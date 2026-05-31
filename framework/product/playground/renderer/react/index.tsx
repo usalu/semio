@@ -787,16 +787,27 @@ export interface PlaygroundViewProps {
 function mergePanelTabs(base: SidePanelTabConfig[] | undefined, extension: readonly (SidePanelTabConfig | SidePanelTabDefinition)[] | undefined): SidePanelTabConfig[] {
   if (!extension?.length) return base ?? [];
   const merged = new Map<string, SidePanelTabConfig>();
-  base?.forEach((tab) => merged.set(tab.id, resolveSidePanelTabSource(tab)));
-  extension.forEach((tab) => merged.set(resolveSidePanelTabSource(tab).id, resolveSidePanelTabSource(tab)));
+  const add = (tab: SidePanelTabConfig | SidePanelTabDefinition): void => {
+    const resolved = resolveSidePanelTabSource(tab);
+    merged.set(resolved.id, resolved);
+  };
+  base?.forEach(add);
+  extension.forEach(add);
   return [...merged.values()];
 }
 
 /** @emoji 🛝 Playground application shell: tree-only side panels, no JSON fallback details tab. */
 export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgroundKeybindings, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
   reactHostPort.useSyncExternalStore(
-    (onStoreChange) => runtime.subscribe(onStoreChange),
-    () => runtime.generation,
+    (onStoreChange) => {
+      const unsubData = runtime.subscribe(onStoreChange);
+      const unsubChrome = runtime.subscribeChrome(onStoreChange);
+      return () => {
+        unsubData();
+        unsubChrome();
+      };
+    },
+    () => runtime.generation * 1_000_000 + runtime.chromeGeneration,
     () => 0,
   );
 
@@ -829,22 +840,30 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
   const activeApp = activeAppBase.resolve(activeModeId);
   const bus = runtime.commandBus;
 
-  const workbenchTabs = mergePanelTabs(
-    sideTabsToPlaygroundPanelTabs(
-      activeApp.panelTabs.filter((tab) => tab.panel === "workbench"),
-      bus,
-    ),
-    augmentPanelTabs?.workbench,
+  const workbenchTabs = reactHostPort.useMemo(
+    () =>
+      mergePanelTabs(
+        sideTabsToPlaygroundPanelTabs(
+          activeApp.panelTabs.filter((tab) => tab.panel === "workbench"),
+          bus,
+        ),
+        augmentPanelTabs?.workbench,
+      ),
+    [activeApp.panelTabs, augmentPanelTabs?.workbench, bus],
   );
-  const detailsTabs = mergePanelTabs(
-    sideTabsToPlaygroundPanelTabs(
-      activeApp.panelTabs.filter((tab) => tab.panel === "details"),
-      bus,
-    ),
-    augmentPanelTabs?.details,
+  const detailsTabs = reactHostPort.useMemo(
+    () =>
+      mergePanelTabs(
+        sideTabsToPlaygroundPanelTabs(
+          activeApp.panelTabs.filter((tab) => tab.panel === "details"),
+          bus,
+        ),
+        augmentPanelTabs?.details,
+      ),
+    [activeApp.panelTabs, augmentPanelTabs?.details, bus],
   );
 
-  const mergedTools = declareToolsToViewTools(activeApp.tools, bus);
+  const mergedTools = reactHostPort.useMemo(() => declareToolsToViewTools(activeApp.tools, bus), [activeApp.tools, bus, runtime.generation]);
   const hasToolbarTools = listPopulatedToolbarViewCategories(mergedTools).length > 0;
 
   const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
@@ -858,54 +877,72 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
 
   const goldenWindowKinds = reactHostPort.useMemo(() => windowKindsToGolden(activeApp.windowKinds, bus), [activeApp.windowKinds, bus]);
 
-  const footerItems: FooterItem[] = [
-    ...mergePlatformFooterChromeRows(runtime, activeApp),
-    ...(extraFooterItems ?? []),
-  ].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-  const workbenchIcon = workbenchTabs[0]?.icon ? reactHostPort.createElement(workbenchTabs[0].icon, { size: 16 }) : <Folder size={16} />;
-  const detailsIcon = detailsTabs[0]?.icon ? reactHostPort.createElement(detailsTabs[0].icon, { size: 16 }) : <Info size={16} />;
-
-  const navbarItems: NavbarItem[] = [
-    {
-      key: "title",
-      className: "flex-1 min-w-0",
-      content: <span className="truncate px-single text-sm font-medium">{activeApp.label}</span>,
-    },
-    {
-      key: "panelToggles",
-      content: (
-        <div className="flex items-stretch overflow-hidden border border-element h-medium">
-          <Toggle
-            id="playground.panel.workbench"
-            pressed={panelVisibility.leftSidePanel}
-            onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed }))}
-            icon={workbenchIcon}
-            className="rounded-none border-0"
-          />
-          <Toggle
-            id="playground.panel.details"
-            pressed={panelVisibility.rightSidePanel}
-            onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed }))}
-            icon={detailsIcon}
-            className="rounded-none border-0 border-l"
-          />
-        </div>
+  const footerItems = reactHostPort.useMemo(
+    () =>
+      [...mergePlatformFooterChromeRows(runtime, activeApp), ...(extraFooterItems ?? [])].sort(
+        (a, b) => (a.order ?? 0) - (b.order ?? 0),
       ),
-    },
-  ];
+    [activeApp, extraFooterItems, runtime, runtime.generation],
+  );
 
-  const toolbarElement = slotToolbar ?? (hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : undefined);
+  const workbenchIcon = reactHostPort.useMemo(
+    () => (workbenchTabs[0]?.icon ? reactHostPort.createElement(workbenchTabs[0].icon, { size: 16 }) : <Folder size={16} />),
+    [workbenchTabs],
+  );
+  const detailsIcon = reactHostPort.useMemo(
+    () => (detailsTabs[0]?.icon ? reactHostPort.createElement(detailsTabs[0].icon, { size: 16 }) : <Info size={16} />),
+    [detailsTabs],
+  );
+
+  const navbarItems = reactHostPort.useMemo<NavbarItem[]>(
+    () => [
+      {
+        key: "title",
+        className: "flex-1 min-w-0",
+        content: <span className="truncate px-single text-sm font-medium">{activeApp.label}</span>,
+      },
+      {
+        key: "panelToggles",
+        content: (
+          <div className="flex items-stretch overflow-hidden border border-element h-medium">
+            <Toggle
+              id="playground.panel.workbench"
+              pressed={panelVisibility.leftSidePanel}
+              onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed }))}
+              icon={workbenchIcon}
+              className="rounded-none border-0"
+            />
+            <Toggle
+              id="playground.panel.details"
+              pressed={panelVisibility.rightSidePanel}
+              onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed }))}
+              icon={detailsIcon}
+              className="rounded-none border-0 border-l"
+            />
+          </div>
+        ),
+      },
+    ],
+    [activeApp.label, detailsIcon, panelVisibility.leftSidePanel, panelVisibility.rightSidePanel, setPanelVisibility, workbenchIcon],
+  );
+
+  const toolbarElement = reactHostPort.useMemo(
+    () => slotToolbar ?? (hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : undefined),
+    [hasToolbarTools, mergedTools, slotToolbar],
+  );
+
+  const playgroundContextValue = reactHostPort.useMemo<PlaygroundContextValue>(
+    () => ({
+      runtime,
+      activeAppId: runtime.activeAppId,
+      activeApp,
+      activeModeId,
+    }),
+    [activeApp, activeModeId, runtime, runtime.activeAppId],
+  );
 
   return (
-    <PlaygroundContext.Provider
-      value={{
-        runtime,
-        activeAppId: runtime.activeAppId,
-        activeApp,
-        activeModeId,
-      }}
-    >
+    <PlaygroundContext.Provider value={playgroundContextValue}>
       <PlaygroundKeybindings keybindings={playgroundKeybindings} bus={bus} />
       <ProductShell
         platform={runtime}
@@ -934,7 +971,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         activeModeId={activeModeId}
         onActiveModeChange={(modeId) => {
           activeAppBase.setActiveModeId(modeId);
-          runtime.notify();
+          runtime.notifyChrome();
         }}
       />
     </PlaygroundContext.Provider>

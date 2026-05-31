@@ -2764,6 +2764,7 @@ export class Puzzle2dRenderer {
   private lastPushedSceneDescriptorEpoch = -1;
   private lastVelloThemeJson = "";
   private textOverlayContentEpoch = 0;
+  private readonly textOverlayLayoutCache = new Map<string, { readonly line: string; readonly fontPx: number }>();
   private textOverlayPainted = false;
   private lastOverlayCameraX = Number.NaN;
   private lastOverlayCameraY = Number.NaN;
@@ -3501,10 +3502,17 @@ export class Puzzle2dRenderer {
     return this.styles.get(name ?? fallbackName) ?? this.styles.get(fallbackName) ?? {};
   }
 
-  setSize(width: number, height: number, dpr = this.dpr): void {
-    this.width = Math.max(1, Math.round(width));
-    this.height = Math.max(1, Math.round(height));
-    this.dpr = Math.max(1, dpr);
+  /** @emoji 📐 Updates layout size; returns false when width/height/dpr are unchanged (skips overlay invalidation). */
+  setSize(width: number, height: number, dpr = this.dpr): boolean {
+    const nextWidth = Math.max(1, Math.round(width));
+    const nextHeight = Math.max(1, Math.round(height));
+    const nextDpr = Math.max(1, dpr);
+    if (this.width === nextWidth && this.height === nextHeight && this.dpr === nextDpr) {
+      return false;
+    }
+    this.width = nextWidth;
+    this.height = nextHeight;
+    this.dpr = nextDpr;
     if (this.canvas) {
       const nextW = Math.round(this.width * this.dpr);
       const nextH = Math.round(this.height * this.dpr);
@@ -3513,7 +3521,9 @@ export class Puzzle2dRenderer {
         this.canvas.height = nextH;
       }
     }
+    this.textOverlayLayoutCache.clear();
     this.markDirty();
+    return true;
   }
 
   setCamera(x: number, y: number, zoom: number): void {
@@ -3579,6 +3589,7 @@ export class Puzzle2dRenderer {
   /** @emoji 🖌️ Requests a repaint; pass `observeGraph: true` when scene topology or authored props changed. */
   markDirty(options?: { readonly observeGraph?: boolean }): void {
     this.textOverlayContentEpoch += 1;
+    this.textOverlayLayoutCache.clear();
     this.invalidated = true;
     if (this.batchDepth > 0) {
       return;
@@ -4334,20 +4345,35 @@ export class Puzzle2dRenderer {
       const family = node.textFontFamily;
       ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
       if (node.textAutofit) {
-        const fontPx = puzzle2dFitTextFontPx(ctx, caption, maxW, maxH, 4, 512, family);
-        ctx.font = puzzle2dBuildCanvasFontSpec(fontPx, family);
-        let line = caption;
-        if (ctx.measureText(line).width > maxW) {
-          line = puzzle2dEllipsisTextToWidth(ctx, caption, maxW);
+        const layoutKey = `${node.id}\0${lod}\0${Math.round(maxW)}\0${Math.round(maxH)}\0${caption}\0${family ?? ""}`;
+        let layout = this.textOverlayLayoutCache.get(layoutKey);
+        if (!layout) {
+          const fontPx = puzzle2dFitTextFontPx(ctx, caption, maxW, maxH, 4, 512, family);
+          ctx.font = puzzle2dBuildCanvasFontSpec(fontPx, family);
+          let line = caption;
+          if (ctx.measureText(line).width > maxW) {
+            line = puzzle2dEllipsisTextToWidth(ctx, caption, maxW);
+          }
+          layout = { line, fontPx };
+          this.textOverlayLayoutCache.set(layoutKey, layout);
         }
+        ctx.font = puzzle2dBuildCanvasFontSpec(layout.fontPx, family);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(line, boxCenter.x, boxCenter.y);
+        ctx.fillText(layout.line, boxCenter.x, boxCenter.y);
         continue;
       }
-      const fontPx = node.textFontSize;
-      ctx.font = puzzle2dBuildCanvasFontSpec(fontPx, family);
-      const line = puzzle2dEllipsisTextToWidth(ctx, caption, maxW);
+      const fixedKey = `${node.id}\0${lod}\0${Math.round(maxW)}\0${node.textFontSize}\0${caption}\0${family ?? ""}`;
+      let fixedLayout = this.textOverlayLayoutCache.get(fixedKey);
+      if (!fixedLayout) {
+        const fontPx = node.textFontSize;
+        ctx.font = puzzle2dBuildCanvasFontSpec(fontPx, family);
+        const line = puzzle2dEllipsisTextToWidth(ctx, caption, maxW);
+        fixedLayout = { line, fontPx };
+        this.textOverlayLayoutCache.set(fixedKey, fixedLayout);
+      }
+      ctx.font = puzzle2dBuildCanvasFontSpec(fixedLayout.fontPx, family);
+      const line = fixedLayout.line;
       const anchor = puzzle2dNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, node.textAlignment);
       ctx.textAlign = anchor.textAlign;
       ctx.textBaseline = anchor.textBaseline;
@@ -8446,10 +8472,25 @@ export function Puzzle2dCanvas({
       return undefined;
     }
     const root = document.documentElement;
-    const observer = new MutationObserver(() => {
-      renderer.invalidate();
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.type !== "attributes") {
+          continue;
+        }
+        const name = record.attributeName;
+        if (name !== "class" && name !== "style") {
+          continue;
+        }
+        const target = record.target as HTMLElement;
+        const next = target.getAttribute(name);
+        if (record.oldValue === next) {
+          continue;
+        }
+        renderer.invalidate();
+        return;
+      }
     });
-    observer.observe(root, { attributeFilter: ["class", "style"], attributes: true });
+    observer.observe(root, { attributeFilter: ["class", "style"], attributeOldValue: true, attributes: true });
     return () => {
       observer.disconnect();
     };
@@ -8529,8 +8570,11 @@ export function Puzzle2dCanvas({
     const applySize = (): void => {
       const nextWidth = width ?? container.clientWidth ?? 1;
       const nextHeight = height ?? container.clientHeight ?? 1;
-      renderer.setSize(nextWidth, nextHeight, globalThis.devicePixelRatio || 1);
-      renderer.render();
+      const nextDpr = globalThis.devicePixelRatio || 1;
+      if (!renderer.setSize(nextWidth, nextHeight, nextDpr)) {
+        return;
+      }
+      renderer.invalidate();
     };
 
     applySize();
@@ -8538,11 +8582,18 @@ export function Puzzle2dCanvas({
       return undefined;
     }
 
+    let resizeRafId: number | null = null;
     const observer = new ResizeObserver(() => {
+      if (resizeRafId !== null) {
+        return;
+      }
       const schedule =
         typeof globalThis.requestAnimationFrame === "function"
           ? (fn: () => void) => {
-              globalThis.requestAnimationFrame(fn);
+              resizeRafId = globalThis.requestAnimationFrame(() => {
+                resizeRafId = null;
+                fn();
+              });
             }
           : (fn: () => void) => {
               queueMicrotask(fn);

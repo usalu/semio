@@ -825,18 +825,30 @@ function vortexLodVisualEqual(a: VortexLodVisual, b: VortexLodVisual): boolean {
   return a.drawVortexBody === b.drawVortexBody && a.pickProxy === b.pickProxy && a.meshUrl === b.meshUrl;
 }
 
+function applyLodGridLayerStyle(grid: GridHelper, opacity: number): void {
+  const materials = Array.isArray(grid.material) ? grid.material : [grid.material];
+  for (const raw of materials) {
+    const mat = raw as LineBasicMaterial;
+    mat.transparent = true;
+    mat.opacity = opacity;
+    mat.depthTest = true;
+    mat.depthWrite = false;
+  }
+  grid.renderOrder = -5;
+  grid.frustumCulled = false;
+}
+
 function LodGridHelper() {
   const lod = useLod();
+  const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
+  const anchor = controls?.target;
   const layers = reactHostPort.useMemo(() => lodProgressiveGridLayers(lod.lod, lod.gridFactor), [lod.lod, lod.gridFactor]);
   const grids = reactHostPort.useMemo(() => {
     const size = 12_000;
     return layers.map(({ stepWorld, opacity }) => {
       const divs = Math.min(512, Math.max(2, Math.round(size / stepWorld)));
-      const grid = new GridHelper(size, divs, 0x8899aa, 0x445566);
-      const mat = grid.material as LineBasicMaterial;
-      mat.transparent = true;
-      mat.opacity = opacity;
-      mat.depthWrite = false;
+      const grid = new GridHelper(size, divs, 0xb8c4d0, 0x6a7a8a);
+      applyLodGridLayerStyle(grid, opacity);
       return grid;
     });
   }, [layers]);
@@ -847,10 +859,13 @@ function LodGridHelper() {
     [grids],
   );
   if (!grids.length) return null;
+  const px = anchor?.x ?? 0;
+  const py = anchor?.y ?? 0;
+  const pz = anchor?.z ?? 0;
   return (
     <>
       {grids.map((grid, i) => (
-        <primitive key={`${layers[i]?.stepWorld ?? i}`} object={grid} position={[0, 0, 0]} />
+        <primitive key={`${layers[i]?.stepWorld ?? i}`} object={grid} position={[px, py, pz]} />
       ))}
     </>
   );
@@ -6253,7 +6268,7 @@ function Inner(props: CanvasProps) {
   const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
   const gridFactor = props.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
   const gridSnapEnabled = props.gridSnapEnabled ?? false;
-  const showLodGrid = props.showLodGrid === true;
+  const showLodGrid = props.showLodGrid !== false;
   const automaticLod = props.automaticLod ?? true;
   const depthVariableLod = props.depthVariableLod ?? false;
   const manualLod = typeof props.lod === "number" && Number.isFinite(props.lod) && props.lod > 0 ? props.lod : DEFAULT_MANUAL_LOD;

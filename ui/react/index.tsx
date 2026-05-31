@@ -2274,11 +2274,11 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
       </div>
     ) : (
       <div className="flex flex-1 min-h-0 relative">
-        {leftSidePanel && leftSidePanel.visible && <SidePanel {...leftSidePanel} position="left" />}
+        {leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
         <div className="flex flex-col flex-1 min-w-0 relative">
           <div className="flex flex-1 min-h-0 relative">
             <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-            {rightSidePanel && rightSidePanel.visible && <SidePanel {...rightSidePanel} position="right" />}
+            {rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
           </div>
           {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
         </div>
@@ -10235,7 +10235,17 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
 
   return (
     <LevelProvider level="panel">
-      <div data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"} className={cn("absolute text-foreground border bg-panel min-w-0 overflow-hidden flex flex-col", borderClass, className)} style={positionStyle}>
+      <div
+        data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"}
+        data-panel-visible={visible ? "true" : "false"}
+        className={cn(
+          "absolute min-w-0 overflow-hidden flex flex-col",
+          visible ? cn("text-foreground border bg-panel", borderClass) : "hidden pointer-events-none",
+          className,
+        )}
+        style={positionStyle}
+        aria-hidden={visible ? undefined : true}
+      >
         {showTabBar && (
           <div data-slot="side-panel-tabs" className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
             {sortedTabs.map((tab) => {
@@ -10280,7 +10290,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
             ) : null}
           </div>
         </Scrollable>
-        {onSizeChange && <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />}
+        {visible && onSizeChange ? (
+          <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />
+        ) : null}
       </div>
     </LevelProvider>
   );

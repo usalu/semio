@@ -740,9 +740,11 @@ export interface PlatformBreadcrumbItem {
 export class Platform {
 	readonly commandBus = new CommandBus();
 	private readonly listeners = new Set<PlatformSubscriber>();
+	private readonly chromeListeners = new Set<PlatformSubscriber>();
 	readonly apps: BaseAppRuntime[] = [];
 	activeAppId = "";
 	generation = 0;
+	chromeGeneration = 0;
 	uri = "/";
 	canGoBack = false;
 	canGoForward = false;
@@ -789,9 +791,20 @@ export class Platform {
 		for (const listener of this.listeners) listener();
 	}
 
+	/** @emoji 🪟 Bumps shell chrome only (panels, active app/mode) without waking data subscribers. */
+	notifyChrome(): void {
+		this.chromeGeneration++;
+		for (const listener of this.chromeListeners) listener();
+	}
+
 	subscribe(listener: PlatformSubscriber): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
+	}
+
+	subscribeChrome(listener: PlatformSubscriber): () => void {
+		this.chromeListeners.add(listener);
+		return () => this.chromeListeners.delete(listener);
 	}
 
 	addApp(app: BaseAppRuntime): void {
@@ -805,13 +818,17 @@ export class Platform {
 	}
 
 	setActiveAppId(id: string): void {
+		if (this.activeAppId === id) return;
 		this.activeAppId = id;
-		this.notify();
+		this.notifyChrome();
 	}
 
 	setPanelVisibility(next: PanelVisibility): void {
-		this.panelVisibility = { ...next };
-		this.notify();
+		const left = next.leftSidePanel;
+		const right = next.rightSidePanel;
+		if (this.panelVisibility.leftSidePanel === left && this.panelVisibility.rightSidePanel === right) return;
+		this.panelVisibility = { leftSidePanel: left, rightSidePanel: right };
+		this.notifyChrome();
 	}
 
 	private readonly componentsBySurfaceId = new Map<string, SurfaceComponent>();
@@ -1051,6 +1068,36 @@ if (import.meta.vitest) {
 			});
 			expect(platform.initialPanelVisibility).toEqual({ leftSidePanel: true, rightSidePanel: false });
 			expect(platform.panelVisibility).toEqual({ leftSidePanel: true, rightSidePanel: false });
+		});
+
+		it("notifyChrome does not bump data generation", () => {
+			const platform = new Platform({ id: "demo", name: "Demo" });
+			const dataGen = platform.generation;
+			const chromeGen = platform.chromeGeneration;
+			platform.setPanelVisibility({ leftSidePanel: true, rightSidePanel: false });
+			expect(platform.generation).toBe(dataGen);
+			expect(platform.chromeGeneration).toBe(chromeGen + 1);
+			platform.setActiveAppId("missing");
+			expect(platform.generation).toBe(dataGen);
+		});
+
+		it("notify bumps data generation but not chrome generation", () => {
+			const platform = new Platform({ id: "demo", name: "Demo" });
+			const chromeGen = platform.chromeGeneration;
+			platform.notify();
+			expect(platform.generation).toBe(1);
+			expect(platform.chromeGeneration).toBe(chromeGen);
+		});
+
+		it("setPanelVisibility is a no-op when visibility unchanged", () => {
+			const platform = new Platform({
+				id: "demo",
+				name: "Demo",
+				initialPanelVisibility: { leftSidePanel: true, rightSidePanel: false },
+			});
+			const chromeGen = platform.chromeGeneration;
+			platform.setPanelVisibility({ leftSidePanel: true, rightSidePanel: false });
+			expect(platform.chromeGeneration).toBe(chromeGen);
 		});
 
 		it("registers render-agnostic surface components by surface id", () => {

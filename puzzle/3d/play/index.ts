@@ -203,7 +203,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   proximityRadius: 24,
   chunkSize: 256,
   gridFactor: 10,
-  showLodGrid: false,
+  showLodGrid: true,
   gridSnapEnabled: true,
   proximityCount: 0,
   connectCount: 0,
@@ -570,7 +570,7 @@ export class Puzzle3dPlayShellController extends Controller {
     this.proximityRadius = 24;
     this.chunkSize = 256;
     this.gridFactor = 10;
-    this.showLodGrid = false;
+    this.showLodGrid = true;
     this.gridSnapEnabled = true;
     this.proximityCount = 0;
     this.connectCount = 0;
@@ -722,6 +722,13 @@ export class Puzzle3dPlayShellController extends Controller {
         max: PUZZLE_3D_LOD_SLIDER_MAX,
         step: 1,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setManualLod" },
+      },
+      {
+        kind: "toggle",
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-lod-grid`,
+        text: "Grid",
+        pressed: this.showLodGrid,
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setShowLodGrid" },
       },
     ];
   }
@@ -1075,6 +1082,7 @@ export class Puzzle3dPlayShellController extends Controller {
         const pressed = (args as { pressed?: boolean }).pressed;
         if (typeof pressed === "boolean") {
           this.showLodGrid = pressed;
+          this.syncShell();
           this.notifySnapshot();
         }
         return;
