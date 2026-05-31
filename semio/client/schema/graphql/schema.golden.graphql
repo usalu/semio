@@ -5487,6 +5487,7 @@ type Type implements Artifact & RichStrongEntity & StrongEntity & Entity & Node 
   representations: RepresentationConnection! # computed
   representation(id: ID!): Representation # computed
   bestRepresentation: Representation # computed
+  files: FileConnection! # computed
   authors: AuthorConnection! # computed
   author(id: ID!): Author # computed
   concepts: ConceptConnection! # computed
@@ -8321,7 +8322,12 @@ type Design implements Artifact & RichStrongEntity & StrongEntity & Entity & Nod
   stats: StatConnection! # computed
   stat(id: ID!): Stat # computed
   qualitySum: Float! # computed
-  references: DesignConnection! # computed
+  types: TypeConnection! # computed
+  designs: DesignConnection! # computed
+  files: FileConnection! # computed
+  allTypes: TypeConnection! # computed
+  allDesigns: DesignConnection! # computed
+  allFiles: FileConnection! # computed
   referencedBy: PieceConnection! # computed
 }
 

@@ -1,0 +1,10 @@
+{
+  "title": "Derived Reference Computed Properties",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Add computed derived-reference properties to semio kit graph: Type.files; Design.types/designs/files (direct) and allTypes/allDesigns/allFiles (transitive); implement Design.referencedBy.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪bf4b9f1fdfdf4e068a35176beb2cca99"
+  ]
+}

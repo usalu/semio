@@ -3,11 +3,14 @@
   "emoji": "⌨️",
   "status": "open",
   "description": "When a window is active and has engagement, auto-focus the engagement input. Fix CAD play typing hitting all panes (global key capture + replIsQueryTypingTarget). Wire window activation to focus model definition.",
-  "summary": "Window body pointer-down and printable keydown now focus and feed the engagement command input without a separate click. Added focusActiveEngagementInput, routeWindowEngagementKeydown, and shouldRouteKeysToWindowEngagement in ui. InteractionRepl with showAside=false routes global keys to the overlay engagement field instead of a hidden aside input.",
+  "summary": "Engagement hover uses a full-width top strip (h-large, z-panel, pointer-events-auto) so the interaction reveals when the mouse enters the top of the window, not only a small top-left box. Fixed pointer-events toggling that dismissed chrome on expand; popover/engagement leave handling preserved.",
   "goal": "🎯ui",
   "sessions": [
     "⚪c05610cb1b334f46b076bcd7406d0ff4",
     "⚪2975526520ba4aac8cd59ef6fefbf7fe",
-    "⚪08dd13f9e773413dae31837c4db9b34a"
+    "⚪08dd13f9e773413dae31837c4db9b34a",
+    "⚪a20b98195204488fac8a7c6f58a5bb7e",
+    "⚪cf4f861c7dd04b2795a668758ac1f862",
+    "⚪743886e412904acdb22beb8cfe3aa462"
   ]
 }

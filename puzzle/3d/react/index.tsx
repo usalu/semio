@@ -39,6 +39,7 @@ const {
   MeshStandardMaterial,
   NearestFilter,
   OrthographicCamera,
+  Plane,
   PlaneGeometry,
   Points,
   PointsMaterial,

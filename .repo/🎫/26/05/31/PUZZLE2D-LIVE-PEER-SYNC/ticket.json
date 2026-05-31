@@ -3,9 +3,10 @@
   "emoji": "⚡",
   "status": "closed",
   "description": "Restore commit-93 canvas speed while keeping commit-94 live cross-pane node-move/delete sync, by replacing per-frame full-scene WASM re-push on peer panes with lightweight incremental per-node position update in Rust/WASM BoardSession.",
-  "summary": "Added BoardHost.set_node_positions / BoardSession.setNodePositionsJson for O(moved-nodes) peer-pane sync during drags. Peer applyNodePositionSilent now queues pendingIncrementalNodeMoves instead of nulling lastPushedDescriptorJson; pushSceneToWasmDriver flushes incremental moves and skips full syncDescriptorJson when the descriptor cache is still valid. Rust host test + extended vitest peer broadcast test confirm incremental path. wasm rebuilt; cargo test + 88 vitest tests pass.",
+  "summary": "Fixed pan/zoom/selection slowness on top of live peer drag sync: (1) descriptor-cache fast path now flushes pendingIncrementalNodeMoves via setNodePositionsJson; (2) markDirty only runs graph observation when observeGraph:true (scene mutations), selection/preselect/hover use invalidate() only; (3) skip paintTextOverlays during pan/wheel gestures; (4) incremental chrome updates only touch changed scene objects. 91 vitest tests pass.",
   "goal": "🎯r2602",
   "sessions": [
-    "⚪887338089ca7486f83371483c95c03de"
+    "⚪887338089ca7486f83371483c95c03de",
+    "⚪cc65e234f8234210b6fccd0a95cbf41d"
   ]
 }

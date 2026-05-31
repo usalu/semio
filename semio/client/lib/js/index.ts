@@ -2561,6 +2561,13 @@ export class Design extends Entity {
   declare image: () => Promise<string>;
   declare unit: () => Promise<string>;
   declare qualitySum: () => Promise<number>;
+  declare types: () => Promise<readonly Type[]>;
+  declare designs: () => Promise<readonly Design[]>;
+  declare files: () => Promise<readonly File[]>;
+  declare allTypes: () => Promise<readonly Type[]>;
+  declare allDesigns: () => Promise<readonly Design[]>;
+  declare allFiles: () => Promise<readonly File[]>;
+  declare referencedBy: () => Promise<readonly Piece[]>;
   declare connections: () => Promise<readonly Connection[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
   declare onNameChanged: (cb: (next: string) => void) => Unsubscribe;
@@ -2701,6 +2708,55 @@ const DESIGN_FIELDS = defineBoundKitFields([
     coarseEvent: true,
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["design"] as JsonObject | undefined),
   },
+  {
+    selection: "types { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "types").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "designs { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "designs").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "files { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "files").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "allTypes { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "allTypes").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "allDesigns { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "allDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "allFiles { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "allFiles").map((id) => new File(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "referencedBy { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseDesignBranchConnection(frag as JsonObject | null, "referencedBy").map((id) => (entity as Design).piece(id))),
+  },
 ] as const);
 
 const DESIGN_OPERATIONS = defineBoundKitOperations([
@@ -2789,6 +2845,7 @@ export class Type extends Entity {
   declare ports: () => Promise<readonly Port[]>;
   declare connectors: () => Promise<readonly Connector[]>;
   declare representations: () => Promise<readonly Representation[]>;
+  declare files: () => Promise<readonly File[]>;
   declare attributes: () => Promise<readonly Attribute[]>;
   declare authors: () => Promise<readonly Author[]>;
   declare rename: (newName: string) => Promise<SetResult>;
@@ -2828,6 +2885,13 @@ const TYPE_FIELDS = defineBoundKitFields([
     parse: () => [],
     coarseEvent: true,
     parseEntity: (entity, frag) => Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "representations").map((id) => (entity as Type).representation(id))),
+  },
+  {
+    selection: "files { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseTypeBranchConnection(frag as JsonObject | null, "files").map((id) => new File(entity.session, id, entity.storeId))),
   },
   {
     selection: "attributes { edges { node { id key value definition } } }",
@@ -4057,6 +4121,16 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(typeof Piece.prototype.onPathPiecesChanged).toBe("function");
       expect(typeof Piece.prototype.onPositionChanged).toBe("function");
       expect(typeof Piece.prototype.onFlatPositionChanged).toBe("function");
+    });
+    it("Type and Design install derived reference accessors", () => {
+      expect(typeof Type.prototype.files).toBe("function");
+      expect(typeof Design.prototype.types).toBe("function");
+      expect(typeof Design.prototype.designs).toBe("function");
+      expect(typeof Design.prototype.files).toBe("function");
+      expect(typeof Design.prototype.allTypes).toBe("function");
+      expect(typeof Design.prototype.allDesigns).toBe("function");
+      expect(typeof Design.prototype.allFiles).toBe("function");
+      expect(typeof Design.prototype.referencedBy).toBe("function");
     });
     it("Kit and Graph install field change subscriptions", () => {
       expect(typeof Kit.prototype.onNameChanged).toBe("function");

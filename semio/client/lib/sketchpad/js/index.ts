@@ -413,15 +413,17 @@ export function attachSketchpadKit(
 	attachSketchpadKitStore(kitId, new SemioKitStore(backend), options);
 }
 
+/** @emoji 🔗 Syncs platform chrome then optional browser history navigation. */
+function sketchpadCommitUri(platform: Platform, uri: string): void {
+	applySketchpadUri(platform, uri);
+	if (platform.onNavigate) platform.onNavigate(uri);
+}
+
 /** @emoji 🧭 Navigates the sketchpad {@link Platform} (updates history when in a browser). */
 export function navigateSketchpadTo(uri: string): void {
 	const platform = getSketchpadPlatform();
 	if (!platform) throw new Error("semio/sketchpad: platform not initialized — call ensureSketchpadPlatform first");
-	if (platform.onNavigate) {
-		platform.onNavigate(uri);
-		return;
-	}
-	applySketchpadUri(platform, uri);
+	sketchpadCommitUri(platform, uri);
 }
 
 /** @emoji 📦 Imports kit bytes/URL and registers them on the active platform. */
@@ -2911,8 +2913,7 @@ export class SketchpadShellController extends Controller {
 		const navigationPath = `${pathOnly}${sketchpadRouteSelectionUriFilters(selection)}`;
 		this.shellStore.set({ ...shell, routeSelection: selection, navigationPath });
 		const platform = getSketchpadPlatform();
-		if (platform?.onNavigate) platform.onNavigate(navigationPath);
-		else if (platform) applySketchpadUri(platform, navigationPath);
+		if (platform) sketchpadCommitUri(platform, navigationPath);
 		this.emit();
 	}
 
@@ -3073,8 +3074,7 @@ export class SketchpadShellController extends Controller {
 		this.shellStore.set({ ...shell, home, navigationPath });
 		if (pathOnly === "/") {
 			const platform = getSketchpadPlatform();
-			if (platform?.onNavigate) platform.onNavigate(navigationPath);
-			else if (platform) applySketchpadUri(platform, navigationPath);
+			if (platform) sketchpadCommitUri(platform, navigationPath);
 		}
 		this.emit();
 	}
@@ -3090,11 +3090,7 @@ export class SketchpadShellController extends Controller {
 		this.shellStore.set({ ...this.shellStore.get(), navigationPath: path, routeSelection, home });
 		const platform = getSketchpadPlatform();
 		if (!platform) return;
-		if (platform.onNavigate) {
-			platform.onNavigate(path);
-			return;
-		}
-		applySketchpadUri(platform, path);
+		sketchpadCommitUri(platform, path);
 	}
 
 	override run(command: string, args?: unknown): void {
@@ -3740,22 +3736,22 @@ if (import.meta.vitest) {
 			ctrl.dispose();
 		});
 
-		it("navigateTo invokes platform.onNavigate once without recursion", () => {
+		it("navigateTo syncs platform uri before onNavigate", () => {
 			const bus = new CommandBus();
 			const platform = new Platform({ id: "t", name: "T", defaultActiveAppId: SKETCHPAD_HOME_APP_ID });
-			let calls = 0;
-			const paths: string[] = [];
+			platform.applyUri = (uri) => applySketchpadUri(platform, uri);
+			let uriWhenHistoryUpdates: string | undefined;
 			platform.onNavigate = (uri: string) => {
-				calls += 1;
-				paths.push(uri);
-				if (calls > 2) throw new Error("onNavigate recursion");
+				uriWhenHistoryUpdates = platform.uri;
+				expect(uriWhenHistoryUpdates).toBe(uri);
 			};
 			sketchpadPlatformSingleton = platform;
 			const ctrl = new SketchpadShellController(bus, () => platform.notify());
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-			ctrl.navigateTo(`/kits/${kitId}`);
-			expect(calls).toBe(1);
-			expect(paths).toEqual([`/kits/${kitId}`]);
+			const path = `/kits/${kitId}`;
+			ctrl.navigateTo(path);
+			expect(platform.uri).toBe(path);
+			expect(uriWhenHistoryUpdates).toBe(path);
 			ctrl.dispose();
 			sketchpadPlatformSingleton = null;
 		});

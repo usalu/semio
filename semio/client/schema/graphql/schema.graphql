@@ -2134,7 +2134,12 @@ type Design implements Entity & Node & StrongEntity {
 	attributes: AttributeConnection!
 	stats: StatConnection!
 	qualitySum(qualityId: ID!): Float!
-	references: DesignConnection!
+	types: TypeConnection!
+	designs: DesignConnection!
+	files: FileConnection!
+	allTypes: TypeConnection!
+	allDesigns: DesignConnection!
+	allFiles: FileConnection!
 	referencedBy: PieceConnection!
 }
 
@@ -5143,6 +5148,7 @@ type Type implements Entity & StrongEntity {
 	representations: RepresentationConnection!
 	representation(id: ID!): Representation
 	bestRepresentation(tagIds: [ID!]!): Representation
+	files: FileConnection!
 	authors: AuthorConnection!
 	concepts: ConceptConnection!
 	tags: TagConnection!

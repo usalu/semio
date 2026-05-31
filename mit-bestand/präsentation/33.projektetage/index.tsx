@@ -10,7 +10,14 @@ import {
 	playgroundEmbedUrl,
 	type PlaygroundSiteKind,
 } from "../../../ui/styling/playground-embed-url.ts";
-import { Button, Card, CardGrid } from "@ui/react";
+import {
+	Button,
+	Card,
+	CardGrid,
+	Expertise,
+	useElementsSurfaceChrome,
+	type ElementsSurfaceChromeInput,
+} from "@ui/react";
 import { StrictMode, useEffect, useRef, type FC, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters
@@ -36,7 +43,7 @@ const PlaygroundEmbed: FC<{ readonly kind: PlaygroundSiteKind; readonly title?: 
 		<iframe
 			title={title ?? EMBED_LABELS[kind]}
 			src={src}
-			className="h-[min(62vh,520px)] w-full border border-border bg-background"
+			className="h-[min(62vh,520px)] w-full border border-window bg-window"
 			loading="lazy"
 			allow="fullscreen"
 		/>
@@ -44,10 +51,24 @@ const PlaygroundEmbed: FC<{ readonly kind: PlaygroundSiteKind; readonly title?: 
 };
 //#endregion 🔖Embeds
 
+//#region 🔖Shell
+/** @emoji 🌓 Same surface chrome as playground static sites: system theme on `documentElement`. */
+const PRESENTATION_SURFACE_CHROME: ElementsSurfaceChromeInput = {
+	theme: "system",
+	device: "desktop",
+	expertise: Expertise.NORMAL,
+};
+
+const PresentationShell: FC<{ readonly children: ReactNode }> = ({ children }) => {
+	useElementsSurfaceChrome(PRESENTATION_SURFACE_CHROME);
+	return <div className="h-full w-full bg-base text-foreground">{children}</div>;
+};
+//#endregion 🔖Shell
+
 //#region 🔖Slides
 const TitleSlide: FC = () => (
 	<section>
-		<h1 className="r-fit-text text-primary">33. Projektetage</h1>
+		<h1 className="r-fit-text text-accent">33. Projektetage</h1>
 		<p className="mt-6 text-2xl opacity-80">Mit Bestand · Zukunft Bau</p>
 		<p className="mt-4 text-lg opacity-60">semio playgrounds embedded in reveal.js</p>
 	</section>
@@ -134,7 +155,9 @@ function mount(): void {
 	}
 	createRoot(el).render(
 		<StrictMode>
-			<Deck />
+			<PresentationShell>
+				<Deck />
+			</PresentationShell>
 		</StrictMode>,
 	);
 }

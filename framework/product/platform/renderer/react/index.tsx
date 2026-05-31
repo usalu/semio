@@ -114,6 +114,7 @@ import {
 	Lasso as LassoIcon,
 	LayoutGrid as LayoutGridIcon,
 	MessageSquare,
+	Minimize2,
 	MoreHorizontal as MoreHorizontalIcon,
 	MousePointer2 as MousePointerIcon,
 	Move3d as Move3dIcon,
@@ -187,7 +188,10 @@ import {
 	Expertise,
 	LevelProvider,
 	getLevelBgClass,
+	readStoredUiChromeCompact,
+	UiChromeCompactProvider,
 	useElementsSurfaceChrome,
+	writeStoredUiChromeCompact,
 	reactHostPort,
 	windowMeasureControlClass,
 	windowMeasureLabelClass,
@@ -1167,7 +1171,6 @@ const UIToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }
           return (
             <ToolbarItem key={item.id}>
               <Toggle
-                kind={item.icon && !item.text && !item.label ? "icon" : "default"}
                 id={item.id}
                 pressed={item.pressed ?? false}
                 onPressedChange={(pressed) => item.onPressedChange?.(pressed)}
@@ -1789,11 +1792,38 @@ const BuiltinPuzzle2dCanvas: React.FC<{ readonly node: UiPuzzle2dHostSurfaceNode
 	</div>
 );
 
-const BuiltinPuzzle5dCanvas: React.FC<{ readonly node: UiPuzzle5dHostSurfaceNode }> = ({ node }) => (
-	<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
-		<FiveD mode="flat" instanceId={node.surfaceId} />
-	</div>
-);
+const BuiltinPuzzle5dCanvas: React.FC<{ readonly node: UiPuzzle5dHostSurfaceNode; readonly platform?: Platform }> = ({
+	node,
+	platform,
+}) => {
+	if (platform) {
+		const registered = platform.getComponent(node.surfaceId);
+		if (registered?.componentKind === "puzzle5d") {
+			const KindRenderer = componentKindRenderers.get("puzzle5d");
+			if (KindRenderer) {
+				return (
+					<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
+						<KindRenderer
+							component={registered as Component<unknown>}
+							node={node}
+							commandBus={platform.commandBus}
+							layout="canvas"
+							platform={platform}
+						/>
+					</div>
+				);
+			}
+		}
+	}
+	return (
+		<div
+			className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground"
+			data-surface-id={node.surfaceId}
+		>
+			Loading…
+		</div>
+	);
+};
 
 const defaultComponentHosts: Partial<Record<ComponentKind, SurfaceBindingHost>> = {
 	puzzle2d: BuiltinPuzzle2dCanvas as SurfaceBindingHost,
@@ -2547,7 +2577,6 @@ const UIPanelToggleGroup: React.FC<{
     {items.map((item, index) => (
       <Toggle
         key={item.id}
-        kind="icon"
         id={item.id}
         pressed={item.pressed}
         onPressedChange={item.onPressedChange}
@@ -2816,9 +2845,10 @@ const PlatformViewWithHistory: React.FC<Omit<PlatformViewProps, "uri" | "onNavig
 
 	const handleNavigate = reactHostPort.useCallback(
 		(targetUri: string) => {
+			platform.applyUri?.(targetUri);
 			navigate(targetUri);
 		},
-		[navigate],
+		[navigate, platform],
 	);
 
 	return (
@@ -2916,8 +2946,11 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const [mobilePanelActiveTabId, setMobilePanelActiveTabId] = reactHostPort.useState<string | undefined>(undefined);
 	const [searchOpen, setSearchOpen] = reactHostPort.useState(false);
 	const [findOpen, setFindOpen] = reactHostPort.useState(false);
+	const [uiCompact, setUiCompact] = reactHostPort.useState(readStoredUiChromeCompact);
 	const detectedMobile = useMediaQuery(mobileQuery);
 	const resolvedMobile = mobile ?? detectedMobile ?? platform.mobile;
+
+	useElementsSurfaceChrome({ ...PLATFORM_SYSTEM_SURFACE_CHROME, compact: uiCompact });
 
 	const togglePanel = reactHostPort.useCallback((panel: keyof UIPanelVisibility) => {
 		setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
@@ -3115,12 +3148,12 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	navbarItems.push({
 		key: "search",
-		content: <Toggle kind="icon" id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<Search size={16} />} />,
+		content: <Toggle id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<Search size={16} />} />,
 	});
 
 	navbarItems.push({
 		key: "find",
-		content: <Toggle kind="icon" id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<Search size={16} />} />,
+		content: <Toggle id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<Search size={16} />} />,
 	});
 
 	const panelToggleItems = panelKindsWithTabs.map((kind) => {
@@ -3158,7 +3191,24 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		});
 	}
 
-	const mergedFooterItems = mergePlatformFooterChromeRows(platform, activeApp, extraFooterItems ?? []);
+	const mergedFooterItems = mergePlatformFooterChromeRows(platform, activeApp, [
+		{
+			id: "settings.compact",
+			order: -20,
+			content: (
+				<Toggle
+					id="settings.compact"
+					pressed={uiCompact}
+					onPressedChange={(pressed) => {
+						setUiCompact(pressed);
+						writeStoredUiChromeCompact(pressed);
+					}}
+					icon={<Minimize2 className="size-small" aria-hidden />}
+				/>
+			),
+		},
+		...(extraFooterItems ?? []),
+	]);
 
 	const searchItemsResolved = reactHostPort.useMemo(
 		() =>
@@ -3181,30 +3231,31 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const toolbarElement = slotToolbar ?? (hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : undefined);
 
 	return (
-		<AppContext.Provider
-			value={{
-				platform,
-				activeAppId,
-				setActiveAppId,
-				activeApp,
-				activeModeId,
-				setActiveModeId,
-				apps: resolvedApps,
-				panelVisibility,
-				togglePanel,
-				uri: uriProp,
-				navigate: onNavigate ?? (() => {}),
-				canGoBack: canGoBackProp,
-				goBack: onGoBack ?? (() => {}),
-				canGoForward: canGoForwardProp,
-				goForward: onGoForward ?? (() => {}),
-				canGoUp: canGoUpProp,
-				goUp: onGoUp ?? (() => {}),
-			}}
-		>
-			<UIFindProvider>
-				<ProductFindItemsSync findItems={activeApp.findItems} onFindSelect={activeApp.onFindSelect} />
-				<ProductShell
+		<UiChromeCompactProvider compact={uiCompact}>
+			<AppContext.Provider
+				value={{
+					platform,
+					activeAppId,
+					setActiveAppId,
+					activeApp,
+					activeModeId,
+					setActiveModeId,
+					apps: resolvedApps,
+					panelVisibility,
+					togglePanel,
+					uri: uriProp,
+					navigate: onNavigate ?? (() => {}),
+					canGoBack: canGoBackProp,
+					goBack: onGoBack ?? (() => {}),
+					canGoForward: canGoForwardProp,
+					goForward: onGoForward ?? (() => {}),
+					canGoUp: canGoUpProp,
+					goUp: onGoUp ?? (() => {}),
+				}}
+			>
+				<UIFindProvider>
+					<ProductFindItemsSync findItems={activeApp.findItems} onFindSelect={activeApp.onFindSelect} />
+					<ProductShell
 					platform={platform}
 					defaultAppId={defaultAppId}
 					className={className}
@@ -3242,9 +3293,10 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 					onSearchOpenChange={setSearchOpen}
 					findOpen={findOpen}
 					onFindOpenChange={setFindOpen}
-				/>
-			</UIFindProvider>
-		</AppContext.Provider>
+					/>
+				</UIFindProvider>
+			</AppContext.Provider>
+		</UiChromeCompactProvider>
 	);
 };
 
@@ -3486,12 +3538,15 @@ export const PLATFORM_SYSTEM_SURFACE_CHROME = {
 };
 
 /** @emoji 🛝 Applies system theme, level chrome, and full-viewport layout for {@link PlatformView}. */
-export function PlatformShell({ children }: { readonly children: React.ReactNode }): React.ReactElement {
-	useElementsSurfaceChrome(PLATFORM_SYSTEM_SURFACE_CHROME);
+export function PlatformShell({ children, compact }: { readonly children: React.ReactNode; readonly compact?: boolean }): React.ReactElement {
+	const resolvedCompact = compact ?? readStoredUiChromeCompact();
+	useElementsSurfaceChrome({ ...PLATFORM_SYSTEM_SURFACE_CHROME, compact: resolvedCompact });
 	return (
-		<LevelProvider level="window">
-			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>{children}</div>
-		</LevelProvider>
+		<UiChromeCompactProvider compact={resolvedCompact}>
+			<LevelProvider level="window">
+				<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>{children}</div>
+			</LevelProvider>
+		</UiChromeCompactProvider>
 	);
 }
 //#endregion 🔖PlatformShell

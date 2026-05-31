@@ -2090,7 +2090,7 @@ export class Puzzle2dScene {
       for (const handle of object.handles) {
         this.add(handle);
       }
-      this.renderer?.markDirty();
+      this.renderer?.markDirty({ observeGraph: true });
       return this;
     }
 
@@ -2102,7 +2102,7 @@ export class Puzzle2dScene {
       object.parent = this;
       object.attachRenderer(this.renderer);
       object.node.attachHandle(object);
-      this.renderer?.markDirty();
+      this.renderer?.markDirty({ observeGraph: true });
       return this;
     }
 
@@ -2128,7 +2128,7 @@ export class Puzzle2dScene {
           wireKind: wire.wireKind,
         });
       }
-      this.renderer?.markDirty();
+      this.renderer?.markDirty({ observeGraph: true });
       return this;
     }
 
@@ -2136,7 +2136,7 @@ export class Puzzle2dScene {
     object.parent = this;
     object.attachRenderer(this.renderer);
     this.renderer?.emit("edgeCreate", { id: object.id, source: (object as Edge).source.id, target: (object as Edge).target.id });
-    this.renderer?.markDirty();
+    this.renderer?.markDirty({ observeGraph: true });
     return this;
   }
 
@@ -2145,7 +2145,7 @@ export class Puzzle2dScene {
     this.edges.set(edge.id, edge);
     edge.parent = this;
     edge.attachRenderer(this.renderer);
-    this.renderer?.markDirty();
+    this.renderer?.markDirty({ observeGraph: true });
     return this;
   }
 
@@ -2170,7 +2170,7 @@ export class Puzzle2dScene {
       object.parent = null;
       object.attachRenderer(null);
       this.renderer?.evictNodeAuthoringPosition(object.id);
-      this.renderer?.markDirty();
+      this.renderer?.markDirty({ observeGraph: true });
       return this;
     }
 
@@ -2190,7 +2190,7 @@ export class Puzzle2dScene {
       this.handles.delete(object.id);
       object.parent = null;
       object.attachRenderer(null);
-      this.renderer?.markDirty();
+      this.renderer?.markDirty({ observeGraph: true });
       return this;
     }
 
@@ -2199,7 +2199,7 @@ export class Puzzle2dScene {
       this.wires.delete(object.id);
       object.parent = null;
       object.attachRenderer(null);
-      this.renderer?.markDirty();
+      this.renderer?.markDirty({ observeGraph: true });
       return this;
     }
 
@@ -2207,7 +2207,7 @@ export class Puzzle2dScene {
     this.edges.delete(object.id);
     object.parent = null;
     object.attachRenderer(null);
-    this.renderer?.markDirty();
+    this.renderer?.markDirty({ observeGraph: true });
     return this;
   }
 
@@ -2734,6 +2734,9 @@ export class Puzzle2dRenderer {
   private pendingIncrementalNodeMoves = new Map<string, { x: number; y: number }>();
   private wasmPushSceneDrainAlreadyApplied = false;
   private viewportWheelEmitRafId: number | null = null;
+  private lastPushedWidth = -1;
+  private lastPushedHeight = -1;
+  private lastPushedDpr = -1;
   private suppressSceneToWasmPush = false;
   private graphObservationFlushPending = false;
   private lastGraphObservation: Puzzle2dGraphObservationSnapshot | null = null;
@@ -2862,30 +2865,39 @@ export class Puzzle2dRenderer {
 
   /** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
   setSelectionIds(ids: Iterable<string>): void {
-    if (this.wasmSessionCallBlockedForReentry()) {
-      this.updateSelection(ids, true);
+    const nextSnapshot = createSelectionSnapshot(new Set(ids));
+    if (puzzle2dSelectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot())) {
       return;
     }
-    this.pushSceneToWasmDriver();
-    this.session.setSelectionIdsJson(JSON.stringify([...ids]));
+    this.updateSelection(ids, true);
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
+    try {
+      this.session.setSelectionIdsJson(JSON.stringify(nextSnapshot.ids));
+    } catch (err) {
+      console.error("[DEBUG] setSelectionIdsJson failed", err);
+    }
     this.applyWasmDrainToScene(this.session.drainEventsJson());
+    this.invalidate();
   }
 
   /** @emoji 🔇 Controlled sync: updates WASM + JS selection without emitting `select`. */
   setSelectionIdsSilent(ids: Iterable<string>): void {
-    const payload = JSON.stringify([...ids]);
-    if (this.wasmSessionCallBlockedForReentry()) {
-      this.updateSelection(ids, false);
+    const nextSnapshot = createSelectionSnapshot(new Set(ids));
+    if (puzzle2dSelectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot())) {
       return;
     }
-    this.pushSceneToWasmDriver();
+    this.updateSelection(ids, false);
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
     try {
-      this.session.setSelectionIdsJsonSilent(payload);
+      this.session.setSelectionIdsJsonSilent(JSON.stringify(nextSnapshot.ids));
     } catch (err) {
       console.error("[DEBUG] setSelectionIdsJsonSilent failed", err);
     }
-    this.updateSelection(ids, false);
-    this.markDirty();
+    this.invalidate();
   }
 
   /** @emoji 👁️ Controlled sync: mirrors area-select preview chrome on this canvas without emitting `preselect`. */
@@ -2903,7 +2915,7 @@ export class Puzzle2dRenderer {
     } catch (err) {
       console.error("[DEBUG] setPreselectStateJsonSilent failed", err);
     }
-    this.markDirty();
+    this.invalidate();
   }
 
   /** @emoji 🖱️ Controlled sync: mirrors hover chrome without emitting `hover`. */
@@ -2917,7 +2929,7 @@ export class Puzzle2dRenderer {
     }
     this.session.setHoveredIdSilent(id);
     this.updateHover(id);
-    this.markDirty();
+    this.invalidate();
   }
 
   getSelectionOptions(): ResolvedPuzzle2dSelectionOptions {
@@ -3379,12 +3391,15 @@ export class Puzzle2dRenderer {
     };
   }
 
-  markDirty(): void {
+  /** @emoji 🖌️ Requests a repaint; pass `observeGraph: true` when scene topology or authored props changed. */
+  markDirty(options?: { readonly observeGraph?: boolean }): void {
     this.invalidated = true;
     if (this.batchDepth > 0) {
       return;
     }
-    this.enqueuePuzzle2dGraphObservationFlush();
+    if (options?.observeGraph) {
+      this.enqueuePuzzle2dGraphObservationFlush();
+    }
     this.invalidate();
   }
 
@@ -3710,6 +3725,17 @@ export class Puzzle2dRenderer {
     return true;
   }
 
+  /** @emoji 📐 Pushes viewport size and camera when the scene descriptor cache is still valid (pan/zoom/selection chrome). */
+  private pushWasmViewportAndSizeToSession(): void {
+    if (this.lastPushedWidth !== this.width || this.lastPushedHeight !== this.height || this.lastPushedDpr !== this.dpr) {
+      this.session.setSize(this.width, this.height, this.dpr);
+      this.lastPushedWidth = this.width;
+      this.lastPushedHeight = this.height;
+      this.lastPushedDpr = this.dpr;
+    }
+    this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
+  }
+
   /** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link Puzzle2dRenderer.invalidated} so the next frame retries. */
   private pushSceneToWasmDriver(): void {
     if (this.suppressSceneToWasmPush) {
@@ -3722,13 +3748,17 @@ export class Puzzle2dRenderer {
     const descriptorCacheValid =
       this.lastPushedDescriptorJson !== null && this.lastPushedSceneDescriptorEpoch === this.sceneDescriptorEpoch;
     const deferDescriptorSync = this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs() || this.preselectIds.size > 0;
-    if (descriptorCacheValid && (deferDescriptorSync || this.wasmPushSceneDrainAlreadyApplied)) {
+    if (descriptorCacheValid) {
+      this.flushPendingIncrementalNodeMovesToWasm();
+      this.pushWasmViewportAndSizeToSession();
       this.wasmPushSceneDrainAlreadyApplied = false;
-      this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
       return;
     }
     const o = this.selectionOptions;
     this.session.setSize(this.width, this.height, this.dpr);
+    this.lastPushedWidth = this.width;
+    this.lastPushedHeight = this.height;
+    this.lastPushedDpr = this.dpr;
     this.session.setSelectionOptions(o.method, puzzle2dSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
     this.session.setWorldRasterTiling(this.worldRasterTiling);
     this.pushLodAndGridSnapToWasmSession();
@@ -3976,6 +4006,9 @@ export class Puzzle2dRenderer {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
       return;
     }
+    if (this.session.defersDescriptorSyncFromJs() || this.viewportWheelEmitRafId !== null) {
+      return;
+    }
     const el = this.textOverlayCanvas;
     const nextW = Math.max(1, Math.round(this.width * this.dpr));
     const nextH = Math.max(1, Math.round(this.height * this.dpr));
@@ -4195,8 +4228,13 @@ export class Puzzle2dRenderer {
   private applySelectionChromeToSceneObjects(): void {
     const { highlightedIds, selectedIds } = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
     for (const object of this.scene.getAllObjects()) {
-      object.selected = selectedIds.has(object.id);
-      object.highlighted = highlightedIds.has(object.id);
+      const wantSelected = selectedIds.has(object.id);
+      const wantHighlighted = highlightedIds.has(object.id);
+      if (object.selected === wantSelected && object.highlighted === wantHighlighted) {
+        continue;
+      }
+      object.selected = wantSelected;
+      object.highlighted = wantHighlighted;
     }
   }
 
@@ -4211,12 +4249,11 @@ export class Puzzle2dRenderer {
       this.updatePreselection([], [], false);
     }
     this.applySelectionChromeToSceneObjects();
-    this.markSceneDescriptorDirty();
     if (emit) {
       this.emit("select", nextSnapshot);
     }
     this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
-    this.markDirty();
+    this.invalidate();
   }
 
   private updatePreselection(ids: Iterable<string>, removedIds: Iterable<string>, emit: boolean): void {
@@ -4231,7 +4268,7 @@ export class Puzzle2dRenderer {
     if (emit) {
       this.emit("preselect", nextSnapshot);
     }
-    this.markDirty();
+    this.invalidate();
   }
 
   private updateHover(id: string | null): void {
@@ -4801,6 +4838,7 @@ if (puzzle2dVitest) {
       expect(syncDescriptorJson).not.toHaveBeenCalled();
       const nodeDeletes: string[] = [];
       rendererA.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+      rendererA["pushSceneToWasmDriver"]();
       rendererA.setSelectionIdsSilent(["shared"]);
       rendererA["deleteSelectedObjects"]();
       expect(nodeDeletes).toContain("shared");
@@ -4808,6 +4846,35 @@ if (puzzle2dVitest) {
       expect(rendererB.scene.nodes.has("shared")).toBe(false);
       rendererA.dispose();
       rendererB.dispose();
+    });
+
+    it("setSelectionIdsSilent uses setSelectionIdsJsonSilent without full syncDescriptorJson", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0 });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      const syncDescriptorJson = vi.spyOn(renderer.session, "syncDescriptorJson");
+      renderer.setSelectionIdsSilent(["n"]);
+      renderer["pushSceneToWasmDriver"]();
+      expect(syncDescriptorJson).not.toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("setSelectionIdsSilent does not enqueue graph observation change events", async () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0 });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      await Promise.resolve();
+      const graphEvents: string[] = [];
+      const off = renderer.on("change", () => graphEvents.push("change"));
+      renderer.setSelectionIdsSilent(["n"]);
+      await Promise.resolve();
+      expect(graphEvents).toEqual([]);
+      off();
+      renderer.dispose();
     });
 
     it("skips full syncDescriptorJson when only the camera changes", () => {
@@ -5833,7 +5900,7 @@ if (puzzle2dVitest) {
       renderer.scene.add(root).add(child).add(edge);
       await Promise.resolve();
       edge.visible = false;
-      renderer.markDirty();
+      renderer.markDirty({ observeGraph: true });
       await Promise.resolve();
       expect(changes).toEqual(["link"]);
       off();

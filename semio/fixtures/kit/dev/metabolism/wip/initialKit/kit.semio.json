@@ -16,8 +16,7 @@
         "items": [
             {
                 "id": "71749140-9db9-43f6-bd81-d89011667b80",
-                "name": "Capsule",
-                "isAbstract": true,
+                "name": "Capsule", "isAbstract": true,
                 "createdAt": "2025-11-23T01:10:21.293Z",
                 "updatedAt": "2025-11-23T01:10:21.293Z",
                 "families": {

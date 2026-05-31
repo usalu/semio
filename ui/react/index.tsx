@@ -589,6 +589,7 @@ export interface ElementsSurfaceChromeInput {
   theme: ElementsSurfaceTheme;
   device: ElementsSurfaceDevice;
   expertise: Expertise;
+  compact?: boolean;
 }
 
 function applyDocumentBodyBaseColors(): void {
@@ -600,9 +601,13 @@ function applyDocumentBodyBaseColors(): void {
 /**
  * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state and resets tooltip expertise.
  */
-export function applyElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): () => void {
+export function applyElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): () => void {
   setExpertiseProvider(() => expertise);
-  const cleanups: Array<() => void> = [() => setExpertiseProvider(() => Expertise.NORMAL)];
+  setUiChromeCompactProvider(() => compact);
+  const cleanups: Array<() => void> = [
+    () => setExpertiseProvider(() => Expertise.NORMAL),
+    () => setUiChromeCompactProvider(() => readStoredUiChromeCompact()),
+  ];
 
   if (typeof window !== "undefined" && typeof document !== "undefined") {
     const root = document.documentElement;
@@ -638,6 +643,14 @@ export function applyElementsSurfaceChrome({ theme, device, expertise }: Element
     });
   }
 
+  if (typeof document !== "undefined") {
+    const root = document.documentElement;
+    root.dataset.uiCompact = compact ? "true" : "false";
+    cleanups.push(() => {
+      delete root.dataset.uiCompact;
+    });
+  }
+
   return () => {
     while (cleanups.length > 0) {
       cleanups.pop()?.();
@@ -648,11 +661,83 @@ export function applyElementsSurfaceChrome({ theme, device, expertise }: Element
 /**
  * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
  */
-export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): { mobile: boolean } {
-  reactHostPort.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise }), [device, expertise, theme]);
+export function useElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): { mobile: boolean } {
+  reactHostPort.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise, compact }), [compact, device, expertise, theme]);
 
   return { mobile: device === "mobile" };
 }
+
+// #region 🎛️UiChromeCompact
+/** @emoji 🎛️ localStorage key for icon-only button/toggle chrome. */
+export const UI_CHROME_COMPACT_STORAGE_KEY = "semio.ui.compact";
+
+/** @emoji 🎛️ Reads whether compact chrome is enabled from localStorage. */
+export function readStoredUiChromeCompact(): boolean {
+  if (typeof localStorage === "undefined") return false;
+  return localStorage.getItem(UI_CHROME_COMPACT_STORAGE_KEY) === "true";
+}
+
+/** @emoji 🎛️ Persists compact chrome preference to localStorage. */
+export function writeStoredUiChromeCompact(compact: boolean): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_COMPACT_STORAGE_KEY, compact ? "true" : "false");
+}
+
+const UiChromeCompactContext = reactHostPort.createContext<boolean | null>(null);
+
+let _uiChromeCompactProvider: (() => boolean) | null = null;
+
+/** @emoji 🎛️ Registers the active compact-chrome resolver for non-React consumers. */
+export function setUiChromeCompactProvider(fn: () => boolean): void {
+  _uiChromeCompactProvider = fn;
+}
+
+/** @emoji 🎛️ True when global compact chrome hides inline button/toggle labels. */
+export function useUiChromeCompact(): boolean {
+  const contextValue = reactHostPort.useContext(UiChromeCompactContext);
+  if (contextValue !== null) return contextValue;
+  return _uiChromeCompactProvider ? _uiChromeCompactProvider() : readStoredUiChromeCompact();
+}
+
+/** @emoji 🎛️ Supplies compact-chrome state to buttons and toggles in the subtree. */
+export function UiChromeCompactProvider({ compact, children }: { readonly compact: boolean; readonly children: React.ReactNode }): React.ReactElement {
+  reactHostPort.useEffect(() => {
+    setUiChromeCompactProvider(() => compact);
+    return () => setUiChromeCompactProvider(() => readStoredUiChromeCompact());
+  }, [compact]);
+  return <UiChromeCompactContext.Provider value={compact}>{children}</UiChromeCompactContext.Provider>;
+}
+
+/** @emoji 🏷️ Maps shell control ids (`ui.*`) to sketchpad i18n keys for inline labels. */
+export function resolveControlLabelId(id: string): string {
+  if (id.startsWith("ui.nav.")) {
+    const segment = id.slice("ui.nav.".length);
+    if (segment === "back" || segment === "forward" || segment === "up") {
+      return `semio.sketchpad.navbar.${segment}`;
+    }
+  }
+  if (id === "ui.search.toggle" || id === "ui.find.toggle") {
+    return "semio.sketchpad.navbar.search.open";
+  }
+  if (id.startsWith("ui.panelToggle.")) {
+    return `semio.sketchpad.navbar.panelToggle.${id.slice("ui.panelToggle.".length)}`;
+  }
+  if (id.startsWith("ui.toolbar.group.")) {
+    return `semio.sketchpad.toolbar.parent.${id.slice("ui.toolbar.group.".length)}`;
+  }
+  return id;
+}
+
+/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when compact or unset. */
+export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
+  const compact = useUiChromeCompact();
+  if (compact) return undefined;
+  if (text !== undefined) return text || undefined;
+  if (!id) return undefined;
+  return useLabel(resolveControlLabelId(id));
+}
+// #endregion 🎛️UiChromeCompact
+
 // #endregion 🌈SurfaceChrome
 
 // #region 🪁I18n Resources
@@ -5709,6 +5794,12 @@ const elementUiTranslationBundles = {
           "normal": "Mobile layout",
           "beginner": "Use the mobile layout optimized for small screens."
         }
+      }
+    },
+    "compact": {
+      "label": {
+        "normal": "Kompakt",
+        "beginner": "Schaltflaechen und Umschalter nur mit Symbol anzeigen, um Platz zu sparen"
       }
     },
     "mode": {
@@ -10777,6 +10868,12 @@ const elementUiTranslationBundles = {
         }
       }
     },
+    "compact": {
+      "label": {
+        "normal": "Compact",
+        "beginner": "Show icon-only buttons and toggles to save space"
+      }
+    },
     "mode": {
       "dev": {
         "label": {
@@ -13001,7 +13098,8 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const Comp = as;
-  const hasText = Boolean(text);
+  const inlineText = useControlInlineText(id, text);
+  const hasText = Boolean(inlineText);
 
   const actionElement = (
     <Comp
@@ -13024,7 +13122,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       {...(props as any)}
     >
       {icon}
-      {text && <span className="text-tiny whitespace-nowrap">{text}</span>}
+      {inlineText ? <span className="text-tiny whitespace-nowrap">{inlineText}</span> : null}
     </Comp>
   );
 
@@ -13143,24 +13241,27 @@ function ButtonGroupItem({
   const context = reactHostPort.useContext(ButtonGroupContext);
   const level = context.level ?? "base";
   const Comp = asChild ? Slot : "button";
+  const inlineText = useControlInlineText(id, text);
+  const ariaLabel = !inlineText && id ? useLabel(resolveControlLabelId(id)) : undefined;
 
   const buttonGroupItemElement = (
     <Comp
       data-slot="button-group-item"
       id={id}
+      aria-label={ariaLabel}
       data-level={context.level || level}
       className={cn(
         buttonGroupItemVariants({
           level: context.level || level,
         }),
-        text ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
-        text && "flex items-center gap-single py-single px-double w-auto aspect-auto",
+        inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+        inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
         className,
       )}
       {...(props as any)}
     >
       {icon || children}
-      {text && <span className="text-xs whitespace-nowrap">{text}</span>}
+      {inlineText ? <span className="text-xs whitespace-nowrap">{inlineText}</span> : null}
     </Comp>
   );
 
@@ -13214,11 +13315,10 @@ interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"
 /**
  **/
 function Button({ className, asChild = false, id, icon, text, children, ...props }: ButtonProps) {
-  const level = useLevel();
   return (
     <ButtonGroup className={className}>
-      <ButtonGroupItem id={id} asChild={asChild} text={text} {...props}>
-        {icon || children}
+      <ButtonGroupItem id={id} asChild={asChild} icon={icon} text={text} {...props}>
+        {children}
       </ButtonGroupItem>
     </ButtonGroup>
   );
@@ -13228,9 +13328,14 @@ function Button({ className, asChild = false, id, icon, text, children, ...props
  * ButtonCycle holds the data fields for a ButtonCycle record.
  **/
 function ButtonCycle<T extends string = string>({ className, id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps<T>) {
-  const level = useLevel();
   const currentIndex = items.findIndex((item) => item.value === value);
   const currentItem = currentIndex >= 0 ? items[currentIndex] : items[0];
+  const cycleText =
+    typeof currentItem?.text === "string"
+      ? currentItem.text
+      : typeof currentItem?.label === "string"
+        ? currentItem.label
+        : undefined;
 
   const handleCycle = () => {
     const nextIndex = (currentIndex + 1) % items.length;
@@ -13239,9 +13344,7 @@ function ButtonCycle<T extends string = string>({ className, id, showLabel, valu
 
   return (
     <ButtonGroup id={id} showLabel={showLabel} className={className}>
-      <ButtonGroupItem id={id} onClick={handleCycle} text={currentItem?.label} {...props}>
-        {currentItem?.icon}
-      </ButtonGroupItem>
+      <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem?.icon} text={cycleText} {...props} />
     </ButtonGroup>
   );
 }
@@ -14852,26 +14955,29 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
 function ToggleGroupItem({ className, id, icon, text, action, ...props }: ToggleGroupItemProps) {
   const context = reactHostPort.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
+  const inlineText = useControlInlineText(id, text);
+  const ariaLabel = !inlineText && id ? useLabel(resolveControlLabelId(id)) : undefined;
 
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
       data-slot="toggle-group-item"
       id={id}
+      aria-label={ariaLabel}
       className={cn(
         toggleVariants({
           level,
         }),
-        text
+        inlineText
           ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90"
           : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
-        (text || action) && "flex items-center gap-single py-single px-double aspect-auto",
-        text && "w-auto",
+        (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
+        inlineText && "w-auto",
         className,
       )}
       {...props}
     >
       <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{icon as React.ReactNode}</span>
-      {text && <span className="text-xs whitespace-nowrap">{text}</span>}
+      {inlineText ? <span className="text-xs whitespace-nowrap">{inlineText}</span> : null}
       {action && (
         <div
           className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", getLevelBgClass(level), text && "ml-single")}
@@ -19884,11 +19990,11 @@ export function focusActiveEngagementInput(): boolean {
   return true;
 }
 
-/** @emoji 👁 True when the window engagement chrome should render (non-empty command or pointer over the engagement zone). */
-export function windowEngagementChromeVisible(engagement: EngagementSpec | undefined, zone: { readonly hovered: boolean; readonly focused: boolean }): boolean {
+/** @emoji 👁 True when the window engagement chrome should render (non-empty command, click, or focus in the engagement zone). */
+export function windowEngagementChromeVisible(engagement: EngagementSpec | undefined, zone: { readonly activated: boolean; readonly focused: boolean }): boolean {
   if (!engagement) return false;
   if (engagement.input?.value?.trim()) return true;
-  return zone.hovered || zone.focused;
+  return zone.activated || zone.focused;
 }
 
 /** @emoji ⌨️ Routes a printable key to the active window engagement command when focus is elsewhere in the window. */
@@ -20226,9 +20332,9 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const bgClass = "bg-window";
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const [engagementZoneHovered, setEngagementZoneHovered] = reactHostPort.useState(false);
+  const [engagementActivated, setEngagementActivated] = reactHostPort.useState(false);
   const [engagementZoneFocused, setEngagementZoneFocused] = reactHostPort.useState(false);
-  const showEngagementChrome = active && windowEngagementChromeVisible(engagement, { hovered: engagementZoneHovered, focused: engagementZoneFocused });
+  const showEngagementChrome = active && windowEngagementChromeVisible(engagement, { activated: engagementActivated, focused: engagementZoneFocused });
 
   reactHostPort.useEffect(() => {
     if (!active || !engagement?.input) return;
@@ -20236,6 +20342,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     if (!root) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (!routeWindowEngagementKeydown(engagement, event)) return;
+      setEngagementActivated(true);
       event.preventDefault();
       event.stopPropagation();
     };
@@ -20245,7 +20352,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   reactHostPort.useEffect(() => {
     if (!active) {
-      setEngagementZoneHovered(false);
+      setEngagementActivated(false);
       setEngagementZoneFocused(false);
     }
   }, [active]);
@@ -20286,10 +20393,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         data-slot="window"
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
-        onPointerDownCapture={() => {
-          onActivate?.();
-          if (showEngagementChrome && engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
-        }}
+        onPointerDownCapture={() => onActivate?.()}
         className={cn(`relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden ${bgClass}`, className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
@@ -20304,24 +20408,31 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           ) : null}
           {engagement && active ? (
             <div
+              ref={engagementZoneRef}
               data-slot="window-engagement-overlay"
               data-expanded={showEngagementChrome ? "true" : undefined}
-              className="pointer-events-none absolute inset-x-0 top-0 z-window flex items-start justify-center"
+              className={cn(
+                "pointer-events-auto absolute inset-x-0 top-0 z-panel flex min-h-large flex-col items-start justify-start pl-1 pt-1",
+                !showEngagementChrome && "h-large",
+              )}
+              onPointerDownCapture={() => {
+                setEngagementActivated(true);
+                if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+              }}
             >
               <div
-                ref={engagementZoneRef}
                 data-slot="window-engagement-hover-zone"
-                className={cn(
-                  "pointer-events-auto flex w-[min(100%,28rem)] max-w-full flex-col items-stretch px-single pt-single",
-                  showEngagementChrome ? "min-h-0" : "h-medium",
-                )}
-                onPointerEnter={() => setEngagementZoneHovered(true)}
-                onPointerLeave={() => setEngagementZoneHovered(false)}
-                onFocusCapture={() => setEngagementZoneFocused(true)}
+                className="flex w-[min(100%,28rem)] max-w-[calc(100%-5rem)] min-w-0 flex-col items-stretch"
+                onFocusCapture={() => {
+                  setEngagementActivated(true);
+                  setEngagementZoneFocused(true);
+                }}
                 onBlurCapture={(event) => {
                   const next = event.relatedTarget;
                   if (next instanceof Node && engagementZoneRef.current?.contains(next)) return;
+                  if (next instanceof Element && next.closest('[data-slot="engagement-autocomplete"]')) return;
                   setEngagementZoneFocused(false);
+                  if (!engagement?.input?.value?.trim()) setEngagementActivated(false);
                 }}
               >
                 {showEngagementChrome ? <Engagement {...engagement} active /> : null}
@@ -24207,26 +24318,53 @@ if (import.meta.vitest) {
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it("Window focuses engagement input on body pointer down and routes printable keys", async () => {
-      const changes: string[] = [];
-      const { container } = render(
-        <Window
-          id="engagement-window"
-          active
-          engagement={{ input: { id: "engagement-input", value: "", placeholder: "Command", onChange: (value) => changes.push(value) } }}
-        >
-          <div data-testid="window-body">Body</div>
-        </Window>,
-      );
-      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
-      const body = screen.getByTestId("window-body");
-      field.blur();
-      expect(document.activeElement).not.toBe(field);
-      fireEvent.pointerDown(body, { bubbles: true });
-      await waitFor(() => expect(document.activeElement).toBe(field));
+    it("windowEngagementChromeVisible hides until click, focus, or draft", () => {
+      const engagement = { input: { value: "" }, status: [{ id: "s", content: "Idle" }] };
+      expect(windowEngagementChromeVisible(engagement, { activated: false, focused: false })).toBe(false);
+      expect(windowEngagementChromeVisible(engagement, { activated: true, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible({ input: { value: "box" } }, { activated: false, focused: false })).toBe(true);
+    });
+
+    it("Window routes printable keys before chrome is visible and then shows engagement", async () => {
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
+            <div data-testid="window-body">Body</div>
+          </Window>
+        );
+      };
+      const { container } = render(<Harness />);
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
       fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
-      await waitFor(() => expect(changes).toEqual(["b"]));
-      expect(document.activeElement).toBe(field);
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      expect((screen.getByPlaceholderText("Command") as HTMLInputElement).value).toBe("b");
+    });
+
+    it("Window does not show engagement on hover but opens on click and typing", async () => {
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
+            <div data-testid="window-body">Body</div>
+          </Window>
+        );
+      };
+      const { container } = render(<Harness />);
+      const zone = container.querySelector('[data-slot="window-engagement-overlay"]')!;
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      fireEvent.pointerEnter(zone);
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      fireEvent.pointerDown(zone, { bubbles: true });
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
+      await waitFor(() => expect(document.activeElement).toBe(field));
+      field.blur();
+      fireEvent.change(field, { target: { value: "" } });
+      await waitFor(() => expect(screen.queryByPlaceholderText("Command")).toBeNull());
+      fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      expect((screen.getByPlaceholderText("Command") as HTMLInputElement).value).toBe("b");
     });
 
     it("Window anchors engagement in a top overlay when active", () => {
@@ -24237,11 +24375,16 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       expect(overlay).toBeTruthy();
-      expect(overlay?.className).toContain("top-0");
-      expect(overlay?.className).toContain("items-start");
-      expect(overlay?.className).not.toContain("items-center");
-      expect(overlay?.className).toContain("z-window");
-      expect(overlay?.className).not.toContain("z-overlay");
+      expect(overlay?.className).toContain("inset-x-0");
+      expect(overlay?.className).toContain("h-large");
+      expect(overlay?.className).toContain("z-panel");
+      expect(overlay?.className).toContain("pointer-events-auto");
+      expect(overlay?.getAttribute("data-expanded")).toBeNull();
+      expect(screen.queryByText("Idle")).toBeNull();
+      fireEvent.pointerEnter(overlay!);
+      expect(overlay?.getAttribute("data-expanded")).toBeNull();
+      fireEvent.pointerDown(overlay!, { bubbles: true });
+      expect(overlay?.getAttribute("data-expanded")).toBe("true");
       expect(screen.getByText("Idle")).toBeTruthy();
     });
 
@@ -25053,6 +25196,32 @@ if (treeVitest) {
         alignment: "bottom-right",
         margin: [26, 18],
       });
+    });
+  });
+
+  describe("control chrome", () => {
+    it("shows inline labels on buttons when compact is off", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Button id="settings.compact" icon={<CheckIcon />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Compact");
+      expect(markup).toContain("aspect-auto");
+    });
+
+    it("hides inline labels on buttons when compact is on", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={true}>
+          <Button id="settings.compact" icon={<CheckIcon />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).not.toContain(">Compact<");
+    });
+
+    it("maps ui shell ids to sketchpad navbar labels", () => {
+      expect(resolveControlLabelId("ui.nav.back")).toBe("semio.sketchpad.navbar.back");
+      expect(resolveControlLabelId("ui.panelToggle.workbench")).toBe("semio.sketchpad.navbar.panelToggle.workbench");
     });
   });
 
