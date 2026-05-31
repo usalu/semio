@@ -140,6 +140,9 @@ export const DEFAULT_LOD_RANGE = { min: 0.01, max: 100_000 } as const;
 /** @emoji 📐 Default scene LOD when neither auto nor depth-variable applies. */
 export const DEFAULT_MANUAL_LOD = 100;
 
+/** @emoji 📐 Default CAD anchor for the horizontal grid / palette drop plane (matches default orbit target Z). */
+export const DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD: Vec3 = [0, 0, 40];
+
 /** @emoji 📐 Linear slider domain for log-mapped scene LOD in play measures. */
 export const PUZZLE_3D_LOD_SLIDER_MIN = 0;
 
@@ -1312,7 +1315,12 @@ export function snapCadVec3ToGridStep(position: Vec3, step: number | null | unde
   return [snapAxis(position[0]), snapAxis(position[1]), snapAxis(position[2])];
 }
 
-/** @emoji 📍 Ray–grid-plane hit in CAD: cursor vs camera through the horizontal grid (Three Y-up plane). */
+const puzzle3dGridPlaneUp = new Vector3(0, 1, 0);
+const puzzle3dGridPlaneScratch = new Plane();
+const puzzle3dGridPlaneHitScratch = new Vector3();
+const puzzle3dGridPlanePointScratch = new Vector3();
+
+/** @emoji 📍 Ray–grid-plane hit in CAD: cursor vs camera through the horizontal plane at {@link LodGridHelper} / orbit target. */
 export function puzzle3dClientToGridPlaneCad(args: {
   readonly clientX: number;
   readonly clientY: number;
@@ -1320,17 +1328,27 @@ export function puzzle3dClientToGridPlaneCad(args: {
   readonly canvas: HTMLElement;
   readonly gridSnapEnabled?: boolean;
   readonly gridStepWorld?: number | null;
+  /** @emoji 📐 Coplanar anchor in Three.js world space (orbit controls target). */
+  readonly gridPlanePointThree?: readonly [number, number, number];
+  /** @emoji 📐 Coplanar anchor in CAD when Three target is unavailable. */
+  readonly gridPlaneAnchorCad?: Vec3;
 }): Vec3 {
   const rect = args.canvas.getBoundingClientRect();
   const ndc = new Vector2(((args.clientX - rect.left) / rect.width) * 2 - 1, -((args.clientY - rect.top) / rect.height) * 2 + 1);
   const raycaster = new Raycaster();
   raycaster.setFromCamera(ndc, args.camera);
-  const plane = new Plane(new Vector3(0, 1, 0), 0);
-  const hit = new Vector3();
-  if (!raycaster.ray.intersectPlane(plane, hit)) {
-    raycaster.ray.at(80, hit);
+  if (args.gridPlanePointThree) {
+    puzzle3dGridPlanePointScratch.set(args.gridPlanePointThree[0], args.gridPlanePointThree[1], args.gridPlanePointThree[2]);
+  } else {
+    const anchorCad = args.gridPlaneAnchorCad ?? DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD;
+    const anchorThree = cadVec3ToThree(anchorCad);
+    puzzle3dGridPlanePointScratch.set(anchorThree[0], anchorThree[1], anchorThree[2]);
   }
-  const cad = threeVec3ToCad(hit);
+  puzzle3dGridPlaneScratch.setFromNormalAndCoplanarPoint(puzzle3dGridPlaneUp, puzzle3dGridPlanePointScratch);
+  if (!raycaster.ray.intersectPlane(puzzle3dGridPlaneScratch, puzzle3dGridPlaneHitScratch)) {
+    raycaster.ray.at(80, puzzle3dGridPlaneHitScratch);
+  }
+  const cad = threeVec3ToCad(puzzle3dGridPlaneHitScratch);
   return snapCadVec3ToGridStep(cad, args.gridSnapEnabled ? args.gridStepWorld : null);
 }
 
@@ -6397,6 +6415,7 @@ function DemandFrameloopKick(): null {
 /** @emoji 👻 Live grid-plane preview while a workbench object-kind drag hovers the viewport. */
 function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | undefined; readonly sceneFixture?: FixtureV1 }): React.ReactElement | null {
   const { camera, gl } = useThree();
+  const controls = useThree((state) => state.controls as { target?: Vector3 } | null);
   const lod = useLod();
   const [encodedDrag, setEncodedDrag] = reactHostPort.useState<string | null>(() => puzzle3dFixturePalettePointerDragRef.encoded);
   const [origin, setOrigin] = reactHostPort.useState<Vec3 | null>(null);
@@ -6419,6 +6438,7 @@ function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | 
       return;
     }
     const onMove = (event: PointerEvent): void => {
+      const target = controls?.target;
       const cad = puzzle3dClientToGridPlaneCad({
         clientX: event.clientX,
         clientY: event.clientY,
@@ -6426,12 +6446,13 @@ function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | 
         canvas: gl.domElement,
         gridSnapEnabled: lod.gridSnapEnabled,
         gridStepWorld: lod.gridStepWorld,
+        gridPlanePointThree: target ? [target.x, target.y, target.z] : undefined,
       });
       setOrigin(cad);
     };
     window.addEventListener("pointermove", onMove);
     return () => window.removeEventListener("pointermove", onMove);
-  }, [camera, encodedDrag, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
+  }, [camera, controls, encodedDrag, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
 
   const preview = reactHostPort.useMemo(() => {
     if (!encodedDrag || !origin) {
@@ -6463,7 +6484,7 @@ function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | 
     return null;
   }
   return (
-    <group ref={groupRef} raycast={() => null}>
+    <group ref={groupRef} raycast={() => null} renderOrder={10}>
       <MeshBody meshUrl={preview.meshUrl} style="highlighted" scale={preview.scale} />
     </group>
   );
@@ -6478,24 +6499,28 @@ function FixtureDropPointerBridge(props: {
   readonly fixtureDragDepthRef: React.MutableRefObject<number>;
 }): null {
   const { camera, gl } = useThree();
+  const controls = useThree((state) => state.controls as { target?: Vector3 } | null);
   const lod = useLod();
   const onFixtureDropRef = reactHostPort.useRef(props.onFixtureDrop);
   onFixtureDropRef.current = props.onFixtureDrop;
 
   reactHostPort.useEffect(() => {
-    puzzle3dFixtureDropPointerToCadRef.current = (clientX, clientY) =>
-      puzzle3dClientToGridPlaneCad({
+    puzzle3dFixtureDropPointerToCadRef.current = (clientX, clientY) => {
+      const target = controls?.target;
+      return puzzle3dClientToGridPlaneCad({
         clientX,
         clientY,
         camera,
         canvas: gl.domElement,
         gridSnapEnabled: lod.gridSnapEnabled,
         gridStepWorld: lod.gridStepWorld,
+        gridPlanePointThree: target ? [target.x, target.y, target.z] : undefined,
       });
+    };
     return () => {
       puzzle3dFixtureDropPointerToCadRef.current = null;
     };
-  }, [camera, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
+  }, [camera, controls, gl, lod.gridSnapEnabled, lod.gridStepWorld]);
 
   reactHostPort.useEffect(() => {
     if (!props.enabled) {
@@ -7506,6 +7531,32 @@ if (import.meta.vitest) {
       const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
       expect(placed?.meshUrl).toBe("/meshes/base.glb");
       expect(placed?.origin).toEqual([1, 2, 3]);
+    });
+    it("puzzle3dClientToGridPlaneCad uses orbit grid height not CAD Z=0", () => {
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 100_000);
+      const anchorCad: Vec3 = [0, 0, 40];
+      const anchorThree = cadVec3ToThree(anchorCad);
+      camera.position.set(anchorThree[0] + 240, anchorThree[1] + 180, anchorThree[2] + 120);
+      camera.lookAt(anchorThree[0], anchorThree[1], anchorThree[2]);
+      camera.updateMatrixWorld();
+      const canvas = document.createElement("canvas");
+      canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      const atOriginPlane = puzzle3dClientToGridPlaneCad({
+        clientX: 400,
+        clientY: 300,
+        camera,
+        canvas,
+        gridPlaneAnchorCad: [0, 0, 0],
+      });
+      const atGridPlane = puzzle3dClientToGridPlaneCad({
+        clientX: 400,
+        clientY: 300,
+        camera,
+        canvas,
+        gridPlaneAnchorCad: anchorCad,
+      });
+      expect(atGridPlane[2] - atOriginPlane[2]).toBeGreaterThan(30);
+      expect(Math.abs(atGridPlane[2] - 40)).toBeLessThan(2);
     });
     it("beginPuzzle3dFixturePalettePointerDrag commits drop on pointer up over host", () => {
       const host = document.createElement("div");

@@ -1474,7 +1474,6 @@ pub mod gql_relay {
 
     //#region 🏛️ typology
     /// @emoji 🏛️ Kit [`Typology`] — owns [`Type`] and [`Design`] entities; [`Family`] stays at kit root for port compatibility.
-    #[derive(Debug)]
     pub struct Typology {
         pub id: Id,
         pub name: RwLock<String>,
@@ -1541,6 +1540,10 @@ pub mod gql_relay {
                 Vec::new(),
             )
         }
+
+        pub async fn compute_hash(&self) -> String {
+            self.compute_entity_hash().await
+        }
     }
 
     #[Object(name = "Typology")]
@@ -1584,6 +1587,11 @@ pub mod gql_relay {
             Self::from_entities(entities).await
         }
     }
+
+    crate::file_system_node_vfs_complex_ctx!(
+        Typology,
+        crate::gql::interfaces::file_system_vfs::node_for_typology
+    );
     //#endregion 🏛️ typology
 }
 
@@ -5239,7 +5247,13 @@ pub mod kit {
             let name = entity.name.clone();
             let description = entity.description.clone();
             let (_handle, design) = self.bind_external_design_id(design_id).await;
-            let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(self), format!("type-{}", blueprint_id.as_str())).await;
+            let topo = self.ensure_default_typology().await;
+            let blueprint_type = crate::kit::r#type::Type::new(std::sync::Arc::downgrade(&topo), format!("type-{}", blueprint_id.as_str())).await;
+            topo.types.write().await.push(blueprint_type.clone());
+            self.type_weak_by_id
+                .write()
+                .await
+                .insert(blueprint_type.id.clone(), Arc::downgrade(&blueprint_type));
             let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
             let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await;
             piece.set_name(name).await;
@@ -11726,7 +11740,11 @@ pub mod kit_backbone {
                 }
                 if let Some(file_json) = r_json.get("file") {
                     if let Some(fid) = crate::kit_backbone::json_entity_id_ref(file_json) {
-                        if let Some(kit_arc) = owner.upgrade().and_then(|ty_arc| ty_arc.owner_kit.upgrade()) {
+                        if let Some(kit_arc) = owner
+                            .upgrade()
+                            .and_then(|ty_arc| ty_arc.owner_typology.upgrade())
+                            .and_then(|topo| topo.owner_kit.upgrade())
+                        {
                             let files = kit_arc.files.read().await;
                             if let Some(file) = files.iter().find(|f| f.id.as_str() == fid) {
                                 *rep.file.write().await = Some(file.clone());
@@ -13491,12 +13509,22 @@ pub mod gql {
                 ))
             }
 
+            /// @emoji 📁 Resolve a typology as a VFS node from the live kit graph.
+            pub async fn node_for_typology(
+                topo: &crate::gql_relay::Typology,
+                _ctx: &Context<'_>,
+            ) -> Option<FileSystemNodeInterface> {
+                let kit = topo.owner_kit.upgrade()?;
+                let tops = kit.typologies.read().await;
+                tops.iter().find(|t| t.id == topo.id).cloned().map(FileSystemNodeInterface::Typology)
+            }
+
             /// @emoji 📁 Resolve a kind as a VFS node from the live kit graph.
             pub async fn node_for_type(
                 ty: &crate::kit::r#type::Type,
                 _ctx: &Context<'_>,
             ) -> Option<FileSystemNodeInterface> {
-                let kit = ty.owner_kit.upgrade()?;
+                let kit = ty.owner_kit().await?;
                 let types = kit.types_flat().await;
                 types
                     .iter()
@@ -13510,7 +13538,7 @@ pub mod gql {
                 design: &crate::kit::design::Design,
                 _ctx: &Context<'_>,
             ) -> Option<FileSystemNodeInterface> {
-                let kit = design.owner_kit.upgrade()?;
+                let kit = design.owner_kit().await?;
                 let designs = kit.designs_flat().await;
                 designs
                     .iter()
@@ -13670,7 +13698,8 @@ pub mod gql {
                     FileSystemNodeInterface::Design(d) => {
                         if let Some(folder_id) = d.folder_id.read().await.clone() {
                             let kit = d.owner_kit().await?;
-                            kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                            let folder = kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned()?;
+                            Some(FileSystemNodeInterface::Folder(folder))
                         } else {
                             d.owner_typology.upgrade().map(FileSystemNodeInterface::Typology)
                         }
@@ -13678,7 +13707,8 @@ pub mod gql {
                     FileSystemNodeInterface::Type(t) => {
                         if let Some(folder_id) = t.folder_id.read().await.clone() {
                             let kit = t.owner_kit().await?;
-                            kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                            let folder = kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned()?;
+                            Some(FileSystemNodeInterface::Folder(folder))
                         } else {
                             t.owner_typology.upgrade().map(FileSystemNodeInterface::Typology)
                         }
@@ -13960,6 +13990,7 @@ pub mod gql {
                     FileSystemNodeInterface::Design(d) => d.name.read().await.clone(),
                     FileSystemNodeInterface::Type(t) => t.name.read().await.clone(),
                     FileSystemNodeInterface::Family(f) => f.name.clone(),
+                    FileSystemNodeInterface::Typology(t) => t.name.read().await.clone(),
                     FileSystemNodeInterface::Piece(p) => p.name.read().await.clone().unwrap_or_else(|| p.id.as_str().to_string()),
                     FileSystemNodeInterface::Connection(c) => c.name.read().await.clone(),
                     FileSystemNodeInterface::Representation(r) => r.name.read().await.clone(),

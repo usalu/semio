@@ -7,10 +7,10 @@ todos:
     status: completed
   - id: rust
     content: "Add Typology entity in lib.rs: Kit owns typologies, Type/Design owner_typology, computed Kit.types/designs, diff ladder, VFS, hydration; re-export GraphQL SDL"
-    status: in_progress
+    status: completed
   - id: graphql
     content: Update schema.golden.graphql (Typology type/connection/diff, Kit.typologies, Folder.typologies, owner->Typology); regenerate schema.graphql
-    status: pending
+    status: in_progress
   - id: json-openapi
     content: "Update kit.json/type.json/design.json/context + openapi: add Typology/TypologyId/typologies, type/design owning typology"
     status: pending

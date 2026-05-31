@@ -348,6 +348,11 @@ type FamilyId struct {
 	Id string `json:"id"`
 }
 
+// 🏛️TypologyId identifies a typology entity that owns types and designs.
+type TypologyId struct {
+	Id string `json:"id"`
+}
+
 // 📊PropId identifies a prop entity by ID.
 type PropId struct {
 	Id string `json:"id"`
@@ -960,6 +965,95 @@ type FamilyShallow struct {
 
 // #endregion 👪Family
 
+// #region 🏛️Typology
+
+// 🏛️Typology groups types and designs under one kit partition; families stay at kit root.
+type Typology struct {
+	Id          string      `json:"id"`
+	Name        string      `json:"name"`
+	Description *string     `json:"description,omitempty"`
+	Icon        *string     `json:"icon,omitempty"`
+	Folder      *string     `json:"folder,omitempty"`
+	Types       []Type      `json:"types,omitempty"`
+	Designs     []Design    `json:"designs,omitempty"`
+	CreatedAt   string      `json:"createdAt,omitempty"`
+	UpdatedAt   string      `json:"updatedAt,omitempty"`
+}
+
+// 🧬TypologyDiff represents a partial update to a typology and its owned types and designs.
+type TypologyDiff struct {
+	Name        *string         `json:"name,omitempty"`
+	Description *string         `json:"description,omitempty"`
+	Icon        *string         `json:"icon,omitempty"`
+	Folder      *string         `json:"folder,omitempty"`
+	Types       *TypesDiff      `json:"types,omitempty"`
+	Designs     *DesignsDiff    `json:"designs,omitempty"`
+	setFields   map[string]bool `json:"-"`
+}
+
+// 📩UnmarshalJSON deserializes TypologyDiff JSON while tracking explicit fields.
+func (d *TypologyDiff) UnmarshalJSON(data []byte) error {
+	type Alias TypologyDiff
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(d),
+	}
+	var rawMap map[string]json.RawMessage
+	if err := json.Unmarshal(data, &rawMap); err != nil {
+		return err
+	}
+	d.setFields = make(map[string]bool)
+	for key := range rawMap {
+		d.setFields[key] = true
+	}
+	return json.Unmarshal(data, aux)
+}
+
+// 🔎HasField checks whether a typology diff field was present in JSON.
+func (d *TypologyDiff) HasField(field string) bool {
+	if d.setFields == nil {
+		return false
+	}
+	return d.setFields[field]
+}
+
+// 🏛️TypologiesDiff represents batched typology additions, removals and updates.
+type TypologiesDiff struct {
+	Removed []TypologyId `json:"removed,omitempty"`
+	Updated []struct {
+		Typology TypologyId   `json:"typology"`
+		Diff     TypologyDiff `json:"diff"`
+	} `json:"updated,omitempty"`
+	Added []Typology `json:"added,omitempty"`
+}
+
+// 🪪TypologyMeta represents the scalar-only view of a typology.
+type TypologyMeta struct {
+	Id          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
+	Folder      *string `json:"folder,omitempty"`
+	CreatedAt   string  `json:"createdAt,omitempty"`
+	UpdatedAt   string  `json:"updatedAt,omitempty"`
+}
+
+// 🧾TypologyShallow represents a typology including type and design metadata.
+type TypologyShallow struct {
+	Id          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description *string        `json:"description,omitempty"`
+	Icon        *string        `json:"icon,omitempty"`
+	Folder      *string        `json:"folder,omitempty"`
+	Types       []TypeMeta     `json:"types,omitempty"`
+	Designs     []DesignMeta   `json:"designs,omitempty"`
+	CreatedAt   string         `json:"createdAt,omitempty"`
+	UpdatedAt   string         `json:"updatedAt,omitempty"`
+}
+
+// #endregion 🏛️Typology
+
 // #region 📊Prop
 
 // 📊Prop represents a quality measurement value with optional unit.
@@ -1258,6 +1352,7 @@ type ConnectorMeta struct {
 type Type struct {
 	Id        string      `json:"id"`
 	Name        string      `json:"name"`
+	Typology    TypologyId  `json:"typology"`
 	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Virtual     *bool       `json:"virtual,omitempty"`
@@ -1281,6 +1376,7 @@ type Type struct {
 // ⚒️TypeDiff represents a partial update to a type's name, representations, connectors or props.
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
+	Typology    *TypologyId     `json:"typology,omitempty"`
 	Families    []FamilyId      `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
 	Virtual     *bool           `json:"virtual,omitempty"`
@@ -1341,6 +1437,7 @@ type TypesDiff struct {
 type TypeMeta struct {
 	Id        string      `json:"id"`
 	Name        string      `json:"name"`
+	Typology    TypologyId  `json:"typology"`
 	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Virtual     *bool       `json:"virtual,omitempty"`
@@ -1359,6 +1456,7 @@ type TypeMeta struct {
 type TypeShallow struct {
 	Id        string          `json:"id"`
 	Name        string          `json:"name"`
+	Typology    TypologyId      `json:"typology"`
 	Families    []FamilyId      `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
 	Virtual     *bool           `json:"virtual,omitempty"`
@@ -1676,6 +1774,7 @@ type StatMeta struct {
 type Design struct {
 	Id        string       `json:"id"`
 	Name        string       `json:"name"`
+	Typology    TypologyId   `json:"typology"`
 	Families    []FamilyId   `json:"families,omitempty"`
 	IsAbstract  *bool        `json:"isAbstract,omitempty"`
 	Unit        *string      `json:"unit,omitempty"`
@@ -1711,6 +1810,7 @@ type CameraDiff struct {
 // ✒️DesignDiff represents a partial update to a design's name, pieces, connections or layers.
 type DesignDiff struct {
 	Name        *string          `json:"name,omitempty"`
+	Typology    *TypologyId      `json:"typology,omitempty"`
 	Families    []FamilyId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
 	Unit        *string          `json:"unit,omitempty"`
@@ -1808,6 +1908,7 @@ type DesignsDiff struct {
 type DesignMeta struct {
 	Id        string      `json:"id"`
 	Name        string      `json:"name"`
+	Typology    TypologyId  `json:"typology"`
 	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Unit        *string     `json:"unit,omitempty"`
@@ -1828,6 +1929,7 @@ type DesignMeta struct {
 type DesignShallow struct {
 	Id        string           `json:"id"`
 	Name        string           `json:"name"`
+	Typology    TypologyId       `json:"typology"`
 	Families    []FamilyId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
 	Unit        *string          `json:"unit,omitempty"`
@@ -2044,11 +2146,12 @@ func (r *RemoteKit) Close() {}
 
 // 📦Kit represents the root container for all domain entities.
 type Kit struct {
-	Id        string      `json:"id"`
+	Id          string      `json:"id"`
 	Name        string      `json:"name"`
 	Version     string      `json:"version"`
-	Types       []Type      `json:"types,omitempty"`
-	Designs     []Design    `json:"designs,omitempty"`
+	Typologies  []Typology  `json:"typologies,omitempty"`
+	Types       []Type      `json:"-"`
+	Designs     []Design    `json:"-"`
 	Tags        []Tag       `json:"tags,omitempty"`
 	Concepts    []Concept   `json:"concepts,omitempty"`
 	Families    []Family    `json:"families,omitempty"`
@@ -2084,8 +2187,7 @@ type Kit struct {
 type KitDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Version     *string         `json:"version,omitempty"`
-	Types       *TypesDiff      `json:"types,omitempty"`
-	Designs     *DesignsDiff    `json:"designs,omitempty"`
+	Typologies  *TypologiesDiff `json:"typologies,omitempty"`
 	Tags        *TagsDiff       `json:"tags,omitempty"`
 	Concepts    *ConceptsDiff   `json:"concepts,omitempty"`
 	Families    *FamiliesDiff   `json:"families,omitempty"`
@@ -2159,9 +2261,8 @@ type KitShallow struct {
 	Id        string          `json:"id"`
 	Name        string          `json:"name"`
 	Version     string          `json:"version"`
-	Types       []TypeMeta      `json:"types,omitempty"`
-	Designs     []DesignMeta    `json:"designs,omitempty"`
-	Tags        []TagMeta       `json:"tags,omitempty"`
+	Typologies  []TypologyShallow `json:"typologies,omitempty"`
+	Tags        []TagMeta         `json:"tags,omitempty"`
 	Concepts    []ConceptMeta   `json:"concepts,omitempty"`
 	Families    []FamilyShallow `json:"families,omitempty"`
 	Qualities   []QualityMeta   `json:"qualities,omitempty"`
@@ -2178,6 +2279,145 @@ type KitShallow struct {
 	Attributes  []AttributeMeta `json:"attributes,omitempty"`
 	CreatedAt   string          `json:"createdAt,omitempty"`
 	UpdatedAt   string          `json:"updatedAt,omitempty"`
+}
+
+// 🏛️KitFlattenTypesDesigns rebuilds denormalized Types and Designs from Typologies.
+func KitFlattenTypesDesigns(k *Kit) {
+	if k == nil {
+		return
+	}
+	k.Types = nil
+	k.Designs = nil
+	for ti := range k.Typologies {
+		topo := &k.Typologies[ti]
+		for i := range topo.Types {
+			t := topo.Types[i]
+			if t.Typology.Id == "" {
+				t.Typology = TypologyId{Id: topo.Id}
+			}
+			k.Types = append(k.Types, t)
+		}
+		for i := range topo.Designs {
+			d := topo.Designs[i]
+			if d.Typology.Id == "" {
+				d.Typology = TypologyId{Id: topo.Id}
+			}
+			k.Designs = append(k.Designs, d)
+		}
+	}
+}
+
+// 🏛️KitPackTypologiesFromFlat moves kit-level Types and Designs into a single default typology.
+func KitPackTypologiesFromFlat(k *Kit) {
+	if k == nil || len(k.Typologies) > 0 {
+		return
+	}
+	if len(k.Types) == 0 && len(k.Designs) == 0 {
+		return
+	}
+	topoID := Id()
+	if len(k.Types) > 0 && k.Types[0].Typology.Id != "" {
+		topoID = k.Types[0].Typology.Id
+	} else if len(k.Designs) > 0 && k.Designs[0].Typology.Id != "" {
+		topoID = k.Designs[0].Typology.Id
+	}
+	types := make([]Type, len(k.Types))
+	copy(types, k.Types)
+	designs := make([]Design, len(k.Designs))
+	copy(designs, k.Designs)
+	for i := range types {
+		types[i].Typology = TypologyId{Id: topoID}
+	}
+	for i := range designs {
+		designs[i].Typology = TypologyId{Id: topoID}
+	}
+	k.Typologies = []Typology{{
+		Id:      topoID,
+		Name:    "Default",
+		Types:   types,
+		Designs: designs,
+	}}
+	KitFlattenTypesDesigns(k)
+}
+
+// 🏛️KitEnsureTypologies guarantees Typologies exist and flat Types/Designs stay in sync.
+func KitEnsureTypologies(k *Kit) {
+	if k == nil {
+		return
+	}
+	if len(k.Typologies) == 0 {
+		KitPackTypologiesFromFlat(k)
+	}
+	KitFlattenTypesDesigns(k)
+}
+
+type kitJSON struct {
+	Id          string      `json:"id"`
+	Name        string      `json:"name"`
+	Version     string      `json:"version"`
+	Typologies  []Typology  `json:"typologies,omitempty"`
+	Tags        []Tag       `json:"tags,omitempty"`
+	Concepts    []Concept   `json:"concepts,omitempty"`
+	Families    []Family    `json:"families,omitempty"`
+	Qualities   []Quality   `json:"qualities,omitempty"`
+	Files       []File      `json:"files,omitempty"`
+	Folders     []Folder    `json:"folders,omitempty"`
+	Authors     []Author    `json:"authors,omitempty"`
+	Remote      *string     `json:"remote,omitempty"`
+	Homepage    *string     `json:"homepage,omitempty"`
+	License     *string     `json:"license,omitempty"`
+	Preview     *string     `json:"preview,omitempty"`
+	Icon        *string     `json:"icon,omitempty"`
+	Image       *string     `json:"image,omitempty"`
+	Description *string     `json:"description,omitempty"`
+	Attributes  []Attribute `json:"attributes,omitempty"`
+	CreatedAt   string      `json:"createdAt,omitempty"`
+	UpdatedAt   string      `json:"updatedAt,omitempty"`
+}
+
+// 📮MarshalJSON serializes a kit with typologies as the storage root for types and designs.
+func (k Kit) MarshalJSON() ([]byte, error) {
+	KitEnsureTypologies(&k)
+	out := kitJSON{
+		Id: k.Id, Name: k.Name, Version: k.Version, Typologies: k.Typologies,
+		Tags: k.Tags, Concepts: k.Concepts, Families: k.Families, Qualities: k.Qualities,
+		Files: k.Files, Folders: k.Folders, Authors: k.Authors, Remote: k.Remote,
+		Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon,
+		Image: k.Image, Description: k.Description, Attributes: k.Attributes,
+		CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt,
+	}
+	return json.Marshal(out)
+}
+
+// 📬UnmarshalJSON hydrates typologies and rebuilds flat Types and Designs.
+func (k *Kit) UnmarshalJSON(data []byte) error {
+	var raw kitJSON
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	k.Id = raw.Id
+	k.Name = raw.Name
+	k.Version = raw.Version
+	k.Typologies = raw.Typologies
+	k.Tags = raw.Tags
+	k.Concepts = raw.Concepts
+	k.Families = raw.Families
+	k.Qualities = raw.Qualities
+	k.Files = raw.Files
+	k.Folders = raw.Folders
+	k.Authors = raw.Authors
+	k.Remote = raw.Remote
+	k.Homepage = raw.Homepage
+	k.License = raw.License
+	k.Preview = raw.Preview
+	k.Icon = raw.Icon
+	k.Image = raw.Image
+	k.Description = raw.Description
+	k.Attributes = raw.Attributes
+	k.CreatedAt = raw.CreatedAt
+	k.UpdatedAt = raw.UpdatedAt
+	KitFlattenTypesDesigns(k)
+	return nil
 }
 
 // #endregion ⏱️Kit
@@ -2209,6 +2449,8 @@ type QualityChange = Change[Quality, QualityDiff]
 type PortChange = Change[Port, PortDiff]
 
 type FamilyChange = Change[Family, FamilyDiff]
+
+type TypologyChange = Change[Typology, TypologyDiff]
 
 type PropChange = Change[Prop, PropDiff]
 
@@ -2458,6 +2700,11 @@ func ToPortMeta(p Port) PortMeta {
 	return PortMeta{Id: p.Id, Name: p.Name, Description: p.Description, Icon: p.Icon, MaxChildren: p.MaxChildren, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
 }
 
+// 🏛️ToTypologyMeta converts a Typology to its scalar-only Meta view.
+func ToTypologyMeta(t Typology) TypologyMeta {
+	return TypologyMeta{Id: t.Id, Name: t.Name, Description: t.Description, Icon: t.Icon, Folder: t.Folder, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
 // 👪ToFamilyMeta converts a Family to its scalar-only Meta view.
 func ToFamilyMeta(f Family) FamilyMeta {
 	return FamilyMeta{Id: f.Id, Name: f.Name, Description: f.Description, Icon: f.Icon, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
@@ -2524,7 +2771,7 @@ func ToStatMeta(s Stat) StatMeta {
 
 // 🧱ToTypeMeta converts a Type to its scalar-only Meta view.
 func ToTypeMeta(t Type) TypeMeta {
-	return TypeMeta{Id: t.Id, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeMeta{Id: t.Id, Name: t.Name, Typology: t.Typology, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
@@ -2545,12 +2792,12 @@ func ToTypeShallow(t Type) TypeShallow {
 	for i, a := range t.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return TypeShallow{Id: t.Id, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Representations: representations, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeShallow{Id: t.Id, Name: t.Name, Typology: t.Typology, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Representations: representations, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 📐ToDesignMeta converts a Design to its scalar-only Meta view.
 func ToDesignMeta(d Design) DesignMeta {
-	return DesignMeta{Id: d.Id, Name: d.Name, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return DesignMeta{Id: d.Id, Name: d.Name, Typology: d.Typology, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 // 🏕️ToDesignShallow converts a Design to its Shallow overview with scalar-only nested items.
@@ -2583,7 +2830,7 @@ func ToDesignShallow(d Design) DesignShallow {
 	for i, a := range d.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return DesignShallow{Id: d.Id, Name: d.Name, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return DesignShallow{Id: d.Id, Name: d.Name, Typology: d.Typology, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 // 📦ToKitMeta converts a Kit to its scalar-only Meta view.
@@ -2593,13 +2840,21 @@ func ToKitMeta(k Kit) KitMeta {
 
 // 📦ToKitShallow converts a Kit to its Shallow overview with scalar-only nested items.
 func ToKitShallow(k Kit) KitShallow {
-	types := make([]TypeMeta, len(k.Types))
-	for i, t := range k.Types {
-		types[i] = ToTypeMeta(t)
-	}
-	designs := make([]DesignMeta, len(k.Designs))
-	for i, d := range k.Designs {
-		designs[i] = ToDesignMeta(d)
+	KitEnsureTypologies(&k)
+	typologies := make([]TypologyShallow, len(k.Typologies))
+	for i, topo := range k.Typologies {
+		types := make([]TypeMeta, len(topo.Types))
+		for j, t := range topo.Types {
+			types[j] = ToTypeMeta(t)
+		}
+		designs := make([]DesignMeta, len(topo.Designs))
+		for j, d := range topo.Designs {
+			designs[j] = ToDesignMeta(d)
+		}
+		typologies[i] = TypologyShallow{
+			Id: topo.Id, Name: topo.Name, Description: topo.Description, Icon: topo.Icon,
+			Folder: topo.Folder, Types: types, Designs: designs, CreatedAt: topo.CreatedAt, UpdatedAt: topo.UpdatedAt,
+		}
 	}
 	tags := make([]TagMeta, len(k.Tags))
 	for i, t := range k.Tags {
@@ -2633,7 +2888,7 @@ func ToKitShallow(k Kit) KitShallow {
 	for i, a := range k.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return KitShallow{Id: k.Id, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Families: families, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+	return KitShallow{Id: k.Id, Name: k.Name, Version: k.Version, Typologies: typologies, Tags: tags, Concepts: concepts, Families: families, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
 }
 
 // #endregion 🔑Meta And Shallow
@@ -3130,6 +3385,45 @@ func HashFamily(f Family) string {
 	return w.digest()
 }
 
+// 🏛️HashTypology computes SHA-256 hash of a Typology and its owned types and designs.
+func HashTypology(t Typology) string {
+	w := &hashWriter{}
+	w.writeString("Typology")
+	if t.Description != nil {
+		w.writeString("description")
+		w.writeString(*t.Description)
+	}
+	if len(t.Designs) > 0 {
+		w.writeString("designs")
+		hashes := make([]string, len(t.Designs))
+		for i, d := range t.Designs {
+			hashes[i] = HashDesign(d)
+		}
+		w.writeHashList(hashes)
+	}
+	if t.Folder != nil {
+		w.writeString("folder")
+		w.writeString(*t.Folder)
+	}
+	w.writeString("id")
+	w.writeString(t.Id)
+	if t.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*t.Icon)
+	}
+	w.writeString("name")
+	w.writeString(t.Name)
+	if len(t.Types) > 0 {
+		w.writeString("types")
+		hashes := make([]string, len(t.Types))
+		for i, ty := range t.Types {
+			hashes[i] = HashType(ty)
+		}
+		w.writeHashList(hashes)
+	}
+	return w.digest()
+}
+
 // 📊HashProp computes SHA-256 hash of a Prop entity.
 func HashProp(p Prop) string {
 	w := &hashWriter{}
@@ -3352,6 +3646,10 @@ func HashType(t Type) string {
 	if t.Location != nil {
 		w.writeString("location")
 		w.writeString(t.Location.Id)
+	}
+	if t.Typology.Id != "" {
+		w.writeString("typology")
+		w.writeString(t.Typology.Id)
 	}
 	if len(t.Representations) > 0 {
 		w.writeString("representations")
@@ -3702,6 +4000,10 @@ func HashDesign(d Design) string {
 		w.writeString("isAbstract")
 		w.writeBool(*d.IsAbstract)
 	}
+	if d.Typology.Id != "" {
+		w.writeString("typology")
+		w.writeString(d.Typology.Id)
+	}
 	if len(d.Layers) > 0 {
 		w.writeString("layers")
 		hashes := make([]string, len(d.Layers))
@@ -3787,11 +4089,11 @@ func HashKit(k Kit) string {
 		w.writeString("description")
 		w.writeString(*k.Description)
 	}
-	if len(k.Designs) > 0 {
-		w.writeString("designs")
-		hashes := make([]string, len(k.Designs))
-		for i, d := range k.Designs {
-			hashes[i] = HashDesign(d)
+	if len(k.Typologies) > 0 {
+		w.writeString("typologies")
+		hashes := make([]string, len(k.Typologies))
+		for i, topo := range k.Typologies {
+			hashes[i] = HashTypology(topo)
 		}
 		w.writeHashList(hashes)
 	}
@@ -3860,14 +4162,6 @@ func HashKit(k Kit) string {
 		hashes := make([]string, len(k.Tags))
 		for i, t := range k.Tags {
 			hashes[i] = HashTag(t)
-		}
-		w.writeHashList(hashes)
-	}
-	if len(k.Types) > 0 {
-		w.writeString("types")
-		hashes := make([]string, len(k.Types))
-		for i, t := range k.Types {
-			hashes[i] = HashType(t)
 		}
 		w.writeHashList(hashes)
 	}
@@ -4403,6 +4697,49 @@ func HashFamiliesDiff(d FamiliesDiff) string {
 	return hashCollectionDiffGeneric("FamiliesDiff", "FamilyDiffUpdate", "family",
 		func(e interface{}) string { return HashFamily(e.(Family)) },
 		func(d interface{}) string { return HashFamilyDiff(d.(FamilyDiff)) },
+		removed, updated, added)
+}
+
+func HashTypologyDiff(d TypologyDiff) string {
+	w := &hashWriter{}
+	w.writeString("TypologyDiff")
+	writeOptStringDiff(w, "description", d.Description)
+	if d.Designs != nil {
+		w.writeString("designs")
+		w.writeHash(HashDesignsDiff(*d.Designs))
+	}
+	writeOptStringDiff(w, "folder", d.Folder)
+	writeOptStringDiff(w, "icon", d.Icon)
+	writeOptStringDiff(w, "name", d.Name)
+	if d.Types != nil {
+		w.writeString("types")
+		w.writeHash(HashTypesDiff(*d.Types))
+	}
+	return w.digest()
+}
+
+func HashTypologiesDiff(d TypologiesDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Id
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Typology.Id, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("TypologiesDiff", "TypologyDiffUpdate", "typology",
+		func(e interface{}) string { return HashTypology(e.(Typology)) },
+		func(d interface{}) string { return HashTypologyDiff(d.(TypologyDiff)) },
 		removed, updated, added)
 }
 
@@ -5106,10 +5443,6 @@ func HashKitDiff(d KitDiff) string {
 		w.writeHash(HashConceptsDiff(*d.Concepts))
 	}
 	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
-	if d.Designs != nil {
-		w.writeString("designs")
-		w.writeHash(HashDesignsDiff(*d.Designs))
-	}
 	if d.Files != nil {
 		w.writeString("files")
 		w.writeHash(HashFilesDiff(*d.Files))
@@ -5127,6 +5460,10 @@ func HashKitDiff(d KitDiff) string {
 		w.writeString("families")
 		w.writeHash(HashFamiliesDiff(*d.Families))
 	}
+	if d.Typologies != nil {
+		w.writeString("typologies")
+		w.writeHash(HashTypologiesDiff(*d.Typologies))
+	}
 	writeNullableStringDiff(w, "preview", d.Preview, d.HasField("preview"))
 	if d.Qualities != nil {
 		w.writeString("qualities")
@@ -5136,10 +5473,6 @@ func HashKitDiff(d KitDiff) string {
 	if d.Tags != nil {
 		w.writeString("tags")
 		w.writeHash(HashTagsDiff(*d.Tags))
-	}
-	if d.Types != nil {
-		w.writeString("types")
-		w.writeHash(HashTypesDiff(*d.Types))
 	}
 	writeOptStringDiff(w, "version", d.Version)
 	return w.digest()
@@ -5676,10 +6009,7 @@ func AreKitDiffsEqual(a, b KitDiff) bool {
 	if a.Description != nil && *a.Description != *b.Description {
 		return false
 	}
-	if !areTypesDiffsEqual(a.Types, b.Types) {
-		return false
-	}
-	if !areDesignsDiffsEqual(a.Designs, b.Designs) {
+	if !areTypologiesDiffsEqual(a.Typologies, b.Typologies) {
 		return false
 	}
 	if !areTagsDiffsEqual(a.Tags, b.Tags) {
@@ -5907,6 +6237,40 @@ func areFamiliesDiffsEqual(a, b *FamiliesDiff) bool {
 	return true
 }
 
+func areTypologiesDiffsEqual(a, b *TypologiesDiff) bool {
+	if (a == nil) != (b == nil) {
+		return false
+	}
+	if a == nil {
+		return true
+	}
+	if len(a.Added) != len(b.Added) {
+		return false
+	}
+	for i := range a.Added {
+		if a.Added[i].Id != b.Added[i].Id {
+			return false
+		}
+	}
+	if len(a.Removed) != len(b.Removed) {
+		return false
+	}
+	for i := range a.Removed {
+		if a.Removed[i].Id != b.Removed[i].Id {
+			return false
+		}
+	}
+	if len(a.Updated) != len(b.Updated) {
+		return false
+	}
+	for i := range a.Updated {
+		if a.Updated[i].Typology.Id != b.Updated[i].Typology.Id {
+			return false
+		}
+	}
+	return true
+}
+
 func areFilesDiffsEqual(a, b *FilesDiff) bool {
 	if (a == nil) != (b == nil) {
 		return false
@@ -6011,6 +6375,8 @@ func areAuthorsDiffsEqual(a, b *AuthorsDiff) bool {
 
 // 📦GetKitDiff computes the differential between a before and after kit state.
 func GetKitDiff(before, after Kit) KitDiff {
+	KitEnsureTypologies(&before)
+	KitEnsureTypologies(&after)
 	diff := KitDiff{}
 	if before.Name != after.Name {
 		diff.Name = &after.Name
@@ -6039,13 +6405,9 @@ func GetKitDiff(before, after Kit) KitDiff {
 	if normalizeStr(before.Preview) != normalizeStr(after.Preview) {
 		diff.Preview = after.Preview
 	}
-	typesDiff := getTypesDiff(before.Types, after.Types)
-	if len(typesDiff.Added) > 0 || len(typesDiff.Removed) > 0 || len(typesDiff.Updated) > 0 {
-		diff.Types = &typesDiff
-	}
-	designsDiff := getDesignsDiff(before.Designs, after.Designs)
-	if len(designsDiff.Added) > 0 || len(designsDiff.Removed) > 0 || len(designsDiff.Updated) > 0 {
-		diff.Designs = &designsDiff
+	typologiesDiff := getTypologiesDiff(before.Typologies, after.Typologies)
+	if len(typologiesDiff.Added) > 0 || len(typologiesDiff.Removed) > 0 || len(typologiesDiff.Updated) > 0 {
+		diff.Typologies = &typologiesDiff
 	}
 	tagsDiff := getTagsDiff(before.Tags, after.Tags)
 	if len(tagsDiff.Added) > 0 || len(tagsDiff.Removed) > 0 || len(tagsDiff.Updated) > 0 {
@@ -6119,6 +6481,10 @@ func getTypeDiff(before, after Type) TypeDiff {
 		diff.Families = after.Families
 		diff.setFields["families"] = true
 	}
+	if before.Typology.Id != after.Typology.Id {
+		diff.Typology = &after.Typology
+		diff.setFields["typology"] = true
+	}
 	if !optBoolEqual(before.IsAbstract, after.IsAbstract) {
 		diff.IsAbstract = after.IsAbstract
 	}
@@ -6175,7 +6541,7 @@ func getTypeDiff(before, after Type) TypeDiff {
 }
 
 func isTypeDiffEmpty(diff TypeDiff) bool {
-	return diff.Name == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Representations == nil && diff.Props == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Typology == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Representations == nil && diff.Props == nil && diff.Attributes == nil
 }
 
 func getDesignsDiff(before, after []Design) DesignsDiff {
@@ -6216,6 +6582,9 @@ func getDesignDiff(before, after Design) DesignDiff {
 	}
 	if !areFamilyIdSlicesEqual(before.Families, after.Families) {
 		diff.Families = after.Families
+	}
+	if before.Typology.Id != after.Typology.Id {
+		diff.Typology = &after.Typology
 	}
 	if !optBoolEqual(before.IsAbstract, after.IsAbstract) {
 		diff.IsAbstract = after.IsAbstract
@@ -6285,7 +6654,7 @@ func getDesignDiff(before, after Design) DesignDiff {
 }
 
 func isDesignDiffEmpty(diff DesignDiff) bool {
-	return diff.Name == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Unit == nil && diff.Folder == nil && diff.CanScale == nil && diff.CanMirror == nil && diff.ActiveLayer == nil && diff.Location == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Pieces == nil && diff.Connections == nil && diff.Stats == nil && diff.Props == nil && diff.Layers == nil && diff.Groups == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Typology == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Unit == nil && diff.Folder == nil && diff.CanScale == nil && diff.CanMirror == nil && diff.ActiveLayer == nil && diff.Location == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Pieces == nil && diff.Connections == nil && diff.Stats == nil && diff.Props == nil && diff.Layers == nil && diff.Groups == nil && diff.Attributes == nil
 }
 
 func getTagsDiff(before, after []Tag) TagsDiff {
@@ -6523,6 +6892,70 @@ func isFamilyDiffEmpty(diff FamilyDiff) bool {
 	return diff.Name == nil && diff.Description == nil && diff.Icon == nil && diff.Ports == nil && diff.Attributes == nil
 }
 
+func getTypologiesDiff(before, after []Typology) TypologiesDiff {
+	diff := TypologiesDiff{}
+	beforeMap := make(map[string]Typology)
+	for _, t := range before {
+		beforeMap[t.Id] = t
+	}
+	afterMap := make(map[string]Typology)
+	for _, t := range after {
+		afterMap[t.Id] = t
+	}
+	for _, t := range before {
+		if _, ok := afterMap[t.Id]; !ok {
+			diff.Removed = append(diff.Removed, TypologyId{Id: t.Id})
+		}
+	}
+	for _, t := range after {
+		if _, ok := beforeMap[t.Id]; !ok {
+			diff.Added = append(diff.Added, t)
+		} else {
+			topoDiff := getTypologyDiff(beforeMap[t.Id], t)
+			if !isTypologyDiffEmpty(topoDiff) {
+				diff.Updated = append(diff.Updated, struct {
+					Typology TypologyId   `json:"typology"`
+					Diff     TypologyDiff `json:"diff"`
+				}{Typology: TypologyId{Id: t.Id}, Diff: topoDiff})
+			}
+		}
+	}
+	return diff
+}
+
+func getTypologyDiff(before, after Typology) TypologyDiff {
+	diff := TypologyDiff{}
+	diff.setFields = make(map[string]bool)
+	if before.Name != after.Name {
+		diff.Name = &after.Name
+	}
+	if normalizeStr(before.Description) != normalizeStr(after.Description) {
+		diff.Description = after.Description
+		diff.setFields["description"] = true
+	}
+	if normalizeStr(before.Icon) != normalizeStr(after.Icon) {
+		diff.Icon = after.Icon
+		diff.setFields["icon"] = true
+	}
+	if normalizeStr(before.Folder) != normalizeStr(after.Folder) {
+		diff.Folder = after.Folder
+		diff.setFields["folder"] = true
+	}
+	typesDiff := getTypesDiff(before.Types, after.Types)
+	if len(typesDiff.Added) > 0 || len(typesDiff.Removed) > 0 || len(typesDiff.Updated) > 0 {
+		diff.Types = &typesDiff
+	}
+	designsDiff := getDesignsDiff(before.Designs, after.Designs)
+	if len(designsDiff.Added) > 0 || len(designsDiff.Removed) > 0 || len(designsDiff.Updated) > 0 {
+		diff.Designs = &designsDiff
+	}
+	return diff
+}
+
+func isTypologyDiffEmpty(diff TypologyDiff) bool {
+	return diff.Name == nil && diff.Description == nil && diff.Icon == nil && diff.Folder == nil && diff.Types == nil && diff.Designs == nil
+}
+
 func getFilesDiff(before, after []File) FilesDiff {
 	diff := FilesDiff{}
 	beforeMap := make(map[string]File)
@@ -6693,6 +7126,7 @@ func isAuthorDiffEmpty(diff AuthorDiff) bool {
 
 // 📦InverseKitDiff computes the reverse diff that undoes a previously applied diff.
 func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {
+	KitEnsureTypologies(&original)
 	inverse := KitDiff{}
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
@@ -6721,13 +7155,9 @@ func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {
 	if appliedDiff.Preview != nil {
 		inverse.Preview = original.Preview
 	}
-	if appliedDiff.Types != nil {
-		typesDiff := inverseTypesDiff(original.Types, *appliedDiff.Types)
-		inverse.Types = &typesDiff
-	}
-	if appliedDiff.Designs != nil {
-		designsDiff := inverseDesignsDiff(original.Designs, *appliedDiff.Designs)
-		inverse.Designs = &designsDiff
+	if appliedDiff.Typologies != nil {
+		typologiesDiff := inverseTypologiesDiff(original.Typologies, *appliedDiff.Typologies)
+		inverse.Typologies = &typologiesDiff
 	}
 	if appliedDiff.Tags != nil {
 		tagsDiff := inverseTagsDiff(original.Tags, *appliedDiff.Tags)
@@ -7106,6 +7536,68 @@ func inversePortDiff(original Port, appliedDiff PortDiff) PortDiff {
 	if appliedDiff.Attributes != nil {
 		attrsDiff := inverseAttributesDiff(original.Attributes, *appliedDiff.Attributes)
 		inverse.Attributes = &attrsDiff
+	}
+	return inverse
+}
+
+func inverseTypologiesDiff(original []Typology, appliedDiff TypologiesDiff) TypologiesDiff {
+	inverse := TypologiesDiff{}
+	for _, added := range appliedDiff.Added {
+		inverse.Removed = append(inverse.Removed, TypologyId{Id: added.Id})
+	}
+	for _, removed := range appliedDiff.Removed {
+		for _, t := range original {
+			if t.Id == removed.Id {
+				inverse.Added = append(inverse.Added, t)
+				break
+			}
+		}
+	}
+	for _, updated := range appliedDiff.Updated {
+		for _, t := range original {
+			if t.Id == updated.Typology.Id {
+				inverseDiff := inverseTypologyDiff(t, updated.Diff)
+				inverse.Updated = append(inverse.Updated, struct {
+					Typology TypologyId   `json:"typology"`
+					Diff     TypologyDiff `json:"diff"`
+				}{Typology: TypologyId{Id: t.Id}, Diff: inverseDiff})
+				break
+			}
+		}
+	}
+	return inverse
+}
+
+func inverseTypologyDiff(original Typology, appliedDiff TypologyDiff) TypologyDiff {
+	inverse := TypologyDiff{}
+	if appliedDiff.Name != nil {
+		inverse.Name = &original.Name
+	}
+	if appliedDiff.HasField("description") {
+		inverse.Description = original.Description
+		inverse.setFields = map[string]bool{"description": true}
+	}
+	if appliedDiff.HasField("icon") {
+		inverse.Icon = original.Icon
+		if inverse.setFields == nil {
+			inverse.setFields = map[string]bool{}
+		}
+		inverse.setFields["icon"] = true
+	}
+	if appliedDiff.HasField("folder") {
+		inverse.Folder = original.Folder
+		if inverse.setFields == nil {
+			inverse.setFields = map[string]bool{}
+		}
+		inverse.setFields["folder"] = true
+	}
+	if appliedDiff.Types != nil {
+		typesDiff := inverseTypesDiff(original.Types, *appliedDiff.Types)
+		inverse.Types = &typesDiff
+	}
+	if appliedDiff.Designs != nil {
+		designsDiff := inverseDesignsDiff(original.Designs, *appliedDiff.Designs)
+		inverse.Designs = &designsDiff
 	}
 	return inverse
 }
@@ -8781,6 +9273,9 @@ func areTypesEqual(a, b Type) bool {
 	if a.Name != b.Name {
 		return false
 	}
+	if a.Typology.Id != b.Typology.Id {
+		return false
+	}
 	if normalizeStr(a.Description) != normalizeStr(b.Description) {
 		return false
 	}
@@ -8925,6 +9420,9 @@ func areRepresentationsEqual(a, b Representation) bool {
 
 func areDesignsEqual(a, b Design) bool {
 	if a.Name != b.Name {
+		return false
+	}
+	if a.Typology.Id != b.Typology.Id {
 		return false
 	}
 	if normalizeStr(a.Description) != normalizeStr(b.Description) {
@@ -9426,11 +9924,9 @@ func ApplyKitDiff(kit *Kit, diff *KitDiff) {
 	if diff.Preview != nil {
 		kit.Preview = diff.Preview
 	}
-	if diff.Types != nil {
-		applyTypesDiff(&kit.Types, diff.Types)
-	}
-	if diff.Designs != nil {
-		applyDesignsDiff(&kit.Designs, diff.Designs)
+	if diff.Typologies != nil {
+		applyTypologiesDiff(kit, diff.Typologies)
+		KitFlattenTypesDesigns(kit)
 	}
 	if diff.Tags != nil {
 		applyTagsDiff(&kit.Tags, diff.Tags)
@@ -10638,6 +11134,60 @@ func applyPortDiff(item *Port, diff *PortDiff) {
 	}
 	if diff.Attributes != nil {
 		applyAttributesDiff(&item.Attributes, diff.Attributes)
+	}
+}
+
+func applyTypologiesDiff(kit *Kit, diff *TypologiesDiff) {
+	if diff == nil || kit == nil {
+		return
+	}
+	items := &kit.Typologies
+	if diff.Removed != nil {
+		removedIds := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedIds[r.Id] = true
+		}
+		filtered := (*items)[:0]
+		for _, t := range *items {
+			if !removedIds[t.Id] {
+				filtered = append(filtered, t)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Id == u.Typology.Id {
+					applyTypologyDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
+		}
+	}
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
+}
+
+func applyTypologyDiff(item *Typology, diff *TypologyDiff) {
+	if diff.Name != nil {
+		item.Name = *diff.Name
+	}
+	if diff.HasField("description") {
+		item.Description = diff.Description
+	}
+	if diff.HasField("icon") {
+		item.Icon = diff.Icon
+	}
+	if diff.HasField("folder") {
+		item.Folder = diff.Folder
+	}
+	if diff.Types != nil {
+		applyTypesDiff(&item.Types, diff.Types)
+	}
+	if diff.Designs != nil {
+		applyDesignsDiff(&item.Designs, diff.Designs)
 	}
 }
 
@@ -15916,17 +16466,12 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 	}
 	kit.Families = families
 
-	types, err := loadTypes(db, kit.Id)
+	typologies, err := loadTypologies(db, kit.Id)
 	if err != nil {
 		return nil, err
 	}
-	kit.Types = types
-
-	designs, err := loadDesigns(db, kit.Id, types)
-	if err != nil {
-		return nil, err
-	}
-	kit.Designs = designs
+	kit.Typologies = typologies
+	KitFlattenTypesDesigns(kit)
 
 	return kit, nil
 }
@@ -16014,10 +16559,49 @@ func loadPortsForFamily(db *sql.DB, kitId, familyId string) ([]Port, error) {
 	return ports, nil
 }
 
-// 🏷️loadTypes loads all types belonging to a kit from the database
-func loadTypes(db *sql.DB, kitId string) ([]Type, error) {
+// 🏛️loadTypologies loads typologies and nested types and designs for a kit.
+func loadTypologies(db *sql.DB, kitId string) ([]Typology, error) {
+	rows, err := db.Query(`SELECT id, name, description, icon, folder_id FROM typology WHERE kit_id = ? ORDER BY ordinal`, kitId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []Typology
+	for rows.Next() {
+		var topo Typology
+		var description, icon, folderID sql.NullString
+		if err := rows.Scan(&topo.Id, &topo.Name, &description, &icon, &folderID); err != nil {
+			return nil, err
+		}
+		if description.Valid {
+			topo.Description = &description.String
+		}
+		if icon.Valid {
+			topo.Icon = &icon.String
+		}
+		if folderID.Valid {
+			topo.Folder = &folderID.String
+		}
+		types, err := loadTypes(db, topo.Id)
+		if err != nil {
+			return nil, err
+		}
+		topo.Types = types
+		designs, err := loadDesigns(db, topo.Id, types)
+		if err != nil {
+			return nil, err
+		}
+		topo.Designs = designs
+		out = append(out, topo)
+	}
+	return out, nil
+}
+
+// 🏷️loadTypes loads all types belonging to a typology from the database
+func loadTypes(db *sql.DB, typologyId string) ([]Type, error) {
 	rows, err := db.Query(`SELECT id, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at
-		FROM type WHERE kit_id = ? ORDER BY ordinal`, kitId)
+		FROM type WHERE typology_id = ? ORDER BY ordinal`, typologyId)
 	if err != nil {
 		return nil, err
 	}
@@ -16056,6 +16640,7 @@ func loadTypes(db *sql.DB, kitId string) ([]Type, error) {
 		}
 		t.CreatedAt = createdAt.String
 		t.UpdatedAt = updatedAt.String
+		t.Typology = TypologyId{Id: typologyId}
 
 		tfr, err := db.Query(`SELECT family_id FROM type_family WHERE type_id = ? ORDER BY ordinal`, t.Id)
 		if err != nil {
@@ -16082,10 +16667,10 @@ func loadTypes(db *sql.DB, kitId string) ([]Type, error) {
 	return types, nil
 }
 
-// ➕loadDesigns loads all designs belonging to a kit from the database
-func loadDesigns(db *sql.DB, kitId string, types []Type) ([]Design, error) {
+// ➕loadDesigns loads all designs belonging to a typology from the database
+func loadDesigns(db *sql.DB, typologyId string, types []Type) ([]Design, error) {
 	rows, err := db.Query(`SELECT id, name, description, icon, image, location_id, unit, created_at, updated_at
-        FROM design WHERE kit_id = ? ORDER BY ordinal`, kitId)
+        FROM design WHERE typology_id = ? ORDER BY ordinal`, typologyId)
 	if err != nil {
 		return nil, err
 	}
@@ -16115,6 +16700,7 @@ func loadDesigns(db *sql.DB, kitId string, types []Type) ([]Design, error) {
 		}
 		d.CreatedAt = createdAt.String
 		d.UpdatedAt = updatedAt.String
+		d.Typology = TypologyId{Id: typologyId}
 
 		dfr, err := db.Query(`SELECT family_id FROM design_family WHERE design_id = ? ORDER BY ordinal`, d.Id)
 		if err != nil {
@@ -16534,8 +17120,18 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 		}
 	}
 
-	for ti := range kit.Types {
-		t := kit.Types[ti]
+	KitEnsureTypologies(kit)
+	for topoIdx := range kit.Typologies {
+		topo := kit.Typologies[topoIdx]
+		if _, err := db.Exec(`INSERT INTO typology (id, ordinal, name, description, icon, folder_id, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			topo.Id, topoIdx, topo.Name, topo.Description, topo.Icon, topo.Folder, kit.Id); err != nil {
+			return fmt.Errorf("failed to insert typology %s: %w", topo.Id, err)
+		}
+		for ti := range topo.Types {
+			t := topo.Types[ti]
+			if t.Typology.Id == "" {
+				t.Typology = TypologyId{Id: topo.Id}
+			}
 		virtualVal := sql.NullInt64{}
 		if t.Virtual != nil {
 			v := int64(0)

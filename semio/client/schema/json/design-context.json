@@ -359,6 +359,19 @@
             "title": "FamilyId",
             "type": "object"
         },
+        "TypologyId": {
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "TypologyId",
+            "type": "object"
+        },
         "Vector": {
             "description": "\u2764\ufe0fContext fields for understanding a vector by an LLM.",
             "properties": {
@@ -413,6 +426,9 @@
                 }
             ],
             "default": null
+        },
+        "typology": {
+            "$ref": "#/$defs/TypologyId"
         },
         "families": {
             "items": {

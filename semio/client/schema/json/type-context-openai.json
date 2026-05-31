@@ -8,6 +8,18 @@
     "description": {
       "type": "string"
     },
+    "typology": {
+      "type": "object",
+      "description": "Id of the typology that owns this type.",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
     "families": {
       "type": "array",
       "description": "Ids of connector families this type references.",

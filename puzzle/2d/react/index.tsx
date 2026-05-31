@@ -94,9 +94,9 @@ export interface WireKind {
   name: string;
 }
 
-/** @emoji 🌀 Local vortex template on a {@link NodeKind} (perimeter angle in board space). */
-export interface NodeKindVortexTemplate {
-  readonly vortexKind: string;
+/** @emoji 🎯 Local handle template on a {@link NodeKind} (perimeter angle in board space). */
+export interface NodeKindHandleTemplate {
+  readonly handleKind: string;
   readonly angle: number;
   readonly radius?: number;
 }
@@ -111,8 +111,8 @@ export interface NodeKind {
   name: string;
   shape?: "circle" | "rectangle";
   stroke?: string;
-  /** @emoji 🌀 Local handle templates for palette / brush instantiation (`vortexKind` → instance `handleKind`). */
-  vortices?: readonly NodeKindVortexTemplate[];
+  /** @emoji 🎯 Local handle templates for palette / brush instantiation on this node kind. */
+  handles?: readonly NodeKindHandleTemplate[];
 }
 
 /** @emoji 🪢 Edge-kind catalog row (defaults for instances; richer fields reserved for future stroke). */
@@ -192,29 +192,29 @@ export function mergeKindCatalogBundleByRowId(base: KindCatalogBundle, patch: Ki
   };
 }
 
-function parseNodeKindVortexTemplates(raw: unknown): NodeKindVortexTemplate[] | undefined {
+function parseNodeKindHandleTemplates(raw: unknown): NodeKindHandleTemplate[] | undefined {
   if (!Array.isArray(raw) || raw.length === 0) {
     return undefined;
   }
-  const vortices: NodeKindVortexTemplate[] = [];
+  const handles: NodeKindHandleTemplate[] = [];
   for (const row of raw) {
     if (!row || typeof row !== "object") {
       continue;
     }
     const box = row as Record<string, unknown>;
-    const vortexKind = typeof box.vortexKind === "string" ? box.vortexKind.trim() : "";
+    const handleKind = typeof box.handleKind === "string" ? box.handleKind.trim() : "";
     const angle = box.angle;
-    if (vortexKind === "" || typeof angle !== "number" || !Number.isFinite(angle)) {
+    if (handleKind === "" || typeof angle !== "number" || !Number.isFinite(angle)) {
       continue;
     }
     const radius = box.radius;
-    vortices.push({
-      vortexKind,
+    handles.push({
+      handleKind,
       angle,
       ...(typeof radius === "number" && Number.isFinite(radius) ? { radius } : {}),
     });
   }
-  return vortices.length ? vortices : undefined;
+  return handles.length ? handles : undefined;
 }
 
 function parseNodeKindsFromFixtureJson(raw: unknown): readonly NodeKind[] | undefined {
@@ -234,7 +234,7 @@ function parseNodeKindsFromFixtureJson(raw: unknown): readonly NodeKind[] | unde
     const name = typeof box.name === "string" ? box.name.trim() : id;
     const shapeRaw = box.shape;
     const shape = shapeRaw === "circle" || shapeRaw === "rectangle" ? shapeRaw : undefined;
-    const vortices = parseNodeKindVortexTemplates(box.vortices);
+    const handles = parseNodeKindHandleTemplates(box.handles);
     nodes.push({
       id,
       name,
@@ -244,7 +244,7 @@ function parseNodeKindsFromFixtureJson(raw: unknown): readonly NodeKind[] | unde
       ...(typeof box.icon === "string" && box.icon.trim() !== "" ? { icon: box.icon.trim() } : {}),
       ...(box.defaultShapeProps && typeof box.defaultShapeProps === "object" ? { defaultShapeProps: box.defaultShapeProps as Record<string, unknown> } : {}),
       ...(typeof box.defaultHandleKind === "string" && box.defaultHandleKind.trim() !== "" ? { defaultHandleKind: box.defaultHandleKind.trim() } : {}),
-      ...(vortices ? { vortices } : {}),
+      ...(handles ? { handles } : {}),
     });
   }
   return nodes.length ? nodes : undefined;
@@ -346,11 +346,11 @@ function serializeKindCatalogBundle(bundle: KindCatalogBundle): string {
       if (e.defaultHandleKind != null && String(e.defaultHandleKind).trim() !== "") {
         row.defaultHandleKind = String(e.defaultHandleKind).trim();
       }
-      if (e.vortices?.length) {
-        row.vortices = e.vortices.map((v) => ({
-          vortexKind: v.vortexKind,
-          angle: v.angle,
-          ...(v.radius !== undefined ? { radius: v.radius } : {}),
+      if (e.handles?.length) {
+        row.handles = e.handles.map((h) => ({
+          handleKind: h.handleKind,
+          angle: h.angle,
+          ...(h.radius !== undefined ? { radius: h.radius } : {}),
         }));
       }
       return row;
@@ -1709,12 +1709,12 @@ export function puzzle2dRectangleHandleAngleFromCadPoint(x: number, y: number): 
   return Math.atan2(-x, -y);
 }
 
-/** @emoji 🌀 Builds fixture handles for a new node from {@link NodeKind.vortices} templates. */
-export function puzzle2dFixtureHandlesFromNodeKindVortices(nodeId: string, vortices: readonly NodeKindVortexTemplate[]): Puzzle2dFixtureHandleV1[] {
-  return vortices.map((entry, index) => ({
-    id: `${nodeId}:v${index}`,
+/** @emoji 🎯 Builds fixture handles for a new node from {@link NodeKind.handles} templates. */
+export function puzzle2dFixtureHandlesFromNodeKind(nodeId: string, templates: readonly NodeKindHandleTemplate[]): Puzzle2dFixtureHandleV1[] {
+  return templates.map((entry, index) => ({
+    id: `${nodeId}:h${index}`,
     angle: entry.angle,
-    handleKind: entry.vortexKind,
+    handleKind: entry.handleKind,
     ...(entry.radius !== undefined ? { radius: entry.radius } : {}),
   }));
 }
@@ -6416,7 +6416,7 @@ if (puzzle2dVitest) {
       expect(parsed?.nodes[1]).toMatchObject({ id: "r", nodeKind: "semio.kit.node.b" });
     });
 
-    it("parses node-kind vortices from fixture meta.kindCatalogs", () => {
+    it("parses node-kind handle templates from fixture meta.kindCatalogs", () => {
       const catalogs = fixtureMetaKindCatalogBundle({
         meta: {
           kindCatalogs: {
@@ -6424,22 +6424,22 @@ if (puzzle2dVitest) {
               {
                 id: "semio.kit.node.capsule",
                 name: "Capsule",
-                vortices: [{ angle: 0.805, radius: 3, vortexKind: "semio.kit.handle.door" }],
+                handles: [{ angle: 0.805, radius: 3, handleKind: "semio.kit.handle.door" }],
               },
             ],
           },
         },
       });
-      expect(catalogs?.nodes?.[0]?.vortices).toEqual([{ angle: 0.805, radius: 3, vortexKind: "semio.kit.handle.door" }]);
+      expect(catalogs?.nodes?.[0]?.handles).toEqual([{ angle: 0.805, radius: 3, handleKind: "semio.kit.handle.door" }]);
     });
 
     it("puzzle2dRectangleHandleAngleFromCadPoint matches board north-zero rectangle convention", () => {
       expect(puzzle2dRectangleHandleAngleFromCadPoint(-1.3, -1.25)).toBeCloseTo(0.805, 3);
     });
 
-    it("puzzle2dFixtureHandlesFromNodeKindVortices maps vortexKind to handleKind", () => {
-      const handles = puzzle2dFixtureHandlesFromNodeKindVortices("n1", [{ angle: 1.2, radius: 3, vortexKind: "semio.kit.handle.a" }]);
-      expect(handles).toEqual([{ angle: 1.2, handleKind: "semio.kit.handle.a", id: "n1:v0", radius: 3 }]);
+    it("puzzle2dFixtureHandlesFromNodeKind maps templates to fixture handles", () => {
+      const handles = puzzle2dFixtureHandlesFromNodeKind("n1", [{ angle: 1.2, radius: 3, handleKind: "semio.kit.handle.a" }]);
+      expect(handles).toEqual([{ angle: 1.2, handleKind: "semio.kit.handle.a", id: "n1:h0", radius: 3 }]);
     });
 
     it("mergeKindCatalogBundleByRowId overlays rows by id", () => {
@@ -9107,6 +9107,28 @@ if (puzzle2dReactVitest) {
       expect(descriptor.nodes.length).toBe(fixture!.nodes.length);
       expect(descriptor.edges.length).toBe(fixture!.edges.length);
       expect(descriptor.handles.length).toBeGreaterThan(fixture!.nodes.length);
+    });
+
+    it("nakagin fixture encodes edge vector paths at play overview zoom in wasm", async () => {
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
+      expect(fixture).toBeTruthy();
+      await ensurePuzzle2dWasmLoaded();
+      const descriptor = buildPuzzle2dSceneDescriptor(puzzle2dFixtureSceneMarkers(fixture!));
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test", width: 1200, height: 800 });
+      syncPuzzle2dScene(renderer, descriptor);
+      const cam = fixture!.camera ?? { x: 0, y: 0, zoom: 0.2407 };
+      renderer.setCameraSilent(cam.x, cam.y, cam.zoom);
+      renderer.setSize(1200, 800, 1);
+      (renderer as { pushSceneToWasmDriver(): void }).pushSceneToWasmDriver();
+      const withEdges = renderer.session.encodedSceneHint();
+      const stripped = JSON.parse((renderer as { descriptorJsonForWasmHost(): string }).descriptorJsonForWasmHost());
+      stripped.edges = [];
+      renderer.session.syncDescriptorJson(JSON.stringify(stripped));
+      const withoutEdges = renderer.session.encodedSceneHint();
+      expect(withEdges).toBeGreaterThan(withoutEdges);
+      expect(withEdges - withoutEdges).toBeGreaterThan(100);
+      renderer.dispose();
     });
 
     it("createPuzzle2dHostMount registers React 19 error reporters on the host root", () => {

@@ -12360,16 +12360,6 @@ function sketchpadVfsFileNodeKindId(rsKind: string): string {
 	return SKETCHPAD_RS_FILE_NODE_KIND_TO_VFS[rsKind] ?? "file";
 }
 
-function sketchpadVfsEntityId(kind: string, id: string): string {
-	return `${kind}:${id}`;
-}
-
-function sketchpadParseVfsEntityId(nodeId: string): { readonly kind: string; readonly id: string } | null {
-	const slash = nodeId.indexOf(":");
-	if (slash < 0) return null;
-	return { kind: nodeId.slice(0, slash), id: nodeId.slice(slash + 1) };
-}
-
 function sketchpadRsVfsParentRef(
 	parentId: string,
 	root: VirtualFileSystemNodeRecord,
@@ -12468,7 +12458,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			const slash = path.lastIndexOf("/");
 			const name = slash >= 0 ? path.slice(slash + 1) : path;
 			rows.push({
-				id: sketchpadVfsEntityId("folder", id),
+				id,
 				fileNodeKindId: "folder",
 				name,
 				path,
@@ -12482,13 +12472,15 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			if (typeof type !== "object" || type === null || !("id" in type)) continue;
 			const t = type as Type;
 			const typePath = `/${t.name ?? t.id}`;
+			const typeHasChildren =
+				(t.representations?.length ?? 0) > 0 || (t.ports?.length ?? 0) > 0 || (t.connectors?.length ?? 0) > 0;
 			rows.push({
-				id: sketchpadVfsEntityId("type", t.id),
+				id: String(t.id),
 				fileNodeKindId: "type",
 				name: t.name ?? t.id,
 				path: typePath,
 				parentId: kitId,
-				hasChildren: false,
+				hasChildren: typeHasChildren,
 				navigateUri: `/kits/${kitId}/types/${t.id}`,
 				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("type", { path: typePath }),
 			});
@@ -12498,7 +12490,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			const d = design as Design;
 			const designPath = `/${d.name ?? d.id}`;
 			rows.push({
-				id: sketchpadVfsEntityId("design", d.id),
+				id: String(d.id),
 				fileNodeKindId: "design",
 				name: d.name ?? d.id,
 				path: designPath,
@@ -12514,7 +12506,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			if (!id) continue;
 			const filePath = `/${sketchpadKitDiagramFileLabel(row)}`;
 			rows.push({
-				id: sketchpadVfsEntityId("file", id),
+				id,
 				fileNodeKindId: "file",
 				name: sketchpadKitDiagramFileLabel(row),
 				path: filePath,
@@ -12526,17 +12518,15 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 		}
 		return rows;
 	}
-	const parsed = sketchpadParseVfsEntityId(parentId);
-	if (parsed?.kind === "design") {
-		const design = findDesignInKit(kit, parsed.id);
-		if (!design) return [];
+	const design = findDesignInKit(kit, parentId);
+	if (design) {
 		const out: VirtualFileSystemNodeRecord[] = [];
 		for (const piece of design.pieces ?? []) {
 			if (typeof piece !== "object" || piece === null || !("id" in piece)) continue;
 			const p = piece as { id: string; name?: string };
 			const piecePath = `/${design.name ?? design.id}/${p.name ?? p.id}`;
 			out.push({
-				id: sketchpadVfsEntityId("piece", p.id),
+				id: String(p.id),
 				fileNodeKindId: "piece",
 				name: p.name ?? p.id,
 				path: piecePath,
@@ -12550,7 +12540,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			if (!c.id) continue;
 			const connectionPath = `/${design.name ?? design.id}/${c.description ?? c.id}`;
 			out.push({
-				id: sketchpadVfsEntityId("connection", c.id),
+				id: c.id,
 				fileNodeKindId: "connection",
 				name: c.description ?? c.id,
 				path: connectionPath,
@@ -13598,7 +13588,12 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		const kitId = route.kitId;
 		if (!kitId) return Promise.resolve([]);
 		const store = this.getKitStore(kitId);
-		if (!(store instanceof SemioJsKitStore)) return Promise.resolve([]);
+		if (!store) return Promise.resolve([]);
+		if (!(store instanceof SemioJsKitStore)) {
+			const rows = sketchpadKitVfsChildren(store.getSnapshot().kit, parentId);
+			this.rememberVfsNodes(scope, rows, route);
+			return Promise.resolve(rows);
+		}
 		const root = this.getRoot(scope);
 		const parentRef = sketchpadRsVfsParentRef(parentId, root, route, this.vfsMetaForScope(scope));
 		return fetchSemioFileSystemChildren(store.jsStore, parentRef).then((children) => {
@@ -14843,11 +14838,12 @@ if (import.meta.vitest) {
 			platform.uri = `/kits/${kitId}`;
 			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), [kitId]);
 			const vfs = new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform);
+			await new Promise<void>((resolve) => setTimeout(resolve, 0));
 			const snap = vfs.buildSnapshot();
 			expect(snap.rows.some((row) => row.id === kitId && row.fileNodeKindId === "kit")).toBe(true);
-			expect(snap.rows.some((row) => row.id === `type:${typeId}`)).toBe(true);
-			expect(snap.rows.some((row) => row.id === `design:${designId}` && row.navigateUri?.includes(`/designs/${designId}`))).toBe(true);
-			expect(snap.rows.some((row) => row.id === `folder:${folderId}`)).toBe(true);
+			expect(snap.rows.some((row) => row.id === typeId)).toBe(true);
+			expect(snap.rows.some((row) => row.id === designId && row.navigateUri?.includes(`/designs/${designId}`))).toBe(true);
+			expect(snap.rows.some((row) => row.id === folderId)).toBe(true);
 			ctrl.dispose();
 		});
 	});

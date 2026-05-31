@@ -47,6 +47,19 @@
             "title": "FamilyId",
             "type": "object"
         },
+        "TypologyId": {
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "TypologyId",
+            "type": "object"
+        },
         "Connector": {
             "description": "Context fields for understanding a connector by an LLM.",
             "properties": {
@@ -204,6 +217,9 @@
                 }
             ],
             "default": null
+        },
+        "typology": {
+            "$ref": "#/$defs/TypologyId"
         },
         "families": {
             "items": {

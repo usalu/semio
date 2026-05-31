@@ -410,6 +410,20 @@
             "title": "FamilyId",
             "type": "object"
         },
+        "TypologyId": {
+            "description": "Reference to a kit typology by id.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "TypologyId",
+            "type": "object"
+        },
         "Vector": {
             "description": "\ud83d\udc9bDirection vector in 3D space with x, y and z components.",
             "properties": {
@@ -475,6 +489,9 @@
             "format": "date-time",
             "title": "Updated",
             "type": "string"
+        },
+        "typology": {
+            "$ref": "#/$defs/TypologyId"
         },
         "families": {
             "items": {
