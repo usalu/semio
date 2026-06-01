@@ -1,9 +1,9 @@
 {
   "title": "Projektetage Column Text Morph",
   "emoji": "🏷",
-  "status": "open",
+  "status": "closed",
   "description": "Fix projektetage tiles-to-text transition: all column tiles should morph into one shared label per column (not first tile to text then text to stack). Use column ghost bridge slide and columnMorphId labels.",
-  "summary": "Fixed catalogue tiles→labels transition so each column merges into one shared text morph instead of the first tile becoming text then moving.\n\n- Renderer: when `columnMorphTiles` is set, render hidden per-column ghost slots (`columnMorphId`) alongside tiles on the focus arrangement; `columnGhostsOnly` shows only those ghosts (tiles omitted).\n- Projektetage: added `catalogue-column-ghosts` bridge arrangement; labels use `columnMorphId` only (removed `morphColumnGroups` per-tile expansion).\n- Tests and AGENTS.md updated. Verified on :6050: focus has 10 tiles + 3 hidden column ghosts; ghosts slide has 3 shown ghosts; labels slide has 3 `catalogue--column--*` ids.",
+  "summary": "Removed the `catalogue-column-ghosts` bridge arrangement (11 slides again). Column→label morph is direct: `catalogue-focus` keeps hidden `columnMorphId` ghosts alongside tiles; `catalogue-labels` uses the same ids on label slots so reveal.js morphs ghost→label in one step without a per-tile or bridge slide.",
   "goal": "🎯framework",
   "sessions": [
     "⚪9fa3ba0d4a9648759940cf9e24f7fdb0",

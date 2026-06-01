@@ -266,20 +266,6 @@ const mediaThought: Thought = {
 			],
 		},
 		{
-			id: "catalogue-column-ghosts",
-			dispositions: [
-				{
-					participantId: "catalogue",
-					emphasis: "active",
-					split: {
-						tiles: CATALOGUE_FOCUS_TILES,
-						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
-						columnGhostsOnly: true,
-					},
-				},
-			],
-		},
-		{
 			id: "catalogue-labels",
 			dispositions: [
 				{
@@ -346,7 +332,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(12);
+			expect(countArrangements(deck)).toBe(11);
 		});
 
 		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
@@ -387,11 +373,14 @@ if (import.meta.vitest) {
 			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("bridges focus to labels with column ghosts and stacked columnMorphId targets", () => {
+		it("morphs focus tiles to labels via columnMorphId without a bridge arrangement", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
+			const arrangementIds = media?.arrangements.map((arrangement) => arrangement.id) ?? [];
+			expect(arrangementIds).not.toContain("catalogue-column-ghosts");
 			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
 			expect(targets).toHaveLength(3);
+			expect(targets.every((target) => target.columnKey !== undefined)).toBe(true);
 			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
 			expect(labels?.dispositions[0]?.morphColumnGroups).toBeUndefined();
 			const ys = targets.map((target) => target.position.y);
@@ -400,9 +389,6 @@ if (import.meta.vitest) {
 			expect(media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columnMorphTiles).toBe(
 				true,
 			);
-			expect(
-				media?.arrangements.find((a) => a.id === "catalogue-column-ghosts")?.dispositions[0]?.split?.columnGhostsOnly,
-			).toBe(true);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

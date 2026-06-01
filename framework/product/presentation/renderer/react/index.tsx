@@ -1528,16 +1528,6 @@ if (import.meta.vitest) {
 										],
 									},
 									{
-										id: "ghosts",
-										dispositions: [
-											{
-												participantId: "catalogue",
-												emphasis: "active",
-												split: { tiles, columns, columnGhostsOnly: true },
-											},
-										],
-									},
-									{
 										id: "labels",
 										dispositions: [
 											{
@@ -1567,13 +1557,10 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const ghosts = container.querySelector('section[title="ghosts"]');
-			expect(ghosts?.querySelectorAll(".presentation-figure-tile-frame").length).toBe(0);
-			expect(ghosts?.querySelectorAll(".presentation-column-morph-slot--ghost--shown").length).toBe(0);
-			expect(
-				ghosts?.querySelectorAll(".presentation-column-morph-slot--ghost.presentation-column-morph-slot--shown")
-					.length,
-			).toBe(2);
+			const focusGhosts = container
+				.querySelector('section[title="focus"]')
+				?.querySelectorAll(".presentation-column-morph-slot--ghost.presentation-column-morph-slot--hidden");
+			expect(focusGhosts?.length).toBe(2);
 			const labels = container.querySelector('section[title="labels"]');
 			const labelMorphIds = [...labels!.querySelectorAll(".presentation-column-morph-slot--label")].map((element) =>
 				element.getAttribute("data-id"),

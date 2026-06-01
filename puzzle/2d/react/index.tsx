@@ -2840,24 +2840,34 @@ export class Puzzle2dRenderer {
     }
     const nextSnapshot = createSelectionSnapshot(new Set(ids));
     const selectionUnchanged = puzzle2dSelectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot());
+    const hadPreselect = !preselectSnapshotsEqual(this.preselectStore.getSnapshot(), PUZZLE_2D_PRESELECT_EMPTY);
+    if (hadPreselect) {
+      this.preselectIds = new Set();
+      this.preselectRemovedIds = new Set();
+      this.preselectStore.setSnapshot(PUZZLE_2D_PRESELECT_EMPTY, preselectSnapshotsEqual);
+    }
     if (!selectionUnchanged) {
       this.selectionIds = new Set(ids);
-      this.syncSelectionChromeToSceneObjectsIfNeeded();
       this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
     }
-    if (!preselectSnapshotsEqual(this.preselectStore.getSnapshot(), PUZZLE_2D_PRESELECT_EMPTY)) {
-      this.syncPreselectionSilent(PUZZLE_2D_PRESELECT_EMPTY);
+    if (!selectionUnchanged || hadPreselect) {
+      this.syncSelectionChromeToSceneObjectsIfNeeded();
     }
-    if (selectionUnchanged) {
+    if (selectionUnchanged && !hadPreselect) {
       return;
     }
     if (this.wasmSessionCallBlockedForReentry()) {
       return;
     }
     try {
-      this.session.setSelectionIdsJsonSilent(JSON.stringify(nextSnapshot.ids));
+      if (!selectionUnchanged) {
+        this.session.setSelectionIdsJsonSilent(JSON.stringify(nextSnapshot.ids));
+      }
+      if (hadPreselect) {
+        this.session.setPreselectStateJsonSilent(JSON.stringify(PUZZLE_2D_PRESELECT_EMPTY));
+      }
     } catch (err) {
-      console.error("[DEBUG] setSelectionIdsJsonSilent failed", err);
+      console.error("[DEBUG] applySelectionFromPeerSilent failed", err);
     }
     this.scheduleInputInvalidate();
   }
@@ -5553,6 +5563,35 @@ if (puzzle2dVitest) {
       expect(rendererA.selection.getSnapshot().ids).toEqual(["shared"]);
       expect(rendererB.selection.getSnapshot().ids).toEqual(["shared"]);
       expect(syncDescriptorJson).not.toHaveBeenCalled();
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("clears stale peer preselect before applying committed deselect chrome", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const nodeA = new Puzzle2dSceneNode({ id: "a", radius: 28, x: 0, y: 0 });
+      const nodeB = new Puzzle2dSceneNode({ id: "b", radius: 28, x: 80, y: 0 });
+      const peerA = new Puzzle2dSceneNode({ id: "a", radius: 28, x: 0, y: 0 });
+      const peerB = new Puzzle2dSceneNode({ id: "b", radius: 28, x: 80, y: 0 });
+      rendererA.scene.add(nodeA).add(nodeB);
+      rendererB.scene.add(peerA).add(peerB);
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "preselect", payload: { ids: ["a", "b"], removedIds: [] } }]));
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "select", payload: { ids: ["a", "b"] } }]));
+      expect(rendererB.selection.getSnapshot().ids).toEqual(["a", "b"]);
+      expect(rendererB.preselection.getSnapshot()).toEqual(PUZZLE_2D_PRESELECT_EMPTY);
+      expect(peerA.selected).toBe(true);
+      expect(peerB.selected).toBe(true);
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "select", payload: { ids: [] } }]));
+      rendererB["pushSceneToWasmDriver"]();
+      expect(rendererB.selection.getSnapshot().ids).toEqual([]);
+      expect(rendererB.preselection.getSnapshot()).toEqual(PUZZLE_2D_PRESELECT_EMPTY);
+      expect(peerA.selected).toBe(false);
+      expect(peerB.selected).toBe(false);
       rendererA.dispose();
       rendererB.dispose();
     });
