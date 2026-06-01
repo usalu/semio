@@ -297,12 +297,12 @@ export interface DispositionSplit {
 	 * Tiles stay at full opacity for reveal.js position morphing; the figure hides the grid until transition.
 	 */
 	readonly concealed?: boolean;
-	/** @emoji 🎯 Column groups: {@link splitColumnBounds} for labels; one {@link columnMorphId} ghost per column (tiles keep {@link tileMorphId}). */
+	/** @emoji 🎯 Column groups: bounds for unified ghosts and per-tile column morph anchors (tiles keep {@link tileMorphId}). */
 	readonly columns?: readonly SplitColumnGroup[];
-	/** @emoji 👻 Render only column ghosts (temporary merge before {@link Disposition.morphTargets}); tiles omitted. */
+	/** @emoji 👻 Show unified column ghost slots (one per column) on this arrangement. */
 	readonly columnGhostsOnly?: boolean;
-	/** @emoji 👁 Show column ghosts over tiles on this arrangement (pair with {@link Disposition.morphTargets} on the next slide). */
-	readonly columnGhostsVisible?: boolean;
+	/** @emoji 👻 One hidden {@link columnMorphId} anchor per tile so every tile joins the column group morph into labels. */
+	readonly columnMorphTileGhosts?: boolean;
 }
 
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */

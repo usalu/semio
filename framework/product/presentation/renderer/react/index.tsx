@@ -602,6 +602,29 @@ function ColumnMorphSlotView({
 	);
 }
 
+function columnKeyForTile(columns: readonly SplitColumnGroup[], tileKey: string): string | undefined {
+	return columns.find((group) => group.tileKeys.includes(tileKey))?.key;
+}
+
+function SplitTileColumnMorphGhostView({
+	participantId,
+	tile,
+	columnKey,
+}: {
+	readonly participantId: string;
+	readonly tile: SplitTile;
+	readonly columnKey: string;
+}): ReactNode {
+	return (
+		<div
+			data-id={columnMorphId(participantId, columnKey)}
+			className="presentation-disposition-frame presentation-column-morph-tile-ghost"
+			style={dispositionFrameStyle(tile.position, undefined)}
+			role="presentation"
+		/>
+	);
+}
+
 function SplitColumnMorphGhostView({
 	participantId,
 	column,
@@ -679,10 +702,26 @@ function FigureSplitMorphView({
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
 	const columns = disposition.split?.columns ?? [];
-	const ghostsOnly = disposition.split?.columnGhostsOnly === true;
-	const ghostsShown = ghostsOnly || disposition.split?.columnGhostsVisible === true;
+	const unifiedGhosts = disposition.split?.columnGhostsOnly === true;
+	const tileColumnGhosts = disposition.split?.columnMorphTileGhosts === true;
 	return (
 		<>
+			{tileColumnGhosts
+				? tiles.map((tile) => {
+						const columnKey = columnKeyForTile(columns, tile.key);
+						if (!columnKey) {
+							return null;
+						}
+						return (
+							<SplitTileColumnMorphGhostView
+								key={`ghost-${tile.key}`}
+								participantId={disposition.participant.id}
+								tile={tile}
+								columnKey={columnKey}
+							/>
+						);
+					})
+				: null}
 			{columns.map((column) => (
 				<SplitColumnMorphGhostView
 					key={column.key}
@@ -690,20 +729,18 @@ function FigureSplitMorphView({
 					column={column}
 					tiles={tiles}
 					embodiment={embodiment}
-					shown={ghostsShown}
+					shown={unifiedGhosts}
 				/>
 			))}
-			{ghostsOnly
-				? null
-				: tiles.map((tile) => (
-						<FigureTileView
-							key={tile.key}
-							participantId={disposition.participant.id}
-							tile={tile}
-							embodiment={embodiment}
-							defaultEmphasis={disposition.emphasis}
-						/>
-					))}
+			{tiles.map((tile) => (
+				<FigureTileView
+					key={tile.key}
+					participantId={disposition.participant.id}
+					tile={tile}
+					embodiment={embodiment}
+					defaultEmphasis={disposition.emphasis}
+				/>
+			))}
 		</>
 	);
 }
@@ -1460,10 +1497,28 @@ if (import.meta.vitest) {
 												split: {
 													tiles,
 													columns: [
-														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"] },
-														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"] },
+														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"], labelLine: "Rippendecke" },
+														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "Unterzug" },
 													],
-													columnGhostsVisible: true,
+													columnMorphTileGhosts: true,
+												},
+											},
+										],
+									},
+									{
+										id: "merge",
+										dispositions: [
+											{
+												participantId: "catalogue",
+												emphasis: "active",
+												split: {
+													tiles,
+													columns: [
+														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"], labelLine: "Rippendecke" },
+														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "Unterzug" },
+													],
+													columnGhostsOnly: true,
+													columnMorphTileGhosts: true,
 												},
 											},
 										],
@@ -1499,10 +1554,12 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const focus = container.querySelector('section[title="focus"]');
-			expect(focus?.querySelectorAll(".presentation-column-morph-slot--shown").length).toBe(2);
+			expect(focus?.querySelectorAll(".presentation-column-morph-tile-ghost").length).toBe(4);
+			expect(focus?.querySelectorAll(".presentation-column-morph-slot--shown").length).toBe(0);
 			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(4);
-			const ghostCol1 = focus?.querySelector('[data-id="catalogue--column--col1"]');
-			expect(ghostCol1?.querySelector("h2.presentation-column-morph-slot-placeholder")).toBeTruthy();
+			const merge = container.querySelector('section[title="merge"]');
+			expect(merge?.querySelectorAll(".presentation-column-morph-slot--shown").length).toBe(2);
+			expect(merge?.querySelectorAll(".presentation-column-morph-tile-ghost").length).toBe(4);
 			const labels = container.querySelector('section[title="labels"]');
 			const labelCol1 = labels?.querySelector('[data-id="catalogue--column--col1"]');
 			expect(labelCol1?.classList.contains("presentation-column-morph-slot--label")).toBe(true);

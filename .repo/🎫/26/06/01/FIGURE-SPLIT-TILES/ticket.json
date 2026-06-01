@@ -1,9 +1,9 @@
 {
   "title": "Figure Split Tiles",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
-  "summary": "Reveal auto-animate needs one element per columnMorphId. Tiles keep tileMorphId; hidden column ghosts on focus/catalogue pair with visible ghosts on new catalogue-merge slide (columnGhostsOnly); merge→labels morphs ghost div to label text while tiles already faded on merge step.",
+  "summary": "Removed catalogue-merge slide. Focus uses columnGhostsVisible: one ColumnMorphSlot per column (same div\u003eh2+data-id as labels, label text in hidden h2). Tiles keep tileMorphId for catalogue→focus; CSS hides tiles under shown ghosts; focus→labels morphs ghost slot to label while tiles fade.",
   "goal": "🎯framework",
   "sessions": [
     "⚪b9f5d20ffbf54da39143e48f69536ff4",

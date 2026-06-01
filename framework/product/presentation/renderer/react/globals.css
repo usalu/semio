@@ -173,6 +173,12 @@
 	z-index: 1;
 }
 
+.reveal .presentation-column-morph-tile-ghost {
+	z-index: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
 .reveal .presentation-arrangement-canvas:has(.presentation-column-morph-slot--shown) .presentation-figure-tile-frame {
 	visibility: hidden;
 }

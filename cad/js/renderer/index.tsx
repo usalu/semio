@@ -3239,7 +3239,7 @@ function replTryParseValueInteraction(line: string, spec: InteractionSpec, state
 }
 
 function replSuggestionHaystack(s: ReplSuggestion): string {
-  return `${s.key} ${s.label} ${s.detail}`.toLowerCase();
+  return `${s.key} ${s.label} ${s.detail ?? ""}`.toLowerCase();
 }
 
 function replRankScore(query: string, s: ReplSuggestion): number {
@@ -3247,10 +3247,10 @@ function replRankScore(query: string, s: ReplSuggestion): number {
   if (!ql) return -1;
   const key = s.key.toLowerCase();
   const label = s.label.toLowerCase();
-  const detail = s.detail.toLowerCase();
+  const detail = (s.detail ?? "").toLowerCase();
   if (key.startsWith(ql)) return 4000 - key.length;
   if (label.startsWith(ql)) return 3000 - label.length;
-  if (detail.startsWith(ql)) return 2000 - detail.length;
+  if (detail && detail.startsWith(ql)) return 2000 - detail.length;
   if (replSuggestionHaystack(s).includes(ql)) return 1000;
   return -1;
 }
@@ -3271,7 +3271,7 @@ export function replCompletionSuffix(query: string, suggestion: ReplSuggestion |
   const q = query;
   const ql = q.toLowerCase();
   let best = "";
-  for (const text of [suggestion.label, suggestion.detail, suggestion.key]) {
+  for (const text of [suggestion.label, suggestion.detail, suggestion.key].filter((value): value is string => Boolean(value))) {
     if (!text.toLowerCase().startsWith(ql)) continue;
     const suffix = text.slice(q.length);
     if (suffix.length > best.length) best = suffix;
@@ -3307,7 +3307,7 @@ function replExactInteractionSuggestion(query: string, all: readonly ReplSuggest
   if (!raw) return null;
   for (const suggestion of all) {
     if (suggestion.kind !== "interaction") continue;
-    for (const text of [suggestion.key, suggestion.label, suggestion.detail]) {
+    for (const text of [suggestion.key, suggestion.label, suggestion.detail].filter((value): value is string => Boolean(value))) {
       if (text.toLowerCase() === raw) return suggestion;
     }
   }
@@ -5432,6 +5432,18 @@ if (import.meta.vitest) {
       expect(replNormalizeCommandText("box", true)).toBe("Box");
       expect(replNormalizeCommandText("Apply Number", false)).toBe("ApplyNumber");
       expect(replNormalizeCommandText("b ", false)).toBe("b");
+    });
+  });
+
+  describe("replFilterSuggestions", () => {
+    const noop = () => {};
+
+    it("ranks suggestions without optional detail", () => {
+      const rows = replFilterSuggestions("sel", [
+        { kind: "selection", key: "sel", label: "Select all", detail: undefined, onRun: noop },
+        { kind: "action", key: "box", label: "Box", onRun: noop },
+      ]);
+      expect(rows.map((row) => row.key)).toEqual(["sel"]);
     });
   });
 

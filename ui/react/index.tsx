@@ -694,6 +694,27 @@ export function writeStoredUiChromeCompact(compact: boolean): void {
 
 const UiChromeCompactContext = reactHostPort.createContext<boolean | null>(null);
 
+/** @emoji 🏷️ When `always`, inline button/toggle captions stay visible even if compact chrome is on. */
+export type UiChromeLabelPolicy = "compact" | "always";
+
+const UiChromeLabelPolicyContext = reactHostPort.createContext<UiChromeLabelPolicy>("compact");
+
+/** @emoji 🏷️ Overrides {@link useControlInlineText} for a subtree (e.g. navbar always shows captions). */
+export function UiChromeLabelPolicyProvider({
+  policy,
+  children,
+}: {
+  readonly policy: UiChromeLabelPolicy;
+  readonly children: React.ReactNode;
+}): React.ReactElement {
+  return <UiChromeLabelPolicyContext.Provider value={policy}>{children}</UiChromeLabelPolicyContext.Provider>;
+}
+
+/** @emoji 🏷️ True when inline captions should show regardless of compact chrome. */
+export function useUiChromeLabelPolicy(): UiChromeLabelPolicy {
+  return reactHostPort.useContext(UiChromeLabelPolicyContext);
+}
+
 let _uiChromeCompactProvider: (() => boolean) | null = null;
 
 /** @emoji 🎛️ Registers the active compact-chrome resolver for non-React consumers. */
@@ -732,8 +753,11 @@ export function resolveControlLabelId(id: string): string {
       return _controlLabelIdResolver(`ui.nav.${segment}`);
     }
   }
-  if (id === "ui.search.toggle" || id === "ui.find.toggle") {
+  if (id === "ui.search.toggle") {
     return _controlLabelIdResolver("ui.search.toggle");
+  }
+  if (id === "ui.find.toggle") {
+    return _controlLabelIdResolver("ui.find.toggle");
   }
   if (id.startsWith("ui.panelToggle.")) {
     return _controlLabelIdResolver(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
@@ -1607,7 +1631,7 @@ export function useLabel(id: UiTranslationKey | (string & {})): string | undefin
   const value = t(id as UiTranslationKey);
 
   if (typeof value === "string") {
-    if (value === id || isInternalChromeControlId(value)) return undefined;
+    if (isInternalChromeControlId(id) || isInternalChromeControlId(value)) return undefined;
     return value;
   }
 

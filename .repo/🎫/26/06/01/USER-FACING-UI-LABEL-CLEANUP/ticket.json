@@ -1,12 +1,13 @@
 {
   "title": "User Facing Ui Label Cleanup",
   "emoji": "🏷️",
-  "status": "closed",
+  "status": "open",
   "description": "Clean UI labels to user perspective: engagement options → Commands/toggles, no state machine lingo in user space.",
   "summary": "Added ui.engagement i18n keys; mapped legacy engagement-* ids; suppressed internal-id tooltips/humanization (fixes Engagement Possibles Toggle). Engagement chrome uses ui.engagement.* control ids. CAD editor aside hides machine suggestion sublines and uses user counts (tools/kinds).",
   "goal": "🎯semio🎯ui",
   "sessions": [
     "⚪963db0d2e1ad4acca54842b96968fea1",
-    "⚪bab7f48345a346ad8ecc0111fab5f43a"
+    "⚪bab7f48345a346ad8ecc0111fab5f43a",
+    "⚪a9b66b472ac7402cb05dfcbd819d9fb7"
   ]
 }

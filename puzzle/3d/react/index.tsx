@@ -2935,20 +2935,15 @@ function negateVec3Cad(v: Vec3): Vec3 {
   return [-v[0], -v[1], -v[2]] as Vec3;
 }
 
-function rotateVecByCadQuat(q: Quat, v: Vec3): Vec3 {
-  const out = new Vector3(v[0], v[1], v[2]).applyQuaternion(quatToThree(q));
-  return [out.x, out.y, out.z] as Vec3;
-}
-
-/** @emoji 🧭 World CAD position and direction of an object-local vortex. */
+/** @emoji 🧭 World CAD position and direction of an object-local vortex (matches {@link cadObjectLocalToThreeGroupLocal} / scene graph). */
 export function vortexWorldCadFromObject(record: Pick<ObjectRecord, "origin" | "orientation" | "vortices">, vortexIndex: number): { readonly position: Vec3; readonly direction: Vec3 } | null {
   const vortex = record.vortices[vortexIndex];
   if (!vortex) {
     return null;
   }
   const orientation = record.orientation ?? ([0, 0, 0, 1] as Quat);
-  const position = vec3Add(record.origin, rotateVecByCadQuat(orientation, vortex.position));
-  const direction = vortex.direction ? normalizeVec3Cad(rotateVecByCadQuat(orientation, vortex.direction)) : ([0, 0, -1] as Vec3);
+  const position = vec3Add(record.origin, quatRotateVec(orientation, vortex.position));
+  const direction = vortex.direction ? normalizeVec3Cad(quatRotateVec(orientation, vortex.direction)) : ([0, 0, -1] as Vec3);
   return { position, direction };
 }
 
@@ -3073,17 +3068,15 @@ export function computeBrushPlacementPose(args: {
   const scaledLocal = vec3ScaleCad(args.sourceLocalPosition, args.scale);
   if (args.useHostOrientation && args.referenceOrientationCad) {
     const orientation = args.referenceOrientationCad;
-    const rotated = rotateVecByCadQuat(orientation, scaledLocal);
-    const origin = vec3Sub(args.targetWorldPositionCad, rotated);
+    const origin = vec3Sub(args.targetWorldPositionCad, quatRotateVec(orientation, scaledLocal));
     return { origin, orientation };
   }
   const localDir = normalizeVec3Cad(args.sourceLocalDirection);
   const targetDir = normalizeVec3Cad(args.targetWorldDirectionCad);
   const desiredWorldDir = negateVec3Cad(targetDir);
   const qThree = new Quaternion().setFromUnitVectors(new Vector3(...localDir), new Vector3(...desiredWorldDir));
-  const orientation = threeQuatToCad(qThree);
-  const rotated = rotateVecByCadQuat(orientation, scaledLocal);
-  const origin = vec3Sub(args.targetWorldPositionCad, rotated);
+  const orientation: Quat = [qThree.x, qThree.y, qThree.z, qThree.w];
+  const origin = vec3Sub(args.targetWorldPositionCad, quatRotateVec(orientation, scaledLocal));
   return { origin, orientation };
 }
 
@@ -8428,10 +8421,30 @@ if (import.meta.vitest) {
       expect(brushPlacementUsesHostOrientation(target, "door tambour east", "J")).toBe(false);
       expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "J", vortexKind: "door capsule east" }, "door capsule east", "J")).toBe(true);
     });
+    it("vortexWorldCadFromObject matches scene graph world position", () => {
+      const origin: Vec3 = [10, 0, 0];
+      const orientation: Quat = [0, 0, 0.7071067811865475, -0.7071067811865475];
+      const local: Vec3 = [1, 2, 3];
+      const parent = new Group();
+      const vortex = new Group();
+      const groupLocal = cadObjectLocalToThreeGroupLocal(local, origin, orientation);
+      vortex.position.set(groupLocal[0], groupLocal[1], groupLocal[2]);
+      parent.add(vortex);
+      applyObjectPose(parent, origin, orientation, 1);
+      updateWorldMatrixChain(vortex);
+      const worldThree = new Vector3();
+      vortex.getWorldPosition(worldThree);
+      const cad = vortexWorldCadFromObject({ origin, orientation, vortices: [{ id: "v0", position: local }] }, 0);
+      expect(cad).not.toBeNull();
+      const expectedThree = cadVec3ToThree(cad!.position);
+      expect(worldThree.x).toBeCloseTo(expectedThree[0], 5);
+      expect(worldThree.y).toBeCloseTo(expectedThree[1], 5);
+      expect(worldThree.z).toBeCloseTo(expectedThree[2], 5);
+    });
     it("computeBrushPlacementPose stacks tambour bottom on rotated storey top with opposed directions", () => {
       const hostOrientation: Quat = [0, 0, 0.7071067811865475, -0.7071067811865475];
       const targetPos: Vec3 = [1, 2, 30];
-      const targetDir = normalizeVec3Cad(rotateVecByCadQuat(hostOrientation, [0, 0, 1]));
+      const targetDir = normalizeVec3Cad(quatRotateVec(hostOrientation, [0, 0, 1]));
       const pose = computeBrushPlacementPose({
         sourceLocalPosition: [0, 0, 0.9166667],
         sourceLocalDirection: [0, 0, -1],

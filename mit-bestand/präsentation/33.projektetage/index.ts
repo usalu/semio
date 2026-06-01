@@ -240,7 +240,22 @@ const mediaThought: Thought = {
 					split: {
 						tiles: CATALOGUE_FOCUS_TILES,
 						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
-						columnGhostsVisible: true,
+						columnMorphTileGhosts: true,
+					},
+				},
+			],
+		},
+		{
+			id: "catalogue-merge",
+			dispositions: [
+				{
+					participantId: "catalogue",
+					emphasis: "active",
+					split: {
+						tiles: CATALOGUE_FOCUS_TILES,
+						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
+						columnGhostsOnly: true,
+						columnMorphTileGhosts: true,
 					},
 				},
 			],
@@ -312,7 +327,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(11);
+			expect(countArrangements(deck)).toBe(12);
 		});
 
 		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
@@ -353,14 +368,17 @@ if (import.meta.vitest) {
 			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs catalogue columns into component labels with visible focus ghosts", () => {
+		it("uses merge slide and per-tile column morph ghosts into labels", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
 			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
 			const focusSplit = media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split;
-			expect(focusSplit?.columns).toHaveLength(3);
-			expect(focusSplit?.columnGhostsVisible).toBe(true);
+			expect(focusSplit?.columnMorphTileGhosts).toBe(true);
+			expect(focusSplit?.columnGhostsOnly).toBeUndefined();
+			const mergeSplit = media?.arrangements.find((a) => a.id === "catalogue-merge")?.dispositions[0]?.split;
+			expect(mergeSplit?.columnGhostsOnly).toBe(true);
+			expect(mergeSplit?.columnMorphTileGhosts).toBe(true);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {
