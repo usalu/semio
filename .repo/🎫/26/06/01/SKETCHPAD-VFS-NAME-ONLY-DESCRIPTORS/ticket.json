@@ -1,0 +1,11 @@
+{
+  "title": "Sketchpad Vfs Name Only Descriptors",
+  "emoji": "✏️",
+  "status": "closed",
+  "description": "Sketchpad virtual file system: show only the name column; remove path and node kind descriptor columns.",
+  "summary": "Sketchpad kit virtual file system schemas now use empty descriptorColumnIds so the VFS table shows only the built-in Name column (icon + node name), with no Path, Node kind, or kit metadata descriptor columns.",
+  "goal": "🎯semio🎯sketchpad",
+  "sessions": [
+    "⚪9bfde475ae554cb2953d25b5574dfb55"
+  ]
+}

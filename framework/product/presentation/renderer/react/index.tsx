@@ -1549,8 +1549,11 @@ export function flowDispositionManipulationRect(
 /** @emoji ↔️ True when a flow transform only stores pixel translate with unchanged measured size. */
 export function isFlowPixelOffsetTransform(
 	transform: DispositionPosition,
-	measured: DispositionPosition,
+	measured: DispositionPosition | undefined,
 ): boolean {
+	if (!measured) {
+		return false;
+	}
 	return transform.width === measured.width && transform.height === measured.height;
 }
 
@@ -1801,7 +1804,6 @@ const InteractiveDisposition: FC<{
 		transformed &&
 		flowLayout &&
 		transform !== undefined &&
-		measuredNatural !== null &&
 		isFlowPixelOffsetTransform(transform, measuredNatural);
 	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
 	const pinned = (transformed && !flowLayout) || flowSectionFrame;
@@ -1825,8 +1827,11 @@ const InteractiveDisposition: FC<{
 	}, [declaredRect, sectionRef]);
 
 	useLayoutEffect(() => {
-		if (declaredRect || transform) {
+		if (declaredRect) {
 			registry.registerRect(id, null);
+			return;
+		}
+		if (transform) {
 			return;
 		}
 		const section = sectionRef.current;
@@ -3349,6 +3354,7 @@ if (import.meta.vitest) {
 			const measured = { x: 0.2, y: 0.3, width: 0.25, height: 0.1 };
 			const offset = { x: 96, y: 40, width: 0.25, height: 0.1 };
 			expect(isFlowPixelOffsetTransform(offset, measured)).toBe(true);
+			expect(isFlowPixelOffsetTransform(offset, undefined)).toBe(false);
 			expect(isFlowPixelOffsetTransform({ ...offset, width: 0.3 }, measured)).toBe(false);
 			const section = document.createElement("section");
 			section.style.width = "960px";

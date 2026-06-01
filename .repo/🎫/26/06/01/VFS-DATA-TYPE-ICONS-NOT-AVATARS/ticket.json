@@ -1,0 +1,10 @@
+{
+  "title": "Vfs Data Type Icons Not Avatars",
+  "emoji": "📁",
+  "status": "open",
+  "description": "VirtualFileSystem node glyphs should render lucide file-node-kind icons instead of TableAvatar initials for schema icon ids.",
+  "goal": "🎯ui🎯react",
+  "sessions": [
+    "⚪d272e5dae8504969b10d235d183b3200"
+  ]
+}

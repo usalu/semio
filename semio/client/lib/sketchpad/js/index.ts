@@ -12424,17 +12424,17 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 			],
 		},
 	},
-	descriptorColumnIds: ["version", "kitKind", "updated", "createdBy", "path", "fileNodeKind"],
+	descriptorColumnIds: [],
 };
 
 const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
 	...SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
-	descriptorColumnIds: ["version", "kitKind", "updated", "path", "fileNodeKind"],
+	descriptorColumnIds: [],
 };
 
 const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
 	...SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
-	descriptorColumnIds: ["path", "fileNodeKind"],
+	descriptorColumnIds: [],
 };
 
 function sketchpadKitVirtualFileSystemDescriptorValues(
@@ -14370,6 +14370,12 @@ if (import.meta.vitest) {
 	});
 
 	describe("Sketchpad virtual file system", () => {
+		it("schema shows name column only (no path or node kind descriptors)", () => {
+			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.descriptorColumnIds).toEqual([]);
+			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL.descriptorColumnIds).toEqual([]);
+			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL.descriptorColumnIds).toEqual([]);
+		});
+
 		it("schema includes representation port and connector node kinds", () => {
 			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds.representation?.name).toBe("Representation");
 			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds.port?.name).toBe("Port");

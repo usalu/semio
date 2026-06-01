@@ -92,6 +92,8 @@ import {
   AlertCircle as AlertCircleIcon,
   BookOpen as BookIcon,
   Box as BoxIcon,
+  CircleDot as CircleDotIcon,
+  Component as ComponentIcon,
   Camera as CameraIcon,
   Check as CheckIcon,
   CheckIcon as CheckIconAlt,
@@ -121,11 +123,16 @@ import {
   TextSearch as FindInViewIcon,
   Hand as HandIcon,
   Lasso as LassoIcon,
+  Layout as LayoutIcon,
   LayoutGrid as LayoutGridIcon,
+  Landmark as LandmarkIcon,
+  Link as LinkIcon,
   MousePointer2 as MousePointerIcon,
   MoreHorizontal as MoreHorizontalIcon,
   FolderOpen as FolderOpenIcon,
   Plus as PlusIcon,
+  Plug as PlugIcon,
+  Puzzle as PuzzleIcon,
   Filter as FilterIcon,
   Settings2 as Settings2Icon,
   Shapes as Puzzle2dIconCatalogGlyphIcon,
@@ -133,6 +140,7 @@ import {
   Smile as Puzzle2dIconEmojiGlyphIcon,
   TriangleAlert as TriangleAlertIcon,
   GraduationCap as TutorialIcon,
+  Users as UsersIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -14231,37 +14239,55 @@ export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSyste
   return columns;
 }
 
+/** @emoji 📁 Lucide icons keyed by VFS schema `icon` ids and {@link FileNodeKind} ids. */
+const VIRTUAL_FILE_SYSTEM_ICON_BY_ID: Readonly<Record<string, LucideIcon>> = {
+  "layout-grid": LayoutGridIcon,
+  folder: FolderIcon,
+  file: DocumentIcon,
+  branch: FolderIcon,
+  leaf: DocumentIcon,
+  layout: LayoutIcon,
+  component: ComponentIcon,
+  users: UsersIcon,
+  landmark: LandmarkIcon,
+  puzzle: PuzzleIcon,
+  link: LinkIcon,
+  box: BoxIcon,
+  "circle-dot": CircleDotIcon,
+  plug: PlugIcon,
+  root: LayoutGridIcon,
+  kit: LayoutGridIcon,
+  design: LayoutIcon,
+  type: ComponentIcon,
+  family: UsersIcon,
+  typology: LandmarkIcon,
+  piece: PuzzleIcon,
+  connection: LinkIcon,
+  representation: BoxIcon,
+  port: CircleDotIcon,
+  connector: PlugIcon,
+};
+
+/** @emoji 📁 Resolves a lucide icon for a VFS schema icon id or file node kind id. */
+export function resolveVirtualFileSystemSchemaIcon(iconOrKindId: string): LucideIcon | undefined {
+  return VIRTUAL_FILE_SYSTEM_ICON_BY_ID[iconOrKindId];
+}
+
 /** @emoji 📁 Returns a lucide icon component for a generic VFS file node kind id. */
 export function virtualFileSystemKindIcon(fileNodeKindId: string): LucideIcon {
-  switch (fileNodeKindId) {
-    case "root":
-    case "kit":
-      return LayoutGridIcon;
-    case "branch":
-    case "folder":
-      return FolderIcon;
-    case "leaf":
-    case "file":
-      return DocumentIcon;
-    case "design":
-      return LayoutGridIcon;
-    case "type":
-      return LayoutGridIcon;
-    case "family":
-      return FolderIcon;
-    case "piece":
-      return DocumentIcon;
-    case "connection":
-      return DocumentIcon;
-    case "representation":
-      return DocumentIcon;
-    case "port":
-      return DocumentIcon;
-    case "connector":
-      return DocumentIcon;
-    default:
-      return DocumentIcon;
-  }
+  return resolveVirtualFileSystemSchemaIcon(fileNodeKindId) ?? DocumentIcon;
+}
+
+/** @emoji 📁 True when a VFS row `icon` value is a remote or data URL image, not a schema icon id. */
+export function isVirtualFileSystemRemoteIcon(icon: string): boolean {
+  const trimmed = icon.trim();
+  return (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("./")
+  );
 }
 
 /** @emoji 📁 DFS-flattens visible rows: only children of expanded parents in `childrenByParentId`. */
@@ -14302,12 +14328,35 @@ const VirtualFileSystemNodeGlyph: React.FC<{
   readonly fileNodeKindId: string;
   readonly icon?: string;
   readonly name: string;
-}> = ({ schema, fileNodeKindId, icon, name }) => {
+}> = ({ schema, fileNodeKindId, icon }) => {
   const kindIcon = icon ?? schema.fileNodeKinds[fileNodeKindId]?.icon;
-  if (kindIcon) return <TableAvatar name={name} icon={kindIcon} />;
+  const glyphClass = "inline-flex size-small shrink-0 items-center justify-center text-muted-foreground";
+  const schemaIcon = kindIcon ? resolveVirtualFileSystemSchemaIcon(kindIcon) : undefined;
+  if (schemaIcon) {
+    const Icon = schemaIcon;
+    return (
+      <span className={glyphClass}>
+        <Icon size={14} aria-hidden />
+      </span>
+    );
+  }
+  if (kindIcon && isVirtualFileSystemRemoteIcon(kindIcon)) {
+    return (
+      <span className={`${glyphClass} overflow-hidden rounded-sm`}>
+        <img src={kindIcon} alt="" className="size-full object-cover" />
+      </span>
+    );
+  }
+  if (kindIcon) {
+    return (
+      <span className={`${glyphClass} text-base leading-none`} aria-hidden>
+        {kindIcon}
+      </span>
+    );
+  }
   const Icon = virtualFileSystemKindIcon(fileNodeKindId);
   return (
-    <span className="inline-flex size-small shrink-0 items-center justify-center text-muted-foreground">
+    <span className={glyphClass}>
       <Icon size={14} aria-hidden />
     </span>
   );
@@ -17568,6 +17617,23 @@ if (treeVitest) {
       expect(markup).toContain("data-vfs-expand");
       expect(markup).toContain("readme.md");
       expect(markup).toContain("cursor-selectable");
+    });
+
+    it("renders file node kind lucide icons instead of avatars for schema icon ids", () => {
+      const markup = renderToStaticMarkup(
+        <VirtualFileSystem
+          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+          rows={[{ id: "root", fileNodeKindId: "root", name: "Alpha", level: 0, hasChildren: false }]}
+        />,
+      );
+      expect(markup).toContain("lucide-layout-grid");
+      expect(markup).not.toContain("avatar-fallback");
+    });
+
+    it("resolveVirtualFileSystemSchemaIcon maps sketchpad vfs icon ids", () => {
+      expect(resolveVirtualFileSystemSchemaIcon("component")).toBe(ComponentIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("circle-dot")).toBe(CircleDotIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("type")).toBe(ComponentIcon);
     });
 
     it("invokes onRowDoubleClick on double-click", async () => {
