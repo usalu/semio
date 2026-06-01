@@ -26,6 +26,8 @@ import {
   type UiTreeItemNode,
   type UiTreeSectionNode,
   type WindowBodyViewContext,
+  enforcePlaygroundWindowEngagementInput,
+  windowEngagementsEqual,
   type WindowEngagement,
   type WindowMeasure,
 } from "@framework/playground/core";
@@ -175,6 +177,11 @@ function puzzle3dPlaySelectAttractionCommand(attractionId: string): CommandDescr
 }
 
 export { parseKindCatalogs, parseKindCompatibility };
+
+/** @emoji 🔗 React host bridge: routes engagement bus commands to live {@link EngagementSpec} callbacks. */
+export interface Puzzle3dPlayHostBridge {
+  runHostCommand(command: string, args?: unknown): void;
+}
 
 //#region 🔖Puzzle3dPlaySelection
 /** @emoji 🎯 Play harness selection: objects, vortex full ids, and attractions. */
@@ -588,6 +595,8 @@ export class Puzzle3dPlayShellController extends Controller {
   private targetRingCount: number;
   private snapshotListeners = new Set<() => void>();
   private snapshotCache: Puzzle3dPlaySnapshot | null = null;
+  private windowEngagement: WindowEngagement | undefined;
+  private hostBridge: Puzzle3dPlayHostBridge | null = null;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -613,6 +622,7 @@ export class Puzzle3dPlayShellController extends Controller {
     this.indirectCount = 0;
     this.compatibleObjectsCount = 0;
     this.targetRingCount = 0;
+    this.windowEngagement = this.placeholderWindowEngagement();
     this.rebuildShellMode();
     this.rebuildSnapshotCache();
     this.provideStore(PUZZLE_3D_PLAY_STORE_ID, new Puzzle3dPlaySnapshotStore(this));
@@ -667,11 +677,14 @@ export class Puzzle3dPlayShellController extends Controller {
 
   /** @emoji 🎯 Refreshes the viewport store and bumps shell generation so the declarative inspector and hierarchy panels reflect selection changes. */
   private notifySelection(options?: { readonly deferShell?: boolean }): void {
-    this.notifySnapshot();
     if (options?.deferShell) {
-      queueMicrotask(() => this.emit());
+      queueMicrotask(() => {
+        this.notifySnapshot();
+        this.emit();
+      });
       return;
     }
+    this.notifySnapshot();
     this.emit();
   }
 
@@ -818,32 +831,50 @@ export class Puzzle3dPlayShellController extends Controller {
     return [...this.lodMeasures(), ...this.selectionMeasures()];
   }
 
-  /** @emoji 🖌️ Floating viewport engagement: select vs brush tool toggles. */
-  private buildWindowEngagement(): WindowEngagement {
-    const options: NonNullable<WindowEngagement["options"]> = [
-      {
-        id: "puzzle3d.tool.select",
-        label: "Select",
-        pressed: this.activeTool === "select",
-        command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setActiveTool", args: { tool: "select" } },
+  /** @emoji 💬 Placeholder engagement until the viewport host publishes a live snapshot (requires `input`). */
+  private placeholderWindowEngagement(): WindowEngagement {
+    return {
+      input: {
+        id: "engagement-input",
+        value: "",
+        placeholder: "Type Brush to place",
+        onChange: puzzle3dPlayCmd("engagementInput"),
+        onSubmit: puzzle3dPlayCmd("engagementSubmit"),
       },
-      {
-        id: "puzzle3d.tool.brush",
-        label: "Brush",
-        pressed: this.activeTool === "brush",
-        command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setActiveTool", args: { tool: "brush" } },
-      },
-    ];
-    const status: NonNullable<WindowEngagement["status"]> =
-      this.activeTool === "brush"
-        ? [{ id: "puzzle3d.brush.hint", text: "Hover a free vortex · Tab cycles · right-click lists compatibles" }]
-        : [];
-    return { options, ...(status.length > 0 ? { status } : {}) };
+      possibleEngagements: [
+        { id: "puzzle3d.tool.brush", label: "Brush", detail: "tool", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.brush" }) },
+        { id: "puzzle3d.tool.select", label: "Select", detail: "tool", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.select" }) },
+      ],
+    };
+  }
+
+  /** @emoji 💬 Sets viewport window engagement from the live host publisher (CAD play layout). */
+  setWindowEngagement(engagement: WindowEngagement | undefined): void {
+    if (engagement) {
+      enforcePlaygroundWindowEngagementInput(engagement, "Puzzle 3D play");
+    }
+    if (windowEngagementsEqual(this.windowEngagement, engagement)) {
+      return;
+    }
+    this.windowEngagement = engagement;
+    const existing = this.mainMode.windowKinds.find((wk) => wk.id === PUZZLE_3D_PLAY_WINDOW_ID);
+    if (existing) {
+      existing.engagement = engagement;
+      this.mainMode.windowKinds = [...this.mainMode.windowKinds];
+    } else {
+      this.rebuildShellMode();
+    }
+    this.emit();
+  }
+
+  /** @emoji 🔗 Attaches the React host bridge for engagement commands. */
+  setHostBridge(bridge: Puzzle3dPlayHostBridge | null): void {
+    this.hostBridge = bridge;
   }
 
   private rebuildShellMode(): void {
     this.mainMode.windowKinds = [
-      new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.windowMeasures(), this.buildWindowEngagement()),
+      new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.windowMeasures(), this.windowEngagement),
     ];
     const relocateTools: ToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
       id: `puzzle3d.relocate.${mode}`,
@@ -912,10 +943,15 @@ export class Puzzle3dPlayShellController extends Controller {
         if (tool === "select" || tool === "brush") {
           this.activeTool = tool;
         }
-        this.syncShell();
         this.notifySnapshot();
         return;
       }
+      case "engagementOption":
+      case "engagementInput":
+      case "engagementSubmit":
+      case "engagementPossibleSelect":
+        this.hostBridge?.runHostCommand(command, args);
+        return;
       case "addBrushObject": {
         const payload = args as BrushPlacePayload;
         if (!payload?.targetVortexFullId || !payload.objectKindId) {
@@ -1843,19 +1879,56 @@ if (import.meta.vitest) {
       expect(shellNotifyCount).toBe(1);
     });
 
-    it("window engagement exposes select and brush tool options", () => {
+    it("window engagement requires command input and tool possibles (CAD play layout)", () => {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       const engagement = ctrl.mainMode.windowKinds[0]?.engagement;
-      expect(engagement?.options?.map((option) => option.id)).toEqual(["puzzle3d.tool.select", "puzzle3d.tool.brush"]);
-      expect(engagement?.options?.[0]?.pressed).toBe(true);
-      expect(engagement?.options?.[1]?.pressed).toBe(false);
-      ctrl.run("setActiveTool", { tool: "brush" });
-      const brushEngagement = ctrl.mainMode.windowKinds[0]?.engagement;
-      expect(brushEngagement?.options?.[1]?.pressed).toBe(true);
-      expect(brushEngagement?.status?.some((row) => row.id === "puzzle3d.brush.hint")).toBe(true);
+      expect(engagement?.input?.id).toBe("engagement-input");
+      expect(engagement?.possibleEngagements?.map((row) => row.id)).toEqual(["puzzle3d.tool.brush", "puzzle3d.tool.select"]);
+      expect(engagement?.options).toBeUndefined();
       expect(ctrl.mainMode.tools.actions?.some((tool) => tool.id === "puzzle3d.tool.brush")).toBe(false);
+    });
+
+    it("setWindowEngagement enforces input and skips equal digest", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      expect(() => ctrl.setWindowEngagement({ options: [{ id: "x", label: "X" }] })).toThrow(/engagement\.input/);
+      let shellNotifyCount = 0;
+      const trackingCtrl = new Puzzle3dPlayShellController(bus, () => {
+        shellNotifyCount += 1;
+      });
+      const live: WindowEngagement = {
+        input: {
+          id: "engagement-input",
+          value: "brush",
+          onChange: puzzle3dPlayCmd("engagementInput"),
+          onSubmit: puzzle3dPlayCmd("engagementSubmit"),
+        },
+        possibleEngagements: [{ id: "puzzle3d.tool.brush", label: "Brush", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.brush" }) }],
+      };
+      trackingCtrl.setWindowEngagement(live);
+      const afterFirst = shellNotifyCount;
+      trackingCtrl.setWindowEngagement(live);
+      expect(shellNotifyCount).toBe(afterFirst);
+      expect(trackingCtrl.mainMode.windowKinds[0]?.engagement?.input?.value).toBe("brush");
+    });
+
+    it("engagement bus commands route through host bridge", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      let lastCommand = "";
+      ctrl.setHostBridge({
+        runHostCommand: (command) => {
+          lastCommand = command;
+        },
+      });
+      ctrl.run("engagementPossibleSelect", { possibleId: "puzzle3d.tool.brush" });
+      expect(lastCommand).toBe("engagementPossibleSelect");
+      ctrl.run("engagementInput", { value: "J" });
+      expect(lastCommand).toBe("engagementInput");
     });
 
     it("window measures include selection kind toggles and marquee method", () => {

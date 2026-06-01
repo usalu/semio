@@ -2,6 +2,8 @@
 import {
   reactHostPort,
   sceneHostPort,
+  normalizeEngagementCommandText,
+  type EngagementSpec,
   type ThreeEvent,
   type TreeDragAndDropController,
 } from "@ui/react";
@@ -3628,7 +3630,6 @@ function applyBulkSelectionTintToGroup(group: Group, active: boolean): void {
         }
         material.emissive.copy(bulkSelectionEmissiveColor);
         material.emissiveIntensity = selectedColors.emissiveIntensity;
-        material.needsUpdate = true;
         continue;
       }
       const restore = material.userData[BULK_SELECTION_TINT_RESTORE_KEY] as BulkSelectionTintRestore | undefined;
@@ -3637,7 +3638,6 @@ function applyBulkSelectionTintToGroup(group: Group, active: boolean): void {
       }
       material.emissive.copy(restore.emissive);
       material.emissiveIntensity = restore.emissiveIntensity;
-      material.needsUpdate = true;
       delete material.userData[BULK_SELECTION_TINT_RESTORE_KEY];
     }
   });
@@ -5086,20 +5086,109 @@ export type MarqueeOverlayStore = ReturnType<typeof createMarqueeOverlayStore>;
 
 export const puzzle3dMarqueeOverlayStore = createMarqueeOverlayStore();
 
-/** @emoji 🖌️ Brush menu + preview snapshot for DOM overlay and scene ghost. */
+/** @emoji 🖌️ Brush preview + engagement-source snapshot for window engagement. */
 export interface BrushUiSnapshot {
   readonly preview: BrushPreviewState | null;
-  readonly menu:
-    | {
-        readonly x: number;
-        readonly y: number;
-        readonly targetVortexFullId: string;
-        readonly candidates: readonly BrushCompatibleCandidate[];
-      }
-    | null;
+  readonly candidates: readonly BrushCompatibleCandidate[];
+  readonly targetActive: boolean;
 }
 
-const BRUSH_UI_IDLE: BrushUiSnapshot = { preview: null, menu: null };
+const BRUSH_UI_IDLE: BrushUiSnapshot = { preview: null, candidates: [], targetActive: false };
+
+/** @emoji 🖌️ Live brush gestures exposed to {@link buildPuzzle3dPlayEngagement}. */
+export interface Puzzle3dBrushEngagementSource {
+  readonly candidates: readonly BrushCompatibleCandidate[];
+  readonly targetActive: boolean;
+  readonly cycleCandidate: () => void;
+  readonly pickCandidate: (index: number) => void;
+}
+
+export const puzzle3dBrushEngagementSourceRef: { current: Puzzle3dBrushEngagementSource } = {
+  current: { candidates: [], targetActive: false, cycleCandidate: () => {}, pickCandidate: () => {} },
+};
+
+let puzzle3dBrushEngagementEpoch = 0;
+const puzzle3dBrushEngagementListeners = new Set<() => void>();
+
+/** @emoji 🔔 Subscribes to brush engagement source changes (candidates, target hover). */
+export function subscribePuzzle3dBrushEngagementSource(listener: () => void): () => void {
+  puzzle3dBrushEngagementListeners.add(listener);
+  return () => puzzle3dBrushEngagementListeners.delete(listener);
+}
+
+/** @emoji 🔔 Notifies engagement publisher after brush source fields change. */
+export function notifyPuzzle3dBrushEngagementSource(): void {
+  puzzle3dBrushEngagementEpoch += 1;
+  for (const listener of puzzle3dBrushEngagementListeners) {
+    listener();
+  }
+}
+
+/** @emoji 🔑 Epoch for {@link subscribePuzzle3dBrushEngagementSource}. */
+export function getPuzzle3dBrushEngagementEpoch(): number {
+  return puzzle3dBrushEngagementEpoch;
+}
+
+/** @emoji 💬 Inputs for {@link buildPuzzle3dPlayEngagement} (CAD play interaction panel shape). */
+export interface Puzzle3dPlayEngagementInputs {
+  readonly activeTool: "select" | "brush";
+  readonly cmdLine: string;
+  readonly selectionObjectCount: number;
+  readonly onCmdLineChange: (value: string) => void;
+  readonly onCmdLineSubmit: (value: string) => void;
+  readonly onSelectTool: () => void;
+  readonly onBrushTool: () => void;
+  readonly onCycleBrushCandidate: () => void;
+  readonly onPickBrushCandidate: (index: number) => void;
+  readonly brushCandidates: readonly BrushCompatibleCandidate[];
+  readonly brushTargetActive: boolean;
+}
+
+/** @emoji 💬 Builds window {@link EngagementSpec}: command input, possibles, options, status (CAD play layout). */
+export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs): EngagementSpec {
+  const status: { id: string; content: string }[] = [];
+  if (inputs.activeTool === "brush") {
+    status.push({ id: "puzzle3d.brush.hint", content: "Hover a free vortex; chevron lists compatibles; Next cycles" });
+  }
+  if (inputs.selectionObjectCount > 0) {
+    status.push({ id: "puzzle3d.selection", content: `Selected: ${inputs.selectionObjectCount}` });
+  }
+
+  const toolPossibles = [
+    { id: "puzzle3d.tool.brush", label: "Brush", detail: "tool", onSelect: inputs.onBrushTool },
+    { id: "puzzle3d.tool.select", label: "Select", detail: "tool", onSelect: inputs.onSelectTool },
+  ];
+
+  const brushPossibles = inputs.brushCandidates.map((candidate, index) => ({
+    id: `puzzle3d.brush.${candidate.objectKindId}.${candidate.sourceVortexIndex}`,
+    label: normalizeEngagementCommandText(candidate.objectKindId),
+    detail: `v${candidate.sourceVortexIndex}`,
+    onSelect: () => inputs.onPickBrushCandidate(index),
+  }));
+
+  const options =
+    inputs.activeTool === "brush" && inputs.brushTargetActive
+      ? [
+          { id: "puzzle3d.tool.select", label: "Select", onPress: inputs.onSelectTool },
+          { id: "puzzle3d.brush.next", label: "Next", onPress: inputs.onCycleBrushCandidate },
+        ]
+      : undefined;
+
+  const possibleEngagements = inputs.activeTool === "brush" && brushPossibles.length > 0 ? brushPossibles : toolPossibles;
+
+  return {
+    input: {
+      id: "engagement-input",
+      value: inputs.cmdLine,
+      placeholder: inputs.activeTool === "brush" ? "Type a kind or use chevron" : "Type Brush to place",
+      onChange: inputs.onCmdLineChange,
+      onSubmit: inputs.onCmdLineSubmit,
+    },
+    ...(options?.length ? { options } : {}),
+    ...(status.length ? { status } : {}),
+    possibleEngagements,
+  };
+}
 
 /** @emoji 🖌️ External store for brush UI (menu overlay + preview pose). */
 export function createBrushUiStore(initial: BrushUiSnapshot = BRUSH_UI_IDLE) {
@@ -5401,6 +5490,8 @@ function BrushSession(props: {
     targetWorldRef.current = null;
     puzzle3dBrushVortexHoverRef.current = false;
     puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
+    puzzle3dBrushEngagementSourceRef.current = { candidates: [], targetActive: false, cycleCandidate: () => {}, pickCandidate: () => {} };
+    notifyPuzzle3dBrushEngagementSource();
   }, []);
 
   const commitCurrentPreview = reactHostPort.useCallback(() => {
@@ -5416,7 +5507,9 @@ function BrushSession(props: {
       const world = targetWorldRef.current;
       const candidate = candidatesRef.current[index];
       if (!world || !candidate) {
-        puzzle3dBrushUiStore.setSnapshot({ preview: null, menu: puzzle3dBrushUiStore.getSnapshot().menu });
+        const snap = puzzle3dBrushUiStore.getSnapshot();
+        puzzle3dBrushUiStore.setSnapshot({ preview: null, candidates: snap.candidates, targetActive: snap.targetActive });
+        notifyPuzzle3dBrushEngagementSource();
         return;
       }
       const preview = brushPreviewFromCandidate({
@@ -5427,7 +5520,8 @@ function BrushSession(props: {
         kindCatalogs: props.kindCatalogs,
       });
       const snap = puzzle3dBrushUiStore.getSnapshot();
-      puzzle3dBrushUiStore.setSnapshot({ preview, menu: snap.menu });
+      puzzle3dBrushUiStore.setSnapshot({ preview, candidates: snap.candidates, targetActive: snap.targetActive });
+      notifyPuzzle3dBrushEngagementSource();
       invalidate();
     },
     [invalidate, props.kindCatalogs],
@@ -5441,6 +5535,26 @@ function BrushSession(props: {
     indexRef.current = (indexRef.current + 1) % list.length;
     applyCandidateIndex(targetRef.current, indexRef.current);
   }, [applyCandidateIndex]);
+
+  const publishBrushEngagement = reactHostPort.useCallback(() => {
+    const candidates = [...candidatesRef.current];
+    const targetActive = targetRef.current !== null;
+    puzzle3dBrushEngagementSourceRef.current = {
+      candidates,
+      targetActive,
+      cycleCandidate: advanceCandidate,
+      pickCandidate: (index: number) => {
+        if (!targetRef.current || index < 0 || index >= candidatesRef.current.length) {
+          return;
+        }
+        indexRef.current = index;
+        applyCandidateIndex(targetRef.current, index);
+      },
+    };
+    const snap = puzzle3dBrushUiStore.getSnapshot();
+    puzzle3dBrushUiStore.setSnapshot({ preview: snap.preview, candidates, targetActive });
+    notifyPuzzle3dBrushEngagementSource();
+  }, [advanceCandidate, applyCandidateIndex]);
 
   const enterTarget = reactHostPort.useCallback(
     (fullId: string, meta: VortexBindingMeta) => {
@@ -5466,8 +5580,9 @@ function BrushSession(props: {
       candidatesRef.current = brushCompatibleCandidates(targetCtx, props.kindCatalogs, props.kindCompatibility);
       indexRef.current = 0;
       applyCandidateIndex(fullId, 0);
+      publishBrushEngagement();
     },
-    [applyCandidateIndex, props.kindCatalogs, props.kindCompatibility, store],
+    [applyCandidateIndex, props.kindCatalogs, props.kindCompatibility, publishBrushEngagement, store],
   );
 
   const leaveTarget = reactHostPort.useCallback(() => {
@@ -5493,20 +5608,6 @@ function BrushSession(props: {
       clearBrush();
     }
   }, [clearBrush, props.brushActive]);
-
-  reactHostPort.useEffect(() => {
-    const onPick = (event: Event) => {
-      const index = (event as CustomEvent<{ index: number }>).detail.index;
-      if (!props.brushActive || !targetRef.current || index < 0) {
-        return;
-      }
-      indexRef.current = index;
-      applyCandidateIndex(targetRef.current, index);
-      invalidate();
-    };
-    window.addEventListener("puzzle3d-brush-pick-candidate", onPick);
-    return () => window.removeEventListener("puzzle3d-brush-pick-candidate", onPick);
-  }, [applyCandidateIndex, invalidate, props.brushActive]);
 
   return (
     <>
@@ -5614,72 +5715,11 @@ function BrushPointerBridge(props: {
       }
       props.invalidate();
     };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Tab" || !props.targetRef.current) {
-        return;
-      }
-      event.preventDefault();
-      props.advanceCandidate();
-      props.invalidate();
-    };
-    const onContextMenu = (event: MouseEvent) => {
-      if (!props.targetRef.current || !puzzle3dBrushVortexHoverRef.current) {
-        return;
-      }
-      event.preventDefault();
-      const snap = puzzle3dBrushUiStore.getSnapshot();
-      puzzle3dBrushUiStore.setSnapshot({
-        preview: snap.preview,
-        menu: {
-          x: event.clientX,
-          y: event.clientY,
-          targetVortexFullId: props.targetRef.current,
-          candidates: [...props.candidatesRef.current],
-        },
-      });
-    };
     const bindings = new EventBindingController();
     bindings.listen(window, "pointermove", onMove);
-    bindings.listen(window, "keydown", onKeyDown, true);
-    bindings.listen(window, "contextmenu", onContextMenu, true);
     return () => bindings.dispose();
   }, [camera, gl, props, reg]);
   return null;
-}
-
-function Puzzle3dBrushContextMenu(props: { readonly rootRef: React.RefObject<HTMLDivElement | null> }): React.ReactElement | null {
-  const snap = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
-  if (!snap.menu) {
-    return null;
-  }
-  const root = props.rootRef.current;
-  if (!root) {
-    return null;
-  }
-  const rootRect = root.getBoundingClientRect();
-  const left = snap.menu.x - rootRect.left;
-  const top = snap.menu.y - rootRect.top;
-  return (
-    <div className="pointer-events-auto absolute z-20 min-w-[12rem] rounded-md border border-border bg-panel py-1 text-sm shadow-lg" style={{ left, top }} data-puzzle3d-brush-menu>
-      {snap.menu.candidates.map((candidate) => {
-        const label = `${candidate.objectKindId} · ${candidate.sourceVortexIndex}`;
-        return (
-          <button
-            key={`${candidate.objectKindId}:${candidate.sourceVortexIndex}`}
-            type="button"
-            className="block w-full px-3 py-1.5 text-left hover:bg-muted"
-            onClick={() => {
-              const idx = snap.menu!.candidates.findIndex((entry) => entry.objectKindId === candidate.objectKindId && entry.sourceVortexIndex === candidate.sourceVortexIndex);
-              puzzle3dBrushUiStore.setSnapshot({ preview: snap.preview, menu: null });
-              window.dispatchEvent(new CustomEvent("puzzle3d-brush-pick-candidate", { detail: { index: idx >= 0 ? idx : 0 } }));
-            }}
-          >
-            {label}
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 function AttractionThreeBinder() {
@@ -5923,6 +5963,22 @@ function AttractionRubberBand() {
   return <line geometry={geo} material={mat} raycast={() => null} />;
 }
 
+const InnerSceneChildrenContext = reactHostPort.createContext<ReactNode>(null);
+
+/** @emoji 🧩 Renders {@link Canvas3D} scene children inside a stable registry shell (host re-renders must not remount the 3D tree). */
+function InnerSceneChildren(props: { readonly chunkSize: number; readonly maxDistance: number }): React.ReactElement {
+  const children = reactHostPort.useContext(InnerSceneChildrenContext);
+  const { chunked, rest } = reactHostPort.useMemo(() => splitChunkedSceneChildren(children), [children]);
+  return (
+    <>
+      <Chunks chunkSize={props.chunkSize} maxDistance={props.maxDistance}>
+        {chunked}
+      </Chunks>
+      <group data-puzzle3d-unchunked>{rest}</group>
+    </>
+  );
+}
+
 /** @emoji 🎯 Syncs host-controlled selection into the scene store without re-rendering scene children. */
 function ControlledSelectionSync(props: { readonly selection?: SelectionSnapshot }): null {
   const store = useSelectionSnapshotStore();
@@ -5935,6 +5991,16 @@ function ControlledSelectionSync(props: { readonly selection?: SelectionSnapshot
   return null;
 }
 
+interface RegistryHostCallbacks {
+  readonly onSelect?: (snap: SelectionSnapshot) => void;
+  readonly onConnect?: (p: AttractionPayload) => void;
+  readonly onProximityConnect?: (p: AttractionPayload) => void;
+  readonly onIndirectConnect?: (p: AttractionPayload) => void;
+  readonly onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
+  readonly onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
+  readonly onRelocate?: (p: RelocatePayload) => void;
+}
+
 function RegistryProvider({
   children,
   lodRef,
@@ -5945,13 +6011,7 @@ function RegistryProvider({
   proximityRelocateEnabled = true,
   selectionMode,
   relocateMode,
-  onSelect,
-  onConnect,
-  onProximityConnect,
-  onIndirectConnect,
-  onAttractionCompatibleObjects,
-  onAttractionTargetRing,
-  onRelocate,
+  hostCallbacksRef,
   attractionSession: externalAttractionSession,
   selectionMethod = "rectangle",
   marqueeSelectableKinds = { object: true, vortex: true, attraction: true },
@@ -5966,20 +6026,12 @@ function RegistryProvider({
   proximityRelocateEnabled?: boolean;
   selectionMode: SelectionMode;
   relocateMode: RelocateMode;
-  onSelect?: (snap: SelectionSnapshot) => void;
-  onConnect?: (p: AttractionPayload) => void;
-  onProximityConnect?: (p: AttractionPayload) => void;
-  onIndirectConnect?: (p: AttractionPayload) => void;
-  onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
-  onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
-  onRelocate?: (p: RelocatePayload) => void;
+  hostCallbacksRef: MutableRefObject<RegistryHostCallbacks>;
   attractionSession?: AttractionSessionSnapshot | null;
   selectionMethod?: SelectionMethod;
   marqueeSelectableKinds?: MarqueeSelectableKinds;
   selectionStore: SelectionSnapshotStore;
 }) {
-  const onSelectRef = reactHostPort.useRef(onSelect);
-  onSelectRef.current = onSelect;
   const selectionModeRef = reactHostPort.useRef(selectionMode);
   selectionModeRef.current = selectionMode;
   const selectionMethodRef = reactHostPort.useRef(selectionMethod);
@@ -5995,13 +6047,13 @@ function RegistryProvider({
       const controlled = selectionStore.getControlledHostSnapshot();
       if (controlled !== undefined) {
         if (!selectionSnapshotsEqual(controlled, snap)) {
-          onSelectRef.current?.(snap);
+          hostCallbacksRef.current.onSelect?.(snap);
         }
         return;
       }
-      onSelectRef.current?.(snap);
+      hostCallbacksRef.current.onSelect?.(snap);
     },
-    [selectionStore],
+    [hostCallbacksRef, selectionStore],
   );
 
   const commitSelection = reactHostPort.useCallback(
@@ -6984,7 +7036,6 @@ function Inner(props: CanvasProps & {
   const zoom = camProp?.zoom ?? 1;
   const autoFitCamera = props.autoFitCamera !== false;
   const autoFitBehavior = props.autoFitBehavior ?? "initial";
-  const { chunked, rest } = reactHostPort.useMemo(() => splitChunkedSceneChildren(children), [children]);
   const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
   const blocked = useLiveBlockedVortexFullIds(blockedFallback);
   const selectionStoreRef = reactHostPort.useRef<SelectionSnapshotStore>();
@@ -7047,10 +7098,7 @@ function Inner(props: CanvasProps & {
         <AttractionRubberBand />
         <ambientLight intensity={0.45} />
         <directionalLight position={[120, 180, 80]} intensity={0.85} />
-        <Chunks chunkSize={chunkSize} maxDistance={maxDist}>
-          {chunked}
-        </Chunks>
-        <group data-puzzle3d-unchunked>{rest}</group>
+        <InnerSceneChildren chunkSize={chunkSize} maxDistance={maxDist} />
       </LodBridge>
     </RegistryProvider>
     ),
@@ -7059,7 +7107,6 @@ function Inner(props: CanvasProps & {
       automaticLod,
       blocked,
       brushActive,
-      chunked,
       chunkSize,
       depthVariableLod,
       distanceReference,
@@ -7088,7 +7135,6 @@ function Inner(props: CanvasProps & {
       props.marqueeSelectableKinds,
       proximityRelocateEnabled,
       proximityRadius,
-      rest,
       sceneFixture,
       selectionStore,
       showLodGrid,
@@ -7098,8 +7144,10 @@ function Inner(props: CanvasProps & {
   );
   return (
     <SelectionStoreContext.Provider value={selectionStore}>
-      <ControlledSelectionSync selection={props.selection} />
-      {registryScene}
+      <InnerSceneChildrenContext.Provider value={children}>
+        <ControlledSelectionSync selection={props.selection} />
+        {registryScene}
+      </InnerSceneChildrenContext.Provider>
     </SelectionStoreContext.Provider>
   );
 }
@@ -7140,6 +7188,19 @@ export interface PlayCanvasProps {
 
 /** @emoji 🎬 Puzzle 3D play canvas: {@link Canvas3D} cabled to {@link ObjectStateProvider} and {@link Objects}. */
 export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
+  const setSelectedIdRef = reactHostPort.useRef(props.setSelectedId);
+  setSelectedIdRef.current = props.setSelectedId;
+  const sceneChildren = reactHostPort.useMemo(
+    () => (
+      <>
+        <Objects relocate={props.relocateMode} />
+        <AttractionTreeRoots />
+        <MarqueeAttractionSource />
+        <PlayTestBridge setSelectedId={(id) => setSelectedIdRef.current(id)} />
+      </>
+    ),
+    [props.relocateMode],
+  );
   const handleRelocate = useObjectRelocate();
   const handleConnect = useObjectConnect();
   const onIndirectConnect = reactHostPort.useCallback(
@@ -7203,10 +7264,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       sceneFixture={props.fixture}
       {...props.lodProps}
     >
-      <Objects relocate={props.relocateMode} />
-      <AttractionTreeRoots />
-      <MarqueeAttractionSource />
-      <PlayTestBridge setSelectedId={props.setSelectedId} />
+      {sceneChildren}
     </Canvas3D>
   );
 }
@@ -7233,7 +7291,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
       style={{ width: "100%", height: "100%", touchAction: "none", overscrollBehavior: "contain", ...style }}
       data-puzzle3d-fixture-drag-active={fixtureDragActive ? "true" : undefined}
       onContextMenu={(event) => {
-        if (puzzle3dRightDragActiveRef.current || (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current)) {
+        if (puzzle3dRightDragActiveRef.current) {
           event.preventDefault();
         }
       }}
@@ -7258,7 +7316,6 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
         </Inner>
       </Canvas>
       <Puzzle3dMarqueeOverlay rootRef={rootRef} />
-      <Puzzle3dBrushContextMenu rootRef={rootRef} />
     </div>
   );
 }
@@ -8097,6 +8154,41 @@ if (import.meta.vitest) {
       expect(world!.direction[0]).toBeCloseTo(0, 4);
       expect(world!.direction[1]).toBeCloseTo(-1, 4);
       expect(world!.direction[2]).toBeCloseTo(0, 4);
+    });
+    it("buildPuzzle3dPlayEngagement always includes command input and tool possibles", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "select",
+        cmdLine: "",
+        selectionObjectCount: 0,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        brushCandidates: [],
+        brushTargetActive: false,
+      });
+      expect(spec.input?.id).toBe("engagement-input");
+      expect(spec.possibleEngagements?.map((row) => row.id)).toEqual(["puzzle3d.tool.brush", "puzzle3d.tool.select"]);
+      expect(spec.options).toBeUndefined();
+    });
+    it("buildPuzzle3dPlayEngagement lists brush candidates when brush tool is active", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "brush",
+        cmdLine: "",
+        selectionObjectCount: 1,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        brushCandidates: [{ objectKindId: "J", sourceVortexIndex: 0 }],
+        brushTargetActive: true,
+      });
+      expect(spec.possibleEngagements?.[0]?.id).toBe("puzzle3d.brush.J.0");
+      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.tool.select", "puzzle3d.brush.next"]);
     });
     it("brushCompatibleCandidates filters by kind compatibility", () => {
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };

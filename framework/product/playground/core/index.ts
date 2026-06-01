@@ -275,6 +275,28 @@ export interface WindowEngagement {
   readonly status?: readonly WindowEngagementStatus[];
   readonly possibleEngagements?: readonly WindowEngagementPossible[];
 }
+
+/** @emoji 🔑 Stable digest for {@link WindowEngagement} equality (skips redundant shell updates). */
+export function windowEngagementDigest(engagement: WindowEngagement | undefined): string {
+  if (!engagement) return "";
+  const options = (engagement.options ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.pressed ? 1 : 0}\u0001${row.disabled ? 1 : 0}`).join("\u0002");
+  const input = engagement.input ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}` : "";
+  const status = (engagement.status ?? []).map((row) => `${row.id}\u0001${row.text}`).join("\u0002");
+  const possibles = (engagement.possibleEngagements ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}`).join("\u0002");
+  return [options, input, status, possibles].join("\u0003");
+}
+
+/** @emoji ⚖️ Returns whether two neutral engagement snapshots are equivalent for shell sync. */
+export function windowEngagementsEqual(left: WindowEngagement | undefined, right: WindowEngagement | undefined): boolean {
+  return windowEngagementDigest(left) === windowEngagementDigest(right);
+}
+
+/** @emoji 💬 Enforces CAD-style window engagement: a command {@link WindowEngagementInput} must be present. */
+export function enforcePlaygroundWindowEngagementInput(engagement: WindowEngagement | undefined, contextLabel: string): void {
+  if (!engagement?.input) {
+    throw new Error(`${contextLabel} must declare engagement.input (command line).`);
+  }
+}
 //#endregion 🔖WindowEngagement
 
 //#region 🔖WindowKindRuntime

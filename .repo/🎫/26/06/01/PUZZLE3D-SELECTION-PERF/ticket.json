@@ -1,11 +1,12 @@
 {
   "title": "Puzzle3d Selection Perf",
   "emoji": "⚡",
-  "status": "closed",
+  "status": "open",
   "description": "Puzzle 3D Selection Performance Refactor",
   "summary": "Finished Ctrl+A freeze fix: host selection sync via ControlledSelectionSync (useLayoutEffect, before scene tree) without re-rendering memoized RegistryProvider subtree; selection store owned by Inner; PlayCanvas passes selection again; fixed publishSelection/clearSelection controlled host reads; bulk tint hoisted Color. Tests: 146 @puzzle/3d/react, 24 @puzzle/3d/play.",
   "goal": "🎯semio",
   "sessions": [
-    "⚪e62a8f60381942afa82985be8e252a49"
+    "⚪e62a8f60381942afa82985be8e252a49",
+    "⚪2ea609acdab8448d872b5f19bfc4732c"
   ]
 }

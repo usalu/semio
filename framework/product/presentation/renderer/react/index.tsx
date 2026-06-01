@@ -102,6 +102,16 @@ const DEFAULT_SURFACE_CHROME: ElementsSurfaceChromeInput = {
 };
 
 //#region 🔖RevealChrome
+/** @emoji 📐 Writes reveal slide dimensions as CSS variables for positioned arrangement canvases. */
+export function syncPresentationSlideSizeVars(deckEl: HTMLElement | null, deck: Reveal.Api | null): void {
+	if (!deckEl || !deck) {
+		return;
+	}
+	const size = deck.getComputedSlideSize();
+	deckEl.style.setProperty("--presentation-slide-width", `${size.width}px`);
+	deckEl.style.setProperty("--presentation-slide-height", `${size.height}px`);
+}
+
 /** @emoji 🌓 Align reveal `has-dark-background` with `html.dark` from system chrome. */
 export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 	if (!deckEl || typeof document === "undefined") {
@@ -459,12 +469,12 @@ function VideoMorphView({
 				className="presentation-media-video"
 				src={embodiment.src}
 				poster={embodiment.poster}
-				autoPlay={embodiment.autoplay ?? true}
+				autoPlay={false}
 				loop={embodiment.loop ?? false}
 				muted={embodiment.muted ?? true}
 				controls={embodiment.controls ?? true}
 				playsInline
-				preload="auto"
+				preload="metadata"
 			/>
 		</div>
 	);
@@ -601,18 +611,19 @@ const ArrangementSection: FC<{
 	const resolved = resolveArrangement(thought, arrangement.id);
 	const morph = arrangementUsesMorph(transition);
 	const positioned = resolved.some((d) => d.position !== undefined);
+	const placements = resolved.map((disposition) => (
+		<MorphDispositionView
+			key={`${arrangement.id}-${disposition.morphId}-${disposition.embodimentId ?? "default"}`}
+			disposition={disposition}
+		/>
+	));
 	return (
 		<section
 			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": thought.id } : {})}
 			title={arrangement.id}
 			className={positioned ? "presentation-arrangement--positioned" : undefined}
 		>
-			{resolved.map((disposition) => (
-				<MorphDispositionView
-					key={`${arrangement.id}-${disposition.morphId}-${disposition.embodimentId ?? "default"}`}
-					disposition={disposition}
-				/>
-			))}
+			{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
 		</section>
 	);
 };
@@ -652,17 +663,40 @@ export const PresentationDeck: FC<{
 		relaxHiddenPreflight();
 		const deck = new Reveal(deckEl, revealOptions);
 		deckRef.current = deck;
+		const syncPresentSlideMedia = (): void => {
+			for (const video of deckEl.querySelectorAll<HTMLVideoElement>("video.presentation-media-video")) {
+				const section = video.closest("section");
+				const isPresent = section?.classList.contains("present") === true;
+				if (isPresent) {
+					const playResult = video.play();
+					if (playResult !== undefined) {
+						void playResult.catch(() => undefined);
+					}
+				} else {
+					video.pause();
+				}
+			}
+		};
+		const onResize = (): void => {
+			syncPresentationSlideSizeVars(deckEl, deck);
+		};
 		const onSlideChanged = (): void => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
+			syncPresentationSlideSizeVars(deckEl, deck);
+			syncPresentSlideMedia();
 		};
 		void deck.initialize().then(() => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
+			syncPresentationSlideSizeVars(deckEl, deck);
+			syncPresentSlideMedia();
 			deck.on("slidechanged", onSlideChanged);
+			deck.on("resize", onResize);
 		});
 		return () => {
 			deck.off("slidechanged", onSlideChanged);
+			deck.off("resize", onResize);
 			try {
 				deck.destroy();
 			} catch {

@@ -10881,7 +10881,9 @@ export interface EngagementProps extends EngagementSpec {
 
 /** @emoji 💬 Top-aligned engagement: command input with optional right chevron for possibles; status and option buttons below. */
 const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
-  const [draft, setDraft] = reactHostPort.useState(input?.value ?? "");
+  const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
+  const isControlledInput = !!input?.onChange;
+  const draft = normalizeEngagementCommandText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -10889,10 +10891,6 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
     () => filterEngagementPossibles(draft, possibleEngagements ?? []),
     [draft, possibleEngagements],
   );
-
-  reactHostPort.useEffect(() => {
-    setDraft(normalizeEngagementCommandText(input?.value ?? ""));
-  }, [input?.value]);
 
   reactHostPort.useEffect(() => {
     setActivePossibleIndex((index) => (filteredPossibles.length ? Math.min(index, filteredPossibles.length - 1) : 0));
@@ -10915,10 +10913,10 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
       const normalized = normalizeEngagementCommandText(value);
-      setDraft(normalized);
-      input?.onChange?.(normalized);
+      if (isControlledInput) input?.onChange?.(normalized);
+      else setUncontrolledDraft(normalized);
     },
-    [input],
+    [input, isControlledInput],
   );
 
   const selectPossible = reactHostPort.useCallback(
@@ -15588,7 +15586,7 @@ if (import.meta.vitest) {
           status={[{ id: "status-a", content: "Ready" }]}
         />,
       );
-      expect(screen.getByRole("button", { name: "Option A" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "OptionA" })).toBeTruthy();
       expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
       expect(screen.getByText("Ready")).toBeTruthy();
       expect(container.querySelector('[data-slot="engagement"]')).toBeTruthy();
@@ -15768,8 +15766,8 @@ if (import.meta.vitest) {
           </Window>
         );
       };
-      render(<Harness />);
-      fireEvent.keyDown(document.querySelector('[data-slot="window"]')!, { key: "s", bubbles: true });
+      const { container } = render(<Harness />);
+      fireEvent.pointerDown(container.querySelector('[data-slot="window-engagement-overlay"]')!, { bubbles: true });
       const field = await waitFor(() => screen.getByPlaceholderText("Command") as HTMLInputElement);
       fireEvent.change(field, { target: { value: "set height" } });
       await waitFor(() => expect(field.value).toBe("SetHeight"));

@@ -90,6 +90,7 @@ import {
   getSidePanelBodyMount,
   type UiPuzzle3dHostSurfaceNode,
   type UiTableHostSurfaceNode,
+  enforcePlaygroundWindowEngagementInput,
   type WindowBodyViewContext,
   type WindowEngagement,
   type WindowLayout,
@@ -1132,6 +1133,10 @@ import {
   blockedVortexFullIdsFromAttractions,
   mergePaletteObjectFromDrop,
   puzzle3dFixturePaletteTreeDragController,
+  buildPuzzle3dPlayEngagement,
+  getPuzzle3dBrushEngagementEpoch,
+  puzzle3dBrushEngagementSourceRef,
+  subscribePuzzle3dBrushEngagementSource,
   type FixtureV1,
   type Puzzle3dFixtureDropDetail,
   type RelocatePayload,
@@ -1150,6 +1155,7 @@ import {
   Puzzle3dPlayShellController,
   parseKindCatalogs,
   parseKindCompatibility,
+  type Puzzle3dPlayHostBridge,
   type Puzzle3dPlaySnapshot,
 } from "@puzzle/3d/play";
 // #endregion 🔌Adapters
