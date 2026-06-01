@@ -1466,6 +1466,7 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
           onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
           brushActive={snap.activeTool === "brush"}
           onBrushPlace={(payload) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "addBrushObject", payload)}
+          brushPlacementCollisionTolerance={snap.brushPlacementCollisionTolerance}
           fixtureDragDrop
           onFixtureDrop={handleFixtureDrop}
         />

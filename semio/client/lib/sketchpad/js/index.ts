@@ -11235,6 +11235,87 @@ export function findDesignInKit(kit: Kit, designId: string | null | undefined): 
 	return kit.designs?.find((d) => d.id === designId);
 }
 
+/** @emoji 🧭 Builds a navigation destination for sketchpad breadcrumb trails. */
+function sketchpadNavigationDestination(id: string, label: string, uri: string): NavigationDestination {
+	return { id, label, uri };
+}
+
+/** @emoji 🧭 Builds one navigation level (node + separator alternatives). */
+function sketchpadNavigationLevel(node: NavigationDestination, alternatives: readonly NavigationDestination[]): NavigationLevel {
+	return { node, alternatives };
+}
+
+/** @emoji 🧭 Top-level destinations reachable from Home. */
+function sketchpadHomeNavigationAlternatives(): readonly NavigationDestination[] {
+	return [
+		sketchpadNavigationDestination("sketchpad.nav.kits", "Kits", "/"),
+		sketchpadNavigationDestination("sketchpad.nav.documentation", "Documentation", "/docs"),
+		sketchpadNavigationDestination("sketchpad.nav.feedback", "Feedback", "/feedback"),
+	];
+}
+
+/** @emoji 🔍 Reads an entity id from a kit row snapshot. */
+function sketchpadKitRowEntityId(entity: unknown): string | null {
+	if (typeof entity !== "object" || entity === null || !("id" in entity)) return null;
+	return String((entity as { id: unknown }).id);
+}
+
+/** @emoji 🔍 Reads an entity display name from a kit row snapshot. */
+function sketchpadKitRowEntityName(entity: unknown, fallback: string): string {
+	if (typeof entity !== "object" || entity === null) return fallback;
+	const name = (entity as { name?: string }).name;
+	return name && name.length > 0 ? name : fallback;
+}
+
+/** @emoji 🔍 Finds the typology that owns a design on a kit snapshot. */
+function findSketchpadTypologyForDesign(
+	kit: Kit,
+	designId: string,
+): ReturnType<typeof sketchpadKitTypologyRows>[number] | undefined {
+	for (const typology of sketchpadKitTypologyRows(kit)) {
+		if (typology.designs.some((design) => sketchpadKitRowEntityId(design) === designId)) return typology;
+	}
+	return undefined;
+}
+
+/** @emoji 🔍 Finds the typology that owns a type on a kit snapshot. */
+function findSketchpadTypologyForType(kit: Kit, typeId: string): ReturnType<typeof sketchpadKitTypologyRows>[number] | undefined {
+	for (const typology of sketchpadKitTypologyRows(kit)) {
+		if (typology.types.some((type) => sketchpadKitRowEntityId(type) === typeId)) return typology;
+	}
+	return undefined;
+}
+
+/** @emoji 🧭 Lists design destinations within a typology for breadcrumb alternatives. */
+function sketchpadTypologyDesignDestinations(kitId: string, typology: ReturnType<typeof sketchpadKitTypologyRows>[number]): NavigationDestination[] {
+	const out: NavigationDestination[] = [];
+	for (const design of typology.designs) {
+		const designId = sketchpadKitRowEntityId(design);
+		if (!designId) continue;
+		out.push(
+			sketchpadNavigationDestination(
+				`sketchpad.nav.design.${designId}`,
+				sketchpadKitRowEntityName(design, designId),
+				`/kits/${kitId}/designs/${designId}`,
+			),
+		);
+	}
+	return out;
+}
+
+/** @emoji 🧭 Lists type destinations within a typology for breadcrumb alternatives. */
+function sketchpadTypologyTypeDestinations(kitId: string, typology: ReturnType<typeof sketchpadKitTypologyRows>[number]): NavigationDestination[] {
+	const out: NavigationDestination[] = [];
+	for (const type of typology.types) {
+		const typeId = sketchpadKitRowEntityId(type);
+		if (!typeId) continue;
+		out.push(
+			sketchpadNavigationDestination(`sketchpad.nav.type.${typeId}`, sketchpadKitRowEntityName(type, typeId), `/kits/${kitId}/types/${typeId}`),
+		);
+	}
+	return out;
+}
+
 /** @emoji 🔍 Finds a piece row on a design snapshot. */
 export function findPieceInDesign(design: Design, pieceId: string | null | undefined) {
 	if (!pieceId) return undefined;
@@ -14385,44 +14466,168 @@ function applySketchpadUri(platform: Platform, uri: string): void {
 	platform.notify();
 }
 
-function isSketchpadUuid(value: string): boolean {
-	return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
+/** @emoji 🧭 Navigation trail for the current sketchpad URI (decoupled from URL path shape). */
+export function sketchpadNavigation(platform: Platform, uri: string): NavigationLevel[] {
+	const pathOnly = uri.split("?")[0] ?? "/";
+	const scope = parseSketchpadRouteScopeFromPath(uri);
+	const controller = getPlatformControllerById(platform, SKETCHPAD_SHELL_CONTROLLER_ID) as SketchpadShellController | undefined;
+	const homeAlternatives = sketchpadHomeNavigationAlternatives();
+	const homeLevel = sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.home", "Home", "/"), homeAlternatives);
 
-/** @emoji 🍞 Friendly breadcrumb labels for kit routes. */
-function sketchpadBreadcrumb(platform: Platform, uri: string): PlatformBreadcrumbItem[] {
-	const path = uri.split("?")[0] ?? "/";
-	const segments = path.split("/").filter(Boolean);
-	const items: PlatformBreadcrumbItem[] = [{ id: "root", content: "Home" }];
-	let cumulative = "";
-	for (let index = 0; index < segments.length; index++) {
-		const segment = segments[index] ?? "";
-		cumulative += `/${segment}`;
-		const href = cumulative;
-		let label: string = segment;
-		if (segment === "kits") {
-			label = "Kits";
-		} else if (segment === "designs") {
-			label = "Designs";
-		} else if (segment === "types") {
-			label = "Types";
-		} else if (isSketchpadUuid(segment)) {
-			const scope = parseSketchpadRouteScopeFromPath(path);
-			const controller = getPlatformControllerById(platform, SKETCHPAD_SHELL_CONTROLLER_ID) as SketchpadShellController | undefined;
-			const kitStore =
-				scope.kitId && controller ? (controller.getStore<SketchpadKitSnapshot>(`${SKETCHPAD_KIT_STORE_PREFIX}${scope.kitId}`) as SemioKitStore | undefined) : undefined;
-			const kit = kitStore?.getSnapshot().kit;
-			if (scope.designId && kit) {
-				label = findDesignInKit(kit, scope.designId)?.name ?? segment;
-			} else if (scope.typeId && kit) {
-				label = findTypeInKit(kit, scope.typeId)?.name ?? segment;
-			} else if (scope.kitId && kit) {
-				label = kit.name ?? segment;
+	if (pathOnly === "/feedback" || pathOnly.startsWith("/feedback/")) {
+		return [
+			homeLevel,
+			sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.feedback", "Feedback", "/feedback"), []),
+		];
+	}
+
+	if (pathOnly.startsWith("/docs")) {
+		const registry = sketchpadBuildDocsRegistry();
+		const sectionAlternatives = registry.map((section) =>
+			sketchpadNavigationDestination(
+				`sketchpad.nav.docs.section.${section.id}`,
+				section.label,
+				`/docs/${section.pages[0]?.path ?? section.id}`,
+			),
+		);
+		const trail: NavigationLevel[] = [
+			homeLevel,
+			sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.documentation", "Documentation", "/docs"), sectionAlternatives),
+		];
+		const sectionId = scope.docsPath.split("/")[0] ?? "";
+		const section = registry.find((entry) => entry.id === sectionId);
+		if (section) {
+			trail.push(
+				sketchpadNavigationLevel(
+					sketchpadNavigationDestination(`sketchpad.nav.docs.section.${section.id}`, section.label, `/docs/${section.pages[0]?.path ?? section.id}`),
+					sectionAlternatives,
+				),
+			);
+			const page = section.pages.find((entry) => entry.path === scope.docsPath) ?? section.pages[0];
+			if (page && scope.docsPath !== section.pages[0]?.path) {
+				trail.push(
+					sketchpadNavigationLevel(sketchpadNavigationDestination(`sketchpad.nav.docs.page.${page.path}`, page.title, `/docs/${page.path}`), []),
+				);
 			}
 		}
-		items.push({ id: href, content: label });
+		return trail;
 	}
-	return items;
+
+	if (!scope.kitId) {
+		return [homeLevel];
+	}
+
+	const kit = controller?.getKitStore(scope.kitId)?.getSnapshot().kit;
+	const kitName = kit?.name ?? scope.kitId;
+	const kitUri = `/kits/${scope.kitId}`;
+	const openKitIds = controller?.listOpenKitIds() ?? (scope.kitId ? [scope.kitId] : []);
+	const kitAlternatives = openKitIds.map((kitId) => {
+		const openKit = controller?.getKitStore(kitId)?.getSnapshot().kit;
+		return sketchpadNavigationDestination(`sketchpad.nav.kit.${kitId}`, openKit?.name ?? kitId, `/kits/${kitId}`);
+	});
+
+	const trail: NavigationLevel[] = [
+		homeLevel,
+		sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.kits", "Kits", "/"), kitAlternatives),
+		sketchpadNavigationLevel(sketchpadNavigationDestination(`sketchpad.nav.kit.${scope.kitId}`, kitName, kitUri), [
+			sketchpadNavigationDestination("sketchpad.nav.typologies", "Typologies", kitUri),
+		]),
+	];
+
+	const typologies = kit ? sketchpadKitTypologyRows(kit) : [];
+	const typologyAlternatives = typologies.map((typology) =>
+		sketchpadNavigationDestination(`sketchpad.nav.typology.${typology.id}`, typology.name, kitUri),
+	);
+
+	if (scope.designId && kit) {
+		const typology = findSketchpadTypologyForDesign(kit, scope.designId);
+		const design = findDesignInKit(kit, scope.designId);
+		const typologyDesign = typology?.designs.find((row) => sketchpadKitRowEntityId(row) === scope.designId);
+		const designName = design?.name ?? (typologyDesign ? sketchpadKitRowEntityName(typologyDesign, scope.designId) : scope.designId);
+		const designUri = `/kits/${scope.kitId}/designs/${scope.designId}`;
+		if (typology && typologies.length > 0) {
+			const typologySectionAlternatives: NavigationDestination[] = [];
+			if (typology.designs.length > 0) {
+				typologySectionAlternatives.push(sketchpadNavigationDestination("sketchpad.nav.typology-designs", "Designs", kitUri));
+			}
+			if (typology.types.length > 0) {
+				typologySectionAlternatives.push(sketchpadNavigationDestination("sketchpad.nav.typology-types", "Types", kitUri));
+			}
+			trail.push(
+				sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.typologies", "Typologies", kitUri), typologyAlternatives),
+				sketchpadNavigationLevel(
+					sketchpadNavigationDestination(`sketchpad.nav.typology.${typology.id}`, typology.name, kitUri),
+					typologySectionAlternatives,
+				),
+				sketchpadNavigationLevel(
+					sketchpadNavigationDestination("sketchpad.nav.designs", "Designs", kitUri),
+					sketchpadTypologyDesignDestinations(scope.kitId, typology),
+				),
+				sketchpadNavigationLevel(sketchpadNavigationDestination(`sketchpad.nav.design.${scope.designId}`, designName, designUri), []),
+			);
+		} else {
+			const designAlternatives = (kit.designs ?? [])
+				.filter((row): row is Design => typeof row === "object" && row !== null && "id" in row)
+				.map((row) =>
+					sketchpadNavigationDestination(
+						`sketchpad.nav.design.${row.id}`,
+						row.name ?? String(row.id),
+						`/kits/${scope.kitId}/designs/${row.id}`,
+					),
+				);
+			trail.push(
+				sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.designs", "Designs", kitUri), designAlternatives),
+				sketchpadNavigationLevel(sketchpadNavigationDestination(`sketchpad.nav.design.${scope.designId}`, designName, designUri), []),
+			);
+		}
+		return trail;
+	}
+
+	if (scope.typeId && kit) {
+		const typology = findSketchpadTypologyForType(kit, scope.typeId);
+		const type = findTypeInKit(kit, scope.typeId);
+		const typologyType = typology?.types.find((row) => sketchpadKitRowEntityId(row) === scope.typeId);
+		const typeName = type?.name ?? (typologyType ? sketchpadKitRowEntityName(typologyType, scope.typeId) : scope.typeId);
+		const typeUri = `/kits/${scope.kitId}/types/${scope.typeId}`;
+		if (typology && typologies.length > 0) {
+			const typologySectionAlternatives: NavigationDestination[] = [];
+			if (typology.designs.length > 0) {
+				typologySectionAlternatives.push(sketchpadNavigationDestination("sketchpad.nav.typology-designs", "Designs", kitUri));
+			}
+			if (typology.types.length > 0) {
+				typologySectionAlternatives.push(sketchpadNavigationDestination("sketchpad.nav.typology-types", "Types", kitUri));
+			}
+			trail.push(
+				sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.typologies", "Typologies", kitUri), typologyAlternatives),
+				sketchpadNavigationLevel(
+					sketchpadNavigationDestination(`sketchpad.nav.typology.${typology.id}`, typology.name, kitUri),
+					typologySectionAlternatives,
+				),
+				sketchpadNavigationLevel(
+					sketchpadNavigationDestination("sketchpad.nav.types", "Types", kitUri),
+					sketchpadTypologyTypeDestinations(scope.kitId, typology),
+				),
+				sketchpadNavigationLevel(sketchpadNavigationDestination(`sketchpad.nav.type.${scope.typeId}`, typeName, typeUri), []),
+			);
+		} else {
+			const typeAlternatives = (kit.types ?? [])
+				.filter((row): row is Type => typeof row === "object" && row !== null && "id" in row)
+				.map((row) =>
+					sketchpadNavigationDestination(`sketchpad.nav.type.${row.id}`, row.name ?? String(row.id), `/kits/${scope.kitId}/types/${row.id}`),
+				);
+			trail.push(
+				sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.types", "Types", kitUri), typeAlternatives),
+				sketchpadNavigationLevel(sketchpadNavigationDestination(`sketchpad.nav.type.${scope.typeId}`, typeName, typeUri), []),
+			);
+		}
+		return trail;
+	}
+
+	if (typologies.length > 0) {
+		trail.push(sketchpadNavigationLevel(sketchpadNavigationDestination("sketchpad.nav.typologies", "Typologies", kitUri), typologyAlternatives));
+	}
+
+	return trail;
 }
 
 const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
@@ -14446,7 +14651,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	await host.activateAll((controllerId) => (controllerId === SKETCHPAD_SHELL_CONTROLLER_ID ? controller : undefined));
 	new SketchpadPlatformComponents(platform);
 	platform.applyUri = (uri) => applySketchpadUri(platform, uri);
-	platform.breadcrumb = (uri) => sketchpadBreadcrumb(platform, uri);
+	platform.navigation = (uri) => sketchpadNavigation(platform, uri);
 	if (typeof window === "undefined") {
 		platform.activeAppId = SKETCHPAD_HOME_APP_ID;
 		platform.notify();
@@ -14611,6 +14816,46 @@ if (import.meta.vitest) {
 			expect(firstSectionId).toBeTruthy();
 			const pages = sketchpadHomeVfsChildren(["metabolism-id"], () => kit, () => "temporary", sketchpadEmptyHomeUiState(), firstSectionId!);
 			expect(pages.some((page) => page.navigateUri?.startsWith("/docs/"))).toBe(true);
+		});
+	});
+
+	describe("Sketchpad navigation", () => {
+		it("design route trail includes typology levels and home alternatives", () => {
+			const platform = new Platform({ id: "nav-test", name: "Nav" });
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => platform.notify());
+			const app = new AppRuntime(
+				SKETCHPAD_HOME_APP_ID,
+				"Home",
+				undefined,
+				ctrl,
+				createTabStackLayout(["main"], ["Main"]),
+				[new WindowKindRuntime("main", "Main", "test.sketchpad.nav.main")],
+			);
+			platform.addApp(app);
+			const kit = {
+				id: "k1",
+				name: "Demo Kit",
+				typologies: [
+					{
+						id: "topo-1",
+						name: "Residential",
+						types: [],
+						designs: [
+							{ id: "d1", name: "Plan A" },
+							{ id: "d2", name: "Plan B" },
+						],
+					},
+				],
+			} as Kit;
+			ctrl.registerKitStore("k1", new InMemorySemioKitStore(kit));
+			const trail = sketchpadNavigation(platform, "/kits/k1/designs/d1");
+			expect(trail.map((level) => level.node.label)).toEqual(["Home", "Kits", "Demo Kit", "Typologies", "Residential", "Designs", "Plan A"]);
+			expect(trail[0]?.alternatives.some((alternative) => alternative.label === "Documentation")).toBe(true);
+			expect(trail[0]?.alternatives.some((alternative) => alternative.label === "Feedback")).toBe(true);
+			const designsLevel = trail.find((level) => level.node.label === "Designs");
+			expect(designsLevel?.alternatives.map((alternative) => alternative.label).sort()).toEqual(["Plan A", "Plan B"]);
+			ctrl.dispose();
 		});
 	});
 

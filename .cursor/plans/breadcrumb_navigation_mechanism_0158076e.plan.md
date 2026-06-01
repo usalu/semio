@@ -7,13 +7,13 @@ todos:
     status: completed
   - id: renderer
     content: "Platform React renderer: add navigationTrailToBreadcrumbItems mapping alternatives->options, prefer platform.navigation in breadcrumb useMemo"
-    status: in_progress
+    status: completed
   - id: sketchpad
     content: "Sketchpad: implement sketchpadNavigation building Home>Kits>{Kit}>Typologies>{Typology}>Designs>{Design} with alternatives; wire platform.navigation; add typology-resolution helpers"
-    status: pending
+    status: completed
   - id: tests
     content: "Extend existing vitest regions: renderer mapping test + sketchpad navigation trail/alternatives tests; typecheck and run suites"
-    status: pending
+    status: in_progress
   - id: ticket
     content: Open repo ticket under best goal, keep temp files in ticket folder, close ticket with summary
     status: pending

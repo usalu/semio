@@ -3560,6 +3560,32 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("navigationTrailToBreadcrumbItems", () => {
+		it("maps navigation alternatives to breadcrumb separator options", () => {
+			const items = navigationTrailToBreadcrumbItems(
+				[
+					{
+						node: { id: "home", label: "Home", uri: "/" },
+						alternatives: [
+							{ id: "kits", label: "Kits", uri: "/" },
+							{ id: "docs", label: "Documentation", uri: "/docs" },
+						],
+					},
+					{
+						node: { id: "kits", label: "Kits", uri: "/" },
+						alternatives: [{ id: "k1", label: "Demo", uri: "/kits/k1" }],
+					},
+				],
+				(href) => href,
+			);
+			expect(items).toHaveLength(2);
+			expect(items[0]?.options).toHaveLength(2);
+			expect(items[0]?.options?.[0]?.href).toBe("/");
+			expect(items[0]?.options?.[1]?.label).toBe("Documentation");
+			expect(items[1]?.content).toBe("Kits");
+		});
+	});
+
 	describe("PlatformView", () => {
 		it("opens side panels when PlatformSpec initialPanelVisibility is set", () => {
 			const wb = new Platform({

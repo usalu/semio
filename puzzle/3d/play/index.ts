@@ -36,7 +36,13 @@ import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
   PUZZLE_3D_LOD_SLIDER_MIN,
+  BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX,
+  BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
+  BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
+  DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
   applyBrushPlacementToFixture,
+  brushPlacementCollisionToleranceFromSlider,
+  brushPlacementCollisionToleranceToSlider,
   applyRelocateToFixture,
   applyObjectKindToFixtureObject,
   fixtureAppearanceFingerprint,
@@ -248,6 +254,8 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   compatibleObjectsCount: 0,
   targetRingCount: 0,
   activeTool: "select",
+  brushPlacementCollisionTolerance: DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
+  brushPlacementCollisionToleranceSlider: brushPlacementCollisionToleranceToSlider(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE),
 };
 
 /** @emoji 🖌️ Puzzle 3D play active viewport tool. */
@@ -621,6 +629,8 @@ export class Puzzle3dPlayShellController extends Controller {
   private indirectCount: number;
   private compatibleObjectsCount: number;
   private targetRingCount: number;
+  private brushPlacementCollisionTolerance: number;
+  private brushPlacementCollisionToleranceSlider: number;
   private snapshotListeners = new Set<() => void>();
   private snapshotCache: Puzzle3dPlaySnapshot | null = null;
   private windowEngagement: WindowEngagement | undefined;
@@ -650,6 +660,8 @@ export class Puzzle3dPlayShellController extends Controller {
     this.indirectCount = 0;
     this.compatibleObjectsCount = 0;
     this.targetRingCount = 0;
+    this.brushPlacementCollisionTolerance = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
+    this.brushPlacementCollisionToleranceSlider = brushPlacementCollisionToleranceToSlider(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE);
     this.windowEngagement = this.placeholderWindowEngagement();
     this.rebuildShellMode();
     this.rebuildSnapshotCache();
@@ -693,6 +705,8 @@ export class Puzzle3dPlayShellController extends Controller {
       indirectCount: this.indirectCount,
       compatibleObjectsCount: this.compatibleObjectsCount,
       targetRingCount: this.targetRingCount,
+      brushPlacementCollisionTolerance: this.brushPlacementCollisionTolerance,
+      brushPlacementCollisionToleranceSlider: this.brushPlacementCollisionToleranceSlider,
     };
   }
 
@@ -853,8 +867,24 @@ export class Puzzle3dPlayShellController extends Controller {
     ];
   }
 
+  private brushMeasures(): readonly WindowMeasure[] {
+    const toleranceLabel = this.brushPlacementCollisionTolerance.toFixed(2);
+    return [
+      {
+        kind: "slider",
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-collision-tolerance`,
+        label: `Brush tol ${toleranceLabel}`,
+        value: this.brushPlacementCollisionToleranceSlider,
+        min: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
+        max: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX,
+        step: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setBrushPlacementCollisionTolerance" },
+      },
+    ];
+  }
+
   private windowMeasures(): readonly WindowMeasure[] {
-    return [...this.lodMeasures(), ...this.selectionMeasures()];
+    return [...this.lodMeasures(), ...this.selectionMeasures(), ...this.brushMeasures()];
   }
 
   /** @emoji 💬 Placeholder engagement until the viewport host publishes a live snapshot (requires `input`). */
@@ -994,6 +1024,26 @@ export class Puzzle3dPlayShellController extends Controller {
           this.activeTool = tool;
         }
         this.notifySnapshot();
+        return;
+      }
+      case "setBrushPlacementCollisionTolerance": {
+        const payload = args as { value?: number; cad?: boolean };
+        const value = payload.value;
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+          return;
+        }
+        if (payload.cad) {
+          this.brushPlacementCollisionTolerance = Math.max(0, Math.min(BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX, value));
+          this.brushPlacementCollisionToleranceSlider = brushPlacementCollisionToleranceToSlider(this.brushPlacementCollisionTolerance);
+        } else {
+          this.brushPlacementCollisionToleranceSlider = Math.max(
+            BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
+            Math.min(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX, Math.round(value)),
+          );
+          this.brushPlacementCollisionTolerance = brushPlacementCollisionToleranceFromSlider(this.brushPlacementCollisionToleranceSlider);
+        }
+        this.notifySnapshot();
+        this.syncShell();
         return;
       }
       case "cycleBrushCandidate": {
@@ -1361,6 +1411,8 @@ export interface Puzzle3dPlaySnapshot {
   readonly indirectCount: number;
   readonly compatibleObjectsCount: number;
   readonly targetRingCount: number;
+  readonly brushPlacementCollisionTolerance: number;
+  readonly brushPlacementCollisionToleranceSlider: number;
 }
 
 export const PUZZLE_3D_PLAY_STORE_ID = "play";
@@ -1811,6 +1863,18 @@ export function buildPuzzle3dPlaySettingsBody(ctx: WindowBodyViewContext): UiNod
           },
           {
             type: "field",
+            id: "puzzle-3d-play-settings.brushCollisionTolerance",
+            label: "Brush collision tolerance",
+            child: {
+              type: "input",
+              id: "puzzle-3d-play-settings.brushCollisionTolerance.input",
+              inputKind: "number",
+              value: String(snap.brushPlacementCollisionTolerance),
+              onChange: puzzle3dPlayCmd("setBrushPlacementCollisionTolerance", { cad: true }),
+            },
+          },
+          {
+            type: "field",
             id: "puzzle-3d-play-settings.proximityRadius",
             label: "Proximity radius",
             child: {
@@ -2109,6 +2173,28 @@ if (import.meta.vitest) {
       expect(texts).toContain("Attractions");
       expect(texts).toContain("Rectangle");
       expect(texts).toContain("Lasso");
+    });
+
+    it("window measures include brush collision tolerance slider", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      const brushTol = measures.find((measure) => measure.id.endsWith("-brush-collision-tolerance"));
+      expect(brushTol?.kind).toBe("slider");
+      expect(brushTol?.max).toBe(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX);
+    });
+
+    it("setBrushPlacementCollisionTolerance updates snapshot and slider mapping", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      ctrl.run("setBrushPlacementCollisionTolerance", { value: 75 });
+      expect(ctrl.getSnapshot().brushPlacementCollisionToleranceSlider).toBe(75);
+      expect(ctrl.getSnapshot().brushPlacementCollisionTolerance).toBeCloseTo(1.5, 5);
+      ctrl.run("setBrushPlacementCollisionTolerance", { value: 0.4, cad: true });
+      expect(ctrl.getSnapshot().brushPlacementCollisionTolerance).toBeCloseTo(0.4, 5);
+      expect(ctrl.getSnapshot().brushPlacementCollisionToleranceSlider).toBe(20);
     });
 
     it("setSelectionMethod and toggleSelectableKind update snapshot", () => {

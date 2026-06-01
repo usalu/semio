@@ -3168,6 +3168,32 @@ export function boxesIntersect(a: Box3, b: Box3, epsilon = 1e-3): boolean {
 /** @emoji 📏 Default brush placement penetration (CAD world units); face contact and shallow AABB bleed below this stays collision-free. */
 export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = 1;
 
+/** @emoji 🎚️ Window-measure slider range for brush placement collision tolerance. */
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN = 0;
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX = 100;
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP = 1;
+/** @emoji 📏 CAD penetration depth at {@link BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX}. */
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX = 2;
+
+/** @emoji 🎚️ Maps play window slider position to brush collision tolerance (CAD units). */
+export function brushPlacementCollisionToleranceFromSlider(slider: number): number {
+  const span = BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN;
+  if (span <= 0) {
+    return DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
+  }
+  const t = Math.max(0, Math.min(1, (slider - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN) / span));
+  return t * BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX;
+}
+
+/** @emoji 🎚️ Maps brush collision tolerance to play window slider position. */
+export function brushPlacementCollisionToleranceToSlider(tolerance: number): number {
+  if (BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX <= 0) {
+    return BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN;
+  }
+  const t = Math.max(0, Math.min(1, tolerance / BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX));
+  return Math.round(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN + t * (BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN));
+}
+
 /** @emoji 📦 True when AABB overlap depth along every axis exceeds {@link minPenetration} (touching faces do not count). */
 export function boxesPenetrationExceeds(a: Box3, b: Box3, minPenetration: number): boolean {
   if (minPenetration <= 0) {
@@ -6499,6 +6525,13 @@ function BrushSession(props: {
     }
   }, [clearBrush, props.brushActive]);
 
+  reactHostPort.useEffect(() => {
+    if (!props.brushActive || !targetRef.current) {
+      return;
+    }
+    reconcilePlacementCandidates();
+  }, [props.brushActive, props.collisionTolerance, reconcilePlacementCandidates]);
+
   return (
     <>
       <BrushPointerBridge
@@ -9609,6 +9642,12 @@ if (import.meta.vitest) {
       cables: [{ id: "cable.link", defaultAttractionKind: "puzzle3d.attraction.link" }],
     };
     const brushCompat: readonly KindCompatEntry[] = [{ bidirectional: true, specificity: "vortex", source: "door capsule east", target: "door tambour east" }];
+    it("brushPlacementCollisionToleranceFromSlider maps window slider to CAD penetration depth", () => {
+      expect(brushPlacementCollisionToleranceFromSlider(0)).toBe(0);
+      expect(brushPlacementCollisionToleranceFromSlider(50)).toBeCloseTo(1, 5);
+      expect(brushPlacementCollisionToleranceFromSlider(100)).toBeCloseTo(BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX, 5);
+      expect(brushPlacementCollisionToleranceToSlider(1)).toBe(50);
+    });
     it("computeBrushPlacementPose aligns source vortex to target with opposite direction", () => {
       const targetPos: Vec3 = [10, 20, 30];
       const targetDir: Vec3 = [0, 1, 0];
@@ -9772,8 +9811,8 @@ if (import.meta.vitest) {
       const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
       const touching = new Box3(new Vector3(2, 0, 0), new Vector3(4, 2, 2));
       const shallow = new Box3(new Vector3(1.98, 0, 0), new Vector3(3.98, 2, 2));
-      const deep = new Box3(new Vector3(1, 1, 1), new Vector3(3, 3, 3));
-      const tol = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
+      const deep = new Box3(new Vector3(0.5, 0.5, 0.5), new Vector3(3.5, 3.5, 3.5));
+      const tol = 0.25;
       expect(boxesPenetrationExceeds(a, touching, tol)).toBe(false);
       expect(boxesPenetrationExceeds(a, shallow, tol)).toBe(false);
       expect(boxesPenetrationExceeds(a, deep, tol)).toBe(true);
