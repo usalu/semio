@@ -1318,12 +1318,20 @@ export function measureElementRectInSection(
 		return null;
 	}
 	const rect = element.getBoundingClientRect();
+	if (rect.width <= 0 || rect.height <= 0) {
+		return null;
+	}
 	return {
 		x: (rect.left - sectionBounds.left) / sectionBounds.width,
 		y: (rect.top - sectionBounds.top) / sectionBounds.height,
 		width: rect.width / sectionBounds.width,
 		height: rect.height / sectionBounds.height,
 	};
+}
+
+/** @emoji 📏 True when measured fractions are large enough to drag or resize reliably. */
+export function isUsableMeasuredRect(rect: DispositionPosition): boolean {
+	return rect.width >= DISPOSITION_MIN_FRACTION && rect.height >= DISPOSITION_MIN_FRACTION;
 }
 
 /** @emoji 📐 Declared placement for one resolved disposition (tiles union when split). */
@@ -1562,9 +1570,11 @@ const InteractiveDisposition: FC<{
 	readonly sectionRef: RefObject<HTMLElement | null>;
 	readonly children: ReactNode;
 }> = ({ id, disposition, declaredRect, allDeclaredRects, sectionRef, children }) => {
+	const slideEpoch = useContext(PresentationSlideEpochContext);
 	const interaction = usePresentationInteractionState();
 	const registry = useSlideDispositionRegistry();
 	const rootRef = useRef<HTMLDivElement>(null);
+	const contentRef = useRef<HTMLDivElement>(null);
 	const selected = interaction.isSelected(id);
 	const transform = interaction.getTransform(id);
 	const pinned = transform !== undefined;
@@ -1572,72 +1582,105 @@ const InteractiveDisposition: FC<{
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
 
+	const measureDispositionTarget = useCallback((): HTMLElement | null => {
+		return contentRef.current ?? rootRef.current;
+	}, []);
+
 	useLayoutEffect(() => {
 		if (declaredRect || transform) {
 			registry.registerRect(id, null);
 			return;
 		}
-		const root = rootRef.current;
 		const section = sectionRef.current;
-		if (!root || !section) {
+		const target = measureDispositionTarget();
+		if (!target || !section || !section.classList.contains("present")) {
+			registry.registerRect(id, null);
 			return;
 		}
-		const measured = measureElementRectInSection(root, section);
-		registry.registerRect(id, measured);
-	}, [id, declaredRect, transform, registry, sectionRef]);
+		const measured = measureElementRectInSection(target, section);
+		registry.registerRect(id, measured && isUsableMeasuredRect(measured) ? measured : null);
+	}, [id, declaredRect, transform, registry, sectionRef, slideEpoch, measureDispositionTarget]);
 
 	const ensureRectForManipulation = useCallback((): DispositionPosition | null => {
-		const existing = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
-		if (existing) {
-			return existing;
+		let rect: DispositionPosition | undefined =
+			interaction.getTransform(id) ?? declaredRect ?? registry.getRect(id);
+		if (rect && !declaredRect && !interaction.getTransform(id) && !isUsableMeasuredRect(rect)) {
+			rect = undefined;
 		}
-		const root = rootRef.current;
-		const section = sectionRef.current;
-		if (!root || !section) {
-			return null;
+		if (!rect) {
+			const section = sectionRef.current;
+			const target = measureDispositionTarget();
+			if (!target || !section) {
+				return null;
+			}
+			const measured = measureElementRectInSection(target, section);
+			if (!measured || !isUsableMeasuredRect(measured)) {
+				return null;
+			}
+			rect = measured;
+			registry.registerRect(id, measured);
 		}
-		const measured = measureElementRectInSection(root, section);
-		if (!measured) {
-			return null;
-		}
-		interaction.setTransform(id, measured);
-		return measured;
-	}, [id, declaredRect, interaction, registry, sectionRef]);
+		return rect;
+	}, [id, declaredRect, interaction, registry, sectionRef, measureDispositionTarget]);
 
-	const runPointerGesture = useCallback(
+	const attachPointerGesture = useCallback(
 		(
-			event: React.PointerEvent,
+			origin: {
+				readonly pointerId: number;
+				readonly clientX: number;
+				readonly clientY: number;
+				readonly captureEl: HTMLElement | null;
+			},
 			mode: "move" | DispositionResizeHandle,
 			initialRect: DispositionPosition,
-		) => {
-			event.preventDefault();
-			event.stopPropagation();
+			requireDragThreshold: boolean,
+		): void => {
 			const section = sectionRef.current;
 			if (!section) {
 				return;
 			}
-			const pointerId = event.pointerId;
-			const startClient = { x: event.clientX, y: event.clientY };
+			const pointerId = origin.pointerId;
+			const startClient = { x: origin.clientX, y: origin.clientY };
 			const startFraction = clientToSectionFraction(section, startClient.x, startClient.y);
-			const selectedAtStart = [...interaction.selectedIds];
+			const selectedAtStart = new Set(interaction.selectedIds);
+			if (!selectedAtStart.has(id)) {
+				selectedAtStart.add(id);
+			}
 			const groupIds =
-				selectedAtStart.includes(id) && selectedAtStart.length > 1 ? selectedAtStart : [id];
+				selectedAtStart.has(id) && selectedAtStart.size > 1 ? [...selectedAtStart] : [id];
 			const startRects = new Map<string, DispositionPosition>();
 			for (const memberId of groupIds) {
 				const rect =
 					interaction.getTransform(memberId) ??
 					allDeclaredRects.get(memberId) ??
 					(memberId === id ? initialRect : registry.getRect(memberId));
-				if (rect) {
+				if (rect && (allDeclaredRects.get(memberId) !== undefined || isUsableMeasuredRect(rect))) {
 					startRects.set(memberId, rect);
 				}
+			}
+			if (startRects.size === 0) {
+				startRects.set(id, initialRect);
 			}
 			const startGroup =
 				mode !== "move" && groupIds.length > 1
 					? groupBoundingRect([...startRects.values()])
 					: null;
+			let dragging = !requireDragThreshold;
 
 			const onMove = (moveEvent: PointerEvent): void => {
+				if (moveEvent.pointerId !== pointerId) {
+					return;
+				}
+				if (!dragging) {
+					if (
+						Math.hypot(moveEvent.clientX - startClient.x, moveEvent.clientY - startClient.y) <
+						POINTER_DRAG_THRESHOLD_PX
+					) {
+						return;
+					}
+					dragging = true;
+				}
+				moveEvent.preventDefault();
 				const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY);
 				const dx = current.x - startFraction.x;
 				const dy = current.y - startFraction.y;
@@ -1657,32 +1700,43 @@ const InteractiveDisposition: FC<{
 				interaction.setTransforms(updates);
 			};
 
-			const onUp = (): void => {
+			const onUp = (upEvent: PointerEvent): void => {
+				if (upEvent.pointerId !== pointerId) {
+					return;
+				}
 				window.removeEventListener("pointermove", onMove);
 				window.removeEventListener("pointerup", onUp);
 				window.removeEventListener("pointercancel", onUp);
 				try {
-					(event.target as HTMLElement | null)?.releasePointerCapture?.(pointerId);
+					origin.captureEl?.releasePointerCapture?.(pointerId);
 				} catch {
 					// jsdom may not support pointer capture
 				}
 			};
 
-			(event.target as HTMLElement).setPointerCapture?.(pointerId);
+			try {
+				origin.captureEl?.setPointerCapture?.(pointerId);
+			} catch {
+				// jsdom may not support pointer capture
+			}
 			window.addEventListener("pointermove", onMove);
 			window.addEventListener("pointerup", onUp);
 			window.addEventListener("pointercancel", onUp);
 		},
-		[id, declaredRect, allDeclaredRects, interaction, registry, sectionRef],
+		[id, allDeclaredRects, interaction, registry, sectionRef],
 	);
 
 	const onPointerDown = (event: React.PointerEvent): void => {
+		if (event.button !== 0) {
+			return;
+		}
 		if ((event.target as HTMLElement).closest(".presentation-interaction-handle")) {
 			return;
 		}
 		if ((event.target as HTMLElement).closest(".presentation-interaction-fullscreen")) {
 			return;
 		}
+		event.preventDefault();
 		event.stopPropagation();
 		const additive = event.shiftKey;
 		if (!selected) {
@@ -1694,27 +1748,24 @@ const InteractiveDisposition: FC<{
 		if (!rect) {
 			return;
 		}
-		const startClient = { x: event.clientX, y: event.clientY };
-		let dragged = false;
-		const onMove = (moveEvent: PointerEvent): void => {
-			if (
-				!dragged &&
-				Math.hypot(moveEvent.clientX - startClient.x, moveEvent.clientY - startClient.y) >=
-					POINTER_DRAG_THRESHOLD_PX
-			) {
-				dragged = true;
-				runPointerGesture(event, "move", rect);
-			}
-		};
-		const onUp = (): void => {
-			window.removeEventListener("pointermove", onMove);
-			window.removeEventListener("pointerup", onUp);
-		};
-		window.addEventListener("pointermove", onMove);
-		window.addEventListener("pointerup", onUp);
+		attachPointerGesture(
+			{
+				pointerId: event.pointerId,
+				clientX: event.clientX,
+				clientY: event.clientY,
+				captureEl: rootRef.current,
+			},
+			"move",
+			rect,
+			true,
+		);
 	};
 
 	const onHandlePointerDown = (handle: DispositionResizeHandle) => (event: React.PointerEvent) => {
+		if (event.button !== 0) {
+			return;
+		}
+		event.preventDefault();
 		event.stopPropagation();
 		if (!selected) {
 			interaction.selectIds([id], false);
@@ -1723,7 +1774,17 @@ const InteractiveDisposition: FC<{
 		if (!rect) {
 			return;
 		}
-		runPointerGesture(event, handle, rect);
+		attachPointerGesture(
+			{
+				pointerId: event.pointerId,
+				clientX: event.clientX,
+				clientY: event.clientY,
+				captureEl: rootRef.current,
+			},
+			handle,
+			rect,
+			false,
+		);
 	};
 
 	const onFullscreenClick = (event: React.MouseEvent): void => {
@@ -1755,7 +1816,9 @@ const InteractiveDisposition: FC<{
 			style={wrapperStyle}
 			onPointerDown={onPointerDown}
 		>
-			<div className="presentation-interactive-disposition__content">{children}</div>
+			<div ref={contentRef} className="presentation-interactive-disposition__content">
+				{children}
+			</div>
 			{selected && effectiveRect ? (
 				<>
 					<div className="presentation-interactive-disposition__chrome" aria-hidden>
@@ -2965,6 +3028,11 @@ if (import.meta.vitest) {
 			expect(resized.height).toBeCloseTo(0.3);
 		});
 
+		it("rejects unusable measured fractions", () => {
+			expect(isUsableMeasuredRect({ x: 0.2, y: 0.3, width: 0.1, height: 0.1 })).toBe(true);
+			expect(isUsableMeasuredRect({ x: 0.2, y: 0.3, width: 0.005, height: 0.1 })).toBe(false);
+		});
+
 		it("scales group members and toggles fullscreen", () => {
 			const a = { x: 0.1, y: 0.2, width: 0.2, height: 0.2 };
 			const b = { x: 0.5, y: 0.2, width: 0.2, height: 0.2 };
@@ -3033,6 +3101,65 @@ if (import.meta.vitest) {
 			);
 		};
 
+		const mockClientRect = (
+			element: Element,
+			left: number,
+			top: number,
+			width: number,
+			height: number,
+		): void => {
+			const rect = {
+				left,
+				top,
+				width,
+				height,
+				right: left + width,
+				bottom: top + height,
+				x: left,
+				y: top,
+				toJSON: () => ({}),
+			};
+			element.getBoundingClientRect = () => rect as DOMRect;
+		};
+
+		const pointerDrag = (
+			target: Element,
+			fromX: number,
+			fromY: number,
+			toX: number,
+			toY: number,
+			pointerId = 1,
+		): void => {
+			target.dispatchEvent(
+				new PointerEvent("pointerdown", {
+					bubbles: true,
+					cancelable: true,
+					button: 0,
+					clientX: fromX,
+					clientY: fromY,
+					pointerId,
+				}),
+			);
+			window.dispatchEvent(
+				new PointerEvent("pointermove", {
+					bubbles: true,
+					cancelable: true,
+					clientX: toX,
+					clientY: toY,
+					pointerId,
+				}),
+			);
+			window.dispatchEvent(
+				new PointerEvent("pointerup", {
+					bubbles: true,
+					cancelable: true,
+					clientX: toX,
+					clientY: toY,
+					pointerId,
+				}),
+			);
+		};
+
 		beforeEach(() => {
 			container = document.createElement("div");
 			document.body.appendChild(container);
@@ -3066,6 +3193,63 @@ if (import.meta.vitest) {
 				pointerClick(layer);
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
+		});
+
+		it("drags flow intro title disposition", () => {
+			const deck = intro({
+				title: { full: ["A", "B", "C"], short: "Short" },
+				description: { full: ["D1"], short: "D short" },
+				goal: ["G1"],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni" },
+						],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni", shortName: "LUH", suffix: { mark: "x", name: "Chair X" } },
+						],
+					],
+				},
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const section = container.querySelector(
+				'.slides > section > section[title="title"]',
+			) as HTMLElement;
+			section.classList.add("present");
+			const disposition = section.querySelector("[data-disposition-id]") as HTMLElement;
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(content, 330, 280, 300, 120);
+			mockClientRect(disposition, 330, 280, 300, 120);
+			act(() => {
+				pointerDrag(disposition, 480, 320, 560, 360);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(disposition.style.left).not.toBe("");
+		});
+
+		it("drags positioned disposition", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			const beforeLeft = disposition.style.left;
+			act(() => {
+				pointerDrag(disposition, 300, 280, 380, 320);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(disposition.style.left).not.toBe(beforeLeft);
 		});
 
 		it("toggles slide fullscreen without pinned transforms or inline placement", () => {

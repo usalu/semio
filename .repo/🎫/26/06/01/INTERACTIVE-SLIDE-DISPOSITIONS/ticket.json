@@ -3,9 +3,10 @@
   "emoji": "🖱",
   "status": "closed",
   "description": "Make all slides interactive by default: every disposition is hoverable, selectable (click + rectangle marquee with crossing/window rules), draggable, resizable, with per-disposition slide-fullscreen toggle. Ephemeral in-session only.",
-  "summary": "Added ephemeral interactive manipulation to the React presentation renderer: every disposition is hoverable, selectable (click with shift-toggle, crossing/window marquee), draggable, resizable (8 handles, multi-select group ops), and slide-fullscreen via a small toggle. State resets on slide change/reload. Wired PresentationInteractionProvider into PresentationDeck, InteractionLayer behind placements for empty-area hit testing, geometry helpers with vitest coverage, and interaction CSS.",
+  "summary": "Fixed drag on flow-layout intro dispositions (e.g. title slide). Root cause: registry cached zero-size rects from measuring hidden reveal slides, and ensureRect reused them without re-measure. Now re-measures on slideEpoch, only when section.present, validates min size, measures content box, and uses unified pointer gesture with capture. Added intro flow + positioned drag DOM tests (33 passing).",
   "goal": "🎯framework🎯presentation",
   "sessions": [
-    "⚪ff10b8bd673f400597d9f29275555cf3"
+    "⚪ff10b8bd673f400597d9f29275555cf3",
+    "⚪8e8c9fbb38104777bd310bae1046ac78"
   ]
 }
