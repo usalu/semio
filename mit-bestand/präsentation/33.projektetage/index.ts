@@ -172,16 +172,6 @@ const mediaThought: Thought = {
 				{
 					participantId: "catalogue",
 					emphasis: "active",
-					position: CATALOGUE_FRAME,
-				},
-			],
-		},
-		{
-			id: "catalogue-tiles",
-			dispositions: [
-				{
-					participantId: "catalogue",
-					emphasis: "active",
 					split: { tiles: CATALOGUE_TILES_ASSEMBLED },
 				},
 			],
@@ -263,13 +253,13 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(12);
+			expect(countArrangements(deck)).toBe(11);
 		});
 
-		it("splits the catalogue figure into fifteen morph tiles", () => {
+		it("uses fifteen split tiles on the catalogue slide for reveal auto-animate", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
-			const tilesArrangement = media?.arrangements.find((a) => a.id === "catalogue-tiles");
-			expect(tilesArrangement?.dispositions[0]?.split?.tiles).toHaveLength(15);
+			const catalogue = media?.arrangements.find((a) => a.id === "catalogue");
+			expect(catalogue?.dispositions[0]?.split?.tiles).toHaveLength(15);
 		});
 
 		it("arranges catalogue-focus as three columns without the top row", () => {

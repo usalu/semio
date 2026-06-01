@@ -133,13 +133,12 @@
 	object-fit: contain;
 }
 
-.reveal .presentation-figure-tile {
+.reveal .presentation-figure-tile-frame {
+	overflow: hidden;
+}
+
+.reveal .presentation-figure-tile-img {
 	display: block;
-	width: 100%;
-	height: 100%;
-	min-height: 0;
-	min-width: 0;
-	background-repeat: no-repeat;
 }
 
 .reveal .presentation-disposition-frame:has(.presentation-media-pdf-document) {
