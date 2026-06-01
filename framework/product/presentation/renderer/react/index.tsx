@@ -333,29 +333,25 @@ export function patchAutoAnimateUniformScale(css: string): string {
 export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): string {
 	const duration = `${durationSeconds}s`;
 	return `
-.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-source[data-auto-animate-target],
-.reveal .slides section.present[data-auto-animate="pending"] .presentation-affiliation-morph-source[data-auto-animate-target] {
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-source[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="pending"] .presentation-affiliation-morph-source[data-auto-animate-target] {
 	opacity: 1 !important;
 	visibility: visible !important;
-	transition: none !important;
+	animation: none !important;
 }
-.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target],
-.reveal .slides section.present[data-auto-animate="running"] .presentation-affiliation-morph-source[data-auto-animate-target] {
-	opacity: 0 !important;
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-affiliation-morph-source[data-auto-animate-target] {
 	visibility: visible !important;
-	transition: opacity ${duration} ease !important;
-	transition-property: opacity !important;
+	animation: presentation-morph-source-fade-out ${duration} ease forwards !important;
 }
-.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-into[data-auto-animate-target] {
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-into[data-auto-animate-target] {
 	opacity: 0 !important;
 	visibility: hidden !important;
-	transition: none !important;
+	animation: none !important;
 }
-.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-into[data-auto-animate-target] {
-	opacity: 1 !important;
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-into[data-auto-animate-target] {
 	visibility: visible !important;
-	transition: opacity ${duration} ease !important;
-	transition-property: opacity !important;
+	animation: presentation-morph-into-fade-in ${duration} ease forwards !important;
 }
 `;
 }
@@ -692,9 +688,8 @@ function AffiliationsMorphView({
 						{morphSourceLabel !== undefined ? (
 							<span className="presentation-affiliation-line-part relative inline-flex shrink-0 items-center justify-center text-center">
 								<h4
-									data-id={`${anchorId}--${entry.mark}`}
 									className={[
-										morphTextClass(anchorId, "m-0 w-full text-center"),
+										morphTextClass(anchorId, "m-0 shrink-0 text-center"),
 										"presentation-morph-source",
 										"presentation-affiliation-morph-source",
 									].join(" ")}
@@ -702,7 +697,13 @@ function AffiliationsMorphView({
 								>
 									{affiliationLineContent(entry, "line", morphSourceLabel)}
 								</h4>
-								<h4 className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}>
+								<h4
+									data-id={`${anchorId}--${entry.mark}`}
+									className={[
+										morphTextClass(anchorId, "m-0 shrink-0 text-center"),
+										"presentation-morph-into",
+									].join(" ")}
+								>
 									{affiliationLineContent(entry, "line", displayLabel)}
 								</h4>
 							</span>
@@ -1693,18 +1694,24 @@ function transformFrameStyle(transform: DispositionPosition): CSSProperties {
 
 /** @emoji 📐 reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
 export function sectionVisualScale(sectionEl: HTMLElement): number {
+	const bounds = slideLayoutBounds(sectionEl);
+	if (bounds.width <= 0 || bounds.height <= 0) {
+		return 1;
+	}
 	const root = slideCoordinateRoot(sectionEl);
-	const layoutW = root.offsetWidth;
-	const layoutH = root.offsetHeight;
+	let layoutW = root.offsetWidth;
+	let layoutH = root.offsetHeight;
 	if (layoutW <= 0 || layoutH <= 0) {
 		return 1;
 	}
-	const rect = root.getBoundingClientRect();
-	if (rect.width <= 0 || rect.height <= 0) {
-		return 1;
+	const reveal = sectionEl.closest(".reveal");
+	const slideCss = parsePresentationSlideCssSize(reveal instanceof HTMLElement ? reveal : null);
+	if (layoutH > bounds.height * 1.02 || layoutW > bounds.width * 1.02) {
+		layoutW = slideCss.width;
+		layoutH = slideCss.height;
 	}
-	const scaleX = rect.width / layoutW;
-	const scaleY = rect.height / layoutH;
+	const scaleX = bounds.width / layoutW;
+	const scaleY = bounds.height / layoutH;
 	const scale = Math.min(scaleX, scaleY);
 	if (!Number.isFinite(scale) || scale <= 0) {
 		return 1;
@@ -1745,34 +1752,6 @@ export function dispositionPositionChanged(
 		Math.abs(a.width - b.width) > 1e-6 ||
 		Math.abs(a.height - b.height) > 1e-6
 	);
-}
-
-/** @emoji 📐 Canvas drag: wrapper stays on the declared frame; content follows the pointer via translate (not absolute inset, which overflows the wrapper). */
-export function canvasDispositionDragContentStyle(
-	declared: DispositionPosition,
-	transform: DispositionPosition,
-): CSSProperties {
-	if (!dispositionPositionChanged(declared, transform)) {
-		return {};
-	}
-	if (declared.width <= 0 || declared.height <= 0) {
-		return {};
-	}
-	const dxPercent = ((transform.x - declared.x) / declared.width) * 100;
-	const dyPercent = ((transform.y - declared.y) / declared.height) * 100;
-	if (transform.width === declared.width && transform.height === declared.height) {
-		return {
-			transform: `translate3d(${dxPercent}%, ${dyPercent}%, 0)`,
-		};
-	}
-	return {
-		position: "absolute",
-		left: `${dxPercent}%`,
-		top: `${dyPercent}%`,
-		width: `${(transform.width / declared.width) * 100}%`,
-		height: `${(transform.height / declared.height) * 100}%`,
-		boxSizing: "border-box",
-	};
 }
 
 /** @emoji 📐 Flow drag: preserve the wrapper footprint while ink is absolutely positioned inside. */
@@ -2513,7 +2492,10 @@ const InteractiveDisposition: FC<{
 		Object.assign(wrapperFrame, flowDispositionReserveStyle(flowReservePx));
 	}
 	if (canvasFramed && canvasAnchorRect) {
-		Object.assign(wrapperFrame, transformFrameStyle(canvasAnchorRect));
+		// 🔀 The wrapper owns the reveal `data-id` morph anchor; placing it on the live ephemeral
+		// rect (drag/resize) makes reveal.js auto-animate capture the modified frame as the morph
+		// `from`, so morphs start from the current disposition including ephemeral modifications.
+		Object.assign(wrapperFrame, transformFrameStyle(canvasLiveTransform ?? canvasAnchorRect));
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
 	}
@@ -2524,10 +2506,6 @@ const InteractiveDisposition: FC<{
 			: undefined;
 	const contentInkStyle: CSSProperties | undefined =
 		flowInkActive && inkInWrapper ? transformFrameStyle(inkInWrapper) : undefined;
-	const canvasDragContentStyle =
-		canvasDragActive && canvasAnchorRect && canvasLiveTransform
-			? canvasDispositionDragContentStyle(canvasAnchorRect, canvasLiveTransform)
-			: undefined;
 	const flowDragOffsetStyle =
 		flowPixelOffset && transform ? flowDispositionOffsetStyle(transform) : undefined;
 	const resizeContentBaseline = measuredNatural ?? interactionRect;
@@ -2540,7 +2518,6 @@ const InteractiveDisposition: FC<{
 			: null;
 	const contentStyle: CSSProperties | undefined = {
 		...(contentInkStyle ?? {}),
-		...(canvasDragContentStyle ?? {}),
 		...(flowDragOffsetStyle ?? {}),
 		...(resizeContentScale !== null ? interactiveDispositionContentScaleStyle(resizeContentScale) : {}),
 	};
@@ -3023,7 +3000,16 @@ export const PresentationDeck: FC<{
 			}
 		};
 		const onAutoAnimate = (event: Event): void => {
-			const sheet = (event as Event & { sheet?: { innerHTML: string } }).sheet;
+			const animateEvent = event as Event & {
+				readonly data?: { readonly fromSlide?: HTMLElement; readonly toSlide?: HTMLElement };
+				readonly sheet?: { innerHTML: string };
+			};
+			const fromSlide = animateEvent.data?.fromSlide;
+			const toSlide = animateEvent.data?.toSlide;
+			if (fromSlide && toSlide) {
+				prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
+			}
+			const sheet = animateEvent.sheet;
 			if (sheet && typeof sheet.innerHTML === "string") {
 				const durationSeconds =
 					typeof deck.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
@@ -3288,11 +3274,9 @@ if (import.meta.vitest) {
 			expect(slide("affiliations-3")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(3);
 			expect(slide("affiliations-2")?.querySelector('h5[data-id="institutions"]')).toBeNull();
 			expect(slide("affiliations-2")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
-			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
+			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("LUH");
 			expect(slide("affiliations-3")?.querySelector(".presentation-affiliation-morph-source")).toBeTruthy();
-			expect(
-				slide("affiliations-3")?.querySelector(".presentation-intro-line h4:not([data-id])")?.textContent,
-			).toContain("LUH");
+			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.classList.contains("presentation-morph-into")).toBe(true);
 			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--x"]')?.textContent).toContain("Chair X");
 			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
 			expect(slide("affiliations-1")?.querySelector('h4[data-id="authors--Alice Example"] sup')?.textContent).toBe("a");
@@ -3315,10 +3299,7 @@ if (import.meta.vitest) {
 			expect(aff2?.querySelector('h4[data-id="institutions--1"] .opacity-20')).toBeNull();
 			const aff3 = slide("affiliations-3");
 			expect(aff3?.querySelector('h4[data-id="institutions--a"] .opacity-20')).toBeTruthy();
-			expect(
-				aff3?.querySelector(".presentation-affiliation-line-part h4:not([data-id]) .opacity-20")?.textContent,
-			).toContain("LUH");
-			expect(aff3?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
+			expect(aff3?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("LUH");
 			expect(aff3?.querySelector('h4[data-id="institutions--x"] .opacity-20')).toBeNull();
 		});
 
@@ -3722,9 +3703,9 @@ if (import.meta.vitest) {
 			expect(sheet.innerHTML).toContain(
 				'[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target]',
 			);
-			expect(sheet.innerHTML).toContain("opacity: 0 !important");
 			expect(sheet.innerHTML).toContain("opacity: 1 !important");
-			expect(sheet.innerHTML).toContain("transition: opacity 0.8s ease !important");
+			expect(sheet.innerHTML).toContain("presentation-morph-source-fade-out 0.8s ease forwards !important");
+			expect(sheet.innerHTML).toContain("presentation-morph-into-fade-in 0.8s ease forwards !important");
 		});
 
 		it("uses stretch-fill at rest and larger cover vars only while auto-animating", () => {
@@ -4187,6 +4168,29 @@ if (import.meta.vitest) {
 			document.body.removeChild(section);
 			expect(delta.dx).toBeCloseTo(100);
 			expect(delta.dy).toBeCloseTo(120);
+		});
+
+		it("maps flow drag 1:1 on nested reveal stacks whose layout height exceeds one slide", () => {
+			const reveal = document.createElement("div");
+			reveal.className = "reveal";
+			reveal.style.setProperty("--presentation-slide-width", "960");
+			reveal.style.setProperty("--presentation-slide-height", "700");
+			const stack = document.createElement("section");
+			const inner = document.createElement("section");
+			stack.append(inner);
+			reveal.append(stack);
+			document.body.append(reveal);
+			Object.defineProperty(stack, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(stack, "offsetHeight", { value: 4900, configurable: true });
+			Object.defineProperty(inner, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(inner, "offsetHeight", { value: 0, configurable: true });
+			stack.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
+			inner.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
+			expect(sectionVisualScale(inner)).toBeCloseTo(0.5);
+			const delta = flowPointerDeltaToLocal(inner, 100, 200, 120, 220);
+			document.body.removeChild(reveal);
+			expect(delta.dx).toBeCloseTo(40);
+			expect(delta.dy).toBeCloseTo(40);
 		});
 
 		it("rejects unusable measured fractions", () => {

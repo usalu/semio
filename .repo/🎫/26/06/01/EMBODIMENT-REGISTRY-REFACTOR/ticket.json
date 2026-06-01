@@ -3,12 +3,13 @@
   "emoji": "🎭",
   "status": "closed",
   "description": "Restructure @framework/presentation: embodiments in scoped sibling registries, dispositions bind participantId+embodimentId, full artifact-level scoping, tile/split templates produce embodiments+dispositions (remove DispositionSplit). Migrate renderer and 33.projektetage deck.",
-  "summary": "Morph ghosts fade opacity 1→0 during reveal running (morph-into 0→1): split pending/running CSS with transition synced to autoAnimateDuration; patch auto-animate sheet to override reveal opacity on matched morph-source/into targets; affiliation ghosts use presentation-morph-source class.",
+  "summary": "Fixed forward 8→9 morph: morph ghost opacity no longer jumps to 0 on running (broke FLIP while present slide was labels). Use keyframed fade-out/in synced to autoAnimateDuration; apply pending/running rules without .present so both slides measure correctly; call prepareArrangementBeforeAutoAnimate from autoanimate event.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪bb34f80bdccb4ebabf0a48bc06aca0a6",
     "⚪778720ae3c2f441ebcb048eb9d46e966",
     "⚪b10f9584d8094e44a966480c527dc3fd",
-    "⚪bf9aee1da49f40e3a91b01571ffa460c"
+    "⚪bf9aee1da49f40e3a91b01571ffa460c",
+    "⚪3dd398d27c5b42dfb0896856d946c46f"
   ]
 }

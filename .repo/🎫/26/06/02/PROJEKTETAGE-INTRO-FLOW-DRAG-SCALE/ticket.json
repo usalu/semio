@@ -1,0 +1,10 @@
+{
+  "title": "Projektetage Intro Flow Drag Scale",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix projektetage intro slides 0-6 where dragging text shoots elements out quickly; slide 9 (canvas) works. Root cause likely sectionVisualScale using tall nested reveal stack offsetHeight vs viewport-sized client rect.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪b9caca74d18f4d7e83b5afacd69c8df4"
+  ]
+}

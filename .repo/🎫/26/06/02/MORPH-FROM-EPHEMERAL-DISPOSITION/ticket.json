@@ -1,0 +1,10 @@
+{
+  "title": "Morph From Ephemeral Disposition",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "In the presentation renderer, all morphs must start from the current disposition including ephemeral modifications (drag/resize/fullscreen). Text morphs in intro are already correct, but canvas-framed tiles (e.g. slide 7 to 8) reset the ephemeral modification first and then transition, because the data-id morph anchor wrapper stays at the declared frame while only the inner content is translated. Fix so the morph anchor reflects the effective ephemeral rect at slide-change time.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪39968ad99a3949b38edf118a0708b4c9"
+  ]
+}

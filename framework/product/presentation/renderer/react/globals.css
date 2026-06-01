@@ -604,6 +604,24 @@
 	opacity: 0;
 }
 
+@keyframes presentation-morph-source-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes presentation-morph-into-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
 .reveal .presentation-morph-source {
 	opacity: 0 !important;
 	visibility: hidden !important;
@@ -615,34 +633,30 @@
 	visibility: visible;
 }
 
-.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-source {
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-source {
 	opacity: 1 !important;
 	visibility: visible !important;
 	pointer-events: auto;
-	transition: none !important;
+	animation: none !important;
 }
 
-.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-source {
-	opacity: 0 !important;
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-source {
 	visibility: visible !important;
 	pointer-events: none;
-	transition: opacity var(--presentation-auto-animate-duration, 1s) ease !important;
-	transition-property: opacity !important;
+	animation: presentation-morph-source-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
 }
 
-.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-into {
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-into {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;
-	transition: none !important;
+	animation: none !important;
 }
 
-.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-into {
-	opacity: 1 !important;
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-into {
 	visibility: visible !important;
 	pointer-events: auto;
-	transition: opacity var(--presentation-auto-animate-duration, 1s) ease !important;
-	transition-property: opacity !important;
+	animation: presentation-morph-into-fade-in var(--presentation-auto-animate-duration, 1s) ease forwards !important;
 }
 
 .reveal
@@ -732,13 +746,17 @@
 }
 
 .reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-affiliation-line-part {
+	display: inline-flex;
 	vertical-align: top;
+	width: max-content;
+	max-width: 100%;
 }
 
 .reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-affiliation-morph-source {
 	position: absolute;
 	inset: 0;
 	margin: 0;
+	width: 100%;
 	pointer-events: none;
 }
 
