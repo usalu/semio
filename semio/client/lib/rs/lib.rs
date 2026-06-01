@@ -3966,8 +3966,9 @@ pub mod kit {
                     let mut queue: VecDeque<Arc<Piece>> = self.has_pieces().await.into_iter().collect();
                     while let Some(piece) = queue.pop_front() {
                         if seen.insert(piece.id.clone()) {
+                            let children = piece.has_pieces().await;
                             out.push(piece);
-                            for child in piece.has_pieces().await {
+                            for child in children {
                                 queue.push_back(child);
                             }
                         }
@@ -4811,8 +4812,8 @@ pub mod kit {
                             continue;
                         }
                         if design_seen.insert(d.id.clone()) {
+                            pending_designs.push_back(d.clone());
                             all_designs.push(d);
-                            pending_designs.push_back(d);
                         }
                     }
                 }
