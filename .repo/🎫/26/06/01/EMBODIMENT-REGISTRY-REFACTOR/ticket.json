@@ -3,10 +3,11 @@
   "emoji": "🎭",
   "status": "closed",
   "description": "Restructure @framework/presentation: embodiments in scoped sibling registries, dispositions bind participantId+embodimentId, full artifact-level scoping, tile/split templates produce embodiments+dispositions (remove DispositionSplit). Migrate renderer and 33.projektetage deck.",
-  "summary": "Slide 8→9 many-to-one morph: presentation uses morphFrom only; expandArrangementMorphFrom adds morphSource dispositions (tile figures at label slots). At rest arrangementRestDispositions yields 3 column labels; morph sources hidden via renderer CSS during reveal auto-animate only. Renamed morphGhost/morphTarget to morphSource/receivesMorphFrom (presentation-morph-source/into). columnLabelMorphFrom uses label positions. Tests: core 39, renderer 61, deck 11 passed.",
+  "summary": "Fixed morph sources staying visible after spacebar transition to Bauteilbeschriftungen: reveal.js leaves data-auto-animate=running until the next morph, which kept morph-source CSS and FLIP sheet rules active. Added finalizeRevealAutoAnimateRestState after auto-animate duration and on beforeslidechange; tightened CSS to hide morph-source by default and only show on present slides during pending/running.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪bb34f80bdccb4ebabf0a48bc06aca0a6",
-    "⚪778720ae3c2f441ebcb048eb9d46e966"
+    "⚪778720ae3c2f441ebcb048eb9d46e966",
+    "⚪b10f9584d8094e44a966480c527dc3fd"
   ]
 }

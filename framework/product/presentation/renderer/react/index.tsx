@@ -251,6 +251,18 @@ export function slideChangedEventSlides(event: Event): {
 	};
 }
 
+/** @emoji ✅ Clears reveal `pending`/`running` on slides so morph-source/into rest CSS applies after FLIP completes. */
+export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
+	for (const slide of deckEl.querySelectorAll<HTMLElement>(
+		'section[data-auto-animate="running"], section[data-auto-animate="pending"]',
+	)) {
+		slide.setAttribute("data-auto-animate", "");
+	}
+	for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
+		delete element.dataset.autoAnimateTarget;
+	}
+}
+
 /** @emoji ⏳ Swaps split tiles for dormant morph anchors on the outgoing slide when auto-animating to a listed target. */
 export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSlide: HTMLElement): void {
 	const settleBefore = fromSlide.getAttribute("data-settle-before-morph-to");
@@ -2904,7 +2916,24 @@ export const PresentationDeck: FC<{
 		const onResize = (): void => {
 			syncPresentationSlideSizeVars(deckEl, deck);
 		};
+		let autoAnimateFinalizeTimer: ReturnType<typeof setTimeout> | undefined;
+		const scheduleFinalizeAutoAnimateRest = (): void => {
+			const durationSeconds =
+				typeof deck.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
+			if (autoAnimateFinalizeTimer !== undefined) {
+				clearTimeout(autoAnimateFinalizeTimer);
+			}
+			autoAnimateFinalizeTimer = setTimeout(() => {
+				finalizeRevealAutoAnimateRestState(deckEl);
+				autoAnimateFinalizeTimer = undefined;
+			}, durationSeconds * 1000 + 80);
+		};
 		const onBeforeSlideChange = (event: Event): void => {
+			if (autoAnimateFinalizeTimer !== undefined) {
+				clearTimeout(autoAnimateFinalizeTimer);
+				autoAnimateFinalizeTimer = undefined;
+			}
+			finalizeRevealAutoAnimateRestState(deckEl);
 			const slideEvent = event as Event & { readonly indexh?: number; readonly indexv?: number };
 			const fromSlide = deck.getCurrentSlide() as HTMLElement | null;
 			if (!fromSlide || slideEvent.indexh === undefined || slideEvent.indexv === undefined) {
@@ -2949,6 +2978,7 @@ export const PresentationDeck: FC<{
 			if (sheet && typeof sheet.innerHTML === "string") {
 				sheet.innerHTML = patchAutoAnimateUniformScale(sheet.innerHTML);
 			}
+			scheduleFinalizeAutoAnimateRest();
 		};
 		void deck.initialize().then(() => {
 			relaxHiddenPreflight();
@@ -2993,6 +3023,9 @@ export const PresentationDeck: FC<{
 			deck.on("autoanimate", onAutoAnimate);
 		});
 		return () => {
+			if (autoAnimateFinalizeTimer !== undefined) {
+				clearTimeout(autoAnimateFinalizeTimer);
+			}
 			window.removeEventListener("hashchange", onWindowHashChange);
 			deck.off("beforeslidechange", onBeforeSlideChange);
 			deck.off("slidechanged", onSlideChanged);
@@ -3661,6 +3694,24 @@ if (import.meta.vitest) {
 					],
 			);
 			expect(new Set(positions).size).toBe(4);
+		});
+
+		it("finalizeRevealAutoAnimateRestState clears running so morph sources rest hidden", () => {
+			const deckEl = document.createElement("div");
+			deckEl.className = "reveal";
+			const slide = document.createElement("section");
+			slide.classList.add("present");
+			slide.setAttribute("data-auto-animate", "running");
+			const morphSource = document.createElement("div");
+			morphSource.className = "presentation-morph-source";
+			morphSource.dataset.autoAnimateTarget = "0";
+			slide.appendChild(morphSource);
+			deckEl.appendChild(slide);
+			document.body.appendChild(deckEl);
+			finalizeRevealAutoAnimateRestState(deckEl);
+			expect(slide.getAttribute("data-auto-animate")).toBe("");
+			expect(morphSource.hasAttribute("data-auto-animate-target")).toBe(false);
+			deckEl.remove();
 		});
 
 		it("matches auto-animate targets only by data-id", () => {
@@ -4439,12 +4490,21 @@ if (import.meta.vitest) {
 			await new Promise((resolve) => setTimeout(resolve, 50));
 			const afterCatalogueToFocus = autoAnimateCount;
 			await revealApi!.slide(labelRef!.h, labelRef!.v);
-			await new Promise((resolve) => setTimeout(resolve, 300));
+			const autoAnimateDurationMs =
+				(typeof revealApi!.getConfig().autoAnimateDuration === "number"
+					? revealApi!.getConfig().autoAnimateDuration
+					: 1) *
+					1000 +
+				120;
+			await new Promise((resolve) => setTimeout(resolve, autoAnimateDurationMs));
 			expect(afterCatalogueToFocus).toBeGreaterThan(0);
 			expect(autoAnimateCount).toBeGreaterThan(afterCatalogueToFocus);
 			const focusSlide = revealRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			const labelSlide = revealRoot.querySelector('section[title="catalogue-labels"]') as HTMLElement;
 			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
+			expect(labelSlide.getAttribute("data-auto-animate")).not.toBe("running");
+			expect(labelSlide.querySelector("[data-auto-animate-target]")).toBeNull();
+			expect(labelSlide.querySelectorAll(".presentation-morph-source[data-auto-animate-target]").length).toBe(0);
 			mountRoot.remove();
 		});
 
