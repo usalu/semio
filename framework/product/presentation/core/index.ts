@@ -856,6 +856,19 @@ export interface SlideFileModule {
 	readonly file: SlideFile;
 }
 
+/** @emoji 📁 Parsed path segments for a thought template module (`slide/<chapter>/<sequence>/<thought>.ts`). */
+export interface ParsedThoughtFilePath {
+	readonly chapter: string;
+	readonly sequence: string;
+	readonly thought: string;
+}
+
+/** @emoji 📄 Thought module expanded into slides via a named template (e.g. intro). */
+export type ThoughtFile = {
+	readonly template: "intro";
+	readonly spec: IntroSpec;
+};
+
 /** @emoji 📽 Deck metadata paired with slide modules discovered from a glob import. */
 export interface PresentationMeta {
 	readonly id: string;
@@ -885,6 +898,11 @@ export function presentationSlideFilePath(
 	return `slide/${chapter}/${sequence}/${thought}/${slide}.ts`;
 }
 
+/** @emoji 📁 Builds the canonical thought template path for one Gedanke bookmark name. */
+export function presentationThoughtFilePath(chapter: string, sequence: string, thought: string): string {
+	return `slide/${chapter}/${sequence}/${thought}.ts`;
+}
+
 /** @emoji 📁 Parses `slide/<chapter>/<sequence>/<thought>/<slide>.ts` from an import path. */
 export function parsePresentationSlideFilePath(path: string): ParsedSlideFilePath | null {
 	const normalized = path.replace(/\\/g, "/");
@@ -897,6 +915,20 @@ export function parsePresentationSlideFilePath(path: string): ParsedSlideFilePat
 		sequence: match[2]!,
 		thought: match[3]!,
 		slide: match[4]!,
+	};
+}
+
+/** @emoji 📁 Parses `slide/<chapter>/<sequence>/<thought>.ts` from an import path. */
+export function parsePresentationThoughtFilePath(path: string): ParsedThoughtFilePath | null {
+	const normalized = path.replace(/\\/g, "/");
+	const match = normalized.match(/(?:^|\/)slide\/([^/]+)\/([^/]+)\/([^/]+)\.ts$/u);
+	if (!match) {
+		return null;
+	}
+	return {
+		chapter: match[1]!,
+		sequence: match[2]!,
+		thought: match[3]!,
 	};
 }
 
@@ -972,23 +1004,50 @@ export function assembleChapterFromSlideFiles(
 	};
 }
 
-/** @emoji 📽 Assembles a deck from eager import.meta.glob slide module maps. */
+function isThoughtFile(module: SlideFile | ThoughtFile): module is ThoughtFile {
+	return "template" in module;
+}
+
+/** @emoji 📽 Assembles a deck from eager import.meta.glob slide and thought template modules. */
 export function loadPresentationFromSlideGlob(
 	meta: PresentationMeta,
-	globModules: Readonly<Record<string, { readonly default: SlideFile }>>,
+	globModules: Readonly<Record<string, { readonly default: SlideFile | ThoughtFile }>>,
 ): Presentation {
 	const byChapter = new Map<string, Map<string, readonly SlideFileModule[]>>();
+	const thoughtTemplateKeys = new Set<string>();
 	for (const [importPath, module] of Object.entries(globModules)) {
-		const parsedPath = parsePresentationSlideFilePath(importPath);
-		if (!parsedPath) {
+		const slidePath = parsePresentationSlideFilePath(importPath);
+		const thoughtPath = slidePath ? null : parsePresentationThoughtFilePath(importPath);
+		if (!slidePath && !thoughtPath) {
 			continue;
 		}
 		const byThought =
-			byChapter.get(parsedPath.chapter) ?? new Map<string, readonly SlideFileModule[]>();
-		const thoughtKey = `${parsedPath.sequence}\0${parsedPath.thought}`;
-		const modules = [...(byThought.get(thoughtKey) ?? []), { path: parsedPath, file: module.default }];
-		byThought.set(thoughtKey, modules);
-		byChapter.set(parsedPath.chapter, byThought);
+			byChapter.get((slidePath ?? thoughtPath)!.chapter) ?? new Map<string, readonly SlideFileModule[]>();
+		const keyPath = slidePath ?? thoughtPath!;
+		const thoughtKey = `${keyPath.sequence}\0${keyPath.thought}`;
+		const existing = byThought.get(thoughtKey) ?? [];
+		if (thoughtPath) {
+			if (existing.length > 0) {
+				throw new Error(
+					`Thought "${thoughtPath.thought}" is defined both as ${presentationThoughtFilePath(thoughtPath.chapter, thoughtPath.sequence, thoughtPath.thought)} and as slide files under that folder.`,
+				);
+			}
+			if (!isThoughtFile(module.default)) {
+				throw new Error(
+					`Expected a thought template export from ${presentationThoughtFilePath(thoughtPath.chapter, thoughtPath.sequence, thoughtPath.thought)}.`,
+				);
+			}
+			thoughtTemplateKeys.add(thoughtKey);
+			byThought.set(thoughtKey, expandThoughtFileToSlideModules(thoughtPath, module.default));
+		} else {
+			if (thoughtTemplateKeys.has(thoughtKey)) {
+				throw new Error(
+					`Thought "${slidePath!.thought}" already uses template file ${presentationThoughtFilePath(slidePath!.chapter, slidePath!.sequence, slidePath!.thought)}.`,
+				);
+			}
+			byThought.set(thoughtKey, [...existing, { path: slidePath!, file: module.default as SlideFile }]);
+		}
+		byChapter.set(keyPath.chapter, byThought);
 	}
 	return {
 		id: meta.id,
@@ -1299,6 +1358,31 @@ export function introSlideFiles(spec: IntroSpec): readonly SlideFile[] {
 	];
 }
 
+/** @emoji 🎬 Intro thought module referencing {@link IntroSpec}. */
+export function introThoughtFile(spec: IntroSpec): ThoughtFile {
+	return { template: "intro", spec };
+}
+
+/** @emoji 🧩 Expands a thought template module into slide modules under its folder path. */
+export function expandThoughtFileToSlideModules(path: ParsedThoughtFilePath, thought: ThoughtFile): SlideFileModule[] {
+	if (thought.template !== "intro") {
+		throw new Error(`Unknown thought template "${thought.template}" at ${presentationThoughtFilePath(path.chapter, path.sequence, path.thought)}.`);
+	}
+	const language = introBookmarkLanguage(thought.spec.language);
+	return introSlideFiles(thought.spec).map((file) => ({
+		path: {
+			chapter: path.chapter,
+			sequence: path.sequence,
+			thought: path.thought,
+			slide:
+				file.arrangement.name ??
+				INTRO_ARRANGEMENT_BOOKMARK[language][file.arrangement.id] ??
+				file.arrangement.id,
+		},
+		file,
+	}));
+}
+
 /** @emoji 🎬 Builds a seven-slide intro; each arrangement is that slide's target content for reveal.js auto-animate. */
 export function intro(spec: IntroSpec): Presentation {
 	const language = introBookmarkLanguage(spec.language);
@@ -1546,6 +1630,50 @@ if (import.meta.vitest) {
 				thought: "Einleitung",
 				slide: "Titel",
 			});
+		});
+	});
+
+	describe("parsePresentationThoughtFilePath", () => {
+		it("round-trips canonical thought template paths", () => {
+			const path = presentationThoughtFilePath("Hauptteil", "Einführung", "Einleitung");
+			expect(path).toBe("slide/Hauptteil/Einführung/Einleitung.ts");
+			expect(parsePresentationThoughtFilePath(`./${path}`)).toEqual({
+				chapter: "Hauptteil",
+				sequence: "Einführung",
+				thought: "Einleitung",
+			});
+			expect(parsePresentationSlideFilePath(`./${path}`)).toBeNull();
+		});
+	});
+
+	describe("loadPresentationFromSlideGlob thought templates", () => {
+		it("expands intro thought files into ordered slides", () => {
+			const deck = loadPresentationFromSlideGlob(
+				{ id: "deck", name: "Deck", language: "de" },
+				{
+					"./slide/Hauptteil/Einführung/Einleitung.ts": {
+						default: introThoughtFile({
+							language: "de",
+							title: { full: ["T"], short: "T" },
+							description: { full: ["D"], short: "D" },
+							goal: ["G"],
+							authors: { lines: [[{ name: "A", marks: ["a"] }]] },
+							affiliations: { steps: [[{ mark: "a", name: "Faculty" }], [{ mark: "a", name: "Faculty" }], [{ mark: "a", name: "Faculty" }]] },
+						}),
+					},
+				},
+			);
+			const thought = deck.chapters[0]!.sequences[0]!.thoughts[0]!;
+			expect(thought.name).toBe("Einleitung");
+			expect(thought.slides.map((slide) => slide.arrangement.name)).toEqual([
+				"Titel",
+				"Beschreibung",
+				"Ziel",
+				"Autoren",
+				"Fakultät",
+				"Universitäten",
+				"Lehrstühle",
+			]);
 		});
 	});
 
