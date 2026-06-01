@@ -1929,21 +1929,94 @@ function vec3FromSnapshotContext(ctx: Record<string, unknown>, key: string): Vec
   return readVec3(ctx[key]);
 }
 
+const HEIGHT_DRAG_PLANE_X_OFFSET = 0.06;
+
+/** @emoji 📍 Projects `ray` onto the infinite world-Z line through `origin` (Z may be negative). */
+export function projectRayToVerticalZLine(ray: THREE.Ray, origin: Vec3): Vec3 {
+  const [ox, oy, oz] = origin;
+  const ro = ray.origin;
+  const rd = ray.direction;
+  const eps = 1e-9;
+  let z = oz;
+  if (Math.abs(rd.x) > Math.abs(rd.y) && Math.abs(rd.x) > eps) {
+    z = ro.z + ((ox - ro.x) / rd.x) * rd.z;
+  } else if (Math.abs(rd.y) > eps) {
+    z = ro.z + ((oy - ro.y) / rd.y) * rd.z;
+  } else {
+    z = ro.z;
+  }
+  return [ox, oy, z];
+}
+
+/** @emoji 📍 Intersects `ray` with the YZ plane at fixed world X. */
+export function projectRayToYzPlaneAtX(ray: THREE.Ray, planeX: number): Vec3 | null {
+  const plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -planeX);
+  const hit = new THREE.Vector3();
+  return ray.intersectPlane(plane, hit) ? ([hit.x, hit.y, hit.z] as unknown as Vec3) : null;
+}
+
+function pointerRayFromClient(client: { readonly x: number; readonly y: number }, camera: THREE.Camera, rect: DOMRect): THREE.Ray {
+  const pointer = new THREE.Vector2(((client.x - rect.left) / rect.width) * 2 - 1, -(((client.y - rect.top) / rect.height) * 2 - 1));
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(pointer, camera);
+  return raycaster.ray;
+}
+
+type SpatialConstrainedPointerMode = "vertical-z" | "height-yz";
+
+/** @emoji 🖱️ Canvas raycast cursor constraint (vertical Z rod or YZ height wall) independent of pick-mesh hit. */
+function SpatialConstrainedPointerBridge({
+  mode,
+  origin,
+  corner,
+  enabled,
+  onPointerMove,
+  onPointerDown,
+}: {
+  readonly mode: SpatialConstrainedPointerMode | null;
+  readonly origin: Vec3;
+  readonly corner: Vec3 | null;
+  readonly enabled: boolean;
+  readonly onPointerMove?: (point: Vec3) => void;
+  readonly onPointerDown?: (point: Vec3) => void;
+}): null {
+  const { camera, gl } = useThree();
+  reactHostPort.useEffect(() => {
+    if (!enabled || mode === null || !onPointerMove) return;
+    const canvas = gl.domElement;
+    const resolve = (ray: THREE.Ray): Vec3 | null => {
+      if (mode === "vertical-z") return projectRayToVerticalZLine(ray, origin);
+      if (mode === "height-yz" && corner) return projectRayToYzPlaneAtX(ray, corner[0] + HEIGHT_DRAG_PLANE_X_OFFSET);
+      return null;
+    };
+    const onMove = (event: PointerEvent) => {
+      const point = resolve(pointerRayFromClient(event, camera, canvas.getBoundingClientRect()));
+      if (point) onPointerMove(point);
+    };
+    const onDown = (event: PointerEvent) => {
+      if (event.button !== 0 || !onPointerDown) return;
+      const point = resolve(pointerRayFromClient(event, camera, canvas.getBoundingClientRect()));
+      if (point) onPointerDown(point);
+    };
+    canvas.addEventListener("pointermove", onMove, { passive: true });
+    canvas.addEventListener("pointerdown", onDown, { passive: true });
+    return () => {
+      canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerdown", onDown);
+    };
+  }, [enabled, mode, origin, corner, camera, gl, onPointerMove, onPointerDown]);
+  return null;
+}
+
 /** @emoji 🖱️ YZ wall at the second corner so `pointer.move` changes world Z (factory height uses |Δz|). */
-function HeightDragSurface({ origin, corner, enabled, onPointerMove }: { readonly origin: Vec3; readonly corner: Vec3; readonly enabled: boolean; readonly onPointerMove?: (point: Vec3) => void }): ReactNode {
+function HeightDragSurface({ origin, corner }: { readonly origin: Vec3; readonly corner: Vec3 }): ReactNode {
   const z0 = origin[2];
   const zSpan = 10;
   const zMid = z0 + zSpan / 2;
   const ySpan = 6;
-  const onMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!enabled || !onPointerMove) return;
-    e.stopPropagation();
-    const p = e.point;
-    onPointerMove([p.x, p.y, p.z] as unknown as Vec3);
-  };
-  const xPlane = corner[0] + 0.06;
+  const xPlane = corner[0] + HEIGHT_DRAG_PLANE_X_OFFSET;
   return (
-    <mesh position={[xPlane, corner[1], zMid]} rotation={[0, Math.PI / 2, 0]} onPointerMove={onMove} renderOrder={2}>
+    <mesh position={[xPlane, corner[1], zMid]} rotation={[0, Math.PI / 2, 0]} raycast={raycastNone} renderOrder={2}>
       <planeGeometry args={[zSpan, ySpan]} />
       <meshStandardMaterial
         transparent
@@ -1960,34 +2033,11 @@ function HeightDragSurface({ origin, corner, enabled, onPointerMove }: { readonl
   );
 }
 
-/** @emoji 🖱️ Z-aligned rod at `origin` so `pointer.move` drives peak height without XY drift. */
-function VerticalZDragRod({
-  origin,
-  enabled,
-  onPointerMove,
-  onPointerDown,
-}: {
-  readonly origin: Vec3;
-  readonly enabled: boolean;
-  readonly onPointerMove?: (point: Vec3) => void;
-  readonly onPointerDown?: (point: Vec3) => void;
-}): ReactNode {
+/** @emoji 🖱️ Z-aligned rod at `origin` (visual only; cursor projection is {@link SpatialConstrainedPointerBridge}). */
+function VerticalZDragRod({ origin }: { readonly origin: Vec3 }): ReactNode {
   const h = 22;
-  const toPoint = (e: ThreeEvent<PointerEvent>): Vec3 => [e.point.x, e.point.y, e.point.z] as unknown as Vec3;
-  const onMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!enabled || !onPointerMove) return;
-    e.stopPropagation();
-    onPointerMove(toPoint(e));
-  };
-  const onDown = (e: ThreeEvent<PointerEvent>) => {
-    if (!enabled) return;
-    e.stopPropagation();
-    const p = toPoint(e);
-    onPointerMove?.(p);
-    onPointerDown?.(p);
-  };
   return (
-    <mesh position={[origin[0], origin[1], origin[2] + h / 2]} rotation={[Math.PI / 2, 0, 0]} onPointerMove={onMove} onPointerDown={onDown} renderOrder={3}>
+    <mesh position={[origin[0], origin[1], origin[2] + h / 2]} rotation={[Math.PI / 2, 0, 0]} raycast={raycastNone} renderOrder={3}>
       <cylinderGeometry args={[0.14, 0.14, h, 10]} />
       <meshStandardMaterial transparent opacity={0.14} color={spatialSceneColors().accentSecondary} depthWrite={false} side={THREE.DoubleSide} />
     </mesh>
@@ -3100,16 +3150,23 @@ export function InteractionSpatialView({
           onSelectionRequest={onSelectionRequest}
         />
       ) : null}
-      {heightMoveOn && origin && corner ? <HeightDragSurface origin={origin} corner={corner} enabled={heightMoveOn} onPointerMove={onScenePointerMoveEvent} /> : null}
-      {zRodMoveOn && origin ? (
-        <VerticalZDragRod
+      {heightMoveOn && origin && corner ? <HeightDragSurface origin={origin} corner={corner} /> : null}
+      {zRodMoveOn && origin ? <VerticalZDragRod origin={origin} /> : null}
+      {origin && (heightMoveOn || zRodMoveOn) ? (
+        <SpatialConstrainedPointerBridge
+          mode={zRodMoveOn ? "vertical-z" : heightMoveOn ? "height-yz" : null}
           origin={origin}
-          enabled={zRodMoveOn}
+          corner={corner}
+          enabled={heightMoveOn || zRodMoveOn}
           onPointerMove={onScenePointerMoveEvent}
-          onPointerDown={(point) => {
-            const event = createSpatialPickEvent("pointer.down", point, null);
-            onInteractionEvent?.(event);
-          }}
+          onPointerDown={
+            zRodMoveOn
+              ? (point) => {
+                  const event = createSpatialPickEvent("pointer.down", point, null);
+                  onInteractionEvent?.(event);
+                }
+              : undefined
+          }
         />
       ) : null}
       <CommittedMeshLayer
@@ -5661,6 +5718,28 @@ if (import.meta.vitest) {
         spatialInteraction: mergeInteractionSpatial(spec!),
       } satisfies Pick<InteractionSnapshot, "state" | "spatialInteraction">;
       expect(interactionSpatialGroundPickPlaneEnabled(snapshot, true)).toBe(true);
+    });
+
+    it("projectRayToVerticalZLine locks XY to origin and allows negative Z", () => {
+      const origin: Vec3 = [2, 3, 1];
+      const ray = new THREE.Ray(new THREE.Vector3(2, 3, -8), new THREE.Vector3(0, 0, 1));
+      const vertical = projectRayToVerticalZLine(ray, origin);
+      expect(vertical[0]).toBeCloseTo(2, 4);
+      expect(vertical[1]).toBeCloseTo(3, 4);
+      expect(vertical[2]).toBeCloseTo(-8, 4);
+      const oblique = new THREE.Ray(new THREE.Vector3(0, 0, 3), new THREE.Vector3(1, 0, -1.5).normalize());
+      const point = projectRayToVerticalZLine(oblique, origin);
+      expect(point[0]).toBeCloseTo(2, 4);
+      expect(point[2]).toBeLessThan(1);
+    });
+
+    it("projectRayToYzPlaneAtX intersects height-drag wall plane", () => {
+      const planeX = 4.06;
+      const ray = new THREE.Ray(new THREE.Vector3(0, 0, 5), new THREE.Vector3(1, 0, -0.2).normalize());
+      const point = projectRayToYzPlaneAtX(ray, planeX);
+      expect(point).not.toBeNull();
+      expect(point![0]).toBeCloseTo(planeX, 4);
+      expect(point![2]).toBeLessThan(5);
     });
 
     it("enables spatial ground pick plane during rubber-band states regardless of host selection accept", () => {

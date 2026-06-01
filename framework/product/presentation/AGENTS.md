@@ -24,16 +24,18 @@ A sequence is presented as a column.
 
 # Thought
 
-A thought that develops over one or many slides.
-A thought has participants.
+A thought has one or many slides.
 
 # Participant
 
+A participant is either part of a presentation, a chapter, a sequence, a thought or a slide and is available only for the artifact and its children.
 A participant appear on one or many slides.
-A praticipant has different embodiments.
+A participant is represented with an embodiment inside a disposition.
+Multiple participants can have the same embodiment.
 
 # Embodiment
 
+An embodiment is either part of a presentation, a chapter, a sequence, a thought or a slide and is available only for the artifact and its children.
 An embodiment is a representation of a participant in a certain shape.
 The embodiment has a default style which can be changed by dispositions.
 
@@ -61,10 +63,6 @@ A selection rectangle is started when the user clicks into empty stapce.
 When the selection rectangle is going to the left, partial 
 Because every disposition either disappears or morphs between slides, all ephemeral modification are lost after a slide changge.
 
-# Split
-
-A split divides one figure into many independently placed tiles.
-
 # Morph
 
 A morph is when one disposition changes to another disposition.
@@ -86,10 +84,17 @@ A slide is an arragement with an optional transition to the next slide.
 
 # Template
 
-A template produces anything parametrically (a presentation, a chapter, a sequence, a tought, a partcipant, embodiment, figure, video, text, pdf, disposition, split, morph, arrangement, transition, …)
+A template produces a set of matching artifacts (a presentation, a chapter, a sequence, a tought, a partcipant, embodiment, figure, video, text, pdf, disposition, split, morph, arrangement, transition, …)
+Templates can use other templates.
 
 ## Intro
 
-Produces an intro sequence.
+The intro template produces an sequence along with participants: title, description, goal, authors, affiliations.
 
-Participants: title, description, goal, authors, affiliations
+## Tile
+
+A tile template produces from a source figure a new figure embodiments.
+
+## Split
+
+A spit template produces a grid of tiles.
