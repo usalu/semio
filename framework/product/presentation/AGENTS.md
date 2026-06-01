@@ -70,6 +70,7 @@ A split divides one figure into many independently placed tiles.
 A morph is when one disposition changes to another disposition.
 You MUST always start by first morphing the source embodiment from the the source position and source style into the target position and target style, and then afterwards switch embodiment from source to target.
 You MUST NOT start by switching the embodiment, and then afterwards morphing the target embodiment from the the source position and source style into the target position and target style.
+You MUST morph from the current disposition (including ephemeral modifications), although after the morph the ephemeral modifications will be gone.
 
 # Arrangement
 

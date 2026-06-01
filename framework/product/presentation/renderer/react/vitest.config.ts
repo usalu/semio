@@ -16,6 +16,14 @@ export default defineConfig({
 			{ find: "@framework/presentation/core", replacement: resolve(root, "../../core/index.ts") },
 			{ find: "@framework/core", replacement: resolve(root, "../../../core/index.ts") },
 			{ find: "@ui/react", replacement: resolve(root, "../../../../../ui/react/index.tsx") },
+			{
+				find: "@mit-bestand/praesentation/projektetage-spec",
+				replacement: resolve(root, "../../../../../mit-bestand/präsentation/33.projektetage/spec.ts"),
+			},
+			{
+				find: "@mit-bestand/praesentation/projektetage-deck",
+				replacement: resolve(root, "../../../../../mit-bestand/präsentation/33.projektetage/index.ts"),
+			},
 		],
 	},
 	test: {

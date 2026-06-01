@@ -141,6 +141,8 @@ export interface PresentationMountOptions {
 	readonly slideNumber?: boolean;
 	readonly width?: number;
 	readonly height?: number;
+	/** @emoji 🎞 Called once reveal.js finished initializing (tests and tooling). */
+	readonly onRevealReady?: (api: Reveal.Api) => void;
 }
 
 /** @emoji 🔗 Writes reveal.js hash with localized bookmark params after the path; bookmark params are ignored for navigation. */
@@ -213,6 +215,34 @@ export function syncArrangementSettledState(
 	if (currentSlide?.hasAttribute("data-settle-before-morph-to")) {
 		currentSlide.classList.remove("presentation-arrangement--settled");
 	}
+}
+
+/** @emoji 🔗 Resolves the reveal.js slide section at stack indices `h` / `v`. */
+export function resolveRevealSlideAt(
+	deckEl: HTMLElement,
+	indices: { readonly h: number; readonly v: number },
+): HTMLElement | null {
+	const horizontal = deckEl.querySelectorAll<HTMLElement>(".slides > section")[indices.h];
+	if (!horizontal) {
+		return null;
+	}
+	const vertical = horizontal.querySelectorAll<HTMLElement>("section");
+	return vertical[indices.v] ?? horizontal;
+}
+
+/** @emoji 📖 Reads reveal.js `slidechanged` slide elements extended onto the event object. */
+export function slideChangedEventSlides(event: Event): {
+	readonly previousSlide: HTMLElement | undefined;
+	readonly currentSlide: HTMLElement | undefined;
+} {
+	const slideEvent = event as Event & {
+		readonly previousSlide?: HTMLElement;
+		readonly currentSlide?: HTMLElement;
+	};
+	return {
+		previousSlide: slideEvent.previousSlide,
+		currentSlide: slideEvent.currentSlide,
+	};
 }
 
 /** @emoji ⏳ Swaps split tiles for dormant morph anchors on the outgoing slide when auto-animating to a listed target. */
@@ -3022,18 +3052,26 @@ export const PresentationDeck: FC<{
 		const onResize = (): void => {
 			syncPresentationSlideSizeVars(deckEl, deck);
 		};
+		const onBeforeSlideChange = (event: Event): void => {
+			const slideEvent = event as Event & { readonly indexh?: number; readonly indexv?: number };
+			const fromSlide = deck.getCurrentSlide() as HTMLElement | null;
+			if (!fromSlide || slideEvent.indexh === undefined || slideEvent.indexv === undefined) {
+				return;
+			}
+			const toSlide = resolveRevealSlideAt(deckEl, { h: slideEvent.indexh, v: slideEvent.indexv });
+			if (toSlide) {
+				prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
+			}
+		};
 		const onSlideChanged = (event: Event): void => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
 			syncPresentSlideMedia();
 			syncSlideUrl();
-			const slideEvent = event as Event & {
-				previousSlide?: HTMLElement;
-				currentSlide?: HTMLElement;
-			};
-			const currentSlide = slideEvent.currentSlide ?? deck.getCurrentSlide();
-			const previousSlide = slideEvent.previousSlide ?? previousSlideRef.current;
+			const { previousSlide: eventPrevious, currentSlide: eventCurrent } = slideChangedEventSlides(event);
+			const currentSlide = eventCurrent ?? (deck.getCurrentSlide() as HTMLElement | null);
+			const previousSlide = eventPrevious ?? previousSlideRef.current;
 			if (previousSlide && currentSlide) {
 				prepareArrangementBeforeAutoAnimate(previousSlide, currentSlide);
 			}
@@ -3055,7 +3093,7 @@ export const PresentationDeck: FC<{
 			}
 		};
 		const onAutoAnimate = (event: Event): void => {
-			const sheet = (event as Event & { data?: { sheet?: { innerHTML: string } } }).data?.sheet;
+			const sheet = (event as Event & { sheet?: { innerHTML: string } }).sheet;
 			if (sheet && typeof sheet.innerHTML === "string") {
 				sheet.innerHTML = patchAutoAnimateUniformScale(sheet.innerHTML);
 			}
@@ -3096,12 +3134,15 @@ export const PresentationDeck: FC<{
 				previousSlideRef.current = currentSlide;
 				setSlideEpoch((epoch) => epoch + 1);
 			}
+			options?.onRevealReady?.(deck);
+			deck.on("beforeslidechange", onBeforeSlideChange);
 			deck.on("slidechanged", onSlideChanged);
 			deck.on("resize", onResize);
 			deck.on("autoanimate", onAutoAnimate);
 		});
 		return () => {
 			window.removeEventListener("hashchange", onWindowHashChange);
+			deck.off("beforeslidechange", onBeforeSlideChange);
 			deck.off("slidechanged", onSlideChanged);
 			deck.off("resize", onResize);
 			deck.off("autoanimate", onAutoAnimate);
@@ -4335,6 +4376,258 @@ if (import.meta.vitest) {
 			const layout = buildInteractiveSlideLayout("slide-2", resolved);
 			expect(layout.placements).toHaveLength(0);
 			expect(layout.rowBands).toHaveLength(0);
+		});
+
+		it("auto-animates catalogue focus into inline column labels", async () => {
+			const {
+				ASSET_CATALOGUE,
+				CATALOGUE_COL1,
+				CATALOGUE_COL2,
+				CATALOGUE_COL3,
+				CATALOGUE_COLUMN_TILE_KEYS,
+				CATALOGUE_EMBODIMENT_CROP,
+				CATALOGUE_EMBODIMENT_LABEL,
+				CATALOGUE_FOCUS_TILES,
+				CATALOGUE_PARTICIPANT,
+				CATALOGUE_TILES_ASSEMBLED,
+				catalogueColumnParticipant,
+				catalogueFocusTilesForColumn,
+				inlineColumnLabelPosition,
+				unionTileCrop,
+			} = await import("@mit-bestand/praesentation/projektetage-spec");
+			const deck: Presentation = {
+				id: "projektetage-morph",
+				name: "Morph",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "medien",
+										participants: [
+											{
+												id: CATALOGUE_PARTICIPANT,
+												embodiments: [{ kind: "figure", src: ASSET_CATALOGUE, alt: "Katalog" }],
+											},
+											catalogueColumnParticipant(
+												CATALOGUE_COL1,
+												CATALOGUE_COLUMN_TILE_KEYS.col1,
+												"Rippenplatte",
+											),
+											catalogueColumnParticipant(
+												CATALOGUE_COL2,
+												CATALOGUE_COLUMN_TILE_KEYS.col2,
+												"Unterzug",
+											),
+											catalogueColumnParticipant(
+												CATALOGUE_COL3,
+												CATALOGUE_COLUMN_TILE_KEYS.col3,
+												"Stütze",
+											),
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "catalogue",
+													dispositions: [
+														{
+															participantId: CATALOGUE_PARTICIPANT,
+															emphasis: "active",
+															split: { tiles: CATALOGUE_TILES_ASSEMBLED },
+														},
+													],
+												},
+												transition: { kind: "morph" },
+											},
+											{
+												arrangement: {
+													id: "catalogue-focus",
+													settleBeforeMorphTo: ["catalogue-labels"],
+													dispositions: [
+														{
+															participantId: CATALOGUE_PARTICIPANT,
+															emphasis: "active",
+															split: { tiles: CATALOGUE_FOCUS_TILES },
+														},
+														{
+															participantId: CATALOGUE_COL1,
+															emphasis: "active",
+															split: {
+																tiles: catalogueFocusTilesForColumn("col1"),
+																morphParticipant: true,
+															},
+														},
+														{
+															participantId: CATALOGUE_COL2,
+															emphasis: "active",
+															split: {
+																tiles: catalogueFocusTilesForColumn("col2"),
+																morphParticipant: true,
+															},
+														},
+														{
+															participantId: CATALOGUE_COL3,
+															emphasis: "active",
+															split: {
+																tiles: catalogueFocusTilesForColumn("col3"),
+																morphParticipant: true,
+															},
+														},
+													],
+												},
+												transition: { kind: "morph" },
+											},
+											{
+												arrangement: {
+													id: "catalogue-labels",
+													dispositions: [
+														{
+															participantId: CATALOGUE_COL1,
+															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+															emphasis: "active",
+															position: inlineColumnLabelPosition(0),
+															morphFrom: [
+																{
+																	participantId: CATALOGUE_COL1,
+																	embodimentId: CATALOGUE_EMBODIMENT_CROP,
+																	position: inlineColumnLabelPosition(0),
+																},
+															],
+														},
+														{
+															participantId: CATALOGUE_COL2,
+															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+															emphasis: "active",
+															position: inlineColumnLabelPosition(1),
+															morphFrom: [
+																{
+																	participantId: CATALOGUE_COL2,
+																	embodimentId: CATALOGUE_EMBODIMENT_CROP,
+																	position: inlineColumnLabelPosition(1),
+																},
+															],
+														},
+														{
+															participantId: CATALOGUE_COL3,
+															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+															emphasis: "active",
+															position: inlineColumnLabelPosition(2),
+															morphFrom: [
+																{
+																	participantId: CATALOGUE_COL3,
+																	embodimentId: CATALOGUE_EMBODIMENT_CROP,
+																	position: inlineColumnLabelPosition(2),
+																},
+															],
+														},
+													],
+												},
+												transition: { kind: "morph" },
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			const revealEl = mountRoot.querySelector(".reveal") as HTMLElement;
+			const focusSlide = revealEl.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			const labelSlide = revealEl.querySelector('section[title="catalogue-labels"]') as HTMLElement;
+			expect(focusSlide).toBeTruthy();
+			expect(labelSlide).toBeTruthy();
+			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
+			expect(
+				focusSlide.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--figure'),
+			).toBeTruthy();
+			prepareArrangementBeforeAutoAnimate(focusSlide, labelSlide);
+			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(true);
+			const host: AutoAnimateMatcherHost = {
+				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
+					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
+						const key = serializer(element);
+						const toElement = toScope.querySelector<HTMLElement>(
+							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
+						);
+						if (toElement) {
+							pairs.push({ from: element, to: toElement });
+						}
+					}
+				},
+			};
+			const pairs = presentationAutoAnimateMatcher.call(host, focusSlide, labelSlide);
+			const columnIds = [CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3];
+			expect(columnIds.every((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id))).toBe(
+				true,
+			);
+			expect(
+				pairs.every((pair) => pair.from.classList.contains("presentation-morph-slot--figure")),
+			).toBe(true);
+			expect(pairs.every((pair) => pair.to.classList.contains("presentation-morph-slot--label"))).toBe(
+				true,
+			);
+			expect(unionTileCrop(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col1).width).toBeGreaterThan(0);
+			mountRoot.remove();
+		});
+
+		it("fires reveal auto-animate when advancing projektetage focus to labels", async () => {
+			const { collectPresentationSlides } = await import("@framework/presentation/core");
+			const { deck } = await import("@mit-bestand/praesentation/projektetage-deck");
+			const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
+			const labelRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilbeschriftungen");
+			expect(focusRef).toBeDefined();
+			expect(labelRef).toBeDefined();
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			let revealApi: Reveal.Api | undefined;
+			let autoAnimateCount = 0;
+			act(() => {
+				mountPresentation(mountRoot, deck, {
+					hash: false,
+					slideNumber: false,
+					surfaceChrome: false,
+					onRevealReady: (api) => {
+						revealApi = api;
+					},
+				});
+			});
+			const revealRoot = mountRoot.querySelector(".reveal") as HTMLElement;
+			revealRoot.addEventListener("autoanimate", () => {
+				autoAnimateCount += 1;
+			});
+			await new Promise<void>((resolve) => {
+				const start = Date.now();
+				const wait = (): void => {
+					if (revealApi) {
+						resolve();
+						return;
+					}
+					if (Date.now() - start > 5000) {
+						throw new Error("reveal.js did not become ready.");
+					}
+					setTimeout(wait, 50);
+				};
+				wait();
+			});
+			await revealApi!.slide(focusRef!.h, focusRef!.v);
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			await revealApi!.slide(labelRef!.h, labelRef!.v);
+			await new Promise((resolve) => setTimeout(resolve, 300));
+			expect(autoAnimateCount).toBeGreaterThan(0);
+			const focusSlide = revealRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			const labelSlide = revealRoot.querySelector('section[title="catalogue-labels"]') as HTMLElement;
+			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
+			mountRoot.remove();
 		});
 
 		it("renders morph-participant dormant anchors on the arrangement canvas", () => {

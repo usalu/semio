@@ -9867,7 +9867,7 @@ if (import.meta.vitest) {
         {
           id: "J",
           meshUrl: "/meshes/capsule_J.glb",
-          vortices: [{ vortexKind: "door capsule east", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
+          vortices: [{ vortexKind: "door capsule west", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
         },
         {
           id: "Tambour",
@@ -9877,11 +9877,16 @@ if (import.meta.vitest) {
       ],
       vortices: [
         { id: "door capsule east", defaultCableKind: "cable.link" },
+        { id: "door capsule west", defaultCableKind: "cable.link" },
         { id: "door tambour east", defaultCableKind: "cable.link" },
+        { id: "door tambour west", defaultCableKind: "cable.link" },
       ],
       cables: [{ id: "cable.link", defaultAttractionKind: "puzzle3d.attraction.link" }],
     };
-    const brushCompat: readonly KindCompatEntry[] = [{ bidirectional: true, specificity: "vortex", source: "door capsule east", target: "door tambour east" }];
+    const brushCompat: readonly KindCompatEntry[] = [
+      { bidirectional: true, specificity: "vortex", source: "door capsule east", target: "door tambour west" },
+      { bidirectional: true, specificity: "vortex", source: "door capsule west", target: "door tambour east" },
+    ];
     it("brushPlacementCollisionToleranceFromSlider maps window slider to CAD penetration depth", () => {
       expect(brushPlacementCollisionToleranceFromSlider(0)).toBe(0);
       expect(brushPlacementCollisionToleranceFromSlider(50)).toBeCloseTo(1, 5);

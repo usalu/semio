@@ -1232,13 +1232,13 @@
       },
       {
         "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
-        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
         "bidirectional": true,
         "specificity": "handle"
       },
       {
         "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
-        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
         "bidirectional": true,
         "specificity": "handle"
       },

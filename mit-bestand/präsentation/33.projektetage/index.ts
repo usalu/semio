@@ -25,7 +25,7 @@ import "./globals.css";
 
 //#region 🔖Deck
 const slideModules = import.meta.glob<{ default: SlideFile }>("./slide/**/*.ts", { eager: true });
-const deck: Presentation = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+export const deck: Presentation = loadPresentationFromSlideGlob(presentationMeta, slideModules);
 
 function mount(): void {
 	const el = document.getElementById("root");

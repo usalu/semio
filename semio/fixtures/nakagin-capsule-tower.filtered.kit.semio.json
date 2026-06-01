@@ -55,7 +55,7 @@
                     "name": "door capsule east",
                     "compatiblePorts": [
                         {
-                            "id": "019ab243-21f4-73df-8cb4-50266f6860b8"
+                            "id": "019ab243-21f4-73df-8cb4-57263e420e70"
                         }
                     ]
                 },
@@ -64,7 +64,7 @@
                     "name": "door capsule west",
                     "compatiblePorts": [
                         {
-                            "id": "019ab243-21f4-73df-8cb4-57263e420e70"
+                            "id": "019ab243-21f4-73df-8cb4-50266f6860b8"
                         }
                     ]
                 },
