@@ -366,6 +366,8 @@ export interface Arrangement {
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly dispositions: readonly Disposition[];
+	/** @emoji ⏳ Arrangement ids whose morph must finish before dormant morph anchors replace split tiles on this slide. */
+	readonly settleAfterMorphFrom?: readonly string[];
 }
 //#endregion 🔖Arrangement
 
@@ -496,11 +498,19 @@ export function morphBridgeDirect(
 	source: Disposition,
 	target: Disposition,
 ): boolean {
+	const sourceEmbodiment = resolveEmbodiment(participant, source.embodimentId);
+	const targetEmbodiment = resolveEmbodiment(participant, target.embodimentId);
+	if (
+		sourceEmbodiment.kind === "authors" &&
+		targetEmbodiment.kind === "authors" &&
+		sourceEmbodiment.id === "plain" &&
+		targetEmbodiment.id?.startsWith("marked-affiliations-step")
+	) {
+		return true;
+	}
 	if (source.position === undefined || target.position === undefined) {
 		return false;
 	}
-	const sourceEmbodiment = resolveEmbodiment(participant, source.embodimentId);
-	const targetEmbodiment = resolveEmbodiment(participant, target.embodimentId);
 	return (
 		sourceEmbodiment.kind === "figure" &&
 		sourceEmbodiment.crop !== undefined &&
@@ -1517,6 +1527,15 @@ if (import.meta.vitest) {
 				],
 			};
 			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual(["focus", "labels"]);
+		});
+
+		it("skips a bridge when intro authors switch from plain to affiliation marks", () => {
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
+			const expanded = expandThoughtSlides(thought);
+			expect(expanded.map((slide) => slide.id)).not.toContain("affiliations-1--bridge");
+			const authorsIndex = expanded.findIndex((slide) => slide.id === "authors");
+			const facultyIndex = expanded.findIndex((slide) => slide.id === "affiliations-1");
+			expect(facultyIndex).toBe(authorsIndex + 1);
 		});
 
 		it("does not insert a bridge when only position changes", () => {

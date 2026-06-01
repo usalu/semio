@@ -187,10 +187,21 @@
 	opacity: 0;
 }
 
-.reveal .slides section.present .presentation-morph-slot--dormant {
+.reveal .slides section.presentation-arrangement--positioned:not(.presentation-arrangement--settled) .presentation-morph-slot--dormant {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;
+}
+
+.reveal .slides section.presentation-arrangement--positioned.presentation-arrangement--settled .presentation-figure-tile-frame {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none;
+}
+
+.reveal .slides section.presentation-arrangement--positioned.presentation-arrangement--settled .presentation-morph-slot--dormant {
+	opacity: 1 !important;
+	visibility: visible !important;
 }
 
 .reveal .presentation-disposition-frame--overlay {

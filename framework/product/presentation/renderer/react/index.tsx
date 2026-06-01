@@ -205,6 +205,55 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 }
 //#endregion 🔖RevealChrome
 
+//#region 🔖ArrangementSettled
+/** @emoji ⏳ Swaps split tiles for dormant column morph anchors once tile morphs from the listed source slides finish. */
+export function syncArrangementSettledState(
+	deckEl: HTMLElement,
+	currentSlide: HTMLElement | null,
+	previousSlide: HTMLElement | null,
+): void {
+	const settleSections = deckEl.querySelectorAll<HTMLElement>("section[data-settle-after-morph-from]");
+	for (const section of settleSections) {
+		if (section !== currentSlide && section !== previousSlide) {
+			section.classList.remove("presentation-arrangement--settled");
+		}
+	}
+	if (!currentSlide) {
+		return;
+	}
+	const settleAfter = currentSlide.getAttribute("data-settle-after-morph-from");
+	if (!settleAfter) {
+		return;
+	}
+	const fromIds = settleAfter.split(",").filter((id) => id.length > 0);
+	const previousId = previousSlide?.getAttribute("title");
+	if (previousId && fromIds.includes(previousId)) {
+		return;
+	}
+	currentSlide.classList.add("presentation-arrangement--settled");
+}
+
+/** @emoji ⏳ Marks a slide settled after an auto-animate transition from a listed source arrangement. */
+export function settleArrangementAfterAutoAnimate(
+	toSlide: HTMLElement,
+	fromSlide: HTMLElement,
+	autoAnimateDurationSeconds: number,
+): void {
+	const settleAfter = toSlide.getAttribute("data-settle-after-morph-from");
+	if (!settleAfter) {
+		return;
+	}
+	const fromIds = settleAfter.split(",").filter((id) => id.length > 0);
+	const fromId = fromSlide.getAttribute("title");
+	if (!fromId || !fromIds.includes(fromId)) {
+		return;
+	}
+	window.setTimeout(() => {
+		toSlide.classList.add("presentation-arrangement--settled");
+	}, autoAnimateDurationSeconds * 1000 + 50);
+}
+//#endregion 🔖ArrangementSettled
+
 //#region 🔖HiddenPreflight
 /**
  * @emoji 🩹 Lets reveal.js own slide visibility by relaxing Tailwind preflight's `[hidden]` reset.
@@ -941,6 +990,9 @@ const ArrangementSection: FC<{
 	return (
 		<section
 			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": renderSlide.autoAnimateId } : {})}
+			{...(renderSlide.arrangement.settleAfterMorphFrom?.length
+				? { "data-settle-after-morph-from": renderSlide.arrangement.settleAfterMorphFrom.join(",") }
+				: {})}
 			title={renderSlide.id}
 			className={positioned ? "presentation-arrangement--positioned" : undefined}
 		>
@@ -958,6 +1010,7 @@ export const PresentationDeck: FC<{
 }> = ({ presentation, options }) => {
 	const deckDivRef = useRef<HTMLDivElement>(null);
 	const deckRef = useRef<Reveal.Api | null>(null);
+	const previousSlideRef = useRef<HTMLElement | null>(null);
 	const [slideEpoch, setSlideEpoch] = useState(0);
 
 	useEffect(() => {
@@ -1018,12 +1071,24 @@ export const PresentationDeck: FC<{
 		const onResize = (): void => {
 			syncPresentationSlideSizeVars(deckEl, deck);
 		};
+		const onAutoAnimate = (event: Event): void => {
+			const autoAnimateEvent = event as Event & { fromSlide?: HTMLElement; toSlide?: HTMLElement };
+			const fromSlide = autoAnimateEvent.fromSlide;
+			const toSlide = autoAnimateEvent.toSlide;
+			if (!fromSlide || !toSlide) {
+				return;
+			}
+			settleArrangementAfterAutoAnimate(toSlide, fromSlide, deck.getConfig().autoAnimateDuration ?? 1);
+		};
 		const onSlideChanged = (): void => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
 			syncPresentSlideMedia();
 			syncSlideUrl();
+			const currentSlide = deck.getCurrentSlide();
+			syncArrangementSettledState(deckEl, currentSlide, previousSlideRef.current);
+			previousSlideRef.current = currentSlide;
 			setSlideEpoch((epoch) => epoch + 1);
 		};
 		const onWindowHashChange = (): void => {
@@ -1048,6 +1113,9 @@ export const PresentationDeck: FC<{
 				const indices = readPresentationSlideIndicesFromUrl();
 				const afterSlideSync = (): void => {
 					syncSlideUrl();
+					const currentSlide = deck.getCurrentSlide();
+					syncArrangementSettledState(deckEl, currentSlide, previousSlideRef.current);
+					previousSlideRef.current = currentSlide;
 					setSlideEpoch((epoch) => epoch + 1);
 				};
 				if (indices) {
@@ -1067,13 +1135,18 @@ export const PresentationDeck: FC<{
 				}
 				window.addEventListener("hashchange", onWindowHashChange);
 			} else {
+				const currentSlide = deck.getCurrentSlide();
+				syncArrangementSettledState(deckEl, currentSlide, previousSlideRef.current);
+				previousSlideRef.current = currentSlide;
 				setSlideEpoch((epoch) => epoch + 1);
 			}
+			deck.on("autoanimate", onAutoAnimate);
 			deck.on("slidechanged", onSlideChanged);
 			deck.on("resize", onResize);
 		});
 		return () => {
 			window.removeEventListener("hashchange", onWindowHashChange);
+			deck.off("autoanimate", onAutoAnimate);
 			deck.off("slidechanged", onSlideChanged);
 			deck.off("resize", onResize);
 			try {
@@ -1606,7 +1679,23 @@ if (import.meta.vitest) {
 			expect(slot?.style.left).toBe("10%");
 		});
 
-		it("marks zero-opacity crop morph slots dormant and hides them on the present slide", () => {
+		it("settles arrangements after morph from listed sources", () => {
+			const deckEl = document.createElement("div");
+			const focus = document.createElement("section");
+			focus.setAttribute("title", "focus");
+			focus.setAttribute("data-settle-after-morph-from", "catalogue");
+			focus.classList.add("presentation-arrangement--positioned");
+			deckEl.appendChild(focus);
+			syncArrangementSettledState(deckEl, focus, null);
+			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(true);
+			focus.classList.remove("presentation-arrangement--settled");
+			const catalogue = document.createElement("section");
+			catalogue.setAttribute("title", "catalogue");
+			syncArrangementSettledState(deckEl, focus, catalogue);
+			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(false);
+		});
+
+		it("marks zero-opacity crop morph slots dormant until the arrangement settles", () => {
 			const deck: Presentation = {
 				id: "dormant-crop",
 				name: "Dormant",

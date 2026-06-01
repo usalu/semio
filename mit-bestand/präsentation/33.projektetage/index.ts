@@ -291,6 +291,7 @@ const mediaThought: Thought = {
 			arrangement: {
 				id: "catalogue-focus",
 				name: "Bauteilarten",
+				settleAfterMorphFrom: ["catalogue"],
 				dispositions: [
 					{
 						participantId: CATALOGUE_PARTICIPANT,
@@ -450,6 +451,7 @@ if (import.meta.vitest) {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
 			const focus = media?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");
 			const dispositions = focus?.arrangement.dispositions ?? [];
+			expect(focus?.arrangement.settleAfterMorphFrom).toEqual(["catalogue"]);
 			expect(dispositions[0]?.participantId).toBe(CATALOGUE_PARTICIPANT);
 			expect(dispositions[0]?.split?.tiles).toHaveLength(10);
 			expect(dispositions.slice(1).map((disposition) => disposition.participantId)).toEqual([
