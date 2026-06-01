@@ -1,0 +1,10 @@
+{
+  "title": "Fix Interactive Disposition Resize",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Resizing interactive dispositions only drags them. Fix resize handles, flow-layout resize rendering, chrome positioning with display:contents, and group resize dx/dy.",
+  "goal": "🎯framework",
+  "sessions": [
+    "⚪ec68fa46ca124c61a5ed820483f067e6"
+  ]
+}

@@ -2627,6 +2627,9 @@ if (import.meta.vitest) {
 			expect(globalsCssSource).toMatch(
 				/\.presentation-arrangement--interactive\s*\{[^}]*overflow\s*:\s*visible/s,
 			);
+			expect(globalsCssSource).not.toMatch(
+				/\.presentation-arrangement--interactive\s*\{[^}]*position\s*:\s*relative/s,
+			);
 		});
 
 		it("applies muted opacity on layered description slide", () => {
@@ -3633,6 +3636,28 @@ if (import.meta.vitest) {
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
 			expect(disposition.style.left).not.toBe(beforeLeft);
+		});
+
+		it("resizes positioned disposition from se handle", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			act(() => {
+				pointerClick(disposition);
+			});
+			const handle = disposition.querySelector(
+				".presentation-interaction-handle--se",
+			) as HTMLElement;
+			act(() => {
+				pointerDrag(handle, 560, 340, 640, 400);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(parseFloat(disposition.style.width)).toBeGreaterThan(40);
+			expect(parseFloat(disposition.style.height)).toBeGreaterThan(20);
 		});
 
 		it("toggles slide fullscreen without pinned transforms or inline placement", () => {

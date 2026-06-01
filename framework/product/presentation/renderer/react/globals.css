@@ -91,7 +91,6 @@
 }
 
 .reveal .slides > section > section.presentation-arrangement--interactive {
-	position: relative;
 	text-align: initial;
 	overflow: visible;
 }
