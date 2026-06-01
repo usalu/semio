@@ -100,25 +100,27 @@ const CATALOGUE_FOCUS_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
 	{ key: "col3", tileKeys: ["tile-r2-c4"], labelLine: CATALOGUE_COLUMN_LABEL_LINES.col3 },
 ];
 
-function columnLabelLineForTile(tileKey: string): string {
-	const column = CATALOGUE_FOCUS_COLUMN_GROUPS.find((group) => group.tileKeys.includes(tileKey));
-	return column?.labelLine ?? tileKey;
+const CATALOGUE_LABEL_STACK_FRAME = { x: 0.38, y: 0.12, width: 0.24, height: 0.76 };
+const CATALOGUE_LABEL_ROW_GAP = 0.04;
+
+function stackedColumnLabelPosition(rowIndex: number): DispositionPosition {
+	const rowHeight = (CATALOGUE_LABEL_STACK_FRAME.height - 2 * CATALOGUE_LABEL_ROW_GAP) / 3;
+	return {
+		x: CATALOGUE_LABEL_STACK_FRAME.x,
+		y: CATALOGUE_LABEL_STACK_FRAME.y + rowIndex * (rowHeight + CATALOGUE_LABEL_ROW_GAP),
+		width: CATALOGUE_LABEL_STACK_FRAME.width,
+		height: rowHeight,
+	};
 }
 
-/** @emoji 🏷 One label target per focus tile so reveal.js morphs each tile `data-id` into text in place. */
-const CATALOGUE_TILE_LABEL_TARGETS: readonly SplitMorphTarget[] = CATALOGUE_FOCUS_TILES.map((tile) => {
-	const position = tile.position;
-	if (!position) {
-		throw new Error(`Catalogue focus tile "${tile.key}" has no position.`);
-	}
-	return {
-		tileKey: tile.key,
-		position,
-		lines: [columnLabelLineForTile(tile.key)],
-		level: "heading",
-		morphRoot: "heading-line",
-	};
-});
+/** @emoji 🏷 One stacked label per column; tiles morph via shared {@link columnMorphId} on hidden per-tile ghosts. */
+const CATALOGUE_COLUMN_LABELS: readonly SplitMorphTarget[] = CATALOGUE_FOCUS_COLUMN_GROUPS.map((column, rowIndex) => ({
+	columnKey: column.key,
+	position: stackedColumnLabelPosition(rowIndex),
+	lines: [column.labelLine ?? column.key],
+	level: "heading",
+	morphRoot: "heading-line",
+}));
 
 const introDeck = intro({
 	id: "projektetage",
@@ -232,7 +234,11 @@ const mediaThought: Thought = {
 				{
 					participantId: "catalogue",
 					emphasis: "active",
-					split: { tiles: CATALOGUE_FOCUS_TILES },
+					split: {
+						tiles: CATALOGUE_FOCUS_TILES,
+						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
+						columnMorphTileGhosts: true,
+					},
 				},
 			],
 		},
@@ -242,7 +248,7 @@ const mediaThought: Thought = {
 				{
 					participantId: "catalogue",
 					emphasis: "active",
-					morphTargets: CATALOGUE_TILE_LABEL_TARGETS,
+					morphTargets: CATALOGUE_COLUMN_LABELS,
 				},
 			],
 		},
@@ -344,14 +350,17 @@ if (import.meta.vitest) {
 			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs each focus tile into a label via tileKey morphTargets", () => {
+		it("stacks three column labels and uses per-tile column morph ghosts on focus", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
-			expect(targets).toHaveLength(10);
-			expect(targets.every((target) => target.tileKey !== undefined)).toBe(true);
-			expect(new Set(targets.map((target) => target.lines[0]))).toEqual(
-				new Set(["Rippendecke", "Unterzug", "Stütze"]),
+			expect(targets).toHaveLength(3);
+			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
+			const ys = targets.map((target) => target.position.y);
+			expect(ys[0]).toBeLessThan(ys[1] ?? 0);
+			expect(ys[1]).toBeLessThan(ys[2] ?? 0);
+			expect(media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columnMorphTileGhosts).toBe(
+				true,
 			);
 			expect(media?.arrangements.some((a) => a.id === "catalogue-merge")).toBe(false);
 		});

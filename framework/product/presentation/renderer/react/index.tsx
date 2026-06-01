@@ -610,17 +610,29 @@ function SplitTileColumnMorphGhostView({
 	participantId,
 	tile,
 	columnKey,
+	embodiment,
+	labelLine,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly columnKey: string;
+	readonly embodiment: FigureEmbodiment;
+	readonly labelLine: string;
 }): ReactNode {
+	const position = tile.position;
+	if (!position) {
+		return null;
+	}
 	return (
-		<div
-			data-id={columnMorphId(participantId, columnKey)}
-			className="presentation-disposition-frame presentation-column-morph-tile-ghost"
-			style={dispositionFrameStyle(tile.position, undefined)}
-			role="presentation"
+		<ColumnMorphSlotView
+			morphId={columnMorphId(participantId, columnKey)}
+			position={position}
+			variant="ghost"
+			line={labelLine}
+			figureEmbodiment={embodiment}
+			crop={tile.crop}
+			emphasis="active"
+			ghostVisibility="hidden"
 		/>
 	);
 }
@@ -712,26 +724,32 @@ function FigureSplitMorphView({
 						if (!columnKey) {
 							return null;
 						}
+						const labelLine =
+							columns.find((group) => group.key === columnKey)?.labelLine ?? "\u00a0";
 						return (
 							<SplitTileColumnMorphGhostView
 								key={`ghost-${tile.key}`}
 								participantId={disposition.participant.id}
 								tile={tile}
 								columnKey={columnKey}
+								embodiment={embodiment}
+								labelLine={labelLine}
 							/>
 						);
 					})
 				: null}
-			{columns.map((column) => (
-				<SplitColumnMorphGhostView
-					key={column.key}
-					participantId={disposition.participant.id}
-					column={column}
-					tiles={tiles}
-					embodiment={embodiment}
-					shown={unifiedGhosts}
-				/>
-			))}
+			{unifiedGhosts
+				? columns.map((column) => (
+						<SplitColumnMorphGhostView
+							key={column.key}
+							participantId={disposition.participant.id}
+							column={column}
+							tiles={tiles}
+							embodiment={embodiment}
+							shown
+						/>
+					))
+				: null}
 			{tiles.map((tile) => (
 				<FigureTileView
 					key={tile.key}
@@ -1468,12 +1486,16 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("morphs each tile data-id into a positioned label on the next slide", () => {
+		it("groups per-tile column ghosts into one stacked label per column", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
+			const columns = [
+				{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"], labelLine: "A" },
+				{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "B" },
+			];
 			const deck: Presentation = {
-				id: "tile-label-morph",
-				name: "Tile label morph",
+				id: "stacked-label-morph",
+				name: "Stacked labels",
 				sequences: [
 					{
 						id: "main",
@@ -1494,7 +1516,7 @@ if (import.meta.vitest) {
 											{
 												participantId: "catalogue",
 												emphasis: "active",
-												split: { tiles },
+												split: { tiles, columns, columnMorphTileGhosts: true },
 											},
 										],
 									},
@@ -1504,11 +1526,18 @@ if (import.meta.vitest) {
 											{
 												participantId: "catalogue",
 												emphasis: "active",
-												morphTargets: tiles.map((tile) => ({
-													tileKey: tile.key,
-													position: tile.position,
-													lines: ["Label"],
-												})),
+												morphTargets: [
+													{
+														columnKey: "col1",
+														position: { x: 0.4, y: 0.1, width: 0.2, height: 0.2 },
+														lines: ["A"],
+													},
+													{
+														columnKey: "col2",
+														position: { x: 0.4, y: 0.35, width: 0.2, height: 0.2 },
+														lines: ["B"],
+													},
+												],
 											},
 										],
 									},
@@ -1522,11 +1551,11 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const focus = container.querySelector('section[title="focus"]');
+			expect(focus?.querySelectorAll('[data-id="catalogue--column--col1"]').length).toBe(2);
 			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(4);
-			expect(focus?.querySelector(".presentation-figure-tile-morph-placeholder")).toBeTruthy();
 			const labels = container.querySelector('section[title="labels"]');
-			expect(labels?.querySelector('[data-id="catalogue--tile--tile-r0-c0"]')?.textContent).toContain("Label");
-			expect(container.querySelector('section[title="merge"]')).toBeNull();
+			expect(labels?.querySelectorAll('[data-id^="catalogue--column--"]').length).toBe(2);
+			expect(labels?.querySelector('[data-id="catalogue--tile--tile-r0-c0"]')).toBeNull();
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {

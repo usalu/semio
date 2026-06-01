@@ -18,11 +18,15 @@ import {
 	type AppTools,
 	type ToolItem,
 	type WindowBodyViewContext,
+	type CommandDescriptor,
+	type WindowEngagement,
 	type WindowMeasure,
 	type UiNode,
 	type UiTreeItemNode,
 	type UiTreeNode,
 	type WindowLayout,
+	enforcePlaygroundWindowEngagementInput,
+	windowEngagementsEqual,
 } from "@framework/playground/core";
 
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.2d.json";
@@ -66,6 +70,28 @@ export function puzzle2dPlayLodTierMenuLabel(tier: Puzzle2dDrawLodKind): string 
 }
 
 export const PUZZLE_2D_PLAY_HIERARCHY_TAB_ID = "puzzle-2d-play-hierarchy";
+
+const PUZZLE_2D_PLAY_WINDOW_SPECS: { readonly pane: Puzzle2dPlayPaneId; readonly label: string; readonly bodyKey: string }[] = [
+	{ pane: "2d-overview", label: "Overview", bodyKey: PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW },
+	{ pane: "2d-detail", label: "Zoom", bodyKey: PUZZLE_2D_PLAY_BODY_KEY_DETAIL },
+	{ pane: "2d-selection", label: "Selection", bodyKey: PUZZLE_2D_PLAY_BODY_KEY_SELECTION },
+];
+
+function puzzle2dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+	return { controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command, args: args as never };
+}
+
+/** @emoji ⌨️ Lowercase PascalCase engagement token for command matching (mirrors ui {@link normalizeEngagementCommandText}). */
+function puzzle2dPlayEngagementCommandToken(text: string): string {
+	const words = text
+		.replace(/[^a-zA-Z0-9]+/g, " ")
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean)
+		.flatMap((word) => word.split(/(?=[A-Z])/))
+		.filter(Boolean);
+	return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("").toLowerCase();
+}
 
 export const PUZZLE_2D_PLAY_PACKAGE_ROOT = import.meta.url;
 
@@ -448,6 +474,7 @@ export class Puzzle2dPlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Puzzle 2D", undefined);
 	private lodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
 	private effectiveLodByPane: Record<Puzzle2dPlayPaneId, Puzzle2dDrawLodKind>;
+	private engagementInputByPane: Record<Puzzle2dPlayPaneId, string>;
 	private hostBridge: Puzzle2dPlayHostBridge | null = null;
 	private readonly hostChromeNotify: () => void;
 
@@ -464,7 +491,76 @@ export class Puzzle2dPlayShellController extends Controller {
 			"2d-overview": "normal",
 			"2d-selection": "normal",
 		};
+		this.engagementInputByPane = {
+			"2d-detail": "",
+			"2d-overview": "",
+			"2d-selection": "",
+		};
 		this.rebuildShellMode();
+	}
+
+	private windowEngagementForPane(pane: Puzzle2dPlayPaneId): WindowEngagement {
+		return {
+			input: {
+				id: "engagement-input",
+				value: this.engagementInputByPane[pane],
+				placeholder: "Command",
+				onChange: puzzle2dPlayCmd("engagementInput", { pane }),
+				onSubmit: puzzle2dPlayCmd("engagementSubmit", { pane }),
+				onAbort: puzzle2dPlayCmd("engagementAbort", { pane }),
+			},
+			possibleEngagements: [
+				{ id: "puzzle2d.select.rectangle", label: "Rectangle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.rectangle" }) },
+				{ id: "puzzle2d.select.lasso", label: "Lasso", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.lasso" }) },
+				{ id: "puzzle2d.create.circle", label: "Circle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.circle" }) },
+				{ id: "puzzle2d.create.rectangle", label: "RectangleShape", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.rectangle" }) },
+				{ id: "puzzle2d.selection.clear", label: "Clear", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.selection.clear" }) },
+			],
+		};
+	}
+
+	private syncWindowEngagementForPane(pane: Puzzle2dPlayPaneId): void {
+		const existing = this.mainMode.windowKinds.find((wk) => wk.id === pane);
+		const next = this.windowEngagementForPane(pane);
+		if (existing) {
+			if (windowEngagementsEqual(existing.engagement, next)) {
+				return;
+			}
+			existing.engagement = next;
+			this.mainMode.windowKinds = [...this.mainMode.windowKinds];
+		} else {
+			this.rebuildShellMode();
+		}
+		this.emit();
+	}
+
+	private applyEngagementCommand(pane: Puzzle2dPlayPaneId, possibleIdOrText: string): boolean {
+		const token = puzzle2dPlayEngagementCommandToken(possibleIdOrText);
+		const runHost = (command: string, args?: unknown) => {
+			this.hostBridge?.runHostCommand(command, args);
+		};
+		if (possibleIdOrText === "puzzle2d.select.rectangle" || token === "rectangle") {
+			runHost("setSelectionMethod", { method: "rectangle" });
+			return true;
+		}
+		if (possibleIdOrText === "puzzle2d.select.lasso" || token === "lasso") {
+			runHost("setSelectionMethod", { method: "lasso" });
+			return true;
+		}
+		if (possibleIdOrText === "puzzle2d.selection.clear" || token === "clear") {
+			runHost("clearSelection", {});
+			return true;
+		}
+		if (possibleIdOrText === "puzzle2d.create.circle" || token === "circle") {
+			runHost("appendCircle", {});
+			return true;
+		}
+		if (possibleIdOrText === "puzzle2d.create.rectangle" || token === "rectangleshape" || token === "rectangle") {
+			runHost("appendRectangle", {});
+			return true;
+		}
+		void pane;
+		return false;
 	}
 
 	/** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
@@ -497,11 +593,13 @@ export class Puzzle2dPlayShellController extends Controller {
 	}
 
 	private rebuildShellMode(): void {
-		this.mainMode.windowKinds = [
-			new WindowKindRuntime("2d-overview", "Overview", PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, undefined, [this.lodMeasureForPane("2d-overview")]),
-			new WindowKindRuntime("2d-detail", "Zoom", PUZZLE_2D_PLAY_BODY_KEY_DETAIL, undefined, [this.lodMeasureForPane("2d-detail")]),
-			new WindowKindRuntime("2d-selection", "Selection", PUZZLE_2D_PLAY_BODY_KEY_SELECTION, undefined, [this.lodMeasureForPane("2d-selection")]),
-		];
+		this.mainMode.windowKinds = PUZZLE_2D_PLAY_WINDOW_SPECS.map(
+			(row) =>
+				new WindowKindRuntime(row.pane, row.label, row.bodyKey, undefined, [this.lodMeasureForPane(row.pane)], this.windowEngagementForPane(row.pane)),
+		);
+		for (const windowKind of this.mainMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 2D play window "${windowKind.id}"`);
+		}
 	}
 
 	override run(command: string, args?: unknown): void {
@@ -533,6 +631,50 @@ export class Puzzle2dPlayShellController extends Controller {
 			case "toggleRedrawPlaying":
 			case "redrawHandlesOnce": {
 				this.hostBridge?.runHostCommand(command, args);
+				break;
+			}
+			case "engagementInput": {
+				const { pane, value } = args as { pane?: Puzzle2dPlayPaneId; value?: string };
+				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") {
+					break;
+				}
+				this.engagementInputByPane = { ...this.engagementInputByPane, [pane]: String(value ?? "") };
+				this.syncWindowEngagementForPane(pane);
+				break;
+			}
+			case "engagementSubmit": {
+				const { pane, value } = args as { pane?: Puzzle2dPlayPaneId; value?: string };
+				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") {
+					break;
+				}
+				if (this.applyEngagementCommand(pane, String(value ?? ""))) {
+					this.engagementInputByPane = { ...this.engagementInputByPane, [pane]: "" };
+					this.syncWindowEngagementForPane(pane);
+				} else {
+					this.hostBridge?.runHostCommand(command, args);
+				}
+				break;
+			}
+			case "engagementAbort": {
+				const { pane } = args as { pane?: Puzzle2dPlayPaneId };
+				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") {
+					break;
+				}
+				this.engagementInputByPane = { ...this.engagementInputByPane, [pane]: "" };
+				this.syncWindowEngagementForPane(pane);
+				break;
+			}
+			case "engagementPossibleSelect": {
+				const { pane, possibleId } = args as { pane?: Puzzle2dPlayPaneId; possibleId?: string };
+				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") {
+					break;
+				}
+				if (this.applyEngagementCommand(pane, possibleId ?? "")) {
+					this.engagementInputByPane = { ...this.engagementInputByPane, [pane]: "" };
+					this.syncWindowEngagementForPane(pane);
+				} else {
+					this.hostBridge?.runHostCommand(command, args);
+				}
 				break;
 			}
 			default:

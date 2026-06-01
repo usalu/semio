@@ -93,6 +93,7 @@ import {
   type UiPuzzle3dHostSurfaceNode,
   type UiTableHostSurfaceNode,
   enforcePlaygroundWindowEngagementInput,
+  enforceWindowKindsEngagementInput,
   type WindowBodyViewContext,
   type WindowEngagement,
   type WindowLayout,
@@ -673,6 +674,7 @@ export function windowEngagementToGolden(engagement: WindowEngagement | undefine
 }
 
 export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], bus: CommandBus): UIWindowKindDefinition[] {
+  enforceWindowKindsEngagementInput(windowKinds, "Playground app");
   return windowKinds.map((wk) => ({
     id: wk.id,
     label: wk.label,
@@ -4277,6 +4279,7 @@ if (import.meta.vitest) {
 
     it("threads engagement through windowKindsToGolden", () => {
       const wk = new WindowKindRuntime("w", "W", "body", undefined, [], {
+        input: { id: "engagement-input", onChange: { controllerId: "ctrl", command: "engagementInput" } },
         status: [{ id: "s", text: "ready" }],
       });
       const golden = windowKindsToGolden([wk], new CommandBus());

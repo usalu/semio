@@ -11657,35 +11657,6 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     active && windowEngagementChromeVisible(engagement, { hovered: engagementZoneHovered, activated: engagementActivated, focused: engagementZoneFocused });
 
   reactHostPort.useEffect(() => {
-    if (!active || !engagement?.input) return;
-    const root = windowRef.current;
-    if (!root) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        routeWindowEngagementEscape(engagement, event, {
-          chromeVisible: showEngagementChrome,
-          commandActive: engagementCommandActive,
-        })
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!engagement?.input?.value?.trim()) {
-          setEngagementActivated(false);
-          setEngagementZoneFocused(false);
-        }
-        return;
-      }
-      if (!routeWindowEngagementKeydown(engagement, event)) return;
-      setEngagementActivated(true);
-      event.preventDefault();
-      event.stopPropagation();
-      queueMicrotask(() => focusActiveEngagementInput());
-    };
-    root.addEventListener("keydown", onKeyDown, true);
-    return () => root.removeEventListener("keydown", onKeyDown, true);
-  }, [active, engagement, engagementCommandActive, showEngagementChrome]);
-
-  reactHostPort.useEffect(() => {
     const draft = engagement?.input?.value ?? "";
     const hadDraft = engagementDraftRef.current.trim().length > 0;
     const hasDraft = draft.trim().length > 0;
@@ -15127,6 +15098,31 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setLayoutState((prev) => setActiveWindowInLayout(prev, activeWindowId));
   }, [activeWindowId]);
 
+  reactHostPort.useEffect(() => {
+    const root = modeBodyRef.current;
+    if (!root || !activeWindowId) return;
+    const engagement = windowsById.get(activeWindowId)?.engagement;
+    if (!engagement?.input) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        routeWindowEngagementEscape(engagement, event, {
+          chromeVisible: true,
+          commandActive: true,
+        })
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (!routeWindowEngagementKeydown(engagement, event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      queueMicrotask(() => focusActiveEngagementInput());
+    };
+    root.addEventListener("keydown", onKeyDown, true);
+    return () => root.removeEventListener("keydown", onKeyDown, true);
+  }, [activeWindowId, windowsById, windowsKey]);
+
   const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
     if (!tabBarElement && !bodyElement) {
       stackDropElementsRef.current.delete(path);
@@ -16218,18 +16214,30 @@ if (import.meta.vitest) {
       expect(windowEngagementChromeVisible({ input: { value: "box" } }, { hovered: false, activated: false, focused: false })).toBe(true);
     });
 
-    it("Window routes printable keys before chrome is visible and then shows engagement", async () => {
+    it("Mode routes printable keys to the active window engagement", async () => {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
-            <div data-testid="window-body">Body</div>
-          </Window>
+          <div className="h-[240px] w-[360px]">
+            <Mode
+              activeWindowId="engagement-window"
+              windows={[
+                {
+                  id: "engagement-window",
+                  title: "Viewport",
+                  active: true,
+                  engagement: { input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } },
+                  children: <div data-testid="window-body">Body</div>,
+                },
+              ]}
+              layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
+            />
+          </div>
         );
       };
       const { container } = render(<Harness />);
       expect(screen.queryByPlaceholderText("Command")).toBeNull();
-      fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
+      fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "b", bubbles: true });
       await waitFor(() => {
         const typedField = screen.getByPlaceholderText("Command") as HTMLInputElement;
         expect(typedField.value).toBe("B");
@@ -16320,23 +16328,31 @@ if (import.meta.vitest) {
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it("Window Escape aborts active engagement from the viewport", async () => {
+    it("Mode Escape aborts active window engagement", async () => {
       const aborted: string[] = [];
       const Harness = () => (
-        <Window
-          id="engagement-window"
-          active
-          engagement={{
-            input: { value: "Box", placeholder: "Command", onChange: () => {}, onAbort: () => aborted.push("abort") },
-          }}
-        >
-          <div data-testid="window-body">Body</div>
-        </Window>
+        <div className="h-[240px] w-[360px]">
+          <Mode
+            activeWindowId="engagement-window"
+            windows={[
+              {
+                id: "engagement-window",
+                title: "Viewport",
+                active: true,
+                engagement: {
+                  input: { value: "Box", placeholder: "Command", onChange: () => {}, onAbort: () => aborted.push("abort") },
+                },
+                children: <div data-testid="window-body">Body</div>,
+              },
+            ]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
+          />
+        </div>
       );
       const { container } = render(<Harness />);
       fireEvent.pointerDown(container.querySelector('[data-slot="window-engagement-overlay"]')!);
       await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
-      fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "Escape", bubbles: true });
+      fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "Escape", bubbles: true });
       expect(aborted).toEqual(["abort"]);
     });
 

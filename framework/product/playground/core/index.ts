@@ -300,6 +300,13 @@ export function enforcePlaygroundWindowEngagementInput(engagement: WindowEngagem
     throw new Error(`${contextLabel} must declare engagement.input (command line).`);
   }
 }
+
+/** @emoji 💬 Ensures every playground window kind exposes a command {@link WindowEngagementInput}. */
+export function enforceWindowKindsEngagementInput(windowKinds: readonly WindowKindRuntime[], contextLabel: string): void {
+  for (const windowKind of windowKinds) {
+    enforcePlaygroundWindowEngagementInput(windowKind.engagement, `${contextLabel} window "${windowKind.id}"`);
+  }
+}
 //#endregion 🔖WindowEngagement
 
 //#region 🔖WindowKindRuntime

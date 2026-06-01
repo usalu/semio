@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
-  "summary": "Removed catalogue-merge (extra figure-like slide). focus→labels uses morphTargets with tileKey per tile (same tileMorphId as split tiles) and matching div\u003eh2 DOM. 11 slides total.",
+  "summary": "Labels stack vertically (3 column morphTargets). Focus uses columnMorphTileGhosts: hidden per-tile columnMorphId slots with tile crops group-morph into one label each; visible tiles keep tileMorphId for catalogue→focus. Fixed duplicate unified ghosts on focus.",
   "goal": "🎯framework",
   "sessions": [
     "⚪b9f5d20ffbf54da39143e48f69536ff4",
@@ -12,6 +12,7 @@
     "⚪f9808265b61a432a863424b3c77a2a77",
     "⚪cf4f4c3d99f843eeac5a5b4b2347f6ec",
     "⚪71ee87a7bb404f80b4e07a9e80780064",
-    "⚪12a044926cda43db8314a98f191632cd"
+    "⚪12a044926cda43db8314a98f191632cd",
+    "⚪decdcc48ca0a4bb0a176f0943759b799"
   ]
 }

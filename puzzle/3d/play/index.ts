@@ -849,7 +849,7 @@ export class Puzzle3dPlayShellController extends Controller {
   }
 
   /** @emoji 💬 Placeholder engagement until the viewport host publishes a live snapshot (requires `input`). */
-  private placeholderWindowEngagement(): WindowEngagement {
+  placeholderWindowEngagement(): WindowEngagement {
     return {
       input: {
         id: "engagement-input",
@@ -1357,7 +1357,7 @@ class Puzzle3dPlaySnapshotStore extends Store<Puzzle3dPlaySnapshot> {
 
 export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellController): AppRuntime {
   const app = new AppRuntime(PUZZLE_3D_PLAY_APP_ID, "Puzzle 3D play", undefined, controller, createStackLayout([PUZZLE_3D_PLAY_WINDOW_ID], [PUZZLE_3D_PLAY_WINDOW_LABEL]) as never, [
-    new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY),
+    new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, [], controller.placeholderWindowEngagement()),
   ]);
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
