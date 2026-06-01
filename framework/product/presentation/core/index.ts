@@ -371,7 +371,7 @@ const SPLIT_TILES_PACKED_EPSILON = 1e-5;
 
 /** @emoji 🧩 Bounding frame when split tile positions pack the rectangle with no gaps (gap-zero grids). */
 export function splitTilesPackedFrame(tiles: readonly SplitTile[]): DispositionPosition | null {
-	if (tiles.length === 0) {
+	if (tiles.length < 2) {
 		return null;
 	}
 	let minX = 1;
@@ -2404,6 +2404,11 @@ if (import.meta.vitest) {
 		it("returns null when tiles leave holes inside the bounding box", () => {
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
 			expect(splitTilesPackedFrame([tiles[0]!, tiles[3]!])).toBeNull();
+		});
+
+		it("returns null for a single tile (per-tile interactive placements must crop, not full figure)", () => {
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			expect(splitTilesPackedFrame([tiles[0]!])).toBeNull();
 		});
 	});
 

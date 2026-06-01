@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
-  "summary": "Fixed projektetage split figure tiles showing the full catalogue image in every cell.\n\nRoot cause: `figureCropBackgroundVars` copied morph/cover background size and center position into the resting CSS vars whenever the tile frame aspect differed from the crop (common on Bauteilarten focus layout). That oversized and mis-centered the background so each tile looked like a miniature full figure.\n\nFix: keep stretch-fill crop math for `--presentation-figure-bg-size/position` at rest; reserve enlarged cover vars for auto-animate pending/running only. Added regression tests for rest vs morph vars and distinct per-tile positions. Renderer suite: 52 tests pass.",
+  "summary": "Fixed slide 7 (Bauteilkatalog) and all interactive split tiles showing the full catalogue in every cell.\n\nRoot cause: `buildInteractiveSlideLayout` expands each split tile into its own disposition with `split: { tiles: [one] }`. A lone tile still satisfied `splitTilesPackedFrame`, so `FigureSplitMorphView` used assembled mode and rendered a full `\u003cimg\u003e` per cell instead of `FigureTileView` crop backgrounds.\n\nFix: `splitTilesPackedFrame` returns null when fewer than two tiles; guard assembled rendering the same way. Tests updated (core + renderer). Verified in browser on #/1/0: crop fills use distinct positions (0%, 25%, 50%…), no assembled-full layer.",
   "goal": "🎯framework",
   "sessions": [
     "⚪b9f5d20ffbf54da39143e48f69536ff4",
@@ -16,6 +16,7 @@
     "⚪decdcc48ca0a4bb0a176f0943759b799",
     "⚪416d875b7e544ce281ca5d969da194ee",
     "⚪d9c0c21320db422c80d0e518bba10151",
-    "⚪40f9e04a329b4d18853804fddf6c67cc"
+    "⚪40f9e04a329b4d18853804fddf6c67cc",
+    "⚪662a72c732b24d2291959d4b3240f75a"
   ]
 }

@@ -885,7 +885,7 @@ function FigureSplitMorphView({
 		}
 	}
 	const packedFrame = splitTilesPackedFrame(tiles);
-	if (packedFrame) {
+	if (packedFrame && tiles.length > 1) {
 		return (
 			<div className="presentation-figure-split-assembled">
 				<DispositionFrame
@@ -1736,10 +1736,16 @@ export function sectionVisualScale(sectionEl: HTMLElement): number {
 		return 1;
 	}
 	const rect = root.getBoundingClientRect();
+	if (rect.width <= 0 || rect.height <= 0) {
+		return 1;
+	}
 	const scaleX = rect.width / layoutW;
 	const scaleY = rect.height / layoutH;
 	const scale = Math.min(scaleX, scaleY);
-	return Number.isFinite(scale) && scale > 0 ? scale : 1;
+	if (!Number.isFinite(scale) || scale <= 0) {
+		return 1;
+	}
+	return Math.min(4, Math.max(0.05, scale));
 }
 
 /** @emoji ↔️ Pointer travel in screen px → local px for CSS translate inside a scaled slide. */
@@ -1777,7 +1783,7 @@ export function dispositionPositionChanged(
 	);
 }
 
-/** @emoji 📐 Canvas drag: wrapper stays on the declared frame; content moves to the live transform. */
+/** @emoji 📐 Canvas drag: wrapper stays on the declared frame; content follows the pointer via translate (not absolute inset, which overflows the wrapper). */
 export function canvasDispositionDragContentStyle(
 	declared: DispositionPosition,
 	transform: DispositionPosition,
@@ -1788,10 +1794,17 @@ export function canvasDispositionDragContentStyle(
 	if (declared.width <= 0 || declared.height <= 0) {
 		return {};
 	}
+	const dxPercent = ((transform.x - declared.x) / declared.width) * 100;
+	const dyPercent = ((transform.y - declared.y) / declared.height) * 100;
+	if (transform.width === declared.width && transform.height === declared.height) {
+		return {
+			transform: `translate3d(${dxPercent}%, ${dyPercent}%, 0)`,
+		};
+	}
 	return {
 		position: "absolute",
-		left: `${((transform.x - declared.x) / declared.width) * 100}%`,
-		top: `${((transform.y - declared.y) / declared.height) * 100}%`,
+		left: `${dxPercent}%`,
+		top: `${dyPercent}%`,
 		width: `${(transform.width / declared.width) * 100}%`,
 		height: `${(transform.height / declared.height) * 100}%`,
 		boxSizing: "border-box",
@@ -2299,11 +2312,9 @@ const InteractiveDisposition: FC<{
 				return;
 			}
 			const fractionContainer = dispositionPlacementContainer(section, canvasPlacement);
+			const gesturePlacementBounds = fractionContainer.getBoundingClientRect();
 			const pointerId = origin.pointerId;
 			const startClient = { x: origin.clientX, y: origin.clientY };
-			const startFraction = clientToSectionFraction(fractionContainer, startClient.x, startClient.y, {
-				clamp: false,
-			});
 			const selectedAtStart = new Set(interaction.selectedIds);
 			if (!selectedAtStart.has(id)) {
 				selectedAtStart.add(id);
@@ -2380,20 +2391,24 @@ const InteractiveDisposition: FC<{
 								section,
 								allDeclaredRects.get(memberId) !== undefined,
 							);
-							const current = clientToSectionFraction(container, moveEvent.clientX, moveEvent.clientY, {
-								clamp: false,
-							});
-							const dx = current.x - startFraction.x;
-							const dy = current.y - startFraction.y;
+							const bounds =
+								container === fractionContainer && gesturePlacementBounds.width > 0
+									? gesturePlacementBounds
+									: container.getBoundingClientRect();
+							const dx =
+								bounds.width > 0 ? (moveEvent.clientX - startClient.x) / bounds.width : 0;
+							const dy =
+								bounds.height > 0 ? (moveEvent.clientY - startClient.y) / bounds.height : 0;
 							updates.set(memberId, translateDispositionRect(rect, dx, dy));
 						}
 					}
 				} else {
-					const current = clientToSectionFraction(fractionContainer, moveEvent.clientX, moveEvent.clientY, {
-						clamp: false,
-					});
-					const dx = current.x - startFraction.x;
-					const dy = current.y - startFraction.y;
+					const bounds =
+						gesturePlacementBounds.width > 0
+							? gesturePlacementBounds
+							: fractionContainer.getBoundingClientRect();
+					const dx = bounds.width > 0 ? (moveEvent.clientX - startClient.x) / bounds.width : 0;
+					const dy = bounds.height > 0 ? (moveEvent.clientY - startClient.y) / bounds.height : 0;
 					if (startGroup && groupIds.length > 1) {
 						const resizedGroup = resizeDispositionRect(startGroup, mode, dx, dy);
 						for (const [memberId, rect] of startRects) {
@@ -3516,13 +3531,13 @@ if (import.meta.vitest) {
 			const first = tiles[0] as HTMLElement;
 			expect(first.classList.contains("presentation-figure-tile-frame")).toBe(true);
 			expect(first.style.position).toBe("absolute");
-			expect(first.querySelector(".presentation-figure-crop-fill")?.getAttribute("style")).toContain("/catalogue.png");
-			const fullFigure = container.querySelector(
-				".presentation-figure-split-assembled-full .presentation-media-figure",
-			) as HTMLImageElement | null;
-			expect(fullFigure?.getAttribute("src")).toBe("/catalogue.png");
-			const presentSection = container.querySelector("section.present");
-			expect(presentSection?.querySelector(".presentation-figure-split-assembled-full")).not.toBeNull();
+			const fill = first.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
+			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
+			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 200%");
+			expect(container.querySelector(".presentation-figure-split-assembled-full")).toBeNull();
+			const fills = [...container.querySelectorAll(".presentation-figure-crop-fill")] as HTMLElement[];
+			const positions = fills.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
+			expect(new Set(positions).size).toBe(4);
 		});
 
 		it("omits tiles not listed in a split disposition", () => {
@@ -3991,11 +4006,30 @@ if (import.meta.vitest) {
 			const transform = { x: 0.35, y: 0.45, width: 0.4, height: 0.2 };
 			expect(canvasDispositionDragContentStyle(declared, declared)).toEqual({});
 			const dragged = canvasDispositionDragContentStyle(declared, transform);
-			expect(dragged.position).toBe("absolute");
-			expect(parseFloat(String(dragged.left))).toBeCloseTo(37.5);
-			expect(parseFloat(String(dragged.top))).toBeCloseTo(75);
-			expect(dragged.width).toBe("100%");
-			expect(dragged.height).toBe("100%");
+			const match = String(dragged.transform).match(
+				/translate3d\(([-\d.]+)%,\s*([-\d.]+)%/,
+			);
+			expect(match).not.toBeNull();
+			expect(Number.parseFloat(match![1]!)).toBeCloseTo(37.5);
+			expect(Number.parseFloat(match![2]!)).toBeCloseTo(75);
+		});
+
+		it("maps canvas drag pointer delta to content translate proportional to the wrapper", () => {
+			const declared = { x: 0.1, y: 0.3, width: 0.3, height: 0.2 };
+			const canvas = document.createElement("div");
+			canvas.className = "presentation-arrangement-canvas";
+			document.body.appendChild(canvas);
+			canvas.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
+			const pointerDx = 48;
+			const pointerDy = 35;
+			const dx = pointerDx / 960;
+			const dy = pointerDy / 700;
+			const transform = translateDispositionRect(declared, dx, dy);
+			const style = canvasDispositionDragContentStyle(declared, transform);
+			document.body.removeChild(canvas);
+			expect(style.transform).toContain("translate3d(");
+			expect((dx / declared.width) * 960 * declared.width).toBeCloseTo(pointerDx);
+			expect((dy / declared.height) * 700 * declared.height).toBeCloseTo(pointerDy);
 		});
 
 		it("resolves arrangement canvas as placement container for positioned slides", () => {
@@ -4532,8 +4566,8 @@ if (import.meta.vitest) {
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
 			expect(disposition.style.left).toBe(beforeLeft);
-			expect(content.style.position).toBe("absolute");
-			expect(parseFloat(content.style.left)).toBeGreaterThan(0);
+			expect(content.style.transform).toContain("translate3d");
+			expect(content.style.transform).not.toBe("");
 		});
 
 		it("keeps other canvas dispositions on their declared frames while one is dragged", () => {
@@ -4605,8 +4639,8 @@ if (import.meta.vitest) {
 			expect(parseFloat(dispositions[0]!.style.left)).toBeCloseTo(10);
 			expect(dispositions[1]!.style.left).toBe(peerBefore);
 			expect(
-				dispositions[0]!.querySelector(".presentation-interactive-disposition__content")?.style.position,
-			).toBe("absolute");
+				dispositions[0]!.querySelector(".presentation-interactive-disposition__content")?.style.transform,
+			).toContain("translate3d");
 		});
 
 		it("resizes positioned disposition from se handle", () => {
