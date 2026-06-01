@@ -309,10 +309,15 @@ const mediaThought: Thought = {
 
 const deck: Presentation = {
 	...introDeck,
-	sequences: [
+	chapters: [
 		{
-			...introDeck.sequences[0]!,
-			thoughts: [...introDeck.sequences[0]!.thoughts, mediaThought],
+			...introDeck.chapters[0]!,
+			sequences: [
+				{
+					...introDeck.chapters[0]!.sequences[0]!,
+					thoughts: [...introDeck.chapters[0]!.sequences[0]!.thoughts, mediaThought],
+				},
+			],
 		},
 	],
 };
@@ -349,6 +354,7 @@ if (import.meta.vitest) {
 			expect(introSlide).toEqual({
 				h: 0,
 				v: 0,
+				chapter: "Hauptteil",
 				sequence: "Einführung",
 				thought: "Einleitung",
 				slide: "Titel",
@@ -357,6 +363,7 @@ if (import.meta.vitest) {
 			expect(mediaSlide).toEqual({
 				h: 0,
 				v: 7,
+				chapter: "Hauptteil",
 				sequence: "Einführung",
 				thought: "Medien",
 				slide: "Bauteilkatalog",
@@ -364,7 +371,7 @@ if (import.meta.vitest) {
 		});
 
 		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
-			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const catalogue = media?.arrangements.find((a) => a.id === "catalogue");
 			expect(catalogue?.dispositions[0]?.split?.concealed).toBe(true);
 			expect(catalogue?.dispositions[0]?.split?.tiles).toHaveLength(15);
@@ -374,7 +381,7 @@ if (import.meta.vitest) {
 		});
 
 		it("arranges catalogue-focus as three columns without the top row", () => {
-			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const focus = media?.arrangements.find((a) => a.id === "catalogue-focus");
 			const tiles = focus?.dispositions[0]?.split?.tiles ?? [];
 			const keys = tiles.map((tile) => tile.key);
@@ -402,7 +409,7 @@ if (import.meta.vitest) {
 		});
 
 		it("morphs focus tiles into fixed column labels without a bridge arrangement", () => {
-			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const arrangementIds = media?.arrangements.map((arrangement) => arrangement.id) ?? [];
 			expect(arrangementIds).not.toContain("catalogue-column-ghosts");
 			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
@@ -421,7 +428,7 @@ if (import.meta.vitest) {
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {
-			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const kinds = media?.participants.flatMap((p) => p.embodiments.map((e) => e.kind)) ?? [];
 			expect(kinds).toEqual(["figure", "video", "pdf"]);
 		});

@@ -1,5 +1,5 @@
 // #region 🧱Header
-/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Sequence}, {@link Thought}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link intro}, and {@link analogy}. */
+/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Chapter}, {@link Sequence}, {@link Thought}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link intro}, and {@link analogy}. */
 // #endregion 🧱Header
 
 //#region 🔖Emphasis
@@ -455,7 +455,7 @@ export interface Thought {
 //#endregion 🔖Thought
 
 //#region 🔖Sequence
-/** @emoji 📚 Horizontal chapter: a sequence of thoughts. */
+/** @emoji 📚 Reveal.js horizontal stack: ordered thoughts rendered as one vertical slide column. */
 export interface Sequence {
 	readonly id: string;
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
@@ -464,20 +464,37 @@ export interface Sequence {
 }
 //#endregion 🔖Sequence
 
+//#region 🔖Chapter
+/** @emoji 📖 Groups related sequences in a deck (bookmarks and authoring; sequences stay top-level in reveal.js). */
+export interface Chapter {
+	readonly id: string;
+	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	readonly name?: string;
+	readonly sequences: readonly Sequence[];
+}
+//#endregion 🔖Chapter
+
 //#region 🔖Presentation
 /** @emoji 🌐 Main language of a deck; drives localized URL bookmark query keys. */
 export type PresentationLanguageKind = "de" | "en";
 
-/** @emoji 📽 Root deck: ordered sequences of thoughts. */
+/** @emoji 📽 Root deck: ordered chapters of sequences of thoughts. */
 export interface Presentation {
 	readonly id: string;
 	readonly name: string;
-	readonly sequences: readonly Sequence[];
+	readonly chapters: readonly Chapter[];
 	readonly language?: PresentationLanguageKind;
 	readonly width?: number;
 	readonly height?: number;
 }
 //#endregion 🔖Presentation
+
+//#region 🔖Traverse
+/** @emoji 📚 Flattens all sequences in chapter order (one reveal.js horizontal stack per sequence). */
+export function presentationSequences(presentation: Presentation): readonly Sequence[] {
+	return presentation.chapters.flatMap((chapter) => chapter.sequences);
+}
+//#endregion 🔖Traverse
 
 //#region 🔖Resolved
 /** @emoji ✅ One participant embodiment resolved for rendering a single arrangement. */
@@ -576,21 +593,23 @@ export function resolveArrangement(thought: Thought, arrangementId: string): Res
 	});
 }
 
-/** @emoji 🔢 Counts slides (arrangements) across all sequences. */
+/** @emoji 🔢 Counts slides (arrangements) across all chapters and sequences. */
 export function countArrangements(presentation: Presentation): number {
-	return presentation.sequences.reduce(
+	return presentationSequences(presentation).reduce(
 		(sum, seq) => sum + seq.thoughts.reduce((tSum, thought) => tSum + thought.arrangements.length, 0),
 		0,
 	);
 }
 
 /** @emoji 🔖 English bookmark query keys after the reveal.js hash path. */
+export const PRESENTATION_CHAPTER_QUERY_PARAM = "chapter";
 export const PRESENTATION_SEQUENCE_QUERY_PARAM = "sequence";
 export const PRESENTATION_THOUGHT_QUERY_PARAM = "thought";
 export const PRESENTATION_SLIDE_QUERY_PARAM = "slide";
 
-/** @emoji 🔖 Localized bookmark query keys for sequence, thought, and slide. */
+/** @emoji 🔖 Localized bookmark query keys for chapter, sequence, thought, and slide. */
 export interface PresentationSlideBookmarkParamKeys {
+	readonly chapter: string;
 	readonly sequence: string;
 	readonly thought: string;
 	readonly slide: string;
@@ -606,9 +625,15 @@ export function presentationSlideBookmarkParamKeys(
 	language: PresentationLanguageKind = "en",
 ): PresentationSlideBookmarkParamKeys {
 	if (language === "de") {
-		return { sequence: "sequenz", thought: "gedanke", slide: "folie" };
+		return {
+			chapter: "kapitel",
+			sequence: "sequenz",
+			thought: "gedanke",
+			slide: "folie",
+		};
 	}
 	return {
+		chapter: PRESENTATION_CHAPTER_QUERY_PARAM,
 		sequence: PRESENTATION_SEQUENCE_QUERY_PARAM,
 		thought: PRESENTATION_THOUGHT_QUERY_PARAM,
 		slide: PRESENTATION_SLIDE_QUERY_PARAM,
@@ -617,6 +642,7 @@ export function presentationSlideBookmarkParamKeys(
 
 /** @emoji 🔗 Bookmark ids carried in the URL hash query; navigation uses only the hash path. */
 export interface PresentationSlideBookmark {
+	readonly chapter: string;
 	readonly sequence: string;
 	readonly thought: string;
 	readonly slide: string;
@@ -633,22 +659,27 @@ export interface PresentationSlideRef extends PresentationSlideBookmark {
 	readonly v: number;
 }
 
-/** @emoji 🔗 Lists every slide in reveal.js h/v order (one horizontal stack per sequence). */
+/** @emoji 🔗 Lists every slide in reveal.js h/v order (one horizontal stack per sequence, chapters flattened). */
 export function collectPresentationSlides(presentation: Presentation): readonly PresentationSlideRef[] {
 	const slides: PresentationSlideRef[] = [];
-	for (const [h, sequence] of presentation.sequences.entries()) {
-		let v = 0;
-		for (const thought of sequence.thoughts) {
-			for (const arrangement of thought.arrangements) {
-				slides.push({
-					h,
-					v,
-					sequence: presentationEntityBookmarkName(sequence),
-					thought: presentationEntityBookmarkName(thought),
-					slide: presentationEntityBookmarkName(arrangement),
-				});
-				v += 1;
+	let h = 0;
+	for (const chapter of presentation.chapters) {
+		for (const sequence of chapter.sequences) {
+			let v = 0;
+			for (const thought of sequence.thoughts) {
+				for (const arrangement of thought.arrangements) {
+					slides.push({
+						h,
+						v,
+						chapter: presentationEntityBookmarkName(chapter),
+						sequence: presentationEntityBookmarkName(sequence),
+						thought: presentationEntityBookmarkName(thought),
+						slide: presentationEntityBookmarkName(arrangement),
+					});
+					v += 1;
+				}
 			}
+			h += 1;
 		}
 	}
 	return slides;
@@ -700,6 +731,7 @@ export function formatPresentationUrlHash(
 	const path = formatPresentationSlideHash(indices);
 	const keys = presentationSlideBookmarkParamKeys(language);
 	const params = new URLSearchParams([
+		[keys.chapter, bookmark.chapter],
 		[keys.sequence, bookmark.sequence],
 		[keys.thought, bookmark.thought],
 		[keys.slide, bookmark.slide],
@@ -758,8 +790,13 @@ const INTRO_EMBODIMENT_INSTITUTIONS_STEP1 = "step1";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP2 = "step2";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP3 = "step3";
 
-const INTRO_SEQUENCE_BOOKMARK: Record<PresentationLanguageKind, string> = {
+const INTRO_CHAPTER_BOOKMARK: Record<PresentationLanguageKind, string> = {
 	en: "Main",
+	de: "Hauptteil",
+};
+
+const INTRO_SEQUENCE_BOOKMARK: Record<PresentationLanguageKind, string> = {
+	en: "Introduction",
 	de: "Einführung",
 };
 
@@ -987,11 +1024,17 @@ export function intro(spec: IntroSpec): Presentation {
 		id: spec.id ?? "presentation",
 		name: spec.name ?? spec.title.short,
 		...(language ? { language } : {}),
-		sequences: [
+		chapters: [
 			{
 				id: "main",
-				name: INTRO_SEQUENCE_BOOKMARK[introLanguage],
-				thoughts: [thought],
+				name: INTRO_CHAPTER_BOOKMARK[introLanguage],
+				sequences: [
+					{
+						id: "intro",
+						name: INTRO_SEQUENCE_BOOKMARK[introLanguage],
+						thoughts: [thought],
+					},
+				],
 			},
 		],
 	};
@@ -1109,7 +1152,12 @@ export function analogy(spec: AnalogySpec): Presentation {
 	return {
 		id: spec.id ?? "analogy",
 		name: spec.name ?? `${spec.source.label} → ${spec.target.label}`,
-		sequences: [{ id: "main", thoughts: [thought] }],
+		chapters: [
+			{
+				id: "main",
+				sequences: [{ id: "main", thoughts: [thought] }],
+			},
+		],
 	};
 }
 //#endregion 🔖Analogy
@@ -1158,7 +1206,7 @@ if (import.meta.vitest) {
 	describe("intro", () => {
 		it("builds seven arrangements in one thought", () => {
 			expect(countArrangements(sampleIntro)).toBe(7);
-			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			expect(thought.arrangements.map((a) => a.id)).toEqual([
 				"title",
 				"description",
@@ -1171,7 +1219,7 @@ if (import.meta.vitest) {
 		});
 
 		it("uses fixed-size heading blocks without fit-text", () => {
-			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const textEmbodiments = thought.participants.flatMap((p) =>
 				p.embodiments.filter((e): e is TextEmbodiment => e.kind === "text"),
 			);
@@ -1192,7 +1240,7 @@ if (import.meta.vitest) {
 		it("abbreviates author first names on affiliation slides", () => {
 			expect(abbreviateAuthorFirstName("Ueli Saluz")).toBe("U. Saluz");
 			expect(abbreviateAuthorFirstName("Christoph Gengnagel")).toBe("C. Gengnagel");
-			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const authors = resolveArrangement(thought, "affiliations-1").find(
 				(r) => r.participant.id === INTRO_PARTICIPANT_AUTHORS,
 			)!;
@@ -1226,7 +1274,7 @@ if (import.meta.vitest) {
 		});
 
 		it("highlights only new affiliation marks per slide", () => {
-			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const step2 = resolveArrangement(thought, "affiliations-2").find(
 				(r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
 			)!;
@@ -1259,8 +1307,10 @@ if (import.meta.vitest) {
 					],
 				},
 			});
-			const sequence = deck.sequences[0]!;
+			const chapter = deck.chapters[0]!;
+			const sequence = chapter.sequences[0]!;
 			const thought = sequence.thoughts[0]!;
+			expect(chapter.name).toBe("Hauptteil");
 			expect(sequence.name).toBe("Einführung");
 			expect(thought.name).toBe("Einleitung");
 			expect(thought.arrangements.map((arrangement) => arrangement.name)).toEqual([
@@ -1275,6 +1325,7 @@ if (import.meta.vitest) {
 			expect(collectPresentationSlides(deck)[2]).toEqual({
 				h: 0,
 				v: 2,
+				chapter: "Hauptteil",
 				sequence: "Einführung",
 				thought: "Einleitung",
 				slide: "Ziel",
@@ -1583,9 +1634,23 @@ if (import.meta.vitest) {
 
 	describe("resolveArrangement morphId", () => {
 		it("resolves morphId per disposition", () => {
-			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const resolved = resolveArrangement(thought, "goal");
 			expect(resolved.map((r) => r.morphId)).toEqual(["title", "description", "goal"]);
+		});
+	});
+
+	describe("presentationSequences", () => {
+		it("flattens sequences in chapter order", () => {
+			const deck: Presentation = {
+				id: "flat",
+				name: "Flat",
+				chapters: [
+					{ id: "c1", sequences: [{ id: "s1", thoughts: [] }, { id: "s2", thoughts: [] }] },
+					{ id: "c2", sequences: [{ id: "s3", thoughts: [] }] },
+				],
+			};
+			expect(presentationSequences(deck).map((sequence) => sequence.id)).toEqual(["s1", "s2", "s3"]);
 		});
 	});
 
@@ -1594,31 +1659,41 @@ if (import.meta.vitest) {
 			const deck: Presentation = {
 				id: "multi",
 				name: "Multi",
-				sequences: [
+				chapters: [
 					{
-						id: "seq-a",
-						thoughts: [
+						id: "chapter-a",
+						sequences: [
 							{
-								id: "thought-a",
-								arrangements: [{ id: "a1", dispositions: [] }, { id: "a2", dispositions: [] }],
+								id: "seq-a",
+								thoughts: [
+									{
+										id: "thought-a",
+										arrangements: [{ id: "a1", dispositions: [] }, { id: "a2", dispositions: [] }],
+									},
+								],
 							},
 						],
 					},
 					{
-						id: "seq-b",
-						thoughts: [
+						id: "chapter-b",
+						sequences: [
 							{
-								id: "thought-b",
-								arrangements: [{ id: "b1", dispositions: [] }],
+								id: "seq-b",
+								thoughts: [
+									{
+										id: "thought-b",
+										arrangements: [{ id: "b1", dispositions: [] }],
+									},
+								],
 							},
 						],
 					},
 				],
 			};
 			expect(collectPresentationSlides(deck)).toEqual([
-				{ h: 0, v: 0, sequence: "seq-a", thought: "thought-a", slide: "a1" },
-				{ h: 0, v: 1, sequence: "seq-a", thought: "thought-a", slide: "a2" },
-				{ h: 1, v: 0, sequence: "seq-b", thought: "thought-b", slide: "b1" },
+				{ h: 0, v: 0, chapter: "chapter-a", sequence: "seq-a", thought: "thought-a", slide: "a1" },
+				{ h: 0, v: 1, chapter: "chapter-a", sequence: "seq-a", thought: "thought-a", slide: "a2" },
+				{ h: 1, v: 0, chapter: "chapter-b", sequence: "seq-b", thought: "thought-b", slide: "b1" },
 			]);
 			expect(presentationSlideAt(deck, { h: 1, v: 0 })?.slide).toBe("b1");
 		});
@@ -1632,25 +1707,37 @@ if (import.meta.vitest) {
 			expect(formatPresentationSlideHash({ h: 2, v: 3 })).toBe("/2/3");
 		});
 
-		it("formats sequence, thought, and slide bookmark params after the hash path", () => {
-			const bookmark = { sequence: "Main", thought: "Introduction", slide: "Title" };
+		it("formats chapter, sequence, thought, and slide bookmark params after the hash path", () => {
+			const bookmark = {
+				chapter: "Main",
+				sequence: "Introduction",
+				thought: "Introduction",
+				slide: "Title",
+			};
 			expect(formatPresentationUrlHash({ h: 0, v: 0 }, bookmark)).toBe(
-				"#/?sequence=Main&thought=Introduction&slide=Title",
+				"#/?chapter=Main&sequence=Introduction&thought=Introduction&slide=Title",
 			);
 			expect(formatPresentationUrlHash({ h: 0, v: 2 }, { ...bookmark, slide: "Goal" })).toBe(
-				"#/0/2?sequence=Main&thought=Introduction&slide=Goal",
+				"#/0/2?chapter=Main&sequence=Introduction&thought=Introduction&slide=Goal",
 			);
 		});
 
 		it("uses German bookmark query keys and titleized bookmark names for de presentations", () => {
-			const bookmark = { sequence: "Einführung", thought: "Einleitung", slide: "Universitäten" };
+			const bookmark = {
+				chapter: "Hauptteil",
+				sequence: "Einführung",
+				thought: "Einleitung",
+				slide: "Universitäten",
+			};
 			const hash = formatPresentationUrlHash({ h: 0, v: 5 }, bookmark, "de");
 			expect(hash.startsWith("#/0/5?")).toBe(true);
 			const params = new URLSearchParams(hash.split("?")[1] ?? "");
+			expect(params.get("kapitel")).toBe("Hauptteil");
 			expect(params.get("sequenz")).toBe("Einführung");
 			expect(params.get("gedanke")).toBe("Einleitung");
 			expect(params.get("folie")).toBe("Universitäten");
 			expect(presentationSlideBookmarkParamKeys("de")).toEqual({
+				chapter: "kapitel",
 				sequence: "sequenz",
 				thought: "gedanke",
 				slide: "folie",
@@ -1666,12 +1753,12 @@ if (import.meta.vitest) {
 
 		it("builds two morph arrangements", () => {
 			expect(countArrangements(sampleAnalogy)).toBe(2);
-			const thought = sampleAnalogy.sequences[0]!.thoughts[0]!;
+			const thought = sampleAnalogy.chapters[0]!.sequences[0]!.thoughts[0]!;
 			expect(thought.arrangements.map((a) => a.id)).toEqual(["source", "mapping"]);
 		});
 
 		it("resolves positioned visual dispositions", () => {
-			const thought = sampleAnalogy.sequences[0]!.thoughts[0]!;
+			const thought = sampleAnalogy.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const mapping = resolveArrangement(thought, "mapping");
 			const visual = mapping.find((r) => r.participant.id === ANALOGY_PARTICIPANT_VISUAL);
 			expect(visual?.position).toEqual({ x: 0.1, y: 0.35, width: 0.8, height: 0.5 });

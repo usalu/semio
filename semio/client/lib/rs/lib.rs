@@ -1662,13 +1662,12 @@ pub mod gql_relay {
         pub async fn designs(&self) -> DesignConnection {
             DesignConnection::from_designs(self.designs.read().await.clone()).await
         }
-
-        crate::file_system_node_object_methods!(
-            Typology,
-            crate::gql::interfaces::file_system_vfs::node_for_typology,
-            Typology
-        );
     }
+
+    crate::file_system_node_vfs_complex_ctx!(
+        Typology,
+        crate::gql::interfaces::file_system_vfs::node_for_typology
+    );
 
     crate::entity_relay!(TypologyConnection, TypologyEdge, std::sync::Arc<Typology>);
     impl TypologyConnection {
@@ -3675,13 +3674,12 @@ pub mod kit {
             pub async fn stat(&self, id: Id) -> Option<Stat> {
                 self.stats.read().await.iter().find(|s| s.id == id).cloned()
             }
-
-            crate::file_system_node_object_methods!(
-                Type,
-                crate::gql::interfaces::file_system_vfs::node_for_type,
-                Type
-            );
         }
+
+        crate::file_system_node_vfs_complex_ctx!(
+            Type,
+            crate::gql::interfaces::file_system_vfs::node_for_type
+        );
 
         //#endregion 🏠 type
 
@@ -4622,13 +4620,12 @@ pub mod kit {
             pub async fn all_referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
             }
-
-            crate::file_system_node_object_methods!(
-                Design,
-                crate::gql::interfaces::file_system_vfs::node_for_design,
-                Design
-            );
         }
+
+        crate::file_system_node_vfs_complex_ctx!(
+            Design,
+            crate::gql::interfaces::file_system_vfs::node_for_design
+        );
         //#endregion 🏘 design
     }
     //#endregion 🏘 design
@@ -6262,9 +6259,9 @@ pub mod kit {
         pub async fn stat(&self, id: Id) -> Option<Stat> {
             self.stats.read().await.iter().find(|s| s.id == id).cloned()
         }
-
-        crate::file_system_node_object_methods!(Kit, crate::gql::interfaces::file_system_vfs::node_for_kit, Kit);
     }
+
+    crate::file_system_node_vfs_complex_ctx!(Kit, crate::gql::interfaces::file_system_vfs::node_for_kit);
     //#endregion 📦 kit
 }
 

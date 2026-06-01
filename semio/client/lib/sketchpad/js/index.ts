@@ -13712,10 +13712,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		const root = this.getRoot(scope);
 		const parentRef = sketchpadRsVfsParentRef(parentId, root, route, this.vfsMetaForScope(scope));
 		return fetchSemioFileSystemChildren(store.jsStore, parentRef).then((children) => {
-			const rows =
-				children.length > 0
-					? sketchpadVfsRecordsFromRsChildren(kitId, route, parentId, children)
-					: sketchpadKitVfsChildren(store.getSnapshot().kit, parentId);
+			const rows = sketchpadVfsRecordsFromRsChildren(kitId, route, parentId, children);
 			this.rememberVfsNodes(scope, rows, route);
 			return rows;
 		});

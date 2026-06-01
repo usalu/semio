@@ -1,6 +1,10 @@
 # Presentation
 
-A presentation consists of sequences.
+A presentation consists of chapters.
+
+# Chapter
+
+A chapter of sequences.
 
 # Sequence
 

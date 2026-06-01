@@ -871,6 +871,16 @@ semio:
 
 ---
 
+Extend everything with is, has, references is projection.
+By default it just includes the direct ones.
+Add a transitive one with Transitive suffix.
+Be thorough and clean. There were already small attempts.
+is* e.g. piece isTransitive type or design, 
+references* e.g. side referencesPiece and referencesConnector, side referencesTypesTransitive over pieces, connection referencesPiecesTransitive and referencesConnectorsTransitive, etc
+has* e.g. design hasPieces, kit hasPiecesTransitive
+
+---
+
 Make sure dev sketchpad works end-to-end.
 
 semio/graphql:

@@ -91,6 +91,7 @@ export type {
 	Participant,
 	ParticipantEmphasis,
 	PdfEmbodiment,
+	Chapter,
 	Presentation,
 	ResolvedDisposition,
 	Sequence,
@@ -112,9 +113,11 @@ export {
 	intro,
 	morphId,
 	parsePresentationSlideHash,
+	PRESENTATION_CHAPTER_QUERY_PARAM,
 	PRESENTATION_SEQUENCE_QUERY_PARAM,
 	PRESENTATION_SLIDE_QUERY_PARAM,
 	PRESENTATION_THOUGHT_QUERY_PARAM,
+	presentationSequences,
 	presentationLanguage,
 	presentationEntityBookmarkName,
 	presentationSlideAt,
@@ -1181,20 +1184,22 @@ export const PresentationDeck: FC<{
 		<PresentationSlideEpochContext.Provider value={slideEpoch}>
 			<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
 				<div className="slides">
-				{presentation.sequences.map((sequence) => (
-					<section key={sequence.id}>
-						{sequence.thoughts.flatMap((thought) =>
-							thought.arrangements.map((arrangement) => (
-								<ArrangementSection
-									key={`${sequence.id}-${thought.id}-${arrangement.id}`}
-									thought={thought}
-									arrangement={arrangement}
-									transition={thought.transition}
-								/>
-							)),
-						)}
-					</section>
-				))}
+				{presentation.chapters.flatMap((chapter) =>
+					chapter.sequences.map((sequence) => (
+						<section key={`${chapter.id}-${sequence.id}`}>
+							{sequence.thoughts.flatMap((thought) =>
+								thought.arrangements.map((arrangement) => (
+									<ArrangementSection
+										key={`${chapter.id}-${sequence.id}-${thought.id}-${arrangement.id}`}
+										thought={thought}
+										arrangement={arrangement}
+										transition={thought.transition}
+									/>
+								)),
+							)}
+						</section>
+					)),
+				)}
 				</div>
 			</div>
 		</PresentationSlideEpochContext.Provider>
@@ -1443,23 +1448,28 @@ if (import.meta.vitest) {
 			const deck: Presentation = {
 				id: "media-test",
 				name: "Media",
-				sequences: [
+				chapters: [
 					{
-						id: "media",
-						thoughts: [
+						id: "main",
+						sequences: [
 							{
 								id: "media",
-								transition: { kind: "morph" },
-								participants: [
-									{ id: "clip", embodiments: [{ kind: "video", src: "/demo.mp4" }] },
-									{ id: "doc", embodiments: [{ kind: "pdf", src: "/paper.pdf", page: 1 }] },
-								],
-								arrangements: [
+								thoughts: [
 									{
-										id: "slide",
-										dispositions: [
-											{ participantId: "clip", emphasis: "active" },
-											{ participantId: "doc", emphasis: "active" },
+										id: "media",
+										transition: { kind: "morph" },
+										participants: [
+											{ id: "clip", embodiments: [{ kind: "video", src: "/demo.mp4" }] },
+											{ id: "doc", embodiments: [{ kind: "pdf", src: "/paper.pdf", page: 1 }] },
+										],
+										arrangements: [
+											{
+												id: "slide",
+												dispositions: [
+													{ participantId: "clip", emphasis: "active" },
+													{ participantId: "doc", emphasis: "active" },
+												],
+											},
 										],
 									},
 								],
@@ -1479,26 +1489,31 @@ if (import.meta.vitest) {
 			const deck: Presentation = {
 				id: "position-test",
 				name: "Position",
-				sequences: [
+				chapters: [
 					{
-						id: "pos",
-						thoughts: [
+						id: "main",
+						sequences: [
 							{
 								id: "pos",
-								participants: [
+								thoughts: [
 									{
-										id: "box",
-										embodiments: [{ kind: "text", lines: ["A"], level: "body" }],
-									},
-								],
-								arrangements: [
-									{
-										id: "placed",
-										dispositions: [
+										id: "pos",
+										participants: [
 											{
-												participantId: "box",
-												emphasis: "active",
-												position: { x: 0.1, y: 0.2, width: 0.5, height: 0.3 },
+												id: "box",
+												embodiments: [{ kind: "text", lines: ["A"], level: "body" }],
+											},
+										],
+										arrangements: [
+											{
+												id: "placed",
+												dispositions: [
+													{
+														participantId: "box",
+														emphasis: "active",
+														position: { x: 0.1, y: 0.2, width: 0.5, height: 0.3 },
+													},
+												],
 											},
 										],
 									},
@@ -1522,29 +1537,34 @@ if (import.meta.vitest) {
 			const deck: Presentation = {
 				id: "split-figure",
 				name: "Split",
-				sequences: [
+				chapters: [
 					{
 						id: "main",
-						thoughts: [
+						sequences: [
 							{
-								id: "split",
-								transition: { kind: "morph" },
-								participants: [
+								id: "main",
+								thoughts: [
 									{
-										id: "catalogue",
-										embodiments: [{ kind: "figure", src: "/catalogue.png", alt: "Catalogue" }],
-									},
-								],
-								arrangements: [
-									{
-										id: "tiles",
-										dispositions: [
+										id: "split",
+										transition: { kind: "morph" },
+										participants: [
 											{
-												participantId: "catalogue",
-												emphasis: "active",
-												split: {
-													tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
-												},
+												id: "catalogue",
+												embodiments: [{ kind: "figure", src: "/catalogue.png", alt: "Catalogue" }],
+											},
+										],
+										arrangements: [
+											{
+												id: "tiles",
+												dispositions: [
+													{
+														participantId: "catalogue",
+														emphasis: "active",
+														split: {
+															tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
+														},
+													},
+												],
 											},
 										],
 									},
@@ -1571,27 +1591,32 @@ if (import.meta.vitest) {
 			const deck: Presentation = {
 				id: "partial-split",
 				name: "Partial",
-				sequences: [
+				chapters: [
 					{
 						id: "main",
-						thoughts: [
+						sequences: [
 							{
-								id: "partial",
-								transition: { kind: "morph" },
-								participants: [
+								id: "main",
+								thoughts: [
 									{
-										id: "catalogue",
-										embodiments: [{ kind: "figure", src: "/catalogue.png" }],
-									},
-								],
-								arrangements: [
-									{
-										id: "focus",
-										dispositions: [
+										id: "partial",
+										transition: { kind: "morph" },
+										participants: [
 											{
-												participantId: "catalogue",
-												emphasis: "active",
-												split: { tiles: [allTiles[0]!, allTiles[1]!] },
+												id: "catalogue",
+												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
+											},
+										],
+										arrangements: [
+											{
+												id: "focus",
+												dispositions: [
+													{
+														participantId: "catalogue",
+														emphasis: "active",
+														split: { tiles: [allTiles[0]!, allTiles[1]!] },
+													},
+												],
 											},
 										],
 									},
@@ -1617,27 +1642,32 @@ if (import.meta.vitest) {
 			const deck: Presentation = {
 				id: "column-tile-focus",
 				name: "Column tiles",
-				sequences: [
+				chapters: [
 					{
 						id: "main",
-						thoughts: [
+						sequences: [
 							{
-								id: "morph",
-								transition: { kind: "morph" },
-								participants: [
+								id: "main",
+								thoughts: [
 									{
-										id: "catalogue",
-										embodiments: [{ kind: "figure", src: "/catalogue.png" }],
-									},
-								],
-								arrangements: [
-									{
-										id: "focus",
-										dispositions: [
+										id: "morph",
+										transition: { kind: "morph" },
+										participants: [
 											{
-												participantId: "catalogue",
-												emphasis: "active",
-												split: { tiles, columns, columnMorphTiles: true },
+												id: "catalogue",
+												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
+											},
+										],
+										arrangements: [
+											{
+												id: "focus",
+												dispositions: [
+													{
+														participantId: "catalogue",
+														emphasis: "active",
+														split: { tiles, columns, columnMorphTiles: true },
+													},
+												],
 											},
 										],
 									},
@@ -1665,48 +1695,53 @@ if (import.meta.vitest) {
 			const deck: Presentation = {
 				id: "stacked-label-morph",
 				name: "Stacked labels",
-				sequences: [
+				chapters: [
 					{
 						id: "main",
-						thoughts: [
+						sequences: [
 							{
-								id: "morph",
-								transition: { kind: "morph" },
-								participants: [
+								id: "main",
+								thoughts: [
 									{
-										id: "catalogue",
-										embodiments: [{ kind: "figure", src: "/catalogue.png" }],
-									},
-								],
-								arrangements: [
-									{
-										id: "focus",
-										dispositions: [
+										id: "morph",
+										transition: { kind: "morph" },
+										participants: [
 											{
-												participantId: "catalogue",
-												emphasis: "active",
-												split: { tiles, columns, columnMorphTiles: true },
+												id: "catalogue",
+												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
 											},
 										],
-									},
-									{
-										id: "labels",
-										dispositions: [
+										arrangements: [
 											{
-												participantId: "catalogue",
-												emphasis: "active",
-												morphSourceTiles: tiles,
-												morphColumnGroups: columns,
-												morphTargets: [
+												id: "focus",
+												dispositions: [
 													{
-														columnKey: "col1",
-														position: { x: 0.4, y: 0.1, width: 0.2, height: 0.2 },
-														lines: ["A"],
+														participantId: "catalogue",
+														emphasis: "active",
+														split: { tiles, columns, columnMorphTiles: true },
 													},
+												],
+											},
+											{
+												id: "labels",
+												dispositions: [
 													{
-														columnKey: "col2",
-														position: { x: 0.4, y: 0.35, width: 0.2, height: 0.2 },
-														lines: ["B"],
+														participantId: "catalogue",
+														emphasis: "active",
+														morphSourceTiles: tiles,
+														morphColumnGroups: columns,
+														morphTargets: [
+															{
+																columnKey: "col1",
+																position: { x: 0.4, y: 0.1, width: 0.2, height: 0.2 },
+																lines: ["A"],
+															},
+															{
+																columnKey: "col2",
+																position: { x: 0.4, y: 0.35, width: 0.2, height: 0.2 },
+																lines: ["B"],
+															},
+														],
 													},
 												],
 											},
@@ -1791,18 +1826,21 @@ if (import.meta.vitest) {
 			history.replaceState(null, "", "/deck");
 			syncPresentationSlideUrl(deck, { h: 0, v: 2 });
 			const params = new URLSearchParams(new URL(window.location.href).hash.split("?")[1] ?? "");
+			expect(params.get("kapitel")).toBe("Hauptteil");
 			expect(params.get("sequenz")).toBe("Einführung");
 			expect(params.get("gedanke")).toBe("Einleitung");
 			expect(params.get("folie")).toBe("Ziel");
 			history.replaceState(null, "", "/deck");
 		});
 
-		it("writes sequence, thought, and slide bookmark params after the hash path", () => {
+		it("writes chapter, sequence, thought, and slide bookmark params after the hash path", () => {
 			history.replaceState(null, "", "/deck");
 			syncPresentationSlideUrl(sampleDeck, { h: 0, v: 2 });
 			const url = new URL(window.location.href);
 			expect(url.search).toBe("");
-			expect(url.hash).toBe("#/0/2?sequence=Main&thought=Introduction&slide=Goal");
+			expect(url.hash).toBe(
+				"#/0/2?chapter=Main&sequence=Introduction&thought=Introduction&slide=Goal",
+			);
 			history.replaceState(null, "", "/deck");
 		});
 
