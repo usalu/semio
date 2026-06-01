@@ -270,8 +270,13 @@
 	z-index: 2;
 }
 
-.reveal .presentation-interactive-disposition--pinned {
+.reveal .presentation-interactive-disposition--pinned,
+.reveal .presentation-interactive-disposition--offset {
 	cursor: move;
+}
+
+.reveal .presentation-interactive-disposition--offset {
+	transform-origin: center center;
 }
 
 .reveal .presentation-arrangement-canvas .presentation-interactive-disposition--pinned .presentation-interactive-disposition__content {

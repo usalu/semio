@@ -1404,7 +1404,7 @@ export function tightElementBoundsRect(element: HTMLElement): DOMRect | null {
 	}
 	const rangeBox = tightRangeBoundsRect(element);
 	if (rangeBox !== null && rangeBox.width < box.width * 0.95) {
-		return rangeBox;
+		return alignTightBoxWithin(element, box, rangeBox);
 	}
 	const probeBox = tightProbeBoundsRect(element, box);
 	if (probeBox !== null && probeBox.width < box.width * 0.95) {
@@ -1497,6 +1497,24 @@ function transformFrameStyle(transform: DispositionPosition): CSSProperties {
 		height: `${transform.height * 100}%`,
 		boxSizing: "border-box",
 	};
+}
+
+/** @emoji ↔️ Flow-layout drag: translate only, keeps centered morph layout (no absolute snap). */
+function flowDispositionOffsetStyle(transform: DispositionPosition): CSSProperties {
+	return {
+		transform: `translate(${transform.x * 100}%, ${transform.y * 100}%)`,
+	};
+}
+
+/** @emoji 📐 Flow transforms store pointer deltas; positioned transforms store slide-space frames. */
+export function flowDispositionManipulationRect(
+	measured: DispositionPosition,
+	existing: DispositionPosition | undefined,
+): DispositionPosition {
+	if (existing) {
+		return existing;
+	}
+	return { x: 0, y: 0, width: measured.width, height: measured.height };
 }
 
 interface PresentationInteractionState {
@@ -1719,8 +1737,10 @@ const InteractiveDisposition: FC<{
 	const rootRef = useRef<HTMLDivElement>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
 	const selected = interaction.isSelected(id);
+	const flowLayout = declaredRect === undefined;
 	const transform = interaction.getTransform(id);
-	const pinned = transform !== undefined;
+	const transformed = transform !== undefined;
+	const pinned = transformed && !flowLayout;
 	const fullscreen = interaction.isFullscreen(id);
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
@@ -1755,9 +1775,9 @@ const InteractiveDisposition: FC<{
 	}, [id, declaredRect, transform, registry, sectionRef, slideEpoch, measureDispositionRect]);
 
 	const ensureRectForManipulation = useCallback((): DispositionPosition | null => {
-		const pinnedRect = interaction.getTransform(id);
-		if (pinnedRect) {
-			return pinnedRect;
+		const existing = interaction.getTransform(id);
+		if (existing) {
+			return existing;
 		}
 		if (declaredRect) {
 			return declaredRect;
@@ -1767,7 +1787,7 @@ const InteractiveDisposition: FC<{
 			return null;
 		}
 		registry.registerRect(id, measured);
-		return measured;
+		return flowDispositionManipulationRect(measured, undefined);
 	}, [id, declaredRect, interaction, registry, measureDispositionRect]);
 
 	const attachPointerGesture = useCallback(
@@ -1797,11 +1817,19 @@ const InteractiveDisposition: FC<{
 				selectedAtStart.has(id) && selectedAtStart.size > 1 ? [...selectedAtStart] : [id];
 			const startRects = new Map<string, DispositionPosition>();
 			for (const memberId of groupIds) {
-				const rect =
-					interaction.getTransform(memberId) ??
-					allDeclaredRects.get(memberId) ??
-					(memberId === id ? initialRect : registry.getRect(memberId));
-				if (rect && (allDeclaredRects.get(memberId) !== undefined || isUsableMeasuredRect(rect))) {
+				const memberDeclared = allDeclaredRects.get(memberId);
+				let rect: DispositionPosition | undefined =
+					interaction.getTransform(memberId) ?? memberDeclared;
+				if (!rect) {
+					const natural = memberId === id ? initialRect : registry.getRect(memberId);
+					if (natural) {
+						rect =
+							memberDeclared !== undefined
+								? natural
+								: flowDispositionManipulationRect(natural, undefined);
+					}
+				}
+				if (rect && (memberDeclared !== undefined || isUsableMeasuredRect(rect))) {
 					startRects.set(memberId, rect);
 				}
 			}
@@ -1949,13 +1977,18 @@ const InteractiveDisposition: FC<{
 		"presentation-interactive-disposition",
 		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
 		selected ? "presentation-interactive-disposition--selected" : undefined,
+		transformed && flowLayout ? "presentation-interactive-disposition--offset" : undefined,
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
 	]
 		.filter(Boolean)
 		.join(" ");
 
-	const wrapperStyle: CSSProperties | undefined = pinned && transform ? transformFrameStyle(transform) : undefined;
+	const wrapperStyle: CSSProperties | undefined = transformed
+		? flowLayout
+			? flowDispositionOffsetStyle(transform)
+			: transformFrameStyle(transform)
+		: undefined;
 
 	return (
 		<div
@@ -3194,6 +3227,16 @@ if (import.meta.vitest) {
 			expect(resized.height).toBeCloseTo(0.3);
 		});
 
+		it("starts flow manipulation at zero offset with measured size", () => {
+			const measured = { x: 0.35, y: 0.4, width: 0.3, height: 0.08 };
+			expect(flowDispositionManipulationRect(measured, undefined)).toEqual({
+				x: 0,
+				y: 0,
+				width: 0.3,
+				height: 0.08,
+			});
+		});
+
 		it("rejects unusable measured fractions", () => {
 			expect(isUsableMeasuredRect({ x: 0.2, y: 0.3, width: 0.1, height: 0.1 })).toBe(true);
 			expect(isUsableMeasuredRect({ x: 0.2, y: 0.3, width: 0.005, height: 0.1 })).toBe(false);
@@ -3428,9 +3471,10 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerDrag(disposition, 480, 320, 560, 360);
 			});
-			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-			expect(disposition.style.left).not.toBe("");
-			expect(Number.parseFloat(disposition.style.width)).toBeLessThan(50);
+			expect(disposition.classList.contains("presentation-interactive-disposition--offset")).toBe(true);
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
+			expect(disposition.style.transform).toContain("translate");
+			expect(disposition.style.left).toBe("");
 		});
 
 		it("drags positioned disposition", () => {
