@@ -604,26 +604,26 @@
 	opacity: 0;
 }
 
-.reveal .slides section[data-auto-animate] .presentation-morph-ghost {
+.reveal .slides section[data-auto-animate] .presentation-morph-source {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;
 }
 
-.reveal .slides section[data-auto-animate] .presentation-morph-target {
+.reveal .slides section[data-auto-animate] .presentation-morph-into {
 	opacity: 1;
 	visibility: visible;
 }
 
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-ghost,
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-ghost {
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-source,
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-source {
 	opacity: 1 !important;
 	visibility: visible !important;
 	pointer-events: auto;
 }
 
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-target,
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-target {
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-into,
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-into {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;

@@ -732,7 +732,7 @@ function FigureMorphView({
 	style,
 	dormantAnchor,
 	anchorOnWrapper = false,
-	morphGhost = false,
+	morphSource = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -741,10 +741,10 @@ function FigureMorphView({
 	readonly style?: DispositionStyle;
 	readonly dormantAnchor?: boolean;
 	readonly anchorOnWrapper?: boolean;
-	readonly morphGhost?: boolean;
+	readonly morphSource?: boolean;
 }): ReactNode {
 	if (embodiment.crop && position) {
-		const dormant = dormantAnchor === true || (!morphGhost && style?.opacity === 0);
+		const dormant = dormantAnchor === true || (!morphSource && style?.opacity === 0);
 		const frameStyle = anchorOnWrapper
 			? {
 					position: "relative" as const,
@@ -761,7 +761,7 @@ function FigureMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--figure",
-					morphGhost ? "presentation-morph-ghost" : undefined,
+					morphSource ? "presentation-morph-source" : undefined,
 					dormant ? "presentation-morph-slot--dormant" : undefined,
 					emphasisClass(emphasis),
 				]
@@ -793,7 +793,7 @@ function PositionedTextMorphView({
 	position,
 	style,
 	anchorOnWrapper = false,
-	morphTarget = false,
+	receivesMorphFrom = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: TextEmbodiment;
@@ -801,7 +801,7 @@ function PositionedTextMorphView({
 	readonly position: DispositionPosition;
 	readonly style?: DispositionStyle;
 	readonly anchorOnWrapper?: boolean;
-	readonly morphTarget?: boolean;
+	readonly receivesMorphFrom?: boolean;
 }): ReactNode {
 	const frameStyle = anchorOnWrapper
 		? {
@@ -819,7 +819,7 @@ function PositionedTextMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--label",
-					morphTarget ? "presentation-morph-target" : undefined,
+					receivesMorphFrom ? "presentation-morph-into" : undefined,
 					emphasisClass(emphasis),
 				]
 					.filter(Boolean)
@@ -838,7 +838,7 @@ function PositionedTextMorphView({
 				"presentation-disposition-frame",
 				"presentation-morph-slot",
 				"presentation-morph-slot--label",
-				morphTarget ? "presentation-morph-target" : undefined,
+				receivesMorphFrom ? "presentation-morph-into" : undefined,
 				emphasisClass(emphasis),
 			]
 				.filter(Boolean)
@@ -989,7 +989,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						position={disposition.position}
 						style={disposition.style}
 						anchorOnWrapper={anchorOnWrapper}
-						morphTarget={disposition.morphTarget}
+						receivesMorphFrom={(disposition.morphFrom?.length ?? 0) > 0}
 					/>
 				);
 			}
@@ -1014,7 +1014,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						position={disposition.position}
 						style={disposition.style}
 						anchorOnWrapper={anchorOnWrapper}
-						morphGhost={disposition.morphGhost}
+						morphSource={disposition.morphSource}
 					/>
 				);
 			}
@@ -1025,7 +1025,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 					emphasis={emphasis}
 					position={disposition.position}
 					anchorOnWrapper={anchorOnWrapper}
-					morphGhost={disposition.morphGhost}
+					morphSource={disposition.morphSource}
 				/>
 			);
 			break;
@@ -2440,8 +2440,8 @@ const InteractiveDisposition: FC<{
 		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
 		gesturing ? "presentation-interactive-disposition--gesturing" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
-		disposition.morphGhost ? "presentation-morph-ghost" : undefined,
-		disposition.morphTarget ? "presentation-morph-target" : undefined,
+		disposition.morphSource ? "presentation-morph-source" : undefined,
+		(disposition.morphFrom?.length ?? 0) > 0 ? "presentation-morph-into" : undefined,
 	]
 		.filter(Boolean)
 		.join(" ");
@@ -4287,18 +4287,18 @@ if (import.meta.vitest) {
 					pairs.some(
 						(pair) =>
 							pair.from.getAttribute("data-id") === id &&
-							pair.to.classList.contains("presentation-morph-ghost"),
+							pair.to.classList.contains("presentation-morph-source"),
 					),
 				).length,
 			).toBeGreaterThanOrEqual(8);
 			expect(
 				columnIds.every((id) =>
 					labelSlide.querySelector(
-						`.presentation-interactive-disposition.presentation-morph-target[data-id="${id}"]`,
+						`.presentation-interactive-disposition.presentation-morph-into[data-id="${id}"]`,
 					),
 				),
 			).toBe(true);
-			expect(labelSlide.querySelectorAll(".presentation-morph-ghost").length).toBeGreaterThanOrEqual(8);
+			expect(labelSlide.querySelectorAll(".presentation-morph-source").length).toBeGreaterThanOrEqual(8);
 			mountRoot.remove();
 		});
 

@@ -7,6 +7,7 @@ import {
 	buildResolutionScope,
 	collectPresentationSlides,
 	countArrangements,
+	arrangementRestDispositions,
 	expandThoughtSlides,
 	loadPresentationFromSlideGlob,
 	resolveArrangement,
@@ -138,6 +139,18 @@ if (import.meta.vitest) {
 			expect(morphIds[0]).toBeTruthy();
 		});
 
+		it("expands ten morph sources and three resting labels on Bauteilbeschriftungen", () => {
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
+			expect(media).toBeDefined();
+			const expanded = expandThoughtSlides(media!);
+			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
+			expect(labelSlide).toBeDefined();
+			expect(arrangementRestDispositions(labelSlide!.arrangement)).toHaveLength(3);
+			expect(labelSlide!.arrangement.dispositions.filter((disposition) => disposition.morphSource)).toHaveLength(
+				10,
+			);
+		});
+
 		it("morphs tile figures into label positions before column text appears", () => {
 			const labelPosition = inlineColumnLabelPosition(0);
 			const slots = columnLabelMorphFrom("col1", labelPosition);
@@ -152,8 +165,7 @@ if (import.meta.vitest) {
 			const focusSlide = expanded.find((slide) => slide.id === "catalogue-focus");
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
 			expect(focusSlide?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels"]);
-			const labelDispositions =
-				labelSlide?.arrangement.dispositions.filter((disposition) => !disposition.morphGhost) ?? [];
+			const labelDispositions = labelSlide ? arrangementRestDispositions(labelSlide.arrangement) : [];
 			expect(labelDispositions).toHaveLength(3);
 			expect(labelDispositions.map((disposition) => disposition.participantId)).toEqual([
 				CATALOGUE_COL1,

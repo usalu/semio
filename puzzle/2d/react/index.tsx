@@ -776,6 +776,7 @@ export interface Puzzle2dBrushPlacePayload {
   readonly x: number;
   readonly y: number;
   readonly height?: number;
+  readonly iconKind?: string;
   readonly radius?: number;
   readonly width?: number;
 }
@@ -1793,7 +1794,7 @@ export function puzzle2dFixtureHandlesFromNodeKind(nodeId: string, templates: re
 }
 
 /** @emoji 🖌️ Appends a brushed node and parent edge from a WASM {@link Puzzle2dBrushPlacePayload}. */
-export function applyBrushPlacementToFixture(fixture: Puzzle2dFixtureV1, payload: Puzzle2dBrushPlacePayload): Puzzle2dFixtureV1 {
+export function applyBrushPlacementToFixture(fixture: Puzzle2dFixtureV1, payload: Puzzle2dBrushPlacePayload, catalogs?: KindCatalogBundle): Puzzle2dFixtureV1 {
   const nodeId = `puzzle2d.brush.${crypto.randomUUID()}`;
   const handles = puzzle2dFixtureHandlesFromNodeKind(nodeId, payload.handles);
   const targetHandle = handles[payload.targetHandleIndex];
@@ -1808,7 +1809,8 @@ export function applyBrushPlacementToFixture(fixture: Puzzle2dFixtureV1, payload
   }
   const edgeId = `puzzle2d.brush.edge.${crypto.randomUUID()}`;
   const edge: Puzzle2dFixtureEdgeV1 = { id: edgeId, source: payload.sourceHandleId, target: targetHandle.id };
-  const base = { handles, id: nodeId, nodeKind: payload.nodeKind, x: payload.x, y: payload.y };
+  const iconKind = payload.iconKind?.trim() || puzzle2dIconKindForBrushNodeKind(fixture, catalogs, payload.nodeKind);
+  const base = { handles, id: nodeId, nodeKind: payload.nodeKind, x: payload.x, y: payload.y, ...(iconKind ? { iconKind } : {}) };
   const node: Puzzle2dFixtureNodeV1 =
     payload.shape === "rectangle"
       ? { ...base, height: payload.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX, shape: "rectangle", width: payload.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX }
@@ -2677,6 +2679,20 @@ export function puzzle2dFixtureMergedKindCatalogs(fixture: Puzzle2dFixtureV1): K
   return mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, fixtureMetaKindCatalogBundle(fixture) ?? {});
 }
 
+/** @emoji 🏷️ Icon for a brushed node: catalog `icon`, else the first fixture peer with the same `nodeKind`. */
+export function puzzle2dIconKindForBrushNodeKind(fixture: Puzzle2dFixtureV1, catalogs: KindCatalogBundle | undefined, nodeKind: string): string | undefined {
+  const kindId = nodeKind.trim();
+  if (kindId === "") {
+    return undefined;
+  }
+  const fromCatalog = catalogs?.nodes?.find((row) => row.id === kindId)?.icon?.trim();
+  if (fromCatalog) {
+    return fromCatalog;
+  }
+  const peer = fixture.nodes.find((node) => node.nodeKind === kindId && node.iconKind?.trim());
+  return peer?.iconKind?.trim();
+}
+
 function puzzle2dCatalogNameLooksLikeI18nKey(name: string): boolean {
   return /^semio\.(sketchpad|metabolism)\./.test(name.trim());
 }
@@ -3126,6 +3142,8 @@ export class Puzzle2dRenderer {
   private wheelFlushRafId: number | null = null;
   private pendingWheelScreen: { sx: number; sy: number; deltaY: number } | null = null;
   private inputInvalidateRafId: number | null = null;
+  /** @emoji 🖌️ Replays brush pointer leave/move after {@link Puzzle2dRenderer.wasmSessionCallBlockedForReentry} drops an input event. */
+  private pendingBrushWasmFlush: "leave" | "move" | null = null;
   private lastPushedCameraX = Number.NaN;
   private lastPushedCameraY = Number.NaN;
   private lastPushedCameraZoom = Number.NaN;
@@ -3493,6 +3511,7 @@ export class Puzzle2dRenderer {
       return;
     }
     this.activeTool = tool;
+    this.pendingBrushWasmFlush = null;
     this.lastActiveToolForWasm = null;
     this.markDirty();
   }
@@ -4133,6 +4152,7 @@ export class Puzzle2dRenderer {
         listener(frameState, frameDelta);
       }
       this.applyCanvasDebugAttributes();
+      this.flushPendingBrushWasmInput();
     } finally {
       this.renderPipelineDepth -= 1;
       if (this.renderPipelineDepth === 0 && this.invalidated && !this.isDisposed) {
@@ -4768,6 +4788,8 @@ export class Puzzle2dRenderer {
               })
               .filter((h): h is NonNullable<typeof h> => h !== null);
             const shape = String(p.shape ?? "circle") === "rectangle" ? "rectangle" : "circle";
+            const iconKindRaw = p.iconKind;
+            const iconKind = typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
             const payload: Puzzle2dBrushPlacePayload = {
               handles,
               nodeKind: String(p.nodeKind ?? ""),
@@ -4776,6 +4798,7 @@ export class Puzzle2dRenderer {
               targetHandleIndex: Number(p.targetHandleIndex ?? 0),
               x: Number(p.x),
               y: Number(p.y),
+              ...(iconKind ? { iconKind } : {}),
               ...(shape === "rectangle"
                 ? { height: Number(p.height), width: Number(p.width) }
                 : { radius: Number(p.radius) }),
@@ -5315,6 +5338,31 @@ export class Puzzle2dRenderer {
     this.lastPointerScreenY = screenY;
   }
 
+  /** @emoji 🖌️ Replays a deferred brush pointer leave/move after GPU/session reentry unblocks. */
+  private flushPendingBrushWasmInput(): void {
+    const pending = this.pendingBrushWasmFlush;
+    if (pending === null || this.activeTool !== "brush" || this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
+    this.pendingBrushWasmFlush = null;
+    if (pending === "leave") {
+      this.session.pointerLeaveScreen();
+    } else {
+      this.session.pointerMoveScreen(this.lastPointerScreenX, this.lastPointerScreenY, false, false);
+    }
+    this.applyWasmDrainToScene(this.session.drainEventsJson());
+    this.wasmPushSceneDrainAlreadyApplied = true;
+    this.scheduleInputInvalidate();
+  }
+
+  private queuePendingBrushWasmFlush(kind: "leave" | "move"): void {
+    if (this.activeTool !== "brush") {
+      return;
+    }
+    this.pendingBrushWasmFlush = kind;
+    this.invalidated = true;
+  }
+
   private deleteSelectedObjects(): void {
     if (this.wasmSessionCallBlockedForReentry()) {
       this.invalidated = true;
@@ -5460,9 +5508,10 @@ export class Puzzle2dRenderer {
       return;
     }
     if (this.wasmSessionCallBlockedForReentry()) {
-      this.invalidated = true;
+      this.queuePendingBrushWasmFlush("move");
       return;
     }
+    this.pendingBrushWasmFlush = null;
     const rect = this.canvas.getBoundingClientRect();
     const sx = event.clientX - rect.left;
     const sy = event.clientY - rect.top;
@@ -5511,9 +5560,10 @@ export class Puzzle2dRenderer {
       this.recordPointerClient(event.clientX, event.clientY, sx, sy);
     }
     if (this.wasmSessionCallBlockedForReentry()) {
-      this.invalidated = true;
+      this.queuePendingBrushWasmFlush("leave");
       return;
     }
+    this.pendingBrushWasmFlush = null;
     this.session.pointerLeaveScreen();
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     this.scheduleInputInvalidate();
@@ -7417,6 +7467,65 @@ if (puzzle2dVitest) {
       expect(next.edges).toHaveLength(1);
       expect(next.edges[0]?.source).toBe("a:h0");
       expect(next.edges[0]?.target).toMatch(/:h0$/);
+    });
+
+    it("applyBrushPlacementToFixture copies iconKind from fixture peer nodeKind", () => {
+      const fixture: Puzzle2dFixtureV1 = {
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [
+          { id: "peer", nodeKind: "capsule.kind", iconKind: "capsule_J", x: 0, y: 0, width: 40, height: 40, shape: "rectangle", handles: [{ id: "peer:h0", angle: 0, handleKind: "port" }] },
+          { id: "a", x: 0, y: 0, radius: 20, handles: [{ id: "a:h0", angle: 0, handleKind: "port" }] },
+        ],
+        edges: [],
+      };
+      const next = applyBrushPlacementToFixture(
+        fixture,
+        {
+          handles: [{ angle: Math.PI, handleKind: "port" }],
+          nodeKind: "capsule.kind",
+          shape: "rectangle",
+          sourceHandleId: "a:h0",
+          targetHandleIndex: 0,
+          x: 80,
+          y: 0,
+          width: 40,
+          height: 40,
+        },
+        {},
+      );
+      const brushed = next.nodes.find((node) => node.id.startsWith("puzzle2d.brush."));
+      expect(brushed).toMatchObject({ nodeKind: "capsule.kind", iconKind: "capsule_J" });
+    });
+
+    it("brushPlace fires when pointer leaves brush slot", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      renderer.setCamera(0, 0, 1);
+      renderer.setActiveTool("brush");
+      renderer.setBrushFlushDistance(80);
+      renderer.setBrushNodeSize(40);
+      renderer.setKindCatalogs({
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      });
+      const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+      new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
+      renderer.scene.add(node);
+      renderer.render();
+      const handleWorld = computeHandlePosition({ height: 80, radius: 40, shape: "circle", width: 80, x: 0, y: 0 }, 0);
+      const slotWorld = { x: handleWorld.x + (handleWorld.x - 0) * 2, y: handleWorld.y + (handleWorld.y - 0) * 2 };
+      const slotScreen = renderer.worldToScreen(slotWorld);
+      const farScreen = renderer.worldToScreen({ x: 500, y: 500 });
+      const placed: Puzzle2dBrushPlacePayload[] = [];
+      renderer.on("brushPlace", (payload) => placed.push(payload));
+      canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
+      canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: farScreen.x, clientY: farScreen.y }));
+      expect(placed).toHaveLength(1);
+      expect(placed[0]?.sourceHandleId).toBe("a:h0");
+      expect(placed[0]?.nodeKind).toBe("brush.kind");
+      renderer.dispose();
     });
 
     it("puzzle2dNodeKindHandlesFromKitConnectors keeps two connectors with the same handleKind at different CAD points", () => {

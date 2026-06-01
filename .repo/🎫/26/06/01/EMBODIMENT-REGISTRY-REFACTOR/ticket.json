@@ -3,9 +3,10 @@
   "emoji": "🎭",
   "status": "closed",
   "description": "Restructure @framework/presentation: embodiments in scoped sibling registries, dispositions bind participantId+embodimentId, full artifact-level scoping, tile/split templates produce embodiments+dispositions (remove DispositionSplit). Migrate renderer and 33.projektetage deck.",
-  "summary": "Fixed Bauteilarten→Bauteilbeschriftungen morph: morphFrom slots now target inline label positions (not focus layout); morphGhost dispositions keep source figure embodiment visible during reveal auto-animate then hide at rest; morphTarget column labels stay hidden until animation completes (position/style morph first, embodiment switch after). Added ResolvedDisposition.morphGhost/morphTarget, renderer classes + CSS, spec columnLabelMorphFrom fix, tests.",
+  "summary": "Slide 8→9 many-to-one morph: presentation uses morphFrom only; expandArrangementMorphFrom adds morphSource dispositions (tile figures at label slots). At rest arrangementRestDispositions yields 3 column labels; morph sources hidden via renderer CSS during reveal auto-animate only. Renamed morphGhost/morphTarget to morphSource/receivesMorphFrom (presentation-morph-source/into). columnLabelMorphFrom uses label positions. Tests: core 39, renderer 61, deck 11 passed.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
-    "⚪bb34f80bdccb4ebabf0a48bc06aca0a6"
+    "⚪bb34f80bdccb4ebabf0a48bc06aca0a6",
+    "⚪778720ae3c2f441ebcb048eb9d46e966"
   ]
 }

@@ -2530,6 +2530,8 @@ mod board_host {
         pub scale: f64,
         pub shape: NodeShape,
         pub handles: Vec<NodeKindHandleTemplate>,
+        /// @emoji 🏷️ Default WASM detail/micro icon encoding for instances of this node kind (`icon` in kind catalog JSON).
+        pub icon: Option<String>,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2550,6 +2552,7 @@ mod board_host {
         height: f64,
         handles: Vec<NodeKindHandleTemplate>,
         target_handle_index: usize,
+        icon_kind: Option<String>,
     }
 
     #[derive(Clone, Debug)]
@@ -3346,7 +3349,13 @@ mod board_host {
                             handles.push(NodeKindHandleTemplate { handle_kind: handle_kind.to_string(), angle, radius });
                         }
                     }
-                    next.insert(id.to_string(), NodeKindDef { name, scale, shape, handles });
+                    let icon = no
+                        .get("icon")
+                        .and_then(|x| x.as_str())
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .map(|s| s.to_string());
+                    next.insert(id.to_string(), NodeKindDef { name, scale, shape, handles, icon });
                 }
                 self.node_kinds = next;
             }
@@ -3925,6 +3934,7 @@ mod board_host {
                 height,
                 handles: kind.handles.clone(),
                 target_handle_index,
+                icon_kind: kind.icon.clone(),
             })
         }
 
@@ -3940,6 +3950,9 @@ mod board_host {
                 node["height"] = json!(preview.height);
             } else {
                 node["radius"] = json!(preview.radius);
+            }
+            if let Some(ref icon) = preview.icon_kind {
+                node["iconKind"] = json!(icon);
             }
             let handles: Vec<_> = preview
                 .handles
@@ -3976,6 +3989,9 @@ mod board_host {
                 flat["height"] = json!(preview.height);
             } else {
                 flat["radius"] = json!(preview.radius);
+            }
+            if let Some(ref icon) = preview.icon_kind {
+                flat["iconKind"] = json!(icon);
             }
             let handles: Vec<_> = preview
                 .handles
@@ -4151,6 +4167,78 @@ mod board_host {
             self.brush_rebuild_preview();
         }
 
+        fn append_brush_node_icon_paint(
+            &self,
+            scene: &mut Scene,
+            lod: BoardDrawLod,
+            center: Point,
+            shape: NodeShape,
+            radius: f64,
+            width: f64,
+            height: f64,
+            icon_kind: &str,
+            fill: Color,
+            stroke_c: Color,
+        ) {
+            if !matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro) {
+                return;
+            }
+            let preserve_original_style = false;
+            let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(icon_kind, stroke_c, fill, preserve_original_style) else {
+                return;
+            };
+            let clip_inset = 0.88;
+            let fit_inset = 0.76;
+            let (sx_half, sy_half) = match shape {
+                NodeShape::Circle => {
+                    let s = self.draw_space_len(radius, false) * fit_inset;
+                    (s, s)
+                }
+                NodeShape::Rectangle => (
+                    self.draw_space_len(width, false) * fit_inset * 0.5,
+                    self.draw_space_len(height, false) * fit_inset * 0.5,
+                ),
+            };
+            let center_ds = self.draw_space_point(center, false);
+            let cx = bx + bw * 0.5;
+            let cy = by + bh * 0.5;
+            let avail_w = 2.0 * sx_half;
+            let avail_h = 2.0 * sy_half;
+            let scale = (avail_w / bw).min(avail_h / bh);
+            let aff = Affine::translate((center_ds.x - scale * cx, center_ds.y - scale * cy)) * Affine::scale(scale);
+            match shape {
+                NodeShape::Circle => {
+                    let r_clip = self.draw_space_len(radius, false) * clip_inset;
+                    let disc = Circle::new(center_ds, r_clip);
+                    scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
+                    match &body {
+                        CachedIconBody::Vector(icon_scene) => {
+                            scene.append(icon_scene, Some(aff));
+                        }
+                        CachedIconBody::Raster(img) => {
+                            scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                        }
+                    }
+                    scene.pop_layer();
+                }
+                NodeShape::Rectangle => {
+                    let hw = self.draw_space_len(width, false) * clip_inset * 0.5;
+                    let hh = self.draw_space_len(height, false) * clip_inset * 0.5;
+                    let clip_r = Rect::from_points(Point::new(center_ds.x - hw, center_ds.y - hh), Point::new(center_ds.x + hw, center_ds.y + hh));
+                    scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+                    match &body {
+                        CachedIconBody::Vector(icon_scene) => {
+                            scene.append(icon_scene, Some(aff));
+                        }
+                        CachedIconBody::Raster(img) => {
+                            scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                        }
+                    }
+                    scene.pop_layer();
+                }
+            }
+        }
+
         fn append_brush_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod) {
             let Some(ref preview) = self.brush_preview else {
                 return;
@@ -4180,6 +4268,9 @@ mod board_host {
                     scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
                     scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &rect);
                 }
+            }
+            if let Some(ref icon) = preview.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+                self.append_brush_node_icon_paint(scene, lod, center, preview.shape, preview.radius, preview.width, preview.height, icon, fill, stroke_c);
             }
             let source = match self.handles.get(preview.source_handle_id.as_str()) {
                 Some(h) => h,
@@ -6770,6 +6861,9 @@ mod board_host {
                 if matches!(self.interaction, Interaction::Pan { .. }) {
                     self.interaction = Interaction::None;
                 }
+                self.brush_commit_preview();
+                self.brush_clear_slot();
+                self.set_hovered_id(None);
                 return;
             }
             let grabbed = std::mem::take(&mut self.interaction);

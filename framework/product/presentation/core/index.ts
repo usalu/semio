@@ -317,10 +317,12 @@ export interface DispositionStyle {
 	readonly scale?: number;
 }
 
-/** @emoji 👻 One source participant that morphs independently into a target participant slot. */
+/** @emoji 🔀 One source participant that morphs into a target disposition (many-to-one). */
 export interface MorphFromSlot {
 	readonly participantId: string;
+	/** @emoji 📐 Target position and frame where the source embodiment travels before the target embodiment appears. */
 	readonly position: DispositionPosition;
+	/** @emoji 🧩 Source embodiment shown during the position morph (e.g. figure crop), before switching to the target. */
 	readonly embodimentId: string;
 	/** @emoji 🎯 Line index when the target uses a multi-line text morph root (`participantId--index`). */
 	readonly targetLineIndex?: number;
@@ -333,12 +335,12 @@ export interface Disposition {
 	readonly emphasis: ParticipantEmphasis;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
-	/** @emoji 👻 Source participants that each morph into this disposition (expanded as ghost dispositions for reveal.js). */
+	/** @emoji 🔀 Source participants that morph into this disposition (many-to-one); expanded as {@link Disposition.morphSource} slots. */
 	readonly morphFrom?: readonly MorphFromSlot[];
-	/** @emoji 👻 True when auto-expanded from {@link Disposition.morphFrom} (not authored directly). */
-	readonly morphGhost?: boolean;
-	/** @emoji 🎯 Overrides reveal.js `data-id` for this disposition (ghost morph into a target line). */
-	readonly morphTargetId?: string;
+	/** @emoji 🔀 True when this disposition is an expanded morph source (not shown at rest on the arrangement). */
+	readonly morphSource?: boolean;
+	/** @emoji 🎯 Morph anchor id when it differs from {@link Participant.id} (e.g. line index on multi-line text). */
+	readonly morphAnchorId?: string;
 }
 //#endregion 🔖Disposition
 
@@ -584,10 +586,10 @@ export interface ResolvedDisposition {
 	readonly morphId: string;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
-	/** @emoji 👻 Expanded from {@link Disposition.morphFrom}; carries source embodiment through position morph before target shows. */
-	readonly morphGhost?: boolean;
-	/** @emoji 🎯 Target slot with {@link Disposition.morphFrom}; hidden until source embodiment finishes position morph. */
-	readonly morphTarget?: boolean;
+	/** @emoji 🔀 Expanded morph source slot (many-to-one); carries source embodiment through position morph. */
+	readonly morphSource?: boolean;
+	/** @emoji 🔀 Present when this disposition receives a many-to-one morph. */
+	readonly morphFrom?: readonly MorphFromSlot[];
 }
 
 /** @emoji 📐 Union of normalized placement rectangles. */
@@ -633,15 +635,28 @@ export function shiftDispositionPosition(
 
 const CENTER_ARRANGEMENT_EPSILON = 1e-6;
 
-function isDispositionVisibleForLayout(style: DispositionStyle | undefined): boolean {
-	return style?.opacity !== 0;
+function isDispositionVisibleForLayout(disposition: ResolvedDisposition): boolean {
+	if (disposition.morphSource) {
+		return false;
+	}
+	return disposition.style?.opacity !== 0;
+}
+
+/** @emoji 🔀 True when a disposition is an expanded morph source (not part of the resting arrangement). */
+export function isMorphSourceDisposition(disposition: Disposition): boolean {
+	return disposition.morphSource === true;
+}
+
+/** @emoji 📍 Dispositions visible on the arrangement at rest (omits expanded morph sources). */
+export function arrangementRestDispositions(arrangement: Arrangement): readonly Disposition[] {
+	return arrangement.dispositions.filter((disposition) => !isMorphSourceDisposition(disposition));
 }
 
 /** @emoji 📍 Slide positions for layout centering (visible tiles and frames; omits opacity-0 dispositions). */
 export function visibleArrangementPositions(resolved: readonly ResolvedDisposition[]): DispositionPosition[] {
 	const positions: DispositionPosition[] = [];
 	for (const disposition of resolved) {
-		if (!isDispositionVisibleForLayout(disposition.style)) {
+		if (!isDispositionVisibleForLayout(disposition)) {
 			continue;
 		}
 		if (disposition.position) {
@@ -721,7 +736,7 @@ function slideMorphParticipantIds(slide: Slide): ReadonlySet<string> {
 	return ids;
 }
 
-/** @emoji 👻 Expands {@link Disposition.morphFrom} into per-source ghost dispositions for reveal.js pairing. */
+/** @emoji 🔀 Expands {@link Disposition.morphFrom} into per-source {@link Disposition.morphSource} dispositions on the target arrangement. */
 export function expandArrangementMorphFrom(
 	sourceSlide: Slide,
 	arrangement: Arrangement,
@@ -729,11 +744,11 @@ export function expandArrangementMorphFrom(
 ): Arrangement {
 	const sourceByParticipant = primaryDispositionByParticipant(sourceSlide.arrangement);
 	const morphLineTargets = options?.morphLineTargets ?? true;
-	const ghosts: Disposition[] = [];
+	const morphSources: Disposition[] = [];
 	for (const disposition of arrangement.dispositions) {
 		for (const slot of disposition.morphFrom ?? []) {
 			const sourceDisposition = sourceByParticipant.get(slot.participantId);
-			const morphTargetId =
+			const morphAnchorId =
 				morphLineTargets && slot.targetLineIndex !== undefined
 					? `${disposition.participantId}--${slot.targetLineIndex}`
 					: undefined;
@@ -743,20 +758,20 @@ export function expandArrangementMorphFrom(
 					`morphFrom slot for "${slot.participantId}" needs embodimentId (or a source disposition with embodimentId).`,
 				);
 			}
-			ghosts.push({
+			morphSources.push({
 				participantId: slot.participantId,
 				embodimentId,
 				emphasis: sourceDisposition?.emphasis ?? "active",
 				position: slot.position,
-				morphGhost: true,
-				morphTargetId,
+				morphSource: true,
+				morphAnchorId,
 			});
 		}
 	}
-	if (ghosts.length === 0) {
+	if (morphSources.length === 0) {
 		return arrangement;
 	}
-	return { ...arrangement, dispositions: [...arrangement.dispositions, ...ghosts] };
+	return { ...arrangement, dispositions: [...arrangement.dispositions, ...morphSources] };
 }
 
 /** @emoji 🔗 True when two consecutive slides share at least one participant for reveal.js auto-animate pairing. */
@@ -834,11 +849,11 @@ export function resolveArrangement(scope: ResolutionScope, arrangement: Arrangem
 				embodiment: resolveEmbodiment(scope, disposition.embodimentId),
 				emphasis: disposition.emphasis,
 				embodimentId: disposition.embodimentId,
-				morphId: disposition.morphTargetId ?? morphId(participant.id),
+				morphId: disposition.morphAnchorId ?? morphId(participant.id),
 				position: disposition.position,
 				style: disposition.style,
-				morphGhost: disposition.morphGhost,
-				morphTarget: (disposition.morphFrom?.length ?? 0) > 0,
+				morphSource: disposition.morphSource,
+				morphFrom: disposition.morphFrom,
 			},
 		];
 	});
@@ -2131,9 +2146,10 @@ if (import.meta.vitest) {
 			};
 			const expanded = expandThoughtSlides(thought);
 			const labels = expanded.find((slide) => slide.id === "labels");
-			const labelGhost = labels?.arrangement.dispositions.find((disposition) => disposition.morphGhost);
-			expect(labelGhost?.morphTargetId).toBe("labels--0");
-			expect(labelGhost?.morphGhost).toBe(true);
+			const morphSource = labels?.arrangement.dispositions.find((disposition) => disposition.morphSource);
+			expect(morphSource?.morphAnchorId).toBe("labels--0");
+			expect(morphSource?.morphSource).toBe(true);
+			expect(arrangementRestDispositions(labels!.arrangement)).toHaveLength(1);
 		});
 
 		it("preserves declarative settleBeforeMorphTo on arrangements", () => {

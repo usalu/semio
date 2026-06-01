@@ -1780,6 +1780,7 @@ import {
   PUZZLE_2D_PRESELECT_EMPTY,
   PUZZLE_2D_SELECTION_TARGETS_DEFAULT,
   fixtureMetaKindCatalogBundle,
+  puzzle2dFixtureMetaKindCompatibility,
   puzzle2dFixtureNodeCaption,
   puzzle2dFixtureHandleEndpointDisplayLabel,
   puzzle2dFixtureMergedKindCatalogs,
@@ -1788,6 +1789,7 @@ import {
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
   applyBrushPlacementToFixture,
+  puzzle2dFixtureMergedKindCatalogs,
   puzzle2dActiveRenderer,
   DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
@@ -2486,6 +2488,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => applyCanvasSelection(snapshot.ids), [applyCanvasSelection]);
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
+  const kindCompatibility = reactHostPort.useMemo(() => puzzle2dFixtureMetaKindCompatibility(fixture.meta), [fixture.meta]);
   const sceneMarkers = reactHostPort.useMemo(
     () =>
       puzzle2dFixtureSceneMarkers(fixture, {
@@ -2541,7 +2544,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   const { notifyBrushCandidates } = usePuzzle2dPlayShell();
   const onBrushPlace = reactHostPort.useCallback(
     (payload: Puzzle2dBrushPlacePayload) => {
-      patchFixture((prev) => applyBrushPlacementToFixture(prev, payload));
+      patchFixture((prev) => applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev)));
     },
     [patchFixture],
   );
@@ -2560,6 +2563,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         brushNodeSize={DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX}
         gridSnapEnabled={puzzle2dGridSnapEnabled}
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
+        kindCompatibility={kindCompatibility}
         lodZoomThresholds={DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS}
         onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
         onDelete={onCanvasDelete}

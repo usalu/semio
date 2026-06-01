@@ -283,7 +283,7 @@ export function catalogueFocusDispositions(): readonly Disposition[] {
 	);
 }
 
-/** @emoji 👻 morphFrom slots for one column's tiles into its label disposition. */
+/** @emoji 🔀 Many-to-one morphFrom slots: focus tiles (source figure) into one column label disposition. */
 export function columnLabelMorphFrom(
 	column: keyof typeof CATALOGUE_COLUMN_TILE_KEYS,
 	labelPosition: DispositionPosition,
