@@ -1321,12 +1321,60 @@ export function measureElementRectInSection(
 	if (rect.width <= 0 || rect.height <= 0) {
 		return null;
 	}
+	return clientRectToSectionFraction(rect, sectionBounds);
+}
+
+const DISPOSITION_BOUNDS_SELECTORS =
+	"[data-id], .presentation-disposition-frame, .presentation-morph-anchor, .presentation-intro-line, .presentation-morph-text, h1, h2, h3, h4, p, li, img, video, .presentation-media-figure, .presentation-figure-tile-frame";
+
+function unionDomRects(a: DOMRect, b: DOMRect): DOMRect {
+	const left = Math.min(a.left, b.left);
+	const top = Math.min(a.top, b.top);
+	const right = Math.max(a.right, b.right);
+	const bottom = Math.max(a.bottom, b.bottom);
+	return new DOMRect(left, top, right - left, bottom - top);
+}
+
+function clientRectToSectionFraction(
+	rect: DOMRect,
+	sectionBounds: DOMRect,
+): DispositionPosition {
 	return {
 		x: (rect.left - sectionBounds.left) / sectionBounds.width,
 		y: (rect.top - sectionBounds.top) / sectionBounds.height,
 		width: rect.width / sectionBounds.width,
 		height: rect.height / sectionBounds.height,
 	};
+}
+
+/** @emoji 📍 Union of morph content bounds in section space (avoids full-width flow wrappers). */
+export function measureDispositionBoundsInSection(
+	root: HTMLElement,
+	sectionEl: HTMLElement,
+): DispositionPosition | null {
+	const sectionBounds = sectionEl.getBoundingClientRect();
+	if (sectionBounds.width <= 0 || sectionBounds.height <= 0) {
+		return null;
+	}
+	let union: DOMRect | null = null;
+	for (const node of root.querySelectorAll(DISPOSITION_BOUNDS_SELECTORS)) {
+		if (!(node instanceof HTMLElement)) {
+			continue;
+		}
+		const rect = node.getBoundingClientRect();
+		if (rect.width <= 0 || rect.height <= 0) {
+			continue;
+		}
+		union = union === null ? rect : unionDomRects(union, rect);
+	}
+	if (union === null) {
+		const fallback = root.getBoundingClientRect();
+		if (fallback.width <= 0 || fallback.height <= 0) {
+			return null;
+		}
+		return clientRectToSectionFraction(fallback, sectionBounds);
+	}
+	return clientRectToSectionFraction(union, sectionBounds);
 }
 
 /** @emoji 📏 True when measured fractions are large enough to drag or resize reliably. */
@@ -1582,9 +1630,20 @@ const InteractiveDisposition: FC<{
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
 
-	const measureDispositionTarget = useCallback((): HTMLElement | null => {
-		return contentRef.current ?? rootRef.current;
-	}, []);
+	const measureDispositionRect = useCallback((): DispositionPosition | null => {
+		const section = sectionRef.current;
+		const root = rootRef.current;
+		if (!root || !section) {
+			return null;
+		}
+		const measured = declaredRect
+			? measureElementRectInSection(root, section)
+			: measureDispositionBoundsInSection(root, section);
+		if (!measured || !isUsableMeasuredRect(measured)) {
+			return null;
+		}
+		return measured;
+	}, [declaredRect, sectionRef]);
 
 	useLayoutEffect(() => {
 		if (declaredRect || transform) {
@@ -1592,36 +1651,29 @@ const InteractiveDisposition: FC<{
 			return;
 		}
 		const section = sectionRef.current;
-		const target = measureDispositionTarget();
-		if (!target || !section || !section.classList.contains("present")) {
+		if (!section || !section.classList.contains("present")) {
 			registry.registerRect(id, null);
 			return;
 		}
-		const measured = measureElementRectInSection(target, section);
-		registry.registerRect(id, measured && isUsableMeasuredRect(measured) ? measured : null);
-	}, [id, declaredRect, transform, registry, sectionRef, slideEpoch, measureDispositionTarget]);
+		const measured = measureDispositionRect();
+		registry.registerRect(id, measured);
+	}, [id, declaredRect, transform, registry, sectionRef, slideEpoch, measureDispositionRect]);
 
 	const ensureRectForManipulation = useCallback((): DispositionPosition | null => {
-		let rect: DispositionPosition | undefined =
-			interaction.getTransform(id) ?? declaredRect ?? registry.getRect(id);
-		if (rect && !declaredRect && !interaction.getTransform(id) && !isUsableMeasuredRect(rect)) {
-			rect = undefined;
+		const pinnedRect = interaction.getTransform(id);
+		if (pinnedRect) {
+			return pinnedRect;
 		}
-		if (!rect) {
-			const section = sectionRef.current;
-			const target = measureDispositionTarget();
-			if (!target || !section) {
-				return null;
-			}
-			const measured = measureElementRectInSection(target, section);
-			if (!measured || !isUsableMeasuredRect(measured)) {
-				return null;
-			}
-			rect = measured;
-			registry.registerRect(id, measured);
+		if (declaredRect) {
+			return declaredRect;
 		}
-		return rect;
-	}, [id, declaredRect, interaction, registry, sectionRef, measureDispositionTarget]);
+		const measured = measureDispositionRect();
+		if (!measured) {
+			return null;
+		}
+		registry.registerRect(id, measured);
+		return measured;
+	}, [id, declaredRect, interaction, registry, measureDispositionRect]);
 
 	const attachPointerGesture = useCallback(
 		(
@@ -2262,6 +2314,13 @@ export function unmountPresentation(): void {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it, beforeEach, afterEach } = import.meta.vitest;
+	const { readFileSync } = await import("node:fs");
+	const { dirname, join } = await import("node:path");
+	const { fileURLToPath } = await import("node:url");
+	const globalsCssSource = readFileSync(
+		join(dirname(fileURLToPath(import.meta.url)), "globals.css"),
+		"utf8",
+	);
 
 	describe("PresentationDeck", () => {
 		let container: HTMLDivElement;
@@ -2330,6 +2389,9 @@ if (import.meta.vitest) {
 				expect(slide.querySelector(".presentation-arrangement-canvas")).toBeNull();
 				expect(slide.querySelectorAll("[data-disposition-id]").length).toBeGreaterThan(0);
 			}
+			expect(globalsCssSource).not.toMatch(
+				/\.presentation-arrangement--interactive\s*\{[^}]*position\s*:\s*relative/s,
+			);
 		});
 
 		it("applies muted opacity on layered description slide", () => {
@@ -3033,6 +3095,24 @@ if (import.meta.vitest) {
 			expect(isUsableMeasuredRect({ x: 0.2, y: 0.3, width: 0.005, height: 0.1 })).toBe(false);
 		});
 
+		it("measures flow disposition bounds from morph nodes not full-width wrapper", () => {
+			const section = document.createElement("section");
+			const root = document.createElement("div");
+			const heading = document.createElement("h2");
+			heading.textContent = "Entwerfen mit Bestand";
+			root.appendChild(heading);
+			section.appendChild(root);
+			document.body.appendChild(section);
+			section.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
+			root.getBoundingClientRect = () => new DOMRect(0, 280, 960, 120);
+			heading.getBoundingClientRect = () => new DOMRect(330, 300, 300, 80);
+			const measured = measureDispositionBoundsInSection(root, section);
+			document.body.removeChild(section);
+			expect(measured?.width).toBeCloseTo(300 / 960, 5);
+			expect(measured?.width).toBeLessThan(0.5);
+			expect(measured?.x).toBeCloseTo(330 / 960, 5);
+		});
+
 		it("scales group members and toggles fullscreen", () => {
 			const a = { x: 0.1, y: 0.2, width: 0.2, height: 0.2 };
 			const b = { x: 0.5, y: 0.2, width: 0.2, height: 0.2 };
@@ -3226,14 +3306,17 @@ if (import.meta.vitest) {
 			const content = disposition.querySelector(
 				".presentation-interactive-disposition__content",
 			) as HTMLElement;
+			const heading = disposition.querySelector("h2") as HTMLElement;
 			mockClientRect(section, 0, 0, 960, 700);
-			mockClientRect(content, 330, 280, 300, 120);
-			mockClientRect(disposition, 330, 280, 300, 120);
+			mockClientRect(disposition, 0, 280, 960, 120);
+			mockClientRect(content, 0, 280, 960, 120);
+			mockClientRect(heading, 330, 300, 300, 80);
 			act(() => {
 				pointerDrag(disposition, 480, 320, 560, 360);
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
 			expect(disposition.style.left).not.toBe("");
+			expect(Number.parseFloat(disposition.style.width)).toBeLessThan(50);
 		});
 
 		it("drags positioned disposition", () => {

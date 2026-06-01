@@ -3,9 +3,10 @@
   "emoji": "📽",
   "status": "closed",
   "description": "All presentation content must be centered horizontally and vertically. Projektetage intro currently starts at the top because text dispositions incorrectly use the positioned canvas layout.",
-  "summary": "Fixed presentation content not being vertically centered on intro/flow slides.\n\nRoot cause: `ArrangementSection` treated any text disposition as \"positioned\", wrapping intro slides in a full-height `presentation-arrangement-canvas`. Content stacked from the top of that canvas instead of using reveal.js `center: true` flow centering.\n\nFix: only use the positioned canvas when a disposition has explicit `position` or `split` (matching the figure-split plan). Added renderer test asserting intro slides have no canvas. Verified live on projektetage :6050 — title slide centered horizontally and vertically. All 14 renderer tests pass.",
+  "summary": "Fixed intro flow slides (e.g. Ziel) pushing content to the bottom of the viewport.\n\nRoot cause: `.presentation-arrangement--interactive { position: relative }` overrode reveal.js `position: absolute` on nested stack sections, so past/present/future intro slides flowed vertically instead of overlaying — the present slide content appeared at the bottom.\n\nFix: removed `position: relative` from the interactive section rule; reveal.js stack positioning and centering work again. Added regression test asserting globals.css does not reintroduce that override. Verified live on projektetage :6050 Ziel and Titel slides. All 34 renderer tests pass.",
   "goal": "🎯framework🎯presentation",
   "sessions": [
-    "⚪b812016df39e415ba16af84411819f7c"
+    "⚪b812016df39e415ba16af84411819f7c",
+    "⚪3944b9686f8e4bd8ba97726d1b382ce9"
   ]
 }

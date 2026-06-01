@@ -3,10 +3,11 @@
   "emoji": "🖱",
   "status": "closed",
   "description": "Make all slides interactive by default: every disposition is hoverable, selectable (click + rectangle marquee with crossing/window rules), draggable, resizable, with per-disposition slide-fullscreen toggle. Ephemeral in-session only.",
-  "summary": "Fixed drag on flow-layout intro dispositions (e.g. title slide). Root cause: registry cached zero-size rects from measuring hidden reveal slides, and ensureRect reused them without re-measure. Now re-measures on slideEpoch, only when section.present, validates min size, measures content box, and uses unified pointer gesture with capture. Added intro flow + positioned drag DOM tests (33 passing).",
+  "summary": "Fixed tiny selection/drag on flow intro slides: measure tight union of morph nodes (not full-width wrapper), fresh measure on manipulation start, flow-specific pinned CSS (flex center, no 100% squash on text). Drag/resize only updates ephemeral normalized transform map.",
   "goal": "🎯framework🎯presentation",
   "sessions": [
     "⚪ff10b8bd673f400597d9f29275555cf3",
-    "⚪8e8c9fbb38104777bd310bae1046ac78"
+    "⚪8e8c9fbb38104777bd310bae1046ac78",
+    "⚪51e9a011403e4f0aae5acd51f60e21c0"
   ]
 }

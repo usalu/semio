@@ -91,7 +91,6 @@
 }
 
 .reveal .slides > section > section.presentation-arrangement--interactive {
-	position: relative;
 	text-align: initial;
 }
 
@@ -272,7 +271,7 @@
 	cursor: move;
 }
 
-.reveal .presentation-interactive-disposition--pinned .presentation-interactive-disposition__content {
+.reveal .presentation-arrangement-canvas .presentation-interactive-disposition--pinned .presentation-interactive-disposition__content {
 	width: 100%;
 	height: 100%;
 	min-height: 0;
@@ -280,14 +279,17 @@
 }
 
 .reveal
+	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--pinned
 	.presentation-interactive-disposition__content
 	.presentation-disposition-frame,
 .reveal
+	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--pinned
 	.presentation-interactive-disposition__content
 	.presentation-figure-tile-frame,
 .reveal
+	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--pinned
 	.presentation-interactive-disposition__content
 	.presentation-morph-slot {
@@ -297,6 +299,22 @@
 	width: 100% !important;
 	height: 100% !important;
 	transform: none !important;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--interactive:not(.presentation-arrangement--positioned)
+	> .presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition__content {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
 }
 
 .reveal .presentation-interactive-disposition__chrome {
