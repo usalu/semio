@@ -1305,7 +1305,7 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			for (const slide of container.querySelectorAll('.slides > section > section[data-auto-animate-id="intro--m0"]')) {
+			for (const slide of container.querySelectorAll('.slides > section > section[data-auto-animate-id="introduction--m0"]')) {
 				expect(slide.classList.contains("presentation-arrangement--positioned")).toBe(false);
 				expect(slide.querySelector(".presentation-arrangement-canvas")).toBeNull();
 			}
@@ -1351,7 +1351,7 @@ if (import.meta.vitest) {
 			expect(slide("goal")?.querySelector('h2[data-id="goal"]')).toBeTruthy();
 			const authorLines = slide("authors")?.querySelectorAll('h4[data-id^="authors--"]');
 			expect(authorLines?.length).toBe(3);
-			expect(slide("authors")?.getAttribute("data-auto-animate-id")).toMatch(/^intro--/);
+			expect(slide("authors")?.getAttribute("data-auto-animate-id")).toMatch(/^introduction--/);
 			expect(slide("authors")?.querySelector(".presentation-intro-line")?.className).toContain("gap-x-");
 			expect(slide("affiliations-1")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(1);
 			expect(slide("affiliations-2")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(2);
@@ -1439,7 +1439,7 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const morphSections = container.querySelectorAll(
-				'.slides > section > section[data-auto-animate][data-auto-animate-id="intro--m0"]',
+				'.slides > section > section[data-auto-animate][data-auto-animate-id="introduction--m0"]',
 			);
 			expect(morphSections.length).toBeGreaterThan(7);
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);

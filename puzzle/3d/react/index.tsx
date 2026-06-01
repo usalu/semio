@@ -5088,17 +5088,11 @@ export function segmentIntersectsPolygon(a: ScreenPoint, b: ScreenPoint, polygon
 export interface MarqueeCandidate {
   readonly kind: "object" | "vortex" | "attraction";
   readonly id: string;
-  readonly points: readonly ScreenPoint[];
-  readonly anyBehindCamera: boolean;
-}
-
-export interface ObjectMarqueeFootprint {
-  readonly hull: ScreenPoint[];
-  readonly anyBehindCamera: boolean;
+  readonly screenBounds: ScreenRect | null;
 }
 
 const _marqueeProjectScratch = new Vector3();
-const _marqueeObjectBox = new Box3();
+const _marqueeMeshBox = new Box3();
 const _marqueeBoxCorners: readonly Vector3[] = [
   new Vector3(),
   new Vector3(),
@@ -5149,40 +5143,38 @@ export interface MarqueeSelectionInput {
   readonly candidates: readonly MarqueeCandidate[];
 }
 
-function marqueePointMatcher(method: SelectionMethod, rect: ScreenRect | null, polygon: readonly ScreenPoint[]): (point: ScreenPoint) => boolean {
-  if (method === "rectangle" && rect) {
-    return (point) => pointInScreenRect(point, rect);
+/** @emoji 🖱️ Axis-aligned client bounds from projected points (ignores behind-camera samples). */
+export function screenBoundsFromClientPoints(points: readonly ScreenPoint[]): ScreenRect | null {
+  if (points.length === 0) {
+    return null;
   }
-  return (point) => pointInPolygon(point, polygon);
+  let left = Infinity;
+  let right = -Infinity;
+  let top = Infinity;
+  let bottom = -Infinity;
+  for (const point of points) {
+    left = Math.min(left, point.x);
+    right = Math.max(right, point.x);
+    top = Math.min(top, point.y);
+    bottom = Math.max(bottom, point.y);
+  }
+  return { left, right, top, bottom };
 }
 
-function marqueeHullEdgesIntersectRect(hull: readonly ScreenPoint[], rect: ScreenRect): boolean {
-  if (hull.length === 0) {
-    return false;
-  }
-  if (hull.length === 1) {
-    return pointInScreenRect(hull[0]!, rect);
-  }
-  for (let i = 0; i < hull.length; i += 1) {
-    const a = hull[i]!;
-    const b = hull[(i + 1) % hull.length]!;
-    if (segmentIntersectsScreenRect(a, b, rect)) {
+/** @emoji 🖱️ True when a screen rect overlaps a lasso polygon (crossing selection). */
+export function screenRectIntersectsPolygon(bounds: ScreenRect, polygon: readonly ScreenPoint[]): boolean {
+  for (const point of polygon) {
+    if (pointInScreenRect(point, bounds)) {
       return true;
     }
   }
-  return false;
-}
-
-function marqueeHullEdgesIntersectPolygon(hull: readonly ScreenPoint[], polygon: readonly ScreenPoint[]): boolean {
-  if (hull.length === 0) {
-    return false;
+  const corners = screenRectCorners(bounds);
+  if (corners.some((corner) => pointInPolygon(corner, polygon))) {
+    return true;
   }
-  if (hull.length === 1) {
-    return pointInPolygon(hull[0]!, polygon);
-  }
-  for (let i = 0; i < hull.length; i += 1) {
-    const a = hull[i]!;
-    const b = hull[(i + 1) % hull.length]!;
+  for (let i = 0; i < corners.length; i += 1) {
+    const a = corners[i]!;
+    const b = corners[(i + 1) % corners.length]!;
     if (segmentIntersectsPolygon(a, b, polygon)) {
       return true;
     }
@@ -5191,24 +5183,20 @@ function marqueeHullEdgesIntersectPolygon(hull: readonly ScreenPoint[], polygon:
 }
 
 function marqueeCandidateSelected(input: MarqueeSelectionInput, candidate: MarqueeCandidate): boolean {
-  if (candidate.points.length === 0) {
+  const bounds = candidate.screenBounds;
+  if (!bounds) {
     return false;
   }
-  const hull = candidate.points;
-  const contains = marqueePointMatcher(input.method, input.rect, input.polygon);
   if (input.crossing) {
-    if (hull.some(contains)) {
-      return true;
-    }
     if (input.method === "rectangle" && input.rect) {
-      return marqueeHullEdgesIntersectRect(hull, input.rect);
+      return screenRectIntersectsRect(input.rect, bounds);
     }
-    return marqueeHullEdgesIntersectPolygon(hull, input.polygon);
+    return screenRectIntersectsPolygon(bounds, input.polygon);
   }
-  if (candidate.anyBehindCamera) {
-    return false;
+  if (input.method === "rectangle" && input.rect) {
+    return screenRectContainsRect(input.rect, bounds);
   }
-  return hull.every(contains);
+  return polygonContainsScreenRect(input.polygon, bounds);
 }
 
 /** @emoji 🖱️ Resolves marquee hits into a {@link SelectionSnapshot} from projected screen candidates. */
@@ -5273,10 +5261,9 @@ export function resolveMarqueeSelectionGesture(
   return mergeSelectionSnapshot(marqueeModeFromModifiers(args.modifiers), options.base, incoming);
 }
 
-/** @emoji 🖱️ Stable key for marquee screen-footprint cache (camera pose + canvas size). */
-export function marqueeViewKey(camera: Camera, rect: DOMRect): string {
-  const e = camera.matrixWorldInverse.elements;
-  return `${Math.round(rect.width)}x${Math.round(rect.height)}:${e[0]!.toFixed(4)}:${e[5]!.toFixed(4)}:${e[10]!.toFixed(4)}:${e[12]!.toFixed(2)}:${e[13]!.toFixed(2)}:${e[14]!.toFixed(2)}`;
+/** @emoji 🖱️ Client-space rect for marquee projection ({@link HTMLCanvasElement.getBoundingClientRect}). */
+export function puzzle3dMarqueeClientRect(gl: WebGLRenderer): DOMRect {
+  return gl.domElement.getBoundingClientRect();
 }
 
 /** @emoji 🖱️ Projects a world point to client space; reports when the point is outside the view volume. */
@@ -5315,23 +5302,7 @@ function writeMarqueeBoxCorners(box: Box3): readonly Vector3[] {
   return _marqueeBoxCorners;
 }
 
-function projectWorldPointsToMarqueeFootprint(worldPoints: readonly Vector3[], camera: Camera, rect: DOMRect): ObjectMarqueeFootprint {
-  let anyBehindCamera = false;
-  const projected: ScreenPoint[] = [];
-  for (const world of worldPoints) {
-    const sample = projectWorldToClientMarquee(world, camera, rect);
-    if (sample.behindCamera) {
-      anyBehindCamera = true;
-    }
-    if (sample.point) {
-      projected.push(sample.point);
-    }
-  }
-  const hull = projected.length <= 3 ? projected : convexHullScreenPoints(projected);
-  return { hull, anyBehindCamera };
-}
-
-/** @emoji 🖱️ Precomputes mesh geometry bounding boxes so marquee {@link Box3.setFromObject} avoids a cold first-gesture stall. */
+/** @emoji 🖱️ Precomputes mesh geometry bounding boxes so marquee projection avoids a cold first-gesture stall. */
 export function warmObjectGroupMarqueeBounds(group: Group): void {
   group.traverse((node) => {
     if (!(node instanceof Mesh)) {
@@ -5345,13 +5316,29 @@ export function warmObjectGroupMarqueeBounds(group: Group): void {
   });
 }
 
-/** @emoji 🖱️ Projects an object group's world AABB to a client-space convex hull for marquee tests. */
-export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ObjectMarqueeFootprint {
-  _marqueeObjectBox.setFromObject(group, false);
-  if (_marqueeObjectBox.isEmpty()) {
-    return { hull: [], anyBehindCamera: false };
-  }
-  return projectWorldPointsToMarqueeFootprint(writeMarqueeBoxCorners(_marqueeObjectBox), camera, rect);
+/** @emoji 🖱️ Projects an object group's visible mesh bounds to client-space screen bounds for marquee tests. */
+export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ScreenRect | null {
+  const projected: ScreenPoint[] = [];
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) {
+      return;
+    }
+    const geometry = node.geometry;
+    if (!geometry) {
+      return;
+    }
+    if (!geometry.boundingBox) {
+      geometry.computeBoundingBox();
+    }
+    _marqueeMeshBox.copy(geometry.boundingBox!).applyMatrix4(node.matrixWorld);
+    for (const corner of writeMarqueeBoxCorners(_marqueeMeshBox)) {
+      const sample = projectWorldToClientMarquee(corner, camera, rect);
+      if (sample.point) {
+        projected.push(sample.point);
+      }
+    }
+  });
+  return screenBoundsFromClientPoints(projected);
 }
 
 export interface MarqueeOverlaySnapshot {
@@ -5360,9 +5347,10 @@ export interface MarqueeOverlaySnapshot {
   readonly start: ScreenPoint | null;
   readonly current: ScreenPoint | null;
   readonly path: readonly ScreenPoint[];
+  readonly clientOrigin: ScreenPoint;
 }
 
-const MARQUEE_OVERLAY_IDLE: MarqueeOverlaySnapshot = { active: false, method: "rectangle", start: null, current: null, path: [] };
+const MARQUEE_OVERLAY_IDLE: MarqueeOverlaySnapshot = { active: false, method: "rectangle", start: null, current: null, path: [], clientOrigin: { x: 0, y: 0 } };
 
 /** @emoji 🖱️ External store for marquee overlay geometry (DOM subscribes without scene re-renders). */
 export function createMarqueeOverlayStore(initial: MarqueeOverlaySnapshot = MARQUEE_OVERLAY_IDLE) {
@@ -6267,12 +6255,14 @@ function MarqueeBridge() {
         path,
         modifiers: { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey },
       };
+      const clientRect = gl.domElement.getBoundingClientRect();
       const overlaySnapshot = {
         active: true as const,
         method: marquee.selectionMethod,
         start: { x: gesture.startX, y: gesture.startY },
         current: { x: lastX, y: lastY },
         path,
+        clientOrigin: { x: clientRect.left, y: clientRect.top },
       };
       puzzle3dMarqueeOverlayStore.setSnapshot(overlaySnapshot);
       if (activating) {
@@ -6336,24 +6326,12 @@ export function MarqueeAttractionSource(): null {
   return null;
 }
 
-function Puzzle3dMarqueeOverlay(props: { readonly rootRef: MutableRefObject<HTMLDivElement | null> }) {
+function Puzzle3dMarqueeOverlay() {
   const overlay = reactHostPort.useSyncExternalStore(puzzle3dMarqueeOverlayStore.subscribe, puzzle3dMarqueeOverlayStore.getSnapshot, puzzle3dMarqueeOverlayStore.getSnapshot);
-  const [origin, setOrigin] = reactHostPort.useState<ScreenPoint>({ x: 0, y: 0 });
-  reactHostPort.useLayoutEffect(() => {
-    const update = () => {
-      const rect = props.rootRef.current?.getBoundingClientRect();
-      if (rect) {
-        setOrigin({ x: rect.left, y: rect.top });
-      }
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [overlay.active, props.rootRef]);
   if (!overlay.active || !overlay.start || !overlay.current) {
     return null;
   }
-  const toLocal = (point: ScreenPoint) => ({ x: point.x - origin.x, y: point.y - origin.y });
+  const toLocal = (point: ScreenPoint) => ({ x: point.x - overlay.clientOrigin.x, y: point.y - overlay.clientOrigin.y });
   if (overlay.method === "lasso" && overlay.path.length >= 2) {
     const points = overlay.path.map((point) => `${toLocal(point).x},${toLocal(point).y}`).join(" ");
     return (
@@ -6502,8 +6480,6 @@ function RegistryProvider({
   const marqueeAttractionsRef = reactHostPort.useRef<readonly AttractionProps[]>([]);
   const marqueeCandidatesRef = reactHostPort.useRef<MarqueeCandidate[]>([]);
   const marqueeBaseSelectionRef = reactHostPort.useRef<SelectionSnapshot | null>(null);
-  const marqueePrefetchRef = reactHostPort.useRef<{ readonly key: string; readonly candidates: MarqueeCandidate[] }>({ key: "", candidates: [] });
-  const marqueeObjectFootprintCacheRef = reactHostPort.useRef<Map<string, { readonly viewKey: string; readonly footprint: ObjectMarqueeFootprint }>>(new Map());
   const notifyConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onConnect?.(payload), [hostCallbacksRef]);
   const notifyProximityConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onProximityConnect?.(payload), [hostCallbacksRef]);
   const notifyIndirectConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onIndirectConnect?.(payload), [hostCallbacksRef]);
@@ -6547,23 +6523,16 @@ function RegistryProvider({
     if (!env) {
       return [];
     }
-    const domRect = env.gl.domElement.getBoundingClientRect();
-    const viewKey = marqueeViewKey(env.camera, domRect);
-    const footprintCache = marqueeObjectFootprintCacheRef.current;
+    env.camera.updateMatrixWorld(true);
+    const domRect = puzzle3dMarqueeClientRect(env.gl);
     const candidates: MarqueeCandidate[] = [];
     for (const [id, group] of objectGroupMap.current) {
       if (!group) {
         continue;
       }
-      let footprint = footprintCache.get(id);
-      if (!footprint || footprint.viewKey !== viewKey) {
-        const projected = projectObjectGroupToScreenPoints(group, env.camera, domRect);
-        footprint = { viewKey, footprint: projected };
-        footprintCache.set(id, footprint);
-      }
-      const hull = footprint.footprint;
-      if (hull.hull.length) {
-        candidates.push({ kind: "object", id, points: hull.hull, anyBehindCamera: hull.anyBehindCamera });
+      const screenBounds = projectObjectGroupToScreenPoints(group, env.camera, domRect);
+      if (screenBounds) {
+        candidates.push({ kind: "object", id, screenBounds });
       }
     }
     for (const [fullId, getter] of vortexGettersRef.current) {
@@ -6572,8 +6541,9 @@ function RegistryProvider({
         continue;
       }
       const point = projectWorldToClient(world, env.camera, domRect);
-      if (point) {
-        candidates.push({ kind: "vortex", id: fullId, points: [point], anyBehindCamera: false });
+      const screenBounds = point ? screenBoundsFromClientPoints([point]) : null;
+      if (screenBounds) {
+        candidates.push({ kind: "vortex", id: fullId, screenBounds });
       }
     }
     for (const attraction of marqueeAttractionsRef.current) {
@@ -6592,16 +6562,12 @@ function RegistryProvider({
           points.push(projected);
         }
       }
-      if (points.length) {
-        candidates.push({ kind: "attraction", id: attraction.id, points, anyBehindCamera: false });
+      const screenBounds = screenBoundsFromClientPoints(points);
+      if (screenBounds) {
+        candidates.push({ kind: "attraction", id: attraction.id, screenBounds });
       }
     }
     return candidates;
-  }, []);
-
-  const invalidateMarqueePrefetch = reactHostPort.useCallback(() => {
-    marqueePrefetchRef.current = { key: "", candidates: [] };
-    marqueeObjectFootprintCacheRef.current.clear();
   }, []);
 
   const clearMarqueeGestureCache = reactHostPort.useCallback(() => {
@@ -6611,21 +6577,7 @@ function RegistryProvider({
 
   const captureMarqueeCandidates = reactHostPort.useCallback(() => {
     marqueeBaseSelectionRef.current = selectionStore.getSnapshot();
-    const env = attractionThreeRef.current;
-    if (env) {
-      const domRect = env.gl.domElement.getBoundingClientRect();
-      const key = marqueeViewKey(env.camera, domRect);
-      if (marqueePrefetchRef.current.key === key && marqueePrefetchRef.current.candidates.length > 0) {
-        marqueeCandidatesRef.current = marqueePrefetchRef.current.candidates;
-        return;
-      }
-    }
-    const built = buildMarqueeCandidates();
-    marqueeCandidatesRef.current = built;
-    if (env) {
-      const domRect = env.gl.domElement.getBoundingClientRect();
-      marqueePrefetchRef.current = { key: marqueeViewKey(env.camera, domRect), candidates: built };
-    }
+    marqueeCandidatesRef.current = buildMarqueeCandidates();
   }, [buildMarqueeCandidates, selectionStore]);
 
   const previewMarqueeSelection = reactHostPort.useCallback(
@@ -6691,13 +6643,9 @@ function RegistryProvider({
     [publishSelection, selectionStore],
   );
 
-  const setMarqueeAttractions = reactHostPort.useCallback(
-    (attractions: readonly AttractionProps[]) => {
-      marqueeAttractionsRef.current = attractions;
-      invalidateMarqueePrefetch();
-    },
-    [invalidateMarqueePrefetch],
-  );
+  const setMarqueeAttractions = reactHostPort.useCallback((attractions: readonly AttractionProps[]) => {
+    marqueeAttractionsRef.current = attractions;
+  }, []);
   const activeRelocateObjectIdRef = reactHostPort.useRef<string | null>(primarySelectionObjectId(selectionStore.getSnapshot()));
   const setActiveRelocateObjectId = reactHostPort.useCallback((id: string | null) => {
     if (activeRelocateObjectIdRef.current === id) {
@@ -6795,12 +6743,11 @@ function RegistryProvider({
     (id: string, objectKind: string | undefined, group: Group | null) => {
       objectGroupMap.current.set(id, group);
       objectKindsRef.current.set(id, objectKind);
-      invalidateMarqueePrefetch();
       if (group) {
         scheduleDeferredCallback(() => warmObjectGroupMarqueeBounds(group));
       }
     },
-    [invalidateMarqueePrefetch],
+    [],
   );
 
   const collectObjectGroups = reactHostPort.useCallback((): Group[] => {
@@ -7120,11 +7067,8 @@ function RegistryProvider({
   const attachAttractionThreeEnv = reactHostPort.useCallback(
     (env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
       attractionThreeRef.current = env;
-      if (env) {
-        invalidateMarqueePrefetch();
-      }
     },
-    [invalidateMarqueePrefetch],
+    [],
   );
 
   const findNearestProximityRelocate = reactHostPort.useCallback(
@@ -7879,7 +7823,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
           {children}
         </Inner>
       </Canvas>
-      <Puzzle3dMarqueeOverlay rootRef={rootRef} />
+      <Puzzle3dMarqueeOverlay />
     </div>
   );
 }
@@ -8523,19 +8467,28 @@ if (import.meta.vitest) {
       expect(marqueeIsCrossing(80, 100)).toBe(false);
     });
   });
-  describe("marqueeViewKey", () => {
-    it("changes when canvas size changes", () => {
-      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
-      camera.position.set(0, 10, 20);
-      camera.lookAt(0, 0, 0);
-      camera.updateMatrixWorld(true);
-      const a = marqueeViewKey(camera, { width: 800, height: 600, left: 0, top: 0, right: 800, bottom: 600 } as DOMRect);
-      const b = marqueeViewKey(camera, { width: 1024, height: 768, left: 0, top: 0, right: 1024, bottom: 768 } as DOMRect);
-      expect(a).not.toBe(b);
+  describe("screenBoundsFromClientPoints", () => {
+    it("returns null for an empty list", () => {
+      expect(screenBoundsFromClientPoints([])).toBeNull();
+    });
+    it("builds an axis-aligned rect from points", () => {
+      expect(screenBoundsFromClientPoints([{ x: 10, y: 20 }, { x: 30, y: 5 }])).toEqual({ left: 10, right: 30, top: 5, bottom: 20 });
+    });
+  });
+  describe("screenRectIntersectsPolygon", () => {
+    it("detects overlap when only edges cross", () => {
+      const bounds = { left: -10, right: 110, top: 50, bottom: 60 };
+      const polygon = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+      expect(screenRectIntersectsPolygon(bounds, polygon)).toBe(true);
     });
   });
   describe("projectObjectGroupToScreenPoints", () => {
-    it("returns a hull from warmed mesh bounds without sampling vertices", () => {
+    it("returns screen bounds from warmed mesh geometry boxes", () => {
       const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
       camera.position.set(0, 10, 20);
       camera.lookAt(0, 0, 0);
@@ -8545,8 +8498,10 @@ if (import.meta.vitest) {
       const mesh = new Mesh(new BoxGeometry(2, 2, 2));
       root.add(mesh);
       warmObjectGroupMarqueeBounds(root);
-      const footprint = projectObjectGroupToScreenPoints(root, camera, rect);
-      expect(footprint.hull.length).toBeGreaterThan(0);
+      const bounds = projectObjectGroupToScreenPoints(root, camera, rect);
+      expect(bounds).not.toBeNull();
+      expect(bounds!.right).toBeGreaterThan(bounds!.left);
+      expect(bounds!.bottom).toBeGreaterThan(bounds!.top);
     });
   });
   describe("warmObjectGroupMarqueeBounds", () => {
@@ -8578,8 +8533,8 @@ if (import.meta.vitest) {
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
         candidates: [
-          { kind: "object", id: "inside", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }], anyBehindCamera: false },
-          { kind: "object", id: "partial", points: [{ x: 90, y: 90 }, { x: 120, y: 120 }], anyBehindCamera: false },
+          { kind: "object", id: "inside", screenBounds: { left: 10, right: 20, top: 10, bottom: 20 } },
+          { kind: "object", id: "partial", screenBounds: { left: 90, right: 120, top: 90, bottom: 120 } },
         ],
       });
       expect(snap.objectIds).toEqual(["inside"]);
@@ -8591,7 +8546,7 @@ if (import.meta.vitest) {
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [{ kind: "object", id: "partial", points: [{ x: 90, y: 90 }, { x: 120, y: 120 }], anyBehindCamera: false }],
+        candidates: [{ kind: "object", id: "partial", screenBounds: { left: 90, right: 120, top: 90, bottom: 120 } }],
       });
       expect(snap.objectIds).toEqual(["partial"]);
     });
@@ -8603,67 +8558,43 @@ if (import.meta.vitest) {
         polygon: [],
         kinds: { object: false, vortex: true, attraction: false },
         candidates: [
-          { kind: "object", id: "obj", points: [{ x: 10, y: 10 }], anyBehindCamera: false },
-          { kind: "vortex", id: "a:v1", points: [{ x: 12, y: 12 }], anyBehindCamera: false },
+          { kind: "object", id: "obj", screenBounds: { left: 10, right: 10, top: 10, bottom: 10 } },
+          { kind: "vortex", id: "a:v1", screenBounds: { left: 12, right: 12, top: 12, bottom: 12 } },
         ],
       });
       expect(snap.objectIds).toEqual([]);
       expect(snap.vortexIds).toEqual(["a:v1"]);
     });
-    it("window mode rejects objects with vertices behind the camera", () => {
+    it("skips candidates without screen bounds", () => {
       const snap = marqueeSelectionFromCandidates({
         method: "rectangle",
         crossing: false,
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [{ kind: "object", id: "straddle", points: [{ x: 50, y: 50 }], anyBehindCamera: true }],
+        candidates: [{ kind: "object", id: "hidden", screenBounds: null }],
       });
       expect(snap.objectIds).toEqual([]);
     });
-    it("window mode selects a tight hull fully inside the marquee", () => {
+    it("window mode selects bounds fully inside the marquee", () => {
       const snap = marqueeSelectionFromCandidates({
         method: "rectangle",
         crossing: false,
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [
-          {
-            kind: "object",
-            id: "tight",
-            points: [
-              { x: 40, y: 40 },
-              { x: 60, y: 40 },
-              { x: 60, y: 60 },
-              { x: 40, y: 60 },
-            ],
-            anyBehindCamera: false,
-          },
-        ],
+        candidates: [{ kind: "object", id: "tight", screenBounds: { left: 40, right: 60, top: 40, bottom: 60 } }],
       });
       expect(snap.objectIds).toEqual(["tight"]);
     });
-    it("crossing mode selects via convex-hull edges without any corner inside", () => {
+    it("crossing mode selects when screen bounds overlap the marquee", () => {
       const snap = marqueeSelectionFromCandidates({
         method: "rectangle",
         crossing: true,
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [
-          {
-            kind: "object",
-            id: "edge-hit",
-            points: [
-              { x: -10, y: 50 },
-              { x: 110, y: 50 },
-              { x: 110, y: 60 },
-              { x: -10, y: 60 },
-            ],
-            anyBehindCamera: false,
-          },
-        ],
+        candidates: [{ kind: "object", id: "edge-hit", screenBounds: { left: -10, right: 110, top: 50, bottom: 60 } }],
       });
       expect(snap.objectIds).toEqual(["edge-hit"]);
     });
@@ -8694,8 +8625,8 @@ if (import.meta.vitest) {
   describe("resolveMarqueeSelectionGesture", () => {
     const rect = screenRectFromClientPoints(0, 0, 100, 100);
     const candidates = [
-      { kind: "object" as const, id: "inside", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }], anyBehindCamera: false },
-      { kind: "object" as const, id: "outside", points: [{ x: 200, y: 200 }], anyBehindCamera: false },
+      { kind: "object" as const, id: "inside", screenBounds: { left: 10, right: 20, top: 10, bottom: 20 } },
+      { kind: "object" as const, id: "outside", screenBounds: { left: 200, right: 200, top: 200, bottom: 200 } },
     ];
     const gesture = {
       startX: 0,

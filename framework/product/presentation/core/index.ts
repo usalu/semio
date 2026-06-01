@@ -1,5 +1,5 @@
 // #region 🧱Header
-/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Chapter}, {@link Sequence}, {@link Thought}, {@link Slide}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link expandThoughtSlides}, {@link intro}, and {@link analogy}. */
+/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Chapter}, {@link Sequence}, {@link Thought}, {@link Slide}, {@link SlideFile}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link expandThoughtSlides}, {@link loadPresentationFromSlideGlob}, {@link intro}, and {@link analogy}. */
 // #endregion 🧱Header
 
 //#region 🔖Emphasis
@@ -833,6 +833,176 @@ export function formatPresentationUrlHash(
 }
 //#endregion 🔖Resolve
 
+//#region 🔖SlideFile
+/** @emoji 📄 One slide module under `slide/<chapter>/<sequence>/<thought>/<slide>.ts`. */
+export interface SlideFile {
+	readonly order: number;
+	readonly arrangement: Arrangement;
+	readonly transition?: Transition;
+	readonly participants?: readonly Participant[];
+}
+
+/** @emoji 📁 Parsed path segments for a slide module file. */
+export interface ParsedSlideFilePath {
+	readonly chapter: string;
+	readonly sequence: string;
+	readonly thought: string;
+	readonly slide: string;
+}
+
+/** @emoji 📁 Slide module path plus its parsed segments. */
+export interface SlideFileModule {
+	readonly path: ParsedSlideFilePath;
+	readonly file: SlideFile;
+}
+
+/** @emoji 📽 Deck metadata paired with slide modules discovered from a glob import. */
+export interface PresentationMeta {
+	readonly id: string;
+	readonly name: string;
+	readonly language?: PresentationLanguageKind;
+	readonly width?: number;
+	readonly height?: number;
+}
+
+/** @emoji 🔤 Stable id derived from a titleized presentation entity name. */
+export function presentationNameToId(name: string): string {
+	return name
+		.normalize("NFD")
+		.replace(/\p{M}/gu, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+}
+
+/** @emoji 📁 Builds the canonical slide module path for one arrangement bookmark name. */
+export function presentationSlideFilePath(
+	chapter: string,
+	sequence: string,
+	thought: string,
+	slide: string,
+): string {
+	return `slide/${chapter}/${sequence}/${thought}/${slide}.ts`;
+}
+
+/** @emoji 📁 Parses `slide/<chapter>/<sequence>/<thought>/<slide>.ts` from an import path. */
+export function parsePresentationSlideFilePath(path: string): ParsedSlideFilePath | null {
+	const normalized = path.replace(/\\/g, "/");
+	const match = normalized.match(/(?:^|\/)slide\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\.ts$/u);
+	if (!match) {
+		return null;
+	}
+	return {
+		chapter: match[1]!,
+		sequence: match[2]!,
+		thought: match[3]!,
+		slide: match[4]!,
+	};
+}
+
+function mergeSlideFileParticipants(modules: readonly SlideFile[]): Participant[] {
+	const byId = new Map<string, Participant>();
+	for (const module of modules) {
+		for (const participant of module.participants ?? []) {
+			const existing = byId.get(participant.id);
+			if (!existing) {
+				byId.set(participant.id, participant);
+				continue;
+			}
+			const embodimentKeys = new Set(existing.embodiments.map((embodiment) => embodiment.id ?? embodiment.kind));
+			const embodiments = [...existing.embodiments];
+			for (const embodiment of participant.embodiments) {
+				const key = embodiment.id ?? embodiment.kind;
+				if (!embodimentKeys.has(key)) {
+					embodiments.push(embodiment);
+					embodimentKeys.add(key);
+				}
+			}
+			byId.set(participant.id, { id: participant.id, embodiments });
+		}
+	}
+	return [...byId.values()];
+}
+
+/** @emoji 🧩 Assembles one thought from slide modules sharing the same folder path. */
+export function assembleThoughtFromSlideFiles(thoughtName: string, modules: readonly SlideFileModule[]): Thought {
+	const sorted = [...modules].sort((left, right) => left.file.order - right.file.order);
+	const slideFiles = sorted.map((module) => module.file);
+	return {
+		id: presentationNameToId(thoughtName),
+		name: thoughtName,
+		participants: mergeSlideFileParticipants(slideFiles),
+		slides: sorted.map((module) => ({
+			arrangement: {
+				...module.file.arrangement,
+				name: module.file.arrangement.name ?? module.path.slide,
+			},
+			transition: module.file.transition,
+		})),
+	};
+}
+
+/** @emoji 📚 Assembles one chapter from nested slide modules. */
+export function assembleChapterFromSlideFiles(
+	chapterName: string,
+	thoughtModules: ReadonlyMap<string, readonly SlideFileModule[]>,
+): Chapter {
+	const sequences = new Map<string, Map<string, SlideFileModule[]>>();
+	for (const [key, modules] of thoughtModules) {
+		const [sequenceName, thoughtName] = key.split("\0");
+		if (!sequenceName || !thoughtName) {
+			throw new Error(`Invalid thought key "${key}" while assembling chapter "${chapterName}".`);
+		}
+		const byThought = sequences.get(sequenceName) ?? new Map<string, SlideFileModule[]>();
+		byThought.set(thoughtName, [...modules]);
+		sequences.set(sequenceName, byThought);
+	}
+	return {
+		id: presentationNameToId(chapterName),
+		name: chapterName,
+		sequences: [...sequences.entries()]
+			.sort(([left], [right]) => left.localeCompare(right, "de"))
+			.map(([sequenceName, byThought]) => ({
+				id: presentationNameToId(sequenceName),
+				name: sequenceName,
+				thoughts: [...byThought.entries()]
+					.sort(([left], [right]) => left.localeCompare(right, "de"))
+					.map(([thoughtName, modules]) => assembleThoughtFromSlideFiles(thoughtName, modules)),
+			})),
+	};
+}
+
+/** @emoji 📽 Assembles a deck from eager import.meta.glob slide module maps. */
+export function loadPresentationFromSlideGlob(
+	meta: PresentationMeta,
+	globModules: Readonly<Record<string, { readonly default: SlideFile }>>,
+): Presentation {
+	const byChapter = new Map<string, Map<string, readonly SlideFileModule[]>>();
+	for (const [importPath, module] of Object.entries(globModules)) {
+		const parsedPath = parsePresentationSlideFilePath(importPath);
+		if (!parsedPath) {
+			continue;
+		}
+		const byThought =
+			byChapter.get(parsedPath.chapter) ?? new Map<string, readonly SlideFileModule[]>();
+		const thoughtKey = `${parsedPath.sequence}\0${parsedPath.thought}`;
+		const modules = [...(byThought.get(thoughtKey) ?? []), { path: parsedPath, file: module.default }];
+		byThought.set(thoughtKey, modules);
+		byChapter.set(parsedPath.chapter, byThought);
+	}
+	return {
+		id: meta.id,
+		name: meta.name,
+		...(meta.language ? { language: meta.language } : {}),
+		...(meta.width ? { width: meta.width } : {}),
+		...(meta.height ? { height: meta.height } : {}),
+		chapters: [...byChapter.entries()]
+			.sort(([left], [right]) => left.localeCompare(right, "de"))
+			.map(([chapterName, thoughtModules]) => assembleChapterFromSlideFiles(chapterName, thoughtModules)),
+	};
+}
+//#endregion 🔖SlideFile
+
 //#region 🔖Intro
 /** @emoji 🎬 Spec for the standard paper intro template (title → description → goal → authors → affiliations ×3). */
 export interface IntroSpec {
@@ -926,11 +1096,8 @@ function introArrangementBookmarkName(
 	return INTRO_ARRANGEMENT_BOOKMARK[introBookmarkLanguage(language)][arrangementId] ?? arrangementId;
 }
 
-/** @emoji 🎬 Builds a seven-slide intro; each arrangement is that slide's target content for reveal.js auto-animate. */
-export function intro(spec: IntroSpec): Presentation {
-	const thoughtId = "intro";
-	const language = spec.language;
-	const participants: Participant[] = [
+function introParticipants(spec: IntroSpec): Participant[] {
+	return [
 		{
 			id: INTRO_PARTICIPANT_TITLE,
 			embodiments: [
@@ -986,7 +1153,7 @@ export function intro(spec: IntroSpec): Presentation {
 				{
 					kind: "authors",
 					id: INTRO_EMBODIMENT_AUTHORS_PLAIN,
-					lines: spec.authors.lines.map((line) => line.map((a) => ({ name: a.name }))),
+					lines: spec.authors.lines.map((line) => line.map((author) => ({ name: author.name }))),
 				},
 				{
 					kind: "authors",
@@ -1042,106 +1209,117 @@ export function intro(spec: IntroSpec): Presentation {
 			],
 		},
 	];
+}
 
+/** @emoji 🎬 Slide modules for the standard intro thought (`slide/<chapter>/<sequence>/<thought>/<slide>.ts`). */
+export function introSlideFiles(spec: IntroSpec): readonly SlideFile[] {
+	const language = introBookmarkLanguage(spec.language);
+	const participants = introParticipants(spec);
 	const muted = (participantId: string, embodimentId?: string): Disposition => ({
 		participantId,
 		...(embodimentId ? { embodimentId } : {}),
 		emphasis: "muted",
 	});
-
 	const active = (participantId: string, embodimentId?: string): Disposition => ({
 		participantId,
 		...(embodimentId ? { embodimentId } : {}),
 		emphasis: "active",
 	});
-
 	const introMutedAboveAuthors = [
 		muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
 		muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
 		muted(INTRO_PARTICIPANT_GOAL),
 	];
-
-	const introLanguage = introBookmarkLanguage(language);
 	const introArrangement = (
 		arrangementId: string,
 		dispositions: Arrangement["dispositions"],
 	): Arrangement => ({
 		id: arrangementId,
-		name: introArrangementBookmarkName(arrangementId, introLanguage),
+		name: introArrangementBookmarkName(arrangementId, language),
 		dispositions,
 	});
+	return [
+		{
+			order: 0,
+			participants,
+			arrangement: introArrangement("title", [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)]),
+			transition: { kind: "morph" },
+		},
+		{
+			order: 1,
+			arrangement: introArrangement("description", [
+				muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
+				active(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_FULL),
+			]),
+			transition: { kind: "morph" },
+		},
+		{
+			order: 2,
+			arrangement: introArrangement("goal", [
+				muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
+				muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
+				active(INTRO_PARTICIPANT_GOAL),
+			]),
+			transition: { kind: "morph" },
+		},
+		{
+			order: 3,
+			arrangement: introArrangement("authors", [
+				...introMutedAboveAuthors,
+				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
+			]),
+			transition: { kind: "morph" },
+		},
+		{
+			order: 4,
+			arrangement: introArrangement("affiliations-1", [
+				...introMutedAboveAuthors,
+				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1),
+				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
+			]),
+			transition: { kind: "morph" },
+		},
+		{
+			order: 5,
+			arrangement: introArrangement("affiliations-2", [
+				...introMutedAboveAuthors,
+				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2),
+				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
+			]),
+			transition: { kind: "morph" },
+		},
+		{
+			order: 6,
+			arrangement: introArrangement("affiliations-3", [
+				...introMutedAboveAuthors,
+				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3),
+				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
+			]),
+		},
+	];
+}
 
-	const thought: Thought = {
-		id: thoughtId,
-		name: INTRO_THOUGHT_BOOKMARK[introLanguage],
-		participants,
-		slides: [
-			{ arrangement: introArrangement("title", [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)]), transition: { kind: "morph" } },
-			{
-				arrangement: introArrangement("description", [
-					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					active(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_FULL),
-				]),
-				transition: { kind: "morph" },
-			},
-			{
-				arrangement: introArrangement("goal", [
-					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
-					active(INTRO_PARTICIPANT_GOAL),
-				]),
-				transition: { kind: "morph" },
-			},
-			{
-				arrangement: introArrangement("authors", [
-					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
-				]),
-				transition: { kind: "morph" },
-			},
-			{
-				arrangement: introArrangement("affiliations-1", [
-					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1),
-					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
-				]),
-				transition: { kind: "morph" },
-			},
-			{
-				arrangement: introArrangement("affiliations-2", [
-					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2),
-					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
-				]),
-				transition: { kind: "morph" },
-			},
-			{
-				arrangement: introArrangement("affiliations-3", [
-					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3),
-					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
-				]),
-			},
-		],
-	};
-
+/** @emoji 🎬 Builds a seven-slide intro; each arrangement is that slide's target content for reveal.js auto-animate. */
+export function intro(spec: IntroSpec): Presentation {
+	const language = introBookmarkLanguage(spec.language);
+	const chapterName = INTRO_CHAPTER_BOOKMARK[language];
+	const sequenceName = INTRO_SEQUENCE_BOOKMARK[language];
+	const thoughtName = INTRO_THOUGHT_BOOKMARK[language];
+	const modules: SlideFileModule[] = introSlideFiles(spec).map((file, index) => ({
+		path: {
+			chapter: chapterName,
+			sequence: sequenceName,
+			thought: thoughtName,
+			slide: file.arrangement.name ?? INTRO_ARRANGEMENT_BOOKMARK[language][file.arrangement.id] ?? `${index}`,
+		},
+		file,
+	}));
+	const chapter = assembleChapterFromSlideFiles(chapterName, new Map([[`${sequenceName}\0${thoughtName}`, modules]]));
 	return {
 		id: spec.id ?? "presentation",
 		name: spec.name ?? spec.title.short,
-		...(language ? { language } : {}),
-		chapters: [
-			{
-				id: "main",
-				name: INTRO_CHAPTER_BOOKMARK[introLanguage],
-				sequences: [
-					{
-						id: "intro",
-						name: INTRO_SEQUENCE_BOOKMARK[introLanguage],
-						thoughts: [thought],
-					},
-				],
-			},
-		],
+		...(spec.language ? { language: spec.language } : {}),
+		chapters: [chapter],
 	};
 }
 //#endregion 🔖Intro
@@ -1305,6 +1483,70 @@ if (import.meta.vitest) {
 				],
 			],
 		},
+	});
+
+	describe("loadPresentationFromSlideGlob", () => {
+		it("assembles chapters, sequences, thoughts, and ordered slides from slide paths", () => {
+			const deck = loadPresentationFromSlideGlob(
+				{ id: "deck", name: "Deck", language: "de" },
+				{
+					"./slide/Hauptteil/Einführung/Einleitung/Titel.ts": {
+						default: {
+							order: 0,
+							participants: [{ id: "title", embodiments: [{ kind: "text", lines: ["A"], level: "title" }] }],
+							arrangement: { id: "title", name: "Titel", dispositions: [{ participantId: "title", emphasis: "active" }] },
+						},
+					},
+					"./slide/Hauptteil/Einführung/Einleitung/Ziel.ts": {
+						default: {
+							order: 1,
+							arrangement: { id: "goal", name: "Ziel", dispositions: [{ participantId: "title", emphasis: "active" }] },
+						},
+					},
+					"./slide/Hauptteil/Einführung/Medien/Bauteilkatalog.ts": {
+						default: {
+							order: 0,
+							arrangement: {
+								id: "catalogue",
+								name: "Bauteilkatalog",
+								dispositions: [{ participantId: "catalogue", emphasis: "active" }],
+							},
+						},
+					},
+				},
+			);
+			expect(deck.chapters[0]).toMatchObject({
+				name: "Hauptteil",
+				sequences: [
+					{
+						name: "Einführung",
+						thoughts: [
+							{
+								name: "Einleitung",
+								slides: [{ arrangement: { name: "Titel" } }, { arrangement: { name: "Ziel" } }],
+							},
+							{
+								name: "Medien",
+								slides: [{ arrangement: { name: "Bauteilkatalog" } }],
+							},
+						],
+					},
+				],
+			});
+		});
+	});
+
+	describe("parsePresentationSlideFilePath", () => {
+		it("round-trips canonical slide module paths", () => {
+			const path = presentationSlideFilePath("Hauptteil", "Einführung", "Einleitung", "Titel");
+			expect(path).toBe("slide/Hauptteil/Einführung/Einleitung/Titel.ts");
+			expect(parsePresentationSlideFilePath(`./${path}`)).toEqual({
+				chapter: "Hauptteil",
+				sequence: "Einführung",
+				thought: "Einleitung",
+				slide: "Titel",
+			});
+		});
 	});
 
 	describe("intro", () => {
