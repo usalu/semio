@@ -3,7 +3,7 @@
   "emoji": "⚡",
   "status": "closed",
   "description": "Puzzle 3D Selection Performance Refactor",
-  "summary": "Refactored selection to O(1) per-id subscriptions (object/vortex/attraction Sets with diff-notify) instead of whole-snapshot scans in every ObjectItem/Vortex. CableBatch uses stable attraction set subscription. Inspector aggregates multi vortex/attraction rows. Play viewport host memoizes fixture-derived catalogs on fixture reference only.",
+  "summary": "O(1) per-id selection store; aggregated inspector; bulk select skips drei/pooled edge outlines above 48 rows; single canvas invalidate per revision; deferred shell emit on select-all; removed selectedObjectIds from registry core.",
   "goal": "🎯semio",
   "sessions": []
 }

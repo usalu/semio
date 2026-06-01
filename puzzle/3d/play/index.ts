@@ -393,7 +393,6 @@ export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, select
   const selectedObjects = new Set(selection.objectIds);
   const selectedVortices = new Set(selection.vortexIds);
   const selectedAttractions = new Set(selection.attractionIds);
-  const selectedObjectIdSet = selectedObjects;
   const objectItems: UiTreeItemNode[] = fixture.objects.map((object) => {
     const vortexItems: UiTreeItemNode[] = object.vortices.map((vortex) => {
       const fullId = puzzle3dVortexFullId(object.id, vortex.id);
@@ -1984,7 +1983,7 @@ if (import.meta.vitest) {
       ctrl.run("setSelection", { selection: PUZZLE_3D_PLAY_EMPTY_SELECTION });
       const started = performance.now();
       ctrl.run("selectAllSelection");
-      expect(performance.now() - started).toBeLessThan(250);
+      expect(performance.now() - started).toBeLessThan(100);
       const snap = ctrl.getSnapshot();
       expect(snap.selection.objectIds.length).toBe(fixture!.objects.length);
       expect(snap.selection.vortexIds.length).toBe(fixture!.objects.reduce((count, object) => count + object.vortices.length, 0));

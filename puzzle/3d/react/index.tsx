@@ -7444,6 +7444,20 @@ if (import.meta.vitest) {
       expect(bulkCount).toBe(1);
       unsub();
     });
+    it("disables mesh outlines when selection exceeds budget", () => {
+      const store = createSelectionSnapshotStore();
+      const ids = Array.from({ length: PUZZLE3D_MESH_OUTLINE_MAX_SELECTION + 1 }, (_, index) => `o${index}`);
+      store.setSnapshot({ objectIds: ids, vortexIds: [], attractionIds: [] });
+      expect(store.getMeshOutlineEnabled()).toBe(false);
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(store.getMeshOutlineEnabled()).toBe(true);
+    });
+    it("increments revision on each selection change", () => {
+      const store = createSelectionSnapshotStore();
+      expect(store.getRevision()).toBe(1);
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(store.getRevision()).toBe(2);
+    });
   });
   describe("puzzle3dObjectKindVorticesFromKitConnectors", () => {
     it("keeps two connectors with the same vortexKind at different CAD positions", () => {
