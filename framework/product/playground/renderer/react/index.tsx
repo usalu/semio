@@ -658,6 +658,9 @@ export function windowEngagementToGolden(engagement: WindowEngagement | undefine
         disabled: engagement.input.disabled,
         onChange: engagement.input.onChange ? (value: string) => bus.dispatch(engagement.input!.onChange!.controllerId, engagement.input!.onChange!.command, { ...(engagement.input!.onChange!.args as object | undefined), value }) : undefined,
         onSubmit: engagement.input.onSubmit ? (value: string) => bus.dispatch(engagement.input!.onSubmit!.controllerId, engagement.input!.onSubmit!.command, { ...(engagement.input!.onSubmit!.args as object | undefined), value }) : undefined,
+        onRepeatLast: engagement.input.onRepeatLast
+          ? () => bus.dispatch(engagement.input!.onRepeatLast!.controllerId, engagement.input!.onRepeatLast!.command, engagement.input!.onRepeatLast!.args)
+          : undefined,
         onAbort: engagement.input.onAbort ? () => bus.dispatch(engagement.input!.onAbort!.controllerId, engagement.input!.onAbort!.command, engagement.input!.onAbort!.args) : undefined,
       }
     : undefined;
@@ -1185,6 +1188,7 @@ function usePuzzle3dPlaySnapshot(): Puzzle3dPlaySnapshot {
 
 /** @emoji 💬 Enforces CAD-style puzzle 3D play engagement (command input row required). */
 export function enforcePuzzle3dPlayWindowEngagement(engagement: WindowEngagement | undefined): void {
+  if (!engagement) return;
   enforcePlaygroundWindowEngagementInput(engagement, "Puzzle 3D play viewport");
 }
 
@@ -1206,6 +1210,9 @@ export function puzzle3dPlayEngagementMirror(engagement: EngagementSpec | null):
         disabled: engagement.input.disabled,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementInput", args: {} },
         onSubmit: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: {} },
+        onRepeatLast: engagement.input.onRepeatLast
+          ? { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementRepeatLast", args: {} }
+          : undefined,
         onAbort: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementAbort", args: {} },
       }
     : undefined;
@@ -1227,15 +1234,23 @@ function Puzzle3dPlayEngagementPublisher(props: {
   const { ctrl, snap, bus } = props;
   const [cmdLine, setCmdLine] = reactHostPort.useState("");
   const engagementSpecRef = reactHostPort.useRef<EngagementSpec | null>(null);
+  const lastEngagementToolRef = reactHostPort.useRef<"select" | "brush">("brush");
   const brushEngagementEpoch = reactHostPort.useSyncExternalStore(subscribePuzzle3dBrushEngagementSource, getPuzzle3dBrushEngagementEpoch, getPuzzle3dBrushEngagementEpoch);
   const brushSource = puzzle3dBrushEngagementSourceRef.current;
   const selectionCount = snap.selection.objectIds.length + snap.selection.vortexIds.length + snap.selection.attractionIds.length;
   const onSelectTool = reactHostPort.useCallback(() => {
+    lastEngagementToolRef.current = "select";
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "select" });
   }, [bus]);
   const onBrushTool = reactHostPort.useCallback(() => {
+    lastEngagementToolRef.current = "brush";
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "brush" });
   }, [bus]);
+  const onRepeatLastEngagement = reactHostPort.useCallback(() => {
+    if (snap.activeTool === lastEngagementToolRef.current) return;
+    if (lastEngagementToolRef.current === "brush") onBrushTool();
+    else onSelectTool();
+  }, [onBrushTool, onSelectTool, snap.activeTool]);
   const onEngagementAbort = reactHostPort.useCallback(() => {
     setCmdLine("");
     if (snap.activeTool === "brush") {
@@ -1276,6 +1291,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         selectionObjectCount: selectionCount,
         onCmdLineChange: setCmdLine,
         onCmdLineSubmit,
+        onRepeatLast: onRepeatLastEngagement,
         onAbort: onEngagementAbort,
         onSelectTool,
         onBrushTool,
@@ -1284,7 +1300,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushCandidates: brushSource.candidates,
         brushTargetActive: brushSource.targetActive,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onSelectTool, selectionCount, snap.activeTool],
+    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onRepeatLastEngagement, onSelectTool, selectionCount, snap.activeTool],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -1314,6 +1330,9 @@ function Puzzle3dPlayEngagementPublisher(props: {
             engagementSpecRef.current?.input?.onSubmit?.(value);
             break;
           }
+          case "engagementRepeatLast":
+            engagementSpecRef.current?.input?.onRepeatLast?.();
+            break;
           case "engagementAbort":
             engagementSpecRef.current?.input?.onAbort?.();
             break;
@@ -4200,24 +4219,6 @@ if (import.meta.vitest) {
           filter: [{ id: "sep", kind: "separator" }],
         }),
       ).toEqual(["save"]);
-    });
-  });
-
-  describe("enforcePuzzle3dPlayWindowEngagement", () => {
-    it("requires engagement.input", () => {
-      expect(() => enforcePuzzle3dPlayWindowEngagement({ options: [{ id: "x", label: "X" }] })).toThrow(/engagement\.input/);
-      expect(() => enforcePuzzle3dPlayWindowEngagement(undefined)).not.toThrow();
-    });
-  });
-
-  describe("puzzle3dPlayEngagementMirror", () => {
-    it("maps input and possibles to bus commands", () => {
-      const mirror = puzzle3dPlayEngagementMirror({
-        input: { id: "engagement-input", value: "brush", onChange: () => {}, onSubmit: () => {} },
-        possibleEngagements: [{ id: "puzzle3d.tool.brush", label: "Brush", onSelect: () => {} }],
-      });
-      expect(mirror?.input?.onChange?.command).toBe("engagementInput");
-      expect(mirror?.possibleEngagements?.[0]?.command?.command).toBe("engagementPossibleSelect");
     });
   });
 

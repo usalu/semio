@@ -254,6 +254,8 @@ export interface WindowEngagementInput {
   readonly disabled?: boolean;
   readonly onChange?: CommandDescriptor;
   readonly onSubmit?: CommandDescriptor;
+  /** @emoji 🔁 Restarts the last engagement when Space is pressed with an empty command. */
+  readonly onRepeatLast?: CommandDescriptor;
   readonly onAbort?: CommandDescriptor;
 }
 
@@ -804,6 +806,14 @@ if (import.meta.vitest) {
       }
     }
   }
+
+  describe("enforceWindowKindsEngagementInput", () => {
+    it("throws when any window kind lacks engagement.input", () => {
+      expect(() =>
+        enforceWindowKindsEngagementInput([new WindowKindRuntime("w", "W", "body")], "Test app"),
+      ).toThrow(/engagement\.input/);
+    });
+  });
 
   describe("WindowKindRuntime engagement", () => {
     it("defaults to no engagement and accepts a neutral engagement descriptor", () => {

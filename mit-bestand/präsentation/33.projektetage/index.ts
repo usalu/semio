@@ -86,6 +86,24 @@ const CATALOGUE_COLUMN_LABEL_LINES: Record<string, string> = {
 	col3: "Stütze",
 };
 
+const CATALOGUE_ASSEMBLED_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
+	{
+		key: "col1",
+		tileKeys: ["tile-r0-c0", "tile-r0-c1", "tile-r1-c0", "tile-r1-c1", "tile-r2-c0", "tile-r2-c1"],
+		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col1,
+	},
+	{
+		key: "col2",
+		tileKeys: ["tile-r0-c2", "tile-r1-c2", "tile-r2-c2"],
+		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col2,
+	},
+	{
+		key: "col3",
+		tileKeys: ["tile-r0-c3", "tile-r0-c4", "tile-r1-c3", "tile-r1-c4", "tile-r2-c3", "tile-r2-c4"],
+		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col3,
+	},
+];
+
 const CATALOGUE_FOCUS_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
 	{
 		key: "col1",
@@ -113,7 +131,7 @@ function stackedColumnLabelPosition(rowIndex: number): DispositionPosition {
 	};
 }
 
-/** @emoji 🏷 One stacked label per column; tiles morph via shared {@link columnMorphId} on hidden per-tile ghosts. */
+/** @emoji 🏷 One stacked label per column; visible tiles share {@link columnMorphId} per column and group-morph here. */
 const CATALOGUE_COLUMN_LABELS: readonly SplitMorphTarget[] = CATALOGUE_FOCUS_COLUMN_GROUPS.map((column, rowIndex) => ({
 	columnKey: column.key,
 	position: stackedColumnLabelPosition(rowIndex),
@@ -219,7 +237,12 @@ const mediaThought: Thought = {
 				{
 					participantId: "catalogue",
 					emphasis: "active",
-					split: { tiles: CATALOGUE_TILES_ASSEMBLED, concealed: true },
+					split: {
+						tiles: CATALOGUE_TILES_ASSEMBLED,
+						concealed: true,
+						columns: CATALOGUE_ASSEMBLED_COLUMN_GROUPS,
+						columnMorphTiles: true,
+					},
 				},
 				{
 					participantId: "catalogue",
@@ -237,7 +260,7 @@ const mediaThought: Thought = {
 					split: {
 						tiles: CATALOGUE_FOCUS_TILES,
 						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
-						columnMorphTileGhosts: true,
+						columnMorphTiles: true,
 					},
 				},
 			],
@@ -317,7 +340,7 @@ if (import.meta.vitest) {
 			const catalogue = media?.arrangements.find((a) => a.id === "catalogue");
 			expect(catalogue?.dispositions[0]?.split?.concealed).toBe(true);
 			expect(catalogue?.dispositions[0]?.split?.tiles).toHaveLength(15);
-			expect(catalogue?.dispositions[0]?.split?.columns).toBeUndefined();
+			expect(catalogue?.dispositions[0]?.split?.columnMorphTiles).toBe(true);
 			expect(catalogue?.dispositions[1]?.position).toEqual(CATALOGUE_FRAME);
 			expect(catalogue?.dispositions[1]?.split).toBeUndefined();
 		});
@@ -350,7 +373,7 @@ if (import.meta.vitest) {
 			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("stacks three column labels and uses per-tile column morph ghosts on focus", () => {
+		it("stacks three column labels and uses columnMorphTiles on focus", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
@@ -359,7 +382,7 @@ if (import.meta.vitest) {
 			const ys = targets.map((target) => target.position.y);
 			expect(ys[0]).toBeLessThan(ys[1] ?? 0);
 			expect(ys[1]).toBeLessThan(ys[2] ?? 0);
-			expect(media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columnMorphTileGhosts).toBe(
+			expect(media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columnMorphTiles).toBe(
 				true,
 			);
 			expect(media?.arrangements.some((a) => a.id === "catalogue-merge")).toBe(false);

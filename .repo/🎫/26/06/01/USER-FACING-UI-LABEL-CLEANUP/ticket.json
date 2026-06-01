@@ -1,13 +1,14 @@
 {
   "title": "User Facing Ui Label Cleanup",
   "emoji": "🏷️",
-  "status": "closed",
+  "status": "open",
   "description": "Clean UI labels to user perspective: engagement options → Commands/toggles, no state machine lingo in user space.",
   "summary": "Navbar and toolbar always show button/toggle captions via UiChromeLabelPolicyProvider. useControlAccessibleLabel ensures aria-labels when compact hides inline text. Added ui.find.toggle i18n; fixed find vs search label mapping.",
   "goal": "🎯semio🎯ui",
   "sessions": [
     "⚪963db0d2e1ad4acca54842b96968fea1",
     "⚪bab7f48345a346ad8ecc0111fab5f43a",
-    "⚪a9b66b472ac7402cb05dfcbd819d9fb7"
+    "⚪a9b66b472ac7402cb05dfcbd819d9fb7",
+    "⚪7499be500cb64b8abe9defbad31c399f"
   ]
 }

@@ -1021,6 +1021,7 @@ export class Puzzle3dPlayShellController extends Controller {
         return;
       }
       case "engagementInput":
+      case "engagementRepeatLast":
       case "engagementAbort":
         this.hostBridge?.runHostCommand(command, args);
         return;

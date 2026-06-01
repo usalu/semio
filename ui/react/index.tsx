@@ -774,7 +774,18 @@ export function resolveControlLabelId(id: string): string {
   if (id === "engagement-input" || id === "ui.engagement.command") {
     return _controlLabelIdResolver("ui.engagement.command");
   }
+  if (id.startsWith("playground.panel.")) {
+    return _controlLabelIdResolver(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
+  }
   return _controlLabelIdResolver(id);
+}
+
+/** @emoji 🏷️ Panel kind slug from a panel-toggle control id (`ui.panelToggle.*`, `playground.panel.*`, sketchpad navbar keys). */
+export function panelKindFromPanelToggleControlId(id: string): string | undefined {
+  if (id.startsWith("ui.panelToggle.")) return id.slice("ui.panelToggle.".length);
+  if (id.startsWith("playground.panel.")) return id.slice("playground.panel.".length);
+  if (id.startsWith("semio.sketchpad.navbar.panelToggle.")) return id.slice("semio.sketchpad.navbar.panelToggle.".length);
+  return undefined;
 }
 
 /** @emoji 🏷️ True for legacy engagement element ids that must not surface as humanized tooltips. */
@@ -805,6 +816,13 @@ export function useControlAccessibleLabel(id: string | undefined, text?: string)
   const labelId = resolveControlLabelId(id);
   const localized = useLabel(labelId);
   if (localized && localized !== labelId) return localized;
+  const panelKind = panelKindFromPanelToggleControlId(id);
+  if (panelKind) {
+    const uiPanelKey = `ui.panelToggle.${panelKind}` as UiTranslationKey;
+    const fromUiPanel = useLabel(uiPanelKey);
+    if (fromUiPanel && fromUiPanel !== uiPanelKey) return fromUiPanel;
+    return humanizeEngagementStepId(panelKind);
+  }
   if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
   return undefined;
 }
@@ -11056,6 +11074,8 @@ export interface EngagementInput {
   placeholder?: string;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
+  /** @emoji 🔁 Restarts the last engagement when Space is pressed with an empty command (no active session). */
+  onRepeatLast?: () => void;
   /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear command. */
   onAbort?: () => void;
   disabled?: boolean;
@@ -11274,6 +11294,22 @@ export function shouldDismissEmptyWindowEngagement(
   return true;
 }
 
+/** @emoji 🔁 Routes Space to {@link EngagementInput.onRepeatLast} when the command line is empty and focus is outside the engagement field. */
+export function routeWindowEngagementSpace(
+  engagement: EngagementSpec | undefined,
+  event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">,
+): boolean {
+  const input = engagement?.input;
+  if (!input?.onRepeatLast || input.disabled || event.defaultPrevented || event.isComposing) return false;
+  if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
+  if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
+  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  const draft = normalizeEngagementCommandText(input.value ?? field?.value ?? "");
+  if (draft.trim()) return false;
+  input.onRepeatLast();
+  return true;
+}
+
 /** @emoji ⌨️ Routes a printable key to the active window engagement command when focus is elsewhere in the window. */
 export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = engagement?.input;
@@ -11479,10 +11515,17 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                       setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
                       return;
                     }
-                    if (
-                      event.key === "Enter" ||
-                      (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey)
-                    ) {
+                    if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                      event.preventDefault();
+                      if (showPossiblesList && activatePossible()) return;
+                      if (!draft.trim() && input!.onRepeatLast) {
+                        input!.onRepeatLast();
+                        return;
+                      }
+                      input!.onSubmit?.(draft);
+                      return;
+                    }
+                    if (event.key === "Enter") {
                       event.preventDefault();
                       if (showPossiblesList && activatePossible()) return;
                       input!.onSubmit?.(draft);
@@ -15099,8 +15142,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   }, [activeWindowId]);
 
   reactHostPort.useEffect(() => {
-    const root = modeBodyRef.current;
-    if (!root || !activeWindowId) return;
+    if (!activeWindowId) return;
     const engagement = windowsById.get(activeWindowId)?.engagement;
     if (!engagement?.input) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -15114,13 +15156,18 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         event.stopPropagation();
         return;
       }
+      if (routeWindowEngagementSpace(engagement, event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       if (!routeWindowEngagementKeydown(engagement, event)) return;
       event.preventDefault();
       event.stopPropagation();
       queueMicrotask(() => focusActiveEngagementInput());
     };
-    root.addEventListener("keydown", onKeyDown, true);
-    return () => root.removeEventListener("keydown", onKeyDown, true);
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [activeWindowId, windowsById, windowsKey]);
 
   const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
@@ -16212,6 +16259,43 @@ if (import.meta.vitest) {
       expect(windowEngagementChromeVisible(engagement, { hovered: true, activated: false, focused: false })).toBe(true);
       expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: true, focused: false })).toBe(true);
       expect(windowEngagementChromeVisible({ input: { value: "box" } }, { hovered: false, activated: false, focused: false })).toBe(true);
+    });
+
+    it("routeWindowEngagementSpace calls onRepeatLast for empty command", () => {
+      const repeated: string[] = [];
+      const engagement = { input: { value: "", onRepeatLast: () => repeated.push("last") } };
+      const body = document.createElement("div");
+      expect(
+        routeWindowEngagementSpace(engagement, {
+          key: " ",
+          ctrlKey: false,
+          metaKey: false,
+          altKey: false,
+          defaultPrevented: false,
+          isComposing: false,
+          target: body,
+        }),
+      ).toBe(true);
+      expect(repeated).toEqual(["last"]);
+    });
+
+    it("Engagement Space with empty draft calls onRepeatLast instead of onSubmit", async () => {
+      const submitted: string[] = [];
+      const repeated: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{
+            placeholder: "Command",
+            onSubmit: () => submitted.push("submit"),
+            onRepeatLast: () => repeated.push("last"),
+          }}
+        />,
+      );
+      const field = await screen.findByPlaceholderText("Command");
+      fireEvent.keyDown(field, { key: " " });
+      expect(repeated).toEqual(["last"]);
+      expect(submitted).toEqual([]);
     });
 
     it("Mode routes printable keys to the active window engagement", async () => {

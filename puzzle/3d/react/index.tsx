@@ -5246,6 +5246,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly selectionObjectCount: number;
   readonly onCmdLineChange: (value: string) => void;
   readonly onCmdLineSubmit: (value: string) => void;
+  readonly onRepeatLast?: () => void;
   readonly onAbort?: () => void;
   readonly onSelectTool: () => void;
   readonly onBrushTool: () => void;
@@ -5297,6 +5298,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
       placeholder: inputs.activeTool === "brush" ? "Kind name or list" : "Brush",
       onChange: inputs.onCmdLineChange,
       onSubmit: inputs.onCmdLineSubmit,
+      onRepeatLast: inputs.onRepeatLast,
       onAbort: inputs.onAbort,
     },
     ...(options?.length ? { options } : {}),

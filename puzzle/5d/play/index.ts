@@ -15,12 +15,15 @@ import {
   createDefaultLayout,
   type ToolItem,
   type WindowBodyViewContext,
+  type CommandDescriptor,
+  type WindowEngagement,
   type WindowMeasure,
   type UiNode,
   Playground,
   playgroundTreePanelRootItems,
   type UiTreeItemNode,
   type UiTreeNode,
+  enforcePlaygroundWindowEngagementInput,
 } from "@framework/playground/core";
 
 import { buildPuzzle2dPlayHierarchySections } from "../../2d/play/index.ts";
@@ -57,6 +60,10 @@ export const PUZZLE_5D_PLAY_3D_SURFACE_ID = "puzzle.5d.play.3d/v1";
 export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
 
 const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+
+function puzzle5dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+  return { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command, args: args as never };
+}
 //#endregion 🔖Ids
 
 //#region 🔖Puzzle5dPlayHierarchy
@@ -185,6 +192,10 @@ export class Puzzle5dPlayShellController extends Controller {
   private connect3d = 0;
   private proximity2d = 0;
   private proximity3d = 0;
+  private engagementInputByWindow: Record<string, string> = {
+    [PUZZLE_5D_PLAY_2D_WINDOW_ID]: "",
+    [PUZZLE_5D_PLAY_3D_WINDOW_ID]: "",
+  };
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_5D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -250,11 +261,28 @@ export class Puzzle5dPlayShellController extends Controller {
     ];
   }
 
+  private windowEngagementFor(windowId: string): WindowEngagement {
+    return {
+      input: {
+        id: "engagement-input",
+        value: this.engagementInputByWindow[windowId] ?? "",
+        placeholder: "Command",
+        onChange: puzzle5dPlayCmd("engagementInput", { windowId }),
+        onSubmit: puzzle5dPlayCmd("engagementSubmit", { windowId }),
+        onAbort: puzzle5dPlayCmd("engagementAbort", { windowId }),
+      },
+    };
+  }
+
   getWindowKinds(): readonly WindowKindRuntime[] {
-    return [
-      new WindowKindRuntime(PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_2D_BODY_KEY, undefined, [this.lod2dMeasure()]),
-      new WindowKindRuntime(PUZZLE_5D_PLAY_3D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_BODY_KEY, undefined, [...this.lod3dMeasures()]),
+    const windowKinds = [
+      new WindowKindRuntime(PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_2D_BODY_KEY, undefined, [this.lod2dMeasure()], this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID)),
+      new WindowKindRuntime(PUZZLE_5D_PLAY_3D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_BODY_KEY, undefined, [...this.lod3dMeasures()], this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID)),
     ];
+    for (const windowKind of windowKinds) {
+      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 5D play window "${windowKind.id}"`);
+    }
+    return windowKinds;
   }
 
   override run(command: string, args?: unknown): void {
@@ -342,6 +370,25 @@ export class Puzzle5dPlayShellController extends Controller {
       case "note3dProximity":
         this.proximity3d += 1;
         break;
+      case "engagementInput": {
+        const { windowId, value } = args as { windowId?: string; value?: string };
+        if (!windowId || !(windowId in this.engagementInputByWindow)) {
+          changed = false;
+          break;
+        }
+        this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: String(value ?? "") };
+        break;
+      }
+      case "engagementSubmit":
+      case "engagementAbort": {
+        const { windowId } = args as { windowId?: string };
+        if (!windowId || !(windowId in this.engagementInputByWindow)) {
+          changed = false;
+          break;
+        }
+        this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: "" };
+        break;
+      }
       default:
         changed = false;
         break;

@@ -544,6 +544,9 @@ export function cadPlayEngagementMirror(engagement: EngagementSpec | null, pane:
         disabled: engagement.input.disabled,
         onChange: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementInput", args: { pane } },
         onSubmit: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane } },
+        onRepeatLast: engagement.input.onRepeatLast
+          ? { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementRepeatLast", args: { pane } }
+          : undefined,
         onAbort: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementAbort", args: { pane } },
       }
     : undefined;
@@ -662,6 +665,7 @@ export class CadPlayShellController extends Controller {
       case "engagementOption":
       case "engagementInput":
       case "engagementSubmit":
+      case "engagementRepeatLast":
       case "engagementAbort":
       case "engagementPossibleSelect":
         this.hostBridge?.runHostCommand(command, args);
@@ -1781,6 +1785,12 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
             const pane = (args as { pane?: CadPlayPaneId })?.pane;
             if (!pane || !CAD_PLAY_PANE_IDS.includes(pane)) break;
             engagementSpecRefByPane.current[pane]?.input?.onSubmit?.((args as { value?: string })?.value ?? "");
+            break;
+          }
+          case "engagementRepeatLast": {
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
+            if (!pane || !CAD_PLAY_PANE_IDS.includes(pane)) break;
+            engagementSpecRefByPane.current[pane]?.input?.onRepeatLast?.();
             break;
           }
           case "engagementAbort": {

@@ -3320,8 +3320,14 @@ function replInteractionSuggestionOnSpace(query: string, matches: readonly ReplS
   return matches.find((suggestion) => suggestion.kind === "interaction") ?? null;
 }
 
-function replInteractionIdOnSpace(query: string, matches: readonly ReplSuggestion[], all: readonly ReplSuggestion[], lastFinalizedInteractionId: string): string | null {
-  if (!query.trim()) return lastFinalizedInteractionId || null;
+function replInteractionIdOnSpace(
+  query: string,
+  matches: readonly ReplSuggestion[],
+  all: readonly ReplSuggestion[],
+  lastFinalizedInteractionId: string,
+  repeatLastWhenIdle: boolean,
+): string | null {
+  if (!query.trim()) return repeatLastWhenIdle ? lastFinalizedInteractionId || null : null;
   return replInteractionSuggestionOnSpace(query, matches, all)?.interactionId ?? null;
 }
 
@@ -3341,11 +3347,12 @@ function replShouldRepeatInteractionOnSpace(
     readonly target: EventTarget | null;
   },
   state: {
+    readonly interactionId: string;
     readonly interactionActive: boolean;
     readonly cmdTarget: EventTarget | null;
   },
 ): boolean {
-  if (event.defaultPrevented || event.isComposing || state.interactionActive) return false;
+  if (event.defaultPrevented || event.isComposing || state.interactionId || state.interactionActive) return false;
   if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
   if (replIsQueryTypingTarget(event.target)) return false;
   return event.target !== state.cmdTarget;
@@ -3708,6 +3715,7 @@ export interface InteractionReplEngagementInputs {
   readonly onStartInteraction: (interactionId: string) => void;
   readonly onInputChange: (value: string) => void;
   readonly onInputSubmit: (value: string) => void;
+  readonly onRepeatLast?: () => void;
   readonly onAbort?: () => void;
 }
 
@@ -3753,6 +3761,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
           placeholder: inputs.boundInteractionSession ? ENGAGEMENT_USER.commandPlaceholderActive : ENGAGEMENT_USER.commandPlaceholder,
           onChange: inputs.onInputChange,
           onSubmit: inputs.onInputSubmit,
+          onRepeatLast: inputs.onRepeatLast,
           onAbort: inputs.onAbort,
         }
       : undefined;
@@ -4006,6 +4015,12 @@ export function InteractionRepl({
     setCmdLine("");
   }, [interactionId, spec, snapshot.state, setCmdLine]);
 
+  reactHostPort.useEffect(() => {
+    if (!interactionId || interactionActive) return;
+    if (!isFinalInteractionState(spec, snapshot.state)) return;
+    onInteractionId("");
+  }, [interactionId, interactionActive, spec, snapshot.state, onInteractionId]);
+
   const handleEscapeKey = reactHostPort.useCallback(() => {
     if (selectionMenu !== null) {
       setSelectionMenu(null);
@@ -4050,10 +4065,10 @@ export function InteractionRepl({
     void startRuntime();
   }, [sessionRestartNonce, rt, startRuntime]);
 
-  const repeatCurrentInteraction = reactHostPort.useCallback(() => {
-    rt.cancel();
-    void startRuntime();
-  }, [rt, startRuntime]);
+  const repeatLastFinalizedInteraction = reactHostPort.useCallback(() => {
+    if (!lastFinalizedInteractionId) return;
+    onInteractionId(lastFinalizedInteractionId);
+  }, [lastFinalizedInteractionId, onInteractionId]);
 
   const modelRevision = documentModel.model.revision;
   const hostPickingEnabled = replHostGeometryPickingEnabled(interactionId, spec, snapshot.state);
@@ -4549,8 +4564,11 @@ export function InteractionRepl({
           })();
           return;
         }
-        const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, filtered, allSuggestions, lastFinalizedInteractionId);
+        const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, filtered, allSuggestions, lastFinalizedInteractionId, !interactionId);
         if (runInteractionIdFromSpace(interactionIdOnSpace)) return;
+        if (!cmdLine.trim() && !interactionId && lastFinalizedInteractionId) {
+          repeatLastFinalizedInteraction();
+        }
         setInteractionMenuOpen(false);
         return;
       }
@@ -4598,7 +4616,7 @@ export function InteractionRepl({
         return;
       }
     },
-    [cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, replCmdLineValue, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, spec, rt],
+    [cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, replCmdLineValue, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, spec, rt, interactionId, repeatLastFinalizedInteraction],
   );
 
   const submitEngagementLine = reactHostPort.useCallback(() => {
@@ -4634,9 +4652,10 @@ export function InteractionRepl({
         onStartInteraction: (id: string) => onInteractionId(id),
         onInputChange: (value: string) => setCmdLine(replNormalizeCommandText(value, engagementCommandMode)),
         onInputSubmit: () => submitEngagementLine(),
+        onRepeatLast: lastFinalizedInteractionId ? repeatLastFinalizedInteraction : undefined,
         onAbort: handleEscapeKey,
       }),
-    [showEngagement, engagementCommandMode, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine, handleEscapeKey],
+    [showEngagement, engagementCommandMode, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine, handleEscapeKey, lastFinalizedInteractionId, repeatLastFinalizedInteraction],
   );
 
   reactHostPort.useEffect(() => {
@@ -4708,6 +4727,10 @@ export function InteractionRepl({
         if (engagementCommandMode) {
           e.preventDefault();
           e.stopPropagation();
+          if (!cmdLine.trim() && !boundInteractionSession && lastFinalizedInteractionId) {
+            repeatLastFinalizedInteraction();
+            return;
+          }
           focusReplCommandInput();
           submitEngagementLine();
           return;
@@ -4730,9 +4753,9 @@ export function InteractionRepl({
           return;
         }
         const matches = replPaletteRows(cmdLine, allSuggestions);
-        const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, matches, allSuggestions, lastFinalizedInteractionId);
+        const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, matches, allSuggestions, lastFinalizedInteractionId, !interactionId);
         if (runInteractionIdFromSpace(interactionIdOnSpace)) return;
-        else if (replShouldRepeatInteractionOnSpace(e, { interactionActive, cmdTarget: cmdRef.current })) repeatCurrentInteraction();
+        else if (replShouldRepeatInteractionOnSpace(e, { interactionId, interactionActive, cmdTarget: cmdRef.current })) repeatLastFinalizedInteraction();
         return;
       }
       const commandInput = replCommandInputElement();
@@ -4791,7 +4814,7 @@ export function InteractionRepl({
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement, engagementCommandMode, submitEngagementLine]);
+  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionId, interactionActive, boundInteractionSession, repeatLastFinalizedInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement, engagementCommandMode, submitEngagementLine]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {
@@ -5444,6 +5467,41 @@ if (import.meta.vitest) {
         { kind: "action", key: "box", label: "Box", onRun: noop },
       ]);
       expect(rows.map((row) => row.key)).toEqual(["sel"]);
+    });
+  });
+
+  describe("replInteractionIdOnSpace", () => {
+    it("returns last finalized id only when idle repeat is allowed", () => {
+      expect(replInteractionIdOnSpace("", [], [], "primitive.box", false)).toBeNull();
+      expect(replInteractionIdOnSpace("", [], [], "primitive.box", true)).toBe("primitive.box");
+    });
+  });
+
+  describe("replShouldRepeatInteractionOnSpace", () => {
+    it("requires no bound interaction id or active session", () => {
+      const event = {
+        key: " ",
+        ctrlKey: false,
+        metaKey: false,
+        altKey: false,
+        defaultPrevented: false,
+        isComposing: false,
+        target: document.body,
+      };
+      expect(
+        replShouldRepeatInteractionOnSpace(event, {
+          interactionId: "primitive.box",
+          interactionActive: false,
+          cmdTarget: null,
+        }),
+      ).toBe(false);
+      expect(
+        replShouldRepeatInteractionOnSpace(event, {
+          interactionId: "",
+          interactionActive: false,
+          cmdTarget: null,
+        }),
+      ).toBe(true);
     });
   });
 

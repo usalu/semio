@@ -475,6 +475,7 @@ export class Puzzle2dPlayShellController extends Controller {
 	private lodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
 	private effectiveLodByPane: Record<Puzzle2dPlayPaneId, Puzzle2dDrawLodKind>;
 	private engagementInputByPane: Record<Puzzle2dPlayPaneId, string>;
+	private lastEngagementRepeatByPane: Record<Puzzle2dPlayPaneId, string>;
 	private hostBridge: Puzzle2dPlayHostBridge | null = null;
 	private readonly hostChromeNotify: () => void;
 
@@ -496,6 +497,11 @@ export class Puzzle2dPlayShellController extends Controller {
 			"2d-overview": "",
 			"2d-selection": "",
 		};
+		this.lastEngagementRepeatByPane = {
+			"2d-detail": "",
+			"2d-overview": "",
+			"2d-selection": "",
+		};
 		this.rebuildShellMode();
 	}
 
@@ -507,6 +513,7 @@ export class Puzzle2dPlayShellController extends Controller {
 				placeholder: "Command",
 				onChange: puzzle2dPlayCmd("engagementInput", { pane }),
 				onSubmit: puzzle2dPlayCmd("engagementSubmit", { pane }),
+				onRepeatLast: puzzle2dPlayCmd("engagementRepeatLast", { pane }),
 				onAbort: puzzle2dPlayCmd("engagementAbort", { pane }),
 			},
 			possibleEngagements: [
@@ -539,28 +546,41 @@ export class Puzzle2dPlayShellController extends Controller {
 		const runHost = (command: string, args?: unknown) => {
 			this.hostBridge?.runHostCommand(command, args);
 		};
+		const remember = (key: string): true => {
+			this.lastEngagementRepeatByPane = { ...this.lastEngagementRepeatByPane, [pane]: key };
+			return true;
+		};
 		if (possibleIdOrText === "puzzle2d.select.rectangle" || token === "rectangle") {
 			runHost("setSelectionMethod", { method: "rectangle" });
-			return true;
+			return remember(possibleIdOrText === "puzzle2d.select.rectangle" ? possibleIdOrText : "puzzle2d.select.rectangle");
 		}
 		if (possibleIdOrText === "puzzle2d.select.lasso" || token === "lasso") {
 			runHost("setSelectionMethod", { method: "lasso" });
-			return true;
+			return remember(possibleIdOrText === "puzzle2d.select.lasso" ? possibleIdOrText : "puzzle2d.select.lasso");
 		}
 		if (possibleIdOrText === "puzzle2d.selection.clear" || token === "clear") {
 			runHost("clearSelection", {});
-			return true;
+			return remember("puzzle2d.selection.clear");
 		}
 		if (possibleIdOrText === "puzzle2d.create.circle" || token === "circle") {
 			runHost("appendCircle", {});
-			return true;
+			return remember("puzzle2d.create.circle");
 		}
 		if (possibleIdOrText === "puzzle2d.create.rectangle" || token === "rectangleshape" || token === "rectangle") {
 			runHost("appendRectangle", {});
-			return true;
+			return remember("puzzle2d.create.rectangle");
 		}
 		void pane;
 		return false;
+	}
+
+	private repeatLastEngagementForPane(pane: Puzzle2dPlayPaneId): void {
+		const last = this.lastEngagementRepeatByPane[pane];
+		if (!last) return;
+		if (this.applyEngagementCommand(pane, last)) {
+			this.engagementInputByPane = { ...this.engagementInputByPane, [pane]: "" };
+			this.syncWindowEngagementForPane(pane);
+		}
 	}
 
 	/** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
@@ -653,6 +673,14 @@ export class Puzzle2dPlayShellController extends Controller {
 				} else {
 					this.hostBridge?.runHostCommand(command, args);
 				}
+				break;
+			}
+			case "engagementRepeatLast": {
+				const { pane } = args as { pane?: Puzzle2dPlayPaneId };
+				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") {
+					break;
+				}
+				this.repeatLastEngagementForPane(pane);
 				break;
 			}
 			case "engagementAbort": {
@@ -855,6 +883,14 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("puzzle 2d play declarative shell", () => {
+		it("requires engagement.input on every window kind", () => {
+			const bus = new CommandBus();
+			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
+			for (const windowKind of ctrl.mainMode.windowKinds) {
+				expect(windowKind.engagement?.input?.id).toBe("engagement-input");
+			}
+		});
+
 		it("default nakagin fixture parses with puzzle 2d graph nodes", () => {
 			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.length).toBeGreaterThan(0);
 			expect(PUZZLE_2D_PLAY_DEFAULT_FIXTURE.edges.length).toBeGreaterThan(0);
