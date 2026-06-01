@@ -1,0 +1,8 @@
+{
+  "title": "Semio Is Has References Projections",
+  "emoji": "🪢",
+  "status": "open",
+  "description": "Unify is/has/references/referencedBy projection verbs with Transitive variants on Rust canonical model, GraphQL schema, and TypeScript client.",
+  "goal": "🎯semio",
+  "sessions": []
+}

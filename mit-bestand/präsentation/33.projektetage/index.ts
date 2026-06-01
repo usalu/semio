@@ -15,7 +15,6 @@ import {
 	type SplitTile,
 	type Thought,
 } from "@framework/presentation/core";
-import { Expertise, mountPresentation } from "@framework/presentation/renderer/react";
 import "./globals.css";
 // #endregion 🔌Adapters
 
@@ -195,9 +194,9 @@ const introDeck = intro({
 	},
 });
 
-const mediaThought: Thought = {
-	id: "media",
-	name: "Medien",
+const bauteilkatalogThought: Thought = {
+	id: "bauteilkatalog",
+	name: "Bauteilkatalog",
 	transition: { kind: "morph" },
 	participants: [
 		{
@@ -236,7 +235,7 @@ const mediaThought: Thought = {
 	arrangements: [
 		{
 			id: "catalogue",
-			name: "Bauteilkatalog",
+			name: "Inventar",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -285,7 +284,7 @@ const mediaThought: Thought = {
 		},
 		{
 			id: "media-suite",
-			name: "Medienüberblick",
+			name: "Website",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -307,15 +306,32 @@ const mediaThought: Thought = {
 	],
 };
 
+const introChapter = introDeck.chapters[0]!;
+const introSequence = introChapter.sequences[0]!;
+const ueberUnsThought = introSequence.thoughts[0]!;
+
 const deck: Presentation = {
 	...introDeck,
 	chapters: [
 		{
-			...introDeck.chapters[0]!,
+			id: "einfuehrung",
+			name: "Einführung",
 			sequences: [
 				{
-					...introDeck.chapters[0]!.sequences[0]!,
-					thoughts: [...introDeck.chapters[0]!.sequences[0]!.thoughts, mediaThought],
+					id: "einleitung",
+					name: "Einleitung",
+					thoughts: [{ ...ueberUnsThought, name: "Über Uns" }],
+				},
+			],
+		},
+		{
+			id: "system",
+			name: "System",
+			sequences: [
+				{
+					id: "bauteilboerse",
+					name: "Bauteilbörse",
+					thoughts: [bauteilkatalogThought],
 				},
 			],
 		},
@@ -327,10 +343,12 @@ function mount(): void {
 	if (!el) {
 		return;
 	}
-	mountPresentation(el, deck, {
-		transition: "fade",
-		slideNumber: false,
-		surfaceChrome: { theme: "dark", device: "desktop", expertise: Expertise.NORMAL },
+	void import("@framework/presentation/renderer/react").then(({ Expertise, mountPresentation }) => {
+		mountPresentation(el, deck, {
+			transition: "fade",
+			slideNumber: false,
+			surfaceChrome: { theme: "dark", device: "desktop", expertise: Expertise.NORMAL },
+		});
 	});
 }
 
@@ -344,35 +362,44 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("projektetage deck", () => {
-		it("declares intro plus media arrangement slides", () => {
+		it("declares intro plus bauteilkatalog arrangement slides", () => {
 			expect(countArrangements(deck)).toBe(11);
 			expect(deck.language).toBe("de");
 		});
 
-		it("uses German bookmark names on intro and media slides", () => {
+		it("uses German bookmark names on intro and bauteilkatalog slides", () => {
 			const introSlide = collectPresentationSlides(deck)[0];
 			expect(introSlide).toEqual({
 				h: 0,
 				v: 0,
-				chapter: "Hauptteil",
-				sequence: "Einführung",
-				thought: "Einleitung",
+				chapter: "Einführung",
+				sequence: "Einleitung",
+				thought: "Über Uns",
 				slide: "Titel",
 			});
-			const mediaSlide = collectPresentationSlides(deck)[7];
-			expect(mediaSlide).toEqual({
-				h: 0,
-				v: 7,
-				chapter: "Hauptteil",
-				sequence: "Einführung",
-				thought: "Medien",
-				slide: "Bauteilkatalog",
+			const inventarSlide = collectPresentationSlides(deck)[7];
+			expect(inventarSlide).toEqual({
+				h: 1,
+				v: 0,
+				chapter: "System",
+				sequence: "Bauteilbörse",
+				thought: "Bauteilkatalog",
+				slide: "Inventar",
+			});
+			const websiteSlide = collectPresentationSlides(deck)[10];
+			expect(websiteSlide).toEqual({
+				h: 1,
+				v: 3,
+				chapter: "System",
+				sequence: "Bauteilbörse",
+				thought: "Bauteilkatalog",
+				slide: "Website",
 			});
 		});
 
 		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
-			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((t) => t.id === "media");
-			const catalogue = media?.arrangements.find((a) => a.id === "catalogue");
+			const bauteilkatalog = deck.chapters[1]?.sequences[0]?.thoughts.find((t) => t.id === "bauteilkatalog");
+			const catalogue = bauteilkatalog?.arrangements.find((a) => a.id === "catalogue");
 			expect(catalogue?.dispositions[0]?.split?.concealed).toBe(true);
 			expect(catalogue?.dispositions[0]?.split?.tiles).toHaveLength(15);
 			expect(catalogue?.dispositions[0]?.split?.columnMorphTiles).toBe(true);
@@ -381,8 +408,8 @@ if (import.meta.vitest) {
 		});
 
 		it("arranges catalogue-focus as three columns without the top row", () => {
-			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((t) => t.id === "media");
-			const focus = media?.arrangements.find((a) => a.id === "catalogue-focus");
+			const bauteilkatalog = deck.chapters[1]?.sequences[0]?.thoughts.find((t) => t.id === "bauteilkatalog");
+			const focus = bauteilkatalog?.arrangements.find((a) => a.id === "catalogue-focus");
 			const tiles = focus?.dispositions[0]?.split?.tiles ?? [];
 			const keys = tiles.map((tile) => tile.key);
 			expect(keys).toHaveLength(10);
@@ -409,10 +436,10 @@ if (import.meta.vitest) {
 		});
 
 		it("morphs focus tiles into fixed column labels without a bridge arrangement", () => {
-			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((t) => t.id === "media");
-			const arrangementIds = media?.arrangements.map((arrangement) => arrangement.id) ?? [];
+			const bauteilkatalog = deck.chapters[1]?.sequences[0]?.thoughts.find((t) => t.id === "bauteilkatalog");
+			const arrangementIds = bauteilkatalog?.arrangements.map((arrangement) => arrangement.id) ?? [];
 			expect(arrangementIds).not.toContain("catalogue-column-ghosts");
-			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
+			const labels = bauteilkatalog?.arrangements.find((a) => a.id === "catalogue-labels");
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
 			expect(targets).toHaveLength(3);
 			expect(targets.every((target) => target.columnKey !== undefined)).toBe(true);
@@ -422,14 +449,14 @@ if (import.meta.vitest) {
 			const ys = targets.map((target) => target.position.y);
 			expect(ys[0]).toBeLessThan(ys[1] ?? 0);
 			expect(ys[1]).toBeLessThan(ys[2] ?? 0);
-			expect(media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columnMorphTiles).toBe(
+			expect(bauteilkatalog?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columnMorphTiles).toBe(
 				true,
 			);
 		});
 
-		it("includes figure, video, and pdf participants in the media thought", () => {
-			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((t) => t.id === "media");
-			const kinds = media?.participants.flatMap((p) => p.embodiments.map((e) => e.kind)) ?? [];
+		it("includes figure, video, and pdf participants in the bauteilkatalog thought", () => {
+			const bauteilkatalog = deck.chapters[1]?.sequences[0]?.thoughts.find((t) => t.id === "bauteilkatalog");
+			const kinds = bauteilkatalog?.participants.flatMap((p) => p.embodiments.map((e) => e.kind)) ?? [];
 			expect(kinds).toEqual(["figure", "video", "pdf"]);
 		});
 	});
