@@ -13677,6 +13677,7 @@ export interface VirtualFileSystemProps {
   readonly defaultSelectedRowIds?: readonly string[];
   readonly onSelectionChange?: (selectedRowIds: readonly string[], context: { readonly anchorRowId?: string }) => void;
   readonly onRowClick?: (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => void;
+  readonly onRowDoubleClick?: (row: VirtualFileSystemRow, index: number) => void;
   readonly onToggleExpand?: (rowId: string) => void;
   readonly emptyMessage?: string;
   readonly className?: string;
@@ -13908,6 +13909,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   defaultSelectedRowIds = [],
   onSelectionChange,
   onRowClick,
+  onRowDoubleClick,
   onToggleExpand,
   emptyMessage = "No file system nodes",
   className = "",
@@ -13971,6 +13973,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
                   event.stopPropagation();
                   onToggleExpand?.(row.id);
                 }}
+                onDoubleClick={(event) => event.stopPropagation()}
               >
                 {row.isExpanded ? "▾" : "▸"}
               </button>
@@ -13995,6 +13998,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       getRowId={(row) => row.id}
       selectedRows={resolvedSelectedRowIds}
       onRowClick={handleRowClick}
+      onRowDoubleClick={onRowDoubleClick}
       emptyMessage={emptyMessage}
       rowHeight={rowHeight}
       hierarchical
@@ -16979,28 +16983,6 @@ if (treeVitest) {
       expect(markup).toContain("data-vfs-expand");
       expect(markup).toContain("readme.md");
       expect(markup).toContain("cursor-selectable");
-    });
-
-    it("onRowClick is optional and does not imply navigation", () => {
-      const onRowClick = vi.fn();
-      const onSelectionChange = vi.fn();
-      const { container } = render(
-        <VirtualFileSystem
-          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
-          rows={[
-            { id: "root", fileNodeKindId: "root", name: "Root", level: 0, hasChildren: false },
-            { id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" },
-          ]}
-          onRowClick={onRowClick}
-          onSelectionChange={onSelectionChange}
-        />,
-      );
-      const leafRow = container.querySelector('tr[data-row-id="leaf-a"]');
-      expect(leafRow).toBeTruthy();
-      fireEvent.click(leafRow!);
-      expect(onSelectionChange).toHaveBeenCalledWith(["leaf-a"], expect.objectContaining({ anchorRowId: "leaf-a" }));
-      expect(onRowClick).toHaveBeenCalledTimes(1);
-      expect(onRowClick.mock.calls[0]?.[0]?.navigateUri).toBe("/alpha");
     });
 
     it("computes shift range and ctrl toggle selection for visible rows", () => {

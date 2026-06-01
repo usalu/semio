@@ -165,7 +165,12 @@ const mediaThought: Thought = {
 				{
 					participantId: "catalogue",
 					emphasis: "active",
-					split: { tiles: CATALOGUE_TILES_ASSEMBLED },
+					split: { tiles: CATALOGUE_TILES_ASSEMBLED, concealed: true },
+				},
+				{
+					participantId: "catalogue",
+					emphasis: "active",
+					position: CATALOGUE_FRAME,
 				},
 			],
 		},
@@ -239,10 +244,13 @@ if (import.meta.vitest) {
 			expect(countArrangements(deck)).toBe(10);
 		});
 
-		it("uses fifteen split tiles on the catalogue slide for reveal auto-animate", () => {
+		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const catalogue = media?.arrangements.find((a) => a.id === "catalogue");
+			expect(catalogue?.dispositions[0]?.split?.concealed).toBe(true);
 			expect(catalogue?.dispositions[0]?.split?.tiles).toHaveLength(15);
+			expect(catalogue?.dispositions[1]?.position).toEqual(CATALOGUE_FRAME);
+			expect(catalogue?.dispositions[1]?.split).toBeUndefined();
 		});
 
 		it("arranges catalogue-focus as three columns without the top row", () => {

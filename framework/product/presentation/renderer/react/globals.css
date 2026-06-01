@@ -20,7 +20,7 @@
 	--r-link-color: var(--color-primary);
 	--r-link-color-hover: var(--color-secondary);
 	--r-selection-background-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
-	--r-controls-color: var(--foreground);
+	--r-controls-color: var(--color-primary);
 }
 
 .reveal {
@@ -139,6 +139,15 @@
 	background-repeat: no-repeat;
 }
 
+.reveal .presentation-figure-tile-frame--concealed {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.reveal .presentation-disposition-frame--overlay {
+	z-index: 1;
+}
+
 .reveal .presentation-disposition-frame:has(.presentation-media-pdf-document) {
 	overflow: hidden;
 }
@@ -206,7 +215,7 @@
 .reveal .controls,
 .reveal.has-dark-background .controls,
 .reveal.has-light-background .controls {
-	color: var(--foreground);
+	color: var(--color-primary);
 }
 
 .reveal .progress {

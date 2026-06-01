@@ -270,6 +270,8 @@ export interface SplitTile {
 /** @emoji ✂️ Splits one figure disposition into independently placed crop tiles for auto-animate. */
 export interface DispositionSplit {
 	readonly tiles: readonly SplitTile[];
+	/** @emoji 👻 Tiles stay in the DOM for reveal.js matching but are not painted until a later arrangement reveals them. */
+	readonly concealed?: boolean;
 }
 
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */
@@ -998,6 +1000,19 @@ if (import.meta.vitest) {
 			};
 			const resolved = resolveArrangement(thought, "slide");
 			expect(resolved[0]?.split?.tiles).toHaveLength(1);
+		});
+
+		it("passes concealed on split", () => {
+			const split = {
+				tiles: splitFigureGrid({ rows: 1, columns: 1, frame: { x: 0, y: 0, width: 1, height: 1 } }),
+				concealed: true,
+			};
+			const thought: Thought = {
+				id: "split",
+				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
+				arrangements: [{ id: "slide", dispositions: [{ participantId: "fig", emphasis: "active", split }] }],
+			};
+			expect(resolveArrangement(thought, "slide")[0]?.split?.concealed).toBe(true);
 		});
 	});
 

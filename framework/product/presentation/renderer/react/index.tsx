@@ -511,11 +511,13 @@ function FigureTileView({
 	tile,
 	embodiment,
 	defaultEmphasis,
+	concealed,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly embodiment: FigureEmbodiment;
 	readonly defaultEmphasis: ParticipantEmphasis;
+	readonly concealed?: boolean;
 }): ReactNode {
 	const emphasis = tile.emphasis ?? defaultEmphasis;
 	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
@@ -525,7 +527,8 @@ function FigureTileView({
 			className={[
 				"presentation-disposition-frame",
 				"presentation-figure-tile-frame",
-				emphasisClass(emphasis),
+				concealed ? "presentation-figure-tile-frame--concealed" : undefined,
+				concealed ? undefined : emphasisClass(emphasis),
 			]
 				.filter(Boolean)
 				.join(" ")}
@@ -560,6 +563,7 @@ function FigureSplitMorphView({
 	readonly embodiment: FigureEmbodiment;
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
+	const concealed = disposition.split?.concealed === true;
 	return (
 		<>
 			{tiles.map((tile) => (
@@ -569,6 +573,7 @@ function FigureSplitMorphView({
 					tile={tile}
 					embodiment={embodiment}
 					defaultEmphasis={disposition.emphasis}
+					concealed={concealed}
 				/>
 			))}
 		</>
@@ -674,16 +679,26 @@ function dispositionFrameStyle(
 function DispositionFrame({
 	disposition,
 	children,
+	overlay,
 }: {
 	readonly disposition: ResolvedDisposition;
 	readonly children: ReactNode;
+	readonly overlay?: boolean;
 }): ReactNode {
 	const frameStyle = dispositionFrameStyle(disposition.position, disposition.style);
 	if (!frameStyle) {
 		return children;
 	}
 	return (
-		<div className="presentation-disposition-frame" style={frameStyle}>
+		<div
+			className={[
+				"presentation-disposition-frame",
+				overlay ? "presentation-disposition-frame--overlay" : undefined,
+			]
+				.filter(Boolean)
+				.join(" ")}
+			style={frameStyle}
+		>
 			{children}
 		</div>
 	);
@@ -729,7 +744,15 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 			content = _exhaustive;
 		}
 	}
-	return <DispositionFrame disposition={disposition}>{content}</DispositionFrame>;
+	const overlay =
+		disposition.embodiment.kind === "figure" &&
+		disposition.position !== undefined &&
+		disposition.split === undefined;
+	return (
+		<DispositionFrame disposition={disposition} overlay={overlay}>
+			{content}
+		</DispositionFrame>
+	);
 }
 //#endregion 🔖MorphView
 

@@ -1598,6 +1598,10 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 						surfaceId: component.surfaceId,
 					});
 				}}
+				onRowDoubleClick={(row) => {
+					if (!row.navigateUri || !platform?.onNavigate) return;
+					platform.onNavigate(row.navigateUri);
+				}}
 				dragDrop={
 					model.dragDropEnabled
 						? {
