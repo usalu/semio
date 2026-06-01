@@ -277,6 +277,7 @@
 
 .reveal .presentation-interactive-disposition--offset {
 	transform-origin: center center;
+	will-change: transform;
 }
 
 .reveal .presentation-arrangement-canvas .presentation-interactive-disposition--pinned .presentation-interactive-disposition__content {

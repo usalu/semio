@@ -1499,18 +1499,39 @@ function transformFrameStyle(transform: DispositionPosition): CSSProperties {
 	};
 }
 
-/** @emoji ↔️ Flow-layout drag: section-pixel translate so pointer deltas track 1:1 (not % of element box). */
-export function flowDispositionOffsetStyle(
-	transform: DispositionPosition,
-	sectionBounds: Pick<DOMRect, "width" | "height"> | null,
-): CSSProperties {
-	if (!sectionBounds || sectionBounds.width <= 0 || sectionBounds.height <= 0) {
-		return {
-			transform: `translate(${transform.x * 100}%, ${transform.y * 100}%)`,
-		};
+/** @emoji 📐 reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
+export function sectionVisualScale(sectionEl: HTMLElement): number {
+	const layoutW = sectionEl.offsetWidth;
+	const layoutH = sectionEl.offsetHeight;
+	if (layoutW <= 0 || layoutH <= 0) {
+		return 1;
 	}
+	const rect = sectionEl.getBoundingClientRect();
+	const scaleX = rect.width / layoutW;
+	const scaleY = rect.height / layoutH;
+	const scale = Math.min(scaleX, scaleY);
+	return Number.isFinite(scale) && scale > 0 ? scale : 1;
+}
+
+/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate inside a scaled slide. */
+export function flowPointerDeltaToLocal(
+	sectionEl: HTMLElement,
+	startClientX: number,
+	startClientY: number,
+	currentClientX: number,
+	currentClientY: number,
+): { readonly dx: number; readonly dy: number } {
+	const scale = sectionVisualScale(sectionEl);
 	return {
-		transform: `translate(${transform.x * sectionBounds.width}px, ${transform.y * sectionBounds.height}px)`,
+		dx: (currentClientX - startClientX) / scale,
+		dy: (currentClientY - startClientY) / scale,
+	};
+}
+
+/** @emoji ↔️ Flow-layout drag: local-pixel translate (x/y are px, not normalized). */
+export function flowDispositionOffsetStyle(transform: DispositionPosition): CSSProperties {
+	return {
+		transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
 	};
 }
 
@@ -1523,6 +1544,33 @@ export function flowDispositionManipulationRect(
 		return existing;
 	}
 	return { x: 0, y: 0, width: measured.width, height: measured.height };
+}
+
+/** @emoji ↔️ True when a flow transform only stores pixel translate with unchanged measured size. */
+export function isFlowPixelOffsetTransform(
+	transform: DispositionPosition,
+	measured: DispositionPosition,
+): boolean {
+	return transform.width === measured.width && transform.height === measured.height;
+}
+
+/** @emoji 📍 Converts a flow pixel-offset transform into a slide-space frame using measured ink bounds. */
+export function flowPixelOffsetToSectionRect(
+	measured: DispositionPosition,
+	transform: DispositionPosition,
+	sectionEl: HTMLElement,
+): DispositionPosition {
+	const scale = sectionVisualScale(sectionEl);
+	const layoutW = sectionEl.offsetWidth;
+	const layoutH = sectionEl.offsetHeight;
+	const w = layoutW > 0 ? layoutW : sectionEl.getBoundingClientRect().width / scale;
+	const h = layoutH > 0 ? layoutH : sectionEl.getBoundingClientRect().height / scale;
+	return {
+		x: measured.x + transform.x / w,
+		y: measured.y + transform.y / h,
+		width: transform.width,
+		height: transform.height,
+	};
 }
 
 interface PresentationInteractionState {
@@ -1748,7 +1796,15 @@ const InteractiveDisposition: FC<{
 	const flowLayout = declaredRect === undefined;
 	const transform = interaction.getTransform(id);
 	const transformed = transform !== undefined;
-	const pinned = transformed && !flowLayout;
+	const measuredNatural = registry.getRect(id);
+	const flowPixelOffset =
+		transformed &&
+		flowLayout &&
+		transform !== undefined &&
+		measuredNatural !== null &&
+		isFlowPixelOffsetTransform(transform, measuredNatural);
+	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
+	const pinned = (transformed && !flowLayout) || flowSectionFrame;
 	const fullscreen = interaction.isFullscreen(id);
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
@@ -1782,21 +1838,35 @@ const InteractiveDisposition: FC<{
 		registry.registerRect(id, measured);
 	}, [id, declaredRect, transform, registry, sectionRef, slideEpoch, measureDispositionRect]);
 
-	const ensureRectForManipulation = useCallback((): DispositionPosition | null => {
-		const existing = interaction.getTransform(id);
-		if (existing) {
-			return existing;
-		}
-		if (declaredRect) {
-			return declaredRect;
-		}
-		const measured = measureDispositionRect();
-		if (!measured) {
-			return null;
-		}
-		registry.registerRect(id, measured);
-		return flowDispositionManipulationRect(measured, undefined);
-	}, [id, declaredRect, interaction, registry, measureDispositionRect]);
+	const ensureRectForManipulation = useCallback(
+		(kind: "move" | "resize"): DispositionPosition | null => {
+			const section = sectionRef.current;
+			const existing = interaction.getTransform(id);
+			const measuredNatural = registry.getRect(id) ?? measureDispositionRect();
+			if (declaredRect) {
+				return existing ?? declaredRect;
+			}
+			if (kind === "resize") {
+				if (!measuredNatural) {
+					return null;
+				}
+				registry.registerRect(id, measuredNatural);
+				if (existing && section && isFlowPixelOffsetTransform(existing, measuredNatural)) {
+					return flowPixelOffsetToSectionRect(measuredNatural, existing, section);
+				}
+				return existing ?? measuredNatural;
+			}
+			if (existing) {
+				return existing;
+			}
+			if (!measuredNatural) {
+				return null;
+			}
+			registry.registerRect(id, measuredNatural);
+			return flowDispositionManipulationRect(measuredNatural, undefined);
+		},
+		[id, declaredRect, interaction, registry, measureDispositionRect, sectionRef],
+	);
 
 	const attachPointerGesture = useCallback(
 		(
@@ -1864,23 +1934,47 @@ const InteractiveDisposition: FC<{
 					dragging = true;
 				}
 				moveEvent.preventDefault();
-				const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY, {
-					clamp: false,
-				});
-				const dx = current.x - startFraction.x;
-				const dy = current.y - startFraction.y;
 				const updates = new Map<string, DispositionTransform>();
 				if (mode === "move") {
 					for (const [memberId, rect] of startRects) {
-						updates.set(memberId, translateDispositionRect(rect, dx, dy));
-					}
-				} else if (startGroup && groupIds.length > 1) {
-					const resizedGroup = resizeDispositionRect(startGroup, mode, dx, dy);
-					for (const [memberId, rect] of startRects) {
-						updates.set(memberId, scaleRectWithinGroup(rect, startGroup, resizedGroup));
+						if (allDeclaredRects.get(memberId) === undefined) {
+							const { dx, dy } = flowPointerDeltaToLocal(
+								section,
+								startClient.x,
+								startClient.y,
+								moveEvent.clientX,
+								moveEvent.clientY,
+							);
+							updates.set(memberId, {
+								x: rect.x + dx,
+								y: rect.y + dy,
+								width: rect.width,
+								height: rect.height,
+							});
+						} else {
+							const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY, {
+								clamp: false,
+							});
+							const dx = current.x - startFraction.x;
+							const dy = current.y - startFraction.y;
+							updates.set(memberId, translateDispositionRect(rect, dx, dy));
+						}
 					}
 				} else {
-					updates.set(id, resizeDispositionRect(initialRect, mode, dx, dy));
+					const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY, {
+						clamp: false,
+					});
+					const dx = current.x - startFraction.x;
+					const dy = current.y - startFraction.y;
+					if (startGroup && groupIds.length > 1) {
+						const resizedGroup = resizeDispositionRect(startGroup, mode, dx, dy);
+						for (const [memberId, rect] of startRects) {
+							updates.set(memberId, scaleRectWithinGroup(rect, startGroup, resizedGroup));
+						}
+					} else {
+						const startRect = startRects.get(id) ?? initialRect;
+						updates.set(id, resizeDispositionRect(startRect, mode, dx, dy));
+					}
 				}
 				interaction.setTransforms(updates);
 			};
@@ -1908,7 +2002,7 @@ const InteractiveDisposition: FC<{
 			window.addEventListener("pointerup", onUp);
 			window.addEventListener("pointercancel", onUp);
 		},
-		[id, allDeclaredRects, interaction, registry, sectionRef],
+		[id, flowLayout, allDeclaredRects, interaction, registry, sectionRef],
 	);
 
 	const onPointerDown = (event: React.PointerEvent): void => {
@@ -1929,7 +2023,7 @@ const InteractiveDisposition: FC<{
 		} else if (additive) {
 			interaction.selectIds([id], true);
 		}
-		const rect = ensureRectForManipulation();
+		const rect = ensureRectForManipulation("move");
 		if (!rect) {
 			return;
 		}
@@ -1955,7 +2049,7 @@ const InteractiveDisposition: FC<{
 		if (!selected) {
 			interaction.selectIds([id], false);
 		}
-		const rect = ensureRectForManipulation();
+		const rect = ensureRectForManipulation("resize");
 		if (!rect) {
 			return;
 		}
@@ -1985,7 +2079,7 @@ const InteractiveDisposition: FC<{
 		"presentation-interactive-disposition",
 		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
 		selected ? "presentation-interactive-disposition--selected" : undefined,
-		transformed && flowLayout ? "presentation-interactive-disposition--offset" : undefined,
+		flowPixelOffset ? "presentation-interactive-disposition--offset" : undefined,
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
 	]
@@ -1993,10 +2087,13 @@ const InteractiveDisposition: FC<{
 		.join(" ");
 
 	const wrapperStyle: CSSProperties | undefined = transformed
-		? flowLayout
-			? flowDispositionOffsetStyle(transform, sectionRef.current?.getBoundingClientRect() ?? null)
+		? flowPixelOffset
+			? flowDispositionOffsetStyle(transform)
 			: transformFrameStyle(transform)
 		: undefined;
+
+	const chromeStyle: CSSProperties | undefined =
+		selected && effectiveRect && !pinned && !fullscreen ? transformFrameStyle(effectiveRect) : undefined;
 
 	return (
 		<div
@@ -2011,7 +2108,7 @@ const InteractiveDisposition: FC<{
 			</div>
 			{selected && effectiveRect ? (
 				<>
-					<div className="presentation-interactive-disposition__chrome" aria-hidden>
+					<div className="presentation-interactive-disposition__chrome" style={chromeStyle} aria-hidden>
 						{DISPOSITION_RESIZE_HANDLES.map((handle) => (
 							<div
 								key={handle}
@@ -3245,11 +3342,41 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("maps flow offsets to section pixels not element percent", () => {
-			expect(
-				flowDispositionOffsetStyle({ x: 0.1, y: 0.2, width: 0.3, height: 0.08 }, { width: 960, height: 700 })
-					.transform,
-			).toBe("translate(96px, 140px)");
+		it("detects flow pixel-offset transforms and maps them to section frames", () => {
+			const measured = { x: 0.2, y: 0.3, width: 0.25, height: 0.1 };
+			const offset = { x: 96, y: 40, width: 0.25, height: 0.1 };
+			expect(isFlowPixelOffsetTransform(offset, measured)).toBe(true);
+			expect(isFlowPixelOffsetTransform({ ...offset, width: 0.3 }, measured)).toBe(false);
+			const section = document.createElement("section");
+			section.style.width = "960px";
+			section.style.height = "700px";
+			document.body.appendChild(section);
+			section.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
+			const sectionRect = flowPixelOffsetToSectionRect(measured, offset, section);
+			document.body.removeChild(section);
+			expect(sectionRect.x).toBeCloseTo(0.3);
+			expect(sectionRect.y).toBeCloseTo(0.357, 2);
+		});
+
+		it("maps flow offsets to local translate pixels", () => {
+			expect(flowDispositionOffsetStyle({ x: 96, y: 140, width: 0.3, height: 0.08 }).transform).toBe(
+				"translate3d(96px, 140px, 0)",
+			);
+		});
+
+		it("converts screen pointer delta through section visual scale", () => {
+			const section = document.createElement("section");
+			section.style.width = "960px";
+			section.style.height = "700px";
+			document.body.appendChild(section);
+			section.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
+			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(section, "offsetHeight", { value: 700, configurable: true });
+			expect(sectionVisualScale(section)).toBeCloseTo(0.5);
+			const delta = flowPointerDeltaToLocal(section, 100, 200, 150, 260);
+			document.body.removeChild(section);
+			expect(delta.dx).toBeCloseTo(100);
+			expect(delta.dy).toBeCloseTo(120);
 		});
 
 		it("rejects unusable measured fractions", () => {
