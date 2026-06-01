@@ -326,6 +326,37 @@ export function splitFigureGrid(spec: SplitFigureGridSpec): SplitTile[] {
 	}
 	return tiles;
 }
+
+const SPLIT_TILES_PACKED_EPSILON = 1e-5;
+
+/** @emoji 🧩 Bounding frame when split tile positions pack the rectangle with no gaps (gap-zero grids). */
+export function splitTilesPackedFrame(tiles: readonly SplitTile[]): DispositionPosition | null {
+	if (tiles.length === 0) {
+		return null;
+	}
+	let minX = 1;
+	let minY = 1;
+	let maxX = 0;
+	let maxY = 0;
+	let areaSum = 0;
+	for (const tile of tiles) {
+		const position = tile.position;
+		minX = Math.min(minX, position.x);
+		minY = Math.min(minY, position.y);
+		maxX = Math.max(maxX, position.x + position.width);
+		maxY = Math.max(maxY, position.y + position.height);
+		areaSum += position.width * position.height;
+	}
+	const frame = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+	const frameArea = frame.width * frame.height;
+	if (frameArea <= 0) {
+		return null;
+	}
+	if (Math.abs(areaSum - frameArea) > SPLIT_TILES_PACKED_EPSILON) {
+		return null;
+	}
+	return frame;
+}
 //#endregion 🔖Split
 
 //#region 🔖Arrangement
@@ -1646,6 +1677,29 @@ if (import.meta.vitest) {
 		it("applies default emphasis to every tile when set", () => {
 			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, emphasis: "muted" });
 			expect(tiles.every((tile) => tile.emphasis === "muted")).toBe(true);
+		});
+	});
+
+	describe("splitTilesPackedFrame", () => {
+		const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
+
+		it("returns the bounding frame for gap-zero grids", () => {
+			const tiles = splitFigureGrid({ rows: 3, columns: 5, frame });
+			const packed = splitTilesPackedFrame(tiles);
+			expect(packed?.x).toBe(frame.x);
+			expect(packed?.y).toBe(frame.y);
+			expect(packed?.width).toBe(frame.width);
+			expect(packed?.height).toBeCloseTo(frame.height, 5);
+		});
+
+		it("returns null when tiles leave gaps inside the bounding box", () => {
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
+			expect(splitTilesPackedFrame(tiles)).toBeNull();
+		});
+
+		it("returns null when tiles leave holes inside the bounding box", () => {
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			expect(splitTilesPackedFrame([tiles[0]!, tiles[3]!])).toBeNull();
 		});
 	});
 

@@ -142,6 +142,30 @@
 	z-index: 1;
 }
 
+.reveal .presentation-figure-split-assembled {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.reveal .slides section.present .presentation-figure-split-assembled-full {
+	opacity: 1;
+}
+
+.reveal .slides section:not(.present) .presentation-figure-split-assembled-full {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.reveal .slides section.present .presentation-figure-split-assembled-tiles {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.reveal .slides section:not(.present) .presentation-figure-split-assembled-tiles {
+	opacity: 1;
+}
+
 .reveal .presentation-figure-crop-frame,
 .reveal .presentation-morph-slot {
 	display: flex;

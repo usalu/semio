@@ -1,7 +1,7 @@
 {
   "title": "Presentation Spec Generalization",
   "emoji": "📽",
-  "status": "closed",
+  "status": "open",
   "description": "Align @framework/presentation with the spec: introduce Slide (arrangement + optional transition), generalize Morph with auto-derived bridge slides, simplify Split to tiles only, remove bespoke column/ghost/morphTarget machinery, update renderer and 33.projektetage deck.",
   "summary": "Removed the derived catalogue-labels bridge slide: positioned figure-crop morph slots now morph directly into positioned text labels in one reveal.js step (`morphBridgeDirect`). Dormant crop anchors no longer set inline opacity so they stay visible as morph sources when leaving Bauteilarten. v=14 is now Bauteilbeschriftungen text. Core/renderer/deck tests updated (30/19/6 passing).",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
@@ -9,6 +9,7 @@
     "⚪13531ab51b094146b2b0664aa39353d3",
     "⚪94c78b783e3d4cb787b763a6b88c06de",
     "⚪b8797ffeeb4a48a5ab834eb48b497aa6",
-    "⚪eec337fccc344c4aba197fe4b57f5794"
+    "⚪eec337fccc344c4aba197fe4b57f5794",
+    "⚪8f3603228a034ed0bd27485f78519a55"
   ]
 }

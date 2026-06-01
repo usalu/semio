@@ -68,6 +68,7 @@ import {
 	resolveEmbodiment,
 	resolveTextMorphRoot,
 	splitFigureGrid,
+	splitTilesPackedFrame,
 	tileMorphId,
 	type TextMorphRoot,
 } from "@framework/presentation/core";
@@ -124,6 +125,7 @@ export {
 	resolveEmbodiment,
 	resolveTextMorphRoot,
 	splitFigureGrid,
+	splitTilesPackedFrame,
 	tileMorphId,
 } from "@framework/presentation/core";
 export type {
@@ -677,6 +679,37 @@ function FigureSplitMorphView({
 	readonly embodiment: FigureEmbodiment;
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
+	const packedFrame = splitTilesPackedFrame(tiles);
+	if (packedFrame) {
+		return (
+			<div className="presentation-figure-split-assembled">
+				<DispositionFrame
+					disposition={{ ...disposition, position: packedFrame, split: undefined }}
+					overlay
+				>
+					<div className="presentation-figure-split-assembled-full">
+						<FigureMorphView
+							morphId={disposition.morphId}
+							embodiment={embodiment}
+							emphasis={disposition.emphasis}
+							position={packedFrame}
+						/>
+					</div>
+				</DispositionFrame>
+				<div className="presentation-figure-split-assembled-tiles" aria-hidden>
+					{tiles.map((tile) => (
+						<FigureTileView
+							key={tile.key}
+							participantId={disposition.participant.id}
+							tile={tile}
+							embodiment={embodiment}
+							defaultEmphasis={disposition.emphasis}
+						/>
+					))}
+				</div>
+			</div>
+		);
+	}
 	return (
 		<>
 			{tiles.map((tile) => (
@@ -1460,6 +1493,12 @@ if (import.meta.vitest) {
 			expect(first.classList.contains("presentation-figure-tile-frame")).toBe(true);
 			expect(first.style.position).toBe("absolute");
 			expect(first.style.backgroundImage).toContain("/catalogue.png");
+			const fullFigure = container.querySelector(
+				".presentation-figure-split-assembled-full .presentation-media-figure",
+			) as HTMLImageElement | null;
+			expect(fullFigure?.getAttribute("src")).toBe("/catalogue.png");
+			const presentSection = container.querySelector("section.present");
+			expect(presentSection?.querySelector(".presentation-figure-split-assembled-full")).not.toBeNull();
 		});
 
 		it("omits tiles not listed in a split disposition", () => {
