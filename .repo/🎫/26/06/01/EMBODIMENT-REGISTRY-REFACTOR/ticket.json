@@ -1,0 +1,8 @@
+{
+  "title": "Embodiment Registry Refactor",
+  "emoji": "🎭",
+  "status": "open",
+  "description": "Restructure @framework/presentation: embodiments in scoped sibling registries, dispositions bind participantId+embodimentId, full artifact-level scoping, tile/split templates produce embodiments+dispositions (remove DispositionSplit). Migrate renderer and 33.projektetage deck.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": []
+}

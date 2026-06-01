@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🚪 Capsule east ↔ tambour west; capsule west ↔ tambour east only. */
+/** @emoji 🚪 Same-side doors: capsule east ↔ tambour east; capsule west ↔ tambour west. */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -24,54 +24,74 @@ function itemsOf(block: unknown): { id?: string }[] {
 let portFixes = 0;
 let compatRuleFixes = 0;
 
+function setSingleDoorCompat(port: Record<string, unknown>, tambourOrCapsuleId: string): void {
+  const items = itemsOf(port.compatiblePorts);
+  const doorIds = new Set([DOOR_CAPSULE_EAST, DOOR_CAPSULE_WEST, DOOR_TAMBOUR_EAST, DOOR_TAMBOUR_WEST]);
+  let replaced = false;
+  for (const item of items) {
+    const id = String(item.id ?? "");
+    if (!doorIds.has(id)) continue;
+    if (id !== tambourOrCapsuleId) {
+      item.id = tambourOrCapsuleId;
+      portFixes++;
+      replaced = true;
+    }
+  }
+  if (!replaced && items.length === 1 && doorIds.has(String(items[0]!.id ?? ""))) {
+    const id = String(items[0]!.id ?? "");
+    if (id !== tambourOrCapsuleId) {
+      items[0]!.id = tambourOrCapsuleId;
+      portFixes++;
+    }
+  }
+}
+
 function fixPortCompatibleRefs(port: Record<string, unknown>): void {
   const name = String(port.name ?? "");
-  const compat = port.compatiblePorts;
-  const items = itemsOf(compat);
-  if (items.length === 0) return;
-  const replaceId = (from: string, to: string) => {
-    for (const item of items) {
-      if (String(item.id ?? "") === from) {
-        item.id = to;
-        portFixes++;
-      }
-    }
-  };
-  if (name === "door capsule east") replaceId(DOOR_TAMBOUR_EAST, DOOR_TAMBOUR_WEST);
-  if (name === "door capsule west") replaceId(DOOR_TAMBOUR_WEST, DOOR_TAMBOUR_EAST);
+  if (name === "door capsule east") setSingleDoorCompat(port, DOOR_TAMBOUR_EAST);
+  if (name === "door capsule west") setSingleDoorCompat(port, DOOR_TAMBOUR_WEST);
+  if (name === "door tambour east") setSingleDoorCompat(port, DOOR_CAPSULE_EAST);
+  if (name === "door tambour west") setSingleDoorCompat(port, DOOR_CAPSULE_WEST);
 }
 
 function fixKindCompatEntry(entry: Record<string, unknown>): void {
   const source = String(entry.source ?? "");
   const target = String(entry.target ?? "");
-  const swapNamed = (s: string, t: string, ns: string, nt: string) => {
-    if (s === ns && t === nt) {
-      entry.target = nt === "door tambour east" ? "door tambour west" : nt;
-      if (ns === "door capsule east" && nt === "door tambour east") entry.target = "door tambour west";
-      if (ns === "door capsule west" && nt === "door tambour west") entry.target = "door tambour east";
+  const fixNamed = (s: string, t: string, wantTarget: string) => {
+    if (s === source && t === target) {
+      entry.target = wantTarget;
       compatRuleFixes++;
     }
   };
-  if (source === "door capsule east" && target === "door tambour east") {
-    entry.target = "door tambour west";
-    compatRuleFixes++;
-    return;
-  }
-  if (source === "door capsule west" && target === "door tambour west") {
+  if (source === "door capsule east" && target !== "door tambour east") {
     entry.target = "door tambour east";
     compatRuleFixes++;
-    return;
-  }
-  if (source === HANDLE_CAPSULE_EAST && target === HANDLE_TAMBOUR_EAST) {
-    entry.target = HANDLE_TAMBOUR_WEST;
+  } else if (source === "door capsule west" && target !== "door tambour west") {
+    entry.target = "door tambour west";
     compatRuleFixes++;
-    return;
-  }
-  if (source === HANDLE_CAPSULE_WEST && target === HANDLE_TAMBOUR_WEST) {
+  } else if (source === "door tambour east" && target !== "door capsule east") {
+    entry.target = "door capsule east";
+    compatRuleFixes++;
+  } else if (source === "door tambour west" && target !== "door capsule west") {
+    entry.target = "door capsule west";
+    compatRuleFixes++;
+  } else if (source === HANDLE_CAPSULE_EAST && target !== HANDLE_TAMBOUR_EAST) {
     entry.target = HANDLE_TAMBOUR_EAST;
     compatRuleFixes++;
+  } else if (source === HANDLE_CAPSULE_WEST && target !== HANDLE_TAMBOUR_WEST) {
+    entry.target = HANDLE_TAMBOUR_WEST;
+    compatRuleFixes++;
+  } else if (source === HANDLE_TAMBOUR_EAST && target !== HANDLE_CAPSULE_EAST) {
+    entry.target = HANDLE_CAPSULE_EAST;
+    compatRuleFixes++;
+  } else if (source === HANDLE_TAMBOUR_WEST && target !== HANDLE_CAPSULE_WEST) {
+    entry.target = HANDLE_CAPSULE_WEST;
+    compatRuleFixes++;
   }
-  swapNamed(source, target, "door capsule east", "door tambour east");
+  fixNamed("door capsule east", "door tambour west", "door tambour east");
+  fixNamed("door capsule west", "door tambour east", "door tambour west");
+  fixNamed("door tambour east", "door capsule west", "door capsule east");
+  fixNamed("door tambour west", "door capsule east", "door capsule west");
 }
 
 function walk(value: unknown): void {
@@ -115,7 +135,8 @@ for (const root of roots) {
     const beforeRules = compatRuleFixes;
     walk(doc);
     if (portFixes > beforePorts || compatRuleFixes > beforeRules) {
-      writeFileSync(path, `${JSON.stringify(doc, null, path.includes("shallow") || path.includes("nakagin-capsule-tower.filtered") ? 4 : 2)}\n`);
+      const indent = path.includes("shallow") || path.includes("nakagin-capsule-tower.filtered") ? 4 : 2;
+      writeFileSync(path, `${JSON.stringify(doc, null, indent)}\n`);
       filesChanged++;
       console.log("[DEBUG] fixed", path);
     }

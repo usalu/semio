@@ -23,11 +23,6 @@ export function morphId(participantId: string): string {
 	return participantId;
 }
 
-/** @emoji 🧩 Stable reveal.js `data-id` for one crop tile of a split figure disposition. */
-export function tileMorphId(participantId: string, tileKey: string): string {
-	return `${participantId}--tile--${tileKey}`;
-}
-
 /** @emoji 📐 Chooses the eg-ice-25 text DOM root for reveal.js `data-id` pairing. */
 export function resolveTextMorphRoot(embodiment: TextEmbodiment): TextMorphRoot {
 	if (embodiment.morphRoot) {
@@ -50,7 +45,7 @@ export function resolveTextMorphRoot(embodiment: TextEmbodiment): TextMorphRoot 
 /** @emoji 📝 Text lines at a heading level; optional `fit` hints fit-text in reveal renderers. */
 export interface TextEmbodiment {
 	readonly kind: "text";
-	readonly id?: string;
+	readonly id: string;
 	readonly lines: readonly string[];
 	readonly level: "title" | "heading" | "subheading" | "body";
 	readonly fit?: boolean;
@@ -60,7 +55,7 @@ export interface TextEmbodiment {
 /** @emoji 🖼 Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
 export interface FigureEmbodiment {
 	readonly kind: "figure";
-	readonly id?: string;
+	readonly id: string;
 	readonly src: string;
 	readonly alt?: string;
 	readonly crop?: DispositionPosition;
@@ -69,7 +64,7 @@ export interface FigureEmbodiment {
 /** @emoji 🎬 Video clip on a slide. */
 export interface VideoEmbodiment {
 	readonly kind: "video";
-	readonly id?: string;
+	readonly id: string;
 	readonly src: string;
 	readonly poster?: string;
 	readonly autoplay?: boolean;
@@ -81,7 +76,7 @@ export interface VideoEmbodiment {
 /** @emoji 📄 PDF document page on a slide. */
 export interface PdfEmbodiment {
 	readonly kind: "pdf";
-	readonly id?: string;
+	readonly id: string;
 	readonly src: string;
 	readonly page?: number;
 	readonly alt?: string;
@@ -90,7 +85,7 @@ export interface PdfEmbodiment {
 /** @emoji • Bulleted list body. */
 export interface BulletEmbodiment {
 	readonly kind: "bullet";
-	readonly id?: string;
+	readonly id: string;
 	readonly items: readonly string[];
 }
 
@@ -110,7 +105,7 @@ export interface AuthorPerson {
 /** @emoji 👤 Author rows (names with optional superscript marks); use `lines` for multiple rows. */
 export interface AuthorsEmbodiment {
 	readonly kind: "authors";
-	readonly id?: string;
+	readonly id: string;
 	readonly people?: readonly AuthorPerson[];
 	readonly lines?: readonly (readonly AuthorPerson[])[];
 	readonly abbreviateFirstName?: boolean;
@@ -241,7 +236,7 @@ export function highlightAffiliationDelta(
 /** @emoji 🏛 Affiliation footnotes keyed by mark. */
 export interface AffiliationsEmbodiment {
 	readonly kind: "affiliations";
-	readonly id?: string;
+	readonly id: string;
 	readonly entries: readonly AffiliationEntry[];
 	/** @emoji 🔀 Prior line labels keyed by mark when the visible label changes after position morph (e.g. full name → shortName). */
 	readonly morphLineLabels?: Readonly<Record<string, string>>;
@@ -259,12 +254,52 @@ export type Embodiment =
 //#endregion 🔖Embodiment
 
 //#region 🔖Participant
-/** @emoji 🧑 Entity that may appear across arrangements (title, authors, …). */
+/** @emoji 🧑 Entity that may appear on one or many slides (identity only; embodiments live in a scope registry). */
 export interface Participant {
 	readonly id: string;
-	readonly embodiments: readonly Embodiment[];
+	readonly name?: string;
 }
 //#endregion 🔖Participant
+
+//#region 🔖Scope
+/** @emoji 🗂 Optional participant and embodiment registries on a presentation artifact and its children. */
+export interface ArtifactScope {
+	readonly participants?: readonly Participant[];
+	readonly embodiments?: readonly Embodiment[];
+}
+
+/** @emoji 🔍 Merged participant and embodiment maps for resolving dispositions. */
+export interface ResolutionScope {
+	readonly participants: ReadonlyMap<string, Participant>;
+	readonly embodiments: ReadonlyMap<string, Embodiment>;
+}
+
+/** @emoji 🔍 Merges registries from outer to inner scope layers (later layers override earlier ids). */
+export function buildResolutionScope(ancestors: readonly ArtifactScope[]): ResolutionScope {
+	const participants = new Map<string, Participant>();
+	const embodiments = new Map<string, Embodiment>();
+	for (const layer of ancestors) {
+		for (const participant of layer.participants ?? []) {
+			participants.set(participant.id, participant);
+		}
+		for (const embodiment of layer.embodiments ?? []) {
+			embodiments.set(embodiment.id, embodiment);
+		}
+	}
+	return { participants, embodiments };
+}
+
+/** @emoji 🔍 Builds the resolution scope for one arrangement inside a deck hierarchy. */
+export function resolutionScopeForArrangement(
+	presentation: Presentation,
+	chapter: Chapter,
+	sequence: Sequence,
+	thought: Thought,
+	arrangement: Arrangement,
+): ResolutionScope {
+	return buildResolutionScope([presentation, chapter, sequence, thought, arrangement]);
+}
+//#endregion 🔖Scope
 
 //#region 🔖Disposition
 /** @emoji 📐 Normalized slide rectangle (0..1 fractions) for a {@link Disposition}. */
@@ -282,27 +317,11 @@ export interface DispositionStyle {
 	readonly scale?: number;
 }
 
-/** @emoji 🧩 One crop of a figure source with its own slide placement (see {@link DispositionSplit}). */
-export interface SplitTile {
-	readonly key: string;
-	readonly crop: DispositionPosition;
-	readonly position: DispositionPosition;
-	readonly emphasis?: ParticipantEmphasis;
-	readonly style?: DispositionStyle;
-}
-
-/** @emoji ✂️ Splits one figure disposition into independently placed crop tiles for auto-animate. */
-export interface DispositionSplit {
-	readonly tiles: readonly SplitTile[];
-	/** @emoji 🎯 When true, a dormant participant-scoped morph anchor covers the tile bounding box (tiles stay visible until settle). */
-	readonly morphParticipant?: boolean;
-}
-
 /** @emoji 👻 One source participant that morphs independently into a target participant slot. */
 export interface MorphFromSlot {
 	readonly participantId: string;
 	readonly position: DispositionPosition;
-	readonly embodimentId?: string;
+	readonly embodimentId: string;
 	/** @emoji 🎯 Line index when the target uses a multi-line text morph root (`participantId--index`). */
 	readonly targetLineIndex?: number;
 }
@@ -310,11 +329,10 @@ export interface MorphFromSlot {
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */
 export interface Disposition {
 	readonly participantId: string;
-	readonly embodimentId?: string;
+	readonly embodimentId: string;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
-	readonly split?: DispositionSplit;
 	/** @emoji 👻 Source participants that each morph into this disposition (expanded as ghost dispositions for reveal.js). */
 	readonly morphFrom?: readonly MorphFromSlot[];
 	/** @emoji 👻 True when auto-expanded from {@link Disposition.morphFrom} (not authored directly). */
@@ -324,7 +342,37 @@ export interface Disposition {
 }
 //#endregion 🔖Disposition
 
+//#region 🔖Tile
+/** @emoji 🧩 Spec for {@link tile}: one cropped figure embodiment from a source image. */
+export interface TileSpec {
+	readonly id: string;
+	readonly source: string;
+	readonly crop: DispositionPosition;
+	readonly alt?: string;
+}
+
+/** @emoji 🧩 Produces one cropped {@link FigureEmbodiment} from a source figure. */
+export function tile(spec: TileSpec): FigureEmbodiment {
+	return {
+		kind: "figure",
+		id: spec.id,
+		src: spec.source,
+		alt: spec.alt,
+		crop: spec.crop,
+	};
+}
+//#endregion 🔖Tile
+
 //#region 🔖Split
+/** @emoji 📐 One grid cell placement and source crop (internal to {@link splitFigureGrid}). */
+export interface SplitGridCell {
+	readonly key: string;
+	readonly crop: DispositionPosition;
+	readonly position: DispositionPosition;
+	readonly emphasis?: ParticipantEmphasis;
+	readonly style?: DispositionStyle;
+}
+
 /** @emoji 📐 Spec for {@link splitFigureGrid}: uniform rows×columns inside a slide frame. */
 export interface SplitFigureGridSpec {
 	readonly rows: number;
@@ -335,18 +383,18 @@ export interface SplitFigureGridSpec {
 	readonly keyPrefix?: string;
 }
 
-/** @emoji ✂️ Builds crop tiles that pack a figure grid into a normalized slide frame (gap=0 reconstructs the frame). */
-export function splitFigureGrid(spec: SplitFigureGridSpec): SplitTile[] {
+/** @emoji ✂️ Builds grid cells that pack a figure into a normalized slide frame (gap=0 reconstructs the frame). */
+export function splitFigureGrid(spec: SplitFigureGridSpec): SplitGridCell[] {
 	const { rows, columns, frame, gap = 0, emphasis, keyPrefix = "tile" } = spec;
 	if (rows < 1 || columns < 1) {
 		throw new Error(`splitFigureGrid requires rows and columns >= 1 (got ${rows}×${columns}).`);
 	}
 	const cellWidth = (frame.width - gap * (columns - 1)) / columns;
 	const cellHeight = (frame.height - gap * (rows - 1)) / rows;
-	const tiles: SplitTile[] = [];
+	const cells: SplitGridCell[] = [];
 	for (let row = 0; row < rows; row += 1) {
 		for (let column = 0; column < columns; column += 1) {
-			tiles.push({
+			cells.push({
 				key: `${keyPrefix}-r${row}-c${column}`,
 				crop: {
 					x: column / columns,
@@ -364,132 +412,19 @@ export function splitFigureGrid(spec: SplitFigureGridSpec): SplitTile[] {
 			});
 		}
 	}
-	return tiles;
+	return cells;
 }
 
-const SPLIT_TILES_PACKED_EPSILON = 1e-5;
-
-/** @emoji 🧩 Bounding frame when split tile positions pack the rectangle with no gaps (gap-zero grids). */
-export function splitTilesPackedFrame(tiles: readonly SplitTile[]): DispositionPosition | null {
-	if (tiles.length < 2) {
-		return null;
+/** @emoji 📐 Union of normalized source-image crops. */
+export function unionSourceCrops(crops: readonly DispositionPosition[]): DispositionPosition {
+	if (crops.length === 0) {
+		throw new Error("unionSourceCrops: no crops.");
 	}
 	let minX = 1;
 	let minY = 1;
 	let maxX = 0;
 	let maxY = 0;
-	let areaSum = 0;
-	for (const tile of tiles) {
-		const position = tile.position;
-		minX = Math.min(minX, position.x);
-		minY = Math.min(minY, position.y);
-		maxX = Math.max(maxX, position.x + position.width);
-		maxY = Math.max(maxY, position.y + position.height);
-		areaSum += position.width * position.height;
-	}
-	const frame = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-	const frameArea = frame.width * frame.height;
-	if (frameArea <= 0) {
-		return null;
-	}
-	if (Math.abs(areaSum - frameArea) > SPLIT_TILES_PACKED_EPSILON) {
-		return null;
-	}
-	return frame;
-}
-
-/** @emoji 📐 Bounding box of slide positions for a tile set (ignores gaps between tiles). */
-export function splitTilesBoundingFrame(tiles: readonly SplitTile[]): DispositionPosition | null {
-	if (tiles.length === 0) {
-		return null;
-	}
-	let minX = 1;
-	let minY = 1;
-	let maxX = 0;
-	let maxY = 0;
-	for (const tile of tiles) {
-		const position = tile.position;
-		minX = Math.min(minX, position.x);
-		minY = Math.min(minY, position.y);
-		maxX = Math.max(maxX, position.x + position.width);
-		maxY = Math.max(maxY, position.y + position.height);
-	}
-	const width = maxX - minX;
-	const height = maxY - minY;
-	if (width <= 0 || height <= 0) {
-		return null;
-	}
-	return { x: minX, y: minY, width, height };
-}
-
-/** @emoji 📊 One visual row of split tiles with similar vertical placement. */
-export interface SplitTileVisualRow {
-	readonly tiles: readonly SplitTile[];
-}
-
-/** @emoji 📊 Groups split tiles into visual rows by vertical midpoint proximity. */
-export function clusterSplitTilesByVisualRow(tiles: readonly SplitTile[]): readonly SplitTileVisualRow[] {
-	if (tiles.length === 0) {
-		return [];
-	}
-	const sorted = [...tiles].sort(
-		(a, b) => a.position.y + a.position.height / 2 - (b.position.y + b.position.height / 2),
-	);
-	const rows: SplitTile[][] = [];
-	for (const tile of sorted) {
-		const midY = tile.position.y + tile.position.height / 2;
-		let matched: SplitTile[] | undefined;
-		for (const row of rows) {
-			const frame = splitTilesBoundingFrame(row);
-			if (!frame) {
-				continue;
-			}
-			const rowMid = frame.y + frame.height / 2;
-			const tolerance = Math.max(tile.position.height, frame.height) * 0.55;
-			if (Math.abs(midY - rowMid) <= tolerance) {
-				matched = row;
-				break;
-			}
-		}
-		if (matched) {
-			matched.push(tile);
-		} else {
-			rows.push([tile]);
-		}
-	}
-	return rows.map((rowTiles) => ({ tiles: rowTiles }));
-}
-
-/** @emoji 📐 Re-expresses tile positions relative to a group frame (0..1 inside the group). */
-export function splitTilesInGroupFrame(
-	tiles: readonly SplitTile[],
-	group: DispositionPosition,
-): readonly SplitTile[] {
-	if (group.width <= 0 || group.height <= 0) {
-		return tiles;
-	}
-	return tiles.map((tile) => ({
-		...tile,
-		position: {
-			x: (tile.position.x - group.x) / group.width,
-			y: (tile.position.y - group.y) / group.height,
-			width: tile.position.width / group.width,
-			height: tile.position.height / group.height,
-		},
-	}));
-}
-
-/** @emoji 📐 Union of normalized source-image crops for a tile set. */
-export function splitTilesUnionSourceCrop(tiles: readonly SplitTile[]): DispositionPosition {
-	if (tiles.length === 0) {
-		throw new Error("splitTilesUnionSourceCrop: no tiles.");
-	}
-	let minX = 1;
-	let minY = 1;
-	let maxX = 0;
-	let maxY = 0;
-	for (const tile of tiles) {
-		const crop = tile.crop;
+	for (const crop of crops) {
 		minX = Math.min(minX, crop.x);
 		minY = Math.min(minY, crop.y);
 		maxX = Math.max(maxX, crop.x + crop.width);
@@ -497,16 +432,84 @@ export function splitTilesUnionSourceCrop(tiles: readonly SplitTile[]): Disposit
 	}
 	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
+
+/** @emoji ✂️ Spec for {@link split}: grid of tile participants, embodiments, and dispositions. */
+export interface SplitSpec {
+	readonly source: string;
+	readonly rows: number;
+	readonly columns: number;
+	readonly frame: DispositionPosition;
+	readonly gap?: number;
+	readonly emphasis?: ParticipantEmphasis;
+	readonly keyPrefix?: string;
+	readonly alt?: string;
+	readonly embodimentIdSuffix?: string;
+}
+
+/** @emoji ✂️ Artifacts produced by the split template (one participant and disposition per grid cell). */
+export interface SplitArtifacts {
+	readonly participants: readonly Participant[];
+	readonly embodiments: readonly FigureEmbodiment[];
+	readonly dispositions: readonly Disposition[];
+}
+
+/** @emoji ✂️ Produces a grid of tile figure embodiments with one disposition per cell. */
+export function split(spec: SplitSpec): SplitArtifacts {
+	const suffix = spec.embodimentIdSuffix ?? "figure";
+	const cells = splitFigureGrid({
+		rows: spec.rows,
+		columns: spec.columns,
+		frame: spec.frame,
+		gap: spec.gap,
+		emphasis: spec.emphasis,
+		keyPrefix: spec.keyPrefix,
+	});
+	const participants: Participant[] = [];
+	const embodiments: FigureEmbodiment[] = [];
+	const dispositions: Disposition[] = [];
+	for (const cell of cells) {
+		const participantId = cell.key;
+		const embodimentId = `${participantId}-${suffix}`;
+		participants.push({ id: participantId });
+		embodiments.push(
+			tile({
+				id: embodimentId,
+				source: spec.source,
+				crop: cell.crop,
+				alt: spec.alt,
+			}),
+		);
+		dispositions.push({
+			participantId,
+			embodimentId,
+			emphasis: cell.emphasis ?? spec.emphasis ?? "active",
+			position: cell.position,
+			...(cell.style ? { style: cell.style } : {}),
+		});
+	}
+	return { participants, embodiments, dispositions };
+}
+
+/** @emoji 📐 Replaces slide positions on split dispositions matched by participant id. */
+export function remapSplitDispositions(
+	dispositions: readonly Disposition[],
+	positionsByParticipantId: Readonly<Record<string, DispositionPosition>>,
+): Disposition[] {
+	return dispositions.map((disposition) => {
+		const position = positionsByParticipantId[disposition.participantId];
+		return position ? { ...disposition, position } : disposition;
+	});
+}
 //#endregion 🔖Split
 
 //#region 🔖Arrangement
 /** @emoji 🖼 One slide: participants disposed with emphasis, position, and style. */
-export interface Arrangement {
+export interface Arrangement extends ArtifactScope {
 	readonly id: string;
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly dispositions: readonly Disposition[];
-	/** @emoji ⏳ Arrangement ids that trigger swapping split tiles for dormant morph anchors on this slide when auto-animating to them. */
+	/** @emoji ⏳ Arrangement ids that settle ephemeral layout before auto-animating to them. */
 	readonly settleBeforeMorphTo?: readonly string[];
 }
 //#endregion 🔖Arrangement
@@ -520,19 +523,18 @@ export interface Slide {
 //#endregion 🔖Slide
 
 //#region 🔖Thought
-/** @emoji 💭 Idea developed across one or more slides with shared participants. */
-export interface Thought {
+/** @emoji 💭 Idea developed across one or more slides with scoped participants and embodiments. */
+export interface Thought extends ArtifactScope {
 	readonly id: string;
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
-	readonly participants: readonly Participant[];
 	readonly slides: readonly Slide[];
 }
 //#endregion 🔖Thought
 
 //#region 🔖Sequence
 /** @emoji 📚 Reveal.js horizontal stack: ordered thoughts rendered as one vertical slide column. */
-export interface Sequence {
+export interface Sequence extends ArtifactScope {
 	readonly id: string;
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
@@ -542,7 +544,7 @@ export interface Sequence {
 
 //#region 🔖Chapter
 /** @emoji 📖 Groups related sequences in a deck (bookmarks and authoring; sequences stay top-level in reveal.js). */
-export interface Chapter {
+export interface Chapter extends ArtifactScope {
 	readonly id: string;
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
@@ -555,7 +557,7 @@ export interface Chapter {
 export type PresentationLanguageKind = "de" | "en";
 
 /** @emoji 📽 Root deck: ordered chapters of sequences of thoughts. */
-export interface Presentation {
+export interface Presentation extends ArtifactScope {
 	readonly id: string;
 	readonly name: string;
 	readonly chapters: readonly Chapter[];
@@ -578,11 +580,10 @@ export interface ResolvedDisposition {
 	readonly participant: Participant;
 	readonly embodiment: Embodiment;
 	readonly emphasis: ParticipantEmphasis;
-	readonly embodimentId?: string;
+	readonly embodimentId: string;
 	readonly morphId: string;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
-	readonly split?: DispositionSplit;
 }
 
 /** @emoji 📐 Union of normalized placement rectangles. */
@@ -639,15 +640,6 @@ export function visibleArrangementPositions(resolved: readonly ResolvedDispositi
 		if (!isDispositionVisibleForLayout(disposition.style)) {
 			continue;
 		}
-		if (disposition.split?.morphParticipant) {
-			continue;
-		}
-		if (disposition.split?.tiles) {
-			for (const tile of disposition.split.tiles) {
-				positions.push(tile.position);
-			}
-			continue;
-		}
 		if (disposition.position) {
 			positions.push(disposition.position);
 		}
@@ -659,23 +651,13 @@ function shiftResolvedDisposition(
 	disposition: ResolvedDisposition,
 	offset: DispositionPosition,
 ): ResolvedDisposition {
-	let next = disposition;
-	if (disposition.position) {
-		next = { ...next, position: shiftDispositionPosition(disposition.position, offset) };
+	if (!disposition.position) {
+		return disposition;
 	}
-	if (disposition.split?.tiles) {
-		next = {
-			...next,
-			split: {
-				...disposition.split,
-				tiles: disposition.split.tiles.map((tile) => ({
-					...tile,
-					position: shiftDispositionPosition(tile.position, offset),
-				})),
-			},
-		};
-	}
-	return next;
+	return {
+		...disposition,
+		position: shiftDispositionPosition(disposition.position, offset),
+	};
 }
 
 /** @emoji ⊕ Centers visible placements in the unit slide frame. */
@@ -751,9 +733,15 @@ export function expandArrangementMorphFrom(
 				morphLineTargets && slot.targetLineIndex !== undefined
 					? `${disposition.participantId}--${slot.targetLineIndex}`
 					: undefined;
+			const embodimentId = slot.embodimentId ?? sourceDisposition?.embodimentId;
+			if (!embodimentId) {
+				throw new Error(
+					`morphFrom slot for "${slot.participantId}" needs embodimentId (or a source disposition with embodimentId).`,
+				);
+			}
 			ghosts.push({
 				participantId: slot.participantId,
-				embodimentId: slot.embodimentId ?? sourceDisposition?.embodimentId,
+				embodimentId,
 				emphasis: sourceDisposition?.emphasis ?? "active",
 				position: slot.position,
 				style: { opacity: 0 },
@@ -821,43 +809,31 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 //#endregion 🔖Expand
 
 //#region 🔖Resolve
-/** @emoji 🔍 Picks the embodiment for a participant (by id or first). */
-export function resolveEmbodiment(participant: Participant, embodimentId?: string): Embodiment {
-	if (embodimentId) {
-		const match = participant.embodiments.find((e) => e.id === embodimentId);
-		if (match) {
-			return match;
-		}
-		throw new Error(`Participant "${participant.id}" has no embodiment "${embodimentId}".`);
+/** @emoji 🔍 Looks up one embodiment in a {@link ResolutionScope}. */
+export function resolveEmbodiment(scope: ResolutionScope, embodimentId: string): Embodiment {
+	const match = scope.embodiments.get(embodimentId);
+	if (!match) {
+		throw new Error(`Unknown embodiment "${embodimentId}".`);
 	}
-	const first = participant.embodiments[0];
-	if (!first) {
-		throw new Error(`Participant "${participant.id}" has no embodiments.`);
-	}
-	return first;
+	return match;
 }
 
-/** @emoji 🔍 Resolves all dispositions for one arrangement. */
-export function resolveArrangement(
-	participants: readonly Participant[],
-	arrangement: Arrangement,
-): ResolvedDisposition[] {
-	const byId = new Map(participants.map((participant) => [participant.id, participant]));
+/** @emoji 🔍 Resolves all dispositions for one arrangement against a scope. */
+export function resolveArrangement(scope: ResolutionScope, arrangement: Arrangement): ResolvedDisposition[] {
 	return arrangement.dispositions.flatMap((disposition) => {
-		const participant = byId.get(disposition.participantId);
+		const participant = scope.participants.get(disposition.participantId);
 		if (!participant) {
 			throw new Error(`Arrangement "${arrangement.id}" references unknown participant "${disposition.participantId}".`);
 		}
 		return [
 			{
 				participant,
-				embodiment: resolveEmbodiment(participant, disposition.embodimentId),
+				embodiment: resolveEmbodiment(scope, disposition.embodimentId),
 				emphasis: disposition.emphasis,
 				embodimentId: disposition.embodimentId,
 				morphId: disposition.morphTargetId ?? morphId(participant.id),
 				position: disposition.position,
 				style: disposition.style,
-				split: disposition.split,
 			},
 		];
 	});
@@ -1017,11 +993,10 @@ export function formatPresentationUrlHash(
 
 //#region 🔖SlideFile
 /** @emoji 📄 One slide module under `slide/<chapter>/<sequence>/<thought>/<slide>.ts`. */
-export interface SlideFile {
+export interface SlideFile extends ArtifactScope {
 	readonly order: number;
 	readonly arrangement: Arrangement;
 	readonly transition?: Transition;
-	readonly participants?: readonly Participant[];
 }
 
 /** @emoji 📁 Parsed path segments for a slide module file. */
@@ -1114,38 +1089,33 @@ export function parsePresentationThoughtFilePath(path: string): ParsedThoughtFil
 	};
 }
 
-function mergeSlideFileParticipants(modules: readonly SlideFile[]): Participant[] {
-	const byId = new Map<string, Participant>();
+function mergeArtifactScopeFromSlideFiles(modules: readonly SlideFile[]): ArtifactScope {
+	const participants = new Map<string, Participant>();
+	const embodiments = new Map<string, Embodiment>();
 	for (const module of modules) {
 		for (const participant of module.participants ?? []) {
-			const existing = byId.get(participant.id);
-			if (!existing) {
-				byId.set(participant.id, participant);
-				continue;
-			}
-			const embodimentKeys = new Set(existing.embodiments.map((embodiment) => embodiment.id ?? embodiment.kind));
-			const embodiments = [...existing.embodiments];
-			for (const embodiment of participant.embodiments) {
-				const key = embodiment.id ?? embodiment.kind;
-				if (!embodimentKeys.has(key)) {
-					embodiments.push(embodiment);
-					embodimentKeys.add(key);
-				}
-			}
-			byId.set(participant.id, { id: participant.id, embodiments });
+			participants.set(participant.id, participant);
+		}
+		for (const embodiment of module.embodiments ?? []) {
+			embodiments.set(embodiment.id, embodiment);
 		}
 	}
-	return [...byId.values()];
+	return {
+		participants: [...participants.values()],
+		embodiments: [...embodiments.values()],
+	};
 }
 
 /** @emoji 🧩 Assembles one thought from slide modules sharing the same folder path. */
 export function assembleThoughtFromSlideFiles(thoughtName: string, modules: readonly SlideFileModule[]): Thought {
 	const sorted = [...modules].sort((left, right) => left.file.order - right.file.order);
 	const slideFiles = sorted.map((module) => module.file);
+	const scope = mergeArtifactScopeFromSlideFiles(slideFiles);
 	return {
 		id: presentationNameToId(thoughtName),
 		name: thoughtName,
-		participants: mergeSlideFileParticipants(slideFiles),
+		participants: scope.participants,
+		embodiments: scope.embodiments,
 		slides: sorted.map((module) => ({
 			arrangement: {
 				...module.file.arrangement,
@@ -1277,18 +1247,19 @@ const INTRO_PARTICIPANT_GOAL = "goal";
 const INTRO_PARTICIPANT_AUTHORS = "authors";
 const INTRO_PARTICIPANT_INSTITUTIONS = "institutions";
 
-const INTRO_EMBODIMENT_TITLE_FULL = "full";
-const INTRO_EMBODIMENT_TITLE_SHORT = "short";
-const INTRO_EMBODIMENT_DESCRIPTION_FULL = "full";
-const INTRO_EMBODIMENT_DESCRIPTION_SHORT = "short";
-const INTRO_EMBODIMENT_AUTHORS_PLAIN = "plain";
-const INTRO_EMBODIMENT_AUTHORS_MARKED = "marked";
-const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1 = "marked-affiliations-step1";
-const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2 = "marked-affiliations-step2";
-const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3 = "marked-affiliations-step3";
-const INTRO_EMBODIMENT_INSTITUTIONS_STEP1 = "step1";
-const INTRO_EMBODIMENT_INSTITUTIONS_STEP2 = "step2";
-const INTRO_EMBODIMENT_INSTITUTIONS_STEP3 = "step3";
+const INTRO_EMBODIMENT_TITLE_FULL = "title--full";
+const INTRO_EMBODIMENT_TITLE_SHORT = "title--short";
+const INTRO_EMBODIMENT_DESCRIPTION_FULL = "description--full";
+const INTRO_EMBODIMENT_DESCRIPTION_SHORT = "description--short";
+const INTRO_EMBODIMENT_GOAL = "goal--main";
+const INTRO_EMBODIMENT_AUTHORS_PLAIN = "authors--plain";
+const INTRO_EMBODIMENT_AUTHORS_MARKED = "authors--marked";
+const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1 = "authors--marked-affiliations-step1";
+const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2 = "authors--marked-affiliations-step2";
+const INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3 = "authors--marked-affiliations-step3";
+const INTRO_EMBODIMENT_INSTITUTIONS_STEP1 = "institutions--step1";
+const INTRO_EMBODIMENT_INSTITUTIONS_STEP2 = "institutions--step2";
+const INTRO_EMBODIMENT_INSTITUTIONS_STEP3 = "institutions--step3";
 
 const INTRO_CHAPTER_BOOKMARK: Record<PresentationLanguageKind, string> = {
 	en: "Main",
@@ -1337,121 +1308,104 @@ function introArrangementBookmarkName(
 	return INTRO_ARRANGEMENT_BOOKMARK[introBookmarkLanguage(language)][arrangementId] ?? arrangementId;
 }
 
-function introParticipants(spec: IntroSpec): Participant[] {
+function introParticipants(): Participant[] {
+	return [
+		{ id: INTRO_PARTICIPANT_TITLE },
+		{ id: INTRO_PARTICIPANT_DESCRIPTION },
+		{ id: INTRO_PARTICIPANT_GOAL },
+		{ id: INTRO_PARTICIPANT_AUTHORS },
+		{ id: INTRO_PARTICIPANT_INSTITUTIONS },
+	];
+}
+
+function introEmbodiments(spec: IntroSpec): Embodiment[] {
 	return [
 		{
-			id: INTRO_PARTICIPANT_TITLE,
-			embodiments: [
-				{
-					kind: "text",
-					id: INTRO_EMBODIMENT_TITLE_FULL,
-					lines: spec.title.full,
-					level: "heading",
-					morphRoot: "heading-block",
-				},
-				{
-					kind: "text",
-					id: INTRO_EMBODIMENT_TITLE_SHORT,
-					lines: [spec.title.short],
-					level: "heading",
-					morphRoot: "heading-block",
-				},
-			],
+			kind: "text",
+			id: INTRO_EMBODIMENT_TITLE_FULL,
+			lines: spec.title.full,
+			level: "heading",
+			morphRoot: "heading-block",
 		},
 		{
-			id: INTRO_PARTICIPANT_DESCRIPTION,
-			embodiments: [
-				{
-					kind: "text",
-					id: INTRO_EMBODIMENT_DESCRIPTION_FULL,
-					lines: spec.description.full,
-					level: "heading",
-					morphRoot: "heading-block",
-				},
-				{
-					kind: "text",
-					id: INTRO_EMBODIMENT_DESCRIPTION_SHORT,
-					lines: [spec.description.short],
-					level: "heading",
-					morphRoot: "heading-block",
-				},
-			],
+			kind: "text",
+			id: INTRO_EMBODIMENT_TITLE_SHORT,
+			lines: [spec.title.short],
+			level: "heading",
+			morphRoot: "heading-block",
 		},
 		{
-			id: INTRO_PARTICIPANT_GOAL,
-			embodiments: [
-				{
-					kind: "text",
-					lines: spec.goal,
-					level: "heading",
-					morphRoot: "heading-block",
-				},
-			],
+			kind: "text",
+			id: INTRO_EMBODIMENT_DESCRIPTION_FULL,
+			lines: spec.description.full,
+			level: "heading",
+			morphRoot: "heading-block",
 		},
 		{
-			id: INTRO_PARTICIPANT_AUTHORS,
-			embodiments: [
-				{
-					kind: "authors",
-					id: INTRO_EMBODIMENT_AUTHORS_PLAIN,
-					lines: spec.authors.lines.map((line) => line.map((author) => ({ name: author.name }))),
-				},
-				{
-					kind: "authors",
-					id: INTRO_EMBODIMENT_AUTHORS_MARKED,
-					lines: spec.authors.lines,
-				},
-				{
-					kind: "authors",
-					id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1,
-					lines: authorLinesForAffiliationStep(spec.authors.lines, spec.affiliations.steps[0], []),
-					abbreviateFirstName: true,
-				},
-				{
-					kind: "authors",
-					id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2,
-					lines: authorLinesForAffiliationStep(
-						spec.authors.lines,
-						spec.affiliations.steps[1],
-						spec.affiliations.steps[0],
-					),
-					abbreviateFirstName: true,
-				},
-				{
-					kind: "authors",
-					id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3,
-					lines: authorLinesForAffiliationStep(
-						spec.authors.lines,
-						spec.affiliations.steps[2],
-						spec.affiliations.steps[1],
-					),
-					abbreviateFirstName: true,
-				},
-			],
+			kind: "text",
+			id: INTRO_EMBODIMENT_DESCRIPTION_SHORT,
+			lines: [spec.description.short],
+			level: "heading",
+			morphRoot: "heading-block",
 		},
 		{
-			id: INTRO_PARTICIPANT_INSTITUTIONS,
-			embodiments: [
-				{
-					kind: "affiliations",
-					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP1,
-					entries: spec.affiliations.steps[0],
-				},
-				{
-					kind: "affiliations",
-					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP2,
-					entries: highlightAffiliationDelta(spec.affiliations.steps[1], spec.affiliations.steps[0]),
-				},
-				{
-					kind: "affiliations",
-					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP3,
-					entries: highlightAffiliationDelta(spec.affiliations.steps[2], spec.affiliations.steps[1]),
-					morphLineLabels: affiliationEmbodimentMorphLabels(
-						spec.affiliations.steps[1],
-						spec.affiliations.steps[2],
-					),
-				},
-			],
+			kind: "text",
+			id: INTRO_EMBODIMENT_GOAL,
+			lines: spec.goal,
+			level: "heading",
+			morphRoot: "heading-block",
+		},
+		{
+			kind: "authors",
+			id: INTRO_EMBODIMENT_AUTHORS_PLAIN,
+			lines: spec.authors.lines.map((line) => line.map((author) => ({ name: author.name }))),
+		},
+		{
+			kind: "authors",
+			id: INTRO_EMBODIMENT_AUTHORS_MARKED,
+			lines: spec.authors.lines,
+		},
+		{
+			kind: "authors",
+			id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1,
+			lines: authorLinesForAffiliationStep(spec.authors.lines, spec.affiliations.steps[0], []),
+			abbreviateFirstName: true,
+		},
+		{
+			kind: "authors",
+			id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2,
+			lines: authorLinesForAffiliationStep(
+				spec.authors.lines,
+				spec.affiliations.steps[1],
+				spec.affiliations.steps[0],
+			),
+			abbreviateFirstName: true,
+		},
+		{
+			kind: "authors",
+			id: INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3,
+			lines: authorLinesForAffiliationStep(
+				spec.authors.lines,
+				spec.affiliations.steps[2],
+				spec.affiliations.steps[1],
+			),
+			abbreviateFirstName: true,
+		},
+		{
+			kind: "affiliations",
+			id: INTRO_EMBODIMENT_INSTITUTIONS_STEP1,
+			entries: spec.affiliations.steps[0],
+		},
+		{
+			kind: "affiliations",
+			id: INTRO_EMBODIMENT_INSTITUTIONS_STEP2,
+			entries: highlightAffiliationDelta(spec.affiliations.steps[1], spec.affiliations.steps[0]),
+		},
+		{
+			kind: "affiliations",
+			id: INTRO_EMBODIMENT_INSTITUTIONS_STEP3,
+			entries: highlightAffiliationDelta(spec.affiliations.steps[2], spec.affiliations.steps[1]),
+			morphLineLabels: affiliationEmbodimentMorphLabels(spec.affiliations.steps[1], spec.affiliations.steps[2]),
 		},
 	];
 }
@@ -1459,21 +1413,22 @@ function introParticipants(spec: IntroSpec): Participant[] {
 /** @emoji 🎬 Slide modules for the standard intro thought (`slide/<chapter>/<sequence>/<thought>/<slide>.ts`). */
 export function introSlideFiles(spec: IntroSpec): readonly SlideFile[] {
 	const language = introBookmarkLanguage(spec.language);
-	const participants = introParticipants(spec);
-	const muted = (participantId: string, embodimentId?: string): Disposition => ({
+	const participants = introParticipants();
+	const embodiments = introEmbodiments(spec);
+	const muted = (participantId: string, embodimentId: string): Disposition => ({
 		participantId,
-		...(embodimentId ? { embodimentId } : {}),
+		embodimentId,
 		emphasis: "muted",
 	});
-	const active = (participantId: string, embodimentId?: string): Disposition => ({
+	const active = (participantId: string, embodimentId: string): Disposition => ({
 		participantId,
-		...(embodimentId ? { embodimentId } : {}),
+		embodimentId,
 		emphasis: "active",
 	});
 	const introMutedAboveAuthors = [
 		muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
 		muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
-		muted(INTRO_PARTICIPANT_GOAL),
+		muted(INTRO_PARTICIPANT_GOAL, INTRO_EMBODIMENT_GOAL),
 	];
 	const introArrangement = (
 		arrangementId: string,
@@ -1487,6 +1442,7 @@ export function introSlideFiles(spec: IntroSpec): readonly SlideFile[] {
 		{
 			order: 0,
 			participants,
+			embodiments,
 			arrangement: introArrangement("title", [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)]),
 			transition: { kind: "morph" },
 		},
@@ -1503,7 +1459,7 @@ export function introSlideFiles(spec: IntroSpec): readonly SlideFile[] {
 			arrangement: introArrangement("goal", [
 				muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
 				muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
-				active(INTRO_PARTICIPANT_GOAL),
+				active(INTRO_PARTICIPANT_GOAL, INTRO_EMBODIMENT_GOAL),
 			]),
 			transition: { kind: "morph" },
 		},
@@ -1597,10 +1553,10 @@ export function intro(spec: IntroSpec): Presentation {
 //#region 🔖Analogy
 const ANALOGY_PARTICIPANT_LABEL = "label";
 const ANALOGY_PARTICIPANT_VISUAL = "visual";
-const ANALOGY_EMBODIMENT_LABEL_SOURCE = "source";
-const ANALOGY_EMBODIMENT_LABEL_TARGET = "target";
-const ANALOGY_EMBODIMENT_VISUAL_SOURCE = "source";
-const ANALOGY_EMBODIMENT_VISUAL_TARGET = "target";
+const ANALOGY_EMBODIMENT_LABEL_SOURCE = "label--source";
+const ANALOGY_EMBODIMENT_LABEL_TARGET = "label--target";
+const ANALOGY_EMBODIMENT_VISUAL_SOURCE = "visual--source";
+const ANALOGY_EMBODIMENT_VISUAL_TARGET = "visual--target";
 
 /** @emoji 🔀 Spec for a two-slide analogy (source concept morphs into target via shared participant ids). */
 export interface AnalogySpec {
@@ -1618,29 +1574,25 @@ export interface AnalogySpec {
 
 /** @emoji 🔀 Builds a morph thought: source arrangement then mapping arrangement (reveal.js auto-animate). */
 export function analogy(spec: AnalogySpec): Presentation {
-	const labelParticipant: Participant = {
-		id: ANALOGY_PARTICIPANT_LABEL,
-		embodiments: [
-			{
-				kind: "text",
-				id: ANALOGY_EMBODIMENT_LABEL_SOURCE,
-				lines: [spec.source.label],
-				level: "heading",
-				morphRoot: "heading-line",
-			},
-			{
-				kind: "text",
-				id: ANALOGY_EMBODIMENT_LABEL_TARGET,
-				lines: [spec.target.label],
-				level: "heading",
-				morphRoot: "heading-line",
-			},
-		],
-	};
-
-	const visualEmbodiments: Embodiment[] = [];
+	const participants: Participant[] = [{ id: ANALOGY_PARTICIPANT_LABEL }];
+	const embodiments: Embodiment[] = [
+		{
+			kind: "text",
+			id: ANALOGY_EMBODIMENT_LABEL_SOURCE,
+			lines: [spec.source.label],
+			level: "heading",
+			morphRoot: "heading-line",
+		},
+		{
+			kind: "text",
+			id: ANALOGY_EMBODIMENT_LABEL_TARGET,
+			lines: [spec.target.label],
+			level: "heading",
+			morphRoot: "heading-line",
+		},
+	];
 	if (spec.source.figure) {
-		visualEmbodiments.push({
+		embodiments.push({
 			kind: "figure",
 			id: ANALOGY_EMBODIMENT_VISUAL_SOURCE,
 			src: spec.source.figure,
@@ -1648,17 +1600,15 @@ export function analogy(spec: AnalogySpec): Presentation {
 		});
 	}
 	if (spec.target.figure) {
-		visualEmbodiments.push({
+		embodiments.push({
 			kind: "figure",
 			id: ANALOGY_EMBODIMENT_VISUAL_TARGET,
 			src: spec.target.figure,
 			alt: spec.target.label,
 		});
 	}
-
-	const participants: Participant[] = [labelParticipant];
-	if (visualEmbodiments.length > 0) {
-		participants.push({ id: ANALOGY_PARTICIPANT_VISUAL, embodiments: visualEmbodiments });
+	if (spec.source.figure || spec.target.figure) {
+		participants.push({ id: ANALOGY_PARTICIPANT_VISUAL });
 	}
 
 	const sourceDispositions: Disposition[] = [
@@ -1695,6 +1645,7 @@ export function analogy(spec: AnalogySpec): Presentation {
 	const thought: Thought = {
 		id: "analogy",
 		participants,
+		embodiments,
 		slides: [
 			{ arrangement: { id: "source", dispositions: sourceDispositions }, transition: { kind: "morph" } },
 			{ arrangement: { id: "mapping", dispositions: mappingDispositions } },
@@ -1717,6 +1668,10 @@ export function analogy(spec: AnalogySpec): Presentation {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	function thoughtScope(thought: Thought): ResolutionScope {
+		return buildResolutionScope([thought]);
+	}
 
 	const sampleIntro = intro({
 		title: {
@@ -1763,14 +1718,23 @@ if (import.meta.vitest) {
 					"./slide/Hauptteil/Einführung/Einleitung/Titel.ts": {
 						default: {
 							order: 0,
-							participants: [{ id: "title", embodiments: [{ kind: "text", lines: ["A"], level: "title" }] }],
-							arrangement: { id: "title", name: "Titel", dispositions: [{ participantId: "title", emphasis: "active" }] },
+							participants: [{ id: "title" }],
+							embodiments: [{ kind: "text", id: "title--main", lines: ["A"], level: "title" }],
+							arrangement: {
+								id: "title",
+								name: "Titel",
+								dispositions: [{ participantId: "title", embodimentId: "title--main", emphasis: "active" }],
+							},
 						},
 					},
 					"./slide/Hauptteil/Einführung/Einleitung/Ziel.ts": {
 						default: {
 							order: 1,
-							arrangement: { id: "goal", name: "Ziel", dispositions: [{ participantId: "title", emphasis: "active" }] },
+							arrangement: {
+								id: "goal",
+								name: "Ziel",
+								dispositions: [{ participantId: "title", embodimentId: "title--main", emphasis: "active" }],
+							},
 						},
 					},
 					"./slide/Hauptteil/Einführung/Medien/Bauteilkatalog.ts": {
@@ -1779,7 +1743,7 @@ if (import.meta.vitest) {
 							arrangement: {
 								id: "catalogue",
 								name: "Bauteilkatalog",
-								dispositions: [{ participantId: "catalogue", emphasis: "active" }],
+								dispositions: [{ participantId: "catalogue", embodimentId: "catalogue--figure", emphasis: "active" }],
 							},
 						},
 					},
@@ -1894,9 +1858,7 @@ if (import.meta.vitest) {
 
 		it("uses fixed-size heading blocks without fit-text", () => {
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
-			const textEmbodiments = thought.participants.flatMap((p) =>
-				p.embodiments.filter((e): e is TextEmbodiment => e.kind === "text"),
-			);
+			const textEmbodiments = (thought.embodiments ?? []).filter((e): e is TextEmbodiment => e.kind === "text");
 			expect(textEmbodiments.every((e) => e.fit !== true)).toBe(true);
 			expect(textEmbodiments.every((e) => resolveTextMorphRoot(e) === "heading-block")).toBe(true);
 		});
@@ -1930,7 +1892,7 @@ if (import.meta.vitest) {
 			});
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const affiliations3 = thought.slides.find((slide) => slide.arrangement.id === "affiliations-3")!.arrangement;
-			const step3 = resolveArrangement(thought.participants, affiliations3).find(
+			const step3 = resolveArrangement(thoughtScope(thought), affiliations3).find(
 				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
 			)!;
 			if (step3.embodiment.kind === "affiliations") {
@@ -1946,7 +1908,7 @@ if (import.meta.vitest) {
 			expect(abbreviateAuthorFirstName("Christoph Gengnagel")).toBe("C. Gengnagel");
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const affiliations1 = thought.slides.find((slide) => slide.arrangement.id === "affiliations-1")!.arrangement;
-			const authors = resolveArrangement(thought.participants, affiliations1).find(
+			const authors = resolveArrangement(thoughtScope(thought), affiliations1).find(
 				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_AUTHORS,
 			)!;
 			if (authors.embodiment.kind === "authors") {
@@ -1981,7 +1943,7 @@ if (import.meta.vitest) {
 		it("highlights only new affiliation marks per slide", () => {
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const affiliations2 = thought.slides.find((slide) => slide.arrangement.id === "affiliations-2")!.arrangement;
-			const step2 = resolveArrangement(thought.participants, affiliations2).find(
+			const step2 = resolveArrangement(thoughtScope(thought), affiliations2).find(
 				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
 			)!;
 			if (step2.embodiment.kind === "affiliations") {
@@ -1989,7 +1951,7 @@ if (import.meta.vitest) {
 				expect(step2.embodiment.entries.find((e) => e.mark === "a")?.lineEmphasis).toBe("muted");
 			}
 			const affiliations3 = thought.slides.find((slide) => slide.arrangement.id === "affiliations-3")!.arrangement;
-			const step3 = resolveArrangement(thought.participants, affiliations3).find(
+			const step3 = resolveArrangement(thoughtScope(thought), affiliations3).find(
 				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
 			)!;
 			if (step3.embodiment.kind === "affiliations") {
@@ -2042,12 +2004,24 @@ if (import.meta.vitest) {
 	});
 
 	describe("resolveEmbodiment", () => {
-		it("throws when embodiment id is missing", () => {
-			const participant: Participant = {
-				id: "x",
-				embodiments: [{ kind: "text", lines: ["a"], level: "body" }],
-			};
-			expect(() => resolveEmbodiment(participant, "missing")).toThrow(/no embodiment/);
+		it("throws when embodiment id is missing from scope", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "x" }],
+					embodiments: [{ kind: "text", id: "x--body", lines: ["a"], level: "body" }],
+				},
+			]);
+			expect(() => resolveEmbodiment(scope, "missing")).toThrow(/Unknown embodiment/);
+		});
+	});
+
+	describe("buildResolutionScope", () => {
+		it("lets inner scopes override embodiment ids", () => {
+			const scope = buildResolutionScope([
+				{ embodiments: [{ kind: "text", id: "a", lines: ["outer"], level: "body" }] },
+				{ embodiments: [{ kind: "text", id: "a", lines: ["inner"], level: "body" }] },
+			]);
+			expect((resolveEmbodiment(scope, "a") as TextEmbodiment).lines[0]).toBe("inner");
 		});
 	});
 
@@ -2057,9 +2031,19 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("tileMorphId", () => {
-		it("scopes tile keys under the participant id", () => {
-			expect(tileMorphId("catalogue", "tile-r0-c0")).toBe("catalogue--tile--tile-r0-c0");
+	describe("split", () => {
+		it("produces one participant, embodiment, and disposition per grid cell", () => {
+			const artifacts = split({
+				source: "/catalogue.png",
+				rows: 2,
+				columns: 2,
+				frame: { x: 0, y: 0, width: 1, height: 1 },
+			});
+			expect(artifacts.participants).toHaveLength(4);
+			expect(artifacts.embodiments).toHaveLength(4);
+			expect(artifacts.dispositions).toHaveLength(4);
+			expect(artifacts.dispositions[0]?.participantId).toBe("tile-r0-c0");
+			expect(artifacts.dispositions[0]?.embodimentId).toBe("tile-r0-c0-figure");
 		});
 	});
 
@@ -2067,14 +2051,10 @@ if (import.meta.vitest) {
 		it("assigns one auto-animate id per morph run", () => {
 			const thought: Thought = {
 				id: "morph",
-				participants: [
-					{
-						id: "label",
-						embodiments: [
-							{ kind: "text", id: "source", lines: ["Reuse"], level: "heading" },
-							{ kind: "text", id: "target", lines: ["Remanufacture"], level: "heading" },
-						],
-					},
+				participants: [{ id: "label" }],
+				embodiments: [
+					{ kind: "text", id: "source", lines: ["Reuse"], level: "heading" },
+					{ kind: "text", id: "target", lines: ["Remanufacture"], level: "heading" },
 				],
 				slides: [
 					{
@@ -2100,18 +2080,11 @@ if (import.meta.vitest) {
 		it("expands morphFrom ghosts with line targets on morph target slides", () => {
 			const thought: Thought = {
 				id: "merge",
-				participants: [
-					{
-						id: "col1",
-						embodiments: [
-							{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
-							{ kind: "text", id: "label", lines: ["A"], level: "heading" },
-						],
-					},
-					{
-						id: "labels",
-						embodiments: [{ kind: "text", id: "stack", lines: ["A"], level: "heading", morphRoot: "heading-block" }],
-					},
+				participants: [{ id: "col1" }, { id: "labels" }],
+				embodiments: [
+					{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					{ kind: "text", id: "label", lines: ["A"], level: "heading" },
+					{ kind: "text", id: "stack", lines: ["A"], level: "heading", morphRoot: "heading-block" },
 				],
 				slides: [
 					{
@@ -2161,14 +2134,10 @@ if (import.meta.vitest) {
 		it("preserves declarative settleBeforeMorphTo on arrangements", () => {
 			const thought: Thought = {
 				id: "media",
-				participants: [
-					{
-						id: "col1",
-						embodiments: [
-							{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
-							{ kind: "text", id: "label", lines: ["A"], level: "heading" },
-						],
-					},
+				participants: [{ id: "col1" }],
+				embodiments: [
+					{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					{ kind: "text", id: "label", lines: ["A"], level: "heading" },
 				],
 				slides: [
 					{
@@ -2209,12 +2178,8 @@ if (import.meta.vitest) {
 		it("keeps consecutive morph slides without extra render slides", () => {
 			const thought: Thought = {
 				id: "move",
-				participants: [
-					{
-						id: "box",
-						embodiments: [{ kind: "text", lines: ["A"], level: "body" }],
-					},
-				],
+				participants: [{ id: "box" }],
+				embodiments: [{ kind: "text", id: "box--main", lines: ["A"], level: "body" }],
 				slides: [
 					{
 						arrangement: {
@@ -2222,6 +2187,7 @@ if (import.meta.vitest) {
 							dispositions: [
 								{
 									participantId: "box",
+									embodimentId: "box--main",
 									emphasis: "active",
 									position: { x: 0.1, y: 0.2, width: 0.3, height: 0.2 },
 								},
@@ -2235,6 +2201,7 @@ if (import.meta.vitest) {
 							dispositions: [
 								{
 									participantId: "box",
+									embodimentId: "box--main",
 									emphasis: "active",
 									position: { x: 0.6, y: 0.2, width: 0.3, height: 0.2 },
 								},
@@ -2249,23 +2216,28 @@ if (import.meta.vitest) {
 		it("starts a new morph run after a fade transition", () => {
 			const thought: Thought = {
 				id: "fade",
-				participants: [
-					{
-						id: "box",
-						embodiments: [{ kind: "text", lines: ["A"], level: "body" }],
-					},
-				],
+				participants: [{ id: "box" }],
+				embodiments: [{ kind: "text", id: "box--main", lines: ["A"], level: "body" }],
 				slides: [
 					{
-						arrangement: { id: "a", dispositions: [{ participantId: "box", emphasis: "active" }] },
+						arrangement: {
+							id: "a",
+							dispositions: [{ participantId: "box", embodimentId: "box--main", emphasis: "active" }],
+						},
 						transition: { kind: "morph" },
 					},
 					{
-						arrangement: { id: "b", dispositions: [{ participantId: "box", emphasis: "active" }] },
+						arrangement: {
+							id: "b",
+							dispositions: [{ participantId: "box", embodimentId: "box--main", emphasis: "active" }],
+						},
 						transition: { kind: "fade" },
 					},
 					{
-						arrangement: { id: "c", dispositions: [{ participantId: "box", emphasis: "active" }] },
+						arrangement: {
+							id: "c",
+							dispositions: [{ participantId: "box", embodimentId: "box--main", emphasis: "active" }],
+						},
 					},
 				],
 			};
@@ -2278,21 +2250,19 @@ if (import.meta.vitest) {
 		it("starts a new morph run when consecutive slides share no participants", () => {
 			const thought: Thought = {
 				id: "media",
-				participants: [
-					{ id: "catalogue", embodiments: [{ kind: "figure", src: "/a.png" }] },
-					{
-						id: "col1",
-						embodiments: [
-							{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
-							{ kind: "text", id: "label", lines: ["A"], level: "heading" },
-						],
-					},
+				participants: [{ id: "catalogue" }, { id: "col1" }],
+				embodiments: [
+					{ kind: "figure", id: "catalogue--figure", src: "/a.png" },
+					{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					{ kind: "text", id: "label", lines: ["A"], level: "heading" },
 				],
 				slides: [
 					{
 						arrangement: {
 							id: "catalogue",
-							dispositions: [{ participantId: "catalogue", emphasis: "active" }],
+							dispositions: [
+								{ participantId: "catalogue", embodimentId: "catalogue--figure", emphasis: "active" },
+							],
 						},
 						transition: { kind: "morph" },
 					},
@@ -2337,8 +2307,9 @@ if (import.meta.vitest) {
 		it("offsets placements so their bounding box is centered in the unit slide", () => {
 			const resolved: ResolvedDisposition[] = [
 				{
-					participant: { id: "a", embodiments: [{ kind: "figure", src: "/a.png" }] },
-					embodiment: { kind: "figure", src: "/a.png" },
+					participant: { id: "a" },
+					embodiment: { kind: "figure", id: "a--figure", src: "/a.png" },
+					embodimentId: "a--figure",
 					emphasis: "active",
 					morphId: "a",
 					position: { x: 0.2, y: 0.1, width: 0.3, height: 0.5 },
@@ -2384,62 +2355,11 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("splitTilesPackedFrame", () => {
-		const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
-
-		it("returns the bounding frame for gap-zero grids", () => {
-			const tiles = splitFigureGrid({ rows: 3, columns: 5, frame });
-			const packed = splitTilesPackedFrame(tiles);
-			expect(packed?.x).toBe(frame.x);
-			expect(packed?.y).toBe(frame.y);
-			expect(packed?.width).toBe(frame.width);
-			expect(packed?.height).toBeCloseTo(frame.height, 5);
-		});
-
-		it("returns null when tiles leave gaps inside the bounding box", () => {
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
-			expect(splitTilesPackedFrame(tiles)).toBeNull();
-		});
-
-		it("returns null when tiles leave holes inside the bounding box", () => {
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
-			expect(splitTilesPackedFrame([tiles[0]!, tiles[3]!])).toBeNull();
-		});
-
-		it("returns null for a single tile (per-tile interactive placements must crop, not full figure)", () => {
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
-			expect(splitTilesPackedFrame([tiles[0]!])).toBeNull();
-		});
-	});
-
-	describe("splitTilesInGroupFrame", () => {
-		it("expresses tile positions relative to a group bounding frame", () => {
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 } });
-			const group = splitTilesBoundingFrame(tiles);
-			expect(group).not.toBeNull();
-			const relative = splitTilesInGroupFrame(tiles, group!);
-			expect(relative[0]?.position.x).toBeCloseTo(0);
-			expect(relative[0]?.position.y).toBeCloseTo(0);
-			expect(relative[0]?.position.width).toBeGreaterThan(0);
-			expect(relative[0]?.position.width).toBeLessThanOrEqual(1);
-		});
-	});
-
-	describe("resolveArrangement split", () => {
-		it("passes split through on resolved dispositions", () => {
-			const split = { tiles: splitFigureGrid({ rows: 1, columns: 1, frame: { x: 0, y: 0, width: 1, height: 1 } }) };
-			const participants: Participant[] = [
-				{
-					id: "fig",
-					embodiments: [{ kind: "figure", src: "/a.png" }],
-				},
-			];
-			const arrangement: Arrangement = {
-				id: "slide",
-				dispositions: [{ participantId: "fig", emphasis: "active", split }],
-			};
-			const resolved = resolveArrangement(participants, arrangement);
-			expect(resolved[0]?.split?.tiles).toHaveLength(1);
+	describe("unionSourceCrops", () => {
+		it("unions normalized crops from grid cells", () => {
+			const cells = splitFigureGrid({ rows: 2, columns: 2, frame: { x: 0, y: 0, width: 1, height: 1 } });
+			const union = unionSourceCrops(cells.map((cell) => cell.crop));
+			expect(union).toEqual({ x: 0, y: 0, width: 1, height: 1 });
 		});
 	});
 
@@ -2468,7 +2388,7 @@ if (import.meta.vitest) {
 		it("resolves morphId per disposition", () => {
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const goal = thought.slides.find((slide) => slide.arrangement.id === "goal")!.arrangement;
-			const resolved = resolveArrangement(thought.participants, goal);
+			const resolved = resolveArrangement(thoughtScope(thought), goal);
 			expect(resolved.map((resolvedDisposition) => resolvedDisposition.morphId)).toEqual([
 				"title",
 				"description",
@@ -2602,7 +2522,7 @@ if (import.meta.vitest) {
 		it("resolves positioned visual dispositions", () => {
 			const thought = sampleAnalogy.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const mapping = thought.slides.find((slide) => slide.arrangement.id === "mapping")!.arrangement;
-			const resolved = resolveArrangement(thought.participants, mapping);
+			const resolved = resolveArrangement(thoughtScope(thought), mapping);
 			const visual = resolved.find((resolvedDisposition) => resolvedDisposition.participant.id === ANALOGY_PARTICIPANT_VISUAL);
 			expect(visual?.position).toEqual({ x: 0.1, y: 0.35, width: 0.8, height: 0.5 });
 			expect(visual?.embodiment.kind).toBe("figure");
@@ -2611,24 +2531,28 @@ if (import.meta.vitest) {
 
 	describe("video and pdf embodiments", () => {
 		it("resolves video and pdf kinds", () => {
-			const participants: Participant[] = [
+			const scope = buildResolutionScope([
 				{
-					id: "clip",
-					embodiments: [{ kind: "video", src: "/demo.mp4", muted: true }],
+					participants: [{ id: "clip" }, { id: "doc" }],
+					embodiments: [
+						{ kind: "video", id: "clip--video", src: "/demo.mp4", muted: true },
+						{ kind: "pdf", id: "doc--pdf", src: "/paper.pdf", page: 2 },
+					],
 				},
-				{
-					id: "doc",
-					embodiments: [{ kind: "pdf", src: "/paper.pdf", page: 2 }],
-				},
-			];
+			]);
 			const arrangement: Arrangement = {
 				id: "slide",
 				dispositions: [
-					{ participantId: "clip", emphasis: "active" },
-					{ participantId: "doc", emphasis: "active", position: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 } },
+					{ participantId: "clip", embodimentId: "clip--video", emphasis: "active" },
+					{
+						participantId: "doc",
+						embodimentId: "doc--pdf",
+						emphasis: "active",
+						position: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 },
+					},
 				],
 			};
-			const resolved = resolveArrangement(participants, arrangement);
+			const resolved = resolveArrangement(scope, arrangement);
 			expect(resolved[0]?.embodiment.kind).toBe("video");
 			expect(resolved[1]?.embodiment.kind).toBe("pdf");
 			if (resolved[1]?.embodiment.kind === "pdf") {

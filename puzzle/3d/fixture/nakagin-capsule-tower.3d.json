@@ -2259,19 +2259,19 @@
         "bidirectional": true,
         "specificity": "vortex",
         "source": "door capsule east",
-        "target": "door tambour west"
-      },
-      {
-        "bidirectional": true,
-        "specificity": "vortex",
-        "source": "door capsule west",
         "target": "door tambour east"
       },
       {
         "bidirectional": true,
         "specificity": "vortex",
+        "source": "door capsule west",
+        "target": "door tambour west"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
         "source": "door tambour east",
-        "target": "door capsule west"
+        "target": "door capsule east"
       },
       {
         "bidirectional": true,
@@ -2283,7 +2283,7 @@
         "bidirectional": true,
         "specificity": "vortex",
         "source": "door tambour west",
-        "target": "door capsule east"
+        "target": "door capsule west"
       },
       {
         "bidirectional": true,
