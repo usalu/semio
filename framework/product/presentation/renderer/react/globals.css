@@ -137,6 +137,11 @@
 	display: block;
 	overflow: hidden;
 	background-repeat: no-repeat;
+	z-index: 1;
+}
+
+.reveal .presentation-split-column-morph-anchor {
+	z-index: 0;
 }
 
 .reveal .presentation-disposition-frame--overlay {

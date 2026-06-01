@@ -44,7 +44,7 @@ A figure disposition may declare a `split` of crop tiles (`SplitTile`), each wit
 
 # Split
 
-A split divides one figure into many independently placed tiles for reveal.js auto-animate (see `splitFigureGrid` in core). Set `concealed: true` on the split and add a whole-figure disposition on the same arrangement so tiles stay at full opacity (position-only morph) while the figure hides the grid.
+A split divides one figure into many independently placed tiles for reveal.js auto-animate (see `splitFigureGrid` in core). Set `concealed: true` on the split and add a whole-figure disposition on the same arrangement so tiles stay at full opacity (position-only morph) while the figure hides the grid. Group tiles with `split.columns` and morph them into labels via `morphTargets` on the next arrangement (`columnMorphId`, `splitColumnBounds`).
 
 # Arrangement
 

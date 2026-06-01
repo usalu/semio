@@ -1,11 +1,12 @@
 {
   "title": "Figure Split Tiles",
   "emoji": "🧩",
-  "status": "closed",
+  "status": "open",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
   "summary": "Added general figure split mechanism to presentation framework: Disposition.split with SplitTile crops, tileMorphId, splitFigureGrid helper, React FigureTileView with background-image crops and reveal auto-animate data-ids. Projektetage media thought now has catalogue → catalogue-tiles (3×5 assembled) → catalogue-split (spread/scaled) → catalogue-focus (center row only) → media-suite. Core 19 tests, renderer 11 tests, deck build pass; runtime verified catalogue-tiles slide in dev server.",
   "goal": "🎯framework",
   "sessions": [
-    "⚪b9f5d20ffbf54da39143e48f69536ff4"
+    "⚪b9f5d20ffbf54da39143e48f69536ff4",
+    "⚪319cd4206a644386941e55520c9e0dd7"
   ]
 }

@@ -44,6 +44,8 @@ import type {
 	PdfEmbodiment,
 	Presentation,
 	ResolvedDisposition,
+	SplitColumnGroup,
+	SplitMorphTarget,
 	SplitTile,
 	TextEmbodiment,
 	Thought,
@@ -57,6 +59,8 @@ import {
 	intro,
 	resolveArrangement,
 	resolveTextMorphRoot,
+	columnMorphId,
+	splitColumnBounds,
 	splitFigureGrid,
 	tileMorphId,
 	type TextMorphRoot,
@@ -82,6 +86,8 @@ export type {
 	Presentation,
 	ResolvedDisposition,
 	Sequence,
+	SplitColumnGroup,
+	SplitMorphTarget,
 	SplitTile,
 	TextEmbodiment,
 	Thought,
@@ -91,12 +97,14 @@ export type {
 
 export {
 	analogy,
+	columnMorphId,
 	countArrangements,
 	intro,
 	morphId,
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
+	splitColumnBounds,
 	splitFigureGrid,
 	tileMorphId,
 } from "@framework/presentation/core";
@@ -552,6 +560,24 @@ function FigureMorphView({
 	);
 }
 
+function SplitColumnMorphAnchorView({
+	participantId,
+	columnKey,
+	position,
+}: {
+	readonly participantId: string;
+	readonly columnKey: string;
+	readonly position: DispositionPosition;
+}): ReactNode {
+	return (
+		<div
+			data-id={columnMorphId(participantId, columnKey)}
+			className="presentation-disposition-frame presentation-split-column-morph-anchor"
+			style={dispositionFrameStyle(position, undefined)}
+		/>
+	);
+}
+
 function FigureSplitMorphView({
 	disposition,
 	embodiment,
@@ -560,8 +586,17 @@ function FigureSplitMorphView({
 	readonly embodiment: FigureEmbodiment;
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
+	const columns = disposition.split?.columns ?? [];
 	return (
 		<>
+			{columns.map((column) => (
+				<SplitColumnMorphAnchorView
+					key={column.key}
+					participantId={disposition.participant.id}
+					columnKey={column.key}
+					position={splitColumnBounds(tiles, column.tileKeys)}
+				/>
+			))}
 			{tiles.map((tile) => (
 				<FigureTileView
 					key={tile.key}
@@ -763,10 +798,12 @@ const ArrangementSection: FC<{
 }> = ({ thought, arrangement, transition }) => {
 	const resolved = resolveArrangement(thought, arrangement.id);
 	const morph = arrangementUsesMorph(transition);
-	const positioned = resolved.some((d) => d.position !== undefined || d.split !== undefined);
-	const placements = resolved.map((disposition) => (
+	const positioned = resolved.some(
+		(d) => d.position !== undefined || d.split !== undefined || d.embodiment.kind === "text",
+	);
+	const placements = resolved.map((disposition, index) => (
 		<MorphDispositionView
-			key={`${arrangement.id}-${disposition.morphId}-${disposition.embodimentId ?? "default"}`}
+			key={`${arrangement.id}-${disposition.morphId}-${disposition.embodimentId ?? index}`}
 			disposition={disposition}
 		/>
 	));
@@ -1283,6 +1320,80 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
+		});
+
+		it("renders column morph anchors and label targets with matching data-id", () => {
+			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
+			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, gap: 0.05 });
+			const deck: Presentation = {
+				id: "column-morph",
+				name: "Column morph",
+				sequences: [
+					{
+						id: "main",
+						thoughts: [
+							{
+								id: "morph",
+								transition: { kind: "morph" },
+								participants: [
+									{
+										id: "catalogue",
+										embodiments: [{ kind: "figure", src: "/catalogue.png" }],
+									},
+								],
+								arrangements: [
+									{
+										id: "focus",
+										dispositions: [
+											{
+												participantId: "catalogue",
+												emphasis: "active",
+												split: {
+													tiles,
+													columns: [
+														{ key: "col1", tileKeys: ["tile-r0-c0"] },
+														{ key: "col2", tileKeys: ["tile-r0-c1"] },
+													],
+												},
+											},
+										],
+									},
+									{
+										id: "labels",
+										dispositions: [
+											{
+												participantId: "catalogue",
+												emphasis: "active",
+												morphTargets: [
+													{
+														columnKey: "col1",
+														position: splitColumnBounds(tiles, ["tile-r0-c0"]),
+														lines: ["Rippendecke"],
+													},
+													{
+														columnKey: "col2",
+														position: splitColumnBounds(tiles, ["tile-r0-c1"]),
+														lines: ["Unterzug"],
+													},
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const focus = container.querySelector('section[title="focus"]');
+			expect(focus?.querySelectorAll(".presentation-split-column-morph-anchor").length).toBe(2);
+			expect(focus?.querySelector('[data-id="catalogue--column--col1"]')).toBeTruthy();
+			const labels = container.querySelector('section[title="labels"]');
+			expect(labels?.querySelector('[data-id="catalogue--column--col1"]')?.textContent).toContain("Rippendecke");
+			expect(labels?.querySelector('[data-id="catalogue--column--col2"]')?.textContent).toContain("Unterzug");
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {
