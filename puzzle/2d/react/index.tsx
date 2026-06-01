@@ -6126,7 +6126,7 @@ if (puzzle2dVitest) {
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "main-thread" });
       renderer.attachTextOverlayCanvas(overlay);
       renderer.setSize(800, 600, 1);
-      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption", textAutofit: true });
       renderer.scene.add(node);
       const overlayCamera = { x: 0, y: 0, zoom: 1 };
       vi.spyOn(renderer.session, "overlayPaintStateJson").mockReturnValue(

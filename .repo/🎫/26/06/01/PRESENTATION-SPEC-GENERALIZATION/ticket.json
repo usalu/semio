@@ -1,9 +1,9 @@
 {
   "title": "Presentation Spec Generalization",
   "emoji": "📽",
-  "status": "open",
+  "status": "closed",
   "description": "Align @framework/presentation with the spec: introduce Slide (arrangement + optional transition), generalize Morph with auto-derived bridge slides, simplify Split to tiles only, remove bespoke column/ghost/morphTarget machinery, update renderer and 33.projektetage deck.",
-  "summary": "Fixed wrong Bauteilarten final frame after tile morph: hidden column-crop morph anchors were fading in at full opacity (reveal unmatched) and overlaying tiles. FigureMorphView now applies disposition style; zero-opacity crops get `presentation-morph-slot--dormant` and CSS hides them on the present slide while keeping them in DOM for focus→labels morph. Verified in browser: 10 tiles visible, cols hidden.",
+  "summary": "Removed the derived catalogue-labels bridge slide: positioned figure-crop morph slots now morph directly into positioned text labels in one reveal.js step (`morphBridgeDirect`). Dormant crop anchors no longer set inline opacity so they stay visible as morph sources when leaving Bauteilarten. v=14 is now Bauteilbeschriftungen text. Core/renderer/deck tests updated (30/19/6 passing).",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪13531ab51b094146b2b0664aa39353d3",

@@ -433,7 +433,7 @@ function AuthorsMorphView({
 			{rows.map((line, lineIndex) => (
 				<div
 					key={`${anchorId}-line-${lineIndex}`}
-					className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center"
+					className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center gap-x-[0.35em]"
 				>
 					{line.map((person) => {
 						const displayName = authorDisplayName(person, embodiment);
@@ -491,7 +491,7 @@ function AffiliationsMorphView({
 			{embodiment.entries.map((entry) => (
 				<div
 					key={entry.mark}
-					className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center"
+					className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center gap-x-[0.35em]"
 				>
 					<h4
 						data-id={`${anchorId}--${entry.mark}`}
@@ -1219,6 +1219,8 @@ if (import.meta.vitest) {
 			expect(slide("goal")?.querySelector('h2[data-id="goal"]')).toBeTruthy();
 			const authorLines = slide("authors")?.querySelectorAll('h4[data-id^="authors--"]');
 			expect(authorLines?.length).toBe(3);
+			expect(slide("authors")?.getAttribute("data-auto-animate-id")).toMatch(/^intro--/);
+			expect(slide("authors")?.querySelector(".presentation-intro-line")?.className).toContain("gap-x-");
 			expect(slide("affiliations-1")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(1);
 			expect(slide("affiliations-2")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(2);
 			expect(slide("affiliations-3")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(3);
@@ -1619,7 +1621,7 @@ if (import.meta.vitest) {
 			});
 			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--dormant') as HTMLElement | null;
 			expect(slot).toBeTruthy();
-			expect(slot?.style.opacity).toBe("0");
+			expect(slot?.classList.contains("presentation-morph-slot--dormant")).toBe(true);
 		});
 
 		it("renders positioned labels with data-id on the morph slot frame", () => {

@@ -462,7 +462,7 @@ if (import.meta.vitest) {
 			expect(col3?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs catalogue tiles into focus and column crops into labels in one run", () => {
+		it("morphs catalogue tiles into focus and column crops directly into labels in one run", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
 			expect(media).toBeDefined();
 			const expanded = expandThoughtSlides(media!);
@@ -472,12 +472,8 @@ if (import.meta.vitest) {
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
 			expect(catalogueSlide?.autoAnimateId).toBeDefined();
 			expect(focusSlide?.autoAnimateId).toBe(catalogueSlide?.autoAnimateId);
-			expect(bridgeSlide?.derived).toBe(true);
-			expect(bridgeSlide?.autoAnimateId).toBe(focusSlide?.autoAnimateId);
+			expect(bridgeSlide).toBeUndefined();
 			expect(labelSlide?.autoAnimateId).toBe(focusSlide?.autoAnimateId);
-			expect(
-				bridgeSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP),
-			).toBe(true);
 			expect(
 				labelSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_LABEL),
 			).toBe(true);

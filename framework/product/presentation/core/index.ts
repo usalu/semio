@@ -1443,6 +1443,51 @@ if (import.meta.vitest) {
 			expect(bridge.embodimentId).toBe("source");
 		});
 
+		it("skips a bridge for positioned figure crop to positioned text morph slots", () => {
+			const thought: Thought = {
+				id: "media",
+				participants: [
+					{
+						id: "col1",
+						embodiments: [
+							{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+							{ kind: "text", id: "label", lines: ["Rippendecke"], level: "heading" },
+						],
+					},
+				],
+				slides: [
+					{
+						arrangement: {
+							id: "focus",
+							dispositions: [
+								{
+									participantId: "col1",
+									embodimentId: "crop",
+									emphasis: "active",
+									position: { x: 0.05, y: 0.1, width: 0.4, height: 0.78 },
+								},
+							],
+						},
+						transition: { kind: "morph" },
+					},
+					{
+						arrangement: {
+							id: "labels",
+							dispositions: [
+								{
+									participantId: "col1",
+									embodimentId: "label",
+									emphasis: "active",
+									position: { x: 0.38, y: 0.12, width: 0.24, height: 0.24 },
+								},
+							],
+						},
+					},
+				],
+			};
+			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual(["focus", "labels"]);
+		});
+
 		it("does not insert a bridge when only position changes", () => {
 			const thought: Thought = {
 				id: "move",
@@ -1563,16 +1608,10 @@ if (import.meta.vitest) {
 				],
 			};
 			const expanded = expandThoughtSlides(thought);
-			expect(expanded.map((slide) => slide.id)).toEqual([
-				"catalogue",
-				"focus",
-				"labels--bridge",
-				"labels",
-			]);
+			expect(expanded.map((slide) => slide.id)).toEqual(["catalogue", "focus", "labels"]);
 			expect(expanded[0]?.autoAnimateId).toBeUndefined();
 			expect(expanded[1]?.autoAnimateId).toBe("media--m1");
 			expect(expanded[2]?.autoAnimateId).toBe("media--m1");
-			expect(expanded[3]?.autoAnimateId).toBe("media--m1");
 		});
 	});
 
