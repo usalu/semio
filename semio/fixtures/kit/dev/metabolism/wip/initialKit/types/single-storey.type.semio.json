@@ -1,6 +1,6 @@
 {
     "id": "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
-    "name": "Single Storey",
+    "name": "Cylindric Tambour Single Storey",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "d4a57baf-27d8-4130-8112-09a233dab3eb",
-                "name": "cylindric-tambour_single-storey_1to500",
+                "name": "cylindric-tambour_single-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "3ed61863-a85f-47b2-b2fd-2dcd5dfdcc79",
-                "name": "cylindric-tambour_single-storey_1to200",
+                "name": "cylindric-tambour_single-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "3bf93425-1538-4e15-8443-2bfed5c66299",
-                "name": "cylindric-tambour_single-storey_collider",
+                "name": "cylindric-tambour_single-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

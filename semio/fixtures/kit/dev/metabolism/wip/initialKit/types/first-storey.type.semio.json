@@ -1,6 +1,6 @@
 {
     "id": "2951ab00-3891-4d50-b887-26f1d308bfef",
-    "name": "First Storey",
+    "name": "Cylindric Tambour First Storey",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "9581c4e0-3680-48d3-87eb-0dc18b2e1a0f",
-                "name": "cylindric-tambour_first-storey_1to500",
+                "name": "cylindric-tambour_first-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "45c38d74-d48c-4c18-aa08-e20ffe79954d",
-                "name": "cylindric-tambour_first-storey_1to200",
+                "name": "cylindric-tambour_first-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "e2e1aa9c-a903-4919-bd4c-415f196cb083",
-                "name": "cylindric-tambour_first-storey_collider",
+                "name": "cylindric-tambour_first-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

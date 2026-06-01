@@ -1,6 +1,6 @@
 {
     "id": "818f2a23-569b-47cb-a69c-147694beb815",
-    "name": "J",
+    "name": "Capsule J",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "8af352d5-58d0-4eba-a5ee-9fad89d750de",
-                "name": "capsule_J_1to500",
+                "name": "capsule_J",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "fd5ff954-3075-44f7-a0fd-d4a577385d68",
-                "name": "capsule_J_1to200",
+                "name": "capsule_J",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "14217873-f5f1-4e1c-bf0e-90fe2d83bc05",
-                "name": "capsule_J_collider",
+                "name": "capsule_J",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

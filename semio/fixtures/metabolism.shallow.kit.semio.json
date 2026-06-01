@@ -2673,7 +2673,7 @@
                         },
                         {
                             "id": "e1878572-0fe1-4780-b877-90df9b25d31f",
-                            "name": "Capsule Q.svg",
+                            "name": "Capsule Q",
                             "description": "🗼 An apartment capsule for one person. It has the entrance on the back and has the view to the side.",
                             "icon": "icons/capsule_q.svg",
                             "image": "images/capsule_q.png",
@@ -2693,7 +2693,7 @@
                         },
                         {
                             "id": "cc9a4330-537f-49c2-a70d-5e6383b535f5",
-                            "name": "Capsule Z.svg",
+                            "name": "Capsule Z",
                             "description": "🏫 An apartment capsule for one person. It has the entrance on the side and has the view to the side. It is mirrored compared to the normal one.",
                             "icon": "icons/capsule_z.svg",
                             "image": "images/capsule_z.png",
@@ -2713,7 +2713,7 @@
                         },
                         {
                             "id": "6cbd2d9c-5710-452c-af7a-6859cfb0151a",
-                            "name": "Capsule With Balcony P.svg",
+                            "name": "Capsule With Balcony P",
                             "description": "🏚 An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
                             "icon": "icons/capsule-with-balcony_p.svg",
                             "image": "images/capsule-with-balcony_p.png",
@@ -2733,7 +2733,7 @@
                         },
                         {
                             "id": "f1779b1f-2324-4bad-86da-773a1e90b57c",
-                            "name": "Capsule With Balcony Backslash.svg",
+                            "name": "Capsule With Balcony Backslash",
                             "description": "🏦 An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
                             "icon": "icons/capsule-with-balcony_backslash.svg",
                             "image": "images/capsule-with-balcony_backslash.png",
@@ -2753,7 +2753,7 @@
                         },
                         {
                             "id": "3697e115-c2e7-4279-b09a-03e1d1e9c21e",
-                            "name": "Capsule With Balcony Slash.svg",
+                            "name": "Capsule With Balcony Slash",
                             "description": "🏣 An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
                             "icon": "icons/capsule-with-balcony_slash.svg",
                             "image": "images/capsule-with-balcony_slash.png",
@@ -2773,7 +2773,7 @@
                         },
                         {
                             "id": "7ca051a6-8752-4ff2-9430-71a80114a88e",
-                            "name": "Capsule With Balcony Q.svg",
+                            "name": "Capsule With Balcony Q",
                             "description": "🏤 An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
                             "icon": "icons/capsule-with-balcony_q.svg",
                             "image": "images/capsule-with-balcony_q.png",
@@ -2793,7 +2793,7 @@
                         },
                         {
                             "id": "af980393-c613-47c2-88a4-461298b0b8f9",
-                            "name": "Capsule With Balcony J.svg",
+                            "name": "Capsule With Balcony J",
                             "description": "🏘 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
                             "icon": "icons/capsule-with-balcony_J.svg",
                             "image": "images/capsule-with-balcony_J.png",
@@ -2813,7 +2813,7 @@
                         },
                         {
                             "id": "8ee84149-4198-4223-ae89-3021ad2950c7",
-                            "name": "Capsule With Balcony L.svg",
+                            "name": "Capsule With Balcony L",
                             "description": "🏙 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
                             "icon": "icons/capsule-with-balcony_L.svg",
                             "image": "images/capsule-with-balcony_L.png",
@@ -2833,7 +2833,7 @@
                         },
                         {
                             "id": "5aa65d97-778b-4449-be63-7948730d64bc",
-                            "name": "Capsule With Balcony S.svg",
+                            "name": "Capsule With Balcony S",
                             "description": "🕌 An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
                             "icon": "icons/capsule-with-balcony_s.svg",
                             "image": "images/capsule-with-balcony_s.png",
@@ -2853,7 +2853,7 @@
                         },
                         {
                             "id": "bfb4b43c-8e75-4265-b64a-7ebe4f62e099",
-                            "name": "Capsule With Balcony Z.svg",
+                            "name": "Capsule With Balcony Z",
                             "description": "🕍 An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
                             "icon": "icons/capsule-with-balcony_z.svg",
                             "image": "images/capsule-with-balcony_z.png",
@@ -2873,7 +2873,7 @@
                         },
                         {
                             "id": "c90e216d-d899-4709-995b-5abfcce75bcb",
-                            "name": "Ellipsoid Capsule Backslash.svg",
+                            "name": "Ellipsoid Capsule Backslash",
                             "description": "🕋 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
                             "icon": "icons/ellipsoid-capsule_backslash.svg",
                             "image": "images/ellipsoid-capsule_backslash.png",
@@ -2893,7 +2893,7 @@
                         },
                         {
                             "id": "eefe6d3e-f18d-474e-b82e-04bb406d290f",
-                            "name": "Ellipsoid Capsule Slash.svg",
+                            "name": "Ellipsoid Capsule Slash",
                             "description": "🛕 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
                             "icon": "icons/ellipsoid-capsule_slash.svg",
                             "image": "images/ellipsoid-capsule_slash.png",
@@ -2913,7 +2913,7 @@
                         },
                         {
                             "id": "ccb67521-5ca1-42cf-bd81-4058c6c5348d",
-                            "name": "Ellipsoid Capsule Q.svg",
+                            "name": "Ellipsoid Capsule Q",
                             "description": "🏡 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
                             "icon": "icons/ellipsoid-capsule_q.svg",
                             "image": "images/ellipsoid-capsule_q.png",
@@ -2933,7 +2933,7 @@
                         },
                         {
                             "id": "4b8563c5-37ad-49e8-9b6c-d635378bffce",
-                            "name": "Ellipsoid Capsule P.svg",
+                            "name": "Ellipsoid Capsule P",
                             "description": "🛖 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
                             "icon": "icons/ellipsoid-capsule_p.svg",
                             "image": "images/ellipsoid-capsule_p.png",
@@ -2953,7 +2953,7 @@
                         },
                         {
                             "id": "5af2d54e-309c-46a6-8454-c91b957a59f9",
-                            "name": "Ellipsoid Capsule J.svg",
+                            "name": "Ellipsoid Capsule J",
                             "description": "🔧 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
                             "icon": "icons/ellipsoid-capsule_J.svg",
                             "image": "images/ellipsoid-capsule_J.png",
@@ -2973,7 +2973,7 @@
                         },
                         {
                             "id": "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
-                            "name": "Ellipsoid Capsule L.svg",
+                            "name": "Ellipsoid Capsule L",
                             "description": "🔨 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
                             "icon": "icons/ellipsoid-capsule_L.svg",
                             "image": "images/ellipsoid-capsule_L.png",
@@ -2993,7 +2993,7 @@
                         },
                         {
                             "id": "aa34760a-d543-46c8-afa1-d83a38d42f2b",
-                            "name": "Ellipsoid Capsule S.svg",
+                            "name": "Ellipsoid Capsule S",
                             "description": "🪛 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
                             "icon": "icons/ellipsoid-capsule_s.svg",
                             "image": "images/ellipsoid-capsule_s.png",
@@ -3013,7 +3013,7 @@
                         },
                         {
                             "id": "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
-                            "name": "Ellipsoid Capsule Z.svg",
+                            "name": "Ellipsoid Capsule Z",
                             "description": "🪜 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
                             "icon": "icons/ellipsoid-capsule_z.svg",
                             "image": "images/ellipsoid-capsule_z.png",
@@ -3033,7 +3033,7 @@
                         },
                         {
                             "id": "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
-                            "name": "Trapezoid Capsule Backslash.svg",
+                            "name": "Trapezoid Capsule Backslash",
                             "description": "🧱 An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
                             "icon": "icons/trapezoid-capsule_backslash.svg",
                             "image": "images/trapezoid-capsule_backslash.png",
@@ -3053,7 +3053,7 @@
                         },
                         {
                             "id": "5ee4ad14-091f-42f4-a357-09fc16c3ae39",
-                            "name": "Trapezoid Capsule Slash.svg",
+                            "name": "Trapezoid Capsule Slash",
                             "description": "🪵 An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
                             "icon": "icons/trapezoid-capsule_slash.svg",
                             "image": "images/trapezoid-capsule_slash.png",
@@ -3073,7 +3073,7 @@
                         },
                         {
                             "id": "34ddd546-4df3-480c-9aa3-880fb51b8016",
-                            "name": "Trapezoid Capsule Q.svg",
+                            "name": "Trapezoid Capsule Q",
                             "description": "🔩 An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
                             "icon": "icons/trapezoid-capsule_q.svg",
                             "image": "images/trapezoid-capsule_q.png",
@@ -3093,7 +3093,7 @@
                         },
                         {
                             "id": "e913ffae-6ae9-44e0-b516-1cc763bfefe7",
-                            "name": "Trapezoid Capsule P.svg",
+                            "name": "Trapezoid Capsule P",
                             "description": "🧰 An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
                             "icon": "icons/trapezoid-capsule_p.svg",
                             "image": "images/trapezoid-capsule_p.png",
@@ -3113,7 +3113,7 @@
                         },
                         {
                             "id": "7ec14f29-b730-4000-b66d-aa304767e8c1",
-                            "name": "Trapezoid Capsule J.svg",
+                            "name": "Trapezoid Capsule J",
                             "description": "🪓 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
                             "icon": "icons/trapezoid-capsule_J.svg",
                             "image": "images/trapezoid-capsule_J.png",
@@ -3133,7 +3133,7 @@
                         },
                         {
                             "id": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
-                            "name": "Trapezoid Capsule L.svg",
+                            "name": "Trapezoid Capsule L",
                             "description": "🔑 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
                             "icon": "icons/trapezoid-capsule_L.svg",
                             "image": "images/trapezoid-capsule_L.png",
@@ -3153,7 +3153,7 @@
                         },
                         {
                             "id": "67917609-d54d-4afc-9f9a-6e3abc0d18a4",
-                            "name": "Trapezoid Capsule S.svg",
+                            "name": "Trapezoid Capsule S",
                             "description": "🗝 An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
                             "icon": "icons/trapezoid-capsule_s.svg",
                             "image": "images/trapezoid-capsule_s.png",
@@ -3173,7 +3173,7 @@
                         },
                         {
                             "id": "94c31826-ae8e-432a-9a27-73346f49c704",
-                            "name": "Trapezoid Capsule Z.svg",
+                            "name": "Trapezoid Capsule Z",
                             "description": "🚪 An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
                             "icon": "icons/trapezoid-capsule_z.svg",
                             "image": "images/trapezoid-capsule_z.png",
@@ -3193,7 +3193,7 @@
                         },
                         {
                             "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
-                            "name": "Capsule Backslash.svg",
+                            "name": "Capsule Backslash",
                             "description": "🏛 An apartment capsule for one person. It has the entrance on the back and has the view to the front.",
                             "icon": "icons/capsule_backslash.svg",
                             "image": "images/capsule_backslash.png",
@@ -3213,7 +3213,7 @@
                         },
                         {
                             "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
-                            "name": "Capsule Slash.svg",
+                            "name": "Capsule Slash",
                             "description": "🌉 An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
                             "icon": "icons/capsule_slash.svg",
                             "image": "images/capsule_slash.png",
@@ -3233,7 +3233,7 @@
                         },
                         {
                             "id": "357b841f-b121-463c-88a6-153d7cbf272f",
-                            "name": "Capsule P.svg",
+                            "name": "Capsule P",
                             "description": "🏭 An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
                             "icon": "icons/capsule_p.svg",
                             "image": "images/capsule_p.png",
@@ -3253,7 +3253,7 @@
                         },
                         {
                             "id": "818f2a23-569b-47cb-a69c-147694beb815",
-                            "name": "Capsule J.svg",
+                            "name": "Capsule J",
                             "description": "🏬 An apartment capsule for one person. It has the entrance on the side and has the view to the front.",
                             "icon": "icons/capsule_J.svg",
                             "image": "images/capsule_J.png",
@@ -3273,7 +3273,7 @@
                         },
                         {
                             "id": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
-                            "name": "Capsule L.svg",
+                            "name": "Capsule L",
                             "description": "🏨 An apartment capsule for one person. It has the entrance on the side and has the view to the front. It is mirrored compared to the normal one.",
                             "icon": "icons/capsule_L.svg",
                             "image": "images/capsule_L.png",
@@ -3293,7 +3293,7 @@
                         },
                         {
                             "id": "214a30f8-adfc-40de-840b-151d9f7e17dd",
-                            "name": "Capsule S.svg",
+                            "name": "Capsule S",
                             "description": "🏪 An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
                             "icon": "icons/capsule_s.svg",
                             "image": "images/capsule_s.png",
@@ -3345,7 +3345,7 @@
                     "items": [
                         {
                             "id": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
-                            "name": "Base Blob.svg",
+                            "name": "Base Blob",
                             "description": "🏩 A blobby two storey office building with an entrance hall and access to the staircases and elevators of the round cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
                             "icon": "icons/base_blob.svg",
                             "image": "images/base_blob.png",
@@ -3373,7 +3373,7 @@
                         },
                         {
                             "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
-                            "name": "Base.svg",
+                            "name": "Base",
                             "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
                             "icon": "icons/base.svg",
                             "image": "images/base.png",
@@ -3406,7 +3406,7 @@
                     "items": [
                         {
                             "id": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
-                            "name": "Bridge.png",
+                            "name": "Bridge",
                             "description": "🏢 A bridge with two segments an addition on the west along the main path.",
                             "icon": "",
                             "image": "images/bridge.png",
@@ -3435,7 +3435,7 @@
                     "items": [
                         {
                             "id": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
-                            "name": "Capital.svg",
+                            "name": "Capital",
                             "description": "🏗 A roof that has the skin of a cut extruded cuboid.",
                             "icon": "icons/capital.svg",
                             "image": "images/capital.png",
@@ -3455,7 +3455,7 @@
                         },
                         {
                             "id": "cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9",
-                            "name": "Cylindric Capital.svg",
+                            "name": "Cylindric Capital",
                             "description": "🏥 A roof that has the skin of a cut extruded cylinder.",
                             "icon": "icons/cylindric-capital.svg",
                             "image": "images/cylindric-capital.png",
@@ -3488,7 +3488,7 @@
                     "items": [
                         {
                             "id": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
-                            "name": "Tambour Single Storey.svg",
+                            "name": "Tambour Single Storey",
                             "description": "🪤 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "icon": "icons/tambour_single-storey.svg",
                             "image": "images/tambour_single-storey.svg",
@@ -3508,7 +3508,7 @@
                         },
                         {
                             "id": "2951ab00-3891-4d50-b887-26f1d308bfef",
-                            "name": "Cylindric Tambour First Storey.svg",
+                            "name": "Cylindric Tambour First Storey",
                             "description": "🪑 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
                             "icon": "icons/cylindric-tambour_first-storey.svg",
                             "image": "images/cylindric-tambour_first-storey.svg",
@@ -3528,7 +3528,7 @@
                         },
                         {
                             "id": "0271dcc8-c961-4ecf-8591-9f8027252174",
-                            "name": "Cylindric Tambour Last Storey.svg",
+                            "name": "Cylindric Tambour Last Storey",
                             "description": "🚿 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
                             "icon": "icons/cylindric-tambour_last-storey.svg",
                             "image": "images/cylindric-tambour_last-storey.svg",
@@ -3548,7 +3548,7 @@
                         },
                         {
                             "id": "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
-                            "name": "Cylindric Tambour Single Storey.svg",
+                            "name": "Cylindric Tambour Single Storey",
                             "description": "🛁 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
                             "icon": "icons/cylindric-tambour_single-storey.svg",
                             "image": "images/cylindric-tambour_single-storey.svg",
@@ -3568,7 +3568,7 @@
                         },
                         {
                             "id": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
-                            "name": "Tambour.svg",
+                            "name": "Tambour",
                             "description": "🏰 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "icon": "icons/tambour.svg",
                             "image": "images/tambour.svg",
@@ -3588,7 +3588,7 @@
                         },
                         {
                             "id": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
-                            "name": "Cylindric Tambour.svg",
+                            "name": "Cylindric Tambour",
                             "description": "🛏 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
                             "icon": "icons/cylindric-tambour.svg",
                             "image": "images/cylindric-tambour.svg",
@@ -3608,7 +3608,7 @@
                         },
                         {
                             "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
-                            "name": "Tambour First Storey.svg",
+                            "name": "Tambour First Storey",
                             "description": "🪟 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "icon": "icons/tambour_first-storey.svg",
                             "image": "images/tambour_first-storey.svg",
@@ -3628,7 +3628,7 @@
                         },
                         {
                             "id": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
-                            "name": "Tambour Last Storey.svg",
+                            "name": "Tambour Last Storey",
                             "description": "🛗 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "icon": "icons/tambour_last-storey.svg",
                             "image": "images/tambour_last-storey.svg",

@@ -1,6 +1,6 @@
 {
     "id": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
-    "name": "Blob",
+    "name": "Base Blob",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "c16fe085-0d6c-4ac3-a4eb-5697ed3fcbfb",
-                "name": "base_blob_1to500",
+                "name": "base_blob",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -72,7 +72,7 @@
             },
             {
                 "id": "9093dc1a-5e3c-4693-ad1c-040b762be49a",
-                "name": "base_blob_1to200",
+                "name": "base_blob",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "f04864f9-544c-4074-acfc-30abbabaafbb",
-                "name": "base_blob_collider",
+                "name": "base_blob",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

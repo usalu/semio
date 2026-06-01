@@ -300,3 +300,23 @@ for (const path of targets) {
   }
 }
 console.log(`[DEBUG] reconciled ${changed} kit documents`);
+
+const typeFilesDir = join(import.meta.dir, "../../../../../../semio/fixtures/kit/dev/metabolism");
+let typeFilesChanged = 0;
+for (const path of walkJsonFiles(typeFilesDir)) {
+  if (!path.endsWith(".type.semio.json")) continue;
+  let row: Record<string, unknown>;
+  try {
+    row = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+  } catch {
+    continue;
+  }
+  const before = String(row.name ?? "");
+  renameTypeRow(row, new Map());
+  if (String(row.name ?? "") !== before) {
+    writeFileSync(path, `${JSON.stringify(row, null, 4)}\n`);
+    typeFilesChanged++;
+    console.log("[DEBUG] renamed type", path, before, "→", row.name);
+  }
+}
+console.log(`[DEBUG] renamed ${typeFilesChanged} standalone type files`);

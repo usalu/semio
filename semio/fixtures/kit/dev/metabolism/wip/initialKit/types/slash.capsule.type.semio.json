@@ -1,6 +1,6 @@
 {
     "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
-    "name": "/",
+    "name": "Capsule Slash",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "c552d2bd-58f3-4cb4-9d68-c7c956a93ed5",
-                "name": "capsule_slash_1to500",
+                "name": "capsule_slash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "a2ee7fc0-91f6-4b74-b220-42b78bc25e45",
-                "name": "capsule_slash_1to200",
+                "name": "capsule_slash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "d86ed11a-0509-453d-a63e-0d10ec85ca26",
-                "name": "capsule_slash_collider",
+                "name": "capsule_slash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

@@ -46,18 +46,18 @@
                     "items": [
                         {
                             "id": "019ab664-1111-1111-1111-111111111111",
-                            "name": "Duplicate Type Name",
+                            "name": "Duplicate representation name",
                             "representations": [
                                 {
                                     "id": "019ab664-1111-1111-1111-111111110001",
-                                    "name": "Duplicate Representation Name",
+                                    "name": "duplicate-file.txt",
                                     "file": {
                                         "id": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000"
                                     }
                                 },
                                 {
                                     "id": "019ab664-1111-1111-1111-111111110002",
-                                    "name": "Duplicate Representation Name",
+                                    "name": "duplicate-file.txt",
                                     "file": {
                                         "id": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
                                     }

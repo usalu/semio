@@ -1,12 +1,13 @@
 {
   "title": "Projektetage Inline Catalogue Labels",
   "emoji": "🏷",
-  "status": "closed",
+  "status": "open",
   "description": "Bauteilbeschriftungen: three text dispositions on one line (Rippenplatte Unterzug Stütze). Many-to-one tile morph per column; tiles settle and morph position before embodiment switch.",
   "summary": "Fixed catalogue tiles not morphing into inline column labels.\n\nRoot cause: morphParticipant column dispositions were skipped in buildInteractiveSlideLayout and never rendered, so no catalogue-col1/2/3 figure morph slots existed on Bauteilarten for reveal.js to pair with label dispositions.\n\nFix: MorphParticipantArrangementSlots renders dormant participant anchors on the arrangement canvas; Bauteilbeschriftungen restores morphFrom crop ghosts at inline label positions for correct position-then-embodiment morph.\n\n58 renderer + 7 deck tests pass.",
   "goal": "🎯presentation",
   "sessions": [
     "⚪9767b61ed4b447c9942a8107d707be52",
-    "⚪13918f7ca3a24a9a8c8258142bd9afaa"
+    "⚪13918f7ca3a24a9a8c8258142bd9afaa",
+    "⚪a975acd1c4f34d4083c32eef29797bfd"
   ]
 }

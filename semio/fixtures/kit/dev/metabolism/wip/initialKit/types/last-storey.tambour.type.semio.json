@@ -1,6 +1,6 @@
 {
     "id": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
-    "name": "Last Storey",
+    "name": "Tambour Last Storey",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "a41ac697-df5e-4c73-9452-0b4166f9c9d3",
-                "name": "tambour_last-storey_1to500",
+                "name": "tambour_last-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -42,7 +42,7 @@
             },
             {
                 "id": "13837560-78ca-474c-8fe4-2efc3db987aa",
-                "name": "tambour_last-storey_1to200",
+                "name": "tambour_last-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -112,7 +112,7 @@
             },
             {
                 "id": "dd8c6354-49b9-4e37-a274-2f9c7ab9c071",
-                "name": "tambour_last-storey_collider",
+                "name": "tambour_last-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

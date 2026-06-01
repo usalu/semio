@@ -1,6 +1,6 @@
 {
     "id": "0271dcc8-c961-4ecf-8591-9f8027252174",
-    "name": "Last Storey",
+    "name": "Cylindric Tambour Last Storey",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "6c846d2d-bdb3-4353-815a-a891011d43cf",
-                "name": "cylindric-tambour_last-storey_1to500",
+                "name": "cylindric-tambour_last-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "051d24b9-a725-4c83-8284-85021c6fd540",
-                "name": "cylindric-tambour_last-storey_1to200",
+                "name": "cylindric-tambour_last-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "cdec2dd6-9ea0-4bad-95a4-2cd80901d7ee",
-                "name": "cylindric-tambour_last-storey_collider",
+                "name": "cylindric-tambour_last-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

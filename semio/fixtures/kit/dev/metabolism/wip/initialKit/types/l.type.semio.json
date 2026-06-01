@@ -1,6 +1,6 @@
 {
     "id": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
-    "name": "L",
+    "name": "Trapezoid Capsule L",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "19a6854c-d456-4af7-8652-2f220c3d7a4e",
-                "name": "trapezoid-capsule_L_1to500",
+                "name": "trapezoid-capsule_L",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "ab8d8553-cf71-429d-80c2-85a15417ccec",
-                "name": "trapezoid-capsule_L_1to200",
+                "name": "trapezoid-capsule_L",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "5d657ab5-f813-40dc-b0aa-86bff6d12cbc",
-                "name": "trapezoid-capsule_L_collider",
+                "name": "trapezoid-capsule_L",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

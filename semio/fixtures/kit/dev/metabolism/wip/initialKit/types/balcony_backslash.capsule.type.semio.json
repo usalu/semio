@@ -1,6 +1,6 @@
 {
     "id": "f1779b1f-2324-4bad-86da-773a1e90b57c",
-    "name": "\\",
+    "name": "Capsule With Balcony Backslash",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "81c07c34-179f-4adb-896e-4e3a3c7afb83",
-                "name": "capsule-with-balcony_backslash_1to500",
+                "name": "capsule-with-balcony_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "c98db075-2d4e-4261-8a6b-6d0a206823e0",
-                "name": "capsule-with-balcony_backslash_1to200",
+                "name": "capsule-with-balcony_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "00a68e84-3670-47bd-9acc-6ee27f2f0d85",
-                "name": "capsule-with-balcony_backslash_collider",
+                "name": "capsule-with-balcony_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

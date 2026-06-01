@@ -1,6 +1,6 @@
 {
     "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
-    "name": "First Storey",
+    "name": "Tambour First Storey",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "916b6eed-e7c7-4629-8a49-25f5c631c260",
-                "name": "tambour_first-storey_1to500",
+                "name": "tambour_first-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -42,7 +42,7 @@
             },
             {
                 "id": "94df4683-982a-4668-87f2-1b05a73633b6",
-                "name": "tambour_first-storey_1to200",
+                "name": "tambour_first-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -112,7 +112,7 @@
             },
             {
                 "id": "cebb9596-3a46-46bd-bac4-f5d7d8aeaeb8",
-                "name": "tambour_first-storey_collider",
+                "name": "tambour_first-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

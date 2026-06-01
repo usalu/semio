@@ -1,6 +1,6 @@
 {
     "id": "e1878572-0fe1-4780-b877-90df9b25d31f",
-    "name": "q",
+    "name": "Capsule Q",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "486bc256-63e0-4770-af2a-988ed5cb3c09",
-                "name": "capsule_q_1to500",
+                "name": "capsule_q",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "fce706ef-4651-439c-9494-851a0a6ff60b",
-                "name": "capsule_q_1to200",
+                "name": "capsule_q",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "4c750a2e-62b7-478f-ad76-cd422466c91e",
-                "name": "capsule_q_collider",
+                "name": "capsule_q",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

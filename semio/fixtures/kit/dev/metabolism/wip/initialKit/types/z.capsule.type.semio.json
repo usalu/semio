@@ -1,6 +1,6 @@
 {
     "id": "cc9a4330-537f-49c2-a70d-5e6383b535f5",
-    "name": "z",
+    "name": "Capsule Z",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "ec199590-7fe0-4e86-90dc-8963dda073f9",
-                "name": "capsule_z_1to500",
+                "name": "capsule_z",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "b1920a8d-ed2f-4319-8c78-0d0e493a3e1b",
-                "name": "capsule_z_1to200",
+                "name": "capsule_z",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "d9fe9988-7350-4996-be5c-c3be05e1cc3a",
-                "name": "capsule_z_collider",
+                "name": "capsule_z",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

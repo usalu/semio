@@ -1,6 +1,6 @@
 {
     "id": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
-    "name": "Single Storey",
+    "name": "Tambour Single Storey",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "4531ef42-c120-4186-8212-c840489dd4d7",
-                "name": "tambour_single-storey_1to500",
+                "name": "tambour_single-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -42,7 +42,7 @@
             },
             {
                 "id": "20e47bed-c6ef-476b-a563-373df3534f62",
-                "name": "tambour_single-storey_1to200",
+                "name": "tambour_single-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -112,7 +112,7 @@
             },
             {
                 "id": "c954e258-c141-4e73-9d60-34d9b6166282",
-                "name": "tambour_single-storey_collider",
+                "name": "tambour_single-storey",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

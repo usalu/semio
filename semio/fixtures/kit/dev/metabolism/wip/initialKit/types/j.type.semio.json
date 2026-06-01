@@ -1,6 +1,6 @@
 {
     "id": "7ec14f29-b730-4000-b66d-aa304767e8c1",
-    "name": "J",
+    "name": "Trapezoid Capsule J",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "35f864ad-f247-41fc-9085-4401ff565027",
-                "name": "trapezoid-capsule_J_1to500",
+                "name": "trapezoid-capsule_J",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "5826d977-6600-4fd3-b2a9-aa19fff73b4e",
-                "name": "trapezoid-capsule_J_1to200",
+                "name": "trapezoid-capsule_J",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "bf9ca2e2-e451-450f-9922-7da85664cd95",
-                "name": "trapezoid-capsule_J_collider",
+                "name": "trapezoid-capsule_J",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

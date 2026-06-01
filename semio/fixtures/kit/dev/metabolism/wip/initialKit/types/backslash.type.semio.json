@@ -1,6 +1,6 @@
 {
     "id": "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
-    "name": "\\",
+    "name": "Trapezoid Capsule Backslash",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "eefdb5c8-1b84-4f09-8203-35e502e58de1",
-                "name": "trapezoid-capsule_backslash_1to500",
+                "name": "trapezoid-capsule_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "e0de5fa6-d51b-4516-b848-ba2c805922ba",
-                "name": "trapezoid-capsule_backslash_1to200",
+                "name": "trapezoid-capsule_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "d31f18db-c434-4e37-8c1a-71d839e33eed",
-                "name": "trapezoid-capsule_backslash_collider",
+                "name": "trapezoid-capsule_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [

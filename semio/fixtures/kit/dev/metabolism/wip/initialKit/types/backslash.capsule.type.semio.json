@@ -1,6 +1,6 @@
 {
     "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
-    "name": "\\",
+    "name": "Capsule Backslash",
     "representations": {
         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
         "items": [
@@ -24,7 +24,7 @@
             },
             {
                 "id": "a2f5db0c-2ac3-4b42-b3e7-9d97de38e15a",
-                "name": "capsule_backslash_1to500",
+                "name": "capsule_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -46,7 +46,7 @@
             },
             {
                 "id": "d81f5119-6fb2-421a-9e9c-dc4d4faad798",
-                "name": "capsule_backslash_1to200",
+                "name": "capsule_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
@@ -120,7 +120,7 @@
             },
             {
                 "id": "394b7f76-5270-48e1-bb37-8fdc8ac2f884",
-                "name": "capsule_backslash_collider",
+                "name": "capsule_backslash",
                 "tags": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
