@@ -1,9 +1,9 @@
 {
   "title": "User Facing Ui Label Cleanup",
   "emoji": "🏷️",
-  "status": "open",
+  "status": "closed",
   "description": "Clean UI labels to user perspective: engagement options → Commands/toggles, no state machine lingo in user space.",
-  "summary": "Fixed missing Workbench/Details navbar labels: removed clipping from panel toggle wrappers and ToggleGroup (`overflow-visible` when inline labels present), pass explicit i18n text in platform UIPanelToggleGroup, map playground panel ids to ui.panelToggle.*, fallback panel-kind labels in useControlAccessibleLabel, and added sketchpad panelToggle.details/workbench labels (en/de). Playground navbar uses ui.panelToggle ids. Tests: 107 @ui/react passing including compact navbar panel toggle labels.",
+  "summary": "Fixed Search/Find navbar inconsistency: sketchpad resolver no longer maps both toggles to search.open (find uses find.open + new i18n). Find toggle uses TextSearch icon vs Search magnifying glass. Aligned de copy (Finden vs Suche). UISearch/UIFind dialogs use ui.search.* / ui.find.* i18n. Tests: 108 @ui/react.",
   "goal": "🎯semio🎯ui",
   "sessions": [
     "⚪963db0d2e1ad4acca54842b96968fea1",

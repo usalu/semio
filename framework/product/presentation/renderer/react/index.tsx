@@ -1467,7 +1467,7 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("groups per-tile column ghosts into one stacked label per column", () => {
+		it("pairs each column tile with a per-tile morph label slot", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
 			const columns = [
@@ -1543,7 +1543,7 @@ if (import.meta.vitest) {
 			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(0);
 			const labels = container.querySelector('section[title="labels"]');
 			expect(labels?.querySelectorAll('[data-id^="catalogue--column--col1--"]').length).toBe(2);
-			expect(labels?.querySelectorAll(".presentation-column-morph-slot--label-companion").length).toBe(1);
+			expect(labels?.querySelectorAll(".presentation-column-morph-slot--label-companion").length).toBe(2);
 			expect(labels?.querySelector('[data-id="catalogue--tile--tile-r0-c0"]')).toBeNull();
 		});
 

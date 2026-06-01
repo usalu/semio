@@ -135,7 +135,6 @@ import {
 	Move3d as Move3dIcon,
 	Plus as PlusIcon,
 	Save as SaveIcon,
-	Search,
 	Search as SearchIcon,
 	TextSearch as FindInViewIcon,
 	Settings2,
@@ -850,7 +849,12 @@ const UISearch: React.FC<{
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
   emptyMessage?: string;
-}> = ({ items, open, onOpenChange, placeholder = "Search...", emptyMessage = "No results found." }) => {
+}> = ({ items, open, onOpenChange, placeholder, emptyMessage }) => {
+  const { t } = useUiTranslation();
+  const dialogTitle = resolveTranslationLabel(t("ui.search.title" as const));
+  const dialogDescription = resolveTranslationLabel(t("ui.search.description" as const));
+  const dialogPlaceholder = placeholder ?? resolveTranslationLabel(t("ui.search.placeholder" as const));
+  const dialogEmpty = emptyMessage ?? resolveTranslationLabel(t("ui.search.empty" as const));
   const [query, setQuery] = reactHostPort.useState("");
 
   const fuse = reactHostPort.useMemo(
@@ -892,10 +896,10 @@ const UISearch: React.FC<{
   );
 
   return (
-    <CommandDialog title="Search" description="Search for items..." open={open} onOpenChange={onOpenChange} shouldFilter={false}>
-      <CommandInput id="ui.search.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
+    <CommandDialog title={dialogTitle} description={dialogDescription} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+      <CommandInput id="ui.search.input" placeholder={dialogPlaceholder} value={query} onValueChange={setQuery} />
       <CommandList>
-        <CommandEmpty>{emptyMessage}</CommandEmpty>
+        <CommandEmpty>{dialogEmpty}</CommandEmpty>
         {Object.entries(grouped).map(([category, categoryResults]) => (
           <CommandGroup key={category || "__default"} heading={category || undefined}>
             {categoryResults.map((result, idx) => (
@@ -1010,7 +1014,12 @@ const UIFind: React.FC<{
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
   emptyMessage?: string;
-}> = ({ open, onOpenChange, placeholder = "Find...", emptyMessage = "No results found." }) => {
+}> = ({ open, onOpenChange, placeholder, emptyMessage }) => {
+  const { t } = useUiTranslation();
+  const dialogTitle = resolveTranslationLabel(t("ui.find.title" as const));
+  const dialogDescription = resolveTranslationLabel(t("ui.find.description" as const));
+  const dialogPlaceholder = placeholder ?? resolveTranslationLabel(t("ui.find.placeholder" as const));
+  const dialogEmpty = emptyMessage ?? resolveTranslationLabel(t("ui.find.empty" as const));
   const [query, setQuery] = reactHostPort.useState("");
   const findContext = reactHostPort.useContext(UIFindContext);
   const findItems = findContext?.findItems || [];
@@ -1057,10 +1066,10 @@ const UIFind: React.FC<{
   if (!findContext || findItems.length === 0) return null;
 
   return (
-    <CommandDialog title="Find" description="Find items in this app..." open={open} onOpenChange={onOpenChange} shouldFilter={false}>
-      <CommandInput id="ui.find.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
+    <CommandDialog title={dialogTitle} description={dialogDescription} open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+      <CommandInput id="ui.find.input" placeholder={dialogPlaceholder} value={query} onValueChange={setQuery} />
       <CommandList>
-        <CommandEmpty>{emptyMessage}</CommandEmpty>
+        <CommandEmpty>{dialogEmpty}</CommandEmpty>
         {Object.entries(grouped).map(([category, categoryResults]) => (
           <CommandGroup key={category || "__default"} heading={category || undefined}>
             {categoryResults.map((result, idx) => (

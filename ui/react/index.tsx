@@ -118,6 +118,7 @@ import {
   ArrowUp as NavigateUpIcon,
   Minus as RemoveIcon,
   SearchIcon,
+  TextSearch as FindInViewIcon,
   Hand as HandIcon,
   Lasso as LassoIcon,
   LayoutGrid as LayoutGridIcon,
@@ -906,9 +907,17 @@ export type UiTranslationSchema = {
     readonly search: {
       readonly toggle: UiLabelValue;
       readonly close: UiLabelValue;
+      readonly title: UiLabelValue;
+      readonly description: UiLabelValue;
+      readonly placeholder: UiLabelValue;
+      readonly empty: UiLabelValue;
     };
     readonly find: {
       readonly toggle: UiLabelValue;
+      readonly title: UiLabelValue;
+      readonly description: UiLabelValue;
+      readonly placeholder: UiLabelValue;
+      readonly empty: UiLabelValue;
     };
     readonly panelToggle: {
       readonly windows: UiLabelValue;
@@ -1065,6 +1074,30 @@ export const uiChromeTranslationBundles = {
           "normal": "Suche schliessen",
           "beginner": "Suche schliessen"
         }
+      },
+      "title": {
+        "label": {
+          "normal": "Suche",
+          "beginner": "Suche"
+        }
+      },
+      "description": {
+        "label": {
+          "normal": "Nach Elementen suchen",
+          "beginner": "Nach Elementen suchen"
+        }
+      },
+      "placeholder": {
+        "label": {
+          "normal": "Suchen...",
+          "beginner": "Suchen..."
+        }
+      },
+      "empty": {
+        "label": {
+          "normal": "Keine Ergebnisse gefunden.",
+          "beginner": "Keine Ergebnisse gefunden."
+        }
       }
     },
     find: {
@@ -1072,6 +1105,30 @@ export const uiChromeTranslationBundles = {
         label: {
           normal: "Finden",
           beginner: "Im aktuellen Kontext finden",
+        },
+      },
+      title: {
+        label: {
+          normal: "Finden",
+          beginner: "Finden",
+        },
+      },
+      description: {
+        label: {
+          normal: "Elemente in dieser Ansicht finden",
+          beginner: "Elemente in dieser Ansicht finden",
+        },
+      },
+      placeholder: {
+        label: {
+          normal: "Finden...",
+          beginner: "Finden...",
+        },
+      },
+      empty: {
+        label: {
+          normal: "Keine Ergebnisse gefunden.",
+          beginner: "Keine Ergebnisse gefunden.",
         },
       },
     },
@@ -1328,6 +1385,30 @@ export const uiChromeTranslationBundles = {
           "normal": "Close search",
           "beginner": "Close search"
         }
+      },
+      "title": {
+        "label": {
+          "normal": "Search",
+          "beginner": "Search"
+        }
+      },
+      "description": {
+        "label": {
+          "normal": "Search for items",
+          "beginner": "Search for items"
+        }
+      },
+      "placeholder": {
+        "label": {
+          "normal": "Search...",
+          "beginner": "Search..."
+        }
+      },
+      "empty": {
+        "label": {
+          "normal": "No results found.",
+          "beginner": "No results found."
+        }
       }
     },
     find: {
@@ -1335,6 +1416,30 @@ export const uiChromeTranslationBundles = {
         label: {
           normal: "Find",
           beginner: "Find in view",
+        },
+      },
+      title: {
+        label: {
+          normal: "Find",
+          beginner: "Find",
+        },
+      },
+      description: {
+        label: {
+          normal: "Find items in this view",
+          beginner: "Find items in this view",
+        },
+      },
+      placeholder: {
+        label: {
+          normal: "Find...",
+          beginner: "Find...",
+        },
+      },
+      empty: {
+        label: {
+          normal: "No results found.",
+          beginner: "No results found.",
         },
       },
     },
@@ -17637,6 +17742,18 @@ if (treeVitest) {
       );
       expect(markup).toContain("Search");
       expect(markup).toContain("aspect-auto");
+    });
+
+    it("renders search and find toggles with distinct labels", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />
+          <Toggle id="ui.find.toggle" pressed={false} onPressedChange={() => undefined} icon={<FindInViewIcon className="size-small" />} />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Search");
+      expect(markup).toContain("Find");
+      expect(resolveControlLabelId("ui.search.toggle")).not.toBe(resolveControlLabelId("ui.find.toggle"));
     });
 
     it("humanizes unknown control ids when no i18n entry exists", () => {

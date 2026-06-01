@@ -38,6 +38,8 @@ import {
   PUZZLE_3D_LOD_SLIDER_MIN,
   applyBrushPlacementToFixture,
   applyRelocateToFixture,
+  applyObjectKindToFixtureObject,
+  fixtureAppearanceFingerprint,
   fixturePoseFingerprint,
   fixtureStateFingerprint,
   formatLod,
@@ -735,9 +737,10 @@ export class Puzzle3dPlayShellController extends Controller {
       this.fixtureRevision += 1;
     }
     const poseChanged = fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
+    const appearanceChanged = fixtureAppearanceFingerprint(next) !== fixtureAppearanceFingerprint(prev);
     if (structureChanged) {
       this.notifySelection();
-    } else if (poseChanged) {
+    } else if (poseChanged || appearanceChanged) {
       this.notifySnapshot();
     }
   }
@@ -1124,16 +1127,27 @@ export class Puzzle3dPlayShellController extends Controller {
           value?: unknown;
         };
         if (!objectIds.length || !field) return;
-        const patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> = {};
-        if (field === "label" && typeof value === "string") patch.label = value;
-        if (field === "objectKind" && typeof value === "string") patch.objectKind = value;
-        if (field === "wormhole" && typeof value === "string") patch.wormhole = value === "true";
-        if (field === "origin" && Array.isArray(value) && value.length === 3) {
-          patch.origin = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
-        }
+        const catalogs = parseKindCatalogs(this.fixture?.meta);
         this.patchFixture((fixture) => {
           let next = fixture;
           for (const objectId of objectIds) {
+            if (field === "objectKind" && typeof value === "string") {
+              const object = next.objects.find((row) => row.id === objectId);
+              if (!object) {
+                continue;
+              }
+              next = {
+                ...next,
+                objects: patchPuzzle3dObject(next.objects, objectId, (row) => applyObjectKindToFixtureObject(row, value, catalogs, next)),
+              };
+              continue;
+            }
+            const patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> = {};
+            if (field === "label" && typeof value === "string") patch.label = value;
+            if (field === "wormhole" && typeof value === "string") patch.wormhole = value === "true";
+            if (field === "origin" && Array.isArray(value) && value.length === 3) {
+              patch.origin = [Number(value[0]), Number(value[1]), Number(value[2])] as [number, number, number];
+            }
             next = updatePuzzle3dObjectInFixture(next, objectId, patch);
           }
           return next;
@@ -1914,6 +1928,40 @@ if (import.meta.vitest) {
         objects: fixture.objects.slice(0, -1),
       }));
       expect(ctrl.getFixtureRevision()).toBe(revisionBefore + 1);
+    });
+
+    it("patchPuzzle3dObjects objectKind notifies snapshot listeners and updates meshUrl", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        meta: {
+          kindCatalogs: {
+            objects: [
+              { id: "kind-a", meshUrl: "/meshes/a.glb" },
+              { id: "kind-b", meshUrl: "/meshes/b.glb" },
+            ],
+          },
+        },
+        attractions: [],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [] }],
+      });
+      expect(fixture).not.toBeNull();
+      ctrl.patchFixture(() => fixture!);
+      let snapshotCount = 0;
+      const unsubscribe = ctrl.subscribeSnapshot(() => {
+        snapshotCount += 1;
+      });
+      ctrl.run("setSelection", { selection: { objectIds: ["obj"], vortexIds: [], attractionIds: [] } });
+      const snapshotsBeforeKind = snapshotCount;
+      ctrl.run("patchPuzzle3dObjects", { objectIds: ["obj"], field: "objectKind", value: "kind-b" });
+      expect(snapshotCount).toBeGreaterThan(snapshotsBeforeKind);
+      const updated = ctrl.getFixture()?.objects.find((object) => object.id === "obj");
+      expect(updated?.objectKind).toBe("kind-b");
+      expect(updated?.meshUrl).toBe("/meshes/b.glb");
+      unsubscribe();
     });
 
     it("selection commands refresh the viewport store and the declarative inspector/hierarchy panels", () => {

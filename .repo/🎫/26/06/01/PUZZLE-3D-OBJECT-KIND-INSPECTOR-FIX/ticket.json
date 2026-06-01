@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 3d Object Kind Inspector Fix",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix puzzle3d: switching object kind in the details inspector does nothing. patchFixture does not notify on appearance-only changes; ObjectStateProvider only syncPoses; objectKind patch must update meshUrl.",
+  "goal": "🎯semio🎯ui",
+  "sessions": [
+    "⚪d8daf600c8f14a15b90e21c5bba4ee9b"
+  ]
+}

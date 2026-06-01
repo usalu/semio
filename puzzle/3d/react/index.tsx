@@ -2124,6 +2124,48 @@ export function fixturePoseFingerprint(fixture: FixtureV1): string {
     .join("\0");
 }
 
+/** @emoji 🎨 Fingerprint of object mesh/kind/labels and vortex fields for inspector edits without structure revision bumps. */
+export function fixtureAppearanceFingerprint(fixture: FixtureV1): string {
+  const objects = fixture.objects
+    .map((object) => {
+      const vortices = object.vortices
+        .map((vortex) => {
+          const position = vortex.position.join(",");
+          const direction = vortex.direction?.join(",") ?? "";
+          const radius = vortex.radius === undefined ? "" : String(vortex.radius);
+          return `${vortex.id}|${vortex.vortexKind ?? ""}|${vortex.label ?? ""}|${position}|${direction}|${radius}`;
+        })
+        .join(";");
+      const meshByLod = object.meshByLod?.map((entry) => `${entry.lod}:${entry.url}`).join(",") ?? "";
+      return `${object.id}|${object.objectKind ?? ""}|${object.meshUrl}|${object.label ?? ""}|${object.wormhole === true ? "1" : "0"}|${meshByLod}|${vortices}`;
+    })
+    .join("\0");
+  const attractions = fixture.attractions
+    .map((attraction) => `${attraction.id}|${attraction.attractionKind ?? ""}|${attraction.attracting}|${attraction.attracted}`)
+    .join("\0");
+  return `${objects}\0${attractions}`;
+}
+
+/** @emoji 🧩 Applies an object-kind switch on a fixture object (mesh URL from catalog or scene). */
+export function applyObjectKindToFixtureObject(object: FixtureObjectV1, kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): FixtureObjectV1 {
+  const meshUrl = resolveObjectKindMeshUrl(kindId, kindCatalogs, sceneFixture);
+  const kind = catalogObjectKindById(kindCatalogs, kindId);
+  const next: FixtureObjectV1 = {
+    ...object,
+    objectKind: kindId,
+    ...(meshUrl ? { meshUrl } : {}),
+  };
+  if (kind?.meshByLod) {
+    next.meshByLod = kind.meshByLod;
+    return next;
+  }
+  if (next.meshByLod === undefined) {
+    return next;
+  }
+  const { meshByLod: _removed, ...withoutLod } = next;
+  return withoutLod;
+}
+
 function objectStateReducer(state: ObjectStateSnapshot, action: ObjectStateAction): ObjectStateSnapshot {
   switch (action.type) {
     case "init": {
@@ -2450,6 +2492,37 @@ export class ObjectStore {
     }
   }
 
+  syncAppearanceFromFixture(fixture: FixtureV1): void {
+    const changed: string[] = [];
+    for (const object of fixture.objects) {
+      const cur = this.records.get(object.id);
+      if (!cur) {
+        continue;
+      }
+      const nextRecord = fixtureToRecords([object]).get(object.id);
+      if (!nextRecord) {
+        continue;
+      }
+      if (
+        cur.objectKind === nextRecord.objectKind &&
+        cur.meshUrl === nextRecord.meshUrl &&
+        cur.label === nextRecord.label &&
+        cur.wormhole === nextRecord.wormhole &&
+        JSON.stringify(cur.vortices) === JSON.stringify(nextRecord.vortices)
+      ) {
+        continue;
+      }
+      this.records.set(object.id, { ...cur, ...nextRecord });
+      changed.push(object.id);
+    }
+    for (const objectId of changed) {
+      this.notifyObject(objectId);
+    }
+    if (changed.length > 0) {
+      this.bumpStructure();
+    }
+  }
+
   removeObjectIds(objectIds: readonly string[]): void {
     if (objectIds.length === 0) {
       return;
@@ -2559,10 +2632,12 @@ export function ObjectStateProvider(props: {
   const store = storeRef.current;
   const syncedFixtureFingerprintRef = reactHostPort.useRef<string | null>(null);
   const syncedPoseFingerprintRef = reactHostPort.useRef<string | null>(null);
+  const syncedAppearanceFingerprintRef = reactHostPort.useRef<string | null>(null);
   const syncedFixtureRevisionRef = reactHostPort.useRef<number | undefined>(undefined);
   const skipExternalPoseSyncRef = reactHostPort.useRef(false);
   const fixtureFingerprint = reactHostPort.useMemo(() => fixtureStateFingerprint(props.fixture), [props.fixture]);
   const poseFingerprint = reactHostPort.useMemo(() => fixturePoseFingerprint(props.fixture), [props.fixture]);
+  const appearanceFingerprint = reactHostPort.useMemo(() => fixtureAppearanceFingerprint(props.fixture), [props.fixture]);
   reactHostPort.useEffect(() => {
     const puzzle3dStore = storeRef.current;
     if (!puzzle3dStore) {
@@ -2571,12 +2646,14 @@ export function ObjectStateProvider(props: {
     if (skipExternalPoseSyncRef.current) {
       skipExternalPoseSyncRef.current = false;
       syncedPoseFingerprintRef.current = poseFingerprint;
+      syncedAppearanceFingerprintRef.current = appearanceFingerprint;
       return;
     }
     if (props.fixtureRevision !== undefined && syncedFixtureRevisionRef.current !== props.fixtureRevision) {
       syncedFixtureRevisionRef.current = props.fixtureRevision;
       syncedFixtureFingerprintRef.current = fixtureFingerprint;
       syncedPoseFingerprintRef.current = poseFingerprint;
+      syncedAppearanceFingerprintRef.current = appearanceFingerprint;
       const prevIds = new Set(puzzle3dStore.getSortedObjectIds());
       const nextIds = new Set(props.fixture.objects.map((object) => object.id));
       const removed = [...prevIds].filter((id) => !nextIds.has(id));
@@ -2591,6 +2668,7 @@ export function ObjectStateProvider(props: {
     if (syncedFixtureFingerprintRef.current !== fixtureFingerprint) {
       syncedFixtureFingerprintRef.current = fixtureFingerprint;
       syncedPoseFingerprintRef.current = poseFingerprint;
+      syncedAppearanceFingerprintRef.current = appearanceFingerprint;
       const prevIds = new Set(puzzle3dStore.getSortedObjectIds());
       const nextIds = new Set(props.fixture.objects.map((object) => object.id));
       const removed = [...prevIds].filter((id) => !nextIds.has(id));
@@ -2602,12 +2680,16 @@ export function ObjectStateProvider(props: {
       }
       return;
     }
-    if (syncedPoseFingerprintRef.current === poseFingerprint) {
+    if (syncedPoseFingerprintRef.current !== poseFingerprint) {
+      syncedPoseFingerprintRef.current = poseFingerprint;
+      puzzle3dStore.syncPosesFromFixture(props.fixture);
+    }
+    if (syncedAppearanceFingerprintRef.current === appearanceFingerprint) {
       return;
     }
-    syncedPoseFingerprintRef.current = poseFingerprint;
-    puzzle3dStore.syncPosesFromFixture(props.fixture);
-  }, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint]);
+    syncedAppearanceFingerprintRef.current = appearanceFingerprint;
+    puzzle3dStore.syncAppearanceFromFixture(props.fixture);
+  }, [props.fixture, props.fixtureRevision, fixtureFingerprint, poseFingerprint, appearanceFingerprint]);
   const handleRelocate = reactHostPort.useCallback(
     (payload: RelocatePayload) => {
       const puzzle3dStore = storeRef.current!;
@@ -8283,6 +8365,39 @@ if (import.meta.vitest) {
       const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
       expect(placed?.meshUrl).toBe("/meshes/base.glb");
       expect(placed?.origin).toEqual([1, 2, 3]);
+    });
+    it("applyObjectKindToFixtureObject swaps meshUrl from the catalog", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          { id: "kind-a", meshUrl: "/meshes/a.glb" },
+          { id: "kind-b", meshUrl: "/meshes/b.glb" },
+        ],
+      };
+      const object: FixtureObjectV1 = { id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [] };
+      const next = applyObjectKindToFixtureObject(object, "kind-b", catalogs);
+      expect(next.objectKind).toBe("kind-b");
+      expect(next.meshUrl).toBe("/meshes/b.glb");
+      expect(fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture/v1", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [object] })).not.toBe(
+        fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture/v1", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [next] }),
+      );
+    });
+    it("ObjectStore syncAppearanceFromFixture updates meshUrl on object-kind change", () => {
+      const store = new ObjectStore();
+      const initial: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [{ id: "obj", objectKind: "kind-a", meshUrl: "/meshes/a.glb", origin: [0, 0, 0], vortices: [] }],
+      };
+      store.initFromFixture(initial);
+      expect(store.getRecord("obj")?.meshUrl).toBe("/meshes/a.glb");
+      store.syncAppearanceFromFixture({
+        ...initial,
+        objects: [{ id: "obj", objectKind: "kind-b", meshUrl: "/meshes/b.glb", origin: [0, 0, 0], vortices: [] }],
+      });
+      expect(store.getRecord("obj")?.objectKind).toBe("kind-b");
+      expect(store.getRecord("obj")?.meshUrl).toBe("/meshes/b.glb");
     });
     it("puzzle3dGridPlacementAnchorCad uses orbit XY and datum Z", () => {
       const targetThree = new Vector3(...cadVec3ToThree([12, -8, 40]));
