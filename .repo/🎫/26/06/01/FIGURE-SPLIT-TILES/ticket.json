@@ -3,12 +3,13 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
-  "summary": "Fixed regression: assigning columnMorphId to tiles broke catalogue→focus because tile data-ids no longer matched. Tiles always use tileMorphId again; split.columns adds invisible column morph layers (columnMorphId) for focus→labels. Catalogue split now includes CATALOGUE_ASSEMBLED_COLUMN_GROUPS so column layers morph across catalogue→focus→labels.",
+  "summary": "Reveal auto-animate needs one element per columnMorphId. Tiles keep tileMorphId; hidden column ghosts on focus/catalogue pair with visible ghosts on new catalogue-merge slide (columnGhostsOnly); merge→labels morphs ghost div to label text while tiles already faded on merge step.",
   "goal": "🎯framework",
   "sessions": [
     "⚪b9f5d20ffbf54da39143e48f69536ff4",
     "⚪319cd4206a644386941e55520c9e0dd7",
     "⚪3a330d5ec0f14c41954189ae52227c13",
-    "⚪f9808265b61a432a863424b3c77a2a77"
+    "⚪f9808265b61a432a863424b3c77a2a77",
+    "⚪cf4f4c3d99f843eeac5a5b4b2347f6ec"
   ]
 }

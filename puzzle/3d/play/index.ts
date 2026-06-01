@@ -158,10 +158,28 @@ export const PUZZLE_3D_PLAY_ICON_HIERARCHY = "puzzle.3d-play.icon.hierarchy";
 export const PUZZLE_3D_PLAY_ICON_KINDS = "puzzle.3d-play.icon.kinds";
 export const PUZZLE_3D_PLAY_ICON_INSPECTOR = "puzzle.3d-play.icon.inspector";
 export const PUZZLE_3D_PLAY_ICON_SETTINGS = "puzzle.3d-play.icon.settings";
+
+/** @emoji 🖌️ Window engagement possible id for the brush tool. */
+export const PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID = "puzzle3d.tool.brush";
+
+/** @emoji 🎯 Window engagement possible id for the select tool. */
+export const PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle3d.tool.select";
 //#endregion 🎬Play
 
 function puzzle3dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
 	return { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command, args: args as never };
+}
+
+/** @emoji ⌨️ Lowercase PascalCase engagement token for tool command matching (mirrors ui {@link normalizeEngagementCommandText}). */
+function puzzle3dPlayEngagementCommandToken(text: string): string {
+	const words = text
+		.replace(/[^a-zA-Z0-9]+/g, " ")
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean)
+		.flatMap((word) => word.split(/(?=[A-Z])/))
+		.filter(Boolean);
+	return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("").toLowerCase();
 }
 
 function puzzle3dPlaySelectObjectCommand(objectId: string): CommandDescriptor {
@@ -839,8 +857,8 @@ export class Puzzle3dPlayShellController extends Controller {
         onSubmit: puzzle3dPlayCmd("engagementSubmit"),
       },
       possibleEngagements: [
-        { id: "puzzle3d.tool.brush", label: "Brush", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.brush" }) },
-        { id: "puzzle3d.tool.select", label: "Select", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.select" }) },
+        { id: PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID }) },
+        { id: PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID }) },
       ],
     };
   }
@@ -867,6 +885,30 @@ export class Puzzle3dPlayShellController extends Controller {
   /** @emoji 🔗 Attaches the React host bridge for engagement commands. */
   setHostBridge(bridge: Puzzle3dPlayHostBridge | null): void {
     this.hostBridge = bridge;
+  }
+
+  /** @emoji 🖌️ Activates select or brush from engagement possibles or command-line tokens (no React host bridge required). */
+  private applyEngagementToolCommand(possibleIdOrToken: string | undefined): boolean {
+    if (!possibleIdOrToken) {
+      return false;
+    }
+    if (possibleIdOrToken === PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID || puzzle3dPlayEngagementCommandToken(possibleIdOrToken) === "brush") {
+      if (this.activeTool === "brush") {
+        return true;
+      }
+      this.activeTool = "brush";
+      this.notifySnapshot();
+      return true;
+    }
+    if (possibleIdOrToken === PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID || puzzle3dPlayEngagementCommandToken(possibleIdOrToken) === "select") {
+      if (this.activeTool === "select") {
+        return true;
+      }
+      this.activeTool = "select";
+      this.notifySnapshot();
+      return true;
+    }
+    return false;
   }
 
   private rebuildShellMode(): void {
@@ -943,10 +985,25 @@ export class Puzzle3dPlayShellController extends Controller {
         this.notifySnapshot();
         return;
       }
+      case "engagementPossibleSelect": {
+        const possibleId = (args as { possibleId?: string })?.possibleId;
+        if (this.applyEngagementToolCommand(possibleId)) {
+          return;
+        }
+        this.hostBridge?.runHostCommand(command, args);
+        return;
+      }
+      case "engagementSubmit": {
+        const value = (args as { value?: string })?.value ?? "";
+        const token = puzzle3dPlayEngagementCommandToken(String(value).trim());
+        if (this.applyEngagementToolCommand(token)) {
+          return;
+        }
+        this.hostBridge?.runHostCommand(command, args);
+        return;
+      }
       case "engagementOption":
       case "engagementInput":
-      case "engagementSubmit":
-      case "engagementPossibleSelect":
         this.hostBridge?.runHostCommand(command, args);
         return;
       case "addBrushObject": {
@@ -1912,7 +1969,23 @@ if (import.meta.vitest) {
       expect(trackingCtrl.mainMode.windowKinds[0]?.engagement?.input?.value).toBe("brush");
     });
 
-    it("engagement bus commands route through host bridge", () => {
+    it("engagementPossibleSelect activates brush without host bridge", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      ctrl.run("engagementPossibleSelect", { possibleId: PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID });
+      expect(ctrl.getSnapshot().activeTool).toBe("brush");
+    });
+
+    it("engagementSubmit activates brush from normalized command text without host bridge", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      ctrl.run("engagementSubmit", { value: "brush" });
+      expect(ctrl.getSnapshot().activeTool).toBe("brush");
+    });
+
+    it("engagement bus commands route through host bridge for non-tool commands", () => {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
@@ -1922,7 +1995,7 @@ if (import.meta.vitest) {
           lastCommand = command;
         },
       });
-      ctrl.run("engagementPossibleSelect", { possibleId: "puzzle3d.tool.brush" });
+      ctrl.run("engagementPossibleSelect", { possibleId: "puzzle3d.brush.J.0" });
       expect(lastCommand).toBe("engagementPossibleSelect");
       ctrl.run("engagementInput", { value: "J" });
       expect(lastCommand).toBe("engagementInput");

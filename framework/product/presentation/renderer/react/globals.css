@@ -140,9 +140,15 @@
 	z-index: 1;
 }
 
-.reveal .presentation-split-column-morph-layer {
+.reveal .presentation-split-column-morph-ghost--hidden {
 	z-index: 0;
 	opacity: 0;
+	pointer-events: none;
+}
+
+.reveal .presentation-split-column-morph-ghost--visible {
+	z-index: 2;
+	opacity: 1;
 	pointer-events: none;
 }
 

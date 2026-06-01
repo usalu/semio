@@ -1326,12 +1326,26 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   const { runtime } = useApp();
   const bus = runtime.commandBus;
   const ctrl = usePuzzle3dPlayController();
-  if (node.controllerId !== PUZZLE_3D_PLAY_CONTROLLER_ID) {
-    return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 3D viewport binding</div>;
-  }
   const snap = usePuzzle3dPlaySnapshot();
+  const engagementPublisher =
+    ctrl && node.controllerId === PUZZLE_3D_PLAY_CONTROLLER_ID ? (
+      <Puzzle3dPlayEngagementPublisher ctrl={ctrl} snap={snap} bus={bus} />
+    ) : null;
+  if (node.controllerId !== PUZZLE_3D_PLAY_CONTROLLER_ID) {
+    return (
+      <>
+        {engagementPublisher}
+        <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 3D viewport binding</div>
+      </>
+    );
+  }
   if (!snap.fixture) {
-    return <div className="p-4 text-destructive">Invalid puzzle 3D fixture</div>;
+    return (
+      <>
+        {engagementPublisher}
+        <div className="p-4 text-destructive">Invalid puzzle 3D fixture</div>
+      </>
+    );
   }
   const kindCompatibility = reactHostPort.useMemo(() => parseKindCompatibility(snap.fixture.meta), [snap.fixture]);
   const kindCatalogs = reactHostPort.useMemo(() => parseKindCatalogs(snap.fixture.meta), [snap.fixture]);
@@ -1368,7 +1382,7 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   );
   return (
     <>
-      <Puzzle3dPlayEngagementPublisher ctrl={ctrl} snap={snap} bus={bus} />
+      {engagementPublisher}
       <div className="absolute inset-0 min-h-0 min-w-0">
       <ObjectStateProvider
         fixture={snap.fixture}

@@ -295,8 +295,10 @@ export interface DispositionSplit {
 	 * Tiles stay at full opacity for reveal.js position morphing; the figure hides the grid until transition.
 	 */
 	readonly concealed?: boolean;
-	/** @emoji 🎯 Column groups: {@link splitColumnBounds} for labels; invisible morph layers use {@link columnMorphId} (tiles keep {@link tileMorphId}). */
+	/** @emoji 🎯 Column groups: {@link splitColumnBounds} for labels; one {@link columnMorphId} ghost per column (tiles keep {@link tileMorphId}). */
 	readonly columns?: readonly SplitColumnGroup[];
+	/** @emoji 👻 Render only column ghosts (temporary merge before {@link Disposition.morphTargets}); tiles omitted. */
+	readonly columnGhostsOnly?: boolean;
 }
 
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */
@@ -1126,6 +1128,20 @@ if (import.meta.vitest) {
 			};
 			const resolved = resolveArrangement(thought, "slide");
 			expect(resolved[0]?.split?.tiles).toHaveLength(1);
+		});
+
+		it("passes columnGhostsOnly on split", () => {
+			const split = {
+				tiles: splitFigureGrid({ rows: 1, columns: 1, frame: { x: 0, y: 0, width: 1, height: 1 } }),
+				columns: [{ key: "col1", tileKeys: ["tile-r0-c0"] }],
+				columnGhostsOnly: true,
+			};
+			const thought: Thought = {
+				id: "ghosts",
+				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
+				arrangements: [{ id: "slide", dispositions: [{ participantId: "fig", emphasis: "active", split }] }],
+			};
+			expect(resolveArrangement(thought, "slide")[0]?.split?.columnGhostsOnly).toBe(true);
 		});
 
 		it("passes concealed on split", () => {

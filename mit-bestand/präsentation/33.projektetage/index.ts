@@ -238,6 +238,20 @@ const mediaThought: Thought = {
 			],
 		},
 		{
+			id: "catalogue-merge",
+			dispositions: [
+				{
+					participantId: "catalogue",
+					emphasis: "active",
+					split: {
+						tiles: CATALOGUE_FOCUS_TILES,
+						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
+						columnGhostsOnly: true,
+					},
+				},
+			],
+		},
+		{
 			id: "catalogue-labels",
 			dispositions: [
 				{
@@ -304,7 +318,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(11);
+			expect(countArrangements(deck)).toBe(12);
 		});
 
 		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
@@ -345,13 +359,16 @@ if (import.meta.vitest) {
 			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs catalogue columns into component labels", () => {
+		it("morphs catalogue columns into component labels via a ghost-only merge slide", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
 			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
 			expect(media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columns).toHaveLength(
 				3,
+			);
+			expect(media?.arrangements.find((a) => a.id === "catalogue-merge")?.dispositions[0]?.split?.columnGhostsOnly).toBe(
+				true,
 			);
 		});
 

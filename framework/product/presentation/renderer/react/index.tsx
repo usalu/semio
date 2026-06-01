@@ -550,28 +550,34 @@ function FigureTileView({
 	);
 }
 
-function SplitColumnMorphLayerView({
+function SplitColumnMorphGhostView({
 	participantId,
 	column,
 	tiles,
 	embodiment,
+	visible,
 }: {
 	readonly participantId: string;
 	readonly column: SplitColumnGroup;
 	readonly tiles: readonly SplitTile[];
 	readonly embodiment: FigureEmbodiment;
+	readonly visible: boolean;
 }): ReactNode {
 	const position = splitColumnBounds(tiles, column.tileKeys);
 	const crop = splitColumnCrop(tiles, column.tileKeys);
 	return (
 		<div
 			data-id={columnMorphId(participantId, column.key)}
-			className="presentation-disposition-frame presentation-split-column-morph-layer"
+			className={[
+				"presentation-disposition-frame",
+				"presentation-split-column-morph-ghost",
+				visible ? "presentation-split-column-morph-ghost--visible" : "presentation-split-column-morph-ghost--hidden",
+			].join(" ")}
 			style={{
 				...dispositionFrameStyle(position, undefined),
 				...figureTileBackgroundStyle(embodiment, crop),
 			}}
-			aria-hidden
+			role="presentation"
 		/>
 	);
 }
@@ -632,26 +638,30 @@ function FigureSplitMorphView({
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
 	const columns = disposition.split?.columns ?? [];
+	const ghostsOnly = disposition.split?.columnGhostsOnly === true;
 	return (
 		<>
 			{columns.map((column) => (
-				<SplitColumnMorphLayerView
+				<SplitColumnMorphGhostView
 					key={column.key}
 					participantId={disposition.participant.id}
 					column={column}
 					tiles={tiles}
 					embodiment={embodiment}
+					visible={ghostsOnly}
 				/>
 			))}
-			{tiles.map((tile) => (
-				<FigureTileView
-					key={tile.key}
-					participantId={disposition.participant.id}
-					tile={tile}
-					embodiment={embodiment}
-					defaultEmphasis={disposition.emphasis}
-				/>
-			))}
+			{ghostsOnly
+				? null
+				: tiles.map((tile) => (
+						<FigureTileView
+							key={tile.key}
+							participantId={disposition.participant.id}
+							tile={tile}
+							embodiment={embodiment}
+							defaultEmphasis={disposition.emphasis}
+						/>
+					))}
 		</>
 	);
 }
@@ -1416,6 +1426,23 @@ if (import.meta.vitest) {
 										],
 									},
 									{
+										id: "merge",
+										dispositions: [
+											{
+												participantId: "catalogue",
+												emphasis: "active",
+												split: {
+													tiles,
+													columns: [
+														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"] },
+														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"] },
+													],
+													columnGhostsOnly: true,
+												},
+											},
+										],
+									},
+									{
 										id: "labels",
 										dispositions: [
 											{
@@ -1424,12 +1451,12 @@ if (import.meta.vitest) {
 												morphTargets: [
 													{
 														columnKey: "col1",
-														position: splitColumnBounds(tiles, ["tile-r0-c0"]),
+														position: splitColumnBounds(tiles, ["tile-r0-c0", "tile-r1-c0"]),
 														lines: ["Rippendecke"],
 													},
 													{
 														columnKey: "col2",
-														position: splitColumnBounds(tiles, ["tile-r0-c1"]),
+														position: splitColumnBounds(tiles, ["tile-r0-c1", "tile-r1-c1"]),
 														lines: ["Unterzug"],
 													},
 												],
@@ -1446,11 +1473,11 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const focus = container.querySelector('section[title="focus"]');
-			expect(focus?.querySelectorAll(".presentation-split-column-morph-layer").length).toBe(2);
+			expect(focus?.querySelectorAll(".presentation-split-column-morph-ghost--hidden").length).toBe(2);
 			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(4);
-			expect(focus?.querySelector('[data-id="catalogue--column--col1"]')?.classList.contains("presentation-figure-tile-frame")).toBe(
-				false,
-			);
+			const merge = container.querySelector('section[title="merge"]');
+			expect(merge?.querySelectorAll(".presentation-split-column-morph-ghost--visible").length).toBe(2);
+			expect(merge?.querySelector('[data-id^="catalogue--tile--"]')).toBeNull();
 			const labels = container.querySelector('section[title="labels"]');
 			expect(
 				labels?.querySelector('.presentation-column-label-frame[data-id="catalogue--column--col1"]')?.textContent,
