@@ -1356,7 +1356,7 @@ if (import.meta.vitest) {
 
 		it("groups split tiles by columnMorphId and pairs label frames for auto-animate", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
-			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, gap: 0.05 });
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
 			const deck: Presentation = {
 				id: "column-morph",
 				name: "Column morph",
@@ -1384,7 +1384,7 @@ if (import.meta.vitest) {
 													tiles,
 													columns: [
 														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"] },
-														{ key: "col2", tileKeys: ["tile-r0-c1"] },
+														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"] },
 													],
 												},
 											},
@@ -1422,7 +1422,7 @@ if (import.meta.vitest) {
 			});
 			const focus = container.querySelector('section[title="focus"]');
 			expect(focus?.querySelectorAll('[data-id="catalogue--column--col1"]').length).toBe(2);
-			expect(focus?.querySelectorAll('[data-id="catalogue--column--col2"]').length).toBe(1);
+			expect(focus?.querySelectorAll('[data-id="catalogue--column--col2"]').length).toBe(2);
 			expect(focus?.querySelector('[data-id^="catalogue--tile--"]')).toBeNull();
 			const labels = container.querySelector('section[title="labels"]');
 			expect(

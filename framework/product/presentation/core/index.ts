@@ -295,7 +295,7 @@ export interface DispositionSplit {
 	 * Tiles stay at full opacity for reveal.js position morphing; the figure hides the grid until transition.
 	 */
 	readonly concealed?: boolean;
-	/** @emoji 🎯 Invisible morph anchors per column (pair with {@link Disposition.morphTargets} on the next arrangement). */
+	/** @emoji 🎯 Groups tiles by {@link columnMorphId} for reveal.js group morph into {@link Disposition.morphTargets}. */
 	readonly columns?: readonly SplitColumnGroup[];
 }
 

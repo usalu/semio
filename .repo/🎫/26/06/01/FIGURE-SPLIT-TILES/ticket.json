@@ -1,9 +1,9 @@
 {
   "title": "Figure Split Tiles",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
-  "summary": "Added column morph: split.columns render invisible columnMorphId anchors; morphTargets resolve to text at splitColumnBounds. Projektetage catalogue-focus carries column groups; catalogue-labels morphs to Rippendecke, Unterzug, Stütze. Core 23 tests, renderer 12 tests, deck vitest pass.",
+  "summary": "Fixed column→label auto-animate: tiles in split.columns now share columnMorphId (reveal group morph) instead of per-tile ids plus invisible anchors. Label slide uses ColumnLabelMorphView with data-id on the same positioned div as tile frames. Tests updated.",
   "goal": "🎯framework",
   "sessions": [
     "⚪b9f5d20ffbf54da39143e48f69536ff4",

@@ -1,8 +1,9 @@
 {
   "title": "User Facing Ui Label Cleanup",
   "emoji": "🏷️",
-  "status": "open",
+  "status": "closed",
   "description": "Clean UI labels to user perspective: engagement options → Commands/toggles, no state machine lingo in user space.",
+  "summary": "Centralized user-facing engagement copy in ENGAGEMENT_USER (Command, Commands, Suggestions). Replaced state-machine placeholders and status (State/transition/interaction) with Step and selection counts. Added aria-labels on engagement chrome; cleaned CAD REPL aside and puzzle3d engagement builders.",
   "goal": "🎯semio🎯ui",
   "sessions": [
     "⚪963db0d2e1ad4acca54842b96968fea1"
