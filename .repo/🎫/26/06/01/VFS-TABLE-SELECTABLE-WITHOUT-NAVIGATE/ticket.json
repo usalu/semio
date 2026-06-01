@@ -1,12 +1,13 @@
 {
   "title": "Vfs Table Selectable Without Navigate",
   "emoji": "📁",
-  "status": "closed",
+  "status": "open",
   "description": "Virtual file system table must have selectable file nodes. In sketchpad, clicking a row directly navigates — this must not happen on click; selection only.",
   "summary": "VFS table: single click selects, double-click navigates.\n\n- VirtualFileSystem: onRowDoubleClick prop forwarded to Table; expand chevron stops double-click propagation.\n- Platform BuiltinVirtualFileSystemKindRenderer: onRowDoubleClick calls platform.onNavigate(row.navigateUri).\n- Sketchpad E2E: design/type rows assert single-click selection and double-click navigation.\n\nTests: @ui/react 96 passed.",
   "goal": "🎯ui",
   "sessions": [
     "⚪30517ce7a8ab4be8b834609c48efc13c",
-    "⚪b8b01b943ea54b139f8c9d63e20bbfab"
+    "⚪b8b01b943ea54b139f8c9d63e20bbfab",
+    "⚪2688c8b641ca4fec8a926c8ff397a245"
   ]
 }

@@ -14268,6 +14268,25 @@ if (import.meta.vitest) {
 			expect(rows[1]?.fileNodeKindId).toBe("representation");
 			expect(rows[1]?.navigateUri).toContain("/kits/kit-1/types/type-1");
 		});
+
+		it("home vfs kit and docs page rows expose navigateUri", () => {
+			const kit = { id: "metabolism-id", name: "Metabolism" } as Kit;
+			const homeChildren = sketchpadHomeVfsChildren(
+				["metabolism-id"],
+				(kitId) => (kitId === "metabolism-id" ? kit : undefined),
+				() => "temporary",
+				sketchpadEmptyHomeUiState(),
+				"sketchpad-home",
+			);
+			const kitRow = homeChildren.find((row) => row.id === "kit:metabolism-id");
+			expect(kitRow?.navigateUri).toBe("/kits/metabolism-id");
+			const docsSection = sketchpadHomeVfsChildren(["metabolism-id"], () => kit, () => "temporary", sketchpadEmptyHomeUiState(), "docs-root");
+			expect(docsSection.length).toBeGreaterThan(0);
+			const firstSectionId = docsSection[0]?.id;
+			expect(firstSectionId).toBeTruthy();
+			const pages = sketchpadHomeVfsChildren(["metabolism-id"], () => kit, () => "temporary", sketchpadEmptyHomeUiState(), firstSectionId!);
+			expect(pages.some((page) => page.navigateUri?.startsWith("/docs/"))).toBe(true);
+		});
 	});
 
 	describe("SketchpadShellController stores", () => {

@@ -13394,7 +13394,6 @@ const Table = <T,>({
         className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
         {...(canDragRow ? { ...attributes, ...listeners } : {})}
         onClick={(e) => onRowClick?.(row, index, e)}
-        onDoubleClick={() => onRowDoubleClick?.(row, index)}
         onMouseEnter={() => onRowMouseEnter?.(row, index)}
         onMouseLeave={() => onRowMouseLeave?.(row, index)}
         role={onRowClick ? "button" : undefined}
@@ -13941,6 +13940,10 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   );
   const handleRowClick = reactHostPort.useCallback(
     (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => {
+      if (event.detail >= 2) {
+        onRowDoubleClick?.(row, index);
+        return;
+      }
       const next = getVirtualFileSystemNextSelectionState({
         selectionMode,
         selectedRowIds: [...resolvedSelectedRowIds],
@@ -13953,7 +13956,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       applySelection(next);
       onRowClick?.(row, index, event);
     },
-    [applySelection, onRowClick, orderedRowIds, resolvedSelectedRowIds, selectionMode],
+    [applySelection, onRowClick, onRowDoubleClick, orderedRowIds, resolvedSelectedRowIds, selectionMode],
   );
   const columns = reactHostPort.useMemo((): TableColumn<VirtualFileSystemRow>[] => {
     const base: TableColumn<VirtualFileSystemRow>[] = [
@@ -13998,7 +14001,6 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       getRowId={(row) => row.id}
       selectedRows={resolvedSelectedRowIds}
       onRowClick={handleRowClick}
-      onRowDoubleClick={onRowDoubleClick}
       emptyMessage={emptyMessage}
       rowHeight={rowHeight}
       hierarchical
@@ -16983,6 +16985,34 @@ if (treeVitest) {
       expect(markup).toContain("data-vfs-expand");
       expect(markup).toContain("readme.md");
       expect(markup).toContain("cursor-selectable");
+    });
+
+    it("invokes onRowDoubleClick on double-click (including drag-enabled rows)", async () => {
+      const { render } = await import("@testing-library/react");
+      const userEvent = (await import("@testing-library/user-event")).default;
+      const user = userEvent.setup();
+      const onRowDoubleClick = vi.fn();
+      const onSelectionChange = vi.fn();
+      const { container } = render(
+        <VirtualFileSystem
+          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+          rows={[
+            { id: "root", fileNodeKindId: "root", name: "Root", level: 0, hasChildren: false },
+            { id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" },
+          ]}
+          onRowDoubleClick={onRowDoubleClick}
+          onSelectionChange={onSelectionChange}
+          dragDrop={{ enabled: true, canDrag: () => true }}
+        />,
+      );
+      const leafRow = container.querySelector('tr[data-row-id="leaf-a"]');
+      expect(leafRow).toBeTruthy();
+      await user.click(leafRow!);
+      expect(onSelectionChange).toHaveBeenCalledWith(["leaf-a"], expect.objectContaining({ anchorRowId: "leaf-a" }));
+      onRowDoubleClick.mockClear();
+      await user.dblClick(leafRow!);
+      expect(onRowDoubleClick).toHaveBeenCalled();
+      expect(onRowDoubleClick.mock.calls.some((call) => call[0]?.id === "leaf-a")).toBe(true);
     });
 
     it("computes shift range and ctrl toggle selection for visible rows", () => {

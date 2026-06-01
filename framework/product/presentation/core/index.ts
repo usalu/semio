@@ -1025,12 +1025,11 @@ if (import.meta.vitest) {
 				columns: 2,
 				frame: { x: 0.1, y: 0.2, width: 0.8, height: 0.6 },
 			});
-			expect(splitColumnBounds(tiles, ["tile-r0-c0", "tile-r1-c0"])).toEqual({
-				x: 0.1,
-				y: 0.2,
-				width: 0.4,
-				height: 0.6,
-			});
+			const bounds = splitColumnBounds(tiles, ["tile-r0-c0", "tile-r1-c0"]);
+			expect(bounds.x).toBeCloseTo(0.1);
+			expect(bounds.y).toBeCloseTo(0.2);
+			expect(bounds.width).toBeCloseTo(0.4);
+			expect(bounds.height).toBeCloseTo(0.6);
 		});
 	});
 

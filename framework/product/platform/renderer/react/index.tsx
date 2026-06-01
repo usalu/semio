@@ -1599,14 +1599,22 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 					});
 				}}
 				onRowDoubleClick={(row) => {
-					if (!row.navigateUri || !platform?.onNavigate) return;
-					platform.onNavigate(row.navigateUri);
+					if (!row.navigateUri || !platform) return;
+					if (platform.onNavigate) {
+						platform.onNavigate(row.navigateUri);
+						return;
+					}
+					platform.commandBus.dispatch(controllerId, "navigate", { path: row.navigateUri });
 				}}
 				dragDrop={
 					model.dragDropEnabled
 						? {
 								enabled: true,
-								canDrag: (rowId) => rowId !== rows[0]?.id,
+								canDrag: (rowId) => {
+									if (rowId === rows[0]?.id) return false;
+									const modelRow = model.rows.find((entry) => entry.id === rowId);
+									return modelRow?.canDrag !== false;
+								},
 								canDrop: (draggedId, targetId) => draggedId !== targetId,
 								onDragEnd: ({ active, over }) => {
 									if (!over) return;
