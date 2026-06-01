@@ -37,8 +37,8 @@
         "hash": "typology-migration-stub",
         "items": [
             {
-                "id": "typology-default",
-                "name": "Default",
+                "id": "typology-base",
+                "name": "Base",
                 "types": {
                     "hash": "typology-migration-stub",
                     "items": [
@@ -47,7 +47,7 @@
                             "name": "selected-external-lg",
                             "connectors": [],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -90,7 +90,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -98,7 +98,7 @@
                             "name": "selected-external-ll",
                             "connectors": [],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -124,7 +124,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -150,7 +150,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -176,7 +176,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -219,7 +219,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -296,7 +296,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -339,7 +339,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -365,7 +365,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         }
                     ]
@@ -499,7 +499,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -514,7 +514,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -556,7 +556,7 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         }
                     ]

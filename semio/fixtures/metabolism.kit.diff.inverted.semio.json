@@ -120,19 +120,6 @@
     },
     "typologies": {
         "hash": "typology-migration-stub",
-        "items": [
-            {
-                "id": "typology-default",
-                "name": "Default",
-                "types": {
-                    "hash": "typology-migration-stub",
-                    "items": []
-                },
-                "designs": {
-                    "hash": "typology-migration-stub",
-                    "items": []
-                }
-            }
-        ]
+        "items": []
     }
 }

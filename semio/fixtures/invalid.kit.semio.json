@@ -39,8 +39,8 @@
         "hash": "typology-migration-stub",
         "items": [
             {
-                "id": "typology-default",
-                "name": "Default",
+                "id": "typology-base",
+                "name": "Base",
                 "types": {
                     "hash": "typology-migration-stub",
                     "items": [
@@ -96,14 +96,14 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
                             "id": "019ab664-2222-2222-2222-222222222222",
                             "name": "Duplicate Type Name",
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         }
                     ]
@@ -202,14 +202,14 @@
                                 }
                             ],
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         },
                         {
                             "id": "019ab664-6666-6666-6666-666666666666",
                             "name": "Duplicate Design Name",
                             "typology": {
-                                "id": "typology-default"
+                                "id": "typology-base"
                             }
                         }
                     ]

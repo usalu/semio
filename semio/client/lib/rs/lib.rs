@@ -12568,8 +12568,10 @@ pub mod kit_backbone {
             }
             for (topo_json, topo) in &topo_entries {
                 let types_arr = topo_json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-                let designs_arr = topo_json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
                 hydrate_types_block(topo, kit, &types_arr, &kit_scope_ports).await?;
+            }
+            for (topo_json, topo) in &topo_entries {
+                let designs_arr = topo_json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
                 hydrate_designs_block(topo, kit, &designs_arr).await?;
             }
         } else {

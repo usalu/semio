@@ -5352,6 +5352,32 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       }
     });
 
+    it("installProjection has no typology-default on metabolism shallow kit", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/metabolism.shallow.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const typologies = await eventually(() => kit.hasTypologies(), (rows) => rows.length >= 6, 30_000);
+        expect(typologies.some((t) => t.id === "typology-default")).toBe(false);
+        const tower = typologies.find((t) => t.id === "typology-tower");
+        expect(tower).toBeDefined();
+        const towerDesigns = await tower!.hasDesigns();
+        const towerDesignNames = await Promise.all(towerDesigns.map((d) => d.name()));
+        expect(towerDesignNames).toEqual(
+          expect.arrayContaining(["Nakagin Capsule Tower", "Slanted", "Twisted", "Dancing"]),
+        );
+      } finally {
+        await session.dispose();
+      }
+    });
+
     it("installProjection places Nakagin Capsule Tower under typology-tower not typology-capsule", async () => {
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
