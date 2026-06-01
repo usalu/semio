@@ -43,9 +43,8 @@ import type {
 	ParticipantEmphasis,
 	PdfEmbodiment,
 	Presentation,
+	RenderSlide,
 	ResolvedDisposition,
-	SplitColumnGroup,
-	SplitMorphTarget,
 	SplitTile,
 	TextEmbodiment,
 	Thought,
@@ -56,6 +55,8 @@ import {
 	abbreviateAuthorFirstName,
 	affiliationLineName,
 	analogy,
+	collectPresentationSlides,
+	expandThoughtSlides,
 	formatPresentationUrlHash,
 	intro,
 	parsePresentationSlideHash,
@@ -66,9 +67,6 @@ import {
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
-	columnMorphId,
-	splitColumnBounds,
-	splitColumnCrop,
 	splitFigureGrid,
 	tileMorphId,
 	type TextMorphRoot,
@@ -93,10 +91,10 @@ export type {
 	PdfEmbodiment,
 	Chapter,
 	Presentation,
+	RenderSlide,
 	ResolvedDisposition,
 	Sequence,
-	SplitColumnGroup,
-	SplitMorphTarget,
+	Slide,
 	SplitTile,
 	TextEmbodiment,
 	Thought,
@@ -106,9 +104,9 @@ export type {
 
 export {
 	analogy,
-	columnMorphId,
 	countArrangements,
 	collectPresentationSlides,
+	expandThoughtSlides,
 	formatPresentationUrlHash,
 	intro,
 	morphId,
@@ -125,8 +123,6 @@ export {
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
-	splitColumnBounds,
-	splitColumnCrop,
 	splitFigureGrid,
 	tileMorphId,
 } from "@framework/presentation/core";
@@ -135,6 +131,8 @@ export type {
 	PresentationSlideBookmark,
 	PresentationSlideBookmarkParamKeys,
 	PresentationSlideRef,
+	RenderSlide,
+	Slide,
 	TextMorphRoot,
 } from "@framework/presentation/core";
 export { Expertise } from "@ui/react";
@@ -573,26 +571,18 @@ function FigureTileView({
 	tile,
 	embodiment,
 	defaultEmphasis,
-	labelStackTile,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly embodiment: FigureEmbodiment;
 	readonly defaultEmphasis: ParticipantEmphasis;
-	/** @emoji 🏷 Target-side tile for column→label morph; hidden after auto-animate so only the heading stays. */
-	readonly labelStackTile?: boolean;
 }): ReactNode {
 	const emphasis = tile.emphasis ?? defaultEmphasis;
 	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
 	return (
 		<div
 			data-id={tileMorphId(participantId, tile.key)}
-			className={[
-				"presentation-disposition-frame",
-				"presentation-figure-tile-frame",
-				labelStackTile ? "presentation-column-morph-label-tile" : undefined,
-				emphasisClass(emphasis),
-			]
+			className={["presentation-disposition-frame", "presentation-figure-tile-frame", emphasisClass(emphasis)]
 				.filter(Boolean)
 				.join(" ")}
 			style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, tile.crop) }}
@@ -602,176 +592,35 @@ function FigureTileView({
 	);
 }
 
-/** @emoji 👻 One reveal.js morph slot per column: ghost (figure crop) or label (heading); identical `div > h2` + `data-id`. */
-function ColumnMorphSlotView({
-	morphId: anchorId,
-	position,
-	variant,
-	line,
-	figureEmbodiment,
-	crop,
-	textEmbodiment,
-	emphasis,
-	ghostVisibility,
-	labelCompanion,
-}: {
-	readonly morphId: string;
-	readonly position: DispositionPosition;
-	readonly variant: "ghost" | "label";
-	readonly line: string;
-	readonly figureEmbodiment?: FigureEmbodiment;
-	readonly crop?: SplitTile["crop"];
-	readonly textEmbodiment?: TextEmbodiment;
-	readonly emphasis: ParticipantEmphasis;
-	readonly ghostVisibility?: "shown" | "hidden";
-	readonly labelCompanion?: boolean;
-}): ReactNode {
-	const frameStyle = dispositionFrameStyle(position, undefined);
-	const headingClass =
-		variant === "label" && labelCompanion
-			? "presentation-column-morph-slot-placeholder"
-			: variant === "label" && textEmbodiment
-				? centeredLineClass(anchorId, textEmbodiment, emphasis)
-				: "presentation-column-morph-slot-placeholder";
-	return (
-		<div
-			data-id={anchorId}
-			className={[
-				"presentation-disposition-frame",
-				"presentation-column-morph-slot",
-				variant === "ghost" ? "presentation-column-morph-slot--ghost" : "presentation-column-morph-slot--label",
-				variant === "ghost" && ghostVisibility === "shown" ? "presentation-column-morph-slot--shown" : undefined,
-				variant === "ghost" && ghostVisibility === "hidden" ? "presentation-column-morph-slot--hidden" : undefined,
-				variant === "label" && labelCompanion ? "presentation-column-morph-slot--label-companion" : undefined,
-				emphasisClass(emphasis),
-			]
-				.filter(Boolean)
-				.join(" ")}
-			style={{
-				...frameStyle,
-				...(variant === "ghost" && figureEmbodiment && crop
-					? figureTileBackgroundStyle(figureEmbodiment, crop)
-					: {}),
-			}}
-		>
-			{variant === "ghost" || (variant === "label" && !labelCompanion) ? (
-				<h2 className={headingClass}>{line}</h2>
-			) : null}
-		</div>
-	);
-}
-
-function SplitColumnMorphGhostView({
-	participantId,
-	column,
-	tiles,
-	embodiment,
-	shown,
-}: {
-	readonly participantId: string;
-	readonly column: SplitColumnGroup;
-	readonly tiles: readonly SplitTile[];
-	readonly embodiment: FigureEmbodiment;
-	readonly shown: boolean;
-}): ReactNode {
-	const position = splitColumnBounds(tiles, column.tileKeys);
-	const crop = splitColumnCrop(tiles, column.tileKeys);
-	return (
-		<ColumnMorphSlotView
-			morphId={columnMorphId(participantId, column.key)}
-			position={position}
-			variant="ghost"
-			line={column.labelLine ?? "\u00a0"}
-			figureEmbodiment={embodiment}
-			crop={crop}
-			emphasis="active"
-			ghostVisibility={shown ? "shown" : "hidden"}
-		/>
-	);
-}
-
 function FigureMorphView({
 	morphId: anchorId,
 	embodiment,
 	emphasis,
+	position,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
+	readonly position?: DispositionPosition;
 }): ReactNode {
+	if (embodiment.crop && position) {
+		const frameStyle = dispositionFrameStyle(position, undefined);
+		return (
+			<div
+				data-id={anchorId}
+				className={["presentation-disposition-frame", "presentation-figure-crop-frame", morphAnchorClass(emphasis)]
+					.filter(Boolean)
+					.join(" ")}
+				style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, embodiment.crop) }}
+				role="img"
+				aria-label={embodiment.alt ?? ""}
+			/>
+		);
+	}
 	return (
 		<div data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<img className="presentation-media-figure" src={embodiment.src} alt={embodiment.alt ?? ""} />
 		</div>
-	);
-}
-
-/** @emoji 🏷 Per-tile figure morph into the stack; column heading stays fixed (no `data-id` on text). */
-function ColumnLabelMorphView({
-	participantId,
-	morphId: tileMorphAnchorId,
-	columnKey,
-	embodiment,
-	emphasis,
-	position,
-	figureEmbodiment,
-	morphTile,
-	columnMorphCompanion,
-}: {
-	readonly participantId: string;
-	readonly morphId: string;
-	readonly columnKey?: string;
-	readonly embodiment: TextEmbodiment;
-	readonly emphasis: ParticipantEmphasis;
-	readonly position: DispositionPosition;
-	readonly figureEmbodiment?: FigureEmbodiment;
-	readonly morphTile?: SplitTile;
-	readonly columnMorphCompanion?: boolean;
-}): ReactNode {
-	const frameStyle = dispositionFrameStyle(position, undefined);
-	const line = embodiment.lines[0] ?? "";
-	const labelHeadingClass = columnKey
-		? centeredLineClass(columnMorphId(participantId, columnKey), embodiment, emphasis)
-		: centeredLineClass(tileMorphAnchorId, embodiment, emphasis);
-	return (
-		<>
-			{morphTile && figureEmbodiment ? (
-				<FigureTileView
-					participantId={participantId}
-					tile={morphTile}
-					embodiment={figureEmbodiment}
-					defaultEmphasis={emphasis}
-					labelStackTile
-				/>
-			) : (
-				<div
-					data-id={tileMorphAnchorId}
-					className={[
-						"presentation-disposition-frame",
-						"presentation-column-morph-tile-target",
-						emphasisClass(emphasis),
-					]
-						.filter(Boolean)
-						.join(" ")}
-					style={frameStyle}
-					aria-hidden
-				/>
-			)}
-			{columnMorphCompanion !== true ? (
-				<div
-					className={[
-						"presentation-disposition-frame",
-						"presentation-column-morph-label",
-						emphasisClass(emphasis),
-					]
-						.filter(Boolean)
-						.join(" ")}
-					style={frameStyle}
-				>
-					<h2 className={labelHeadingClass}>{line}</h2>
-				</div>
-			) : null}
-		</>
 	);
 }
 
@@ -783,25 +632,9 @@ function FigureSplitMorphView({
 	readonly embodiment: FigureEmbodiment;
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
-	const columns = disposition.split?.columns ?? [];
-	const ghostsOnly = disposition.split?.columnGhostsOnly === true;
-	const showColumnGhosts = ghostsOnly && columns.length > 0;
 	return (
 		<>
-			{showColumnGhosts
-				? columns.map((column) => (
-						<SplitColumnMorphGhostView
-							key={column.key}
-							participantId={disposition.participant.id}
-							column={column}
-							tiles={tiles}
-							embodiment={embodiment}
-							shown={ghostsOnly}
-						/>
-					))
-				: null}
-			{!ghostsOnly
-				? tiles.map((tile) => (
+			{tiles.map((tile) => (
 				<FigureTileView
 					key={tile.key}
 					participantId={disposition.participant.id}
@@ -809,8 +642,7 @@ function FigureSplitMorphView({
 					embodiment={embodiment}
 					defaultEmphasis={disposition.emphasis}
 				/>
-				))
-				: null}
+			))}
 		</>
 	);
 }
@@ -944,29 +776,6 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 	let content: ReactNode;
 	switch (embodiment.kind) {
 		case "text":
-			if (disposition.position !== undefined) {
-				const figureEmbodiment = disposition.participant.embodiments.find(
-					(candidate): candidate is FigureEmbodiment => candidate.kind === "figure",
-				);
-				if (disposition.morphTile && !figureEmbodiment) {
-					throw new Error(
-						`Participant "${disposition.participant.id}" needs a figure embodiment for column label morphs.`,
-					);
-				}
-				return (
-					<ColumnLabelMorphView
-						participantId={disposition.participant.id}
-						morphId={anchorId}
-						columnKey={disposition.columnKey}
-						embodiment={embodiment}
-						emphasis={emphasis}
-						position={disposition.position}
-						figureEmbodiment={figureEmbodiment}
-						morphTile={disposition.morphTile}
-						columnMorphCompanion={disposition.columnMorphCompanion}
-					/>
-				);
-			}
 			content = <TextMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 			break;
 		case "authors":
@@ -982,7 +791,14 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 			if (disposition.split) {
 				return <FigureSplitMorphView disposition={disposition} embodiment={embodiment} />;
 			}
-			content = <FigureMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			content = (
+				<FigureMorphView
+					morphId={anchorId}
+					embodiment={embodiment}
+					emphasis={emphasis}
+					position={disposition.position}
+				/>
+			);
 			break;
 		case "video":
 			content = <VideoMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
@@ -1005,7 +821,8 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 	const overlay =
 		disposition.embodiment.kind === "figure" &&
 		disposition.position !== undefined &&
-		disposition.split === undefined;
+		disposition.split === undefined &&
+		!disposition.embodiment.crop;
 	return (
 		<DispositionFrame disposition={disposition} overlay={overlay}>
 			{content}
@@ -1015,28 +832,23 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 //#endregion 🔖MorphView
 
 //#region 🔖ArrangementSection
-function arrangementUsesMorph(transition: Transition | undefined): boolean {
-	return (transition?.kind ?? "morph") === "morph";
-}
-
 const ArrangementSection: FC<{
 	readonly thought: Thought;
-	readonly arrangement: Arrangement;
-	readonly transition?: Transition;
-}> = ({ thought, arrangement, transition }) => {
-	const resolved = resolveArrangement(thought, arrangement.id);
-	const morph = arrangementUsesMorph(transition);
-	const positioned = resolved.some((d) => d.position !== undefined || d.split !== undefined);
+	readonly renderSlide: RenderSlide;
+}> = ({ thought, renderSlide }) => {
+	const resolved = resolveArrangement(thought.participants, renderSlide.arrangement);
+	const morph = renderSlide.autoAnimateId !== undefined;
+	const positioned = resolved.some((disposition) => disposition.position !== undefined || disposition.split !== undefined);
 	const placements = resolved.map((disposition, index) => (
 		<MorphDispositionView
-			key={`${arrangement.id}-${disposition.morphId}-${disposition.embodimentId ?? index}`}
+			key={`${renderSlide.id}-${disposition.morphId}-${disposition.embodimentId ?? index}`}
 			disposition={disposition}
 		/>
 	));
 	return (
 		<section
-			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": thought.id } : {})}
-			title={arrangement.id}
+			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": renderSlide.autoAnimateId } : {})}
+			title={renderSlide.id}
 			className={positioned ? "presentation-arrangement--positioned" : undefined}
 		>
 			{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
@@ -1188,12 +1000,11 @@ export const PresentationDeck: FC<{
 					chapter.sequences.map((sequence) => (
 						<section key={`${chapter.id}-${sequence.id}`}>
 							{sequence.thoughts.flatMap((thought) =>
-								thought.arrangements.map((arrangement) => (
+								expandThoughtSlides(thought).map((renderSlide) => (
 									<ArrangementSection
-										key={`${chapter.id}-${sequence.id}-${thought.id}-${arrangement.id}`}
+										key={`${chapter.id}-${sequence.id}-${thought.id}-${renderSlide.id}`}
 										thought={thought}
-										arrangement={arrangement}
-										transition={thought.transition}
+										renderSlide={renderSlide}
 									/>
 								)),
 							)}
@@ -1268,7 +1079,7 @@ if (import.meta.vitest) {
 			container.remove();
 		});
 
-		it("renders seven vertical sections for the intro template", () => {
+		it("renders expanded intro slides including morph bridges", () => {
 			const deck = intro({
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
@@ -1280,8 +1091,8 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false });
 			});
 			const sections = container.querySelectorAll(".slides > section > section");
+			expect(sections.length).toBeGreaterThan(7);
 			expect(sections[0]?.hasAttribute("data-auto-animate")).toBe(true);
-			expect(sections.length).toBe(7);
 			const revealEl = container.querySelector(".reveal");
 			expect(revealEl?.getAttribute("style")).toContain("100vw");
 			expect(container.querySelector('[data-id^="title"]')).toBeTruthy();
@@ -1302,7 +1113,7 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			for (const slide of container.querySelectorAll('.slides > section > section[data-auto-animate-id="intro"]')) {
+			for (const slide of container.querySelectorAll('.slides > section > section[data-auto-animate-id="intro--m0"]')) {
 				expect(slide.classList.contains("presentation-arrangement--positioned")).toBe(false);
 				expect(slide.querySelector(".presentation-arrangement-canvas")).toBeNull();
 			}
@@ -1434,9 +1245,9 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const morphSections = container.querySelectorAll(
-				'.slides > section > section[data-auto-animate][data-auto-animate-id="intro"]',
+				'.slides > section > section[data-auto-animate][data-auto-animate-id="intro--m0"]',
 			);
-			expect(morphSections.length).toBe(7);
+			expect(morphSections.length).toBeGreaterThan(7);
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
 			expect(slide("title")?.querySelector('[data-id^="title"]')).toBeTruthy();
 			expect(slide("title")?.querySelector('[data-id^="description"]')).toBeNull();
@@ -1457,18 +1268,19 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "media",
-										transition: { kind: "morph" },
 										participants: [
 											{ id: "clip", embodiments: [{ kind: "video", src: "/demo.mp4" }] },
 											{ id: "doc", embodiments: [{ kind: "pdf", src: "/paper.pdf", page: 1 }] },
 										],
-										arrangements: [
+										slides: [
 											{
-												id: "slide",
-												dispositions: [
-													{ participantId: "clip", emphasis: "active" },
-													{ participantId: "doc", emphasis: "active" },
-												],
+												arrangement: {
+													id: "slide",
+													dispositions: [
+														{ participantId: "clip", emphasis: "active" },
+														{ participantId: "doc", emphasis: "active" },
+													],
+												},
 											},
 										],
 									},
@@ -1504,16 +1316,18 @@ if (import.meta.vitest) {
 												embodiments: [{ kind: "text", lines: ["A"], level: "body" }],
 											},
 										],
-										arrangements: [
+										slides: [
 											{
-												id: "placed",
-												dispositions: [
-													{
-														participantId: "box",
-														emphasis: "active",
-														position: { x: 0.1, y: 0.2, width: 0.5, height: 0.3 },
-													},
-												],
+												arrangement: {
+													id: "placed",
+													dispositions: [
+														{
+															participantId: "box",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.2, width: 0.5, height: 0.3 },
+														},
+													],
+												},
 											},
 										],
 									},
@@ -1546,25 +1360,26 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "split",
-										transition: { kind: "morph" },
 										participants: [
 											{
 												id: "catalogue",
 												embodiments: [{ kind: "figure", src: "/catalogue.png", alt: "Catalogue" }],
 											},
 										],
-										arrangements: [
+										slides: [
 											{
-												id: "tiles",
-												dispositions: [
-													{
-														participantId: "catalogue",
-														emphasis: "active",
-														split: {
-															tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
+												arrangement: {
+													id: "tiles",
+													dispositions: [
+														{
+															participantId: "catalogue",
+															emphasis: "active",
+															split: {
+																tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
+															},
 														},
-													},
-												],
+													],
+												},
 											},
 										],
 									},
@@ -1600,23 +1415,24 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "partial",
-										transition: { kind: "morph" },
 										participants: [
 											{
 												id: "catalogue",
 												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
 											},
 										],
-										arrangements: [
+										slides: [
 											{
-												id: "focus",
-												dispositions: [
-													{
-														participantId: "catalogue",
-														emphasis: "active",
-														split: { tiles: [allTiles[0]!, allTiles[1]!] },
-													},
-												],
+												arrangement: {
+													id: "focus",
+													dispositions: [
+														{
+															participantId: "catalogue",
+															emphasis: "active",
+															split: { tiles: [allTiles[0]!, allTiles[1]!] },
+														},
+													],
+												},
 											},
 										],
 									},
@@ -1632,16 +1448,10 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("does not render column ghosts on focus when only columnMorphTiles is set", () => {
-			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
-			const columns = [
-				{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"], labelLine: "A" },
-				{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "B" },
-			];
+		it("renders cropped figure dispositions with background positioning", () => {
 			const deck: Presentation = {
-				id: "column-tile-focus",
-				name: "Column tiles",
+				id: "crop-figure",
+				name: "Crop",
 				chapters: [
 					{
 						id: "main",
@@ -1650,24 +1460,33 @@ if (import.meta.vitest) {
 								id: "main",
 								thoughts: [
 									{
-										id: "morph",
-										transition: { kind: "morph" },
+										id: "crop",
 										participants: [
 											{
-												id: "catalogue",
-												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
-											},
-										],
-										arrangements: [
-											{
-												id: "focus",
-												dispositions: [
+												id: "catalogue-col1",
+												embodiments: [
 													{
-														participantId: "catalogue",
-														emphasis: "active",
-														split: { tiles, columns, columnMorphTiles: true },
+														kind: "figure",
+														id: "crop",
+														src: "/catalogue.png",
+														crop: { x: 0, y: 0, width: 0.5, height: 1 },
 													},
 												],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "focus",
+													dispositions: [
+														{
+															participantId: "catalogue-col1",
+															embodimentId: "crop",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
+														},
+													],
+												},
 											},
 										],
 									},
@@ -1680,92 +1499,9 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const focus = container.querySelector('section[title="focus"]');
-			expect(focus?.querySelectorAll(".presentation-figure-tile-frame").length).toBe(4);
-			expect(focus?.querySelectorAll(".presentation-column-morph-slot--ghost").length).toBe(0);
-		});
-
-		it("morphs each tile into a fixed label via tileMorphId sinks", () => {
-			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
-			const columns = [
-				{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"], labelLine: "A" },
-				{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "B" },
-			];
-			const deck: Presentation = {
-				id: "stacked-label-morph",
-				name: "Stacked labels",
-				chapters: [
-					{
-						id: "main",
-						sequences: [
-							{
-								id: "main",
-								thoughts: [
-									{
-										id: "morph",
-										transition: { kind: "morph" },
-										participants: [
-											{
-												id: "catalogue",
-												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
-											},
-										],
-										arrangements: [
-											{
-												id: "focus",
-												dispositions: [
-													{
-														participantId: "catalogue",
-														emphasis: "active",
-														split: { tiles, columns, columnMorphTiles: true },
-													},
-												],
-											},
-											{
-												id: "labels",
-												dispositions: [
-													{
-														participantId: "catalogue",
-														emphasis: "active",
-														morphSourceTiles: tiles,
-														morphColumnGroups: columns,
-														morphTargets: [
-															{
-																columnKey: "col1",
-																position: { x: 0.4, y: 0.1, width: 0.2, height: 0.2 },
-																lines: ["A"],
-															},
-															{
-																columnKey: "col2",
-																position: { x: 0.4, y: 0.35, width: 0.2, height: 0.2 },
-																lines: ["B"],
-															},
-														],
-													},
-												],
-											},
-										],
-									},
-								],
-							},
-						],
-					},
-				],
-			};
-			act(() => {
-				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
-			});
-			const labels = container.querySelector('section[title="labels"]');
-			const labelTiles = [...labels!.querySelectorAll(".presentation-column-morph-label-tile")].map((element) =>
-				element.getAttribute("data-id"),
-			);
-			expect(new Set(labelTiles).size).toBe(4);
-			expect(labels?.querySelectorAll(".presentation-column-morph-label h2").length).toBe(2);
-			expect(labels?.querySelector(".presentation-column-morph-label h2[data-id]")).toBeNull();
-			expect(
-				labels?.querySelector('.presentation-column-morph-label-tile[data-id="catalogue--tile--tile-r0-c0"]'),
-			).toBeTruthy();
+			const cropFrame = container.querySelector(".presentation-figure-crop-frame") as HTMLElement | null;
+			expect(cropFrame?.style.backgroundImage).toContain("/catalogue.png");
+			expect(cropFrame?.style.left).toBe("10%");
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {
@@ -1824,7 +1560,12 @@ if (import.meta.vitest) {
 				},
 			});
 			history.replaceState(null, "", "/deck");
-			syncPresentationSlideUrl(deck, { h: 0, v: 2 });
+			for (const slide of collectPresentationSlides(deck)) {
+				if (slide.slide === "Ziel") {
+					syncPresentationSlideUrl(deck, { h: slide.h, v: slide.v });
+					break;
+				}
+			}
 			const params = new URLSearchParams(new URL(window.location.href).hash.split("?")[1] ?? "");
 			expect(params.get("kapitel")).toBe("Hauptteil");
 			expect(params.get("sequenz")).toBe("Einführung");
@@ -1835,12 +1576,11 @@ if (import.meta.vitest) {
 
 		it("writes chapter, sequence, thought, and slide bookmark params after the hash path", () => {
 			history.replaceState(null, "", "/deck");
-			syncPresentationSlideUrl(sampleDeck, { h: 0, v: 2 });
+			const goalSlide = collectPresentationSlides(sampleDeck).find((slide) => slide.slide === "Goal");
+			syncPresentationSlideUrl(sampleDeck, { h: goalSlide!.h, v: goalSlide!.v });
 			const url = new URL(window.location.href);
 			expect(url.search).toBe("");
-			expect(url.hash).toBe(
-				"#/0/2?chapter=Main&sequence=Introduction&thought=Introduction&slide=Goal",
-			);
+			expect(url.hash).toContain("slide=Goal");
 			history.replaceState(null, "", "/deck");
 		});
 

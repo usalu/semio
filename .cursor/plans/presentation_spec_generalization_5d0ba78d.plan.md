@@ -4,25 +4,25 @@ overview: Align @framework/presentation with the spec by introducing a first-cla
 todos:
   - id: ticket
     content: Open repo MCP ticket (read repo://goals, associate with running-sketchpad goal); do not edit AGENTS.md.
-    status: pending
+    status: completed
   - id: core-model
     content: "Core: add Slide (arrangement + transition), Thought.slides, per-slide Transition; add FigureEmbodiment.crop; simplify DispositionSplit to tiles; remove SplitColumnGroup/SplitMorphTarget/column helpers and extra Disposition/ResolvedDisposition fields."
-    status: pending
+    status: completed
   - id: core-morph
     content: "Core: implement expandThoughtSlides() — auto-derive morph bridges (source embodiment at target position/style) and partition slides into morph-runs with unique autoAnimateId; refactor resolveArrangement to resolve an Arrangement against participants."
-    status: pending
+    status: completed
   - id: core-traverse
     content: "Core: route collectPresentationSlides/countArrangements/presentationSlideAt/bookmark+URL helpers through expandThoughtSlides; migrate intro() and analogy() to the slides model."
-    status: pending
+    status: completed
   - id: renderer
     content: "Renderer: iterate expandThoughtSlides, set data-auto-animate-id per morph-run, render cropped figures, keep split tiles, remove column/ghost views; clean globals.css and exports."
-    status: pending
+    status: completed
   - id: deck
     content: "Re-express 33.projektetage on the slides model: catalogue columns as crop-figure+text participants morphing focus->labels via generalized morph; remove bespoke column/ghost usage."
-    status: pending
+    status: completed
   - id: tests
     content: Extend core, renderer, and deck vitest suites in place to cover the new model; run all via nx and ensure they pass; close the ticket.
-    status: pending
+    status: completed
 isProject: false
 ---
 

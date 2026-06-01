@@ -142,82 +142,10 @@
 	z-index: 1;
 }
 
-.reveal .presentation-column-morph-slot {
-	display: flex;
-	align-items: center;
-	justify-content: center;
+.reveal .presentation-figure-crop-frame {
 	overflow: hidden;
-	box-sizing: border-box;
-}
-
-.reveal .presentation-column-morph-slot h2 {
-	margin: 0;
-	width: 100%;
-}
-
-.reveal .presentation-column-morph-slot-placeholder {
-	opacity: 0;
-}
-
-.reveal .presentation-column-morph-slot--ghost.presentation-column-morph-slot--hidden {
-	z-index: 0;
-	opacity: 0;
-	pointer-events: none;
-}
-
-.reveal .presentation-column-morph-slot--ghost.presentation-column-morph-slot--shown {
-	z-index: 2;
-	opacity: 1;
-	pointer-events: none;
-}
-
-.reveal .presentation-column-morph-slot--label {
+	background-repeat: no-repeat;
 	z-index: 1;
-}
-
-.reveal .presentation-column-morph-slot--label-companion {
-	z-index: 0;
-	opacity: 0;
-	pointer-events: none;
-}
-
-.reveal .presentation-column-morph-tile-target {
-	z-index: 0;
-	opacity: 0;
-	pointer-events: none;
-}
-
-.reveal .presentation-column-morph-label-tile {
-	z-index: 1;
-	opacity: 0;
-	pointer-events: none;
-}
-
-.reveal[data-auto-animate="running"] .presentation-column-morph-label-tile {
-	opacity: 1;
-}
-
-.reveal .presentation-column-morph-label {
-	z-index: 2;
-	pointer-events: none;
-}
-
-.reveal .presentation-column-morph-label h2 {
-	margin: 0;
-	width: 100%;
-	text-align: center;
-}
-
-.reveal .presentation-column-morph-slot--ghost.presentation-column-morph-slot--hidden {
-	z-index: 0;
-}
-
-.reveal .presentation-column-morph-slot--label {
-	text-align: center;
-}
-
-.reveal .presentation-arrangement-canvas:has(.presentation-column-morph-slot--shown) .presentation-figure-tile-frame {
-	visibility: hidden;
 }
 
 .reveal .presentation-disposition-frame--overlay {

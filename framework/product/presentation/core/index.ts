@@ -1,5 +1,5 @@
 // #region 🧱Header
-/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Chapter}, {@link Sequence}, {@link Thought}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link intro}, and {@link analogy}. */
+/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Chapter}, {@link Sequence}, {@link Thought}, {@link Slide}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link expandThoughtSlides}, {@link intro}, and {@link analogy}. */
 // #endregion 🧱Header
 
 //#region 🔖Emphasis
@@ -8,7 +8,7 @@ export type ParticipantEmphasis = "active" | "muted";
 //#endregion 🔖Emphasis
 
 //#region 🔖Transition
-/** @emoji ↔️ Transition between arrangements within a thought. */
+/** @emoji ↔️ Transition from one slide to the next within a thought. */
 export interface Transition {
 	readonly kind: "morph" | "fade";
 }
@@ -26,16 +26,6 @@ export function morphId(participantId: string): string {
 /** @emoji 🧩 Stable reveal.js `data-id` for one crop tile of a split figure disposition. */
 export function tileMorphId(participantId: string, tileKey: string): string {
 	return `${participantId}--tile--${tileKey}`;
-}
-
-/** @emoji 🎯 Stable reveal.js `data-id` for a tile column morphing into text or another target. */
-export function columnMorphId(participantId: string, columnKey: string): string {
-	return `${participantId}--column--${columnKey}`;
-}
-
-/** @emoji 🧩 Per-tile reveal.js `data-id` when one column label is the shared morph target (reveal dedupes by `to`). */
-export function columnMorphTileId(participantId: string, columnKey: string, tileKey: string): string {
-	return `${columnMorphId(participantId, columnKey)}--${tileKey}`;
 }
 
 /** @emoji 📐 Chooses the eg-ice-25 text DOM root for reveal.js `data-id` pairing. */
@@ -67,12 +57,13 @@ export interface TextEmbodiment {
 	readonly morphRoot?: TextMorphRoot;
 }
 
-/** @emoji 🖼 Raster or vector figure on a slide. */
+/** @emoji 🖼 Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
 export interface FigureEmbodiment {
 	readonly kind: "figure";
 	readonly id?: string;
 	readonly src: string;
 	readonly alt?: string;
+	readonly crop?: DispositionPosition;
 }
 
 /** @emoji 🎬 Video clip on a slide. */
@@ -277,52 +268,9 @@ export interface SplitTile {
 	readonly style?: DispositionStyle;
 }
 
-/** @emoji 📚 Tile keys grouped as one column that may morph into a single target on a later arrangement. */
-export interface SplitColumnGroup {
-	readonly key: string;
-	readonly tileKeys: readonly string[];
-	/** @emoji 🏷 Same line as the later label target; ghost `h2` uses it (hidden) for reveal.js text morph. */
-	readonly labelLine?: string;
-}
-
-/** @emoji 🏷 Text target for reveal.js morph; use {@link tileKey} per tile or {@link columnKey} for one grouped label. */
-export interface SplitMorphTarget {
-	readonly columnKey?: string;
-	readonly tileKey?: string;
-	readonly position: DispositionPosition;
-	readonly lines: readonly string[];
-	readonly level?: TextEmbodiment["level"];
-	readonly morphRoot?: TextMorphRoot;
-}
-
-/** @emoji 🎯 Stable `data-id` for a {@link SplitMorphTarget} (tile or column). */
-export function morphTargetId(participantId: string, target: SplitMorphTarget, tileKey?: string): string {
-	if (target.tileKey) {
-		return tileMorphId(participantId, target.tileKey);
-	}
-	if (target.columnKey) {
-		if (tileKey) {
-			return tileMorphId(participantId, tileKey);
-		}
-		return columnMorphId(participantId, target.columnKey);
-	}
-	throw new Error("SplitMorphTarget requires tileKey or columnKey.");
-}
-
 /** @emoji ✂️ Splits one figure disposition into independently placed crop tiles for auto-animate. */
 export interface DispositionSplit {
 	readonly tiles: readonly SplitTile[];
-	/**
-	 * @emoji 👻 Pair with a whole-figure disposition on the same arrangement (stacked above via overlay).
-	 * Tiles stay at full opacity for reveal.js position morphing; the figure hides the grid until transition.
-	 */
-	readonly concealed?: boolean;
-	/** @emoji 🎯 Column groups for {@link columnMorphTiles} (shared {@link columnMorphId} per column). */
-	readonly columns?: readonly SplitColumnGroup[];
-	/** @emoji 👻 Show unified column ghost slots (one per column) on this arrangement. */
-	readonly columnGhostsOnly?: boolean;
-	/** @emoji 🎯 Tiles use {@link tileMorphId}; pair labels via {@link morphColumnGroups} on the labels arrangement (one morph slot per tile). */
-	readonly columnMorphTiles?: boolean;
 }
 
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */
@@ -333,12 +281,6 @@ export interface Disposition {
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
 	readonly split?: DispositionSplit;
-	/** @emoji 🏷 Column targets after a split (e.g. tile columns morph into labels); uses {@link columnMorphId}. */
-	readonly morphTargets?: readonly SplitMorphTarget[];
-	/** @emoji 🧩 Expands {@link SplitMorphTarget} `columnKey` entries into one morph slot per tile (same position). */
-	readonly morphColumnGroups?: readonly SplitColumnGroup[];
-	/** @emoji 🖼 Crop tiles for {@link morphColumnGroups} label sinks (same keys as on the source split). */
-	readonly morphSourceTiles?: readonly SplitTile[];
 }
 //#endregion 🔖Disposition
 
@@ -384,52 +326,6 @@ export function splitFigureGrid(spec: SplitFigureGridSpec): SplitTile[] {
 	}
 	return tiles;
 }
-
-/** @emoji 📐 Bounding box covering the slide positions of the given split tiles. */
-export function splitColumnBounds(
-	tiles: readonly SplitTile[],
-	tileKeys: readonly string[],
-): DispositionPosition {
-	const selected = tiles.filter((tile) => tileKeys.includes(tile.key));
-	if (selected.length === 0) {
-		throw new Error("splitColumnBounds: no tiles matched the given keys.");
-	}
-	let minX = 1;
-	let minY = 1;
-	let maxX = 0;
-	let maxY = 0;
-	for (const tile of selected) {
-		const position = tile.position;
-		minX = Math.min(minX, position.x);
-		minY = Math.min(minY, position.y);
-		maxX = Math.max(maxX, position.x + position.width);
-		maxY = Math.max(maxY, position.y + position.height);
-	}
-	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-}
-
-/** @emoji ✂️ Union of normalized figure crops for tiles in one column (for column morph layers). */
-export function splitColumnCrop(
-	tiles: readonly SplitTile[],
-	tileKeys: readonly string[],
-): SplitTile["crop"] {
-	const selected = tiles.filter((tile) => tileKeys.includes(tile.key));
-	if (selected.length === 0) {
-		throw new Error("splitColumnCrop: no tiles matched the given keys.");
-	}
-	let minX = 1;
-	let minY = 1;
-	let maxX = 0;
-	let maxY = 0;
-	for (const tile of selected) {
-		const crop = tile.crop;
-		minX = Math.min(minX, crop.x);
-		minY = Math.min(minY, crop.y);
-		maxX = Math.max(maxX, crop.x + crop.width);
-		maxY = Math.max(maxY, crop.y + crop.height);
-	}
-	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-}
 //#endregion 🔖Split
 
 //#region 🔖Arrangement
@@ -442,6 +338,14 @@ export interface Arrangement {
 }
 //#endregion 🔖Arrangement
 
+//#region 🔖Slide
+/** @emoji 🖼 One slide: an arrangement with an optional transition to the next slide. */
+export interface Slide {
+	readonly arrangement: Arrangement;
+	readonly transition?: Transition;
+}
+//#endregion 🔖Slide
+
 //#region 🔖Thought
 /** @emoji 💭 Idea developed across one or more slides with shared participants. */
 export interface Thought {
@@ -449,8 +353,7 @@ export interface Thought {
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly participants: readonly Participant[];
-	readonly arrangements: readonly Arrangement[];
-	readonly transition?: Transition;
+	readonly slides: readonly Slide[];
 }
 //#endregion 🔖Thought
 
@@ -507,14 +410,135 @@ export interface ResolvedDisposition {
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
 	readonly split?: DispositionSplit;
-	/** @emoji 👥 Stacked label slot paired with the primary column label (reveal.js per-tile morph). */
-	readonly columnMorphCompanion?: boolean;
-	/** @emoji 🏷 Column key when this label belongs to a {@link morphColumnGroups} expansion. */
-	readonly columnKey?: string;
-	/** @emoji 🧩 Figure crop tile placed at the label stack for per-tile forward auto-animate. */
-	readonly morphTile?: SplitTile;
 }
 //#endregion 🔖Resolved
+
+//#region 🔖Expand
+/** @emoji 🎞 One renderable slide after morph-bridge expansion for reveal.js. */
+export interface RenderSlide {
+	readonly id: string;
+	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	readonly name?: string;
+	readonly arrangement: Arrangement;
+	/** @emoji ↔️ reveal.js `data-auto-animate-id` shared by consecutive morph-linked slides in one run. */
+	readonly autoAnimateId?: string;
+	/** @emoji 🌉 True when auto-inserted for morph-then-switch embodiment ordering. */
+	readonly derived?: boolean;
+}
+
+function transitionUsesMorph(transition: Transition | undefined): boolean {
+	return (transition?.kind ?? "morph") === "morph";
+}
+
+function dispositionEmbodimentKey(participant: Participant, disposition: Disposition): string {
+	if (disposition.embodimentId) {
+		return disposition.embodimentId;
+	}
+	const first = participant.embodiments[0];
+	if (!first) {
+		throw new Error(`Participant "${participant.id}" has no embodiments.`);
+	}
+	return first.id ?? first.kind;
+}
+
+function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, Disposition> {
+	const map = new Map<string, Disposition>();
+	for (const disposition of arrangement.dispositions) {
+		if (!map.has(disposition.participantId)) {
+			map.set(disposition.participantId, disposition);
+		}
+	}
+	return map;
+}
+
+function morphBridgeNeeded(
+	participant: Participant,
+	source: Disposition,
+	target: Disposition,
+): boolean {
+	return dispositionEmbodimentKey(participant, source) !== dispositionEmbodimentKey(participant, target);
+}
+
+function morphBridgeDisposition(source: Disposition, target: Disposition): Disposition {
+	return {
+		participantId: target.participantId,
+		embodimentId: source.embodimentId,
+		emphasis: target.emphasis,
+		position: target.position,
+		style: target.style,
+	};
+}
+
+function buildMorphBridgeArrangement(
+	thought: Thought,
+	sourceSlide: Slide,
+	targetSlide: Slide,
+): Arrangement | null {
+	const sourceByParticipant = primaryDispositionByParticipant(sourceSlide.arrangement);
+	const byId = new Map((thought.participants ?? []).map((participant) => [participant.id, participant]));
+	let anyBridge = false;
+	const dispositions = targetSlide.arrangement.dispositions.map((targetDisposition) => {
+		const participant = byId.get(targetDisposition.participantId);
+		const sourceDisposition = sourceByParticipant.get(targetDisposition.participantId);
+		if (participant && sourceDisposition && morphBridgeNeeded(participant, sourceDisposition, targetDisposition)) {
+			anyBridge = true;
+			return morphBridgeDisposition(sourceDisposition, targetDisposition);
+		}
+		return targetDisposition;
+	});
+	if (!anyBridge) {
+		return null;
+	}
+	return {
+		id: `${targetSlide.arrangement.id}--bridge`,
+		name: targetSlide.arrangement.name,
+		dispositions,
+	};
+}
+
+/** @emoji 🌉 Expands {@link Thought.slides} with auto-derived morph bridges and morph-run auto-animate ids. */
+export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
+	const slides = thought.slides;
+	if (slides.length === 0) {
+		return [];
+	}
+	const expanded: RenderSlide[] = [];
+	let runIndex = 0;
+	let index = 0;
+	while (index < slides.length) {
+		let runEnd = index;
+		while (runEnd < slides.length - 1 && transitionUsesMorph(slides[runEnd]?.transition)) {
+			runEnd += 1;
+		}
+		const autoAnimateId = runEnd > index ? `${thought.id}--m${runIndex}` : undefined;
+		runIndex += 1;
+		for (let slideIndex = index; slideIndex <= runEnd; slideIndex += 1) {
+			const slide = slides[slideIndex]!;
+			if (slideIndex > index && transitionUsesMorph(slides[slideIndex - 1]?.transition)) {
+				const bridge = buildMorphBridgeArrangement(thought, slides[slideIndex - 1]!, slide);
+				if (bridge) {
+					expanded.push({
+						id: bridge.id,
+						name: bridge.name,
+						arrangement: bridge,
+						autoAnimateId,
+						derived: true,
+					});
+				}
+			}
+			expanded.push({
+				id: slide.arrangement.id,
+				name: slide.arrangement.name,
+				arrangement: slide.arrangement,
+				autoAnimateId,
+				derived: false,
+			});
+		}
+		index = runEnd + 1;
+	}
+	return expanded;
+}
+//#endregion 🔖Expand
 
 //#region 🔖Resolve
 /** @emoji 🔍 Picks the embodiment for a participant (by id or first). */
@@ -533,50 +557,16 @@ export function resolveEmbodiment(participant: Participant, embodimentId?: strin
 	return first;
 }
 
-/** @emoji 🔍 Resolves all dispositions for one arrangement within a thought. */
-export function resolveArrangement(thought: Thought, arrangementId: string): ResolvedDisposition[] {
-	const arrangement = thought.arrangements.find((a) => a.id === arrangementId);
-	if (!arrangement) {
-		throw new Error(`Thought "${thought.id}" has no arrangement "${arrangementId}".`);
-	}
-	const byId = new Map(thought.participants.map((p) => [p.id, p]));
+/** @emoji 🔍 Resolves all dispositions for one arrangement. */
+export function resolveArrangement(
+	participants: readonly Participant[],
+	arrangement: Arrangement,
+): ResolvedDisposition[] {
+	const byId = new Map(participants.map((participant) => [participant.id, participant]));
 	return arrangement.dispositions.flatMap((disposition) => {
 		const participant = byId.get(disposition.participantId);
 		if (!participant) {
-			throw new Error(`Thought "${thought.id}" has no participant "${disposition.participantId}".`);
-		}
-		if (disposition.morphTargets && disposition.morphTargets.length > 0) {
-			return disposition.morphTargets.flatMap((target) => {
-				const columnGroup =
-					target.columnKey && disposition.morphColumnGroups
-						? disposition.morphColumnGroups.find((group) => group.key === target.columnKey)
-						: undefined;
-				const tileKeys = columnGroup?.tileKeys;
-				const keys = tileKeys && tileKeys.length > 0 ? tileKeys : [undefined];
-				return keys.map((tileKey, tileIndex) => {
-					const sourceTile =
-						tileKey && disposition.morphSourceTiles
-							? disposition.morphSourceTiles.find((tile) => tile.key === tileKey)
-							: undefined;
-					return {
-						participant,
-						embodiment: {
-							kind: "text" as const,
-							lines: tileIndex === 0 ? target.lines : ["\u00a0"],
-							level: target.level ?? "heading",
-							morphRoot: target.morphRoot ?? "heading-line",
-						},
-						emphasis: disposition.emphasis,
-						morphId: morphTargetId(participant.id, target, tileKey),
-						position: target.position,
-						columnMorphCompanion: tileKey !== undefined && tileIndex > 0,
-						...(target.columnKey ? { columnKey: target.columnKey } : {}),
-						...(sourceTile
-							? { morphTile: { ...sourceTile, position: target.position, emphasis: disposition.emphasis } }
-							: {}),
-					};
-				});
-			});
+			throw new Error(`Arrangement "${arrangement.id}" references unknown participant "${disposition.participantId}".`);
 		}
 		return [
 			{
@@ -593,10 +583,11 @@ export function resolveArrangement(thought: Thought, arrangementId: string): Res
 	});
 }
 
-/** @emoji 🔢 Counts slides (arrangements) across all chapters and sequences. */
+/** @emoji 🔢 Counts render slides (including morph bridges) across all chapters and sequences. */
 export function countArrangements(presentation: Presentation): number {
 	return presentationSequences(presentation).reduce(
-		(sum, seq) => sum + seq.thoughts.reduce((tSum, thought) => tSum + thought.arrangements.length, 0),
+		(sum, sequence) =>
+			sum + sequence.thoughts.reduce((thoughtSum, thought) => thoughtSum + expandThoughtSlides(thought).length, 0),
 		0,
 	);
 }
@@ -667,14 +658,14 @@ export function collectPresentationSlides(presentation: Presentation): readonly 
 		for (const sequence of chapter.sequences) {
 			let v = 0;
 			for (const thought of sequence.thoughts) {
-				for (const arrangement of thought.arrangements) {
+				for (const renderSlide of expandThoughtSlides(thought)) {
 					slides.push({
 						h,
 						v,
 						chapter: presentationEntityBookmarkName(chapter),
 						sequence: presentationEntityBookmarkName(sequence),
 						thought: presentationEntityBookmarkName(thought),
-						slide: presentationEntityBookmarkName(arrangement),
+						slide: presentationEntityBookmarkName(renderSlide),
 					});
 					v += 1;
 				}
@@ -986,37 +977,53 @@ export function intro(spec: IntroSpec): Presentation {
 		id: thoughtId,
 		name: INTRO_THOUGHT_BOOKMARK[introLanguage],
 		participants,
-		transition: { kind: "morph" },
-		arrangements: [
-			introArrangement("title", [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)]),
-			introArrangement("description", [
-				muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-				active(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_FULL),
-			]),
-			introArrangement("goal", [
-				muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-				muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
-				active(INTRO_PARTICIPANT_GOAL),
-			]),
-			introArrangement("authors", [
-				...introMutedAboveAuthors,
-				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
-			]),
-			introArrangement("affiliations-1", [
-				...introMutedAboveAuthors,
-				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1),
-				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
-			]),
-			introArrangement("affiliations-2", [
-				...introMutedAboveAuthors,
-				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2),
-				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
-			]),
-			introArrangement("affiliations-3", [
-				...introMutedAboveAuthors,
-				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3),
-				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
-			]),
+		slides: [
+			{ arrangement: introArrangement("title", [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)]), transition: { kind: "morph" } },
+			{
+				arrangement: introArrangement("description", [
+					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
+					active(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_FULL),
+				]),
+				transition: { kind: "morph" },
+			},
+			{
+				arrangement: introArrangement("goal", [
+					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
+					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
+					active(INTRO_PARTICIPANT_GOAL),
+				]),
+				transition: { kind: "morph" },
+			},
+			{
+				arrangement: introArrangement("authors", [
+					...introMutedAboveAuthors,
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
+				]),
+				transition: { kind: "morph" },
+			},
+			{
+				arrangement: introArrangement("affiliations-1", [
+					...introMutedAboveAuthors,
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1),
+					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
+				]),
+				transition: { kind: "morph" },
+			},
+			{
+				arrangement: introArrangement("affiliations-2", [
+					...introMutedAboveAuthors,
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2),
+					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
+				]),
+				transition: { kind: "morph" },
+			},
+			{
+				arrangement: introArrangement("affiliations-3", [
+					...introMutedAboveAuthors,
+					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3),
+					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
+				]),
+			},
 		],
 	};
 
@@ -1142,10 +1149,9 @@ export function analogy(spec: AnalogySpec): Presentation {
 	const thought: Thought = {
 		id: "analogy",
 		participants,
-		transition: { kind: "morph" },
-		arrangements: [
-			{ id: "source", dispositions: sourceDispositions },
-			{ id: "mapping", dispositions: mappingDispositions },
+		slides: [
+			{ arrangement: { id: "source", dispositions: sourceDispositions }, transition: { kind: "morph" } },
+			{ arrangement: { id: "mapping", dispositions: mappingDispositions } },
 		],
 	};
 
@@ -1204,10 +1210,9 @@ if (import.meta.vitest) {
 	});
 
 	describe("intro", () => {
-		it("builds seven arrangements in one thought", () => {
-			expect(countArrangements(sampleIntro)).toBe(7);
+		it("builds seven slides in one thought", () => {
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
-			expect(thought.arrangements.map((a) => a.id)).toEqual([
+			expect(thought.slides.map((slide) => slide.arrangement.id)).toEqual([
 				"title",
 				"description",
 				"goal",
@@ -1216,6 +1221,7 @@ if (import.meta.vitest) {
 				"affiliations-2",
 				"affiliations-3",
 			]);
+			expect(expandThoughtSlides(thought).length).toBeGreaterThan(7);
 		});
 
 		it("uses fixed-size heading blocks without fit-text", () => {
@@ -1241,8 +1247,9 @@ if (import.meta.vitest) {
 			expect(abbreviateAuthorFirstName("Ueli Saluz")).toBe("U. Saluz");
 			expect(abbreviateAuthorFirstName("Christoph Gengnagel")).toBe("C. Gengnagel");
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
-			const authors = resolveArrangement(thought, "affiliations-1").find(
-				(r) => r.participant.id === INTRO_PARTICIPANT_AUTHORS,
+			const affiliations1 = thought.slides.find((slide) => slide.arrangement.id === "affiliations-1")!.arrangement;
+			const authors = resolveArrangement(thought.participants, affiliations1).find(
+				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_AUTHORS,
 			)!;
 			if (authors.embodiment.kind === "authors") {
 				expect(authors.embodiment.abbreviateFirstName).toBe(true);
@@ -1275,15 +1282,17 @@ if (import.meta.vitest) {
 
 		it("highlights only new affiliation marks per slide", () => {
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
-			const step2 = resolveArrangement(thought, "affiliations-2").find(
-				(r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
+			const affiliations2 = thought.slides.find((slide) => slide.arrangement.id === "affiliations-2")!.arrangement;
+			const step2 = resolveArrangement(thought.participants, affiliations2).find(
+				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
 			)!;
 			if (step2.embodiment.kind === "affiliations") {
 				expect(step2.embodiment.entries.find((e) => e.mark === "1")?.lineEmphasis).toBe("active");
 				expect(step2.embodiment.entries.find((e) => e.mark === "a")?.lineEmphasis).toBe("muted");
 			}
-			const step3 = resolveArrangement(thought, "affiliations-3").find(
-				(r) => r.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
+			const affiliations3 = thought.slides.find((slide) => slide.arrangement.id === "affiliations-3")!.arrangement;
+			const step3 = resolveArrangement(thought.participants, affiliations3).find(
+				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
 			)!;
 			if (step3.embodiment.kind === "affiliations") {
 				const uni = step3.embodiment.entries.find((e) => e.mark === "1");
@@ -1313,7 +1322,7 @@ if (import.meta.vitest) {
 			expect(chapter.name).toBe("Hauptteil");
 			expect(sequence.name).toBe("Einführung");
 			expect(thought.name).toBe("Einleitung");
-			expect(thought.arrangements.map((arrangement) => arrangement.name)).toEqual([
+			expect(thought.slides.map((slide) => slide.arrangement.name)).toEqual([
 				"Titel",
 				"Beschreibung",
 				"Ziel",
@@ -1322,14 +1331,15 @@ if (import.meta.vitest) {
 				"Universitäten",
 				"Lehrstühle",
 			]);
-			expect(collectPresentationSlides(deck)[2]).toEqual({
+			const goalSlide = collectPresentationSlides(deck).find((slide) => slide.slide === "Ziel");
+			expect(goalSlide).toMatchObject({
 				h: 0,
-				v: 2,
 				chapter: "Hauptteil",
 				sequence: "Einführung",
 				thought: "Einleitung",
 				slide: "Ziel",
 			});
+			expect(goalSlide?.v).toBeGreaterThan(0);
 		});
 	});
 
@@ -1355,48 +1365,110 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("columnMorphId", () => {
-		it("scopes column keys under the participant id", () => {
-			expect(columnMorphId("catalogue", "col1")).toBe("catalogue--column--col1");
+	describe("expandThoughtSlides", () => {
+		it("inserts a morph bridge when embodiment switches between morph slides", () => {
+			const thought: Thought = {
+				id: "morph",
+				participants: [
+					{
+						id: "label",
+						embodiments: [
+							{ kind: "text", id: "source", lines: ["Reuse"], level: "heading" },
+							{ kind: "text", id: "target", lines: ["Remanufacture"], level: "heading" },
+						],
+					},
+				],
+				slides: [
+					{
+						arrangement: {
+							id: "source",
+							dispositions: [{ participantId: "label", embodimentId: "source", emphasis: "active" }],
+						},
+						transition: { kind: "morph" },
+					},
+					{
+						arrangement: {
+							id: "mapping",
+							dispositions: [{ participantId: "label", embodimentId: "target", emphasis: "active" }],
+						},
+					},
+				],
+			};
+			const expanded = expandThoughtSlides(thought);
+			expect(expanded.map((slide) => slide.id)).toEqual(["source", "mapping--bridge", "mapping"]);
+			expect(expanded[1]?.derived).toBe(true);
+			expect(expanded.every((slide) => slide.autoAnimateId === "morph--m0")).toBe(true);
+			const bridge = expanded[1]!.arrangement.dispositions[0]!;
+			expect(bridge.embodimentId).toBe("source");
 		});
-	});
 
-	describe("columnMorphTileId", () => {
-		it("scopes each tile under its column morph id", () => {
-			expect(columnMorphTileId("catalogue", "col1", "tile-r1-c0")).toBe(
-				"catalogue--column--col1--tile-r1-c0",
-			);
+		it("does not insert a bridge when only position changes", () => {
+			const thought: Thought = {
+				id: "move",
+				participants: [
+					{
+						id: "box",
+						embodiments: [{ kind: "text", lines: ["A"], level: "body" }],
+					},
+				],
+				slides: [
+					{
+						arrangement: {
+							id: "left",
+							dispositions: [
+								{
+									participantId: "box",
+									emphasis: "active",
+									position: { x: 0.1, y: 0.2, width: 0.3, height: 0.2 },
+								},
+							],
+						},
+						transition: { kind: "morph" },
+					},
+					{
+						arrangement: {
+							id: "right",
+							dispositions: [
+								{
+									participantId: "box",
+									emphasis: "active",
+									position: { x: 0.6, y: 0.2, width: 0.3, height: 0.2 },
+								},
+							],
+						},
+					},
+				],
+			};
+			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual(["left", "right"]);
 		});
-	});
 
-	describe("splitColumnCrop", () => {
-		it("returns the union of normalized crops for listed tiles", () => {
-			const tiles = splitFigureGrid({
-				rows: 2,
-				columns: 2,
-				frame: { x: 0.1, y: 0.2, width: 0.8, height: 0.6 },
-			});
-			expect(splitColumnCrop(tiles, ["tile-r0-c0", "tile-r1-c1"])).toEqual({
-				x: 0,
-				y: 0,
-				width: 1,
-				height: 1,
-			});
-		});
-	});
-
-	describe("splitColumnBounds", () => {
-		it("returns the union rectangle of listed tiles", () => {
-			const tiles = splitFigureGrid({
-				rows: 2,
-				columns: 2,
-				frame: { x: 0.1, y: 0.2, width: 0.8, height: 0.6 },
-			});
-			const bounds = splitColumnBounds(tiles, ["tile-r0-c0", "tile-r1-c0"]);
-			expect(bounds.x).toBeCloseTo(0.1);
-			expect(bounds.y).toBeCloseTo(0.2);
-			expect(bounds.width).toBeCloseTo(0.4);
-			expect(bounds.height).toBeCloseTo(0.6);
+		it("starts a new morph run after a fade transition", () => {
+			const thought: Thought = {
+				id: "fade",
+				participants: [
+					{
+						id: "box",
+						embodiments: [{ kind: "text", lines: ["A"], level: "body" }],
+					},
+				],
+				slides: [
+					{
+						arrangement: { id: "a", dispositions: [{ participantId: "box", emphasis: "active" }] },
+						transition: { kind: "morph" },
+					},
+					{
+						arrangement: { id: "b", dispositions: [{ participantId: "box", emphasis: "active" }] },
+						transition: { kind: "fade" },
+					},
+					{
+						arrangement: { id: "c", dispositions: [{ participantId: "box", emphasis: "active" }] },
+					},
+				],
+			};
+			const expanded = expandThoughtSlides(thought);
+			expect(expanded[0]?.autoAnimateId).toBe("fade--m0");
+			expect(expanded[1]?.autoAnimateId).toBe("fade--m0");
+			expect(expanded[2]?.autoAnimateId).toBeUndefined();
 		});
 	});
 
@@ -1437,177 +1509,18 @@ if (import.meta.vitest) {
 	describe("resolveArrangement split", () => {
 		it("passes split through on resolved dispositions", () => {
 			const split = { tiles: splitFigureGrid({ rows: 1, columns: 1, frame: { x: 0, y: 0, width: 1, height: 1 } }) };
-			const thought: Thought = {
-				id: "split",
-				participants: [
-					{
-						id: "fig",
-						embodiments: [{ kind: "figure", src: "/a.png" }],
-					},
-				],
-				arrangements: [
-					{
-						id: "slide",
-						dispositions: [{ participantId: "fig", emphasis: "active", split }],
-					},
-				],
+			const participants: Participant[] = [
+				{
+					id: "fig",
+					embodiments: [{ kind: "figure", src: "/a.png" }],
+				},
+			];
+			const arrangement: Arrangement = {
+				id: "slide",
+				dispositions: [{ participantId: "fig", emphasis: "active", split }],
 			};
-			const resolved = resolveArrangement(thought, "slide");
+			const resolved = resolveArrangement(participants, arrangement);
 			expect(resolved[0]?.split?.tiles).toHaveLength(1);
-		});
-
-		it("passes columnGhostsOnly on split", () => {
-			const split = {
-				tiles: splitFigureGrid({ rows: 1, columns: 1, frame: { x: 0, y: 0, width: 1, height: 1 } }),
-				columns: [{ key: "col1", tileKeys: ["tile-r0-c0"] }],
-				columnGhostsOnly: true,
-			};
-			const thought: Thought = {
-				id: "ghosts",
-				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
-				arrangements: [{ id: "slide", dispositions: [{ participantId: "fig", emphasis: "active", split }] }],
-			};
-			expect(resolveArrangement(thought, "slide")[0]?.split?.columnGhostsOnly).toBe(true);
-		});
-
-		it("passes concealed on split", () => {
-			const split = {
-				tiles: splitFigureGrid({ rows: 1, columns: 1, frame: { x: 0, y: 0, width: 1, height: 1 } }),
-				concealed: true,
-			};
-			const thought: Thought = {
-				id: "split",
-				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
-				arrangements: [{ id: "slide", dispositions: [{ participantId: "fig", emphasis: "active", split }] }],
-			};
-			expect(resolveArrangement(thought, "slide")[0]?.split?.concealed).toBe(true);
-		});
-
-		it("expands morphTargets with tileKey into tileMorphId text dispositions", () => {
-			const thought: Thought = {
-				id: "tile-labels",
-				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
-				arrangements: [
-					{
-						id: "slide",
-						dispositions: [
-							{
-								participantId: "fig",
-								emphasis: "active",
-								morphTargets: [
-									{
-										tileKey: "tile-r0-c0",
-										position: { x: 0.1, y: 0.2, width: 0.3, height: 0.4 },
-										lines: ["Rippendecke"],
-									},
-								],
-							},
-						],
-					},
-				],
-			};
-			const resolved = resolveArrangement(thought, "slide");
-			expect(resolved[0]?.morphId).toBe("fig--tile--tile-r0-c0");
-		});
-
-		it("expands morphTargets into text dispositions with columnMorphId", () => {
-			const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
-			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, gap: 0 });
-			const thought: Thought = {
-				id: "labels",
-				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
-				arrangements: [
-					{
-						id: "slide",
-						dispositions: [
-							{
-								participantId: "fig",
-								emphasis: "active",
-								morphTargets: [
-									{
-										columnKey: "col1",
-										position: splitColumnBounds(tiles, ["tile-r0-c0"]),
-										lines: ["Rippendecke"],
-									},
-									{
-										columnKey: "col2",
-										position: splitColumnBounds(tiles, ["tile-r0-c1"]),
-										lines: ["Stütze"],
-									},
-								],
-							},
-						],
-					},
-				],
-			};
-			const resolved = resolveArrangement(thought, "slide");
-			expect(resolved).toHaveLength(2);
-			expect(resolved[0]?.morphId).toBe("fig--column--col1");
-			expect(resolved[0]?.embodiment).toMatchObject({ kind: "text", lines: ["Rippendecke"] });
-			expect(resolved[1]?.morphId).toBe("fig--column--col2");
-		});
-
-		it("expands column morphTargets per tile when morphColumnGroups is set", () => {
-			const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
-			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, gap: 0 });
-			const labelPosition = { x: 0.4, y: 0.1, width: 0.2, height: 0.2 };
-			const thought: Thought = {
-				id: "labels",
-				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
-				arrangements: [
-					{
-						id: "slide",
-						dispositions: [
-							{
-								participantId: "fig",
-								emphasis: "active",
-								morphColumnGroups: [
-									{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r0-c1"] },
-									{ key: "col2", tileKeys: ["tile-r1-c0"] },
-								],
-								morphTargets: [
-									{ columnKey: "col1", position: labelPosition, lines: ["Rippendecke"] },
-									{ columnKey: "col2", position: labelPosition, lines: ["Stütze"] },
-								],
-							},
-						],
-					},
-				],
-			};
-			const resolved = resolveArrangement(thought, "slide");
-			expect(resolved).toHaveLength(3);
-			expect(resolved[0]?.morphId).toBe("fig--tile--tile-r0-c0");
-			expect(resolved[1]?.morphId).toBe("fig--tile--tile-r0-c1");
-			expect(resolved[1]?.columnMorphCompanion).toBe(true);
-			expect(resolved[1]?.columnKey).toBe("col1");
-			expect(resolved[2]?.morphId).toBe("fig--tile--tile-r1-c0");
-		});
-
-		it("resolves morphTile from morphSourceTiles for column label expansion", () => {
-			const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
-			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, gap: 0 });
-			const labelPosition = { x: 0.4, y: 0.1, width: 0.2, height: 0.2 };
-			const thought: Thought = {
-				id: "labels",
-				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
-				arrangements: [
-					{
-						id: "slide",
-						dispositions: [
-							{
-								participantId: "fig",
-								emphasis: "active",
-								morphSourceTiles: tiles,
-								morphColumnGroups: [{ key: "col1", tileKeys: ["tile-r0-c0"] }],
-								morphTargets: [{ columnKey: "col1", position: labelPosition, lines: ["Rippendecke"] }],
-							},
-						],
-					},
-				],
-			};
-			const resolved = resolveArrangement(thought, "slide");
-			expect(resolved[0]?.morphTile?.key).toBe("tile-r0-c0");
-			expect(resolved[0]?.morphTile?.position).toEqual(labelPosition);
 		});
 	});
 
@@ -1635,8 +1548,13 @@ if (import.meta.vitest) {
 	describe("resolveArrangement morphId", () => {
 		it("resolves morphId per disposition", () => {
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
-			const resolved = resolveArrangement(thought, "goal");
-			expect(resolved.map((r) => r.morphId)).toEqual(["title", "description", "goal"]);
+			const goal = thought.slides.find((slide) => slide.arrangement.id === "goal")!.arrangement;
+			const resolved = resolveArrangement(thought.participants, goal);
+			expect(resolved.map((resolvedDisposition) => resolvedDisposition.morphId)).toEqual([
+				"title",
+				"description",
+				"goal",
+			]);
 		});
 	});
 
@@ -1668,7 +1586,11 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "thought-a",
-										arrangements: [{ id: "a1", dispositions: [] }, { id: "a2", dispositions: [] }],
+										participants: [],
+										slides: [
+											{ arrangement: { id: "a1", dispositions: [] } },
+											{ arrangement: { id: "a2", dispositions: [] } },
+										],
 									},
 								],
 							},
@@ -1682,7 +1604,8 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "thought-b",
-										arrangements: [{ id: "b1", dispositions: [] }],
+										participants: [],
+										slides: [{ arrangement: { id: "b1", dispositions: [] } }],
 									},
 								],
 							},
@@ -1751,16 +1674,21 @@ if (import.meta.vitest) {
 			target: { label: "Remanufacture", figure: "/remanufacture.png" },
 		});
 
-		it("builds two morph arrangements", () => {
-			expect(countArrangements(sampleAnalogy)).toBe(2);
+		it("builds two morph slides plus bridge", () => {
 			const thought = sampleAnalogy.chapters[0]!.sequences[0]!.thoughts[0]!;
-			expect(thought.arrangements.map((a) => a.id)).toEqual(["source", "mapping"]);
+			expect(thought.slides.map((slide) => slide.arrangement.id)).toEqual(["source", "mapping"]);
+			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual([
+				"source",
+				"mapping--bridge",
+				"mapping",
+			]);
 		});
 
 		it("resolves positioned visual dispositions", () => {
 			const thought = sampleAnalogy.chapters[0]!.sequences[0]!.thoughts[0]!;
-			const mapping = resolveArrangement(thought, "mapping");
-			const visual = mapping.find((r) => r.participant.id === ANALOGY_PARTICIPANT_VISUAL);
+			const mapping = thought.slides.find((slide) => slide.arrangement.id === "mapping")!.arrangement;
+			const resolved = resolveArrangement(thought.participants, mapping);
+			const visual = resolved.find((resolvedDisposition) => resolvedDisposition.participant.id === ANALOGY_PARTICIPANT_VISUAL);
 			expect(visual?.position).toEqual({ x: 0.1, y: 0.35, width: 0.8, height: 0.5 });
 			expect(visual?.embodiment.kind).toBe("figure");
 		});
@@ -1768,29 +1696,24 @@ if (import.meta.vitest) {
 
 	describe("video and pdf embodiments", () => {
 		it("resolves video and pdf kinds", () => {
-			const thought: Thought = {
-				id: "media",
-				participants: [
-					{
-						id: "clip",
-						embodiments: [{ kind: "video", src: "/demo.mp4", muted: true }],
-					},
-					{
-						id: "doc",
-						embodiments: [{ kind: "pdf", src: "/paper.pdf", page: 2 }],
-					},
-				],
-				arrangements: [
-					{
-						id: "slide",
-						dispositions: [
-							{ participantId: "clip", emphasis: "active" },
-							{ participantId: "doc", emphasis: "active", position: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 } },
-						],
-					},
+			const participants: Participant[] = [
+				{
+					id: "clip",
+					embodiments: [{ kind: "video", src: "/demo.mp4", muted: true }],
+				},
+				{
+					id: "doc",
+					embodiments: [{ kind: "pdf", src: "/paper.pdf", page: 2 }],
+				},
+			];
+			const arrangement: Arrangement = {
+				id: "slide",
+				dispositions: [
+					{ participantId: "clip", emphasis: "active" },
+					{ participantId: "doc", emphasis: "active", position: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 } },
 				],
 			};
-			const resolved = resolveArrangement(thought, "slide");
+			const resolved = resolveArrangement(participants, arrangement);
 			expect(resolved[0]?.embodiment.kind).toBe("video");
 			expect(resolved[1]?.embodiment.kind).toBe("pdf");
 			if (resolved[1]?.embodiment.kind === "pdf") {

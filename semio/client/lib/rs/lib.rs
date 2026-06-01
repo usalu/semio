@@ -2685,7 +2685,9 @@ pub mod meta {
                     None
                 }
             }
-            pub async fn types(&self) -> crate::gql_relay::TypeConnection {
+            /// @emoji 🧰 Kinds in this folder.
+            #[graphql(name = "hasTypes")]
+            pub async fn has_types(&self) -> crate::gql_relay::TypeConnection {
                 if let Some(kit) = self.owner_kit.upgrade() {
                     let mut out = Vec::new();
                     for ty in kit.types_flat().await.iter() {
@@ -2706,7 +2708,9 @@ pub mod meta {
                     None
                 }
             }
-            pub async fn designs(&self) -> crate::gql_relay::DesignConnection {
+            /// @emoji 🏘 Designs in this folder.
+            #[graphql(name = "hasDesigns")]
+            pub async fn has_designs(&self) -> crate::gql_relay::DesignConnection {
                 if let Some(kit) = self.owner_kit.upgrade() {
                     let mut out = Vec::new();
                     for d in kit.designs_flat().await.iter() {
@@ -3837,56 +3841,57 @@ pub mod kit {
                     }
                 }
 
-                async fn collect_is_types_from_piece(
-                    piece: &Piece,
-                    type_seen: &mut std::collections::HashSet<Id>,
-                    out: &mut Vec<Arc<super::super::r#type::Type>>,
-                ) {
-                    match piece.blueprint.read().await.clone() {
+                /// @emoji 🧰 Kinds reachable through this piece's blueprint, expanding nested designs.
+                pub async fn is_types_transitive(&self) -> Vec<Arc<super::super::r#type::Type>> {
+                    use std::collections::{HashSet, VecDeque};
+                    let mut type_seen = HashSet::new();
+                    let mut out = Vec::new();
+                    let mut pending: VecDeque<Arc<Piece>> = VecDeque::new();
+                    match self.blueprint.read().await.clone() {
                         super::super::r#type::Blueprint::Type(t) => {
                             if type_seen.insert(t.id.clone()) {
                                 out.push(t);
                             }
                         }
                         super::super::r#type::Blueprint::Design(d) => {
-                            for child in d.pieces.read().await.iter() {
-                                Self::collect_is_types_from_piece(child.as_ref(), type_seen, out).await;
-                            }
+                            pending.extend(d.pieces.read().await.iter().cloned());
                         }
                     }
-                }
-
-                async fn collect_is_designs_from_piece(
-                    piece: &Piece,
-                    design_seen: &mut std::collections::HashSet<Id>,
-                    out: &mut Vec<Arc<super::Design>>,
-                ) {
-                    match piece.blueprint.read().await.clone() {
-                        super::super::r#type::Blueprint::Type(_) => {}
-                        super::super::r#type::Blueprint::Design(d) => {
-                            if design_seen.insert(d.id.clone()) {
-                                out.push(d.clone());
-                                for child in d.pieces.read().await.iter() {
-                                    Self::collect_is_designs_from_piece(child.as_ref(), design_seen, out).await;
+                    while let Some(piece) = pending.pop_front() {
+                        match piece.blueprint.read().await.clone() {
+                            super::super::r#type::Blueprint::Type(t) => {
+                                if type_seen.insert(t.id.clone()) {
+                                    out.push(t);
                                 }
                             }
+                            super::super::r#type::Blueprint::Design(d) => {
+                                pending.extend(d.pieces.read().await.iter().cloned());
+                            }
                         }
                     }
-                }
-
-                /// @emoji 🧰 Kinds reachable through this piece's blueprint, expanding nested designs.
-                pub async fn is_types_transitive(&self) -> Vec<Arc<super::super::r#type::Type>> {
-                    let mut type_seen = std::collections::HashSet::new();
-                    let mut out = Vec::new();
-                    Self::collect_is_types_from_piece(self, &mut type_seen, &mut out).await;
                     out
                 }
 
                 /// @emoji 🏘 Designs reachable through this piece's blueprint, expanding nested designs.
                 pub async fn is_designs_transitive(&self) -> Vec<Arc<super::Design>> {
-                    let mut design_seen = std::collections::HashSet::new();
+                    use std::collections::{HashSet, VecDeque};
+                    let mut design_seen = HashSet::new();
                     let mut out = Vec::new();
-                    Self::collect_is_designs_from_piece(self, &mut design_seen, &mut out).await;
+                    let mut pending: VecDeque<Arc<Piece>> = VecDeque::new();
+                    if let super::super::r#type::Blueprint::Design(d) = self.blueprint.read().await.clone() {
+                        if design_seen.insert(d.id.clone()) {
+                            out.push(d.clone());
+                            pending.extend(d.pieces.read().await.iter().cloned());
+                        }
+                    }
+                    while let Some(piece) = pending.pop_front() {
+                        if let super::super::r#type::Blueprint::Design(d) = piece.blueprint.read().await.clone() {
+                            if design_seen.insert(d.id.clone()) {
+                                out.push(d.clone());
+                                pending.extend(d.pieces.read().await.iter().cloned());
+                            }
+                        }
+                    }
                     out
                 }
 
@@ -4412,8 +4417,8 @@ pub mod kit {
 
                 /// @emoji ⛓️ Parent and child sides owned by this connection.
                 #[graphql(name = "hasSides")]
-                pub async fn has_sides_field(&self) -> crate::gql_relay::SideConnection {
-                    crate::gql_relay::SideConnection::from_sides(self.has_sides().await).await
+                pub async fn has_sides_field(&self) -> Vec<Arc<Side>> {
+                    self.has_sides().await
                 }
 
                 /// @emoji 🪢 Pieces referenced by the parent and child sides.
@@ -18518,8 +18523,8 @@ pub mod kit_store_comprehensive_e2e {
             }
         }
         if step.get("expectAuthoritativeDesignsHaveNoPieces").and_then(|v| v.as_bool()) == Some(true) {
-            let edges = data["store"]["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
-            let all_empty = edges.iter().all(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
+            let edges = data["store"]["authoritative"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("auth design edges");
+            let all_empty = edges.iter().all(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
             assert!(all_empty, "authoritative must not mirror wip pieces");
         }
         if let Some(relay_contains) = step.get("expectRelayContains").and_then(|o| o.as_object()) {
@@ -18883,11 +18888,11 @@ mod tests {
     "#;
 
     fn relay_wip_designs_have_piece() -> &'static str {
-        "{ store { wip { theKit { kit { designs { edges { node { id pieces { edges { node { id position { center { u v } } } } } } } } } } } } }"
+        "{ store { wip { theKit { kit { hasDesigns { edges { node { id hasPieces { edges { node { id position { center { u v } } } } } } } } } } } } }"
     }
 
     fn relay_auth_designs_piece_ids() -> &'static str {
-        "{ store { authoritative { theKit { kit { designs { edges { node { pieces { edges { node { id } } } } } } } } } } }"
+        "{ store { authoritative { theKit { kit { hasDesigns { edges { node { hasPieces { edges { node { id } } } } } } } } } } }"
     }
 
     /// 📤 Writes the executable schema's SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.
@@ -19487,11 +19492,11 @@ mod tests {
             assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
             let payload = res.data.into_json().unwrap()["session"]["store"]["installProjection"].clone();
             assert_eq!(payload["ok"], true);
-            let q = r#"query { session { stores { edges { node { wip { theKit { kit { types { edges { node { name } } } } } } } } } } }"#;
+            let q = r#"query { session { stores { edges { node { wip { theKit { kit { hasTypes { edges { node { name } } } } } } } } } } }"#;
             let read = schema.execute(Request::new(q)).await;
             assert!(read.errors.is_empty(), "read types: {:?}", read.errors);
             let read_json = read.data.into_json().unwrap();
-            let names = read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["types"]["edges"]
+            let names = read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"]
                 .as_array()
                 .expect("type edges");
             assert_eq!(names[0]["node"]["name"], "Type-IP");
@@ -19551,12 +19556,12 @@ mod tests {
                                 wip {
                                     theKit {
                                         kit {
-                                            files { edges { node { id url } } }
-                                            types {
+                                            hasFiles { edges { node { id url } } }
+                                            hasTypes {
                                                 edges {
                                                     node {
                                                         id
-                                                        representations { edges { node { id name file { id } } } }
+                                                        hasRepresentations { edges { node { id name file { id } } } }
                                                     }
                                                 }
                                             }
@@ -19571,11 +19576,11 @@ mod tests {
             let read = schema.execute(Request::new(q)).await;
             assert!(read.errors.is_empty(), "read kit: {:?}", read.errors);
             let kit_json = read.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
-            let file_edges = kit_json["files"]["edges"].as_array().expect("file edges");
+            let file_edges = kit_json["hasFiles"]["edges"].as_array().expect("file edges");
             assert_eq!(file_edges.len(), 1);
             assert_eq!(file_edges[0]["node"]["id"], "f1");
             assert!(file_edges[0]["node"]["url"].as_str().unwrap_or("").starts_with("data:"));
-            let rep_edges = kit_json["types"]["edges"][0]["node"]["representations"]["edges"]
+            let rep_edges = kit_json["hasTypes"]["edges"][0]["node"]["hasRepresentations"]["edges"]
                 .as_array()
                 .expect("representation edges");
             assert_eq!(rep_edges.len(), 1);
@@ -19637,10 +19642,10 @@ mod tests {
                                 wip {
                                     theKit {
                                         kit {
-                                            types {
+                                            hasTypes {
                                                 edges {
                                                     node {
-                                                        connectors {
+                                                        hasConnectors {
                                                             edges {
                                                                 node {
                                                                     port {
@@ -19664,8 +19669,8 @@ mod tests {
             let read = schema.execute(Request::new(q)).await;
             assert!(read.errors.is_empty(), "read connector port: {:?}", read.errors);
             let read_json = read.data.into_json().unwrap();
-            let connector_port = &read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["types"]["edges"][0]["node"]
-                ["connectors"]["edges"][0]["node"]["port"];
+            let connector_port = &read_json["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"][0]["node"]
+                ["hasConnectors"]["edges"][0]["node"]["port"];
             assert_eq!(connector_port["id"], "p1");
             let compat = connector_port["copatibleWith"]["edges"].as_array().expect("compat edges");
             assert_eq!(compat.len(), 1);
@@ -19849,11 +19854,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ store { wip { theKit { kit { designs { edges { node { name } } } } } } } }";
+            let q = "{ store { wip { theKit { kit { hasDesigns { edges { node { name } } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "layout-alpha"), "designs missing new name: {:?}", names);
         });
     }
@@ -19910,17 +19915,17 @@ mod tests {
                         wip {
                             theKit {
                                 kit {
-                                    folders {
+                                    hasFolders {
                                         edges {
                                             node {
                                                 id
                                                 name
                                                 ... on FileSystemNode { fileSystemPath }
-                                                designs { edges { node { id name } } }
+                                                hasDesigns { edges { node { id name } } }
                                             }
                                         }
                                     }
-                                    designs {
+                                    hasDesigns {
                                         edges {
                                             node {
                                                 id
@@ -19941,11 +19946,11 @@ mod tests {
             let res = schema.execute(folder_q).await;
             assert!(res.errors.is_empty(), "vfs query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let folders = &data["store"]["wip"]["theKit"]["kit"]["folders"]["edges"];
+            let folders = &data["store"]["wip"]["theKit"]["kit"]["hasFolders"]["edges"];
             let folder_id = folders.as_array().unwrap().iter().find_map(|e| {
                 (e["node"]["name"].as_str() == Some("inbox")).then(|| e["node"]["id"].as_str().unwrap().to_string())
             }).expect("inbox folder");
-            let design_id = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"]
+            let design_id = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"]
                 .as_array()
                 .unwrap()
                 .iter()
@@ -19958,13 +19963,13 @@ mod tests {
                 .find(|e| e["node"]["name"].as_str() == Some("inbox"))
                 .expect("inbox folder edge");
             assert!(
-                !inbox["node"]["designs"]["edges"]
+                !inbox["node"]["hasDesigns"]["edges"]
                     .as_array()
                     .unwrap()
                     .iter()
                     .any(|e| e["node"]["name"].as_str() == Some("nested-layout")),
                 "design must not be in inbox before move: {:?}",
-                inbox["node"]["designs"]
+                inbox["node"]["hasDesigns"]
             );
 
             const MOVE: &str = r#"
@@ -19991,26 +19996,26 @@ mod tests {
             let res = schema.execute(folder_q).await;
             assert!(res.errors.is_empty(), "vfs query after move errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let design = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"]
+            let _design = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"]
                 .as_array()
                 .unwrap()
                 .iter()
                 .find(|e| e["node"]["name"].as_str() == Some("nested-layout"))
                 .unwrap();
-            let inbox_after = data["store"]["wip"]["theKit"]["kit"]["folders"]["edges"]
+            let inbox_after = data["store"]["wip"]["theKit"]["kit"]["hasFolders"]["edges"]
                 .as_array()
                 .unwrap()
                 .iter()
                 .find(|e| e["node"]["name"].as_str() == Some("inbox"))
                 .expect("inbox after move");
             assert!(
-                inbox_after["node"]["designs"]["edges"]
+                inbox_after["node"]["hasDesigns"]["edges"]
                     .as_array()
                     .unwrap()
                     .iter()
                     .any(|e| e["node"]["id"].as_str() == Some(design_id.as_str())),
                 "design not in inbox after move: {:?}",
-                inbox_after["node"]["designs"]
+                inbox_after["node"]["hasDesigns"]
             );
             assert_eq!(inbox_after["node"]["name"].as_str(), Some("inbox"));
         });
@@ -20048,11 +20053,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ store { wip { theKit { kit { types { edges { node { name } } } } } } } }";
+            let q = "{ store { wip { theKit { kit { hasTypes { edges { node { name } } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["types"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["hasTypes"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "kind-beta"), "types missing new name: {:?}", names);
         });
     }
@@ -20117,8 +20122,8 @@ mod tests {
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let edges = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("design edges");
-            let any_piece = edges.iter().any(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
+            let edges = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("design edges");
+            let any_piece = edges.iter().any(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
             assert!(any_piece, "expected at least one piece in wip; got: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
         });
     }
@@ -20134,8 +20139,8 @@ mod tests {
             let q = relay_auth_designs_piece_ids();
             let res = schema.execute(q).await;
             let data = res.data.into_json().unwrap();
-            let edges = data["store"]["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
-            let all_empty = edges.iter().all(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
+            let edges = data["store"]["authoritative"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("auth design edges");
+            let all_empty = edges.iter().all(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
             assert!(all_empty, "authoritative leaked pieces: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
         });
     }
@@ -20175,10 +20180,10 @@ mod tests {
     }
 
     fn relay_piece_count_wip(data: &crate::external_adapters::serde_json::Value) -> usize {
-        let Some(edges) = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array() else {
+        let Some(edges) = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array() else {
             return 0;
         };
-        edges.iter().map(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()
+        edges.iter().map(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()
     }
 
     /// 🛡️ Mutation visibility without re-snapshotting: read wip, mutate, read wip again, second
@@ -20451,9 +20456,18 @@ mod tests {
         let v: crate::external_adapters::serde_json::Value =
             crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
-        let types_arr = crate::kit_backbone::json_array_or_block_items_ref(kit.get("types").expect("types")).expect("types list");
+        let typologies = crate::kit_backbone::json_array_or_block_items_ref(kit.get("typologies").expect("typologies")).expect("typologies list");
+        let types_arr: Vec<&crate::external_adapters::serde_json::Value> = typologies
+            .iter()
+            .flat_map(|topo| {
+                topo.get("types")
+                    .and_then(crate::kit_backbone::json_array_or_block_items_ref)
+                    .into_iter()
+                    .flatten()
+            })
+            .collect();
         assert!(!types_arr.is_empty(), "expected seeded types");
-        for t in types_arr {
+        for t in &types_arr {
             let id = t["id"].as_str().expect("type id");
             let nk = t["nodeKind"].as_str().expect("type.nodeKind");
             let exp = format!("semio.metabolism.light.node.{id}");
@@ -20476,7 +20490,7 @@ mod tests {
             }
         }
         assert!(port_rows >= 1, "expected at least one family port in fixture");
-        for t in types_arr {
+        for t in &types_arr {
             if let Some(connectors) = t
                 .get("connectors")
                 .and_then(|c| crate::kit_backbone::json_array_or_block_items_ref(c))
@@ -20841,8 +20855,16 @@ mod tests {
         const FIXTURE: &str = include_str!("../../../fixtures/metabolism.kit.diff.semio.json");
         let raw: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
-        assert!(raw.get("types").is_some(), "fixture must include types collection");
-        assert!(raw.get("designs").is_some(), "fixture must include designs collection");
+        assert!(raw.get("typologies").is_some(), "fixture must include typologies collection");
+        let topo_items = crate::kit_backbone::json_array_or_block_items_ref(raw.get("typologies").expect("typologies")).expect("typologies list");
+        assert!(
+            topo_items.iter().any(|t| t.get("types").is_some()),
+            "fixture typologies must include types"
+        );
+        assert!(
+            topo_items.iter().any(|t| t.get("designs").is_some()),
+            "fixture typologies must include designs"
+        );
     }
 
     //#region 🪪 merkle hashing

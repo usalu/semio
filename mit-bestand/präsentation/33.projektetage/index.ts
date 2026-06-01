@@ -9,9 +9,8 @@ import {
 	intro,
 	splitFigureGrid,
 	type DispositionPosition,
+	type Participant,
 	type Presentation,
-	type SplitColumnGroup,
-	type SplitMorphTarget,
 	type SplitTile,
 	type Thought,
 } from "@framework/presentation/core";
@@ -23,6 +22,14 @@ const ASSET_CATALOGUE = "./bauteilbo\u0308rse.png";
 const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
 const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
 
+const CATALOGUE_PARTICIPANT = "catalogue";
+const CATALOGUE_COL1 = "catalogue-col1";
+const CATALOGUE_COL2 = "catalogue-col2";
+const CATALOGUE_COL3 = "catalogue-col3";
+
+const CATALOGUE_EMBODIMENT_CROP = "crop";
+const CATALOGUE_EMBODIMENT_LABEL = "label";
+
 const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
 const CATALOGUE_TILES_ASSEMBLED = splitFigureGrid({
 	rows: 3,
@@ -32,6 +39,46 @@ const CATALOGUE_TILES_ASSEMBLED = splitFigureGrid({
 });
 
 const CATALOGUE_TILE_BY_KEY = new Map(CATALOGUE_TILES_ASSEMBLED.map((tile) => [tile.key, tile]));
+
+/** @emoji 📐 Union of normalized figure crops for the given tile keys. */
+function unionTileCrop(tiles: readonly SplitTile[], tileKeys: readonly string[]): DispositionPosition {
+	const selected = tiles.filter((tile) => tileKeys.includes(tile.key));
+	if (selected.length === 0) {
+		throw new Error("unionTileCrop: no tiles matched the given keys.");
+	}
+	let minX = 1;
+	let minY = 1;
+	let maxX = 0;
+	let maxY = 0;
+	for (const tile of selected) {
+		const crop = tile.crop;
+		minX = Math.min(minX, crop.x);
+		minY = Math.min(minY, crop.y);
+		maxX = Math.max(maxX, crop.x + crop.width);
+		maxY = Math.max(maxY, crop.y + crop.height);
+	}
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/** @emoji 📐 Bounding box of slide positions for the given tile keys. */
+function unionTilePosition(tiles: readonly SplitTile[], tileKeys: readonly string[]): DispositionPosition {
+	const selected = tiles.filter((tile) => tileKeys.includes(tile.key));
+	if (selected.length === 0) {
+		throw new Error("unionTilePosition: no tiles matched the given keys.");
+	}
+	let minX = 1;
+	let minY = 1;
+	let maxX = 0;
+	let maxY = 0;
+	for (const tile of selected) {
+		const position = tile.position;
+		minX = Math.min(minX, position.x);
+		minY = Math.min(minY, position.y);
+		maxX = Math.max(maxX, position.x + position.width);
+		maxY = Math.max(maxY, position.y + position.height);
+	}
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
 
 /** @emoji 📐 Ten catalogue tiles (5–14) as three separated columns (2×3 | 1×3 | 1×1). */
 function catalogueFocusColumnTiles(): SplitTile[] {
@@ -80,43 +127,17 @@ function catalogueFocusColumnTiles(): SplitTile[] {
 
 const CATALOGUE_FOCUS_TILES = catalogueFocusColumnTiles();
 
-const CATALOGUE_COLUMN_LABEL_LINES: Record<string, string> = {
+const CATALOGUE_COLUMN_TILE_KEYS = {
+	col1: ["tile-r1-c0", "tile-r1-c1", "tile-r1-c2", "tile-r1-c3", "tile-r1-c4", "tile-r2-c0"],
+	col2: ["tile-r2-c1", "tile-r2-c2", "tile-r2-c3"],
+	col3: ["tile-r2-c4"],
+} as const;
+
+const CATALOGUE_COLUMN_LABELS: Record<keyof typeof CATALOGUE_COLUMN_TILE_KEYS, string> = {
 	col1: "Rippendecke",
 	col2: "Unterzug",
 	col3: "Stütze",
 };
-
-const CATALOGUE_ASSEMBLED_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
-	{
-		key: "col1",
-		tileKeys: ["tile-r0-c0", "tile-r0-c1", "tile-r1-c0", "tile-r1-c1", "tile-r2-c0", "tile-r2-c1"],
-		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col1,
-	},
-	{
-		key: "col2",
-		tileKeys: ["tile-r0-c2", "tile-r1-c2", "tile-r2-c2"],
-		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col2,
-	},
-	{
-		key: "col3",
-		tileKeys: ["tile-r0-c3", "tile-r0-c4", "tile-r1-c3", "tile-r1-c4", "tile-r2-c3", "tile-r2-c4"],
-		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col3,
-	},
-];
-
-const CATALOGUE_FOCUS_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
-	{
-		key: "col1",
-		tileKeys: ["tile-r1-c0", "tile-r1-c1", "tile-r1-c2", "tile-r1-c3", "tile-r1-c4", "tile-r2-c0"],
-		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col1,
-	},
-	{
-		key: "col2",
-		tileKeys: ["tile-r2-c1", "tile-r2-c2", "tile-r2-c3"],
-		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col2,
-	},
-	{ key: "col3", tileKeys: ["tile-r2-c4"], labelLine: CATALOGUE_COLUMN_LABEL_LINES.col3 },
-];
 
 const CATALOGUE_LABEL_STACK_FRAME = { x: 0.38, y: 0.12, width: 0.24, height: 0.76 };
 const CATALOGUE_LABEL_ROW_GAP = 0.04;
@@ -131,14 +152,31 @@ function stackedColumnLabelPosition(rowIndex: number): DispositionPosition {
 	};
 }
 
-/** @emoji 🏷 One stacked label per column; visible tiles share {@link columnMorphId} per column and group-morph here. */
-const CATALOGUE_COLUMN_LABELS: readonly SplitMorphTarget[] = CATALOGUE_FOCUS_COLUMN_GROUPS.map((column, rowIndex) => ({
-	columnKey: column.key,
-	position: stackedColumnLabelPosition(rowIndex),
-	lines: [column.labelLine ?? column.key],
-	level: "heading",
-	morphRoot: "heading-line",
-}));
+function catalogueColumnParticipant(
+	id: string,
+	tileKeys: readonly string[],
+	label: string,
+): Participant {
+	return {
+		id,
+		embodiments: [
+			{
+				kind: "figure",
+				id: CATALOGUE_EMBODIMENT_CROP,
+				src: ASSET_CATALOGUE,
+				alt: label,
+				crop: unionTileCrop(CATALOGUE_TILES_ASSEMBLED, tileKeys),
+			},
+			{
+				kind: "text",
+				id: CATALOGUE_EMBODIMENT_LABEL,
+				lines: [label],
+				level: "heading",
+				morphRoot: "heading-line",
+			},
+		],
+	};
+}
 
 const introDeck = intro({
 	id: "projektetage",
@@ -194,13 +232,12 @@ const introDeck = intro({
 	},
 });
 
-const bauteilkatalogThought: Thought = {
-	id: "bauteilkatalog",
-	name: "Bauteilkatalog",
-	transition: { kind: "morph" },
+const mediaThought: Thought = {
+	id: "media",
+	name: "Medien",
 	participants: [
 		{
-			id: "catalogue",
+			id: CATALOGUE_PARTICIPANT,
 			embodiments: [
 				{
 					kind: "figure",
@@ -209,6 +246,9 @@ const bauteilkatalogThought: Thought = {
 				},
 			],
 		},
+		catalogueColumnParticipant(CATALOGUE_COL1, CATALOGUE_COLUMN_TILE_KEYS.col1, CATALOGUE_COLUMN_LABELS.col1),
+		catalogueColumnParticipant(CATALOGUE_COL2, CATALOGUE_COLUMN_TILE_KEYS.col2, CATALOGUE_COLUMN_LABELS.col2),
+		catalogueColumnParticipant(CATALOGUE_COL3, CATALOGUE_COLUMN_TILE_KEYS.col3, CATALOGUE_COLUMN_LABELS.col3),
 		{
 			id: "demo-video",
 			embodiments: [
@@ -232,106 +272,110 @@ const bauteilkatalogThought: Thought = {
 			],
 		},
 	],
-	arrangements: [
+	slides: [
 		{
-			id: "catalogue",
-			name: "Inventar",
-			dispositions: [
-				{
-					participantId: "catalogue",
-					emphasis: "active",
-					split: {
-						tiles: CATALOGUE_TILES_ASSEMBLED,
-						concealed: true,
-						columns: CATALOGUE_ASSEMBLED_COLUMN_GROUPS,
-						columnMorphTiles: true,
+			arrangement: {
+				id: "catalogue",
+				name: "Bauteilkatalog",
+				dispositions: [
+					{
+						participantId: CATALOGUE_PARTICIPANT,
+						emphasis: "active",
+						split: { tiles: CATALOGUE_TILES_ASSEMBLED },
 					},
-				},
-				{
-					participantId: "catalogue",
-					emphasis: "active",
-					position: CATALOGUE_FRAME,
-				},
-			],
+				],
+			},
+			transition: { kind: "morph" },
 		},
 		{
-			id: "catalogue-focus",
-			name: "Bauteilarten",
-			dispositions: [
-				{
-					participantId: "catalogue",
-					emphasis: "active",
-					split: {
-						tiles: CATALOGUE_FOCUS_TILES,
-						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
-						columnMorphTiles: true,
+			arrangement: {
+				id: "catalogue-focus",
+				name: "Bauteilarten",
+				dispositions: [
+					{
+						participantId: CATALOGUE_COL1,
+						embodimentId: CATALOGUE_EMBODIMENT_CROP,
+						emphasis: "active",
+						position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col1),
 					},
-				},
-			],
+					{
+						participantId: CATALOGUE_COL2,
+						embodimentId: CATALOGUE_EMBODIMENT_CROP,
+						emphasis: "active",
+						position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col2),
+					},
+					{
+						participantId: CATALOGUE_COL3,
+						embodimentId: CATALOGUE_EMBODIMENT_CROP,
+						emphasis: "active",
+						position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col3),
+					},
+				],
+			},
+			transition: { kind: "morph" },
 		},
 		{
-			id: "catalogue-labels",
-			name: "Bauteilbeschriftungen",
-			dispositions: [
-				{
-					participantId: "catalogue",
-					emphasis: "active",
-					morphTargets: CATALOGUE_COLUMN_LABELS,
-					morphColumnGroups: CATALOGUE_FOCUS_COLUMN_GROUPS,
-					morphSourceTiles: CATALOGUE_FOCUS_TILES,
-				},
-			],
+			arrangement: {
+				id: "catalogue-labels",
+				name: "Bauteilbeschriftungen",
+				dispositions: [
+					{
+						participantId: CATALOGUE_COL1,
+						embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+						emphasis: "active",
+						position: stackedColumnLabelPosition(0),
+					},
+					{
+						participantId: CATALOGUE_COL2,
+						embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+						emphasis: "active",
+						position: stackedColumnLabelPosition(1),
+					},
+					{
+						participantId: CATALOGUE_COL3,
+						embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+						emphasis: "active",
+						position: stackedColumnLabelPosition(2),
+					},
+				],
+			},
+			transition: { kind: "morph" },
 		},
 		{
-			id: "media-suite",
-			name: "Website",
-			dispositions: [
-				{
-					participantId: "catalogue",
-					emphasis: "muted",
-					position: { x: 0.02, y: 0.05, width: 0.3, height: 0.35 },
-				},
-				{
-					participantId: "demo-video",
-					emphasis: "active",
-					position: { x: 0.35, y: 0.1, width: 0.6, height: 0.5 },
-				},
-				{
-					participantId: "thesis",
-					emphasis: "active",
-					position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
-				},
-			],
+			arrangement: {
+				id: "media-suite",
+				name: "Medienüberblick",
+				dispositions: [
+					{
+						participantId: CATALOGUE_PARTICIPANT,
+						emphasis: "muted",
+						position: { x: 0.02, y: 0.05, width: 0.3, height: 0.35 },
+					},
+					{
+						participantId: "demo-video",
+						emphasis: "active",
+						position: { x: 0.35, y: 0.1, width: 0.6, height: 0.5 },
+					},
+					{
+						participantId: "thesis",
+						emphasis: "active",
+						position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+					},
+				],
+			},
 		},
 	],
 };
-
-const introChapter = introDeck.chapters[0]!;
-const introSequence = introChapter.sequences[0]!;
-const ueberUnsThought = introSequence.thoughts[0]!;
 
 const deck: Presentation = {
 	...introDeck,
 	chapters: [
 		{
-			id: "einfuehrung",
-			name: "Einführung",
+			...introDeck.chapters[0]!,
 			sequences: [
 				{
-					id: "einleitung",
-					name: "Einleitung",
-					thoughts: [{ ...ueberUnsThought, name: "Über Uns" }],
-				},
-			],
-		},
-		{
-			id: "system",
-			name: "System",
-			sequences: [
-				{
-					id: "bauteilboerse",
-					name: "Bauteilbörse",
-					thoughts: [bauteilkatalogThought],
+					...introDeck.chapters[0]!.sequences[0]!,
+					thoughts: [...introDeck.chapters[0]!.sequences[0]!.thoughts, mediaThought],
 				},
 			],
 		},
@@ -360,104 +404,76 @@ if (typeof document !== "undefined" && !import.meta.vitest) {
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+	const { expandThoughtSlides } = await import("@framework/presentation/core");
 
 	describe("projektetage deck", () => {
-		it("declares intro plus bauteilkatalog arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(11);
+		it("declares intro plus expanded media render slides", () => {
+			expect(countArrangements(deck)).toBeGreaterThan(11);
 			expect(deck.language).toBe("de");
 		});
 
-		it("uses German bookmark names on intro and bauteilkatalog slides", () => {
+		it("uses German bookmark names on intro and media slides", () => {
 			const introSlide = collectPresentationSlides(deck)[0];
 			expect(introSlide).toEqual({
 				h: 0,
 				v: 0,
-				chapter: "Einführung",
-				sequence: "Einleitung",
-				thought: "Über Uns",
+				chapter: "Hauptteil",
+				sequence: "Einführung",
+				thought: "Einleitung",
 				slide: "Titel",
 			});
-			const inventarSlide = collectPresentationSlides(deck)[7];
-			expect(inventarSlide).toEqual({
-				h: 1,
-				v: 0,
-				chapter: "System",
-				sequence: "Bauteilbörse",
-				thought: "Bauteilkatalog",
-				slide: "Inventar",
-			});
-			const websiteSlide = collectPresentationSlides(deck)[10];
-			expect(websiteSlide).toEqual({
-				h: 1,
-				v: 3,
-				chapter: "System",
-				sequence: "Bauteilbörse",
-				thought: "Bauteilkatalog",
-				slide: "Website",
+			const catalogueSlide = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilkatalog");
+			expect(catalogueSlide).toMatchObject({
+				h: 0,
+				chapter: "Hauptteil",
+				sequence: "Einführung",
+				thought: "Medien",
+				slide: "Bauteilkatalog",
 			});
 		});
 
-		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
-			const bauteilkatalog = deck.chapters[1]?.sequences[0]?.thoughts.find((t) => t.id === "bauteilkatalog");
-			const catalogue = bauteilkatalog?.arrangements.find((a) => a.id === "catalogue");
-			expect(catalogue?.dispositions[0]?.split?.concealed).toBe(true);
-			expect(catalogue?.dispositions[0]?.split?.tiles).toHaveLength(15);
-			expect(catalogue?.dispositions[0]?.split?.columnMorphTiles).toBe(true);
-			expect(catalogue?.dispositions[1]?.position).toEqual(CATALOGUE_FRAME);
-			expect(catalogue?.dispositions[1]?.split).toBeUndefined();
+		it("assembles the catalogue as a split figure grid", () => {
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
+			const catalogue = media?.slides.find((slide) => slide.arrangement.id === "catalogue");
+			expect(catalogue?.arrangement.dispositions[0]?.split?.tiles).toHaveLength(15);
 		});
 
-		it("arranges catalogue-focus as three columns without the top row", () => {
-			const bauteilkatalog = deck.chapters[1]?.sequences[0]?.thoughts.find((t) => t.id === "bauteilkatalog");
-			const focus = bauteilkatalog?.arrangements.find((a) => a.id === "catalogue-focus");
-			const tiles = focus?.dispositions[0]?.split?.tiles ?? [];
-			const keys = tiles.map((tile) => tile.key);
-			expect(keys).toHaveLength(10);
-			expect(keys.every((key) => !key.startsWith("tile-r0-"))).toBe(true);
-			expect(keys).toEqual([
-				"tile-r1-c0",
-				"tile-r1-c1",
-				"tile-r1-c2",
-				"tile-r1-c3",
-				"tile-r1-c4",
-				"tile-r2-c0",
-				"tile-r2-c1",
-				"tile-r2-c2",
-				"tile-r2-c3",
-				"tile-r2-c4",
+		it("focuses three column crop figures", () => {
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
+			const focus = media?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");
+			const dispositions = focus?.arrangement.dispositions ?? [];
+			expect(dispositions.map((disposition) => disposition.participantId)).toEqual([
+				CATALOGUE_COL1,
+				CATALOGUE_COL2,
+				CATALOGUE_COL3,
 			]);
-			const col1 = tiles.filter((tile) => tile.key.startsWith("tile-r1-") || tile.key === "tile-r2-c0");
-			const col2 = tiles.filter((tile) => ["tile-r2-c1", "tile-r2-c2", "tile-r2-c3"].includes(tile.key));
-			const col3 = tiles.filter((tile) => tile.key === "tile-r2-c4");
-			expect(col1.every((tile) => (tile.position?.x ?? 0) < 0.5)).toBe(true);
-			expect(col2.every((tile) => (tile.position?.x ?? 0) > 0.48 && (tile.position?.x ?? 0) < 0.72)).toBe(true);
-			expect(col3[0]?.position?.x).toBeGreaterThan(0.7);
-			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
+			expect(dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP)).toBe(true);
+			const col3 = dispositions.find((disposition) => disposition.participantId === CATALOGUE_COL3);
+			expect(col3?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs focus tiles into fixed column labels without a bridge arrangement", () => {
-			const bauteilkatalog = deck.chapters[1]?.sequences[0]?.thoughts.find((t) => t.id === "bauteilkatalog");
-			const arrangementIds = bauteilkatalog?.arrangements.map((arrangement) => arrangement.id) ?? [];
-			expect(arrangementIds).not.toContain("catalogue-column-ghosts");
-			const labels = bauteilkatalog?.arrangements.find((a) => a.id === "catalogue-labels");
-			const targets = labels?.dispositions[0]?.morphTargets ?? [];
-			expect(targets).toHaveLength(3);
-			expect(targets.every((target) => target.columnKey !== undefined)).toBe(true);
-			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
-			expect(labels?.dispositions[0]?.morphColumnGroups).toEqual(CATALOGUE_FOCUS_COLUMN_GROUPS);
-			expect(labels?.dispositions[0]?.morphSourceTiles).toEqual(CATALOGUE_FOCUS_TILES);
-			const ys = targets.map((target) => target.position.y);
-			expect(ys[0]).toBeLessThan(ys[1] ?? 0);
-			expect(ys[1]).toBeLessThan(ys[2] ?? 0);
-			expect(bauteilkatalog?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columnMorphTiles).toBe(
+		it("morphs column crops into labels via auto-derived bridges", () => {
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
+			expect(media).toBeDefined();
+			const expanded = expandThoughtSlides(media!);
+			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
+			const bridgeSlide = expanded.find((slide) => slide.id === "catalogue-labels--bridge");
+			expect(labelSlide).toBeDefined();
+			expect(bridgeSlide?.derived).toBe(true);
+			expect(bridgeSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP)).toBe(
 				true,
 			);
+			expect(
+				labelSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_LABEL),
+			).toBe(true);
 		});
 
-		it("includes figure, video, and pdf participants in the bauteilkatalog thought", () => {
-			const bauteilkatalog = deck.chapters[1]?.sequences[0]?.thoughts.find((t) => t.id === "bauteilkatalog");
-			const kinds = bauteilkatalog?.participants.flatMap((p) => p.embodiments.map((e) => e.kind)) ?? [];
-			expect(kinds).toEqual(["figure", "video", "pdf"]);
+		it("includes figure, video, and pdf participants in the media thought", () => {
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
+			const kinds = media?.participants.flatMap((participant) => participant.embodiments.map((embodiment) => embodiment.kind)) ?? [];
+			expect(kinds).toContain("figure");
+			expect(kinds).toContain("video");
+			expect(kinds).toContain("pdf");
 		});
 	});
 }
