@@ -56,6 +56,10 @@ A pdf embodiment of a participant.
 # Disposition
 
 A disposition is a concrete positioned, styled embodiment.
+A disposition is ephemerally modifyable (hoverable, draggable, selectable, resizable and rotatetable).
+A selection rectangle is started when the user clicks into empty stapce.
+When the selection rectangle is going to the left 
+Because every disposition either disappears or morphs between slides, all ephemeral modification are lost after a slide changge.
 
 # Split
 

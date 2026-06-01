@@ -5206,8 +5206,28 @@ export function segmentIntersectsPolygon(a: ScreenPoint, b: ScreenPoint, polygon
 export interface MarqueeCandidate {
   readonly kind: "object" | "vortex" | "attraction";
   readonly id: string;
+  readonly hull: readonly ScreenPoint[];
   readonly screenBounds: ScreenRect | null;
 }
+
+/** @emoji 🖱️ Projected marquee silhouette: convex hull plus axis-aligned reject bounds. */
+export interface ObjectMarqueeFootprint {
+  readonly hull: readonly ScreenPoint[];
+  readonly screenBounds: ScreenRect;
+}
+
+/** @emoji 🖱️ Per-mesh local AABB corners for fast marquee projection without geometry traversal. */
+export interface ObjectMarqueeMeshCache {
+  readonly mesh: Mesh;
+  readonly localCorners: readonly Vector3[];
+}
+
+/** @emoji 🖱️ Cached mesh footprints for one puzzle object group. */
+export interface ObjectMarqueeFootprintCacheEntry {
+  readonly meshes: readonly ObjectMarqueeMeshCache[];
+}
+
+const objectMarqueeFootprintCache = new Map<string, ObjectMarqueeFootprintCacheEntry>();
 
 const _marqueeProjectScratch = new Vector3();
 const _marqueeMeshBox = new Box3();
@@ -5279,6 +5299,35 @@ export function screenBoundsFromClientPoints(points: readonly ScreenPoint[]): Sc
   return { left, right, top, bottom };
 }
 
+/** @emoji 🖱️ True when two closed screen polygons overlap (lasso crossing vs object hull). */
+export function screenPolygonsIntersect(a: readonly ScreenPoint[], b: readonly ScreenPoint[]): boolean {
+  if (a.length === 0 || b.length === 0) {
+    return false;
+  }
+  for (const point of a) {
+    if (pointInPolygon(point, b)) {
+      return true;
+    }
+  }
+  for (const point of b) {
+    if (pointInPolygon(point, a)) {
+      return true;
+    }
+  }
+  for (let i = 0; i < a.length; i += 1) {
+    const a0 = a[i]!;
+    const a1 = a[(i + 1) % a.length]!;
+    for (let j = 0; j < b.length; j += 1) {
+      const b0 = b[j]!;
+      const b1 = b[(j + 1) % b.length]!;
+      if (segmentIntersectsSegment(a0, a1, b0, b1)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /** @emoji 🖱️ True when a screen rect overlaps a lasso polygon (crossing selection). */
 export function screenRectIntersectsPolygon(bounds: ScreenRect, polygon: readonly ScreenPoint[]): boolean {
   for (const point of polygon) {
@@ -5301,20 +5350,30 @@ export function screenRectIntersectsPolygon(bounds: ScreenRect, polygon: readonl
 }
 
 function marqueeCandidateSelected(input: MarqueeSelectionInput, candidate: MarqueeCandidate): boolean {
+  const hull = candidate.hull;
   const bounds = candidate.screenBounds;
-  if (!bounds) {
+  if (hull.length === 0 || !bounds) {
     return false;
   }
   if (input.crossing) {
     if (input.method === "rectangle" && input.rect) {
-      return screenRectIntersectsRect(input.rect, bounds);
+      if (!screenRectIntersectsRect(input.rect, bounds)) {
+        return false;
+      }
+      return screenRectIntersectsPolygon(input.rect, hull);
     }
-    return screenRectIntersectsPolygon(bounds, input.polygon);
+    if (input.polygon.length < 3) {
+      return false;
+    }
+    return screenPolygonsIntersect(hull, input.polygon);
   }
   if (input.method === "rectangle" && input.rect) {
-    return screenRectContainsRect(input.rect, bounds);
+    return hull.every((point) => pointInScreenRect(point, input.rect!));
   }
-  return polygonContainsScreenRect(input.polygon, bounds);
+  if (input.polygon.length < 3) {
+    return false;
+  }
+  return hull.every((point) => pointInPolygon(point, input.polygon));
 }
 
 /** @emoji 🖱️ Resolves marquee hits into a {@link SelectionSnapshot} from projected screen candidates. */
@@ -5420,8 +5479,72 @@ function writeMarqueeBoxCorners(box: Box3): readonly Vector3[] {
   return _marqueeBoxCorners;
 }
 
-/** @emoji 🖱️ Precomputes mesh geometry bounding boxes so marquee projection avoids a cold first-gesture stall. */
-export function warmObjectGroupMarqueeBounds(group: Group): void {
+function cloneMarqueeBoxCorners(box: Box3): Vector3[] {
+  return writeMarqueeBoxCorners(box).map((corner) => corner.clone());
+}
+
+function objectMarqueeMeshCount(group: Group): number {
+  let count = 0;
+  group.traverse((node) => {
+    if (node instanceof Mesh) {
+      count += 1;
+    }
+  });
+  return count;
+}
+
+function footprintFromProjectedPoints(projected: readonly ScreenPoint[]): ObjectMarqueeFootprint | null {
+  if (projected.length === 0) {
+    return null;
+  }
+  const screenBounds = screenBoundsFromClientPoints(projected);
+  if (!screenBounds) {
+    return null;
+  }
+  return { hull: convexHullScreenPoints(projected), screenBounds };
+}
+
+/** @emoji 🖱️ Drops cached mesh corners for one object or the whole scene. */
+export function invalidateObjectMarqueeFootprintCache(objectId?: string): void {
+  if (objectId === undefined) {
+    objectMarqueeFootprintCache.clear();
+    return;
+  }
+  objectMarqueeFootprintCache.delete(objectId);
+}
+
+/** @emoji 🖱️ Reads cached mesh corners for marquee projection tests. */
+export function getObjectMarqueeFootprintCache(objectId: string): ObjectMarqueeFootprintCacheEntry | undefined {
+  return objectMarqueeFootprintCache.get(objectId);
+}
+
+/** @emoji 🖱️ Traverses a group once and stores per-mesh local AABB corners for marquee projection. */
+export function buildObjectMarqueeFootprintCache(group: Group, objectId: string): ObjectMarqueeFootprintCacheEntry {
+  const meshes: ObjectMarqueeMeshCache[] = [];
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) {
+      return;
+    }
+    const geometry = node.geometry;
+    if (!geometry) {
+      return;
+    }
+    if (!geometry.boundingBox) {
+      geometry.computeBoundingBox();
+    }
+    meshes.push({ mesh: node, localCorners: cloneMarqueeBoxCorners(geometry.boundingBox!) });
+  });
+  const entry: ObjectMarqueeFootprintCacheEntry = { meshes };
+  objectMarqueeFootprintCache.set(objectId, entry);
+  return entry;
+}
+
+/** @emoji 🖱️ Precomputes mesh geometry bounding boxes and optional footprint cache for marquee. */
+export function warmObjectGroupMarqueeBounds(group: Group, objectId?: string): void {
+  if (objectId) {
+    buildObjectMarqueeFootprintCache(group, objectId);
+    return;
+  }
   group.traverse((node) => {
     if (!(node instanceof Mesh)) {
       return;
@@ -5434,8 +5557,36 @@ export function warmObjectGroupMarqueeBounds(group: Group): void {
   });
 }
 
-/** @emoji 🖱️ Projects an object group's visible mesh bounds to client-space screen bounds for marquee tests. */
-export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ScreenRect | null {
+function projectMarqueePointsFromMeshes(
+  meshes: readonly ObjectMarqueeMeshCache[],
+  camera: Camera,
+  rect: DOMRect,
+): ScreenPoint[] {
+  const projected: ScreenPoint[] = [];
+  for (const entry of meshes) {
+    entry.mesh.updateWorldMatrix(true, false);
+    for (const local of entry.localCorners) {
+      _marqueeProjectScratch.copy(local).applyMatrix4(entry.mesh.matrixWorld);
+      const sample = projectWorldToClientMarquee(_marqueeProjectScratch, camera, rect);
+      if (sample.point) {
+        projected.push(sample.point);
+      }
+    }
+  }
+  return projected;
+}
+
+/** @emoji 🖱️ Projects cached mesh corners to a client-space marquee footprint. */
+export function projectObjectMarqueeFootprintFromCache(
+  cache: ObjectMarqueeFootprintCacheEntry,
+  camera: Camera,
+  rect: DOMRect,
+): ObjectMarqueeFootprint | null {
+  return footprintFromProjectedPoints(projectMarqueePointsFromMeshes(cache.meshes, camera, rect));
+}
+
+/** @emoji 🖱️ Projects an object group's visible mesh bounds to a client-space marquee footprint. */
+export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ObjectMarqueeFootprint | null {
   const projected: ScreenPoint[] = [];
   group.traverse((node) => {
     if (!(node instanceof Mesh)) {
@@ -5456,7 +5607,31 @@ export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, r
       }
     }
   });
-  return screenBoundsFromClientPoints(projected);
+  return footprintFromProjectedPoints(projected);
+}
+
+function resolveObjectMarqueeFootprintCache(group: Group, objectId: string): ObjectMarqueeFootprintCacheEntry {
+  let cache = objectMarqueeFootprintCache.get(objectId);
+  const meshCount = objectMarqueeMeshCount(group);
+  if (!cache || cache.meshes.length !== meshCount) {
+    cache = buildObjectMarqueeFootprintCache(group, objectId);
+  }
+  return cache;
+}
+
+function marqueeFootprintToCandidate(
+  kind: MarqueeCandidate["kind"],
+  id: string,
+  footprint: ObjectMarqueeFootprint | null,
+): MarqueeCandidate | null {
+  if (!footprint) {
+    return null;
+  }
+  return { kind, id, hull: footprint.hull, screenBounds: footprint.screenBounds };
+}
+
+function marqueeFootprintFromClientPoints(points: readonly ScreenPoint[]): ObjectMarqueeFootprint | null {
+  return footprintFromProjectedPoints(points);
 }
 
 export interface MarqueeOverlaySnapshot {
@@ -6330,6 +6505,8 @@ function MarqueeBridge() {
     lastX: number;
     lastY: number;
   } | null>(null);
+  const marqueePrefetchFrameRef = reactHostPort.useRef<number | null>(null);
+  const marqueeCandidatesPrefetchedRef = reactHostPort.useRef(false);
   reactHostPort.useEffect(() => {
     const canvas = gl.domElement;
     if (!canvas) {
@@ -6338,7 +6515,15 @@ function MarqueeBridge() {
     const resetOverlay = () => {
       puzzle3dMarqueeOverlayStore.setSnapshot(MARQUEE_OVERLAY_IDLE);
     };
+    const cancelPrefetch = () => {
+      if (marqueePrefetchFrameRef.current !== null) {
+        cancelAnimationFrame(marqueePrefetchFrameRef.current);
+        marqueePrefetchFrameRef.current = null;
+      }
+      marqueeCandidatesPrefetchedRef.current = false;
+    };
     const cancelGesture = () => {
+      cancelPrefetch();
       gestureRef.current = null;
       cancelMarqueePreview();
       resetOverlay();
@@ -6348,6 +6533,7 @@ function MarqueeBridge() {
       if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current || puzzle3dBrushToolActiveRef.current) {
         return;
       }
+      cancelPrefetch();
       gestureRef.current = {
         pointerId: event.pointerId,
         startX: event.clientX,
@@ -6357,6 +6543,16 @@ function MarqueeBridge() {
         lastX: event.clientX,
         lastY: event.clientY,
       };
+      const pointerId = event.pointerId;
+      marqueePrefetchFrameRef.current = requestAnimationFrame(() => {
+        marqueePrefetchFrameRef.current = null;
+        const gesture = gestureRef.current;
+        if (!gesture || gesture.pointerId !== pointerId) {
+          return;
+        }
+        captureMarqueeCandidates();
+        marqueeCandidatesPrefetchedRef.current = true;
+      });
     };
     const onPointerMove = (event: PointerEvent) => {
       if (puzzle3dRelocateDragActiveRef.current) {
@@ -6398,7 +6594,8 @@ function MarqueeBridge() {
       };
       puzzle3dMarqueeOverlayStore.setSnapshot(overlaySnapshot);
       if (activating) {
-        captureMarqueeCandidates();
+        captureMarqueeCandidates({ reuseCandidates: marqueeCandidatesPrefetchedRef.current });
+        marqueeCandidatesPrefetchedRef.current = false;
       }
       previewMarqueeSelection(gestureArgs);
       invalidate();
@@ -6662,9 +6859,10 @@ function RegistryProvider({
       if (!group) {
         continue;
       }
-      const screenBounds = projectObjectGroupToScreenPoints(group, env.camera, domRect);
-      if (screenBounds) {
-        candidates.push({ kind: "object", id, screenBounds });
+      const cache = resolveObjectMarqueeFootprintCache(group, id);
+      const candidate = marqueeFootprintToCandidate("object", id, projectObjectMarqueeFootprintFromCache(cache, env.camera, domRect));
+      if (candidate) {
+        candidates.push(candidate);
       }
     }
     for (const [fullId, getter] of vortexGettersRef.current) {
@@ -6673,9 +6871,9 @@ function RegistryProvider({
         continue;
       }
       const point = projectWorldToClient(world, env.camera, domRect);
-      const screenBounds = point ? screenBoundsFromClientPoints([point]) : null;
-      if (screenBounds) {
-        candidates.push({ kind: "vortex", id: fullId, screenBounds });
+      const candidate = marqueeFootprintToCandidate("vortex", fullId, point ? marqueeFootprintFromClientPoints([point]) : null);
+      if (candidate) {
+        candidates.push(candidate);
       }
     }
     for (const attraction of marqueeAttractionsRef.current) {
@@ -6694,9 +6892,9 @@ function RegistryProvider({
           points.push(projected);
         }
       }
-      const screenBounds = screenBoundsFromClientPoints(points);
-      if (screenBounds) {
-        candidates.push({ kind: "attraction", id: attraction.id, screenBounds });
+      const candidate = marqueeFootprintToCandidate("attraction", attraction.id, marqueeFootprintFromClientPoints(points));
+      if (candidate) {
+        candidates.push(candidate);
       }
     }
     return candidates;
@@ -6707,10 +6905,15 @@ function RegistryProvider({
     marqueeBaseSelectionRef.current = null;
   }, []);
 
-  const captureMarqueeCandidates = reactHostPort.useCallback(() => {
-    marqueeBaseSelectionRef.current = selectionStore.getSnapshot();
-    marqueeCandidatesRef.current = buildMarqueeCandidates();
-  }, [buildMarqueeCandidates, selectionStore]);
+  const captureMarqueeCandidates = reactHostPort.useCallback(
+    (options?: { readonly reuseCandidates?: boolean }) => {
+      marqueeBaseSelectionRef.current = selectionStore.getSnapshot();
+      if (!options?.reuseCandidates || marqueeCandidatesRef.current.length === 0) {
+        marqueeCandidatesRef.current = buildMarqueeCandidates();
+      }
+    },
+    [buildMarqueeCandidates, selectionStore],
+  );
 
   const previewMarqueeSelection = reactHostPort.useCallback(
     (args: MarqueeGestureArgs) => {
@@ -6871,13 +7074,31 @@ function RegistryProvider({
     vortexPickRef.current.delete(fullId);
   }, []);
 
+  const warmAllMarqueeFootprintCaches = reactHostPort.useCallback(() => {
+    for (const [id, group] of objectGroupMap.current) {
+      if (group) {
+        buildObjectMarqueeFootprintCache(group, id);
+      }
+    }
+  }, []);
+
   const registerObject = reactHostPort.useCallback(
     (id: string, objectKind: string | undefined, group: Group | null) => {
       objectGroupMap.current.set(id, group);
       objectKindsRef.current.set(id, objectKind);
       if (group) {
-        scheduleDeferredCallback(() => warmObjectGroupMarqueeBounds(group));
+        scheduleDeferredCallback(() => warmObjectGroupMarqueeBounds(group, id));
+        if (attractionThreeRef.current) {
+          requestAnimationFrame(() => {
+            const current = objectGroupMap.current.get(id);
+            if (current) {
+              buildObjectMarqueeFootprintCache(current, id);
+            }
+          });
+        }
+        return;
       }
+      invalidateObjectMarqueeFootprintCache(id);
     },
     [],
   );
@@ -7199,8 +7420,12 @@ function RegistryProvider({
   const attachAttractionThreeEnv = reactHostPort.useCallback(
     (env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
       attractionThreeRef.current = env;
+      if (env) {
+        requestAnimationFrame(() => warmAllMarqueeFootprintCaches());
+        scheduleDeferredCallback(warmAllMarqueeFootprintCaches);
+      }
     },
-    [],
+    [warmAllMarqueeFootprintCaches],
   );
 
   const findNearestProximityRelocate = reactHostPort.useCallback(
@@ -7998,7 +8223,7 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
 //#endregion 🎬Viewport
 
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+  const { describe, expect, it, vi } = import.meta.vitest;
   describe("lodFromCameraDistance", () => {
     it("maps orbit distance to scale ratio", () => {
       expect(lodFromCameraDistance(100, 100)).toBe(1);
@@ -8620,7 +8845,7 @@ if (import.meta.vitest) {
     });
   });
   describe("projectObjectGroupToScreenPoints", () => {
-    it("returns screen bounds from warmed mesh geometry boxes", () => {
+    it("returns a convex hull and screen bounds from warmed mesh geometry boxes", () => {
       const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
       camera.position.set(0, 10, 20);
       camera.lookAt(0, 0, 0);
@@ -8630,10 +8855,30 @@ if (import.meta.vitest) {
       const mesh = new Mesh(new BoxGeometry(2, 2, 2));
       root.add(mesh);
       warmObjectGroupMarqueeBounds(root);
-      const bounds = projectObjectGroupToScreenPoints(root, camera, rect);
-      expect(bounds).not.toBeNull();
-      expect(bounds!.right).toBeGreaterThan(bounds!.left);
-      expect(bounds!.bottom).toBeGreaterThan(bounds!.top);
+      const footprint = projectObjectGroupToScreenPoints(root, camera, rect);
+      expect(footprint).not.toBeNull();
+      expect(footprint!.hull.length).toBeGreaterThanOrEqual(4);
+      expect(footprint!.screenBounds.right).toBeGreaterThan(footprint!.screenBounds.left);
+      expect(footprint!.screenBounds.bottom).toBeGreaterThan(footprint!.screenBounds.top);
+    });
+    it("returns a tighter hull than the inflated union screen rect for a rotated mesh", () => {
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
+      camera.position.set(0, 8, 16);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld(true);
+      const rect = { width: 800, height: 600, left: 0, top: 0, right: 800, bottom: 600 } as DOMRect;
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(4, 1, 1));
+      mesh.rotation.set(0, 0, Math.PI / 4);
+      mesh.updateMatrixWorld(true);
+      root.add(mesh);
+      warmObjectGroupMarqueeBounds(root);
+      const footprint = projectObjectGroupToScreenPoints(root, camera, rect);
+      expect(footprint).not.toBeNull();
+      const hullBounds = screenBoundsFromClientPoints(footprint!.hull)!;
+      const unionBounds = footprint!.screenBounds;
+      expect(hullBounds.right - hullBounds.left).toBeLessThanOrEqual(unionBounds.right - unionBounds.left + 1e-6);
+      expect(hullBounds.bottom - hullBounds.top).toBeLessThanOrEqual(unionBounds.bottom - unionBounds.top + 1e-6);
     });
   });
   describe("warmObjectGroupMarqueeBounds", () => {
@@ -8654,9 +8899,48 @@ if (import.meta.vitest) {
       warmObjectGroupMarqueeBounds(root);
       expect(mesh.geometry.boundingBox).toBe(box);
     });
+    it("buildObjectMarqueeFootprintCache stores mesh corners for projection", () => {
+      invalidateObjectMarqueeFootprintCache();
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+      root.add(mesh);
+      const cache = buildObjectMarqueeFootprintCache(root, "obj-a");
+      expect(cache.meshes).toHaveLength(1);
+      expect(cache.meshes[0]?.localCorners).toHaveLength(8);
+      expect(getObjectMarqueeFootprintCache("obj-a")).toBe(cache);
+    });
+    it("projectObjectMarqueeFootprintFromCache does not call computeBoundingBox", () => {
+      invalidateObjectMarqueeFootprintCache();
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
+      camera.position.set(0, 10, 20);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld(true);
+      const rect = { width: 800, height: 600, left: 0, top: 0, right: 800, bottom: 600 } as DOMRect;
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+      root.add(mesh);
+      const cache = buildObjectMarqueeFootprintCache(root, "obj-b");
+      const geometry = mesh.geometry;
+      const computeSpy = vi.spyOn(geometry, "computeBoundingBox");
+      const footprint = projectObjectMarqueeFootprintFromCache(cache, camera, rect);
+      expect(footprint).not.toBeNull();
+      expect(computeSpy).not.toHaveBeenCalled();
+      computeSpy.mockRestore();
+    });
   });
   describe("marqueeSelectionFromCandidates", () => {
     const rect = screenRectFromClientPoints(0, 0, 100, 100);
+    const testMarqueeCandidate = (kind: MarqueeCandidate["kind"], id: string, screenBounds: ScreenRect): MarqueeCandidate => ({
+      kind,
+      id,
+      screenBounds,
+      hull: [
+        { x: screenBounds.left, y: screenBounds.top },
+        { x: screenBounds.right, y: screenBounds.top },
+        { x: screenBounds.right, y: screenBounds.bottom },
+        { x: screenBounds.left, y: screenBounds.bottom },
+      ],
+    });
     it("window mode requires full enclosure", () => {
       const snap = marqueeSelectionFromCandidates({
         method: "rectangle",
@@ -8665,8 +8949,8 @@ if (import.meta.vitest) {
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
         candidates: [
-          { kind: "object", id: "inside", screenBounds: { left: 10, right: 20, top: 10, bottom: 20 } },
-          { kind: "object", id: "partial", screenBounds: { left: 90, right: 120, top: 90, bottom: 120 } },
+          testMarqueeCandidate("object", "inside", { left: 10, right: 20, top: 10, bottom: 20 }),
+          testMarqueeCandidate("object", "partial", { left: 90, right: 120, top: 90, bottom: 120 }),
         ],
       });
       expect(snap.objectIds).toEqual(["inside"]);
@@ -8678,7 +8962,7 @@ if (import.meta.vitest) {
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [{ kind: "object", id: "partial", screenBounds: { left: 90, right: 120, top: 90, bottom: 120 } }],
+        candidates: [testMarqueeCandidate("object", "partial", { left: 90, right: 120, top: 90, bottom: 120 })],
       });
       expect(snap.objectIds).toEqual(["partial"]);
     });
@@ -8690,8 +8974,8 @@ if (import.meta.vitest) {
         polygon: [],
         kinds: { object: false, vortex: true, attraction: false },
         candidates: [
-          { kind: "object", id: "obj", screenBounds: { left: 10, right: 10, top: 10, bottom: 10 } },
-          { kind: "vortex", id: "a:v1", screenBounds: { left: 12, right: 12, top: 12, bottom: 12 } },
+          testMarqueeCandidate("object", "obj", { left: 10, right: 10, top: 10, bottom: 10 }),
+          { kind: "vortex", id: "a:v1", hull: [{ x: 12, y: 12 }], screenBounds: { left: 12, right: 12, top: 12, bottom: 12 } },
         ],
       });
       expect(snap.objectIds).toEqual([]);
@@ -8704,29 +8988,125 @@ if (import.meta.vitest) {
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [{ kind: "object", id: "hidden", screenBounds: null }],
+        candidates: [{ kind: "object", id: "hidden", hull: [], screenBounds: null }],
       });
       expect(snap.objectIds).toEqual([]);
     });
-    it("window mode selects bounds fully inside the marquee", () => {
+    it("window mode selects when the hull is fully enclosed even if screen bounds extend past the marquee", () => {
       const snap = marqueeSelectionFromCandidates({
         method: "rectangle",
         crossing: false,
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [{ kind: "object", id: "tight", screenBounds: { left: 40, right: 60, top: 40, bottom: 60 } }],
+        candidates: [
+          {
+            kind: "object",
+            id: "tight-hull",
+            hull: [
+              { x: 40, y: 40 },
+              { x: 60, y: 40 },
+              { x: 60, y: 60 },
+              { x: 40, y: 60 },
+            ],
+            screenBounds: { left: 10, right: 90, top: 10, bottom: 90 },
+          },
+        ],
       });
-      expect(snap.objectIds).toEqual(["tight"]);
+      expect(snap.objectIds).toEqual(["tight-hull"]);
     });
-    it("crossing mode selects when screen bounds overlap the marquee", () => {
+    it("crossing mode rejects overlap that only exists on inflated screen bounds", () => {
       const snap = marqueeSelectionFromCandidates({
         method: "rectangle",
         crossing: true,
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [{ kind: "object", id: "edge-hit", screenBounds: { left: -10, right: 110, top: 50, bottom: 60 } }],
+        candidates: [
+          {
+            kind: "object",
+            id: "outside-hull",
+            hull: [{ x: 200, y: 200 }],
+            screenBounds: { left: -10, right: 110, top: 50, bottom: 60 },
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual([]);
+    });
+    it("crossing mode selects when a hull edge crosses the marquee", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: true,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "edge-hit",
+            hull: [
+              { x: -20, y: 50 },
+              { x: 120, y: 50 },
+            ],
+            screenBounds: { left: -20, right: 120, top: 50, bottom: 50 },
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual(["edge-hit"]);
+    });
+    it("lasso window mode requires every hull point inside the polygon", () => {
+      const polygon = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+      const snap = marqueeSelectionFromCandidates({
+        method: "lasso",
+        crossing: false,
+        rect: null,
+        polygon,
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "inside",
+            hull: [
+              { x: 40, y: 40 },
+              { x: 60, y: 40 },
+              { x: 60, y: 60 },
+              { x: 40, y: 60 },
+            ],
+            screenBounds: { left: 40, right: 60, top: 40, bottom: 60 },
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual(["inside"]);
+    });
+    it("lasso crossing mode uses hull polygon intersection", () => {
+      const polygon = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+      const snap = marqueeSelectionFromCandidates({
+        method: "lasso",
+        crossing: true,
+        rect: null,
+        polygon,
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "edge-hit",
+            hull: [
+              { x: -20, y: 50 },
+              { x: 120, y: 50 },
+            ],
+            screenBounds: { left: -20, right: 120, top: 50, bottom: 50 },
+          },
+        ],
       });
       expect(snap.objectIds).toEqual(["edge-hit"]);
     });
@@ -8754,11 +9134,41 @@ if (import.meta.vitest) {
       expect(mergeSelectionSnapshot("invertive", current, incoming).objectIds.sort()).toEqual(["a", "b"]);
     });
   });
+  describe("screenPolygonsIntersect", () => {
+    it("detects edge crossings between two polygons", () => {
+      const hull = [
+        { x: -20, y: 50 },
+        { x: 120, y: 50 },
+      ];
+      const lasso = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+      ];
+      expect(screenPolygonsIntersect(hull, lasso)).toBe(true);
+    });
+  });
   describe("resolveMarqueeSelectionGesture", () => {
     const rect = screenRectFromClientPoints(0, 0, 100, 100);
     const candidates = [
-      { kind: "object" as const, id: "inside", screenBounds: { left: 10, right: 20, top: 10, bottom: 20 } },
-      { kind: "object" as const, id: "outside", screenBounds: { left: 200, right: 200, top: 200, bottom: 200 } },
+      {
+        kind: "object" as const,
+        id: "inside",
+        hull: [
+          { x: 10, y: 10 },
+          { x: 20, y: 10 },
+          { x: 20, y: 20 },
+          { x: 10, y: 20 },
+        ],
+        screenBounds: { left: 10, right: 20, top: 10, bottom: 20 },
+      },
+      {
+        kind: "object" as const,
+        id: "outside",
+        hull: [{ x: 200, y: 200 }],
+        screenBounds: { left: 200, right: 200, top: 200, bottom: 200 },
+      },
     ];
     const gesture = {
       startX: 0,

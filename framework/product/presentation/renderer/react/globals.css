@@ -275,6 +275,10 @@
 	will-change: transform;
 }
 
+.reveal .presentation-interactive-disposition--canvas-framed.presentation-interactive-disposition--pinned {
+	overflow: visible;
+}
+
 .reveal
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)

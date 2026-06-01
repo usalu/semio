@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
-  "summary": "Fixed catalogue→focus and focus→labels morph pairing: tiles now always use tileMorphId (columnMorphTileId broke catalogue→focus when column groups changed). Removed figure-tile h2 nbsp placeholders and companion label h2s so reveal.js text matching no longer hijacks forward auto-animate. Label morph slots still expand via morphColumnGroups with one unique tileMorphId per tile.",
+  "summary": "Fixed projektetage split figure tiles showing the full catalogue image in every cell.\n\nRoot cause: `figureCropBackgroundVars` copied morph/cover background size and center position into the resting CSS vars whenever the tile frame aspect differed from the crop (common on Bauteilarten focus layout). That oversized and mis-centered the background so each tile looked like a miniature full figure.\n\nFix: keep stretch-fill crop math for `--presentation-figure-bg-size/position` at rest; reserve enlarged cover vars for auto-animate pending/running only. Added regression tests for rest vs morph vars and distinct per-tile positions. Renderer suite: 52 tests pass.",
   "goal": "🎯framework",
   "sessions": [
     "⚪b9f5d20ffbf54da39143e48f69536ff4",
@@ -15,6 +15,7 @@
     "⚪12a044926cda43db8314a98f191632cd",
     "⚪decdcc48ca0a4bb0a176f0943759b799",
     "⚪416d875b7e544ce281ca5d969da194ee",
-    "⚪d9c0c21320db422c80d0e518bba10151"
+    "⚪d9c0c21320db422c80d0e518bba10151",
+    "⚪40f9e04a329b4d18853804fddf6c67cc"
   ]
 }

@@ -701,12 +701,6 @@ export function figureCropBackgroundVars(
 		morphHeight = stretchHeight * coverScale;
 		morphPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
 		morphPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
-		if (coverScale > 1 + 1e-6) {
-			restWidth = morphWidth;
-			restHeight = morphHeight;
-			restPosX = morphPosX;
-			restPosY = morphPosY;
-		}
 	}
 	return {
 		backgroundImage: `url("${embodiment.src}")`,
@@ -1770,6 +1764,51 @@ export function flowDispositionOffsetStyle(transform: DispositionPosition): CSSP
 	};
 }
 
+/** @emoji 📐 True when two normalized disposition frames differ. */
+export function dispositionPositionChanged(
+	a: DispositionPosition,
+	b: DispositionPosition,
+): boolean {
+	return (
+		Math.abs(a.x - b.x) > 1e-6 ||
+		Math.abs(a.y - b.y) > 1e-6 ||
+		Math.abs(a.width - b.width) > 1e-6 ||
+		Math.abs(a.height - b.height) > 1e-6
+	);
+}
+
+/** @emoji 📐 Canvas drag: wrapper stays on the declared frame; content moves to the live transform. */
+export function canvasDispositionDragContentStyle(
+	declared: DispositionPosition,
+	transform: DispositionPosition,
+): CSSProperties {
+	if (!dispositionPositionChanged(declared, transform)) {
+		return {};
+	}
+	if (declared.width <= 0 || declared.height <= 0) {
+		return {};
+	}
+	return {
+		position: "absolute",
+		left: `${((transform.x - declared.x) / declared.width) * 100}%`,
+		top: `${((transform.y - declared.y) / declared.height) * 100}%`,
+		width: `${(transform.width / declared.width) * 100}%`,
+		height: `${(transform.height / declared.height) * 100}%`,
+		boxSizing: "border-box",
+	};
+}
+
+/** @emoji 📐 Flow drag: preserve the wrapper footprint while ink is absolutely positioned inside. */
+export function flowDispositionReserveStyle(reservePx: {
+	readonly width: number;
+	readonly height: number;
+}): CSSProperties {
+	return {
+		minWidth: reservePx.width,
+		minHeight: reservePx.height,
+	};
+}
+
 /** @emoji 📐 Flow transforms store pointer deltas; positioned transforms store slide-space frames. */
 export function flowDispositionManipulationRect(
 	measured: DispositionPosition,
@@ -2138,13 +2177,24 @@ const InteractiveDisposition: FC<{
 	const fullscreen = interaction.isFullscreen(id);
 	const canvasFramed = declaredRect !== undefined && !fullscreen;
 	const canvasPlacement = interactionRect !== undefined;
-	const pinned =
-		(transformed && !flowLayout) ||
-		flowSectionFrame ||
-		(canvasFramed && !flowPixelOffset);
-
 	const effectiveRect = resolveEffectiveDispositionRect(id, interactionRect, interaction, registry);
+	const canvasAnchorRect = interactionRect;
+	const canvasLiveTransform =
+		canvasFramed && transform && canvasAnchorRect ? transform : undefined;
+	const canvasDragActive = Boolean(
+		canvasLiveTransform &&
+			canvasAnchorRect &&
+			!fullscreen &&
+			dispositionPositionChanged(canvasAnchorRect, canvasLiveTransform),
+	);
+	const pinned =
+		(transformed && !flowLayout && !canvasFramed) ||
+		flowSectionFrame ||
+		(canvasFramed && canvasDragActive && !flowPixelOffset);
 	const [gesturing, setGesturing] = useState(false);
+	const [flowReservePx, setFlowReservePx] = useState<{ readonly width: number; readonly height: number } | null>(
+		null,
+	);
 	const useFlowInkFrame = flowLayout && !flowSectionFrame;
 	const [inkInWrapper, setInkInWrapper] = useState<DispositionPosition | null>(null);
 	const displayDisposition = disposition;
@@ -2165,6 +2215,12 @@ const InteractiveDisposition: FC<{
 		}
 		return measured;
 	}, [canvasPlacement, sectionRef]);
+
+	useLayoutEffect(() => {
+		if (!transform) {
+			setFlowReservePx(null);
+		}
+	}, [transform]);
 
 	useLayoutEffect(() => {
 		if (interactionRect) {
@@ -2281,6 +2337,12 @@ const InteractiveDisposition: FC<{
 					: null;
 			let dragging = !requireDragThreshold;
 			setGesturing(true);
+			if (allDeclaredRects.get(id) === undefined) {
+				const root = rootRef.current;
+				if (root && root.offsetWidth > 0 && root.offsetHeight > 0) {
+					setFlowReservePx({ width: root.offsetWidth, height: root.offsetHeight });
+				}
+			}
 
 			const onMove = (moveEvent: PointerEvent): void => {
 				if (moveEvent.pointerId !== pointerId) {
@@ -2472,11 +2534,12 @@ const InteractiveDisposition: FC<{
 
 	const flowInkActive = useFlowInkFrame && (selected || gesturing || flowPixelOffset);
 	const wrapperFrame: CSSProperties = flowInkActive ? { position: "relative" } : {};
-	if (flowPixelOffset && transform) {
-		Object.assign(wrapperFrame, flowDispositionOffsetStyle(transform));
-	} else if (canvasFramed && effectiveRect) {
-		Object.assign(wrapperFrame, transformFrameStyle(effectiveRect));
-	} else if (transformed && transform) {
+	if (flowReservePx) {
+		Object.assign(wrapperFrame, flowDispositionReserveStyle(flowReservePx));
+	}
+	if (canvasFramed && canvasAnchorRect) {
+		Object.assign(wrapperFrame, transformFrameStyle(canvasAnchorRect));
+	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
 	}
 	const wrapperStyle: CSSProperties | undefined = fullscreen
@@ -2492,6 +2555,12 @@ const InteractiveDisposition: FC<{
 			: undefined;
 	const contentInkStyle: CSSProperties | undefined =
 		flowInkActive && inkInWrapper ? transformFrameStyle(inkInWrapper) : undefined;
+	const canvasDragContentStyle =
+		canvasDragActive && canvasAnchorRect && canvasLiveTransform
+			? canvasDispositionDragContentStyle(canvasAnchorRect, canvasLiveTransform)
+			: undefined;
+	const flowDragOffsetStyle =
+		flowPixelOffset && transform ? flowDispositionOffsetStyle(transform) : undefined;
 	const resizeContentBaseline = measuredNatural ?? interactionRect;
 	const resizeContentScale =
 		!canvasFramed &&
@@ -2500,10 +2569,17 @@ const InteractiveDisposition: FC<{
 		resizeContentBaseline
 			? interactiveDispositionContentScale(transform, resizeContentBaseline)
 			: null;
-	const contentStyle: CSSProperties | undefined =
-		contentInkStyle ??
-		(resizeContentScale !== null ? interactiveDispositionContentScaleStyle(resizeContentScale) : undefined);
-	const chromeLayoutRect = flowSectionFrame && transform ? transform : effectiveRect;
+	const contentStyle: CSSProperties | undefined = {
+		...(contentInkStyle ?? {}),
+		...(canvasDragContentStyle ?? {}),
+		...(flowDragOffsetStyle ?? {}),
+		...(resizeContentScale !== null ? interactiveDispositionContentScaleStyle(resizeContentScale) : {}),
+	};
+	const hasContentStyle = Object.keys(contentStyle).length > 0;
+	const chromeLayoutRect =
+		flowSectionFrame && transform
+			? transform
+			: canvasLiveTransform ?? effectiveRect;
 	const chromeStyle: CSSProperties | undefined = useFlowInkFrame
 		? undefined
 		: interactiveDispositionChromeStyle({
@@ -2541,7 +2617,7 @@ const InteractiveDisposition: FC<{
 			<div
 				ref={contentRef}
 				className="presentation-interactive-disposition__content"
-				style={contentStyle}
+				style={hasContentStyle ? contentStyle : undefined}
 			>
 				<MorphDispositionView disposition={displayDisposition} />
 				{showControls ? (
@@ -3563,7 +3639,7 @@ if (import.meta.vitest) {
 			);
 		});
 
-		it("uses larger morph background vars when the frame is wider than the crop", () => {
+		it("uses stretch-fill at rest and larger cover vars only while auto-animating", () => {
 			const crop = { x: 0, y: 0, width: 0.5, height: 1 };
 			const square = figureCropBackgroundVars(
 				{ kind: "figure", src: "/catalogue.png", crop },
@@ -3577,8 +3653,22 @@ if (import.meta.vitest) {
 			);
 			expect(square["--presentation-figure-bg-size-morph" as keyof typeof square]).toBe("400% 200%");
 			expect(wide["--presentation-figure-bg-size-morph" as keyof typeof wide]).toBe("1600% 800%");
-			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("1600% 800%");
-			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% 200%");
+			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("200% 100%");
+			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("200% 100%");
+			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("0% 0%");
+		});
+
+		it("assigns distinct crop background positions per split tile", () => {
+			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			const embodiment = { kind: "figure" as const, src: "/catalogue.png" };
+			const positions = tiles.map(
+				(tile) =>
+					figureCropBackgroundVars(embodiment, tile.crop, tile.position)[
+						"--presentation-figure-bg-position" as keyof ReturnType<typeof figureCropBackgroundVars>
+					],
+			);
+			expect(new Set(positions).size).toBe(4);
 		});
 
 		it("matches auto-animate targets only by data-id", () => {
@@ -3894,6 +3984,18 @@ if (import.meta.vitest) {
 			expect(flowDispositionOffsetStyle({ x: 96, y: 140, width: 0.3, height: 0.08 }).transform).toBe(
 				"translate3d(96px, 140px, 0)",
 			);
+		});
+
+		it("offsets canvas drag content while the wrapper keeps the declared frame", () => {
+			const declared = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+			const transform = { x: 0.35, y: 0.45, width: 0.4, height: 0.2 };
+			expect(canvasDispositionDragContentStyle(declared, declared)).toEqual({});
+			const dragged = canvasDispositionDragContentStyle(declared, transform);
+			expect(dragged.position).toBe("absolute");
+			expect(parseFloat(String(dragged.left))).toBeCloseTo(37.5);
+			expect(parseFloat(String(dragged.top))).toBeCloseTo(75);
+			expect(dragged.width).toBe("100%");
+			expect(dragged.height).toBe("100%");
 		});
 
 		it("resolves arrangement canvas as placement container for positioned slides", () => {
@@ -4341,7 +4443,8 @@ if (import.meta.vitest) {
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--offset")).toBe(true);
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
-			expect(disposition.style.transform).toContain("translate");
+			expect(content.style.transform).toContain("translate");
+			expect(disposition.style.transform).toBe("");
 			expect(disposition.style.left).toBe("");
 			expect(disposition.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
 			const chrome = disposition.querySelector(
@@ -4415,6 +4518,9 @@ if (import.meta.vitest) {
 				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
 			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
 			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
 			mockClientRect(section, 0, 0, 960, 700);
@@ -4425,7 +4531,82 @@ if (import.meta.vitest) {
 				pointerDrag(disposition, 300, 280, 380, 320);
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-			expect(disposition.style.left).not.toBe(beforeLeft);
+			expect(disposition.style.left).toBe(beforeLeft);
+			expect(content.style.position).toBe("absolute");
+			expect(parseFloat(content.style.left)).toBeGreaterThan(0);
+		});
+
+		it("keeps other canvas dispositions on their declared frames while one is dragged", () => {
+			const twoBoxDeck: Presentation = {
+				id: "interactive-dom-two",
+				name: "Interactive DOM Two",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "placed",
+										participants: [
+											{
+												id: "left",
+												embodiments: [{ kind: "text", lines: ["Left"], level: "body" }],
+											},
+											{
+												id: "right",
+												embodiments: [{ kind: "text", lines: ["Right"], level: "body" }],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "placed",
+													dispositions: [
+														{
+															participantId: "left",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.3, width: 0.3, height: 0.2 },
+														},
+														{
+															participantId: "right",
+															emphasis: "active",
+															position: { x: 0.6, y: 0.3, width: 0.3, height: 0.2 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, twoBoxDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const dispositions = [...container.querySelectorAll("[data-disposition-id]")] as HTMLElement[];
+			expect(dispositions).toHaveLength(2);
+			const section = dispositions[0]!.closest(
+				"section.presentation-arrangement--interactive",
+			) as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(dispositions[0]!, 96, 210, 288, 140);
+			mockClientRect(dispositions[1]!, 576, 210, 288, 140);
+			const peerBefore = dispositions[1]!.style.left;
+			act(() => {
+				pointerDrag(dispositions[0]!, 240, 280, 400, 320);
+			});
+			expect(parseFloat(dispositions[0]!.style.left)).toBeCloseTo(10);
+			expect(dispositions[1]!.style.left).toBe(peerBefore);
+			expect(
+				dispositions[0]!.querySelector(".presentation-interactive-disposition__content")?.style.position,
+			).toBe("absolute");
 		});
 
 		it("resizes positioned disposition from se handle", () => {
@@ -4447,9 +4628,13 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerDrag(handle, 560, 340, 640, 400);
 			});
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-			expect(parseFloat(disposition.style.width)).toBeGreaterThan(40);
-			expect(parseFloat(disposition.style.height)).toBeGreaterThan(20);
+			expect(parseFloat(disposition.style.width)).toBeCloseTo(40);
+			expect(parseFloat(content.style.width)).toBeGreaterThan(40);
+			expect(parseFloat(content.style.height)).toBeGreaterThan(20);
 			const chrome = disposition.querySelector(
 				".presentation-interactive-disposition__chrome",
 			) as HTMLElement;
