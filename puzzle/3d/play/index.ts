@@ -1959,7 +1959,9 @@ if (import.meta.vitest) {
       const fixture = ctrl.getFixture();
       expect(fixture).not.toBeNull();
       ctrl.run("setSelection", { selection: PUZZLE_3D_PLAY_EMPTY_SELECTION });
+      const started = performance.now();
       ctrl.run("selectAllSelection");
+      expect(performance.now() - started).toBeLessThan(250);
       const snap = ctrl.getSnapshot();
       expect(snap.selection.objectIds.length).toBe(fixture!.objects.length);
       expect(snap.selection.vortexIds.length).toBe(fixture!.objects.reduce((count, object) => count + object.vortices.length, 0));

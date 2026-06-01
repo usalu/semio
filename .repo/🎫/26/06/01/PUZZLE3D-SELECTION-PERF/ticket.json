@@ -1,9 +1,9 @@
 {
   "title": "Puzzle3d Selection Perf",
   "emoji": "⚡",
-  "status": "open",
+  "status": "closed",
   "description": "Puzzle 3D Selection Performance Refactor",
-  "summary": "",
+  "summary": "Refactored selection to O(1) per-id subscriptions (object/vortex/attraction Sets with diff-notify) instead of whole-snapshot scans in every ObjectItem/Vortex. CableBatch uses stable attraction set subscription. Inspector aggregates multi vortex/attraction rows. Play viewport host memoizes fixture-derived catalogs on fixture reference only.",
   "goal": "🎯semio",
   "sessions": []
 }

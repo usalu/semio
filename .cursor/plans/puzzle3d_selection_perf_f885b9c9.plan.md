@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: verify
     content: Extend existing vitest blocks; run tests; runtime-verify Ctrl+A timing with temporary [DEBUG] logs then remove; close ticket
-    status: in_progress
+    status: completed
 isProject: false
 ---
 
