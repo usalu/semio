@@ -746,6 +746,10 @@ It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declar
 
 ---
 
+The new mesh of the suggested object must not collide with other meshes. Make sure to start by picking a rondom compatible object and then check if it is collision free. If not try another one and check if it is collision free, etc. If none can be found, brush doesnt place anything.
+
+---
+
 Introduce selection.
 When holding down left button then selection should be opened.
 There are two methods: Rectangle (default) and Lasso
