@@ -1,0 +1,10 @@
+{
+  "title": "Tree Hover Performance",
+  "emoji": "🖱️",
+  "status": "open",
+  "description": "Make tree-item hover instant across cad play, puzzle 2d play, and puzzle 3d play by removing wasted per-row hover re-renders, coalescing pointer-over path-highlight work, and decoupling hover highlight from section/tree rebuilds via TreeHighlightStore.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪9584a29cbdc942a7a34b17ada707852a"
+  ]
+}

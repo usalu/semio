@@ -134,11 +134,9 @@
 }
 
 .reveal .presentation-figure-tile-frame {
-	overflow: hidden;
-}
-
-.reveal .presentation-figure-tile-img {
 	display: block;
+	overflow: hidden;
+	background-repeat: no-repeat;
 }
 
 .reveal .presentation-disposition-frame:has(.presentation-media-pdf-document) {

@@ -16,6 +16,7 @@ import {
   cn,
   getLevelBgClass,
   Label,
+  engagementCommandTokenEquals,
   normalizeEngagementCommandText,
   LevelProvider,
   staticTreePanelDefinition,
@@ -223,18 +224,24 @@ export class StaticTreePanelDefinition implements TreePanelDefinition {
 export class CallbackTreePanelDefinition implements TreePanelDefinition {
   private resolved: TreePanelConfig | null = null;
   private resolvedSections: TreeDataSection[] | null = null;
+  private resolvedHighlightedIds: readonly string[] | null = null;
 
-  constructor(private readonly buildSections: () => TreeDataSection[]) {}
+  constructor(
+    private readonly buildSections: () => TreeDataSection[],
+    private readonly buildHighlightedIds: () => readonly string[] = () => [],
+  ) {}
 
   resolveTree(): TreePanelConfig {
     const sections = this.buildSections();
-    if (this.resolved && this.resolvedSections === sections) {
+    const highlightedIds = this.buildHighlightedIds();
+    if (this.resolved && this.resolvedSections === sections && this.resolvedHighlightedIds === highlightedIds) {
       return this.resolved;
     }
-    const config: TreePanelConfig = { sections };
+    const config: TreePanelConfig = { sections, highlightedIds };
     enforcePlaygroundTreePanel(config);
     this.resolved = config;
     this.resolvedSections = sections;
+    this.resolvedHighlightedIds = highlightedIds;
     return config;
   }
 }
@@ -1226,19 +1233,21 @@ function Puzzle3dPlayEngagementPublisher(props: {
   const onCmdLineSubmit = reactHostPort.useCallback(
     (value: string) => {
       const token = normalizeEngagementCommandText(value.trim());
-      if (token === "brush") {
+      if (engagementCommandTokenEquals(token, "brush")) {
         onBrushTool();
         setCmdLine("");
         return;
       }
-      if (token === "select") {
+      if (engagementCommandTokenEquals(token, "select")) {
         onSelectTool();
         setCmdLine("");
         return;
       }
       if (snap.activeTool === "brush") {
         const raw = value.trim();
-        const idx = brushSource.candidates.findIndex((candidate) => candidate.objectKindId === raw || normalizeEngagementCommandText(candidate.objectKindId) === token);
+        const idx = brushSource.candidates.findIndex(
+          (candidate) => candidate.objectKindId === raw || engagementCommandTokenEquals(candidate.objectKindId, token),
+        );
         if (idx >= 0) {
           brushSource.pickCandidate(idx);
         }
@@ -1264,13 +1273,13 @@ function Puzzle3dPlayEngagementPublisher(props: {
       }),
     [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onSelectTool, selectionCount, snap.activeTool],
   );
+  engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
-    engagementSpecRef.current = spec;
     const mirrored = puzzle3dPlayEngagementMirror(spec);
     enforcePuzzle3dPlayWindowEngagement(mirrored);
     ctrl?.setWindowEngagement(mirrored);
   }, [ctrl, spec]);
-  reactHostPort.useEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     if (!ctrl) {
       return;
     }
@@ -1689,6 +1698,7 @@ import {
   Puzzle2dPlayShellController,
   buildPuzzle2dPlayHierarchySections,
   puzzle2dPlayHierarchyGraphIdFromTreeItemId,
+  puzzle2dPlayHierarchyTreeHighlightedIds,
   puzzle2dPlayHierarchyTreeSelectedIds,
   buildPuzzle2dPlayOverviewDeclarativeBody,
   buildPuzzle2dPlayDetailDeclarativeBody,
@@ -1887,6 +1897,8 @@ interface Puzzle2dPlayShellValue {
   setHoverPane: (pane: Puzzle2dPlayPaneId) => void;
   setHoverForPane: (pane: Puzzle2dPlayPaneId, id: string | null) => void;
   clearHoverForPane: (pane: Puzzle2dPlayPaneId) => void;
+  /** @emoji 🌳 Sets shared graph hover from hierarchy rows without claiming a canvas pane. */
+  setHierarchyHover: (id: string | null) => void;
   /** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
   remapIdInSelections: (replacedId: string, replacementId: string) => void;
   puzzle2dSelectionMethod: Puzzle2dSelectionMethod;
@@ -1957,17 +1969,19 @@ interface Puzzle2dPlayCamerasValue {
 
 /** @emoji 🌳 Workbench hierarchy bound to play fixture + selection (not static tree snapshots). */
 function Puzzle2dPlayHierarchyPanel(): ReactElement {
-  const { fixture } = usePuzzle2dPlayShell();
+  const { fixture, hoveredId, setHierarchyHover } = usePuzzle2dPlayShell();
   const { selectionIds, setSelectionIds } = usePuzzle2dPlaySelection();
   const onHierarchySelect = reactHostPort.useCallback((id: string) => setSelectionIds([id]), [setSelectionIds]);
+  const onHierarchyHover = reactHostPort.useCallback((id: string | null) => setHierarchyHover(id), [setHierarchyHover]);
   const sections = reactHostPort.useMemo(
-    () => buildPuzzle2dPlayHierarchySections(fixture, [], onHierarchySelect, undefined, { omitItemSelection: true }).sections as TreeDataSection[],
-    [fixture, onHierarchySelect],
+    () => buildPuzzle2dPlayHierarchySections(fixture, [], onHierarchySelect, undefined, { omitItemSelection: true, onHover: onHierarchyHover }).sections as TreeDataSection[],
+    [fixture, onHierarchyHover, onHierarchySelect],
   );
   const treeSelectedIds = reactHostPort.useMemo(
     () => puzzle2dPlayHierarchyTreeSelectedIds(fixture, [...selectionIds]),
     [fixture, selectionIds],
   );
+  const treeHighlightedIds = reactHostPort.useMemo(() => puzzle2dPlayHierarchyTreeHighlightedIds(fixture, hoveredId), [fixture, hoveredId]);
   const onTreeSelectionChange = reactHostPort.useCallback(
     (treeIds: string[]) => {
       const graphIds = treeIds.map(puzzle2dPlayHierarchyGraphIdFromTreeItemId).filter((id): id is string => id !== null);
@@ -1980,6 +1994,7 @@ function Puzzle2dPlayHierarchyPanel(): ReactElement {
   return (
     <Tree
       className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden"
+      highlightedIds={treeHighlightedIds}
       onSelectionChange={onTreeSelectionChange}
       sections={sections}
       selectedIds={treeSelectedIds}
@@ -3358,6 +3373,12 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     setHoveredId(null);
   }, []);
 
+  const setHierarchyHover = reactHostPort.useCallback((id: string | null) => {
+    hoverSourcePaneRef.current = null;
+    setHoverSourcePane(null);
+    setHoveredId(id);
+  }, []);
+
   const handleCanvasFixtureDrop = reactHostPort.useCallback(
     (_pane: Puzzle2dPlayPaneId, detail: Puzzle2dFixtureDropDetail) => {
       skipNextCameraBasisResyncRef.current = true;
@@ -3869,6 +3890,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       setHoverPane,
       setHoverForPane,
       clearHoverForPane,
+      setHierarchyHover,
       treeLayoutLayerSpacing,
       treeLayoutDirection,
       treeLayoutSiblingGap,
@@ -3907,6 +3929,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       setHoverPane,
       setHoverForPane,
       clearHoverForPane,
+      setHierarchyHover,
       treeLayoutLayerSpacing,
       treeLayoutDirection,
       treeLayoutSiblingGap,

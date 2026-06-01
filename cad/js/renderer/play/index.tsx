@@ -253,9 +253,9 @@ export function cadPlayModelsDigest(modelsByDefinitionId: Record<string, Model>)
 type CadPlayHierarchyPickContext = {
   readonly modelDefinitionId: string;
   readonly isSelected: (kind: SelectionTarget["kind"], id: string) => boolean;
-  readonly isHighlighted: (kind: SelectionTarget["kind"], id: string) => boolean;
   readonly onSelect: (modelDefinitionId: string, target: SelectionTarget) => void;
   readonly onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void;
+  readonly registerHighlight: (target: SelectionTarget, itemId: string) => void;
 };
 
 function cadPlayHierarchyHoverHandlers(ctx: CadPlayHierarchyPickContext, target: SelectionTarget): Pick<TreeDataItem, "onPointerEnter" | "onPointerLeave"> {
@@ -268,11 +268,12 @@ function cadPlayHierarchyHoverHandlers(ctx: CadPlayHierarchyPickContext, target:
 function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveHierarchyNode, path: string, ctx: CadPlayHierarchyPickContext): TreeDataItem {
   const childItems = node.children.map((child) => cadPlayPrimitiveChildTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx));
   const target: SelectionTarget = { kind: node.kind, id: node.id, editable: true };
+  const itemId = `cad-play-hierarchy.child.${path}`;
+  ctx.registerHighlight(target, itemId);
   return {
-    id: `cad-play-hierarchy.child.${path}`,
+    id: itemId,
     label: `${node.kind} ${node.id}`,
     isSelected: ctx.isSelected(node.kind, node.id),
-    isHighlighted: ctx.isHighlighted(node.kind, node.id),
     defaultOpen: node.kind === "solid" || node.kind === "shell" || node.kind === "face",
     onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
     ...cadPlayHierarchyHoverHandlers(ctx, target),
@@ -286,11 +287,12 @@ function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string, 
   const primitiveHierarchy = buildModelPrimitiveHierarchy(model, primitiveId);
   const childItems = (primitiveHierarchy?.children ?? []).map((child) => cadPlayPrimitiveChildTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx));
   const target: SelectionTarget = { kind, id: primitiveId, editable: true };
+  const itemId = `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`;
+  ctx.registerHighlight(target, itemId);
   return {
-    id: `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`,
+    id: itemId,
     label: `${slot}: ${kind} ${primitiveId}`,
     isSelected: ctx.isSelected(kind, primitiveId),
-    isHighlighted: ctx.isHighlighted(kind, primitiveId),
     defaultOpen: true,
     onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
     ...cadPlayHierarchyHoverHandlers(ctx, target),
@@ -299,17 +301,36 @@ function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string, 
 }
 
 /** @emoji 🌳 ModelSpace → model definition → object → primitive slot tree for CAD play workbench. */
+export interface CadPlayHierarchyBuildResult {
+  readonly sections: TreeDataSection[];
+  readonly highlightKeyToItemIds: Readonly<Record<string, readonly string[]>>;
+}
+
+function registerCadPlayHierarchyHighlight(index: Record<string, string[]>, target: SelectionTarget, itemId: string): void {
+  const key = selectionTargetHoverKey(target);
+  const bucket = index[key];
+  if (bucket) {
+    if (!bucket.includes(itemId)) {
+      bucket.push(itemId);
+    }
+    return;
+  }
+  index[key] = [itemId];
+}
+
 export function buildCadPlayHierarchySections(
   modelsByDefinitionId: Record<string, Model>,
   activeModelDefinitionId: string,
   selection: readonly SelectionTarget[],
   onSelect: (modelDefinitionId: string, target: SelectionTarget) => void,
-  hoveredKey: string | null = null,
   onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void = () => {},
-): TreeDataSection[] {
+): CadPlayHierarchyBuildResult {
   const selectedKeys = new Set(selection.map(cadPlaySelectionKey));
   const isSelected = (kind: SelectionTarget["kind"], id: string): boolean => selectedKeys.has(`${kind}:${id}`);
-  const isHighlighted = (kind: SelectionTarget["kind"], id: string): boolean => hoveredKey === `${kind}:${id}`;
+  const highlightKeyToItemIds: Record<string, string[]> = {};
+  const registerHighlight = (target: SelectionTarget, itemId: string): void => {
+    registerCadPlayHierarchyHighlight(highlightKeyToItemIds, target, itemId);
+  };
   const modelDefinitionIds = Object.keys(modelsByDefinitionId).sort((a, b) => a.localeCompare(b));
   const modelBranches: TreeDataItem[] = [];
   for (const modelDefinitionId of modelDefinitionIds) {
@@ -317,18 +338,19 @@ export function buildCadPlayHierarchySections(
     if (!model) {
       continue;
     }
-    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, isSelected, isHighlighted, onSelect, onHover };
+    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, isSelected, onSelect, onHover, registerHighlight };
     const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
       const objectId = String(object.id);
       const typologyTail = object.typology.split(".").pop() ?? object.typology;
       const primitiveItems: TreeDataItem[] = objectPrimitiveEntries(object).map(([slot, primitiveRef]) => cadPlayPrimitiveSlotTreeItems(model, modelDefinitionId, objectId, slot, primitiveRef, pickCtx));
       const objectTarget: SelectionTarget = { kind: "object", id: objectId, editable: true };
+      const objectItemId = `cad-play-hierarchy.object.${modelDefinitionId}.${objectId}`;
+      registerHighlight(objectTarget, objectItemId);
       return {
-        id: `cad-play-hierarchy.object.${modelDefinitionId}.${objectId}`,
+        id: objectItemId,
         label: `${typologyObjectPascalFromLabel(typologyTail.replace(/[._-]+/g, " "))} (${objectId})`,
         description: object.typology,
         isSelected: isSelected("object", objectId),
-        isHighlighted: isHighlighted("object", objectId),
         defaultOpen: true,
         onClick: () => onSelect(modelDefinitionId, objectTarget),
         ...cadPlayHierarchyHoverHandlers(pickCtx, objectTarget),
@@ -349,7 +371,10 @@ export function buildCadPlayHierarchySections(
     defaultOpen: true,
     items: modelBranches.length ? modelBranches : [{ id: "cad-play-hierarchy.modelspace.empty", label: "(empty)" }],
   };
-  return [{ id: "cad-play-hierarchy.root", defaultOpen: true, items: [modelSpaceRoot] }];
+  return {
+    sections: [{ id: "cad-play-hierarchy.root", defaultOpen: true, items: [modelSpaceRoot] }],
+    highlightKeyToItemIds,
+  };
 }
 //#endregion 🔖CadPlayHierarchy
 
@@ -1139,7 +1164,10 @@ function useCadPlayChromePublish(): (snapshot: CadPlayChromeSnapshot | null) => 
 }
 
 class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly buildSections: () => TreeDataSection[]) {
+  constructor(
+    private readonly buildSections: () => TreeDataSection[],
+    private readonly buildHighlightedIds: () => readonly string[],
+  ) {
     super();
   }
 
@@ -1148,8 +1176,12 @@ class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
       id: CAD_PLAY_HIERARCHY_TAB_ID,
       icon: ListTree,
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => this.buildSections()),
+      tree: new CallbackTreePanelDefinition(() => this.buildSections(), () => this.buildHighlightedIds()),
     };
+  }
+
+  buildTab(): SidePanelTabConfig {
+    return this.resolveTab();
   }
 }
 //#endregion 🔖CadPlayChrome
@@ -2125,25 +2157,35 @@ function CadPlayRoot(): ReactNode {
     return null;
   }
   const chromeContextValue = reactHostPort.useMemo<CadPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
-  const chromeSnapshotRef = reactHostPort.useRef(chromeSnapshot);
-  chromeSnapshotRef.current = chromeSnapshot;
   const chromeKey = chromeSnapshot
-    ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${chromeSnapshot.hoveredKey ?? ""}\u0001${cadPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
+    ? `${chromeSnapshot.activeModelDefinitionId}\u0001${chromeSnapshot.selection.map((row) => `${row.kind}:${row.id}`).join(",")}\u0001${cadPlayModelsDigest(chromeSnapshot.modelsByDefinitionId)}`
     : "";
+  const hierarchyBuild = reactHostPort.useMemo(() => {
+    if (!chromeSnapshot) {
+      return { sections: [] as TreeDataSection[], highlightKeyToItemIds: {} as Readonly<Record<string, readonly string[]>> };
+    }
+    return buildCadPlayHierarchySections(chromeSnapshot.modelsByDefinitionId, chromeSnapshot.activeModelDefinitionId, chromeSnapshot.selection, chromeSnapshot.selectTarget, chromeSnapshot.hoverTarget);
+  }, [chromeKey, chromeSnapshot]);
+  const hierarchyHighlightedIds = reactHostPort.useMemo(() => {
+    const hoveredKey = chromeSnapshot?.hoveredKey;
+    if (!hoveredKey) {
+      return [];
+    }
+    return [...(hierarchyBuild.highlightKeyToItemIds[hoveredKey] ?? [])];
+  }, [chromeSnapshot?.hoveredKey, hierarchyBuild.highlightKeyToItemIds]);
   const workbenchTabs = reactHostPort.useMemo(
     () => [
       new CadPlayCatalogPanelDefinition().resolveTab(),
       ...(chromeSnapshot
         ? [
-            new CadPlayHierarchyPanelDefinition(() => {
-              const snap = chromeSnapshotRef.current;
-              if (!snap) return [];
-              return buildCadPlayHierarchySections(snap.modelsByDefinitionId, snap.activeModelDefinitionId, snap.selection, snap.selectTarget, snap.hoveredKey, snap.hoverTarget);
-            }).resolveTab(),
+            new CadPlayHierarchyPanelDefinition(
+              () => hierarchyBuild.sections,
+              () => hierarchyHighlightedIds,
+            ).resolveTab(),
           ]
         : []),
     ],
-    [chromeSnapshot, chromeKey],
+    [chromeSnapshot, hierarchyBuild.sections, hierarchyHighlightedIds],
   );
   const detailsTabs = reactHostPort.useMemo(() => [new CadPlayDetailsPanelDefinition().resolveTab()], []);
   return (
@@ -2461,12 +2503,12 @@ if (import.meta.vitest) {
       await rt.send({ kind: "pointer.down", point: [2, 3, 0], modifiers: {} });
       await rt.send({ kind: "set.height", value: 4, modifiers: {} });
       await rt.send({ kind: "confirm", modifiers: {} });
-      const sections = buildCadPlayHierarchySections({ [defaultModelDefinitionId()]: model }, defaultModelDefinitionId(), [], () => {});
-      const modelBranch = sections[0]?.items?.[0]?.items?.[0];
+      const build = buildCadPlayHierarchySections({ [defaultModelDefinitionId()]: model }, defaultModelDefinitionId(), [], () => {});
+      const modelBranch = build.sections[0]?.items?.[0]?.items?.[0];
       expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
     });
 
-    it("buildCadPlayHierarchySections highlights hovered primitive keys", async () => {
+    it("buildCadPlayHierarchySections maps hover keys to tree item ids", async () => {
       const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
       const { applyModelDiff, solidRef } = await import("@cad/js/core");
       const model = new Model();
@@ -2477,10 +2519,10 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box",
         primitives: { solid: String(solid) },
       };
-      const sections = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {}, "object:box1");
-      const modelBranch = sections[0]?.items?.[0]?.items?.[0];
-      const objectNode = modelBranch?.items?.[0];
-      expect(objectNode?.isHighlighted).toBe(true);
+      const build = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
+      expect(build.highlightKeyToItemIds["object:box1"]).toEqual(["cad-play-hierarchy.object.spatial.shape.box1"]);
+      const objectNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
+      expect(objectNode?.isHighlighted).toBeUndefined();
     });
 
     it("buildCadPlayHierarchySections nests child primitives under primitive slots", async () => {
@@ -2494,8 +2536,8 @@ if (import.meta.vitest) {
         typology: "spatial.shape.primitive.box",
         primitives: { solid: String(solid) },
       };
-      const sections = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
-      const primitiveNode = sections[0]?.items?.[0]?.items?.[0]?.items?.[0]?.items?.[0];
+      const build = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
+      const primitiveNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0]?.items?.[0];
       expect(primitiveNode?.label).toContain("solid:");
       const shellNode = primitiveNode?.items?.[0];
       expect(shellNode?.label).toContain("shell");

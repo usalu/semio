@@ -2,6 +2,7 @@
 import {
   reactHostPort,
   sceneHostPort,
+  engagementCommandTokenEquals,
   normalizeEngagementCommandText,
   type EngagementSpec,
   type ThreeEvent,
@@ -144,8 +145,8 @@ export const DEFAULT_LOD_RANGE = { min: 0.01, max: 100_000 } as const;
 /** @emoji 📐 Default scene LOD when neither auto nor depth-variable applies. */
 export const DEFAULT_MANUAL_LOD = 100;
 
-/** @emoji 📐 Default CAD anchor for the horizontal grid / palette drop plane (matches default orbit target Z). */
-export const DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD: Vec3 = [0, 0, 40];
+/** @emoji 📐 Default CAD anchor for the horizontal grid / palette drop plane (datum Z). */
+export const DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD: Vec3 = [0, 0, 0];
 
 /** @emoji 📐 Linear slider domain for log-mapped scene LOD in play measures. */
 export const PUZZLE_3D_LOD_SLIDER_MIN = 0;
@@ -1287,9 +1288,8 @@ function LodGridHelper() {
     [grids],
   );
   if (!grids.length) return null;
-  const px = anchor?.x ?? 0;
-  const py = anchor?.y ?? 0;
-  const pz = anchor?.z ?? 0;
+  const placementCad = puzzle3dGridPlacementAnchorCad(anchor ?? null);
+  const [px, py, pz] = cadVec3ToThree(placementCad);
   return (
     <>
       {grids.map((grid, i) => (
@@ -1608,7 +1608,16 @@ const puzzle3dGridPlaneScratch = new Plane();
 const puzzle3dGridPlaneHitScratch = new Vector3();
 const puzzle3dGridPlanePointScratch = new Vector3();
 
-/** @emoji 📍 Ray–grid-plane hit in CAD: cursor vs camera through the horizontal plane at {@link LodGridHelper} / orbit target. */
+/** @emoji 📐 CAD anchor for {@link LodGridHelper} and palette drops: orbit pan XY, datum Z=0 (not camera look-at height). */
+export function puzzle3dGridPlacementAnchorCad(controlsTargetThree?: Vector3 | null): Vec3 {
+  if (!controlsTargetThree) {
+    return DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD;
+  }
+  const orbitCad = threeVec3ToCad(controlsTargetThree);
+  return [orbitCad[0], orbitCad[1], 0];
+}
+
+/** @emoji 📍 Ray–grid-plane hit in CAD: cursor vs camera through the horizontal plane at {@link LodGridHelper}. */
 export function puzzle3dClientToGridPlaneCad(args: {
   readonly clientX: number;
   readonly clientY: number;
@@ -1616,22 +1625,16 @@ export function puzzle3dClientToGridPlaneCad(args: {
   readonly canvas: HTMLElement;
   readonly gridSnapEnabled?: boolean;
   readonly gridStepWorld?: number | null;
-  /** @emoji 📐 Coplanar anchor in Three.js world space (orbit controls target). */
-  readonly gridPlanePointThree?: readonly [number, number, number];
-  /** @emoji 📐 Coplanar anchor in CAD when Three target is unavailable. */
+  /** @emoji 📐 Coplanar anchor in CAD (defaults to datum); use {@link puzzle3dGridPlacementAnchorCad} for orbit-aware XY. */
   readonly gridPlaneAnchorCad?: Vec3;
 }): Vec3 {
   const rect = args.canvas.getBoundingClientRect();
   const ndc = new Vector2(((args.clientX - rect.left) / rect.width) * 2 - 1, -((args.clientY - rect.top) / rect.height) * 2 + 1);
   const raycaster = new Raycaster();
   raycaster.setFromCamera(ndc, args.camera);
-  if (args.gridPlanePointThree) {
-    puzzle3dGridPlanePointScratch.set(args.gridPlanePointThree[0], args.gridPlanePointThree[1], args.gridPlanePointThree[2]);
-  } else {
-    const anchorCad = args.gridPlaneAnchorCad ?? DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD;
-    const anchorThree = cadVec3ToThree(anchorCad);
-    puzzle3dGridPlanePointScratch.set(anchorThree[0], anchorThree[1], anchorThree[2]);
-  }
+  const anchorCad = args.gridPlaneAnchorCad ?? DEFAULT_PUZZLE3D_GRID_PLANE_ANCHOR_CAD;
+  const anchorThree = cadVec3ToThree(anchorCad);
+  puzzle3dGridPlanePointScratch.set(anchorThree[0], anchorThree[1], anchorThree[2]);
   puzzle3dGridPlaneScratch.setFromNormalAndCoplanarPoint(puzzle3dGridPlaneUp, puzzle3dGridPlanePointScratch);
   if (!raycaster.ray.intersectPlane(puzzle3dGridPlaneScratch, puzzle3dGridPlaneHitScratch)) {
     raycaster.ray.at(80, puzzle3dGridPlaneHitScratch);
@@ -6975,7 +6978,6 @@ function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | 
       return;
     }
     const onMove = (event: PointerEvent): void => {
-      const target = controls?.target;
       const cad = puzzle3dClientToGridPlaneCad({
         clientX: event.clientX,
         clientY: event.clientY,
@@ -6983,7 +6985,7 @@ function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | 
         canvas: gl.domElement,
         gridSnapEnabled: lod.gridSnapEnabled,
         gridStepWorld: lod.gridStepWorld,
-        gridPlanePointThree: target ? [target.x, target.y, target.z] : undefined,
+        gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(controls?.target ?? null),
       });
       setOrigin(cad);
     };
@@ -7042,18 +7044,16 @@ function FixtureDropPointerBridge(props: {
   onFixtureDropRef.current = props.onFixtureDrop;
 
   reactHostPort.useEffect(() => {
-    puzzle3dFixtureDropPointerToCadRef.current = (clientX, clientY) => {
-      const target = controls?.target;
-      return puzzle3dClientToGridPlaneCad({
+    puzzle3dFixtureDropPointerToCadRef.current = (clientX, clientY) =>
+      puzzle3dClientToGridPlaneCad({
         clientX,
         clientY,
         camera,
         canvas: gl.domElement,
         gridSnapEnabled: lod.gridSnapEnabled,
         gridStepWorld: lod.gridStepWorld,
-        gridPlanePointThree: target ? [target.x, target.y, target.z] : undefined,
+        gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(controls?.target ?? null),
       });
-    };
     return () => {
       puzzle3dFixtureDropPointerToCadRef.current = null;
     };
@@ -8220,31 +8220,38 @@ if (import.meta.vitest) {
       expect(placed?.meshUrl).toBe("/meshes/base.glb");
       expect(placed?.origin).toEqual([1, 2, 3]);
     });
-    it("puzzle3dClientToGridPlaneCad uses orbit grid height not CAD Z=0", () => {
+    it("puzzle3dGridPlacementAnchorCad uses orbit XY and datum Z", () => {
+      const targetThree = new Vector3(...cadVec3ToThree([12, -8, 40]));
+      const anchor = puzzle3dGridPlacementAnchorCad(targetThree);
+      expect(anchor[0]).toBeCloseTo(12, 5);
+      expect(anchor[1]).toBeCloseTo(-8, 5);
+      expect(anchor[2]).toBe(0);
+    });
+    it("puzzle3dClientToGridPlaneCad hits datum plane not camera look-at Z", () => {
       const camera = new ThreePerspectiveCamera(50, 1, 0.1, 100_000);
-      const anchorCad: Vec3 = [0, 0, 40];
-      const anchorThree = cadVec3ToThree(anchorCad);
-      camera.position.set(anchorThree[0] + 240, anchorThree[1] + 180, anchorThree[2] + 120);
-      camera.lookAt(anchorThree[0], anchorThree[1], anchorThree[2]);
+      const lookAtCad: Vec3 = [0, 0, 40];
+      const lookAtThree = new Vector3(...cadVec3ToThree(lookAtCad));
+      camera.position.set(lookAtThree.x + 240, lookAtThree.y + 180, lookAtThree.z + 120);
+      camera.lookAt(lookAtThree);
       camera.updateMatrixWorld();
       const canvas = document.createElement("canvas");
       canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
-      const atOriginPlane = puzzle3dClientToGridPlaneCad({
+      const atDatum = puzzle3dClientToGridPlaneCad({
         clientX: 400,
         clientY: 300,
         camera,
         canvas,
-        gridPlaneAnchorCad: [0, 0, 0],
+        gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(lookAtThree),
       });
-      const atGridPlane = puzzle3dClientToGridPlaneCad({
+      const atLookAtHeight = puzzle3dClientToGridPlaneCad({
         clientX: 400,
         clientY: 300,
         camera,
         canvas,
-        gridPlaneAnchorCad: anchorCad,
+        gridPlaneAnchorCad: lookAtCad,
       });
-      expect(atGridPlane[2] - atOriginPlane[2]).toBeGreaterThan(30);
-      expect(Math.abs(atGridPlane[2] - 40)).toBeLessThan(2);
+      expect(atLookAtHeight[2] - atDatum[2]).toBeGreaterThan(30);
+      expect(Math.abs(atDatum[2])).toBeLessThan(2);
     });
     it("beginPuzzle3dFixturePalettePointerDrag commits drop on pointer up over host", () => {
       const host = document.createElement("div");
@@ -8366,6 +8373,10 @@ if (import.meta.vitest) {
       });
       expect(spec.possibleEngagements?.[0]?.id).toBe("puzzle3d.brush.J.0");
       expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.tool.select", "puzzle3d.brush.next"]);
+    });
+    it("engagementCommandTokenEquals matches Brush after engagement input normalization", () => {
+      expect(engagementCommandTokenEquals(normalizeEngagementCommandText("brush"), "Brush")).toBe(true);
+      expect(engagementCommandTokenEquals(normalizeEngagementCommandText("select"), "Select")).toBe(true);
     });
     it("brushCompatibleCandidates filters by kind compatibility", () => {
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };

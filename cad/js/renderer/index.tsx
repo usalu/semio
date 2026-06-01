@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, focusActiveEngagementInput, Input, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { Button, cn, focusActiveEngagementInput, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -3327,13 +3327,7 @@ function replInteractionIdOnSpace(query: string, matches: readonly ReplSuggestio
 
 /** @emoji ⌨️ True when the event target is already a text field (skip REPL global key capture). */
 export function replIsQueryTypingTarget(t: EventTarget | null): boolean {
-  if (!(t instanceof HTMLElement)) return false;
-  if (t instanceof HTMLTextAreaElement) return true;
-  if (t instanceof HTMLInputElement) {
-    const type = (t.type || "text").toLowerCase();
-    return type !== "button" && type !== "checkbox" && type !== "radio" && type !== "file" && type !== "range" && type !== "color";
-  }
-  return Boolean(t.closest('[data-slot="engagement"] input, [data-slot="engagement"] textarea'));
+  return isUiTypingTarget(t);
 }
 
 function replShouldRepeatInteractionOnSpace(

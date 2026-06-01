@@ -1,0 +1,10 @@
+{
+  "title": "Vfs Table Selectable Without Navigate",
+  "emoji": "📁",
+  "status": "open",
+  "description": "Virtual file system table must have selectable file nodes. In sketchpad, clicking a row directly navigates — this must not happen on click; selection only.",
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪30517ce7a8ab4be8b834609c48efc13c"
+  ]
+}

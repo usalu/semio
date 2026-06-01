@@ -7519,6 +7519,7 @@ interface TreeRootProps {
   selectedIds?: string[];
   defaultSelectedIds?: string[];
   onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
+  highlightedIds?: readonly string[];
   dragAndDropController?: TreeDragAndDropController;
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
@@ -7583,6 +7584,67 @@ function useTreeItemRowSelected(itemId: string, itemSelectedOverride: boolean | 
     () => selectionStore.isSelected(itemId),
   );
   return itemSelectedOverride ?? subscribedSelected;
+}
+
+/** @emoji 🖱️ Per-tree highlight store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
+interface TreeHighlightStore {
+  subscribe: (listener: () => void) => () => void;
+  getHighlightedIds: () => readonly string[];
+  isHighlighted: (itemId: string) => boolean;
+  setHighlightedIds: (highlightedIds: readonly string[]) => void;
+}
+
+function createTreeHighlightStore(): TreeHighlightStore {
+  let highlightedIds: readonly string[] = [];
+  let highlightedIdSet = new Set<string>();
+  const listeners = new Set<() => void>();
+  const notify = (): void => {
+    for (const listener of listeners) {
+      listener();
+    }
+  };
+  return {
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getHighlightedIds() {
+      return highlightedIds;
+    },
+    isHighlighted(itemId) {
+      return highlightedIdSet.has(itemId);
+    },
+    setHighlightedIds(nextIds) {
+      if (nextIds.length === highlightedIds.length && nextIds.every((id, index) => id === highlightedIds[index])) {
+        return;
+      }
+      highlightedIds = nextIds;
+      highlightedIdSet = new Set(nextIds);
+      notify();
+    },
+  };
+}
+
+const TreeHighlightContext = reactHostPort.createContext<TreeHighlightStore | null>(null);
+
+function useTreeHighlightStore(): TreeHighlightStore {
+  const value = reactHostPort.useContext(TreeHighlightContext);
+  if (!value) {
+    throw new Error("Tree highlight hooks must render inside Tree");
+  }
+  return value;
+}
+
+function useTreeItemRowHighlighted(itemId: string, itemHighlightedOverride: boolean | undefined): boolean {
+  const highlightStore = useTreeHighlightStore();
+  const subscribedHighlighted = reactHostPort.useSyncExternalStore(
+    highlightStore.subscribe,
+    () => highlightStore.isHighlighted(itemId),
+    () => highlightStore.isHighlighted(itemId),
+  );
+  return itemHighlightedOverride ?? subscribedHighlighted;
 }
 
 /** @emoji 🌲 Stable context for hoisted Tree data rows (avoids remounting rows when Tree re-renders). */
@@ -7687,7 +7749,6 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     },
     [onOpenChange, treeOpenState],
   );
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const isHeaderlessSection = displayLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
@@ -7705,14 +7766,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         id={id}
         className={rowClassName}
         draggable={draggable}
-        onPointerEnter={() => {
-          setIsHovered(true);
-          onSectionPointerEnter?.();
-        }}
-        onPointerLeave={() => {
-          setIsHovered(false);
-          onSectionPointerLeave?.();
-        }}
+        onPointerEnter={onSectionPointerEnter}
+        onPointerLeave={onSectionPointerLeave}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -7762,14 +7817,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           className={rowClassName}
           role="button"
           draggable={draggable}
-          onPointerEnter={() => {
-            setIsHovered(true);
-            onSectionPointerEnter?.();
-          }}
-          onPointerLeave={() => {
-            setIsHovered(false);
-            onSectionPointerLeave?.();
-          }}
+          onPointerEnter={onSectionPointerEnter}
+          onPointerLeave={onSectionPointerLeave}
           onDragStart={onDragStart}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
@@ -7854,7 +7903,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   const itemKey = id ?? displayLabel ?? id;
   const itemId = `item-${id}-${itemKey}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
@@ -7886,8 +7934,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               event.stopPropagation();
               onDoubleClick(event);
             }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
           >
             <TreeAlignedRow
               level={level}
@@ -7959,8 +8005,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             event.stopPropagation();
             onDoubleClick(event);
           }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           <TreeAlignedRow
             level={level}
@@ -8039,8 +8083,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           event.stopPropagation();
           onDoubleClick(event);
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
@@ -8077,8 +8119,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         event.stopPropagation();
         onDoubleClick(event);
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
@@ -8199,13 +8239,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     },
     [onOpenChange, treeOpenState],
   );
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const handlePointerEnter = reactHostPort.useCallback(() => {
-    setIsHovered(true);
     onPointerEnter?.();
   }, [onPointerEnter]);
   const handlePointerLeave = reactHostPort.useCallback(() => {
-    setIsHovered(false);
     onPointerLeave?.();
   }, [onPointerLeave]);
   const hasChildren = hasNonEmptyChildren(children);
@@ -8776,6 +8813,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
     buildPalettePointerProps,
   } = useTreeDataRendering();
   const isRowSelected = useTreeItemRowSelected(item.id, item.isSelected);
+  const isRowHighlighted = useTreeItemRowHighlighted(item.id, item.isHighlighted);
   const baseChildItems = getTreeItemItems(item, itemItemsById);
   const alternatives = item.alternatives ?? [];
   const branchCount = alternatives.length;
@@ -8804,7 +8842,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       icon={item.icon}
       className={cn(item.className, palettePointerClassName)}
       isSelected={isRowSelected}
-      isHighlighted={item.isHighlighted}
+      isHighlighted={isRowHighlighted}
       isDragHandle={item.isDragHandle}
       defaultOpen={getTreeItemDefaultOpen(item)}
       open={treeOpenState.open}
@@ -8898,6 +8936,7 @@ export const Tree = (({
   selectedIds: controlledSelectedIds,
   defaultSelectedIds = [],
   onSelectionChange,
+  highlightedIds: controlledHighlightedIds = [],
   dragAndDropController,
   emptyState,
   indentMultiplier = 1,
@@ -8938,10 +8977,16 @@ export const Tree = (({
   const [selectionStore] = reactHostPort.useState(createTreeSelectionStore);
   const selectionStoreRef = reactHostPort.useRef(selectionStore);
   selectionStoreRef.current = selectionStore;
+  const [highlightStore] = reactHostPort.useState(createTreeHighlightStore);
+  const resolvedHighlightedIds = reactHostPort.useMemo(() => normalizeTreeSelectedIds(controlledHighlightedIds, "multiple"), [controlledHighlightedIds]);
 
   reactHostPort.useEffect(() => {
     selectionStore.setSelectedIds(resolvedSelectedIds);
   }, [resolvedSelectedIds, selectionStore]);
+
+  reactHostPort.useEffect(() => {
+    highlightStore.setHighlightedIds(resolvedHighlightedIds);
+  }, [highlightStore, resolvedHighlightedIds]);
 
   reactHostPort.useEffect(() => {
     setSectionItemsById(() => {
@@ -9237,16 +9282,54 @@ export const Tree = (({
   );
 
   const treeRootRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const lastHoverRowRef = reactHostPort.useRef<Element | null>(null);
+  const hoverPathFrameRef = reactHostPort.useRef<number | null>(null);
+  const pendingHoverRowRef = reactHostPort.useRef<Element | null>(null);
 
-  const handleTreePointerOver = reactHostPort.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const flushTreeHoverPath = reactHostPort.useCallback(() => {
+    hoverPathFrameRef.current = null;
     const root = treeRootRef.current;
+    const row = pendingHoverRowRef.current;
+    pendingHoverRowRef.current = null;
     if (!root) return;
-    const row = resolveHoverRow(e.target as HTMLElement, root);
-    if (row) applyTreeHoverPath(row, root);
-    else clearTreeHoverPath(root);
+    if (row) {
+      applyTreeHoverPath(row, root);
+      lastHoverRowRef.current = row;
+      return;
+    }
+    clearTreeHoverPath(root);
+    lastHoverRowRef.current = null;
   }, []);
 
+  const scheduleTreeHoverPath = reactHostPort.useCallback(
+    (row: Element | null) => {
+      pendingHoverRowRef.current = row;
+      if (hoverPathFrameRef.current !== null) {
+        return;
+      }
+      hoverPathFrameRef.current = requestAnimationFrame(flushTreeHoverPath);
+    },
+    [flushTreeHoverPath],
+  );
+
+  const handleTreePointerOver = reactHostPort.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const root = treeRootRef.current;
+      if (!root) return;
+      const row = resolveHoverRow(e.target as HTMLElement, root);
+      if (row === lastHoverRowRef.current) return;
+      scheduleTreeHoverPath(row);
+    },
+    [scheduleTreeHoverPath],
+  );
+
   const handleTreePointerLeave = reactHostPort.useCallback(() => {
+    if (hoverPathFrameRef.current !== null) {
+      cancelAnimationFrame(hoverPathFrameRef.current);
+      hoverPathFrameRef.current = null;
+    }
+    pendingHoverRowRef.current = null;
+    lastHoverRowRef.current = null;
     const root = treeRootRef.current;
     if (root) clearTreeHoverPath(root);
   }, []);
@@ -9256,13 +9339,15 @@ export const Tree = (({
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
         <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
           <TreeSelectionContext.Provider value={selectionStore}>
-            <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
-              {resolvedSections.map((section, index) => (
-                <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
-                  <TreeDataSectionView section={section} />
-                </div>
-              ))}
-            </TreeDataRenderingContext.Provider>
+            <TreeHighlightContext.Provider value={highlightStore}>
+              <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
+                {resolvedSections.map((section, index) => (
+                  <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
+                    <TreeDataSectionView section={section} />
+                  </div>
+                ))}
+              </TreeDataRenderingContext.Provider>
+            </TreeHighlightContext.Provider>
           </TreeSelectionContext.Provider>
           {resolvedSections.length === 0 && emptyState}
         </div>
@@ -9401,7 +9486,6 @@ interface FileTreeItemProps {
  **/
 const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNavigate, as = "a" }) => {
   const { level, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
   const itemId = `file-${node.path}`;
   const { open, setOpen } = useTreeOpenState(itemId, true);
 
@@ -9433,8 +9517,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
     className: itemClasses,
     style: { paddingLeft: `${detailPanelIndentPx(level, indentMultiplier) + 12}px` },
     onClick: handleClick,
-    onMouseEnter: () => setIsHovered(true),
-    onMouseLeave: () => setIsHovered(false),
   };
 
   const itemElement =
@@ -10368,6 +10450,7 @@ export interface TreePanelConfig {
   selectedIds?: string[];
   defaultSelectedIds?: string[];
   onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
+  highlightedIds?: readonly string[];
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
   className?: string;
@@ -10501,6 +10584,7 @@ const SidePanelTreePane = reactHostPort.memo(function SidePanelTreePane({ config
         defaultSelectedIds={config.defaultSelectedIds}
         dragAndDropController={config.dragAndDropController}
         emptyState={config.emptyState}
+        highlightedIds={config.highlightedIds}
         indentMultiplier={config.indentMultiplier}
         onSelectionChange={config.onSelectionChange}
         sections={config.sections}
@@ -10826,6 +10910,11 @@ export function normalizeEngagementCommandText(text: string): string {
   return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
 }
 
+/** @emoji ⚖️ True when two engagement command tokens match after {@link normalizeEngagementCommandText} (case-insensitive). */
+export function engagementCommandTokenEquals(a: string, b: string): boolean {
+  return normalizeEngagementCommandText(a).toLowerCase() === normalizeEngagementCommandText(b).toLowerCase();
+}
+
 /** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
 export function filterEngagementPossibles(query: string, items: readonly EngagementPossible[]): EngagementPossible[] {
   const trimmed = normalizeEngagementCommandText(query).toLowerCase();
@@ -10906,6 +10995,21 @@ export function engagementHighlightedLabel(label: string, query: string, detail?
   );
 }
 
+/** @emoji ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
+export function isUiTypingTarget(t: EventTarget | null): boolean {
+  if (!(t instanceof HTMLElement)) return false;
+  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return true;
+  if (t.isContentEditable) return true;
+  if (t instanceof HTMLInputElement) {
+    const kind = (t.type || "text").toLowerCase();
+    return kind !== "button" && kind !== "checkbox" && kind !== "radio" && kind !== "file" && kind !== "range" && kind !== "color";
+  }
+  if (t.closest('[data-slot="input-root"], [data-slot="textarea-root"], [data-collapsed="true"], [data-slot="command-input"], [data-slot="select-trigger"], [data-slot="select-content"]')) {
+    return true;
+  }
+  return Boolean(t.closest('[data-slot="engagement"] input, [data-slot="engagement"] textarea'));
+}
+
 /** @emoji ⌨️ True when the event target is already the active window engagement command field. */
 export function isEngagementCommandTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
@@ -10922,13 +11026,8 @@ export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolea
   const engagementField = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
   const active = document.activeElement;
   if (engagementField && (active === engagementField || engagementField.contains(active))) return false;
-  if (!(t instanceof HTMLElement)) return true;
-  if (t instanceof HTMLTextAreaElement) return false;
-  if (t instanceof HTMLInputElement) {
-    const kind = (t.type || "text").toLowerCase();
-    return kind === "button" || kind === "checkbox" || kind === "radio" || kind === "file" || kind === "range" || kind === "color";
-  }
-  if (t.isContentEditable) return false;
+  if (active instanceof HTMLElement && isUiTypingTarget(active) && !active.closest('[data-slot="engagement"]')) return false;
+  if (isUiTypingTarget(t)) return false;
   return true;
 }
 
@@ -11092,8 +11191,13 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
     return true;
   }, [activePossibleIndex, filteredPossibles, selectPossible]);
 
+  const wasActiveRef = reactHostPort.useRef(false);
   reactHostPort.useEffect(() => {
-    if (!active || !hasInput || input?.disabled) return;
+    const becameActive = active && !wasActiveRef.current;
+    wasActiveRef.current = active;
+    if (!becameActive || !hasInput || input?.disabled) return;
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return;
     const field = engagementRef.current?.querySelector<HTMLInputElement>('[data-slot="input"]');
     field?.focus({ preventScroll: true });
   }, [active, hasInput, input?.disabled, input?.id]);
@@ -15858,6 +15962,53 @@ if (import.meta.vitest) {
       });
     });
 
+    it("isUiTypingTarget treats text inputs, collapsed fields, and command inputs as typing targets", () => {
+      const text = document.createElement("input");
+      text.type = "text";
+      expect(isUiTypingTarget(text)).toBe(true);
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      expect(isUiTypingTarget(checkbox)).toBe(false);
+      const collapsed = document.createElement("div");
+      collapsed.setAttribute("data-slot", "input");
+      collapsed.setAttribute("data-collapsed", "true");
+      expect(isUiTypingTarget(collapsed)).toBe(true);
+      const command = document.createElement("input");
+      command.setAttribute("data-slot", "command-input");
+      expect(isUiTypingTarget(command)).toBe(true);
+      expect(shouldRouteKeysToWindowEngagement(text)).toBe(false);
+    });
+
+    it("Window does not route keys to engagement while another input is focused", () => {
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
+            <Input id="other-input" placeholder="Other" />
+          </Window>
+        );
+      };
+      render(<Harness />);
+      const other = screen.getByPlaceholderText("Other") as HTMLInputElement;
+      other.focus();
+      fireEvent.keyDown(other, { key: "x", bubbles: true });
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+    });
+
+    it("Engagement does not steal focus from another input when it becomes active", async () => {
+      const Harness = ({ active }: { active: boolean }) => (
+        <>
+          <Input id="other-input" placeholder="Other" />
+          <Engagement active={active} input={{ placeholder: "Command" }} />
+        </>
+      );
+      const { rerender } = render(<Harness active={false} />);
+      const other = screen.getByPlaceholderText("Other") as HTMLInputElement;
+      other.focus();
+      rerender(<Harness active />);
+      await waitFor(() => expect(document.activeElement).toBe(other));
+    });
+
     it("Window reveals engagement on hover but activates only on click or typing", async () => {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
@@ -15907,6 +16058,12 @@ if (import.meta.vitest) {
       expect(normalizeEngagementCommandText("b ")).toBe("B");
       expect(normalizeEngagementCommandText("box")).toBe("Box");
       expect(normalizeEngagementCommandText("SetHeight")).toBe("SetHeight");
+    });
+
+    it("engagementCommandTokenEquals matches tokens regardless of casing", () => {
+      expect(engagementCommandTokenEquals("brush", "Brush")).toBe(true);
+      expect(engagementCommandTokenEquals("SELECT", "select")).toBe(true);
+      expect(engagementCommandTokenEquals("box", "sphere")).toBe(false);
     });
 
     it("Engagement input PascalCases command text and space confirms like enter", async () => {
@@ -16095,6 +16252,23 @@ if (treeVitest) {
       expect(resolveHotkeyValue("ctrl+p")).toBe("ctrl+p");
       expect(resolveHotkeyValue({ hotkey: "ctrl+f" })).toBe("ctrl+f");
       expect(resolveHotkeyValue({ label: "Search" })).toBeUndefined();
+    });
+
+    it("tree highlight store notifies subscribers only when highlighted ids change", () => {
+      const store = createTreeHighlightStore();
+      let calls = 0;
+      const unsub = store.subscribe(() => {
+        calls++;
+      });
+      store.setHighlightedIds(["a"]);
+      expect(calls).toBe(1);
+      expect(store.isHighlighted("a")).toBe(true);
+      store.setHighlightedIds(["a"]);
+      expect(calls).toBe(1);
+      store.setHighlightedIds([]);
+      expect(calls).toBe(2);
+      expect(store.isHighlighted("a")).toBe(false);
+      unsub();
     });
 
     it("tree selection store notifies subscribers only when selection changes", () => {

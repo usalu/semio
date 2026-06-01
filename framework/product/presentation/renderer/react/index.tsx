@@ -493,15 +493,16 @@ function BulletMorphView({
 	);
 }
 
-function figureTileImageStyle(crop: DispositionPosition): CSSProperties {
+function figureTileBackgroundStyle(embodiment: FigureEmbodiment, crop: DispositionPosition): CSSProperties {
+	const bgWidth = crop.width > 0 ? 100 / crop.width : 100;
+	const bgHeight = crop.height > 0 ? 100 / crop.height : 100;
+	const posX = crop.width >= 1 ? 0 : (crop.x / (1 - crop.width)) * 100;
+	const posY = crop.height >= 1 ? 0 : (crop.y / (1 - crop.height)) * 100;
 	return {
-		position: "absolute",
-		left: crop.width > 0 ? `${(-crop.x / crop.width) * 100}%` : 0,
-		top: crop.height > 0 ? `${(-crop.y / crop.height) * 100}%` : 0,
-		width: crop.width > 0 ? `${(100 / crop.width) * 100}%` : "100%",
-		height: crop.height > 0 ? `${(100 / crop.height) * 100}%` : "100%",
-		maxWidth: "none",
-		maxHeight: "none",
+		backgroundImage: `url("${embodiment.src}")`,
+		backgroundRepeat: "no-repeat",
+		backgroundSize: `${bgWidth}% ${bgHeight}%`,
+		backgroundPosition: `${posX}% ${posY}%`,
 	};
 }
 
@@ -528,15 +529,10 @@ function FigureTileView({
 			]
 				.filter(Boolean)
 				.join(" ")}
-			style={frameStyle}
-		>
-			<img
-				className="presentation-figure-tile-img"
-				src={embodiment.src}
-				alt={embodiment.alt ?? ""}
-				style={figureTileImageStyle(tile.crop)}
-			/>
-		</div>
+			style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, tile.crop) }}
+			role="img"
+			aria-label={embodiment.alt ?? ""}
+		/>
 	);
 }
 
@@ -1226,7 +1222,7 @@ if (import.meta.vitest) {
 			const first = tiles[0] as HTMLElement;
 			expect(first.classList.contains("presentation-figure-tile-frame")).toBe(true);
 			expect(first.style.position).toBe("absolute");
-			expect(first.querySelector("img.presentation-figure-tile-img")?.getAttribute("src")).toBe("/catalogue.png");
+			expect(first.style.backgroundImage).toContain("/catalogue.png");
 		});
 
 		it("omits tiles not listed in a split disposition", () => {

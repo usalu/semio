@@ -147,6 +147,8 @@ export interface UiTreeItemNode {
   readonly draggable?: boolean;
   /** @emoji 📤 Extra `dataTransfer` MIME entries for in-app drags (e.g. puzzle fixture palette). */
   readonly dragData?: Readonly<Record<string, string>>;
+  readonly onPointerEnter?: () => void;
+  readonly onPointerLeave?: () => void;
   readonly items?: readonly UiTreeItemNode[];
 }
 

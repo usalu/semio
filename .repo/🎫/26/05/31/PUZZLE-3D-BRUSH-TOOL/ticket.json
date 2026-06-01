@@ -1,7 +1,7 @@
 {
   "title": "Puzzle 3D Brush Tool",
-  "status": "open",
-  "summary": "Puzzle 3D play now mirrors CAD play engagement: live EngagementSpec from the viewport host (command input, possibles, options, status), puzzle3dPlayEngagementMirror + host bridge for engagementOption/Input/Submit/PossibleSelect, enforcePuzzle3dPlayWindowEngagement requiring engagement.input. Brush Tab/context-menu removed; tool and candidate cycling go through window engagement chevron and Next option.",
+  "status": "closed",
+  "summary": "Fixed puzzle 3D brush engagement Enter and chevron select: engagement command line uses engagementCommandTokenEquals so PascalCase tokens (Brush/Select) match tool commands; engagementSpecRef updates synchronously during render; host bridge registers in useLayoutEffect so commands run before paint.",
   "sessions": [
     "⚪832954a6c04b40129e01afd7572cad87",
     "⚪347a438a3aad4f87aad47f369f12985d"
