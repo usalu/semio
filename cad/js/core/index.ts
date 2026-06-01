@@ -220,6 +220,33 @@ export function filterSelectionTargets(spec: SelectionSpec, targets: readonly Se
   return targets.filter((t) => spec.accept.includes(t.kind));
 }
 
+/** @emoji 🧭 Maps object picks to wire/edge primitives when `spec.accept` lists curve geometry kinds. */
+export function expandSelectionTargetsForAccept(model: Model, spec: SelectionSpec, targets: readonly SelectionTarget[]): SelectionTarget[] {
+  const accept = new Set(spec.accept);
+  const out: SelectionTarget[] = [];
+  const seen = new Set<string>();
+  const push = (kind: ModelEntityKind, id: string): void => {
+    const key = `${kind}:${id}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ kind, id, editable: true });
+  };
+  for (const target of targets) {
+    if (accept.has(target.kind)) {
+      push(target.kind, target.id);
+      continue;
+    }
+    if (target.kind !== "object") continue;
+    const row = model.objects[target.id as ObjectRef];
+    if (!row) continue;
+    const wireRef = row.primitives.wire;
+    const edgeRef = row.primitives.edge;
+    if (accept.has("wire") && wireRef) push("wire", String(wireRef));
+    else if (accept.has("edge") && edgeRef) push("edge", String(edgeRef));
+  }
+  return out;
+}
+
 /** @emoji 🧭 True when every target is accepted (and at least one target exists). */
 export function selectionEventMatches(spec: SelectionSpec, ev: SelectionEvent): boolean {
   if (!ev.targets || ev.targets.length === 0) return false;
@@ -5566,7 +5593,7 @@ export class InteractionRuntime {
 
   private selectionEventFromStart(event: InteractionEvent, spec: SelectionSpec): SelectionEvent | null {
     const rawTargets = Array.isArray(event.targets) ? (event.targets as readonly SelectionTarget[]) : [];
-    const selected = filterSelectionTargets(spec, rawTargets);
+    const selected = expandSelectionTargetsForAccept(this.opts.document.model, spec, rawTargets);
     if (selected.length === 0) return null;
     return { kind: "selection.changed", targets: spec.multiple ? selected : selected.slice(0, 1) };
   }
@@ -7513,6 +7540,19 @@ if (import.meta.vitest) {
       expect(selectionEventMatches(spec, ok)).toBe(true);
       expect(selectionEventMatches(spec, bad)).toBe(false);
     });
+
+    it("expandSelectionTargetsForAccept maps object picks to wire primitives", () => {
+      const model = new Model();
+      const typology = "spatial.shape.curve.interpolate-curve";
+      model.objects[typology as ObjectRef] = {
+        id: typology as ObjectRef,
+        typology: typology as TypologyRef,
+        primitives: { wire: "w-interp" },
+      };
+      const spec: SelectionSpec = { accept: ["wire", "edge"], multiple: true };
+      const expanded = expandSelectionTargetsForAccept(model, spec, [{ kind: "object", id: typology, editable: true }]);
+      expect(expanded).toEqual([{ kind: "wire", id: "w-interp", editable: true }]);
+    });
   });
   describe("@cad/js/core interaction box", () => {
     it("tracks first-corner cursor on the grid after start", async () => {
@@ -7854,6 +7894,34 @@ if (import.meta.vitest) {
       expect(rt.getSnapshot().state).toBe("committed");
       expect(rt.getSnapshot().lastResponse?.ok).toBe(true);
       expect(Object.keys(model.solids).length).toBeGreaterThan(0);
+    });
+
+    it("surface.extrudeCrv start seeds curves from selected interpolate object", async () => {
+      const spec = loadSpatialInteraction("surface.extrudeCrv")!;
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      await kernel.executeCommandDiff("curve.interpolateCurve", {
+        model,
+        points: [
+          [0, 0, 0],
+          [2, 1, 0],
+          [4, 0, 0],
+        ],
+      });
+      const wireId = Object.values(model.wires)[0]!.id;
+      const objectId = Object.keys(model.objects)[0]!;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({
+        kind: "start",
+        targets: [{ kind: "object", id: objectId, editable: true }],
+        modifiers: {},
+      });
+      expect(rt.getSnapshot().state).toBe("extrusion_distance");
+      expect((rt.getSnapshot().context.curves as { id: string }[])[0]?.id).toBe(wireId);
     });
 
     it("interactionNumericEntryCommitEvent uses pointer.down for length and confirm for scalar", () => {

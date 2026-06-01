@@ -20,6 +20,9 @@ import {
 	face,
 	filledFace,
 	healSolid,
+	loft,
+	translate,
+	wire,
 	getBounds,
 	getCurveType,
 	getEdges,
@@ -56,7 +59,7 @@ import {
 	exportSTEP,
 	importSTEP,
 } from "brepjs";
-import type { Edge, Face, OrientedFace, Shape3D, Solid, ValidSolid } from "brepjs";
+import type { Dimension, Edge, Face, OrientedFace, Shape3D, Solid, ValidSolid, Wire } from "brepjs";
 import initOpenCascade from "brepjs-opencascade";
 import {
 	applyModelDiff,
@@ -1804,6 +1807,24 @@ function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 	return line(p0, p1);
 }
 
+/** @emoji 🔗 brepjs wire from a model wire (closed `wireLoop` or open `wire`). */
+function geomWireToBrepWire(model: Model, wireId: WireRef): Wire<Dimension> | null {
+	const w = geom(model).wires[wireId];
+	if (!w?.edgeIds.length) return null;
+	const edges: Edge[] = [];
+	for (const eid of w.edgeIds) {
+		const rec = geom(model).edges[eid];
+		if (!rec) return null;
+		const be = geomEdgeToBrepEdge(model, rec);
+		if (!be) return null;
+		edges.push(be);
+	}
+	const loop = wireLoop(edges);
+	if (isOk(loop)) return loop.value;
+	const open = wire(edges);
+	return isOk(open) ? open.value : null;
+}
+
 	/** @emoji 🔗 Closed planar brepjs face from a model wire (`wireLoop` + `face`). */
 function geomWireToOrientedFace(model: Model, wireId: WireRef): OrientedFace | null {
 	const w = geom(model).wires[wireId];
@@ -1842,17 +1863,30 @@ function geomWireToOrientedFaceLoose(model: Model, wireId: WireRef): OrientedFac
 	return isOk(filled) ? filled.value : null;
 }
 
-/** @emoji 🔗 Extrudes a model wire to a `ValidSolid` via brepjs. */
+/** @emoji 🔗 Extrudes a model wire to a `ValidSolid` via brepjs (planar face or open-curve loft). */
 function extrudeModelWire(
 	model: Model,
 	wireId: string,
 	direction: Vec3,
 	distance: number,
 ): ValidSolid | null {
-	const planar = geomWireToOrientedFace(model, wireId as WireRef);
-	if (!planar) return null;
-	const solid = extrude(planar as Parameters<typeof extrude>[0], extrudeDirection(direction, distance));
-	return isOk(solid) ? (solid.value as ValidSolid) : null;
+	const wid = wireId as WireRef;
+	const vec = extrudeDirection(direction, distance);
+	const planar = geomWireToOrientedFace(model, wid);
+	if (planar) {
+		const solid = extrude(planar as Parameters<typeof extrude>[0], vec);
+		return isOk(solid) ? (solid.value as ValidSolid) : null;
+	}
+	const profile = geomWireToBrepWire(model, wid);
+	if (!profile) return null;
+	const moved = translate(profile, vec);
+	if (!isOk(moved)) return null;
+	const lofted = loft([profile, moved.value], { ruled: true });
+	if (!isOk(lofted)) return null;
+	const shape = lofted.value as Shape3D;
+	if (isSolid(shape) && isValidSolid(shape)) return shape as ValidSolid;
+	const healed = healSolid(shape);
+	return isOk(healed) && isValidSolid(healed.value) ? (healed.value as ValidSolid) : null;
 }
 
 type SelectionPick = { readonly kind: string; readonly id: string };
@@ -2448,9 +2482,8 @@ class BrepjsWasmEngine {
 		model: Model;
 	}): Promise<SolidRef> {
 		await this.ensureInit();
-		const solid =
-			extrudeModelWire(input.model, input.wireId, input.direction, input.distance) ??
-			box(1, 1, Math.abs(input.distance) || 1e-6, { at: [0, 0, 0], centered: true });
+		const solid = extrudeModelWire(input.model, input.wireId, input.direction, input.distance);
+		if (!solid) throw new Error(`Cannot extrude wire ${input.wireId}`);
 		const ref = kernelGeometry.solidRef(`brepjs-solid-${++this.seq}`);
 		this.solids.set(ref, solid);
 		return ref;
@@ -2987,6 +3020,32 @@ if (import.meta.vitest) {
 			const mesh = await kernel.tessellate(solid, 1e-3, g);
 			expect(mesh.index.length).toBeGreaterThan(0);
 			expect(Object.keys(g.faces).some((id) => id.startsWith("cm-"))).toBe(false);
+		});
+
+		it("extrudeWireDiff lofts open nurbs interpolate wires to solids", async () => {
+			const g = new Model();
+			const res = await kernel.executeCommandDiff("curve.interpolateCurve", {
+				model: g,
+				points: [
+					[0, 0, 0],
+					[2, 1, 0],
+					[4, 0, 0],
+				],
+			});
+			applyModelDiff(g, res.diff);
+			const wireId = res.diff.wires?.added?.[0]?.id;
+			expect(wireId).toBeTruthy();
+			const { diff, solid } = await kernel.extrudeWireDiff({
+				wireId: String(wireId),
+				distance: 1.2,
+				direction: [0, 0, 1],
+				model: g,
+			});
+			expect(diff.solids?.added?.length).toBe(1);
+			applyModelDiff(g, diff);
+			g.bump();
+			const mesh = await kernel.tessellate(solid, 1e-3, g);
+			expect(mesh.index.length).toBeGreaterThan(0);
 		});
 
 		it("executeCommandDiff surface.extrudeCrv extrudes selected wires along direction", async () => {

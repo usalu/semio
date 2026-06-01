@@ -26,6 +26,8 @@ import {
   solidRef,
   createInteractionRuntime,
   emptyMeshTransfer,
+  expandSelectionTargetsForAccept,
+  getActiveSelectionSpec,
   DocumentHistory,
   EMPTY_MODEL_DIFF,
   interactionCanConfirmSelection,
@@ -4043,12 +4045,15 @@ export function InteractionRepl({
   }, [interactionId, interactionActive, cmdLine, selectionMenu, dismissReplChrome, cancelActiveInteraction, onEscape, setSelectionMenu, setHoveredPickKey]);
 
   const startRuntime = reactHostPort.useCallback(async () => {
-    const accept = rt.listActiveSelectionAccept() as readonly ModelEntityKind[];
     const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
-    const accepted = replSelectionAccepted(accept, replRendererSelectionTargets(rendererSelectionByModelRef.current, mdId));
+    const rendererSel = replRendererSelectionTargets(rendererSelectionByModelRef.current, mdId);
+    const selSpec = getActiveSelectionSpec(spec, rt.getSnapshot().state);
+    const accepted = selSpec
+      ? expandSelectionTargetsForAccept(documentModel.model, selSpec, rendererSel)
+      : replSelectionAccepted(rt.listActiveSelectionAccept() as readonly ModelEntityKind[], rendererSel);
     setInteractionSelectionByState({ [rt.getSnapshot().state]: [...accepted] });
     await rt.send(replStartEvent(accepted));
-  }, [rt, activeModelDefinitionId, setInteractionSelectionByState]);
+  }, [rt, spec, documentModel.model, activeModelDefinitionId, setInteractionSelectionByState]);
 
   reactHostPort.useEffect(() => {
     if (!interactionId) return;
