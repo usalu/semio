@@ -100,12 +100,12 @@ const CATALOGUE_TILES_GRID = splitFigureGrid({
 
 /** @emoji 🏷 Grid keys of the ten component tiles on catalogue rows 1–2 → semantic slide keys. */
 export const CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS = {
-	"tile-r1-c0": "Rippendecke 1",
-	"tile-r1-c1": "Rippendecke 2",
-	"tile-r1-c2": "Rippendecke 3",
-	"tile-r1-c3": "Rippendecke 4",
-	"tile-r1-c4": "Rippendecke 5",
-	"tile-r2-c0": "Rippendecke 6",
+	"tile-r1-c0": "Rippenplatte 1",
+	"tile-r1-c1": "Rippenplatte 2",
+	"tile-r1-c2": "Rippenplatte 3",
+	"tile-r1-c3": "Rippenplatte 4",
+	"tile-r1-c4": "Rippenplatte 5",
+	"tile-r2-c0": "Rippenplatte 6",
 	"tile-r2-c1": "Unterzug 1",
 	"tile-r2-c2": "Unterzug 2",
 	"tile-r2-c3": "Unterzug 3",
@@ -224,19 +224,19 @@ export function catalogueFocusTilesForColumn(
 
 export const CATALOGUE_COLUMN_TILE_KEYS = {
 	col1: [
-		"Rippendecke 1",
-		"Rippendecke 2",
-		"Rippendecke 3",
-		"Rippendecke 4",
-		"Rippendecke 5",
-		"Rippendecke 6",
+		"Rippenplatte 1",
+		"Rippenplatte 2",
+		"Rippenplatte 3",
+		"Rippenplatte 4",
+		"Rippenplatte 5",
+		"Rippenplatte 6",
 	],
 	col2: ["Unterzug 1", "Unterzug 2", "Unterzug 3"],
 	col3: ["Stütze"],
 } as const;
 
 export const CATALOGUE_COLUMN_LABELS: Record<keyof typeof CATALOGUE_COLUMN_TILE_KEYS, string> = {
-	col1: "Rippendecke",
+	col1: "Rippenplatte",
 	col2: "Unterzug",
 	col3: "Stütze",
 };

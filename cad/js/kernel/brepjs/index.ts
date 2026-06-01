@@ -1878,11 +1878,20 @@ function extrudeModelWire(
 		return isOk(solid) ? (solid.value as ValidSolid) : null;
 	}
 	const profile = geomWireToBrepWire(model, wid);
-	if (!profile) return null;
+	if (!profile) {
+		console.log("[DEBUG] extrudeModelWire: no brep wire", wireId);
+		return null;
+	}
 	const moved = translate(profile, vec);
-	if (!isOk(moved)) return null;
+	if (!isOk(moved)) {
+		console.log("[DEBUG] extrudeModelWire: translate failed", wireId, moved);
+		return null;
+	}
 	const lofted = loft([profile, moved.value], { ruled: true });
-	if (!isOk(lofted)) return null;
+	if (!isOk(lofted)) {
+		console.log("[DEBUG] extrudeModelWire: loft failed", wireId, lofted);
+		return null;
+	}
 	const shape = lofted.value as Shape3D;
 	if (isSolid(shape) && isValidSolid(shape)) return shape as ValidSolid;
 	const healed = healSolid(shape);

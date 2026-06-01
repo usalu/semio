@@ -89,12 +89,12 @@ if (import.meta.vitest) {
 			expect(dispositions[0]?.participantId).toBe(CATALOGUE_PARTICIPANT);
 			expect(dispositions[0]?.split?.tiles).toHaveLength(10);
 			expect(dispositions[0]?.split?.tiles.map((tile) => tile.key)).toEqual([
-				"Rippendecke 1",
-				"Rippendecke 2",
-				"Rippendecke 3",
-				"Rippendecke 4",
-				"Rippendecke 5",
-				"Rippendecke 6",
+				"Rippenplatte 1",
+				"Rippenplatte 2",
+				"Rippenplatte 3",
+				"Rippenplatte 4",
+				"Rippenplatte 5",
+				"Rippenplatte 6",
 				"Unterzug 1",
 				"Unterzug 2",
 				"Unterzug 3",

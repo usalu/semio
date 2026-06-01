@@ -3767,10 +3767,10 @@ if (import.meta.vitest) {
 		it("matches auto-animate targets only by data-id", () => {
 			const fromSlide = document.createElement("section");
 			fromSlide.innerHTML =
-				'<div data-id="catalogue-col1" class="presentation-morph-slot--figure"><h2>Rippendecke</h2></div>';
+				'<div data-id="catalogue-col1" class="presentation-morph-slot--figure"><h2>Rippenplatte</h2></div>';
 			const toSlide = document.createElement("section");
 			toSlide.innerHTML =
-				'<div data-id="catalogue-col1" class="presentation-morph-slot--label"><h2>Rippendecke</h2></div>';
+				'<div data-id="catalogue-col1" class="presentation-morph-slot--label"><h2>Rippenplatte</h2></div>';
 			const host: AutoAnimateMatcherHost = {
 				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
 					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
@@ -3883,7 +3883,7 @@ if (import.meta.vitest) {
 													{
 														kind: "text",
 														id: "label",
-														lines: ["Rippendecke"],
+														lines: ["Rippenplatte"],
 														level: "heading",
 														morphRoot: "heading-line",
 													},
@@ -3916,7 +3916,7 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--label');
-			expect(slot?.querySelector("h2")?.textContent).toBe("Rippendecke");
+			expect(slot?.querySelector("h2")?.textContent).toBe("Rippenplatte");
 			expect(slot?.querySelector("h2[data-id]")).toBeNull();
 		});
 
