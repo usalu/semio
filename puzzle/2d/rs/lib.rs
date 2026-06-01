@@ -2473,6 +2473,13 @@ mod board_host {
         Disabled,
     }
 
+    /// @emoji 🎨 Whether drawable style resolves committed selection chrome or neutral cached geometry.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum StyleChromePass {
+        CachedBase,
+        InteractionOverlay,
+    }
+
     #[derive(Clone, Debug)]
     pub struct NodeData {
         pub id: String,
@@ -3439,44 +3446,95 @@ mod board_host {
             BoardElementStyleKind::Neutral
         }
 
-        fn resolve_node_style_kind(&self, n: &NodeData) -> BoardElementStyleKind {
+        fn resolve_node_style_kind(&self, n: &NodeData, pass: StyleChromePass) -> BoardElementStyleKind {
             if let Some(kind) = Self::explicit_style_kind(n.style.as_deref()) {
                 return kind;
             }
-            if let Some(kind) = self.hovered_style_kind(n.id.as_str()) {
-                return kind;
+            match pass {
+                StyleChromePass::CachedBase => {
+                    if self.preserve_original_element_style {
+                        BoardElementStyleKind::Original
+                    } else {
+                        BoardElementStyleKind::Neutral
+                    }
+                }
+                StyleChromePass::InteractionOverlay => {
+                    if let Some(kind) = self.hovered_style_kind(n.id.as_str()) {
+                        return kind;
+                    }
+                    self.resolve_interaction_style_kind(n.id.as_str())
+                }
             }
-            self.resolve_interaction_style_kind(n.id.as_str())
         }
 
-        fn resolve_handle_style_kind(&self, h: &HandleData) -> BoardElementStyleKind {
+        fn resolve_handle_style_kind(&self, h: &HandleData, pass: StyleChromePass) -> BoardElementStyleKind {
             if let Some(kind) = Self::explicit_style_kind(h.style.as_deref()) {
                 return kind;
             }
-            if let Some(kind) = self.hovered_style_kind(h.id.as_str()) {
-                return kind;
+            match pass {
+                StyleChromePass::CachedBase => {
+                    if self.preserve_original_element_style {
+                        BoardElementStyleKind::Original
+                    } else {
+                        BoardElementStyleKind::Neutral
+                    }
+                }
+                StyleChromePass::InteractionOverlay => {
+                    if let Some(kind) = self.hovered_style_kind(h.id.as_str()) {
+                        return kind;
+                    }
+                    self.resolve_interaction_style_kind(h.id.as_str())
+                }
             }
-            self.resolve_interaction_style_kind(h.id.as_str())
         }
 
-        fn resolve_edge_style_kind(&self, e: &EdgeData) -> BoardElementStyleKind {
+        fn resolve_edge_style_kind(&self, e: &EdgeData, pass: StyleChromePass) -> BoardElementStyleKind {
             if let Some(kind) = Self::explicit_style_kind(e.style.as_deref()) {
                 return kind;
             }
-            if let Some(kind) = self.hovered_style_kind(e.id.as_str()) {
-                return kind;
+            match pass {
+                StyleChromePass::CachedBase => BoardElementStyleKind::Neutral,
+                StyleChromePass::InteractionOverlay => {
+                    if let Some(kind) = self.hovered_style_kind(e.id.as_str()) {
+                        return kind;
+                    }
+                    self.resolve_interaction_style_kind(e.id.as_str())
+                }
             }
-            self.resolve_interaction_style_kind(e.id.as_str())
         }
 
-        fn resolve_wire_style_kind(&self, w: &WireData) -> BoardElementStyleKind {
+        fn resolve_wire_style_kind(&self, w: &WireData, pass: StyleChromePass) -> BoardElementStyleKind {
             if let Some(kind) = Self::explicit_style_kind(w.style.as_deref()) {
                 return kind;
             }
-            if let Some(kind) = self.hovered_style_kind(w.id.as_str()) {
-                return kind;
+            match pass {
+                StyleChromePass::CachedBase => BoardElementStyleKind::Neutral,
+                StyleChromePass::InteractionOverlay => {
+                    if let Some(kind) = self.hovered_style_kind(w.id.as_str()) {
+                        return kind;
+                    }
+                    self.resolve_interaction_style_kind(w.id.as_str())
+                }
             }
-            self.resolve_interaction_style_kind(w.id.as_str())
+        }
+
+        /// @emoji 💠 Entity ids that need selection/preselect/hover chrome painted above {@link BoardHost.world_content_cache}.
+        fn interaction_overlay_entity_ids(&self) -> BTreeSet<String> {
+            let mut ids = BTreeSet::new();
+            if self.is_preselect_active() {
+                ids.extend(self.preselect.iter().cloned());
+                ids.extend(self.selection.iter().cloned());
+                ids.extend(self.preselect_removed.iter().cloned());
+            } else {
+                ids.extend(self.selection.iter().cloned());
+                ids.extend(self.selection_exit_highlight.iter().cloned());
+            }
+            if let Some(ref hover_id) = self.hovered_id {
+                if !self.is_preselect_active() && !self.selection.contains(hover_id) {
+                    ids.insert(hover_id.clone());
+                }
+            }
+            ids
         }
 
         fn node_fill_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
@@ -3877,7 +3935,6 @@ mod board_host {
             self.selection_exit_highlight.clear();
             self.selection.clear();
             self.sync_selection_flags_to_objects();
-            self.bump_content_scene_generation();
             self.push_event("select", json!({ "ids": [], "exitHighlightIds": [] }));
         }
 
@@ -3915,7 +3972,6 @@ mod board_host {
             self.selection_exit_highlight.clear();
             self.selection = next;
             self.sync_selection_flags_to_objects();
-            self.bump_content_scene_generation();
             self.push_select_event();
         }
 
@@ -3931,7 +3987,6 @@ mod board_host {
             self.selection_exit_highlight.clear();
             self.selection = next;
             self.sync_selection_flags_to_objects();
-            self.bump_content_scene_generation();
         }
 
         /// @emoji 🔇 Mirrors area-select preview chrome without emitting `preselect` (shared multi-view sync).
@@ -3943,7 +3998,6 @@ mod board_host {
             }
             self.preselect = next;
             self.preselect_removed = removed;
-            self.bump_content_scene_generation();
             self.sync_selection_flags_to_objects();
         }
 
@@ -3964,7 +4018,6 @@ mod board_host {
                 self.selection_exit_highlight.clear();
                 self.selection = next;
                 self.sync_selection_flags_to_objects();
-                self.bump_content_scene_generation();
             }
             let mut payload = json!({ "ids": sorted, "exitHighlightIds": [] });
             if let Some(ref g) = gesture_owned {
@@ -3988,7 +4041,6 @@ mod board_host {
             self.preselect_removed = anchor_ids.difference(&self.preselect).cloned().collect();
             self.set_hovered_id_silent(None);
             self.sync_selection_flags_to_objects();
-            self.bump_content_scene_generation();
             let mut payload = json!({ "ids": sorted, "removedIds": removed });
             if let Some(ref g) = gesture_owned {
                 payload["gestureMergeMode"] = json!(g);
@@ -4015,7 +4067,6 @@ mod board_host {
             self.selection_exit_highlight.clear();
             self.selection = next;
             self.sync_selection_flags_to_objects();
-            self.bump_content_scene_generation();
             let mut payload = json!({ "ids": sorted, "anchorIds": anchor, "exitHighlightIds": [] });
             if let Some(ref g) = gesture_owned {
                 payload["gestureMergeMode"] = json!(g);
@@ -5295,7 +5346,7 @@ mod board_host {
             }
         }
 
-        fn append_indirect_handle_ring(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, node_id: &str) {
+        fn append_indirect_handle_ring(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, node_id: &str, chrome_pass: StyleChromePass) {
             for h in self.handles.values() {
                 if h.node_id != node_id || !self.handle_effectively_visible(h.id.as_str()) {
                     continue;
@@ -5310,7 +5361,7 @@ mod board_host {
                     }
                 }
                 let Some(wp) = self.indirect_handle_world_pos(h) else { continue };
-                let style_kind = self.resolve_handle_style_kind(h);
+                let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
                 let stroke_px = 2.0_f64;
                 let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { Some((self.vello_theme.indirect_handle_fill, self.vello_theme.indirect_handle_stroke, stroke_px)) } else { None };
                 self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, false);
@@ -5334,13 +5385,21 @@ mod board_host {
         }
 
         fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
-            self.append_nodes_and_handles(scene, tile_filter, lod, world_space);
+            self.append_nodes_and_handles(scene, tile_filter, lod, world_space, None, StyleChromePass::CachedBase);
             if !world_space {
-                self.append_edges_wires_and_link(scene, tile_filter, lod, world_space);
+                self.append_edges_wires_and_link(scene, tile_filter, lod, world_space, None, StyleChromePass::CachedBase);
             }
         }
 
-        fn append_nodes_and_handles(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
+        fn append_nodes_and_handles(
+            &self,
+            scene: &mut Scene,
+            tile_filter: Option<&WorldBox>,
+            lod: BoardDrawLod,
+            world_space: bool,
+            only_ids: Option<&BTreeSet<String>>,
+            chrome_pass: StyleChromePass,
+        ) {
             let pad = self.drawable_cull_pad_world();
             let draw_handles = matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
@@ -5352,13 +5411,18 @@ mod board_host {
                 if !n.visible {
                     continue;
                 }
+                if let Some(ids) = only_ids {
+                    if !ids.contains(&n.id) {
+                        continue;
+                    }
+                }
                 if let Some(tb) = tile_filter {
                     if !world_boxes_overlap(*tb, self.node_world_bounds(n, pad)) {
                         continue;
                     }
                 }
                 let link_compat = link_compat_nodes.contains(&n.id);
-                let resolved_style_kind = self.resolve_node_style_kind(n);
+                let resolved_style_kind = self.resolve_node_style_kind(n, chrome_pass);
                 let style_kind = if link_compat && matches!(resolved_style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { BoardElementStyleKind::Highlighted } else { resolved_style_kind };
                 let draw_node_stroke = lod != BoardDrawLod::Minimap || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
                 let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
@@ -5448,6 +5512,11 @@ mod board_host {
                 if !draw_handles || !self.handle_effectively_visible(h.id.as_str()) {
                     continue;
                 }
+                if let Some(ids) = only_ids {
+                    if !ids.contains(&h.id) {
+                        continue;
+                    }
+                }
                 if let Some(tb) = tile_filter {
                     let Some(hb) = self.handle_world_bounds_cull(h) else { continue };
                     if !world_boxes_overlap(*tb, hb) {
@@ -5455,15 +5524,25 @@ mod board_host {
                     }
                 }
                 let Some(wp) = self.handle_world_pos(h) else { continue };
-                let style_kind = self.resolve_handle_style_kind(h);
+                let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
                 self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space);
             }
             if let Some(node_id) = indirect_ring_node_id {
-                self.append_indirect_handle_ring(scene, tile_filter, &node_id);
+                if only_ids.is_none() {
+                    self.append_indirect_handle_ring(scene, tile_filter, &node_id, chrome_pass);
+                }
             }
         }
 
-        fn append_edges_wires_and_link(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
+        fn append_edges_wires_and_link(
+            &self,
+            scene: &mut Scene,
+            tile_filter: Option<&WorldBox>,
+            lod: BoardDrawLod,
+            world_space: bool,
+            only_ids: Option<&BTreeSet<String>>,
+            chrome_pass: StyleChromePass,
+        ) {
             let edge_sw = if world_space {
                 self.edge_world_stroke_width(lod)
             } else {
@@ -5473,6 +5552,11 @@ mod board_host {
             for e in self.edges.values() {
                 if !self.edge_effectively_visible(e) {
                     continue;
+                }
+                if let Some(ids) = only_ids {
+                    if !ids.contains(&e.id) {
+                        continue;
+                    }
                 }
                 if let Some(tb) = tile_filter {
                     let Some(eb) = self.edge_world_bounds_for_cull(e) else { continue };
@@ -5486,7 +5570,7 @@ mod board_host {
                     let p2 = self.draw_space_point(c.p2, world_space);
                     let p3 = self.draw_space_point(c.p3, world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
-                    let stroke_color = Self::edge_stroke_for_style(&self.vello_theme, self.resolve_edge_style_kind(e));
+                    let stroke_color = Self::edge_stroke_for_style(&self.vello_theme, self.resolve_edge_style_kind(e, chrome_pass));
                     scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
                 }
             }
@@ -5496,13 +5580,18 @@ mod board_host {
                 if !self.wire_effectively_visible(w) {
                     continue;
                 }
+                if let Some(ids) = only_ids {
+                    if !ids.contains(&w.id) {
+                        continue;
+                    }
+                }
                 if let Some(c) = self.wire_curve(w) {
                     let p0 = self.draw_space_point(c.p0, world_space);
                     let p1 = self.draw_space_point(c.p1, world_space);
                     let p2 = self.draw_space_point(c.p2, world_space);
                     let p3 = self.draw_space_point(c.p3, world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
-                    let wc = Self::wire_stroke_for_style(&self.vello_theme, self.resolve_wire_style_kind(w));
+                    let wc = Self::wire_stroke_for_style(&self.vello_theme, self.resolve_wire_style_kind(w, chrome_pass));
                     scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
                 }
             }
@@ -5526,12 +5615,19 @@ mod board_host {
             let needs_rebuild = cache.as_ref().map(|c| c.0 != gen || c.1 != lod).unwrap_or(true);
             if needs_rebuild {
                 let mut content = Scene::new();
-                self.append_nodes_and_handles(&mut content, None, lod, true);
-                self.append_edges_wires_and_link(&mut content, None, lod, true);
+                self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase);
+                self.append_edges_wires_and_link(&mut content, None, lod, true, None, StyleChromePass::CachedBase);
                 *cache = Some((gen, lod, content));
             }
             if let Some(cached) = cache.as_ref() {
                 scene.append(&cached.2, Some(cam_aff));
+            }
+            let overlay_ids = self.interaction_overlay_entity_ids();
+            if !overlay_ids.is_empty() {
+                let mut overlay = Scene::new();
+                self.append_nodes_and_handles(&mut overlay, None, lod, true, Some(&overlay_ids), StyleChromePass::InteractionOverlay);
+                self.append_edges_wires_and_link(&mut overlay, None, lod, true, Some(&overlay_ids), StyleChromePass::InteractionOverlay);
+                scene.append(&overlay, Some(cam_aff));
             }
             if let Some(c) = self.active_link_wire_curve() {
                 let link_wire_stroke = Stroke::new(2.85_f64);
@@ -6421,7 +6517,9 @@ mod board_host {
     #[cfg(test)]
     impl BoardHost {
         pub(crate) fn test_resolve_node_style_kind(&self, node_id: &str) -> Option<BoardElementStyleKind> {
-            self.nodes.get(node_id).map(|n| self.resolve_node_style_kind(n))
+            self.nodes
+                .get(node_id)
+                .map(|n| self.resolve_node_style_kind(n, StyleChromePass::InteractionOverlay))
         }
     }
 }
@@ -7553,14 +7651,15 @@ mod host_tests {
     }
 
     #[test]
-    fn board_host_gestured_selection_invalidates_cached_world_content() {
+    fn board_host_silent_selection_keeps_cached_world_content_warm() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
         let gen_before = h.test_content_scene_generation();
-        let s = h.world_to_screen(Point::new(0.0, 0.0));
-        h.pointer_down_screen(s.x, s.y, 0, false, false);
-        assert!(h.test_content_scene_generation() > gen_before, "gestured click selection must rebuild cached nodes/handles");
+        let neutral_hint = h.encoded_scene_hint();
+        h.set_selection_ids_silent(&["a".into()]);
+        assert_eq!(h.test_content_scene_generation(), gen_before, "selection chrome must paint via overlay without rebuilding cached geometry");
+        assert!(h.encoded_scene_hint() > neutral_hint, "overlay must still encode selected chrome");
         assert_eq!(h.test_resolve_node_style_kind("a"), Some(BoardElementStyleKind::Selected));
     }
 
@@ -7897,6 +7996,21 @@ mod host_tests {
         let mut got: Vec<_> = h.selection.iter().cloned().collect();
         got.sort();
         assert_eq!(got, vec!["a".to_string(), "e1".to_string()]);
+    }
+
+    #[test]
+    fn board_host_selection_change_does_not_bump_content_scene_generation() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        let gen = h.test_content_scene_generation();
+        let neutral_hint = h.encoded_scene_hint();
+        h.set_selection_ids_silent(&["a".into()]);
+        assert_eq!(h.test_content_scene_generation(), gen);
+        assert!(h.encoded_scene_hint() > neutral_hint);
+        h.set_selection_ids_silent(&[]);
+        assert_eq!(h.test_content_scene_generation(), gen);
+        assert_eq!(h.encoded_scene_hint(), neutral_hint);
     }
 
     #[test]

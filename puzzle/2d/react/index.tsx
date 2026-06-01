@@ -4463,16 +4463,26 @@ export class Puzzle2dRenderer {
       return true;
     }
     const lod = this.effectiveDrawLodLabel();
-    return (
+    const selection = this.selectionStore.getSnapshot();
+    const preselect = this.preselectStore.getSnapshot();
+    const selectionChromeDirty =
+      this.lastOverlaySelection === null ||
+      !puzzle2dSelectionSnapshotsEqual(selection, this.lastOverlaySelection) ||
+      this.lastOverlayPreselect === null ||
+      !preselectSnapshotsEqual(preselect, this.lastOverlayPreselect);
+    const viewportDirty =
       this.camera.x !== this.lastOverlayCameraX ||
       this.camera.y !== this.lastOverlayCameraY ||
       !nearlyEqual(this.camera.zoom, this.lastOverlayCameraZoom) ||
       this.width !== this.lastOverlayWidth ||
       this.height !== this.lastOverlayHeight ||
       this.dpr !== this.lastOverlayDpr ||
-      lod !== this.lastOverlayLod ||
+      lod !== this.lastOverlayLod;
+    return (
       this.textOverlayContentEpoch !== this.lastOverlayContentEpoch ||
-      this.lastVelloThemeJson !== this.lastOverlayVelloThemeJson
+      this.lastVelloThemeJson !== this.lastOverlayVelloThemeJson ||
+      selectionChromeDirty ||
+      (!this.wheelZoomGestureActive && viewportDirty)
     );
   }
 
@@ -5543,7 +5553,7 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
-    it("textOverlayDirty after camera, content epoch, and theme changes but not selection alone", () => {
+    it("textOverlayDirty after camera, selection chrome, content epoch, and theme changes", () => {
       const { canvas } = createMockCanvas();
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
       const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "label" });
@@ -5555,12 +5565,62 @@ if (puzzle2dVitest) {
       expect(renderer.textOverlayDirty()).toBe(true);
       renderer["rememberTextOverlayPainted"]();
       renderer.setSelectionIdsSilent(["n"]);
+      expect(renderer.textOverlayDirty()).toBe(true);
+      renderer["rememberTextOverlayPainted"]();
       expect(renderer.textOverlayDirty()).toBe(false);
       renderer.markDirty();
       expect(renderer.textOverlayDirty()).toBe(true);
       renderer["rememberTextOverlayPainted"]();
       renderer["lastVelloThemeJson"] = '{"changed":true}';
       expect(renderer.textOverlayDirty()).toBe(true);
+      renderer.dispose();
+    });
+
+    it("paintTextOverlays repaints when selection chrome changes", () => {
+      const { canvas } = createMockCanvas();
+      const overlay = document.createElement("canvas");
+      const fillText = vi.fn();
+      const overlayCtx: Puzzle2dCanvasContext = {
+        arc: vi.fn(),
+        beginPath: vi.fn(),
+        bezierCurveTo: vi.fn(),
+        clearRect: vi.fn(),
+        clip: vi.fn(),
+        closePath: vi.fn(),
+        fill: vi.fn(),
+        fillRect: vi.fn(),
+        fillStyle: "#000000",
+        fillText,
+        font: "",
+        lineCap: "round",
+        lineJoin: "round",
+        lineTo: vi.fn(),
+        lineWidth: 1,
+        measureText: vi.fn((s: string) => ({ width: s.length * 6 })),
+        moveTo: vi.fn(),
+        rect: vi.fn(),
+        restore: vi.fn(),
+        save: vi.fn(),
+        setLineDash: vi.fn(),
+        setTransform: vi.fn(),
+        stroke: vi.fn(),
+        strokeRect: vi.fn(),
+        strokeStyle: "#000000",
+        textAlign: "start",
+        textBaseline: "alphabetic",
+      };
+      Object.defineProperty(overlay, "getContext", { configurable: true, value: () => overlayCtx });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "main-thread" });
+      renderer.attachTextOverlayCanvas(overlay);
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer.setCamera(0, 0, 1);
+      renderer["paintTextOverlays"]();
+      expect(fillText).toHaveBeenCalled();
+      fillText.mockClear();
+      renderer.setSelectionIdsSilent(["n"]);
+      renderer["paintTextOverlays"]();
+      expect(fillText).toHaveBeenCalled();
       renderer.dispose();
     });
 
@@ -5611,6 +5671,57 @@ if (puzzle2dVitest) {
       renderer["paintTextOverlays"]();
       expect(fillText).not.toHaveBeenCalled();
       renderer["wheelZoomGestureActive"] = false;
+      renderer["paintTextOverlays"]();
+      expect(fillText).toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("paintTextOverlays repaints selection chrome during wheel zoom", () => {
+      const { canvas } = createMockCanvas();
+      const overlay = document.createElement("canvas");
+      const fillText = vi.fn();
+      const overlayCtx: Puzzle2dCanvasContext = {
+        arc: vi.fn(),
+        beginPath: vi.fn(),
+        bezierCurveTo: vi.fn(),
+        clearRect: vi.fn(),
+        clip: vi.fn(),
+        closePath: vi.fn(),
+        fill: vi.fn(),
+        fillRect: vi.fn(),
+        fillStyle: "#000000",
+        fillText,
+        font: "",
+        lineCap: "round",
+        lineJoin: "round",
+        lineTo: vi.fn(),
+        lineWidth: 1,
+        measureText: vi.fn((s: string) => ({ width: s.length * 6 })),
+        moveTo: vi.fn(),
+        rect: vi.fn(),
+        restore: vi.fn(),
+        save: vi.fn(),
+        setLineDash: vi.fn(),
+        setTransform: vi.fn(),
+        stroke: vi.fn(),
+        strokeRect: vi.fn(),
+        strokeStyle: "#000000",
+        textAlign: "start",
+        textBaseline: "alphabetic",
+      };
+      Object.defineProperty(overlay, "getContext", { configurable: true, value: () => overlayCtx });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "main-thread" });
+      renderer.attachTextOverlayCanvas(overlay);
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer.setCamera(0, 0, 1);
+      renderer["paintTextOverlays"]();
+      fillText.mockClear();
+      renderer["wheelZoomGestureActive"] = true;
+      renderer.setCamera(120, 0, 2);
+      renderer["paintTextOverlays"]();
+      expect(fillText).not.toHaveBeenCalled();
+      renderer.setSelectionIdsSilent(["n"]);
       renderer["paintTextOverlays"]();
       expect(fillText).toHaveBeenCalled();
       renderer.dispose();
@@ -6027,6 +6138,32 @@ if (puzzle2dVitest) {
       expect(renderer.selection.getSnapshot().ids).toEqual([]);
       expect(node.selected).toBe(false);
       expect(node.highlighted).toBe(false);
+      renderer.dispose();
+    });
+
+    it("background deselect keeps warm descriptor cache without full scene resync", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+      renderer.scene.add(node);
+      renderer.render();
+      const descriptorEpochBefore = renderer["sceneDescriptorEpoch"];
+      const descriptorJsonBefore = renderer["lastPushedDescriptorJson"];
+
+      const onNode = renderer.worldToScreen({ x: 0, y: 0 });
+      canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: onNode.x, clientY: onNode.y }));
+      canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: onNode.x, clientY: onNode.y }));
+      expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
+
+      puzzle2dResetDebugPerfCounters();
+      const background = renderer.worldToScreen({ x: 900, y: 900 });
+      canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
+      canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
+
+      expect(renderer.selection.getSnapshot().ids).toEqual([]);
+      expect(renderer["sceneDescriptorEpoch"]).toBe(descriptorEpochBefore);
+      expect(renderer["lastPushedDescriptorJson"]).toBe(descriptorJsonBefore);
+      expect(renderer["lastPushedSceneDescriptorEpoch"]).toBe(descriptorEpochBefore);
       renderer.dispose();
     });
 

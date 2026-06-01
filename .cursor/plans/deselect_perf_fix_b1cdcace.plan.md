@@ -4,16 +4,16 @@ overview: Make selection/deselection in puzzle 2d play instant by decoupling sel
 todos:
   - id: tree-selection-store
     content: "ui/react: add TreeSelectionStore/Context, remove selectedIds from treeDataRenderingValue, per-row useSyncExternalStore in TreeDataItemView, update handlers to read store ref"
-    status: pending
+    status: completed
   - id: wasm-selection-overlay
     content: "puzzle/2d/rs: build world_content_cache without selection styling, add selection/preselect overlay pass, remove bump_content_scene_generation from selection setters"
-    status: pending
+    status: completed
   - id: framework-canvas-context
     content: "framework playground: split stable applyCanvasSelection context so the 3 pane canvases don't re-render on selection changes"
-    status: pending
+    status: completed
   - id: validate-deselect
     content: Extend existing vitest files, add [DEBUG] counters, run package tests, runtime-verify instant deselect on Nakagin; track under repo ticket
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

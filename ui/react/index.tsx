@@ -7524,12 +7524,72 @@ interface TreeRootProps {
   indentMultiplier?: number;
 }
 
+/** @emoji ✅ Per-tree selection store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
+interface TreeSelectionStore {
+  subscribe: (listener: () => void) => () => void;
+  getSelectedIds: () => readonly string[];
+  isSelected: (itemId: string) => boolean;
+  setSelectedIds: (selectedIds: readonly string[]) => void;
+}
+
+function createTreeSelectionStore(): TreeSelectionStore {
+  let selectedIds: readonly string[] = [];
+  let selectedIdSet = new Set<string>();
+  const listeners = new Set<() => void>();
+  const notify = (): void => {
+    for (const listener of listeners) {
+      listener();
+    }
+  };
+  return {
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSelectedIds() {
+      return selectedIds;
+    },
+    isSelected(itemId) {
+      return selectedIdSet.has(itemId);
+    },
+    setSelectedIds(nextIds) {
+      if (nextIds.length === selectedIds.length && nextIds.every((id, index) => id === selectedIds[index])) {
+        return;
+      }
+      selectedIds = nextIds;
+      selectedIdSet = new Set(nextIds);
+      notify();
+    },
+  };
+}
+
+const TreeSelectionContext = reactHostPort.createContext<TreeSelectionStore | null>(null);
+
+function useTreeSelectionStore(): TreeSelectionStore {
+  const value = reactHostPort.useContext(TreeSelectionContext);
+  if (!value) {
+    throw new Error("Tree selection hooks must render inside Tree");
+  }
+  return value;
+}
+
+function useTreeItemRowSelected(itemId: string, itemSelectedOverride: boolean | undefined): boolean {
+  const selectionStore = useTreeSelectionStore();
+  const subscribedSelected = reactHostPort.useSyncExternalStore(
+    selectionStore.subscribe,
+    () => selectionStore.isSelected(itemId),
+    () => selectionStore.isSelected(itemId),
+  );
+  return itemSelectedOverride ?? subscribedSelected;
+}
+
 /** @emoji 🌲 Stable context for hoisted Tree data rows (avoids remounting rows when Tree re-renders). */
 interface TreeDataRenderingContextValue {
   readonly sectionItemsById: Record<string, TreeDataItem[]>;
   readonly itemItemsById: Record<string, TreeDataItem[]>;
   readonly loadingById: Record<string, boolean>;
-  readonly selectedIds: readonly string[];
   readonly dragAndDropController?: TreeDragAndDropController;
   readonly loadSectionItems: (section: TreeDataSection) => Promise<void>;
   readonly loadItemItems: (item: TreeDataItem) => Promise<void>;
@@ -8705,7 +8765,6 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
   const {
     itemItemsById,
     loadingById,
-    selectedIds,
     dragAndDropController,
     loadItemItems,
     handleSelectItem,
@@ -8716,6 +8775,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
     handleDropOnItem,
     buildPalettePointerProps,
   } = useTreeDataRendering();
+  const isRowSelected = useTreeItemRowSelected(item.id, item.isSelected);
   const baseChildItems = getTreeItemItems(item, itemItemsById);
   const alternatives = item.alternatives ?? [];
   const branchCount = alternatives.length;
@@ -8743,7 +8803,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       label={getTreeItemLabel(item)}
       icon={item.icon}
       className={cn(item.className, palettePointerClassName)}
-      isSelected={item.isSelected ?? selectedIds.includes(item.id)}
+      isSelected={isRowSelected}
       isHighlighted={item.isHighlighted}
       isDragHandle={item.isDragHandle}
       defaultOpen={getTreeItemDefaultOpen(item)}
@@ -8875,6 +8935,13 @@ export const Tree = (({
   reactHostPort.useEffect(() => () => clearPalettePointerWindowListeners(), [clearPalettePointerWindowListeners]);
   const anchorIdRef = reactHostPort.useRef<string | undefined>(normalizeTreeSelectedIds(defaultSelectedIds, selectionMode)[0]);
   const resolvedSelectedIds = reactHostPort.useMemo(() => normalizeTreeSelectedIds(controlledSelectedIds ?? uncontrolledSelectedIds, selectionMode), [controlledSelectedIds, uncontrolledSelectedIds, selectionMode]);
+  const [selectionStore] = reactHostPort.useState(createTreeSelectionStore);
+  const selectionStoreRef = reactHostPort.useRef(selectionStore);
+  selectionStoreRef.current = selectionStore;
+
+  reactHostPort.useEffect(() => {
+    selectionStore.setSelectedIds(resolvedSelectedIds);
+  }, [resolvedSelectedIds, selectionStore]);
 
   reactHostPort.useEffect(() => {
     setSectionItemsById(() => {
@@ -8953,10 +9020,11 @@ export const Tree = (({
         suppressPaletteClickRef.current = false;
         return;
       }
+      const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
       const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
       const nextSelection = getTreeNextSelectionState({
         selectionMode,
-        selectedIds: resolvedSelectedIds,
+        selectedIds: currentSelectedIds,
         orderedIds,
         targetId: item.id,
         anchorId: anchorIdRef.current,
@@ -8967,20 +9035,21 @@ export const Tree = (({
       updateSelection(nextSelection.selectedIds);
       item.onClick?.(event, { path, selectedIds: nextSelection.selectedIds, sectionId: section.id });
     },
-    [itemItemsById, resolvedSections, resolvedSelectedIds, sectionItemsById, selectionMode, updateSelection],
+    [itemItemsById, resolvedSections, sectionItemsById, selectionMode, updateSelection],
   );
 
   const handleDoubleClickItem = reactHostPort.useCallback(
     (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
-      item.onDoubleClick?.(event, { path, selectedIds: resolvedSelectedIds, sectionId: section.id });
+      item.onDoubleClick?.(event, { path, selectedIds: selectionStoreRef.current.getSelectedIds(), sectionId: section.id });
     },
-    [resolvedSelectedIds],
+    [],
   );
 
   const handleDragStart = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
       event.stopPropagation();
-      const nextDraggedIds = resolvedSelectedIds.includes(item.id) ? resolvedSelectedIds : [item.id];
+      const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
+      const nextDraggedIds = currentSelectedIds.includes(item.id) ? currentSelectedIds : [item.id];
       const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
       setDraggedIds(nextDraggedIds);
       event.dataTransfer.effectAllowed = "move";
@@ -9002,7 +9071,7 @@ export const Tree = (({
       }
       dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
     },
-    [dragAndDropController, itemMap, resolvedSelectedIds],
+    [dragAndDropController, itemMap],
   );
 
   const handleDragEnd = reactHostPort.useCallback(
@@ -9137,7 +9206,6 @@ export const Tree = (({
       sectionItemsById,
       itemItemsById,
       loadingById,
-      selectedIds: resolvedSelectedIds,
       dragAndDropController,
       loadSectionItems,
       loadItemItems,
@@ -9164,7 +9232,6 @@ export const Tree = (({
       loadItemItems,
       loadSectionItems,
       loadingById,
-      resolvedSelectedIds,
       sectionItemsById,
     ],
   );
@@ -9188,13 +9255,15 @@ export const Tree = (({
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
         <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
-          <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
-            {resolvedSections.map((section, index) => (
-              <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
-                <TreeDataSectionView section={section} />
-              </div>
-            ))}
-          </TreeDataRenderingContext.Provider>
+          <TreeSelectionContext.Provider value={selectionStore}>
+            <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
+              {resolvedSections.map((section, index) => (
+                <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
+                  <TreeDataSectionView section={section} />
+                </div>
+              ))}
+            </TreeDataRenderingContext.Provider>
+          </TreeSelectionContext.Provider>
           {resolvedSections.length === 0 && emptyState}
         </div>
       </TreeContext.Provider>
@@ -16026,6 +16095,23 @@ if (treeVitest) {
       expect(resolveHotkeyValue("ctrl+p")).toBe("ctrl+p");
       expect(resolveHotkeyValue({ hotkey: "ctrl+f" })).toBe("ctrl+f");
       expect(resolveHotkeyValue({ label: "Search" })).toBeUndefined();
+    });
+
+    it("tree selection store notifies subscribers only when selection changes", () => {
+      const store = createTreeSelectionStore();
+      let calls = 0;
+      const unsub = store.subscribe(() => {
+        calls++;
+      });
+      store.setSelectedIds(["a"]);
+      expect(calls).toBe(1);
+      expect(store.isSelected("a")).toBe(true);
+      store.setSelectedIds(["a"]);
+      expect(calls).toBe(1);
+      store.setSelectedIds([]);
+      expect(calls).toBe(2);
+      expect(store.isSelected("a")).toBe(false);
+      unsub();
     });
 
     it("computes additive and range multi selection", () => {

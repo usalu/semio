@@ -2083,6 +2083,13 @@ const Puzzle2dPlayShellContext = reactHostPort.createContext<Puzzle2dPlayShellVa
 
 const Puzzle2dPlaySelectionContext = reactHostPort.createContext<Puzzle2dPlaySelectionValue | null>(null);
 
+/** @emoji ✅ Stable canvas selection actions so pane canvases skip re-render on selection-only updates. */
+interface Puzzle2dPlayCanvasSelectionActions {
+  applyCanvasSelection: (ids: readonly string[]) => void;
+}
+
+const Puzzle2dPlayCanvasSelectionContext = reactHostPort.createContext<Puzzle2dPlayCanvasSelectionActions | null>(null);
+
 const Puzzle2dPlayCamerasContext = reactHostPort.createContext<Puzzle2dPlayCamerasValue | null>(null);
 
 const Puzzle2dPlayLodRuntimeContext = reactHostPort.createContext<((pane: Puzzle2dPlayPaneId, lod: Puzzle2dDrawLodKind) => void) | null>(null);
@@ -2099,6 +2106,14 @@ function usePuzzle2dPlaySelection(): Puzzle2dPlaySelectionValue {
   const value = reactHostPort.useContext(Puzzle2dPlaySelectionContext);
   if (!value) {
     throw new Error("usePuzzle2dPlaySelection must be used inside Puzzle2dPlaySelectionContext.");
+  }
+  return value;
+}
+
+function usePuzzle2dPlayCanvasSelection(): Puzzle2dPlayCanvasSelectionActions {
+  const value = reactHostPort.useContext(Puzzle2dPlayCanvasSelectionContext);
+  if (!value) {
+    throw new Error("usePuzzle2dPlayCanvasSelection must be used inside Puzzle2dPlayCanvasSelectionContext.");
   }
   return value;
 }
@@ -2373,7 +2388,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   const lodProps = puzzle2dPlayLodCanvasProps(puzzle2dLodModeByPane[paneId]);
   const reportEffectiveLod = reactHostPort.useContext(Puzzle2dPlayLodRuntimeContext);
   const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
-  const { applyCanvasSelection } = usePuzzle2dPlaySelection();
+  const { applyCanvasSelection } = usePuzzle2dPlayCanvasSelection();
   const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => applyCanvasSelection(snapshot.ids), [applyCanvasSelection]);
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
@@ -3909,6 +3924,13 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     [applyCanvasSelection, selectionIds, setSelectionIds, preselection, setPreselection],
   );
 
+  const canvasSelectionValue = reactHostPort.useMemo(
+    (): Puzzle2dPlayCanvasSelectionActions => ({
+      applyCanvasSelection,
+    }),
+    [applyCanvasSelection],
+  );
+
   const camerasValue = reactHostPort.useMemo(
     (): Puzzle2dPlayCamerasValue => ({
       camerasByPane,
@@ -4049,11 +4071,13 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   return (
     <Puzzle2dPlayShellContext.Provider value={shellValue}>
       <Puzzle2dPlaySelectionContext.Provider value={selectionValue}>
-        <Puzzle2dPlayCamerasContext.Provider value={camerasValue}>
-          <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
-            <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
-          </Puzzle2dPlayLodRuntimeContext.Provider>
-        </Puzzle2dPlayCamerasContext.Provider>
+        <Puzzle2dPlayCanvasSelectionContext.Provider value={canvasSelectionValue}>
+          <Puzzle2dPlayCamerasContext.Provider value={camerasValue}>
+            <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
+              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
+            </Puzzle2dPlayLodRuntimeContext.Provider>
+          </Puzzle2dPlayCamerasContext.Provider>
+        </Puzzle2dPlayCanvasSelectionContext.Provider>
       </Puzzle2dPlaySelectionContext.Provider>
     </Puzzle2dPlayShellContext.Provider>
   );

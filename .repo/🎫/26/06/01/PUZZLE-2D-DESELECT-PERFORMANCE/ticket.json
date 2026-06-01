@@ -1,13 +1,14 @@
 {
-  "title": "Puzzle3d Selection Perf",
+  "title": "Puzzle 2d Deselect Performance",
   "emoji": "⚡",
-  "status": "closed",
+  "status": "open",
   "description": "Puzzle 3D Selection Performance Refactor",
   "summary": "Fixed Ctrl+A ~2s 3D freeze root cause: Tree defined DataItemView/DataSectionView inside render body, remounting ~700 hierarchy rows on every selection emit. Hoisted TreeDataItemView and TreeDataSectionView to module scope with TreeDataRenderingContext (handlers, maps, drag controller). 90 ui/react, 154 puzzle/3d/react, 26 play tests pass.",
   "goal": "🎯semio",
   "sessions": [
     "⚪e62a8f60381942afa82985be8e252a49",
     "⚪2ea609acdab8448d872b5f19bfc4732c",
-    "⚪f279206acff741df930e7c392f49eb0c"
+    "⚪f279206acff741df930e7c392f49eb0c",
+    "⚪55be60c1530d499a82349f31f01af2e9"
   ]
 }
