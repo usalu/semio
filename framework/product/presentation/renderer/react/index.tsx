@@ -5035,12 +5035,12 @@ if (import.meta.vitest) {
 			expect(tile.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
 			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
 			expect(tile.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
-			const tileFrame = tile.querySelector(".presentation-figure-tile-frame") as HTMLElement;
-			expect(tileFrame).toBeTruthy();
-			expect(getComputedStyle(tileFrame).width).toBe("100%");
-			expect(getComputedStyle(tileFrame).height).toBe("100%");
-			expect(tile.style.inset).toBe("0px");
+			expect(tile.style.position).toBe("absolute");
+			expect(tile.style.inset).toBe("0");
 			expect(canvas.contains(tile)).toBe(true);
+			expect(globalsCssSource).toMatch(
+				/\.presentation-interactive-disposition--fullscreen:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-tile-frame[\s\S]*width\s*:\s*100%\s*!important/s,
+			);
 			act(() => {
 				fullscreen.click();
 			});

@@ -1,8 +1,9 @@
 {
   "title": "Projektetage Tile Fullscreen",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Fix split tile fullscreen on projektetage catalogue slides: pressing fullscreen on a tile does not expand it to slide fullscreen.",
+  "summary": "Split catalogue tiles entered slide fullscreen on the wrapper but the inner figure tile frame kept its grid-relative inline size. Added fullscreen CSS (same stretch rules as canvas-framed) and excluded fullscreen from pinned state. Regression test for split-tile fullscreen toggle.",
   "goal": "🎯presentation",
   "sessions": [
     "⚪99b8fa53b0c0467ebe096529b2031eda"

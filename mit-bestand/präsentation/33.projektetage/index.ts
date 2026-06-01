@@ -106,6 +106,18 @@ if (import.meta.vitest) {
 			expect(col1?.position).toBeUndefined();
 		});
 
+		it("assigns one auto-animate run across catalogue, focus, and labels", () => {
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
+			expect(media).toBeDefined();
+			const expanded = expandThoughtSlides(media!);
+			const morphIds = expanded
+				.filter((slide) => ["catalogue", "catalogue-focus", "catalogue-labels"].includes(slide.id))
+				.map((slide) => slide.autoAnimateId);
+			expect(morphIds).toHaveLength(3);
+			expect(new Set(morphIds).size).toBe(1);
+			expect(morphIds[0]).toBeTruthy();
+		});
+
 		it("morphs each column participant into inline label dispositions on one row", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			expect(media).toBeDefined();
