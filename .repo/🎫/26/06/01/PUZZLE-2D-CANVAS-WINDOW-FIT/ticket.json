@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 2d Canvas Window Fit",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix puzzle2d canvas not filling the window (left gap from stack body padding) and remove duplicate blue focus border on the canvas since the window chrome already shows active state.",
+  "goal": "🎯framework",
+  "sessions": [
+    "⚪b1d4fc133a8541189e9f2314e4d96976"
+  ]
+}

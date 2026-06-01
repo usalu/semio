@@ -975,9 +975,7 @@ const ArrangementSection: FC<{
 }> = ({ thought, arrangement, transition }) => {
 	const resolved = resolveArrangement(thought, arrangement.id);
 	const morph = arrangementUsesMorph(transition);
-	const positioned = resolved.some(
-		(d) => d.position !== undefined || d.split !== undefined || d.embodiment.kind === "text",
-	);
+	const positioned = resolved.some((d) => d.position !== undefined || d.split !== undefined);
 	const placements = resolved.map((disposition, index) => (
 		<MorphDispositionView
 			key={`${arrangement.id}-${disposition.morphId}-${disposition.embodimentId ?? index}`}
@@ -1194,6 +1192,23 @@ if (import.meta.vitest) {
 			expect(container.querySelector('[data-id="goal"]')).toBeTruthy();
 			expect(container.querySelector('[data-id^="authors--"]')).toBeTruthy();
 			expect(container.querySelector('[data-id^="institutions--"]')).toBeTruthy();
+		});
+
+		it("centers intro flow slides without a positioned arrangement canvas", () => {
+			const deck = intro({
+				title: { full: ["A", "B", "C"], short: "Short" },
+				description: { full: ["D1", "D2"], short: "D short" },
+				goal: ["G1"],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: testAffiliationSteps,
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			for (const slide of container.querySelectorAll('.slides > section > section[data-auto-animate-id="intro"]')) {
+				expect(slide.classList.contains("presentation-arrangement--positioned")).toBe(false);
+				expect(slide.querySelector(".presentation-arrangement-canvas")).toBeNull();
+			}
 		});
 
 		it("applies muted opacity on layered description slide", () => {

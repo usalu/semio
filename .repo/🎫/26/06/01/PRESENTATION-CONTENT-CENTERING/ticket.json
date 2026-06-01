@@ -1,0 +1,10 @@
+{
+  "title": "Presentation Content Centering",
+  "emoji": "📽",
+  "status": "open",
+  "description": "All presentation content must be centered horizontally and vertically. Projektetage intro currently starts at the top because text dispositions incorrectly use the positioned canvas layout.",
+  "goal": "🎯framework🎯presentation",
+  "sessions": [
+    "⚪b812016df39e415ba16af84411819f7c"
+  ]
+}

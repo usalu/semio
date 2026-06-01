@@ -4773,6 +4773,7 @@ export class Puzzle2dRenderer {
     }
     this.canvas.tabIndex = 0;
     this.canvas.style.touchAction = "none";
+    this.canvas.style.outline = "none";
     const bindings = new Puzzle2dEventBindingController();
     bindings.listen(this.canvas, "contextmenu", this.handleContextMenu as EventListener);
     bindings.listen(this.canvas, "pointerdown", this.handlePointerDown as EventListener);
@@ -9257,7 +9258,7 @@ export function Puzzle2dCanvas({
   return (
     <Puzzle2dContext.Provider value={contextRenderer}>
       <div
-        className={["flex min-h-0 min-w-0 flex-1 flex-col", className, fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : ""].filter(Boolean).join(" ") || undefined}
+        className={["relative box-border min-h-0 min-w-0 size-full", className, fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : ""].filter(Boolean).join(" ") || undefined}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -9265,7 +9266,7 @@ export function Puzzle2dCanvas({
         ref={containerRef}
         style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
       >
-        <canvas className="min-h-0 min-w-0 flex-1 touch-none" data-testid="puzzle2d-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
+        <canvas className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" data-testid="puzzle2d-canvas" ref={canvasRef} />
         {renderMode === "headless-test" ? null : <canvas aria-hidden className="pointer-events-none absolute inset-0 min-h-0 min-w-0" data-testid="puzzle2d-text-overlay" ref={textOverlayCanvasRef} />}
         {contextRenderer ? (
           <>
@@ -10006,6 +10007,9 @@ if (puzzle2dReactVitest) {
       expect(readyRenderer).not.toBeNull();
       const createdRenderer = requireRenderer(readyRenderer);
       expect(createdRenderer.scene.getObjectById("edge-1")).toBeInstanceOf(Puzzle2dSceneEdge);
+      const canvasEl = container.querySelector<HTMLCanvasElement>('[data-testid="puzzle2d-canvas"]');
+      expect(canvasEl?.className).toContain("outline-none");
+      expect(canvasEl?.style.outline).toBe("none");
 
       await act(async () => {
         root.render(
