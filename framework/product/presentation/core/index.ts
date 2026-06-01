@@ -573,6 +573,73 @@ export function countArrangements(presentation: Presentation): number {
 		0,
 	);
 }
+
+/** @emoji 🔗 One reveal.js slide location with its arrangement id (bookmark `?name=` uses {@link arrangementId}). */
+export interface PresentationSlideRef {
+	readonly h: number;
+	readonly v: number;
+	readonly sequenceId: string;
+	readonly thoughtId: string;
+	readonly arrangementId: string;
+}
+
+/** @emoji 🔗 Lists every slide in reveal.js h/v order (one horizontal stack per sequence). */
+export function collectPresentationSlides(presentation: Presentation): readonly PresentationSlideRef[] {
+	const slides: PresentationSlideRef[] = [];
+	for (const [h, sequence] of presentation.sequences.entries()) {
+		let v = 0;
+		for (const thought of sequence.thoughts) {
+			for (const arrangement of thought.arrangements) {
+				slides.push({
+					h,
+					v,
+					sequenceId: sequence.id,
+					thoughtId: thought.id,
+					arrangementId: arrangement.id,
+				});
+				v += 1;
+			}
+		}
+	}
+	return slides;
+}
+
+/** @emoji 🔗 Resolves the slide at reveal.js indices within a deck. */
+export function presentationSlideAt(
+	presentation: Presentation,
+	indices: { readonly h: number; readonly v: number },
+): PresentationSlideRef | undefined {
+	return collectPresentationSlides(presentation).find(
+		(slide) => slide.h === indices.h && slide.v === indices.v,
+	);
+}
+
+/** @emoji 🔗 Formats reveal.js hash path (`/` = first slide, `/2/1` = h=2 v=1). */
+export function formatPresentationSlideHash(indices: { readonly h: number; readonly v: number }): string {
+	if (indices.h <= 0 && indices.v <= 0) {
+		return "/";
+	}
+	let hash = `/${indices.h}`;
+	if (indices.v > 0) {
+		hash += `/${indices.v}`;
+	}
+	return hash;
+}
+
+/** @emoji 🔗 Parses reveal.js slide hash into zero-based h/v indices; ignores query params like `?name=`. */
+export function parsePresentationSlideHash(hash: string): { readonly h: number; readonly v: number } | null {
+	const cleaned = hash.replace(/^#\/?/, "").trim();
+	if (!cleaned) {
+		return { h: 0, v: 0 };
+	}
+	const bits = cleaned.split("/");
+	const h = Number.parseInt(bits[0] ?? "0", 10);
+	const v = Number.parseInt(bits[1] ?? "0", 10);
+	if (!Number.isFinite(h) || !Number.isFinite(v) || Number.isNaN(h) || Number.isNaN(v)) {
+		return null;
+	}
+	return { h, v };
+}
 //#endregion 🔖Resolve
 
 //#region 🔖Intro
@@ -1372,6 +1439,50 @@ if (import.meta.vitest) {
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
 			const resolved = resolveArrangement(thought, "goal");
 			expect(resolved.map((r) => r.morphId)).toEqual(["title", "description", "goal"]);
+		});
+	});
+
+	describe("collectPresentationSlides", () => {
+		it("orders slides by sequence h then arrangement v", () => {
+			const deck: Presentation = {
+				id: "multi",
+				name: "Multi",
+				sequences: [
+					{
+						id: "seq-a",
+						thoughts: [
+							{
+								id: "thought-a",
+								arrangements: [{ id: "a1", dispositions: [] }, { id: "a2", dispositions: [] }],
+							},
+						],
+					},
+					{
+						id: "seq-b",
+						thoughts: [
+							{
+								id: "thought-b",
+								arrangements: [{ id: "b1", dispositions: [] }],
+							},
+						],
+					},
+				],
+			};
+			expect(collectPresentationSlides(deck)).toEqual([
+				{ h: 0, v: 0, sequenceId: "seq-a", thoughtId: "thought-a", arrangementId: "a1" },
+				{ h: 0, v: 1, sequenceId: "seq-a", thoughtId: "thought-a", arrangementId: "a2" },
+				{ h: 1, v: 0, sequenceId: "seq-b", thoughtId: "thought-b", arrangementId: "b1" },
+			]);
+			expect(presentationSlideAt(deck, { h: 1, v: 0 })?.arrangementId).toBe("b1");
+		});
+	});
+
+	describe("parsePresentationSlideHash", () => {
+		it("round-trips reveal.js hash paths", () => {
+			expect(parsePresentationSlideHash("#/")).toEqual({ h: 0, v: 0 });
+			expect(parsePresentationSlideHash("#/2/3")).toEqual({ h: 2, v: 3 });
+			expect(formatPresentationSlideHash({ h: 0, v: 0 })).toBe("/");
+			expect(formatPresentationSlideHash({ h: 2, v: 3 })).toBe("/2/3");
 		});
 	});
 

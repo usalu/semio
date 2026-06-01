@@ -317,7 +317,6 @@ function mount(): void {
 	}
 	mountPresentation(el, deck, {
 		transition: "fade",
-		hash: false,
 		slideNumber: false,
 		surfaceChrome: { theme: "dark", device: "desktop", expertise: Expertise.NORMAL },
 	});

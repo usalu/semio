@@ -56,7 +56,11 @@ import {
 	abbreviateAuthorFirstName,
 	affiliationLineName,
 	analogy,
+	collectPresentationSlides,
+	formatPresentationSlideHash,
 	intro,
+	parsePresentationSlideHash,
+	presentationSlideAt,
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
@@ -101,8 +105,12 @@ export {
 	analogy,
 	columnMorphId,
 	countArrangements,
+	collectPresentationSlides,
+	formatPresentationSlideHash,
 	intro,
 	morphId,
+	parsePresentationSlideHash,
+	presentationSlideAt,
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
@@ -111,7 +119,7 @@ export {
 	splitFigureGrid,
 	tileMorphId,
 } from "@framework/presentation/core";
-export type { TextMorphRoot } from "@framework/presentation/core";
+export type { PresentationSlideRef, TextMorphRoot } from "@framework/presentation/core";
 export { Expertise } from "@ui/react";
 
 //#region 🔖MountOptions
@@ -119,10 +127,40 @@ export { Expertise } from "@ui/react";
 export interface PresentationMountOptions {
 	readonly surfaceChrome?: ElementsSurfaceChromeInput | false;
 	readonly transition?: "fade" | "slide" | "convex" | "concave" | "zoom" | "none";
+	/** @emoji 🔗 Sync slide position to the URL hash; defaults to true. */
 	readonly hash?: boolean;
 	readonly slideNumber?: boolean;
 	readonly width?: number;
 	readonly height?: number;
+}
+
+/** @emoji 🔖 Query param carrying the current slide name for bookmarking only (navigation uses the hash). */
+export const PRESENTATION_SLIDE_NAME_QUERY_PARAM = "name";
+
+/** @emoji 🔗 Writes `?name=<arrangementId>` plus reveal.js hash for the active slide; ignores existing `name` when reading. */
+export function syncPresentationSlideUrl(
+	presentation: Presentation,
+	indices: { readonly h: number; readonly v: number },
+): void {
+	if (typeof window === "undefined" || import.meta.vitest) {
+		return;
+	}
+	const slide = presentationSlideAt(presentation, indices);
+	if (!slide) {
+		return;
+	}
+	const url = new URL(window.location.href);
+	url.searchParams.set(PRESENTATION_SLIDE_NAME_QUERY_PARAM, slide.arrangementId);
+	const hashPath = formatPresentationSlideHash(indices);
+	url.hash = hashPath === "/" ? "" : `#${hashPath}`;
+	history.replaceState(null, "", url);
+}
+
+/** @emoji 🔗 Reads reveal.js slide indices from the URL hash; the `name` query param is ignored. */
+export function readPresentationSlideIndicesFromUrl(
+	hash: string = typeof window !== "undefined" ? window.location.hash : "",
+): { readonly h: number; readonly v: number } | null {
+	return parsePresentationSlideHash(hash);
 }
 //#endregion 🔖MountOptions
 
@@ -1009,13 +1047,14 @@ export const PresentationDeck: FC<{
 		if (!deckEl || deckRef.current) {
 			return;
 		}
+		const slideUrlEnabled = options?.hash !== false;
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
 			autoAnimateUnmatched: true,
 			center: true,
 		};
-		if (options?.hash === true) {
+		if (slideUrlEnabled) {
 			revealOptions.hash = true;
 		}
 		if (options?.slideNumber === true) {
@@ -1030,6 +1069,12 @@ export const PresentationDeck: FC<{
 		relaxHiddenPreflight();
 		const deck = new Reveal(deckEl, revealOptions);
 		deckRef.current = deck;
+		const syncSlideUrl = (): void => {
+			if (!slideUrlEnabled) {
+				return;
+			}
+			syncPresentationSlideUrl(presentation, deck.getIndices());
+		};
 		const tryPlayVideo = (video: HTMLVideoElement): void => {
 			try {
 				const playResult = video.play();
@@ -1062,18 +1107,53 @@ export const PresentationDeck: FC<{
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
 			syncPresentSlideMedia();
+			syncSlideUrl();
 			setSlideEpoch((epoch) => epoch + 1);
+		};
+		const onWindowHashChange = (): void => {
+			if (!slideUrlEnabled) {
+				return;
+			}
+			const indices = readPresentationSlideIndicesFromUrl();
+			if (!indices) {
+				return;
+			}
+			const current = deck.getIndices();
+			if (current.h !== indices.h || current.v !== indices.v) {
+				void deck.slide(indices.h, indices.v);
+			}
 		};
 		void deck.initialize().then(() => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
 			syncPresentSlideMedia();
-			setSlideEpoch((epoch) => epoch + 1);
+			if (slideUrlEnabled) {
+				const indices = readPresentationSlideIndicesFromUrl();
+				if (indices) {
+					const current = deck.getIndices();
+					if (current.h !== indices.h || current.v !== indices.v) {
+						void deck.slide(indices.h, indices.v).then(() => {
+							syncSlideUrl();
+							setSlideEpoch((epoch) => epoch + 1);
+						});
+					} else {
+						syncSlideUrl();
+						setSlideEpoch((epoch) => epoch + 1);
+					}
+				} else {
+					syncSlideUrl();
+					setSlideEpoch((epoch) => epoch + 1);
+				}
+				window.addEventListener("hashchange", onWindowHashChange);
+			} else {
+				setSlideEpoch((epoch) => epoch + 1);
+			}
 			deck.on("slidechanged", onSlideChanged);
 			deck.on("resize", onResize);
 		});
 		return () => {
+			window.removeEventListener("hashchange", onWindowHashChange);
 			deck.off("slidechanged", onSlideChanged);
 			deck.off("resize", onResize);
 			try {
@@ -1651,6 +1731,57 @@ if (import.meta.vitest) {
 			expect(hiddenRule.style.getPropertyValue("display")).toBe("");
 			expect(hiddenRule.style.getPropertyValue("color")).toBe("red");
 			style.remove();
+		});
+
+		it("syncs slide hash and name query param without using name for navigation", () => {
+			const deck = intro({
+				title: { full: ["A"], short: "Short" },
+				description: { full: ["D"], short: "D short" },
+				goal: ["G"],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: testAffiliationSteps,
+			});
+			history.replaceState(null, "", "/presentation?name=title#/0/2");
+			act(() => {
+				mountPresentation(container, deck, { hash: true, slideNumber: false, surfaceChrome: false });
+			});
+			const url = new URL(window.location.href);
+			expect(url.searchParams.get(PRESENTATION_SLIDE_NAME_QUERY_PARAM)).toBe("goal");
+			expect(url.hash).toBe("#/0/2");
+			expect(container.querySelector('.slides > section > section[title="goal"]')?.classList.contains("present")).toBe(
+				true,
+			);
+			history.replaceState(null, "", "/presentation");
+		});
+	});
+
+	describe("syncPresentationSlideUrl", () => {
+		const sampleDeck = intro({
+			title: { full: ["A"], short: "Short" },
+			description: { full: ["D"], short: "D short" },
+			goal: ["G"],
+			authors: { lines: [[{ name: "Alice" }]] },
+			affiliations: {
+				steps: [
+					[{ mark: "a", name: "Faculty" }],
+					[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
+					[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
+				],
+			},
+		});
+
+		it("writes arrangement id as name and reveal hash for indices", () => {
+			history.replaceState(null, "", "/deck");
+			syncPresentationSlideUrl(sampleDeck, { h: 0, v: 2 });
+			const url = new URL(window.location.href);
+			expect(url.searchParams.get(PRESENTATION_SLIDE_NAME_QUERY_PARAM)).toBe("goal");
+			expect(url.hash).toBe("#/0/2");
+			history.replaceState(null, "", "/deck");
+		});
+
+		it("readPresentationSlideIndicesFromUrl ignores the name query param", () => {
+			expect(readPresentationSlideIndicesFromUrl("#/1/3")).toEqual({ h: 1, v: 3 });
+			expect(readPresentationSlideIndicesFromUrl("")).toEqual({ h: 0, v: 0 });
 		});
 	});
 }

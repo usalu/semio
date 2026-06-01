@@ -4511,8 +4511,23 @@ export class Puzzle2dRenderer {
       this.textOverlayContentEpoch !== this.lastOverlayContentEpoch ||
       this.lastVelloThemeJson !== this.lastOverlayVelloThemeJson ||
       selectionChromeDirty ||
-      (!this.wheelZoomGestureActive && viewportDirty)
+      viewportDirty
     );
+  }
+
+  /** @emoji 📷 False while pan/zoom/drag defers host camera props so {@link Puzzle2dHostSubtree} does not stomp the live WASM viewport. */
+  acceptsHostCameraProp(): boolean {
+    if (this.wheelZoomGestureActive) {
+      return false;
+    }
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return true;
+    }
+    try {
+      return !this.session.defersDescriptorSyncFromJs();
+    } catch {
+      return true;
+    }
   }
 
   /** @emoji 📌 Records the overlay inputs used by the last {@link Puzzle2dRenderer.paintTextOverlays} pass. */
@@ -8559,6 +8574,9 @@ function Puzzle2dHostSubtree({
   }, [children, renderer, wasmHostSceneMergeResyncEpoch]);
 
   reactHostPort.useLayoutEffect(() => {
+    if (!renderer.acceptsHostCameraProp()) {
+      return;
+    }
     const cx = camera?.x ?? 0;
     const cy = camera?.y ?? 0;
     const cz = camera?.zoom ?? 1;
