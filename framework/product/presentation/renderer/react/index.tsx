@@ -1884,13 +1884,45 @@ function resolveEffectiveDispositionRect(
 	return registry.getRect(id);
 }
 
+const InteractiveRowBand: FC<{
+	readonly id: string;
+	readonly frame: DispositionPosition;
+	readonly tileIds: readonly string[];
+}> = ({ id, frame, tileIds }) => {
+	const interaction = usePresentationInteractionState();
+	const rowSelected = tileIds.length > 0 && tileIds.every((tileId) => interaction.isSelected(tileId));
+	const onPointerDown = (event: React.PointerEvent): void => {
+		if (event.button !== 0) {
+			return;
+		}
+		event.preventDefault();
+		event.stopPropagation();
+		interaction.selectIds(tileIds, event.shiftKey);
+	};
+	return (
+		<div
+			className={[
+				"presentation-interactive-row-band",
+				rowSelected ? "presentation-interactive-row-band--selected" : undefined,
+			]
+				.filter(Boolean)
+				.join(" ")}
+			data-row-band={id}
+			style={transformFrameStyle(frame)}
+			onPointerDown={onPointerDown}
+			aria-hidden
+		/>
+	);
+};
+
 const InteractiveDisposition: FC<{
 	readonly id: string;
 	readonly disposition: ResolvedDisposition;
 	readonly declaredRect: DispositionPosition | undefined;
 	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 	readonly sectionRef: RefObject<HTMLElement | null>;
-}> = ({ id, disposition, declaredRect, allDeclaredRects, sectionRef }) => {
+	readonly rowBandId?: string;
+}> = ({ id, disposition, declaredRect, allDeclaredRects, sectionRef, rowBandId }) => {
 	const slideEpoch = useContext(PresentationSlideEpochContext);
 	const interaction = usePresentationInteractionState();
 	const registry = useSlideDispositionRegistry();
@@ -1908,30 +1940,19 @@ const InteractiveDisposition: FC<{
 		isFlowPixelOffsetTransform(transform, measuredNatural);
 	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
 	const fullscreen = interaction.isFullscreen(id);
-	const splitLayout = Boolean(disposition.split?.tiles?.length);
-	const canvasFramed = declaredRect !== undefined && !fullscreen && !splitLayout;
-	const canvasGroupFramed = declaredRect !== undefined && !fullscreen && splitLayout;
-	const canvasPlacement = canvasFramed || canvasGroupFramed;
+	const splitTileCount = disposition.split?.tiles?.length ?? 0;
+	const splitGroupLayout = splitTileCount > 1;
+	const canvasFramed = declaredRect !== undefined && !fullscreen && !splitGroupLayout;
+	const canvasPlacement = canvasFramed;
 	const pinned =
 		(transformed && !flowLayout) ||
 		flowSectionFrame ||
-		((canvasFramed || canvasGroupFramed) && !flowPixelOffset);
+		(canvasFramed && !flowPixelOffset);
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
 	const [gesturing, setGesturing] = useState(false);
 
-	const displayDisposition = useMemo((): ResolvedDisposition => {
-		if (!splitLayout || !effectiveRect || !disposition.split) {
-			return disposition;
-		}
-		return {
-			...disposition,
-			split: {
-				...disposition.split,
-				tiles: splitTilesInGroupFrame(disposition.split.tiles, effectiveRect),
-			},
-		};
-	}, [disposition, splitLayout, effectiveRect]);
+	const displayDisposition = disposition;
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
 		const section = sectionRef.current;
@@ -2233,7 +2254,6 @@ const InteractiveDisposition: FC<{
 		flowPixelOffset ? "presentation-interactive-disposition--offset" : undefined,
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
 		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
-		canvasGroupFramed ? "presentation-interactive-disposition--split-group" : undefined,
 		gesturing ? "presentation-interactive-disposition--gesturing" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
 	]
@@ -2252,7 +2272,7 @@ const InteractiveDisposition: FC<{
 			? transform
 				? flowDispositionOffsetStyle(transform)
 				: undefined
-			: (canvasFramed || canvasGroupFramed) && effectiveRect
+			: canvasFramed && effectiveRect
 				? transformFrameStyle(effectiveRect)
 				: transformed && transform
 					? transformFrameStyle(transform)
@@ -2261,15 +2281,17 @@ const InteractiveDisposition: FC<{
 	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
 		selected,
 		effectiveRect,
-		canvasFramed: canvasFramed || canvasGroupFramed,
+		canvasFramed,
 		fullscreen,
 	});
-	const showChrome = (selected || gesturing) && effectiveRect && !fullscreen;
+	const showControls = (selected || gesturing) && Boolean(effectiveRect);
+	const showHandles = showControls && !fullscreen;
 
 	return (
 		<div
 			ref={rootRef}
 			data-disposition-id={id}
+			{...(rowBandId ? { "data-row-band": rowBandId } : {})}
 			className={wrapperClass}
 			style={wrapperStyle}
 			onPointerDown={onPointerDown}
@@ -2277,17 +2299,19 @@ const InteractiveDisposition: FC<{
 			<div ref={contentRef} className="presentation-interactive-disposition__content">
 				<MorphDispositionView disposition={displayDisposition} />
 			</div>
-			{showChrome ? (
+			{showControls ? (
 				<>
-					<div className="presentation-interactive-disposition__chrome" style={chromeStyle} aria-hidden>
-						{DISPOSITION_RESIZE_HANDLES.map((handle) => (
-							<div
-								key={handle}
-								className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
-								onPointerDown={onHandlePointerDown(handle)}
-							/>
-						))}
-					</div>
+					{showHandles ? (
+						<div className="presentation-interactive-disposition__chrome" style={chromeStyle} aria-hidden>
+							{DISPOSITION_RESIZE_HANDLES.map((handle) => (
+								<div
+									key={handle}
+									className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
+									onPointerDown={onHandlePointerDown(handle)}
+								/>
+							))}
+						</div>
+					) : null}
 					<button
 						type="button"
 						className="presentation-interaction-fullscreen"
@@ -4010,13 +4034,18 @@ if (import.meta.vitest) {
 			expect(disposition.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
 			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
 			expect(disposition.style.left).toBe("");
-			expect(disposition.querySelector(".presentation-disposition-frame")).toBeTruthy();
-			expect(fullscreen.getAttribute("aria-pressed")).toBe("true");
+			const fullscreenOn = disposition.querySelector(
+				".presentation-interaction-fullscreen",
+			) as HTMLButtonElement;
+			expect(fullscreenOn.getAttribute("aria-pressed")).toBe("true");
 			act(() => {
-				fullscreen.click();
+				fullscreenOn.click();
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(false);
-			expect(fullscreen.getAttribute("aria-pressed")).toBe("false");
+			const fullscreenOff = disposition.querySelector(
+				".presentation-interaction-fullscreen",
+			) as HTMLButtonElement;
+			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
 		});
 	});
 }

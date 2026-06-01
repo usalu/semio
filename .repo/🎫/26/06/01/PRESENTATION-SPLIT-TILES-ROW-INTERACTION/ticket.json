@@ -1,0 +1,10 @@
+{
+  "title": "Presentation Split Tiles Row Interaction",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Tiles in presentations should remain individual dispositions; arrangement must not group them. Rows should be selectable/hoverable as a whole while each tile stays independently interactive. Fix for slides like Bauteilarten with split figure grids.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪e169764b44eb48678ca5fd4631081ebe"
+  ]
+}
