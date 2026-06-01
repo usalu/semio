@@ -3294,10 +3294,18 @@ export function brushPreviewCollides(
   return false;
 }
 
-/** @emoji 🧪 Disposable posed group for brush collision probes. */
+/** @emoji 🧭 Same inner mesh frame as {@link MeshBody} / scene objects (GLB Y-up → CAD Z-up). */
+export function brushPreviewMeshFrameGroup(meshRoot: Object3D): Group {
+  const frame = new Group();
+  frame.rotation.x = GLB_MESH_FRAME_ROTATION_X;
+  frame.add(meshRoot.clone(true));
+  return frame;
+}
+
+/** @emoji 🧪 Disposable posed group for brush collision probes (matches {@link BrushPreviewGhost} graph). */
 export function brushProbeGroupFromPreview(preview: Pick<BrushPreviewState, "origin" | "orientation" | "scale">, meshRoot: Object3D): Group {
   const group = new Group();
-  group.add(meshRoot.clone(true));
+  group.add(brushPreviewMeshFrameGroup(meshRoot));
   applyObjectPose(group, preview.origin, preview.orientation, preview.scale);
   return group;
 }
@@ -6429,7 +6437,7 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   }, [props.collisionTolerance, props.excludeObjectId, props.preview, props.onCollisionChange, reg, invalidate]);
   return (
     <group ref={groupRef} raycast={() => null}>
-      <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" scale={props.preview.scale} />
+      <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" />
     </group>
   );
 });
@@ -10059,6 +10067,22 @@ if (import.meta.vitest) {
       expect(shuffled).toHaveLength(3);
       expect(new Set(shuffled.map((row) => row.objectKindId)).size).toBe(3);
       expect(shuffled[0]?.objectKindId).toBe("B");
+    });
+    it("brushPreviewMeshFrameGroup applies GLB mesh frame rotation", () => {
+      const meshRoot = new Mesh(new BoxGeometry(1, 2, 3));
+      const frame = brushPreviewMeshFrameGroup(meshRoot);
+      expect(frame.rotation.x).toBeCloseTo(GLB_MESH_FRAME_ROTATION_X, 5);
+      expect(frame.children.length).toBe(1);
+    });
+    it("brushPreviewCollides ignores penetration against excluded host when stacking", () => {
+      const host = new Group();
+      host.userData.puzzle3dObjectId = "host";
+      host.add(brushPreviewMeshFrameGroup(new Mesh(new BoxGeometry(4, 4, 10))));
+      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
+      const preview = brushProbeGroupFromPreview({ origin: [0, 0, 10], orientation: [0, 0, 0, 1], scale: 1 }, new Mesh(new BoxGeometry(4, 4, 2)));
+      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
+      expect(brushPreviewCollides(scene, preview, "host")).toBe(false);
+      expect(brushPreviewCollides(scene, preview)).toBe(false);
     });
     it("brushPreviewCollides detects penetration beyond default tolerance", () => {
       const obstacle = new Group();

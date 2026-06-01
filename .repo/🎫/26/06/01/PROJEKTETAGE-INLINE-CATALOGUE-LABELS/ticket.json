@@ -3,8 +3,10 @@
   "emoji": "🏷",
   "status": "open",
   "description": "Bauteilbeschriftungen: three text dispositions on one line (Rippenplatte Unterzug Stütze). Many-to-one tile morph per column; tiles settle and morph position before embodiment switch.",
+  "summary": "Bauteilbeschriftungen now uses three separate column text dispositions on one horizontal row (Rippenplatte, Unterzug, Stütze) via inlineColumnLabelPosition instead of a stacked heading-block participant with morphFrom ghosts.\n\nMorph order preserved: Bauteilarten keeps settleBeforeMorphTo catalogue-labels and morphParticipant splits; reveal.js pairs catalogue-col1/2/3 figure morph slots to label slots on the next slide (position morph then embodiment switch per presentation/AGENTS.md).\n\nRemoved catalogueLabelsParticipant, CATALOGUE_EMBODIMENT_STACK, and morphFrom ghosts. Deck test updated; 7/7 deck vitest, 43 core, 57 renderer pass. Verified live #/0/8→#/0/9 morph to Bauteilbeschriftungen.",
   "goal": "🎯presentation",
   "sessions": [
-    "⚪9767b61ed4b447c9942a8107d707be52"
+    "⚪9767b61ed4b447c9942a8107d707be52",
+    "⚪13918f7ca3a24a9a8c8258142bd9afaa"
   ]
 }

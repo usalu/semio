@@ -11342,6 +11342,20 @@ export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string): st
 	return `/${segments.join("/")}`;
 }
 
+/** @emoji 🧊 Maps metabolism representation GLBs to puzzle 3d `/meshes/*` URLs (see {@link puzzle3dMeshesVitePlugin}). */
+export function sketchpadPuzzle3dMeshUrlForKitFile(row: { readonly name?: string; readonly path?: string }): string | undefined {
+	const path = row.path?.replace(/^\.\//, "") ?? "";
+	if (path.includes("representations/") && path.endsWith(".glb")) {
+		const base = path.split("/").pop();
+		return base ? `/meshes/${base}` : undefined;
+	}
+	const name = row.name?.trim();
+	if (!path && name?.endsWith(".glb")) {
+		return `/meshes/${name}`;
+	}
+	return undefined;
+}
+
 /** @emoji 🗂️ Resolves kit file ids to fetchable mesh URLs (http, absolute, or metabolism assets). */
 export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 	const map = new Map<string, string>();
@@ -11356,12 +11370,13 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 			map.set(row.id, direct);
 			continue;
 		}
-		if (row.path) {
-			map.set(row.id, sketchpadFixtureUrlFromKitRelativePath(row.path));
+		const puzzleMesh = sketchpadPuzzle3dMeshUrlForKitFile(row);
+		if (puzzleMesh) {
+			map.set(row.id, puzzleMesh);
 			continue;
 		}
-		if (row.name && row.name.endsWith(".glb")) {
-			map.set(row.id, sketchpadFixtureUrlFromKitRelativePath(`../../representations/${row.name}`));
+		if (row.path) {
+			map.set(row.id, sketchpadFixtureUrlFromKitRelativePath(row.path));
 		}
 	}
 	return map;
@@ -15168,14 +15183,12 @@ if (import.meta.vitest) {
 			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:model/gltf-binary;base64,AAAA");
 		});
 
-		it("resolves metabolism representation glbs via sibling representations folder", () => {
+		it("resolves metabolism representation glbs for puzzle 3d via /meshes", () => {
 			const kit = {
 				id: "k",
 				files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "bridge.glb" }],
 			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe(
-				"/fixtures/kit/dev/metabolism/representations/bridge.glb",
-			);
+			expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/meshes/bridge.glb");
 		});
 	});
 
@@ -15591,12 +15604,12 @@ if (import.meta.vitest) {
 			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/kit/dev/metabolism/wip/initialKit/files/mesh.glb");
 		});
 
-		it("normalizes parent-relative representation paths", () => {
+		it("maps parent-relative representation paths to /meshes", () => {
 			const kit = {
 				id: "k",
 				files: [{ id: "f1", path: "../../representations/bridge.glb" }],
 			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/kit/dev/metabolism/representations/bridge.glb");
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/meshes/bridge.glb");
 		});
 	});
 
