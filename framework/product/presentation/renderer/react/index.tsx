@@ -4581,8 +4581,15 @@ if (import.meta.vitest) {
 		});
 
 		it("fires reveal auto-animate when advancing projektetage focus to labels", async () => {
-			const { collectPresentationSlides } = await import("@framework/presentation/core");
-			const { deck } = await import("@mit-bestand/praesentation/projektetage-deck");
+			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
+				await import("@framework/presentation/core");
+			type SlideFile = import("@framework/presentation/core").SlideFile;
+			const { presentationMeta } = await import("@mit-bestand/praesentation/projektetage-spec");
+			const slideModules = import.meta.glob<{ default: SlideFile }>(
+				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
+				{ eager: true },
+			);
+			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
 			const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
 			const labelRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilbeschriftungen");
 			expect(focusRef).toBeDefined();

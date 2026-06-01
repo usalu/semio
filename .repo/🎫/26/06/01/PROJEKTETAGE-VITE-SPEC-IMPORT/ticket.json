@@ -1,0 +1,11 @@
+{
+  "title": "Projektetage Vite Spec Import",
+  "emoji": "📽",
+  "status": "closed",
+  "description": "Fix Vite dev failing to resolve @mit-bestand/praesentation/projektetage-spec when loading framework presentation renderer from 33.projektetage.",
+  "summary": "Vite dev/build for 33.projektetage failed because the presentation renderer’s vitest-only dynamic imports reference `@mit-bestand/praesentation/projektetage-spec`, which was aliased in vitest.config.ts but not in the app’s vite.config.ts. Added the same resolve alias pointing at `spec.ts` in `mit-bestand/präsentation/33.projektetage/vite.config.ts`. Verified with `bun nx run @mit-bestand/praesentation/projektetage:build --skip-nx-cache` (exit 0).",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪e326c75454dc402188f5b4381414dc93"
+  ]
+}

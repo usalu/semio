@@ -4670,12 +4670,27 @@ export function interactionLengthEntryLiveDistance(ctx: Record<string, unknown>,
   return distance > 1e-9 ? distance : null;
 }
 
-/** @emoji 🔢 Locked numeric value from context when live entry already applied. */
-export function interactionNumericEntryLockedValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
+/** @emoji 🔢 Explicit length/height lock from context (`set.length` / `set.height`), not live rubber-band distance. */
+export function interactionNumericEntryExplicitLockValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
   const lengthEntry = interactionLengthEntryForState(spec, state);
   if (lengthEntry) {
     const lock = ctx[LENGTH_LOCK_CTX];
     if (typeof lock === "number" && Number.isFinite(lock) && lock > 0) return lock;
+  }
+  const scalarEntry = interactionScalarEntryForState(spec, state);
+  if (scalarEntry) {
+    const heightLock = ctx[HEIGHT_LOCK_CTX];
+    if (typeof heightLock === "number" && Number.isFinite(heightLock) && heightLock > 0) return heightLock;
+  }
+  return null;
+}
+
+/** @emoji 🔢 Locked numeric value from context when live entry already applied. */
+export function interactionNumericEntryLockedValue(spec: InteractionSpec, state: string, ctx: Record<string, unknown>): number | null {
+  const lengthEntry = interactionLengthEntryForState(spec, state);
+  if (lengthEntry) {
+    const lock = interactionNumericEntryExplicitLockValue(spec, state, ctx);
+    if (lock != null) return lock;
     const live = interactionLengthEntryLiveDistance(ctx, lengthEntry);
     if (live != null) return live;
   }
@@ -6933,6 +6948,22 @@ if (import.meta.vitest) {
       expect(rt.getSnapshot().state).toBe("next_point");
       expect(rt.getSnapshot().lastResponse?.ok).toBe(false);
       expect(rt.getSnapshot().lastResponse?.errors?.[0]?.code).toBe("interaction.emptyCommit");
+    });
+
+    it("interactionStepFinalizeEvent confirms interpolate curve with two points instead of pointer.down", () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const ctx = { points: [[0, 0, 0] as Vec3, [2, 1, 0] as Vec3], cursor: [5, 5, 0] as Vec3 };
+      expect(interactionStepFinalizeEvent(spec, "next_point", ctx, M)?.kind).toBe("confirm");
+      expect(interactionNumericEntryCommitEvent(spec, "next_point", ctx, M)?.kind).toBe("pointer.down");
+    });
+
+    it("interactionNumericEntryExplicitLockValue ignores live rubber-band distance", () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const ctx = { points: [[0, 0, 0] as Vec3], cursor: [4, 0, 0] as Vec3, __lengthLock: 2 };
+      expect(interactionNumericEntryExplicitLockValue(spec, "next_point", ctx)).toBe(2);
+      const liveOnly = { points: [[0, 0, 0] as Vec3], cursor: [4, 0, 0] as Vec3 };
+      expect(interactionNumericEntryExplicitLockValue(spec, "next_point", liveOnly)).toBeNull();
+      expect(interactionNumericEntryLockedValue(spec, "next_point", liveOnly)).toBeCloseTo(4, 5);
     });
 
     it("curve.interpolateCurve confirm with one point stays in next_point", async () => {

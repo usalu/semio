@@ -750,6 +750,17 @@ The new mesh of the suggested object must not collide with other meshes. Make su
 
 ---
 
+introduce a new tool: Brush
+
+What brush does is it flushs new objects.
+As soon as the cursor is close enough to a vortex which is not part of an attraction, it suggest a new compatible, non-colliding object and previews it.
+If the mouse cursor leaves the vortex then the suggested object is added to the puzzle 3d.
+The vortices have a direction. Make sure that the suggested object has the vortex exactly on the same point and the suggested object is rotated so that the direction of the of source vortex is the same as the opposite of the target vortex.
+While the mouse is still inside the vortex if tab is pressed then another compatible object is selected.
+If right click is pressed inside the vortex show the list of all compatible objects.
+
+---
+
 Introduce selection.
 When holding down left button then selection should be opened.
 There are two methods: Rectangle (default) and Lasso

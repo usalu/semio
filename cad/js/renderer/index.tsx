@@ -70,7 +70,7 @@ import {
   interactionInNumericEntryState,
   interactionNumericEntryApplyEvent,
   interactionNumericEntryCommitEvent,
-  interactionNumericEntryLockedValue,
+  interactionNumericEntryExplicitLockValue,
   interactionStepFinalizeEvent,
   parseNumericCommandLine,
   isFinalInteractionState,
@@ -4487,7 +4487,12 @@ export function InteractionRepl({
     const state = snap.state;
     if (!interactionInNumericEntryState(spec, state)) return false;
     const parsed = parseNumericCommandLine(replCmdLineValue());
-    const value = parsed !== null && parsed !== undefined ? parsed : interactionNumericEntryLockedValue(spec, state, snap.context);
+    const value =
+      parsed !== null && parsed !== undefined
+        ? parsed
+        : parsed === null
+          ? interactionNumericEntryExplicitLockValue(spec, state, snap.context)
+          : null;
     if (value == null) return false;
     const applyEv = interactionNumericEntryApplyEvent(spec, state, value);
     if (applyEv) await rt.send(applyEv);
@@ -4509,6 +4514,25 @@ export function InteractionRepl({
     setInteractionMenuOpen(false);
     return true;
   }, [rt, spec, setCmdLine]);
+
+  const tryConfirmOrNumericCommit = reactHostPort.useCallback(async (): Promise<boolean> => {
+    const snap = rt.getSnapshot();
+    const inNumeric = interactionInNumericEntryState(spec, snap.state);
+    const emptyCmd = !replCmdLineValue().trim();
+    if (inNumeric && emptyCmd && (await tryFinalizeInteractionStep())) return true;
+    if (inNumeric && (await tryCommitNumericEntry())) return true;
+    if (inNumeric && emptyCmd) {
+      const ev = interactionNumericEntryCommitEvent(spec, snap.state, snap.context, rt.previewKernel());
+      if (ev) {
+        await rt.send(ev);
+        setCmdLine("");
+        setInteractionMenuOpen(false);
+        return true;
+      }
+    }
+    if (emptyCmd && (await tryFinalizeInteractionStep())) return true;
+    return false;
+  }, [replCmdLineValue, rt, spec, tryCommitNumericEntry, tryFinalizeInteractionStep, setCmdLine]);
 
   const trySubmitLine = reactHostPort.useCallback((): boolean => {
     const raw = cmdLine.trim();
@@ -4563,10 +4587,7 @@ export function InteractionRepl({
       if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         if (interactionInNumericEntryState(spec, rt.getSnapshot().state)) {
-          void (async () => {
-            if (await tryCommitNumericEntry()) return;
-            await tryFinalizeInteractionStep();
-          })();
+          void tryConfirmOrNumericCommit();
           return;
         }
         const interactionIdOnSpace = replInteractionIdOnSpace(cmdLine, filtered, allSuggestions, lastFinalizedInteractionId, !interactionId);
@@ -4604,7 +4625,7 @@ export function InteractionRepl({
         setInteractionMenuOpen(false);
         if (!cmdLine.trim()) {
           void (async () => {
-            if (interactionInNumericEntryState(spec, rt.getSnapshot().state) && (await tryCommitNumericEntry())) return;
+            if (interactionInNumericEntryState(spec, rt.getSnapshot().state) && (await tryConfirmOrNumericCommit())) return;
             if (await tryFinalizeInteractionStep()) return;
             if (confirmInteractionSelection()) return;
             if (trySubmitLine()) return;
@@ -4621,14 +4642,14 @@ export function InteractionRepl({
         return;
       }
     },
-    [cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, replCmdLineValue, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, spec, rt, interactionId, repeatLastFinalizedInteraction],
+    [cmdLine, allSuggestions, filtered, activeIndex, runSuggestion, trySubmitLine, tryCommitNumericEntry, tryConfirmOrNumericCommit, tryFinalizeInteractionStep, replCmdLineValue, handleEscapeKey, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, spec, rt, interactionId, repeatLastFinalizedInteraction],
   );
 
   const submitEngagementLine = reactHostPort.useCallback(() => {
     setInteractionMenuOpen(false);
     void (async () => {
       if (!cmdLine.trim()) {
-        if (interactionInNumericEntryState(spec, rt.getSnapshot().state) && (await tryCommitNumericEntry())) return;
+        if (interactionInNumericEntryState(spec, rt.getSnapshot().state) && (await tryConfirmOrNumericCommit())) return;
         if (await tryFinalizeInteractionStep()) return;
         if (confirmInteractionSelection()) return;
       }
@@ -4638,7 +4659,7 @@ export function InteractionRepl({
       if (trySubmitLine()) return;
       if (filtered.length) runSuggestion(filtered[activeIndex] ?? filtered[0]!);
     })();
-  }, [cmdLine, confirmInteractionSelection, spec, rt, tryCommitNumericEntry, tryFinalizeInteractionStep, trySubmitLine, filtered, runSuggestion, activeIndex]);
+  }, [cmdLine, confirmInteractionSelection, spec, rt, tryCommitNumericEntry, tryConfirmOrNumericCommit, tryFinalizeInteractionStep, trySubmitLine, filtered, runSuggestion, activeIndex]);
 
   const engagementSpec = reactHostPort.useMemo<EngagementSpec | null>(
     () =>
@@ -4744,10 +4765,7 @@ export function InteractionRepl({
         e.stopPropagation();
         const snap = rt.getSnapshot();
         if (interactionInNumericEntryState(spec, snap.state)) {
-          void (async () => {
-            if (await tryCommitNumericEntry()) return;
-            await tryFinalizeInteractionStep();
-          })();
+          void tryConfirmOrNumericCommit();
           return;
         }
         if (!cmdLine.trim()) {
@@ -4787,7 +4805,7 @@ export function InteractionRepl({
         const snap = rt.getSnapshot();
         if (!cmdLine.trim()) {
           void (async () => {
-            if (interactionInNumericEntryState(spec, snap.state) && (await tryCommitNumericEntry())) return;
+            if (interactionInNumericEntryState(spec, snap.state) && (await tryConfirmOrNumericCommit())) return;
             if (await tryFinalizeInteractionStep()) return;
             if (confirmInteractionSelection()) return;
           })();
@@ -4819,7 +4837,7 @@ export function InteractionRepl({
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionId, interactionActive, boundInteractionSession, repeatLastFinalizedInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement, engagementCommandMode, submitEngagementLine]);
+  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryConfirmOrNumericCommit, tryFinalizeInteractionStep, handleEscapeKey, interactionId, interactionActive, boundInteractionSession, repeatLastFinalizedInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement, engagementCommandMode, submitEngagementLine]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {

@@ -1,0 +1,10 @@
+{
+  "title": "Interpolate Curve Enter Finalize",
+  "emoji": "⌨️",
+  "status": "open",
+  "description": "Interpolate curve: pressing Space or Enter should finalize the command, not add another point at the cursor.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪36b82c654aa04fb2ac6826db2376a621"
+  ]
+}

@@ -33,6 +33,10 @@ export default defineConfig({
 			{ find: "@framework/presentation/core", replacement: presentationCore },
 			{ find: "@framework/presentation/renderer/react", replacement: presentationRenderer },
 			{ find: "@framework/core", replacement: frameworkCore },
+			{
+				find: "@mit-bestand/praesentation/projektetage-spec",
+				replacement: resolve(dir, "spec.ts"),
+			},
 		],
 	},
 });
