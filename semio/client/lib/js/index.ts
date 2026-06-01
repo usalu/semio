@@ -5373,6 +5373,18 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         expect(towerDesignNames).toEqual(
           expect.arrayContaining(["Nakagin Capsule Tower", "Slanted", "Twisted", "Dancing"]),
         );
+        const tambour = typologies.find((t) => t.id === "typology-tambour");
+        expect(tambour).toBeDefined();
+        const tambourKindNames = await Promise.all((await tambour!.hasTypes()).map((k) => k.name()));
+        expect(tambourKindNames).toEqual(
+          expect.arrayContaining([
+            "Cylindric Tambour First Storey",
+            "Cylindric Tambour Last Storey",
+            "Tambour First Storey",
+            "Tambour Last Storey",
+          ]),
+        );
+        expect(tambourKindNames.some((name) => name === "First Storey" || name === "Last Storey")).toBe(false);
       } finally {
         await session.dispose();
       }

@@ -2214,9 +2214,10 @@ const InteractiveDisposition: FC<{
 			dispositionPositionChanged(canvasAnchorRect, canvasLiveTransform),
 	);
 	const pinned =
-		(transformed && !flowLayout && !canvasFramed) ||
-		flowSectionFrame ||
-		(canvasFramed && canvasDragActive && !flowPixelOffset);
+		!fullscreen &&
+		((transformed && !flowLayout && !canvasFramed) ||
+			flowSectionFrame ||
+			(canvasFramed && canvasDragActive && !flowPixelOffset));
 	const [gesturing, setGesturing] = useState(false);
 	const [flowReservePx, setFlowReservePx] = useState<{ readonly width: number; readonly height: number } | null>(
 		null,
@@ -4974,6 +4975,77 @@ if (import.meta.vitest) {
 				".presentation-interaction-fullscreen",
 			) as HTMLButtonElement;
 			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
+		});
+
+		it("toggles slide fullscreen on a split figure tile", () => {
+			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
+			const deck: Presentation = {
+				id: "split-fullscreen",
+				name: "Split Fullscreen",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "split",
+										participants: [
+											{
+												id: "catalogue",
+												embodiments: [{ kind: "figure", src: "/catalogue.png", alt: "Catalogue" }],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "tiles",
+													dispositions: [
+														{
+															participantId: "catalogue",
+															emphasis: "active",
+															split: {
+																tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
+															},
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const tile = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const canvas = tile.closest(".presentation-arrangement-canvas") as HTMLElement;
+			act(() => {
+				pointerClick(tile);
+			});
+			const fullscreen = tile.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
+			act(() => {
+				fullscreen.click();
+			});
+			expect(tile.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
+			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
+			expect(tile.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
+			const tileFrame = tile.querySelector(".presentation-figure-tile-frame") as HTMLElement;
+			expect(tileFrame).toBeTruthy();
+			expect(getComputedStyle(tileFrame).width).toBe("100%");
+			expect(getComputedStyle(tileFrame).height).toBe("100%");
+			expect(tile.style.inset).toBe("0px");
+			expect(canvas.contains(tile)).toBe(true);
+			act(() => {
+				fullscreen.click();
+			});
+			expect(tile.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(false);
+			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
 		});
 	});
 }

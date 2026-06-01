@@ -265,6 +265,27 @@
 	z-index: 2;
 }
 
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	:is(.presentation-disposition-frame, .presentation-morph-slot, .presentation-figure-tile-frame) {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-figure-tile-frame {
+	display: block;
+}
+
 .reveal .presentation-interactive-disposition--pinned,
 .reveal .presentation-interactive-disposition--offset {
 	cursor: move;
