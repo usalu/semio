@@ -1572,57 +1572,289 @@ export type SemioFileSystemParentRef =
   | { readonly kind: "DESIGN"; readonly id: string }
   | { readonly kind: "TYPE"; readonly id: string }
   | { readonly kind: "FAMILY"; readonly id: string }
+  | { readonly kind: "TYPOLOGY"; readonly id: string }
   | { readonly kind: "PIECE"; readonly id: string; readonly designId: string }
   | { readonly kind: "CONNECTION"; readonly id: string; readonly designId: string };
 
+type SemioRelayVfsBranchSpec = {
+  readonly connectionKey: string;
+  readonly kind: string;
+  readonly nameFrom: (node: JsonObject) => string;
+  readonly hasChildren?: (node: JsonObject) => boolean;
+  readonly mapChild?: (child: SemioFileSystemChildRef, node: JsonObject) => SemioFileSystemChildRef;
+};
+
+function semioRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, branches: readonly SemioRelayVfsBranchSpec[]): readonly SemioFileSystemChildRef[] {
+  const out: SemioFileSystemChildRef[] = [];
+  for (const branch of branches) {
+    const edges = (frag?.[branch.connectionKey] as JsonObject | undefined)?.["edges"];
+    if (!Array.isArray(edges)) continue;
+    for (const edge of edges) {
+      const node = (edge as JsonObject)?.["node"] as JsonObject | undefined;
+      if (!node) continue;
+      const id = String(node["id"] ?? "");
+      if (!id) continue;
+      const name = branch.nameFrom(node);
+      let child: SemioFileSystemChildRef = {
+        id,
+        kind: branch.kind,
+        name,
+        path: `/${name}`,
+        hasChildren: branch.hasChildren ? branch.hasChildren(node) : true,
+      };
+      if (branch.mapChild) child = branch.mapChild(child, node);
+      out.push(child);
+    }
+  }
+  return Object.freeze(out);
+}
+
+function semioRelayEdgesNonEmpty(node: JsonObject, key: string): boolean {
+  const edges = (node[key] as JsonObject | undefined)?.["edges"];
+  return Array.isArray(edges) && edges.length > 0;
+}
+
 function semioFileSystemChildrenInner(parent: SemioFileSystemParentRef): string {
-  const vfs = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
   switch (parent.kind) {
     case "KIT":
-      return vfs;
+      return `
+        typologies { edges { node { id name types { edges { node { id } } } designs { edges { node { id } } } } } }
+        families { edges { node { id name } } }
+        folders { edges { node { id path } } }
+        files { edges { node { id name description } } }
+      `;
+    case "TYPOLOGY":
+      return `
+        typology(id: ${gqlString(parent.id)}) {
+          types { edges { node { id name representations { edges { node { id } } } ports { edges { node { id } } } connectors { edges { node { id } } } } } }
+          designs { edges { node { id name pieces { edges { node { id } } } connections { edges { node { id } } } } } }
+        }
+      `;
     case "FOLDER":
-      return `folder(id: ${gqlString(parent.id)}) { ${vfs} }`;
+      return `
+        folder(id: ${gqlString(parent.id)}) {
+          folders { edges { node { id path } } }
+          files { edges { node { id name description } } }
+          designs { edges { node { id name } } }
+          types { edges { node { id name } } }
+          families { edges { node { id name } } }
+          typologies { edges { node { id name } } }
+        }
+      `;
     case "FILE":
-      return `file(id: ${gqlString(parent.id)}) { ${vfs} }`;
+      return `file(id: ${gqlString(parent.id)}) { id name description }`;
     case "DESIGN":
-      return `design(id: ${gqlString(parent.id)}) { ${vfs} }`;
+      return `
+        design(id: ${gqlString(parent.id)}) {
+          pieces { edges { node { id name } } }
+          connections { edges { node { id description } } }
+        }
+      `;
     case "TYPE":
-      return `type(id: ${gqlString(parent.id)}) { ${vfs} }`;
+      return `
+        type(id: ${gqlString(parent.id)}) {
+          representations { edges { node { id name } } }
+          ports { edges { node { id label code } } }
+          connectors { edges { node { id name } } }
+        }
+      `;
     case "FAMILY":
-      return `family(id: ${gqlString(parent.id)}) { ${vfs} }`;
+      return `family(id: ${gqlString(parent.id)}) { id name }`;
     case "PIECE":
-      return `design(id: ${gqlString(parent.designId)}) { piece(id: ${gqlString(parent.id)}) { ${vfs} } }`;
+      return `design(id: ${gqlString(parent.designId)}) { piece(id: ${gqlString(parent.id)}) { id name } }`;
     case "CONNECTION":
-      return `design(id: ${gqlString(parent.designId)}) { connection(id: ${gqlString(parent.id)}) { ${vfs} } }`;
+      return `design(id: ${gqlString(parent.designId)}) { connection(id: ${gqlString(parent.id)}) { id description } }`;
     default:
-      return vfs;
+      return `id`;
   }
 }
 
-/** @emoji 📁 Loads VFS children for a kit-graph parent node via GraphQL {@link FileSystemNode}. */
-export async function fetchSemioFileSystemChildren(store: JsKitStore, parent: SemioFileSystemParentRef): Promise<readonly SemioFileSystemChildRef[]> {
+function semioParseRelayVfsChildren(parent: SemioFileSystemParentRef, frag: JsonObject | null | undefined): readonly SemioFileSystemChildRef[] {
+  switch (parent.kind) {
+    case "KIT":
+      return semioRelayVfsChildrenFromFrag(frag, [
+        {
+          connectionKey: "typologies",
+          kind: "TYPOLOGY",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) => semioRelayEdgesNonEmpty(node, "types") || semioRelayEdgesNonEmpty(node, "designs"),
+        },
+        { connectionKey: "families", kind: "FAMILY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
+        {
+          connectionKey: "folders",
+          kind: "FOLDER",
+          nameFrom: (node) => {
+            const path = String(node["path"] ?? node["id"] ?? "");
+            const slash = path.lastIndexOf("/");
+            return slash >= 0 ? path.slice(slash + 1) : path;
+          },
+        },
+        {
+          connectionKey: "files",
+          kind: "FILE",
+          nameFrom: (node) => String(node["name"] ?? node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+        },
+      ]);
+    case "TYPOLOGY": {
+      const topo = readKitPathNode(frag, ["typology"]);
+      return semioRelayVfsChildrenFromFrag(topo, [
+        {
+          connectionKey: "types",
+          kind: "TYPE",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) =>
+            semioRelayEdgesNonEmpty(node, "representations") || semioRelayEdgesNonEmpty(node, "ports") || semioRelayEdgesNonEmpty(node, "connectors"),
+          mapChild: (child) => ({ ...child, typeId: child.id }),
+        },
+        {
+          connectionKey: "designs",
+          kind: "DESIGN",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: (node) => semioRelayEdgesNonEmpty(node, "pieces") || semioRelayEdgesNonEmpty(node, "connections"),
+          mapChild: (child) => ({ ...child, designId: child.id }),
+        },
+      ]);
+    }
+    case "FOLDER": {
+      const folder = readKitPathNode(frag, ["folder"]);
+      return semioRelayVfsChildrenFromFrag(folder, [
+        {
+          connectionKey: "folders",
+          kind: "FOLDER",
+          nameFrom: (node) => {
+            const path = String(node["path"] ?? node["id"] ?? "");
+            const slash = path.lastIndexOf("/");
+            return slash >= 0 ? path.slice(slash + 1) : path;
+          },
+        },
+        {
+          connectionKey: "files",
+          kind: "FILE",
+          nameFrom: (node) => String(node["name"] ?? node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+        },
+        { connectionKey: "designs", kind: "DESIGN", nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""), mapChild: (child) => ({ ...child, designId: child.id }) },
+        { connectionKey: "types", kind: "TYPE", nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""), mapChild: (child) => ({ ...child, typeId: child.id }) },
+        { connectionKey: "families", kind: "FAMILY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
+        { connectionKey: "typologies", kind: "TYPOLOGY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
+      ]);
+    }
+    case "FILE":
+      return frag
+        ? Object.freeze([
+            {
+              id: String(frag["id"] ?? ""),
+              kind: "FILE",
+              name: String(frag["name"] ?? frag["description"] ?? frag["id"] ?? ""),
+              path: `/${String(frag["name"] ?? frag["id"] ?? "")}`,
+              hasChildren: false,
+            },
+          ])
+        : Object.freeze([]);
+    case "DESIGN": {
+      const designId = parent.id;
+      const design = readKitPathNode(frag, ["design"]);
+      return semioRelayVfsChildrenFromFrag(design, [
+        {
+          connectionKey: "pieces",
+          kind: "PIECE",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, designId }),
+        },
+        {
+          connectionKey: "connections",
+          kind: "CONNECTION",
+          nameFrom: (node) => String(node["description"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, designId }),
+        },
+      ]);
+    }
+    case "TYPE": {
+      const typeId = parent.id;
+      const type = readKitPathNode(frag, ["type"]);
+      return semioRelayVfsChildrenFromFrag(type, [
+        {
+          connectionKey: "representations",
+          kind: "REPRESENTATION",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+        {
+          connectionKey: "ports",
+          kind: "PORT",
+          nameFrom: (node) => String(node["label"] ?? node["code"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+        {
+          connectionKey: "connectors",
+          kind: "CONNECTOR",
+          nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""),
+          hasChildren: () => false,
+          mapChild: (child) => ({ ...child, typeId }),
+        },
+      ]);
+    }
+    case "FAMILY":
+      return frag
+        ? Object.freeze([
+            {
+              id: String(frag["id"] ?? ""),
+              kind: "FAMILY",
+              name: String(frag["name"] ?? frag["id"] ?? ""),
+              path: `/${String(frag["name"] ?? frag["id"] ?? "")}`,
+              hasChildren: false,
+            },
+          ])
+        : Object.freeze([]);
+    case "PIECE": {
+      const piece = readKitPathNode(frag, ["design", "piece"]);
+      return piece
+        ? Object.freeze([
+            {
+              id: String(piece["id"] ?? ""),
+              kind: "PIECE",
+              name: String(piece["name"] ?? piece["id"] ?? ""),
+              path: `/${String(piece["name"] ?? piece["id"] ?? "")}`,
+              hasChildren: false,
+              designId: parent.designId,
+            },
+          ])
+        : Object.freeze([]);
+    }
+    case "CONNECTION": {
+      const connection = readKitPathNode(frag, ["design", "connection"]);
+      return connection
+        ? Object.freeze([
+            {
+              id: String(connection["id"] ?? ""),
+              kind: "CONNECTION",
+              name: String(connection["description"] ?? connection["id"] ?? ""),
+              path: `/${String(connection["description"] ?? connection["id"] ?? "")}`,
+              hasChildren: false,
+              designId: parent.designId,
+            },
+          ])
+        : Object.freeze([]);
+    }
+    default:
+      return Object.freeze([]);
+  }
+}
+
+/** @emoji 📁 Loads VFS children for a kit-graph parent via kit entity GraphQL (not {@link FileSystemNode} interface). */
+export async function fetchSemioFileSystemChildren(store: Store, parent: SemioFileSystemParentRef): Promise<readonly SemioFileSystemChildRef[]> {
   const inner = semioFileSystemChildrenInner(parent);
   const frag = await store.readKitInner(inner);
-  if (parent.kind === "KIT") return parseFileSystemChildrenRefs(frag);
-  const path =
-    parent.kind === "FOLDER"
-      ? (["folder"] as const)
-      : parent.kind === "FILE"
-        ? (["file"] as const)
-        : parent.kind === "DESIGN"
-          ? (["design"] as const)
-          : parent.kind === "TYPE"
-            ? (["type"] as const)
-            : parent.kind === "FAMILY"
-              ? (["family"] as const)
-              : parent.kind === "PIECE"
-                ? (["design", "piece"] as const)
-                : (["design", "connection"] as const);
-  return parseFileSystemChildrenRefs(readKitPathNode(frag, path));
+  return semioParseRelayVfsChildren(parent, frag);
 }
 
 /** @emoji 📁 Loads kit-root VFS children (alias for {@link fetchSemioFileSystemChildren} on the kit node). */
-export async function fetchSemioFileSystemRootChildren(store: JsKitStore, kitId: string): Promise<readonly SemioFileSystemChildRef[]> {
+export async function fetchSemioFileSystemRootChildren(store: Store, kitId: string): Promise<readonly SemioFileSystemChildRef[]> {
   return fetchSemioFileSystemChildren(store, { kind: "KIT", id: kitId });
 }
 //#endregion 📁FileSystem
@@ -4833,13 +5065,38 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(connector).toBeInstanceOf(Connector);
     });
 
-    it("fetchSemioFileSystemChildren selects vfs fields through FileSystemNode on kit", () => {
+    it("fetchSemioFileSystemChildren selects kit relay fields at kit root", () => {
       const inner = semioFileSystemChildrenInner({ kind: "KIT", id: "kit-1" });
-      expect(inner).toContain("... on FileSystemNode");
-      expect(inner).toContain("fileSystemChildren");
-      const folderInner = semioFileSystemChildrenInner({ kind: "FOLDER", id: "folder-1" });
-      expect(folderInner).toContain("folder(id:");
-      expect(folderInner).toContain("... on FileSystemNode");
+      expect(inner).toContain("typologies");
+      expect(inner).not.toContain("fileSystemChildren");
+      const topoInner = semioFileSystemChildrenInner({ kind: "TYPOLOGY", id: "topo-1" });
+      expect(topoInner).toContain("typology(id:");
+      expect(topoInner).toContain("types");
+    });
+
+    it("fetchSemioFileSystemChildren returns typologies at kit root after installProjection", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const kitId = kit.id;
+        const children = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "KIT", id: kitId }),
+          (rows) => rows.some((row) => row.kind === "TYPOLOGY"),
+          30_000,
+        );
+        expect(children.some((row) => row.kind === "TYPOLOGY")).toBe(true);
+        expect(children.length).toBeGreaterThan(0);
+      } finally {
+        await session.dispose();
+      }
     });
 
     it("Piece installs pathPieces and weak-geometry change subscriptions", () => {

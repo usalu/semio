@@ -63,13 +63,16 @@ An arrangement of dispositions.
 
 A transition from an arrangement into another arrangement.
 
+# Slide
+
+A slide is an arragement with an optional transition to the next slide.
+
 # Template
 
-A template is a parametric prefined sequence.
+A template produces anything parametrically (a presentation, a chapter, a sequence, a tought, a partcipant, embodiment, figure, video, text, pdf, disposition, split, morph, arrangement, transition, …)
 
 ## Intro
 
+Produces an intro sequence.
+
 Participants: title, description, goal, authors, affiliations
-
-## Analogy
-
