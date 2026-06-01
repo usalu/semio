@@ -1,12 +1,10 @@
 #!/usr/bin/env bun
-/** @emoji 🏛️ Reconcile kit types/designs into typology buckets; no typology-default on metabolism kits. */
+/** @emoji 🏛️ Reconcile typologies, derive kind names and typology from primary representation file names. */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const METABOLOGY_TOPO_NAMES = ["base", "capsule", "tambour", "capital", "bridge", "tower"] as const;
-/** @emoji 🗼 Design-name typology match order (`tower` before `capsule` so "Nakagin Capsule Tower" → Tower). */
 const METABOLOGY_DESIGN_TOPO_PRIORITY = ["tower", "bridge", "capital", "tambour", "capsule", "base"] as const;
-/** @emoji 🗼 Nakagin tower variant designs (children of Nakagin Capsule Tower). */
 const TOWER_VARIANT_DESIGN_NAMES = new Set(["slanted", "twisted", "dancing", "flat"]);
 
 function itemsOf(block: unknown): unknown[] {
@@ -52,14 +50,62 @@ function familyNameById(kit: Record<string, unknown>): Map<string, string> {
   return out;
 }
 
-function typeHasCapsuleRepresentation(row: Record<string, unknown>, files: Map<string, string>): boolean {
+/** @emoji 📎 Primary mesh file for a kind (non-collider `.glb`, no `_1to*` scale suffix). */
+export function primaryRepresentationFileName(row: Record<string, unknown>, files: Map<string, string>): string {
+  const glbs: string[] = [];
   for (const rep of itemsOf(row.representations)) {
     if (!rep || typeof rep !== "object") continue;
     const fileId = String((rep as { file?: { id?: string } }).file?.id ?? "");
-    const name = files.get(fileId) ?? "";
-    if (/capsule/i.test(name)) return true;
+    const fromFile = files.get(fileId) ?? "";
+    const fromRep = String((rep as { name?: string }).name ?? "");
+    const name = fromFile || fromRep;
+    if (name.toLowerCase().endsWith(".glb") && !name.toLowerCase().includes("collider")) glbs.push(name);
   }
-  return false;
+  return glbs.find((n) => !/_1to\d+/i.test(n)) ?? glbs[0] ?? "";
+}
+
+/** @emoji 🏷️ File stem used for naming (drops extension, collider, and scale suffixes). */
+export function fileStemForNaming(fileName: string): string {
+  return fileName
+    .replace(/\.(glb|3dm)$/i, "")
+    .replace(/_collider$/i, "")
+    .replace(/_1to\d+$/i, "");
+}
+
+/** @emoji 🏷️ Titleized kind name with full information from a representation file name. */
+export function typeNameFromFileName(fileName: string): string {
+  const stem = fileStemForNaming(fileName);
+  if (!stem) return "";
+  return stem
+    .split(/[-_]+/)
+    .filter((token) => token.length > 0)
+    .map((token) => {
+      if (token === "\\") return "Backslash";
+      if (token === "/") return "Slash";
+      if (token.length === 1) return token.toUpperCase();
+      return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+    })
+    .join(" ");
+}
+
+/** @emoji 🏛️ Typology id inferred from a representation file name. */
+export function typologyIdFromRepresentationFile(fileName: string): string | null {
+  const n = fileName.toLowerCase();
+  if (!n) return null;
+  if (n.includes("tambour") && !n.includes("capsule")) return "typology-tambour";
+  if (
+    n.includes("ellipsoid-capsule") ||
+    n.includes("trapezoid-capsule") ||
+    n.includes("capsule-with-balcony") ||
+    /^capsule[_-]/.test(n) ||
+    (n.includes("capsule") && !n.includes("tambour"))
+  ) {
+    return "typology-capsule";
+  }
+  if (n.includes("capital")) return "typology-capital";
+  if (n.includes("bridge")) return "typology-bridge";
+  if (n.includes("base")) return "typology-base";
+  return null;
 }
 
 function typologyIdFromFamilies(row: Record<string, unknown>, families: Map<string, string>): string | null {
@@ -75,12 +121,31 @@ function typologyIdFromFamilies(row: Record<string, unknown>, families: Map<stri
   return null;
 }
 
+function syncRepresentationNames(row: Record<string, unknown>, files: Map<string, string>): void {
+  for (const rep of itemsOf(row.representations)) {
+    if (!rep || typeof rep !== "object") continue;
+    const r = rep as Record<string, unknown>;
+    const fileId = String((r.file as { id?: string } | undefined)?.id ?? "");
+    const fileName = files.get(fileId) ?? String(r.name ?? "");
+    if (!fileName) continue;
+    const stem = fileStemForNaming(fileName);
+    if (stem) r.name = stem;
+  }
+}
+
 function intendedTypologyIdForType(
   row: Record<string, unknown>,
   files: Map<string, string>,
   families: Map<string, string>,
 ): string {
-  if (typeHasCapsuleRepresentation(row, files)) return "typology-capsule";
+  const primary = primaryRepresentationFileName(row, files);
+  if (primary) {
+    const fromFile = typologyIdFromRepresentationFile(primary);
+    const derivedName = typeNameFromFileName(primary);
+    if (derivedName) row.name = derivedName;
+    syncRepresentationNames(row, files);
+    if (fromFile) return fromFile;
+  }
   const nm = String(row.name ?? "").toLowerCase();
   if (nm.includes("sketchpad") && nm.includes("default")) return "typology-base";
   const fromName = METABOLOGY_TOPO_NAMES.find((x) => nm === x || nm.includes(x));

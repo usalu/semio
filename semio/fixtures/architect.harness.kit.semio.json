@@ -53,8 +53,8 @@
                 }
             },
             {
-                "id": "typology-capsule",
-                "name": "Capsule",
+                "id": "typology-base",
+                "name": "Base",
                 "types": {
                     "hash": "typology-migration-stub",
                     "items": [
@@ -67,7 +67,7 @@
                                 "items": []
                             },
                             "typology": {
-                                "id": "typology-capsule"
+                                "id": "typology-base"
                             }
                         },
                         {
@@ -79,22 +79,9 @@
                                 "items": []
                             },
                             "typology": {
-                                "id": "typology-capsule"
+                                "id": "typology-base"
                             }
-                        }
-                    ]
-                },
-                "designs": {
-                    "hash": "typology-migration-stub",
-                    "items": []
-                }
-            },
-            {
-                "id": "typology-base",
-                "name": "Base",
-                "types": {
-                    "hash": "typology-migration-stub",
-                    "items": [
+                        },
                         {
                             "id": "b2000000-0000-4000-8000-000000000003",
                             "name": "KindGamma",

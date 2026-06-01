@@ -1259,6 +1259,25 @@ export function buildInteractiveSlideLayout(
 	return { placements, rowBands };
 }
 
+/** @emoji 🎯 Renders dormant participant morph anchors for {@link DispositionSplit.morphParticipant} (tiles stay on sibling dispositions). */
+function MorphParticipantArrangementSlots({
+	dispositions,
+}: {
+	readonly dispositions: readonly ResolvedDisposition[];
+}): ReactNode {
+	return (
+		<>
+			{dispositions.map((disposition, index) => (
+				<MorphDispositionView
+					key={`${disposition.morphId}--morph-participant--${index}`}
+					disposition={disposition}
+					omitSplitTileRevealMorphId
+				/>
+			))}
+		</>
+	);
+}
+
 /** @emoji 📐 True when two normalized rectangles overlap with positive area. */
 export function rectsIntersect(a: DispositionPosition, b: DispositionPosition): boolean {
 	return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
@@ -2808,6 +2827,10 @@ const ArrangementSection: FC<{
 	const morph = renderSlide.autoAnimateId !== undefined;
 	const positioned = resolved.some((disposition) => disposition.position !== undefined || disposition.split !== undefined);
 	const layoutResolved = positioned ? centerResolvedArrangement(resolved) : resolved;
+	const morphParticipantDispositions = useMemo(
+		() => layoutResolved.filter((disposition) => disposition.split?.morphParticipant),
+		[layoutResolved],
+	);
 	const interactiveLayout = useMemo(
 		() => buildInteractiveSlideLayout(renderSlide.id, layoutResolved),
 		[layoutResolved, renderSlide.id],
@@ -2851,6 +2874,7 @@ const ArrangementSection: FC<{
 				dispositionIds={interactiveLayout.placements.map((entry) => entry.id)}
 				declaredRects={declaredRects}
 				placements={placements}
+				morphParticipantDispositions={morphParticipantDispositions}
 			/>
 		</SlideDispositionRegistryProvider>
 	);
@@ -2866,6 +2890,7 @@ const ArrangementSectionSurface: FC<{
 	readonly dispositionIds: readonly string[];
 	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 	readonly placements: ReactNode;
+	readonly morphParticipantDispositions: readonly ResolvedDisposition[];
 }> = ({
 	sectionRef,
 	morph,
@@ -2876,6 +2901,7 @@ const ArrangementSectionSurface: FC<{
 	dispositionIds,
 	declaredRects,
 	placements,
+	morphParticipantDispositions,
 }) => {
 	const backgroundInteraction = useSlideBackgroundInteraction({
 		sectionRef,
@@ -2900,7 +2926,14 @@ const ArrangementSectionSurface: FC<{
 				.join(" ")}
 		>
 			<InteractionLayer marquee={backgroundInteraction.marquee} />
-			{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
+			{positioned ? (
+				<div className="presentation-arrangement-canvas">
+					{placements}
+					<MorphParticipantArrangementSlots dispositions={morphParticipantDispositions} />
+				</div>
+			) : (
+				placements
+			)}
 		</section>
 	);
 };
@@ -4301,6 +4334,67 @@ if (import.meta.vitest) {
 			const layout = buildInteractiveSlideLayout("slide-2", resolved);
 			expect(layout.placements).toHaveLength(0);
 			expect(layout.rowBands).toHaveLength(0);
+		});
+
+		it("renders morph-participant dormant anchors on the arrangement canvas", () => {
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			const frame = { x: 0.1, y: 0.1, width: 0.3, height: 0.6 };
+			const tiles = splitFigureGrid({ rows: 2, columns: 1, frame });
+			const deck: Presentation = {
+				id: "morph-participant-anchor",
+				name: "Morph participant",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "focus",
+										participants: [
+											{
+												id: "catalogue-col1",
+												embodiments: [
+													{
+														kind: "figure",
+														id: "crop",
+														src: "/catalogue.png",
+														crop: { x: 0, y: 0, width: 0.5, height: 1 },
+													},
+												],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "focus",
+													dispositions: [
+														{
+															participantId: "catalogue-col1",
+															emphasis: "active",
+															split: { tiles, morphParticipant: true },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const anchor = mountRoot.querySelector(
+				'[data-id="catalogue-col1"].presentation-morph-slot--figure.presentation-morph-slot--dormant',
+			);
+			expect(anchor).toBeTruthy();
+			mountRoot.remove();
 		});
 	});
 

@@ -126,7 +126,13 @@ if (import.meta.vitest) {
 			const yPositions = labelDispositions.map((disposition) => disposition.position?.y);
 			expect(new Set(yPositions).size).toBe(1);
 			const ghosts = labelSlide?.arrangement.dispositions.filter((disposition) => disposition.morphGhost);
-			expect(ghosts).toHaveLength(0);
+			expect(ghosts).toHaveLength(3);
+			expect(ghosts?.map((disposition) => disposition.participantId)).toEqual([
+				CATALOGUE_COL1,
+				CATALOGUE_COL2,
+				CATALOGUE_COL3,
+			]);
+			expect(ghosts?.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP)).toBe(true);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

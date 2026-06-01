@@ -859,7 +859,7 @@
                         },
                         {
                             "id": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
-                            "name": "Blob",
+                            "name": "Base Blob",
                             "families": [
                                 {
                                     "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
@@ -2353,1137 +2353,10 @@
                             "typology": {
                                 "id": "typology-tambour"
                             }
-                        }
-                    ]
-                },
-                "designs": {
-                    "hash": "typology-migration-stub",
-                    "items": []
-                }
-            },
-            {
-                "id": "typology-capsule",
-                "name": "Capsule",
-                "types": {
-                    "hash": "typology-migration-stub",
-                    "items": [
-                        {
-                            "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
-                            "name": "\\",
-                            "families": [
-                                {
-                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
-                                }
-                            ],
-                            "representations": [
-                                {
-                                    "id": "f4c5663e-98a7-4592-98f9-c36346f6486b",
-                                    "name": "capsule_backslash",
-                                    "tags": [
-                                        {
-                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
-                                        }
-                                    ],
-                                    "file": {
-                                        "id": "dd19ec2a-5988-4d98-96af-5d283202a176"
-                                    }
-                                }
-                            ],
-                            "connectors": [
-                                {
-                                    "id": "a3edeb3f-85a4-4f1c-9bf9-55ba5440022d",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0.45,
-                                        "y": -2.1,
-                                        "z": 2.7755576e-17
-                                    },
-                                    "direction": {
-                                        "x": 0,
-                                        "y": -1,
-                                        "z": 0
-                                    },
-                                    "description": "🔋 The middle of the main entrance door of the upper entrance floor.",
-                                    "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-                                    },
-                                    "mandatory": false,
-                                    "props": [
-                                        {
-                                            "id": "de1b0f32-0006-4d25-ac9c-7da19d77e7e0",
-                                            "quality": {
-                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                            },
-                                            "value": ""
-                                        }
-                                    ]
-                                }
-                            ],
-                            "props": [
-                                {
-                                    "id": "3902e0e3-20da-4a96-948e-81eb63157725",
-                                    "quality": {
-                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                    },
-                                    "value": "back"
-                                },
-                                {
-                                    "id": "b8115f92-5bcd-4a9d-9c45-8f84a068f087",
-                                    "quality": {
-                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
-                                    },
-                                    "value": "front"
-                                },
-                                {
-                                    "id": "9007408b-4670-4b86-8ae6-55b45a196330",
-                                    "quality": {
-                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
-                                    },
-                                    "value": "4.2",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "4f27f4b4-db1b-4062-b71d-00d1e442d564",
-                                    "quality": {
-                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
-                                    },
-                                    "value": "2.6",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "9f227bb0-093e-4944-b244-bbb661665fdb",
-                                    "quality": {
-                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
-                                    },
-                                    "value": "2.5",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "0b0e8980-ea50-43e2-8188-32a25b622bd8",
-                                    "quality": {
-                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
-                                    },
-                                    "value": "round"
-                                },
-                                {
-                                    "id": "81e5add1-770e-446a-b0b4-9332ab5227da",
-                                    "quality": {
-                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
-                                    },
-                                    "value": "8.74",
-                                    "unit": "m²"
-                                },
-                                {
-                                    "id": "53f4f82b-c38d-478c-bbbe-c39addd8d41d",
-                                    "quality": {
-                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
-                                    },
-                                    "value": "82992",
-                                    "unit": "€"
-                                },
-                                {
-                                    "id": "ca85ca8f-b309-4a25-9607-735be00abada",
-                                    "quality": {
-                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
-                                    },
-                                    "value": "393",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "73e548b2-bad2-4809-bd43-8f4b5ebf011f",
-                                    "quality": {
-                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "ed9f624b-bf9b-41e6-8029-26a546fe7da6",
-                                    "quality": {
-                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "89988451-be3d-42c0-aed6-54653ea8cd4a",
-                                    "quality": {
-                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
-                                    },
-                                    "value": "13104",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "adaa5f14-faf6-484d-a25a-ca669fd22d17",
-                                    "quality": {
-                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
-                                    },
-                                    "value": "1048",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "cd82e0bd-f61a-4892-b60b-44e0b19b84b3",
-                                    "quality": {
-                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
-                                    },
-                                    "value": "8736.01",
-                                    "unit": "kgCO2e"
-                                }
-                            ],
-                            "stock": 2147483647,
-                            "virtual": false,
-                            "unit": "m",
-                            "createdAt": "2025-11-23T01:10:21.115Z",
-                            "updatedAt": "2025-11-23T01:10:21.115Z",
-                            "authors": [
-                                {
-                                    "id": "d6b613a7-aa4b-4145-a0e6-9eba42c8c7b3"
-                                }
-                            ],
-                            "icon": "icons/capsule_backslash.svg",
-                            "image": "images/capsule_backslash.png",
-                            "description": "🏛 An apartment capsule for one person. It has the entrance on the back and has the view to the front.",
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
                         },
-                        {
-                            "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
-                            "name": "/",
-                            "families": [
-                                {
-                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
-                                }
-                            ],
-                            "representations": [
-                                {
-                                    "id": "ddad92c3-6a9a-4d0f-ad2b-67733e1f8009",
-                                    "name": "capsule_slash",
-                                    "tags": [
-                                        {
-                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
-                                        }
-                                    ],
-                                    "file": {
-                                        "id": "9fb7699c-8455-4048-ab8b-9621d7756b16"
-                                    }
-                                }
-                            ],
-                            "connectors": [
-                                {
-                                    "id": "dfae8d2b-a0df-4e59-bcdb-865fa8426e50",
-                                    "t": 0,
-                                    "point": {
-                                        "x": -0.45,
-                                        "y": -2.1,
-                                        "z": 2.7755576e-17
-                                    },
-                                    "direction": {
-                                        "x": 0,
-                                        "y": -1,
-                                        "z": 0
-                                    },
-                                    "description": "🔌 The middle of the main entrance door of the upper entrance floor.",
-                                    "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-                                    },
-                                    "mandatory": false,
-                                    "props": [
-                                        {
-                                            "id": "5e9baa67-7b32-43ee-a78a-142875d07e45",
-                                            "quality": {
-                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                            },
-                                            "value": ""
-                                        }
-                                    ]
-                                }
-                            ],
-                            "props": [
-                                {
-                                    "id": "b1555a13-fc31-4bc5-a8ed-0339b185897f",
-                                    "quality": {
-                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                    },
-                                    "value": "back"
-                                },
-                                {
-                                    "id": "e3248001-5cd5-4061-a84c-b4e43892612d",
-                                    "quality": {
-                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
-                                    },
-                                    "value": "front"
-                                },
-                                {
-                                    "id": "7245c3ff-5bf6-4f9e-a661-d0ba4e560c28",
-                                    "quality": {
-                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
-                                    },
-                                    "value": "4.2",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "be3c1faf-1761-4b05-b759-873ed6fcbfd5",
-                                    "quality": {
-                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
-                                    },
-                                    "value": "2.6",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "43daf443-f4d8-4faa-bbb6-11919ca5201a",
-                                    "quality": {
-                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
-                                    },
-                                    "value": "2.5",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "3b76a05e-2bd5-4ded-a771-141099783a97",
-                                    "quality": {
-                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
-                                    },
-                                    "value": "round"
-                                },
-                                {
-                                    "id": "48f4297c-5661-455c-b388-1fe13038c742",
-                                    "quality": {
-                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
-                                    },
-                                    "value": "8.74",
-                                    "unit": "m²"
-                                },
-                                {
-                                    "id": "a4fe3cf3-9b88-49ad-95f9-63adbc3a3758",
-                                    "quality": {
-                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
-                                    },
-                                    "value": "82992",
-                                    "unit": "€"
-                                },
-                                {
-                                    "id": "e19e33a1-b5e2-4241-b77f-00f71ff1d226",
-                                    "quality": {
-                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
-                                    },
-                                    "value": "393",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "1905a6be-f360-48ce-8785-648d72f295ab",
-                                    "quality": {
-                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "4a247b1c-8a02-48f6-a110-e201e03e6408",
-                                    "quality": {
-                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "e8333363-fa7a-4eb1-93df-656d244bf4a6",
-                                    "quality": {
-                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
-                                    },
-                                    "value": "13104",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "8f80f5d5-0a39-4570-8220-a77cbeaa50ca",
-                                    "quality": {
-                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
-                                    },
-                                    "value": "1048",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "560a84f4-1383-489b-a3bc-45cd201790dd",
-                                    "quality": {
-                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
-                                    },
-                                    "value": "8736.01",
-                                    "unit": "kgCO2e"
-                                },
-                                {
-                                    "id": "55921e1c-6b8e-46c4-ae31-b9b39f705a6c",
-                                    "quality": {
-                                        "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d"
-                                    },
-                                    "value": ""
-                                }
-                            ],
-                            "stock": 2147483647,
-                            "virtual": false,
-                            "unit": "m",
-                            "createdAt": "2025-11-23T01:10:21.117Z",
-                            "updatedAt": "2025-11-23T01:10:21.117Z",
-                            "authors": [
-                                {
-                                    "id": "f4645555-9aad-4557-b720-f3df4fed8eb9"
-                                }
-                            ],
-                            "icon": "icons/capsule_slash.svg",
-                            "image": "images/capsule_slash.png",
-                            "description": "🌉 An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
-                        },
-                        {
-                            "id": "357b841f-b121-463c-88a6-153d7cbf272f",
-                            "name": "p",
-                            "families": [
-                                {
-                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
-                                }
-                            ],
-                            "representations": [
-                                {
-                                    "id": "f41a27f0-b391-4b97-87a0-9bd48a2383da",
-                                    "name": "capsule_p",
-                                    "tags": [
-                                        {
-                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
-                                        }
-                                    ],
-                                    "file": {
-                                        "id": "23ccc298-3c2e-41d9-bd55-f0aa8be80098"
-                                    }
-                                }
-                            ],
-                            "connectors": [
-                                {
-                                    "id": "8408bbc8-9055-4edc-9276-f1588c8a6c32",
-                                    "t": 0,
-                                    "point": {
-                                        "x": -0.45,
-                                        "y": -2.1,
-                                        "z": 2.7755576e-17
-                                    },
-                                    "direction": {
-                                        "x": 0,
-                                        "y": -1,
-                                        "z": 0
-                                    },
-                                    "description": "🪔 The middle of the main entrance door of the upper entrance floor.",
-                                    "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-                                    },
-                                    "mandatory": false,
-                                    "props": [
-                                        {
-                                            "id": "fc56c02b-cc0c-4b7e-a6fc-4d7ba4b867ed",
-                                            "quality": {
-                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                            },
-                                            "value": ""
-                                        }
-                                    ]
-                                }
-                            ],
-                            "props": [
-                                {
-                                    "id": "15d81558-8faf-40e0-87f1-3e59a3d40bd9",
-                                    "quality": {
-                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                    },
-                                    "value": "back"
-                                },
-                                {
-                                    "id": "fe173f6e-610e-442a-973a-3221d64614c1",
-                                    "quality": {
-                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
-                                    },
-                                    "value": "side"
-                                },
-                                {
-                                    "id": "99a82a51-f15b-4bdc-a32a-30368e459e88",
-                                    "quality": {
-                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
-                                    },
-                                    "value": "4.2",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "ccc2e987-042e-43cc-8d09-bb53b055d0fa",
-                                    "quality": {
-                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
-                                    },
-                                    "value": "2.6",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "6c8a4cdb-209e-4503-86b9-25e44631554f",
-                                    "quality": {
-                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
-                                    },
-                                    "value": "2.5",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "e6d8b6bf-a5d8-425b-9fbf-998313361688",
-                                    "quality": {
-                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
-                                    },
-                                    "value": "round"
-                                },
-                                {
-                                    "id": "e0710bd2-9bd7-4aea-bbd4-ddcc35adf812",
-                                    "quality": {
-                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
-                                    },
-                                    "value": "8.74",
-                                    "unit": "m²"
-                                },
-                                {
-                                    "id": "be4399ca-ef70-4233-b161-20f65d32eff1",
-                                    "quality": {
-                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
-                                    },
-                                    "value": "82992",
-                                    "unit": "€"
-                                },
-                                {
-                                    "id": "7ba4cbad-f312-43c2-bfda-87ac99609ae4",
-                                    "quality": {
-                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
-                                    },
-                                    "value": "393",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "1af02c91-74d7-4712-ab63-fde9feccc94d",
-                                    "quality": {
-                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "d1afe05e-72da-429a-b950-6d95047f6e3b",
-                                    "quality": {
-                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "8ee8ee44-cf6b-47d5-9c8d-d161bcfa240b",
-                                    "quality": {
-                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
-                                    },
-                                    "value": "13104",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "ba633fa8-6ccb-453f-9cde-04911f89e5dc",
-                                    "quality": {
-                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
-                                    },
-                                    "value": "1048",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "c7e1f5b7-68f2-499e-9e75-5ac36aa56fcf",
-                                    "quality": {
-                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
-                                    },
-                                    "value": "8736.01",
-                                    "unit": "kgCO2e"
-                                },
-                                {
-                                    "id": "45e5709a-043c-4704-a731-34546b7e2f4f",
-                                    "quality": {
-                                        "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d"
-                                    },
-                                    "value": ""
-                                }
-                            ],
-                            "stock": 2147483647,
-                            "virtual": false,
-                            "unit": "m",
-                            "createdAt": "2025-11-23T01:10:21.121Z",
-                            "updatedAt": "2025-11-23T01:10:21.121Z",
-                            "authors": [
-                                {
-                                    "id": "eb10a789-2af3-41fc-b99b-6778ab94a97e"
-                                }
-                            ],
-                            "icon": "icons/capsule_p.svg",
-                            "image": "images/capsule_p.png",
-                            "description": "🏭 An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
-                        },
-                        {
-                            "id": "818f2a23-569b-47cb-a69c-147694beb815",
-                            "name": "J",
-                            "families": [
-                                {
-                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
-                                }
-                            ],
-                            "representations": [
-                                {
-                                    "id": "9ef55441-6093-45d1-aadd-811d0cb31b08",
-                                    "name": "capsule_J",
-                                    "tags": [
-                                        {
-                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
-                                        }
-                                    ],
-                                    "file": {
-                                        "id": "cc3a1265-5a8e-46a6-93b4-7dfc2692f699"
-                                    }
-                                }
-                            ],
-                            "connectors": [
-                                {
-                                    "id": "cfe0b1e5-468b-48b3-a888-5b5d5eb81ffa",
-                                    "t": 0,
-                                    "point": {
-                                        "x": -1.3,
-                                        "y": -1.25,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": -1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "description": "🧯 The middle of the main entrance door of the upper entrance floor.",
-                                    "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-                                    },
-                                    "mandatory": false,
-                                    "props": [
-                                        {
-                                            "id": "4540d5f0-f49a-4789-b1db-6f4e3d814abe",
-                                            "quality": {
-                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                            },
-                                            "value": ""
-                                        }
-                                    ]
-                                }
-                            ],
-                            "props": [
-                                {
-                                    "id": "f51a2e31-839a-4798-92ff-3abb63cd7ce2",
-                                    "quality": {
-                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                    },
-                                    "value": "side"
-                                },
-                                {
-                                    "id": "53fa6575-6cfe-4512-9ce1-b9db6a1a3cfc",
-                                    "quality": {
-                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
-                                    },
-                                    "value": "front"
-                                },
-                                {
-                                    "id": "a4a7bcf4-772b-437a-af80-8c80fa7d5ec0",
-                                    "quality": {
-                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
-                                    },
-                                    "value": "4.2",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "00aeeec8-0d4f-4152-8b87-e8ddb7bc2ecb",
-                                    "quality": {
-                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
-                                    },
-                                    "value": "2.6",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "a2b8faaf-43a5-4fc6-a733-50ff32210883",
-                                    "quality": {
-                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
-                                    },
-                                    "value": "2.5",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "d1dd57dd-5e03-439e-8156-68234b294f58",
-                                    "quality": {
-                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
-                                    },
-                                    "value": "round"
-                                },
-                                {
-                                    "id": "0f07bec4-f82a-4a06-a971-e2ad66abea97",
-                                    "quality": {
-                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
-                                    },
-                                    "value": "8.74",
-                                    "unit": "m²"
-                                },
-                                {
-                                    "id": "eb133f0e-7153-4540-924f-8ae0b6433379",
-                                    "quality": {
-                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
-                                    },
-                                    "value": "82992",
-                                    "unit": "€"
-                                },
-                                {
-                                    "id": "0e2dcba8-b633-498c-84f6-8d4e588d4099",
-                                    "quality": {
-                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
-                                    },
-                                    "value": "393",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "58c6ee84-2787-4028-8b79-792893ca28dd",
-                                    "quality": {
-                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "83f00295-c2d4-40b9-8499-a18c6b0129cf",
-                                    "quality": {
-                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "c88a4cd0-1026-4154-9dc6-1acbe17b2ad5",
-                                    "quality": {
-                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
-                                    },
-                                    "value": "13104",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "6cc23b0f-ffb4-4dc9-9ca4-3325658fd89d",
-                                    "quality": {
-                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
-                                    },
-                                    "value": "1048",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "5406ffdb-6652-43c1-8422-bb5f755cf65e",
-                                    "quality": {
-                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
-                                    },
-                                    "value": "8736.01",
-                                    "unit": "kgCO2e"
-                                }
-                            ],
-                            "stock": 2147483647,
-                            "virtual": false,
-                            "unit": "m",
-                            "createdAt": "2025-11-23T01:10:21.123Z",
-                            "updatedAt": "2025-11-23T01:10:21.123Z",
-                            "authors": [
-                                {
-                                    "id": "c54f6cea-7194-4410-9539-7ec1dcf46a1e"
-                                }
-                            ],
-                            "icon": "icons/capsule_J.svg",
-                            "image": "images/capsule_J.png",
-                            "description": "🏬 An apartment capsule for one person. It has the entrance on the side and has the view to the front.",
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
-                        },
-                        {
-                            "id": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
-                            "name": "L",
-                            "families": [
-                                {
-                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
-                                }
-                            ],
-                            "representations": [
-                                {
-                                    "id": "1db8438c-bb5d-4bb0-9b28-ca7899166e60",
-                                    "name": "capsule_L",
-                                    "tags": [
-                                        {
-                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
-                                        }
-                                    ],
-                                    "file": {
-                                        "id": "cc2964b0-834c-4c69-b0a8-6f1efe30c036"
-                                    }
-                                }
-                            ],
-                            "connectors": [
-                                {
-                                    "id": "a34db64e-24a5-40c7-9ece-7480f5817151",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 1.3,
-                                        "y": -1.25,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "description": "🗑 The middle of the main entrance door of the upper entrance floor.",
-                                    "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-                                    },
-                                    "mandatory": false,
-                                    "props": [
-                                        {
-                                            "id": "1461a579-c36e-47fb-ae31-a04e2d7e54b2",
-                                            "quality": {
-                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                            },
-                                            "value": ""
-                                        }
-                                    ]
-                                }
-                            ],
-                            "props": [
-                                {
-                                    "id": "3e520e07-113d-4298-971f-f6bda4ed7b2d",
-                                    "quality": {
-                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                    },
-                                    "value": "side"
-                                },
-                                {
-                                    "id": "e2edce8b-eb58-4279-9142-88f8596a00ae",
-                                    "quality": {
-                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
-                                    },
-                                    "value": "front"
-                                },
-                                {
-                                    "id": "864b9a67-60f2-4260-935b-9f41b077000a",
-                                    "quality": {
-                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
-                                    },
-                                    "value": "4.2",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "1773b5e2-968f-4b2e-9de2-e81957d48fc5",
-                                    "quality": {
-                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
-                                    },
-                                    "value": "2.6",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "b3a035f3-443a-46ae-b984-fca132b6f949",
-                                    "quality": {
-                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
-                                    },
-                                    "value": "2.5",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "1e400896-98d0-410b-8af6-0d27506b05b7",
-                                    "quality": {
-                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
-                                    },
-                                    "value": "round"
-                                },
-                                {
-                                    "id": "c95cc042-1522-49f0-a97d-dc2313fe7947",
-                                    "quality": {
-                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
-                                    },
-                                    "value": "8.74",
-                                    "unit": "m²"
-                                },
-                                {
-                                    "id": "d56e4fbc-0fdb-4205-9496-fd22760946d9",
-                                    "quality": {
-                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
-                                    },
-                                    "value": "82992",
-                                    "unit": "€"
-                                },
-                                {
-                                    "id": "39d979f0-356b-4f0f-b262-e82a96b2da4c",
-                                    "quality": {
-                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
-                                    },
-                                    "value": "393",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "c3dc04ce-88d1-4a59-a894-46378b632eaf",
-                                    "quality": {
-                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "c97c24eb-dbf9-48c2-a7d1-54b0305bfb48",
-                                    "quality": {
-                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "564a3090-1082-4484-8c46-6aa5cabc5f9d",
-                                    "quality": {
-                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
-                                    },
-                                    "value": "13104",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "0197d008-17c5-44f4-85c2-a2498e605fc6",
-                                    "quality": {
-                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
-                                    },
-                                    "value": "1048",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "2c0a2f46-bd0c-4467-b222-ee7616b79404",
-                                    "quality": {
-                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
-                                    },
-                                    "value": "8736.01",
-                                    "unit": "kgCO2e"
-                                },
-                                {
-                                    "id": "aa6ebca4-0ac0-4308-8405-64695a74c088",
-                                    "quality": {
-                                        "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d"
-                                    },
-                                    "value": ""
-                                }
-                            ],
-                            "stock": 2147483647,
-                            "virtual": false,
-                            "unit": "m",
-                            "createdAt": "2025-11-23T01:10:21.125Z",
-                            "updatedAt": "2025-11-23T01:10:21.125Z",
-                            "authors": [
-                                {
-                                    "id": "1771ad52-e1f4-41b3-86bc-594161411c9d"
-                                }
-                            ],
-                            "icon": "icons/capsule_L.svg",
-                            "image": "images/capsule_L.png",
-                            "description": "🏨 An apartment capsule for one person. It has the entrance on the side and has the view to the front. It is mirrored compared to the normal one.",
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
-                        },
-                        {
-                            "id": "214a30f8-adfc-40de-840b-151d9f7e17dd",
-                            "name": "s",
-                            "families": [
-                                {
-                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
-                                }
-                            ],
-                            "representations": [
-                                {
-                                    "id": "7126908e-d1b1-4505-91e4-f14411aa1ffc",
-                                    "name": "capsule_s",
-                                    "tags": [
-                                        {
-                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
-                                        }
-                                    ],
-                                    "file": {
-                                        "id": "f622872b-af33-4270-9930-b9ed5391a303"
-                                    }
-                                }
-                            ],
-                            "connectors": [
-                                {
-                                    "id": "406ee5c9-8d1e-4639-a9d7-781006082347",
-                                    "t": 0,
-                                    "point": {
-                                        "x": -1.3,
-                                        "y": -1.25,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": -1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "description": "🛢 The middle of the main entrance door of the upper entrance floor.",
-                                    "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-                                    },
-                                    "mandatory": false,
-                                    "props": [
-                                        {
-                                            "id": "4c631069-5422-42d2-9a25-a8ff97a25c32",
-                                            "quality": {
-                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                            },
-                                            "value": ""
-                                        }
-                                    ]
-                                }
-                            ],
-                            "props": [
-                                {
-                                    "id": "7133af46-a6ba-416f-b45d-056f8e9636a4",
-                                    "quality": {
-                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
-                                    },
-                                    "value": "side"
-                                },
-                                {
-                                    "id": "b19fae53-81d9-4d00-934e-2aae676a78ef",
-                                    "quality": {
-                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
-                                    },
-                                    "value": "side"
-                                },
-                                {
-                                    "id": "db4e0d3b-369b-4032-9620-233f84e09277",
-                                    "quality": {
-                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
-                                    },
-                                    "value": "4.2",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "1b4bbae5-f6e3-4ccf-96f7-396f8e87c947",
-                                    "quality": {
-                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
-                                    },
-                                    "value": "2.6",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "7fdc46c4-71f5-44b5-a876-554c09e99f91",
-                                    "quality": {
-                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
-                                    },
-                                    "value": "2.5",
-                                    "unit": "m"
-                                },
-                                {
-                                    "id": "d6973efb-c6fe-4ce4-a207-eeeed8e8de56",
-                                    "quality": {
-                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
-                                    },
-                                    "value": "round"
-                                },
-                                {
-                                    "id": "8813bfaa-3bbe-4d30-b956-f884da2ebf6d",
-                                    "quality": {
-                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
-                                    },
-                                    "value": "8.74",
-                                    "unit": "m²"
-                                },
-                                {
-                                    "id": "1ee60328-145c-4ed4-b51c-ada9188ce676",
-                                    "quality": {
-                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
-                                    },
-                                    "value": "82992",
-                                    "unit": "€"
-                                },
-                                {
-                                    "id": "65ea8d90-deea-4d8b-ac46-9d4e4a3f4ad9",
-                                    "quality": {
-                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
-                                    },
-                                    "value": "393",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "56d8264c-820a-4c66-9d15-35d241fc338c",
-                                    "quality": {
-                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "956af1ad-cab7-4ac7-aab9-b7ad87691beb",
-                                    "quality": {
-                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
-                                    },
-                                    "value": "262",
-                                    "unit": "kWh/a"
-                                },
-                                {
-                                    "id": "49d770cc-beef-40af-baf4-9259a9618e67",
-                                    "quality": {
-                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
-                                    },
-                                    "value": "13104",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "9e07d3f3-bd88-492a-b7b1-277f0af36567",
-                                    "quality": {
-                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
-                                    },
-                                    "value": "1048",
-                                    "unit": "€/a"
-                                },
-                                {
-                                    "id": "17214442-ac47-41fa-9257-bcecd9bed975",
-                                    "quality": {
-                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
-                                    },
-                                    "value": "8736.01",
-                                    "unit": "kgCO2e"
-                                }
-                            ],
-                            "stock": 2147483647,
-                            "virtual": false,
-                            "unit": "m",
-                            "createdAt": "2025-11-23T01:10:21.128Z",
-                            "updatedAt": "2025-11-23T01:10:21.128Z",
-                            "authors": [
-                                {
-                                    "id": "8d7feac4-959c-478d-b6db-fb1c22eca5a0"
-                                }
-                            ],
-                            "icon": "icons/capsule_s.svg",
-                            "image": "images/capsule_s.png",
-                            "description": "🏪 An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
-                        }
-                    ]
-                },
-                "designs": {
-                    "hash": "typology-migration-stub",
-                    "items": []
-                }
-            },
-            {
-                "id": "typology-tower",
-                "name": "Tower",
-                "types": {
-                    "hash": "typology-migration-stub",
-                    "items": [
                         {
                             "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
-                            "name": "First Storey",
+                            "name": "Tambour First Storey",
                             "families": [
                                 {
                                     "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
@@ -3856,12 +2729,12 @@
                             "image": "images/tambour_first-storey.svg",
                             "description": "🪟 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "typology": {
-                                "id": "typology-tower"
+                                "id": "typology-tambour"
                             }
                         },
                         {
                             "id": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
-                            "name": "Last Storey",
+                            "name": "Tambour Last Storey",
                             "families": [
                                 {
                                     "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
@@ -4234,10 +3107,1136 @@
                             "image": "images/tambour_last-storey.svg",
                             "description": "🛗 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "typology": {
-                                "id": "typology-tower"
+                                "id": "typology-tambour"
                             }
                         }
                     ]
+                },
+                "designs": {
+                    "hash": "typology-migration-stub",
+                    "items": []
+                }
+            },
+            {
+                "id": "typology-capsule",
+                "name": "Capsule",
+                "types": {
+                    "hash": "typology-migration-stub",
+                    "items": [
+                        {
+                            "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
+                            "name": "Capsule Backslash",
+                            "families": [
+                                {
+                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+                                }
+                            ],
+                            "representations": [
+                                {
+                                    "id": "f4c5663e-98a7-4592-98f9-c36346f6486b",
+                                    "name": "capsule_backslash",
+                                    "tags": [
+                                        {
+                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                                        }
+                                    ],
+                                    "file": {
+                                        "id": "dd19ec2a-5988-4d98-96af-5d283202a176"
+                                    }
+                                }
+                            ],
+                            "connectors": [
+                                {
+                                    "id": "a3edeb3f-85a4-4f1c-9bf9-55ba5440022d",
+                                    "t": 0,
+                                    "point": {
+                                        "x": 0.45,
+                                        "y": -2.1,
+                                        "z": 2.7755576e-17
+                                    },
+                                    "direction": {
+                                        "x": 0,
+                                        "y": -1,
+                                        "z": 0
+                                    },
+                                    "description": "🔋 The middle of the main entrance door of the upper entrance floor.",
+                                    "port": {
+                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+                                    },
+                                    "mandatory": false,
+                                    "props": [
+                                        {
+                                            "id": "de1b0f32-0006-4d25-ac9c-7da19d77e7e0",
+                                            "quality": {
+                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                            },
+                                            "value": ""
+                                        }
+                                    ]
+                                }
+                            ],
+                            "props": [
+                                {
+                                    "id": "3902e0e3-20da-4a96-948e-81eb63157725",
+                                    "quality": {
+                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                    },
+                                    "value": "back"
+                                },
+                                {
+                                    "id": "b8115f92-5bcd-4a9d-9c45-8f84a068f087",
+                                    "quality": {
+                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
+                                    },
+                                    "value": "front"
+                                },
+                                {
+                                    "id": "9007408b-4670-4b86-8ae6-55b45a196330",
+                                    "quality": {
+                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
+                                    },
+                                    "value": "4.2",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "4f27f4b4-db1b-4062-b71d-00d1e442d564",
+                                    "quality": {
+                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
+                                    },
+                                    "value": "2.6",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "9f227bb0-093e-4944-b244-bbb661665fdb",
+                                    "quality": {
+                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
+                                    },
+                                    "value": "2.5",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "0b0e8980-ea50-43e2-8188-32a25b622bd8",
+                                    "quality": {
+                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
+                                    },
+                                    "value": "round"
+                                },
+                                {
+                                    "id": "81e5add1-770e-446a-b0b4-9332ab5227da",
+                                    "quality": {
+                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
+                                    },
+                                    "value": "8.74",
+                                    "unit": "m²"
+                                },
+                                {
+                                    "id": "53f4f82b-c38d-478c-bbbe-c39addd8d41d",
+                                    "quality": {
+                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
+                                    },
+                                    "value": "82992",
+                                    "unit": "€"
+                                },
+                                {
+                                    "id": "ca85ca8f-b309-4a25-9607-735be00abada",
+                                    "quality": {
+                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
+                                    },
+                                    "value": "393",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "73e548b2-bad2-4809-bd43-8f4b5ebf011f",
+                                    "quality": {
+                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "ed9f624b-bf9b-41e6-8029-26a546fe7da6",
+                                    "quality": {
+                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "89988451-be3d-42c0-aed6-54653ea8cd4a",
+                                    "quality": {
+                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
+                                    },
+                                    "value": "13104",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "adaa5f14-faf6-484d-a25a-ca669fd22d17",
+                                    "quality": {
+                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
+                                    },
+                                    "value": "1048",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "cd82e0bd-f61a-4892-b60b-44e0b19b84b3",
+                                    "quality": {
+                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
+                                    },
+                                    "value": "8736.01",
+                                    "unit": "kgCO2e"
+                                }
+                            ],
+                            "stock": 2147483647,
+                            "virtual": false,
+                            "unit": "m",
+                            "createdAt": "2025-11-23T01:10:21.115Z",
+                            "updatedAt": "2025-11-23T01:10:21.115Z",
+                            "authors": [
+                                {
+                                    "id": "d6b613a7-aa4b-4145-a0e6-9eba42c8c7b3"
+                                }
+                            ],
+                            "icon": "icons/capsule_backslash.svg",
+                            "image": "images/capsule_backslash.png",
+                            "description": "🏛 An apartment capsule for one person. It has the entrance on the back and has the view to the front.",
+                            "typology": {
+                                "id": "typology-capsule"
+                            }
+                        },
+                        {
+                            "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
+                            "name": "Capsule Slash",
+                            "families": [
+                                {
+                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+                                }
+                            ],
+                            "representations": [
+                                {
+                                    "id": "ddad92c3-6a9a-4d0f-ad2b-67733e1f8009",
+                                    "name": "capsule_slash",
+                                    "tags": [
+                                        {
+                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                                        }
+                                    ],
+                                    "file": {
+                                        "id": "9fb7699c-8455-4048-ab8b-9621d7756b16"
+                                    }
+                                }
+                            ],
+                            "connectors": [
+                                {
+                                    "id": "dfae8d2b-a0df-4e59-bcdb-865fa8426e50",
+                                    "t": 0,
+                                    "point": {
+                                        "x": -0.45,
+                                        "y": -2.1,
+                                        "z": 2.7755576e-17
+                                    },
+                                    "direction": {
+                                        "x": 0,
+                                        "y": -1,
+                                        "z": 0
+                                    },
+                                    "description": "🔌 The middle of the main entrance door of the upper entrance floor.",
+                                    "port": {
+                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+                                    },
+                                    "mandatory": false,
+                                    "props": [
+                                        {
+                                            "id": "5e9baa67-7b32-43ee-a78a-142875d07e45",
+                                            "quality": {
+                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                            },
+                                            "value": ""
+                                        }
+                                    ]
+                                }
+                            ],
+                            "props": [
+                                {
+                                    "id": "b1555a13-fc31-4bc5-a8ed-0339b185897f",
+                                    "quality": {
+                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                    },
+                                    "value": "back"
+                                },
+                                {
+                                    "id": "e3248001-5cd5-4061-a84c-b4e43892612d",
+                                    "quality": {
+                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
+                                    },
+                                    "value": "front"
+                                },
+                                {
+                                    "id": "7245c3ff-5bf6-4f9e-a661-d0ba4e560c28",
+                                    "quality": {
+                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
+                                    },
+                                    "value": "4.2",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "be3c1faf-1761-4b05-b759-873ed6fcbfd5",
+                                    "quality": {
+                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
+                                    },
+                                    "value": "2.6",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "43daf443-f4d8-4faa-bbb6-11919ca5201a",
+                                    "quality": {
+                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
+                                    },
+                                    "value": "2.5",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "3b76a05e-2bd5-4ded-a771-141099783a97",
+                                    "quality": {
+                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
+                                    },
+                                    "value": "round"
+                                },
+                                {
+                                    "id": "48f4297c-5661-455c-b388-1fe13038c742",
+                                    "quality": {
+                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
+                                    },
+                                    "value": "8.74",
+                                    "unit": "m²"
+                                },
+                                {
+                                    "id": "a4fe3cf3-9b88-49ad-95f9-63adbc3a3758",
+                                    "quality": {
+                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
+                                    },
+                                    "value": "82992",
+                                    "unit": "€"
+                                },
+                                {
+                                    "id": "e19e33a1-b5e2-4241-b77f-00f71ff1d226",
+                                    "quality": {
+                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
+                                    },
+                                    "value": "393",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "1905a6be-f360-48ce-8785-648d72f295ab",
+                                    "quality": {
+                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "4a247b1c-8a02-48f6-a110-e201e03e6408",
+                                    "quality": {
+                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "e8333363-fa7a-4eb1-93df-656d244bf4a6",
+                                    "quality": {
+                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
+                                    },
+                                    "value": "13104",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "8f80f5d5-0a39-4570-8220-a77cbeaa50ca",
+                                    "quality": {
+                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
+                                    },
+                                    "value": "1048",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "560a84f4-1383-489b-a3bc-45cd201790dd",
+                                    "quality": {
+                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
+                                    },
+                                    "value": "8736.01",
+                                    "unit": "kgCO2e"
+                                },
+                                {
+                                    "id": "55921e1c-6b8e-46c4-ae31-b9b39f705a6c",
+                                    "quality": {
+                                        "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d"
+                                    },
+                                    "value": ""
+                                }
+                            ],
+                            "stock": 2147483647,
+                            "virtual": false,
+                            "unit": "m",
+                            "createdAt": "2025-11-23T01:10:21.117Z",
+                            "updatedAt": "2025-11-23T01:10:21.117Z",
+                            "authors": [
+                                {
+                                    "id": "f4645555-9aad-4557-b720-f3df4fed8eb9"
+                                }
+                            ],
+                            "icon": "icons/capsule_slash.svg",
+                            "image": "images/capsule_slash.png",
+                            "description": "🌉 An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
+                            "typology": {
+                                "id": "typology-capsule"
+                            }
+                        },
+                        {
+                            "id": "357b841f-b121-463c-88a6-153d7cbf272f",
+                            "name": "Capsule P",
+                            "families": [
+                                {
+                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+                                }
+                            ],
+                            "representations": [
+                                {
+                                    "id": "f41a27f0-b391-4b97-87a0-9bd48a2383da",
+                                    "name": "capsule_p",
+                                    "tags": [
+                                        {
+                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                                        }
+                                    ],
+                                    "file": {
+                                        "id": "23ccc298-3c2e-41d9-bd55-f0aa8be80098"
+                                    }
+                                }
+                            ],
+                            "connectors": [
+                                {
+                                    "id": "8408bbc8-9055-4edc-9276-f1588c8a6c32",
+                                    "t": 0,
+                                    "point": {
+                                        "x": -0.45,
+                                        "y": -2.1,
+                                        "z": 2.7755576e-17
+                                    },
+                                    "direction": {
+                                        "x": 0,
+                                        "y": -1,
+                                        "z": 0
+                                    },
+                                    "description": "🪔 The middle of the main entrance door of the upper entrance floor.",
+                                    "port": {
+                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+                                    },
+                                    "mandatory": false,
+                                    "props": [
+                                        {
+                                            "id": "fc56c02b-cc0c-4b7e-a6fc-4d7ba4b867ed",
+                                            "quality": {
+                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                            },
+                                            "value": ""
+                                        }
+                                    ]
+                                }
+                            ],
+                            "props": [
+                                {
+                                    "id": "15d81558-8faf-40e0-87f1-3e59a3d40bd9",
+                                    "quality": {
+                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                    },
+                                    "value": "back"
+                                },
+                                {
+                                    "id": "fe173f6e-610e-442a-973a-3221d64614c1",
+                                    "quality": {
+                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
+                                    },
+                                    "value": "side"
+                                },
+                                {
+                                    "id": "99a82a51-f15b-4bdc-a32a-30368e459e88",
+                                    "quality": {
+                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
+                                    },
+                                    "value": "4.2",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "ccc2e987-042e-43cc-8d09-bb53b055d0fa",
+                                    "quality": {
+                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
+                                    },
+                                    "value": "2.6",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "6c8a4cdb-209e-4503-86b9-25e44631554f",
+                                    "quality": {
+                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
+                                    },
+                                    "value": "2.5",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "e6d8b6bf-a5d8-425b-9fbf-998313361688",
+                                    "quality": {
+                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
+                                    },
+                                    "value": "round"
+                                },
+                                {
+                                    "id": "e0710bd2-9bd7-4aea-bbd4-ddcc35adf812",
+                                    "quality": {
+                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
+                                    },
+                                    "value": "8.74",
+                                    "unit": "m²"
+                                },
+                                {
+                                    "id": "be4399ca-ef70-4233-b161-20f65d32eff1",
+                                    "quality": {
+                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
+                                    },
+                                    "value": "82992",
+                                    "unit": "€"
+                                },
+                                {
+                                    "id": "7ba4cbad-f312-43c2-bfda-87ac99609ae4",
+                                    "quality": {
+                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
+                                    },
+                                    "value": "393",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "1af02c91-74d7-4712-ab63-fde9feccc94d",
+                                    "quality": {
+                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "d1afe05e-72da-429a-b950-6d95047f6e3b",
+                                    "quality": {
+                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "8ee8ee44-cf6b-47d5-9c8d-d161bcfa240b",
+                                    "quality": {
+                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
+                                    },
+                                    "value": "13104",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "ba633fa8-6ccb-453f-9cde-04911f89e5dc",
+                                    "quality": {
+                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
+                                    },
+                                    "value": "1048",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "c7e1f5b7-68f2-499e-9e75-5ac36aa56fcf",
+                                    "quality": {
+                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
+                                    },
+                                    "value": "8736.01",
+                                    "unit": "kgCO2e"
+                                },
+                                {
+                                    "id": "45e5709a-043c-4704-a731-34546b7e2f4f",
+                                    "quality": {
+                                        "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d"
+                                    },
+                                    "value": ""
+                                }
+                            ],
+                            "stock": 2147483647,
+                            "virtual": false,
+                            "unit": "m",
+                            "createdAt": "2025-11-23T01:10:21.121Z",
+                            "updatedAt": "2025-11-23T01:10:21.121Z",
+                            "authors": [
+                                {
+                                    "id": "eb10a789-2af3-41fc-b99b-6778ab94a97e"
+                                }
+                            ],
+                            "icon": "icons/capsule_p.svg",
+                            "image": "images/capsule_p.png",
+                            "description": "🏭 An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
+                            "typology": {
+                                "id": "typology-capsule"
+                            }
+                        },
+                        {
+                            "id": "818f2a23-569b-47cb-a69c-147694beb815",
+                            "name": "Capsule J",
+                            "families": [
+                                {
+                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+                                }
+                            ],
+                            "representations": [
+                                {
+                                    "id": "9ef55441-6093-45d1-aadd-811d0cb31b08",
+                                    "name": "capsule_J",
+                                    "tags": [
+                                        {
+                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                                        }
+                                    ],
+                                    "file": {
+                                        "id": "cc3a1265-5a8e-46a6-93b4-7dfc2692f699"
+                                    }
+                                }
+                            ],
+                            "connectors": [
+                                {
+                                    "id": "cfe0b1e5-468b-48b3-a888-5b5d5eb81ffa",
+                                    "t": 0,
+                                    "point": {
+                                        "x": -1.3,
+                                        "y": -1.25,
+                                        "z": 0
+                                    },
+                                    "direction": {
+                                        "x": -1,
+                                        "y": 0,
+                                        "z": 0
+                                    },
+                                    "description": "🧯 The middle of the main entrance door of the upper entrance floor.",
+                                    "port": {
+                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+                                    },
+                                    "mandatory": false,
+                                    "props": [
+                                        {
+                                            "id": "4540d5f0-f49a-4789-b1db-6f4e3d814abe",
+                                            "quality": {
+                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                            },
+                                            "value": ""
+                                        }
+                                    ]
+                                }
+                            ],
+                            "props": [
+                                {
+                                    "id": "f51a2e31-839a-4798-92ff-3abb63cd7ce2",
+                                    "quality": {
+                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                    },
+                                    "value": "side"
+                                },
+                                {
+                                    "id": "53fa6575-6cfe-4512-9ce1-b9db6a1a3cfc",
+                                    "quality": {
+                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
+                                    },
+                                    "value": "front"
+                                },
+                                {
+                                    "id": "a4a7bcf4-772b-437a-af80-8c80fa7d5ec0",
+                                    "quality": {
+                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
+                                    },
+                                    "value": "4.2",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "00aeeec8-0d4f-4152-8b87-e8ddb7bc2ecb",
+                                    "quality": {
+                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
+                                    },
+                                    "value": "2.6",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "a2b8faaf-43a5-4fc6-a733-50ff32210883",
+                                    "quality": {
+                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
+                                    },
+                                    "value": "2.5",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "d1dd57dd-5e03-439e-8156-68234b294f58",
+                                    "quality": {
+                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
+                                    },
+                                    "value": "round"
+                                },
+                                {
+                                    "id": "0f07bec4-f82a-4a06-a971-e2ad66abea97",
+                                    "quality": {
+                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
+                                    },
+                                    "value": "8.74",
+                                    "unit": "m²"
+                                },
+                                {
+                                    "id": "eb133f0e-7153-4540-924f-8ae0b6433379",
+                                    "quality": {
+                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
+                                    },
+                                    "value": "82992",
+                                    "unit": "€"
+                                },
+                                {
+                                    "id": "0e2dcba8-b633-498c-84f6-8d4e588d4099",
+                                    "quality": {
+                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
+                                    },
+                                    "value": "393",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "58c6ee84-2787-4028-8b79-792893ca28dd",
+                                    "quality": {
+                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "83f00295-c2d4-40b9-8499-a18c6b0129cf",
+                                    "quality": {
+                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "c88a4cd0-1026-4154-9dc6-1acbe17b2ad5",
+                                    "quality": {
+                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
+                                    },
+                                    "value": "13104",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "6cc23b0f-ffb4-4dc9-9ca4-3325658fd89d",
+                                    "quality": {
+                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
+                                    },
+                                    "value": "1048",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "5406ffdb-6652-43c1-8422-bb5f755cf65e",
+                                    "quality": {
+                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
+                                    },
+                                    "value": "8736.01",
+                                    "unit": "kgCO2e"
+                                }
+                            ],
+                            "stock": 2147483647,
+                            "virtual": false,
+                            "unit": "m",
+                            "createdAt": "2025-11-23T01:10:21.123Z",
+                            "updatedAt": "2025-11-23T01:10:21.123Z",
+                            "authors": [
+                                {
+                                    "id": "c54f6cea-7194-4410-9539-7ec1dcf46a1e"
+                                }
+                            ],
+                            "icon": "icons/capsule_J.svg",
+                            "image": "images/capsule_J.png",
+                            "description": "🏬 An apartment capsule for one person. It has the entrance on the side and has the view to the front.",
+                            "typology": {
+                                "id": "typology-capsule"
+                            }
+                        },
+                        {
+                            "id": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
+                            "name": "Capsule L",
+                            "families": [
+                                {
+                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+                                }
+                            ],
+                            "representations": [
+                                {
+                                    "id": "1db8438c-bb5d-4bb0-9b28-ca7899166e60",
+                                    "name": "capsule_L",
+                                    "tags": [
+                                        {
+                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                                        }
+                                    ],
+                                    "file": {
+                                        "id": "cc2964b0-834c-4c69-b0a8-6f1efe30c036"
+                                    }
+                                }
+                            ],
+                            "connectors": [
+                                {
+                                    "id": "a34db64e-24a5-40c7-9ece-7480f5817151",
+                                    "t": 0,
+                                    "point": {
+                                        "x": 1.3,
+                                        "y": -1.25,
+                                        "z": 0
+                                    },
+                                    "direction": {
+                                        "x": 1,
+                                        "y": 0,
+                                        "z": 0
+                                    },
+                                    "description": "🗑 The middle of the main entrance door of the upper entrance floor.",
+                                    "port": {
+                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+                                    },
+                                    "mandatory": false,
+                                    "props": [
+                                        {
+                                            "id": "1461a579-c36e-47fb-ae31-a04e2d7e54b2",
+                                            "quality": {
+                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                            },
+                                            "value": ""
+                                        }
+                                    ]
+                                }
+                            ],
+                            "props": [
+                                {
+                                    "id": "3e520e07-113d-4298-971f-f6bda4ed7b2d",
+                                    "quality": {
+                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                    },
+                                    "value": "side"
+                                },
+                                {
+                                    "id": "e2edce8b-eb58-4279-9142-88f8596a00ae",
+                                    "quality": {
+                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
+                                    },
+                                    "value": "front"
+                                },
+                                {
+                                    "id": "864b9a67-60f2-4260-935b-9f41b077000a",
+                                    "quality": {
+                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
+                                    },
+                                    "value": "4.2",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "1773b5e2-968f-4b2e-9de2-e81957d48fc5",
+                                    "quality": {
+                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
+                                    },
+                                    "value": "2.6",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "b3a035f3-443a-46ae-b984-fca132b6f949",
+                                    "quality": {
+                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
+                                    },
+                                    "value": "2.5",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "1e400896-98d0-410b-8af6-0d27506b05b7",
+                                    "quality": {
+                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
+                                    },
+                                    "value": "round"
+                                },
+                                {
+                                    "id": "c95cc042-1522-49f0-a97d-dc2313fe7947",
+                                    "quality": {
+                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
+                                    },
+                                    "value": "8.74",
+                                    "unit": "m²"
+                                },
+                                {
+                                    "id": "d56e4fbc-0fdb-4205-9496-fd22760946d9",
+                                    "quality": {
+                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
+                                    },
+                                    "value": "82992",
+                                    "unit": "€"
+                                },
+                                {
+                                    "id": "39d979f0-356b-4f0f-b262-e82a96b2da4c",
+                                    "quality": {
+                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
+                                    },
+                                    "value": "393",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "c3dc04ce-88d1-4a59-a894-46378b632eaf",
+                                    "quality": {
+                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "c97c24eb-dbf9-48c2-a7d1-54b0305bfb48",
+                                    "quality": {
+                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "564a3090-1082-4484-8c46-6aa5cabc5f9d",
+                                    "quality": {
+                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
+                                    },
+                                    "value": "13104",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "0197d008-17c5-44f4-85c2-a2498e605fc6",
+                                    "quality": {
+                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
+                                    },
+                                    "value": "1048",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "2c0a2f46-bd0c-4467-b222-ee7616b79404",
+                                    "quality": {
+                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
+                                    },
+                                    "value": "8736.01",
+                                    "unit": "kgCO2e"
+                                },
+                                {
+                                    "id": "aa6ebca4-0ac0-4308-8405-64695a74c088",
+                                    "quality": {
+                                        "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d"
+                                    },
+                                    "value": ""
+                                }
+                            ],
+                            "stock": 2147483647,
+                            "virtual": false,
+                            "unit": "m",
+                            "createdAt": "2025-11-23T01:10:21.125Z",
+                            "updatedAt": "2025-11-23T01:10:21.125Z",
+                            "authors": [
+                                {
+                                    "id": "1771ad52-e1f4-41b3-86bc-594161411c9d"
+                                }
+                            ],
+                            "icon": "icons/capsule_L.svg",
+                            "image": "images/capsule_L.png",
+                            "description": "🏨 An apartment capsule for one person. It has the entrance on the side and has the view to the front. It is mirrored compared to the normal one.",
+                            "typology": {
+                                "id": "typology-capsule"
+                            }
+                        },
+                        {
+                            "id": "214a30f8-adfc-40de-840b-151d9f7e17dd",
+                            "name": "Capsule S",
+                            "families": [
+                                {
+                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+                                }
+                            ],
+                            "representations": [
+                                {
+                                    "id": "7126908e-d1b1-4505-91e4-f14411aa1ffc",
+                                    "name": "capsule_s",
+                                    "tags": [
+                                        {
+                                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                                        }
+                                    ],
+                                    "file": {
+                                        "id": "f622872b-af33-4270-9930-b9ed5391a303"
+                                    }
+                                }
+                            ],
+                            "connectors": [
+                                {
+                                    "id": "406ee5c9-8d1e-4639-a9d7-781006082347",
+                                    "t": 0,
+                                    "point": {
+                                        "x": -1.3,
+                                        "y": -1.25,
+                                        "z": 0
+                                    },
+                                    "direction": {
+                                        "x": -1,
+                                        "y": 0,
+                                        "z": 0
+                                    },
+                                    "description": "🛢 The middle of the main entrance door of the upper entrance floor.",
+                                    "port": {
+                                        "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+                                    },
+                                    "mandatory": false,
+                                    "props": [
+                                        {
+                                            "id": "4c631069-5422-42d2-9a25-a8ff97a25c32",
+                                            "quality": {
+                                                "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                            },
+                                            "value": ""
+                                        }
+                                    ]
+                                }
+                            ],
+                            "props": [
+                                {
+                                    "id": "7133af46-a6ba-416f-b45d-056f8e9636a4",
+                                    "quality": {
+                                        "id": "897d53c2-dcc3-598a-acb3-ff641af00dae"
+                                    },
+                                    "value": "side"
+                                },
+                                {
+                                    "id": "b19fae53-81d9-4d00-934e-2aae676a78ef",
+                                    "quality": {
+                                        "id": "2b8403af-d98f-5dee-8cd4-200f00259960"
+                                    },
+                                    "value": "side"
+                                },
+                                {
+                                    "id": "db4e0d3b-369b-4032-9620-233f84e09277",
+                                    "quality": {
+                                        "id": "9a71931b-2837-571d-9169-83229724d78f"
+                                    },
+                                    "value": "4.2",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "1b4bbae5-f6e3-4ccf-96f7-396f8e87c947",
+                                    "quality": {
+                                        "id": "0121fb9c-374e-53aa-8118-4d3eb421337c"
+                                    },
+                                    "value": "2.6",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "7fdc46c4-71f5-44b5-a876-554c09e99f91",
+                                    "quality": {
+                                        "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c"
+                                    },
+                                    "value": "2.5",
+                                    "unit": "m"
+                                },
+                                {
+                                    "id": "d6973efb-c6fe-4ce4-a207-eeeed8e8de56",
+                                    "quality": {
+                                        "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d"
+                                    },
+                                    "value": "round"
+                                },
+                                {
+                                    "id": "8813bfaa-3bbe-4d30-b956-f884da2ebf6d",
+                                    "quality": {
+                                        "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
+                                    },
+                                    "value": "8.74",
+                                    "unit": "m²"
+                                },
+                                {
+                                    "id": "1ee60328-145c-4ed4-b51c-ada9188ce676",
+                                    "quality": {
+                                        "id": "c3326230-4951-5e08-9752-d934dbc5a88f"
+                                    },
+                                    "value": "82992",
+                                    "unit": "€"
+                                },
+                                {
+                                    "id": "65ea8d90-deea-4d8b-ac46-9d4e4a3f4ad9",
+                                    "quality": {
+                                        "id": "64cc900f-72ec-5e7b-91af-78251b681bde"
+                                    },
+                                    "value": "393",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "56d8264c-820a-4c66-9d15-35d241fc338c",
+                                    "quality": {
+                                        "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "956af1ad-cab7-4ac7-aab9-b7ad87691beb",
+                                    "quality": {
+                                        "id": "dba0671e-04a8-5545-a083-eb28b44d3453"
+                                    },
+                                    "value": "262",
+                                    "unit": "kWh/a"
+                                },
+                                {
+                                    "id": "49d770cc-beef-40af-baf4-9259a9618e67",
+                                    "quality": {
+                                        "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
+                                    },
+                                    "value": "13104",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "9e07d3f3-bd88-492a-b7b1-277f0af36567",
+                                    "quality": {
+                                        "id": "8ba1a60d-25af-52f0-8dca-515239be5c77"
+                                    },
+                                    "value": "1048",
+                                    "unit": "€/a"
+                                },
+                                {
+                                    "id": "17214442-ac47-41fa-9257-bcecd9bed975",
+                                    "quality": {
+                                        "id": "7ed15c6b-b191-5da7-94a8-4443649d3593"
+                                    },
+                                    "value": "8736.01",
+                                    "unit": "kgCO2e"
+                                }
+                            ],
+                            "stock": 2147483647,
+                            "virtual": false,
+                            "unit": "m",
+                            "createdAt": "2025-11-23T01:10:21.128Z",
+                            "updatedAt": "2025-11-23T01:10:21.128Z",
+                            "authors": [
+                                {
+                                    "id": "8d7feac4-959c-478d-b6db-fb1c22eca5a0"
+                                }
+                            ],
+                            "icon": "icons/capsule_s.svg",
+                            "image": "images/capsule_s.png",
+                            "description": "🏪 An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
+                            "typology": {
+                                "id": "typology-capsule"
+                            }
+                        }
+                    ]
+                },
+                "designs": {
+                    "hash": "typology-migration-stub",
+                    "items": []
+                }
+            },
+            {
+                "id": "typology-tower",
+                "name": "Tower",
+                "types": {
+                    "hash": "typology-migration-stub",
+                    "items": []
                 },
                 "designs": {
                     "hash": "typology-migration-stub",
