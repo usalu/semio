@@ -758,26 +758,46 @@ const INTRO_EMBODIMENT_INSTITUTIONS_STEP1 = "step1";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP2 = "step2";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP3 = "step3";
 
-const INTRO_SEQUENCE_BOOKMARK_DE = "haupt";
-const INTRO_THOUGHT_BOOKMARK_DE = "einleitung";
-const INTRO_ARRANGEMENT_BOOKMARK_DE: Record<string, string> = {
-	title: "titel",
-	description: "beschreibung",
-	goal: "ziel",
-	authors: "autoren",
-	"affiliations-1": "zugehoerigkeiten-1",
-	"affiliations-2": "zugehoerigkeiten-2",
-	"affiliations-3": "zugehoerigkeiten-3",
+const INTRO_SEQUENCE_BOOKMARK: Record<PresentationLanguageKind, string> = {
+	en: "Main",
+	de: "Einführung",
 };
+
+const INTRO_THOUGHT_BOOKMARK: Record<PresentationLanguageKind, string> = {
+	en: "Introduction",
+	de: "Einleitung",
+};
+
+const INTRO_ARRANGEMENT_BOOKMARK: Record<PresentationLanguageKind, Record<string, string>> = {
+	en: {
+		title: "Title",
+		description: "Description",
+		goal: "Goal",
+		authors: "Authors",
+		"affiliations-1": "Faculty",
+		"affiliations-2": "Universities",
+		"affiliations-3": "Chairs",
+	},
+	de: {
+		title: "Titel",
+		description: "Beschreibung",
+		goal: "Ziel",
+		authors: "Autoren",
+		"affiliations-1": "Fakultät",
+		"affiliations-2": "Universitäten",
+		"affiliations-3": "Lehrstühle",
+	},
+};
+
+function introBookmarkLanguage(language: PresentationLanguageKind | undefined): PresentationLanguageKind {
+	return language ?? "en";
+}
 
 function introArrangementBookmarkName(
 	arrangementId: string,
 	language: PresentationLanguageKind | undefined,
-): string | undefined {
-	if (language !== "de") {
-		return undefined;
-	}
-	return INTRO_ARRANGEMENT_BOOKMARK_DE[arrangementId];
+): string {
+	return INTRO_ARRANGEMENT_BOOKMARK[introBookmarkLanguage(language)][arrangementId] ?? arrangementId;
 }
 
 /** @emoji 🎬 Builds a seven-slide intro; each arrangement is that slide's target content for reveal.js auto-animate. */
@@ -915,20 +935,19 @@ export function intro(spec: IntroSpec): Presentation {
 		muted(INTRO_PARTICIPANT_GOAL),
 	];
 
+	const introLanguage = introBookmarkLanguage(language);
 	const introArrangement = (
 		arrangementId: string,
 		dispositions: Arrangement["dispositions"],
 	): Arrangement => ({
 		id: arrangementId,
-		...(introArrangementBookmarkName(arrangementId, language)
-			? { name: introArrangementBookmarkName(arrangementId, language) }
-			: {}),
+		name: introArrangementBookmarkName(arrangementId, introLanguage),
 		dispositions,
 	});
 
 	const thought: Thought = {
 		id: thoughtId,
-		...(language === "de" ? { name: INTRO_THOUGHT_BOOKMARK_DE } : {}),
+		name: INTRO_THOUGHT_BOOKMARK[introLanguage],
 		participants,
 		transition: { kind: "morph" },
 		arrangements: [
@@ -971,7 +990,7 @@ export function intro(spec: IntroSpec): Presentation {
 		sequences: [
 			{
 				id: "main",
-				...(language === "de" ? { name: INTRO_SEQUENCE_BOOKMARK_DE } : {}),
+				name: INTRO_SEQUENCE_BOOKMARK[introLanguage],
 				thoughts: [thought],
 			},
 		],
@@ -1242,23 +1261,23 @@ if (import.meta.vitest) {
 			});
 			const sequence = deck.sequences[0]!;
 			const thought = sequence.thoughts[0]!;
-			expect(sequence.name).toBe("haupt");
-			expect(thought.name).toBe("einleitung");
+			expect(sequence.name).toBe("Einführung");
+			expect(thought.name).toBe("Einleitung");
 			expect(thought.arrangements.map((arrangement) => arrangement.name)).toEqual([
-				"titel",
-				"beschreibung",
-				"ziel",
-				"autoren",
-				"zugehoerigkeiten-1",
-				"zugehoerigkeiten-2",
-				"zugehoerigkeiten-3",
+				"Titel",
+				"Beschreibung",
+				"Ziel",
+				"Autoren",
+				"Fakultät",
+				"Universitäten",
+				"Lehrstühle",
 			]);
 			expect(collectPresentationSlides(deck)[2]).toEqual({
 				h: 0,
 				v: 2,
-				sequence: "haupt",
-				thought: "einleitung",
-				slide: "ziel",
+				sequence: "Einführung",
+				thought: "Einleitung",
+				slide: "Ziel",
 			});
 		});
 	});
@@ -1614,20 +1633,23 @@ if (import.meta.vitest) {
 		});
 
 		it("formats sequence, thought, and slide bookmark params after the hash path", () => {
-			const bookmark = { sequence: "main", thought: "intro", slide: "title" };
+			const bookmark = { sequence: "Main", thought: "Introduction", slide: "Title" };
 			expect(formatPresentationUrlHash({ h: 0, v: 0 }, bookmark)).toBe(
-				"#/?sequence=main&thought=intro&slide=title",
+				"#/?sequence=Main&thought=Introduction&slide=Title",
 			);
-			expect(formatPresentationUrlHash({ h: 0, v: 2 }, { ...bookmark, slide: "goal" })).toBe(
-				"#/0/2?sequence=main&thought=intro&slide=goal",
+			expect(formatPresentationUrlHash({ h: 0, v: 2 }, { ...bookmark, slide: "Goal" })).toBe(
+				"#/0/2?sequence=Main&thought=Introduction&slide=Goal",
 			);
 		});
 
-		it("uses German bookmark query keys and intro bookmark names for de presentations", () => {
-			const bookmark = { sequence: "haupt", thought: "einleitung", slide: "ziel" };
-			expect(formatPresentationUrlHash({ h: 0, v: 2 }, bookmark, "de")).toBe(
-				"#/0/2?sequenz=haupt&gedanke=einleitung&folie=ziel",
-			);
+		it("uses German bookmark query keys and titleized bookmark names for de presentations", () => {
+			const bookmark = { sequence: "Einführung", thought: "Einleitung", slide: "Universitäten" };
+			const hash = formatPresentationUrlHash({ h: 0, v: 5 }, bookmark, "de");
+			expect(hash.startsWith("#/0/5?")).toBe(true);
+			const params = new URLSearchParams(hash.split("?")[1] ?? "");
+			expect(params.get("sequenz")).toBe("Einführung");
+			expect(params.get("gedanke")).toBe("Einleitung");
+			expect(params.get("folie")).toBe("Universitäten");
 			expect(presentationSlideBookmarkParamKeys("de")).toEqual({
 				sequence: "sequenz",
 				thought: "gedanke",

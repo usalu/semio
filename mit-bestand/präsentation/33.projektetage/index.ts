@@ -197,7 +197,7 @@ const introDeck = intro({
 
 const mediaThought: Thought = {
 	id: "media",
-	name: "medien",
+	name: "Medien",
 	transition: { kind: "morph" },
 	participants: [
 		{
@@ -236,7 +236,7 @@ const mediaThought: Thought = {
 	arrangements: [
 		{
 			id: "catalogue",
-			name: "katalog",
+			name: "Bauteilkatalog",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -257,7 +257,7 @@ const mediaThought: Thought = {
 		},
 		{
 			id: "catalogue-focus",
-			name: "katalog-fokus",
+			name: "Bauteilfokus",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -272,7 +272,7 @@ const mediaThought: Thought = {
 		},
 		{
 			id: "catalogue-labels",
-			name: "katalog-beschriftungen",
+			name: "Bauteilbeschriftungen",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -285,7 +285,7 @@ const mediaThought: Thought = {
 		},
 		{
 			id: "media-suite",
-			name: "medien-suite",
+			name: "Medienüberblick",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -349,17 +349,17 @@ if (import.meta.vitest) {
 			expect(introSlide).toEqual({
 				h: 0,
 				v: 0,
-				sequence: "haupt",
-				thought: "einleitung",
-				slide: "titel",
+				sequence: "Einführung",
+				thought: "Einleitung",
+				slide: "Titel",
 			});
 			const mediaSlide = collectPresentationSlides(deck)[7];
 			expect(mediaSlide).toEqual({
 				h: 0,
 				v: 7,
-				sequence: "haupt",
-				thought: "medien",
-				slide: "katalog",
+				sequence: "Einführung",
+				thought: "Medien",
+				slide: "Bauteilkatalog",
 			});
 		});
 

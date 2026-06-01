@@ -1790,7 +1790,10 @@ if (import.meta.vitest) {
 			});
 			history.replaceState(null, "", "/deck");
 			syncPresentationSlideUrl(deck, { h: 0, v: 2 });
-			expect(new URL(window.location.href).hash).toBe("#/0/2?sequenz=haupt&gedanke=einleitung&folie=ziel");
+			const params = new URLSearchParams(new URL(window.location.href).hash.split("?")[1] ?? "");
+			expect(params.get("sequenz")).toBe("Einführung");
+			expect(params.get("gedanke")).toBe("Einleitung");
+			expect(params.get("folie")).toBe("Ziel");
 			history.replaceState(null, "", "/deck");
 		});
 
@@ -1799,7 +1802,7 @@ if (import.meta.vitest) {
 			syncPresentationSlideUrl(sampleDeck, { h: 0, v: 2 });
 			const url = new URL(window.location.href);
 			expect(url.search).toBe("");
-			expect(url.hash).toBe("#/0/2?sequence=main&thought=intro&slide=goal");
+			expect(url.hash).toBe("#/0/2?sequence=Main&thought=Introduction&slide=Goal");
 			history.replaceState(null, "", "/deck");
 		});
 
