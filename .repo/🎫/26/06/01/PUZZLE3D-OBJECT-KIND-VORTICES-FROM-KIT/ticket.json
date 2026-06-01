@@ -3,11 +3,12 @@
   "emoji": "🌀",
   "status": "closed",
   "description": "Puzzle2d Node Kind Vortices From Kit",
-  "summary": "Fixed kit extraction deduping: object/node kind templates now keep every distinct connector CAD position, not one row per handle/vortex kind (Base had 2 connectors on the same port → 2 vortices). Added `puzzle3dObjectKindVorticesFromKitConnectors` and `puzzle2dNodeKindHandlesFromKitConnectors` with tests; rebaked nakagin 2d/3d fixtures. Base catalog now has 2 vortices at (-7.5,-7.7) and (-18.6,-7.7).",
+  "summary": "Object-kind vortex templates from `meta.kindCatalogs` now appear as nested child rows under each object kind in the Puzzle 3D workbench Kinds catalog tab. Labels resolve through the vortex kind catalog; descriptions show local CAD position. Parent object rows stay draggable for palette placement; vortex child rows are read-only.",
   "goal": "🎯semio",
   "sessions": [
     "⚪499bc0efb77b4a9590ad8e574073e94c",
     "⚪1cfd0e77d0c8474da8529a6ec9252d4c",
-    "⚪dc3adb29a2094fcf8e4c9b0ad017606f"
+    "⚪dc3adb29a2094fcf8e4c9b0ad017606f",
+    "⚪a32d86fd8ba047d59a614966f205f9d2"
   ]
 }

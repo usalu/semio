@@ -56,6 +56,7 @@ import {
   type KindCatalogBundle,
   type KindCompatEntry,
   type ObjectKind,
+  type ObjectKindVortexTemplate,
   type BrushPlacePayload,
   type RelocateMode,
   type RelocatePayload,
@@ -453,18 +454,52 @@ function puzzle3dCatalogKindLabel(entry: Puzzle3dCatalogKind): string {
   return display && display.length > 0 ? display : entry.id;
 }
 
-function puzzle3dPlayKindCatalogSection(sectionId: string, label: string, entries: readonly Puzzle3dCatalogKind[] | undefined): UiTreeSectionNode | null {
+function puzzle3dCatalogVortexKindLabel(vortexKindId: string, vortexKinds: readonly VortexKind[] | undefined): string {
+  const entry = vortexKinds?.find((row) => row.id === vortexKindId);
+  return entry ? puzzle3dCatalogKindLabel(entry) : vortexKindId;
+}
+
+function puzzle3dObjectKindVortexTemplateCatalogDescription(template: ObjectKindVortexTemplate): string {
+  return template.position.map((n) => n.toFixed(1)).join(", ");
+}
+
+function puzzle3dPlayObjectKindVortexCatalogItems(
+  sectionId: string,
+  objectIndex: number,
+  objectKindId: string,
+  templates: readonly ObjectKindVortexTemplate[],
+  vortexKinds: readonly VortexKind[] | undefined,
+): readonly UiTreeItemNode[] {
+  return templates.map((template, vortexIndex) => ({
+    id: `${sectionId}.${objectIndex}.${objectKindId}.vortex.${vortexIndex}`,
+    label: puzzle3dCatalogVortexKindLabel(template.vortexKind, vortexKinds),
+    description: puzzle3dObjectKindVortexTemplateCatalogDescription(template),
+  }));
+}
+
+function puzzle3dPlayKindCatalogSection(
+  sectionId: string,
+  label: string,
+  entries: readonly Puzzle3dCatalogKind[] | undefined,
+  vortexKinds?: readonly VortexKind[],
+): UiTreeSectionNode | null {
   if (!entries?.length) {
     return null;
   }
+  const isObjectPalette = sectionId === "puzzle-3d-play-kinds.objects";
   const items: UiTreeItemNode[] = [...entries]
     .sort((a, b) => puzzle3dCatalogKindLabel(a).localeCompare(puzzle3dCatalogKindLabel(b)))
     .map((entry, index) => {
-      const isObjectPalette = sectionId === "puzzle-3d-play-kinds.objects";
+      const objectKind = isObjectPalette ? (entry as ObjectKind) : null;
+      const vortexItems = objectKind?.vortices?.length
+        ? puzzle3dPlayObjectKindVortexCatalogItems(sectionId, index, entry.id, objectKind.vortices, vortexKinds)
+        : [];
       return {
         id: `${sectionId}.${index}.${entry.id}`,
         label: puzzle3dCatalogKindLabel(entry),
         description: entry.id,
+        defaultOpen: true,
+        ...(vortexItems.length ? { items: vortexItems } : {}),
         ...(isObjectPalette
           ? {
               draggable: true,
@@ -479,7 +514,7 @@ function puzzle3dPlayKindCatalogSection(sectionId: string, label: string, entrie
 /** @emoji 🏷️ Workbench kinds tab: Objects, Vortices, Cables, Attractions. */
 export function buildPuzzle3dPlayKindsTree(catalogs: KindCatalogBundle | undefined): UiNode {
   const sections = [
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.objects),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.objects, catalogs?.vortices),
     puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.vortices),
     puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.cables", "Cables", catalogs?.cables),
     puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.attractions),
@@ -1254,6 +1289,35 @@ function puzzle3dPlayAllEqual<T>(values: readonly T[]): boolean {
   return true;
 }
 
+function puzzle3dPlayVec3AllEqual(values: readonly (readonly [number, number, number])[]): boolean {
+  if (values.length <= 1) return true;
+  const first = values[0];
+  for (let i = 1; i < values.length; i += 1) {
+    const next = values[i]!;
+    if (next[0] !== first![0] || next[1] !== first![1] || next[2] !== first![2]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+type Puzzle3dPlayInspectorVortexRow = { readonly fullId: string; readonly vortex: VortexProps };
+
+/** @emoji 🗺️ Resolves selected vortex rows via object index (O(V) not O(V×objects)). */
+export function puzzle3dPlayInspectorVortexRows(fixture: FixtureV1, vortexFullIds: readonly string[]): Puzzle3dPlayInspectorVortexRow[] {
+  const objectById = new Map(fixture.objects.map((object) => [object.id, object]));
+  const rows: Puzzle3dPlayInspectorVortexRow[] = [];
+  for (const fullId of vortexFullIds) {
+    const { objectId, vortexId } = parseVortexFullId(fullId);
+    const object = objectById.get(objectId);
+    const vortex = object?.vortices.find((entry) => puzzle3dVortexFullId(objectId, entry.id) === fullId || entry.id === vortexId);
+    if (vortex) {
+      rows.push({ fullId, vortex });
+    }
+  }
+  return rows;
+}
+
 /** @emoji 🔎 Declarative inspector panel for puzzle 3D play selection. */
 export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = puzzle3dPlayControllerFromContext(ctx);
@@ -1290,8 +1354,9 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
       ],
     },
   ];
+  const selectedObjectIdSet = new Set(selection.objectIds);
   if (selection.objectIds.length > 0) {
-    const objects = fixture.objects.filter((object) => selection.objectIds.includes(object.id));
+    const objects = fixture.objects.filter((object) => selectedObjectIdSet.has(object.id));
     const labels = objects.map((object) => object.label ?? "");
     const labelUniform = puzzle3dPlayAllEqual(labels);
     const kinds = objects.map((object) => object.objectKind ?? "");
@@ -1360,25 +1425,23 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
       children: objectFields,
     });
   }
-  for (const vortexFullId of selection.vortexIds) {
-    const { objectId, vortexId } = parseVortexFullId(vortexFullId);
-    const object = fixture.objects.find((entry) => entry.id === objectId);
-    const vortex = object?.vortices.find((entry) => puzzle3dVortexFullId(objectId, entry.id) === vortexFullId || entry.id === vortexId);
-    if (!object || !vortex) continue;
+  const selectedVortexRows = puzzle3dPlayInspectorVortexRows(fixture, selection.vortexIds);
+  if (selectedVortexRows.length === 1) {
+    const { fullId: vortexFullId, vortex } = selectedVortexRows[0]!;
     const vortexFields: UiNode[] = [
       {
         type: "field",
-        id: `puzzle-3d-play-inspector.vortex.id.${vortexFullId}`,
+        id: "puzzle-3d-play-inspector.vortex.id",
         label: "Full id",
         child: { type: "text", value: vortexFullId },
       },
       {
         type: "field",
-        id: `puzzle-3d-play-inspector.vortex.label.${vortexFullId}`,
+        id: "puzzle-3d-play-inspector.vortex.label",
         label: "Label",
         child: {
           type: "input",
-          id: `puzzle-3d-play-inspector.vortex.label.input.${vortexFullId}`,
+          id: "puzzle-3d-play-inspector.vortex.label.input",
           inputKind: "text",
           value: vortex.label ?? "",
           onChange: puzzle3dPlayCmd("patchPuzzle3dVortex", { vortexFullId, field: "label" }),
@@ -1386,11 +1449,11 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
       },
       {
         type: "field",
-        id: `puzzle-3d-play-inspector.vortex.kind.${vortexFullId}`,
+        id: "puzzle-3d-play-inspector.vortex.kind",
         label: "Vortex kind",
         child: {
           type: "select",
-          id: `puzzle-3d-play-inspector.vortex.kind.select.${vortexFullId}`,
+          id: "puzzle-3d-play-inspector.vortex.kind.select",
           value: vortex.vortexKind ?? "",
           items: puzzle3dPlayKindCatalogSelectItems(vortexKinds),
           onChange: puzzle3dPlayCmd("patchPuzzle3dVortex", { vortexFullId, field: "vortexKind" }),
@@ -1398,11 +1461,11 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
       },
       {
         type: "field",
-        id: `puzzle-3d-play-inspector.vortex.position.${vortexFullId}`,
+        id: "puzzle-3d-play-inspector.vortex.position",
         label: "Position",
         child: {
           type: "vec3",
-          id: `puzzle-3d-play-inspector.vortex.position.vec3.${vortexFullId}`,
+          id: "puzzle-3d-play-inspector.vortex.position.vec3",
           value: vortex.position as [number, number, number],
           onChange: puzzle3dPlayCmd("patchPuzzle3dVortex", { vortexFullId, field: "position" }),
         },
@@ -1411,11 +1474,11 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
     if (vortex.direction) {
       vortexFields.push({
         type: "field",
-        id: `puzzle-3d-play-inspector.vortex.direction.${vortexFullId}`,
+        id: "puzzle-3d-play-inspector.vortex.direction",
         label: "Direction",
         child: {
           type: "vec3",
-          id: `puzzle-3d-play-inspector.vortex.direction.vec3.${vortexFullId}`,
+          id: "puzzle-3d-play-inspector.vortex.direction.vec3",
           value: vortex.direction as [number, number, number],
           onChange: puzzle3dPlayCmd("patchPuzzle3dVortex", { vortexFullId, field: "direction" }),
         },
@@ -1423,11 +1486,11 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
     }
     vortexFields.push({
       type: "field",
-      id: `puzzle-3d-play-inspector.vortex.radius.${vortexFullId}`,
+      id: "puzzle-3d-play-inspector.vortex.radius",
       label: "Radius",
       child: {
         type: "input",
-        id: `puzzle-3d-play-inspector.vortex.radius.input.${vortexFullId}`,
+        id: "puzzle-3d-play-inspector.vortex.radius.input",
         inputKind: "number",
         value: String(vortex.radius ?? 0.35),
         onChange: puzzle3dPlayCmd("patchPuzzle3dVortex", { vortexFullId, field: "radius" }),
@@ -1435,26 +1498,74 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
     });
     children.push({
       type: "section",
-      id: `puzzle-3d-play-inspector.vortex.${vortexFullId}`,
+      id: "puzzle-3d-play-inspector.vortex",
       label: puzzle3dPlayFixtureRowLabel(vortex.label, vortexFullId),
       children: vortexFields,
     });
-  }
-  for (const attractionId of selection.attractionIds) {
-    const attraction = fixture.attractions.find((entry) => entry.id === attractionId);
-    if (!attraction) continue;
+  } else if (selectedVortexRows.length > 1) {
+    const labels = selectedVortexRows.map((row) => row.vortex.label ?? "");
+    const kinds = selectedVortexRows.map((row) => row.vortex.vortexKind ?? "");
+    const positions = selectedVortexRows.map((row) => row.vortex.position);
+    const radii = selectedVortexRows.map((row) => row.vortex.radius ?? 0.35);
+    const labelUniform = puzzle3dPlayAllEqual(labels);
+    const kindUniform = puzzle3dPlayAllEqual(kinds);
+    const positionUniform = puzzle3dPlayVec3AllEqual(positions);
+    const radiusUniform = puzzle3dPlayAllEqual(radii);
     children.push({
       type: "section",
-      id: `puzzle-3d-play-inspector.attraction.${attractionId}`,
+      id: "puzzle-3d-play-inspector.vortices",
+      label: `Vortices (${selectedVortexRows.length})`,
+      children: [
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.vortices.label",
+          label: "Label",
+          child: {
+            type: "text",
+            value: labelUniform ? (labels[0] ?? "") || "—" : "Mixed",
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.vortices.kind",
+          label: "Vortex kind",
+          child: { type: "text", value: kindUniform ? kinds[0] || "—" : "Mixed" },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.vortices.position",
+          label: "Position",
+          child: {
+            type: "text",
+            value: positionUniform ? `[${positions[0]!.join(", ")}]` : "Mixed",
+          },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.vortices.radius",
+          label: "Radius",
+          child: { type: "text", value: radiusUniform ? String(radii[0]) : "Mixed" },
+        },
+      ],
+    });
+  }
+  const attractionById = new Map(fixture.attractions.map((attraction) => [attraction.id, attraction]));
+  const selectedAttractions = selection.attractionIds.map((id) => attractionById.get(id)).filter((row): row is NonNullable<typeof row> => row !== undefined);
+  if (selectedAttractions.length === 1) {
+    const attraction = selectedAttractions[0]!;
+    const attractionId = attraction.id;
+    children.push({
+      type: "section",
+      id: "puzzle-3d-play-inspector.attraction",
       label: attraction.id,
       children: [
         {
           type: "field",
-          id: `puzzle-3d-play-inspector.attraction.kind.${attractionId}`,
+          id: "puzzle-3d-play-inspector.attraction.kind",
           label: "Attraction kind",
           child: {
             type: "select",
-            id: `puzzle-3d-play-inspector.attraction.kind.select.${attractionId}`,
+            id: "puzzle-3d-play-inspector.attraction.kind.select",
             value: attraction.attractionKind ?? "",
             items: puzzle3dPlayKindCatalogSelectItems(attractionKinds),
             onChange: puzzle3dPlayCmd("patchPuzzle3dAttraction", { attractionId, field: "attractionKind" }),
@@ -1462,11 +1573,11 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
         },
         {
           type: "field",
-          id: `puzzle-3d-play-inspector.attraction.attracting.${attractionId}`,
+          id: "puzzle-3d-play-inspector.attraction.attracting",
           label: "Attracting",
           child: {
             type: "input",
-            id: `puzzle-3d-play-inspector.attraction.attracting.input.${attractionId}`,
+            id: "puzzle-3d-play-inspector.attraction.attracting.input",
             inputKind: "text",
             value: attraction.attracting,
             onChange: puzzle3dPlayCmd("patchPuzzle3dAttraction", { attractionId, field: "attracting" }),
@@ -1474,15 +1585,44 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiNo
         },
         {
           type: "field",
-          id: `puzzle-3d-play-inspector.attraction.attracted.${attractionId}`,
+          id: "puzzle-3d-play-inspector.attraction.attracted",
           label: "Attracted",
           child: {
             type: "input",
-            id: `puzzle-3d-play-inspector.attraction.attracted.input.${attractionId}`,
+            id: "puzzle-3d-play-inspector.attraction.attracted.input",
             inputKind: "text",
             value: attraction.attracted,
             onChange: puzzle3dPlayCmd("patchPuzzle3dAttraction", { attractionId, field: "attracted" }),
           },
+        },
+      ],
+    });
+  } else if (selectedAttractions.length > 1) {
+    const kinds = selectedAttractions.map((row) => row.attractionKind ?? "");
+    const attracting = selectedAttractions.map((row) => row.attracting);
+    const attracted = selectedAttractions.map((row) => row.attracted);
+    children.push({
+      type: "section",
+      id: "puzzle-3d-play-inspector.attractions",
+      label: `Attractions (${selectedAttractions.length})`,
+      children: [
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.attractions.kind",
+          label: "Attraction kind",
+          child: { type: "text", value: puzzle3dPlayAllEqual(kinds) ? kinds[0] || "—" : "Mixed" },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.attractions.attracting",
+          label: "Attracting",
+          child: { type: "text", value: puzzle3dPlayAllEqual(attracting) ? attracting[0]! : "Mixed" },
+        },
+        {
+          type: "field",
+          id: "puzzle-3d-play-inspector.attractions.attracted",
+          label: "Attracted",
+          child: { type: "text", value: puzzle3dPlayAllEqual(attracted) ? attracted[0]! : "Mixed" },
         },
       ],
     });
@@ -1756,6 +1896,62 @@ if (import.meta.vitest) {
       expect(objectsOnly.attractionIds).toEqual([]);
     });
 
+    it("buildPuzzle3dPlayInspectorBody aggregates multi vortex and attraction selection", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      wb.addApp(buildPuzzle3dPlayAppRuntime(ctrl));
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [
+          { id: "t1", attracting: "a:v1", attracted: "b:v2" },
+          { id: "t2", attracting: "b:v2", attracted: "c:v3" },
+        ],
+        objects: [
+          { id: "a", meshUrl: "/m.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] },
+          { id: "b", meshUrl: "/m.glb", origin: [1, 0, 0], vortices: [{ id: "v2", position: [0, 0, 0] }] },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      ctrl.patchFixture(() => fixture!);
+      ctrl.run("setSelection", {
+        selection: {
+          objectIds: [],
+          vortexIds: ["a:v1", "b:v2"],
+          attractionIds: ["t1", "t2"],
+        },
+      });
+      const tree = buildPuzzle3dPlayInspectorBody({
+        runtime: wb,
+        windowKindId: PUZZLE_3D_PLAY_WINDOW_ID,
+        bodyKey: PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY,
+        activeModeId: "main",
+        generation: wb.generation,
+      });
+      const stack = tree as { children?: { label?: string }[] };
+      const labels = (stack.children ?? []).map((child) => child.label);
+      expect(labels).toContain("Vortices (2)");
+      expect(labels).toContain("Attractions (2)");
+      expect(labels.filter((label) => label?.startsWith("a:v1")).length).toBe(0);
+    });
+
+    it("puzzle3dPlayInspectorVortexRows resolves rows via object map", () => {
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [
+          { id: "a", meshUrl: "/m.glb", origin: [0, 0, 0], vortices: [{ id: "v1", label: "A", position: [0, 0, 0] }] },
+          { id: "b", meshUrl: "/m.glb", origin: [1, 0, 0], vortices: [{ id: "v2", label: "B", position: [0, 0, 0] }] },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      const rows = puzzle3dPlayInspectorVortexRows(fixture!, ["a:v1", "b:v2"]);
+      expect(rows).toHaveLength(2);
+      expect(rows[0]?.vortex.label).toBe("A");
+    });
+
     it("selectAllSelection selects every selectable fixture row", () => {
       const bus = new CommandBus();
       const wb = new Platform();
@@ -1903,6 +2099,33 @@ if (import.meta.vitest) {
       const ids = tree.sections[0]?.items?.map((item) => item.id) ?? [];
       expect(ids).toHaveLength(2);
       expect(new Set(ids).size).toBe(2);
+    });
+
+    it("buildPuzzle3dPlayKindsTree nests object-kind vortex templates as child rows", () => {
+      const catalogs = parseKindCatalogs({
+        kindCatalogs: {
+          objects: [
+            {
+              id: "base",
+              label: "Base",
+              name: "Base",
+              meshUrl: "m.glb",
+              vortices: [
+                { vortexKind: "core rectangular bottom", position: [-7.5, -7.7, 7.5] },
+                { vortexKind: "core rectangular bottom", position: [-18.6, -7.7, 7.5] },
+              ],
+            },
+          ],
+          vortices: [{ id: "core rectangular bottom", label: "Core rectangular bottom", name: "Core rectangular bottom" }],
+        },
+      });
+      const tree = buildPuzzle3dPlayKindsTree(catalogs);
+      const base = tree.sections[0]?.items?.find((item) => item.label === "Base");
+      expect(base?.items).toHaveLength(2);
+      expect(base?.items?.[0]?.label).toBe("Core rectangular bottom");
+      expect(base?.items?.[0]?.description).toBe("-7.5, -7.7, 7.5");
+      expect(base?.items?.[1]?.description).toBe("-18.6, -7.7, 7.5");
+      expect(base?.items?.[0]?.draggable).toBeUndefined();
     });
 
     it("puzzle3dPlayKindCatalogSelectItems dedupes duplicate catalog ids for inspector selects", () => {

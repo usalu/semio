@@ -13,13 +13,13 @@ todos:
     status: completed
   - id: inspector
     content: Aggregate buildPuzzle3dPlayInspectorBody with Map indexes (count + uniform/Mixed) instead of per-row sections
-    status: in_progress
+    status: completed
   - id: host
     content: Memoize host-derived kindCatalogs/kindCompatibility/blockedVortexFullIds in framework renderer keyed on fixture
     status: completed
   - id: verify
     content: Extend existing vitest blocks; run tests; runtime-verify Ctrl+A timing with temporary [DEBUG] logs then remove; close ticket
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

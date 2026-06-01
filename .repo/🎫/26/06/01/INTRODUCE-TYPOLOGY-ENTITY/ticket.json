@@ -1,8 +1,9 @@
 {
   "title": "Introduce Typology Entity",
   "emoji": "🏛️",
-  "status": "open",
+  "status": "closed",
   "description": "Introduce Typology as first-class entity: Kit owns typologies (not types/designs directly). Typology owns types and designs. Family stays at kit root for port compatibility. Type/Design keep families refs. Refactor Rust, GraphQL, schemas, SQL, all clients, fixtures, tests. No legacy.",
+  "summary": "Introduced Typology entity across semio: kit owns typologies; typology owns types/designs; families at kit root unchanged. Rust authority, GraphQL SDL, schemas, Go/Python/C#/Ruby/TS/sketchpad, fixture migration.",
   "goal": "🎯semio",
   "sessions": [
     "⚪d21038f952c54c1fa6466b6452304589"

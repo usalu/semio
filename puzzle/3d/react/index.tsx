@@ -506,6 +506,18 @@ function deriveSelectionSnapshot(snapshot: SelectionSnapshot): SelectionDerivati
   };
 }
 
+function selectionIdSetsEqual(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
+  if (left.size !== right.size) {
+    return false;
+  }
+  for (const id of left) {
+    if (!right.has(id)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function selectionSetSymmetricDifference(left: ReadonlySet<string>, right: ReadonlySet<string>): Set<string> {
   const changed = new Set<string>();
   for (const id of left) {
@@ -603,11 +615,14 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
         return;
       }
       const prev = derived;
-      derived = deriveSelectionSnapshot(next);
+      const nextDerived = deriveSelectionSnapshot(next);
+      derived = selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)
+        ? { ...nextDerived, attractionIdSet: prev.attractionIdSet }
+        : nextDerived;
       notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet));
       notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.vortexOwnerObjectIdSet, derived.vortexOwnerObjectIdSet));
       notifyPerIdListeners(vortexListeners, selectionSetSymmetricDifference(prev.vortexIdSet, derived.vortexIdSet));
-      if (prev.attractionIdSet !== derived.attractionIdSet) {
+      if (!selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)) {
         notifyPerIdListeners(attractionListeners, selectionSetSymmetricDifference(prev.attractionIdSet, derived.attractionIdSet));
         for (const listener of attractionBulkListeners) {
           listener();
@@ -7362,6 +7377,53 @@ if (import.meta.vitest) {
       store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(count).toBe(1);
       unsubscribe();
+    });
+    it("notifies per-object listeners only when that object membership changes", () => {
+      const store = createSelectionSnapshotStore();
+      let aCount = 0;
+      let bCount = 0;
+      const unsubA = store.subscribeObject("a", () => {
+        aCount += 1;
+      });
+      const unsubB = store.subscribeObject("b", () => {
+        bCount += 1;
+      });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(aCount).toBe(1);
+      expect(bCount).toBe(0);
+      store.setSnapshot({ objectIds: ["a", "b"], vortexIds: [], attractionIds: [] });
+      expect(aCount).toBe(1);
+      expect(bCount).toBe(1);
+      store.setSnapshot({ objectIds: ["a", "b"], vortexIds: ["c:v1"], attractionIds: [] });
+      expect(aCount).toBe(1);
+      expect(bCount).toBe(1);
+      store.setSnapshot({ objectIds: [], vortexIds: ["c:v1"], attractionIds: [] });
+      expect(aCount).toBe(2);
+      expect(bCount).toBe(2);
+      unsubA();
+      unsubB();
+    });
+    it("marks object selected when a child vortex is selected", () => {
+      const store = createSelectionSnapshotStore();
+      store.setSnapshot({ objectIds: [], vortexIds: ["parent:v1"], attractionIds: [] });
+      expect(store.isObjectSelected("parent")).toBe(true);
+      expect(store.isVortexSelected("parent:v1")).toBe(true);
+      expect(store.getPrimaryObjectId()).toBe("parent");
+    });
+    it("notifies attraction bulk listeners only when attraction membership changes", () => {
+      const store = createSelectionSnapshotStore();
+      let bulkCount = 0;
+      const unsub = store.subscribeAttractions(() => {
+        bulkCount += 1;
+      });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(bulkCount).toBe(0);
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: ["t1"] });
+      expect(bulkCount).toBe(1);
+      expect(store.getAttractionIdSet().has("t1")).toBe(true);
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: ["t1"] });
+      expect(bulkCount).toBe(1);
+      unsub();
     });
   });
   describe("puzzle3dObjectKindVorticesFromKitConnectors", () => {
