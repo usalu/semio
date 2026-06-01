@@ -1,7 +1,17 @@
 # Presentation
 
 A presentation consists of chapters.
-The presentation is website under site `/{columnIndex}/{rowIndex}?chapter={chapterName}&sequence={sequenceName}&thought={thoughtName}&slide={slideName}`. The variables are 
+The slides are presented by a grid.
+When `escape` is pressed, the overview is shown.
+The presentation is website under site `/{columnIndex}/{rowIndex}?chapter={chapterName}&sequence={sequenceName}&thought={thoughtName}&slide={slideName}`. The variables are only for humans and not used by the system.
+
+# Column
+
+A vertical list of slides.
+
+# Row
+
+The slide in a column.
 
 # Chapter
 
@@ -10,6 +20,7 @@ A chapter of sequences.
 # Sequence
 
 A sequence of thoughts.
+A sequence is presented as a column.
 
 # Thought
 

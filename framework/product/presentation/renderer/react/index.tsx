@@ -19,8 +19,11 @@ import {
 	createContext,
 	Fragment,
 	type CSSProperties,
+	useCallback,
 	useContext,
 	useEffect,
+	useLayoutEffect,
+	useMemo,
 	useRef,
 	useState,
 	type FC,
@@ -833,18 +836,13 @@ function FigureSplitMorphView({
 				: { ...embodiment, crop: sourceCrop };
 			return (
 				<>
-					<DispositionFrame
-						disposition={{ ...disposition, position: boundingFrame, split: undefined }}
-						overlay
-					>
-						<FigureMorphView
-							morphId={disposition.morphId}
-							embodiment={cropEmbodiment}
-							emphasis={disposition.emphasis}
-							position={boundingFrame}
-							style={{ opacity: 0 }}
-						/>
-					</DispositionFrame>
+					<FigureMorphView
+						morphId={disposition.morphId}
+						embodiment={cropEmbodiment}
+						emphasis={disposition.emphasis}
+						position={boundingFrame}
+						style={{ opacity: 0 }}
+					/>
 					{tiles.map((tile) => (
 						<FigureTileView
 							key={tile.key}
@@ -1104,32 +1102,864 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 }
 //#endregion 🔖MorphView
 
+//#region 🔖Interaction
+const DISPOSITION_MIN_FRACTION = 0.02;
+const POINTER_DRAG_THRESHOLD_PX = 3;
+
+/** @emoji 📐 Ephemeral slide-space rectangle for interactive dispositions (normalized 0..1). */
+export type DispositionTransform = DispositionPosition;
+
+/** @emoji ↔️ Marquee selection mode: crossing (L→R partial overlap) vs window (R→L full containment). */
+export type MarqueeSelectionRule = "crossing" | "window";
+
+/** @emoji ⊡ Eight resize handles on a disposition frame. */
+export type DispositionResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
+
+const DISPOSITION_RESIZE_HANDLES: readonly DispositionResizeHandle[] = [
+	"nw",
+	"n",
+	"ne",
+	"e",
+	"se",
+	"s",
+	"sw",
+	"w",
+];
+
+/** @emoji 🔑 Stable id for one resolved disposition on a slide. */
+export function dispositionInteractionId(
+	renderSlideId: string,
+	disposition: ResolvedDisposition,
+	index: number,
+): string {
+	return `${renderSlideId}--${disposition.morphId}--${disposition.embodimentId ?? index}`;
+}
+
+/** @emoji 📐 True when two normalized rectangles overlap with positive area. */
+export function rectsIntersect(a: DispositionPosition, b: DispositionPosition): boolean {
+	return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+/** @emoji 📐 True when outer fully contains inner. */
+export function rectContains(outer: DispositionPosition, inner: DispositionPosition): boolean {
+	return (
+		inner.x >= outer.x &&
+		inner.y >= outer.y &&
+		inner.x + inner.width <= outer.x + outer.width &&
+		inner.y + inner.height <= outer.y + outer.height
+	);
+}
+
+/** @emoji ⊞ Normalized marquee rectangle from two pointer fractions. */
+export function normalizeMarquee(
+	start: { readonly x: number; readonly y: number },
+	end: { readonly x: number; readonly y: number },
+): DispositionPosition {
+	const x = Math.min(start.x, end.x);
+	const y = Math.min(start.y, end.y);
+	return {
+		x,
+		y,
+		width: Math.abs(end.x - start.x),
+		height: Math.abs(end.y - start.y),
+	};
+}
+
+/** @emoji ↔️ Crossing when dragged left-to-right (end.x >= start.x), else window. */
+export function marqueeSelectionRule(
+	start: { readonly x: number; readonly y: number },
+	end: { readonly x: number; readonly y: number },
+): MarqueeSelectionRule {
+	return end.x >= start.x ? "crossing" : "window";
+}
+
+/** @emoji 🎯 Whether a marquee selects a target rect under crossing or window rules. */
+export function marqueeSelects(
+	marquee: DispositionPosition,
+	target: DispositionPosition,
+	rule: MarqueeSelectionRule,
+): boolean {
+	if (marquee.width <= 0 || marquee.height <= 0) {
+		return false;
+	}
+	return rule === "crossing" ? rectsIntersect(marquee, target) : rectContains(marquee, target);
+}
+
+function clampFraction(value: number): number {
+	return Math.max(0, Math.min(1, value));
+}
+
+/** @emoji ↔️ Moves a normalized rect by fractional deltas. */
+export function translateDispositionRect(
+	rect: DispositionPosition,
+	dx: number,
+	dy: number,
+): DispositionPosition {
+	const width = rect.width;
+	const height = rect.height;
+	const x = clampFraction(rect.x + dx);
+	const y = clampFraction(rect.y + dy);
+	const maxX = 1 - width;
+	const maxY = 1 - height;
+	return {
+		x: Math.min(x, maxX),
+		y: Math.min(y, maxY),
+		width,
+		height,
+	};
+}
+
+/** @emoji ⊡ Resizes a normalized rect from one handle by fractional deltas. */
+export function resizeDispositionRect(
+	rect: DispositionPosition,
+	handle: DispositionResizeHandle,
+	dx: number,
+	dy: number,
+	minSize: number = DISPOSITION_MIN_FRACTION,
+): DispositionPosition {
+	let { x, y, width, height } = rect;
+	if (handle.includes("e")) {
+		width += dx;
+	}
+	if (handle.includes("w")) {
+		x += dx;
+		width -= dx;
+	}
+	if (handle.includes("s")) {
+		height += dy;
+	}
+	if (handle.includes("n")) {
+		y += dy;
+		height -= dy;
+	}
+	width = Math.max(minSize, width);
+	height = Math.max(minSize, height);
+	x = clampFraction(x);
+	y = clampFraction(y);
+	if (x + width > 1) {
+		width = 1 - x;
+	}
+	if (y + height > 1) {
+		height = 1 - y;
+	}
+	if (width < minSize) {
+		width = minSize;
+	}
+	if (height < minSize) {
+		height = minSize;
+	}
+	return { x, y, width, height };
+}
+
+/** @emoji ⊞ Union bounding box of normalized rectangles. */
+export function groupBoundingRect(rects: readonly DispositionPosition[]): DispositionPosition | null {
+	if (rects.length === 0) {
+		return null;
+	}
+	return unionDispositionPositions(rects);
+}
+
+/** @emoji ⊞ Scales one member rect when a group bounding box is resized. */
+export function scaleRectWithinGroup(
+	rect: DispositionPosition,
+	oldGroup: DispositionPosition,
+	newGroup: DispositionPosition,
+): DispositionPosition {
+	if (oldGroup.width <= 0 || oldGroup.height <= 0) {
+		return rect;
+	}
+	const relX = (rect.x - oldGroup.x) / oldGroup.width;
+	const relY = (rect.y - oldGroup.y) / oldGroup.height;
+	const relW = rect.width / oldGroup.width;
+	const relH = rect.height / oldGroup.height;
+	return {
+		x: newGroup.x + relX * newGroup.width,
+		y: newGroup.y + relY * newGroup.height,
+		width: relW * newGroup.width,
+		height: relH * newGroup.height,
+	};
+}
+
+/** @emoji ⛶ Toggles slide-fullscreen rect vs stashed pre-fullscreen rect. */
+export function toggleFullscreenRect(
+	current: DispositionPosition,
+	stash: DispositionPosition | undefined,
+): { readonly rect: DispositionPosition; readonly stash: DispositionPosition | undefined } {
+	if (stash !== undefined) {
+		return { rect: stash, stash: undefined };
+	}
+	return { rect: { x: 0, y: 0, width: 1, height: 1 }, stash: current };
+}
+
+/** @emoji 📍 Maps client coordinates to normalized fractions inside a section element. */
+export function clientToSectionFraction(
+	sectionEl: HTMLElement,
+	clientX: number,
+	clientY: number,
+): { readonly x: number; readonly y: number } {
+	const bounds = sectionEl.getBoundingClientRect();
+	if (bounds.width <= 0 || bounds.height <= 0) {
+		return { x: 0, y: 0 };
+	}
+	return {
+		x: clampFraction((clientX - bounds.left) / bounds.width),
+		y: clampFraction((clientY - bounds.top) / bounds.height),
+	};
+}
+
+/** @emoji 📍 Maps an element's client rect to normalized fractions inside a section. */
+export function measureElementRectInSection(
+	element: HTMLElement,
+	sectionEl: HTMLElement,
+): DispositionPosition | null {
+	const sectionBounds = sectionEl.getBoundingClientRect();
+	if (sectionBounds.width <= 0 || sectionBounds.height <= 0) {
+		return null;
+	}
+	const rect = element.getBoundingClientRect();
+	return {
+		x: (rect.left - sectionBounds.left) / sectionBounds.width,
+		y: (rect.top - sectionBounds.top) / sectionBounds.height,
+		width: rect.width / sectionBounds.width,
+		height: rect.height / sectionBounds.height,
+	};
+}
+
+/** @emoji 📐 Declared placement for one resolved disposition (tiles union when split). */
+export function declaredDispositionRect(disposition: ResolvedDisposition): DispositionPosition | undefined {
+	if (disposition.style?.opacity === 0) {
+		return undefined;
+	}
+	if (disposition.split?.tiles?.length) {
+		return splitTilesBoundingFrame(disposition.split.tiles) ?? undefined;
+	}
+	return disposition.position;
+}
+
+function transformFrameStyle(transform: DispositionPosition): CSSProperties {
+	return {
+		position: "absolute",
+		left: `${transform.x * 100}%`,
+		top: `${transform.y * 100}%`,
+		width: `${transform.width * 100}%`,
+		height: `${transform.height * 100}%`,
+		boxSizing: "border-box",
+	};
+}
+
+interface PresentationInteractionState {
+	readonly selectedIds: ReadonlySet<string>;
+	readonly transforms: ReadonlyMap<string, DispositionTransform>;
+	readonly fullscreenStash: ReadonlyMap<string, DispositionPosition>;
+	readonly isSelected: (id: string) => boolean;
+	readonly getTransform: (id: string) => DispositionTransform | undefined;
+	readonly setTransform: (id: string, rect: DispositionTransform) => void;
+	readonly setTransforms: (updates: ReadonlyMap<string, DispositionTransform>) => void;
+	readonly selectIds: (ids: readonly string[], additive: boolean) => void;
+	readonly clearSelection: () => void;
+	readonly toggleFullscreen: (id: string, current: DispositionPosition) => void;
+}
+
+const PresentationInteractionContext = createContext<PresentationInteractionState | null>(null);
+
+function usePresentationInteractionState(): PresentationInteractionState {
+	const value = useContext(PresentationInteractionContext);
+	if (!value) {
+		throw new Error("Presentation interaction requires PresentationInteractionContext.");
+	}
+	return value;
+}
+
+/** @emoji 🖱 Ephemeral selection, transforms, and fullscreen stash; resets when slideEpoch changes. */
+export function usePresentationInteraction(slideEpoch: number): PresentationInteractionState {
+	const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
+	const [transforms, setTransforms] = useState<ReadonlyMap<string, DispositionTransform>>(() => new Map());
+	const [fullscreenStash, setFullscreenStash] = useState<ReadonlyMap<string, DispositionPosition>>(() => new Map());
+
+	useEffect(() => {
+		setSelectedIds(new Set());
+		setTransforms(new Map());
+		setFullscreenStash(new Map());
+	}, [slideEpoch]);
+
+	const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
+
+	const getTransform = useCallback((id: string) => transforms.get(id), [transforms]);
+
+	const setTransform = useCallback((id: string, rect: DispositionTransform) => {
+		setTransforms((previous) => {
+			const next = new Map(previous);
+			next.set(id, rect);
+			return next;
+		});
+	}, []);
+
+	const setTransformsBatch = useCallback((updates: ReadonlyMap<string, DispositionTransform>) => {
+		setTransforms((previous) => {
+			const next = new Map(previous);
+			for (const [id, rect] of updates) {
+				next.set(id, rect);
+			}
+			return next;
+		});
+	}, []);
+
+	const selectIds = useCallback((ids: readonly string[], additive: boolean) => {
+		setSelectedIds((previous) => {
+			if (!additive) {
+				return new Set(ids);
+			}
+			const next = new Set(previous);
+			for (const id of ids) {
+				if (next.has(id)) {
+					next.delete(id);
+				} else {
+					next.add(id);
+				}
+			}
+			return next;
+		});
+	}, []);
+
+	const clearSelection = useCallback(() => {
+		setSelectedIds(new Set());
+	}, []);
+
+	const toggleFullscreen = useCallback((id: string, current: DispositionPosition) => {
+		const stash = fullscreenStash.get(id);
+		const { rect, stash: nextStash } = toggleFullscreenRect(current, stash);
+		setTransforms((previous) => {
+			const next = new Map(previous);
+			next.set(id, rect);
+			return next;
+		});
+		setFullscreenStash((previous) => {
+			const next = new Map(previous);
+			if (nextStash === undefined) {
+				next.delete(id);
+			} else {
+				next.set(id, nextStash);
+			}
+			return next;
+		});
+	}, [fullscreenStash]);
+
+	return useMemo(
+		() => ({
+			selectedIds,
+			transforms,
+			fullscreenStash,
+			isSelected,
+			getTransform,
+			setTransform,
+			setTransforms: setTransformsBatch,
+			selectIds,
+			clearSelection,
+			toggleFullscreen,
+		}),
+		[
+			selectedIds,
+			transforms,
+			fullscreenStash,
+			isSelected,
+			getTransform,
+			setTransform,
+			setTransformsBatch,
+			selectIds,
+			clearSelection,
+			toggleFullscreen,
+		],
+	);
+}
+
+interface SlideDispositionRegistry {
+	readonly registerRect: (id: string, rect: DispositionPosition | null) => void;
+	readonly getRect: (id: string) => DispositionPosition | undefined;
+	readonly listEntries: () => readonly { readonly id: string; readonly rect: DispositionPosition }[];
+}
+
+const SlideDispositionRegistryContext = createContext<SlideDispositionRegistry | null>(null);
+
+function useSlideDispositionRegistry(): SlideDispositionRegistry {
+	const value = useContext(SlideDispositionRegistryContext);
+	if (!value) {
+		throw new Error("Slide disposition registry requires SlideDispositionRegistryContext.");
+	}
+	return value;
+}
+
+function SlideDispositionRegistryProvider({
+	children,
+}: {
+	readonly children: ReactNode;
+}): ReactNode {
+	const measuredRectsRef = useRef<Map<string, DispositionPosition>>(new Map());
+	const [, bump] = useState(0);
+
+	const registerRect = useCallback((id: string, rect: DispositionPosition | null) => {
+		const map = measuredRectsRef.current;
+		if (rect === null) {
+			if (map.delete(id)) {
+				bump((value) => value + 1);
+			}
+			return;
+		}
+		const existing = map.get(id);
+		if (
+			existing &&
+			Math.abs(existing.x - rect.x) < 1e-5 &&
+			Math.abs(existing.y - rect.y) < 1e-5 &&
+			Math.abs(existing.width - rect.width) < 1e-5 &&
+			Math.abs(existing.height - rect.height) < 1e-5
+		) {
+			return;
+		}
+		map.set(id, rect);
+		bump((value) => value + 1);
+	}, []);
+
+	const getRect = useCallback((id: string) => measuredRectsRef.current.get(id), []);
+
+	const listEntries = useCallback(() => {
+		return [...measuredRectsRef.current.entries()].map(([id, rect]) => ({ id, rect }));
+	}, []);
+
+	const registry = useMemo(
+		() => ({
+			registerRect,
+			getRect,
+			listEntries,
+		}),
+		[registerRect, getRect, listEntries],
+	);
+
+	return (
+		<SlideDispositionRegistryContext.Provider value={registry}>{children}</SlideDispositionRegistryContext.Provider>
+	);
+}
+
+function resolveEffectiveDispositionRect(
+	id: string,
+	declared: DispositionPosition | undefined,
+	interaction: PresentationInteractionState,
+	registry: SlideDispositionRegistry,
+): DispositionPosition | undefined {
+	const transform = interaction.getTransform(id);
+	if (transform) {
+		return transform;
+	}
+	if (declared) {
+		return declared;
+	}
+	return registry.getRect(id);
+}
+
+const InteractiveDisposition: FC<{
+	readonly id: string;
+	readonly disposition: ResolvedDisposition;
+	readonly declaredRect: DispositionPosition | undefined;
+	readonly sectionRef: RefObject<HTMLElement | null>;
+	readonly children: ReactNode;
+}> = ({ id, disposition, declaredRect, sectionRef, children }) => {
+	const interaction = usePresentationInteractionState();
+	const registry = useSlideDispositionRegistry();
+	const rootRef = useRef<HTMLDivElement>(null);
+	const selected = interaction.isSelected(id);
+	const transform = interaction.getTransform(id);
+	const pinned = transform !== undefined;
+	const fullscreen = interaction.fullscreenStash.has(id) || (transform?.width === 1 && transform?.x === 0 && transform?.y === 0);
+
+	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
+
+	useLayoutEffect(() => {
+		if (declaredRect || transform) {
+			registry.registerRect(id, null);
+			return;
+		}
+		const root = rootRef.current;
+		const section = sectionRef.current;
+		if (!root || !section) {
+			return;
+		}
+		const measured = measureElementRectInSection(root, section);
+		registry.registerRect(id, measured);
+	}, [id, declaredRect, transform, registry, sectionRef]);
+
+	const ensureRectForManipulation = useCallback((): DispositionPosition | null => {
+		const existing = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
+		if (existing) {
+			return existing;
+		}
+		const root = rootRef.current;
+		const section = sectionRef.current;
+		if (!root || !section) {
+			return null;
+		}
+		const measured = measureElementRectInSection(root, section);
+		if (!measured) {
+			return null;
+		}
+		interaction.setTransform(id, measured);
+		return measured;
+	}, [id, declaredRect, interaction, registry, sectionRef]);
+
+	const runPointerGesture = useCallback(
+		(
+			event: React.PointerEvent,
+			mode: "move" | DispositionResizeHandle,
+			initialRect: DispositionPosition,
+		) => {
+			event.preventDefault();
+			event.stopPropagation();
+			const section = sectionRef.current;
+			if (!section) {
+				return;
+			}
+			const pointerId = event.pointerId;
+			const startClient = { x: event.clientX, y: event.clientY };
+			const startFraction = clientToSectionFraction(section, startClient.x, startClient.y);
+			const selectedAtStart = [...interaction.selectedIds];
+			const groupIds =
+				selectedAtStart.includes(id) && selectedAtStart.length > 1 ? selectedAtStart : [id];
+			const startRects = new Map<string, DispositionPosition>();
+			for (const memberId of groupIds) {
+				const memberDeclared =
+					memberId === id
+						? declaredRect
+						: undefined;
+				const rect =
+					interaction.getTransform(memberId) ??
+					(memberId === id ? initialRect : registry.getRect(memberId));
+				if (rect) {
+					startRects.set(memberId, rect);
+				}
+			}
+			const startGroup =
+				mode !== "move" && groupIds.length > 1
+					? groupBoundingRect([...startRects.values()])
+					: null;
+
+			const onMove = (moveEvent: PointerEvent): void => {
+				const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY);
+				const dx = current.x - startFraction.x;
+				const dy = current.y - startFraction.y;
+				const updates = new Map<string, DispositionTransform>();
+				if (mode === "move") {
+					for (const [memberId, rect] of startRects) {
+						updates.set(memberId, translateDispositionRect(rect, dx, dy));
+					}
+				} else if (startGroup && groupIds.length > 1) {
+					const resizedGroup = resizeDispositionRect(startGroup, mode, dx, dy);
+					for (const [memberId, rect] of startRects) {
+						updates.set(memberId, scaleRectWithinGroup(rect, startGroup, resizedGroup));
+					}
+				} else {
+					updates.set(id, resizeDispositionRect(initialRect, mode, dx, dy));
+				}
+				interaction.setTransforms(updates);
+			};
+
+			const onUp = (): void => {
+				window.removeEventListener("pointermove", onMove);
+				window.removeEventListener("pointerup", onUp);
+				window.removeEventListener("pointercancel", onUp);
+				try {
+					(event.target as HTMLElement | null)?.releasePointerCapture?.(pointerId);
+				} catch {
+					// jsdom may not support pointer capture
+				}
+			};
+
+			(event.target as HTMLElement).setPointerCapture?.(pointerId);
+			window.addEventListener("pointermove", onMove);
+			window.addEventListener("pointerup", onUp);
+			window.addEventListener("pointercancel", onUp);
+		},
+		[id, declaredRect, interaction, registry, sectionRef],
+	);
+
+	const onPointerDown = (event: React.PointerEvent): void => {
+		if ((event.target as HTMLElement).closest(".presentation-interaction-handle")) {
+			return;
+		}
+		if ((event.target as HTMLElement).closest(".presentation-interaction-fullscreen")) {
+			return;
+		}
+		event.stopPropagation();
+		const additive = event.shiftKey;
+		if (!selected) {
+			interaction.selectIds([id], additive);
+		} else if (additive) {
+			interaction.selectIds([id], true);
+		}
+		const rect = ensureRectForManipulation();
+		if (!rect) {
+			return;
+		}
+		const startClient = { x: event.clientX, y: event.clientY };
+		let dragged = false;
+		const onMove = (moveEvent: PointerEvent): void => {
+			if (
+				!dragged &&
+				Math.hypot(moveEvent.clientX - startClient.x, moveEvent.clientY - startClient.y) >=
+					POINTER_DRAG_THRESHOLD_PX
+			) {
+				dragged = true;
+				runPointerGesture(event, "move", rect);
+			}
+		};
+		const onUp = (): void => {
+			window.removeEventListener("pointermove", onMove);
+			window.removeEventListener("pointerup", onUp);
+		};
+		window.addEventListener("pointermove", onMove);
+		window.addEventListener("pointerup", onUp);
+	};
+
+	const onHandlePointerDown = (handle: DispositionResizeHandle) => (event: React.PointerEvent) => {
+		event.stopPropagation();
+		if (!selected) {
+			interaction.selectIds([id], false);
+		}
+		const rect = ensureRectForManipulation();
+		if (!rect) {
+			return;
+		}
+		runPointerGesture(event, handle, rect);
+	};
+
+	const onFullscreenClick = (event: React.MouseEvent): void => {
+		event.stopPropagation();
+		const rect = ensureRectForManipulation();
+		if (!rect) {
+			return;
+		}
+		if (!selected) {
+			interaction.selectIds([id], false);
+		}
+		interaction.toggleFullscreen(id, rect);
+	};
+
+	const wrapperClass = [
+		"presentation-interactive-disposition",
+		selected ? "presentation-interactive-disposition--selected" : undefined,
+		pinned ? "presentation-interactive-disposition--pinned" : undefined,
+		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
+	]
+		.filter(Boolean)
+		.join(" ");
+
+	const wrapperStyle: CSSProperties | undefined = pinned && transform ? transformFrameStyle(transform) : undefined;
+
+	return (
+		<div
+			ref={rootRef}
+			data-disposition-id={id}
+			className={wrapperClass}
+			style={wrapperStyle}
+			onPointerDown={onPointerDown}
+		>
+			<div className="presentation-interactive-disposition__content">{children}</div>
+			{selected && effectiveRect ? (
+				<div className="presentation-interactive-disposition__chrome" aria-hidden>
+					{DISPOSITION_RESIZE_HANDLES.map((handle) => (
+						<div
+							key={handle}
+							className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
+							onPointerDown={onHandlePointerDown(handle)}
+						/>
+					))}
+					<button
+						type="button"
+						className="presentation-interaction-fullscreen"
+						title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
+						onClick={onFullscreenClick}
+					>
+						{fullscreen ? "⤢" : "⤢"}
+					</button>
+				</div>
+			) : null}
+		</div>
+	);
+};
+
+const InteractionLayer: FC<{
+	readonly sectionRef: RefObject<HTMLElement | null>;
+	readonly dispositionIds: readonly string[];
+	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
+}> = ({ sectionRef, dispositionIds, declaredRects }) => {
+	const interaction = usePresentationInteractionState();
+	const registry = useSlideDispositionRegistry();
+	const [marquee, setMarquee] = useState<{
+		readonly start: { readonly x: number; readonly y: number };
+		readonly end: { readonly x: number; readonly y: number };
+	} | null>(null);
+
+	const resolveRectForId = useCallback(
+		(targetId: string): DispositionPosition | undefined => {
+			return resolveEffectiveDispositionRect(
+				targetId,
+				declaredRects.get(targetId),
+				interaction,
+				registry,
+			);
+		},
+		[declaredRects, interaction, registry],
+	);
+
+	const onPointerDown = (event: React.PointerEvent): void => {
+		if (event.button !== 0) {
+			return;
+		}
+		const section = sectionRef.current;
+		if (!section) {
+			return;
+		}
+		const fraction = clientToSectionFraction(section, event.clientX, event.clientY);
+		const start = { x: fraction.x, y: fraction.y };
+		let moved = false;
+
+		const onMove = (moveEvent: PointerEvent): void => {
+			if (
+				!moved &&
+				Math.hypot(moveEvent.clientX - event.clientX, moveEvent.clientY - event.clientY) <
+					POINTER_DRAG_THRESHOLD_PX
+			) {
+				return;
+			}
+			moved = true;
+			const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY);
+			setMarquee({ start, end: { x: current.x, y: current.y } });
+		};
+
+		const onUp = (upEvent: PointerEvent): void => {
+			window.removeEventListener("pointermove", onMove);
+			window.removeEventListener("pointerup", onUp);
+			setMarquee(null);
+			if (!moved) {
+				interaction.clearSelection();
+				return;
+			}
+			const end = clientToSectionFraction(section, upEvent.clientX, upEvent.clientY);
+			const box = normalizeMarquee(start, end);
+			const rule = marqueeSelectionRule(start, end);
+			const hits: string[] = [];
+			for (const targetId of dispositionIds) {
+				const rect = resolveRectForId(targetId);
+				if (rect && marqueeSelects(box, rect, rule)) {
+					hits.push(targetId);
+				}
+			}
+			interaction.selectIds(hits, upEvent.shiftKey);
+		};
+
+		window.addEventListener("pointermove", onMove);
+		window.addEventListener("pointerup", onUp);
+	};
+
+	const marqueeStyle: CSSProperties | undefined = marquee
+		? (() => {
+				const box = normalizeMarquee(marquee.start, marquee.end);
+				const rule = marqueeSelectionRule(marquee.start, marquee.end);
+				return {
+					left: `${box.x * 100}%`,
+					top: `${box.y * 100}%`,
+					width: `${box.width * 100}%`,
+					height: `${box.height * 100}%`,
+					...(rule === "crossing"
+						? { className: "presentation-interaction-marquee presentation-interaction-marquee--crossing" }
+						: {}),
+				};
+			})()
+		: undefined;
+
+	const marqueeRule =
+		marquee === null ? null : marqueeSelectionRule(marquee.start, marquee.end);
+
+	return (
+		<div className="presentation-interaction-layer" onPointerDown={onPointerDown}>
+			{marquee && marqueeStyle ? (
+				<div
+					className={[
+						"presentation-interaction-marquee",
+						marqueeRule === "crossing"
+							? "presentation-interaction-marquee--crossing"
+							: "presentation-interaction-marquee--window",
+					].join(" ")}
+					style={{
+						left: marqueeStyle.left,
+						top: marqueeStyle.top,
+						width: marqueeStyle.width,
+						height: marqueeStyle.height,
+					}}
+				/>
+			) : null}
+		</div>
+	);
+};
+//#endregion 🔖Interaction
+
 //#region 🔖ArrangementSection
 const ArrangementSection: FC<{
 	readonly thought: Thought;
 	readonly renderSlide: RenderSlide;
 }> = ({ thought, renderSlide }) => {
+	const sectionRef = useRef<HTMLElement>(null);
 	const resolved = resolveArrangement(thought.participants, renderSlide.arrangement);
 	const morph = renderSlide.autoAnimateId !== undefined;
 	const positioned = resolved.some((disposition) => disposition.position !== undefined || disposition.split !== undefined);
 	const layoutResolved = positioned ? centerResolvedArrangement(resolved) : resolved;
-	const placements = layoutResolved.map((disposition, index) => (
-		<MorphDispositionView
-			key={`${renderSlide.id}-${disposition.morphId}-${disposition.embodimentId ?? index}`}
-			disposition={disposition}
-		/>
+	const dispositionMeta = useMemo(
+		() =>
+			layoutResolved.map((disposition, index) => ({
+				id: dispositionInteractionId(renderSlide.id, disposition, index),
+				disposition,
+				declaredRect: declaredDispositionRect(disposition),
+			})),
+		[layoutResolved, renderSlide.id],
+	);
+	const declaredRects = useMemo(() => {
+		const map = new Map<string, DispositionPosition | undefined>();
+		for (const entry of dispositionMeta) {
+			map.set(entry.id, entry.declaredRect);
+		}
+		return map;
+	}, [dispositionMeta]);
+	const placements = dispositionMeta.map((entry) => (
+		<InteractiveDisposition
+			key={entry.id}
+			id={entry.id}
+			disposition={entry.disposition}
+			declaredRect={entry.declaredRect}
+			sectionRef={sectionRef}
+		>
+			<MorphDispositionView disposition={entry.disposition} />
+		</InteractiveDisposition>
 	));
 	return (
-		<section
-			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": renderSlide.autoAnimateId } : {})}
-			{...(renderSlide.arrangement.settleBeforeMorphTo?.length
-				? { "data-settle-before-morph-to": renderSlide.arrangement.settleBeforeMorphTo.join(",") }
-				: {})}
-			title={renderSlide.id}
-			className={positioned ? "presentation-arrangement--positioned" : undefined}
-		>
-			{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
-		</section>
+		<SlideDispositionRegistryProvider>
+			<section
+				ref={sectionRef}
+				{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": renderSlide.autoAnimateId } : {})}
+				{...(renderSlide.arrangement.settleBeforeMorphTo?.length
+					? { "data-settle-before-morph-to": renderSlide.arrangement.settleBeforeMorphTo.join(",") }
+					: {})}
+				title={renderSlide.id}
+				className={[
+					"presentation-arrangement--interactive",
+					positioned ? "presentation-arrangement--positioned" : undefined,
+				]
+					.filter(Boolean)
+					.join(" ")}
+			>
+				{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
+				<InteractionLayer
+					sectionRef={sectionRef}
+					dispositionIds={dispositionMeta.map((entry) => entry.id)}
+					declaredRects={declaredRects}
+				/>
+			</section>
+		</SlideDispositionRegistryProvider>
 	);
 };
 //#endregion 🔖ArrangementSection

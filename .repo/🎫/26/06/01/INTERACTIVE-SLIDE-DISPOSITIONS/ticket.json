@@ -1,0 +1,10 @@
+{
+  "title": "Interactive Slide Dispositions",
+  "emoji": "🖱",
+  "status": "open",
+  "description": "Make all slides interactive by default: every disposition is hoverable, selectable (click + rectangle marquee with crossing/window rules), draggable, resizable, with per-disposition slide-fullscreen toggle. Ephemeral in-session only.",
+  "goal": "🎯framework🎯presentation",
+  "sessions": [
+    "⚪ff10b8bd673f400597d9f29275555cf3"
+  ]
+}

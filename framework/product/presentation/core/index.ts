@@ -858,6 +858,23 @@ function buildMorphBridgeArrangement(
 	};
 }
 
+/** @emoji 👻 Shows morph-bridge ghost crops at rest; they stay opacity-0 on the final morph target slide. */
+function arrangementWithVisibleMorphBridgeGhosts(arrangement: Arrangement): Arrangement {
+	let changed = false;
+	const dispositions = arrangement.dispositions.map((disposition) => {
+		if (!disposition.morphGhost || disposition.style?.opacity !== 0) {
+			return disposition;
+		}
+		changed = true;
+		const { opacity: _opacity, ...restStyle } = disposition.style ?? {};
+		return {
+			...disposition,
+			style: Object.keys(restStyle).length > 0 ? restStyle : undefined,
+		};
+	});
+	return changed ? { ...arrangement, dispositions } : arrangement;
+}
+
 /** @emoji 🌉 Expands {@link Thought.slides} with auto-derived morph bridges and morph-run auto-animate ids. */
 export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 	const slides = thought.slides;
@@ -898,7 +915,7 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 					expanded.push({
 						id: bridge.id,
 						name: bridge.name,
-						arrangement: bridge,
+						arrangement: arrangementWithVisibleMorphBridgeGhosts(bridge),
 						autoAnimateId,
 						derived: true,
 					});
@@ -2294,6 +2311,8 @@ if (import.meta.vitest) {
 			const labelGhost = labels?.arrangement.dispositions.find((disposition) => disposition.morphGhost);
 			expect(bridgeGhost?.morphTargetId).toBeUndefined();
 			expect(labelGhost?.morphTargetId).toBe("labels--0");
+			expect(bridgeGhost?.style?.opacity).toBeUndefined();
+			expect(labelGhost?.style?.opacity).toBe(0);
 		});
 
 		it("enriches settleBeforeMorphTo on the source slide when a morph bridge is inserted", () => {
