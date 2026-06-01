@@ -1286,6 +1286,52 @@ export function toggleFullscreenRect(
 	return { rect: { x: 0, y: 0, width: 1, height: 1 }, stash: current };
 }
 
+/** @emoji 🖼 Arrangement canvas when dispositions use declared slide-space frames; otherwise the slide section. */
+export function dispositionPlacementContainer(
+	sectionEl: HTMLElement,
+	canvasPlacement: boolean,
+): HTMLElement {
+	if (!canvasPlacement) {
+		return sectionEl;
+	}
+	const canvas = sectionEl.querySelector(".presentation-arrangement-canvas");
+	return canvas instanceof HTMLElement ? canvas : sectionEl;
+}
+
+/** @emoji 🖼 Ink-bearing node used to measure a positioned disposition on the arrangement canvas. */
+export function dispositionFrameElement(root: HTMLElement): HTMLElement {
+	return (
+		(root.querySelector(
+			".presentation-disposition-frame, .presentation-figure-tile-frame, .presentation-morph-slot--figure, .presentation-morph-anchor",
+		) as HTMLElement | null) ?? root
+	);
+}
+
+/** @emoji ⊡ Selection chrome style: canvas frame when unpinned, wrapper inset when pinned, scaled with content. */
+export function interactiveDispositionChromeStyle(options: {
+	readonly selected: boolean;
+	readonly effectiveRect: DispositionPosition | undefined;
+	readonly pinned: boolean;
+	readonly fullscreen: boolean;
+	readonly contentScale: number | null;
+}): CSSProperties | undefined {
+	const { selected, effectiveRect, pinned, fullscreen, contentScale } = options;
+	if (!selected || !effectiveRect || fullscreen) {
+		return undefined;
+	}
+	if (pinned) {
+		if (contentScale !== null) {
+			return {
+				position: "absolute",
+				inset: 0,
+				...interactiveDispositionContentScaleStyle(contentScale),
+			};
+		}
+		return undefined;
+	}
+	return transformFrameStyle(effectiveRect);
+}
+
 /** @emoji 📍 Maps client coordinates to normalized fractions inside a section element. */
 export function clientToSectionFraction(
 	sectionEl: HTMLElement,
@@ -1557,6 +1603,43 @@ export function isFlowPixelOffsetTransform(
 	return transform.width === measured.width && transform.height === measured.height;
 }
 
+/** @emoji 🔍 Uniform scale for pinned resize so ink zooms inside the frame without reflow overflow. */
+export function interactiveDispositionContentScale(
+	transform: DispositionPosition,
+	baseline: DispositionPosition | undefined,
+): number | null {
+	if (!baseline || baseline.width <= 0 || baseline.height <= 0) {
+		return null;
+	}
+	if (transform.width <= 0 || transform.height <= 0) {
+		return null;
+	}
+	const scaleX = transform.width / baseline.width;
+	const scaleY = transform.height / baseline.height;
+	const widthChanged = Math.abs(scaleX - 1) >= 1e-4;
+	const heightChanged = Math.abs(scaleY - 1) >= 1e-4;
+	if (!widthChanged && !heightChanged) {
+		return null;
+	}
+	if (!widthChanged) {
+		return Number.isFinite(scaleY) ? scaleY : null;
+	}
+	if (!heightChanged) {
+		return Number.isFinite(scaleX) ? scaleX : null;
+	}
+	const uniform = Math.min(scaleX, scaleY);
+	return Number.isFinite(uniform) ? uniform : null;
+}
+
+/** @emoji 🔍 CSS transform that scales disposition content from its center during interactive resize. */
+export function interactiveDispositionContentScaleStyle(scale: number): CSSProperties {
+	return {
+		transform: `scale(${scale})`,
+		transformOrigin: "center center",
+		willChange: "transform",
+	};
+}
+
 /** @emoji 📍 Converts a flow pixel-offset transform into a slide-space frame using measured ink bounds. */
 export function flowPixelOffsetToSectionRect(
 	measured: DispositionPosition,
@@ -1810,6 +1893,7 @@ const InteractiveDisposition: FC<{
 	const fullscreen = interaction.isFullscreen(id);
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
+	const canvasPlacement = declaredRect !== undefined;
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
 		const section = sectionRef.current;
@@ -1817,14 +1901,15 @@ const InteractiveDisposition: FC<{
 		if (!root || !section) {
 			return null;
 		}
-		const measured = declaredRect
-			? measureElementRectInSection(root, section)
+		const container = dispositionPlacementContainer(section, canvasPlacement);
+		const measured = canvasPlacement
+			? measureElementRectInSection(dispositionFrameElement(root), container)
 			: measureDispositionBoundsInSection(root, section);
 		if (!measured || !isUsableMeasuredRect(measured)) {
 			return null;
 		}
 		return measured;
-	}, [declaredRect, sectionRef]);
+	}, [canvasPlacement, sectionRef]);
 
 	useLayoutEffect(() => {
 		if (declaredRect) {
@@ -1889,9 +1974,12 @@ const InteractiveDisposition: FC<{
 			if (!section) {
 				return;
 			}
+			const fractionContainer = dispositionPlacementContainer(section, canvasPlacement);
 			const pointerId = origin.pointerId;
 			const startClient = { x: origin.clientX, y: origin.clientY };
-			const startFraction = clientToSectionFraction(section, startClient.x, startClient.y, { clamp: false });
+			const startFraction = clientToSectionFraction(fractionContainer, startClient.x, startClient.y, {
+				clamp: false,
+			});
 			const selectedAtStart = new Set(interaction.selectedIds);
 			if (!selectedAtStart.has(id)) {
 				selectedAtStart.add(id);
@@ -1957,7 +2045,11 @@ const InteractiveDisposition: FC<{
 								height: rect.height,
 							});
 						} else {
-							const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY, {
+							const container = dispositionPlacementContainer(
+								section,
+								allDeclaredRects.get(memberId) !== undefined,
+							);
+							const current = clientToSectionFraction(container, moveEvent.clientX, moveEvent.clientY, {
 								clamp: false,
 							});
 							const dx = current.x - startFraction.x;
@@ -1966,7 +2058,7 @@ const InteractiveDisposition: FC<{
 						}
 					}
 				} else {
-					const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY, {
+					const current = clientToSectionFraction(fractionContainer, moveEvent.clientX, moveEvent.clientY, {
 						clamp: false,
 					});
 					const dx = current.x - startFraction.x;
@@ -2007,7 +2099,7 @@ const InteractiveDisposition: FC<{
 			window.addEventListener("pointerup", onUp);
 			window.addEventListener("pointercancel", onUp);
 		},
-		[id, flowLayout, allDeclaredRects, interaction, registry, sectionRef],
+		[id, canvasPlacement, allDeclaredRects, interaction, registry, sectionRef],
 	);
 
 	const onPointerDown = (event: React.PointerEvent): void => {
@@ -2097,8 +2189,27 @@ const InteractiveDisposition: FC<{
 			: transformFrameStyle(transform)
 		: undefined;
 
-	const chromeStyle: CSSProperties | undefined =
-		selected && effectiveRect && !pinned && !fullscreen ? transformFrameStyle(effectiveRect) : undefined;
+	const resizeBaseline = declaredRect ?? measuredNatural;
+	const contentScale =
+		pinned && transform && resizeBaseline
+			? interactiveDispositionContentScale(transform, resizeBaseline)
+			: null;
+
+	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
+		selected,
+		effectiveRect,
+		pinned,
+		fullscreen,
+		contentScale,
+	});
+	const contentClass = [
+		"presentation-interactive-disposition__content",
+		contentScale !== null ? "presentation-interactive-disposition__content--scaled" : undefined,
+	]
+		.filter(Boolean)
+		.join(" ");
+	const contentStyle: CSSProperties | undefined =
+		contentScale !== null ? interactiveDispositionContentScaleStyle(contentScale) : undefined;
 
 	return (
 		<div
@@ -2108,7 +2219,7 @@ const InteractiveDisposition: FC<{
 			style={wrapperStyle}
 			onPointerDown={onPointerDown}
 		>
-			<div ref={contentRef} className="presentation-interactive-disposition__content">
+			<div ref={contentRef} className={contentClass} style={contentStyle}>
 				{children}
 			</div>
 			{selected && effectiveRect ? (
@@ -2139,9 +2250,10 @@ const InteractiveDisposition: FC<{
 
 const InteractionLayer: FC<{
 	readonly sectionRef: RefObject<HTMLElement | null>;
+	readonly canvasPlacement: boolean;
 	readonly dispositionIds: readonly string[];
 	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
-}> = ({ sectionRef, dispositionIds, declaredRects }) => {
+}> = ({ sectionRef, canvasPlacement, dispositionIds, declaredRects }) => {
 	const interaction = usePresentationInteractionState();
 	const registry = useSlideDispositionRegistry();
 	const [marquee, setMarquee] = useState<{
@@ -2169,7 +2281,8 @@ const InteractionLayer: FC<{
 		if (!section) {
 			return;
 		}
-		const fraction = clientToSectionFraction(section, event.clientX, event.clientY);
+		const fractionContainer = dispositionPlacementContainer(section, canvasPlacement);
+		const fraction = clientToSectionFraction(fractionContainer, event.clientX, event.clientY);
 		const start = { x: fraction.x, y: fraction.y };
 		let moved = false;
 
@@ -2182,7 +2295,7 @@ const InteractionLayer: FC<{
 				return;
 			}
 			moved = true;
-			const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY);
+			const current = clientToSectionFraction(fractionContainer, moveEvent.clientX, moveEvent.clientY);
 			setMarquee({ start, end: { x: current.x, y: current.y } });
 		};
 
@@ -2194,7 +2307,7 @@ const InteractionLayer: FC<{
 				interaction.clearSelection();
 				return;
 			}
-			const end = clientToSectionFraction(section, upEvent.clientX, upEvent.clientY);
+			const end = clientToSectionFraction(fractionContainer, upEvent.clientX, upEvent.clientY);
 			const box = normalizeMarquee(start, end);
 			const rule = marqueeSelectionRule(start, end);
 			const hits: string[] = [];
@@ -2309,6 +2422,7 @@ const ArrangementSection: FC<{
 			>
 				<InteractionLayer
 					sectionRef={sectionRef}
+					canvasPlacement={positioned}
 					dispositionIds={dispositionMeta.map((entry) => entry.id)}
 					declaredRects={declaredRects}
 				/>
@@ -3435,6 +3549,18 @@ if (import.meta.vitest) {
 			const restored = toggleFullscreenRect(full.rect, full.stash);
 			expect(restored.rect).toEqual(a);
 		});
+
+		it("uses uniform min-axis scale for interactive resize content", () => {
+			const baseline = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+			const grown = { x: 0.2, y: 0.3, width: 0.6, height: 0.2 };
+			expect(interactiveDispositionContentScale(grown, baseline)).toBeCloseTo(1.5);
+			const stretched = { x: 0.2, y: 0.3, width: 0.6, height: 0.35 };
+			expect(interactiveDispositionContentScale(stretched, baseline)).toBeCloseTo(1.5);
+			expect(interactiveDispositionContentScale(baseline, baseline)).toBeNull();
+			expect(
+				interactiveDispositionContentScaleStyle(1.25).transform,
+			).toBe("scale(1.25)");
+		});
 	});
 
 	describe("presentation interaction dom", () => {
@@ -3664,6 +3790,13 @@ if (import.meta.vitest) {
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
 			expect(parseFloat(disposition.style.width)).toBeGreaterThan(40);
 			expect(parseFloat(disposition.style.height)).toBeGreaterThan(20);
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
+			expect(content.classList.contains("presentation-interactive-disposition__content--scaled")).toBe(
+				true,
+			);
+			expect(content.style.transform).toContain("scale(");
 		});
 
 		it("toggles slide fullscreen without pinned transforms or inline placement", () => {

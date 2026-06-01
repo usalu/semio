@@ -1,0 +1,1 @@
+Resize applies `interactiveDispositionContentScale` on pinned transforms: baseline = declared position or measured flow ink bounds; uniform scale from changed axes; min when both axes change to avoid overshoot.

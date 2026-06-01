@@ -286,6 +286,10 @@
 	min-width: 0;
 }
 
+.reveal .presentation-interactive-disposition--pinned .presentation-interactive-disposition__content--scaled {
+	overflow: visible;
+}
+
 .reveal
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--pinned
