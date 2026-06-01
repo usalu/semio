@@ -422,6 +422,44 @@ export function splitTilesBoundingFrame(tiles: readonly SplitTile[]): Dispositio
 	return { x: minX, y: minY, width, height };
 }
 
+/** @emoji 📊 One visual row of split tiles with similar vertical placement. */
+export interface SplitTileVisualRow {
+	readonly tiles: readonly SplitTile[];
+}
+
+/** @emoji 📊 Groups split tiles into visual rows by vertical midpoint proximity. */
+export function clusterSplitTilesByVisualRow(tiles: readonly SplitTile[]): readonly SplitTileVisualRow[] {
+	if (tiles.length === 0) {
+		return [];
+	}
+	const sorted = [...tiles].sort(
+		(a, b) => a.position.y + a.position.height / 2 - (b.position.y + b.position.height / 2),
+	);
+	const rows: SplitTile[][] = [];
+	for (const tile of sorted) {
+		const midY = tile.position.y + tile.position.height / 2;
+		let matched: SplitTile[] | undefined;
+		for (const row of rows) {
+			const frame = splitTilesBoundingFrame(row);
+			if (!frame) {
+				continue;
+			}
+			const rowMid = frame.y + frame.height / 2;
+			const tolerance = Math.max(tile.position.height, frame.height) * 0.55;
+			if (Math.abs(midY - rowMid) <= tolerance) {
+				matched = row;
+				break;
+			}
+		}
+		if (matched) {
+			matched.push(tile);
+		} else {
+			rows.push([tile]);
+		}
+	}
+	return rows.map((rowTiles) => ({ tiles: rowTiles }));
+}
+
 /** @emoji 📐 Re-expresses tile positions relative to a group frame (0..1 inside the group). */
 export function splitTilesInGroupFrame(
 	tiles: readonly SplitTile[],

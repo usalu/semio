@@ -59,6 +59,7 @@ import {
 	affiliationLineName,
 	analogy,
 	centerResolvedArrangement,
+	clusterSplitTilesByVisualRow,
 	collectPresentationSlides,
 	expandThoughtSlides,
 	formatPresentationUrlHash,
@@ -133,6 +134,7 @@ export {
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
+	clusterSplitTilesByVisualRow,
 	splitFigureGrid,
 	splitTilesBoundingFrame,
 	splitTilesInGroupFrame,
@@ -1166,6 +1168,104 @@ export function dispositionInteractionId(
 	return `${renderSlideId}--${disposition.morphId}--${disposition.embodimentId ?? index}`;
 }
 
+/** @emoji 🔑 Stable id for one split tile on an interactive slide. */
+export function tileDispositionInteractionId(
+	renderSlideId: string,
+	disposition: ResolvedDisposition,
+	dispositionIndex: number,
+	tileKey: string,
+): string {
+	return `${dispositionInteractionId(renderSlideId, disposition, dispositionIndex)}--tile--${tileKey}`;
+}
+
+/** @emoji 🔑 Stable id for a visual row band grouping split tiles on one disposition. */
+export function rowBandInteractionId(
+	renderSlideId: string,
+	disposition: ResolvedDisposition,
+	dispositionIndex: number,
+	rowIndex: number,
+): string {
+	return `${dispositionInteractionId(renderSlideId, disposition, dispositionIndex)}--row--${rowIndex}`;
+}
+
+/** @emoji 🖱 One interactive placement (whole disposition or a single split tile). */
+export interface InteractiveDispositionPlacement {
+	readonly id: string;
+	readonly disposition: ResolvedDisposition;
+	/** @emoji 📐 Wrapper frame (row-local for tiles inside a visual row). */
+	readonly declaredRect: DispositionPosition | undefined;
+	/** @emoji 📐 Slide-space frame for marquee, drag, and resize. */
+	readonly sectionRect: DispositionPosition | undefined;
+	readonly rowBandId?: string;
+}
+
+/** @emoji 📏 Row-level hit target spanning all tiles in one visual row of a split disposition. */
+export interface InteractiveRowBandPlacement {
+	readonly id: string;
+	readonly frame: DispositionPosition;
+	readonly tileIds: readonly string[];
+}
+
+/** @emoji 🖱 Interactive placements and row bands for one slide arrangement. */
+export interface InteractiveSlideLayout {
+	readonly placements: readonly InteractiveDispositionPlacement[];
+	readonly rowBands: readonly InteractiveRowBandPlacement[];
+}
+
+/** @emoji 🧩 Expands split dispositions into per-tile placements; skips morph-only duplicate splits. */
+export function buildInteractiveSlideLayout(
+	renderSlideId: string,
+	resolved: readonly ResolvedDisposition[],
+): InteractiveSlideLayout {
+	const placements: InteractiveDispositionPlacement[] = [];
+	const rowBands: InteractiveRowBandPlacement[] = [];
+	resolved.forEach((disposition, dispositionIndex) => {
+		if (disposition.split?.morphParticipant) {
+			return;
+		}
+		const tiles = disposition.split?.tiles;
+		if (tiles && tiles.length > 0) {
+			const visualRows = clusterSplitTilesByVisualRow(tiles);
+			visualRows.forEach((row, rowIndex) => {
+				const rowBandId = rowBandInteractionId(renderSlideId, disposition, dispositionIndex, rowIndex);
+				const frame = splitTilesBoundingFrame(row.tiles);
+				const tileIds: string[] = [];
+				for (const tile of row.tiles) {
+					const id = tileDispositionInteractionId(
+						renderSlideId,
+						disposition,
+						dispositionIndex,
+						tile.key,
+					);
+					tileIds.push(id);
+					placements.push({
+						id,
+						disposition: {
+							...disposition,
+							split: { ...disposition.split!, tiles: [tile] },
+						},
+						declaredRect: tile.position,
+						sectionRect: tile.position,
+						rowBandId,
+					});
+				}
+				if (frame && tileIds.length > 0) {
+					rowBands.push({ id: rowBandId, frame, tileIds });
+				}
+			});
+			return;
+		}
+		const declaredRect = declaredDispositionRect(disposition);
+		placements.push({
+			id: dispositionInteractionId(renderSlideId, disposition, dispositionIndex),
+			disposition,
+			declaredRect,
+			sectionRect: declaredRect,
+		});
+	});
+	return { placements, rowBands };
+}
+
 /** @emoji 📐 True when two normalized rectangles overlap with positive area. */
 export function rectsIntersect(a: DispositionPosition, b: DispositionPosition): boolean {
 	return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
@@ -1343,9 +1443,10 @@ export function interactiveDispositionChromeStyle(options: {
 	readonly effectiveRect: DispositionPosition | undefined;
 	readonly canvasFramed: boolean;
 	readonly fullscreen: boolean;
+	readonly flowPixelOffset?: boolean;
 }): CSSProperties | undefined {
-	const { selected, effectiveRect, canvasFramed, fullscreen } = options;
-	if (!selected || !effectiveRect || fullscreen || canvasFramed) {
+	const { selected, effectiveRect, canvasFramed, fullscreen, flowPixelOffset } = options;
+	if (!selected || !effectiveRect || fullscreen || canvasFramed || flowPixelOffset) {
 		return undefined;
 	}
 	return transformFrameStyle(effectiveRect);
@@ -1694,6 +1795,13 @@ interface PresentationInteractionState {
 
 const PresentationInteractionContext = createContext<PresentationInteractionState | null>(null);
 
+interface PresentationRowHoverState {
+	readonly hoveredRowBandId: string | null;
+	readonly setHoveredRowBandId: (rowBandId: string | null) => void;
+}
+
+const PresentationRowHoverContext = createContext<PresentationRowHoverState | null>(null);
+
 function usePresentationInteractionState(): PresentationInteractionState {
 	const value = useContext(PresentationInteractionContext);
 	if (!value) {
@@ -1890,6 +1998,7 @@ const InteractiveRowBand: FC<{
 	readonly tileIds: readonly string[];
 }> = ({ id, frame, tileIds }) => {
 	const interaction = usePresentationInteractionState();
+	const rowHover = useContext(PresentationRowHoverContext);
 	const rowSelected = tileIds.length > 0 && tileIds.every((tileId) => interaction.isSelected(tileId));
 	const onPointerDown = (event: React.PointerEvent): void => {
 		if (event.button !== 0) {
@@ -1910,6 +2019,12 @@ const InteractiveRowBand: FC<{
 			data-row-band={id}
 			style={transformFrameStyle(frame)}
 			onPointerDown={onPointerDown}
+			onPointerEnter={() => rowHover?.setHoveredRowBandId(id)}
+			onPointerLeave={() => {
+				if (rowHover?.hoveredRowBandId === id) {
+					rowHover.setHoveredRowBandId(null);
+				}
+			}}
 			aria-hidden
 		/>
 	);
@@ -1919,17 +2034,20 @@ const InteractiveDisposition: FC<{
 	readonly id: string;
 	readonly disposition: ResolvedDisposition;
 	readonly declaredRect: DispositionPosition | undefined;
+	readonly sectionDeclaredRect: DispositionPosition | undefined;
 	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 	readonly sectionRef: RefObject<HTMLElement | null>;
 	readonly rowBandId?: string;
-}> = ({ id, disposition, declaredRect, allDeclaredRects, sectionRef, rowBandId }) => {
+}> = ({ id, disposition, declaredRect, sectionDeclaredRect, allDeclaredRects, sectionRef, rowBandId }) => {
 	const slideEpoch = useContext(PresentationSlideEpochContext);
 	const interaction = usePresentationInteractionState();
+	const rowHover = useContext(PresentationRowHoverContext);
 	const registry = useSlideDispositionRegistry();
 	const rootRef = useRef<HTMLDivElement>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
 	const selected = interaction.isSelected(id);
-	const flowLayout = declaredRect === undefined;
+	const interactionRect = sectionDeclaredRect ?? declaredRect;
+	const flowLayout = interactionRect === undefined;
 	const transform = interaction.getTransform(id);
 	const transformed = transform !== undefined;
 	const measuredNatural = registry.getRect(id);
@@ -1940,19 +2058,17 @@ const InteractiveDisposition: FC<{
 		isFlowPixelOffsetTransform(transform, measuredNatural);
 	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
 	const fullscreen = interaction.isFullscreen(id);
-	const splitTileCount = disposition.split?.tiles?.length ?? 0;
-	const splitGroupLayout = splitTileCount > 1;
-	const canvasFramed = declaredRect !== undefined && !fullscreen && !splitGroupLayout;
-	const canvasPlacement = canvasFramed;
+	const canvasFramed = declaredRect !== undefined && !fullscreen;
+	const canvasPlacement = interactionRect !== undefined;
 	const pinned =
 		(transformed && !flowLayout) ||
 		flowSectionFrame ||
 		(canvasFramed && !flowPixelOffset);
 
-	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
+	const effectiveRect = resolveEffectiveDispositionRect(id, interactionRect, interaction, registry);
 	const [gesturing, setGesturing] = useState(false);
-
 	const displayDisposition = disposition;
+	const rowHovered = rowBandId !== undefined && rowHover?.hoveredRowBandId === rowBandId;
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
 		const section = sectionRef.current;
@@ -1971,7 +2087,7 @@ const InteractiveDisposition: FC<{
 	}, [canvasPlacement, sectionRef]);
 
 	useLayoutEffect(() => {
-		if (declaredRect) {
+		if (interactionRect) {
 			registry.registerRect(id, null);
 			return;
 		}
@@ -1985,15 +2101,15 @@ const InteractiveDisposition: FC<{
 		}
 		const measured = measureDispositionRect();
 		registry.registerRect(id, measured);
-	}, [id, declaredRect, transform, registry, sectionRef, slideEpoch, measureDispositionRect]);
+	}, [id, interactionRect, transform, registry, sectionRef, slideEpoch, measureDispositionRect]);
 
 	const ensureRectForManipulation = useCallback(
 		(kind: "move" | "resize"): DispositionPosition | null => {
 			const section = sectionRef.current;
 			const existing = interaction.getTransform(id);
 			const measuredNatural = registry.getRect(id) ?? measureDispositionRect();
-			if (declaredRect) {
-				return existing ?? declaredRect;
+			if (interactionRect) {
+				return existing ?? interactionRect;
 			}
 			if (kind === "resize") {
 				if (!measuredNatural) {
@@ -2014,7 +2130,7 @@ const InteractiveDisposition: FC<{
 			registry.registerRect(id, measuredNatural);
 			return flowDispositionManipulationRect(measuredNatural, undefined);
 		},
-		[id, declaredRect, interaction, registry, measureDispositionRect, sectionRef],
+		[id, interactionRect, interaction, registry, measureDispositionRect, sectionRef],
 	);
 
 	const attachPointerGesture = useCallback(
@@ -2164,16 +2280,16 @@ const InteractiveDisposition: FC<{
 	);
 
 	const seedCanvasTransform = useCallback((): DispositionPosition | null => {
-		if (!declaredRect) {
+		if (!interactionRect) {
 			return null;
 		}
 		const existing = interaction.getTransform(id);
 		if (existing) {
 			return existing;
 		}
-		interaction.setTransform(id, declaredRect);
-		return declaredRect;
-	}, [id, declaredRect, interaction]);
+		interaction.setTransform(id, interactionRect);
+		return interactionRect;
+	}, [id, interactionRect, interaction]);
 
 	const onPointerDown = (event: React.PointerEvent): void => {
 		if (event.button !== 0) {
@@ -2250,6 +2366,7 @@ const InteractiveDisposition: FC<{
 	const wrapperClass = [
 		"presentation-interactive-disposition",
 		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
+		rowHovered ? "presentation-interactive-disposition--row-hovered" : undefined,
 		selected ? "presentation-interactive-disposition--selected" : undefined,
 		flowPixelOffset ? "presentation-interactive-disposition--offset" : undefined,
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
@@ -2278,13 +2395,20 @@ const InteractiveDisposition: FC<{
 					? transformFrameStyle(transform)
 					: undefined;
 
+	const chromeLayoutRect =
+		flowPixelOffset && measuredNatural
+			? measuredNatural
+			: flowSectionFrame && transform
+				? transform
+				: effectiveRect;
 	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
 		selected,
-		effectiveRect,
+		effectiveRect: chromeLayoutRect,
 		canvasFramed,
 		fullscreen,
+		flowPixelOffset,
 	});
-	const showControls = (selected || gesturing) && Boolean(effectiveRect);
+	const showControls = (selected || gesturing) && Boolean(chromeLayoutRect ?? effectiveRect);
 	const showHandles = showControls && !fullscreen;
 
 	return (
@@ -2295,34 +2419,50 @@ const InteractiveDisposition: FC<{
 			className={wrapperClass}
 			style={wrapperStyle}
 			onPointerDown={onPointerDown}
+			onPointerEnter={
+				rowBandId ? () => rowHover?.setHoveredRowBandId(rowBandId) : undefined
+			}
+			onPointerLeave={
+				rowBandId
+					? () => {
+							if (rowHover?.hoveredRowBandId === rowBandId) {
+								rowHover.setHoveredRowBandId(null);
+							}
+						}
+					: undefined
+			}
 		>
 			<div ref={contentRef} className="presentation-interactive-disposition__content">
 				<MorphDispositionView disposition={displayDisposition} />
+				{showControls ? (
+					<>
+						{showHandles ? (
+							<div
+								className="presentation-interactive-disposition__chrome"
+								style={chromeStyle}
+								aria-hidden
+							>
+								{DISPOSITION_RESIZE_HANDLES.map((handle) => (
+									<div
+										key={handle}
+										className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
+										onPointerDown={onHandlePointerDown(handle)}
+									/>
+								))}
+							</div>
+						) : null}
+						<button
+							type="button"
+							className="presentation-interaction-fullscreen"
+							title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
+							aria-pressed={fullscreen}
+							onClick={onFullscreenClick}
+						>
+							{fullscreen ? "⤢" : "⤢"}
+						</button>
+					</>
+				) : null}
 			</div>
-			{showControls ? (
-				<>
-					{showHandles ? (
-						<div className="presentation-interactive-disposition__chrome" style={chromeStyle} aria-hidden>
-							{DISPOSITION_RESIZE_HANDLES.map((handle) => (
-								<div
-									key={handle}
-									className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
-									onPointerDown={onHandlePointerDown(handle)}
-								/>
-							))}
-						</div>
-					) : null}
-					<button
-						type="button"
-						className="presentation-interaction-fullscreen"
-						title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
-						aria-pressed={fullscreen}
-						onClick={onFullscreenClick}
-					>
-						{fullscreen ? "⤢" : "⤢"}
-					</button>
-				</>
-			) : null}
 		</div>
 	);
 };
@@ -2333,6 +2473,8 @@ function isDispositionPointerTarget(target: EventTarget | null): boolean {
 	}
 	return Boolean(
 		target.closest(".presentation-interactive-disposition") ||
+			target.closest(".presentation-interactive-row-band") ||
+			target.closest(".presentation-interactive-visual-row") ||
 			target.closest(".presentation-interaction-handle") ||
 			target.closest(".presentation-interaction-fullscreen"),
 	);
@@ -2481,32 +2623,41 @@ const ArrangementSection: FC<{
 	const morph = renderSlide.autoAnimateId !== undefined;
 	const positioned = resolved.some((disposition) => disposition.position !== undefined || disposition.split !== undefined);
 	const layoutResolved = positioned ? centerResolvedArrangement(resolved) : resolved;
-	const dispositionMeta = useMemo(
-		() =>
-			layoutResolved.map((disposition, index) => ({
-				id: dispositionInteractionId(renderSlide.id, disposition, index),
-				disposition,
-				declaredRect: declaredDispositionRect(disposition),
-			})),
+	const interactiveLayout = useMemo(
+		() => buildInteractiveSlideLayout(renderSlide.id, layoutResolved),
 		[layoutResolved, renderSlide.id],
+	);
+	const [hoveredRowBandId, setHoveredRowBandId] = useState<string | null>(null);
+	const rowHover = useMemo(
+		(): PresentationRowHoverState => ({ hoveredRowBandId, setHoveredRowBandId }),
+		[hoveredRowBandId],
 	);
 	const declaredRects = useMemo(() => {
 		const map = new Map<string, DispositionPosition | undefined>();
-		for (const entry of dispositionMeta) {
-			map.set(entry.id, entry.declaredRect);
+		for (const entry of interactiveLayout.placements) {
+			map.set(entry.id, entry.sectionRect ?? entry.declaredRect);
 		}
 		return map;
-	}, [dispositionMeta]);
-	const placements = dispositionMeta.map((entry) => (
-		<InteractiveDisposition
-			key={entry.id}
-			id={entry.id}
-			disposition={entry.disposition}
-			declaredRect={entry.declaredRect}
-			allDeclaredRects={declaredRects}
-			sectionRef={sectionRef}
-		/>
-	));
+	}, [interactiveLayout.placements]);
+	const placements = (
+		<PresentationRowHoverContext.Provider value={rowHover}>
+			{interactiveLayout.rowBands.map((band) => (
+				<InteractiveRowBand key={band.id} id={band.id} frame={band.frame} tileIds={band.tileIds} />
+			))}
+			{interactiveLayout.placements.map((entry) => (
+				<InteractiveDisposition
+					key={entry.id}
+					id={entry.id}
+					disposition={entry.disposition}
+					declaredRect={entry.declaredRect}
+					sectionDeclaredRect={entry.sectionRect}
+					allDeclaredRects={declaredRects}
+					sectionRef={sectionRef}
+					rowBandId={entry.rowBandId}
+				/>
+			))}
+		</PresentationRowHoverContext.Provider>
+	);
 	return (
 		<SlideDispositionRegistryProvider>
 			<ArrangementSectionSurface
@@ -2516,7 +2667,7 @@ const ArrangementSection: FC<{
 				settleBeforeMorphTo={renderSlide.arrangement.settleBeforeMorphTo}
 				slideId={renderSlide.id}
 				positioned={positioned}
-				dispositionIds={dispositionMeta.map((entry) => entry.id)}
+				dispositionIds={interactiveLayout.placements.map((entry) => entry.id)}
 				declaredRects={declaredRects}
 				placements={placements}
 			/>
@@ -3662,6 +3813,15 @@ if (import.meta.vitest) {
 					fullscreen: false,
 				}),
 			).toBeUndefined();
+			expect(
+				interactiveDispositionChromeStyle({
+					selected: true,
+					effectiveRect: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 },
+					canvasFramed: false,
+					fullscreen: false,
+					flowPixelOffset: true,
+				}),
+			).toBeUndefined();
 		});
 
 		it("converts screen pointer delta through section visual scale", () => {
@@ -3737,6 +3897,50 @@ if (import.meta.vitest) {
 			expect(
 				interactiveDispositionContentScaleStyle(1.25).transform,
 			).toBe("scale(1.25)");
+		});
+
+		it("expands split dispositions into per-tile interactive placements with row bands", () => {
+			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			const participants = [
+				{
+					id: "catalogue",
+					embodiments: [{ kind: "figure" as const, src: "/catalogue.png" }],
+				},
+			];
+			const resolved = resolveArrangement(participants, {
+				id: "tiles",
+				dispositions: [{ participantId: "catalogue", emphasis: "active" as const, split: { tiles } }],
+			});
+			const layout = buildInteractiveSlideLayout("slide-1", resolved);
+			expect(layout.placements).toHaveLength(4);
+			expect(layout.rowBands).toHaveLength(2);
+			expect(layout.placements.every((entry) => entry.sectionRect !== undefined)).toBe(true);
+			expect(layout.placements.every((entry) => entry.rowBandId !== undefined)).toBe(true);
+		});
+
+		it("skips morph-participant duplicate splits in interactive layout", () => {
+			const frame = { x: 0.1, y: 0.1, width: 0.3, height: 0.6 };
+			const tiles = splitFigureGrid({ rows: 2, columns: 1, frame });
+			const participants = [
+				{
+					id: "catalogue-col1",
+					embodiments: [{ kind: "figure" as const, src: "/catalogue.png" }],
+				},
+			];
+			const resolved = resolveArrangement(participants, {
+				id: "col",
+				dispositions: [
+					{
+						participantId: "catalogue-col1",
+						emphasis: "active" as const,
+						split: { tiles, morphParticipant: true },
+					},
+				],
+			});
+			const layout = buildInteractiveSlideLayout("slide-2", resolved);
+			expect(layout.placements).toHaveLength(0);
+			expect(layout.rowBands).toHaveLength(0);
 		});
 	});
 
@@ -3868,6 +4072,57 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll("[data-disposition-id]").length).toBe(1);
 		});
 
+		it("renders one interactive wrapper per split tile", () => {
+			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
+			const deck: Presentation = {
+				id: "split-interactive",
+				name: "Split Interactive",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "split",
+										participants: [
+											{
+												id: "catalogue",
+												embodiments: [{ kind: "figure", src: "/catalogue.png", alt: "Catalogue" }],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "tiles",
+													dispositions: [
+														{
+															participantId: "catalogue",
+															emphasis: "active",
+															split: {
+																tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
+															},
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			expect(container.querySelectorAll("[data-disposition-id]").length).toBe(4);
+			expect(container.querySelectorAll(".presentation-interactive-row-band").length).toBe(2);
+			expect(container.querySelector(".presentation-interactive-disposition--split-group")).toBeNull();
+		});
+
 		it("selects on click and deselects on empty slide click", () => {
 			act(() => {
 				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
@@ -3932,12 +4187,22 @@ if (import.meta.vitest) {
 			mockClientRect(content, 0, 280, 960, 120);
 			mockClientRect(heading, 330, 300, 300, 80);
 			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
+			act(() => {
 				pointerDrag(disposition, 480, 320, 560, 360);
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--offset")).toBe(true);
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
 			expect(disposition.style.transform).toContain("translate");
 			expect(disposition.style.left).toBe("");
+			expect(disposition.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
+			const chrome = disposition.querySelector(
+				".presentation-interactive-disposition__chrome",
+			) as HTMLElement;
+			expect(chrome.isConnected).toBe(true);
+			expect(chrome.style.left).toBe("");
 		});
 
 		it("drags positioned disposition", () => {

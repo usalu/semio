@@ -1,7 +1,7 @@
 {
   "title": "Projektetage Resize Handles Alignment",
   "emoji": "🐛",
-  "status": "closed",
+  "status": "open",
   "description": "Fix interactive resize on projektetage: content scales uniformly inside the frame (no text reflow overshoot); resize handles aligned with selection chrome.",
   "summary": "Fixed catalogue split-grid resize handles (Bauteilkatalog / focus slides).\n\nRoot cause: canvas-framed CSS forced every `.presentation-figure-tile-frame` to `position: static; width/height 100%`, collapsing the 15-tile grid into one box while chrome stayed on the bounding wrapper — handles looked inside the per-tile highlights and vanished when layout flipped on drag.\n\n- Split dispositions use `--split-group` wrapper at the tile bounding rect; tiles are re-expressed with `splitTilesInGroupFrame` relative to that rect.\n- Tile frames keep absolute % placement; only single disposition frames are flattened to fill the wrapper.\n- Handles centered on corners via `translate(-50%, -50%)`; chrome stays visible during gestures (`--gesturing`).\n- Fullscreen control remains mounted while handles hide in fullscreen.\n\n42 core + 44 renderer tests pass.",
   "goal": "🎯aioptimizedrepo",
@@ -9,6 +9,7 @@
     "⚪8e72685386be43deb606fd885b24412f",
     "⚪26dabf1cc33f4be69c7d776b1ecdf060",
     "⚪7c5329643fe54a5d8ed323e833eddf69",
-    "⚪09802a6a48e74937aa582b6121d0b639"
+    "⚪09802a6a48e74937aa582b6121d0b639",
+    "⚪74482b1bd391428093ec4041178f8835"
   ]
 }
