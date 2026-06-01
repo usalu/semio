@@ -678,51 +678,29 @@ function AffiliationsMorphView({
 	return (
 		<div className="presentation-intro-rows presentation-intro-affiliations flex w-full max-w-full flex-col items-center text-center">
 			{embodiment.entries.map((entry) => {
-				const morphSourceLabel = embodiment.morphLineLabels?.[entry.mark];
 				const displayLabel = affiliationLineLabel(entry, "line");
 				return (
 					<div
 						key={entry.mark}
 						className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center gap-x-[0.35em]"
 					>
-						{morphSourceLabel !== undefined ? (
-							<span className="presentation-affiliation-line-part relative inline-flex shrink-0 items-center justify-center text-center">
-								<h4
-									className={[
-										morphTextClass(anchorId, "m-0 shrink-0 text-center"),
-										"presentation-morph-source",
-										"presentation-affiliation-morph-source",
-									].join(" ")}
-									aria-hidden
+						<h4
+							data-id={`${anchorId}--${entry.mark}`}
+							className={morphTextClass(
+								anchorId,
+								"presentation-affiliation-row m-0 inline-flex max-w-full shrink-0 flex-row flex-nowrap items-center justify-center gap-x-[0.35em] text-center",
+							)}
+						>
+							{affiliationLineContent(entry, "line", displayLabel)}
+							{entry.suffix ? (
+								<span
+									data-id={`${anchorId}--${entry.suffix.mark}`}
+									className="inline-flex shrink-0 items-center justify-center text-center"
 								>
-									{affiliationLineContent(entry, "line", morphSourceLabel)}
-								</h4>
-								<h4
-									data-id={`${anchorId}--${entry.mark}`}
-									className={[
-										morphTextClass(anchorId, "m-0 shrink-0 text-center"),
-										"presentation-morph-into",
-									].join(" ")}
-								>
-									{affiliationLineContent(entry, "line", displayLabel)}
-								</h4>
-							</span>
-						) : (
-							<h4
-								data-id={`${anchorId}--${entry.mark}`}
-								className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}
-							>
-								{affiliationLineContent(entry, "line", displayLabel)}
-							</h4>
-						)}
-						{entry.suffix ? (
-							<h4
-								data-id={`${anchorId}--${entry.suffix.mark}`}
-								className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}
-							>
-								{affiliationLineContent(entry, "suffix", affiliationLineLabel(entry, "suffix"))}
-							</h4>
-						) : null}
+									{affiliationLineContent(entry, "suffix", affiliationLineLabel(entry, "suffix"))}
+								</span>
+							) : null}
+						</h4>
 					</div>
 				);
 			})}
@@ -1214,7 +1192,7 @@ export function buildInteractiveSlideLayout(
 			disposition,
 			declaredRect,
 			sectionRect: declaredRect,
-			revealMorphId: morph ? disposition.morphId : undefined,
+			revealMorphId: morph && declaredRect !== undefined ? disposition.morphId : undefined,
 		});
 	});
 	return { placements, rowBands: [] };
@@ -3264,6 +3242,8 @@ if (import.meta.vitest) {
 			expect(slide("description")?.querySelector('div[data-id="title"].presentation-disposition-frame')).toBeNull();
 			expect(slide("description")?.querySelectorAll('h2[data-id^="description"]').length).toBe(2);
 			expect(slide("goal")?.querySelector('h2[data-id="description"]')?.textContent).toBe("D short");
+			expect(slide("goal")?.querySelector('.presentation-interactive-disposition[data-id="description"]')).toBeNull();
+			expect(slide("description")?.querySelector('.presentation-interactive-disposition[data-id="description"]')).toBeNull();
 			expect(slide("goal")?.querySelector('h2[data-id^="goal"]')).toBeTruthy();
 			const authorLines = slide("authors")?.querySelectorAll('h4[data-id^="authors--"]');
 			expect(authorLines?.length).toBe(3);
@@ -3271,13 +3251,17 @@ if (import.meta.vitest) {
 			expect(slide("authors")?.querySelector(".presentation-intro-line")?.className).toContain("gap-x-");
 			expect(slide("affiliations-1")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(1);
 			expect(slide("affiliations-2")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(2);
-			expect(slide("affiliations-3")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(3);
+			expect(slide("affiliations-3")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(2);
+			expect(slide("affiliations-3")?.querySelectorAll('[data-id^="institutions--"]').length).toBe(3);
 			expect(slide("affiliations-2")?.querySelector('h5[data-id="institutions"]')).toBeNull();
 			expect(slide("affiliations-2")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
 			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("LUH");
-			expect(slide("affiliations-3")?.querySelector(".presentation-affiliation-morph-source")).toBeTruthy();
-			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.classList.contains("presentation-morph-into")).toBe(true);
-			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--x"]')?.textContent).toContain("Chair X");
+			expect(slide("affiliations-3")?.querySelector(".presentation-affiliation-morph-source")).toBeNull();
+			expect(
+				slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.classList.contains("presentation-affiliation-row"),
+			).toBe(true);
+			expect(slide("affiliations-3")?.querySelector('[data-id="institutions--x"]')?.textContent).toContain("Chair X");
+			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"] [data-id="institutions--x"]')).toBeTruthy();
 			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
 			expect(slide("affiliations-1")?.querySelector('h4[data-id="authors--Alice Example"] sup')?.textContent).toBe("a");
 			const marked2 = slide("affiliations-2")?.querySelector('h4[data-id="authors--Alice Example"] sup');
@@ -3300,7 +3284,7 @@ if (import.meta.vitest) {
 			const aff3 = slide("affiliations-3");
 			expect(aff3?.querySelector('h4[data-id="institutions--a"] .opacity-20')).toBeTruthy();
 			expect(aff3?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("LUH");
-			expect(aff3?.querySelector('h4[data-id="institutions--x"] .opacity-20')).toBeNull();
+			expect(aff3?.querySelector('[data-id="institutions--x"] .opacity-20')).toBeNull();
 		});
 
 		it("applies title and secondary morph text sizes on intro slides", () => {
@@ -4065,37 +4049,6 @@ if (import.meta.vitest) {
 			);
 		});
 
-		it("offsets canvas drag content while the wrapper keeps the declared frame", () => {
-			const declared = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
-			const transform = { x: 0.35, y: 0.45, width: 0.4, height: 0.2 };
-			expect(canvasDispositionDragContentStyle(declared, declared)).toEqual({});
-			const dragged = canvasDispositionDragContentStyle(declared, transform);
-			const match = String(dragged.transform).match(
-				/translate3d\(([-\d.]+)%,\s*([-\d.]+)%/,
-			);
-			expect(match).not.toBeNull();
-			expect(Number.parseFloat(match![1]!)).toBeCloseTo(37.5);
-			expect(Number.parseFloat(match![2]!)).toBeCloseTo(75);
-		});
-
-		it("maps canvas drag pointer delta to content translate proportional to the wrapper", () => {
-			const declared = { x: 0.1, y: 0.3, width: 0.3, height: 0.2 };
-			const canvas = document.createElement("div");
-			canvas.className = "presentation-arrangement-canvas";
-			document.body.appendChild(canvas);
-			canvas.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
-			const pointerDx = 48;
-			const pointerDy = 35;
-			const dx = pointerDx / 960;
-			const dy = pointerDy / 700;
-			const transform = translateDispositionRect(declared, dx, dy);
-			const style = canvasDispositionDragContentStyle(declared, transform);
-			document.body.removeChild(canvas);
-			expect(style.transform).toContain("translate3d(");
-			expect((dx / declared.width) * 960 * declared.width).toBeCloseTo(pointerDx);
-			expect((dy / declared.height) * 700 * declared.height).toBeCloseTo(pointerDy);
-		});
-
 		it("resolves arrangement canvas as placement container for positioned slides", () => {
 			const section = document.createElement("section");
 			const canvas = document.createElement("div");
@@ -4278,10 +4231,57 @@ if (import.meta.vitest) {
 				id: "tiles",
 				dispositions: grid.dispositions,
 			});
-			const layout = buildInteractiveSlideLayout("slide-1", resolved);
+			const layout = buildInteractiveSlideLayout("slide-1", resolved, true);
 			expect(layout.placements).toHaveLength(4);
 			expect(layout.rowBands).toHaveLength(0);
 			expect(layout.placements.every((entry) => entry.sectionRect !== undefined)).toBe(true);
+			expect(layout.placements.every((entry) => entry.revealMorphId !== undefined)).toBe(true);
+		});
+
+		it("keeps reveal morph data-id on canvas placements only", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "title" }, { id: "description" }],
+					embodiments: [
+						{ kind: "text", id: "title--full", lines: ["A"], level: "heading", morphRoot: "heading-line" },
+						{
+							kind: "text",
+							id: "description--full",
+							lines: ["Long description"],
+							level: "heading",
+							morphRoot: "heading-block",
+						},
+					],
+				},
+			]);
+			const flow = buildInteractiveSlideLayout(
+				"goal",
+				resolveArrangement(scope, {
+					id: "goal",
+					dispositions: [
+						{ participantId: "title", embodimentId: "title--full", emphasis: "muted" },
+						{ participantId: "description", embodimentId: "description--full", emphasis: "muted" },
+					],
+				}),
+				true,
+			);
+			expect(flow.placements.every((entry) => entry.revealMorphId === undefined)).toBe(true);
+			const canvas = buildInteractiveSlideLayout(
+				"tiles",
+				resolveArrangement(scope, {
+					id: "tiles",
+					dispositions: [
+						{
+							participantId: "description",
+							embodimentId: "description--full",
+							emphasis: "active",
+							position: { x: 0.1, y: 0.2, width: 0.8, height: 0.3 },
+						},
+					],
+				}),
+				true,
+			);
+			expect(canvas.placements[0]?.revealMorphId).toBe("description");
 		});
 
 		it("auto-animates catalogue focus into inline column labels", async () => {
@@ -4896,14 +4896,16 @@ if (import.meta.vitest) {
 			mockClientRect(section, 0, 0, 960, 700);
 			mockClientRect(canvas, 0, 0, 960, 700);
 			mockClientRect(disposition, 192, 210, 384, 140);
-			const beforeLeft = disposition.style.left;
 			act(() => {
 				pointerDrag(disposition, 300, 280, 380, 320);
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-			expect(disposition.style.left).toBe(beforeLeft);
-			expect(content.style.transform).toContain("translate3d");
-			expect(content.style.transform).not.toBe("");
+			// 🔀 The wrapper owns the reveal `data-id` morph anchor, so the ephemeral drag must move the
+			// wrapper frame itself (not just translate inner content). Auto-animate then morphs from the
+			// dragged frame, including the ephemeral modification.
+			expect(parseFloat(disposition.style.left)).toBeCloseTo(28.333, 1);
+			expect(parseFloat(disposition.style.top)).toBeCloseTo(35.714, 1);
+			expect(content.style.transform).toBe("");
 		});
 
 		it("keeps other canvas dispositions on their declared frames while one is dragged", () => {
@@ -4969,11 +4971,13 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerDrag(dispositions[0]!, 240, 280, 400, 320);
 			});
-			expect(parseFloat(dispositions[0]!.style.left)).toBeCloseTo(10);
+			// 🔀 Dragged disposition's wrapper (its morph anchor) follows the ephemeral frame...
+			expect(parseFloat(dispositions[0]!.style.left)).toBeCloseTo(26.667, 1);
+			// ...while peers keep their declared frames.
 			expect(dispositions[1]!.style.left).toBe(peerBefore);
 			expect(
 				dispositions[0]!.querySelector(".presentation-interactive-disposition__content")?.style.transform,
-			).toContain("translate3d");
+			).toBe("");
 		});
 
 		it("shows tile disposition drag preview outside the declared frame without clipping", () => {
@@ -5020,17 +5024,18 @@ if (import.meta.vitest) {
 			mockClientRect(section, 0, 0, 960, 700);
 			mockClientRect(canvas, 0, 0, 960, 700);
 			mockClientRect(tile, 96, 70, 384, 210);
-			const beforeLeft = tile.style.left;
 			act(() => {
 				pointerDrag(tile, 200, 140, 360, 260);
 			});
-			expect(tile.style.left).toBe(beforeLeft);
+			// 🔀 The tile wrapper (morph anchor) moves to the ephemeral frame so the morph starts there.
+			expect(parseFloat(tile.style.left)).toBeCloseTo(26.667, 1);
 			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
 			expect(tile.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			// Pinned keeps the dragged tile unclipped while it sits outside the declared frame.
 			expect(getComputedStyle(tile).overflow).not.toBe("hidden");
 			expect(
 				tile.querySelector(".presentation-interactive-disposition__content")?.style.transform,
-			).toContain("translate3d");
+			).toBe("");
 		});
 
 		it("resizes positioned disposition from se handle", () => {
@@ -5056,9 +5061,12 @@ if (import.meta.vitest) {
 				".presentation-interactive-disposition__content",
 			) as HTMLElement;
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-			expect(parseFloat(disposition.style.width)).toBeCloseTo(40);
-			expect(parseFloat(content.style.width)).toBeGreaterThan(40);
-			expect(parseFloat(content.style.height)).toBeGreaterThan(20);
+			// 🔀 Resize grows the wrapper frame (the morph anchor) itself; the content fills it at 100%
+			// rather than carrying a scaled inline size, so auto-animate morphs from the resized frame.
+			expect(parseFloat(disposition.style.width)).toBeCloseTo(48.333, 1);
+			expect(parseFloat(disposition.style.height)).toBeCloseTo(28.571, 1);
+			expect(content.style.width).toBe("");
+			expect(content.style.height).toBe("");
 			const chrome = disposition.querySelector(
 				".presentation-interactive-disposition__chrome",
 			) as HTMLElement;

@@ -745,19 +745,9 @@
 	column-gap: 0.35em;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-affiliation-line-part {
-	display: inline-flex;
-	vertical-align: top;
-	width: max-content;
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-affiliations .presentation-affiliation-row {
+	width: fit-content;
 	max-width: 100%;
-}
-
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-affiliation-morph-source {
-	position: absolute;
-	inset: 0;
-	margin: 0;
-	width: 100%;
-	pointer-events: none;
 }
 
 .reveal .progress span {

@@ -1,8 +1,9 @@
 {
   "title": "Projektetage Intro Flow Drag Scale",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Fix projektetage intro slides 0-6 where dragging text shoots elements out quickly; slide 9 (canvas) works. Root cause likely sectionVisualScale using tall nested reveal stack offsetHeight vs viewport-sized client rect.",
+  "summary": "Fixed hypersensitive text drag on projektetage intro slides 0–6.\n\nRoot cause: `sectionVisualScale` compared visible slide bounds from `slideLayoutBounds` against `slideCoordinateRoot` layout size. On nested reveal.js vertical stacks, the coordinate root is the full stack (offsetHeight ≈ N× slide height) while client bounds stay one viewport tall, so scale was far too small and `flowPointerDeltaToLocal` amplified pointer movement.\n\nFix: when layout exceeds slide bounds, use CSS slide dimensions as layout reference. Added regression test for nested stack with 4900px layout vs 700px slide.\n\nFiles: `framework/product/presentation/renderer/react/index.tsx`",
   "goal": "🎯presentation",
   "sessions": [
     "⚪b9caca74d18f4d7e83b5afacd69c8df4"
