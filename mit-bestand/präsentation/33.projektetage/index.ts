@@ -272,6 +272,7 @@ const mediaThought: Thought = {
 					participantId: "catalogue",
 					emphasis: "active",
 					morphTargets: CATALOGUE_COLUMN_LABELS,
+					morphColumnGroups: CATALOGUE_FOCUS_COLUMN_GROUPS,
 				},
 			],
 		},
@@ -379,6 +380,7 @@ if (import.meta.vitest) {
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
 			expect(targets).toHaveLength(3);
 			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
+			expect(labels?.dispositions[0]?.morphColumnGroups).toEqual(CATALOGUE_FOCUS_COLUMN_GROUPS);
 			const ys = targets.map((target) => target.position.y);
 			expect(ys[0]).toBeLessThan(ys[1] ?? 0);
 			expect(ys[1]).toBeLessThan(ys[2] ?? 0);

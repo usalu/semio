@@ -181,6 +181,12 @@
 	z-index: 1;
 }
 
+.reveal .presentation-column-morph-slot--label-companion {
+	z-index: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
 .reveal .presentation-column-morph-slot--ghost.presentation-column-morph-slot--hidden {
 	z-index: 0;
 }

@@ -137,6 +137,7 @@ import {
 	Save as SaveIcon,
 	Search,
 	Search as SearchIcon,
+	TextSearch as FindInViewIcon,
 	Settings2,
 	Settings2 as Settings2Icon,
 } from "lucide-react";
@@ -2749,18 +2750,20 @@ const UIPanelToggleGroup: React.FC<{
   items: Array<{
     icon: React.ReactNode;
     id: string;
+    text?: string;
     onPressedChange: (pressed: boolean) => void;
     pressed: boolean;
   }>;
 }> = ({ items }) => (
-  <div data-slot="app-panel-toggle-group" className="flex items-stretch border border-element overflow-hidden h-medium">
+  <div data-slot="app-panel-toggle-group" className="flex min-w-0 items-stretch border border-element h-medium">
     {items.map((item, index) => (
       <Toggle
         key={item.id}
         id={item.id}
+        text={item.text}
         pressed={item.pressed}
         onPressedChange={item.onPressedChange}
-        className={cn("border-0 rounded-none", index > 0 && "border-l")}
+        className={cn("border-0 rounded-none shrink-0", index > 0 && "border-l")}
         icon={item.icon}
       />
     ))}
@@ -3342,22 +3345,25 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	navbarItems.push({
 		key: "search",
-		content: <Toggle id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<Search size={16} />} />,
+		content: <Toggle id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<SearchIcon size={16} />} />,
 	});
 
 	navbarItems.push({
 		key: "find",
-		content: <Toggle id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<Search size={16} />} />,
+		content: <Toggle id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<FindInViewIcon size={16} />} />,
 	});
 
+	const { t } = useUiTranslation();
 	const panelToggleItems = panelKindsWithTabs.map((kind) => {
 		const tabs = panelTabsByKind[kind];
 		const icon = panelKindToggleIcon(kind, tabs);
 		const side = panelSide(kind);
+		const text = resolveTranslationLabel(t(`ui.panelToggle.${kind}` as const));
 		if (resolvedMobile) {
 			return {
 				id: `ui.panelToggle.${kind}`,
 				icon,
+				text,
 				pressed: mobilePanelVisible && activeMobilePanelKind === kind,
 				onPressedChange: (pressed: boolean) => openMobilePanel(kind, pressed),
 			};
@@ -3366,6 +3372,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 			return {
 				id: `ui.panelToggle.${kind}`,
 				icon,
+				text,
 				pressed: panelVisibility.leftSidePanel && activeDesktopLeftPanelKind === kind,
 				onPressedChange: (pressed: boolean) => openDesktopLeftPanel(kind, pressed),
 			};
@@ -3373,6 +3380,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		return {
 			id: `ui.panelToggle.${kind}`,
 			icon,
+			text,
 			pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === kind,
 			onPressedChange: (pressed: boolean) => openDesktopRightPanel(kind, pressed),
 		};

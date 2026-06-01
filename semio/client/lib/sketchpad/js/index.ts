@@ -111,6 +111,7 @@ export type SemioSketchpadControlTranslationKey =
 	| "semio.sketchpad.navbar.forward"
 	| "semio.sketchpad.navbar.up"
 	| "semio.sketchpad.navbar.search.open"
+	| "semio.sketchpad.navbar.find.open"
 	| `semio.sketchpad.navbar.panelToggle.${string}`
 	| `semio.sketchpad.toolbar.parent.${UiToolbarParentCategory}`;
 
@@ -244,6 +245,50 @@ const semioSketchpadTranslationBundles = {
             "label": {
               "normal": "Suchen...",
               "beginner": "Suchen..."
+            }
+          },
+          "noResults": {
+            "label": {
+              "normal": "Keine Ergebnisse gefunden",
+              "beginner": "Keine Ergebnisse gefunden"
+            }
+          }
+        },
+        "find": {
+          "label": {
+            "normal": "Finden",
+            "beginner": "Im aktuellen Kontext finden"
+          },
+          "open": {
+            "label": {
+              "normal": "Finden",
+              "beginner": "Klicken, um Elemente in der aktuellen Ansicht zu finden"
+            },
+            "hotkey": "Ctrl+F"
+          },
+          "close": {
+            "label": {
+              "normal": "Finden schliessen",
+              "beginner": "Klicken, um den Finden-Dialog zu schliessen"
+            },
+            "hotkey": "Escape"
+          },
+          "title": {
+            "label": {
+              "normal": "Finden",
+              "beginner": "Finden"
+            }
+          },
+          "description": {
+            "label": {
+              "normal": "Elemente in dieser Ansicht finden",
+              "beginner": "Elemente in dieser Ansicht finden"
+            }
+          },
+          "placeholder": {
+            "label": {
+              "normal": "Finden...",
+              "beginner": "Finden..."
             }
           },
           "noResults": {
@@ -461,8 +506,8 @@ const semioSketchpadTranslationBundles = {
           },
           "workbench": {
             "label": {
-              "normal": "Workbench umschalten",
-              "beginner": "Das Workbench-Panel auf der linken Seite ein- oder ausblenden"
+              "normal": "Arbeitsbereich",
+              "beginner": "Das Workbench-Panel links ein- oder ausblenden"
             },
             "show": {
               "label": {
@@ -514,6 +559,10 @@ const semioSketchpadTranslationBundles = {
             }
           },
           "details": {
+            "label": {
+              "normal": "Details",
+              "beginner": "Das Details-Panel rechts ein- oder ausblenden"
+            },
             "show": {
               "label": {
                 "normal": "Anzeigen",
@@ -5254,6 +5303,50 @@ const semioSketchpadTranslationBundles = {
             }
           }
         },
+        "find": {
+          "label": {
+            "normal": "Find",
+            "beginner": "Find items in the current view"
+          },
+          "open": {
+            "label": {
+              "normal": "Find",
+              "beginner": "Click to find and jump to items in the current app view"
+            },
+            "hotkey": "Ctrl+F"
+          },
+          "close": {
+            "label": {
+              "normal": "Close Find",
+              "beginner": "Click to close the find dialog"
+            },
+            "hotkey": "Escape"
+          },
+          "title": {
+            "label": {
+              "normal": "Find",
+              "beginner": "Find"
+            }
+          },
+          "description": {
+            "label": {
+              "normal": "Find items in this view",
+              "beginner": "Find items in this view"
+            }
+          },
+          "placeholder": {
+            "label": {
+              "normal": "Find...",
+              "beginner": "Find..."
+            }
+          },
+          "noResults": {
+            "label": {
+              "normal": "No results found",
+              "beginner": "No results found"
+            }
+          }
+        },
         "focus": {
           "label": {
             "normal": "Focus Mode",
@@ -5462,8 +5555,8 @@ const semioSketchpadTranslationBundles = {
           },
           "workbench": {
             "label": {
-              "normal": "Toggle Workbench",
-              "beginner": "Toggle the Workbench panel on the left side"
+              "normal": "Workbench",
+              "beginner": "Show or hide the workbench panel on the left"
             },
             "show": {
               "label": {
@@ -5515,6 +5608,10 @@ const semioSketchpadTranslationBundles = {
             }
           },
           "details": {
+            "label": {
+              "normal": "Details",
+              "beginner": "Show or hide the details panel on the right"
+            },
             "show": {
               "label": {
                 "normal": "Show",
@@ -10128,8 +10225,11 @@ export function sketchpadResolveControlLabelId(id: string): SemioSketchpadContro
 			return `semio.sketchpad.navbar.${segment}`;
 		}
 	}
-	if (id === "ui.search.toggle" || id === "ui.find.toggle") {
+	if (id === "ui.search.toggle") {
 		return "semio.sketchpad.navbar.search.open";
+	}
+	if (id === "ui.find.toggle") {
+		return "semio.sketchpad.navbar.find.open";
 	}
 	if (id.startsWith("ui.panelToggle.")) {
 		return `semio.sketchpad.navbar.panelToggle.${id.slice("ui.panelToggle.".length)}`;

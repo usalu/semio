@@ -1029,20 +1029,20 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
       {
         key: "panelToggles",
         content: (
-          <div className="flex items-stretch overflow-hidden border border-element h-medium">
+          <div className="flex min-w-0 items-stretch border border-element h-medium">
             <Toggle
-              id="playground.panel.workbench"
+              id="ui.panelToggle.workbench"
               pressed={panelVisibility.leftSidePanel}
               onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed }))}
               icon={shell.workbenchIcon}
-              className="rounded-none border-0"
+              className="rounded-none border-0 shrink-0"
             />
             <Toggle
-              id="playground.panel.details"
+              id="ui.panelToggle.details"
               pressed={panelVisibility.rightSidePanel}
               onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed }))}
               icon={shell.detailsIcon}
-              className="rounded-none border-0 border-l"
+              className="rounded-none border-0 border-l shrink-0"
             />
           </div>
         ),

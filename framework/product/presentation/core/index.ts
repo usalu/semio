@@ -33,6 +33,11 @@ export function columnMorphId(participantId: string, columnKey: string): string 
 	return `${participantId}--column--${columnKey}`;
 }
 
+/** @emoji 🧩 Per-tile reveal.js `data-id` when one column label is the shared morph target (reveal dedupes by `to`). */
+export function columnMorphTileId(participantId: string, columnKey: string, tileKey: string): string {
+	return `${columnMorphId(participantId, columnKey)}--${tileKey}`;
+}
+
 /** @emoji 📐 Chooses the eg-ice-25 text DOM root for reveal.js `data-id` pairing. */
 export function resolveTextMorphRoot(embodiment: TextEmbodiment): TextMorphRoot {
 	if (embodiment.morphRoot) {
@@ -291,11 +296,14 @@ export interface SplitMorphTarget {
 }
 
 /** @emoji 🎯 Stable `data-id` for a {@link SplitMorphTarget} (tile or column). */
-export function morphTargetId(participantId: string, target: SplitMorphTarget): string {
+export function morphTargetId(participantId: string, target: SplitMorphTarget, tileKey?: string): string {
 	if (target.tileKey) {
 		return tileMorphId(participantId, target.tileKey);
 	}
 	if (target.columnKey) {
+		if (tileKey) {
+			return columnMorphTileId(participantId, target.columnKey, tileKey);
+		}
 		return columnMorphId(participantId, target.columnKey);
 	}
 	throw new Error("SplitMorphTarget requires tileKey or columnKey.");
@@ -313,7 +321,7 @@ export interface DispositionSplit {
 	readonly columns?: readonly SplitColumnGroup[];
 	/** @emoji 👻 Show unified column ghost slots (one per column) on this arrangement. */
 	readonly columnGhostsOnly?: boolean;
-	/** @emoji 🎯 Visible tiles use {@link columnMorphId} so they group-morph into stacked column labels (not duplicate ghosts). */
+	/** @emoji 🎯 Visible tiles use {@link columnMorphTileId} per tile into stacked column label companions (reveal dedupes shared targets). */
 	readonly columnMorphTiles?: boolean;
 }
 
@@ -327,6 +335,8 @@ export interface Disposition {
 	readonly split?: DispositionSplit;
 	/** @emoji 🏷 Column targets after a split (e.g. tile columns morph into labels); uses {@link columnMorphId}. */
 	readonly morphTargets?: readonly SplitMorphTarget[];
+	/** @emoji 🧩 Expands {@link SplitMorphTarget} `columnKey` entries into one morph slot per tile (same position). */
+	readonly morphColumnGroups?: readonly SplitColumnGroup[];
 }
 //#endregion 🔖Disposition
 
@@ -468,6 +478,8 @@ export interface ResolvedDisposition {
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
 	readonly split?: DispositionSplit;
+	/** @emoji 👥 Stacked label slot paired with the primary column label (reveal.js per-tile morph). */
+	readonly columnMorphCompanion?: boolean;
 }
 //#endregion 🔖Resolved
 
@@ -501,18 +513,27 @@ export function resolveArrangement(thought: Thought, arrangementId: string): Res
 			throw new Error(`Thought "${thought.id}" has no participant "${disposition.participantId}".`);
 		}
 		if (disposition.morphTargets && disposition.morphTargets.length > 0) {
-			return disposition.morphTargets.map((target) => ({
-				participant,
-				embodiment: {
-					kind: "text" as const,
-					lines: target.lines,
-					level: target.level ?? "heading",
-					morphRoot: target.morphRoot ?? "heading-line",
-				},
-				emphasis: disposition.emphasis,
-				morphId: morphTargetId(participant.id, target),
-				position: target.position,
-			}));
+			return disposition.morphTargets.flatMap((target) => {
+				const columnGroup =
+					target.columnKey && disposition.morphColumnGroups
+						? disposition.morphColumnGroups.find((group) => group.key === target.columnKey)
+						: undefined;
+				const tileKeys = columnGroup?.tileKeys;
+				const keys = tileKeys && tileKeys.length > 0 ? tileKeys : [undefined];
+				return keys.map((tileKey, tileIndex) => ({
+					participant,
+					embodiment: {
+						kind: "text" as const,
+						lines: tileIndex === 0 ? target.lines : ["\u00a0"],
+						level: target.level ?? "heading",
+						morphRoot: target.morphRoot ?? "heading-line",
+					},
+					emphasis: disposition.emphasis,
+					morphId: morphTargetId(participant.id, target, tileKey),
+					position: target.position,
+					columnMorphCompanion: tileKey !== undefined && tileIndex > 0,
+				}));
+			});
 		}
 		return [
 			{
@@ -1059,6 +1080,14 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("columnMorphTileId", () => {
+		it("scopes each tile under its column morph id", () => {
+			expect(columnMorphTileId("catalogue", "col1", "tile-r1-c0")).toBe(
+				"catalogue--column--col1--tile-r1-c0",
+			);
+		});
+	});
+
 	describe("splitColumnCrop", () => {
 		it("returns the union of normalized crops for listed tiles", () => {
 			const tiles = splitFigureGrid({
@@ -1235,6 +1264,41 @@ if (import.meta.vitest) {
 			expect(resolved[0]?.morphId).toBe("fig--column--col1");
 			expect(resolved[0]?.embodiment).toMatchObject({ kind: "text", lines: ["Rippendecke"] });
 			expect(resolved[1]?.morphId).toBe("fig--column--col2");
+		});
+
+		it("expands column morphTargets per tile when morphColumnGroups is set", () => {
+			const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
+			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, gap: 0 });
+			const labelPosition = { x: 0.4, y: 0.1, width: 0.2, height: 0.2 };
+			const thought: Thought = {
+				id: "labels",
+				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
+				arrangements: [
+					{
+						id: "slide",
+						dispositions: [
+							{
+								participantId: "fig",
+								emphasis: "active",
+								morphColumnGroups: [
+									{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r0-c1"] },
+									{ key: "col2", tileKeys: ["tile-r1-c0"] },
+								],
+								morphTargets: [
+									{ columnKey: "col1", position: labelPosition, lines: ["Rippendecke"] },
+									{ columnKey: "col2", position: labelPosition, lines: ["Stütze"] },
+								],
+							},
+						],
+					},
+				],
+			};
+			const resolved = resolveArrangement(thought, "slide");
+			expect(resolved).toHaveLength(3);
+			expect(resolved[0]?.morphId).toBe("fig--column--col1--tile-r0-c0");
+			expect(resolved[1]?.morphId).toBe("fig--column--col1--tile-r0-c1");
+			expect(resolved[1]?.columnMorphCompanion).toBe(true);
+			expect(resolved[2]?.morphId).toBe("fig--column--col2--tile-r1-c0");
 		});
 	});
 

@@ -1070,8 +1070,8 @@ export const uiChromeTranslationBundles = {
     find: {
       toggle: {
         label: {
-          normal: "Suchen in Ansicht",
-          beginner: "Suchen in Ansicht",
+          normal: "Finden",
+          beginner: "Im aktuellen Kontext finden",
         },
       },
     },
@@ -5602,7 +5602,12 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
       data-state={rootDataState}
       id={id}
       type={kind}
-      className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)}
+      className={cn(
+        "group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden has-[_[data-slot=inline-label]]:overflow-visible h-medium divide-x",
+        borderClass,
+        divideClass,
+        className,
+      )}
       {...(restProps as any)}
     >
       <ToggleGroupContext.Provider value={{ level }}>
@@ -5653,7 +5658,11 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       {...props}
     >
       <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{icon as React.ReactNode}</span>
-      {inlineText ? <span className="text-xs whitespace-nowrap">{inlineText}</span> : null}
+      {inlineText ? (
+        <span data-slot="inline-label" className="text-xs whitespace-nowrap">
+          {inlineText}
+        </span>
+      ) : null}
       {action && (
         <div
           className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", getLevelBgClass(level), text && "ml-single")}
@@ -17574,6 +17583,8 @@ if (treeVitest) {
     it("maps ui shell ids to domain-neutral ui i18n keys by default", () => {
       expect(resolveControlLabelId("ui.nav.back")).toBe("ui.nav.back");
       expect(resolveControlLabelId("ui.panelToggle.workbench")).toBe("ui.panelToggle.workbench");
+      expect(resolveControlLabelId("playground.panel.details")).toBe("ui.panelToggle.details");
+      expect(panelKindFromPanelToggleControlId("playground.panel.workbench")).toBe("workbench");
     });
 
     it("resolves every ui.toolbar.parent category in en and de", () => {
@@ -17679,6 +17690,30 @@ if (treeVitest) {
       );
       expect(markup).toContain("Details");
       expect(markup).toContain("aspect-auto");
+      expect(markup).toContain("data-slot=\"inline-label\"");
+    });
+
+    it("navbar keeps workbench and details panel toggle labels when compact chrome is enabled", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={true}>
+          <Navbar
+            items={[
+              {
+                key: "panels",
+                content: (
+                  <div className="flex min-w-0 items-stretch border border-element h-medium">
+                    <Toggle id="ui.panelToggle.workbench" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 shrink-0" />
+                    <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 border-l shrink-0" />
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Workbench");
+      expect(markup).toContain("Details");
+      expect(markup).toContain("has-[_[data-slot=inline-label]]:overflow-visible");
     });
 
     it("renders control-tree boolean toggles with inline labels when compact is off", () => {

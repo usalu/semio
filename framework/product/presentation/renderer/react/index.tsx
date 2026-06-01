@@ -60,6 +60,7 @@ import {
 	resolveArrangement,
 	resolveTextMorphRoot,
 	columnMorphId,
+	columnMorphTileId,
 	splitColumnBounds,
 	splitColumnCrop,
 	splitFigureGrid,
@@ -99,6 +100,7 @@ export type {
 export {
 	analogy,
 	columnMorphId,
+	columnMorphTileId,
 	countArrangements,
 	intro,
 	morphId,
@@ -529,7 +531,7 @@ function splitTileDataId(
 	if (columnMorphTiles && columns) {
 		const columnKey = columnKeyForTile(columns, tileKey);
 		if (columnKey) {
-			return columnMorphId(participantId, columnKey);
+			return columnMorphTileId(participantId, columnKey, tileKey);
 		}
 	}
 	return tileMorphId(participantId, tileKey);
@@ -584,6 +586,7 @@ function ColumnMorphSlotView({
 	textEmbodiment,
 	emphasis,
 	ghostVisibility,
+	labelCompanion,
 }: {
 	readonly morphId: string;
 	readonly position: DispositionPosition;
@@ -594,12 +597,15 @@ function ColumnMorphSlotView({
 	readonly textEmbodiment?: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly ghostVisibility?: "shown" | "hidden";
+	readonly labelCompanion?: boolean;
 }): ReactNode {
 	const frameStyle = dispositionFrameStyle(position, undefined);
 	const headingClass =
-		variant === "label" && textEmbodiment
-			? centeredLineClass(anchorId, textEmbodiment, emphasis)
-			: "presentation-column-morph-slot-placeholder";
+		variant === "label" && labelCompanion
+			? "presentation-column-morph-slot-placeholder"
+			: variant === "label" && textEmbodiment
+				? centeredLineClass(anchorId, textEmbodiment, emphasis)
+				: "presentation-column-morph-slot-placeholder";
 	return (
 		<div
 			data-id={anchorId}
@@ -609,6 +615,7 @@ function ColumnMorphSlotView({
 				variant === "ghost" ? "presentation-column-morph-slot--ghost" : "presentation-column-morph-slot--label",
 				variant === "ghost" && ghostVisibility === "shown" ? "presentation-column-morph-slot--shown" : undefined,
 				variant === "ghost" && ghostVisibility === "hidden" ? "presentation-column-morph-slot--hidden" : undefined,
+				variant === "label" && labelCompanion ? "presentation-column-morph-slot--label-companion" : undefined,
 				emphasisClass(emphasis),
 			]
 				.filter(Boolean)
@@ -675,11 +682,13 @@ function ColumnLabelMorphView({
 	embodiment,
 	emphasis,
 	position,
+	columnMorphCompanion,
 }: {
 	readonly morphId: string;
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position: DispositionPosition;
+	readonly columnMorphCompanion?: boolean;
 }): ReactNode {
 	return (
 		<ColumnMorphSlotView
@@ -689,6 +698,7 @@ function ColumnLabelMorphView({
 			line={embodiment.lines[0] ?? ""}
 			textEmbodiment={embodiment}
 			emphasis={emphasis}
+			labelCompanion={columnMorphCompanion === true}
 		/>
 	);
 }
@@ -869,6 +879,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						embodiment={embodiment}
 						emphasis={emphasis}
 						position={disposition.position}
+						columnMorphCompanion={disposition.columnMorphCompanion}
 					/>
 				);
 			}
@@ -1496,6 +1507,7 @@ if (import.meta.vitest) {
 											{
 												participantId: "catalogue",
 												emphasis: "active",
+												morphColumnGroups: columns,
 												morphTargets: [
 													{
 														columnKey: "col1",
@@ -1521,13 +1533,17 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const focus = container.querySelector('section[title="focus"]');
-			expect(focus?.querySelectorAll('.presentation-figure-tile-frame[data-id="catalogue--column--col1"]').length).toBe(
-				2,
-			);
+			expect(
+				focus?.querySelectorAll('.presentation-figure-tile-frame[data-id="catalogue--column--col1--tile-r0-c0"]').length,
+			).toBe(1);
+			expect(
+				focus?.querySelectorAll('.presentation-figure-tile-frame[data-id^="catalogue--column--col1--"]').length,
+			).toBe(2);
 			expect(focus?.querySelectorAll(".presentation-column-morph-tile-ghost").length).toBe(0);
 			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(0);
 			const labels = container.querySelector('section[title="labels"]');
-			expect(labels?.querySelectorAll('[data-id^="catalogue--column--"]').length).toBe(2);
+			expect(labels?.querySelectorAll('[data-id^="catalogue--column--col1--"]').length).toBe(2);
+			expect(labels?.querySelectorAll(".presentation-column-morph-slot--label-companion").length).toBe(1);
 			expect(labels?.querySelector('[data-id="catalogue--tile--tile-r0-c0"]')).toBeNull();
 		});
 
