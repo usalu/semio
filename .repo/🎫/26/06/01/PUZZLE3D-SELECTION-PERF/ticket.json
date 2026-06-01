@@ -3,10 +3,11 @@
   "emoji": "⚡",
   "status": "closed",
   "description": "Puzzle 3D Selection Performance Refactor",
-  "summary": "Fixed Ctrl+A ~2s 3D freeze: registryScene useMemo was invalidated on every host re-render because PlayCanvas children and callback props got new references, remounting RegistryProvider and ~180 objects. Stable scene via InnerSceneChildrenContext + memoized PlayCanvas scene children; RegistryHostCallbacks ref for registry shell; deferShell now defers snapshot+emit together; bulk tint skips material.needsUpdate.",
+  "summary": "Fixed Ctrl+A ~2s 3D freeze root cause: Tree defined DataItemView/DataSectionView inside render body, remounting ~700 hierarchy rows on every selection emit. Hoisted TreeDataItemView and TreeDataSectionView to module scope with TreeDataRenderingContext (handlers, maps, drag controller). 90 ui/react, 154 puzzle/3d/react, 26 play tests pass.",
   "goal": "🎯semio",
   "sessions": [
     "⚪e62a8f60381942afa82985be8e252a49",
-    "⚪2ea609acdab8448d872b5f19bfc4732c"
+    "⚪2ea609acdab8448d872b5f19bfc4732c",
+    "⚪f279206acff741df930e7c392f49eb0c"
   ]
 }

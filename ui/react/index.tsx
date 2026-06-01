@@ -7524,27 +7524,34 @@ interface TreeRootProps {
   indentMultiplier?: number;
 }
 
-/**
- * TreeDataRenderingContextValue holds the data fields for a TreeDataRenderingContextValue record.
- **/
+/** @emoji 🌲 Stable context for hoisted Tree data rows (avoids remounting rows when Tree re-renders). */
 interface TreeDataRenderingContextValue {
-  sectionItemsById: Record<string, TreeDataItem[]>;
-  itemItemsById: Record<string, TreeDataItem[]>;
-  loadingById: Record<string, boolean>;
-  selectedIds: string[];
-  draggedIds: string[];
-  loadSectionItems: (section: TreeDataSection) => Promise<void>;
-  loadItemItems: (item: TreeDataItem) => Promise<void>;
-  handleSelectItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
-  handleDoubleClickItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
-  handleDragStart: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
-  handleDragEnd: (item: TreeDataItem, section: TreeDataSection) => void;
-  handleDropOnItem: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
-  handleDropOnSection: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
-  handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  readonly sectionItemsById: Record<string, TreeDataItem[]>;
+  readonly itemItemsById: Record<string, TreeDataItem[]>;
+  readonly loadingById: Record<string, boolean>;
+  readonly selectedIds: readonly string[];
+  readonly dragAndDropController?: TreeDragAndDropController;
+  readonly loadSectionItems: (section: TreeDataSection) => Promise<void>;
+  readonly loadItemItems: (item: TreeDataItem) => Promise<void>;
+  readonly handleSelectItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
+  readonly handleDoubleClickItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
+  readonly handleDragStart: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
+  readonly handleDragEnd: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
+  readonly handleDropOnItem: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
+  readonly handleDropOnSection: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
+  readonly handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  readonly buildPalettePointerProps: (item: TreeDataItem, section: TreeDataSection) => Pick<TreeItemProps, "onPointerDown">;
 }
 
 const TreeDataRenderingContext = reactHostPort.createContext<TreeDataRenderingContextValue | null>(null);
+
+function useTreeDataRendering(): TreeDataRenderingContextValue {
+  const value = reactHostPort.useContext(TreeDataRenderingContext);
+  if (!value) {
+    throw new Error("Tree data row components must render inside Tree");
+  }
+  return value;
+}
 
 const treeDefaultDragMimeKind = "application/vnd.code.tree.item";
 
@@ -8687,6 +8694,134 @@ const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
 };
 //#endregion 🎃TreeHoverPath
 
+/** @emoji 🌿 Hoisted data-tree item row (stable component type across Tree re-renders). */
+const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
+  readonly item: TreeDataItem;
+  readonly section: TreeDataSection;
+  readonly path: readonly string[];
+  readonly isLastItem: boolean;
+}): React.ReactElement {
+  const { item, section, path, isLastItem } = props;
+  const {
+    itemItemsById,
+    loadingById,
+    selectedIds,
+    dragAndDropController,
+    loadItemItems,
+    handleSelectItem,
+    handleDoubleClickItem,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDropOnItem,
+    buildPalettePointerProps,
+  } = useTreeDataRendering();
+  const baseChildItems = getTreeItemItems(item, itemItemsById);
+  const alternatives = item.alternatives ?? [];
+  const branchCount = alternatives.length;
+  const [activeBranchIndex, setActiveBranchIndex] = reactHostPort.useState(0);
+  const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
+  const childItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
+  const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), getTreeItemDefaultOpen(item));
+  const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
+  const hasDynamicChildren = Boolean(item.getItems);
+  const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
+  const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
+
+  reactHostPort.useEffect(() => {
+    if (treeOpenState.open && hasDynamicChildren) {
+      void loadItemItems(item);
+    }
+  }, [hasDynamicChildren, item, loadItemItems, treeOpenState.open]);
+
+  const palettePointerProps = buildPalettePointerProps(item, section);
+  const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && (item.draggable || item.dragData) ? "touch-none" : undefined;
+
+  return (
+    <TreeItem
+      id={item.id}
+      label={getTreeItemLabel(item)}
+      icon={item.icon}
+      className={cn(item.className, palettePointerClassName)}
+      isSelected={item.isSelected ?? selectedIds.includes(item.id)}
+      isHighlighted={item.isHighlighted}
+      isDragHandle={item.isDragHandle}
+      defaultOpen={getTreeItemDefaultOpen(item)}
+      open={treeOpenState.open}
+      onOpenChange={treeOpenState.setOpen}
+      expandable={isExpandable}
+      loading={isLoading}
+      isLastItem={isLastItem}
+      actions={item.actions}
+      draggable={Boolean(item.draggable) || Boolean(item.dragData) || Boolean(dragAndDropController)}
+      onClick={(event) => handleSelectItem(event, item, section, [...path])}
+      onDoubleClick={(event) => handleDoubleClickItem(event, item, section, [...path])}
+      onDragStart={(event) => handleDragStart(event, item, section)}
+      onDragEnd={(event) => handleDragEnd(event, item, section)}
+      onDragOver={handleDragOver}
+      onDrop={(event) => handleDropOnItem(event, item, section)}
+      onPointerEnter={item.onPointerEnter}
+      onPointerLeave={item.onPointerLeave}
+      {...palettePointerProps}
+      branchCount={branchCount}
+      activeBranchIndex={clampedBranchIndex}
+      onBranchChange={setActiveBranchIndex}
+    >
+      {childItems.map((childItem, index) => (
+        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
+      ))}
+      {!isLoading && childItems.length === 0 && item.emptyState && (
+        <TreeItem>
+          <TreeContent>{item.emptyState}</TreeContent>
+        </TreeItem>
+      )}
+    </TreeItem>
+  );
+});
+
+/** @emoji 🌿 Hoisted data-tree section row (stable component type across Tree re-renders). */
+const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection }): React.ReactElement {
+  const { section } = props;
+  const { sectionItemsById, loadingById, loadSectionItems, handleDragOver, handleDropOnSection } = useTreeDataRendering();
+  const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? true);
+  const items = getTreeSectionItems(section, sectionItemsById);
+  const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
+  const hasDynamicChildren = Boolean(section.getItems);
+  const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasNonEmptyChildren(section.content);
+
+  reactHostPort.useEffect(() => {
+    if (treeOpenState.open && hasDynamicChildren) {
+      void loadSectionItems(section);
+    }
+  }, [hasDynamicChildren, loadSectionItems, section, treeOpenState.open]);
+
+  return (
+    <TreeSection
+      id={section.id}
+      label={section.label}
+      icon={section.icon}
+      className={section.className}
+      defaultOpen={section.defaultOpen}
+      open={treeOpenState.open}
+      onOpenChange={treeOpenState.setOpen}
+      expandable={isExpandable}
+      loading={isLoading}
+      actions={section.actions}
+      onPointerEnter={section.onPointerEnter}
+      onPointerLeave={section.onPointerLeave}
+      onDoubleClick={section.onDoubleClick}
+      onDragOver={handleDragOver}
+      onDrop={(event) => handleDropOnSection(event, section)}
+    >
+      {section.content}
+      {items.map((item, index) => (
+        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
+      ))}
+      {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}
+    </TreeSection>
+  );
+});
+
 /**
  * Hierarchical tree view component with optional file tree rendering.
  **/
@@ -8983,109 +9118,56 @@ export const Tree = (({
     [clearPalettePointerWindowListeners, dragAndDropController, resolveItemDragData],
   );
 
-  const DataItemView: React.FC<{ item: TreeDataItem; section: TreeDataSection; path: string[]; isLastItem: boolean }> = ({ item, section, path, isLastItem }) => {
-    const baseChildItems = getTreeItemItems(item, itemItemsById);
-    const alternatives = item.alternatives ?? [];
-    const branchCount = alternatives.length;
-    const [activeBranchIndex, setActiveBranchIndex] = reactHostPort.useState(0);
-    const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
-    const childItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
-    const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), getTreeItemDefaultOpen(item));
-    const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
-    const hasDynamicChildren = Boolean(item.getItems);
-    const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
-    const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
+  const handleDropOnItem = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
+      handleDrop(event, item, "item", section);
+    },
+    [handleDrop],
+  );
 
-    reactHostPort.useEffect(() => {
-      if (treeOpenState.open && hasDynamicChildren) {
-        void loadItemItems(item);
-      }
-    }, [hasDynamicChildren, item, treeOpenState.open]);
+  const handleDropOnSection = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => {
+      handleDrop(event, section, "section", section);
+    },
+    [handleDrop],
+  );
 
-    const palettePointerProps = buildPalettePointerProps(item, section);
-    const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && (item.draggable || item.dragData) ? "touch-none" : undefined;
-
-    return (
-      <TreeItem
-        id={item.id}
-        label={getTreeItemLabel(item)}
-        icon={item.icon}
-        className={cn(item.className, palettePointerClassName)}
-        isSelected={item.isSelected ?? resolvedSelectedIds.includes(item.id)}
-        isHighlighted={item.isHighlighted}
-        isDragHandle={item.isDragHandle}
-        defaultOpen={getTreeItemDefaultOpen(item)}
-        open={treeOpenState.open}
-        onOpenChange={treeOpenState.setOpen}
-        expandable={isExpandable}
-        loading={isLoading}
-        isLastItem={isLastItem}
-        actions={item.actions}
-        draggable={Boolean(item.draggable) || Boolean(item.dragData) || Boolean(dragAndDropController)}
-        onClick={(event) => handleSelectItem(event, item, section, path)}
-        onDoubleClick={(event) => handleDoubleClickItem(event, item, section, path)}
-        onDragStart={(event) => handleDragStart(event, item, section)}
-        onDragEnd={(event) => handleDragEnd(event, item, section)}
-        onDragOver={handleDragOver}
-        onDrop={(event) => handleDrop(event, item, "item", section)}
-        onPointerEnter={item.onPointerEnter}
-        onPointerLeave={item.onPointerLeave}
-        {...palettePointerProps}
-        branchCount={branchCount}
-        activeBranchIndex={clampedBranchIndex}
-        onBranchChange={setActiveBranchIndex}
-      >
-        {childItems.map((childItem, index) => (
-          <DataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
-        ))}
-        {!isLoading && childItems.length === 0 && item.emptyState && (
-          <TreeItem>
-            <TreeContent>{item.emptyState}</TreeContent>
-          </TreeItem>
-        )}
-      </TreeItem>
-    );
-  };
-
-  const DataSectionView: React.FC<{ section: TreeDataSection }> = ({ section }) => {
-    const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? true);
-    const items = getTreeSectionItems(section, sectionItemsById);
-    const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
-    const hasDynamicChildren = Boolean(section.getItems);
-    const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasNonEmptyChildren(section.content);
-
-    reactHostPort.useEffect(() => {
-      if (treeOpenState.open && hasDynamicChildren) {
-        void loadSectionItems(section);
-      }
-    }, [hasDynamicChildren, section, treeOpenState.open]);
-
-    return (
-      <TreeSection
-        id={section.id}
-        label={section.label}
-        icon={section.icon}
-        className={section.className}
-        defaultOpen={section.defaultOpen}
-        open={treeOpenState.open}
-        onOpenChange={treeOpenState.setOpen}
-        expandable={isExpandable}
-        loading={isLoading}
-        actions={section.actions}
-        onPointerEnter={section.onPointerEnter}
-        onPointerLeave={section.onPointerLeave}
-        onDoubleClick={section.onDoubleClick}
-        onDragOver={handleDragOver}
-        onDrop={(event) => handleDrop(event, section, "section", section)}
-      >
-        {section.content}
-        {items.map((item, index) => (
-          <DataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
-        ))}
-        {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}
-      </TreeSection>
-    );
-  };
+  const treeDataRenderingValue = reactHostPort.useMemo<TreeDataRenderingContextValue>(
+    () => ({
+      sectionItemsById,
+      itemItemsById,
+      loadingById,
+      selectedIds: resolvedSelectedIds,
+      dragAndDropController,
+      loadSectionItems,
+      loadItemItems,
+      handleSelectItem,
+      handleDoubleClickItem,
+      handleDragStart,
+      handleDragEnd,
+      handleDropOnItem,
+      handleDropOnSection,
+      handleDragOver,
+      buildPalettePointerProps,
+    }),
+    [
+      buildPalettePointerProps,
+      dragAndDropController,
+      handleDoubleClickItem,
+      handleDragEnd,
+      handleDragOver,
+      handleDragStart,
+      handleDropOnItem,
+      handleDropOnSection,
+      handleSelectItem,
+      itemItemsById,
+      loadItemItems,
+      loadSectionItems,
+      loadingById,
+      resolvedSelectedIds,
+      sectionItemsById,
+    ],
+  );
 
   const treeRootRef = reactHostPort.useRef<HTMLDivElement>(null);
 
@@ -9106,11 +9188,13 @@ export const Tree = (({
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
         <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
-          {resolvedSections.map((section, index) => (
-            <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
-              <DataSectionView section={section} />
-            </div>
-          ))}
+          <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
+            {resolvedSections.map((section, index) => (
+              <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
+                <TreeDataSectionView section={section} />
+              </div>
+            ))}
+          </TreeDataRenderingContext.Provider>
           {resolvedSections.length === 0 && emptyState}
         </div>
       </TreeContext.Provider>
