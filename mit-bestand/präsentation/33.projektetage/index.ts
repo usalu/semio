@@ -7,6 +7,7 @@ import {
 	countArrangements,
 	intro,
 	splitFigureGrid,
+	type DispositionPosition,
 	type Presentation,
 	type SplitTile,
 	type Thought,
@@ -34,18 +35,45 @@ const CATALOGUE_TILES_SPREAD = splitFigureGrid({
 	frame: CATALOGUE_SPLIT_FRAME,
 	gap: 0.02,
 });
-const CATALOGUE_FOCUS_TILES: SplitTile[] = CATALOGUE_TILES_SPREAD.filter((tile) =>
-	tile.key.startsWith("tile-r1-"),
-).map((tile, column) => ({
-	...tile,
-	position: {
-		x: 0.04 + column * 0.192,
-		y: 0.22,
-		width: 0.17,
-		height: 0.56,
-	},
-	emphasis: "active" as const,
-}));
+
+const CATALOGUE_TILE_BY_KEY = new Map(CATALOGUE_TILES_ASSEMBLED.map((tile) => [tile.key, tile]));
+
+/** @emoji 📐 Ten catalogue tiles (5–14) in three columns after dropping the top row (1–4). */
+function catalogueFocusColumnTiles(): SplitTile[] {
+	const layout: DispositionPosition = { x: 0.08, y: 0.12, width: 0.84, height: 0.76 };
+	const gap = 0.015;
+	const col1Width = layout.width * 0.48;
+	const col2Width = layout.width * 0.24;
+	const col3Width = layout.width * 0.24;
+	const col2X = layout.x + col1Width + gap;
+	const col3X = col2X + col2Width + gap;
+	const rowHeight = (layout.height - gap * 2) / 3;
+	const cellW1 = (col1Width - gap) / 2;
+	const rowY = (row: number): number => layout.y + row * (rowHeight + gap);
+
+	const placements: readonly { readonly key: string; readonly position: DispositionPosition }[] = [
+		{ key: "tile-r1-c0", position: { x: layout.x, y: rowY(0), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c1", position: { x: layout.x + cellW1 + gap, y: rowY(0), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c2", position: { x: layout.x, y: rowY(1), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c3", position: { x: layout.x + cellW1 + gap, y: rowY(1), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c4", position: { x: layout.x, y: rowY(2), width: cellW1, height: rowHeight } },
+		{ key: "tile-r2-c0", position: { x: layout.x + cellW1 + gap, y: rowY(2), width: cellW1, height: rowHeight } },
+		{ key: "tile-r2-c1", position: { x: col2X, y: rowY(0), width: col2Width, height: rowHeight } },
+		{ key: "tile-r2-c2", position: { x: col2X, y: rowY(1), width: col2Width, height: rowHeight } },
+		{ key: "tile-r2-c3", position: { x: col2X, y: rowY(2), width: col2Width, height: rowHeight } },
+		{ key: "tile-r2-c4", position: { x: col3X, y: rowY(1), width: col3Width, height: rowHeight } },
+	];
+
+	return placements.map(({ key, position }) => {
+		const tile = CATALOGUE_TILE_BY_KEY.get(key);
+		if (!tile) {
+			throw new Error(`Missing catalogue tile "${key}".`);
+		}
+		return { ...tile, position, emphasis: "active" as const };
+	});
+}
+
+const CATALOGUE_FOCUS_TILES = catalogueFocusColumnTiles();
 
 const introDeck = intro({
 	id: "projektetage",
@@ -242,6 +270,26 @@ if (import.meta.vitest) {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const tilesArrangement = media?.arrangements.find((a) => a.id === "catalogue-tiles");
 			expect(tilesArrangement?.dispositions[0]?.split?.tiles).toHaveLength(15);
+		});
+
+		it("arranges catalogue-focus as three columns without the top row", () => {
+			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
+			const focus = media?.arrangements.find((a) => a.id === "catalogue-focus");
+			const keys = focus?.dispositions[0]?.split?.tiles.map((tile) => tile.key) ?? [];
+			expect(keys).toHaveLength(10);
+			expect(keys.every((key) => !key.startsWith("tile-r0-"))).toBe(true);
+			expect(keys).toEqual([
+				"tile-r1-c0",
+				"tile-r1-c1",
+				"tile-r1-c2",
+				"tile-r1-c3",
+				"tile-r1-c4",
+				"tile-r2-c0",
+				"tile-r2-c1",
+				"tile-r2-c2",
+				"tile-r2-c3",
+				"tile-r2-c4",
+			]);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

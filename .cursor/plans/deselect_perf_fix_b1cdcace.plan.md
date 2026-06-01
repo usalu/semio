@@ -13,7 +13,7 @@ todos:
     status: completed
   - id: validate-deselect
     content: Extend existing vitest files, add [DEBUG] counters, run package tests, runtime-verify instant deselect on Nakagin; track under repo ticket
-    status: in_progress
+    status: completed
 isProject: false
 ---
 
