@@ -89,6 +89,8 @@ export const MESH_STYLE_KINDS = ["original", "neutral", "hovered", "selected", "
 export type MeshStyleKind = (typeof MESH_STYLE_KINDS)[number];
 /** @emoji ­ƒÄ¿ Default object mesh style when none is passed ({@link MeshBody}). */
 export const DEFAULT_MESH_STYLE: MeshStyleKind = "neutral";
+/** @emoji 🎯 Max selected scene rows before skipping drei/pooled edge outlines (keeps bulk select responsive). */
+export const PUZZLE3D_MESH_OUTLINE_MAX_SELECTION = 48;
 export type DomainKind = "urban" | "architecture" | "detailing" | "engineering";
 export type ScaleKind = "1to50000" | "1to25000" | "1to10000" | "1to5000" | "1to2500" | "1to1000" | "1to500" | "1to333" | "1to200" | "1to100" | "1to50" | "1to33" | "1to25" | "1to10" | "1to5" | "1to1" | "2to1" | "5to1" | "10to1" | "20to1" | "50to1";
 
@@ -487,6 +489,8 @@ interface SelectionDerivation {
   readonly vortexOwnerObjectIdSet: ReadonlySet<string>;
   readonly attractionIdSet: ReadonlySet<string>;
   readonly primaryObjectId: string | null;
+  readonly revision: number;
+  readonly meshOutlineEnabled: boolean;
 }
 
 function deriveSelectionSnapshot(snapshot: SelectionSnapshot): SelectionDerivation {
@@ -496,13 +500,17 @@ function deriveSelectionSnapshot(snapshot: SelectionSnapshot): SelectionDerivati
   for (const fullId of snapshot.vortexIds) {
     vortexOwnerObjectIdSet.add(parseVortexFullId(fullId).objectId);
   }
+  const attractionIdSet = new Set(snapshot.attractionIds);
+  const selectionRowCount = objectIdSet.size + vortexIdSet.size + attractionIdSet.size;
   return {
     snapshot,
     objectIdSet,
     vortexIdSet,
     vortexOwnerObjectIdSet,
-    attractionIdSet: new Set(snapshot.attractionIds),
+    attractionIdSet,
     primaryObjectId: snapshot.objectIds[0] ?? (snapshot.vortexIds[0] ? parseVortexFullId(snapshot.vortexIds[0]).objectId : null),
+    revision: 0,
+    meshOutlineEnabled: selectionRowCount <= PUZZLE3D_MESH_OUTLINE_MAX_SELECTION,
   };
 }
 
@@ -563,12 +571,14 @@ function notifyPerIdListeners(map: Map<string, Set<() => void>>, ids: Iterable<s
 /** @emoji 🔔 External selection store for synchronous pick feedback under controlled hosts. */
 export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_SELECTION_SNAPSHOT) {
   let derived = deriveSelectionSnapshot(initial);
+  derived = { ...derived, revision: 1 };
   const globalListeners = new Set<() => void>();
   const objectListeners = new Map<string, Set<() => void>>();
   const vortexListeners = new Map<string, Set<() => void>>();
   const attractionListeners = new Map<string, Set<() => void>>();
   const attractionBulkListeners = new Set<() => void>();
   const primaryListeners = new Set<() => void>();
+  const meshOutlinePolicyListeners = new Set<() => void>();
 
   return {
     subscribe(listener: () => void): () => void {
@@ -583,6 +593,16 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
     },
     getAttractionIdSet(): ReadonlySet<string> {
       return derived.attractionIdSet;
+    },
+    getRevision(): number {
+      return derived.revision;
+    },
+    getMeshOutlineEnabled(): boolean {
+      return derived.meshOutlineEnabled;
+    },
+    subscribeMeshOutlinePolicy(listener: () => void): () => void {
+      meshOutlinePolicyListeners.add(listener);
+      return () => meshOutlinePolicyListeners.delete(listener);
     },
     isObjectSelected(objectId: string): boolean {
       return derived.objectIdSet.has(objectId) || derived.vortexOwnerObjectIdSet.has(objectId);
@@ -619,6 +639,12 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
       derived = selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)
         ? { ...nextDerived, attractionIdSet: prev.attractionIdSet }
         : nextDerived;
+      derived = { ...derived, revision: prev.revision + 1 };
+      if (prev.meshOutlineEnabled !== derived.meshOutlineEnabled) {
+        for (const listener of meshOutlinePolicyListeners) {
+          listener();
+        }
+      }
       notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet));
       notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.vortexOwnerObjectIdSet, derived.vortexOwnerObjectIdSet));
       notifyPerIdListeners(vortexListeners, selectionSetSymmetricDifference(prev.vortexIdSet, derived.vortexIdSet));
@@ -693,6 +719,12 @@ export function useSelectedAttractionIdSet(): ReadonlySet<string> {
 export function usePrimarySelectionObjectId(): string | null {
   const store = useSelectionSnapshotStore();
   return reactHostPort.useSyncExternalStore(store.subscribePrimary, store.getPrimaryObjectId, store.getPrimaryObjectId);
+}
+
+/** @emoji 🎯 False when selection count exceeds {@link PUZZLE3D_MESH_OUTLINE_MAX_SELECTION} (fill-only highlight). */
+export function useSelectionMeshOutlinesEnabled(): boolean {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(store.subscribeMeshOutlinePolicy, store.getMeshOutlineEnabled, store.getMeshOutlineEnabled);
 }
 
 /** @emoji 🖱️ Exclusive scene hover target (at most one active). */
@@ -3197,7 +3229,7 @@ function createMeshOutline(geometry: BufferGeometry, color: string, state: MeshS
   return outline;
 }
 
-function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
+function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind, edgeOutlines = true): void {
   const colors = meshStyleColors(style);
   if (!colors) {
     return;
@@ -3211,7 +3243,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind): void {
         object.material = meshMaterial;
       }
       const geometry = object.geometry;
-      if (geometry && !object.children.some((c) => c.userData[MESH_OUTLINE_USER_DATA_KEY])) {
+      if (edgeOutlines && geometry && !object.children.some((c) => c.userData[MESH_OUTLINE_USER_DATA_KEY])) {
         object.add(createMeshOutline(geometry, colors.lineColor, colors));
       }
       return;
@@ -3265,8 +3297,8 @@ const gltfRefCounts = new Map<string, number>();
 const styledMeshRefCounts = new Map<string, number>();
 const styledMeshTemplates = new Map<string, Object3D>();
 
-function styledPoolKey(url: string, style: MeshStyleKind): string {
-  return `${url}\0${style}`;
+function styledPoolKey(url: string, style: MeshStyleKind, edgeOutlines: boolean): string {
+  return edgeOutlines ? `${url}\0${style}` : `${url}\0${style}\0fill`;
 }
 
 export function gltfPoolAcquire(url: string): void {
@@ -3282,13 +3314,13 @@ export function gltfPoolRelease(url: string): void {
   }
 }
 
-export function styledMeshPoolAcquire(url: string, style: MeshStyleKind): void {
-  const key = styledPoolKey(url, style);
+export function styledMeshPoolAcquire(url: string, style: MeshStyleKind, edgeOutlines = true): void {
+  const key = styledPoolKey(url, style, edgeOutlines);
   styledMeshRefCounts.set(key, (styledMeshRefCounts.get(key) ?? 0) + 1);
 }
 
-export function styledMeshPoolRelease(url: string, style: MeshStyleKind): void {
-  const key = styledPoolKey(url, style);
+export function styledMeshPoolRelease(url: string, style: MeshStyleKind, edgeOutlines = true): void {
+  const key = styledPoolKey(url, style, edgeOutlines);
   const n = (styledMeshRefCounts.get(key) ?? 1) - 1;
   if (n <= 0) {
     styledMeshRefCounts.delete(key);
@@ -3311,15 +3343,15 @@ export function gltfPoolClear(url: string): void {
 }
 
 /** @emoji ­ƒÅè Returns a cached styled GLTF template for {@link MeshBody} (refcount via acquire/release). */
-export function styledMeshTemplate(url: string, style: MeshStyleKind, source: Object3D): Object3D {
+export function styledMeshTemplate(url: string, style: MeshStyleKind, source: Object3D, edgeOutlines = true): Object3D {
   if (style === "original") {
     return source;
   }
-  const key = styledPoolKey(url, style);
+  const key = styledPoolKey(url, style, edgeOutlines);
   let template = styledMeshTemplates.get(key);
   if (!template) {
     template = source.clone(true);
-    applyMeshStyleToObject3D(template, style);
+    applyMeshStyleToObject3D(template, style, edgeOutlines);
     styledMeshTemplates.set(key, template);
   }
   return template;
@@ -3336,24 +3368,24 @@ function usePooledGltf(url: string) {
   return gltf;
 }
 
-function usePooledStyledMesh(url: string, style: MeshStyleKind) {
+function usePooledStyledMesh(url: string, style: MeshStyleKind, edgeOutlines = true) {
   const gltf = usePooledGltf(url);
   reactHostPort.useEffect(() => {
     if (style === "original") {
       return undefined;
     }
-    styledMeshPoolAcquire(url, style);
+    styledMeshPoolAcquire(url, style, edgeOutlines);
     return () => {
-      styledMeshPoolRelease(url, style);
+      styledMeshPoolRelease(url, style, edgeOutlines);
     };
-  }, [url, style]);
+  }, [url, style, edgeOutlines]);
   const renderRoot = reactHostPort.useMemo(() => {
     if (!gltf.scene) {
       return null;
     }
-    const template = styledMeshTemplate(url, style, gltf.scene);
+    const template = styledMeshTemplate(url, style, gltf.scene, edgeOutlines);
     return template.clone(true);
-  }, [gltf.scene, url, style]);
+  }, [edgeOutlines, gltf.scene, url, style]);
   return renderRoot;
 }
 //#endregion ­ƒÅèPool
@@ -3385,7 +3417,6 @@ export interface RegistryValue {
   blockedVortexFullIds: ReadonlySet<string>;
   proximityRadius: number;
   proximityRelocateEnabled: boolean;
-  selectedObjectIds: readonly string[];
   setSelectedObjectIds(ids: readonly string[]): void;
   selectionMode: SelectionMode;
   relocateMode: RelocateMode;
@@ -3535,17 +3566,14 @@ function HoverInvalidateBridge(): null {
   return null;
 }
 
-/** @emoji 🎯 Redraws the canvas when host-controlled selection changes. */
+/** @emoji 🎯 Redraws the canvas once per selection revision (not per id string join). */
 function SelectionInvalidateBridge(): null {
-  const selection = useLiveSelection();
+  const store = useSelectionSnapshotStore();
+  const revision = reactHostPort.useSyncExternalStore(store.subscribe, store.getRevision, store.getRevision);
   const invalidate = useThree((state) => state.invalidate);
-  const selectionKey = reactHostPort.useMemo(
-    () => `${selection.objectIds.join("\0")}|${selection.vortexIds.join("\0")}|${selection.attractionIds.join("\0")}`,
-    [selection.attractionIds, selection.objectIds, selection.vortexIds],
-  );
   reactHostPort.useEffect(() => {
     invalidate();
-  }, [selectionKey, invalidate]);
+  }, [revision, invalidate]);
   return null;
 }
 
@@ -3994,7 +4022,7 @@ function GlbMeshFrame(props: { readonly children: ReactNode }) {
 /** @emoji ­ƒºè Pooled GLB body with {@link MeshStyleKind} recoloring aligned to Elements tokens. */
 export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
   const style = props.style ?? DEFAULT_MESH_STYLE;
-  const renderRoot = usePooledStyledMesh(props.meshUrl, style);
+  const renderRoot = usePooledStyledMesh(props.meshUrl, style, props.showOutline === true);
   if (!renderRoot) {
     return null;
   }
@@ -4111,6 +4139,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
   const group = reactHostPort.useRef<Group>(null);
   const registrySelected = useObjectSelected(props.id);
   const primaryObjectId = usePrimarySelectionObjectId();
+  const meshOutlinesEnabled = useSelectionMeshOutlinesEnabled();
   const { registerObject, relocateMode } = useRegistryCore();
   const { selectionMode, commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
   const { setHover, clearHover, isHovered } = useRegistryHover();
@@ -4156,13 +4185,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
       }),
     [props.style, props.disabled, selected, props.hovered, linkHighlighted, objectPointerHovered],
   );
-  const showSelectionOutline = selected && !props.disabled;
-  const invalidate = useThree((state) => state.invalidate);
-  reactHostPort.useEffect(() => {
-    if (selected || showSelectionOutline) {
-      invalidate();
-    }
-  }, [selected, showSelectionOutline, meshStyle, invalidate]);
+  const showSelectionOutline = selected && !props.disabled && meshOutlinesEnabled;
 
   const selectObject = reactHostPort.useCallback(() => {
     if (attractionDragActive || attractionIndirectPickAwait || props.disabled || puzzle3dRelocateDragActiveRef.current) {
@@ -6015,9 +6038,7 @@ function RegistryProvider({
     }
     activeRelocateObjectIdRef.current = primarySelectionObjectId(controlledSelection);
   }, [controlledSelection]);
-  const liveSelection = reactHostPort.useSyncExternalStore(selectionStore.subscribe, selectionStore.getSnapshot, selectionStore.getSnapshot);
-  const selectedObjectIds = liveSelection.objectIds;
-  const activeRelocateObjectId = primarySelectionObjectId(liveSelection);
+  const activeRelocateObjectId = reactHostPort.useSyncExternalStore(selectionStore.subscribePrimary, selectionStore.getPrimaryObjectId, selectionStore.getPrimaryObjectId);
   const [attractionDragActive, setAttractionDragActive] = reactHostPort.useState(false);
   const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = reactHostPort.useState<string | null>(null);
   const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = reactHostPort.useState<ReadonlySet<string>>(new Set());
@@ -6465,7 +6486,6 @@ function RegistryProvider({
       proximityRadius,
       proximityRelocateEnabled,
       relocateMode,
-      selectedObjectIds,
       selectionMode,
       activeRelocateObjectId,
       beginAttractionDragFromVortex,
@@ -6502,7 +6522,6 @@ function RegistryProvider({
       proximityRadius,
       proximityRelocateEnabled,
       relocateMode,
-      selectedObjectIds,
       selectionMode,
       activeRelocateObjectId,
       beginAttractionDragFromVortex,

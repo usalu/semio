@@ -3520,6 +3520,7 @@ export class Puzzle2dRenderer {
       this.wheelZoomGestureActive = false;
       this.pushWheelZoomActiveToWasmSession();
       this.emitPublicCameraChange();
+      this.invalidate();
     }, 120);
   }
 
@@ -4496,6 +4497,9 @@ export class Puzzle2dRenderer {
   /** @emoji 🏷️ Draws node captions on {@link Puzzle2dRenderer.attachTextOverlayCanvas} (GPU path has no text primitives). */
   private paintTextOverlays(): void {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
+      return;
+    }
+    if (this.wheelZoomGestureActive) {
       return;
     }
     if (!this.textOverlayDirty()) {
@@ -5566,7 +5570,7 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
-    it("paintTextOverlays repaints during wheel zoom and deferred descriptor sync", () => {
+    it("paintTextOverlays skips wheel zoom frames and repaints after gesture ends", () => {
       const { canvas } = createMockCanvas();
       const overlay = document.createElement("canvas");
       const fillText = vi.fn();
@@ -5609,8 +5613,10 @@ if (puzzle2dVitest) {
       expect(fillText).toHaveBeenCalled();
       fillText.mockClear();
       renderer["wheelZoomGestureActive"] = true;
-      vi.spyOn(renderer.session, "defersDescriptorSyncFromJs").mockReturnValue(true);
       renderer.camera.x = 120;
+      renderer["paintTextOverlays"]();
+      expect(fillText).not.toHaveBeenCalled();
+      renderer["wheelZoomGestureActive"] = false;
       renderer["paintTextOverlays"]();
       expect(fillText).toHaveBeenCalled();
       renderer.dispose();

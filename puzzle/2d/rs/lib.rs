@@ -2796,6 +2796,8 @@ mod board_host {
         world_content_cache: RefCell<Option<(u64, BoardDrawLod, Scene)>>,
         /// @emoji 🔍 True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
         wheel_zoom_active: bool,
+        /// @emoji 📶 LOD tier pinned for the active wheel gesture so pan/zoom does not rebuild {@link BoardHost.world_content_cache} on every band crossing.
+        wheel_zoom_render_lod: Option<BoardDrawLod>,
     }
 
     impl Default for Camera {
@@ -2850,11 +2852,22 @@ mod board_host {
                 content_scene_generation: 0,
                 world_content_cache: RefCell::new(None),
                 wheel_zoom_active: false,
+                wheel_zoom_render_lod: None,
             }
         }
     }
 
     impl BoardHost {
+        /// @emoji 📶 Draw LOD used while building the vector scene (pins during wheel zoom).
+        fn draw_lod_for_frame(&self) -> BoardDrawLod {
+            if self.wheel_zoom_active {
+                if let Some(pinned) = self.wheel_zoom_render_lod {
+                    return pinned;
+                }
+            }
+            self.current_draw_lod()
+        }
+
         fn bump_content_scene_generation(&mut self) {
             self.content_scene_generation = self.content_scene_generation.wrapping_add(1);
             *self.world_content_cache.borrow_mut() = None;
@@ -5514,21 +5527,37 @@ mod board_host {
             if needs_rebuild {
                 let mut content = Scene::new();
                 self.append_nodes_and_handles(&mut content, None, lod, true);
+                self.append_edges_wires_and_link(&mut content, None, lod, true);
                 *cache = Some((gen, lod, content));
             }
             if let Some(cached) = cache.as_ref() {
                 scene.append(&cached.2, Some(cam_aff));
             }
-            self.append_edges_wires_and_link(scene, None, lod, false);
+            if let Some(c) = self.active_link_wire_curve() {
+                let link_wire_stroke = Stroke::new(2.85_f64);
+                let link_wire_color = self.vello_theme.node_stroke;
+                let p0 = self.draw_space_point(c.p0, false);
+                let p1 = self.draw_space_point(c.p1, false);
+                let p2 = self.draw_space_point(c.p2, false);
+                let p3 = self.draw_space_point(c.p3, false);
+                let curve = CubicBez::new(p0, p1, p2, p3);
+                scene.stroke(&link_wire_stroke, Affine::IDENTITY, link_wire_color, None, &curve);
+            }
         }
 
         pub fn set_wheel_zoom_active(&mut self, active: bool) {
+            if active && !self.wheel_zoom_active {
+                self.wheel_zoom_render_lod = Some(self.current_draw_lod());
+            }
+            if !active {
+                self.wheel_zoom_render_lod = None;
+            }
             self.wheel_zoom_active = active;
         }
 
         pub fn build_vector_scene(&self) -> Scene {
             let mut inner = Scene::new();
-            let lod = self.current_draw_lod();
+            let lod = self.draw_lod_for_frame();
             if !self.wheel_zoom_active {
                 let grid_color = self.vello_theme.grid_minor_stroke;
                 if lod != BoardDrawLod::Minimap {

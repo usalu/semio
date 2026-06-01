@@ -23,11 +23,19 @@ The embodiment has a default style which can be changed by dispositions.
 
 # Figure
 
-A figure embodiement of a participant.
+A figure embodiment of a participant.
+
+# Video
+
+A video embodiment of a participant.
 
 # Text
 
-A text embodiement of a participant.
+A text embodiment of a participant.
+
+# Pdf
+
+A pdf embodiment of a participant.
 
 # Disposition
 

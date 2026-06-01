@@ -1576,7 +1576,7 @@ export type SemioFileSystemParentRef =
   | { readonly kind: "CONNECTION"; readonly id: string; readonly designId: string };
 
 function semioFileSystemChildrenInner(parent: SemioFileSystemParentRef): string {
-  const vfs = `fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } }`;
+  const vfs = `... on FileSystemNode { fileSystemChildren { edges { node { ${VFS_CHILD_NODE_SELECTION} } } } }`;
   switch (parent.kind) {
     case "KIT":
       return vfs;
@@ -4831,6 +4831,15 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(port).toBeInstanceOf(Port);
       const connector = resolveFileSystemNode(session, "store-1", { id: "c1", kind: "CONNECTOR" }, undefined, "type-1");
       expect(connector).toBeInstanceOf(Connector);
+    });
+
+    it("fetchSemioFileSystemChildren selects vfs fields through FileSystemNode on kit", () => {
+      const inner = semioFileSystemChildrenInner({ kind: "KIT", id: "kit-1" });
+      expect(inner).toContain("... on FileSystemNode");
+      expect(inner).toContain("fileSystemChildren");
+      const folderInner = semioFileSystemChildrenInner({ kind: "FOLDER", id: "folder-1" });
+      expect(folderInner).toContain("folder(id:");
+      expect(folderInner).toContain("... on FileSystemNode");
     });
 
     it("Piece installs pathPieces and weak-geometry change subscriptions", () => {

@@ -377,9 +377,11 @@ export class Puzzle2dPlayShellController extends Controller {
 	private lodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
 	private effectiveLodByPane: Record<Puzzle2dPlayPaneId, Puzzle2dDrawLodKind>;
 	private hostBridge: Puzzle2dPlayHostBridge | null = null;
+	private readonly hostChromeNotify: () => void;
 
-	constructor(commandBus: CommandBus, hostNotify: () => void) {
+	constructor(commandBus: CommandBus, hostNotify: () => void, hostChromeNotify: () => void) {
 		super(PUZZLE_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		this.hostChromeNotify = hostChromeNotify;
 		this.lodModeByPane = {
 			"2d-detail": PUZZLE_2D_LOD_MODE_AUTOMATIC,
 			"2d-overview": PUZZLE_2D_LOD_MODE_AUTOMATIC,
@@ -443,9 +445,11 @@ export class Puzzle2dPlayShellController extends Controller {
 			case "setEffectiveLodForPane": {
 				const { pane, lod } = args as { pane: Puzzle2dPlayPaneId; lod: Puzzle2dDrawLodKind };
 				if (!isPuzzle2dDrawLodKind(lod)) break;
-				if (this.effectiveLodByPane[pane] === lod) break;
+				if (this.effectiveLodByPane[pane] === lod) return;
 				this.effectiveLodByPane = { ...this.effectiveLodByPane, [pane]: lod };
-				break;
+				this.rebuildShellMode();
+				this.hostChromeNotify();
+				return;
 			}
 			case "setSelectionMethod":
 			case "setSelectionMode":
@@ -579,7 +583,7 @@ export const puzzle2dPlayPlugin: { readonly id: string; activate(context: Puzzle
 export function buildPuzzle2dPlayRuntime(): Platform {
 	registerPuzzle2dPlayDeclarativeBodies();
 	const runtime = new Platform();
-	const ctrl = new Puzzle2dPlayShellController(runtime.commandBus, () => runtime.notify());
+	const ctrl = new Puzzle2dPlayShellController(runtime.commandBus, () => runtime.notify(), () => runtime.notifyChrome());
 	runtime.addApp(buildPuzzle2dPlayAppRuntime(ctrl));
 	return runtime;
 }
@@ -591,7 +595,7 @@ export class Playground2d extends Playground {
 
 	createRuntime(): Platform {
 		const runtime = new Platform({ id: this.id, initialPanelVisibility: this.initialPanelVisibility });
-		const ctrl = new Puzzle2dPlayShellController(runtime.commandBus, () => runtime.notify());
+		const ctrl = new Puzzle2dPlayShellController(runtime.commandBus, () => runtime.notify(), () => runtime.notifyChrome());
 		runtime.addApp(buildPuzzle2dPlayAppRuntime(ctrl));
 		return runtime;
 	}
@@ -700,6 +704,19 @@ if (import.meta.vitest) {
 			const app = runtime.getActiveApp();
 			expect(app?.panelTabs).toEqual([]);
 			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
+		});
+
+		it("setEffectiveLodForPane bumps chrome generation only", () => {
+			const runtime = buildPuzzle2dPlayRuntime();
+			const controller = runtime.getActiveApp()?.controller as Puzzle2dPlayShellController;
+			const dataGen = runtime.generation;
+			const chromeGen = runtime.chromeGeneration;
+			controller.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", {
+				pane: "2d-overview",
+				lod: "detail",
+			});
+			expect(runtime.generation).toBe(dataGen);
+			expect(runtime.chromeGeneration).toBe(chromeGen + 1);
 		});
 	});
 

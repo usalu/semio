@@ -26,6 +26,7 @@ import {
   type UiTreeItemNode,
   type UiTreeSectionNode,
   type WindowBodyViewContext,
+  type WindowEngagement,
   type WindowMeasure,
 } from "@framework/playground/core";
 
@@ -392,6 +393,7 @@ export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, select
   const selectedObjects = new Set(selection.objectIds);
   const selectedVortices = new Set(selection.vortexIds);
   const selectedAttractions = new Set(selection.attractionIds);
+  const selectedObjectIdSet = selectedObjects;
   const objectItems: UiTreeItemNode[] = fixture.objects.map((object) => {
     const vortexItems: UiTreeItemNode[] = object.vortices.map((vortex) => {
       const fullId = puzzle3dVortexFullId(object.id, vortex.id);
@@ -665,8 +667,12 @@ export class Puzzle3dPlayShellController extends Controller {
   }
 
   /** @emoji 🎯 Refreshes the viewport store and bumps shell generation so the declarative inspector and hierarchy panels reflect selection changes. */
-  private notifySelection(): void {
+  private notifySelection(options?: { readonly deferShell?: boolean }): void {
     this.notifySnapshot();
+    if (options?.deferShell) {
+      queueMicrotask(() => this.emit());
+      return;
+    }
     this.emit();
   }
 
@@ -813,45 +819,47 @@ export class Puzzle3dPlayShellController extends Controller {
     return [...this.lodMeasures(), ...this.selectionMeasures()];
   }
 
+  /** @emoji 🖌️ Floating viewport engagement: select vs brush tool toggles. */
+  private buildWindowEngagement(): WindowEngagement {
+    const options: NonNullable<WindowEngagement["options"]> = [
+      {
+        id: "puzzle3d.tool.select",
+        label: "Select",
+        pressed: this.activeTool === "select",
+        command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setActiveTool", args: { tool: "select" } },
+      },
+      {
+        id: "puzzle3d.tool.brush",
+        label: "Brush",
+        pressed: this.activeTool === "brush",
+        command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setActiveTool", args: { tool: "brush" } },
+      },
+    ];
+    const status: NonNullable<WindowEngagement["status"]> =
+      this.activeTool === "brush"
+        ? [{ id: "puzzle3d.brush.hint", text: "Hover a free vortex · Tab cycles · right-click lists compatibles" }]
+        : [];
+    return { options, ...(status.length > 0 ? { status } : {}) };
+  }
+
   private rebuildShellMode(): void {
-    this.mainMode.windowKinds = [new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.windowMeasures())];
+    this.mainMode.windowKinds = [
+      new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.windowMeasures(), this.buildWindowEngagement()),
+    ];
     const relocateTools: ToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
       id: `puzzle3d.relocate.${mode}`,
       kind: "toggle" as const,
       text: mode.charAt(0).toUpperCase() + mode.slice(1),
-      order: order + 2,
+      order,
       pressed: this.relocateMode === mode,
       controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
       command: "setRelocateMode",
       args: { mode },
     }));
-    const toolModeItems: ToolItem[] = [
-      {
-        id: "puzzle3d.tool.select",
-        kind: "toggle",
-        text: "Select",
-        order: 0,
-        pressed: this.activeTool === "select",
-        controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
-        command: "setActiveTool",
-        args: { tool: "select" },
-      },
-      {
-        id: "puzzle3d.tool.brush",
-        kind: "toggle",
-        text: "Brush",
-        order: 1,
-        pressed: this.activeTool === "brush",
-        controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
-        command: "setActiveTool",
-        args: { tool: "brush" },
-      },
-      ...relocateTools,
-    ];
     this.mainMode.tools = {
       selection: buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
       filter: buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
-      actions: toolModeItems,
+      actions: relocateTools,
     };
   }
 
@@ -998,7 +1006,7 @@ export class Puzzle3dPlayShellController extends Controller {
           return;
         }
         this.selection = resolved;
-        this.notifySelection();
+        this.notifySelection({ deferShell: true });
         return;
       }
       case "patchPuzzle3dObjects": {
@@ -1834,6 +1842,21 @@ if (import.meta.vitest) {
       });
       trackingCtrl.run("setAutoLod", { pressed: true });
       expect(shellNotifyCount).toBe(1);
+    });
+
+    it("window engagement exposes select and brush tool options", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const engagement = ctrl.mainMode.windowKinds[0]?.engagement;
+      expect(engagement?.options?.map((option) => option.id)).toEqual(["puzzle3d.tool.select", "puzzle3d.tool.brush"]);
+      expect(engagement?.options?.[0]?.pressed).toBe(true);
+      expect(engagement?.options?.[1]?.pressed).toBe(false);
+      ctrl.run("setActiveTool", { tool: "brush" });
+      const brushEngagement = ctrl.mainMode.windowKinds[0]?.engagement;
+      expect(brushEngagement?.options?.[1]?.pressed).toBe(true);
+      expect(brushEngagement?.status?.some((row) => row.id === "puzzle3d.brush.hint")).toBe(true);
+      expect(ctrl.mainMode.tools.actions?.some((tool) => tool.id === "puzzle3d.tool.brush")).toBe(false);
     });
 
     it("window measures include selection kind toggles and marquee method", () => {
