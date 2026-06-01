@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 2d Play Missing Edges Again",
+  "emoji": "🪢",
+  "status": "open",
+  "description": "Edges still invisible in puzzle 2d play: world cache again bakes edges in world space without screen-space overlay.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪63d9c348f8f84ccc9c8c35725376ba5d"
+  ]
+}

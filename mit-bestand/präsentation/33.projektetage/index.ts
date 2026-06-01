@@ -81,6 +81,18 @@ function catalogueFocusColumnTiles(): SplitTile[] {
 
 const CATALOGUE_FOCUS_TILES = catalogueFocusColumnTiles();
 
+const CATALOGUE_ASSEMBLED_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
+	{
+		key: "col1",
+		tileKeys: ["tile-r0-c0", "tile-r0-c1", "tile-r1-c0", "tile-r1-c1", "tile-r2-c0", "tile-r2-c1"],
+	},
+	{ key: "col2", tileKeys: ["tile-r0-c2", "tile-r1-c2", "tile-r2-c2"] },
+	{
+		key: "col3",
+		tileKeys: ["tile-r0-c3", "tile-r0-c4", "tile-r1-c3", "tile-r1-c4", "tile-r2-c3", "tile-r2-c4"],
+	},
+];
+
 const CATALOGUE_FOCUS_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
 	{
 		key: "col1",
@@ -202,7 +214,11 @@ const mediaThought: Thought = {
 				{
 					participantId: "catalogue",
 					emphasis: "active",
-					split: { tiles: CATALOGUE_TILES_ASSEMBLED, concealed: true },
+					split: {
+						tiles: CATALOGUE_TILES_ASSEMBLED,
+						concealed: true,
+						columns: CATALOGUE_ASSEMBLED_COLUMN_GROUPS,
+					},
 				},
 				{
 					participantId: "catalogue",
@@ -296,6 +312,7 @@ if (import.meta.vitest) {
 			const catalogue = media?.arrangements.find((a) => a.id === "catalogue");
 			expect(catalogue?.dispositions[0]?.split?.concealed).toBe(true);
 			expect(catalogue?.dispositions[0]?.split?.tiles).toHaveLength(15);
+			expect(catalogue?.dispositions[0]?.split?.columns).toHaveLength(3);
 			expect(catalogue?.dispositions[1]?.position).toEqual(CATALOGUE_FRAME);
 			expect(catalogue?.dispositions[1]?.split).toBeUndefined();
 		});

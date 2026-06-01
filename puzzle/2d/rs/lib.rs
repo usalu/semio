@@ -5616,18 +5616,18 @@ mod board_host {
             if needs_rebuild {
                 let mut content = Scene::new();
                 self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase);
-                self.append_edges_wires_and_link(&mut content, None, lod, true, None, StyleChromePass::CachedBase);
                 *cache = Some((gen, lod, content));
             }
             if let Some(cached) = cache.as_ref() {
                 scene.append(&cached.2, Some(cam_aff));
             }
+            self.append_edges_wires_and_link(scene, None, lod, false, None, StyleChromePass::CachedBase);
             let overlay_ids = self.interaction_overlay_entity_ids();
             if !overlay_ids.is_empty() {
                 let mut overlay = Scene::new();
-                self.append_nodes_and_handles(&mut overlay, None, lod, true, Some(&overlay_ids), StyleChromePass::InteractionOverlay);
-                self.append_edges_wires_and_link(&mut overlay, None, lod, true, Some(&overlay_ids), StyleChromePass::InteractionOverlay);
-                scene.append(&overlay, Some(cam_aff));
+                self.append_nodes_and_handles(&mut overlay, None, lod, false, Some(&overlay_ids), StyleChromePass::InteractionOverlay);
+                self.append_edges_wires_and_link(&mut overlay, None, lod, false, Some(&overlay_ids), StyleChromePass::InteractionOverlay);
+                scene.append(&overlay, None);
             }
             if let Some(c) = self.active_link_wire_curve() {
                 let link_wire_stroke = Stroke::new(2.85_f64);

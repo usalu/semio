@@ -61,6 +61,7 @@ import {
 	resolveTextMorphRoot,
 	columnMorphId,
 	splitColumnBounds,
+	splitColumnCrop,
 	splitFigureGrid,
 	tileMorphId,
 	type TextMorphRoot,
@@ -105,6 +106,7 @@ export {
 	resolveEmbodiment,
 	resolveTextMorphRoot,
 	splitColumnBounds,
+	splitColumnCrop,
 	splitFigureGrid,
 	tileMorphId,
 } from "@framework/presentation/core";
@@ -514,15 +516,6 @@ function figureTileBackgroundStyle(embodiment: FigureEmbodiment, crop: Dispositi
 	};
 }
 
-function splitTileMorphId(
-	participantId: string,
-	tileKey: string,
-	columns: readonly SplitColumnGroup[] | undefined,
-): string {
-	const column = columns?.find((group) => group.tileKeys.includes(tileKey));
-	return column ? columnMorphId(participantId, column.key) : tileMorphId(participantId, tileKey);
-}
-
 function isColumnMorphId(morphId: string): boolean {
 	return morphId.includes("--column--");
 }
@@ -532,19 +525,17 @@ function FigureTileView({
 	tile,
 	embodiment,
 	defaultEmphasis,
-	columns,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly embodiment: FigureEmbodiment;
 	readonly defaultEmphasis: ParticipantEmphasis;
-	readonly columns?: readonly SplitColumnGroup[];
 }): ReactNode {
 	const emphasis = tile.emphasis ?? defaultEmphasis;
 	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
 	return (
 		<div
-			data-id={splitTileMorphId(participantId, tile.key, columns)}
+			data-id={tileMorphId(participantId, tile.key)}
 			className={[
 				"presentation-disposition-frame",
 				"presentation-figure-tile-frame",
@@ -555,6 +546,32 @@ function FigureTileView({
 			style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, tile.crop) }}
 			role="img"
 			aria-label={embodiment.alt ?? ""}
+		/>
+	);
+}
+
+function SplitColumnMorphLayerView({
+	participantId,
+	column,
+	tiles,
+	embodiment,
+}: {
+	readonly participantId: string;
+	readonly column: SplitColumnGroup;
+	readonly tiles: readonly SplitTile[];
+	readonly embodiment: FigureEmbodiment;
+}): ReactNode {
+	const position = splitColumnBounds(tiles, column.tileKeys);
+	const crop = splitColumnCrop(tiles, column.tileKeys);
+	return (
+		<div
+			data-id={columnMorphId(participantId, column.key)}
+			className="presentation-disposition-frame presentation-split-column-morph-layer"
+			style={{
+				...dispositionFrameStyle(position, undefined),
+				...figureTileBackgroundStyle(embodiment, crop),
+			}}
+			aria-hidden
 		/>
 	);
 }
@@ -614,9 +631,18 @@ function FigureSplitMorphView({
 	readonly embodiment: FigureEmbodiment;
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
-	const columns = disposition.split?.columns;
+	const columns = disposition.split?.columns ?? [];
 	return (
 		<>
+			{columns.map((column) => (
+				<SplitColumnMorphLayerView
+					key={column.key}
+					participantId={disposition.participant.id}
+					column={column}
+					tiles={tiles}
+					embodiment={embodiment}
+				/>
+			))}
 			{tiles.map((tile) => (
 				<FigureTileView
 					key={tile.key}
@@ -624,7 +650,6 @@ function FigureSplitMorphView({
 					tile={tile}
 					embodiment={embodiment}
 					defaultEmphasis={disposition.emphasis}
-					columns={columns}
 				/>
 			))}
 		</>
@@ -1354,7 +1379,7 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("groups split tiles by columnMorphId and pairs label frames for auto-animate", () => {
+		it("keeps tileMorphId on tiles and column morph layers for label auto-animate", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
 			const deck: Presentation = {
@@ -1421,9 +1446,11 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const focus = container.querySelector('section[title="focus"]');
-			expect(focus?.querySelectorAll('[data-id="catalogue--column--col1"]').length).toBe(2);
-			expect(focus?.querySelectorAll('[data-id="catalogue--column--col2"]').length).toBe(2);
-			expect(focus?.querySelector('[data-id^="catalogue--tile--"]')).toBeNull();
+			expect(focus?.querySelectorAll(".presentation-split-column-morph-layer").length).toBe(2);
+			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(4);
+			expect(focus?.querySelector('[data-id="catalogue--column--col1"]')?.classList.contains("presentation-figure-tile-frame")).toBe(
+				false,
+			);
 			const labels = container.querySelector('section[title="labels"]');
 			expect(
 				labels?.querySelector('.presentation-column-label-frame[data-id="catalogue--column--col1"]')?.textContent,

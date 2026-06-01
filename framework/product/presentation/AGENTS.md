@@ -44,7 +44,7 @@ A figure disposition may declare a `split` of crop tiles (`SplitTile`), each wit
 
 # Split
 
-A split divides one figure into many independently placed tiles for reveal.js auto-animate (see `splitFigureGrid` in core). Set `concealed: true` on the split and add a whole-figure disposition on the same arrangement so tiles stay at full opacity (position-only morph) while the figure hides the grid. Group tiles with `split.columns` (tiles in a column share `columnMorphId` for reveal.js group morph) and morph them into labels via `morphTargets` on the next arrangement (`splitColumnBounds`, label frame uses the same `columnMorphId`).
+A split divides one figure into many independently placed tiles for reveal.js auto-animate (see `splitFigureGrid` in core). Set `concealed: true` on the split and add a whole-figure disposition on the same arrangement so tiles stay at full opacity (position-only morph) while the figure hides the grid. Group tiles with `split.columns`: tiles always keep `tileMorphId`; invisible `presentation-split-column-morph-layer` elements use `columnMorphId` for morph into `morphTargets` labels. Use the same column keys on the assembled catalogue split and on focus so column layers track catalogue→focus→labels.
 
 # Arrangement
 

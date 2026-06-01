@@ -295,7 +295,7 @@ export interface DispositionSplit {
 	 * Tiles stay at full opacity for reveal.js position morphing; the figure hides the grid until transition.
 	 */
 	readonly concealed?: boolean;
-	/** @emoji 🎯 Groups tiles by {@link columnMorphId} for reveal.js group morph into {@link Disposition.morphTargets}. */
+	/** @emoji 🎯 Column groups: {@link splitColumnBounds} for labels; invisible morph layers use {@link columnMorphId} (tiles keep {@link tileMorphId}). */
 	readonly columns?: readonly SplitColumnGroup[];
 }
 
@@ -374,6 +374,29 @@ export function splitColumnBounds(
 		minY = Math.min(minY, position.y);
 		maxX = Math.max(maxX, position.x + position.width);
 		maxY = Math.max(maxY, position.y + position.height);
+	}
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/** @emoji ✂️ Union of normalized figure crops for tiles in one column (for column morph layers). */
+export function splitColumnCrop(
+	tiles: readonly SplitTile[],
+	tileKeys: readonly string[],
+): SplitTile["crop"] {
+	const selected = tiles.filter((tile) => tileKeys.includes(tile.key));
+	if (selected.length === 0) {
+		throw new Error("splitColumnCrop: no tiles matched the given keys.");
+	}
+	let minX = 1;
+	let minY = 1;
+	let maxX = 0;
+	let maxY = 0;
+	for (const tile of selected) {
+		const crop = tile.crop;
+		minX = Math.min(minX, crop.x);
+		minY = Math.min(minY, crop.y);
+		maxX = Math.max(maxX, crop.x + crop.width);
+		maxY = Math.max(maxY, crop.y + crop.height);
 	}
 	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
@@ -1015,6 +1038,22 @@ if (import.meta.vitest) {
 	describe("columnMorphId", () => {
 		it("scopes column keys under the participant id", () => {
 			expect(columnMorphId("catalogue", "col1")).toBe("catalogue--column--col1");
+		});
+	});
+
+	describe("splitColumnCrop", () => {
+		it("returns the union of normalized crops for listed tiles", () => {
+			const tiles = splitFigureGrid({
+				rows: 2,
+				columns: 2,
+				frame: { x: 0.1, y: 0.2, width: 0.8, height: 0.6 },
+			});
+			expect(splitColumnCrop(tiles, ["tile-r0-c0", "tile-r1-c1"])).toEqual({
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+			});
 		});
 	});
 

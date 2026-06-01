@@ -7709,6 +7709,16 @@ const getTreeItemOrderedIds = (sections: TreeDataSection[], sectionItemsById: Re
   return orderedIds;
 };
 
+const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"]';
+
+/** @emoji 🖱️ Skip row leave when pointer moves to another tree row (avoids stale leave clearing fast-hover highlight). */
+function shouldDispatchTreeRowPointerLeave(relatedTarget: EventTarget | null): boolean {
+  if (!(relatedTarget instanceof Element)) {
+    return true;
+  }
+  return relatedTarget.closest(treeSemanticHoverRowSelector) === null;
+}
+
 /**
  * Collapsible tree section header with optional action buttons.
  **/
@@ -7767,7 +7777,12 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         className={rowClassName}
         draggable={draggable}
         onPointerEnter={onSectionPointerEnter}
-        onPointerLeave={onSectionPointerLeave}
+        onPointerLeave={(event) => {
+          if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
+            return;
+          }
+          onSectionPointerLeave?.();
+        }}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -7818,7 +7833,12 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           role="button"
           draggable={draggable}
           onPointerEnter={onSectionPointerEnter}
-          onPointerLeave={onSectionPointerLeave}
+          onPointerLeave={(event) => {
+            if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
+              return;
+            }
+            onSectionPointerLeave?.();
+          }}
           onDragStart={onDragStart}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
@@ -8242,9 +8262,15 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const handlePointerEnter = reactHostPort.useCallback(() => {
     onPointerEnter?.();
   }, [onPointerEnter]);
-  const handlePointerLeave = reactHostPort.useCallback(() => {
-    onPointerLeave?.();
-  }, [onPointerLeave]);
+  const handlePointerLeave = reactHostPort.useCallback(
+    (event: React.MouseEvent) => {
+      if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
+        return;
+      }
+      onPointerLeave?.();
+    },
+    [onPointerLeave],
+  );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`;
@@ -8984,7 +9010,7 @@ export const Tree = (({
     selectionStore.setSelectedIds(resolvedSelectedIds);
   }, [resolvedSelectedIds, selectionStore]);
 
-  reactHostPort.useEffect(() => {
+  reactHostPort.useLayoutEffect(() => {
     highlightStore.setHighlightedIds(resolvedHighlightedIds);
   }, [highlightStore, resolvedHighlightedIds]);
 
@@ -16315,6 +16341,19 @@ if (treeVitest) {
       expect(calls).toBe(2);
       expect(store.isHighlighted("a")).toBe(false);
       unsub();
+    });
+
+    it("shouldDispatchTreeRowPointerLeave skips leave when moving between tree rows", () => {
+      document.body.innerHTML = `
+        <div data-slot="tree-item-row" id="row-a"></div>
+        <div data-slot="tree-item-row" id="row-b"></div>
+      `;
+      const rowA = document.getElementById("row-a")!;
+      const rowB = document.getElementById("row-b")!;
+      expect(shouldDispatchTreeRowPointerLeave(rowB)).toBe(false);
+      expect(shouldDispatchTreeRowPointerLeave(rowA)).toBe(false);
+      expect(shouldDispatchTreeRowPointerLeave(null)).toBe(true);
+      expect(shouldDispatchTreeRowPointerLeave(document.body)).toBe(true);
     });
 
     it("tree selection store notifies subscribers only when selection changes", () => {
