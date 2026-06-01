@@ -3487,6 +3487,37 @@ if (import.meta.vitest) {
 			);
 		});
 
+		it("resolves arrangement canvas as placement container for positioned slides", () => {
+			const section = document.createElement("section");
+			const canvas = document.createElement("div");
+			canvas.className = "presentation-arrangement-canvas";
+			section.append(canvas);
+			expect(dispositionPlacementContainer(section, false)).toBe(section);
+			expect(dispositionPlacementContainer(section, true)).toBe(canvas);
+		});
+
+		it("scales selection chrome with uniformly scaled pinned content", () => {
+			const rect = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+			expect(
+				interactiveDispositionChromeStyle({
+					selected: true,
+					effectiveRect: rect,
+					pinned: false,
+					fullscreen: false,
+					contentScale: null,
+				}),
+			).toEqual(transformFrameStyle(rect));
+			expect(
+				interactiveDispositionChromeStyle({
+					selected: true,
+					effectiveRect: rect,
+					pinned: true,
+					fullscreen: false,
+					contentScale: 0.75,
+				})?.transform,
+			).toBe("scale(0.75)");
+		});
+
 		it("converts screen pointer delta through section visual scale", () => {
 			const section = document.createElement("section");
 			section.style.width = "960px";
@@ -3760,7 +3791,9 @@ if (import.meta.vitest) {
 			});
 			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
 			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
 			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
 			mockClientRect(disposition, 192, 210, 384, 140);
 			const beforeLeft = disposition.style.left;
 			act(() => {
@@ -3776,7 +3809,9 @@ if (import.meta.vitest) {
 			});
 			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
 			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
 			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
 			mockClientRect(disposition, 192, 210, 384, 140);
 			act(() => {
 				pointerClick(disposition);
@@ -3797,6 +3832,37 @@ if (import.meta.vitest) {
 				true,
 			);
 			expect(content.style.transform).toContain("scale(");
+			const chrome = disposition.querySelector(
+				".presentation-interactive-disposition__chrome",
+			) as HTMLElement;
+			expect(chrome.style.transform).toBe(content.style.transform);
+		});
+
+		it("aligns unpinned chrome with the disposition frame on the arrangement canvas", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			const frame = disposition.querySelector(".presentation-disposition-frame") as HTMLElement;
+			mockClientRect(section, 0, 0, 1200, 900);
+			mockClientRect(canvas, 120, 100, 960, 700);
+			const frameBox = { left: 408, top: 380, width: 384, height: 140 };
+			mockClientRect(frame, frameBox.left, frameBox.top, frameBox.width, frameBox.height);
+			act(() => {
+				pointerClick(disposition);
+			});
+			const chrome = disposition.querySelector(
+				".presentation-interactive-disposition__chrome",
+			) as HTMLElement;
+			mockClientRect(chrome, frameBox.left, frameBox.top, frameBox.width, frameBox.height);
+			const chromeRect = chrome.getBoundingClientRect();
+			const frameRect = frame.getBoundingClientRect();
+			expect(chromeRect.left).toBeCloseTo(frameRect.left, 0);
+			expect(chromeRect.top).toBeCloseTo(frameRect.top, 0);
+			expect(chromeRect.width).toBeCloseTo(frameRect.width, 0);
+			expect(chromeRect.height).toBeCloseTo(frameRect.height, 0);
 		});
 
 		it("toggles slide fullscreen without pinned transforms or inline placement", () => {

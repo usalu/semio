@@ -1,10 +1,12 @@
 {
   "title": "Projektetage Resize Handles Alignment",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Fix interactive resize on projektetage: content scales uniformly inside the frame (no text reflow overshoot); resize handles aligned with selection chrome.",
+  "summary": "Resize handles on positioned projektetage slides now track the selected figure background.\n\n- Pinned non-uniform resize already scaled content uniformly; selection chrome now gets the same `scale()` so eight handles sit on the highlight corners instead of inside the full wrapper.\n- Drag, resize, and marquee use arrangement-canvas normalized coordinates (not the larger flex-centered section).\n- Added helpers/tests; all 44 `@framework/presentation/renderer/react` tests pass.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
-    "⚪8e72685386be43deb606fd885b24412f"
+    "⚪8e72685386be43deb606fd885b24412f",
+    "⚪26dabf1cc33f4be69c7d776b1ecdf060"
   ]
 }
