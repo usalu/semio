@@ -4,15 +4,23 @@
 
 // #region 🔌Adapters
 import {
-	countArrangements,
+	buildResolutionScope,
 	collectPresentationSlides,
+	countArrangements,
 	expandThoughtSlides,
 	loadPresentationFromSlideGlob,
+	resolveArrangement,
 	type Presentation,
 	type SlideFile,
 } from "@framework/presentation/core";
 import { presentationMeta } from "./spec.ts";
-import { CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3, CATALOGUE_PARTICIPANT } from "./spec.ts";
+import {
+	CATALOGUE_COL1,
+	CATALOGUE_COL2,
+	CATALOGUE_COL3,
+	CATALOGUE_EMBODIMENT_COL1_LABEL,
+	CATALOGUE_SPLIT,
+} from "./spec.ts";
 import "./globals.css";
 // #endregion 🔌Adapters
 
@@ -69,19 +77,18 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("assembles the catalogue as a split figure grid", () => {
+		it("assembles the catalogue as split tile dispositions", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			const catalogue = media?.slides.find((slide) => slide.arrangement.id === "catalogue");
-			expect(catalogue?.arrangement.dispositions[0]?.split?.tiles).toHaveLength(15);
+			expect(catalogue?.arrangement.dispositions).toHaveLength(15);
 		});
 
-		it("focuses ten catalogue tiles plus per-column split morph participants", () => {
+		it("focuses ten catalogue tile participants for column morph", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			const focus = media?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");
 			const dispositions = focus?.arrangement.dispositions ?? [];
-			expect(dispositions[0]?.participantId).toBe(CATALOGUE_PARTICIPANT);
-			expect(dispositions[0]?.split?.tiles).toHaveLength(10);
-			expect(dispositions[0]?.split?.tiles.map((tile) => tile.key)).toEqual([
+			expect(dispositions).toHaveLength(10);
+			expect(dispositions.map((disposition) => disposition.participantId)).toEqual([
 				"Rippenplatte 1",
 				"Rippenplatte 2",
 				"Rippenplatte 3",
@@ -93,10 +100,6 @@ if (import.meta.vitest) {
 				"Unterzug 3",
 				"Stütze",
 			]);
-			const col1 = dispositions.find((disposition) => disposition.participantId === CATALOGUE_COL1);
-			expect(col1?.split?.morphParticipant).toBe(true);
-			expect(col1?.split?.tiles).toHaveLength(6);
-			expect(col1?.position).toBeUndefined();
 		});
 
 		it("assigns one auto-animate run across catalogue, focus, and labels", () => {
@@ -117,7 +120,6 @@ if (import.meta.vitest) {
 			const expanded = expandThoughtSlides(media!);
 			const focusSlide = expanded.find((slide) => slide.id === "catalogue-focus");
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
-			expect(expanded.map((slide) => slide.id)).not.toContain("catalogue-labels--bridge");
 			expect(focusSlide?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels"]);
 			const labelDispositions =
 				labelSlide?.arrangement.dispositions.filter((disposition) => !disposition.morphGhost) ?? [];
@@ -127,17 +129,19 @@ if (import.meta.vitest) {
 				CATALOGUE_COL2,
 				CATALOGUE_COL3,
 			]);
-			expect(labelDispositions.every((disposition) => disposition.embodimentId === "label")).toBe(true);
+			expect(labelDispositions.every((disposition) => disposition.embodimentId.endsWith("--label"))).toBe(
+				true,
+			);
 			const yPositions = labelDispositions.map((disposition) => disposition.position?.y);
 			expect(new Set(yPositions).size).toBe(1);
-			expect(
-				labelSlide?.arrangement.dispositions.filter((disposition) => disposition.morphGhost),
-			).toHaveLength(0);
+			const scope = buildResolutionScope([media!]);
+			const resolved = resolveArrangement(scope, labelSlide!.arrangement);
+			expect(resolved.filter((entry) => entry.embodiment.kind === "text")).toHaveLength(3);
 		});
 
-		it("includes figure, video, and pdf participants in the media thought", () => {
+		it("includes figure, video, and pdf embodiments in the media thought", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
-			const kinds = media?.participants.flatMap((participant) => participant.embodiments.map((embodiment) => embodiment.kind)) ?? [];
+			const kinds = media?.embodiments?.map((embodiment) => embodiment.kind) ?? [];
 			expect(kinds).toContain("figure");
 			expect(kinds).toContain("video");
 			expect(kinds).toContain("pdf");

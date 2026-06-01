@@ -11214,10 +11214,33 @@ export function sketchpadAppIdFromPath(path: string): string {
 //#endregion 🔖SketchpadRouteScope
 
 //#region 🔖KitHelpers
+/** @emoji 📋 Normalizes list-or-`{ items }` blocks on kit DTO snapshots. */
+function sketchpadKitItemsOf<T>(node: unknown): readonly T[] {
+	if (Array.isArray(node)) return node as readonly T[];
+	if (node && typeof node === "object" && Array.isArray((node as { items?: unknown[] }).items)) {
+		return (node as { items: T[] }).items;
+	}
+	return [];
+}
+
+/** @emoji 🔍 Flattens kit kinds from root `types` or nested `typologies[].types`. */
+function sketchpadKitTypeRows(kit: Kit): readonly Type[] {
+	const root = sketchpadKitItemsOf<Type>(kit.types);
+	if (root.length > 0) return root;
+	return sketchpadKitTypologyRows(kit).flatMap((topo) => sketchpadKitItemsOf<Type>(topo.types));
+}
+
+/** @emoji 🔍 Flattens kit designs from root `designs` or nested `typologies[].designs`. */
+function sketchpadKitDesignRows(kit: Kit): readonly Design[] {
+	const root = sketchpadKitItemsOf<Design>(kit.designs);
+	if (root.length > 0) return root;
+	return sketchpadKitTypologyRows(kit).flatMap((topo) => sketchpadKitItemsOf<Design>(topo.designs));
+}
+
 /** @emoji 🔍 Finds a type row on a kit snapshot. */
 export function findTypeInKit(kit: Kit, typeId: string | null | undefined): Type | undefined {
 	if (!typeId) return undefined;
-	return kit.types?.find((t) => t.id === typeId);
+	return sketchpadKitTypeRows(kit).find((t) => t.id === typeId);
 }
 
 /** @emoji 🔍 Finds a quality row on a kit snapshot. */
@@ -11232,7 +11255,7 @@ export function findQualityInKit(kit: Kit, qualityId: string | null | undefined)
 /** @emoji 🔍 Finds a design row on a kit snapshot. */
 export function findDesignInKit(kit: Kit, designId: string | null | undefined): Design | undefined {
 	if (!designId) return undefined;
-	return kit.designs?.find((d) => d.id === designId);
+	return sketchpadKitDesignRows(kit).find((d) => d.id === designId);
 }
 
 /** @emoji 🧭 Builds a navigation destination for sketchpad breadcrumb trails. */
@@ -11393,7 +11416,7 @@ export function sketchpadResolvePieceMeshUrl(
 	const typeId = sketchpadReadEntityId(piece.type ?? piece.blueprint);
 	if (!typeId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
 	const type = findTypeInKit(kit, typeId);
-	const reps = (type?.representations ?? []) as readonly { readonly file?: unknown; readonly tags?: unknown }[];
+	const reps = type ? sketchpadListTypeRepresentations(type) : [];
 	if (reps.length === 0) return SKETCHPAD_PLACEHOLDER_MESH_URL;
 	const untagged =
 		reps.find((rep) => {
@@ -11401,9 +11424,7 @@ export function sketchpadResolvePieceMeshUrl(
 			if (Array.isArray(tags)) return tags.length === 0;
 			return !tags?.items?.length;
 		}) ?? reps[0];
-	const fileId = sketchpadReadEntityId(untagged?.file);
-	if (!fileId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
-	return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
+	return sketchpadResolveRepresentationMeshUrl(untagged!, kit, fileUrls);
 }
 
 /** @emoji 🏷️ Normalized type representation row for routing and topology. */
@@ -11438,7 +11459,7 @@ export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Ki
 
 /** @emoji 📋 Lists representation rows on a kit kind. */
 export function sketchpadListTypeRepresentations(type: Type): readonly SketchpadTypeRepresentationRef[] {
-	return (type.representations ?? [])
+	return sketchpadKitItemsOf<Record<string, unknown>>(type.representations)
 		.filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null && "id" in entry)
 		.map((entry) => ({
 			id: String(entry["id"]),
@@ -15131,6 +15152,38 @@ if (import.meta.vitest) {
 		it("returns design by id", () => {
 			const kit = { id: "k", designs: [{ id: "d1", name: "D" }] } as Kit;
 			expect(findDesignInKit(kit, "d1")?.name).toBe("D");
+		});
+	});
+
+	describe("findTypeInKit", () => {
+		it("finds kinds nested under typologies when root types is empty", () => {
+			const bridgeTypeId = "0e240cd2-7f98-42b6-af39-34e7ee4fad35";
+			const bridgeFileId = "60ace9d9-441d-412a-8c91-69e7993fafee";
+			const kit = {
+				id: "k",
+				typologies: {
+					items: [
+						{
+							id: "topo-bridge",
+							name: "Bridge",
+							types: {
+								items: [
+									{
+										id: bridgeTypeId,
+										name: "Bridge",
+										representations: {
+											items: [{ id: "rep-bridge", name: "bridge", file: { id: bridgeFileId } }],
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+				files: [{ id: bridgeFileId, name: "bridge.glb" }],
+			} as Kit;
+			expect(findTypeInKit(kit, bridgeTypeId)?.name).toBe("Bridge");
+			expect(sketchpadResolvePieceMeshUrl({ type: { id: bridgeTypeId } }, kit)).toBe("/meshes/bridge.glb");
 		});
 	});
 

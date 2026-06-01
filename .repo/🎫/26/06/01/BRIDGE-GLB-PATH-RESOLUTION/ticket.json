@@ -3,9 +3,10 @@
   "emoji": "🌉",
   "status": "closed",
   "description": "Fix places where bridge.glb and other metabolism representation files resolve to wrong paths (stale assets/semio/metabolism vs fixtures/kit/dev/metabolism/representations).",
-  "summary": "Metabolism mesh files (including bridge.glb) live under semio/fixtures/kit/dev/metabolism/representations, two levels above wip/initialKit. sketchpadKitFileUrlById now resolves GLBs via ../../representations/\u003cname\u003e.glb with normalized paths; removed the parallel hardcoded representations root. Pointed @semio/assets, engine tests, and desktop E2E at the fixtures kit tree instead of the removed semio/assets/semio/metabolism path. Added unit tests for bridge.glb URL resolution.",
+  "summary": "Bridge pieces showed the puzzle 3D placeholder box because findTypeInKit only searched kit.types; metabolism keeps all kinds under typologies (root types count 0). Fixed by flattening typologies in findTypeInKit/findDesignInKit, normalizing representations {items} in sketchpadListTypeRepresentations, and routing piece mesh resolution through that helper. bridge.glb on disk (367772 bytes) was always correct — not swapped with placeholder.glb (771728 bytes).",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪32c186745e3a46cdbbffcfe36157f3ea"
+    "⚪32c186745e3a46cdbbffcfe36157f3ea",
+    "⚪3cc4d315c9724123910e335416f9f4a3"
   ]
 }

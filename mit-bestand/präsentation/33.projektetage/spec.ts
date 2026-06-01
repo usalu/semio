@@ -4,12 +4,17 @@
 
 // #region 🔌Adapters
 import {
-    splitFigureGrid,
-    type DispositionPosition,
-    type IntroSpec,
-    type Participant,
-    type PresentationMeta,
-    type SplitTile,
+	remapSplitDispositions,
+	split,
+	splitFigureGrid,
+	type Disposition,
+	type DispositionPosition,
+	type Embodiment,
+	type IntroSpec,
+	type Participant,
+	type PresentationMeta,
+	type SplitArtifacts,
+	unionSourceCrops,
 } from "@framework/presentation/core";
 // #endregion 🔌Adapters
 
@@ -85,16 +90,15 @@ export const CATALOGUE_COL1 = "catalogue-col1";
 export const CATALOGUE_COL2 = "catalogue-col2";
 export const CATALOGUE_COL3 = "catalogue-col3";
 
-export const CATALOGUE_EMBODIMENT_CROP = "crop";
-export const CATALOGUE_EMBODIMENT_LABEL = "label";
+export const CATALOGUE_EMBODIMENT_FULL = "catalogue--full";
+export const CATALOGUE_EMBODIMENT_COL1_CROP = "catalogue-col1--crop";
+export const CATALOGUE_EMBODIMENT_COL1_LABEL = "catalogue-col1--label";
+export const CATALOGUE_EMBODIMENT_COL2_CROP = "catalogue-col2--crop";
+export const CATALOGUE_EMBODIMENT_COL2_LABEL = "catalogue-col2--label";
+export const CATALOGUE_EMBODIMENT_COL3_CROP = "catalogue-col3--crop";
+export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
 
 export const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
-const CATALOGUE_TILES_GRID = splitFigureGrid({
-	rows: 3,
-	columns: 5,
-	frame: CATALOGUE_FRAME,
-	gap: 0,
-});
 
 /** @emoji 🏷 Grid keys of the ten component tiles on catalogue rows 1–2 → semantic slide keys. */
 export const CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS = {
@@ -110,53 +114,72 @@ export const CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS = {
 	"tile-r2-c4": "Stütze",
 } as const;
 
-/** @emoji 🏷 Applies {@link CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS} to assembled catalogue tiles. */
-export function catalogueTileWithSemanticKey(tile: SplitTile): SplitTile {
-	const semanticKey =
-		CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS[
-			tile.key as keyof typeof CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS
-		];
-	return semanticKey ? { ...tile, key: semanticKey } : tile;
+/** @emoji 🧩 Applies semantic participant ids to split template artifacts. */
+export function catalogueSplitWithSemanticKeys(artifacts: SplitArtifacts): SplitArtifacts {
+	const keyMap = CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS;
+	const remapId = (gridKey: string): string =>
+		keyMap[gridKey as keyof typeof keyMap] ?? gridKey;
+	const participants = artifacts.participants.map((participant) => ({
+		id: remapId(participant.id),
+	}));
+	const embodiments = artifacts.embodiments.map((embodiment) => {
+		const gridKey = embodiment.id.replace(/-figure$/, "");
+		const semantic = remapId(gridKey);
+		return { ...embodiment, id: `${semantic}-figure` };
+	});
+	const dispositions = artifacts.dispositions.map((disposition) => {
+		const semantic = remapId(disposition.participantId);
+		return {
+			...disposition,
+			participantId: semantic,
+			embodimentId: `${semantic}-figure`,
+		};
+	});
+	return { participants, embodiments, dispositions };
 }
 
-export const CATALOGUE_TILES_ASSEMBLED = CATALOGUE_TILES_GRID.map(catalogueTileWithSemanticKey);
+const CATALOGUE_SPLIT_RAW = split({
+	source: ASSET_CATALOGUE,
+	rows: 3,
+	columns: 5,
+	frame: CATALOGUE_FRAME,
+	gap: 0,
+});
 
-const CATALOGUE_TILE_BY_GRID_KEY = new Map(
-	CATALOGUE_TILES_GRID.map((tile) => [tile.key, catalogueTileWithSemanticKey(tile)]),
-);
+export const CATALOGUE_SPLIT = catalogueSplitWithSemanticKeys(CATALOGUE_SPLIT_RAW);
 
-/** @emoji 📐 Union of normalized figure crops for the given tile keys. */
-export function unionTileCrop(tiles: readonly SplitTile[], tileKeys: readonly string[]): DispositionPosition {
-	const selected = tiles.filter((tile) => tileKeys.includes(tile.key));
-	if (selected.length === 0) {
-		throw new Error("unionTileCrop: no tiles matched the given keys.");
+/** @emoji 📐 Union of normalized figure crops for participant ids. */
+export function unionTileCropForParticipants(
+	artifacts: SplitArtifacts,
+	participantIds: readonly string[],
+): DispositionPosition {
+	const crops = artifacts.dispositions
+		.filter((disposition) => participantIds.includes(disposition.participantId))
+		.map((disposition) => {
+			const embodiment = artifacts.embodiments.find((entry) => entry.id === disposition.embodimentId);
+			return embodiment?.crop;
+		})
+		.filter((crop): crop is DispositionPosition => crop !== undefined);
+	return unionSourceCrops(crops);
+}
+
+/** @emoji 📐 Bounding box of slide positions for participant ids. */
+export function unionTilePositionForParticipants(
+	artifacts: SplitArtifacts,
+	participantIds: readonly string[],
+): DispositionPosition {
+	const positions = artifacts.dispositions
+		.filter((disposition) => participantIds.includes(disposition.participantId))
+		.map((disposition) => disposition.position)
+		.filter((position): position is DispositionPosition => position !== undefined);
+	if (positions.length === 0) {
+		throw new Error("unionTilePositionForParticipants: no positions matched.");
 	}
 	let minX = 1;
 	let minY = 1;
 	let maxX = 0;
 	let maxY = 0;
-	for (const tile of selected) {
-		const crop = tile.crop;
-		minX = Math.min(minX, crop.x);
-		minY = Math.min(minY, crop.y);
-		maxX = Math.max(maxX, crop.x + crop.width);
-		maxY = Math.max(maxY, crop.y + crop.height);
-	}
-	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-}
-
-/** @emoji 📐 Bounding box of slide positions for the given tile keys. */
-export function unionTilePosition(tiles: readonly SplitTile[], tileKeys: readonly string[]): DispositionPosition {
-	const selected = tiles.filter((tile) => tileKeys.includes(tile.key));
-	if (selected.length === 0) {
-		throw new Error("unionTilePosition: no tiles matched the given keys.");
-	}
-	let minX = 1;
-	let minY = 1;
-	let maxX = 0;
-	let maxY = 0;
-	for (const tile of selected) {
-		const position = tile.position;
+	for (const position of positions) {
 		minX = Math.min(minX, position.x);
 		minY = Math.min(minY, position.y);
 		maxX = Math.max(maxX, position.x + position.width);
@@ -166,7 +189,7 @@ export function unionTilePosition(tiles: readonly SplitTile[], tileKeys: readonl
 }
 
 /** @emoji 📐 Ten catalogue tiles (5–14) as three separated columns (2×3 | 1×3 | 1×1). */
-export function catalogueFocusColumnTiles(): SplitTile[] {
+export function catalogueFocusColumnTiles(): readonly { readonly participantId: string; readonly position: DispositionPosition }[] {
 	const rowGap = 0.014;
 	const innerGap = 0.01;
 	const columnGap = 0.05;
@@ -202,23 +225,14 @@ export function catalogueFocusColumnTiles(): SplitTile[] {
 	];
 
 	return placements.map(({ gridKey, position }) => {
-		const tile = CATALOGUE_TILE_BY_GRID_KEY.get(gridKey);
-		if (!tile) {
-			throw new Error(`Missing catalogue tile "${gridKey}".`);
-		}
-		return { ...tile, position, emphasis: "active" as const };
+		const semantic =
+			CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS[gridKey as keyof typeof CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS] ??
+			gridKey;
+		return { participantId: semantic, position };
 	});
 }
 
 export const CATALOGUE_FOCUS_TILES = catalogueFocusColumnTiles();
-
-/** @emoji 📐 Focus-slide tiles for one catalogue column participant. */
-export function catalogueFocusTilesForColumn(
-	column: keyof typeof CATALOGUE_COLUMN_TILE_KEYS,
-): SplitTile[] {
-	const keys = new Set<string>(CATALOGUE_COLUMN_TILE_KEYS[column]);
-	return CATALOGUE_FOCUS_TILES.filter((tile) => keys.has(tile.key));
-}
 
 export const CATALOGUE_COLUMN_TILE_KEYS = {
 	col1: [
@@ -254,67 +268,108 @@ export function inlineColumnLabelPosition(columnIndex: 0 | 1 | 2): DispositionPo
 	};
 }
 
-export function catalogueColumnParticipant(
-	id: string,
-	tileKeys: readonly string[],
-	label: string,
-): Participant {
-	return {
-		id,
-		embodiments: [
-			{
-				kind: "figure",
-				id: CATALOGUE_EMBODIMENT_CROP,
-				src: ASSET_CATALOGUE,
-				alt: label,
-				crop: unionTileCrop(CATALOGUE_TILES_ASSEMBLED, tileKeys),
-			},
-			{
-				kind: "text",
-				id: CATALOGUE_EMBODIMENT_LABEL,
-				lines: [label],
-				level: "heading",
-				morphRoot: "heading-line",
-			},
-		],
-	};
+/** @emoji 📐 Focus-slide dispositions for catalogue tile participants. */
+export function catalogueFocusDispositions(): readonly Disposition[] {
+	const positions = Object.fromEntries(CATALOGUE_FOCUS_TILES.map((tile) => [tile.participantId, tile.position]));
+	return remapSplitDispositions(
+		CATALOGUE_SPLIT.dispositions.filter((disposition) =>
+			CATALOGUE_FOCUS_TILES.some((tile) => tile.participantId === disposition.participantId),
+		),
+		positions,
+	);
+}
+
+/** @emoji 👻 morphFrom slots for one column's tiles into its label disposition. */
+export function columnLabelMorphFrom(
+	column: keyof typeof CATALOGUE_COLUMN_TILE_KEYS,
+	labelPosition: DispositionPosition,
+): Disposition["morphFrom"] {
+	return CATALOGUE_COLUMN_TILE_KEYS[column].map((participantId) => {
+		const focus = CATALOGUE_FOCUS_TILES.find((tile) => tile.participantId === participantId);
+		if (!focus) {
+			throw new Error(`Missing focus tile for "${participantId}".`);
+		}
+		return {
+			participantId,
+			embodimentId: `${participantId}-figure`,
+			position: focus.position,
+		};
+	});
 }
 
 export const mediaParticipants: Participant[] = [
+	{ id: CATALOGUE_PARTICIPANT },
+	{ id: CATALOGUE_COL1 },
+	{ id: CATALOGUE_COL2 },
+	{ id: CATALOGUE_COL3 },
+	{ id: "demo-video" },
+	{ id: "thesis" },
+	...CATALOGUE_SPLIT.participants,
+];
+
+export const mediaEmbodiments: Embodiment[] = [
 	{
-		id: CATALOGUE_PARTICIPANT,
-		embodiments: [
-			{
-				kind: "figure",
-				src: ASSET_CATALOGUE,
-				alt: "Komponentenkatalog",
-			},
-		],
-	},
-	catalogueColumnParticipant(CATALOGUE_COL1, CATALOGUE_COLUMN_TILE_KEYS.col1, CATALOGUE_COLUMN_LABELS.col1),
-	catalogueColumnParticipant(CATALOGUE_COL2, CATALOGUE_COLUMN_TILE_KEYS.col2, CATALOGUE_COLUMN_LABELS.col2),
-	catalogueColumnParticipant(CATALOGUE_COL3, CATALOGUE_COLUMN_TILE_KEYS.col3, CATALOGUE_COLUMN_LABELS.col3),
-	{
-		id: "demo-video",
-		embodiments: [
-			{
-				kind: "video",
-				src: ASSET_VIDEO,
-				muted: true,
-				controls: true,
-			},
-		],
+		kind: "figure",
+		id: CATALOGUE_EMBODIMENT_FULL,
+		src: ASSET_CATALOGUE,
+		alt: "Komponentenkatalog",
 	},
 	{
-		id: "thesis",
-		embodiments: [
-			{
-				kind: "pdf",
-				src: ASSET_THESIS_PDF,
-				page: 1,
-				alt: "Bachelorarbeit Ueli Saluz",
-			},
-		],
+		kind: "figure",
+		id: CATALOGUE_EMBODIMENT_COL1_CROP,
+		src: ASSET_CATALOGUE,
+		alt: CATALOGUE_COLUMN_LABELS.col1,
+		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col1),
 	},
+	{
+		kind: "text",
+		id: CATALOGUE_EMBODIMENT_COL1_LABEL,
+		lines: [CATALOGUE_COLUMN_LABELS.col1],
+		level: "heading",
+		morphRoot: "heading-line",
+	},
+	{
+		kind: "figure",
+		id: CATALOGUE_EMBODIMENT_COL2_CROP,
+		src: ASSET_CATALOGUE,
+		alt: CATALOGUE_COLUMN_LABELS.col2,
+		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col2),
+	},
+	{
+		kind: "text",
+		id: CATALOGUE_EMBODIMENT_COL2_LABEL,
+		lines: [CATALOGUE_COLUMN_LABELS.col2],
+		level: "heading",
+		morphRoot: "heading-line",
+	},
+	{
+		kind: "figure",
+		id: CATALOGUE_EMBODIMENT_COL3_CROP,
+		src: ASSET_CATALOGUE,
+		alt: CATALOGUE_COLUMN_LABELS.col3,
+		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col3),
+	},
+	{
+		kind: "text",
+		id: CATALOGUE_EMBODIMENT_COL3_LABEL,
+		lines: [CATALOGUE_COLUMN_LABELS.col3],
+		level: "heading",
+		morphRoot: "heading-line",
+	},
+	{
+		kind: "video",
+		id: "demo-video--clip",
+		src: ASSET_VIDEO,
+		muted: true,
+		controls: true,
+	},
+	{
+		kind: "pdf",
+		id: "thesis--doc",
+		src: ASSET_THESIS_PDF,
+		page: 1,
+		alt: "Bachelorarbeit Ueli Saluz",
+	},
+	...CATALOGUE_SPLIT.embodiments,
 ];
 //#endregion 🔖Catalogue
