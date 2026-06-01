@@ -247,6 +247,34 @@ export function stripPlaygroundRendererForPuzzleKind(
   return out;
 }
 
+function namedImportSpecifiersForModule(source: string, moduleId: string): string[] {
+  const escaped = moduleId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`import\\s*\\{([^}]+)\\}\\s*from\\s*["']${escaped}["']`, "gs");
+  const names: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(source))) {
+    for (const part of match[1].split(",")) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+      const name = trimmed.replace(/^type\s+/, "").split(/\s+as\s+/)[0]?.trim();
+      if (name) names.push(name);
+    }
+  }
+  return names;
+}
+
+/** @emoji 🔁 Named import specifiers duplicated within the same module import block(s). */
+export function duplicateNamedImportsForModule(source: string, moduleId: string): string[] {
+  const names = namedImportSpecifiersForModule(source, moduleId);
+  const seen = new Set<string>();
+  const dupes: string[] = [];
+  for (const name of names) {
+    if (seen.has(name)) dupes.push(name);
+    else seen.add(name);
+  }
+  return dupes;
+}
+
 /** @emoji 🛝 Vite virtual entry for shell/boot and per-puzzle boot subpaths without cross-dimension hosts. */
 export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): Plugin {
   return {
@@ -394,6 +422,12 @@ if (import.meta.vitest) {
       expect(stripPlaygroundRendererForPuzzleKind(sample, "3d")).not.toContain("host-5d");
       expect(stripPlaygroundRendererForPuzzleKind(sample, "5d")).toContain("host-5d");
       expect(stripPlaygroundRendererForPuzzleKind(sample, "5d")).not.toContain("host-2d");
+    });
+
+    it("puzzle-2d virtual entry has no duplicate @puzzle/2d/react named imports", () => {
+      const rendererIndex = resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
+      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "2d");
+      expect(duplicateNamedImportsForModule(stripped, "@puzzle/2d/react")).toEqual([]);
     });
   });
 }

@@ -11450,6 +11450,7 @@ export function shouldDismissEmptyWindowEngagement(
   if (engagement?.input?.value?.trim()) return false;
   if (relatedTarget instanceof Node && zoneRoot?.contains(relatedTarget)) return false;
   if (relatedTarget instanceof Element && relatedTarget.closest('[data-slot="engagement-autocomplete"]')) return false;
+  if (zoneRoot?.querySelector('[data-slot="engagement"][data-possibles-open="true"]')) return false;
   return true;
 }
 
@@ -11621,7 +11622,13 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
 
   return (
     <LevelProvider level="overlay">
-      <div ref={engagementRef} data-slot="engagement" data-active={active ? "true" : undefined} className={cn("pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half", className)}>
+      <div
+        ref={engagementRef}
+        data-slot="engagement"
+        data-active={active ? "true" : undefined}
+        data-possibles-open={showPossiblesList ? "true" : undefined}
+        className={cn("pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half", className)}
+      >
       {hasInput ? (
         <Popover
           open={showPossiblesList}
@@ -11728,6 +11735,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
               className="w-[min(100vw-1rem,28rem)] p-0"
               align="end"
               onOpenAutoFocus={(event) => event.preventDefault()}
+              onPointerDown={(event) => event.preventDefault()}
             >
               <Command shouldFilter={false}>
                 <CommandList>
@@ -16500,6 +16508,12 @@ if (import.meta.vitest) {
       fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
       fireEvent.keyDown(field, { key: " " });
       await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box"]));
+      fireEvent.change(field, { target: { value: "" } });
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      const sphereRow = document.querySelector('[data-slot="command-item"][data-value="primitive.sphere"]');
+      expect(sphereRow).toBeTruthy();
+      fireEvent.click(sphereRow!);
+      await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box", "primitive.sphere"]));
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 

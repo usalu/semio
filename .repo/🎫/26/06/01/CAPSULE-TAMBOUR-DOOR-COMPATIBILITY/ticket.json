@@ -3,9 +3,10 @@
   "emoji": "🔗",
   "status": "closed",
   "description": "Fix door vortex compatibilities: door capsule east only with door tambour west; door capsule west only with door tambour east; not cross-compatible on same side.",
-  "summary": "Corrected metabolism door port compatibilities: door capsule east ↔ door tambour west only; door capsule west ↔ door tambour east only. Updated kit compatiblePorts in 7 semio fixtures, kindCompatibility in puzzle 2d/3d nakagin fixtures and storybook board, and puzzle3d brush unit tests. Re-ran puzzle 3d react tests (242 passed).",
+  "summary": "Removed east/west complement mirroring. Door capsule vortex side is inferred from connector local CAD X (x\u003c0 → west, x≥0 → east) even when the kit port id says east. enrichKindCatalogBundleDoorCapsules relabels palette kinds without adding a second vortex. Relabeled 113 vortices in nakagin-capsule-tower.3d.json (catalog + scene). Puzzle 3d react tests: 250 passed.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪abdd2a542c814e4685b47a2a36db2d5b"
+    "⚪abdd2a542c814e4685b47a2a36db2d5b",
+    "⚪41a56433b45d47eba9ee4bfe29f18871"
   ]
 }
