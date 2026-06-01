@@ -94,15 +94,14 @@ if (import.meta.vitest) {
 			expect(col1?.position).toBeUndefined();
 		});
 
-		it("morphs each column participant into catalogue-labels via ghosts and a bridge", () => {
+		it("morphs each column participant into catalogue-labels via ghosts", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			expect(media).toBeDefined();
 			const expanded = expandThoughtSlides(media!);
 			const focusSlide = expanded.find((slide) => slide.id === "catalogue-focus");
-			const bridgeSlide = expanded.find((slide) => slide.id === "catalogue-labels--bridge");
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
-			expect(bridgeSlide?.derived).toBe(true);
-			expect(focusSlide?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels--bridge"]);
+			expect(expanded.map((slide) => slide.id)).not.toContain("catalogue-labels--bridge");
+			expect(focusSlide?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels"]);
 			const labelTarget = labelSlide?.arrangement.dispositions.find(
 				(disposition) => disposition.participantId === "catalogue-labels",
 			);

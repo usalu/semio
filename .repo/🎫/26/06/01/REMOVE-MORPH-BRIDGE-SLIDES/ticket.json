@@ -1,0 +1,10 @@
+{
+  "title": "Remove Morph Bridge Slides",
+  "emoji": "🌉",
+  "status": "open",
+  "description": "Remove all auto-derived morph bridge slides from framework presentation expandThoughtSlides and related code/tests.",
+  "goal": "🎯framework🎯presentation",
+  "sessions": [
+    "⚪b03e21905be74d0d954b939a15218c6a"
+  ]
+}

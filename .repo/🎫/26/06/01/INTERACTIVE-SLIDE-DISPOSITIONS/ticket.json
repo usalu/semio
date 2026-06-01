@@ -1,8 +1,9 @@
 {
   "title": "Interactive Slide Dispositions",
   "emoji": "🖱",
-  "status": "open",
+  "status": "closed",
   "description": "Make all slides interactive by default: every disposition is hoverable, selectable (click + rectangle marquee with crossing/window rules), draggable, resizable, with per-disposition slide-fullscreen toggle. Ephemeral in-session only.",
+  "summary": "Added ephemeral interactive manipulation to the React presentation renderer: every disposition is hoverable, selectable (click with shift-toggle, crossing/window marquee), draggable, resizable (8 handles, multi-select group ops), and slide-fullscreen via a small toggle. State resets on slide change/reload. Wired PresentationInteractionProvider into PresentationDeck, InteractionLayer behind placements for empty-area hit testing, geometry helpers with vitest coverage, and interaction CSS.",
   "goal": "🎯framework🎯presentation",
   "sessions": [
     "⚪ff10b8bd673f400597d9f29275555cf3"

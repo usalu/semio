@@ -617,7 +617,7 @@ export function centerResolvedArrangement(resolved: readonly ResolvedDisposition
 //#endregion 🔖Resolved
 
 //#region 🔖Expand
-/** @emoji 🎞 One renderable slide after morph-bridge expansion for reveal.js. */
+/** @emoji 🎞 One renderable slide after morph expansion for reveal.js. */
 export interface RenderSlide {
 	readonly id: string;
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
@@ -625,23 +625,10 @@ export interface RenderSlide {
 	readonly arrangement: Arrangement;
 	/** @emoji ↔️ reveal.js `data-auto-animate-id` shared by consecutive morph-linked slides in one run. */
 	readonly autoAnimateId?: string;
-	/** @emoji 🌉 True when auto-inserted for morph-then-switch embodiment ordering. */
-	readonly derived?: boolean;
 }
 
 function transitionUsesMorph(transition: Transition | undefined): boolean {
 	return (transition?.kind ?? "morph") === "morph";
-}
-
-function dispositionEmbodimentKey(participant: Participant, disposition: Disposition): string {
-	if (disposition.embodimentId) {
-		return disposition.embodimentId;
-	}
-	const first = participant.embodiments[0];
-	if (!first) {
-		throw new Error(`Participant "${participant.id}" has no embodiments.`);
-	}
-	return first.id ?? first.kind;
 }
 
 function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, Disposition> {
@@ -652,108 +639,6 @@ function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, 
 		}
 	}
 	return map;
-}
-
-const DISPOSITION_POSITION_EPSILON = 1e-4;
-
-/** @emoji 📐 True when two {@link DispositionPosition} values are the same for morph bridge decisions. */
-export function dispositionPositionsEqual(a: DispositionPosition, b: DispositionPosition): boolean {
-	return (
-		Math.abs(a.x - b.x) < DISPOSITION_POSITION_EPSILON &&
-		Math.abs(a.y - b.y) < DISPOSITION_POSITION_EPSILON &&
-		Math.abs(a.width - b.width) < DISPOSITION_POSITION_EPSILON &&
-		Math.abs(a.height - b.height) < DISPOSITION_POSITION_EPSILON
-	);
-}
-
-function morphBridgeNeeded(
-	participant: Participant,
-	source: Disposition,
-	target: Disposition,
-): boolean {
-	return dispositionEmbodimentKey(participant, source) !== dispositionEmbodimentKey(participant, target);
-}
-
-/**
- * @emoji 🎯 True when reveal.js may morph in one step without an intermediate bridge slide.
- * Figure→text only when positions already match (embodiment switch after position morph on the bridge slide).
- */
-export function morphBridgeDirect(
-	participant: Participant,
-	source: Disposition,
-	target: Disposition,
-): boolean {
-	const sourceEmbodiment = resolveEmbodiment(participant, source.embodimentId);
-	const targetEmbodiment = resolveEmbodiment(participant, target.embodimentId);
-	if (
-		sourceEmbodiment.kind === "authors" &&
-		targetEmbodiment.kind === "authors" &&
-		sourceEmbodiment.id === "plain" &&
-		targetEmbodiment.id?.startsWith("marked-affiliations-step")
-	) {
-		return true;
-	}
-	if (
-		sourceEmbodiment.kind === "authors" &&
-		targetEmbodiment.kind === "authors" &&
-		sourceEmbodiment.id?.startsWith("marked-affiliations-step") &&
-		targetEmbodiment.id?.startsWith("marked-affiliations-step")
-	) {
-		return true;
-	}
-	if (
-		sourceEmbodiment.kind === "affiliations" &&
-		targetEmbodiment.kind === "affiliations" &&
-		sourceEmbodiment.id?.startsWith("step") &&
-		targetEmbodiment.id?.startsWith("step")
-	) {
-		return true;
-	}
-	if (source.position === undefined || target.position === undefined) {
-		return false;
-	}
-	if (
-		sourceEmbodiment.kind === "figure" &&
-		sourceEmbodiment.crop !== undefined &&
-		targetEmbodiment.kind === "text"
-	) {
-		return dispositionPositionsEqual(source.position, target.position);
-	}
-	return false;
-}
-
-/** @emoji ⏳ True when split tiles or dormant morph anchors must settle before a morph bridge slide. */
-function arrangementNeedsSettleBeforeMorphBridge(arrangement: Arrangement): boolean {
-	return arrangement.dispositions.some(
-		(disposition) =>
-			disposition.split !== undefined ||
-			disposition.morphGhost === true ||
-			(disposition.style?.opacity === 0 && disposition.embodimentId !== undefined),
-	);
-}
-
-/** @emoji ⏳ Adds a morph-bridge arrangement id to {@link Arrangement.settleBeforeMorphTo} when needed. */
-function enrichSettleBeforeMorphTo(arrangement: Arrangement, bridgeId: string): Arrangement {
-	if (!arrangementNeedsSettleBeforeMorphBridge(arrangement)) {
-		return arrangement;
-	}
-	const existing = arrangement.settleBeforeMorphTo ?? [];
-	if (existing.includes(bridgeId)) {
-		return arrangement;
-	}
-	return { ...arrangement, settleBeforeMorphTo: [...existing, bridgeId] };
-}
-
-function morphBridgeDisposition(source: Disposition, target: Disposition): Disposition {
-	return {
-		participantId: target.participantId,
-		embodimentId: source.embodimentId,
-		emphasis: target.emphasis,
-		position: target.position,
-		style: target.style,
-		morphGhost: target.morphGhost,
-		morphTargetId: target.morphTargetId,
-	};
 }
 
 function slideParticipantIds(slide: Slide): ReadonlySet<string> {
@@ -814,68 +699,7 @@ export function slidesShareMorphParticipants(source: Slide, target: Slide): bool
 	return false;
 }
 
-function buildMorphBridgeArrangement(
-	thought: Thought,
-	sourceSlide: Slide,
-	targetSlide: Slide,
-): Arrangement | null {
-	const sourceByParticipant = primaryDispositionByParticipant(sourceSlide.arrangement);
-	const byId = new Map((thought.participants ?? []).map((participant) => [participant.id, participant]));
-	let anyBridge = false;
-	const dispositions = targetSlide.arrangement.dispositions.map((targetDisposition) => {
-		const participant = byId.get(targetDisposition.participantId);
-		const sourceDisposition = sourceByParticipant.get(targetDisposition.participantId);
-		if (
-			targetDisposition.morphFrom?.length &&
-			sourceDisposition === undefined &&
-			targetDisposition.embodimentId !== undefined
-		) {
-			anyBridge = true;
-			return {
-				participantId: targetDisposition.participantId,
-				embodimentId: targetDisposition.embodimentId,
-				emphasis: targetDisposition.emphasis,
-				position: targetDisposition.position,
-				style: { opacity: 0 },
-			};
-		}
-		if (participant && sourceDisposition && morphBridgeNeeded(participant, sourceDisposition, targetDisposition)) {
-			if (morphBridgeDirect(participant, sourceDisposition, targetDisposition)) {
-				return targetDisposition;
-			}
-			anyBridge = true;
-			return morphBridgeDisposition(sourceDisposition, targetDisposition);
-		}
-		return targetDisposition;
-	});
-	if (!anyBridge) {
-		return null;
-	}
-	return {
-		id: `${targetSlide.arrangement.id}--bridge`,
-		name: targetSlide.arrangement.name,
-		dispositions,
-	};
-}
-
-/** @emoji 👻 Shows morph-bridge ghost crops at rest; they stay opacity-0 on the final morph target slide. */
-function arrangementWithVisibleMorphBridgeGhosts(arrangement: Arrangement): Arrangement {
-	let changed = false;
-	const dispositions = arrangement.dispositions.map((disposition) => {
-		if (!disposition.morphGhost || disposition.style?.opacity !== 0) {
-			return disposition;
-		}
-		changed = true;
-		const { opacity: _opacity, ...restStyle } = disposition.style ?? {};
-		return {
-			...disposition,
-			style: Object.keys(restStyle).length > 0 ? restStyle : undefined,
-		};
-	});
-	return changed ? { ...arrangement, dispositions } : arrangement;
-}
-
-/** @emoji 🌉 Expands {@link Thought.slides} with auto-derived morph bridges and morph-run auto-animate ids. */
+/** @emoji 🎞 Expands {@link Thought.slides} with morph ghosts and morph-run auto-animate ids. */
 export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 	const slides = thought.slides;
 	if (slides.length === 0) {
@@ -899,48 +723,15 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 		for (let slideIndex = index; slideIndex <= runEnd; slideIndex += 1) {
 			const slide = slides[slideIndex]!;
 			const sourceSlide = slideIndex > index ? slides[slideIndex - 1]! : undefined;
-			const arrangementWithMorphFrom =
+			const arrangement =
 				sourceSlide === undefined
 					? slide.arrangement
 					: expandArrangementMorphFrom(sourceSlide, slide.arrangement, { morphLineTargets: true });
-			if (slideIndex > index && transitionUsesMorph(slides[slideIndex - 1]?.transition)) {
-				const bridgeTargetArrangement = expandArrangementMorphFrom(slides[slideIndex - 1]!, slide.arrangement, {
-					morphLineTargets: false,
-				});
-				const bridge = buildMorphBridgeArrangement(thought, slides[slideIndex - 1]!, {
-					...slide,
-					arrangement: bridgeTargetArrangement,
-				});
-				if (bridge) {
-					expanded.push({
-						id: bridge.id,
-						name: bridge.name,
-						arrangement: arrangementWithVisibleMorphBridgeGhosts(bridge),
-						autoAnimateId,
-						derived: true,
-					});
-				}
-			}
-			let arrangement = arrangementWithMorphFrom;
-			if (slideIndex < runEnd && transitionUsesMorph(slide.transition)) {
-				const nextSlide = slides[slideIndex + 1]!;
-				const nextArrangement = expandArrangementMorphFrom(slide, nextSlide.arrangement, {
-					morphLineTargets: false,
-				});
-				const bridge = buildMorphBridgeArrangement(thought, slide, {
-					...nextSlide,
-					arrangement: nextArrangement,
-				});
-				if (bridge) {
-					arrangement = enrichSettleBeforeMorphTo(arrangement, bridge.id);
-				}
-			}
 			expanded.push({
 				id: slide.arrangement.id,
 				name: slide.arrangement.name,
 				arrangement,
 				autoAnimateId,
-				derived: false,
 			});
 		}
 		index = runEnd + 1;
@@ -992,7 +783,7 @@ export function resolveArrangement(
 	});
 }
 
-/** @emoji 🔢 Counts render slides (including morph bridges) across all chapters and sequences. */
+/** @emoji 🔢 Counts render slides across all chapters and sequences. */
 export function countArrangements(presentation: Presentation): number {
 	return presentationSequences(presentation).reduce(
 		(sum, sequence) =>
@@ -1074,9 +865,7 @@ export function collectPresentationSlides(presentation: Presentation): readonly 
 						chapter: presentationEntityBookmarkName(chapter),
 						sequence: presentationEntityBookmarkName(sequence),
 						thought: presentationEntityBookmarkName(thought),
-						slide: presentationEntityBookmarkName(
-							renderSlide.derived ? { id: renderSlide.id, name: undefined } : renderSlide,
-						),
+						slide: presentationEntityBookmarkName(renderSlide),
 					});
 					v += 1;
 				}
@@ -2002,25 +1791,21 @@ if (import.meta.vitest) {
 				"affiliations-2",
 				"affiliations-3",
 			]);
-			expect(expandThoughtSlides(thought).length).toBeGreaterThan(7);
-		});
-
-		it("skips morph bridges between affiliation steps", () => {
-			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual([
 				"title",
-				"description--bridge",
 				"description",
-				"goal--bridge",
 				"goal",
 				"authors",
 				"affiliations-1",
 				"affiliations-2",
 				"affiliations-3",
 			]);
+		});
+
+		it("keeps a single universities bookmark at v=5", () => {
 			const uniSlides = collectPresentationSlides(sampleIntro).filter((slide) => slide.slide === "Universities");
 			expect(uniSlides).toHaveLength(1);
-			expect(uniSlides[0]?.v).toBe(7);
+			expect(uniSlides[0]?.v).toBe(5);
 		});
 
 		it("uses fixed-size heading blocks without fit-text", () => {
@@ -2165,7 +1950,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("expandThoughtSlides", () => {
-		it("inserts a morph bridge when embodiment switches between morph slides", () => {
+		it("assigns one auto-animate id per morph run", () => {
 			const thought: Thought = {
 				id: "morph",
 				participants: [
@@ -2194,63 +1979,11 @@ if (import.meta.vitest) {
 				],
 			};
 			const expanded = expandThoughtSlides(thought);
-			expect(expanded.map((slide) => slide.id)).toEqual(["source", "mapping--bridge", "mapping"]);
-			expect(expanded[1]?.derived).toBe(true);
+			expect(expanded.map((slide) => slide.id)).toEqual(["source", "mapping"]);
 			expect(expanded.every((slide) => slide.autoAnimateId === "morph--m0")).toBe(true);
-			const bridge = expanded[1]!.arrangement.dispositions[0]!;
-			expect(bridge.embodimentId).toBe("source");
 		});
 
-		it("inserts a bridge when figure crop and text morph slots differ in position", () => {
-			const thought: Thought = {
-				id: "media",
-				participants: [
-					{
-						id: "col1",
-						embodiments: [
-							{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
-							{ kind: "text", id: "label", lines: ["Rippendecke"], level: "heading" },
-						],
-					},
-				],
-				slides: [
-					{
-						arrangement: {
-							id: "focus",
-							dispositions: [
-								{
-									participantId: "col1",
-									embodimentId: "crop",
-									emphasis: "active",
-									position: { x: 0.05, y: 0.1, width: 0.4, height: 0.78 },
-								},
-							],
-						},
-						transition: { kind: "morph" },
-					},
-					{
-						arrangement: {
-							id: "labels",
-							dispositions: [
-								{
-									participantId: "col1",
-									embodimentId: "label",
-									emphasis: "active",
-									position: { x: 0.38, y: 0.12, width: 0.24, height: 0.24 },
-								},
-							],
-						},
-					},
-				],
-			};
-			const expanded = expandThoughtSlides(thought);
-			expect(expanded.map((slide) => slide.id)).toEqual(["focus", "labels--bridge", "labels"]);
-			const bridge = expanded[1]!.arrangement.dispositions[0]!;
-			expect(bridge.embodimentId).toBe("crop");
-			expect(bridge.position).toEqual({ x: 0.38, y: 0.12, width: 0.24, height: 0.24 });
-		});
-
-		it("expands morphFrom ghosts with line targets only on the final slide", () => {
+		it("expands morphFrom ghosts with line targets on morph target slides", () => {
 			const thought: Thought = {
 				id: "merge",
 				participants: [
@@ -2305,24 +2038,16 @@ if (import.meta.vitest) {
 				],
 			};
 			const expanded = expandThoughtSlides(thought);
-			const bridge = expanded.find((slide) => slide.id === "labels--bridge");
 			const labels = expanded.find((slide) => slide.id === "labels");
-			const bridgeGhost = bridge?.arrangement.dispositions.find((disposition) => disposition.morphGhost);
 			const labelGhost = labels?.arrangement.dispositions.find((disposition) => disposition.morphGhost);
-			expect(bridgeGhost?.morphTargetId).toBeUndefined();
 			expect(labelGhost?.morphTargetId).toBe("labels--0");
-			expect(bridgeGhost?.style?.opacity).toBeUndefined();
 			expect(labelGhost?.style?.opacity).toBe(0);
 		});
 
-		it("enriches settleBeforeMorphTo on the source slide when a morph bridge is inserted", () => {
+		it("preserves declarative settleBeforeMorphTo on arrangements", () => {
 			const thought: Thought = {
 				id: "media",
 				participants: [
-					{
-						id: "catalogue",
-						embodiments: [{ kind: "figure", src: "/a.png" }],
-					},
 					{
 						id: "col1",
 						embodiments: [
@@ -2335,8 +2060,8 @@ if (import.meta.vitest) {
 					{
 						arrangement: {
 							id: "focus",
+							settleBeforeMorphTo: ["labels"],
 							dispositions: [
-								{ participantId: "catalogue", emphasis: "active", split: { tiles: [] } },
 								{
 									participantId: "col1",
 									embodimentId: "crop",
@@ -2364,65 +2089,10 @@ if (import.meta.vitest) {
 				],
 			};
 			const focus = expandThoughtSlides(thought).find((slide) => slide.id === "focus");
-			expect(focus?.arrangement.settleBeforeMorphTo).toEqual(["labels--bridge"]);
+			expect(focus?.arrangement.settleBeforeMorphTo).toEqual(["labels"]);
 		});
 
-		it("skips a bridge for figure crop to text at the same position", () => {
-			const labelPosition = { x: 0.38, y: 0.12, width: 0.24, height: 0.24 };
-			const thought: Thought = {
-				id: "media",
-				participants: [
-					{
-						id: "col1",
-						embodiments: [
-							{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
-							{ kind: "text", id: "label", lines: ["Rippendecke"], level: "heading" },
-						],
-					},
-				],
-				slides: [
-					{
-						arrangement: {
-							id: "bridge",
-							dispositions: [
-								{
-									participantId: "col1",
-									embodimentId: "crop",
-									emphasis: "active",
-									position: labelPosition,
-								},
-							],
-						},
-						transition: { kind: "morph" },
-					},
-					{
-						arrangement: {
-							id: "labels",
-							dispositions: [
-								{
-									participantId: "col1",
-									embodimentId: "label",
-									emphasis: "active",
-									position: labelPosition,
-								},
-							],
-						},
-					},
-				],
-			};
-			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual(["bridge", "labels"]);
-		});
-
-		it("skips a bridge when intro authors switch from plain to affiliation marks", () => {
-			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
-			const expanded = expandThoughtSlides(thought);
-			expect(expanded.map((slide) => slide.id)).not.toContain("affiliations-1--bridge");
-			const authorsIndex = expanded.findIndex((slide) => slide.id === "authors");
-			const facultyIndex = expanded.findIndex((slide) => slide.id === "affiliations-1");
-			expect(facultyIndex).toBe(authorsIndex + 1);
-		});
-
-		it("does not insert a bridge when only position changes", () => {
+		it("keeps consecutive morph slides without extra render slides", () => {
 			const thought: Thought = {
 				id: "move",
 				participants: [
@@ -2542,11 +2212,10 @@ if (import.meta.vitest) {
 				],
 			};
 			const expanded = expandThoughtSlides(thought);
-			expect(expanded.map((slide) => slide.id)).toEqual(["catalogue", "focus", "labels--bridge", "labels"]);
+			expect(expanded.map((slide) => slide.id)).toEqual(["catalogue", "focus", "labels"]);
 			expect(expanded[0]?.autoAnimateId).toBeUndefined();
 			expect(expanded[1]?.autoAnimateId).toBe("media--m1");
 			expect(expanded[2]?.autoAnimateId).toBe("media--m1");
-			expect(expanded[3]?.autoAnimateId).toBe("media--m1");
 		});
 	});
 
@@ -2770,8 +2439,8 @@ if (import.meta.vitest) {
 				thought: "Einleitung",
 				slide: "Universitäten",
 			};
-			const hash = formatPresentationUrlHash({ h: 0, v: 7 }, bookmark, "de");
-			expect(hash.startsWith("#/0/7?")).toBe(true);
+			const hash = formatPresentationUrlHash({ h: 0, v: 5 }, bookmark, "de");
+			expect(hash.startsWith("#/0/5?")).toBe(true);
 			const params = new URLSearchParams(hash.split("?")[1] ?? "");
 			expect(params.get("kapitel")).toBe("Hauptteil");
 			expect(params.get("sequenz")).toBe("Einführung");
@@ -2792,14 +2461,10 @@ if (import.meta.vitest) {
 			target: { label: "Remanufacture", figure: "/remanufacture.png" },
 		});
 
-		it("builds two morph slides plus bridge", () => {
+		it("builds two morph slides", () => {
 			const thought = sampleAnalogy.chapters[0]!.sequences[0]!.thoughts[0]!;
 			expect(thought.slides.map((slide) => slide.arrangement.id)).toEqual(["source", "mapping"]);
-			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual([
-				"source",
-				"mapping--bridge",
-				"mapping",
-			]);
+			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual(["source", "mapping"]);
 		});
 
 		it("resolves positioned visual dispositions", () => {

@@ -1351,14 +1351,15 @@ function transformFrameStyle(transform: DispositionPosition): CSSProperties {
 interface PresentationInteractionState {
 	readonly selectedIds: ReadonlySet<string>;
 	readonly transforms: ReadonlyMap<string, DispositionTransform>;
-	readonly fullscreenStash: ReadonlyMap<string, DispositionPosition>;
+	readonly fullscreenIds: ReadonlySet<string>;
 	readonly isSelected: (id: string) => boolean;
+	readonly isFullscreen: (id: string) => boolean;
 	readonly getTransform: (id: string) => DispositionTransform | undefined;
 	readonly setTransform: (id: string, rect: DispositionTransform) => void;
 	readonly setTransforms: (updates: ReadonlyMap<string, DispositionTransform>) => void;
 	readonly selectIds: (ids: readonly string[], additive: boolean) => void;
 	readonly clearSelection: () => void;
-	readonly toggleFullscreen: (id: string, current: DispositionPosition) => void;
+	readonly toggleFullscreen: (id: string) => void;
 }
 
 const PresentationInteractionContext = createContext<PresentationInteractionState | null>(null);
@@ -1371,19 +1372,21 @@ function usePresentationInteractionState(): PresentationInteractionState {
 	return value;
 }
 
-/** @emoji 🖱 Ephemeral selection, transforms, and fullscreen stash; resets when slideEpoch changes. */
+/** @emoji 🖱 Ephemeral selection, transforms, and slide-fullscreen flags; resets when slideEpoch changes. */
 export function usePresentationInteraction(slideEpoch: number): PresentationInteractionState {
 	const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
 	const [transforms, setTransforms] = useState<ReadonlyMap<string, DispositionTransform>>(() => new Map());
-	const [fullscreenStash, setFullscreenStash] = useState<ReadonlyMap<string, DispositionPosition>>(() => new Map());
+	const [fullscreenIds, setFullscreenIds] = useState<ReadonlySet<string>>(() => new Set());
 
 	useEffect(() => {
 		setSelectedIds(new Set());
 		setTransforms(new Map());
-		setFullscreenStash(new Map());
+		setFullscreenIds(new Set());
 	}, [slideEpoch]);
 
 	const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
+
+	const isFullscreen = useCallback((id: string) => fullscreenIds.has(id), [fullscreenIds]);
 
 	const getTransform = useCallback((id: string) => transforms.get(id), [transforms]);
 
@@ -1424,33 +1427,28 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 
 	const clearSelection = useCallback(() => {
 		setSelectedIds(new Set());
+		setFullscreenIds(new Set());
 	}, []);
 
-	const toggleFullscreen = useCallback((id: string, current: DispositionPosition) => {
-		const stash = fullscreenStash.get(id);
-		const { rect, stash: nextStash } = toggleFullscreenRect(current, stash);
-		setTransforms((previous) => {
-			const next = new Map(previous);
-			next.set(id, rect);
-			return next;
-		});
-		setFullscreenStash((previous) => {
-			const next = new Map(previous);
-			if (nextStash === undefined) {
+	const toggleFullscreen = useCallback((id: string) => {
+		setFullscreenIds((previous) => {
+			const next = new Set(previous);
+			if (next.has(id)) {
 				next.delete(id);
 			} else {
-				next.set(id, nextStash);
+				next.add(id);
 			}
 			return next;
 		});
-	}, [fullscreenStash]);
+	}, []);
 
 	return useMemo(
 		() => ({
 			selectedIds,
 			transforms,
-			fullscreenStash,
+			fullscreenIds,
 			isSelected,
+			isFullscreen,
 			getTransform,
 			setTransform,
 			setTransforms: setTransformsBatch,
@@ -1461,8 +1459,9 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 		[
 			selectedIds,
 			transforms,
-			fullscreenStash,
+			fullscreenIds,
 			isSelected,
+			isFullscreen,
 			getTransform,
 			setTransform,
 			setTransformsBatch,
@@ -1569,7 +1568,7 @@ const InteractiveDisposition: FC<{
 	const selected = interaction.isSelected(id);
 	const transform = interaction.getTransform(id);
 	const pinned = transform !== undefined;
-	const fullscreen = interaction.fullscreenStash.has(id) || (transform?.width === 1 && transform?.x === 0 && transform?.y === 0);
+	const fullscreen = interaction.isFullscreen(id);
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
 
@@ -1728,19 +1727,17 @@ const InteractiveDisposition: FC<{
 	};
 
 	const onFullscreenClick = (event: React.MouseEvent): void => {
+		event.preventDefault();
 		event.stopPropagation();
-		const rect = ensureRectForManipulation();
-		if (!rect) {
-			return;
-		}
 		if (!selected) {
 			interaction.selectIds([id], false);
 		}
-		interaction.toggleFullscreen(id, rect);
+		interaction.toggleFullscreen(id);
 	};
 
 	const wrapperClass = [
 		"presentation-interactive-disposition",
+		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
 		selected ? "presentation-interactive-disposition--selected" : undefined,
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
@@ -1760,23 +1757,26 @@ const InteractiveDisposition: FC<{
 		>
 			<div className="presentation-interactive-disposition__content">{children}</div>
 			{selected && effectiveRect ? (
-				<div className="presentation-interactive-disposition__chrome" aria-hidden>
-					{DISPOSITION_RESIZE_HANDLES.map((handle) => (
-						<div
-							key={handle}
-							className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
-							onPointerDown={onHandlePointerDown(handle)}
-						/>
-					))}
+				<>
+					<div className="presentation-interactive-disposition__chrome" aria-hidden>
+						{DISPOSITION_RESIZE_HANDLES.map((handle) => (
+							<div
+								key={handle}
+								className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
+								onPointerDown={onHandlePointerDown(handle)}
+							/>
+						))}
+					</div>
 					<button
 						type="button"
 						className="presentation-interaction-fullscreen"
 						title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
+						aria-pressed={fullscreen}
 						onClick={onFullscreenClick}
 					>
 						{fullscreen ? "⤢" : "⤢"}
 					</button>
-				</div>
+				</>
 			) : null}
 		</div>
 	);
@@ -2227,7 +2227,7 @@ if (import.meta.vitest) {
 			container.remove();
 		});
 
-		it("renders expanded intro slides including morph bridges", () => {
+		it("renders expanded intro slides", () => {
 			const deck = intro({
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
@@ -2239,7 +2239,7 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false });
 			});
 			const sections = container.querySelectorAll(".slides > section > section");
-			expect(sections.length).toBeGreaterThan(7);
+			expect(sections.length).toBe(7);
 			expect(sections[0]?.hasAttribute("data-auto-animate")).toBe(true);
 			const revealEl = container.querySelector(".reveal");
 			expect(revealEl?.getAttribute("style")).toContain("100vw");
@@ -2399,7 +2399,7 @@ if (import.meta.vitest) {
 			const morphSections = container.querySelectorAll(
 				'.slides > section > section[data-auto-animate][data-auto-animate-id="introduction--m0"]',
 			);
-			expect(morphSections.length).toBeGreaterThan(7);
+			expect(morphSections.length).toBe(7);
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
 			expect(slide("title")?.querySelector('[data-id^="title"]')).toBeTruthy();
 			expect(slide("title")?.querySelector('[data-id^="description"]')).toBeNull();
@@ -3068,7 +3068,7 @@ if (import.meta.vitest) {
 			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
 		});
 
-		it("toggles slide fullscreen on the selected disposition", () => {
+		it("toggles slide fullscreen without pinned transforms or inline placement", () => {
 			act(() => {
 				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
@@ -3077,19 +3077,20 @@ if (import.meta.vitest) {
 				pointerClick(disposition);
 			});
 			const fullscreen = disposition.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
+			expect(fullscreen.getAttribute("aria-pressed")).toBe("false");
 			act(() => {
 				fullscreen.click();
 			});
-			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
 			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
-			expect(disposition.style.left).toBe("0%");
-			expect(disposition.style.width).toBe("100%");
+			expect(disposition.style.left).toBe("");
+			expect(disposition.querySelector(".presentation-disposition-frame")?.style.position).toBe("absolute");
+			expect(fullscreen.getAttribute("aria-pressed")).toBe("true");
 			act(() => {
 				fullscreen.click();
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(false);
-			expect(disposition.style.left).not.toBe("0%");
-			expect(disposition.style.width).toBe("40%");
+			expect(fullscreen.getAttribute("aria-pressed")).toBe("false");
 		});
 	});
 }

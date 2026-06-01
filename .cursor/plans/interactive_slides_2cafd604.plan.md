@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: verify
     content: Verify drag/resize/marquee/fullscreen at runtime via dev server with console logs; close ticket with summary and touched files
-    status: in_progress
+    status: completed
 isProject: false
 ---
 
