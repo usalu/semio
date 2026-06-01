@@ -288,17 +288,11 @@ export function columnLabelMorphFrom(
 	column: keyof typeof CATALOGUE_COLUMN_TILE_KEYS,
 	labelPosition: DispositionPosition,
 ): Disposition["morphFrom"] {
-	return CATALOGUE_COLUMN_TILE_KEYS[column].map((participantId) => {
-		const focus = CATALOGUE_FOCUS_TILES.find((tile) => tile.participantId === participantId);
-		if (!focus) {
-			throw new Error(`Missing focus tile for "${participantId}".`);
-		}
-		return {
-			participantId,
-			embodimentId: `${participantId}-figure`,
-			position: focus.position,
-		};
-	});
+	return CATALOGUE_COLUMN_TILE_KEYS[column].map((participantId) => ({
+		participantId,
+		embodimentId: `${participantId}-figure`,
+		position: labelPosition,
+	}));
 }
 
 export const mediaParticipants: Participant[] = [

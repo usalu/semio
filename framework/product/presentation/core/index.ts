@@ -584,6 +584,10 @@ export interface ResolvedDisposition {
 	readonly morphId: string;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
+	/** @emoji 👻 Expanded from {@link Disposition.morphFrom}; carries source embodiment through position morph before target shows. */
+	readonly morphGhost?: boolean;
+	/** @emoji 🎯 Target slot with {@link Disposition.morphFrom}; hidden until source embodiment finishes position morph. */
+	readonly morphTarget?: boolean;
 }
 
 /** @emoji 📐 Union of normalized placement rectangles. */
@@ -744,7 +748,6 @@ export function expandArrangementMorphFrom(
 				embodimentId,
 				emphasis: sourceDisposition?.emphasis ?? "active",
 				position: slot.position,
-				style: { opacity: 0 },
 				morphGhost: true,
 				morphTargetId,
 			});
@@ -834,6 +837,8 @@ export function resolveArrangement(scope: ResolutionScope, arrangement: Arrangem
 				morphId: disposition.morphTargetId ?? morphId(participant.id),
 				position: disposition.position,
 				style: disposition.style,
+				morphGhost: disposition.morphGhost,
+				morphTarget: (disposition.morphFrom?.length ?? 0) > 0,
 			},
 		];
 	});
@@ -2128,7 +2133,7 @@ if (import.meta.vitest) {
 			const labels = expanded.find((slide) => slide.id === "labels");
 			const labelGhost = labels?.arrangement.dispositions.find((disposition) => disposition.morphGhost);
 			expect(labelGhost?.morphTargetId).toBe("labels--0");
-			expect(labelGhost?.style?.opacity).toBe(0);
+			expect(labelGhost?.morphGhost).toBe(true);
 		});
 
 		it("preserves declarative settleBeforeMorphTo on arrangements", () => {

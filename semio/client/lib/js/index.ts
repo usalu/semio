@@ -5352,6 +5352,32 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       }
     });
 
+    it("installProjection preserves metabolism file names for vfs", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/metabolism.shallow.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const kit = await store.wip().theKit().kit();
+        const children = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "KIT", id: kit.id }),
+          (rows) => rows.some((row) => row.kind === "FILE" && row.name === "base.glb"),
+          30_000,
+        );
+        const baseGlb = children.find((row) => row.kind === "FILE" && row.name === "base.glb");
+        expect(baseGlb).toBeDefined();
+        expect(baseGlb!.id).toBe("457d2061-ac4b-4317-8563-ba41afffd149");
+        expect(children.some((row) => row.kind === "FOLDER" && row.name === "representations")).toBe(true);
+      } finally {
+        await session.dispose();
+      }
+    });
+
     it("installProjection has no typology-default on metabolism shallow kit", async () => {
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");

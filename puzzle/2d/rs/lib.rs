@@ -2425,6 +2425,8 @@ mod board_host {
     const LINK_DRAG_MIN_DISTANCE_PX: f64 = 5.0;
     const LINK_HANDLE_SNAP_EXTRA_PX: f64 = 22.0;
     const LINK_COMMIT_SNAP_TIGHT_PX: f64 = 2.0;
+    const DEFAULT_BRUSH_FLUSH_DISTANCE: f64 = 80.0;
+    const DEFAULT_BRUSH_NODE_SIZE: f64 = 40.0;
     const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
     const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
     const BOUNDED_DRAG_HIT_PAD_PX: f64 = 8.0;
@@ -2516,9 +2518,38 @@ mod board_host {
     }
 
     #[derive(Clone, Debug)]
+    pub struct NodeKindHandleTemplate {
+        pub handle_kind: String,
+        pub angle: f64,
+        pub radius: Option<f64>,
+    }
+
+    #[derive(Clone, Debug)]
     pub struct NodeKindDef {
         pub name: String,
         pub scale: f64,
+        pub shape: NodeShape,
+        pub handles: Vec<NodeKindHandleTemplate>,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ActiveTool {
+        Select,
+        Brush,
+    }
+
+    #[derive(Clone, Debug)]
+    struct BrushPreviewSnapshot {
+        source_handle_id: String,
+        node_kind_id: String,
+        x: f64,
+        y: f64,
+        shape: NodeShape,
+        radius: f64,
+        width: f64,
+        height: f64,
+        handles: Vec<NodeKindHandleTemplate>,
+        target_handle_index: usize,
     }
 
     #[derive(Clone, Debug)]
@@ -2805,6 +2836,16 @@ mod board_host {
         wheel_zoom_active: bool,
         /// @emoji 📶 LOD tier pinned for the active wheel gesture so pan/zoom does not rebuild {@link BoardHost.world_content_cache} on every band crossing.
         wheel_zoom_render_lod: Option<BoardDrawLod>,
+        /// @emoji 🖌️ Active viewport tool (`select` suppresses brush slot logic).
+        active_tool: ActiveTool,
+        brush_flush_distance: f64,
+        brush_node_size: f64,
+        brush_slot_source_id: Option<String>,
+        brush_candidate_kinds: Vec<String>,
+        brush_candidate_index: usize,
+        brush_preview: Option<BrushPreviewSnapshot>,
+        brush_candidates_emit_key: Option<String>,
+        brush_preview_emit_key: Option<String>,
     }
 
     impl Default for Camera {
@@ -2860,6 +2901,15 @@ mod board_host {
                 world_content_cache: RefCell::new(None),
                 wheel_zoom_active: false,
                 wheel_zoom_render_lod: None,
+                active_tool: ActiveTool::Select,
+                brush_flush_distance: DEFAULT_BRUSH_FLUSH_DISTANCE,
+                brush_node_size: DEFAULT_BRUSH_NODE_SIZE,
+                brush_slot_source_id: None,
+                brush_candidate_kinds: Vec::new(),
+                brush_candidate_index: 0,
+                brush_preview: None,
+                brush_candidates_emit_key: None,
+                brush_preview_emit_key: None,
             }
         }
     }
@@ -3282,7 +3332,21 @@ mod board_host {
                     let id = no.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("node kind id missing")?;
                     let name = no.get("name").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).unwrap_or("").to_string();
                     let scale = no.get("scale").and_then(|x| x.as_f64()).filter(|x| x.is_finite() && *x > 0.0).unwrap_or(1.0);
-                    next.insert(id.to_string(), NodeKindDef { name, scale });
+                    let shape = match no.get("shape").and_then(|x| x.as_str()).map(str::trim) {
+                        Some("rectangle") => NodeShape::Rectangle,
+                        _ => NodeShape::Circle,
+                    };
+                    let mut handles: Vec<NodeKindHandleTemplate> = Vec::new();
+                    if let Some(arr) = no.get("handles").and_then(|x| x.as_array()) {
+                        for row in arr {
+                            let ho = row.as_object().ok_or("node kind handle row must be object")?;
+                            let handle_kind = ho.get("handleKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("node kind handle handleKind missing")?;
+                            let angle = ho.get("angle").and_then(|x| x.as_f64()).filter(|x| x.is_finite()).ok_or("node kind handle angle missing")?;
+                            let radius = ho.get("radius").and_then(|x| x.as_f64()).filter(|x| x.is_finite() && *x > 0.0);
+                            handles.push(NodeKindHandleTemplate { handle_kind: handle_kind.to_string(), angle, radius });
+                        }
+                    }
+                    next.insert(id.to_string(), NodeKindDef { name, scale, shape, handles });
                 }
                 self.node_kinds = next;
             }
@@ -3688,6 +3752,451 @@ mod board_host {
         fn default_edge_kind_for_created_link(&self, source: &HandleData, _target: &HandleData) -> String {
             let wk = self.resolve_default_wire_kind_for_handle(source);
             self.resolve_default_edge_kind_for_wire_kind(&wk)
+        }
+
+        fn resolve_default_wire_kind_for_handle_kind(&self, handle_kind: &str) -> String {
+            self.handle_kinds
+                .get(handle_kind)
+                .and_then(|d| d.default_wire_kind.as_ref())
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string())
+        }
+
+        fn link_gesture_rule_applies_kind_strings(
+            &self,
+            rule: &LinkCompatRule,
+            sn: &str,
+            sh: &str,
+            w_src: &str,
+            e_src: &str,
+            tn: &str,
+            th: &str,
+            _w_tgt: &str,
+            e_tgt: &str,
+        ) -> bool {
+            match rule.specificity {
+                CompatSpecificity::General => Self::compat_pair_matches(rule, sh, th),
+                CompatSpecificity::Node => Self::compat_pair_matches(rule, sn, tn),
+                CompatSpecificity::Edge => Self::compat_pair_matches(rule, e_src, e_tgt),
+                CompatSpecificity::Handle => Self::compat_pair_matches(rule, sh, th),
+                CompatSpecificity::Wire => Self::compat_pair_matches(rule, w_src, th),
+            }
+        }
+
+        fn link_kinds_compatible_for_brush(&self, sn: &str, sh: &str, tn: &str, th: &str) -> bool {
+            if self.link_compat_rules.is_empty() {
+                return true;
+            }
+            let w_src = self.resolve_default_wire_kind_for_handle_kind(sh);
+            let w_tgt = self.resolve_default_wire_kind_for_handle_kind(th);
+            let e_src = self.resolve_default_edge_kind_for_wire_kind(&w_src);
+            let e_tgt = self.resolve_default_edge_kind_for_wire_kind(&w_tgt);
+            let mut matched: Vec<&LinkCompatRule> = self
+                .link_compat_rules
+                .iter()
+                .filter(|rule| self.link_gesture_rule_applies_kind_strings(rule, sn, sh, &w_src, &e_src, tn, th, &w_tgt, &e_tgt))
+                .collect();
+            if matched.is_empty() {
+                return false;
+            }
+            if matched.iter().any(|r| r.important) {
+                matched.retain(|r| r.important);
+            } else {
+                let max_rank = matched.iter().map(|r| r.specificity as i32).max().unwrap_or(0);
+                matched.retain(|r| (r.specificity as i32) == max_rank);
+            }
+            !matched.is_empty()
+        }
+
+        fn brush_slot_hit_radius_world(&self) -> f64 {
+            (self.brush_node_size * 0.5).max(1.0)
+        }
+
+        fn brush_slot_center_world(&self, h: &HandleData) -> Option<Point> {
+            let n = self.nodes.get(&h.node_id)?;
+            let hw = self.handle_world_pos(h)?;
+            let nc = Point::new(n.x, n.y);
+            let normal = crate::vcompute::normalize_or_zero(hw - nc);
+            Some(hw + normal * self.brush_flush_distance)
+        }
+
+        fn brush_nearest_slot_source(&self, world: Point) -> Option<String> {
+            let hit_r = self.brush_slot_hit_radius_world();
+            let mut best: Option<(f64, String)> = None;
+            for (hid, h) in &self.handles {
+                if !self.handle_effectively_visible(hid.as_str()) || self.handle_has_incident_edge(hid.as_str()) {
+                    continue;
+                }
+                let center = self.brush_slot_center_world(h)?;
+                let d = distance_between(world, center);
+                if d <= hit_r && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+                    best = Some((d, hid.clone()));
+                }
+            }
+            best.map(|(_, id)| id)
+        }
+
+        fn brush_shuffle_candidates(ids: &mut [String], seed: u64) {
+            if ids.len() < 2 {
+                return;
+            }
+            let mut state = seed;
+            for i in (1..ids.len()).rev() {
+                state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
+                let j = (state as usize) % (i + 1);
+                ids.swap(i, j);
+            }
+        }
+
+        fn brush_candidate_seed(source_handle_id: &str) -> u64 {
+            source_handle_id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)))
+        }
+
+        fn brush_compatible_node_kind_ids(&self, source: &HandleData) -> Vec<String> {
+            let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
+            let sh = source.handle_kind.as_str();
+            let mut out: Vec<String> = Vec::new();
+            for (kind_id, kind) in &self.node_kinds {
+                if kind.handles.is_empty() {
+                    continue;
+                }
+                let tn = kind_id.as_str();
+                let compatible = kind.handles.iter().any(|t| self.link_kinds_compatible_for_brush(sn, sh, tn, t.handle_kind.as_str()));
+                if compatible {
+                    out.push(kind_id.clone());
+                }
+            }
+            out
+        }
+
+        fn brush_template_world_pos(&self, center: Point, shape: NodeShape, radius: f64, width: f64, height: f64, angle: f64) -> Point {
+            match shape {
+                NodeShape::Circle => handle_position_on_circle(center, radius, angle),
+                NodeShape::Rectangle => handle_position_on_rectangle(center, width, height, angle),
+            }
+        }
+
+        fn brush_pick_target_handle_index(&self, source: &HandleData, node_kind_id: &str, kind: &NodeKindDef, cx: f64, cy: f64) -> Option<usize> {
+            let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
+            let sh = source.handle_kind.as_str();
+            let tn = node_kind_id;
+            let src_pos = self.handle_world_pos(source)?;
+            let center = Point::new(cx, cy);
+            let radius = self.brush_node_size * 0.5 * kind.scale;
+            let (width, height) = if kind.shape == NodeShape::Rectangle {
+                (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
+            } else {
+                (radius * 2.0, radius * 2.0)
+            };
+            let mut best: Option<(f64, usize)> = None;
+            for (i, tmpl) in kind.handles.iter().enumerate() {
+                if !self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
+                    continue;
+                }
+                let pos = self.brush_template_world_pos(center, kind.shape, radius, width, height, tmpl.angle);
+                let d = distance_between(src_pos, pos);
+                if best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+                    best = Some((d, i));
+                }
+            }
+            best.map(|(_, i)| i)
+        }
+
+        fn brush_build_preview(&self, source_handle_id: &str, node_kind_id: &str) -> Option<BrushPreviewSnapshot> {
+            let source = self.handles.get(source_handle_id)?;
+            let kind = self.node_kinds.get(node_kind_id)?;
+            let center = self.brush_slot_center_world(source)?;
+            let target_handle_index = self.brush_pick_target_handle_index(source, node_kind_id, kind, center.x, center.y)?;
+            let radius = self.brush_node_size * 0.5 * kind.scale;
+            let (width, height) = if kind.shape == NodeShape::Rectangle {
+                (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
+            } else {
+                (radius * 2.0, radius * 2.0)
+            };
+            Some(BrushPreviewSnapshot {
+                source_handle_id: source_handle_id.to_string(),
+                node_kind_id: node_kind_id.to_string(),
+                x: center.x,
+                y: center.y,
+                shape: kind.shape,
+                radius,
+                width,
+                height,
+                handles: kind.handles.clone(),
+                target_handle_index,
+            })
+        }
+
+        fn brush_preview_json(preview: &BrushPreviewSnapshot) -> serde_json::Value {
+            let mut node = json!({
+                "nodeKind": preview.node_kind_id,
+                "x": preview.x,
+                "y": preview.y,
+                "shape": if preview.shape == NodeShape::Rectangle { "rectangle" } else { "circle" },
+            });
+            if preview.shape == NodeShape::Rectangle {
+                node["width"] = json!(preview.width);
+                node["height"] = json!(preview.height);
+            } else {
+                node["radius"] = json!(preview.radius);
+            }
+            let handles: Vec<_> = preview
+                .handles
+                .iter()
+                .map(|h| {
+                    let mut row = json!({ "angle": h.angle, "handleKind": h.handle_kind });
+                    if let Some(r) = h.radius {
+                        row["radius"] = json!(r);
+                    }
+                    row
+                })
+                .collect();
+            node["handles"] = json!(handles);
+            json!({
+                "node": node,
+                "edge": {
+                    "sourceHandleId": preview.source_handle_id,
+                    "targetHandleIndex": preview.target_handle_index,
+                }
+            })
+        }
+
+        fn brush_place_json(preview: &BrushPreviewSnapshot) -> serde_json::Value {
+            let mut flat = json!({
+                "nodeKind": preview.node_kind_id,
+                "sourceHandleId": preview.source_handle_id,
+                "targetHandleIndex": preview.target_handle_index,
+                "x": preview.x,
+                "y": preview.y,
+                "shape": if preview.shape == NodeShape::Rectangle { "rectangle" } else { "circle" },
+            });
+            if preview.shape == NodeShape::Rectangle {
+                flat["width"] = json!(preview.width);
+                flat["height"] = json!(preview.height);
+            } else {
+                flat["radius"] = json!(preview.radius);
+            }
+            let handles: Vec<_> = preview
+                .handles
+                .iter()
+                .map(|h| {
+                    let mut row = json!({ "angle": h.angle, "handleKind": h.handle_kind });
+                    if let Some(r) = h.radius {
+                        row["radius"] = json!(r);
+                    }
+                    row
+                })
+                .collect();
+            flat["handles"] = json!(handles);
+            flat
+        }
+
+        fn brush_sync_preview_events(&mut self) {
+            let key = self
+                .brush_preview
+                .as_ref()
+                .map(|p| format!("{}|{}|{}|{}", p.source_handle_id, p.node_kind_id, p.x, p.y))
+                .unwrap_or_default();
+            if self.brush_preview_emit_key.as_deref() != Some(key.as_str()) {
+                self.brush_preview_emit_key = Some(key.clone());
+                if let Some(ref preview) = self.brush_preview {
+                    self.push_event("brushPreview", Self::brush_preview_json(preview));
+                } else {
+                    self.push_event("brushPreview", json!({ "node": null, "edge": null }));
+                }
+            }
+            let candidates_key = format!(
+                "{}|{}|{}",
+                self.brush_slot_source_id.as_deref().unwrap_or(""),
+                self.brush_candidate_kinds.join(","),
+                self.brush_candidate_index
+            );
+            if self.brush_candidates_emit_key.as_deref() != Some(candidates_key.as_str()) {
+                self.brush_candidates_emit_key = Some(candidates_key);
+                self.push_event(
+                    "brushCandidates",
+                    json!({
+                        "sourceHandleId": self.brush_slot_source_id.clone().unwrap_or_default(),
+                        "candidates": self.brush_candidate_kinds,
+                        "index": self.brush_candidate_index,
+                    }),
+                );
+            }
+        }
+
+        fn brush_clear_slot(&mut self) {
+            let had_preview = self.brush_preview.is_some();
+            self.brush_slot_source_id = None;
+            self.brush_candidate_kinds.clear();
+            self.brush_candidate_index = 0;
+            self.brush_preview = None;
+            if had_preview {
+                self.bump_content_scene_generation();
+                self.brush_preview_emit_key = None;
+                self.brush_candidates_emit_key = None;
+                self.brush_sync_preview_events();
+            }
+        }
+
+        fn brush_commit_preview(&mut self) {
+            let Some(preview) = self.brush_preview.take() else {
+                return;
+            };
+            self.push_event("brushPlace", Self::brush_place_json(&preview));
+            self.bump_content_scene_generation();
+            self.brush_preview_emit_key = None;
+        }
+
+        fn brush_enter_slot(&mut self, source_handle_id: String) {
+            if self.brush_slot_source_id.as_deref() == Some(source_handle_id.as_str()) {
+                return;
+            }
+            self.brush_commit_preview();
+            self.brush_slot_source_id = Some(source_handle_id.clone());
+            let mut candidates = self
+                .handles
+                .get(source_handle_id.as_str())
+                .map(|h| self.brush_compatible_node_kind_ids(h))
+                .unwrap_or_default();
+            Self::brush_shuffle_candidates(&mut candidates, Self::brush_candidate_seed(&source_handle_id));
+            self.brush_candidate_kinds = candidates;
+            self.brush_candidate_index = 0;
+            self.brush_rebuild_preview();
+        }
+
+        fn brush_rebuild_preview(&mut self) {
+            let Some(ref source_id) = self.brush_slot_source_id else {
+                self.brush_preview = None;
+                self.brush_sync_preview_events();
+                return;
+            };
+            let kind_id = self.brush_candidate_kinds.get(self.brush_candidate_index).cloned();
+            self.brush_preview = kind_id.as_deref().and_then(|k| self.brush_build_preview(source_id, k));
+            if self.brush_preview.is_some() {
+                self.bump_content_scene_generation();
+            }
+            self.brush_preview_emit_key = None;
+            self.brush_candidates_emit_key = None;
+            self.brush_sync_preview_events();
+        }
+
+        fn brush_pointer_move(&mut self, world: Point) {
+            if let Some(slot) = self.brush_nearest_slot_source(world) {
+                self.brush_enter_slot(slot);
+                self.set_hovered_id(self.brush_slot_source_id.clone());
+            } else if self.brush_slot_source_id.is_some() {
+                self.brush_commit_preview();
+                self.brush_clear_slot();
+                self.set_hovered_id(None);
+            }
+        }
+
+        pub fn set_active_tool(&mut self, label: &str) {
+            let next = if label == "brush" { ActiveTool::Brush } else { ActiveTool::Select };
+            if self.active_tool == next {
+                return;
+            }
+            if self.active_tool == ActiveTool::Brush {
+                self.brush_commit_preview();
+                self.brush_clear_slot();
+            }
+            self.active_tool = next;
+            self.interaction = Interaction::None;
+            self.bump_content_scene_generation();
+        }
+
+        pub fn set_brush_flush_distance(&mut self, distance: f64) {
+            let d = if distance.is_finite() && distance >= 0.0 { distance } else { DEFAULT_BRUSH_FLUSH_DISTANCE };
+            if (self.brush_flush_distance - d).abs() < 1e-9 {
+                return;
+            }
+            self.brush_flush_distance = d;
+            if self.active_tool == ActiveTool::Brush {
+                self.brush_preview_emit_key = None;
+                self.brush_rebuild_preview();
+            }
+        }
+
+        pub fn set_brush_node_size(&mut self, size: f64) {
+            let s = if size.is_finite() && size > 0.0 { size } else { DEFAULT_BRUSH_NODE_SIZE };
+            if (self.brush_node_size - s).abs() < 1e-9 {
+                return;
+            }
+            self.brush_node_size = s;
+            if self.active_tool == ActiveTool::Brush {
+                self.brush_preview_emit_key = None;
+                self.brush_rebuild_preview();
+            }
+        }
+
+        pub fn brush_cycle_candidate(&mut self, forward: bool) {
+            if self.brush_candidate_kinds.len() < 2 {
+                return;
+            }
+            let len = self.brush_candidate_kinds.len();
+            self.brush_candidate_index = if forward {
+                (self.brush_candidate_index + 1) % len
+            } else {
+                (self.brush_candidate_index + len - 1) % len
+            };
+            self.brush_rebuild_preview();
+        }
+
+        fn append_brush_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod) {
+            let Some(ref preview) = self.brush_preview else {
+                return;
+            };
+            if matches!(lod, BoardDrawLod::Minimap) {
+                return;
+            }
+            let center = Point::new(preview.x, preview.y);
+            let style = BoardElementStyleKind::Highlighted;
+            let fill = Self::node_fill_for_style(&self.vello_theme, style);
+            let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style);
+            let stroke = Stroke::new(2.0);
+            match preview.shape {
+                NodeShape::Circle => {
+                    let c = self.draw_space_point(center, false);
+                    let r = self.draw_space_len(preview.radius, false);
+                    let circle = Circle::new(c, r);
+                    scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+                    scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &circle);
+                }
+                NodeShape::Rectangle => {
+                    let hw = preview.width * 0.5;
+                    let hh = preview.height * 0.5;
+                    let p0 = self.draw_space_point(Point::new(preview.x - hw, preview.y - hh), false);
+                    let p1 = self.draw_space_point(Point::new(preview.x + hw, preview.y + hh), false);
+                    let rect = Rect::from_points(p0, p1);
+                    scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
+                    scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &rect);
+                }
+            }
+            let source = match self.handles.get(preview.source_handle_id.as_str()) {
+                Some(h) => h,
+                None => return,
+            };
+            let src_pos = match self.handle_world_pos(source) {
+                Some(p) => p,
+                None => return,
+            };
+            let tmpl = match preview.handles.get(preview.target_handle_index) {
+                Some(t) => t,
+                None => return,
+            };
+            let tgt_pos = self.brush_template_world_pos(center, preview.shape, preview.radius, preview.width, preview.height, tmpl.angle);
+            let Some(src_node) = self.nodes.get(&source.node_id) else {
+                return;
+            };
+            let tgt_center = center;
+            let curve = compute_edge_bezier_points(src_pos, tgt_pos, Point::new(src_node.x, src_node.y), tgt_center);
+            let p0 = self.draw_space_point(curve.p0, false);
+            let p1 = self.draw_space_point(curve.p1, false);
+            let p2 = self.draw_space_point(curve.p2, false);
+            let p3 = self.draw_space_point(curve.p3, false);
+            let bez = CubicBez::new(p0, p1, p2, p3);
+            scene.stroke(&Stroke::new(2.85), Affine::IDENTITY, self.vello_theme.wire_stroke_highlighted, None, &bez);
         }
 
         /// @emoji 🧩 Selects world-space clip tiling for Vello scene construction (`none` | `world-clip`).
@@ -5666,6 +6175,9 @@ mod board_host {
                 let curve = CubicBez::new(p0, p1, p2, p3);
                 scene.stroke(&link_wire_stroke, Affine::IDENTITY, link_wire_color, None, &curve);
             }
+            if self.active_tool == ActiveTool::Brush {
+                self.append_brush_preview_paint(scene, lod);
+            }
         }
 
         pub fn set_wheel_zoom_active(&mut self, active: bool) {
@@ -5993,6 +6505,12 @@ mod board_host {
             self.set_selection_screen_preview(None);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
+            if self.active_tool == ActiveTool::Brush {
+                if button == 1 {
+                    self.interaction = Interaction::Pan { origin: self.camera.clone(), start_screen: screen };
+                }
+                return;
+            }
             let hit = self.resolve_hit_world(world).or_else(|| self.resolve_overview_free_link_handle_pointer_world(world));
             if let Interaction::LinkTargetNode { source_id, target_node_id } = self.interaction.clone() {
                 self.interaction = Interaction::None;
@@ -6109,6 +6627,22 @@ mod board_host {
         pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool) {
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
+            if self.active_tool == ActiveTool::Brush {
+                match std::mem::replace(&mut self.interaction, Interaction::None) {
+                    Interaction::Pan { origin, start_screen } => {
+                        let delta = screen - start_screen;
+                        let nx = origin.x - delta.x / origin.zoom;
+                        let ny = origin.y - delta.y / origin.zoom;
+                        self.set_camera(nx, ny, origin.zoom);
+                        self.interaction = Interaction::Pan { origin, start_screen };
+                    }
+                    _ => {
+                        self.interaction = Interaction::None;
+                        self.brush_pointer_move(world);
+                    }
+                }
+                return;
+            }
             match std::mem::replace(&mut self.interaction, Interaction::None) {
                 Interaction::DragNodes { primary_id, offset, start_positions, .. } => {
                     let primary_id = primary_id.clone();
@@ -6224,6 +6758,12 @@ mod board_host {
         pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool) {
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
+            if self.active_tool == ActiveTool::Brush {
+                if matches!(self.interaction, Interaction::Pan { .. }) {
+                    self.interaction = Interaction::None;
+                }
+                return;
+            }
             let grabbed = std::mem::take(&mut self.interaction);
             match grabbed {
                 Interaction::LinkDragSnap { source_id, target_id, .. } => {
@@ -6315,6 +6855,12 @@ mod board_host {
         }
 
         pub fn pointer_leave_screen(&mut self) {
+            if self.active_tool == ActiveTool::Brush {
+                self.brush_commit_preview();
+                self.brush_clear_slot();
+                self.set_hovered_id(None);
+                return;
+            }
             if matches!(self.interaction, Interaction::None) {
                 self.set_hovered_id(None);
             }
@@ -7212,6 +7758,26 @@ impl BoardSession {
     #[wasm_bindgen(js_name = setGridFactor)]
     pub fn set_grid_factor_wasm(&mut self, v: f64) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_grid_factor(v).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = setActiveTool)]
+    pub fn set_active_tool_wasm(&mut self, label: &str) {
+        self.state.borrow_mut().host.set_active_tool(label);
+    }
+
+    #[wasm_bindgen(js_name = setBrushFlushDistance)]
+    pub fn set_brush_flush_distance_wasm(&mut self, distance: f64) {
+        self.state.borrow_mut().host.set_brush_flush_distance(distance);
+    }
+
+    #[wasm_bindgen(js_name = setBrushNodeSize)]
+    pub fn set_brush_node_size_wasm(&mut self, size: f64) {
+        self.state.borrow_mut().host.set_brush_node_size(size);
+    }
+
+    #[wasm_bindgen(js_name = brushCycleCandidate)]
+    pub fn brush_cycle_candidate_wasm(&mut self, forward: bool) {
+        self.state.borrow_mut().host.brush_cycle_candidate(forward);
     }
 
     #[wasm_bindgen(js_name = setLinkSessionJson)]
@@ -9230,6 +9796,74 @@ mod host_tests {
         h.pointer_up_screen(s0.x + 2.0, s0.y, false, false);
         let ev = h.drain_events_json();
         assert!(!ev.contains("edgeCreate"));
+    }
+
+    #[test]
+    fn board_host_brush_slot_emits_preview_and_place_on_leave() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        let catalogs = json!({
+            "handleKinds": [{ "id": "port", "name": "Port", "color": "#888" }],
+            "nodeKinds": [{
+                "id": "brush.kind",
+                "name": "Brush Kind",
+                "handles": [{ "handleKind": "port", "angle": 3.141592653589793 }]
+            }]
+        });
+        h.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
+        let desc = SceneDescriptorJson {
+            nodes: vec![NodeDescJson {
+                id: "a".into(),
+                x: 0.0,
+                y: 0.0,
+                draggable: Some(true),
+                selected: None,
+                style: None,
+                text: None,
+                icon_kind: None,
+                node_kind: Some("a.kind".into()),
+                user_data: None,
+                visible: None,
+                root: None,
+                shape: Some("circle".into()),
+                radius: Some(40.0),
+                width: None,
+                height: None,
+                scale: None,
+            }],
+            handles: vec![HandleDescJson {
+                id: "a:h0".into(),
+                node_id: "a".into(),
+                angle: 0.0,
+                radius: None,
+                scale: None,
+                selected: None,
+                visible: None,
+                style: None,
+                handle_kind: Some("port".into()),
+                color: None,
+                icon_kind: None,
+                user_data: None,
+            }],
+            edges: vec![],
+            wires: vec![],
+            selection_exit_highlight_ids: vec![],
+        };
+        h.sync_descriptor(&desc).unwrap();
+        let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+        let slot = hp + (hp - Point::new(0.0, 0.0)) * (40.0 / 40.0);
+        let s = h.world_to_screen(slot);
+        h.pointer_move_screen(s.x, s.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushPreview"), "expected brushPreview, got: {ev}");
+        h.pointer_leave_screen();
+        let ev2 = h.drain_events_json();
+        assert!(ev2.contains("brushPlace"), "expected brushPlace on leave, got: {ev2}");
+        assert!(ev2.contains("brush.kind"));
+        assert!(ev2.contains("a:h0"));
     }
 }
 

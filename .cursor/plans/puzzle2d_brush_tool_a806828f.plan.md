@@ -7,13 +7,13 @@ todos:
     status: completed
   - id: rust-catalog
     content: Parse node-kind shape + handle templates into NodeKindDef in puzzle/2d/rs/lib.rs
-    status: in_progress
+    status: completed
   - id: rust-brush
     content: Add ActiveTool, brush config/state, kinds-based compat helper, brush gesture, ghost paint, events, and wasm-bindgen API in lib.rs
-    status: pending
+    status: completed
   - id: react-canvas
     content: Add brush props/event handling/Tab forwarding to Puzzle2dCanvas + Puzzle2dRenderer
-    status: pending
+    status: in_progress
   - id: playground-host
     content: Add brush host state, canvas props, host-bridge commands (setActiveTool/setBrushFlushDistance/addBrushNode) and engagement candidate list
     status: pending

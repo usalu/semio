@@ -20,6 +20,8 @@ import {
 	CATALOGUE_COL3,
 	CATALOGUE_EMBODIMENT_COL1_LABEL,
 	CATALOGUE_SPLIT,
+	columnLabelMorphFrom,
+	inlineColumnLabelPosition,
 } from "./spec.ts";
 import "./globals.css";
 // #endregion 🔌Adapters
@@ -134,6 +136,13 @@ if (import.meta.vitest) {
 			expect(morphIds).toHaveLength(3);
 			expect(new Set(morphIds).size).toBe(1);
 			expect(morphIds[0]).toBeTruthy();
+		});
+
+		it("morphs tile figures into label positions before column text appears", () => {
+			const labelPosition = inlineColumnLabelPosition(0);
+			const slots = columnLabelMorphFrom("col1", labelPosition);
+			expect(slots?.every((slot) => slot.position === labelPosition)).toBe(true);
+			expect(slots?.every((slot) => slot.embodimentId.endsWith("-figure"))).toBe(true);
 		});
 
 		it("morphs each column participant into inline label dispositions on one row", () => {

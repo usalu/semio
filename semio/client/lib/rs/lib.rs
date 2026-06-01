@@ -11967,6 +11967,7 @@ pub mod kit_backbone {
                 .map(|f| {
                     let mut file_obj = crate::external_adapters::serde_json::json!({
                         "id": f.id.as_str(),
+                        "name": f.name.as_str(),
                         "hash": f.hash.as_str(),
                     });
                     if !f.url.is_empty() {
@@ -11976,8 +11977,17 @@ pub mod kit_backbone {
                             file_obj["url"] = crate::external_adapters::serde_json::Value::String(f.url.clone());
                         }
                     }
+                    if let Some(folder_id) = &f.folder_id {
+                        file_obj["folder"] = crate::external_adapters::serde_json::json!({ "id": folder_id.as_str() });
+                    }
+                    if let Some(mime) = &f.mime {
+                        file_obj["mime"] = crate::external_adapters::serde_json::Value::String(mime.clone());
+                    }
                     if let Some(desc) = &f.description {
                         file_obj["description"] = crate::external_adapters::serde_json::Value::String(desc.clone());
+                    }
+                    if let Some(icon) = &f.icon {
+                        file_obj["icon"] = crate::external_adapters::serde_json::Value::String(icon.clone());
                     }
                     file_obj
                 })
@@ -12141,6 +12151,36 @@ pub mod kit_backbone {
         if let Some(ts) = kit.updated.read().await.clone() {
             root.insert("updatedAt".into(), crate::external_adapters::serde_json::Value::String(ts.0.clone()));
         }
+        let folders_items: Vec<crate::external_adapters::serde_json::Value> = {
+            kit.folders
+                .read()
+                .await
+                .iter()
+                .map(|folder| {
+                    let mut folder_obj = crate::external_adapters::serde_json::json!({
+                        "id": folder.id.as_str(),
+                        "name": folder.name.as_str(),
+                        "path": folder.path.as_str(),
+                    });
+                    if let Some(desc) = &folder.description {
+                        folder_obj["description"] = crate::external_adapters::serde_json::Value::String(desc.clone());
+                    }
+                    if let Some(icon) = &folder.icon {
+                        folder_obj["icon"] = crate::external_adapters::serde_json::Value::String(icon.clone());
+                    }
+                    if let Some(parent_id) = &folder.parent_folder_id {
+                        folder_obj["parent"] = crate::external_adapters::serde_json::json!({ "id": parent_id.as_str() });
+                    }
+                    folder_obj
+                })
+                .collect()
+        };
+        if !folders_items.is_empty() {
+            root.insert(
+                "folders".into(),
+                crate::external_adapters::serde_json::json!({ "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": folders_items }),
+            );
+        }
         if !files_items.is_empty() {
             root.insert(
                 "files".into(),
@@ -12244,6 +12284,51 @@ pub mod kit_backbone {
             }
         }
         ports_by_id
+    }
+
+    /// @emoji 📁 Hydrates kit-level folder rows from projection JSON (`name`, `path`, nested `parent`).
+    pub(crate) async fn hydrate_kit_folders_from_snapshot_value(
+        kit: &std::sync::Arc<crate::kit::Kit>,
+        json: &crate::external_adapters::serde_json::Value,
+    ) -> Result<(), crate::error::SemioError> {
+        let mut folders_slot = kit.folders.write().await;
+        folders_slot.clear();
+        let folders_list = json
+            .get("folders")
+            .and_then(crate::kit_backbone::json_array_or_block_items_ref)
+            .cloned()
+            .unwrap_or_default();
+        for folder_json in &folders_list {
+            let Some(fid) = crate::kit_backbone::json_entity_id_ref(folder_json) else {
+                continue;
+            };
+            let name = folder_json
+                .get("name")
+                .and_then(|v| v.as_str())
+                .unwrap_or(&fid)
+                .to_string();
+            let path = folder_json
+                .get("path")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| name.clone());
+            folders_slot.push(crate::meta::Folder {
+                id: fid.into(),
+                name,
+                path,
+                description: folder_json.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                icon: folder_json.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                parent_folder_id: folder_json
+                    .get("parentFolderId")
+                    .or_else(|| folder_json.get("parent_folder_id"))
+                    .and_then(|v| v.as_str())
+                    .or_else(|| folder_json.get("parent").and_then(crate::kit_backbone::json_entity_id_ref))
+                    .map(|s| s.into()),
+                owner_kit: std::sync::Arc::downgrade(kit),
+            });
+        }
+        Ok(())
     }
 
     /// @emoji 📎 Hydrates kit-level file rows from projection JSON (`blob`, `url`, or `blobHash`).
@@ -12485,6 +12570,7 @@ pub mod kit_backbone {
         }
         *kit.snapshot_families_projection.write().await = json.get("families").cloned();
 
+        crate::kit_backbone::hydrate_kit_folders_from_snapshot_value(kit, json).await?;
         crate::kit_backbone::hydrate_kit_files_from_snapshot_value(kit, json).await?;
 
         kit.typologies.write().await.clear();
@@ -19664,6 +19750,76 @@ mod tests {
             assert_eq!(rep_edges[0]["node"]["id"], "r1");
             assert_eq!(rep_edges[0]["node"]["name"], "chair");
             assert_eq!(rep_edges[0]["node"]["file"]["id"], "f1");
+        });
+    }
+
+    #[test]
+    fn install_projection_deep_clone_preserves_file_and_folder_names() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let projection = crate::external_adapters::serde_json::json!({
+                "id": "kit-files",
+                "name": "Files Kit",
+                "folders": {
+                    "items": [{
+                        "id": "folder-1",
+                        "name": "assets"
+                    }]
+                },
+                "files": {
+                    "items": [{
+                        "id": "f1",
+                        "name": "chair.glb",
+                        "folder": { "id": "folder-1" }
+                    }]
+                },
+                "types": { "items": [] },
+                "designs": { "items": [] }
+            });
+            let projection_str = crate::external_adapters::serde_json::to_string(&projection).expect("projection json");
+            const INSTALL_M: &str = r#"
+                mutation($json: String!) {
+                    session {
+                        store(id: "test-store") {
+                            installProjection(json: $json) {
+                                ok
+                                errors { message }
+                            }
+                        }
+                    }
+                }"#;
+            let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
+            let res = schema
+                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
+                .await;
+            assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+            let q = r#"query {
+                session {
+                    stores {
+                        edges {
+                            node {
+                                wip {
+                                    theKit {
+                                        kit {
+                                            hasFolders { edges { node { id name } } }
+                                            hasFiles { edges { node { id name } } }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }"#;
+            let read = schema.execute(Request::new(q)).await;
+            assert!(read.errors.is_empty(), "read kit: {:?}", read.errors);
+            let kit_json = read.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
+            let folder_edges = kit_json["hasFolders"]["edges"].as_array().expect("folder edges");
+            assert_eq!(folder_edges.len(), 1);
+            assert_eq!(folder_edges[0]["node"]["name"], "assets");
+            let file_edges = kit_json["hasFiles"]["edges"].as_array().expect("file edges");
+            assert_eq!(file_edges.len(), 1);
+            assert_eq!(file_edges[0]["node"]["name"], "chair.glb");
         });
     }
 

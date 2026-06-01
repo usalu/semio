@@ -757,6 +757,36 @@ export interface Puzzle2dLinkTargetRingPayload {
   readonly handleIds: readonly string[];
 }
 
+/** @emoji 🖌️ Active puzzle 2d viewport tool. */
+export type Puzzle2dActiveTool = "select" | "brush";
+
+/** @emoji 📐 Default brush node span in world units (play authoring uses the same value). */
+export const DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX = 40;
+
+/** @emoji 📐 Default brush flush offset (`2 ×` node diameter). */
+export const DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX * 2;
+
+/** @emoji 🖌️ WASM `brushPlace` payload for fixture commit. */
+export interface Puzzle2dBrushPlacePayload {
+  readonly handles: readonly { readonly angle: number; readonly handleKind: string; readonly radius?: number }[];
+  readonly nodeKind: string;
+  readonly shape: "circle" | "rectangle";
+  readonly sourceHandleId: string;
+  readonly targetHandleIndex: number;
+  readonly x: number;
+  readonly y: number;
+  readonly height?: number;
+  readonly radius?: number;
+  readonly width?: number;
+}
+
+/** @emoji 🖌️ Brush candidate node kinds while hovering a slot. */
+export interface Puzzle2dBrushCandidatesPayload {
+  readonly candidates: readonly string[];
+  readonly index: number;
+  readonly sourceHandleId: string;
+}
+
 /** @emoji 🔗 Host-driven link gesture preview mirrored across flat surfaces (see {@link Puzzle2dCanvasProps.linkSession}). */
 export interface Puzzle2dLinkSessionSnapshot {
   readonly source: string;
@@ -792,6 +822,9 @@ export interface Puzzle2dEventMap {
   parentEdgeChange: Puzzle2dGraphEdgeIdPayload;
   parentNodeChange: Puzzle2dGraphNodeIdPayload;
   proximityConnect: Puzzle2dEdgeLinkPayload;
+  brushCandidates: Puzzle2dBrushCandidatesPayload;
+  brushPlace: Puzzle2dBrushPlacePayload;
+  brushPreview: { readonly edge: { readonly sourceHandleId: string; readonly targetHandleIndex: number } | null; readonly node: Record<string, unknown> | null };
   select: Puzzle2dSelectionSnapshot;
   preselect: Puzzle2dPreselectSnapshot;
   preselectCancel: Puzzle2dPreselectSnapshot;
@@ -1757,6 +1790,30 @@ export function puzzle2dFixtureHandlesFromNodeKind(nodeId: string, templates: re
     handleKind: entry.handleKind,
     ...(entry.radius !== undefined ? { radius: entry.radius } : {}),
   }));
+}
+
+/** @emoji 🖌️ Appends a brushed node and parent edge from a WASM {@link Puzzle2dBrushPlacePayload}. */
+export function applyBrushPlacementToFixture(fixture: Puzzle2dFixtureV1, payload: Puzzle2dBrushPlacePayload): Puzzle2dFixtureV1 {
+  const nodeId = `puzzle2d.brush.${crypto.randomUUID()}`;
+  const handles = puzzle2dFixtureHandlesFromNodeKind(nodeId, payload.handles);
+  const targetHandle = handles[payload.targetHandleIndex];
+  if (!targetHandle) {
+    return fixture;
+  }
+  if (fixture.edges.some((e) => e.source === payload.sourceHandleId || e.target === payload.sourceHandleId)) {
+    return fixture;
+  }
+  if (handles.some((h) => fixture.edges.some((e) => e.source === h.id || e.target === h.id))) {
+    return fixture;
+  }
+  const edgeId = `puzzle2d.brush.edge.${crypto.randomUUID()}`;
+  const edge: Puzzle2dFixtureEdgeV1 = { id: edgeId, source: payload.sourceHandleId, target: targetHandle.id };
+  const base = { handles, id: nodeId, nodeKind: payload.nodeKind, x: payload.x, y: payload.y };
+  const node: Puzzle2dFixtureNodeV1 =
+    payload.shape === "rectangle"
+      ? { ...base, height: payload.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX, shape: "rectangle", width: payload.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX }
+      : { ...base, radius: payload.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2 };
+  return { ...fixture, edges: [...fixture.edges, edge], nodes: [...fixture.nodes, node] };
 }
 
 /** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
@@ -2777,6 +2834,9 @@ const PUZZLE2D_DRAIN_SKIP_GRAPH_OBSERVATION = new Set([
   "linkTargetRing",
   "proximityConnect",
   "indirectConnect",
+  "brushPreview",
+  "brushCandidates",
+  "brushPlace",
 ]);
 
 let puzzle2dDebugInvalidateCount = 0;
@@ -3085,7 +3145,13 @@ export class Puzzle2dRenderer {
   private forcedDrawLodLabel: Puzzle2dDrawLodKind | undefined = undefined;
   private gridSnapEnabled = false;
   private gridFactor = DEFAULT_PUZZLE_2D_GRID_FACTOR;
+  private activeTool: Puzzle2dActiveTool = "select";
+  private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+  private brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
   private lastLodThresholdsJsonForWasm: string | null = null;
+  private lastActiveToolForWasm: Puzzle2dActiveTool | null = null;
+  private lastBrushFlushDistanceForWasm: number | null = null;
+  private lastBrushNodeSizeForWasm: number | null = null;
   private lastAutomaticLodForWasm: boolean | null = null;
   private lastForcedDrawLodLabelForWasm: string | null = null;
   private lastGridSnapEnabledForWasm: boolean | null = null;
@@ -3419,6 +3485,38 @@ export class Puzzle2dRenderer {
       return this.forcedDrawLodLabel;
     }
     return resolvePuzzle2dLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
+  }
+
+  /** @emoji 🖌️ Select or brush viewport tool on the WASM host. */
+  setActiveTool(tool: Puzzle2dActiveTool): void {
+    if (this.activeTool === tool) {
+      return;
+    }
+    this.activeTool = tool;
+    this.lastActiveToolForWasm = null;
+    this.markDirty();
+  }
+
+  /** @emoji 📐 Brush slot offset along handle outward normal (world units). */
+  setBrushFlushDistance(distance: number): void {
+    const next = Number.isFinite(distance) && distance >= 0 ? distance : DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+    if (nearlyEqual(this.brushFlushDistance, next)) {
+      return;
+    }
+    this.brushFlushDistance = next;
+    this.lastBrushFlushDistanceForWasm = null;
+    this.markDirty();
+  }
+
+  /** @emoji 📐 Brush preview node span in world units. */
+  setBrushNodeSize(size: number): void {
+    const next = Number.isFinite(size) && size > 0 ? size : DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
+    if (nearlyEqual(this.brushNodeSize, next)) {
+      return;
+    }
+    this.brushNodeSize = next;
+    this.lastBrushNodeSizeForWasm = null;
+    this.markDirty();
   }
 
   /** @emoji 🧲 Enables snapping dragged nodes to the finest visible LOD grid on the WASM host. */
@@ -4248,6 +4346,18 @@ export class Puzzle2dRenderer {
       this.session.setForcedDrawLodLabel(forcedWasm);
       this.lastForcedDrawLodLabelForWasm = forcedWasm;
     }
+    if (this.lastActiveToolForWasm !== this.activeTool) {
+      this.session.setActiveTool(this.activeTool);
+      this.lastActiveToolForWasm = this.activeTool;
+    }
+    if (this.lastBrushFlushDistanceForWasm === null || !nearlyEqual(this.lastBrushFlushDistanceForWasm, this.brushFlushDistance)) {
+      this.session.setBrushFlushDistance(this.brushFlushDistance);
+      this.lastBrushFlushDistanceForWasm = this.brushFlushDistance;
+    }
+    if (this.lastBrushNodeSizeForWasm === null || !nearlyEqual(this.lastBrushNodeSizeForWasm, this.brushNodeSize)) {
+      this.session.setBrushNodeSize(this.brushNodeSize);
+      this.lastBrushNodeSizeForWasm = this.brushNodeSize;
+    }
   }
 
   /** @emoji 📍 Flushes peer-pane node drags through {@link BoardSession.setNodePositionsJson} without invalidating the full descriptor cache. */
@@ -4612,6 +4722,54 @@ export class Puzzle2dRenderer {
               nodeId,
               handleIds: Array.isArray(p.handleIds) ? p.handleIds.map(String) : [],
             });
+            break;
+          }
+          case "brushPreview": {
+            this.emitter.emit("brushPreview", row.payload as Puzzle2dEventMap["brushPreview"]);
+            break;
+          }
+          case "brushCandidates": {
+            const p = row.payload as { sourceHandleId?: string; candidates?: string[]; index?: number };
+            this.emitter.emit("brushCandidates", {
+              sourceHandleId: String(p.sourceHandleId ?? ""),
+              candidates: Array.isArray(p.candidates) ? p.candidates.map(String) : [],
+              index: Number(p.index ?? 0),
+            });
+            break;
+          }
+          case "brushPlace": {
+            const p = row.payload as Record<string, unknown>;
+            const handlesRaw = Array.isArray(p.handles) ? p.handles : [];
+            const handles = handlesRaw
+              .map((row) => {
+                const h = row as Record<string, unknown>;
+                const handleKind = String(h.handleKind ?? "").trim();
+                const angle = Number(h.angle);
+                if (handleKind === "" || !Number.isFinite(angle)) {
+                  return null;
+                }
+                const radius = h.radius === undefined ? undefined : Number(h.radius);
+                return { handleKind, angle, ...(radius !== undefined && Number.isFinite(radius) ? { radius } : {}) };
+              })
+              .filter((h): h is NonNullable<typeof h> => h !== null);
+            const shape = String(p.shape ?? "circle") === "rectangle" ? "rectangle" : "circle";
+            const payload: Puzzle2dBrushPlacePayload = {
+              handles,
+              nodeKind: String(p.nodeKind ?? ""),
+              shape,
+              sourceHandleId: String(p.sourceHandleId ?? ""),
+              targetHandleIndex: Number(p.targetHandleIndex ?? 0),
+              x: Number(p.x),
+              y: Number(p.y),
+              ...(shape === "rectangle"
+                ? { height: Number(p.height), width: Number(p.width) }
+                : { radius: Number(p.radius) }),
+            };
+            if (payload.nodeKind === "" || payload.sourceHandleId === "" || !Number.isFinite(payload.x) || !Number.isFinite(payload.y)) {
+              break;
+            }
+            console.log("[DEBUG] brushPlace", payload);
+            this.emitter.emit("brushPlace", payload);
             break;
           }
           default:
@@ -5170,6 +5328,17 @@ export class Puzzle2dRenderer {
         this.applyWasmDrainToScene(this.session.drainEventsJson());
         this.invalidate();
       }
+      return;
+    }
+    if (this.activeTool === "brush" && event.key === "Tab") {
+      event.preventDefault();
+      if (this.wasmSessionCallBlockedForReentry()) {
+        this.invalidated = true;
+        return;
+      }
+      this.session.brushCycleCandidate(!event.shiftKey);
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.scheduleInputInvalidate();
       return;
     }
     if (!shouldPuzzle2dHandleDeleteShortcut()) {

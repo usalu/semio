@@ -732,6 +732,7 @@ function FigureMorphView({
 	style,
 	dormantAnchor,
 	anchorOnWrapper = false,
+	morphGhost = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -740,9 +741,10 @@ function FigureMorphView({
 	readonly style?: DispositionStyle;
 	readonly dormantAnchor?: boolean;
 	readonly anchorOnWrapper?: boolean;
+	readonly morphGhost?: boolean;
 }): ReactNode {
 	if (embodiment.crop && position) {
-		const dormant = dormantAnchor === true || style?.opacity === 0;
+		const dormant = dormantAnchor === true || (!morphGhost && style?.opacity === 0);
 		const frameStyle = anchorOnWrapper
 			? {
 					position: "relative" as const,
@@ -759,6 +761,7 @@ function FigureMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--figure",
+					morphGhost ? "presentation-morph-ghost" : undefined,
 					dormant ? "presentation-morph-slot--dormant" : undefined,
 					emphasisClass(emphasis),
 				]
@@ -790,6 +793,7 @@ function PositionedTextMorphView({
 	position,
 	style,
 	anchorOnWrapper = false,
+	morphTarget = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: TextEmbodiment;
@@ -797,6 +801,7 @@ function PositionedTextMorphView({
 	readonly position: DispositionPosition;
 	readonly style?: DispositionStyle;
 	readonly anchorOnWrapper?: boolean;
+	readonly morphTarget?: boolean;
 }): ReactNode {
 	const frameStyle = anchorOnWrapper
 		? {
@@ -814,6 +819,7 @@ function PositionedTextMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--label",
+					morphTarget ? "presentation-morph-target" : undefined,
 					emphasisClass(emphasis),
 				]
 					.filter(Boolean)
@@ -832,6 +838,7 @@ function PositionedTextMorphView({
 				"presentation-disposition-frame",
 				"presentation-morph-slot",
 				"presentation-morph-slot--label",
+				morphTarget ? "presentation-morph-target" : undefined,
 				emphasisClass(emphasis),
 			]
 				.filter(Boolean)
@@ -982,6 +989,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						position={disposition.position}
 						style={disposition.style}
 						anchorOnWrapper={anchorOnWrapper}
+						morphTarget={disposition.morphTarget}
 					/>
 				);
 			}
@@ -1006,6 +1014,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						position={disposition.position}
 						style={disposition.style}
 						anchorOnWrapper={anchorOnWrapper}
+						morphGhost={disposition.morphGhost}
 					/>
 				);
 			}
@@ -1016,6 +1025,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 					emphasis={emphasis}
 					position={disposition.position}
 					anchorOnWrapper={anchorOnWrapper}
+					morphGhost={disposition.morphGhost}
 				/>
 			);
 			break;
@@ -2430,6 +2440,8 @@ const InteractiveDisposition: FC<{
 		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
 		gesturing ? "presentation-interactive-disposition--gesturing" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
+		disposition.morphGhost ? "presentation-morph-ghost" : undefined,
+		disposition.morphTarget ? "presentation-morph-target" : undefined,
 	]
 		.filter(Boolean)
 		.join(" ");
@@ -4265,20 +4277,28 @@ if (import.meta.vitest) {
 			};
 			const pairs = presentationAutoAnimateMatcher.call(host, focusSlide, labelSlide);
 			const columnIds = [CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3];
-			expect(columnIds.every((id) => labelSlide.querySelector(`[data-id="${id}"]`))).toBe(true);
 			const tileIds = [
 				...CATALOGUE_COLUMN_TILE_KEYS.col1,
 				...CATALOGUE_COLUMN_TILE_KEYS.col2,
 				...CATALOGUE_COLUMN_TILE_KEYS.col3,
 			];
 			expect(
-				tileIds.filter((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id)).length,
+				tileIds.filter((id) =>
+					pairs.some(
+						(pair) =>
+							pair.from.getAttribute("data-id") === id &&
+							pair.to.classList.contains("presentation-morph-ghost"),
+					),
+				).length,
 			).toBeGreaterThanOrEqual(8);
 			expect(
 				columnIds.every((id) =>
-					labelSlide.querySelector(`.presentation-interactive-disposition[data-id="${id}"]`),
+					labelSlide.querySelector(
+						`.presentation-interactive-disposition.presentation-morph-target[data-id="${id}"]`,
+					),
 				),
 			).toBe(true);
+			expect(labelSlide.querySelectorAll(".presentation-morph-ghost").length).toBeGreaterThanOrEqual(8);
 			mountRoot.remove();
 		});
 

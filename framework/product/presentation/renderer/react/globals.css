@@ -604,6 +604,31 @@
 	opacity: 0;
 }
 
+.reveal .slides section[data-auto-animate] .presentation-morph-ghost {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none;
+}
+
+.reveal .slides section[data-auto-animate] .presentation-morph-target {
+	opacity: 1;
+	visibility: visible;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-ghost,
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: auto;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-target,
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-target {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none;
+}
+
 .reveal
 	.slides
 	section[data-settle-before-morph-to]:not([data-auto-animate="pending"]):not([data-auto-animate="running"]):not(
