@@ -88,6 +88,18 @@ if (import.meta.vitest) {
 			const dispositions = focus?.arrangement.dispositions ?? [];
 			expect(dispositions[0]?.participantId).toBe(CATALOGUE_PARTICIPANT);
 			expect(dispositions[0]?.split?.tiles).toHaveLength(10);
+			expect(dispositions[0]?.split?.tiles.map((tile) => tile.key)).toEqual([
+				"Rippendecke 1",
+				"Rippendecke 2",
+				"Rippendecke 3",
+				"Rippendecke 4",
+				"Rippendecke 5",
+				"Rippendecke 6",
+				"Unterzug 1",
+				"Unterzug 2",
+				"Unterzug 3",
+				"Stütze",
+			]);
 			const col1 = dispositions.find((disposition) => disposition.participantId === CATALOGUE_COL1);
 			expect(col1?.split?.morphParticipant).toBe(true);
 			expect(col1?.split?.tiles).toHaveLength(6);

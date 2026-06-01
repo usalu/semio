@@ -1,0 +1,11 @@
+{
+  "title": "Projektetage Semantic Tile Names",
+  "emoji": "🏷",
+  "status": "closed",
+  "description": "Rename Bauteilarten slide tiles semantically: Rippendecke 1–6, Unterzug 1–3, Stütze.",
+  "summary": "Renamed the ten Bauteilarten catalogue component tiles to semantic keys (Rippendecke 1–6, Unterzug 1–3, Stütze) via CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS applied to assembled tiles and focus layout. Column morph label col1 is now Rippendecke. FigureTileView uses semantic tile keys for aria-label. Verified live on #/0/8: data-id values catalogue--tile--Rippendecke 1, etc. Deck vitest: 6/7 pass (pre-existing countArrangements \u003e 11 flake). Renderer 57 tests pass.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪520bbc02a1034915944e388e90e7fe62"
+  ]
+}

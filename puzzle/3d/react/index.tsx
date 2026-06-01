@@ -6196,13 +6196,13 @@ function SelectionZoom(props: {
         const linear = Math.min(1, (performance.now() - anim.startMs) / PUZZLE_3D_SELECTION_ZOOM_DURATION_MS);
         const w = puzzle3dEaseInOutCubic01(linear);
         posScratch.copy(anim.fromPos).lerp(anim.toPos, w);
-        tgtScratch.copy(anim.fromTgt).lerp(anim.toTgt, w);
+        targetScratch.copy(anim.fromTgt).lerp(anim.toTgt, w);
         camera.position.copy(posScratch);
         if (orbit?.target) {
-          orbit.target.copy(tgtScratch);
+          orbit.target.copy(targetScratch);
           orbit.update?.();
         } else {
-          camera.lookAt(tgtScratch);
+          camera.lookAt(targetScratch);
         }
         camera.updateProjectionMatrix();
         invalidate();
@@ -6216,7 +6216,7 @@ function SelectionZoom(props: {
         }
         props.onCamera?.({
           position: threeVec3ToCad(camera.position),
-          target: threeVec3ToCad(tgtScratch),
+          target: threeVec3ToCad(targetScratch),
           zoom: props.zoom,
         });
         return;

@@ -91,14 +91,41 @@ export const CATALOGUE_EMBODIMENT_LABEL = "label";
 export const CATALOGUE_EMBODIMENT_STACK = "stack";
 
 export const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
-export const CATALOGUE_TILES_ASSEMBLED = splitFigureGrid({
+const CATALOGUE_TILES_GRID = splitFigureGrid({
 	rows: 3,
 	columns: 5,
 	frame: CATALOGUE_FRAME,
 	gap: 0,
 });
 
-const CATALOGUE_TILE_BY_KEY = new Map(CATALOGUE_TILES_ASSEMBLED.map((tile) => [tile.key, tile]));
+/** @emoji 🏷 Grid keys of the ten component tiles on catalogue rows 1–2 → semantic slide keys. */
+export const CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS = {
+	"tile-r1-c0": "Rippendecke 1",
+	"tile-r1-c1": "Rippendecke 2",
+	"tile-r1-c2": "Rippendecke 3",
+	"tile-r1-c3": "Rippendecke 4",
+	"tile-r1-c4": "Rippendecke 5",
+	"tile-r2-c0": "Rippendecke 6",
+	"tile-r2-c1": "Unterzug 1",
+	"tile-r2-c2": "Unterzug 2",
+	"tile-r2-c3": "Unterzug 3",
+	"tile-r2-c4": "Stütze",
+} as const;
+
+/** @emoji 🏷 Applies {@link CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS} to assembled catalogue tiles. */
+export function catalogueTileWithSemanticKey(tile: SplitTile): SplitTile {
+	const semanticKey =
+		CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS[
+			tile.key as keyof typeof CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS
+		];
+	return semanticKey ? { ...tile, key: semanticKey } : tile;
+}
+
+export const CATALOGUE_TILES_ASSEMBLED = CATALOGUE_TILES_GRID.map(catalogueTileWithSemanticKey);
+
+const CATALOGUE_TILE_BY_GRID_KEY = new Map(
+	CATALOGUE_TILES_GRID.map((tile) => [tile.key, catalogueTileWithSemanticKey(tile)]),
+);
 
 /** @emoji 📐 Union of normalized figure crops for the given tile keys. */
 export function unionTileCrop(tiles: readonly SplitTile[], tileKeys: readonly string[]): DispositionPosition {
@@ -163,23 +190,23 @@ export function catalogueFocusColumnTiles(): SplitTile[] {
 	const col3Height = layout.height;
 	const rowY = (row: number): number => layout.y + row * (rowHeight + rowGap);
 
-	const placements: readonly { readonly key: string; readonly position: DispositionPosition }[] = [
-		{ key: "tile-r1-c0", position: { x: col1X, y: rowY(0), width: cellW1, height: rowHeight } },
-		{ key: "tile-r1-c1", position: { x: col1X + cellW1 + innerGap, y: rowY(0), width: cellW1, height: rowHeight } },
-		{ key: "tile-r1-c2", position: { x: col1X, y: rowY(1), width: cellW1, height: rowHeight } },
-		{ key: "tile-r1-c3", position: { x: col1X + cellW1 + innerGap, y: rowY(1), width: cellW1, height: rowHeight } },
-		{ key: "tile-r1-c4", position: { x: col1X, y: rowY(2), width: cellW1, height: rowHeight } },
-		{ key: "tile-r2-c0", position: { x: col1X + cellW1 + innerGap, y: rowY(2), width: cellW1, height: rowHeight } },
-		{ key: "tile-r2-c1", position: { x: col2X, y: rowY(0), width: col2Width, height: rowHeight } },
-		{ key: "tile-r2-c2", position: { x: col2X, y: rowY(1), width: col2Width, height: rowHeight } },
-		{ key: "tile-r2-c3", position: { x: col2X, y: rowY(2), width: col2Width, height: rowHeight } },
-		{ key: "tile-r2-c4", position: { x: col3X, y: layout.y, width: col3Width, height: col3Height } },
+	const placements: readonly { readonly gridKey: string; readonly position: DispositionPosition }[] = [
+		{ gridKey: "tile-r1-c0", position: { x: col1X, y: rowY(0), width: cellW1, height: rowHeight } },
+		{ gridKey: "tile-r1-c1", position: { x: col1X + cellW1 + innerGap, y: rowY(0), width: cellW1, height: rowHeight } },
+		{ gridKey: "tile-r1-c2", position: { x: col1X, y: rowY(1), width: cellW1, height: rowHeight } },
+		{ gridKey: "tile-r1-c3", position: { x: col1X + cellW1 + innerGap, y: rowY(1), width: cellW1, height: rowHeight } },
+		{ gridKey: "tile-r1-c4", position: { x: col1X, y: rowY(2), width: cellW1, height: rowHeight } },
+		{ gridKey: "tile-r2-c0", position: { x: col1X + cellW1 + innerGap, y: rowY(2), width: cellW1, height: rowHeight } },
+		{ gridKey: "tile-r2-c1", position: { x: col2X, y: rowY(0), width: col2Width, height: rowHeight } },
+		{ gridKey: "tile-r2-c2", position: { x: col2X, y: rowY(1), width: col2Width, height: rowHeight } },
+		{ gridKey: "tile-r2-c3", position: { x: col2X, y: rowY(2), width: col2Width, height: rowHeight } },
+		{ gridKey: "tile-r2-c4", position: { x: col3X, y: layout.y, width: col3Width, height: col3Height } },
 	];
 
-	return placements.map(({ key, position }) => {
-		const tile = CATALOGUE_TILE_BY_KEY.get(key);
+	return placements.map(({ gridKey, position }) => {
+		const tile = CATALOGUE_TILE_BY_GRID_KEY.get(gridKey);
 		if (!tile) {
-			throw new Error(`Missing catalogue tile "${key}".`);
+			throw new Error(`Missing catalogue tile "${gridKey}".`);
 		}
 		return { ...tile, position, emphasis: "active" as const };
 	});
@@ -196,13 +223,20 @@ export function catalogueFocusTilesForColumn(
 }
 
 export const CATALOGUE_COLUMN_TILE_KEYS = {
-	col1: ["tile-r1-c0", "tile-r1-c1", "tile-r1-c2", "tile-r1-c3", "tile-r1-c4", "tile-r2-c0"],
-	col2: ["tile-r2-c1", "tile-r2-c2", "tile-r2-c3"],
-	col3: ["tile-r2-c4"],
+	col1: [
+		"Rippendecke 1",
+		"Rippendecke 2",
+		"Rippendecke 3",
+		"Rippendecke 4",
+		"Rippendecke 5",
+		"Rippendecke 6",
+	],
+	col2: ["Unterzug 1", "Unterzug 2", "Unterzug 3"],
+	col3: ["Stütze"],
 } as const;
 
 export const CATALOGUE_COLUMN_LABELS: Record<keyof typeof CATALOGUE_COLUMN_TILE_KEYS, string> = {
-	col1: "Rippenplatte",
+	col1: "Rippendecke",
 	col2: "Unterzug",
 	col3: "Stütze",
 };
