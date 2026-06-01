@@ -10642,8 +10642,9 @@ export async function openSketchpadKitFromImport(
 	return kit.id;
 }
 
-/** @emoji 🧪 Full metabolism WIP kit (~19MB, served from `/assets/`). */
-const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL = "/assets/semio/metabolism/wip/initialKit/kit.semio.json";
+/** @emoji 🧪 Full metabolism WIP kit (~19MB, served from `/fixtures/` in sketchpad Vite). */
+const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH = "kit/dev/metabolism/wip/initialKit";
+const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}/kit.semio.json`;
 
 /** @emoji 🧪 Default dev auto-seed kit (served from `/fixtures/` in sketchpad Vite). */
 const SKETCHPAD_DEV_FIXTURE_KIT_URL = "/fixtures/nakagin-capsule-tower.filtered.kit.semio.json";
@@ -11236,7 +11237,8 @@ function sketchpadReadEntityId(ref: unknown): string | null {
 	return null;
 }
 
-const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = "/assets/semio/metabolism/wip/initialKit";
+const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}`;
+const SKETCHPAD_METABOLISM_REPRESENTATIONS_ROOT = "/fixtures/kit/dev/metabolism/representations";
 
 /** @emoji 🗂️ Resolves kit file ids to fetchable mesh URLs (http, absolute, or metabolism assets). */
 export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
@@ -11258,7 +11260,7 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 			continue;
 		}
 		if (row.name && row.name.endsWith(".glb")) {
-			map.set(row.id, `/assets/semio/metabolism/representations/${row.name}`);
+			map.set(row.id, `${SKETCHPAD_METABOLISM_REPRESENTATIONS_ROOT}/${row.name}`);
 		}
 	}
 	return map;
@@ -12958,10 +12960,10 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_HOME_APP_ID), expanded);
 		}
 		if (this.vfsAppId === SKETCHPAD_KIT_APP_ID && this.route.kitId) {
-			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), [this.route.kitId]);
+			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), this.route.kitId);
 		}
 		if (this.vfsAppId === SKETCHPAD_DESIGN_APP_ID && this.route.designId) {
-			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_DESIGN_APP_ID), [this.route.designId]);
+			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_DESIGN_APP_ID), this.route.designId);
 		}
 		return ctrl.buildVirtualFileSystemModel(sketchpadVfsScope(this.vfsAppId));
 	}
@@ -13359,6 +13361,7 @@ class SketchpadPlatformComponents {
 
 /** @emoji 🧭 Routes sketchpad navigation and panel chrome through {@link CommandBus}. */
 export class SketchpadShellController extends VirtualFileSystemController {
+	private readonly vfsRouteRootByScope = new Map<string, string>();
 	private readonly shellStore: ObservableCell<SketchpadShellSnapshot>;
 	private readonly kitKinds = new Map<string, string>();
 	private readonly vfsNodeMetaByScope = new Map<
@@ -13758,6 +13761,17 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		super.ensureChildrenLoaded(parentId, scope);
 	}
 
+	/** @emoji 🧭 Rebinds VFS expansion and drops lazy children when the routed root entity changes (e.g. home → another open kit). */
+	syncVirtualFileSystemRoute(scope: VirtualFileSystemScope, rootNodeId: string): void {
+		const scopeKey = virtualFileSystemScopeKey(scope);
+		if (this.vfsRouteRootByScope.get(scopeKey) === rootNodeId) return;
+		this.vfsRouteRootByScope.set(scopeKey, rootNodeId);
+		this.expandedStore(scope).setAll([rootNodeId]);
+		this.vfsNodeMetaByScope.delete(scopeKey);
+		this.childrenByScope.delete(scopeKey);
+		this.pendingChildrenLoadsByScope.delete(scopeKey);
+	}
+
 	/** @emoji 🔄 Drops cached vfs children when the live kit changes. */
 	invalidateKitVirtualFileSystem(kitId: string): void {
 		for (const appId of [SKETCHPAD_KIT_APP_ID, SKETCHPAD_DESIGN_APP_ID] as const) {
@@ -13766,6 +13780,9 @@ export class SketchpadShellController extends VirtualFileSystemController {
 			this.vfsNodeMetaByScope.delete(scopeKey);
 			this.childrenByScope.delete(scopeKey);
 			this.pendingChildrenLoadsByScope.delete(scopeKey);
+			if (this.vfsRouteRootByScope.get(scopeKey) === kitId) {
+				this.vfsRouteRootByScope.delete(scopeKey);
+			}
 		}
 		this.emit();
 	}
@@ -14975,7 +14992,6 @@ if (import.meta.vitest) {
 			);
 			ctrl.navigateTo(`/kits/${kitId}`);
 			platform.uri = `/kits/${kitId}`;
-			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), [kitId]);
 			const vfs = new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform);
 			await new Promise<void>((resolve) => setTimeout(resolve, 0));
 			const snap = vfs.buildSnapshot();
@@ -14983,6 +14999,31 @@ if (import.meta.vitest) {
 			expect(snap.rows.some((row) => row.id === typeId)).toBe(true);
 			expect(snap.rows.some((row) => row.id === designId && row.navigateUri?.includes(`/designs/${designId}`))).toBe(true);
 			expect(snap.rows.some((row) => row.id === folderId)).toBe(true);
+			ctrl.dispose();
+		});
+
+		it("rebinds kit vfs expansion when switching between open kits", async () => {
+			const kitA = "aaaaaaaa-bbbb-cccc-dddd-111111111111";
+			const kitB = "aaaaaaaa-bbbb-cccc-dddd-222222222222";
+			const typeA = "11111111-2222-3333-4444-aaaaaaaaaaaa";
+			const typeB = "22222222-3333-4444-5555-bbbbbbbbbbbb";
+			const platform = await buildSketchpadPlatform();
+			const ctrl = getSketchpadShellController()!;
+			ctrl.registerKitStore(kitA, new InMemorySemioKitStore({ id: kitA, name: "Kit A", types: [{ id: typeA, name: "Type A" }] } as Kit));
+			ctrl.registerKitStore(kitB, new InMemorySemioKitStore({ id: kitB, name: "Kit B", types: [{ id: typeB, name: "Type B" }] } as Kit));
+			ctrl.navigateTo(`/kits/${kitA}`);
+			platform.uri = `/kits/${kitA}`;
+			const vfs = new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform);
+			await new Promise<void>((resolve) => setTimeout(resolve, 0));
+			let snap = vfs.buildSnapshot();
+			expect(snap.rows.some((row) => row.id === typeA)).toBe(true);
+			ctrl.navigateTo(`/kits/${kitB}`);
+			platform.uri = `/kits/${kitB}`;
+			vfs.refresh();
+			await new Promise<void>((resolve) => setTimeout(resolve, 0));
+			snap = vfs.buildSnapshot();
+			expect(snap.rows.some((row) => row.id === typeB)).toBe(true);
+			expect(snap.rows.some((row) => row.id === typeA)).toBe(false);
 			ctrl.dispose();
 		});
 	});
@@ -15089,7 +15130,7 @@ if (import.meta.vitest) {
 				id: "k",
 				files: [{ id: "f1", path: "files/mesh.glb" }],
 			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/assets/semio/metabolism/wip/initialKit/files/mesh.glb");
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/kit/dev/metabolism/wip/initialKit/files/mesh.glb");
 		});
 	});
 

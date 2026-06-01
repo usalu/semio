@@ -1,0 +1,16 @@
+{
+  "title": "Puzzle 3d Marquee Preview Perf",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Add live highlight preview while dragging rectangle/lasso marquee and eliminate post-release freeze by caching projected footprints once per gesture and deferring host shell rebuild.",
+  "summary": "Added live marquee selection preview: capture projected object/vortex/attraction footprints once per gesture, resolve hits on each pointermove via resolveMarqueeSelectionGesture against a frozen base selection (local store only, no host notify), restore on cancel. Commit reuses cached candidates and non-precise Box3 projection. noteSelection defers shell rebuild like select-all. Extended vitest for resolveMarqueeSelectionGesture and async deferred shell on noteSelection.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "plan": {
+    "client": "cursor",
+    "id": "b5e92035",
+    "local": "puzzle3d_marquee_preview_perf_b5e92035.plan.md"
+  },
+  "sessions": [
+    "⚪01c9f56bcf2f45ab8ed0892f6f45a469"
+  ]
+}

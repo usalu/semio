@@ -3645,14 +3645,10 @@ export interface RegistryDragState {
 export interface RegistryInteractionValue {
   readonly selectionMode: SelectionMode;
   commitSelection(pick: SelectionPick): void;
-  commitMarqueeSelection(args: {
-    readonly startX: number;
-    readonly startY: number;
-    readonly endX: number;
-    readonly endY: number;
-    readonly path: readonly ScreenPoint[];
-    readonly modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean };
-  }): void;
+  captureMarqueeCandidates(): void;
+  previewMarqueeSelection(args: MarqueeGestureArgs): void;
+  cancelMarqueePreview(): void;
+  commitMarqueeSelection(args: MarqueeGestureArgs): void;
   setSelectedObjectIds(ids: readonly string[] | ((prev: readonly string[]) => readonly string[])): void;
   setActiveRelocateObjectId(id: string | null): void;
   clearSelection(): void;
@@ -5171,6 +5167,48 @@ export function marqueeSelectionFromCandidates(input: MarqueeSelectionInput): Se
   return { objectIds, vortexIds, attractionIds };
 }
 
+/** @emoji 🖱️ Pointer gesture args shared by marquee preview and commit. */
+export interface MarqueeGestureArgs {
+  readonly startX: number;
+  readonly startY: number;
+  readonly endX: number;
+  readonly endY: number;
+  readonly path: readonly ScreenPoint[];
+  readonly modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean };
+}
+
+/** @emoji 🖱️ Merges cached marquee candidates with a base selection using modifier-driven mode. */
+export function resolveMarqueeSelectionGesture(
+  args: MarqueeGestureArgs,
+  options: {
+    readonly method: SelectionMethod;
+    readonly kinds: MarqueeSelectableKinds;
+    readonly candidates: readonly MarqueeCandidate[];
+    readonly base: SelectionSnapshot;
+  },
+): SelectionSnapshot {
+  const crossing = marqueeIsCrossing(args.startX, args.endX);
+  const screenRect = screenRectFromClientPoints(args.startX, args.startY, args.endX, args.endY);
+  const polygon =
+    options.method === "lasso" && args.path.length >= 3
+      ? args.path
+      : [
+          { x: screenRect.left, y: screenRect.top },
+          { x: screenRect.right, y: screenRect.top },
+          { x: screenRect.right, y: screenRect.bottom },
+          { x: screenRect.left, y: screenRect.bottom },
+        ];
+  const incoming = marqueeSelectionFromCandidates({
+    method: options.method,
+    crossing,
+    rect: options.method === "rectangle" ? screenRect : null,
+    polygon,
+    kinds: options.kinds,
+    candidates: options.candidates,
+  });
+  return mergeSelectionSnapshot(marqueeModeFromModifiers(args.modifiers), options.base, incoming);
+}
+
 /** @emoji 🖱️ Projects a world point to client coordinates for marquee tests. */
 export function projectWorldToClient(point: Vector3, camera: Camera, rect: DOMRect): ScreenPoint | null {
   const projected = point.clone().project(camera);
@@ -5188,7 +5226,7 @@ export function projectWorldToClient(point: Vector3, camera: Camera, rect: DOMRe
 
 /** @emoji 🖱️ Projects an object group's bounds corners to client space. */
 export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ScreenPoint[] {
-  const box = new Box3().setFromObject(group, true);
+  const box = new Box3().setFromObject(group, false);
   if (box.isEmpty()) {
     return [];
   }
@@ -6055,7 +6093,7 @@ function AttractionWindowBridge() {
 
 function MarqueeBridge() {
   const reg = useRegistry();
-  const { commitMarqueeSelection } = useRegistryInteraction();
+  const { captureMarqueeCandidates, previewMarqueeSelection, cancelMarqueePreview, commitMarqueeSelection } = useRegistryInteraction();
   const marquee = useRegistryMarquee();
   const gl = useThree((state) => state.gl);
   const invalidate = useThree((state) => state.invalidate);
@@ -6076,6 +6114,7 @@ function MarqueeBridge() {
     };
     const cancelGesture = () => {
       gestureRef.current = null;
+      cancelMarqueePreview();
       resetOverlay();
     };
     puzzle3dMarqueeGestureCancel = cancelGesture;
@@ -6102,13 +6141,25 @@ function MarqueeBridge() {
         marquee.selectionMethod === "lasso"
           ? [...gesture.path, { x: event.clientX, y: event.clientY }]
           : [{ x: gesture.startX, y: gesture.startY }, { x: event.clientX, y: event.clientY }];
+      const activating = !gesture.active;
       gestureRef.current = { ...gesture, active: true, path };
+      if (activating) {
+        captureMarqueeCandidates();
+      }
       puzzle3dMarqueeOverlayStore.setSnapshot({
         active: true,
         method: marquee.selectionMethod,
         start: { x: gesture.startX, y: gesture.startY },
         current: { x: event.clientX, y: event.clientY },
         path,
+      });
+      previewMarqueeSelection({
+        startX: gesture.startX,
+        startY: gesture.startY,
+        endX: event.clientX,
+        endY: event.clientY,
+        path,
+        modifiers: { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey },
       });
       invalidate();
     };
@@ -6147,7 +6198,7 @@ function MarqueeBridge() {
       bindings.dispose();
       resetOverlay();
     };
-  }, [commitMarqueeSelection, invalidate, marquee.selectionMethod, reg]);
+  }, [cancelMarqueePreview, captureMarqueeCandidates, commitMarqueeSelection, invalidate, marquee.selectionMethod, previewMarqueeSelection, reg]);
   return null;
 }
 
@@ -6331,6 +6382,8 @@ function RegistryProvider({
   const marqueeKindsRef = reactHostPort.useRef(marqueeSelectableKinds);
   marqueeKindsRef.current = marqueeSelectableKinds;
   const marqueeAttractionsRef = reactHostPort.useRef<readonly AttractionProps[]>([]);
+  const marqueeCandidatesRef = reactHostPort.useRef<MarqueeCandidate[]>([]);
+  const marqueeBaseSelectionRef = reactHostPort.useRef<SelectionSnapshot | null>(null);
   const notifyConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onConnect?.(payload), [hostCallbacksRef]);
   const notifyProximityConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onProximityConnect?.(payload), [hostCallbacksRef]);
   const notifyIndirectConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onIndirectConnect?.(payload), [hostCallbacksRef]);
@@ -6369,88 +6422,108 @@ function RegistryProvider({
     [publishSelection, selectionStore],
   );
 
-  const commitMarqueeSelection = reactHostPort.useCallback(
-    (args: {
-      readonly startX: number;
-      readonly startY: number;
-      readonly endX: number;
-      readonly endY: number;
-      readonly path: readonly ScreenPoint[];
-      readonly modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean };
-    }) => {
-      const env = attractionThreeRef.current;
-      if (!env) {
+  const buildMarqueeCandidates = reactHostPort.useCallback((): MarqueeCandidate[] => {
+    const env = attractionThreeRef.current;
+    if (!env) {
+      return [];
+    }
+    const domRect = env.gl.domElement.getBoundingClientRect();
+    const candidates: MarqueeCandidate[] = [];
+    for (const [id, group] of objectGroupMap.current) {
+      if (!group) {
+        continue;
+      }
+      const points = projectObjectGroupToScreenPoints(group, env.camera, domRect);
+      if (points.length) {
+        candidates.push({ kind: "object", id, points });
+      }
+    }
+    for (const [fullId, getter] of vortexGettersRef.current) {
+      const world = getter();
+      if (!world) {
+        continue;
+      }
+      const point = projectWorldToClient(world, env.camera, domRect);
+      if (point) {
+        candidates.push({ kind: "vortex", id: fullId, points: [point] });
+      }
+    }
+    for (const attraction of marqueeAttractionsRef.current) {
+      const a = vortexGettersRef.current.get(attraction.attracting)?.() ?? null;
+      const b = vortexGettersRef.current.get(attraction.attracted)?.() ?? null;
+      const points: ScreenPoint[] = [];
+      if (a) {
+        const projected = projectWorldToClient(a, env.camera, domRect);
+        if (projected) {
+          points.push(projected);
+        }
+      }
+      if (b) {
+        const projected = projectWorldToClient(b, env.camera, domRect);
+        if (projected) {
+          points.push(projected);
+        }
+      }
+      if (points.length) {
+        candidates.push({ kind: "attraction", id: attraction.id, points });
+      }
+    }
+    return candidates;
+  }, []);
+
+  const clearMarqueeGestureCache = reactHostPort.useCallback(() => {
+    marqueeCandidatesRef.current = [];
+    marqueeBaseSelectionRef.current = null;
+  }, []);
+
+  const captureMarqueeCandidates = reactHostPort.useCallback(() => {
+    marqueeBaseSelectionRef.current = selectionStore.getSnapshot();
+    marqueeCandidatesRef.current = buildMarqueeCandidates();
+  }, [buildMarqueeCandidates, selectionStore]);
+
+  const previewMarqueeSelection = reactHostPort.useCallback(
+    (args: MarqueeGestureArgs) => {
+      const base = marqueeBaseSelectionRef.current;
+      if (!base) {
         return;
       }
-      const domRect = env.gl.domElement.getBoundingClientRect();
-      const crossing = marqueeIsCrossing(args.startX, args.endX);
-      const screenRect = screenRectFromClientPoints(args.startX, args.startY, args.endX, args.endY);
-      const polygon =
-        selectionMethodRef.current === "lasso" && args.path.length >= 3
-          ? args.path
-          : [
-              { x: screenRect.left, y: screenRect.top },
-              { x: screenRect.right, y: screenRect.top },
-              { x: screenRect.right, y: screenRect.bottom },
-              { x: screenRect.left, y: screenRect.bottom },
-            ];
-      const candidates: MarqueeCandidate[] = [];
-      for (const [id, group] of objectGroupMap.current) {
-        if (!group) {
-          continue;
-        }
-        const points = projectObjectGroupToScreenPoints(group, env.camera, domRect);
-        if (points.length) {
-          candidates.push({ kind: "object", id, points });
-        }
-      }
-      for (const [fullId, getter] of vortexGettersRef.current) {
-        const world = getter();
-        if (!world) {
-          continue;
-        }
-        const point = projectWorldToClient(world, env.camera, domRect);
-        if (point) {
-          candidates.push({ kind: "vortex", id: fullId, points: [point] });
-        }
-      }
-      for (const attraction of marqueeAttractionsRef.current) {
-        const a = vortexGettersRef.current.get(attraction.attracting)?.() ?? null;
-        const b = vortexGettersRef.current.get(attraction.attracted)?.() ?? null;
-        const points: ScreenPoint[] = [];
-        if (a) {
-          const projected = projectWorldToClient(a, env.camera, domRect);
-          if (projected) {
-            points.push(projected);
-          }
-        }
-        if (b) {
-          const projected = projectWorldToClient(b, env.camera, domRect);
-          if (projected) {
-            points.push(projected);
-          }
-        }
-        if (points.length) {
-          candidates.push({ kind: "attraction", id: attraction.id, points });
-        }
-      }
-      const incoming = marqueeSelectionFromCandidates({
+      const snap = resolveMarqueeSelectionGesture(args, {
         method: selectionMethodRef.current,
-        crossing,
-        rect: selectionMethodRef.current === "rectangle" ? screenRect : null,
-        polygon,
+        kinds: marqueeKindsRef.current,
+        candidates: marqueeCandidatesRef.current,
+        base,
+      });
+      selectionStore.setSnapshot(snap);
+    },
+    [selectionStore],
+  );
+
+  const cancelMarqueePreview = reactHostPort.useCallback(() => {
+    const base = marqueeBaseSelectionRef.current;
+    if (base) {
+      selectionStore.setSnapshot(base);
+    }
+    clearMarqueeGestureCache();
+  }, [clearMarqueeGestureCache, selectionStore]);
+
+  const commitMarqueeSelection = reactHostPort.useCallback(
+    (args: MarqueeGestureArgs) => {
+      const base = marqueeBaseSelectionRef.current ?? selectionStore.getSnapshot();
+      const candidates = marqueeCandidatesRef.current.length > 0 ? marqueeCandidatesRef.current : buildMarqueeCandidates();
+      const snap = resolveMarqueeSelectionGesture(args, {
+        method: selectionMethodRef.current,
         kinds: marqueeKindsRef.current,
         candidates,
+        base,
       });
-      const mode = marqueeModeFromModifiers(args.modifiers);
-      const current = selectionStore.getSnapshot();
-      publishSelection(mergeSelectionSnapshot(mode, current, incoming));
+      clearMarqueeGestureCache();
+      publishSelection(snap);
       puzzle3dMarqueeSuppressClickRef.current = true;
       window.setTimeout(() => {
         puzzle3dMarqueeSuppressClickRef.current = false;
       }, 0);
     },
-    [publishSelection, selectionStore],
+    [buildMarqueeCandidates, clearMarqueeGestureCache, publishSelection, selectionStore],
   );
 
   const setSelectedObjectIds = reactHostPort.useCallback(
@@ -6985,12 +7058,25 @@ function RegistryProvider({
     () => ({
       selectionMode,
       commitSelection,
+      captureMarqueeCandidates,
+      previewMarqueeSelection,
+      cancelMarqueePreview,
       commitMarqueeSelection,
       setSelectedObjectIds,
       setActiveRelocateObjectId,
       clearSelection,
     }),
-    [clearSelection, commitMarqueeSelection, commitSelection, selectionMode, setActiveRelocateObjectId, setSelectedObjectIds],
+    [
+      cancelMarqueePreview,
+      captureMarqueeCandidates,
+      clearSelection,
+      commitMarqueeSelection,
+      commitSelection,
+      previewMarqueeSelection,
+      selectionMode,
+      setActiveRelocateObjectId,
+      setSelectedObjectIds,
+    ],
   );
   const marqueeValue = reactHostPort.useMemo<RegistryMarqueeValue>(
     () => ({
@@ -8322,6 +8408,64 @@ if (import.meta.vitest) {
       const incoming = { objectIds: ["b"], vortexIds: [], attractionIds: [] };
       expect(mergeSelectionSnapshot("default", current, incoming).objectIds).toEqual(["b"]);
       expect(mergeSelectionSnapshot("invertive", current, incoming).objectIds.sort()).toEqual(["a", "b"]);
+    });
+  });
+  describe("resolveMarqueeSelectionGesture", () => {
+    const rect = screenRectFromClientPoints(0, 0, 100, 100);
+    const candidates = [
+      { kind: "object" as const, id: "inside", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }] },
+      { kind: "object" as const, id: "outside", points: [{ x: 200, y: 200 }] },
+    ];
+    const gesture = {
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 100,
+      path: [
+        { x: 0, y: 0 },
+        { x: 100, y: 100 },
+      ],
+      modifiers: { shiftKey: false, ctrlKey: false, metaKey: false },
+    };
+    it("replaces selection on default mode from a fixed base", () => {
+      const base = { objectIds: ["keep"], vortexIds: [], attractionIds: [] };
+      const snap = resolveMarqueeSelectionGesture(gesture, {
+        method: "rectangle",
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates,
+        base,
+      });
+      expect(snap.objectIds).toEqual(["inside"]);
+    });
+    it("additive mode merges against the captured base not the live preview", () => {
+      const base = { objectIds: ["keep"], vortexIds: [], attractionIds: [] };
+      const snap = resolveMarqueeSelectionGesture(
+        { ...gesture, modifiers: { shiftKey: true, ctrlKey: false, metaKey: false } },
+        {
+          method: "rectangle",
+          kinds: { object: true, vortex: true, attraction: true },
+          candidates,
+          base,
+        },
+      );
+      expect(snap.objectIds.sort()).toEqual(["inside", "keep"]);
+    });
+    it("matches window-mode hit testing from marqueeSelectionFromCandidates", () => {
+      const fromCandidates = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: false,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates,
+      });
+      const fromGesture = resolveMarqueeSelectionGesture(gesture, {
+        method: "rectangle",
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates,
+        base: { objectIds: [], vortexIds: [], attractionIds: [] },
+      });
+      expect(fromGesture.objectIds).toEqual(fromCandidates.objectIds);
     });
   });
   describe("palette object fixture drag", () => {

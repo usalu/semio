@@ -4,22 +4,22 @@ overview: Add a live highlight preview while dragging the puzzle 3D rectangle/la
 todos:
   - id: ticket
     content: Open/reopen repo MCP ticket associated to the best matching goal (read repo://goals).
-    status: in_progress
+    status: completed
   - id: capture
     content: Add marqueeCandidatesRef + marqueeBaseSelectionRef and captureMarqueeCandidates(); switch projectObjectGroupToScreenPoints to non-precise Box3.
-    status: pending
+    status: completed
   - id: preview-commit
     content: Extract shared resolve helper; add previewMarqueeSelection (local store only) and cancelMarqueePreview; refactor commitMarqueeSelection to reuse cached candidates + base; expose on RegistryInteractionValue.
-    status: pending
+    status: completed
   - id: bridge
     content: Drive capture on activation, previewMarqueeSelection per move, and cancelMarqueePreview on aborts in MarqueeBridge.
-    status: pending
+    status: completed
   - id: defer-shell
     content: "Make noteSelection in puzzle/3d/play use notifySelection({ deferShell: true })."
-    status: pending
+    status: completed
   - id: verify
     content: Extend existing vitest blocks, run puzzle 3d react+play tests, runtime-verify live highlight + fast commit on Nakagin with temporary [DEBUG] logs, then remove and close ticket.
-    status: pending
+    status: completed
 isProject: false
 ---
 

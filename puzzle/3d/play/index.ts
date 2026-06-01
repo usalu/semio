@@ -1095,7 +1095,7 @@ export class Puzzle3dPlayShellController extends Controller {
           return;
         }
         this.selection = resolved;
-        this.notifySelection();
+        this.notifySelection({ deferShell: true });
         return;
       }
       case "deleteSelection": {
@@ -1964,7 +1964,7 @@ if (import.meta.vitest) {
       unsubscribe();
     });
 
-    it("selection commands refresh the viewport store and the declarative inspector/hierarchy panels", () => {
+    it("selection commands refresh the viewport store and the declarative inspector/hierarchy panels", async () => {
       const trackingBus = new CommandBus();
       let shellNotifyCount = 0;
       const trackingCtrl = new Puzzle3dPlayShellController(trackingBus, () => {
@@ -1974,18 +1974,23 @@ if (import.meta.vitest) {
       const unsubscribe = trackingCtrl.subscribeSnapshot(() => {
         snapshotCount += 1;
       });
+      const flushDeferredShell = () => new Promise<void>((resolve) => queueMicrotask(resolve));
       trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(snapshotCount).toBe(1);
+      expect(shellNotifyCount).toBe(0);
+      await flushDeferredShell();
       expect(shellNotifyCount).toBe(1);
       trackingCtrl.run("noteSelection", { objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(snapshotCount).toBe(1);
       expect(shellNotifyCount).toBe(1);
       trackingCtrl.run("setSelection", { selection: { objectIds: [], vortexIds: ["a:v1"], attractionIds: [] } });
       expect(snapshotCount).toBe(2);
+      await flushDeferredShell();
       expect(shellNotifyCount).toBe(2);
       expect(trackingCtrl.getSnapshot().selection.vortexIds).toEqual(["a:v1"]);
       trackingCtrl.run("setSelectedId", { id: "a" });
       expect(snapshotCount).toBe(3);
+      await flushDeferredShell();
       expect(shellNotifyCount).toBe(3);
       unsubscribe();
     });

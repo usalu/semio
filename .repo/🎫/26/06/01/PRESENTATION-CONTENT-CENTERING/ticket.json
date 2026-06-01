@@ -1,8 +1,9 @@
 {
   "title": "Presentation Content Centering",
   "emoji": "📽",
-  "status": "open",
+  "status": "closed",
   "description": "All presentation content must be centered horizontally and vertically. Projektetage intro currently starts at the top because text dispositions incorrectly use the positioned canvas layout.",
+  "summary": "Fixed presentation content not being vertically centered on intro/flow slides.\n\nRoot cause: `ArrangementSection` treated any text disposition as \"positioned\", wrapping intro slides in a full-height `presentation-arrangement-canvas`. Content stacked from the top of that canvas instead of using reveal.js `center: true` flow centering.\n\nFix: only use the positioned canvas when a disposition has explicit `position` or `split` (matching the figure-split plan). Added renderer test asserting intro slides have no canvas. Verified live on projektetage :6050 — title slide centered horizontally and vertically. All 14 renderer tests pass.",
   "goal": "🎯framework🎯presentation",
   "sessions": [
     "⚪b812016df39e415ba16af84411819f7c"

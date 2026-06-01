@@ -1,0 +1,11 @@
+{
+  "title": "Sketchpad Metabolism Kit Vfs Empty",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "When double-clicking metabolism kit in sketchpad home VFS, the kit VFS shows no items. Fix root cause and add test coverage.",
+  "summary": "Fixed empty kit VFS after home double-click on Metabolism (or any second open kit).\n\nRoot cause: kit VFS expanded-node state is per app surface, not per kit. Visiting another kit left the previous kit id expanded, so the new kit root stayed collapsed and showed no children.\n\n- Added syncVirtualFileSystemRoute to rebind expansion and clear lazy children when the routed root changes.\n- SketchpadAppVirtualFileSystem calls it for kit/design VFS on each snapshot.\n- Pointed metabolism dev fixture and mesh URLs at /fixtures/kit/dev/metabolism/... (assets tree absent locally).\n- Unit test: switching between two open kits shows the correct type rows.\n\nTests: vitest Sketchpad kit virtual file system + sketchpadKitFileUrlById (4 passed).",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪26758a795fad42a18da64432ddfb9b6b"
+  ]
+}
