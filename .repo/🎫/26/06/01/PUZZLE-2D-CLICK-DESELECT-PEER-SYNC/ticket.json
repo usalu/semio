@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 2d Click Deselect Peer Sync",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix puzzle 2d selection sync across windows: group select syncs correctly, but background click and individual element click leave stale group selection on other windows.",
+  "goal": "🎯puzzle",
+  "sessions": [
+    "⚪d4093a6e723c423d9017099903ed9470"
+  ]
+}

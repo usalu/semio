@@ -266,13 +266,26 @@ const mediaThought: Thought = {
 			],
 		},
 		{
+			id: "catalogue-column-ghosts",
+			dispositions: [
+				{
+					participantId: "catalogue",
+					emphasis: "active",
+					split: {
+						tiles: CATALOGUE_FOCUS_TILES,
+						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
+						columnGhostsOnly: true,
+					},
+				},
+			],
+		},
+		{
 			id: "catalogue-labels",
 			dispositions: [
 				{
 					participantId: "catalogue",
 					emphasis: "active",
 					morphTargets: CATALOGUE_COLUMN_LABELS,
-					morphColumnGroups: CATALOGUE_FOCUS_COLUMN_GROUPS,
 				},
 			],
 		},
@@ -333,7 +346,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(11);
+			expect(countArrangements(deck)).toBe(12);
 		});
 
 		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
@@ -374,20 +387,22 @@ if (import.meta.vitest) {
 			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("stacks three column labels and uses columnMorphTiles on focus", () => {
+		it("bridges focus to labels with column ghosts and stacked columnMorphId targets", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
 			expect(targets).toHaveLength(3);
 			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
-			expect(labels?.dispositions[0]?.morphColumnGroups).toEqual(CATALOGUE_FOCUS_COLUMN_GROUPS);
+			expect(labels?.dispositions[0]?.morphColumnGroups).toBeUndefined();
 			const ys = targets.map((target) => target.position.y);
 			expect(ys[0]).toBeLessThan(ys[1] ?? 0);
 			expect(ys[1]).toBeLessThan(ys[2] ?? 0);
 			expect(media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columnMorphTiles).toBe(
 				true,
 			);
-			expect(media?.arrangements.some((a) => a.id === "catalogue-merge")).toBe(false);
+			expect(
+				media?.arrangements.find((a) => a.id === "catalogue-column-ghosts")?.dispositions[0]?.split?.columnGhostsOnly,
+			).toBe(true);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

@@ -2839,12 +2839,18 @@ export class Puzzle2dRenderer {
       return;
     }
     const nextSnapshot = createSelectionSnapshot(new Set(ids));
-    if (puzzle2dSelectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot())) {
+    const selectionUnchanged = puzzle2dSelectionSnapshotsEqual(nextSnapshot, this.selectionStore.getSnapshot());
+    if (!selectionUnchanged) {
+      this.selectionIds = new Set(ids);
+      this.syncSelectionChromeToSceneObjectsIfNeeded();
+      this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
+    }
+    if (!preselectSnapshotsEqual(this.preselectStore.getSnapshot(), PUZZLE_2D_PRESELECT_EMPTY)) {
+      this.syncPreselectionSilent(PUZZLE_2D_PRESELECT_EMPTY);
+    }
+    if (selectionUnchanged) {
       return;
     }
-    this.selectionIds = new Set(ids);
-    this.syncSelectionChromeToSceneObjectsIfNeeded();
-    this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
     if (this.wasmSessionCallBlockedForReentry()) {
       return;
     }
@@ -4844,6 +4850,7 @@ export class Puzzle2dRenderer {
     this.selectionIds = nextIds;
     if (emit && !preselectSnapshotsEqual(this.preselectStore.getSnapshot(), PUZZLE_2D_PRESELECT_EMPTY)) {
       this.updatePreselection([], [], false);
+      puzzle2dBroadcastPreselectSilent(this, PUZZLE_2D_PRESELECT_EMPTY);
     }
     this.syncSelectionChromeToSceneObjectsIfNeeded();
     this.selectionStore.setSnapshot(nextSnapshot, (left, right) => arrayEqual(left.ids, right.ids));
@@ -5546,6 +5553,56 @@ if (puzzle2dVitest) {
       expect(rendererA.selection.getSnapshot().ids).toEqual(["shared"]);
       expect(rendererB.selection.getSnapshot().ids).toEqual(["shared"]);
       expect(syncDescriptorJson).not.toHaveBeenCalled();
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("clears stale peer preselect when committed selection is broadcast after area-select", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const nodeA = new Puzzle2dSceneNode({ id: "solo", radius: 36, x: 0, y: 0 });
+      const nodeB = new Puzzle2dSceneNode({ id: "solo", radius: 36, x: 0, y: 0 });
+      rendererA.scene.add(nodeA);
+      rendererB.scene.add(nodeB);
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "preselect", payload: { ids: ["solo"], removedIds: [] } }]));
+      expect(rendererB.getPreselectSnapshot().ids).toEqual(["solo"]);
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "select", payload: { ids: ["solo"] } }]));
+      expect(rendererB.selection.getSnapshot().ids).toEqual(["solo"]);
+      expect(rendererB.getPreselectSnapshot()).toEqual(PUZZLE_2D_PRESELECT_EMPTY);
+      expect(nodeB.selected).toBe(true);
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "select", payload: { ids: [] } }]));
+      expect(rendererB.selection.getSnapshot().ids).toEqual([]);
+      expect(rendererB.getPreselectSnapshot()).toEqual(PUZZLE_2D_PRESELECT_EMPTY);
+      expect(nodeB.selected).toBe(false);
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("background deselect on one pane clears committed selection on peer renderers", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const nodeA = new Puzzle2dSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+      const nodeB = new Puzzle2dSceneNode({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+      rendererA.scene.add(nodeA);
+      rendererB.scene.add(nodeB);
+      rendererA.render();
+      rendererB["pushSceneToWasmDriver"]();
+      const onNode = rendererA.worldToScreen({ x: 0, y: 0 });
+      canvasA.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: onNode.x, clientY: onNode.y }));
+      canvasA.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: onNode.x, clientY: onNode.y }));
+      expect(rendererB.selection.getSnapshot().ids).toEqual(["solo"]);
+      const background = rendererA.worldToScreen({ x: 900, y: 900 });
+      canvasA.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
+      canvasA.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
+      expect(rendererA.selection.getSnapshot().ids).toEqual([]);
+      expect(rendererB.selection.getSnapshot().ids).toEqual([]);
+      expect(nodeB.selected).toBe(false);
       rendererA.dispose();
       rendererB.dispose();
     });

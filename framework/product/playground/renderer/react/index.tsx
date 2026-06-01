@@ -3393,6 +3393,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
 
   const applyCanvasSelection = reactHostPort.useCallback((ids: readonly string[]) => {
     setSelectionIdsState(new Set(ids));
+    puzzle2dSyncSelectionToAllAuthoringPeers(ids);
   }, []);
   const setSelectionIds = reactHostPort.useCallback((ids: readonly string[]) => {
     setSelectionIdsState(new Set(ids));

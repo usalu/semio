@@ -685,10 +685,12 @@ function FigureSplitMorphView({
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
 	const columns = disposition.split?.columns ?? [];
-	const unifiedGhosts = disposition.split?.columnGhostsOnly === true;
+	const ghostsOnly = disposition.split?.columnGhostsOnly === true;
+	const columnMorphTiles = disposition.split?.columnMorphTiles === true;
+	const showColumnGhosts = ghostsOnly || (columnMorphTiles && columns.length > 0);
 	return (
 		<>
-			{unifiedGhosts
+			{showColumnGhosts
 				? columns.map((column) => (
 						<SplitColumnMorphGhostView
 							key={column.key}
@@ -696,11 +698,12 @@ function FigureSplitMorphView({
 							column={column}
 							tiles={tiles}
 							embodiment={embodiment}
-							shown
+							shown={ghostsOnly}
 						/>
 					))
 				: null}
-			{tiles.map((tile) => (
+			{!ghostsOnly
+				? tiles.map((tile) => (
 				<FigureTileView
 					key={tile.key}
 					participantId={disposition.participant.id}
@@ -708,7 +711,8 @@ function FigureSplitMorphView({
 					embodiment={embodiment}
 					defaultEmphasis={disposition.emphasis}
 				/>
-			))}
+				))
+				: null}
 		</>
 	);
 }
@@ -1437,7 +1441,59 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("pairs each column tile with a per-tile morph label slot", () => {
+		it("renders hidden column ghosts on focus when columnMorphTiles is set", () => {
+			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
+			const columns = [
+				{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"], labelLine: "A" },
+				{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "B" },
+			];
+			const deck: Presentation = {
+				id: "column-ghost-focus",
+				name: "Column ghosts",
+				sequences: [
+					{
+						id: "main",
+						thoughts: [
+							{
+								id: "morph",
+								transition: { kind: "morph" },
+								participants: [
+									{
+										id: "catalogue",
+										embodiments: [{ kind: "figure", src: "/catalogue.png" }],
+									},
+								],
+								arrangements: [
+									{
+										id: "focus",
+										dispositions: [
+											{
+												participantId: "catalogue",
+												emphasis: "active",
+												split: { tiles, columns, columnMorphTiles: true },
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const focus = container.querySelector('section[title="focus"]');
+			expect(focus?.querySelectorAll(".presentation-figure-tile-frame").length).toBe(4);
+			const hiddenGhosts = focus?.querySelectorAll(
+				".presentation-column-morph-slot--ghost.presentation-column-morph-slot--hidden",
+			);
+			expect(hiddenGhosts?.length).toBe(2);
+			expect(hiddenGhosts?.[0]?.getAttribute("data-id")).toBe("catalogue--column--col1");
+		});
+
+		it("morphs column ghosts into one label per column via columnMorphId", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
 			const columns = [
@@ -1472,12 +1528,21 @@ if (import.meta.vitest) {
 										],
 									},
 									{
+										id: "ghosts",
+										dispositions: [
+											{
+												participantId: "catalogue",
+												emphasis: "active",
+												split: { tiles, columns, columnGhostsOnly: true },
+											},
+										],
+									},
+									{
 										id: "labels",
 										dispositions: [
 											{
 												participantId: "catalogue",
 												emphasis: "active",
-												morphColumnGroups: columns,
 												morphTargets: [
 													{
 														columnKey: "col1",
@@ -1502,21 +1567,19 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const focus = container.querySelector('section[title="focus"]');
-			const focusTileIds = [
-				...focus!.querySelectorAll('.presentation-figure-tile-frame[data-id^="catalogue--tile--"]'),
-			].map((element) => element.getAttribute("data-id"));
-			expect(new Set(focusTileIds).size).toBe(4);
-			expect(focus?.querySelectorAll(".presentation-column-morph-tile-ghost").length).toBe(0);
+			const ghosts = container.querySelector('section[title="ghosts"]');
+			expect(ghosts?.querySelectorAll(".presentation-figure-tile-frame").length).toBe(0);
+			expect(ghosts?.querySelectorAll(".presentation-column-morph-slot--ghost--shown").length).toBe(0);
+			expect(
+				ghosts?.querySelectorAll(".presentation-column-morph-slot--ghost.presentation-column-morph-slot--shown")
+					.length,
+			).toBe(2);
 			const labels = container.querySelector('section[title="labels"]');
-			const labelMorphIds = [...labels!.querySelectorAll('[data-id^="catalogue--tile--"]')].map((element) =>
+			const labelMorphIds = [...labels!.querySelectorAll(".presentation-column-morph-slot--label")].map((element) =>
 				element.getAttribute("data-id"),
 			);
-			expect(new Set(labelMorphIds).size).toBe(4);
-			expect(labels?.querySelectorAll(".presentation-column-morph-slot--label-companion").length).toBe(2);
-			expect(
-				labels?.querySelector('.presentation-column-morph-slot--label[data-id="catalogue--tile--tile-r0-c0"] h2'),
-			).toBeTruthy();
+			expect(labelMorphIds).toEqual(["catalogue--column--col1", "catalogue--column--col2"]);
+			expect(labels?.querySelectorAll(".presentation-column-morph-slot--label-companion").length).toBe(0);
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {
