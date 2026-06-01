@@ -235,6 +235,38 @@ export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSl
 		return;
 	}
 	fromSlide.classList.add("presentation-arrangement--settled");
+	void fromSlide.offsetHeight;
+}
+
+type AutoAnimateMatcherHost = {
+	findAutoAnimateMatches: (
+		pairs: { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[],
+		fromScope: HTMLElement,
+		toScope: HTMLElement,
+		selector: string,
+		serializer: (node: HTMLElement) => string,
+		animationOptions?: Record<string, unknown>,
+	) => void;
+};
+
+/** @emoji 🔗 reveal.js auto-animate matcher: only `data-id` pairs so figure crops never morph via placeholder label text. */
+export function presentationAutoAnimateMatcher(
+	this: AutoAnimateMatcherHost,
+	fromSlide: HTMLElement,
+	toSlide: HTMLElement,
+): { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] {
+	const pairs: { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] = [];
+	this.findAutoAnimateMatches(pairs, fromSlide, toSlide, "[data-id]", (node) => {
+		return `${node.nodeName}:::${node.getAttribute("data-id")}`;
+	});
+	const reserved: HTMLElement[] = [];
+	return pairs.filter((pair) => {
+		if (reserved.includes(pair.to)) {
+			return false;
+		}
+		reserved.push(pair.to);
+		return true;
+	});
 }
 //#endregion 🔖ArrangementSettled
 
@@ -588,16 +620,30 @@ function BulletMorphView({
 	);
 }
 
-function figureTileBackgroundStyle(embodiment: FigureEmbodiment, crop: DispositionPosition): CSSProperties {
-	const bgWidth = crop.width > 0 ? 100 / crop.width : 100;
-	const bgHeight = crop.height > 0 ? 100 / crop.height : 100;
-	const posX = crop.width >= 1 ? 0 : (crop.x / (1 - crop.width)) * 100;
-	const posY = crop.height >= 1 ? 0 : (crop.y / (1 - crop.height)) * 100;
+/** @emoji 🖼 Background for a normalized crop; cover-fills the frame so auto-animate never stretches the bitmap. */
+export function figureTileBackgroundStyle(
+	embodiment: FigureEmbodiment,
+	crop: DispositionPosition,
+	frame?: DispositionPosition,
+): CSSProperties {
+	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
+	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
+	let bgWidth = stretchWidth;
+	let bgHeight = stretchHeight;
+	if (frame !== undefined && frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
+		const cropAspect = crop.width / crop.height;
+		const frameAspect = frame.width / frame.height;
+		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
+		bgWidth = stretchWidth * coverScale;
+		bgHeight = stretchHeight * coverScale;
+	}
+	const focalX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
+	const focalY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
 	return {
 		backgroundImage: `url("${embodiment.src}")`,
 		backgroundRepeat: "no-repeat",
 		backgroundSize: `${bgWidth}% ${bgHeight}%`,
-		backgroundPosition: `${posX}% ${posY}%`,
+		backgroundPosition: `${focalX}% ${focalY}%`,
 	};
 }
 
@@ -620,7 +666,7 @@ function FigureTileView({
 			className={["presentation-disposition-frame", "presentation-figure-tile-frame", emphasisClass(emphasis)]
 				.filter(Boolean)
 				.join(" ")}
-			style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, tile.crop) }}
+			style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, tile.crop, tile.position) }}
 			role="img"
 			aria-label={embodiment.alt ?? ""}
 		/>
@@ -655,12 +701,10 @@ function FigureMorphView({
 				]
 					.filter(Boolean)
 					.join(" ")}
-				style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, embodiment.crop) }}
+				style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, embodiment.crop, position) }}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
-			>
-				<h2 className="presentation-morph-slot-placeholder">{embodiment.alt ?? "\u00a0"}</h2>
-			</div>
+			/>
 		);
 	}
 	return (
@@ -1006,6 +1050,7 @@ export const PresentationDeck: FC<{
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
+			autoAnimateMatcher: presentationAutoAnimateMatcher,
 			autoAnimateUnmatched: true,
 			center: true,
 		};
@@ -1055,23 +1100,22 @@ export const PresentationDeck: FC<{
 		const onResize = (): void => {
 			syncPresentationSlideSizeVars(deckEl, deck);
 		};
-		const onAutoAnimate = (event: Event): void => {
-			const autoAnimateEvent = event as Event & { fromSlide?: HTMLElement; toSlide?: HTMLElement };
-			const fromSlide = autoAnimateEvent.fromSlide;
-			const toSlide = autoAnimateEvent.toSlide;
-			if (!fromSlide || !toSlide) {
-				return;
-			}
-			prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
-		};
-		const onSlideChanged = (): void => {
+		const onSlideChanged = (event: Event): void => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
 			syncPresentSlideMedia();
 			syncSlideUrl();
-			const currentSlide = deck.getCurrentSlide();
-			syncArrangementSettledState(deckEl, currentSlide, previousSlideRef.current);
+			const slideEvent = event as Event & {
+				previousSlide?: HTMLElement;
+				currentSlide?: HTMLElement;
+			};
+			const currentSlide = slideEvent.currentSlide ?? deck.getCurrentSlide();
+			const previousSlide = slideEvent.previousSlide ?? previousSlideRef.current;
+			if (previousSlide && currentSlide) {
+				prepareArrangementBeforeAutoAnimate(previousSlide, currentSlide);
+			}
+			syncArrangementSettledState(deckEl, currentSlide, previousSlide);
 			previousSlideRef.current = currentSlide;
 			setSlideEpoch((epoch) => epoch + 1);
 		};
@@ -1124,13 +1168,11 @@ export const PresentationDeck: FC<{
 				previousSlideRef.current = currentSlide;
 				setSlideEpoch((epoch) => epoch + 1);
 			}
-			deck.on("autoanimate", onAutoAnimate);
 			deck.on("slidechanged", onSlideChanged);
 			deck.on("resize", onResize);
 		});
 		return () => {
 			window.removeEventListener("hashchange", onWindowHashChange);
-			deck.off("autoanimate", onAutoAnimate);
 			deck.off("slidechanged", onSlideChanged);
 			deck.off("resize", onResize);
 			try {
@@ -1659,8 +1701,53 @@ if (import.meta.vitest) {
 			});
 			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot') as HTMLElement | null;
 			expect(slot?.style.backgroundImage).toContain("/catalogue.png");
-			expect(slot?.querySelector("h2.presentation-morph-slot-placeholder")).toBeTruthy();
+			expect(slot?.querySelector("h2")).toBeNull();
 			expect(slot?.style.left).toBe("10%");
+			expect(slot?.style.backgroundSize).toBe("200% 100%");
+			expect(slot?.style.backgroundPosition).toBe("25% 50%");
+		});
+
+		it("cover-zooms figure crop backgrounds when the frame is wider than the crop", () => {
+			const crop = { x: 0, y: 0, width: 0.5, height: 1 };
+			const square = figureTileBackgroundStyle(
+				{ kind: "figure", src: "/catalogue.png", crop },
+				crop,
+				{ x: 0, y: 0, width: 0.5, height: 0.5 },
+			);
+			const wide = figureTileBackgroundStyle(
+				{ kind: "figure", src: "/catalogue.png", crop },
+				crop,
+				{ x: 0, y: 0, width: 1, height: 0.25 },
+			);
+			expect(square.backgroundSize).toBe("400% 200%");
+			expect(wide.backgroundSize).toBe("1600% 800%");
+			expect(wide.backgroundSize).not.toBe(square.backgroundSize);
+		});
+
+		it("matches auto-animate targets only by data-id", () => {
+			const fromSlide = document.createElement("section");
+			fromSlide.innerHTML =
+				'<div data-id="catalogue-col1" class="presentation-morph-slot--figure"><h2>Rippendecke</h2></div>';
+			const toSlide = document.createElement("section");
+			toSlide.innerHTML =
+				'<div data-id="catalogue-col1" class="presentation-morph-slot--label"><h2>Rippendecke</h2></div>';
+			const host: AutoAnimateMatcherHost = {
+				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
+					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
+						const key = serializer(element);
+						const toElement = toScope.querySelector<HTMLElement>(
+							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
+						);
+						if (toElement) {
+							pairs.push({ from: element, to: toElement });
+						}
+					}
+				},
+			};
+			const pairs = presentationAutoAnimateMatcher.call(host, fromSlide, toSlide);
+			expect(pairs).toHaveLength(1);
+			expect(pairs[0]?.from.getAttribute("data-id")).toBe("catalogue-col1");
+			expect(pairs[0]?.from.classList.contains("presentation-morph-slot--figure")).toBe(true);
 		});
 
 		it("clears settled state when arriving on a slide and prepares it before morph to listed targets", () => {

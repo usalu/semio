@@ -1,0 +1,11 @@
+{
+  "title": "Fix Catalogue Tiles Morph To Labels",
+  "emoji": "📽",
+  "status": "closed",
+  "description": "Bauteilarten (#/0/10) to Bauteilbeschriftungen (#/0/11): many-to-one tile morph. Only one element transitions; embodiment switches before position morph so text morphs instead of tiles. Fix settle/bridge ordering so all column tiles animate into labels.",
+  "summary": "Fixed Bauteilarten→Bauteilbeschriftungen morph so all three column figure regions animate instead of label text.\n\n- Call `prepareArrangementBeforeAutoAnimate` on `slidechanged` (before reveal.js measures), not on `autoanimate` (too late).\n- Force layout reflow after adding `presentation-arrangement--settled`.\n- Custom `presentationAutoAnimateMatcher` matches only `[data-id]` so placeholder/crop alt text does not pair with label headings.\n- Removed placeholder `h2` from figure crop morph slots.\n\nTests: `@framework/presentation/core` and `@framework/presentation/renderer/react` pass.",
+  "goal": "🎯framework",
+  "sessions": [
+    "⚪f5b72e5b3c3648ff890bcdecc391e9a5"
+  ]
+}
