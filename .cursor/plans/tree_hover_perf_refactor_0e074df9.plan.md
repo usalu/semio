@@ -7,19 +7,19 @@ todos:
     status: completed
   - id: ui-pointerover-coalesce
     content: "Coalesce handleTreePointerOver: same-row short-circuit via ref + requestAnimationFrame batching; reset on pointerleave"
-    status: in_progress
+    status: completed
   - id: ui-highlight-store
     content: Add TreeHighlightStore/Context/useTreeItemRowHighlighted + highlightedIds prop on Tree; consume per-row in TreeDataItemView
-    status: in_progress
+    status: completed
   - id: framework-thread-highlight
     content: Add highlightedIds to TreePanelConfig, pass through SidePanelTreePane and panel definitions; wire puzzle 2d hoveredId -> highlightedIds + hierarchy onPointerEnter
-    status: pending
+    status: completed
   - id: cad-decouple-hover
     content: Remove hoveredKey from chromeKey, build neutral memoized sections + highlightKey->itemIds map, feed hover as highlightedIds to cad hierarchy panel
-    status: pending
+    status: completed
   - id: ticket-validate
     content: Open repo ticket; extend existing vitest files with hover render-isolation + highlightedIds tests; run package tests; runtime-verify; close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

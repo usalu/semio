@@ -16981,6 +16981,28 @@ if (treeVitest) {
       expect(markup).toContain("cursor-selectable");
     });
 
+    it("onRowClick is optional and does not imply navigation", () => {
+      const onRowClick = vi.fn();
+      const onSelectionChange = vi.fn();
+      const { container } = render(
+        <VirtualFileSystem
+          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+          rows={[
+            { id: "root", fileNodeKindId: "root", name: "Root", level: 0, hasChildren: false },
+            { id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" },
+          ]}
+          onRowClick={onRowClick}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+      const leafRow = container.querySelector('tr[data-row-id="leaf-a"]');
+      expect(leafRow).toBeTruthy();
+      fireEvent.click(leafRow!);
+      expect(onSelectionChange).toHaveBeenCalledWith(["leaf-a"], expect.objectContaining({ anchorRowId: "leaf-a" }));
+      expect(onRowClick).toHaveBeenCalledTimes(1);
+      expect(onRowClick.mock.calls[0]?.[0]?.navigateUri).toBe("/alpha");
+    });
+
     it("computes shift range and ctrl toggle selection for visible rows", () => {
       const orderedRowIds = ["root", "branch", "leaf-a", "leaf-b"];
       expect(

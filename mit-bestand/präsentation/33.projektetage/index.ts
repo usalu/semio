@@ -22,18 +22,11 @@ const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
 const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
 
 const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
-const CATALOGUE_SPLIT_FRAME = { x: 0.18, y: 0.12, width: 0.64, height: 0.52 };
 const CATALOGUE_TILES_ASSEMBLED = splitFigureGrid({
 	rows: 3,
 	columns: 5,
 	frame: CATALOGUE_FRAME,
 	gap: 0,
-});
-const CATALOGUE_TILES_SPREAD = splitFigureGrid({
-	rows: 3,
-	columns: 5,
-	frame: CATALOGUE_SPLIT_FRAME,
-	gap: 0.02,
 });
 
 const CATALOGUE_TILE_BY_KEY = new Map(CATALOGUE_TILES_ASSEMBLED.map((tile) => [tile.key, tile]));
@@ -177,16 +170,6 @@ const mediaThought: Thought = {
 			],
 		},
 		{
-			id: "catalogue-split",
-			dispositions: [
-				{
-					participantId: "catalogue",
-					emphasis: "active",
-					split: { tiles: CATALOGUE_TILES_SPREAD },
-				},
-			],
-		},
-		{
 			id: "catalogue-focus",
 			dispositions: [
 				{
@@ -253,7 +236,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(11);
+			expect(countArrangements(deck)).toBe(10);
 		});
 
 		it("uses fifteen split tiles on the catalogue slide for reveal auto-animate", () => {

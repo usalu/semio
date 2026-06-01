@@ -378,6 +378,8 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
           dispatchUiCommand(commandBus, item.command!, {});
         }
       : undefined,
+    onPointerEnter: item.onPointerEnter,
+    onPointerLeave: item.onPointerLeave,
   }));
 }
 

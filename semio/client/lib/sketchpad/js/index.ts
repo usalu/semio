@@ -15118,13 +15118,16 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await expect(page.getByRole("button", { name: "Send feedback" })).toBeVisible({ timeout: 30_000 });
 		});
 
-		test("kit vfs navigates to design app", async ({ page }) => {
+		test("kit vfs selects design row without navigating", async ({ page }) => {
 			await page.goto("/", { waitUntil: "networkidle" });
 			await openSketchpadCommandPalette(page);
 			await page.getByRole("dialog").getByText("Open Nakagin filtered fixture").click();
 			await expect(page.getByText("Nakagin Capsule Tower")).toBeVisible({ timeout: 120_000 });
-			await page.getByText("Nakagin Capsule Tower").click();
-			await expect(page).toHaveURL(/\/designs\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+			const kitUrl = page.url();
+			const designRow = page.locator("tr[data-row-id]").filter({ hasText: "Nakagin Capsule Tower" });
+			await designRow.click();
+			await expect(page).toHaveURL(kitUrl, { timeout: 5_000 });
+			await expect(designRow).toHaveClass(/bg-active-base/);
 		});
 
 		test("type route opens representation tab stack", async ({ page }) => {
@@ -15132,9 +15135,16 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await openSketchpadCommandPalette(page);
 			await page.getByRole("dialog").getByText("Open Nakagin filtered fixture").click();
 			await expect(page.getByRole("columnheader", { name: "Kind" })).toBeVisible({ timeout: 120_000 });
-			const baseRow = page.getByRole("row").filter({ has: page.getByRole("cell", { name: "Base", exact: true }) });
+			const baseRow = page.locator("tr[data-row-id]").filter({ has: page.getByRole("cell", { name: "Base", exact: true }) });
 			await expect(baseRow).toBeVisible({ timeout: 120_000 });
 			await baseRow.click();
+			await expect(page).not.toHaveURL(/\/types\/[0-9a-f-]{36}/i);
+			await expect(baseRow).toHaveClass(/bg-active-base/);
+			const typeId = await baseRow.getAttribute("data-row-id");
+			expect(typeId).toBeTruthy();
+			const kitMatch = page.url().match(/\/kits\/([0-9a-f-]{36})/i);
+			expect(kitMatch?.[1]).toBeTruthy();
+			await page.goto(`/kits/${kitMatch![1]}/types/${typeId}`, { waitUntil: "networkidle" });
 			await expect(page).toHaveURL(/\/types\/[0-9a-f-]{36}/i, { timeout: 120_000 });
 			await expect(page.getByText("Mesh unavailable")).toHaveCount(0, { timeout: 60_000 });
 			await expect(page.getByText("Topology loading")).toHaveCount(0, { timeout: 60_000 });

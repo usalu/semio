@@ -734,14 +734,28 @@ if (import.meta.vitest) {
 		});
 
 		it("puzzle2dPlayHierarchyTreeHighlightedIds maps graph ids to tree row ids", () => {
-			const fixture = {
-				nodes: [{ id: "root", handles: [{ id: "h-root", position: [0, 0] }], kind: "default" }],
-				edges: [{ id: "e1", source: "root", target: "root", kind: "default" }],
-			} as Puzzle2dFixtureV1;
-			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture, "root")).toEqual(["puzzle-2d-play-hierarchy.node.root"]);
-			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture, "h-root")).toEqual(["puzzle-2d-play-hierarchy.handle.h-root"]);
-			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture, "e1")).toEqual(["puzzle-2d-play-hierarchy.edge.e1"]);
-			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture, null)).toEqual([]);
+			const fixture = parsePuzzle2dFixtureV1({
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [
+					{
+						id: "root",
+						root: true,
+						shape: "circle",
+						text: "Root",
+						x: 0,
+						y: 0,
+						radius: 10,
+						handles: [{ id: "h-root", angle: 0, handleKind: "port" }],
+					},
+				],
+				edges: [{ id: "e1", source: "h-root", target: "h-root" }],
+			});
+			expect(fixture).not.toBeNull();
+			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, "root")).toEqual(["puzzle-2d-play-hierarchy.node.root"]);
+			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, "h-root")).toEqual(["puzzle-2d-play-hierarchy.handle.h-root"]);
+			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, "e1")).toEqual(["puzzle-2d-play-hierarchy.edge.e1"]);
+			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, null)).toEqual([]);
 		});
 
 		it("puzzle2dPlayHierarchyTreeSelectedIds maps graph ids to tree row ids", () => {
