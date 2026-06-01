@@ -1815,7 +1815,6 @@ import {
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
   applyBrushPlacementToFixture,
-  puzzle2dFixtureMergedKindCatalogs,
   puzzle2dGuardBrushPlacementStructuralDeletes,
   puzzle2dIsBrushPlacementStructuralDeleteGuarded,
   puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,

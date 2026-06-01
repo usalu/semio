@@ -4902,9 +4902,10 @@ if (import.meta.vitest) {
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
 			// 🔀 The wrapper owns the reveal `data-id` morph anchor, so the ephemeral drag must move the
 			// wrapper frame itself (not just translate inner content). Auto-animate then morphs from the
-			// dragged frame, including the ephemeral modification.
-			expect(parseFloat(disposition.style.left)).toBeCloseTo(28.333, 1);
-			expect(parseFloat(disposition.style.top)).toBeCloseTo(35.714, 1);
+			// dragged frame, including the ephemeral modification. The declared frame is centered first
+			// (single box shifts +0.1/+0.1), then the 80px/40px drag adds +8.333%/+5.714%.
+			expect(parseFloat(disposition.style.left)).toBeCloseTo(38.333, 1);
+			expect(parseFloat(disposition.style.top)).toBeCloseTo(45.714, 1);
 			expect(content.style.transform).toBe("");
 		});
 

@@ -1,0 +1,11 @@
+{
+  "title": "Fix Puzzle 2d Duplicate Import",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Fix duplicate import of puzzle2dFixtureMergedKindCatalogs in playground renderer react index.tsx causing vite/babel build error for puzzle-2d entry.",
+  "summary": "Removed duplicate `puzzle2dFixtureMergedKindCatalogs` import from the `@puzzle/2d` import block in playground renderer react index.tsx. The symbol was listed twice (lines 1812 and 1818), causing Babel \"Identifier has already been declared\" when loading the puzzle-2d playground entry. Playground renderer react tests pass (16/16).",
+  "goal": "🎯framework🎯product🎯playground",
+  "sessions": [
+    "⚪7c16bf400b054d3fbfb023645bcbc9bd"
+  ]
+}
