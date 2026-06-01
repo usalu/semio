@@ -7509,6 +7509,27 @@ mod host_tests {
     }
 
     #[test]
+    fn board_host_overlay_paint_state_json_matches_host_camera_lod_and_node_centers() {
+        let mut h = BoardHost::new();
+        h.set_size(640, 480, 2.0);
+        h.sync_descriptor(&sample_scene()).unwrap();
+        h.set_camera_silent(12.0, -8.0, 0.2);
+        if let Some(n) = h.nodes.get_mut("a") {
+            n.x = 33.0;
+            n.y = 44.0;
+        }
+        let raw: serde_json::Value = serde_json::from_str(&h.overlay_paint_state_json()).expect("overlay paint state json");
+        assert!((raw["camera"]["x"].as_f64().unwrap() - 12.0).abs() < 1e-9);
+        assert!((raw["camera"]["y"].as_f64().unwrap() - (-8.0)).abs() < 1e-9);
+        assert!((raw["camera"]["zoom"].as_f64().unwrap() - 0.2).abs() < 1e-9);
+        assert_eq!(raw["lod"].as_str(), Some("overview"));
+        let nodes = raw["nodes"].as_array().expect("nodes array");
+        let a = nodes.iter().find(|row| row["id"].as_str() == Some("a")).expect("node a row");
+        assert!((a["x"].as_f64().unwrap() - 33.0).abs() < 1e-9);
+        assert!((a["y"].as_f64().unwrap() - 44.0).abs() < 1e-9);
+    }
+
+    #[test]
     fn board_host_node_drag_invalidates_cached_world_content() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);

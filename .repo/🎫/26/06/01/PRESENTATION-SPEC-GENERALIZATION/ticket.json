@@ -1,9 +1,9 @@
 {
   "title": "Presentation Spec Generalization",
   "emoji": "📽",
-  "status": "open",
+  "status": "closed",
   "description": "Align @framework/presentation with the spec: introduce Slide (arrangement + optional transition), generalize Morph with auto-derived bridge slides, simplify Split to tiles only, remove bespoke column/ghost/morphTarget machinery, update renderer and 33.projektetage deck.",
-  "summary": "Aligned @framework/presentation with the spec: added Slide (arrangement + per-slide transition), generalized Morph via expandThoughtSlides() auto-inserting bridge slides (source embodiment at target position/style before embodiment switch), simplified Split to tiles-only, added FigureEmbodiment.crop, removed column/ghost/morphTarget machinery. Updated React renderer to iterate expanded slides with per-run autoAnimateId and cropped figure rendering. Re-expressed 33.projektetage deck with column participants (crop figure + text label) and morph bridges focus→labels. Core 28, renderer 17, deck 6 tests pass.",
+  "summary": "Restored Bauteilkatalog→Bauteilarten tile morph: catalogue-focus again uses split tiles on participant `catalogue` (10 focus tiles sharing `tileMorphId` with the assembled grid) plus invisible column crop anchors for the subsequent focus→labels morph bridge. Catalogue and focus now share `media--m0` auto-animate run. Deck tests updated and passing (6/6).",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪13531ab51b094146b2b0664aa39353d3",

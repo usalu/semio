@@ -398,6 +398,13 @@ export interface CameraState {
   zoom: number;
 }
 
+/** @emoji 🏷️ WASM host snapshot for text overlay paint (matches the last {@link BoardSession.renderFrame}). */
+interface Puzzle2dOverlayPaintStateWasm {
+  readonly camera: CameraState;
+  readonly lod: string;
+  readonly nodes: ReadonlyArray<{ readonly id: string; readonly x: number; readonly y: number }>;
+}
+
 export interface Puzzle2dSelectionSnapshot {
   ids: string[];
 }
@@ -4443,6 +4450,9 @@ export class Puzzle2dRenderer {
           }
           case "edgeDelete": {
             const id = String((row.payload as { id: string }).id);
+            if (options?.silentStructuralRemoves && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.has(id)) {
+              break;
+            }
             const edge = this.scene.edges.get(id);
             if (edge) {
               this.clearWasmHostAuthorshipForEdge(id);
@@ -4595,16 +4605,61 @@ export class Puzzle2dRenderer {
     }
   }
 
+  /** @emoji 🏷️ Reads camera, draw LOD, and node centers from the WASM host (authoritative for the GPU frame). */
+  private readOverlayPaintStateFromWasm(): { readonly camera: CameraState; readonly lod: Puzzle2dDrawLodKind; readonly centersById: ReadonlyMap<string, Point> } | null {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return null;
+    }
+    let raw: Puzzle2dOverlayPaintStateWasm;
+    try {
+      raw = JSON.parse(this.session.overlayPaintStateJson()) as Puzzle2dOverlayPaintStateWasm;
+    } catch {
+      return null;
+    }
+    const zoom = clamp(Number(raw.camera?.zoom), MIN_ZOOM, MAX_ZOOM);
+    const camera: CameraState = {
+      x: Number(raw.camera?.x),
+      y: Number(raw.camera?.y),
+      zoom,
+    };
+    if (!Number.isFinite(camera.x) || !Number.isFinite(camera.y)) {
+      return null;
+    }
+    const lodRaw = typeof raw.lod === "string" ? raw.lod.trim() : "";
+    const lod: Puzzle2dDrawLodKind = isPuzzle2dDrawLodKind(lodRaw) ? lodRaw : this.effectiveDrawLodLabel();
+    const centersById = new Map<string, Point>();
+    if (Array.isArray(raw.nodes)) {
+      for (const row of raw.nodes) {
+        if (!row || typeof row.id !== "string") {
+          continue;
+        }
+        const x = Number(row.x);
+        const y = Number(row.y);
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+          centersById.set(row.id, { x, y });
+        }
+      }
+    }
+    return { camera, lod, centersById };
+  }
+
+  private worldToScreenWithCamera(point: Point, camera: CameraState): Point {
+    return {
+      x: (point.x - camera.x) * camera.zoom + this.width / 2,
+      y: (point.y - camera.y) * camera.zoom + this.height / 2,
+    };
+  }
+
   /** @emoji 📌 Records the overlay inputs used by the last {@link Puzzle2dRenderer.paintTextOverlays} pass. */
-  private rememberTextOverlayPainted(): void {
+  private rememberTextOverlayPainted(overlayCamera: CameraState, overlayLod: Puzzle2dDrawLodKind): void {
     this.textOverlayPainted = true;
-    this.lastOverlayCameraX = this.camera.x;
-    this.lastOverlayCameraY = this.camera.y;
-    this.lastOverlayCameraZoom = this.camera.zoom;
+    this.lastOverlayCameraX = overlayCamera.x;
+    this.lastOverlayCameraY = overlayCamera.y;
+    this.lastOverlayCameraZoom = overlayCamera.zoom;
     this.lastOverlayWidth = this.width;
     this.lastOverlayHeight = this.height;
     this.lastOverlayDpr = this.dpr;
-    this.lastOverlayLod = this.effectiveDrawLodLabel();
+    this.lastOverlayLod = overlayLod;
     this.lastOverlaySelection = this.selectionStore.getSnapshot();
     this.lastOverlayPreselect = this.preselectStore.getSnapshot();
     this.lastOverlayContentEpoch = this.textOverlayContentEpoch;
@@ -4633,7 +4688,10 @@ export class Puzzle2dRenderer {
     const inset = 0.88;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
-    const lod = this.effectiveDrawLodLabel();
+    const wasmOverlay = this.readOverlayPaintStateFromWasm();
+    const overlayCamera = wasmOverlay?.camera ?? this.camera;
+    const lod = wasmOverlay?.lod ?? this.effectiveDrawLodLabel();
+    const overlayZoom = overlayCamera.zoom;
     const chrome = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
     for (const node of this.scene.nodes.values()) {
       if (!node.visible) {
@@ -4646,17 +4704,18 @@ export class Puzzle2dRenderer {
       let maxW: number;
       let maxH: number;
       if (node.shape === "rectangle") {
-        maxW = node.width * this.camera.zoom * inset;
-        maxH = node.height * this.camera.zoom * inset;
+        maxW = node.width * overlayZoom * inset;
+        maxH = node.height * overlayZoom * inset;
       } else {
-        const d = 2 * node.radius * this.camera.zoom * inset;
+        const d = 2 * node.radius * overlayZoom * inset;
         maxW = d;
         maxH = d;
       }
       if (maxW < 4 || maxH < 4) {
         continue;
       }
-      const boxCenter = this.worldToScreen({ x: node.x, y: node.y });
+      const center = wasmOverlay?.centersById.get(node.id) ?? { x: node.x, y: node.y };
+      const boxCenter = this.worldToScreenWithCamera(center, overlayCamera);
       const style = this.getStyle(node.style, puzzle2dInteractionChromeStyleKey("node", node.id, chrome));
       const family = node.textFontFamily;
       ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
@@ -4714,9 +4773,13 @@ export class Puzzle2dRenderer {
         if (caption === null) {
           continue;
         }
-        const handleWorld = computeHandlePosition(node, handle.angle);
-        const handleScreen = this.worldToScreen(handleWorld);
-        const nodeScreen = this.worldToScreen({ x: node.x, y: node.y });
+        const nodeCenter = wasmOverlay?.centersById.get(node.id) ?? { x: node.x, y: node.y };
+        const handleWorld = computeHandlePosition(
+          { height: node.height, radius: node.radius, shape: node.shape, width: node.width, x: nodeCenter.x, y: nodeCenter.y },
+          handle.angle,
+        );
+        const handleScreen = this.worldToScreenWithCamera(handleWorld, overlayCamera);
+        const nodeScreen = this.worldToScreenWithCamera(nodeCenter, overlayCamera);
         const dx = handleScreen.x - nodeScreen.x;
         const dy = handleScreen.y - nodeScreen.y;
         const len = Math.hypot(dx, dy);
@@ -4728,7 +4791,7 @@ export class Puzzle2dRenderer {
         ctx.fillText(caption, labelX, labelY);
       }
     }
-    this.rememberTextOverlayPainted();
+    this.rememberTextOverlayPainted(overlayCamera, lod);
   }
 
   /** @emoji 🎨 Presents one GPU frame after {@link Puzzle2dRenderer.pushSceneToWasmDriver} (same order as pre-369 main-thread canvas: no WASM scene push until the swapchain exists). */
@@ -5791,7 +5854,7 @@ if (puzzle2dVitest) {
       const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
       renderer.scene.add(node);
       renderer.render();
-      renderer["rememberTextOverlayPainted"]();
+      renderer["rememberTextOverlayPainted"]({ ...renderer.camera }, renderer.effectiveDrawLodLabel());
       expect(renderer.textOverlayDirty()).toBe(false);
       renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "nodeMove", payload: { id: "n", x: 40, y: 30 } }]));
       expect(node.x).toBe(40);
@@ -5805,7 +5868,7 @@ if (puzzle2dVitest) {
       const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "label" });
       renderer.scene.add(node);
       renderer["pushSceneToWasmDriver"]();
-      renderer["rememberTextOverlayPainted"]();
+      renderer["rememberTextOverlayPainted"]({ ...renderer.camera }, renderer.effectiveDrawLodLabel());
       expect(renderer.textOverlayDirty()).toBe(false);
       renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "hover", payload: { id: "n" } }]));
       expect(renderer.textOverlayDirty()).toBe(false);
@@ -5818,18 +5881,18 @@ if (puzzle2dVitest) {
       const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "label" });
       renderer.scene.add(node);
       renderer["pushSceneToWasmDriver"]();
-      renderer["rememberTextOverlayPainted"]();
+      renderer["rememberTextOverlayPainted"]({ ...renderer.camera }, renderer.effectiveDrawLodLabel());
       expect(renderer.textOverlayDirty()).toBe(false);
       renderer.camera.x = 40;
       expect(renderer.textOverlayDirty()).toBe(true);
-      renderer["rememberTextOverlayPainted"]();
+      renderer["rememberTextOverlayPainted"]({ ...renderer.camera }, renderer.effectiveDrawLodLabel());
       renderer.setSelectionIdsSilent(["n"]);
       expect(renderer.textOverlayDirty()).toBe(true);
-      renderer["rememberTextOverlayPainted"]();
+      renderer["rememberTextOverlayPainted"]({ ...renderer.camera }, renderer.effectiveDrawLodLabel());
       expect(renderer.textOverlayDirty()).toBe(false);
       renderer.markDirty();
       expect(renderer.textOverlayDirty()).toBe(true);
-      renderer["rememberTextOverlayPainted"]();
+      renderer["rememberTextOverlayPainted"]({ ...renderer.camera }, renderer.effectiveDrawLodLabel());
       renderer["lastVelloThemeJson"] = '{"changed":true}';
       expect(renderer.textOverlayDirty()).toBe(true);
       renderer.dispose();
@@ -5889,7 +5952,7 @@ if (puzzle2dVitest) {
       const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
       renderer.scene.add(node);
       renderer["pushSceneToWasmDriver"]();
-      renderer["rememberTextOverlayPainted"]();
+      renderer["rememberTextOverlayPainted"]({ ...renderer.camera }, renderer.effectiveDrawLodLabel());
       renderer["wheelZoomGestureActive"] = true;
       renderer.camera.x = 80;
       expect(renderer.textOverlayDirty()).toBe(true);
@@ -5954,6 +6017,64 @@ if (puzzle2dVitest) {
       renderer["wheelZoomGestureActive"] = false;
       vi.spyOn(renderer.session, "defersDescriptorSyncFromJs").mockReturnValue(true);
       expect(renderer.acceptsHostCameraProp()).toBe(false);
+      renderer.dispose();
+    });
+
+    it("paintTextOverlays uses wasm node centers when they differ from the js scene", () => {
+      const { canvas } = createMockCanvas();
+      const overlay = document.createElement("canvas");
+      const fillText = vi.fn();
+      const overlayCtx: Puzzle2dCanvasContext = {
+        arc: vi.fn(),
+        beginPath: vi.fn(),
+        bezierCurveTo: vi.fn(),
+        clearRect: vi.fn(),
+        clip: vi.fn(),
+        closePath: vi.fn(),
+        fill: vi.fn(),
+        fillRect: vi.fn(),
+        fillStyle: "#000000",
+        fillText,
+        font: "",
+        lineCap: "round",
+        lineJoin: "round",
+        lineTo: vi.fn(),
+        lineWidth: 1,
+        measureText: vi.fn((s: string) => ({ width: s.length * 6 })),
+        moveTo: vi.fn(),
+        rect: vi.fn(),
+        restore: vi.fn(),
+        save: vi.fn(),
+        setLineDash: vi.fn(),
+        setTransform: vi.fn(),
+        stroke: vi.fn(),
+        strokeRect: vi.fn(),
+        strokeStyle: "#000000",
+        textAlign: "start",
+        textBaseline: "alphabetic",
+      };
+      Object.defineProperty(overlay, "getContext", { configurable: true, value: () => overlayCtx });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "main-thread" });
+      renderer.attachTextOverlayCanvas(overlay);
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer.setCamera(0, 0, 1);
+      vi.spyOn(renderer.session, "overlayPaintStateJson").mockReturnValue(
+        JSON.stringify({
+          camera: { x: 0, y: 0, zoom: 1 },
+          lod: "normal",
+          nodes: [{ id: "n", x: 200, y: 100 }],
+        }),
+      );
+      renderer["paintTextOverlays"]();
+      expect(fillText).toHaveBeenCalled();
+      const [, labelX, labelY] = fillText.mock.calls[0] as [string, number, number];
+      const originScreen = renderer["worldToScreenWithCamera"]({ x: 0, y: 0 }, { x: 0, y: 0, zoom: 1 });
+      const wasmScreen = renderer["worldToScreenWithCamera"]({ x: 200, y: 100 }, { x: 0, y: 0, zoom: 1 });
+      expect(labelX).toBe(wasmScreen.x);
+      expect(labelY).toBe(wasmScreen.y);
+      expect(labelX).not.toBe(originScreen.x);
+      expect(labelY).not.toBe(originScreen.y);
       renderer.dispose();
     });
 
@@ -8446,6 +8567,7 @@ function puzzle2dEnsureSceneEdgesFromDescriptor(renderer: Puzzle2dRenderer, desc
   if (descriptor.edges.length === 0 || renderer.scene.edges.size === descriptor.edges.length) {
     return;
   }
+  renderer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
   renderer.resetDeclarativeSceneSyncFingerprint();
   syncPuzzle2dScene(renderer, descriptor);
 }
@@ -9341,6 +9463,15 @@ export function Puzzle2dCanvas({
       });
     };
   }, [renderMode]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    const expected = puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor, children).edges.length;
+    renderer.setDeclarativeSceneEdgeExpectation(expected);
+  }, [children, contextRenderer, declarativeSceneDescriptor]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
