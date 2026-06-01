@@ -1,0 +1,10 @@
+{
+  "title": "Projektetage Resize Handles Alignment",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix resize handles on projektetage presentation: handles are positioned inside the selected background instead of at corners, not aligned with selection chrome.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪8e72685386be43deb606fd885b24412f"
+  ]
+}

@@ -1582,6 +1582,7 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 		hasChildren: row.hasChildren,
 		isExpanded: row.expanded,
 		parentId: undefined,
+		...(row.icon ? { icon: row.icon } : {}),
 		navigateUri: row.navigateUri,
 		descriptorValues: row.descriptorValues,
 	}));

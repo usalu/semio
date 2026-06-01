@@ -11809,9 +11809,12 @@ export function sketchpadKitDiagramPushTypeCompatEdges(
 	}
 }
 
-function sketchpadKitDiagramFileLabel(file: Record<string, unknown>): string {
+/** @emoji 📄 Basename for a kit file row (prefers `name`, then url/path tail, then id). */
+function sketchpadKitFileBasename(file: Record<string, unknown>): string {
+	const name = file["name"];
+	if (typeof name === "string" && name.trim().length > 0) return name.trim();
 	const description = file["description"];
-	if (typeof description === "string" && description.length > 0) return description;
+	if (typeof description === "string" && description.trim().length > 0) return description.trim();
 	const url = file["url"];
 	if (typeof url === "string" && url.length > 0) {
 		const slash = url.lastIndexOf("/");
@@ -11823,6 +11826,32 @@ function sketchpadKitDiagramFileLabel(file: Record<string, unknown>): string {
 		return slash >= 0 ? path.slice(slash + 1) : path;
 	}
 	return String(file["id"] ?? "");
+}
+
+/** @emoji 📄 VFS label for a kit file: basename without extension. */
+function sketchpadKitFileDisplayName(basename: string): string {
+	const dot = basename.lastIndexOf(".");
+	if (dot <= 0) return basename;
+	return basename.slice(0, dot);
+}
+
+/** @emoji 📄 VFS icon id from a file basename extension (maps in {@link resolveVirtualFileSystemSchemaIcon}). */
+function sketchpadKitFileExtensionIconId(basename: string): string {
+	const dot = basename.lastIndexOf(".");
+	if (dot <= 0 || dot === basename.length - 1) return "file";
+	return basename.slice(dot + 1).toLowerCase();
+}
+
+function sketchpadKitDiagramFileLabel(file: Record<string, unknown>): string {
+	return sketchpadKitFileDisplayName(sketchpadKitFileBasename(file));
+}
+
+function sketchpadKitVfsFileRowFields(file: Record<string, unknown>): { readonly name: string; readonly icon: string } {
+	const basename = sketchpadKitFileBasename(file);
+	return {
+		name: sketchpadKitFileDisplayName(basename),
+		icon: sketchpadKitFileExtensionIconId(basename),
+	};
 }
 
 function sketchpadKitDiagramPushEdge(
@@ -12558,10 +12587,13 @@ function sketchpadVfsRecordsFromRsChildren(
 	return children.map((child) => {
 		const fileNodeKindId = sketchpadVfsFileNodeKindId(child.kind);
 		const path = child.path || `/${child.name || child.id}`;
+		const fileBasename = child.name || child.id;
+		const vfsFile = fileNodeKindId === "file" ? sketchpadKitVfsFileRowFields({ name: fileBasename }) : undefined;
 		return {
 			id: child.id,
 			fileNodeKindId,
-			name: child.name || child.id,
+			name: vfsFile?.name ?? (child.name || child.id),
+			...(vfsFile ? { icon: vfsFile.icon } : {}),
 			path,
 			parentId,
 			hasChildren: child.hasChildren,
@@ -12629,11 +12661,13 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			const row = file as Record<string, unknown>;
 			const id = String(row["id"] ?? "");
 			if (!id) continue;
-			const filePath = `/${sketchpadKitDiagramFileLabel(row)}`;
+			const vfsFile = sketchpadKitVfsFileRowFields(row);
+			const filePath = `/${sketchpadKitFileBasename(row)}`;
 			rows.push({
 				id,
 				fileNodeKindId: "file",
-				name: sketchpadKitDiagramFileLabel(row),
+				name: vfsFile.name,
+				icon: vfsFile.icon,
 				path: filePath,
 				parentId: kitId,
 				hasChildren: false,
@@ -14370,6 +14404,27 @@ if (import.meta.vitest) {
 	});
 
 	describe("Sketchpad virtual file system", () => {
+		it("kit file vfs rows use basename without extension and extension icon ids", () => {
+			const kit = {
+				id: "k1",
+				files: [
+					{ id: "f1", name: "Tower.glb" },
+					{ id: "f2", name: "notes.md" },
+					{ id: "f3", path: "assets/plan.pdf" },
+				],
+			} as Kit;
+			const rows = sketchpadKitVfsChildren(kit, "k1");
+			const glb = rows.find((row) => row.id === "f1");
+			const md = rows.find((row) => row.id === "f2");
+			const pdf = rows.find((row) => row.id === "f3");
+			expect(glb?.name).toBe("Tower");
+			expect(glb?.icon).toBe("glb");
+			expect(md?.name).toBe("notes");
+			expect(md?.icon).toBe("md");
+			expect(pdf?.name).toBe("plan");
+			expect(pdf?.icon).toBe("pdf");
+		});
+
 		it("schema shows name column only (no path or node kind descriptors)", () => {
 			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.descriptorColumnIds).toEqual([]);
 			expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL.descriptorColumnIds).toEqual([]);

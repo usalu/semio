@@ -320,6 +320,7 @@ export interface VirtualFileSystemNodeRecord {
 	readonly path: string;
 	readonly parentId: string | null;
 	readonly hasChildren: boolean;
+	readonly icon?: string;
 	readonly navigateUri?: string;
 	readonly descriptorValues?: Readonly<Record<string, VirtualFileSystemDescriptorValueModel>>;
 	readonly canDrag?: boolean;
@@ -333,6 +334,7 @@ export interface VirtualFileSystemRowModel {
 	readonly path: string;
 	readonly depth: number;
 	readonly hasChildren: boolean;
+	readonly icon?: string;
 	readonly expanded?: boolean;
 	readonly expandToggle?: { readonly command: string; readonly args?: unknown };
 	readonly canDrag?: boolean;
@@ -634,6 +636,7 @@ export function buildVirtualFileSystemModelRows(
 					}
 				: {}),
 			...(node.canDrag === false ? { canDrag: false } : { canDrag: true }),
+			...(node.icon ? { icon: node.icon } : {}),
 			...(node.navigateUri ? { navigateUri: node.navigateUri } : {}),
 			...(node.descriptorValues ? { descriptorValues: node.descriptorValues } : {}),
 		});

@@ -104,7 +104,13 @@ import {
   ChevronsUpDown as ChevronsUpDownIcon,
   X as CloseIcon,
   XIcon as CloseIconAlt,
+  FileArchive as FileArchiveIcon,
+  FileCode as FileCodeIcon,
+  FileImage as FileImageIcon,
+  FileJson as FileJsonIcon,
+  FileSpreadsheet as FileSpreadsheetIcon,
   FileText as DocumentIcon,
+  FileType as FileTypeIcon,
   ExternalLink as ExternalLinkIcon,
   Folder as FolderIcon,
   GripVertical as GripVerticalIcon,
@@ -14266,6 +14272,56 @@ const VIRTUAL_FILE_SYSTEM_ICON_BY_ID: Readonly<Record<string, LucideIcon>> = {
   representation: BoxIcon,
   port: CircleDotIcon,
   connector: PlugIcon,
+  json: FileJsonIcon,
+  jsonc: FileJsonIcon,
+  json5: FileJsonIcon,
+  yaml: FileCodeIcon,
+  yml: FileCodeIcon,
+  toml: FileCodeIcon,
+  xml: FileCodeIcon,
+  md: DocumentIcon,
+  markdown: DocumentIcon,
+  txt: DocumentIcon,
+  log: DocumentIcon,
+  pdf: FileTypeIcon,
+  png: FileImageIcon,
+  jpg: FileImageIcon,
+  jpeg: FileImageIcon,
+  gif: FileImageIcon,
+  webp: FileImageIcon,
+  svg: FileImageIcon,
+  ico: FileImageIcon,
+  bmp: FileImageIcon,
+  glb: BoxIcon,
+  gltf: BoxIcon,
+  obj: BoxIcon,
+  fbx: BoxIcon,
+  stl: BoxIcon,
+  usdz: BoxIcon,
+  zip: FileArchiveIcon,
+  tar: FileArchiveIcon,
+  gz: FileArchiveIcon,
+  tgz: FileArchiveIcon,
+  "7z": FileArchiveIcon,
+  rar: FileArchiveIcon,
+  csv: FileSpreadsheetIcon,
+  tsv: FileSpreadsheetIcon,
+  xlsx: FileSpreadsheetIcon,
+  xls: FileSpreadsheetIcon,
+  ts: FileCodeIcon,
+  tsx: FileCodeIcon,
+  js: FileCodeIcon,
+  jsx: FileCodeIcon,
+  mjs: FileCodeIcon,
+  cjs: FileCodeIcon,
+  rs: FileCodeIcon,
+  py: FileCodeIcon,
+  wasm: FileCodeIcon,
+  html: FileCodeIcon,
+  css: FileCodeIcon,
+  scss: FileCodeIcon,
+  sql: FileCodeIcon,
+  semio: FileJsonIcon,
 };
 
 /** @emoji 📁 Resolves a lucide icon for a VFS schema icon id or file node kind id. */
@@ -17634,6 +17690,23 @@ if (treeVitest) {
       expect(resolveVirtualFileSystemSchemaIcon("component")).toBe(ComponentIcon);
       expect(resolveVirtualFileSystemSchemaIcon("circle-dot")).toBe(CircleDotIcon);
       expect(resolveVirtualFileSystemSchemaIcon("type")).toBe(ComponentIcon);
+    });
+
+    it("resolveVirtualFileSystemSchemaIcon maps file extension ids", () => {
+      expect(resolveVirtualFileSystemSchemaIcon("glb")).toBe(BoxIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("pdf")).toBe(FileTypeIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("json")).toBe(FileJsonIcon);
+    });
+
+    it("renders per-row extension icons for kit files", () => {
+      const markup = renderToStaticMarkup(
+        <VirtualFileSystem
+          schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+          rows={[{ id: "f1", fileNodeKindId: "leaf", name: "Tower", icon: "glb", level: 0, hasChildren: false }]}
+        />,
+      );
+      expect(markup).toContain("lucide-box");
+      expect(markup).not.toContain("avatar-fallback");
     });
 
     it("invokes onRowDoubleClick on double-click", async () => {
