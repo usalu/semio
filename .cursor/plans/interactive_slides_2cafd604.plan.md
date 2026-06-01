@@ -7,25 +7,25 @@ todos:
     status: completed
   - id: helpers
     content: "Add 🔖Interaction region: types + pure geometry helpers (intersect/contain, marquee rule+select, translate/resize, group bounding+scale, fullscreen toggle, client-to-fraction) in index.tsx"
-    status: in_progress
+    status: completed
   - id: hook
     content: Add usePresentationInteraction hook with ephemeral selectedIds/transforms/fullscreenStash, reset on slideEpoch change
-    status: pending
+    status: completed
   - id: wrapper
     content: Add InteractiveDisposition wrapper (data-disposition-id, hover/select/drag/resize handlers, transform override, selection chrome with handles + small fullscreen toggle)
-    status: pending
+    status: completed
   - id: layer
     content: Add InteractionLayer marquee overlay (crossing/window selection, empty-click deselect) and integrate into ArrangementSection
-    status: pending
+    status: completed
   - id: css
     content: "Add 🔖Interaction CSS: hover/selected outlines, handles+cursors, marquee rect, fullscreen toggle button, user-select/touch-action/z-index"
-    status: pending
+    status: completed
   - id: tests
     content: Extend in-source vitest tests (pure geometry + DOM selection/fullscreen) and update the intro flow-canvas test; run the suite until green
-    status: pending
+    status: completed
   - id: verify
     content: Verify drag/resize/marquee/fullscreen at runtime via dev server with console logs; close ticket with summary and touched files
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

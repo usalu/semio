@@ -90,13 +90,186 @@
 	text-align: center;
 }
 
+.reveal .slides > section > section.presentation-arrangement--interactive {
+	position: relative;
+	text-align: initial;
+}
+
 .reveal .slides > section > section.presentation-arrangement--positioned {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	height: 100%;
-	text-align: initial;
 }
+
+/* #region 🔖Interaction */
+.reveal .presentation-interaction-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	touch-action: none;
+}
+
+.reveal .presentation-arrangement-canvas,
+.reveal .presentation-interactive-disposition {
+	position: relative;
+	z-index: 1;
+}
+
+.reveal .presentation-interactive-disposition {
+	touch-action: none;
+	user-select: none;
+	cursor: default;
+}
+
+.reveal .presentation-interactive-disposition:hover:not(.presentation-interactive-disposition--selected) {
+	outline: 2px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+	outline-offset: 2px;
+}
+
+.reveal .presentation-interactive-disposition--selected {
+	z-index: 2;
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
+}
+
+.reveal .presentation-interactive-disposition--fullscreen {
+	z-index: 3;
+}
+
+.reveal .presentation-interactive-disposition--pinned {
+	cursor: move;
+}
+
+.reveal .presentation-interactive-disposition--pinned .presentation-interactive-disposition__content {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal
+	.presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition__content
+	.presentation-disposition-frame,
+.reveal
+	.presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition__content
+	.presentation-figure-tile-frame,
+.reveal
+	.presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition__content
+	.presentation-morph-slot {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal .presentation-interactive-disposition__chrome {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-handle {
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	margin: -5px 0 0 -5px;
+	border-radius: 2px;
+	background: var(--color-primary);
+	border: 1px solid var(--base);
+	pointer-events: auto;
+	box-sizing: border-box;
+}
+
+.reveal .presentation-interaction-handle--nw {
+	left: 0;
+	top: 0;
+	cursor: nwse-resize;
+}
+
+.reveal .presentation-interaction-handle--n {
+	left: 50%;
+	top: 0;
+	cursor: ns-resize;
+}
+
+.reveal .presentation-interaction-handle--ne {
+	left: 100%;
+	top: 0;
+	cursor: nesw-resize;
+}
+
+.reveal .presentation-interaction-handle--e {
+	left: 100%;
+	top: 50%;
+	cursor: ew-resize;
+}
+
+.reveal .presentation-interaction-handle--se {
+	left: 100%;
+	top: 100%;
+	cursor: nwse-resize;
+}
+
+.reveal .presentation-interaction-handle--s {
+	left: 50%;
+	top: 100%;
+	cursor: ns-resize;
+}
+
+.reveal .presentation-interaction-handle--sw {
+	left: 0;
+	top: 100%;
+	cursor: nesw-resize;
+}
+
+.reveal .presentation-interaction-handle--w {
+	left: 0;
+	top: 50%;
+	cursor: ew-resize;
+}
+
+.reveal .presentation-interaction-fullscreen {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 4;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--panel) 90%, transparent);
+	color: var(--foreground);
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	pointer-events: auto;
+}
+
+.reveal .presentation-interaction-marquee {
+	position: absolute;
+	box-sizing: border-box;
+	pointer-events: none;
+	border-width: 2px;
+	border-style: solid;
+}
+
+.reveal .presentation-interaction-marquee--crossing {
+	border-color: color-mix(in srgb, var(--color-primary) 85%, transparent);
+	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.reveal .presentation-interaction-marquee--window {
+	border-color: color-mix(in srgb, var(--color-secondary) 85%, transparent);
+	background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+}
+/* #endregion 🔖Interaction */
 
 .reveal .presentation-arrangement-canvas {
 	position: relative;

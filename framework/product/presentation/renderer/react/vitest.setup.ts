@@ -95,6 +95,16 @@ if (typeof globalThis.ResizeObserver === "undefined") {
 		ResizeObserverStub as unknown as typeof ResizeObserver;
 }
 
+if (typeof globalThis.PointerEvent === "undefined") {
+	(globalThis as { PointerEvent?: typeof PointerEvent }).PointerEvent = class PointerEvent extends MouseEvent {
+		readonly pointerId: number;
+		constructor(type: string, params: PointerEventInit = {}) {
+			super(type, params);
+			this.pointerId = params.pointerId ?? 1;
+		}
+	} as unknown as typeof PointerEvent;
+}
+
 vi.mock("react-pdf", () => ({
 	Document: ({ children }: { readonly children?: ReactNode }) =>
 		createElement("div", { className: "react-pdf__Document" }, children),

@@ -76,6 +76,7 @@ import {
 	splitTilesPackedFrame,
 	splitTilesUnionSourceCrop,
 	tileMorphId,
+	unionDispositionPositions,
 	type MorphFromSlot,
 	type TextMorphRoot,
 } from "@framework/presentation/core";
@@ -1558,9 +1559,10 @@ const InteractiveDisposition: FC<{
 	readonly id: string;
 	readonly disposition: ResolvedDisposition;
 	readonly declaredRect: DispositionPosition | undefined;
+	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 	readonly sectionRef: RefObject<HTMLElement | null>;
 	readonly children: ReactNode;
-}> = ({ id, disposition, declaredRect, sectionRef, children }) => {
+}> = ({ id, disposition, declaredRect, allDeclaredRects, sectionRef, children }) => {
 	const interaction = usePresentationInteractionState();
 	const registry = useSlideDispositionRegistry();
 	const rootRef = useRef<HTMLDivElement>(null);
@@ -1623,12 +1625,9 @@ const InteractiveDisposition: FC<{
 				selectedAtStart.includes(id) && selectedAtStart.length > 1 ? selectedAtStart : [id];
 			const startRects = new Map<string, DispositionPosition>();
 			for (const memberId of groupIds) {
-				const memberDeclared =
-					memberId === id
-						? declaredRect
-						: undefined;
 				const rect =
 					interaction.getTransform(memberId) ??
+					allDeclaredRects.get(memberId) ??
 					(memberId === id ? initialRect : registry.getRect(memberId));
 				if (rect) {
 					startRects.set(memberId, rect);
@@ -1675,7 +1674,7 @@ const InteractiveDisposition: FC<{
 			window.addEventListener("pointerup", onUp);
 			window.addEventListener("pointercancel", onUp);
 		},
-		[id, declaredRect, interaction, registry, sectionRef],
+		[id, declaredRect, allDeclaredRects, interaction, registry, sectionRef],
 	);
 
 	const onPointerDown = (event: React.PointerEvent): void => {
@@ -1931,6 +1930,7 @@ const ArrangementSection: FC<{
 			id={entry.id}
 			disposition={entry.disposition}
 			declaredRect={entry.declaredRect}
+			allDeclaredRects={declaredRects}
 			sectionRef={sectionRef}
 		>
 			<MorphDispositionView disposition={entry.disposition} />
@@ -1952,17 +1952,29 @@ const ArrangementSection: FC<{
 					.filter(Boolean)
 					.join(" ")}
 			>
-				{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
 				<InteractionLayer
 					sectionRef={sectionRef}
 					dispositionIds={dispositionMeta.map((entry) => entry.id)}
 					declaredRects={declaredRects}
 				/>
+				{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
 			</section>
 		</SlideDispositionRegistryProvider>
 	);
 };
 //#endregion 🔖ArrangementSection
+
+//#region 🔖PresentationInteractionProvider
+const PresentationInteractionProvider: FC<{
+	readonly slideEpoch: number;
+	readonly children: ReactNode;
+}> = ({ slideEpoch, children }) => {
+	const interaction = usePresentationInteraction(slideEpoch);
+	return (
+		<PresentationInteractionContext.Provider value={interaction}>{children}</PresentationInteractionContext.Provider>
+	);
+};
+//#endregion 🔖PresentationInteractionProvider
 
 //#region 🔖PresentationDeck
 /** @emoji 🎞 Maps a {@link Presentation} to reveal.js DOM. */
@@ -2128,25 +2140,27 @@ export const PresentationDeck: FC<{
 
 	return (
 		<PresentationSlideEpochContext.Provider value={slideEpoch}>
-			<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
-				<div className="slides">
-				{presentation.chapters.flatMap((chapter) =>
-					chapter.sequences.map((sequence) => (
-						<section key={`${chapter.id}-${sequence.id}`}>
-							{sequence.thoughts.flatMap((thought) =>
-								expandThoughtSlides(thought).map((renderSlide) => (
-									<ArrangementSection
-										key={`${chapter.id}-${sequence.id}-${thought.id}-${renderSlide.id}`}
-										thought={thought}
-										renderSlide={renderSlide}
-									/>
-								)),
-							)}
-						</section>
-					)),
-				)}
+			<PresentationInteractionProvider slideEpoch={slideEpoch}>
+				<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
+					<div className="slides">
+						{presentation.chapters.flatMap((chapter) =>
+							chapter.sequences.map((sequence) => (
+								<section key={`${chapter.id}-${sequence.id}`}>
+									{sequence.thoughts.flatMap((thought) =>
+										expandThoughtSlides(thought).map((renderSlide) => (
+											<ArrangementSection
+												key={`${chapter.id}-${sequence.id}-${thought.id}-${renderSlide.id}`}
+												thought={thought}
+												renderSlide={renderSlide}
+											/>
+										)),
+									)}
+								</section>
+							)),
+						)}
+					</div>
 				</div>
-			</div>
+			</PresentationInteractionProvider>
 		</PresentationSlideEpochContext.Provider>
 	);
 };
@@ -2236,7 +2250,7 @@ if (import.meta.vitest) {
 			expect(container.querySelector('[data-id^="institutions--"]')).toBeTruthy();
 		});
 
-		it("centers intro flow slides without a positioned arrangement canvas", () => {
+		it("keeps intro flow slides centered while enabling interactive dispositions", () => {
 			const deck = intro({
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
@@ -2248,8 +2262,10 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			for (const slide of container.querySelectorAll('.slides > section > section[data-auto-animate-id="introduction--m0"]')) {
+				expect(slide.classList.contains("presentation-arrangement--interactive")).toBe(true);
 				expect(slide.classList.contains("presentation-arrangement--positioned")).toBe(false);
 				expect(slide.querySelector(".presentation-arrangement-canvas")).toBeNull();
+				expect(slide.querySelectorAll("[data-disposition-id]").length).toBeGreaterThan(0);
 			}
 		});
 
@@ -2913,6 +2929,167 @@ if (import.meta.vitest) {
 		it("readPresentationSlideIndicesFromUrl ignores bookmark query params", () => {
 			expect(readPresentationSlideIndicesFromUrl("#/1/3")).toEqual({ h: 1, v: 3 });
 			expect(readPresentationSlideIndicesFromUrl("")).toEqual({ h: 0, v: 0 });
+		});
+	});
+
+	describe("presentation interaction geometry", () => {
+		it("detects intersection and containment", () => {
+			const a = { x: 0.1, y: 0.1, width: 0.3, height: 0.3 };
+			const b = { x: 0.25, y: 0.25, width: 0.3, height: 0.3 };
+			const outer = { x: 0, y: 0, width: 1, height: 1 };
+			expect(rectsIntersect(a, b)).toBe(true);
+			expect(rectContains(outer, a)).toBe(true);
+			expect(rectContains(a, b)).toBe(false);
+		});
+
+		it("applies crossing vs window marquee rules", () => {
+			const inside = { x: 0.2, y: 0.2, width: 0.1, height: 0.1 };
+			const partial = { x: 0.55, y: 0.55, width: 0.3, height: 0.3 };
+			const crossingMarquee = normalizeMarquee({ x: 0.1, y: 0.1 }, { x: 0.5, y: 0.5 });
+			const windowMarquee = normalizeMarquee({ x: 0.7, y: 0.7 }, { x: 0.1, y: 0.1 });
+			expect(marqueeSelectionRule({ x: 0.1, y: 0.1 }, { x: 0.5, y: 0.5 })).toBe("crossing");
+			expect(marqueeSelectionRule({ x: 0.7, y: 0.7 }, { x: 0.1, y: 0.1 })).toBe("window");
+			expect(marqueeSelects(crossingMarquee, inside, "crossing")).toBe(true);
+			expect(marqueeSelects(windowMarquee, inside, "window")).toBe(true);
+			expect(marqueeSelects(windowMarquee, partial, "window")).toBe(false);
+			expect(marqueeSelects(windowMarquee, partial, "crossing")).toBe(true);
+		});
+
+		it("translates and resizes with minimum size", () => {
+			const rect = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+			const moved = translateDispositionRect(rect, 0.1, -0.05);
+			expect(moved.x).toBeCloseTo(0.3);
+			expect(moved.y).toBeCloseTo(0.25);
+			const resized = resizeDispositionRect(rect, "se", 0.2, 0.1);
+			expect(resized.width).toBeCloseTo(0.6);
+			expect(resized.height).toBeCloseTo(0.3);
+		});
+
+		it("scales group members and toggles fullscreen", () => {
+			const a = { x: 0.1, y: 0.2, width: 0.2, height: 0.2 };
+			const b = { x: 0.5, y: 0.2, width: 0.2, height: 0.2 };
+			const group = groupBoundingRect([a, b]);
+			expect(group?.width).toBeCloseTo(0.6);
+			const grown = { x: 0, y: 0.1, width: 0.8, height: 0.3 };
+			const scaledA = scaleRectWithinGroup(a, group!, grown);
+			expect(scaledA.x).toBeCloseTo(0);
+			const full = toggleFullscreenRect(a, undefined);
+			expect(full.rect).toEqual({ x: 0, y: 0, width: 1, height: 1 });
+			expect(full.stash).toEqual(a);
+			const restored = toggleFullscreenRect(full.rect, full.stash);
+			expect(restored.rect).toEqual(a);
+		});
+	});
+
+	describe("presentation interaction dom", () => {
+		let container: HTMLDivElement;
+
+		const positionedDeck: Presentation = {
+			id: "interactive-dom",
+			name: "Interactive DOM",
+			chapters: [
+				{
+					id: "main",
+					sequences: [
+						{
+							id: "main",
+							thoughts: [
+								{
+									id: "placed",
+									participants: [
+										{
+											id: "box",
+											embodiments: [{ kind: "text", lines: ["Hello"], level: "body" }],
+										},
+									],
+									slides: [
+										{
+											arrangement: {
+												id: "placed",
+												dispositions: [
+													{
+														participantId: "box",
+														emphasis: "active",
+														position: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 },
+													},
+												],
+											},
+										},
+									],
+								},
+							],
+						},
+					],
+				},
+			],
+		};
+
+		const pointerClick = (target: Element, clientX = 20, clientY = 20): void => {
+			target.dispatchEvent(
+				new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, clientX, clientY }),
+			);
+			target.dispatchEvent(
+				new PointerEvent("pointerup", { bubbles: true, cancelable: true, button: 0, clientX, clientY }),
+			);
+		};
+
+		beforeEach(() => {
+			container = document.createElement("div");
+			document.body.appendChild(container);
+		});
+
+		afterEach(() => {
+			unmountPresentation();
+			container.remove();
+		});
+
+		it("renders data-disposition-id on every disposition", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			expect(container.querySelectorAll("[data-disposition-id]").length).toBe(1);
+		});
+
+		it("selects on click and deselects on empty slide click", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const layer = section.querySelector(".presentation-interaction-layer") as HTMLElement;
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			expect(disposition.querySelector(".presentation-interaction-fullscreen")).toBeTruthy();
+			act(() => {
+				pointerClick(layer);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
+		});
+
+		it("toggles slide fullscreen on the selected disposition", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			act(() => {
+				pointerClick(disposition);
+			});
+			const fullscreen = disposition.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
+			act(() => {
+				fullscreen.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
+			expect(disposition.style.left).toBe("0%");
+			expect(disposition.style.width).toBe("100%");
+			act(() => {
+				fullscreen.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(false);
+			expect(disposition.style.left).not.toBe("0%");
+			expect(disposition.style.width).toBe("40%");
 		});
 	});
 }
