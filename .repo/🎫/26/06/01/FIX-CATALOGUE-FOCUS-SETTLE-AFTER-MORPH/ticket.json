@@ -1,0 +1,10 @@
+{
+  "title": "Fix Catalogue Focus Settle After Morph",
+  "emoji": "📽",
+  "status": "open",
+  "description": "Slide 11 to 12 transition animates correctly but wrong arrangement at end.",
+  "goal": "🎯runningsketchpad",
+  "sessions": [
+    "⚪6818b164a14646fe8ef512a64302d9f5"
+  ]
+}
