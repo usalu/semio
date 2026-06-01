@@ -595,6 +595,20 @@ export class Puzzle2dPlayShellController extends Controller {
 		this.emit();
 	}
 
+	/** @emoji 🖌️ Syncs shell + React host when the viewport tool changes (engagement or bridge command). */
+	private setPlayActiveTool(tool: Puzzle2dActiveTool): void {
+		this.activeTool = tool;
+		if (tool === "select") {
+			this.brushEngagementPossibles = [];
+		}
+		this.hostBridge?.runHostCommand("setActiveTool", { tool });
+	}
+
+	/** @emoji 🖌️ Active viewport tool owned by the play shell (engagement chrome reads this). */
+	getActiveTool(): Puzzle2dActiveTool {
+		return this.activeTool;
+	}
+
 	private applyEngagementCommand(pane: Puzzle2dPlayPaneId, possibleIdOrText: string): boolean {
 		const token = puzzle2dPlayEngagementCommandToken(possibleIdOrText);
 		const runHost = (command: string, args?: unknown) => {
@@ -625,11 +639,11 @@ export class Puzzle2dPlayShellController extends Controller {
 			return remember("puzzle2d.create.rectangle");
 		}
 		if (possibleIdOrText === PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID || token === "brush") {
-			runHost("setActiveTool", { tool: "brush" });
+			this.setPlayActiveTool("brush");
 			return remember(PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID);
 		}
 		if (possibleIdOrText === PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID || token === "select") {
-			runHost("setActiveTool", { tool: "select" });
+			this.setPlayActiveTool("select");
 			return remember(PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID);
 		}
 		if (possibleIdOrText.startsWith("puzzle2d.brush.")) {
@@ -734,12 +748,8 @@ export class Puzzle2dPlayShellController extends Controller {
 			case "setActiveTool": {
 				const tool = (args as { tool?: Puzzle2dActiveTool }).tool;
 				if (tool === "select" || tool === "brush") {
-					this.activeTool = tool;
-					if (tool === "select") {
-						this.brushEngagementPossibles = [];
-					}
+					this.setPlayActiveTool(tool);
 				}
-				this.hostBridge?.runHostCommand(command, args);
 				break;
 			}
 			case "setBrushFlushDistance": {
@@ -1106,6 +1116,33 @@ if (import.meta.vitest) {
 			const app = runtime.getActiveApp();
 			expect(app?.panelTabs).toEqual([]);
 			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
+		});
+
+		it("engagementSubmit Brush activates brush on shell and forwards setActiveTool to host", () => {
+			const bus = new CommandBus();
+			let hostTool: Puzzle2dActiveTool | undefined;
+			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
+			ctrl.setHostBridge({
+				getToolbarState: () => ({
+					puzzle2dActiveTool: "select",
+					puzzle2dBrushFlushDistance: DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+					puzzle2dGridSnapEnabled: false,
+					puzzle2dRedrawPlaying: false,
+					puzzle2dSelectionMethod: "rectangle",
+					puzzle2dSelectionMode: "default",
+					puzzle2dSelectionTargets: { nodes: true, edges: true, handles: true },
+				}),
+				runHostCommand: (command, args) => {
+					if (command === "setActiveTool") {
+						hostTool = (args as { tool: Puzzle2dActiveTool }).tool;
+					}
+				},
+			});
+			bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "engagementSubmit", { pane: "2d-overview", value: "Brush" });
+			expect(ctrl.getActiveTool()).toBe("brush");
+			expect(hostTool).toBe("brush");
+			const engagement = ctrl.mainMode.windowKinds.find((wk) => wk.id === "2d-overview")?.engagement;
+			expect(engagement?.input?.placeholder).toBe("Brush");
 		});
 
 		it("brush flush-distance measure is registered on play windows", () => {
