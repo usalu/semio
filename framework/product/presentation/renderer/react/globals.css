@@ -139,11 +139,24 @@
 
 .reveal .presentation-figure-tile-frame {
 	display: flex;
-	align-items: center;
-	justify-content: center;
+	align-items: stretch;
+	justify-content: stretch;
 	overflow: hidden;
-	background-repeat: no-repeat;
 	z-index: 1;
+}
+
+.reveal .presentation-figure-crop-fill {
+	width: 100%;
+	height: 100%;
+	background-repeat: no-repeat;
+	background-size: var(--presentation-figure-bg-size);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-figure-crop-fill,
+.reveal .slides section[data-auto-animate="running"] .presentation-figure-crop-fill {
+	background-size: var(--presentation-figure-bg-size-morph);
+	background-position: var(--presentation-figure-bg-position-morph);
 }
 
 .reveal .presentation-figure-split-assembled {

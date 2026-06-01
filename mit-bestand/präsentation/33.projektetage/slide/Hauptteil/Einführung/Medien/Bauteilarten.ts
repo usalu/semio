@@ -15,7 +15,6 @@ export default {
 	arrangement: {
 		id: "catalogue-focus",
 		name: "Bauteilarten",
-		settleBeforeMorphTo: ["catalogue-labels"],
 		dispositions: [
 			{
 				participantId: CATALOGUE_PARTICIPANT,

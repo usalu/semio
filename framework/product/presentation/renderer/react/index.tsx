@@ -268,6 +268,18 @@ export function presentationAutoAnimateMatcher(
 		return true;
 	});
 }
+
+/** @emoji 📐 Rewrites reveal FLIP `scale(sx, sy)` to `scale(max(sx,sy))` so figure tiles zoom instead of squashing during auto-animate. */
+export function patchAutoAnimateUniformScale(css: string): string {
+	return css.replace(/scale\(([\d.]+),\s*([\d.]+)\)/g, (_match, scaleX: string, scaleY: string) => {
+		const sx = Number.parseFloat(scaleX);
+		const sy = Number.parseFloat(scaleY);
+		if (!Number.isFinite(sx) || !Number.isFinite(sy)) {
+			return `scale(${scaleX}, ${scaleY})`;
+		}
+		return `scale(${Math.max(sx, sy)})`;
+	});
+}
 //#endregion 🔖ArrangementSettled
 
 //#region 🔖HiddenPreflight
@@ -620,30 +632,35 @@ function BulletMorphView({
 	);
 }
 
-/** @emoji 🖼 Background for a normalized crop; cover-fills the frame so auto-animate never stretches the bitmap. */
-export function figureTileBackgroundStyle(
+/** @emoji 🖼 CSS vars for crop tiles: stretch-fill at rest, uniform cover zoom while reveal auto-animates. */
+export function figureCropBackgroundVars(
 	embodiment: FigureEmbodiment,
 	crop: DispositionPosition,
 	frame?: DispositionPosition,
 ): CSSProperties {
 	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
 	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
-	let bgWidth = stretchWidth;
-	let bgHeight = stretchHeight;
+	const stretchPosX = crop.width >= 1 ? 0 : (crop.x / (1 - crop.width)) * 100;
+	const stretchPosY = crop.height >= 1 ? 0 : (crop.y / (1 - crop.height)) * 100;
+	let morphWidth = stretchWidth;
+	let morphHeight = stretchHeight;
+	let morphPosX = stretchPosX;
+	let morphPosY = stretchPosY;
 	if (frame !== undefined && frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
 		const cropAspect = crop.width / crop.height;
 		const frameAspect = frame.width / frame.height;
 		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
-		bgWidth = stretchWidth * coverScale;
-		bgHeight = stretchHeight * coverScale;
+		morphWidth = stretchWidth * coverScale;
+		morphHeight = stretchHeight * coverScale;
+		morphPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
+		morphPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
 	}
-	const focalX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
-	const focalY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
 	return {
 		backgroundImage: `url("${embodiment.src}")`,
-		backgroundRepeat: "no-repeat",
-		backgroundSize: `${bgWidth}% ${bgHeight}%`,
-		backgroundPosition: `${focalX}% ${focalY}%`,
+		["--presentation-figure-bg-size" as string]: `${stretchWidth}% ${stretchHeight}%`,
+		["--presentation-figure-bg-position" as string]: `${stretchPosX}% ${stretchPosY}%`,
+		["--presentation-figure-bg-size-morph" as string]: `${morphWidth}% ${morphHeight}%`,
+		["--presentation-figure-bg-position-morph" as string]: `${morphPosX}% ${morphPosY}%`,
 	};
 }
 
@@ -666,10 +683,15 @@ function FigureTileView({
 			className={["presentation-disposition-frame", "presentation-figure-tile-frame", emphasisClass(emphasis)]
 				.filter(Boolean)
 				.join(" ")}
-			style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, tile.crop, tile.position) }}
+			style={frameStyle}
 			role="img"
 			aria-label={embodiment.alt ?? ""}
-		/>
+		>
+			<div
+				className="presentation-figure-crop-fill"
+				style={figureCropBackgroundVars(embodiment, tile.crop, tile.position)}
+			/>
+		</div>
 	);
 }
 
@@ -701,10 +723,15 @@ function FigureMorphView({
 				]
 					.filter(Boolean)
 					.join(" ")}
-				style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, embodiment.crop, position) }}
+				style={frameStyle}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
-			/>
+			>
+				<div
+					className="presentation-figure-crop-fill"
+					style={figureCropBackgroundVars(embodiment, embodiment.crop, position)}
+				/>
+			</div>
 		);
 	}
 	return (
@@ -1132,6 +1159,12 @@ export const PresentationDeck: FC<{
 				void deck.slide(indices.h, indices.v);
 			}
 		};
+		const onAutoAnimate = (event: Event): void => {
+			const sheet = (event as Event & { data?: { sheet?: { innerHTML: string } } }).data?.sheet;
+			if (sheet && typeof sheet.innerHTML === "string") {
+				sheet.innerHTML = patchAutoAnimateUniformScale(sheet.innerHTML);
+			}
+		};
 		void deck.initialize().then(() => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
@@ -1170,11 +1203,13 @@ export const PresentationDeck: FC<{
 			}
 			deck.on("slidechanged", onSlideChanged);
 			deck.on("resize", onResize);
+			deck.on("autoanimate", onAutoAnimate);
 		});
 		return () => {
 			window.removeEventListener("hashchange", onWindowHashChange);
 			deck.off("slidechanged", onSlideChanged);
 			deck.off("resize", onResize);
+			deck.off("autoanimate", onAutoAnimate);
 			try {
 				deck.destroy();
 			} catch {
@@ -1591,7 +1626,7 @@ if (import.meta.vitest) {
 			const first = tiles[0] as HTMLElement;
 			expect(first.classList.contains("presentation-figure-tile-frame")).toBe(true);
 			expect(first.style.position).toBe("absolute");
-			expect(first.style.backgroundImage).toContain("/catalogue.png");
+			expect(first.querySelector(".presentation-figure-crop-fill")?.getAttribute("style")).toContain("/catalogue.png");
 			const fullFigure = container.querySelector(
 				".presentation-figure-split-assembled-full .presentation-media-figure",
 			) as HTMLImageElement | null;
@@ -1700,28 +1735,35 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot') as HTMLElement | null;
-			expect(slot?.style.backgroundImage).toContain("/catalogue.png");
+			const fill = slot?.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
+			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
 			expect(slot?.querySelector("h2")).toBeNull();
 			expect(slot?.style.left).toBe("10%");
-			expect(slot?.style.backgroundSize).toBe("200% 100%");
-			expect(slot?.style.backgroundPosition).toBe("25% 50%");
+			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 100%");
+			expect(fill?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("0% 0%");
 		});
 
-		it("cover-zooms figure crop backgrounds when the frame is wider than the crop", () => {
+		it("rewrites non-uniform auto-animate scale() to a uniform zoom", () => {
+			expect(patchAutoAnimateUniformScale("transform: translate(1px, 2px) scale(1.5, 2) !important;")).toBe(
+				"transform: translate(1px, 2px) scale(2) !important;",
+			);
+		});
+
+		it("uses larger morph background vars when the frame is wider than the crop", () => {
 			const crop = { x: 0, y: 0, width: 0.5, height: 1 };
-			const square = figureTileBackgroundStyle(
+			const square = figureCropBackgroundVars(
 				{ kind: "figure", src: "/catalogue.png", crop },
 				crop,
 				{ x: 0, y: 0, width: 0.5, height: 0.5 },
 			);
-			const wide = figureTileBackgroundStyle(
+			const wide = figureCropBackgroundVars(
 				{ kind: "figure", src: "/catalogue.png", crop },
 				crop,
 				{ x: 0, y: 0, width: 1, height: 0.25 },
 			);
-			expect(square.backgroundSize).toBe("400% 200%");
-			expect(wide.backgroundSize).toBe("1600% 800%");
-			expect(wide.backgroundSize).not.toBe(square.backgroundSize);
+			expect(square["--presentation-figure-bg-size-morph" as keyof typeof square]).toBe("400% 200%");
+			expect(wide["--presentation-figure-bg-size-morph" as keyof typeof wide]).toBe("1600% 800%");
+			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("200% 100%");
 		});
 
 		it("matches auto-animate targets only by data-id", () => {

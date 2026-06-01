@@ -16,6 +16,7 @@ import {
 	CATALOGUE_COL1,
 	CATALOGUE_COL2,
 	CATALOGUE_COL3,
+	CATALOGUE_EMBODIMENT_CROP,
 	CATALOGUE_EMBODIMENT_LABEL,
 	CATALOGUE_PARTICIPANT,
 } from "./spec.ts";
@@ -85,7 +86,6 @@ if (import.meta.vitest) {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			const focus = media?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");
 			const dispositions = focus?.arrangement.dispositions ?? [];
-			expect(focus?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels"]);
 			expect(dispositions[0]?.participantId).toBe(CATALOGUE_PARTICIPANT);
 			expect(dispositions[0]?.split?.tiles).toHaveLength(10);
 			expect(dispositions.slice(1).map((disposition) => disposition.participantId)).toEqual([
@@ -98,7 +98,7 @@ if (import.meta.vitest) {
 			expect(col3?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs catalogue tiles into focus and column crops directly into labels in one run", () => {
+		it("morphs focus column crops to label positions on a bridge then switches to text", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			expect(media).toBeDefined();
 			const expanded = expandThoughtSlides(media!);
@@ -108,7 +108,13 @@ if (import.meta.vitest) {
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
 			expect(catalogueSlide?.autoAnimateId).toBeDefined();
 			expect(focusSlide?.autoAnimateId).toBe(catalogueSlide?.autoAnimateId);
-			expect(bridgeSlide).toBeUndefined();
+			expect(bridgeSlide?.derived).toBe(true);
+			expect(
+				bridgeSlide?.arrangement.dispositions.every(
+					(disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP,
+				),
+			).toBe(true);
+			expect(focusSlide?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels--bridge"]);
 			expect(labelSlide?.autoAnimateId).toBe(focusSlide?.autoAnimateId);
 			expect(
 				labelSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_LABEL),
