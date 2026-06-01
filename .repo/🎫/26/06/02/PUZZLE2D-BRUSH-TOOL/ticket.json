@@ -1,9 +1,9 @@
 {
   "title": "Puzzle2d Brush Tool",
   "emoji": "🖌️",
-  "status": "open",
+  "status": "closed",
   "description": "Implement paint-style Brush tool for puzzle2d: offset slot hitboxes, compatible node preview, auto-flush on leave, Tab cycle candidates, flush-distance window measure.",
-  "summary": "Fixed brush not committing on cursor leave: replay deferred brush pointer leave/move after GPU frame when WASM session was blocked, commit preview on brush pointer-up in WASM, pass fixture kindCompatibility to play canvases, added React integration test brushPlace fires when pointer leaves brush slot. Rebuilt puzzle_2d WASM.",
+  "summary": "Fixed brush placements disappearing: guard fresh brush node/edge ids from play structural-delete resync (600ms TTL), sync committed fixture to all authoring panes immediately via puzzle2dSyncFixtureDescriptorToAllAuthoringPeers, longer quiet window on brush commit. applyBrushPlacementToFixture returns placed ids.",
   "goal": "🎯puzzle",
   "plan": {
     "client": "cursor",
@@ -13,6 +13,7 @@
   "sessions": [
     "⚪bc0785fc8c7a4d08878cd726f260caab",
     "⚪128debf5f8f04565a1c3b382c9fda1f4",
-    "⚪71a872b0e4524469aa8735bb9c46df67"
+    "⚪71a872b0e4524469aa8735bb9c46df67",
+    "⚪4fdb8eb4540541e49500102eafb93c1e"
   ]
 }

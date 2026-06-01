@@ -160,10 +160,18 @@ export interface UiTreeSectionNode {
   readonly items: readonly UiTreeItemNode[];
 }
 
+/** @emoji 🎯 Optional tree selection overlay (row ids); avoids rebuilding sections on every pick. */
+export interface PlaygroundTreePanelSelection {
+  readonly selectedIds?: readonly string[];
+  readonly highlightedIds?: readonly string[];
+}
+
 /** @emoji 🌲 Workbench/details tree panel body. */
 export interface UiTreeNode {
   readonly type: "tree";
   readonly sections: readonly UiTreeSectionNode[];
+  readonly selectedIds?: readonly string[];
+  readonly highlightedIds?: readonly string[];
 }
 
 /** @emoji 🖱️ Collects declarative tree item `dragData` by row id (depth-first across sections). */
@@ -205,13 +213,19 @@ export type UiNode =
   | UiTreeNode;
 
 /** @emoji 🌲 Single-root tree body for a side panel (no duplicate section title). */
-export function playgroundTreePanelRootItems(sectionId: string, items: readonly UiTreeItemNode[]): UiTreeNode {
+export function playgroundTreePanelRootItems(
+  sectionId: string,
+  items: readonly UiTreeItemNode[],
+  selection?: PlaygroundTreePanelSelection,
+): UiTreeNode {
   if (!items.length) {
     throw new Error("playgroundTreePanelRootItems requires at least one root item.");
   }
   return {
     type: "tree",
     sections: [{ id: sectionId, defaultOpen: true, items }],
+    ...(selection?.selectedIds ? { selectedIds: selection.selectedIds } : {}),
+    ...(selection?.highlightedIds ? { highlightedIds: selection.highlightedIds } : {}),
   };
 }
 

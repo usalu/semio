@@ -393,14 +393,32 @@ function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[]
   return puzzle3dFixturePaletteTreeDragController(dragByItemId);
 }
 
-/** @emoji 🌲 Renders a declarative {@link UiTreeNode} with optional puzzle fixture palette drag. */
-function renderPlaygroundDeclarativeTree(treeNode: UiTreeNode, commandBus: CommandBus): React.ReactElement {
-  const dragAndDropController = buildUiTreeDragAndDropController(treeNode.sections, commandBus);
+/** @emoji 🌲 Renders a declarative {@link UiTreeNode}; memoizes TreeData by stable {@link UiTreeNode.sections} identity. */
+function PlaygroundDeclarativeTree(props: { readonly treeNode: UiTreeNode; readonly commandBus: CommandBus }): React.ReactElement {
+  const { treeNode, commandBus } = props;
+  const treeSections = treeNode.sections;
+  const treeDataSections = reactHostPort.useMemo(() => uiTreeSectionsToTreeData(treeSections, commandBus), [treeSections, commandBus]);
+  const dragAndDropController = reactHostPort.useMemo(() => buildUiTreeDragAndDropController(treeSections, commandBus), [treeSections, commandBus]);
+  const selectedIds = treeNode.selectedIds as string[] | undefined;
+  const highlightedIds = treeNode.highlightedIds;
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <Tree className="min-h-0 flex-1 overflow-auto" sections={uiTreeSectionsToTreeData(treeNode.sections, commandBus)} selectionMode="single" showLines dragAndDropController={dragAndDropController} />
+      <Tree
+        className="min-h-0 flex-1 overflow-auto"
+        sections={treeDataSections}
+        selectionMode="single"
+        showLines
+        dragAndDropController={dragAndDropController}
+        selectedIds={selectedIds}
+        highlightedIds={highlightedIds}
+      />
     </div>
   );
+}
+
+/** @emoji 🌲 Imperative helper for non-React callers (e.g. {@link UiRenderer} tree nodes). */
+function renderPlaygroundDeclarativeTree(treeNode: UiTreeNode, commandBus: CommandBus): React.ReactElement {
+  return <PlaygroundDeclarativeTree treeNode={treeNode} commandBus={commandBus} />;
 }
 
 function uiTreeSectionsToTreeData(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDataSection[] {
@@ -736,7 +754,11 @@ function DeclarativeTreeWorkbenchPanel(props: { readonly tabId: string; readonly
   if (node?.type !== "tree") {
     return <PlaygroundPanelBody><div className="p-2 text-xs text-destructive">Expected tree panel {props.bodyKey}</div></PlaygroundPanelBody>;
   }
-  return <PlaygroundPanelBody>{renderPlaygroundDeclarativeTree(node, bus)}</PlaygroundPanelBody>;
+  return (
+    <PlaygroundPanelBody>
+      <PlaygroundDeclarativeTree treeNode={node} commandBus={bus} />
+    </PlaygroundPanelBody>
+  );
 }
 
 /** @emoji 📑 Declarative side-panel body: tree nodes mount as a root {@link Tree} (not nested via {@link UiRenderer}). */
@@ -758,7 +780,11 @@ function DeclarativeSidePanelBody(props: { readonly tabId: string; readonly body
   const factory = getSidePanelBodyFactory(props.bodyKey);
   const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative panel "${props.bodyKey}"` };
   if (node.type === "tree") {
-    return <PlaygroundPanelBody>{renderPlaygroundDeclarativeTree(node, bus)}</PlaygroundPanelBody>;
+    return (
+      <PlaygroundPanelBody>
+        <PlaygroundDeclarativeTree treeNode={node} commandBus={bus} />
+      </PlaygroundPanelBody>
+    );
   }
   return (
     <PlaygroundPanelBody>
@@ -1790,6 +1816,9 @@ import {
   Puzzle2dCanvas,
   applyBrushPlacementToFixture,
   puzzle2dFixtureMergedKindCatalogs,
+  puzzle2dGuardBrushPlacementStructuralDeletes,
+  puzzle2dIsBrushPlacementStructuralDeleteGuarded,
+  puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
   puzzle2dActiveRenderer,
   DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
@@ -2544,9 +2573,18 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   const { notifyBrushCandidates } = usePuzzle2dPlayShell();
   const onBrushPlace = reactHostPort.useCallback(
     (payload: Puzzle2dBrushPlacePayload) => {
-      patchFixture((prev) => applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev)));
+      patchFixture((prev) => {
+        const result = applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev));
+        if (result.kind !== "placed") {
+          return prev;
+        }
+        guardFixtureAuthoringFromStructuralDeletes(200);
+        puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
+        puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
+        return result.fixture;
+      });
     },
-    [patchFixture],
+    [guardFixtureAuthoringFromStructuralDeletes, patchFixture],
   );
   return (
     <Puzzle2dPaneChrome paneId={paneId}>
@@ -3413,6 +3451,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);
   const queueStructuralDelete = reactHostPort.useCallback(
     (kind: "edge" | "node", id: string) => {
+      if (puzzle2dIsBrushPlacementStructuralDeleteGuarded(id)) {
+        return;
+      }
       if (kind === "node" && paletteDropNodeGuardRef.current.has(id)) {
         return;
       }
@@ -4482,6 +4523,29 @@ if (import.meta.vitest) {
         />,
       );
       expect(html).toContain("Scene");
+      expect(html).toContain("Alpha");
+      expect(html).not.toContain("Unsupported UiNode");
+    });
+
+    it("renders declarative tree nodes with selectedIds overlay", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const bus = new CommandBus();
+      const html = renderToStaticMarkup(
+        <UiRenderer
+          commandBus={bus}
+          node={{
+            type: "tree",
+            selectedIds: ["obj.a"],
+            sections: [
+              {
+                id: "root",
+                defaultOpen: true,
+                items: [{ id: "scene", label: "Scene", defaultOpen: true, items: [{ id: "obj.a", label: "Alpha" }] }],
+              },
+            ],
+          }}
+        />,
+      );
       expect(html).toContain("Alpha");
       expect(html).not.toContain("Unsupported UiNode");
     });

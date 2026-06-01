@@ -1793,19 +1793,28 @@ export function puzzle2dFixtureHandlesFromNodeKind(nodeId: string, templates: re
   }));
 }
 
+/** @emoji 🖌️ Result of {@link applyBrushPlacementToFixture} (placed ids for structural-delete guards). */
+export type Puzzle2dBrushPlacementApplyResult =
+  | { readonly kind: "unchanged" }
+  | { readonly fixture: Puzzle2dFixtureV1; readonly kind: "placed"; readonly nodeId: string; readonly edgeId: string };
+
 /** @emoji 🖌️ Appends a brushed node and parent edge from a WASM {@link Puzzle2dBrushPlacePayload}. */
-export function applyBrushPlacementToFixture(fixture: Puzzle2dFixtureV1, payload: Puzzle2dBrushPlacePayload, catalogs?: KindCatalogBundle): Puzzle2dFixtureV1 {
+export function applyBrushPlacementToFixture(
+  fixture: Puzzle2dFixtureV1,
+  payload: Puzzle2dBrushPlacePayload,
+  catalogs?: KindCatalogBundle,
+): Puzzle2dBrushPlacementApplyResult {
   const nodeId = `puzzle2d.brush.${crypto.randomUUID()}`;
   const handles = puzzle2dFixtureHandlesFromNodeKind(nodeId, payload.handles);
   const targetHandle = handles[payload.targetHandleIndex];
   if (!targetHandle) {
-    return fixture;
+    return { kind: "unchanged" };
   }
   if (fixture.edges.some((e) => e.source === payload.sourceHandleId || e.target === payload.sourceHandleId)) {
-    return fixture;
+    return { kind: "unchanged" };
   }
   if (handles.some((h) => fixture.edges.some((e) => e.source === h.id || e.target === h.id))) {
-    return fixture;
+    return { kind: "unchanged" };
   }
   const edgeId = `puzzle2d.brush.edge.${crypto.randomUUID()}`;
   const edge: Puzzle2dFixtureEdgeV1 = { id: edgeId, source: payload.sourceHandleId, target: targetHandle.id };
@@ -1815,7 +1824,12 @@ export function applyBrushPlacementToFixture(fixture: Puzzle2dFixtureV1, payload
     payload.shape === "rectangle"
       ? { ...base, height: payload.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX, shape: "rectangle", width: payload.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX }
       : { ...base, radius: payload.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2 };
-  return { ...fixture, edges: [...fixture.edges, edge], nodes: [...fixture.nodes, node] };
+  return {
+    kind: "placed",
+    fixture: { ...fixture, edges: [...fixture.edges, edge], nodes: [...fixture.nodes, node] },
+    nodeId,
+    edgeId,
+  };
 }
 
 /** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
@@ -7453,7 +7467,7 @@ if (puzzle2dVitest) {
         nodes: [{ id: "a", x: 0, y: 0, radius: 20, handles: [{ id: "a:h0", angle: 0, handleKind: "port" }] }],
         edges: [],
       };
-      const next = applyBrushPlacementToFixture(fixture, {
+      const result = applyBrushPlacementToFixture(fixture, {
         handles: [{ angle: Math.PI, handleKind: "port" }],
         nodeKind: "brush.kind",
         shape: "circle",
@@ -7463,10 +7477,14 @@ if (puzzle2dVitest) {
         y: 0,
         radius: 20,
       });
-      expect(next.nodes).toHaveLength(2);
-      expect(next.edges).toHaveLength(1);
-      expect(next.edges[0]?.source).toBe("a:h0");
-      expect(next.edges[0]?.target).toMatch(/:h0$/);
+      expect(result.kind).toBe("placed");
+      if (result.kind !== "placed") {
+        return;
+      }
+      expect(result.fixture.nodes).toHaveLength(2);
+      expect(result.fixture.edges).toHaveLength(1);
+      expect(result.fixture.edges[0]?.source).toBe("a:h0");
+      expect(result.fixture.edges[0]?.target).toMatch(/:h0$/);
     });
 
     it("applyBrushPlacementToFixture copies iconKind from fixture peer nodeKind", () => {
@@ -7479,7 +7497,7 @@ if (puzzle2dVitest) {
         ],
         edges: [],
       };
-      const next = applyBrushPlacementToFixture(
+      const result = applyBrushPlacementToFixture(
         fixture,
         {
           handles: [{ angle: Math.PI, handleKind: "port" }],
@@ -7494,8 +7512,19 @@ if (puzzle2dVitest) {
         },
         {},
       );
-      const brushed = next.nodes.find((node) => node.id.startsWith("puzzle2d.brush."));
+      expect(result.kind).toBe("placed");
+      if (result.kind !== "placed") {
+        return;
+      }
+      const brushed = result.fixture.nodes.find((node) => node.id.startsWith("puzzle2d.brush."));
       expect(brushed).toMatchObject({ nodeKind: "capsule.kind", iconKind: "capsule_J" });
+    });
+
+    it("puzzle2dIsBrushPlacementStructuralDeleteGuarded respects TTL guard", () => {
+      puzzle2dGuardBrushPlacementStructuralDeletes("puzzle2d.brush.node-a", "puzzle2d.brush.edge-a", 60_000);
+      expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("puzzle2d.brush.node-a")).toBe(true);
+      expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("puzzle2d.brush.edge-a")).toBe(true);
+      expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("other")).toBe(false);
     });
 
     it("brushPlace fires when pointer leaves brush slot", async () => {
@@ -9206,6 +9235,42 @@ export function puzzle2dSyncSelectionToAllAuthoringPeers(ids: readonly string[])
       continue;
     }
     peer.applySelectionFromPeerSilent(ids);
+  }
+}
+
+/** @emoji 🛡️ Fresh brush placement ids shielded from play structural-delete resync bursts. */
+const puzzle2dBrushStructuralDeleteGuardIds = new Set<string>();
+
+/** @emoji 🛡️ Guards a brushed node/edge from {@link puzzle2dIsBrushPlacementStructuralDeleteGuarded} for a short TTL. */
+export function puzzle2dGuardBrushPlacementStructuralDeletes(nodeId: string, edgeId: string, ttlMs = 600): void {
+  puzzle2dBrushStructuralDeleteGuardIds.add(nodeId);
+  puzzle2dBrushStructuralDeleteGuardIds.add(edgeId);
+  if (typeof globalThis.setTimeout !== "function") {
+    return;
+  }
+  globalThis.setTimeout(() => {
+    puzzle2dBrushStructuralDeleteGuardIds.delete(nodeId);
+    puzzle2dBrushStructuralDeleteGuardIds.delete(edgeId);
+  }, ttlMs);
+}
+
+/** @emoji 🛡️ True when play must ignore a structural delete for a just-placed brush instance. */
+export function puzzle2dIsBrushPlacementStructuralDeleteGuarded(id: string): boolean {
+  return puzzle2dBrushStructuralDeleteGuardIds.has(id);
+}
+
+/** @emoji 🔄 Syncs a committed fixture graph into every authoring pane before WASM can push a stale descriptor. */
+export function puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture: Puzzle2dFixtureV1): void {
+  const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture);
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive()) {
+      continue;
+    }
+    const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(peer, descriptor);
+    peer.setDeclarativeSceneEdgeExpectation(merged.edges.length);
+    peer.resetDeclarativeSceneSyncFingerprint();
+    syncPuzzle2dScene(peer, merged);
+    puzzle2dEnsureSceneEdgesFromDescriptor(peer, merged);
   }
 }
 //#endregion 🔖MultiViewAuthoring

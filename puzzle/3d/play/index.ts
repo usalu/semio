@@ -39,6 +39,7 @@ import {
   BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX,
   BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
   BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
+  BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX,
   DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
   applyBrushPlacementToFixture,
   brushPlacementCollisionToleranceFromSlider,
@@ -429,21 +430,29 @@ export function puzzle3dPlaySelectionEqual(a: Puzzle3dPlaySelection, b: Puzzle3d
 }
 
 //#region 🔖Puzzle3dPlayHierarchy
-/** @emoji 🌳 Nested workbench tree: Puzzle 3D → Objects → Vortices; Attractions sibling group. */
-export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, selection: Puzzle3dPlaySelection): UiNode {
-  if (!fixture) {
-    return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [{ id: "puzzle-3d-play-hierarchy.invalid", label: "Invalid puzzle 3D fixture" }]);
+/** @emoji 🎯 Maps play selection to declarative hierarchy row ids for {@link UiTreeNode.selectedIds}. */
+export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelection): readonly string[] {
+  const ids: string[] = [];
+  for (const objectId of selection.objectIds) {
+    ids.push(`puzzle-3d-play-hierarchy.object.${objectId}`);
   }
-  const selectedObjects = new Set(selection.objectIds);
-  const selectedVortices = new Set(selection.vortexIds);
-  const selectedAttractions = new Set(selection.attractionIds);
+  for (const fullId of selection.vortexIds) {
+    ids.push(`puzzle-3d-play-hierarchy.vortex.${fullId}`);
+  }
+  for (const attractionId of selection.attractionIds) {
+    ids.push(`puzzle-3d-play-hierarchy.attraction.${attractionId}`);
+  }
+  return ids;
+}
+
+/** @emoji 🌳 Structural hierarchy sections (no per-row selected flags; selection via {@link puzzle3dPlayHierarchySelectedIds}). */
+export function buildPuzzle3dPlayHierarchySections(fixture: FixtureV1): readonly UiTreeSectionNode[] {
   const objectItems: UiTreeItemNode[] = fixture.objects.map((object) => {
     const vortexItems: UiTreeItemNode[] = object.vortices.map((vortex) => {
       const fullId = puzzle3dVortexFullId(object.id, vortex.id);
       return {
         id: `puzzle-3d-play-hierarchy.vortex.${fullId}`,
         label: puzzle3dPlayFixtureRowLabel(vortex.label, fullId),
-        selected: selectedVortices.has(fullId),
         command: puzzle3dPlaySelectVortexCommand(fullId),
       };
     });
@@ -456,7 +465,6 @@ export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, select
     return {
       id: `puzzle-3d-play-hierarchy.object.${object.id}`,
       label: puzzle3dPlayFixtureRowLabel(object.label, object.id),
-      selected: selectedObjects.has(object.id),
       defaultOpen: true,
       command: puzzle3dPlaySelectObjectCommand(object.id),
       items: [vorticesGroup],
@@ -472,7 +480,6 @@ export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, select
     id: `puzzle-3d-play-hierarchy.attraction.${attraction.id}`,
     label: attraction.id,
     description: `${attraction.attracting} → ${attraction.attracted}`,
-    selected: selectedAttractions.has(attraction.id),
     command: puzzle3dPlaySelectAttractionCommand(attraction.id),
   }));
   const attractionsGroup: UiTreeItemNode = {
@@ -487,7 +494,19 @@ export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, select
     defaultOpen: true,
     items: [objectsGroup, attractionsGroup],
   };
-  return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [viewportRoot]);
+  return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [viewportRoot]).sections;
+}
+
+/** @emoji 🌳 Nested workbench tree: Puzzle 3D → Objects → Vortices; Attractions sibling group. */
+export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, selection: Puzzle3dPlaySelection): UiNode {
+  if (!fixture) {
+    return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [{ id: "puzzle-3d-play-hierarchy.invalid", label: "Invalid puzzle 3D fixture" }]);
+  }
+  return {
+    type: "tree",
+    sections: buildPuzzle3dPlayHierarchySections(fixture),
+    selectedIds: puzzle3dPlayHierarchySelectedIds(selection),
+  };
 }
 //#endregion 🔖Puzzle3dPlayHierarchy
 
@@ -636,6 +655,8 @@ export class Puzzle3dPlayShellController extends Controller {
   private snapshotCache: Puzzle3dPlaySnapshot | null = null;
   private windowEngagement: WindowEngagement | undefined;
   private hostBridge: Puzzle3dPlayHostBridge | null = null;
+  private hierarchySectionsCache: readonly UiTreeSectionNode[] | null = null;
+  private hierarchySectionsRevision = -1;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -673,6 +694,22 @@ export class Puzzle3dPlayShellController extends Controller {
   subscribeSnapshot(listener: () => void): () => void {
     this.snapshotListeners.add(listener);
     return () => this.snapshotListeners.delete(listener);
+  }
+
+  /** @emoji 🌳 Hierarchy panel tree with stable {@link UiTreeNode.sections} across selection-only updates. */
+  getHierarchyPanelTree(selection: Puzzle3dPlaySelection): UiNode {
+    if (!this.fixture) {
+      return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [{ id: "puzzle-3d-play-hierarchy.invalid", label: "Invalid puzzle 3D fixture" }]);
+    }
+    if (this.hierarchySectionsRevision !== this.fixtureRevision || !this.hierarchySectionsCache) {
+      this.hierarchySectionsCache = buildPuzzle3dPlayHierarchySections(this.fixture);
+      this.hierarchySectionsRevision = this.fixtureRevision;
+    }
+    return {
+      type: "tree",
+      sections: this.hierarchySectionsCache,
+      selectedIds: puzzle3dPlayHierarchySelectedIds(selection),
+    };
   }
 
   private rebuildSnapshotCache(): void {
@@ -1929,6 +1966,9 @@ export function buildPuzzle3dPlaySettingsBody(ctx: WindowBodyViewContext): UiNod
 export function buildPuzzle3dPlayHierarchyPanelBody(ctx: WindowBodyViewContext): UiNode {
   const ctrl = puzzle3dPlayControllerFromContext(ctx);
   const snap = ctrl?.getSnapshot();
+  if (ctrl) {
+    return ctrl.getHierarchyPanelTree(snap?.selection ?? PUZZLE_3D_PLAY_EMPTY_SELECTION);
+  }
   return buildPuzzle3dPlayHierarchyTree(snap?.fixture ?? null, snap?.selection ?? PUZZLE_3D_PLAY_EMPTY_SELECTION);
 }
 
@@ -2393,7 +2433,7 @@ if (import.meta.vitest) {
         ],
       });
       expect(fixture).not.toBeNull();
-      const tree = buildPuzzle3dPlayHierarchyTree(fixture, PUZZLE_3D_PLAY_EMPTY_SELECTION);
+      const tree = buildPuzzle3dPlayHierarchyTree(fixture!, PUZZLE_3D_PLAY_EMPTY_SELECTION);
       const viewportRoot = tree.sections[0]?.items?.[0];
       expect(viewportRoot?.label).toBe("Puzzle 3D");
       const objectsGroup = viewportRoot?.items?.find((row) => row.label === "Objects");
@@ -2405,6 +2445,53 @@ if (import.meta.vitest) {
       expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.vortex.a:v1");
       const attractionsGroup = viewportRoot?.items?.find((row) => row.label === "Attractions");
       expect(attractionsGroup?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.attraction.t1");
+    });
+
+    it("buildPuzzle3dPlayHierarchySections omits per-row selected flags", () => {
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [{ id: "a", meshUrl: "/m.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] }],
+      });
+      expect(fixture).not.toBeNull();
+      const visit = (items: readonly UiTreeItemNode[]): void => {
+        for (const item of items) {
+          expect(item.selected).toBeUndefined();
+          if (item.items?.length) {
+            visit(item.items);
+          }
+        }
+      };
+      for (const section of buildPuzzle3dPlayHierarchySections(fixture!)) {
+        visit(section.items);
+      }
+    });
+
+    it("puzzle3dPlayHierarchySelectedIds maps selection to hierarchy row ids", () => {
+      expect(
+        puzzle3dPlayHierarchySelectedIds({
+          objectIds: ["a"],
+          vortexIds: ["a:v1"],
+          attractionIds: ["t1"],
+        }),
+      ).toEqual(["puzzle-3d-play-hierarchy.object.a", "puzzle-3d-play-hierarchy.vortex.a:v1", "puzzle-3d-play-hierarchy.attraction.t1"]);
+    });
+
+    it("getHierarchyPanelTree keeps stable sections across selection-only changes", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = ctrl.getFixture();
+      expect(fixture).not.toBeNull();
+      const objectId = fixture!.objects[0]!.id;
+      ctrl.run("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [] } });
+      const treeA = ctrl.getHierarchyPanelTree(ctrl.getSnapshot().selection);
+      ctrl.run("setSelection", { selection: PUZZLE_3D_PLAY_EMPTY_SELECTION });
+      const treeB = ctrl.getHierarchyPanelTree(ctrl.getSnapshot().selection);
+      expect(treeA.sections).toBe(treeB.sections);
+      expect(treeA.selectedIds).toEqual([`puzzle-3d-play-hierarchy.object.${objectId}`]);
+      expect(treeB.selectedIds).toEqual([]);
     });
 
     it("buildPuzzle3dPlayKindsSections lists object, vortex, cable, and attraction kind categories", () => {
