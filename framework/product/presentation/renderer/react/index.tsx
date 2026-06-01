@@ -1437,16 +1437,15 @@ export function dispositionFrameElement(root: HTMLElement): HTMLElement {
 	);
 }
 
-/** @emoji ⊡ Selection chrome style: flow slides use an explicit frame; canvas-framed slides use wrapper inset via CSS. */
+/** @emoji ⊡ Selection chrome style: flow slides use measured ink frame; canvas-framed slides use wrapper inset via CSS. */
 export function interactiveDispositionChromeStyle(options: {
 	readonly selected: boolean;
 	readonly effectiveRect: DispositionPosition | undefined;
 	readonly canvasFramed: boolean;
 	readonly fullscreen: boolean;
-	readonly flowPixelOffset?: boolean;
 }): CSSProperties | undefined {
-	const { selected, effectiveRect, canvasFramed, fullscreen, flowPixelOffset } = options;
-	if (!selected || !effectiveRect || fullscreen || canvasFramed || flowPixelOffset) {
+	const { selected, effectiveRect, canvasFramed, fullscreen } = options;
+	if (!selected || !effectiveRect || fullscreen || canvasFramed) {
 		return undefined;
 	}
 	return transformFrameStyle(effectiveRect);
@@ -1717,10 +1716,20 @@ export function isFlowPixelOffsetTransform(
 	transform: DispositionPosition,
 	measured: DispositionPosition | undefined,
 ): boolean {
-	if (!measured) {
+	const sizeMatches =
+		measured === undefined
+			? transform.width > 0 &&
+				transform.width <= 1 &&
+				transform.height > 0 &&
+				transform.height <= 1
+			: transform.width === measured.width && transform.height === measured.height;
+	if (!sizeMatches) {
 		return false;
 	}
-	return transform.width === measured.width && transform.height === measured.height;
+	if (Math.abs(transform.x) > 1 || Math.abs(transform.y) > 1) {
+		return true;
+	}
+	return transform.x === 0 && transform.y === 0;
 }
 
 /** @emoji 🔍 Uniform scale for pinned resize so ink zooms inside the frame without reflow overflow. */
@@ -2402,11 +2411,10 @@ const InteractiveDisposition: FC<{
 				? transform
 				: effectiveRect;
 	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
-		selected,
+		selected: selected || gesturing,
 		effectiveRect: chromeLayoutRect,
 		canvasFramed,
 		fullscreen,
-		flowPixelOffset,
 	});
 	const showControls = (selected || gesturing) && Boolean(chromeLayoutRect ?? effectiveRect);
 	const showHandles = showControls && !fullscreen;
@@ -3767,7 +3775,7 @@ if (import.meta.vitest) {
 			const measured = { x: 0.2, y: 0.3, width: 0.25, height: 0.1 };
 			const offset = { x: 96, y: 40, width: 0.25, height: 0.1 };
 			expect(isFlowPixelOffsetTransform(offset, measured)).toBe(true);
-			expect(isFlowPixelOffsetTransform(offset, undefined)).toBe(false);
+			expect(isFlowPixelOffsetTransform(offset, undefined)).toBe(true);
 			expect(isFlowPixelOffsetTransform({ ...offset, width: 0.3 }, measured)).toBe(false);
 			const section = document.createElement("section");
 			section.style.width = "960px";
@@ -3813,15 +3821,18 @@ if (import.meta.vitest) {
 					fullscreen: false,
 				}),
 			).toBeUndefined();
-			expect(
-				interactiveDispositionChromeStyle({
-					selected: true,
-					effectiveRect: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 },
-					canvasFramed: false,
-					fullscreen: false,
-					flowPixelOffset: true,
-				}),
-			).toBeUndefined();
+		});
+
+		it("detects flow pixel-offset transforms without measured rect", () => {
+			const measured = { x: 0.2, y: 0.3, width: 0.25, height: 0.1 };
+			expect(isFlowPixelOffsetTransform({ x: 12, y: -4, width: 0.25, height: 0.1 }, undefined)).toBe(
+				true,
+			);
+			expect(isFlowPixelOffsetTransform({ x: 0, y: 0, width: 0.25, height: 0.1 }, undefined)).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 0.2, y: 0.3, width: 0.25, height: 0.1 }, undefined)).toBe(
+				false,
+			);
+			expect(isFlowPixelOffsetTransform({ x: 0, y: 0, width: 0.25, height: 0.1 }, measured)).toBe(true);
 		});
 
 		it("converts screen pointer delta through section visual scale", () => {
@@ -4202,7 +4213,9 @@ if (import.meta.vitest) {
 				".presentation-interactive-disposition__chrome",
 			) as HTMLElement;
 			expect(chrome.isConnected).toBe(true);
-			expect(chrome.style.left).toBe("");
+			expect(chrome.style.left).not.toBe("");
+			expect(chrome.style.width).not.toBe("");
+			expect(chrome.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
 		});
 
 		it("drags positioned disposition", () => {

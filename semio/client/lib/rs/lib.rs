@@ -12494,43 +12494,65 @@ pub mod kit_backbone {
         let kit_scope_ports = crate::kit_backbone::hydrate_kit_scope_ports_from_snapshot_value(json).await;
         let kit_owner = std::sync::Arc::downgrade(kit);
 
+        async fn resolve_typology_for_entity_json(
+            kit: &std::sync::Arc<crate::kit::Kit>,
+            nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
+            entity_json: &crate::external_adapters::serde_json::Value,
+        ) -> std::sync::Arc<crate::gql_relay::Typology> {
+            if let Some(tid) = entity_json
+                .get("typology")
+                .and_then(crate::kit_backbone::json_entity_id_ref)
+            {
+                if let Some(found) = kit.typology_by_id(&tid.into()).await {
+                    return found;
+                }
+            }
+            nested_topo.clone()
+        }
+
         async fn hydrate_types_block(
-            topo: &std::sync::Arc<crate::gql_relay::Typology>,
+            nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
             kit: &std::sync::Arc<crate::kit::Kit>,
             types_arr: &[crate::external_adapters::serde_json::Value],
             kit_scope_ports: &std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>>,
         ) -> Result<(), crate::error::SemioError> {
-            let topo_owner = std::sync::Arc::downgrade(topo);
             for t in types_arr {
                 let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
+                let owner_topo = resolve_typology_for_entity_json(kit, nested_topo, t).await;
+                let topo_owner = std::sync::Arc::downgrade(&owner_topo);
                 let nm = t.get("name").and_then(|x| x.as_str()).unwrap_or("");
-                let entity = crate::kit::r#type::Type::new_with_external_id(topo_owner.clone(), ts.into(), nm.to_string()).await;
+                let entity = crate::kit::r#type::Type::new_with_external_id(topo_owner, ts.into(), nm.to_string()).await;
                 crate::kit_backbone::hydrate_type_from_snapshot_value(&entity, t, kit_scope_ports).await?;
                 kit.type_weak_by_id.write().await.insert(entity.id.clone(), std::sync::Arc::downgrade(&entity));
-                topo.types.write().await.push(entity);
+                owner_topo.types.write().await.push(entity);
             }
             Ok(())
         }
 
         async fn hydrate_designs_block(
-            topo: &std::sync::Arc<crate::gql_relay::Typology>,
+            nested_topo: &std::sync::Arc<crate::gql_relay::Typology>,
             kit: &std::sync::Arc<crate::kit::Kit>,
             design_arr: &[crate::external_adapters::serde_json::Value],
         ) -> Result<(), crate::error::SemioError> {
-            let topo_owner = std::sync::Arc::downgrade(topo);
             for d in design_arr {
                 let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
+                let owner_topo = resolve_typology_for_entity_json(kit, nested_topo, d).await;
+                let topo_owner = std::sync::Arc::downgrade(&owner_topo);
                 let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
-                let des = crate::kit::design::Design::with_id(topo_owner.clone(), ds.into(), dn.to_string()).await;
+                let des = crate::kit::design::Design::with_id(topo_owner, ds.into(), dn.to_string()).await;
                 hydrate_design_pieces_from_snapshot_value(&des, kit, d).await?;
                 kit.design_weak_by_id.write().await.insert(des.id.clone(), std::sync::Arc::downgrade(&des));
-                topo.designs.write().await.push(des);
+                owner_topo.designs.write().await.push(des);
             }
             Ok(())
         }
 
         let typologies_arr = json.get("typologies").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned();
         if let Some(topos) = typologies_arr {
+            let mut topo_entries: Vec<(
+                crate::external_adapters::serde_json::Value,
+                std::sync::Arc<crate::gql_relay::Typology>,
+            )> = Vec::new();
             for topo_json in &topos {
                 let tid = topo_json.get("id").and_then(|x| x.as_str()).unwrap_or("default-typology");
                 let tnm = topo_json.get("name").and_then(|x| x.as_str()).unwrap_or("Default");
@@ -12541,11 +12563,14 @@ pub mod kit_backbone {
                 if let Some(icon) = topo_json.get("icon").and_then(|x| x.as_str()) {
                     *topo.icon.write().await = Some(icon.to_string());
                 }
+                kit.typologies.write().await.push(topo.clone());
+                topo_entries.push((topo_json.clone(), topo));
+            }
+            for (topo_json, topo) in &topo_entries {
                 let types_arr = topo_json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
                 let designs_arr = topo_json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-                hydrate_types_block(&topo, kit, &types_arr, &kit_scope_ports).await?;
-                hydrate_designs_block(&topo, kit, &designs_arr).await?;
-                kit.typologies.write().await.push(topo);
+                hydrate_types_block(topo, kit, &types_arr, &kit_scope_ports).await?;
+                hydrate_designs_block(topo, kit, &designs_arr).await?;
             }
         } else {
             let default_topo = crate::gql_relay::Typology::new(kit_owner.clone(), "Default".to_string()).await;

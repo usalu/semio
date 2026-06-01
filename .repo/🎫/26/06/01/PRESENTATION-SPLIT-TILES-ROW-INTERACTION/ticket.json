@@ -1,8 +1,9 @@
 {
   "title": "Presentation Split Tiles Row Interaction",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Tiles in presentations should remain individual dispositions; arrangement must not group them. Rows should be selectable/hoverable as a whole while each tile stays independently interactive. Fix for slides like Bauteilarten with split figure grids.",
+  "summary": "Split figure tiles on interactive slides are no longer grouped into a single split-group disposition. buildInteractiveSlideLayout expands each visible split tile into its own canvas-framed InteractiveDisposition (morph-participant duplicate splits stay non-interactive). Visual row bands behind tiles support row-wide hover and click-to-select-all-tiles-in-row while each tile remains individually selectable, draggable, and resizable. Added clusterSplitTilesByVisualRow in core, row hover context in renderer, CSS for row-band and row-hovered tiles. Core (42) and renderer (47) tests pass; verified on Bauteilarten slide: 10 disposition wrappers, 0 split-groups.",
   "goal": "🎯presentation",
   "sessions": [
     "⚪e169764b44eb48678ca5fd4631081ebe"

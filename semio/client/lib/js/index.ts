@@ -4890,6 +4890,11 @@ export class Typology extends Entity {
   declare fileSystemHasChildren: () => Promise<boolean>;
 }
 
+function parseTypologyBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
+  const t = frag?.["typology"] as JsonObject | undefined;
+  return parseEntityConnectionIds(t ?? (isJsonObjectNode(frag) ? frag : null), key);
+}
+
 const TYPOLOGY_FIELDS = defineBoundKitFields([
   { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "name") },
   { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "description") },
@@ -4898,13 +4903,13 @@ const TYPOLOGY_FIELDS = defineBoundKitFields([
     selection: "hasTypes { edges { node { id } } }",
     parse: () => [],
     parseEntity: (entity, frag) =>
-      Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasTypes").map((id) => new Type(entity.session, id, entity.storeId))),
+      Object.freeze(parseTypologyBranchConnection(frag as JsonObject | null, "hasTypes").map((id) => new Type(entity.session, id, entity.storeId))),
   },
   {
     selection: "hasDesigns { edges { node { id } } }",
     parse: () => [],
     parseEntity: (entity, frag) =>
-      Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "hasDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
+      Object.freeze(parseTypologyBranchConnection(frag as JsonObject | null, "hasDesigns").map((id) => new Design(entity.session, id, entity.storeId))),
   },
   ...vfsKitFields("typology"),
 ] as const);
@@ -5313,6 +5318,34 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         );
         expect(children.some((row) => row.kind === "TYPOLOGY")).toBe(true);
         expect(children.length).toBeGreaterThan(0);
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("fetchSemioFileSystemChildren lists capsule kinds under typology-capsule", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/architect.harness.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const capsuleTypologyId = "typology-capsule";
+        const children = await eventually(
+          () => fetchSemioFileSystemChildren(store, { kind: "TYPOLOGY", id: capsuleTypologyId }),
+          (rows) => rows.some((row) => row.kind === "TYPE" && row.name === "KindAlpha"),
+          30_000,
+        );
+        expect(children.some((row) => row.kind === "TYPE" && row.name === "KindAlpha")).toBe(true);
+        expect(children.some((row) => row.kind === "TYPE" && row.name === "KindBeta")).toBe(true);
+        const topo = new Typology(session, capsuleTypologyId, store.id);
+        const hasTypes = await eventually(() => topo.hasTypes(), (rows) => rows.length >= 2, 10_000);
+        expect(hasTypes.length).toBeGreaterThanOrEqual(2);
+        expect(hasTypes.some((row) => row.name === "KindAlpha")).toBe(true);
       } finally {
         await session.dispose();
       }

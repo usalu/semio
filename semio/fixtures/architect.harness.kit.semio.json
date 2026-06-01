@@ -13,30 +13,6 @@
                     "hash": "typology-migration-stub",
                     "items": [
                         {
-                            "id": "b2000000-0000-4000-8000-000000000001",
-                            "name": "KindAlpha",
-                            "hash": "type-a-h",
-                            "families": {
-                                "hash": "fam-h",
-                                "items": []
-                            },
-                            "typology": {
-                                "id": "typology-default"
-                            }
-                        },
-                        {
-                            "id": "b2000000-0000-4000-8000-000000000002",
-                            "name": "KindBeta",
-                            "hash": "type-b-h",
-                            "families": {
-                                "hash": "fam-h",
-                                "items": []
-                            },
-                            "typology": {
-                                "id": "typology-default"
-                            }
-                        },
-                        {
                             "id": "b2000000-0000-4000-8000-000000000003",
                             "name": "KindGamma",
                             "hash": "type-c-h",
@@ -86,7 +62,32 @@
                 "name": "Capsule",
                 "types": {
                     "hash": "typology-migration-stub",
-                    "items": []
+                    "items": [
+                        {
+                            "id": "b2000000-0000-4000-8000-000000000001",
+                            "name": "KindAlpha",
+                            "hash": "type-a-h",
+                            "families": {
+                                "hash": "fam-h",
+                                "items": []
+                            },
+                            "typology": {
+                                "id": "typology-capsule"
+                            }
+                        },
+                        {
+                            "id": "b2000000-0000-4000-8000-000000000002",
+                            "name": "KindBeta",
+                            "hash": "type-b-h",
+                            "families": {
+                                "hash": "fam-h",
+                                "items": []
+                            },
+                            "typology": {
+                                "id": "typology-capsule"
+                            }
+                        }
+                    ]
                 },
                 "designs": {
                     "hash": "typology-migration-stub",

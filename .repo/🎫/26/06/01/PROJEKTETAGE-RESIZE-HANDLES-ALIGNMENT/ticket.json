@@ -1,9 +1,9 @@
 {
   "title": "Projektetage Resize Handles Alignment",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Fix interactive resize on projektetage: content scales uniformly inside the frame (no text reflow overshoot); resize handles aligned with selection chrome.",
-  "summary": "Fixed catalogue split-grid resize handles (Bauteilkatalog / focus slides).\n\nRoot cause: canvas-framed CSS forced every `.presentation-figure-tile-frame` to `position: static; width/height 100%`, collapsing the 15-tile grid into one box while chrome stayed on the bounding wrapper — handles looked inside the per-tile highlights and vanished when layout flipped on drag.\n\n- Split dispositions use `--split-group` wrapper at the tile bounding rect; tiles are re-expressed with `splitTilesInGroupFrame` relative to that rect.\n- Tile frames keep absolute % placement; only single disposition frames are flattened to fill the wrapper.\n- Handles centered on corners via `translate(-50%, -50%)`; chrome stays visible during gestures (`--gesturing`).\n- Fullscreen control remains mounted while handles hide in fullscreen.\n\n42 core + 44 renderer tests pass.",
+  "summary": "Fixed resize handles for catalogue split grids and intro flow title drag.\n\nCatalogue (prior): split-group / per-tile layout, canvas-framed CSS, gesturing chrome.\n\nIntro flow title (this fix): dragging stored pixel offsets on the wrapper while chrome fell back to `inset: 0` on the full-width wrapper (handles jumped off the title or used pixel values as % and vanished).\n\n- Flow drag keeps chrome on measured ink bounds via `transformFrameStyle(measuredNatural)`; wrapper alone uses `translate3d` for pixel offset.\n- `isFlowPixelOffsetTransform` detects px translate without requiring registry measured rect.\n- Chrome stays visible while gesturing (`selected || gesturing`).\n- `clusterSplitTilesByVisualRow` exported from presentation core.\n\n48 renderer + 42 core tests pass.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪8e72685386be43deb606fd885b24412f",

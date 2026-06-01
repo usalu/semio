@@ -1,0 +1,10 @@
+{
+  "title": "Capsule Types Under Capsule Typology",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix sketchpad bug: capsule types do not appear under capsule typology.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8e838cfdeead49bbbaceee1810ec1f00"
+  ]
+}

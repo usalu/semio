@@ -115,17 +115,31 @@ function __metabolismKitInner(): Record<string, unknown> {
   const inner = root.wip?.initialKit;
   return (inner && typeof inner === "object" ? inner : (MetabolismKitData as unknown as Record<string, unknown>)) ?? {};
 }
+
+/** @emoji 🏛️ Flattens kinds from root `types` or nested `typologies[].types`. */
+function __kitTypesFromInner(inner: Record<string, unknown>): readonly unknown[] {
+  const rootTypes = __itemsOf(inner["types"]);
+  if (rootTypes.length > 0) return rootTypes;
+  return __itemsOf(inner["typologies"]).flatMap((topo) => __itemsOf((topo as { types?: unknown }).types));
+}
+
+/** @emoji 🏛️ Flattens designs from root `designs` or nested `typologies[].designs`. */
+function __kitDesignsFromInner(inner: Record<string, unknown>): readonly unknown[] {
+  const rootDesigns = __itemsOf(inner["designs"]);
+  if (rootDesigns.length > 0) return rootDesigns;
+  return __itemsOf(inner["typologies"]).flatMap((topo) => __itemsOf((topo as { designs?: unknown }).designs));
+}
 //#endregion 🔖KitBootstrapHelpers
 export { MetabolismKitData as MetabolismKit };
 
 /**
  * Metabolism kit types array
  **/
-export const MetabolismKitTypes = __itemsOf(__metabolismKitInner()["types"]);
+export const MetabolismKitTypes = __kitTypesFromInner(__metabolismKitInner());
 /**
  * Metabolism kit designs array
  **/
-export const MetabolismKitDesigns = __itemsOf(__metabolismKitInner()["designs"]);
+export const MetabolismKitDesigns = __kitDesignsFromInner(__metabolismKitInner());
 /**
  * Metabolism kit typologies array
  **/

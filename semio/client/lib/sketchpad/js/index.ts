@@ -12603,10 +12603,92 @@ function sketchpadVfsRecordsFromRsChildren(
 	});
 }
 
+function sketchpadKitTypologyRows(kit: Kit): readonly { readonly id: string; readonly name: string; readonly types: readonly unknown[]; readonly designs: readonly unknown[] }[] {
+	const block = (kit as { typologies?: unknown }).typologies;
+	const items = Array.isArray(block)
+		? block
+		: block && typeof block === "object" && Array.isArray((block as { items?: unknown[] }).items)
+			? (block as { items: unknown[] }).items
+			: [];
+	return items
+		.map((topo) => {
+			if (typeof topo !== "object" || topo === null) return null;
+			const row = topo as { id?: string; name?: string; types?: unknown; designs?: unknown };
+			const id = String(row.id ?? "");
+			if (!id) return null;
+			const typesBlock = row.types;
+			const designsBlock = row.designs;
+			const types = Array.isArray(typesBlock)
+				? typesBlock
+				: typesBlock && typeof typesBlock === "object" && Array.isArray((typesBlock as { items?: unknown[] }).items)
+					? (typesBlock as { items: unknown[] }).items
+					: [];
+			const designs = Array.isArray(designsBlock)
+				? designsBlock
+				: designsBlock && typeof designsBlock === "object" && Array.isArray((designsBlock as { items?: unknown[] }).items)
+					? (designsBlock as { items: unknown[] }).items
+					: [];
+			return { id, name: String(row.name ?? id), types, designs };
+		})
+		.filter((row): row is NonNullable<typeof row> => row !== null);
+}
+
 function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFileSystemNodeRecord[] {
 	const kitId = String(kit.id ?? "");
+	const typologies = sketchpadKitTypologyRows(kit);
 	if (parentId === kitId) {
 		const rows: VirtualFileSystemNodeRecord[] = [];
+		for (const topo of typologies) {
+			const topoPath = `/${topo.name}`;
+			rows.push({
+				id: topo.id,
+				fileNodeKindId: "typology",
+				name: topo.name,
+				path: topoPath,
+				parentId: kitId,
+				hasChildren: topo.types.length > 0 || topo.designs.length > 0,
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("typology", { path: topoPath }),
+			});
+		}
+		if (typologies.length > 0) {
+			for (const folder of kit.folders ?? []) {
+				const row = folder as Record<string, unknown>;
+				const id = String(row["id"] ?? "");
+				if (!id) continue;
+				const path = typeof row["path"] === "string" ? row["path"] : id;
+				const slash = path.lastIndexOf("/");
+				const name = slash >= 0 ? path.slice(slash + 1) : path;
+				rows.push({
+					id,
+					fileNodeKindId: "folder",
+					name,
+					path,
+					parentId: kitId,
+					hasChildren: true,
+					navigateUri: `/kits/${kitId}?folder=${encodeURIComponent(id)}`,
+					descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("folder", { path }),
+				});
+			}
+			for (const file of kit.files ?? []) {
+				const row = file as Record<string, unknown>;
+				const id = String(row["id"] ?? "");
+				if (!id) continue;
+				const vfsFile = sketchpadKitVfsFileRowFields(row);
+				const filePath = `/${sketchpadKitFileBasename(row)}`;
+				rows.push({
+					id,
+					fileNodeKindId: "file",
+					name: vfsFile.name,
+					icon: vfsFile.icon,
+					path: filePath,
+					parentId: kitId,
+					hasChildren: false,
+					navigateUri: `/kits/${kitId}?file=${encodeURIComponent(id)}`,
+					descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path: filePath }),
+				});
+			}
+			return rows;
+		}
 		for (const folder of kit.folders ?? []) {
 			const row = folder as Record<string, unknown>;
 			const id = String(row["id"] ?? "");
@@ -12673,6 +12755,43 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				hasChildren: false,
 				navigateUri: `/kits/${kitId}?file=${encodeURIComponent(id)}`,
 				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path: filePath }),
+			});
+		}
+		return rows;
+	}
+	const typology = typologies.find((topo) => topo.id === parentId);
+	if (typology) {
+		const rows: VirtualFileSystemNodeRecord[] = [];
+		for (const type of typology.types) {
+			if (typeof type !== "object" || type === null || !("id" in type)) continue;
+			const t = type as Type;
+			const typePath = `/${typology.name}/${t.name ?? t.id}`;
+			const typeHasChildren =
+				(t.representations?.length ?? 0) > 0 || (t.ports?.length ?? 0) > 0 || (t.connectors?.length ?? 0) > 0;
+			rows.push({
+				id: String(t.id),
+				fileNodeKindId: "type",
+				name: t.name ?? t.id,
+				path: typePath,
+				parentId,
+				hasChildren: typeHasChildren,
+				navigateUri: `/kits/${kitId}/types/${t.id}`,
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("type", { path: typePath }),
+			});
+		}
+		for (const design of typology.designs) {
+			if (typeof design !== "object" || design === null || !("id" in design)) continue;
+			const d = design as Design;
+			const designPath = `/${typology.name}/${d.name ?? d.id}`;
+			rows.push({
+				id: String(d.id),
+				fileNodeKindId: "design",
+				name: d.name ?? d.id,
+				path: designPath,
+				parentId,
+				hasChildren: true,
+				navigateUri: `/kits/${kitId}/designs/${d.id}`,
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("design", { path: designPath }),
 			});
 		}
 		return rows;
