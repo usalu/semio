@@ -83,6 +83,28 @@ if (import.meta.vitest) {
 			expect(catalogue?.arrangement.dispositions).toHaveLength(15);
 		});
 
+		it("names all fifteen catalogue tiles semantically", () => {
+			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
+			const catalogue = media?.slides.find((slide) => slide.arrangement.id === "catalogue");
+			expect(catalogue?.arrangement.dispositions.map((disposition) => disposition.participantId)).toEqual([
+				"Struktur 1",
+				"Struktur 2",
+				"Flächen",
+				"Elemente 1",
+				"Elemente 2",
+				"Rippenplatte 1",
+				"Rippenplatte 2",
+				"Rippenplatte 3",
+				"Rippenplatte 4",
+				"Rippenplatte 5",
+				"Rippenplatte 6",
+				"Unterzug 1",
+				"Unterzug 2",
+				"Unterzug 3",
+				"Stütze",
+			]);
+		});
+
 		it("focuses ten catalogue tile participants for column morph", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			const focus = media?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");

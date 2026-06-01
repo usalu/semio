@@ -16,13 +16,13 @@ todos:
     status: completed
   - id: renderer
     content: "Renderer: resolve via scope chain; delete tile/split/morphParticipant views and interaction branches; keep crop figure morph; clean globals.css dead rules."
-    status: in_progress
+    status: completed
   - id: deck
     content: "Deck: split spec.ts into participants + embodiment registry, build catalogue via split(), columns via crop figure + label + generalized morph; update SlideFile registries, 4 media slides, Einleitung.ts, and index.ts merge."
-    status: pending
+    status: completed
   - id: tests
     content: Extend core/renderer/deck inline vitest to the new model; run all nx test configs + live projektetage dev server check; close ticket with summary.
-    status: pending
+    status: completed
 isProject: false
 ---
 

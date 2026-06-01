@@ -1,8 +1,8 @@
 {
   "title": "Embodiment Registry Refactor",
   "emoji": "🎭",
-  "status": "open",
+  "status": "closed",
   "description": "Restructure @framework/presentation: embodiments in scoped sibling registries, dispositions bind participantId+embodimentId, full artifact-level scoping, tile/split templates produce embodiments+dispositions (remove DispositionSplit). Migrate renderer and 33.projektetage deck.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": []
+  "summary": "Restructured @framework/presentation core: Participant identity-only, required embodiment ids in scoped ArtifactScope registries, Disposition.embodimentId required; removed DispositionSplit/SplitTile/morphParticipant/tileMorphId and split geometry helpers. Added buildResolutionScope, resolutionScopeForArrangement, tile(), split(), remapSplitDispositions, unionSourceCrops; migrated intro()/analogy() and expandArrangementMorphFrom. React renderer resolves via ancestor scope chain, renders each tile as a normal cropped-figure disposition (no split/tile/morph-participant views); fixed AuthorsMorphView muted rows via abbreviateFirstName; cleaned dead split/tile CSS. Migrated 33.projektetage spec (mediaParticipants/mediaEmbodiments, CATALOGUE_SPLIT, column morphFrom) and Medien slides + index merge/tests. All vitest: core 39, renderer 60, deck 8 passed.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
 }

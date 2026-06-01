@@ -100,8 +100,13 @@ export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
 
 export const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
 
-/** @emoji 🏷 Grid keys of the ten component tiles on catalogue rows 1–2 → semantic slide keys. */
-export const CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS = {
+/** @emoji 🏷 Grid keys of all 3×5 catalogue tiles → semantic participant ids. */
+export const CATALOGUE_TILE_SEMANTIC_KEYS = {
+	"tile-r0-c0": "Struktur 1",
+	"tile-r0-c1": "Struktur 2",
+	"tile-r0-c2": "Flächen",
+	"tile-r0-c3": "Elemente 1",
+	"tile-r0-c4": "Elemente 2",
 	"tile-r1-c0": "Rippenplatte 1",
 	"tile-r1-c1": "Rippenplatte 2",
 	"tile-r1-c2": "Rippenplatte 3",
@@ -116,7 +121,7 @@ export const CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS = {
 
 /** @emoji 🧩 Applies semantic participant ids to split template artifacts. */
 export function catalogueSplitWithSemanticKeys(artifacts: SplitArtifacts): SplitArtifacts {
-	const keyMap = CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS;
+	const keyMap = CATALOGUE_TILE_SEMANTIC_KEYS;
 	const remapId = (gridKey: string): string =>
 		keyMap[gridKey as keyof typeof keyMap] ?? gridKey;
 	const participants = artifacts.participants.map((participant) => ({
@@ -226,8 +231,7 @@ export function catalogueFocusColumnTiles(): readonly { readonly participantId: 
 
 	return placements.map(({ gridKey, position }) => {
 		const semantic =
-			CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS[gridKey as keyof typeof CATALOGUE_COMPONENT_TILE_SEMANTIC_KEYS] ??
-			gridKey;
+			CATALOGUE_TILE_SEMANTIC_KEYS[gridKey as keyof typeof CATALOGUE_TILE_SEMANTIC_KEYS] ?? gridKey;
 		return { participantId: semantic, position };
 	});
 }

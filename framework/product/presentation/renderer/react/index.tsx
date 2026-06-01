@@ -26,6 +26,7 @@ import type {
 import {
     abbreviateAuthorFirstName,
     affiliationLineName,
+    buildResolutionScope,
     centerResolvedArrangement,
     collectPresentationSlides,
     expandThoughtSlides,
@@ -374,6 +375,9 @@ function morphAnchorClass(emphasis: ParticipantEmphasis): string {
 //#region 🔖SlideEpoch
 const PresentationSlideEpochContext = createContext(0);
 
+/** @emoji 🔗 When true, the interactive canvas wrapper owns `data-id` for reveal.js auto-animate. */
+const MorphAnchorOnWrapperContext = createContext(false);
+
 export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
 	const width = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-width") ?? "960");
 	const height = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-height") ?? "700");
@@ -529,10 +533,7 @@ function AuthorsMorphView({
 	readonly morphId: string;
 	readonly embodiment: AuthorsEmbodiment;
 }): ReactNode {
-	const namesMuted =
-		embodiment.id === "marked" ||
-		embodiment.id === "marked-affiliations" ||
-		embodiment.id?.startsWith("marked-affiliations-step");
+	const namesMuted = embodiment.abbreviateFirstName === true;
 	const rows = authorRows(embodiment);
 	return (
 		<div className="presentation-intro-rows presentation-intro-authors flex w-full max-w-full flex-col items-center text-center">
@@ -730,6 +731,7 @@ function FigureMorphView({
 	position,
 	style,
 	dormantAnchor,
+	anchorOnWrapper = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -737,13 +739,22 @@ function FigureMorphView({
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
 	readonly dormantAnchor?: boolean;
+	readonly anchorOnWrapper?: boolean;
 }): ReactNode {
 	if (embodiment.crop && position) {
 		const dormant = dormantAnchor === true || style?.opacity === 0;
-		const frameStyle = dispositionFrameStyle(position, dormant ? undefined : style);
+		const frameStyle = anchorOnWrapper
+			? {
+					position: "relative" as const,
+					width: "100%",
+					height: "100%",
+					boxSizing: "border-box" as const,
+					...(style?.opacity !== undefined ? { opacity: style.opacity } : {}),
+				}
+			: dispositionFrameStyle(position, dormant ? undefined : style);
 		return (
 			<div
-				data-id={anchorId}
+				{...(anchorOnWrapper ? {} : { "data-id": anchorId })}
 				className={[
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
@@ -778,14 +789,24 @@ function PositionedTextMorphView({
 	emphasis,
 	position,
 	style,
+	anchorOnWrapper = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position: DispositionPosition;
 	readonly style?: DispositionStyle;
+	readonly anchorOnWrapper?: boolean;
 }): ReactNode {
-	const frameStyle = dispositionFrameStyle(position, style);
+	const frameStyle = anchorOnWrapper
+		? {
+				position: "relative" as const,
+				width: "100%",
+				height: "100%",
+				boxSizing: "border-box" as const,
+				...(style?.opacity !== undefined ? { opacity: style.opacity } : {}),
+			}
+		: dispositionFrameStyle(position, style);
 	if (resolveTextMorphRoot(embodiment) === "heading-block") {
 		return (
 			<div
@@ -806,7 +827,7 @@ function PositionedTextMorphView({
 	const headingClass = centeredLineClass(anchorId, embodiment, emphasis);
 	return (
 		<div
-			data-id={anchorId}
+			{...(anchorOnWrapper ? {} : { "data-id": anchorId })}
 			className={[
 				"presentation-disposition-frame",
 				"presentation-morph-slot",
@@ -948,6 +969,7 @@ function DispositionFrame({
 
 function MorphDispositionView({ disposition }: { readonly disposition: ResolvedDisposition }): ReactNode {
 	const { embodiment, emphasis, morphId: anchorId } = disposition;
+	const anchorOnWrapper = useContext(MorphAnchorOnWrapperContext);
 	let content: ReactNode;
 	switch (embodiment.kind) {
 		case "text":
@@ -959,6 +981,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						emphasis={emphasis}
 						position={disposition.position}
 						style={disposition.style}
+						anchorOnWrapper={anchorOnWrapper}
 					/>
 				);
 			}
@@ -982,10 +1005,19 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						emphasis={emphasis}
 						position={disposition.position}
 						style={disposition.style}
+						anchorOnWrapper={anchorOnWrapper}
 					/>
 				);
 			}
-			content = <FigureMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} position={disposition.position} />;
+			content = (
+				<FigureMorphView
+					morphId={anchorId}
+					embodiment={embodiment}
+					emphasis={emphasis}
+					position={disposition.position}
+					anchorOnWrapper={anchorOnWrapper}
+				/>
+			);
 			break;
 		case "video":
 			content = <VideoMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
@@ -1100,6 +1132,7 @@ export interface InteractiveSlideLayout {
 export function buildInteractiveSlideLayout(
 	renderSlideId: string,
 	resolved: readonly ResolvedDisposition[],
+	morph = false,
 ): InteractiveSlideLayout {
 	const placements: InteractiveDispositionPlacement[] = [];
 	resolved.forEach((disposition, dispositionIndex) => {
@@ -1109,6 +1142,7 @@ export function buildInteractiveSlideLayout(
 			disposition,
 			declaredRect,
 			sectionRect: declaredRect,
+			revealMorphId: morph ? disposition.morphId : undefined,
 		});
 	});
 	return { placements, rowBands: [] };
@@ -1253,12 +1287,12 @@ export function scaleRectWithinGroup(
 	};
 }
 
-/** @emoji ⛶ Centered slide-space frame for interactive fullscreen (between typical figure thumb and video). */
+/** @emoji ⛶ Centered near-slide frame for interactive fullscreen (uniform across figure, video, pdf, tiles). */
 export const SLIDE_INTERACTIVE_FULLSCREEN_FRAME: DispositionPosition = {
-	x: 0.275,
-	y: 0.2875,
-	width: 0.45,
-	height: 0.425,
+	x: 0.05,
+	y: 0.075,
+	width: 0.9,
+	height: 0.85,
 };
 
 /** @emoji ⛶ Toggles uniform slide-fullscreen frame vs stashed pre-fullscreen rect. */
@@ -1322,7 +1356,7 @@ export function dispositionPlacementContainer(
 export function dispositionFrameElement(root: HTMLElement): HTMLElement {
 	return (
 		(root.querySelector(
-			".presentation-disposition-frame, .presentation-figure-tile-frame, .presentation-morph-slot--figure, .presentation-morph-anchor",
+			".presentation-disposition-frame, .presentation-morph-slot--figure, .presentation-morph-anchor",
 		) as HTMLElement | null) ?? root
 	);
 }
@@ -1380,7 +1414,7 @@ export function measureElementRectInSection(
 }
 
 const DISPOSITION_BOUNDS_SELECTORS =
-	"[data-id], .presentation-disposition-frame, .presentation-morph-anchor, .presentation-intro-line, .presentation-morph-text, h1, h2, h3, h4, p, li, img, video, .presentation-media-figure, .presentation-figure-tile-frame";
+	"[data-id], .presentation-disposition-frame, .presentation-morph-anchor, .presentation-intro-line, .presentation-morph-text, h1, h2, h3, h4, p, li, img, video, .presentation-media-figure, .presentation-figure-crop-fill";
 
 function unionDomRects(a: DOMRect, b: DOMRect): DOMRect {
 	const left = Math.min(a.left, b.left);
@@ -2470,7 +2504,11 @@ const InteractiveDisposition: FC<{
 				className="presentation-interactive-disposition__content"
 				style={hasContentStyle ? contentStyle : undefined}
 			>
-				<MorphDispositionView disposition={displayDisposition} />
+				<MorphAnchorOnWrapperContext.Provider
+					value={Boolean(revealMorphId && declaredRect !== undefined)}
+				>
+					<MorphDispositionView disposition={displayDisposition} />
+				</MorphAnchorOnWrapperContext.Provider>
 				{showControls ? (
 					<>
 						{showHandles ? (
@@ -2666,10 +2704,11 @@ const ArrangementSection: FC<{
 	const resolved = resolveArrangement(scope, renderSlide.arrangement);
 	const morph = renderSlide.autoAnimateId !== undefined;
 	const positioned = resolved.some((disposition) => disposition.position !== undefined);
-	const layoutResolved = positioned ? centerResolvedArrangement(resolved) : resolved;
+	const layoutResolved =
+		positioned && !morph ? centerResolvedArrangement(resolved) : resolved;
 	const interactiveLayout = useMemo(
-		() => buildInteractiveSlideLayout(renderSlide.id, layoutResolved),
-		[layoutResolved, renderSlide.id],
+		() => buildInteractiveSlideLayout(renderSlide.id, layoutResolved, morph),
+		[layoutResolved, morph, renderSlide.id],
 	);
 	const declaredRects = useMemo(() => {
 		const map = new Map<string, DispositionPosition | undefined>();
@@ -3056,7 +3095,7 @@ if (import.meta.vitest) {
 		});
 
 		it("renders expanded intro slides", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
 				goal: ["G1"],
@@ -3079,7 +3118,7 @@ if (import.meta.vitest) {
 		});
 
 		it("keeps intro flow slides centered while enabling interactive dispositions", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
 				goal: ["G1"],
@@ -3107,7 +3146,7 @@ if (import.meta.vitest) {
 		});
 
 		it("applies muted opacity on layered description slide", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A"], short: "Short" },
 				description: { full: ["D"], short: "D short" },
 				goal: ["G"],
@@ -3122,7 +3161,7 @@ if (import.meta.vitest) {
 		});
 
 		it("matches eg-ice-25 intro morph DOM per arrangement", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
 				goal: ["G1"],
@@ -3140,7 +3179,7 @@ if (import.meta.vitest) {
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
 			expect(slide("title")?.querySelectorAll('h2[data-id^="title"]').length).toBe(3);
 			expect(slide("description")?.querySelector('h2[data-id="title"]')).toBeTruthy();
-			expect(slide("description")?.querySelector('div[data-id="title"]')).toBeNull();
+			expect(slide("description")?.querySelector('div[data-id="title"].presentation-disposition-frame')).toBeNull();
 			expect(slide("description")?.querySelectorAll('h2[data-id^="description"]').length).toBe(2);
 			expect(slide("goal")?.querySelector('h2[data-id="description"]')?.textContent).toBe("D short");
 			expect(slide("goal")?.querySelector('h2[data-id^="goal"]')).toBeTruthy();
@@ -3188,7 +3227,7 @@ if (import.meta.vitest) {
 		});
 
 		it("applies title and secondary morph text sizes on intro slides", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
 				goal: ["G1"],
@@ -3209,14 +3248,17 @@ if (import.meta.vitest) {
 					expect(node.classList.contains(sizeClass)).toBe(true);
 				}
 			};
-			expectMorphClass('[data-id^="title"]', "presentation-morph-text--title");
-			expectMorphClass('[data-id^="description"], [data-id="goal"]', "presentation-morph-text--secondary");
-			expect(container.querySelector('[data-id^="title"].presentation-morph-text--secondary')).toBeNull();
-			expect(container.querySelector('[data-id="goal"].presentation-morph-text--title')).toBeNull();
+			expectMorphClass('h1[data-id^="title"], h2[data-id^="title"]', "presentation-morph-text--title");
+			expectMorphClass(
+				'h2[data-id^="description"], p[data-id^="description"], h2[data-id="goal"], p[data-id="goal"]',
+				"presentation-morph-text--secondary",
+			);
+			expect(container.querySelector('h2[data-id^="title"].presentation-morph-text--secondary')).toBeNull();
+			expect(container.querySelector('h2[data-id="goal"].presentation-morph-text--title')).toBeNull();
 		});
 
 		it("does not use reveal fit-text on intro headings", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A", "B"], short: "Short" },
 				description: { full: ["D1"], short: "D short" },
 				goal: ["G1"],
@@ -3230,7 +3272,7 @@ if (import.meta.vitest) {
 		});
 
 		it("enables reveal auto-animate and tags every morph arrangement with data-auto-animate", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1", "D2"], short: "D short" },
 				goal: ["G1"],
@@ -3375,18 +3417,20 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const tiles = container.querySelectorAll('[data-id^="tile-r"]');
-			expect(tiles.length).toBe(4);
-			const first = tiles[0] as HTMLElement;
+			const wrappers = container.querySelectorAll("[data-disposition-id]");
+			expect(wrappers.length).toBe(4);
+			const first = wrappers[0] as HTMLElement;
 			expect(first.classList.contains("presentation-interactive-disposition")).toBe(true);
 			expect(first.style.position).toBe("absolute");
-			const fill = first.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
+			const tileFrame = first.querySelector('.presentation-disposition-frame[data-id^="tile-r"]') as HTMLElement;
+			expect(tileFrame).toBeTruthy();
+			const fill = tileFrame.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
 			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
 			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 200%");
 			const fills = [...container.querySelectorAll(".presentation-figure-crop-fill")] as HTMLElement[];
 			const positions = fills.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
-			expect(first.closest(".presentation-interactive-disposition--canvas-framed")).not.toBeNull();
+			expect(first.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
 		});
 
 		it("pairs catalogue tile morph anchors on interactive wrappers across slides", () => {
@@ -3468,6 +3512,9 @@ if (import.meta.vitest) {
 			};
 			const pairs = presentationAutoAnimateMatcher.call(host, fromSlide!, toSlide!);
 			expect(pairs).toHaveLength(4);
+			expect(pairs.every((pair) => pair.from.getAttribute("data-id") === pair.to.getAttribute("data-id"))).toBe(
+				true,
+			);
 			expect(pairs[0]?.from.classList.contains("presentation-interactive-disposition")).toBe(true);
 			expect(pairs[0]?.to.classList.contains("presentation-interactive-disposition")).toBe(true);
 		});
@@ -3523,17 +3570,13 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "crop",
-										participants: [
+										participants: [{ id: "catalogue-col1" }],
+										embodiments: [
 											{
-												id: "catalogue-col1",
-												embodiments: [
-													{
-														kind: "figure",
-														id: "crop",
-														src: "/catalogue.png",
-														crop: { x: 0, y: 0, width: 0.5, height: 1 },
-													},
-												],
+												kind: "figure",
+												id: "catalogue-col1--crop",
+												src: "/catalogue.png",
+												crop: { x: 0, y: 0, width: 0.5, height: 1 },
 											},
 										],
 										slides: [
@@ -3543,7 +3586,7 @@ if (import.meta.vitest) {
 													dispositions: [
 														{
 															participantId: "catalogue-col1",
-															embodimentId: "crop",
+															embodimentId: "catalogue-col1--crop",
 															emphasis: "active",
 															position: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
 														},
@@ -3663,17 +3706,13 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "crop",
-										participants: [
+										participants: [{ id: "catalogue-col1" }],
+										embodiments: [
 											{
-												id: "catalogue-col1",
-												embodiments: [
-													{
-														kind: "figure",
-														id: "crop",
-														src: "/catalogue.png",
-														crop: { x: 0, y: 0, width: 0.5, height: 1 },
-													},
-												],
+												kind: "figure",
+												id: "catalogue-col1--crop",
+												src: "/catalogue.png",
+												crop: { x: 0, y: 0, width: 0.5, height: 1 },
 											},
 										],
 										slides: [
@@ -3683,7 +3722,7 @@ if (import.meta.vitest) {
 													dispositions: [
 														{
 															participantId: "catalogue-col1",
-															embodimentId: "crop",
+															embodimentId: "catalogue-col1--crop",
 															emphasis: "active",
 															position: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
 															style: { opacity: 0 },
@@ -3720,18 +3759,14 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "labels",
-										participants: [
+										participants: [{ id: "catalogue-col1" }],
+										embodiments: [
 											{
-												id: "catalogue-col1",
-												embodiments: [
-													{
-														kind: "text",
-														id: "label",
-														lines: ["Rippenplatte"],
-														level: "heading",
-														morphRoot: "heading-line",
-													},
-												],
+												kind: "text",
+												id: "catalogue-col1--label",
+												lines: ["Rippenplatte"],
+												level: "heading",
+												morphRoot: "heading-line",
 											},
 										],
 										slides: [
@@ -3741,7 +3776,7 @@ if (import.meta.vitest) {
 													dispositions: [
 														{
 															participantId: "catalogue-col1",
-															embodimentId: "label",
+															embodimentId: "catalogue-col1--label",
 															emphasis: "active",
 															position: { x: 0.38, y: 0.12, width: 0.24, height: 0.24 },
 														},
@@ -3790,7 +3825,7 @@ if (import.meta.vitest) {
 	});
 
 	describe("syncPresentationSlideUrl", () => {
-		const sampleDeck = intro({
+		const sampleDeck = intro({ language: "de",
 			title: { full: ["A"], short: "Short" },
 			description: { full: ["D"], short: "D short" },
 			goal: ["G"],
@@ -3836,11 +3871,11 @@ if (import.meta.vitest) {
 
 		it("writes chapter, sequence, thought, and slide bookmark params after the hash path", () => {
 			history.replaceState(null, "", "/deck");
-			const goalSlide = collectPresentationSlides(sampleDeck).find((slide) => slide.slide === "Goal");
+			const goalSlide = collectPresentationSlides(sampleDeck).find((slide) => slide.slide === "Ziel");
 			syncPresentationSlideUrl(sampleDeck, { h: goalSlide!.h, v: goalSlide!.v });
 			const url = new URL(window.location.href);
 			expect(url.search).toBe("");
-			expect(url.hash).toContain("slide=Goal");
+			expect(url.hash).toContain("folie=Ziel");
 			history.replaceState(null, "", "/deck");
 		});
 
@@ -4103,66 +4138,37 @@ if (import.meta.vitest) {
 			).toBe("scale(1.25)");
 		});
 
-		it("expands split dispositions into per-tile interactive placements with row bands", () => {
+		it("builds one interactive placement per tile disposition", () => {
 			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
-			const participants = [
-				{
-					id: "catalogue",
-					embodiments: [{ kind: "figure" as const, src: "/catalogue.png" }],
-				},
-			];
-			const resolved = resolveArrangement(participants, {
+			const grid = split({ source: "/catalogue.png", rows: 2, columns: 2, frame });
+			const scope = buildResolutionScope([
+				{ participants: grid.participants, embodiments: grid.embodiments },
+			]);
+			const resolved = resolveArrangement(scope, {
 				id: "tiles",
-				dispositions: [{ participantId: "catalogue", emphasis: "active" as const, split: { tiles } }],
+				dispositions: grid.dispositions,
 			});
 			const layout = buildInteractiveSlideLayout("slide-1", resolved);
 			expect(layout.placements).toHaveLength(4);
-			expect(layout.rowBands).toHaveLength(2);
-			expect(layout.placements.every((entry) => entry.sectionRect !== undefined)).toBe(true);
-			expect(layout.placements.every((entry) => entry.rowBandId !== undefined)).toBe(true);
-		});
-
-		it("skips morph-participant duplicate splits in interactive layout", () => {
-			const frame = { x: 0.1, y: 0.1, width: 0.3, height: 0.6 };
-			const tiles = splitFigureGrid({ rows: 2, columns: 1, frame });
-			const participants = [
-				{
-					id: "catalogue-col1",
-					embodiments: [{ kind: "figure" as const, src: "/catalogue.png" }],
-				},
-			];
-			const resolved = resolveArrangement(participants, {
-				id: "col",
-				dispositions: [
-					{
-						participantId: "catalogue-col1",
-						emphasis: "active" as const,
-						split: { tiles, morphParticipant: true },
-					},
-				],
-			});
-			const layout = buildInteractiveSlideLayout("slide-2", resolved);
-			expect(layout.placements).toHaveLength(0);
 			expect(layout.rowBands).toHaveLength(0);
+			expect(layout.placements.every((entry) => entry.sectionRect !== undefined)).toBe(true);
 		});
 
 		it("auto-animates catalogue focus into inline column labels", async () => {
 			const {
-				ASSET_CATALOGUE,
 				CATALOGUE_COL1,
 				CATALOGUE_COL2,
 				CATALOGUE_COL3,
+				CATALOGUE_EMBODIMENT_COL1_LABEL,
+				CATALOGUE_EMBODIMENT_COL2_LABEL,
+				CATALOGUE_EMBODIMENT_COL3_LABEL,
 				CATALOGUE_COLUMN_TILE_KEYS,
-				CATALOGUE_EMBODIMENT_CROP,
-				CATALOGUE_EMBODIMENT_LABEL,
-				CATALOGUE_FOCUS_TILES,
-				CATALOGUE_PARTICIPANT,
-				CATALOGUE_TILES_ASSEMBLED,
-				catalogueColumnParticipant,
-				catalogueFocusTilesForColumn,
+				CATALOGUE_SPLIT,
+				catalogueFocusDispositions,
+				columnLabelMorphFrom,
 				inlineColumnLabelPosition,
-				unionTileCrop,
+				mediaEmbodiments,
+				mediaParticipants,
 			} = await import("@mit-bestand/praesentation/projektetage-spec");
 			const deck: Presentation = {
 				id: "projektetage-morph",
@@ -4176,38 +4182,13 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "medien",
-										participants: [
-											{
-												id: CATALOGUE_PARTICIPANT,
-												embodiments: [{ kind: "figure", src: ASSET_CATALOGUE, alt: "Katalog" }],
-											},
-											catalogueColumnParticipant(
-												CATALOGUE_COL1,
-												CATALOGUE_COLUMN_TILE_KEYS.col1,
-												"Rippenplatte",
-											),
-											catalogueColumnParticipant(
-												CATALOGUE_COL2,
-												CATALOGUE_COLUMN_TILE_KEYS.col2,
-												"Unterzug",
-											),
-											catalogueColumnParticipant(
-												CATALOGUE_COL3,
-												CATALOGUE_COLUMN_TILE_KEYS.col3,
-												"Stütze",
-											),
-										],
+										participants: mediaParticipants,
+										embodiments: mediaEmbodiments,
 										slides: [
 											{
 												arrangement: {
 													id: "catalogue",
-													dispositions: [
-														{
-															participantId: CATALOGUE_PARTICIPANT,
-															emphasis: "active",
-															split: { tiles: CATALOGUE_TILES_ASSEMBLED },
-														},
-													],
+													dispositions: CATALOGUE_SPLIT.dispositions,
 												},
 												transition: { kind: "morph" },
 											},
@@ -4215,37 +4196,7 @@ if (import.meta.vitest) {
 												arrangement: {
 													id: "catalogue-focus",
 													settleBeforeMorphTo: ["catalogue-labels"],
-													dispositions: [
-														{
-															participantId: CATALOGUE_PARTICIPANT,
-															emphasis: "active",
-															split: { tiles: CATALOGUE_FOCUS_TILES },
-														},
-														{
-															participantId: CATALOGUE_COL1,
-															emphasis: "active",
-															split: {
-																tiles: catalogueFocusTilesForColumn("col1"),
-																morphParticipant: true,
-															},
-														},
-														{
-															participantId: CATALOGUE_COL2,
-															emphasis: "active",
-															split: {
-																tiles: catalogueFocusTilesForColumn("col2"),
-																morphParticipant: true,
-															},
-														},
-														{
-															participantId: CATALOGUE_COL3,
-															emphasis: "active",
-															split: {
-																tiles: catalogueFocusTilesForColumn("col3"),
-																morphParticipant: true,
-															},
-														},
-													],
+													dispositions: catalogueFocusDispositions(),
 												},
 												transition: { kind: "morph" },
 											},
@@ -4255,21 +4206,24 @@ if (import.meta.vitest) {
 													dispositions: [
 														{
 															participantId: CATALOGUE_COL1,
-															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+															embodimentId: CATALOGUE_EMBODIMENT_COL1_LABEL,
 															emphasis: "active",
 															position: inlineColumnLabelPosition(0),
+															morphFrom: columnLabelMorphFrom("col1", inlineColumnLabelPosition(0)),
 														},
 														{
 															participantId: CATALOGUE_COL2,
-															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+															embodimentId: CATALOGUE_EMBODIMENT_COL2_LABEL,
 															emphasis: "active",
 															position: inlineColumnLabelPosition(1),
+															morphFrom: columnLabelMorphFrom("col2", inlineColumnLabelPosition(1)),
 														},
 														{
 															participantId: CATALOGUE_COL3,
-															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
+															embodimentId: CATALOGUE_EMBODIMENT_COL3_LABEL,
 															emphasis: "active",
 															position: inlineColumnLabelPosition(2),
+															morphFrom: columnLabelMorphFrom("col3", inlineColumnLabelPosition(2)),
 														},
 													],
 												},
@@ -4295,15 +4249,11 @@ if (import.meta.vitest) {
 			expect(focusSlide).toBeTruthy();
 			expect(labelSlide).toBeTruthy();
 			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
-			expect(
-				focusSlide.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--figure'),
-			).toBeTruthy();
 			prepareArrangementBeforeAutoAnimate(focusSlide, labelSlide);
 			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(true);
 			const host: AutoAnimateMatcherHost = {
 				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
 					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
-						const key = serializer(element);
 						const toElement = toScope.querySelector<HTMLElement>(
 							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
 						);
@@ -4315,16 +4265,58 @@ if (import.meta.vitest) {
 			};
 			const pairs = presentationAutoAnimateMatcher.call(host, focusSlide, labelSlide);
 			const columnIds = [CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3];
-			expect(columnIds.every((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id))).toBe(
-				true,
-			);
+			expect(columnIds.every((id) => labelSlide.querySelector(`[data-id="${id}"]`))).toBe(true);
+			const tileIds = [
+				...CATALOGUE_COLUMN_TILE_KEYS.col1,
+				...CATALOGUE_COLUMN_TILE_KEYS.col2,
+				...CATALOGUE_COLUMN_TILE_KEYS.col3,
+			];
 			expect(
-				pairs.every((pair) => pair.from.classList.contains("presentation-morph-slot--figure")),
+				tileIds.filter((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id)).length,
+			).toBeGreaterThanOrEqual(8);
+			expect(
+				columnIds.every((id) =>
+					labelSlide.querySelector(`.presentation-interactive-disposition[data-id="${id}"]`),
+				),
 			).toBe(true);
-			expect(pairs.every((pair) => pair.to.classList.contains("presentation-morph-slot--label"))).toBe(
-				true,
+			mountRoot.remove();
+		});
+
+		it("puts reveal data-id on catalogue tile wrappers for catalogue-to-focus morph", async () => {
+			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
+				await import("@framework/presentation/core");
+			type SlideFile = import("@framework/presentation/core").SlideFile;
+			const { presentationMeta, CATALOGUE_FOCUS_TILES } = await import("@mit-bestand/praesentation/projektetage-spec");
+			const slideModules = import.meta.glob<{ default: SlideFile }>(
+				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
+				{ eager: true },
 			);
-			expect(unionTileCrop(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col1).width).toBeGreaterThan(0);
+			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+			const catalogueRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilkatalog");
+			const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
+			expect(catalogueRef).toBeDefined();
+			expect(focusRef).toBeDefined();
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
+			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			const tileId = CATALOGUE_FOCUS_TILES[0]!.participantId;
+			const catalogueTile = catalogueSlide.querySelector(
+				`.presentation-interactive-disposition[data-id="${tileId}"]`,
+			) as HTMLElement;
+			const focusTile = focusSlide.querySelector(
+				`.presentation-interactive-disposition[data-id="${tileId}"]`,
+			) as HTMLElement;
+			expect(catalogueTile).toBeTruthy();
+			expect(focusTile).toBeTruthy();
+			expect(catalogueTile.querySelector(`[data-id="${tileId}"]`)).toBeNull();
+			expect(catalogueSlide.getAttribute("data-auto-animate-id")).toBe(
+				focusSlide.getAttribute("data-auto-animate-id"),
+			);
 			mountRoot.remove();
 		});
 
@@ -4332,8 +4324,7 @@ if (import.meta.vitest) {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
 				await import("@framework/presentation/core");
 			type SlideFile = import("@framework/presentation/core").SlideFile;
-			const { presentationMeta, CATALOGUE_PARTICIPANT, CATALOGUE_TILES_ASSEMBLED, CATALOGUE_FOCUS_TILES } =
-				await import("@mit-bestand/praesentation/projektetage-spec");
+			const { presentationMeta, CATALOGUE_FOCUS_TILES } = await import("@mit-bestand/praesentation/projektetage-spec");
 			const slideModules = import.meta.glob<{ default: SlideFile }>(
 				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
 				{ eager: true },
@@ -4367,18 +4358,10 @@ if (import.meta.vitest) {
 				},
 			};
 			const pairs = presentationAutoAnimateMatcher.call(host, catalogueSlide, focusSlide);
-			const componentTileIds = CATALOGUE_FOCUS_TILES.map(
-				(tile) => `catalogue--tile--${tile.key}`,
-			);
+			const componentTileIds = CATALOGUE_FOCUS_TILES.map((tile) => tile.participantId);
 			expect(componentTileIds.every((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id))).toBe(
 				true,
 			);
-			expect(
-				catalogueSlide.querySelectorAll(
-					'[data-settle-before-morph-to] .presentation-figure-tile-frame',
-				).length,
-			).toBe(0);
-			expect(CATALOGUE_TILES_ASSEMBLED.length).toBeGreaterThan(componentTileIds.length);
 			mountRoot.remove();
 		});
 
@@ -4445,66 +4428,6 @@ if (import.meta.vitest) {
 			mountRoot.remove();
 		});
 
-		it("renders morph-participant dormant anchors on the arrangement canvas", () => {
-			const mountRoot = document.createElement("div");
-			document.body.appendChild(mountRoot);
-			const frame = { x: 0.1, y: 0.1, width: 0.3, height: 0.6 };
-			const tiles = splitFigureGrid({ rows: 2, columns: 1, frame });
-			const deck: Presentation = {
-				id: "morph-participant-anchor",
-				name: "Morph participant",
-				chapters: [
-					{
-						id: "main",
-						sequences: [
-							{
-								id: "main",
-								thoughts: [
-									{
-										id: "focus",
-										participants: [
-											{
-												id: "catalogue-col1",
-												embodiments: [
-													{
-														kind: "figure",
-														id: "crop",
-														src: "/catalogue.png",
-														crop: { x: 0, y: 0, width: 0.5, height: 1 },
-													},
-												],
-											},
-										],
-										slides: [
-											{
-												arrangement: {
-													id: "focus",
-													dispositions: [
-														{
-															participantId: "catalogue-col1",
-															emphasis: "active",
-															split: { tiles, morphParticipant: true },
-														},
-													],
-												},
-											},
-										],
-									},
-								],
-							},
-						],
-					},
-				],
-			};
-			act(() => {
-				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
-			});
-			const anchor = mountRoot.querySelector(
-				'[data-id="catalogue-col1"].presentation-morph-slot--figure.presentation-morph-slot--dormant',
-			);
-			expect(anchor).toBeTruthy();
-			mountRoot.remove();
-		});
 	});
 
 	describe("presentation interaction dom", () => {
@@ -4522,12 +4445,8 @@ if (import.meta.vitest) {
 							thoughts: [
 								{
 									id: "placed",
-									participants: [
-										{
-											id: "box",
-											embodiments: [{ kind: "text", lines: ["Hello"], level: "body" }],
-										},
-									],
+									participants: [{ id: "box" }],
+									embodiments: [{ kind: "text", id: "box--main", lines: ["Hello"], level: "body" }],
 									slides: [
 										{
 											arrangement: {
@@ -4535,6 +4454,7 @@ if (import.meta.vitest) {
 												dispositions: [
 													{
 														participantId: "box",
+														embodimentId: "box--main",
 														emphasis: "active",
 														position: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 },
 													},
@@ -4635,8 +4555,9 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll("[data-disposition-id]").length).toBe(1);
 		});
 
-		it("renders one interactive wrapper per split tile", () => {
+		it("renders one interactive wrapper per tile disposition", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
+			const grid = split({ source: "/catalogue.png", rows: 2, columns: 2, frame, alt: "Catalogue" });
 			const deck: Presentation = {
 				id: "split-interactive",
 				name: "Split Interactive",
@@ -4649,25 +4570,13 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "split",
-										participants: [
-											{
-												id: "catalogue",
-												embodiments: [{ kind: "figure", src: "/catalogue.png", alt: "Catalogue" }],
-											},
-										],
+										participants: grid.participants,
+										embodiments: grid.embodiments,
 										slides: [
 											{
 												arrangement: {
 													id: "tiles",
-													dispositions: [
-														{
-															participantId: "catalogue",
-															emphasis: "active",
-															split: {
-																tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
-															},
-														},
-													],
+													dispositions: grid.dispositions,
 												},
 											},
 										],
@@ -4682,8 +4591,7 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			expect(container.querySelectorAll("[data-disposition-id]").length).toBe(4);
-			expect(container.querySelectorAll(".presentation-interactive-row-band").length).toBe(2);
-			expect(container.querySelector(".presentation-interactive-disposition--split-group")).toBeNull();
+			expect(container.querySelectorAll(".presentation-interactive-row-band").length).toBe(0);
 		});
 
 		it("selects on click and deselects on empty slide click", () => {
@@ -4714,7 +4622,7 @@ if (import.meta.vitest) {
 		});
 
 		it("drags flow intro title disposition", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1"], short: "D short" },
 				goal: ["G1"],
@@ -4773,7 +4681,7 @@ if (import.meta.vitest) {
 		});
 
 		it("resizes flow disposition from se handle when nested reveal section has zero height", () => {
-			const deck = intro({
+			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1"], short: "D short" },
 				goal: ["G1"],
@@ -4864,15 +4772,10 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "placed",
-										participants: [
-											{
-												id: "left",
-												embodiments: [{ kind: "text", lines: ["Left"], level: "body" }],
-											},
-											{
-												id: "right",
-												embodiments: [{ kind: "text", lines: ["Right"], level: "body" }],
-											},
+										participants: [{ id: "left" }, { id: "right" }],
+										embodiments: [
+											{ kind: "text", id: "left--main", lines: ["Left"], level: "body" },
+											{ kind: "text", id: "right--main", lines: ["Right"], level: "body" },
 										],
 										slides: [
 											{
@@ -4881,11 +4784,13 @@ if (import.meta.vitest) {
 													dispositions: [
 														{
 															participantId: "left",
+															embodimentId: "left--main",
 															emphasis: "active",
 															position: { x: 0.1, y: 0.3, width: 0.3, height: 0.2 },
 														},
 														{
 															participantId: "right",
+															embodimentId: "right--main",
 															emphasis: "active",
 															position: { x: 0.6, y: 0.3, width: 0.3, height: 0.2 },
 														},
@@ -4924,9 +4829,9 @@ if (import.meta.vitest) {
 			).toContain("translate3d");
 		});
 
-		it("shows split tile drag preview outside the declared frame without clipping", () => {
+		it("shows tile disposition drag preview outside the declared frame without clipping", () => {
 			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			const grid = split({ source: "/catalogue.png", rows: 2, columns: 2, frame });
 			const splitDeck: Presentation = {
 				id: "interactive-dom-split-tiles",
 				name: "Interactive DOM Split Tiles",
@@ -4939,23 +4844,13 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "tiles",
-										participants: [
-											{
-												id: "catalogue",
-												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
-											},
-										],
+										participants: grid.participants,
+										embodiments: grid.embodiments,
 										slides: [
 											{
 												arrangement: {
 													id: "tiles",
-													dispositions: [
-														{
-															participantId: "catalogue",
-															emphasis: "active",
-															split: { tiles },
-														},
-													],
+													dispositions: grid.dispositions,
 												},
 											},
 										],
@@ -4970,7 +4865,7 @@ if (import.meta.vitest) {
 				mountPresentation(container, splitDeck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const tile = container.querySelector(
-				".presentation-arrangement-canvas > .presentation-interactive-disposition[data-id]",
+				".presentation-arrangement-canvas > .presentation-interactive-disposition[data-disposition-id]",
 			) as HTMLElement;
 			expect(tile).toBeTruthy();
 			const section = tile.closest("section.presentation-arrangement--interactive") as HTMLElement;
@@ -5086,8 +4981,9 @@ if (import.meta.vitest) {
 			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
 		});
 
-		it("toggles slide fullscreen on a split figure tile", () => {
+		it("toggles slide fullscreen on a cropped figure tile disposition", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
+			const grid = split({ source: "/catalogue.png", rows: 2, columns: 2, frame, alt: "Catalogue" });
 			const deck: Presentation = {
 				id: "split-fullscreen",
 				name: "Split Fullscreen",
@@ -5100,25 +4996,13 @@ if (import.meta.vitest) {
 								thoughts: [
 									{
 										id: "split",
-										participants: [
-											{
-												id: "catalogue",
-												embodiments: [{ kind: "figure", src: "/catalogue.png", alt: "Catalogue" }],
-											},
-										],
+										participants: grid.participants,
+										embodiments: grid.embodiments,
 										slides: [
 											{
 												arrangement: {
 													id: "tiles",
-													dispositions: [
-														{
-															participantId: "catalogue",
-															emphasis: "active",
-															split: {
-																tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
-															},
-														},
-													],
+													dispositions: grid.dispositions,
 												},
 											},
 										],
@@ -5149,7 +5033,7 @@ if (import.meta.vitest) {
 			expect(tile.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
 			expect(canvas.contains(tile)).toBe(true);
 			expect(globalsCssSource).toMatch(
-				/\.presentation-interactive-disposition--fullscreen:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-tile-frame[\s\S]*width\s*:\s*100%\s*!important/s,
+				/\.presentation-interactive-disposition--fullscreen:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-crop-fill[\s\S]*width\s*:\s*100%\s*!important/s,
 			);
 			act(() => {
 				fullscreen.click();

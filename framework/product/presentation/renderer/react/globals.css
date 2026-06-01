@@ -183,7 +183,7 @@
 
 .reveal
 	.presentation-interactive-disposition--kind-figure:hover:not(.presentation-interactive-disposition--selected)
-	:is(.presentation-disposition-frame, .presentation-figure-tile-frame, .presentation-morph-slot--figure)::after,
+	:is(.presentation-disposition-frame, .presentation-morph-slot--figure)::after,
 .reveal
 	.presentation-interactive-disposition--kind-video:hover:not(.presentation-interactive-disposition--selected)
 	.presentation-morph-anchor::after,
@@ -200,7 +200,7 @@
 
 .reveal
 	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
-	:is(.presentation-disposition-frame, .presentation-figure-tile-frame, .presentation-morph-slot--figure),
+	:is(.presentation-disposition-frame, .presentation-morph-slot--figure),
 .reveal
 	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
 	.presentation-morph-anchor,
@@ -213,7 +213,7 @@
 
 .reveal
 	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
-	:is(.presentation-disposition-frame, .presentation-figure-tile-frame, .presentation-morph-slot--figure)::after,
+	:is(.presentation-disposition-frame, .presentation-morph-slot--figure)::after,
 .reveal
 	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
 	.presentation-morph-anchor::after,
@@ -266,7 +266,7 @@
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
-	:is(.presentation-disposition-frame, .presentation-morph-slot, .presentation-figure-tile-frame) {
+	:is(.presentation-disposition-frame, .presentation-morph-slot) {
 	position: static !important;
 	left: auto !important;
 	top: auto !important;
@@ -279,8 +279,9 @@
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
-	.presentation-figure-tile-frame {
-	display: block;
+	.presentation-figure-crop-fill {
+	width: 100% !important;
+	height: 100% !important;
 }
 
 .reveal .presentation-interactive-disposition--pinned,
@@ -300,28 +301,12 @@
 .reveal
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
-	.presentation-interactive-disposition__content,
-.reveal
-	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--split-group:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content {
 	position: relative;
 	width: 100%;
 	height: 100%;
 	min-height: 0;
 	min-width: 0;
-}
-
-.reveal
-	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--split-group
-	.presentation-figure-tile-frame,
-.reveal
-	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--split-group
-	.presentation-morph-slot--figure {
-	position: absolute;
-	box-sizing: border-box;
 }
 
 .reveal
@@ -335,14 +320,6 @@
 	width: 100% !important;
 	height: 100% !important;
 	transform: none !important;
-}
-
-.reveal
-	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
-	.presentation-interactive-disposition__content
-	.presentation-figure-tile-frame {
-	display: block;
 }
 
 .reveal
@@ -382,8 +359,7 @@
 	pointer-events: none;
 }
 
-.reveal .presentation-interactive-disposition--canvas-framed .presentation-interactive-disposition__chrome,
-.reveal .presentation-interactive-disposition--split-group .presentation-interactive-disposition__chrome {
+.reveal .presentation-interactive-disposition--canvas-framed .presentation-interactive-disposition__chrome {
 	box-sizing: border-box;
 }
 
@@ -593,20 +569,6 @@
 	object-fit: cover;
 }
 
-.reveal .presentation-figure-tile-frame {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	overflow: hidden;
-	z-index: 1;
-}
-
-.reveal .presentation-figure-tile-frame--morph-participant-duplicate {
-	opacity: 0 !important;
-	visibility: hidden !important;
-	pointer-events: none;
-}
-
 .reveal .presentation-figure-crop-fill {
 	width: 100%;
 	height: 100%;
@@ -619,30 +581,6 @@
 .reveal .slides section[data-auto-animate="running"] .presentation-figure-crop-fill {
 	background-size: var(--presentation-figure-bg-size-morph);
 	background-position: var(--presentation-figure-bg-position-morph);
-}
-
-.reveal .presentation-figure-split-assembled {
-	position: relative;
-	width: 100%;
-	height: 100%;
-}
-
-.reveal .slides section.present .presentation-figure-split-assembled-full {
-	opacity: 1;
-}
-
-.reveal .slides section:not(.present) .presentation-figure-split-assembled-full {
-	opacity: 0;
-	pointer-events: none;
-}
-
-.reveal .slides section.present .presentation-figure-split-assembled-tiles {
-	opacity: 0;
-	pointer-events: none;
-}
-
-.reveal .slides section:not(.present) .presentation-figure-split-assembled-tiles {
-	opacity: 1;
 }
 
 .reveal .presentation-figure-crop-frame,
@@ -672,23 +610,6 @@
 		.presentation-arrangement--settled
 	)
 	.presentation-morph-slot--dormant {
-	opacity: 0 !important;
-	visibility: hidden !important;
-	pointer-events: none;
-}
-
-.reveal
-	.slides
-	section[data-settle-before-morph-to].presentation-arrangement--settled
-	.presentation-figure-tile-frame,
-.reveal
-	.slides
-	section[data-settle-before-morph-to][data-auto-animate="pending"]
-	.presentation-figure-tile-frame,
-.reveal
-	.slides
-	section[data-settle-before-morph-to][data-auto-animate="running"]
-	.presentation-figure-tile-frame {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;

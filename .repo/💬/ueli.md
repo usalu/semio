@@ -478,7 +478,24 @@ Refactor everything
 
 ### 🏁2d
 
-elements/board:
+---
+
+introduce a new tool: Brush
+
+What brush does is it flushs new nodes with parent edges.
+For this purpose, there is a flush distance (by default two times the diamter of the shape, add it to window option) paramter.
+Then as soon as the cursor is close enough to a slot it peviews a new node and parent edge if the new node is compatible.
+The slot hitbox is a circle (default node size) that is offsetted by the flush distance in normal direction of the paramter t of a free handle.
+A compatible node is a node with at least one compatible handle with the source handle.
+The edge is created between the source handle and the closest compatible target handle from the compatible node.
+
+
+
+If the mouse cursor leaves the vortex then the suggested object is added to the puzzle 3d.
+The vortices have a direction. Make sure that the suggested object has the vortex exactly on the same point and the suggested object is rotated so that the direction of the of source vortex is the same as the opposite of the target vortex.
+While the mouse is still inside the vortex if tab is pressed then another compatible object is selected.
+If right click is pressed inside the vortex show the list of all compatible objects.
+
 
 ---
 
