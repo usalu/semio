@@ -739,15 +739,20 @@ export function resolveInitialPanelVisibility(
 }
 //#endregion 🔖PanelVisibility
 
-//#region 🔖PlatformBreadcrumb
-/** @emoji 🍞 One breadcrumb segment for {@link Platform.breadcrumb} overrides. */
-export interface PlatformBreadcrumbItem {
-	readonly id?: string;
-	readonly content: unknown;
-	readonly options?: readonly { readonly label: unknown; readonly href: string; readonly id?: string }[];
-	readonly onNavigate?: (href: string) => void;
+//#region 🔖Navigation
+/** @emoji 🧭 One navigable destination (label + URI) for breadcrumb trails and separator alternatives. */
+export interface NavigationDestination {
+	readonly id: string;
+	readonly label: unknown;
+	readonly uri: string;
 }
-//#endregion 🔖PlatformBreadcrumb
+
+/** @emoji 🧭 One breadcrumb level: chosen node plus sibling alternatives for the following separator dropdown. */
+export interface NavigationLevel {
+	readonly node: NavigationDestination;
+	readonly alternatives: readonly NavigationDestination[];
+}
+//#endregion 🔖Navigation
 
 //#region 🔖Platform
 /** @emoji 🖥️ Root shell: apps, URI chrome, panel toggles, and shared {@link CommandBus}. */
@@ -766,8 +771,8 @@ export class Platform {
 	onNavigate?: (uri: string) => void;
 	/** @emoji 🔗 Product hook: apply URI to platform state (active app, stores) when navigation changes. */
 	applyUri?: (uri: string) => void;
-	/** @emoji 🍞 Optional breadcrumb items for the current URI; default is path segments. */
-	breadcrumb?: (uri: string) => readonly PlatformBreadcrumbItem[];
+	/** @emoji 🧭 Optional navigation trail for the current URI; default is path segments without alternatives. */
+	navigation?: (uri: string) => readonly NavigationLevel[];
 	onGoBack?: () => void;
 	onGoForward?: () => void;
 	onGoUp?: () => void;

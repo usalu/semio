@@ -3166,7 +3166,7 @@ export function boxesIntersect(a: Box3, b: Box3, epsilon = 1e-3): boolean {
 }
 
 /** @emoji 📏 Default brush placement penetration (CAD world units); face contact and shallow AABB bleed below this stays collision-free. */
-export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = 0.18;
+export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = 1;
 
 /** @emoji 📦 True when AABB overlap depth along every axis exceeds {@link minPenetration} (touching faces do not count). */
 export function boxesPenetrationExceeds(a: Box3, b: Box3, minPenetration: number): boolean {

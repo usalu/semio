@@ -529,6 +529,11 @@
 	z-index: 1;
 }
 
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition[data-id] {
+	overflow: hidden;
+	box-sizing: border-box;
+}
+
 .reveal
 	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--row-hovered:not(.presentation-interactive-disposition--selected):not(:hover)
 	.presentation-figure-tile-frame::after {

@@ -61,7 +61,7 @@ import {
 	PANEL_KINDS,
 	panelSide,
 	type PanelKind,
-	type PlatformBreadcrumbItem,
+	type NavigationLevel,
 	AppRuntime,
 	ModeRuntime,
 	resolveCommandPaletteItems,
@@ -2737,12 +2737,16 @@ function uriToBreadcrumbItems(uri: string, onNavigate: (href: string) => void): 
 	return items;
 }
 
-function platformBreadcrumbToUiItems(items: readonly PlatformBreadcrumbItem[], onNavigate: (href: string) => void): BreadcrumbItemData[] {
-	return items.map((item, index) => ({
-		id: item.id ?? `breadcrumb.${index}`,
-		content: item.content as React.ReactNode,
-		options: item.options,
-		onNavigate: item.onNavigate ?? onNavigate,
+function navigationTrailToBreadcrumbItems(trail: readonly NavigationLevel[], onNavigate: (href: string) => void): BreadcrumbItemData[] {
+	return trail.map((level, index) => ({
+		id: level.node.id ?? `breadcrumb.${index}`,
+		content: level.node.label as React.ReactNode,
+		options: level.alternatives.map((alternative) => ({
+			id: alternative.id,
+			label: alternative.label as React.ReactNode,
+			href: alternative.uri,
+		})),
+		onNavigate: (href: string) => onNavigate(href || level.node.uri),
 	}));
 }
 
@@ -3342,8 +3346,8 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		[onNavigate],
 	);
 	const breadcrumbItems = reactHostPort.useMemo(() => {
-		const override = platform.breadcrumb?.(uriProp);
-		if (override?.length) return platformBreadcrumbToUiItems(override, breadcrumbNavigate);
+		const trail = platform.navigation?.(uriProp);
+		if (trail?.length) return navigationTrailToBreadcrumbItems(trail, breadcrumbNavigate);
 		return uriToBreadcrumbItems(uriProp, breadcrumbNavigate);
 	}, [platform, uriProp, breadcrumbNavigate]);
 

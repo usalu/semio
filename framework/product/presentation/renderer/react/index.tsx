@@ -717,18 +717,20 @@ function FigureTileView({
 	embodiment,
 	defaultEmphasis,
 	tileDuplicateHidden,
+	omitRevealMorphId,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly embodiment: FigureEmbodiment;
 	readonly defaultEmphasis: ParticipantEmphasis;
 	readonly tileDuplicateHidden?: boolean;
+	readonly omitRevealMorphId?: boolean;
 }): ReactNode {
 	const emphasis = tile.emphasis ?? defaultEmphasis;
 	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
 	return (
 		<div
-			data-id={tileMorphId(participantId, tile.key)}
+			{...(omitRevealMorphId ? {} : { "data-id": tileMorphId(participantId, tile.key) })}
 			className={[
 				"presentation-disposition-frame",
 				"presentation-figure-tile-frame",
@@ -849,9 +851,11 @@ function PositionedTextMorphView({
 function FigureSplitMorphView({
 	disposition,
 	embodiment,
+	omitTileRevealMorphId,
 }: {
 	readonly disposition: ResolvedDisposition;
 	readonly embodiment: FigureEmbodiment;
+	readonly omitTileRevealMorphId?: boolean;
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
 	if (disposition.split?.morphParticipant) {
@@ -878,6 +882,7 @@ function FigureSplitMorphView({
 							embodiment={embodiment}
 							defaultEmphasis={disposition.emphasis}
 							tileDuplicateHidden
+							omitRevealMorphId={omitTileRevealMorphId}
 						/>
 					))}
 				</>
@@ -909,6 +914,7 @@ function FigureSplitMorphView({
 							tile={tile}
 							embodiment={embodiment}
 							defaultEmphasis={disposition.emphasis}
+							omitRevealMorphId={omitTileRevealMorphId}
 						/>
 					))}
 				</div>
@@ -924,6 +930,7 @@ function FigureSplitMorphView({
 					tile={tile}
 					embodiment={embodiment}
 					defaultEmphasis={disposition.emphasis}
+					omitRevealMorphId={omitTileRevealMorphId}
 				/>
 			))}
 		</>
@@ -1054,7 +1061,13 @@ function DispositionFrame({
 	);
 }
 
-function MorphDispositionView({ disposition }: { readonly disposition: ResolvedDisposition }): ReactNode {
+function MorphDispositionView({
+	disposition,
+	omitSplitTileRevealMorphId,
+}: {
+	readonly disposition: ResolvedDisposition;
+	readonly omitSplitTileRevealMorphId?: boolean;
+}): ReactNode {
 	const { embodiment, emphasis, morphId: anchorId } = disposition;
 	let content: ReactNode;
 	switch (embodiment.kind) {
@@ -1083,7 +1096,13 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 			break;
 		case "figure":
 			if (disposition.split) {
-				return <FigureSplitMorphView disposition={disposition} embodiment={embodiment} />;
+				return (
+					<FigureSplitMorphView
+						disposition={disposition}
+						embodiment={embodiment}
+						omitTileRevealMorphId={omitSplitTileRevealMorphId}
+					/>
+				);
 			}
 			if (embodiment.crop && disposition.position !== undefined) {
 				return (
@@ -1190,6 +1209,8 @@ export interface InteractiveDispositionPlacement {
 	readonly declaredRect: DispositionPosition | undefined;
 	/** @emoji 📐 Slide-space frame for marquee, drag, and resize. */
 	readonly sectionRect: DispositionPosition | undefined;
+	/** @emoji 🔗 reveal.js `data-id` on the canvas wrapper when the tile frame must not own it. */
+	readonly revealMorphId?: string;
 	readonly rowBandId?: string;
 }
 
@@ -1240,6 +1261,7 @@ export function buildInteractiveSlideLayout(
 						},
 						declaredRect: tile.position,
 						sectionRect: tile.position,
+						revealMorphId: tileMorphId(disposition.participant.id, tile.key),
 						rowBandId,
 					});
 				}
@@ -2167,8 +2189,18 @@ const InteractiveDisposition: FC<{
 	readonly sectionDeclaredRect: DispositionPosition | undefined;
 	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 	readonly sectionRef: RefObject<HTMLElement | null>;
+	readonly revealMorphId?: string;
 	readonly rowBandId?: string;
-}> = ({ id, disposition, declaredRect, sectionDeclaredRect, allDeclaredRects, sectionRef, rowBandId }) => {
+}> = ({
+	id,
+	disposition,
+	declaredRect,
+	sectionDeclaredRect,
+	allDeclaredRects,
+	sectionRef,
+	revealMorphId,
+	rowBandId,
+}) => {
 	const slideEpoch = useContext(PresentationSlideEpochContext);
 	const interaction = usePresentationInteractionState();
 	const rowHover = useContext(PresentationRowHoverContext);
@@ -2612,6 +2644,7 @@ const InteractiveDisposition: FC<{
 		<div
 			ref={rootRef}
 			data-disposition-id={id}
+			{...(revealMorphId ? { "data-id": revealMorphId } : {})}
 			{...(rowBandId ? { "data-row-band": rowBandId } : {})}
 			className={wrapperClass}
 			style={wrapperStyle}
@@ -2634,7 +2667,10 @@ const InteractiveDisposition: FC<{
 				className="presentation-interactive-disposition__content"
 				style={hasContentStyle ? contentStyle : undefined}
 			>
-				<MorphDispositionView disposition={displayDisposition} />
+				<MorphDispositionView
+					disposition={displayDisposition}
+					omitSplitTileRevealMorphId={revealMorphId !== undefined}
+				/>
 				{showControls ? (
 					<>
 						{showHandles ? (
@@ -2854,6 +2890,7 @@ const ArrangementSection: FC<{
 					sectionDeclaredRect={entry.sectionRect}
 					allDeclaredRects={declaredRects}
 					sectionRef={sectionRef}
+					revealMorphId={entry.revealMorphId}
 					rowBandId={entry.rowBandId}
 				/>
 			))}
@@ -3529,7 +3566,8 @@ if (import.meta.vitest) {
 			const tiles = container.querySelectorAll('[data-id^="catalogue--tile--"]');
 			expect(tiles.length).toBe(4);
 			const first = tiles[0] as HTMLElement;
-			expect(first.classList.contains("presentation-figure-tile-frame")).toBe(true);
+			expect(first.classList.contains("presentation-interactive-disposition")).toBe(true);
+			expect(first.querySelector(".presentation-figure-tile-frame")?.hasAttribute("data-id")).toBe(false);
 			expect(first.style.position).toBe("absolute");
 			const fill = first.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
 			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
@@ -3539,6 +3577,99 @@ if (import.meta.vitest) {
 			const positions = fills.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
 			expect(first.closest(".presentation-interactive-disposition--canvas-framed")).not.toBeNull();
+		});
+
+		it("pairs catalogue tile morph anchors on interactive wrappers across slides", () => {
+			const frameA = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
+			const tilesA = splitFigureGrid({ rows: 2, columns: 2, frame: frameA });
+			const frameB = { x: 0.1, y: 0.15, width: 0.35, height: 0.3 };
+			const tilesB = tilesA.map((tile, index) => ({
+				...tile,
+				position: {
+					x: frameB.x + (index % 2) * (frameB.width / 2),
+					y: frameB.y + Math.floor(index / 2) * (frameB.height / 2),
+					width: frameB.width / 2,
+					height: frameB.height / 2,
+				},
+			}));
+			const deck: Presentation = {
+				id: "tile-morph",
+				name: "Tile morph",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "media",
+								thoughts: [
+									{
+										id: "media",
+										participants: [
+											{
+												id: "catalogue",
+												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "catalogue",
+													dispositions: [
+														{
+															participantId: "catalogue",
+															emphasis: "active",
+															split: { tiles: tilesA },
+														},
+													],
+												},
+												transition: { kind: "morph" },
+											},
+											{
+												arrangement: {
+													id: "catalogue-focus",
+													dispositions: [
+														{
+															participantId: "catalogue",
+															emphasis: "active",
+															split: { tiles: tilesB },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const sections = [...container.querySelectorAll("section[data-auto-animate-id]")] as HTMLElement[];
+			expect(sections.length).toBeGreaterThanOrEqual(2);
+			const fromSlide = sections.find((section) => section.title === "catalogue");
+			const toSlide = sections.find((section) => section.title === "catalogue-focus");
+			expect(fromSlide).toBeDefined();
+			expect(toSlide).toBeDefined();
+			const host: AutoAnimateMatcherHost = {
+				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
+					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
+						const key = serializer(element);
+						const toElement = toScope.querySelector<HTMLElement>(
+							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
+						);
+						if (toElement) {
+							pairs.push({ from: element, to: toElement });
+						}
+					}
+				},
+			};
+			const pairs = presentationAutoAnimateMatcher.call(host, fromSlide!, toSlide!);
+			expect(pairs).toHaveLength(4);
+			expect(pairs[0]?.from.classList.contains("presentation-interactive-disposition")).toBe(true);
+			expect(pairs[0]?.to.classList.contains("presentation-interactive-disposition")).toBe(true);
 		});
 
 		it("omits tiles not listed in a split disposition", () => {

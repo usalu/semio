@@ -58,7 +58,7 @@ import {
 	WindowKindRuntime,
 	AppRuntime,
 } from "@framework/platform/core";
-import type { PlatformBreadcrumbItem, SearchItemSpec } from "@framework/core";
+import type { NavigationDestination, NavigationLevel, SearchItemSpec } from "@framework/core";
 //#endregion 🔌Adapters
 
 //#region 🪁SemioUiI18n
