@@ -6039,6 +6039,18 @@ function RegistryProvider({
   const marqueeKindsRef = reactHostPort.useRef(marqueeSelectableKinds);
   marqueeKindsRef.current = marqueeSelectableKinds;
   const marqueeAttractionsRef = reactHostPort.useRef<readonly AttractionProps[]>([]);
+  const notifyConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onConnect?.(payload), [hostCallbacksRef]);
+  const notifyProximityConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onProximityConnect?.(payload), [hostCallbacksRef]);
+  const notifyIndirectConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onIndirectConnect?.(payload), [hostCallbacksRef]);
+  const notifyAttractionCompatibleObjects = reactHostPort.useCallback(
+    (payload: AttractionCompatibleObjectsPayload) => hostCallbacksRef.current.onAttractionCompatibleObjects?.(payload),
+    [hostCallbacksRef],
+  );
+  const notifyAttractionTargetRing = reactHostPort.useCallback(
+    (payload: AttractionTargetRingPayload) => hostCallbacksRef.current.onAttractionTargetRing?.(payload),
+    [hostCallbacksRef],
+  );
+  const notifyRelocate = reactHostPort.useCallback((payload: RelocatePayload) => hostCallbacksRef.current.onRelocate?.(payload), [hostCallbacksRef]);
   const publishSelection = reactHostPort.useCallback(
     (snap: SelectionSnapshot) => {
       selectionStore.setSnapshot(snap);
@@ -6208,11 +6220,11 @@ function RegistryProvider({
       if (controlled.objectIds.length === 0 && controlled.vortexIds.length === 0 && controlled.attractionIds.length === 0) {
         return;
       }
-      onSelectRef.current?.(empty);
+      hostCallbacksRef.current.onSelect?.(empty);
       return;
     }
-    onSelectRef.current?.(empty);
-  }, [clearHoverAll, selectionStore, setActiveRelocateObjectId]);
+    hostCallbacksRef.current.onSelect?.(empty);
+  }, [clearHoverAll, hostCallbacksRef, selectionStore, setActiveRelocateObjectId]);
 
   const vortexGettersRef = reactHostPort.useRef(new Map<string, VortexGetter>());
   const vortexMetaRef = reactHostPort.useRef(new Map<string, VortexBindingMeta>());
@@ -6291,8 +6303,8 @@ function RegistryProvider({
     setAttractionHoverRingFullId(null);
     setAttractionIndirectPickAwait(null);
     setHoverTarget(null);
-    onAttractionTargetRing?.({ attracting: "", objectId: null, vortexFullIds: [] });
-  }, [onAttractionTargetRing]);
+    notifyAttractionTargetRing({ attracting: "", objectId: null, vortexFullIds: [] });
+  }, [notifyAttractionTargetRing]);
 
   reactHostPort.useEffect(() => {
     if (attractionSessionRef.current) {
@@ -6331,12 +6343,12 @@ function RegistryProvider({
     } else {
       setAttractionIndirectPickAwait(null);
     }
-    onAttractionTargetRing?.({
+    notifyAttractionTargetRing({
       attracting: ext.attracting,
       objectId: ext.ringObjectId,
       vortexFullIds: ext.ringVortexFullIds,
     });
-  }, [externalAttractionSession, attractionDragAttractingFullId, onAttractionTargetRing]);
+  }, [externalAttractionSession, attractionDragAttractingFullId, notifyAttractionTargetRing]);
 
   const beginAttractionDragFromVortex = reactHostPort.useCallback(
     (fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
@@ -6373,9 +6385,9 @@ function RegistryProvider({
       setAttractionHoverRingFullId(null);
       setActiveRelocateObjectId(null);
       setHoverTarget(null);
-      onAttractionCompatibleObjects?.({ attracting: fullId, objectIds: [...objectIds] });
+      notifyAttractionCompatibleObjects({ attracting: fullId, objectIds: [...objectIds] });
     },
-    [blockedVortexFullIds, kindCatalogs, kindCompatibility, onAttractionCompatibleObjects],
+    [blockedVortexFullIds, kindCatalogs, kindCompatibility, notifyAttractionCompatibleObjects],
   );
 
   const collectPickRoots = reactHostPort.useCallback((): Object3D[] => {
@@ -6406,13 +6418,13 @@ function RegistryProvider({
       setAttractionHoverRingFullId((prev) => (prev === ring ? prev : ring));
       if (ring) {
         const meta = vortexMetaRef.current.get(ring);
-        onAttractionTargetRing?.({
+        notifyAttractionTargetRing({
           attracting: session.attractingFullId,
           objectId: meta?.objectId ?? null,
           vortexFullIds: ring ? [ring] : [],
         });
       } else {
-        onAttractionTargetRing?.({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
+        notifyAttractionTargetRing({ attracting: session.attractingFullId, objectId: null, vortexFullIds: [] });
       }
       const hitWorld = hitScratchRef.current;
       if (hits.length > 0) {
@@ -6438,7 +6450,7 @@ function RegistryProvider({
         });
       } else session.snapAttractedFullId = null;
     },
-    [blockedVortexFullIds, collectPickRoots, lodRef, onAttractionTargetRing],
+    [blockedVortexFullIds, collectPickRoots, lodRef, notifyAttractionTargetRing],
   );
 
   const commitAttractionPointer = reactHostPort.useCallback(
@@ -6470,8 +6482,8 @@ function RegistryProvider({
       const snapId = session.snapAttractedFullId;
       if (snapId && attractionSnapCommitProximityOk(snapId, pointerWorld, env.camera, env.gl, getV, rad)) {
         const p = { attracting: session.attractingFullId, attracted: snapId };
-        onConnect?.(p);
-        onProximityConnect?.(p);
+        notifyConnect(p);
+        notifyProximityConnect(p);
         cancelAttractionDrag();
         return;
       }
@@ -6480,7 +6492,7 @@ function RegistryProvider({
       for (const h of hits) {
         const vf = readVortexFullIdFromObject(h.object);
         if (vf && vf !== attractingFull && session.compat.has(vf) && !blockedVortexFullIds.has(vf) && vortexMetaRef.current.get(vf)?.objectId !== session.attractingObjectId) {
-          onConnect?.({ attracting: attractingFull, attracted: vf });
+          notifyConnect({ attracting: attractingFull, attracted: vf });
           cancelAttractionDrag();
           return;
         }
@@ -6495,8 +6507,8 @@ function RegistryProvider({
           }
           if (candidates.length === 1) {
             const p = { attracting: attractingFull, attracted: candidates[0]! };
-            onConnect?.(p);
-            onIndirectConnect?.(p);
+            notifyConnect(p);
+            notifyIndirectConnect(p);
             cancelAttractionDrag();
             return;
           }
@@ -6510,7 +6522,7 @@ function RegistryProvider({
               attractedObjectId: oid,
               candidates,
             });
-            onAttractionTargetRing?.({
+            notifyAttractionTargetRing({
               attracting: attractingFull,
               objectId: oid,
               vortexFullIds: candidates,
@@ -6521,7 +6533,7 @@ function RegistryProvider({
       }
       cancelAttractionDrag();
     },
-    [blockedVortexFullIds, cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect, onAttractionTargetRing, onProximityConnect],
+    [blockedVortexFullIds, cancelAttractionDrag, collectPickRoots, notifyAttractionTargetRing, notifyConnect, notifyIndirectConnect, notifyProximityConnect],
   );
 
   const updateIndirectPickPointer = reactHostPort.useCallback(
@@ -6570,8 +6582,8 @@ function RegistryProvider({
         const vf = readVortexFullIdFromObject(h.object);
         if (vf && awaitPick.candidates.includes(vf)) {
           const p = { attracting: awaitPick.attractingFullId, attracted: vf };
-          onConnect?.(p);
-          onIndirectConnect?.(p);
+          notifyConnect(p);
+          notifyIndirectConnect(p);
           cancelAttractionDrag();
           ev?.stopImmediatePropagation();
           return;
@@ -6579,7 +6591,7 @@ function RegistryProvider({
       }
       cancelAttractionDrag();
     },
-    [cancelAttractionDrag, collectPickRoots, onConnect, onIndirectConnect],
+    [cancelAttractionDrag, collectPickRoots, notifyConnect, notifyIndirectConnect],
   );
 
   const attachAttractionThreeEnv = reactHostPort.useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
@@ -6628,13 +6640,13 @@ function RegistryProvider({
       beginAttractionDragFromVortex,
       cancelAttractionDrag,
       findNearestProximityRelocate,
-      onSelect,
-      onConnect,
-      onProximityConnect,
-      onIndirectConnect,
-      onAttractionCompatibleObjects,
-      onAttractionTargetRing,
-      onRelocate,
+      onSelect: (snap) => hostCallbacksRef.current.onSelect?.(snap),
+      onConnect: notifyConnect,
+      onProximityConnect: notifyProximityConnect,
+      onIndirectConnect: notifyIndirectConnect,
+      onAttractionCompatibleObjects: notifyAttractionCompatibleObjects,
+      onAttractionTargetRing: notifyAttractionTargetRing,
+      onRelocate: notifyRelocate,
       attachAttractionThreeEnv,
       updateAttractionPointer,
       commitAttractionPointer,
@@ -6663,13 +6675,13 @@ function RegistryProvider({
       beginAttractionDragFromVortex,
       cancelAttractionDrag,
       findNearestProximityRelocate,
-      onSelect,
-      onConnect,
-      onProximityConnect,
-      onIndirectConnect,
-      onAttractionCompatibleObjects,
-      onAttractionTargetRing,
-      onRelocate,
+      hostCallbacksRef,
+      notifyAttractionCompatibleObjects,
+      notifyAttractionTargetRing,
+      notifyConnect,
+      notifyIndirectConnect,
+      notifyProximityConnect,
+      notifyRelocate,
       attachAttractionThreeEnv,
       updateAttractionPointer,
       commitAttractionPointer,
@@ -7043,6 +7055,28 @@ function Inner(props: CanvasProps & {
     selectionStoreRef.current = createSelectionSnapshotStore(EMPTY_SELECTION_SNAPSHOT);
   }
   const selectionStore = selectionStoreRef.current;
+  const registryHostCallbacksRef = reactHostPort.useRef<RegistryHostCallbacks>({});
+  registryHostCallbacksRef.current = {
+    onSelect: props.onSelect,
+    onConnect: props.onConnect,
+    onProximityConnect: props.onProximityConnect,
+    onIndirectConnect: props.onIndirectConnect,
+    onAttractionCompatibleObjects: props.onAttractionCompatibleObjects,
+    onAttractionTargetRing: props.onAttractionTargetRing,
+    onRelocate: props.onRelocate,
+  };
+  const canvasHostRef = reactHostPort.useRef({
+    onCamera: props.onCamera,
+    onLodChange: props.onLodChange,
+    onBrushPlace: onBrushPlace,
+    onFixtureDrop: onFixtureDrop,
+  });
+  canvasHostRef.current = {
+    onCamera: props.onCamera,
+    onLodChange: props.onLodChange,
+    onBrushPlace,
+    onFixtureDrop,
+  };
   const registryScene = reactHostPort.useMemo(
     () => (
       <RegistryProvider
@@ -7056,13 +7090,7 @@ function Inner(props: CanvasProps & {
         relocateMode={props.relocateMode ?? "translate"}
         selectionMethod={props.selectionMethod ?? "rectangle"}
         marqueeSelectableKinds={props.marqueeSelectableKinds ?? { object: true, vortex: true, attraction: true }}
-        onSelect={props.onSelect}
-        onConnect={props.onConnect}
-        onProximityConnect={props.onProximityConnect}
-        onIndirectConnect={props.onIndirectConnect}
-        onAttractionCompatibleObjects={props.onAttractionCompatibleObjects}
-        onAttractionTargetRing={props.onAttractionTargetRing}
-        onRelocate={props.onRelocate}
+        hostCallbacksRef={registryHostCallbacksRef}
         attractionSession={props.attractionSession}
         selectionStore={selectionStore}
       >
@@ -7075,11 +7103,11 @@ function Inner(props: CanvasProps & {
         automaticLod={automaticLod}
         depthVariableLod={depthVariableLod}
         manualLod={manualLod}
-        onLodChange={props.onLodChange}
+        onLodChange={(lod) => canvasHostRef.current.onLodChange?.(lod)}
       >
         <PerspectiveCamera ref={setCamera} makeDefault near={0.2} far={500_000} fov={50} />
         <CameraSeed camera={puzzle3dCamera} position={pos} target={tgt} />
-        <OrbitGated camera={puzzle3dCamera} onCamera={props.onCamera} zoom={zoom} />
+        <OrbitGated camera={puzzle3dCamera} onCamera={(camera) => canvasHostRef.current.onCamera?.(camera)} zoom={zoom} />
         {autoFitCamera ? <AutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
         <AttractionThreeBinder />
         <AttractionWindowBridge />
@@ -7087,14 +7115,21 @@ function Inner(props: CanvasProps & {
         {fixtureDragDrop ?? Boolean(onFixtureDrop) ? (
           <FixtureDropPointerBridge
             enabled
-            onFixtureDrop={onFixtureDrop}
+            onFixtureDrop={(detail) => canvasHostRef.current.onFixtureDrop?.(detail)}
             rootRef={puzzle3dRootRef}
             setFixtureDragActive={setFixtureDragActive}
             fixtureDragDepthRef={fixtureDragDepthRef}
           />
         ) : null}
         {fixtureDragDrop ?? Boolean(onFixtureDrop) ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
-        {brushActive ? <BrushSession brushActive={brushActive} onBrushPlace={onBrushPlace} kindCatalogs={kindCatalogs} kindCompatibility={kindCompatibility} /> : null}
+        {brushActive ? (
+          <BrushSession
+            brushActive={brushActive}
+            onBrushPlace={(payload) => canvasHostRef.current.onBrushPlace?.(payload)}
+            kindCatalogs={kindCatalogs}
+            kindCompatibility={kindCompatibility}
+          />
+        ) : null}
         <AttractionRubberBand />
         <ambientLight intensity={0.45} />
         <directionalLight position={[120, 180, 80]} intensity={0.85} />
@@ -7117,24 +7152,14 @@ function Inner(props: CanvasProps & {
       kindCompatibility,
       manualLod,
       maxDist,
-      onBrushPlace,
-      onFixtureDrop,
       pos,
-      props.onAttractionCompatibleObjects,
-      props.onAttractionTargetRing,
-      props.onCamera,
-      props.onConnect,
-      props.onIndirectConnect,
-      props.onLodChange,
-      props.onProximityConnect,
-      props.onRelocate,
-      props.onSelect,
       props.relocateMode,
       props.selectionMethod,
       props.selectionMode,
       props.marqueeSelectableKinds,
       proximityRelocateEnabled,
       proximityRadius,
+      registryHostCallbacksRef,
       sceneFixture,
       selectionStore,
       showLodGrid,

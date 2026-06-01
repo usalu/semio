@@ -1,12 +1,8 @@
 {
-  "id": "26/05/31/PUZZLE-3D-BRUSH-TOOL",
   "title": "Puzzle 3D Brush Tool",
   "status": "closed",
-  "summary": "Added Brush tool: hover free vortices to preview compatible catalog objects, Tab cycles candidates, right-click menu lists all compatible kinds, leaving the vortex commits object + attraction with aligned opposite directions. Select/Brush activate via window engagement (not toolbar).",
-  "files": [
-    "puzzle/3d/react/index.tsx",
-    "puzzle/3d/play/index.ts",
-    "puzzle/3d/fixture/nakagin-capsule-tower.3d.json",
-    "framework/product/playground/renderer/react/index.tsx"
+  "summary": "Puzzle 3D play now mirrors CAD play engagement: live EngagementSpec from the viewport host (command input, possibles, options, status), puzzle3dPlayEngagementMirror + host bridge for engagementOption/Input/Submit/PossibleSelect, enforcePuzzle3dPlayWindowEngagement requiring engagement.input. Brush Tab/context-menu removed; tool and candidate cycling go through window engagement chevron and Next option.",
+  "sessions": [
+    "⚪832954a6c04b40129e01afd7572cad87"
   ]
 }

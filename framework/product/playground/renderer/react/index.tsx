@@ -16,6 +16,7 @@ import {
   cn,
   getLevelBgClass,
   Label,
+  normalizeEngagementCommandText,
   LevelProvider,
   staticTreePanelDefinition,
   useCommandHotkey,
@@ -1170,6 +1171,146 @@ function usePuzzle3dPlaySnapshot(): Puzzle3dPlaySnapshot {
   return useControllerStore(ctrl, PUZZLE_3D_PLAY_STORE_ID) ?? PUZZLE_3D_PLAY_IDLE_SNAPSHOT;
 }
 
+/** @emoji 💬 Enforces CAD-style puzzle 3D play engagement (command input row required). */
+export function enforcePuzzle3dPlayWindowEngagement(engagement: WindowEngagement | undefined): void {
+  enforcePlaygroundWindowEngagementInput(engagement, "Puzzle 3D play viewport");
+}
+
+/** @emoji 💬 Mirrors live {@link EngagementSpec} into {@link WindowEngagement} with bus-routed engagement commands. */
+export function puzzle3dPlayEngagementMirror(engagement: EngagementSpec | null): WindowEngagement | undefined {
+  if (!engagement) return undefined;
+  const options = engagement.options?.map((option) => ({
+    id: option.id,
+    label: option.label,
+    pressed: option.pressed,
+    disabled: option.disabled,
+    command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementOption", args: { optionId: option.id } },
+  }));
+  const input = engagement.input
+    ? {
+        id: engagement.input.id,
+        value: engagement.input.value,
+        placeholder: engagement.input.placeholder,
+        disabled: engagement.input.disabled,
+        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementInput", args: {} },
+        onSubmit: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: {} },
+      }
+    : undefined;
+  const status = engagement.status?.map((row) => ({ id: row.id, text: typeof row.content === "string" ? row.content : String(row.content) }));
+  const possibleEngagements = engagement.possibleEngagements?.map((row) => ({
+    id: row.id,
+    label: row.label,
+    detail: row.detail,
+    command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { possibleId: row.id } },
+  }));
+  return { options, input, status, possibleEngagements };
+}
+
+function Puzzle3dPlayEngagementPublisher(props: {
+  readonly ctrl: Puzzle3dPlayShellController | undefined;
+  readonly snap: Puzzle3dPlaySnapshot;
+  readonly bus: CommandBus;
+}): null {
+  const { ctrl, snap, bus } = props;
+  const [cmdLine, setCmdLine] = reactHostPort.useState("");
+  const engagementSpecRef = reactHostPort.useRef<EngagementSpec | null>(null);
+  const brushEngagementEpoch = reactHostPort.useSyncExternalStore(subscribePuzzle3dBrushEngagementSource, getPuzzle3dBrushEngagementEpoch, getPuzzle3dBrushEngagementEpoch);
+  const brushSource = puzzle3dBrushEngagementSourceRef.current;
+  const selectionCount = snap.selection.objectIds.length + snap.selection.vortexIds.length + snap.selection.attractionIds.length;
+  const onSelectTool = reactHostPort.useCallback(() => {
+    bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "select" });
+  }, [bus]);
+  const onBrushTool = reactHostPort.useCallback(() => {
+    bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "brush" });
+  }, [bus]);
+  const onCmdLineSubmit = reactHostPort.useCallback(
+    (value: string) => {
+      const token = normalizeEngagementCommandText(value.trim());
+      if (token === "brush") {
+        onBrushTool();
+        setCmdLine("");
+        return;
+      }
+      if (token === "select") {
+        onSelectTool();
+        setCmdLine("");
+        return;
+      }
+      if (snap.activeTool === "brush") {
+        const raw = value.trim();
+        const idx = brushSource.candidates.findIndex((candidate) => candidate.objectKindId === raw || normalizeEngagementCommandText(candidate.objectKindId) === token);
+        if (idx >= 0) {
+          brushSource.pickCandidate(idx);
+        }
+      }
+      setCmdLine("");
+    },
+    [brushSource, onBrushTool, onSelectTool, snap.activeTool],
+  );
+  const spec = reactHostPort.useMemo(
+    () =>
+      buildPuzzle3dPlayEngagement({
+        activeTool: snap.activeTool,
+        cmdLine,
+        selectionObjectCount: selectionCount,
+        onCmdLineChange: setCmdLine,
+        onCmdLineSubmit,
+        onSelectTool,
+        onBrushTool,
+        onCycleBrushCandidate: () => brushSource.cycleCandidate(),
+        onPickBrushCandidate: (index) => brushSource.pickCandidate(index),
+        brushCandidates: brushSource.candidates,
+        brushTargetActive: brushSource.targetActive,
+      }),
+    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onSelectTool, selectionCount, snap.activeTool],
+  );
+  reactHostPort.useEffect(() => {
+    engagementSpecRef.current = spec;
+    const mirrored = puzzle3dPlayEngagementMirror(spec);
+    enforcePuzzle3dPlayWindowEngagement(mirrored);
+    ctrl?.setWindowEngagement(mirrored);
+  }, [ctrl, spec]);
+  reactHostPort.useEffect(() => {
+    if (!ctrl) {
+      return;
+    }
+    const bridge: Puzzle3dPlayHostBridge = {
+      runHostCommand: (command, args) => {
+        switch (command) {
+          case "engagementOption": {
+            const optionId = (args as { optionId?: string })?.optionId;
+            engagementSpecRef.current?.options?.find((row) => row.id === optionId)?.onPress?.();
+            break;
+          }
+          case "engagementInput": {
+            const value = (args as { value?: string })?.value ?? "";
+            engagementSpecRef.current?.input?.onChange?.(value);
+            break;
+          }
+          case "engagementSubmit": {
+            const value = (args as { value?: string })?.value ?? engagementSpecRef.current?.input?.value ?? "";
+            engagementSpecRef.current?.input?.onSubmit?.(value);
+            break;
+          }
+          case "engagementPossibleSelect": {
+            const possibleId = (args as { possibleId?: string })?.possibleId;
+            if (!possibleId) {
+              break;
+            }
+            engagementSpecRef.current?.possibleEngagements?.find((row) => row.id === possibleId)?.onSelect?.();
+            break;
+          }
+          default:
+            break;
+        }
+      },
+    };
+    ctrl.setHostBridge(bridge);
+    return () => ctrl.setHostBridge(null);
+  }, [ctrl]);
+  return null;
+}
+
 function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
   const { runtime } = useApp();
   const bus = runtime.commandBus;
@@ -1215,7 +1356,9 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
     [bus, ctrl, kindCatalogs, patchFixture],
   );
   return (
-    <div className="absolute inset-0 min-h-0 min-w-0">
+    <>
+      <Puzzle3dPlayEngagementPublisher ctrl={ctrl} snap={snap} bus={bus} />
+      <div className="absolute inset-0 min-h-0 min-w-0">
       <ObjectStateProvider
         fixture={snap.fixture}
         fixtureRevision={snap.fixtureRevision}
@@ -1267,6 +1410,7 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
         <span data-e2e-indirect-count>{snap.indirectCount}</span>
       </div>
     </div>
+    </>
   );
 }
 
@@ -3979,6 +4123,24 @@ if (import.meta.vitest) {
           filter: [{ id: "sep", kind: "separator" }],
         }),
       ).toEqual(["save"]);
+    });
+  });
+
+  describe("enforcePuzzle3dPlayWindowEngagement", () => {
+    it("requires engagement.input", () => {
+      expect(() => enforcePuzzle3dPlayWindowEngagement({ options: [{ id: "x", label: "X" }] })).toThrow(/engagement\.input/);
+      expect(() => enforcePuzzle3dPlayWindowEngagement(undefined)).not.toThrow();
+    });
+  });
+
+  describe("puzzle3dPlayEngagementMirror", () => {
+    it("maps input and possibles to bus commands", () => {
+      const mirror = puzzle3dPlayEngagementMirror({
+        input: { id: "engagement-input", value: "brush", onChange: () => {}, onSubmit: () => {} },
+        possibleEngagements: [{ id: "puzzle3d.tool.brush", label: "Brush", onSelect: () => {} }],
+      });
+      expect(mirror?.input?.onChange?.command).toBe("engagementInput");
+      expect(mirror?.possibleEngagements?.[0]?.command?.command).toBe("engagementPossibleSelect");
     });
   });
 

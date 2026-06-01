@@ -10824,6 +10824,7 @@ export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefi
   const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
   if (!printable) return false;
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  if (field && document.activeElement === field) return false;
   const next = normalizeEngagementCommandText(`${input.value ?? field?.value ?? ""}${event.key}`);
   input.onChange?.(next);
   return true;
@@ -15736,6 +15737,13 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(activeField.value).toBe("B");
       });
+    });
+
+    it("Engagement onChange PascalCases spaced command without window routing", () => {
+      const changed: string[] = [];
+      render(<Engagement input={{ value: "", onChange: (next) => changed.push(next), placeholder: "Command" }} />);
+      fireEvent.change(screen.getByPlaceholderText("Command"), { target: { value: "set height" } });
+      expect(changed).toEqual(["SetHeight"]);
     });
 
     it("normalizeEngagementCommandText strips separators and PascalCases tokens", () => {

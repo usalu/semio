@@ -677,14 +677,11 @@ export class Puzzle3dPlayShellController extends Controller {
 
   /** @emoji 🎯 Refreshes the viewport store and bumps shell generation so the declarative inspector and hierarchy panels reflect selection changes. */
   private notifySelection(options?: { readonly deferShell?: boolean }): void {
+    this.notifySnapshot();
     if (options?.deferShell) {
-      queueMicrotask(() => {
-        this.notifySnapshot();
-        this.emit();
-      });
+      queueMicrotask(() => this.emit());
       return;
     }
-    this.notifySnapshot();
     this.emit();
   }
 

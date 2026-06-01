@@ -96,9 +96,11 @@
 
 .reveal .presentation-arrangement-canvas {
 	position: relative;
-	width: 100%;
-	height: 100%;
-	min-height: 0;
+	width: var(--presentation-slide-width, 960px);
+	height: var(--presentation-slide-height, 700px);
+	max-width: 100%;
+	max-height: 100%;
+	margin: 0 auto;
 	box-sizing: border-box;
 }
 
@@ -131,6 +133,10 @@
 	object-fit: contain;
 }
 
+.reveal .presentation-disposition-frame:has(.presentation-media-pdf-document) {
+	overflow: hidden;
+}
+
 .reveal .presentation-media-pdf-document {
 	display: flex;
 	align-items: center;
@@ -139,15 +145,21 @@
 	height: 100%;
 	min-height: 0;
 	min-width: 0;
+	overflow: hidden;
 }
 
-.reveal .presentation-media-pdf,
+.reveal .presentation-media-pdf {
+	display: block;
+	background: #fff;
+	line-height: 0;
+	max-height: 100%;
+	max-width: 100%;
+}
+
 .reveal .presentation-media-pdf canvas {
 	display: block;
 	max-height: 100%;
 	max-width: 100%;
-	height: auto !important;
-	width: auto !important;
 }
 
 .reveal .slides section[data-auto-animate] [data-id="goal"] h2 {

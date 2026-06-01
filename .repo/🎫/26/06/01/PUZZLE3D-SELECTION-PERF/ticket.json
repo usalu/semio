@@ -1,9 +1,9 @@
 {
   "title": "Puzzle3d Selection Perf",
   "emoji": "⚡",
-  "status": "open",
+  "status": "closed",
   "description": "Puzzle 3D Selection Performance Refactor",
-  "summary": "Finished Ctrl+A freeze fix: host selection sync via ControlledSelectionSync (useLayoutEffect, before scene tree) without re-rendering memoized RegistryProvider subtree; selection store owned by Inner; PlayCanvas passes selection again; fixed publishSelection/clearSelection controlled host reads; bulk tint hoisted Color. Tests: 146 @puzzle/3d/react, 24 @puzzle/3d/play.",
+  "summary": "Fixed Ctrl+A ~2s 3D freeze: registryScene useMemo was invalidated on every host re-render because PlayCanvas children and callback props got new references, remounting RegistryProvider and ~180 objects. Stable scene via InnerSceneChildrenContext + memoized PlayCanvas scene children; RegistryHostCallbacks ref for registry shell; deferShell now defers snapshot+emit together; bulk tint skips material.needsUpdate.",
   "goal": "🎯semio",
   "sessions": [
     "⚪e62a8f60381942afa82985be8e252a49",

@@ -14,7 +14,18 @@ import {
 	Expertise,
 	type ElementsSurfaceChromeInput,
 } from "@ui/react";
-import { act, Fragment, useEffect, useRef, useState, type FC, type ReactNode, type RefObject } from "react";
+import {
+	act,
+	createContext,
+	Fragment,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+	type FC,
+	type ReactNode,
+	type RefObject,
+} from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
 	AffiliationEntry,
@@ -185,34 +196,69 @@ function morphAnchorClass(emphasis: ParticipantEmphasis): string {
 	return ["presentation-morph-anchor", emphasisClass(emphasis)].filter(Boolean).join(" ");
 }
 
-/** @emoji 📐 Tracks a disposition frame size so react-pdf pages scale to the slide region. */
-function useFrameSize(): readonly [
-	RefObject<HTMLDivElement | null>,
-	{ readonly width?: number; readonly height?: number },
-] {
-	const ref = useRef<HTMLDivElement>(null);
+//#region 🔖SlideEpoch
+const PresentationSlideEpochContext = createContext(0);
+
+function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
+	const width = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-width") ?? "960");
+	const height = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-height") ?? "700");
+	return {
+		width: Number.isFinite(width) && width > 0 ? width : 960,
+		height: Number.isFinite(height) && height > 0 ? height : 700,
+	};
+}
+
+/** @emoji 📐 Measures the disposition frame for react-pdf; re-runs when the slide becomes visible. */
+function usePdfPageSize(
+	anchorRef: RefObject<HTMLDivElement | null>,
+	position: DispositionPosition | undefined,
+	slideEpoch: number,
+): { readonly width?: number; readonly height?: number } {
 	const [size, setSize] = useState<{ readonly width?: number; readonly height?: number }>({});
 	useEffect(() => {
-		const el = ref.current;
-		if (!el || typeof ResizeObserver === "undefined") {
+		const el = anchorRef.current;
+		if (!el) {
 			return;
 		}
 		const measure = (): void => {
-			const width = Math.floor(el.clientWidth);
-			const height = Math.floor(el.clientHeight);
+			const frame = el.closest(".presentation-disposition-frame");
+			const frameRect = frame?.getBoundingClientRect();
+			if (frameRect && frameRect.width > 8 && frameRect.height > 8) {
+				setSize({
+					width: Math.floor(frameRect.width),
+					height: Math.floor(frameRect.height),
+				});
+				return;
+			}
+			const slide = parsePresentationSlideCssSize(el.closest(".reveal"));
+			const width = position ? Math.floor(slide.width * position.width) : Math.floor(slide.width * 0.8);
+			const height = position ? Math.floor(slide.height * position.height) : Math.floor(slide.height * 0.4);
 			if (width > 0 && height > 0) {
 				setSize({ width, height });
 			}
 		};
 		measure();
-		const observer = new ResizeObserver(measure);
-		observer.observe(el);
+		const frame = el.closest(".presentation-disposition-frame");
+		const observer =
+			frame && typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+		observer?.observe(frame);
+		const visibility =
+			typeof IntersectionObserver !== "undefined"
+				? new IntersectionObserver((entries) => {
+						if (entries[0]?.isIntersecting) {
+							measure();
+						}
+					})
+				: null;
+		visibility?.observe(el);
 		return () => {
-			observer.disconnect();
+			observer?.disconnect();
+			visibility?.disconnect();
 		};
-	}, []);
-	return [ref, size] as const;
+	}, [anchorRef, position?.height, position?.width, position?.x, position?.y, slideEpoch]);
+	return size;
 }
+//#endregion 🔖SlideEpoch
 
 function lineClass(morphId: string, embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string | undefined {
 	return [morphTextClass(morphId), embodiment.fit ? "r-fit-text" : undefined, emphasisClass(emphasis)]
@@ -484,15 +530,19 @@ function PdfMorphView({
 	morphId: anchorId,
 	embodiment,
 	emphasis,
+	position,
 }: {
 	readonly morphId: string;
 	readonly embodiment: PdfEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
+	readonly position?: DispositionPosition;
 }): ReactNode {
-	const [frameRef, frameSize] = useFrameSize();
-	const pageHeight = frameSize.height;
+	const anchorRef = useRef<HTMLDivElement>(null);
+	const slideEpoch = useContext(PresentationSlideEpochContext);
+	const pageSize = usePdfPageSize(anchorRef, position, slideEpoch);
+	const pageHeight = pageSize.height;
 	return (
-		<div ref={frameRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
+		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<Document
 				className="presentation-media-pdf-document"
 				file={embodiment.src}
@@ -587,7 +637,14 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 			content = <VideoMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 			break;
 		case "pdf":
-			content = <PdfMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			content = (
+				<PdfMorphView
+					morphId={anchorId}
+					embodiment={embodiment}
+					emphasis={emphasis}
+					position={disposition.position}
+				/>
+			);
 			break;
 		default: {
 			const _exhaustive: never = embodiment;
@@ -637,6 +694,7 @@ export const PresentationDeck: FC<{
 }> = ({ presentation, options }) => {
 	const deckDivRef = useRef<HTMLDivElement>(null);
 	const deckRef = useRef<Reveal.Api | null>(null);
+	const [slideEpoch, setSlideEpoch] = useState(0);
 
 	useEffect(() => {
 		const deckEl = deckDivRef.current;
@@ -663,15 +721,25 @@ export const PresentationDeck: FC<{
 		relaxHiddenPreflight();
 		const deck = new Reveal(deckEl, revealOptions);
 		deckRef.current = deck;
+		const tryPlayVideo = (video: HTMLVideoElement): void => {
+			try {
+				const playResult = video.play();
+				if (playResult !== undefined) {
+					void playResult.catch(() => undefined);
+				}
+			} catch {
+				// jsdom and browser autoplay policies
+			}
+		};
 		const syncPresentSlideMedia = (): void => {
+			if (import.meta.vitest) {
+				return;
+			}
 			for (const video of deckEl.querySelectorAll<HTMLVideoElement>("video.presentation-media-video")) {
 				const section = video.closest("section");
 				const isPresent = section?.classList.contains("present") === true;
 				if (isPresent) {
-					const playResult = video.play();
-					if (playResult !== undefined) {
-						void playResult.catch(() => undefined);
-					}
+					tryPlayVideo(video);
 				} else {
 					video.pause();
 				}
@@ -685,12 +753,14 @@ export const PresentationDeck: FC<{
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
 			syncPresentSlideMedia();
+			setSlideEpoch((epoch) => epoch + 1);
 		};
 		void deck.initialize().then(() => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
 			syncPresentSlideMedia();
+			setSlideEpoch((epoch) => epoch + 1);
 			deck.on("slidechanged", onSlideChanged);
 			deck.on("resize", onResize);
 		});
@@ -707,8 +777,9 @@ export const PresentationDeck: FC<{
 	}, []);
 
 	return (
-		<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
-			<div className="slides">
+		<PresentationSlideEpochContext.Provider value={slideEpoch}>
+			<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
+				<div className="slides">
 				{presentation.sequences.map((sequence) => (
 					<section key={sequence.id}>
 						{sequence.thoughts.flatMap((thought) =>
@@ -723,8 +794,9 @@ export const PresentationDeck: FC<{
 						)}
 					</section>
 				))}
+				</div>
 			</div>
-		</div>
+		</PresentationSlideEpochContext.Provider>
 	);
 };
 //#endregion 🔖PresentationDeck
