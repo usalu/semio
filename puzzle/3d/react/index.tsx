@@ -3651,6 +3651,7 @@ export interface RegistryInteractionValue {
   readonly selectionMode: SelectionMode;
   commitSelection(pick: SelectionPick): void;
   captureMarqueeCandidates(): void;
+  prefetchMarqueeCandidates(): void;
   previewMarqueeSelection(args: MarqueeGestureArgs): void;
   cancelMarqueePreview(): void;
   commitMarqueeSelection(args: MarqueeGestureArgs): void;
@@ -5089,6 +5090,55 @@ export interface MarqueeCandidate {
   readonly kind: "object" | "vortex" | "attraction";
   readonly id: string;
   readonly points: readonly ScreenPoint[];
+  readonly anyBehindCamera: boolean;
+}
+
+export interface ObjectMarqueeFootprint {
+  readonly hull: ScreenPoint[];
+  readonly anyBehindCamera: boolean;
+}
+
+const _marqueeProjectScratch = new Vector3();
+const _marqueeObjectBox = new Box3();
+const _marqueeBoxCorners: readonly Vector3[] = [
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+  new Vector3(),
+];
+
+function marqueeCross(o: ScreenPoint, a: ScreenPoint, b: ScreenPoint): number {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+}
+
+/** @emoji 🖱️ Convex hull of screen points (monotone chain) for marquee silhouette edges. */
+export function convexHullScreenPoints(points: readonly ScreenPoint[]): ScreenPoint[] {
+  if (points.length <= 1) {
+    return [...points];
+  }
+  const sorted = [...points].sort((a, b) => (a.x === b.x ? a.y - b.y : a.x - b.x));
+  const lower: ScreenPoint[] = [];
+  for (const p of sorted) {
+    while (lower.length >= 2 && marqueeCross(lower[lower.length - 2]!, lower[lower.length - 1]!, p) <= 0) {
+      lower.pop();
+    }
+    lower.push(p);
+  }
+  const upper: ScreenPoint[] = [];
+  for (let i = sorted.length - 1; i >= 0; i -= 1) {
+    const p = sorted[i]!;
+    while (upper.length >= 2 && marqueeCross(upper[upper.length - 2]!, upper[upper.length - 1]!, p) <= 0) {
+      upper.pop();
+    }
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
 }
 
 export interface MarqueeSelectionInput {
@@ -5107,49 +5157,59 @@ function marqueePointMatcher(method: SelectionMethod, rect: ScreenRect | null, p
   return (point) => pointInPolygon(point, polygon);
 }
 
+function marqueeHullEdgesIntersectRect(hull: readonly ScreenPoint[], rect: ScreenRect): boolean {
+  if (hull.length === 0) {
+    return false;
+  }
+  if (hull.length === 1) {
+    return pointInScreenRect(hull[0]!, rect);
+  }
+  for (let i = 0; i < hull.length; i += 1) {
+    const a = hull[i]!;
+    const b = hull[(i + 1) % hull.length]!;
+    if (segmentIntersectsScreenRect(a, b, rect)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function marqueeHullEdgesIntersectPolygon(hull: readonly ScreenPoint[], polygon: readonly ScreenPoint[]): boolean {
+  if (hull.length === 0) {
+    return false;
+  }
+  if (hull.length === 1) {
+    return pointInPolygon(hull[0]!, polygon);
+  }
+  for (let i = 0; i < hull.length; i += 1) {
+    const a = hull[i]!;
+    const b = hull[(i + 1) % hull.length]!;
+    if (segmentIntersectsPolygon(a, b, polygon)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function marqueeCandidateSelected(input: MarqueeSelectionInput, candidate: MarqueeCandidate): boolean {
   if (candidate.points.length === 0) {
     return false;
   }
+  const hull = candidate.points;
   const contains = marqueePointMatcher(input.method, input.rect, input.polygon);
   if (input.crossing) {
-    if (candidate.points.some(contains)) {
+    if (hull.some(contains)) {
       return true;
     }
     if (input.method === "rectangle" && input.rect) {
-      const objectRect = screenRectFromClientPoints(
-        Math.min(...candidate.points.map((p) => p.x)),
-        Math.min(...candidate.points.map((p) => p.y)),
-        Math.max(...candidate.points.map((p) => p.x)),
-        Math.max(...candidate.points.map((p) => p.y)),
-      );
-      if (screenRectIntersectsRect(input.rect, objectRect)) {
-        return true;
-      }
-      for (let i = 0; i < candidate.points.length - 1; i += 1) {
-        if (segmentIntersectsScreenRect(candidate.points[i]!, candidate.points[i + 1]!, input.rect)) {
-          return true;
-        }
-      }
-      return false;
+      return marqueeHullEdgesIntersectRect(hull, input.rect);
     }
-    for (let i = 0; i < candidate.points.length - 1; i += 1) {
-      if (segmentIntersectsPolygon(candidate.points[i]!, candidate.points[i + 1]!, input.polygon)) {
-        return true;
-      }
-    }
+    return marqueeHullEdgesIntersectPolygon(hull, input.polygon);
+  }
+  if (candidate.anyBehindCamera) {
     return false;
   }
-  if (input.method === "rectangle" && input.rect) {
-    const objectRect = screenRectFromClientPoints(
-      Math.min(...candidate.points.map((p) => p.x)),
-      Math.min(...candidate.points.map((p) => p.y)),
-      Math.max(...candidate.points.map((p) => p.x)),
-      Math.max(...candidate.points.map((p) => p.y)),
-    );
-    return screenRectContainsRect(input.rect, objectRect);
-  }
-  return candidate.points.every(contains);
+  return hull.every(contains);
 }
 
 /** @emoji 🖱️ Resolves marquee hits into a {@link SelectionSnapshot} from projected screen candidates. */
@@ -5214,19 +5274,62 @@ export function resolveMarqueeSelectionGesture(
   return mergeSelectionSnapshot(marqueeModeFromModifiers(args.modifiers), options.base, incoming);
 }
 
-/** @emoji 🖱️ Projects a world point to client coordinates for marquee tests. */
-export function projectWorldToClient(point: Vector3, camera: Camera, rect: DOMRect): ScreenPoint | null {
-  const projected = point.clone().project(camera);
+/** @emoji 🖱️ Stable key for marquee screen-footprint cache (camera pose + canvas size). */
+export function marqueeViewKey(camera: Camera, rect: DOMRect): string {
+  const e = camera.matrixWorldInverse.elements;
+  return `${Math.round(rect.width)}x${Math.round(rect.height)}:${e[0]!.toFixed(4)}:${e[5]!.toFixed(4)}:${e[10]!.toFixed(4)}:${e[12]!.toFixed(2)}:${e[13]!.toFixed(2)}:${e[14]!.toFixed(2)}`;
+}
+
+/** @emoji 🖱️ Projects a world point to client space; reports when the point is outside the view volume. */
+export function projectWorldToClientMarquee(point: Vector3, camera: Camera, rect: DOMRect): { readonly point: ScreenPoint | null; readonly behindCamera: boolean } {
+  const projected = _marqueeProjectScratch.copy(point).project(camera);
   if (!Number.isFinite(projected.x) || !Number.isFinite(projected.y) || !Number.isFinite(projected.z)) {
-    return null;
+    return { point: null, behindCamera: true };
   }
   if (projected.z < -1 || projected.z > 1) {
-    return null;
+    return { point: null, behindCamera: true };
   }
   return {
-    x: rect.left + ((projected.x + 1) / 2) * rect.width,
-    y: rect.top + ((1 - projected.y) / 2) * rect.height,
+    point: {
+      x: rect.left + ((projected.x + 1) / 2) * rect.width,
+      y: rect.top + ((1 - projected.y) / 2) * rect.height,
+    },
+    behindCamera: false,
   };
+}
+
+/** @emoji 🖱️ Projects a world point to client coordinates for marquee tests. */
+export function projectWorldToClient(point: Vector3, camera: Camera, rect: DOMRect): ScreenPoint | null {
+  return projectWorldToClientMarquee(point, camera, rect).point;
+}
+
+function writeMarqueeBoxCorners(box: Box3): readonly Vector3[] {
+  const { min, max } = box;
+  _marqueeBoxCorners[0]!.set(min.x, min.y, min.z);
+  _marqueeBoxCorners[1]!.set(max.x, min.y, min.z);
+  _marqueeBoxCorners[2]!.set(min.x, max.y, min.z);
+  _marqueeBoxCorners[3]!.set(max.x, max.y, min.z);
+  _marqueeBoxCorners[4]!.set(min.x, min.y, max.z);
+  _marqueeBoxCorners[5]!.set(max.x, min.y, max.z);
+  _marqueeBoxCorners[6]!.set(min.x, max.y, max.z);
+  _marqueeBoxCorners[7]!.set(max.x, max.y, max.z);
+  return _marqueeBoxCorners;
+}
+
+function projectWorldPointsToMarqueeFootprint(worldPoints: readonly Vector3[], camera: Camera, rect: DOMRect): ObjectMarqueeFootprint {
+  let anyBehindCamera = false;
+  const projected: ScreenPoint[] = [];
+  for (const world of worldPoints) {
+    const sample = projectWorldToClientMarquee(world, camera, rect);
+    if (sample.behindCamera) {
+      anyBehindCamera = true;
+    }
+    if (sample.point) {
+      projected.push(sample.point);
+    }
+  }
+  const hull = projected.length >= 3 ? convexHullScreenPoints(projected) : projected;
+  return { hull, anyBehindCamera };
 }
 
 /** @emoji 🖱️ Precomputes mesh geometry bounding boxes so marquee {@link Box3.setFromObject} avoids a cold first-gesture stall. */
@@ -5243,30 +5346,13 @@ export function warmObjectGroupMarqueeBounds(group: Group): void {
   });
 }
 
-/** @emoji 🖱️ Projects an object group's bounds corners to client space. */
-export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ScreenPoint[] {
-  const box = new Box3().setFromObject(group, false);
-  if (box.isEmpty()) {
-    return [];
+/** @emoji 🖱️ Projects an object group's world AABB to a client-space convex hull for marquee tests. */
+export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ObjectMarqueeFootprint {
+  _marqueeObjectBox.setFromObject(group, false);
+  if (_marqueeObjectBox.isEmpty()) {
+    return { hull: [], anyBehindCamera: false };
   }
-  const corners = [
-    new Vector3(box.min.x, box.min.y, box.min.z),
-    new Vector3(box.max.x, box.min.y, box.min.z),
-    new Vector3(box.min.x, box.max.y, box.min.z),
-    new Vector3(box.max.x, box.max.y, box.min.z),
-    new Vector3(box.min.x, box.min.y, box.max.z),
-    new Vector3(box.max.x, box.min.y, box.max.z),
-    new Vector3(box.min.x, box.max.y, box.max.z),
-    new Vector3(box.max.x, box.max.y, box.max.z),
-  ];
-  const out: ScreenPoint[] = [];
-  for (const corner of corners) {
-    const client = projectWorldToClient(corner, camera, rect);
-    if (client) {
-      out.push(client);
-    }
-  }
-  return out;
+  return projectWorldPointsToMarqueeFootprint(writeMarqueeBoxCorners(_marqueeObjectBox), camera, rect);
 }
 
 export interface MarqueeOverlaySnapshot {
@@ -6112,7 +6198,7 @@ function AttractionWindowBridge() {
 
 function MarqueeBridge() {
   const reg = useRegistry();
-  const { captureMarqueeCandidates, previewMarqueeSelection, cancelMarqueePreview, commitMarqueeSelection } = useRegistryInteraction();
+  const { captureMarqueeCandidates, prefetchMarqueeCandidates, previewMarqueeSelection, cancelMarqueePreview, commitMarqueeSelection } = useRegistryInteraction();
   const marquee = useRegistryMarquee();
   const gl = useThree((state) => state.gl);
   const invalidate = useThree((state) => state.invalidate);
@@ -6125,7 +6211,6 @@ function MarqueeBridge() {
     lastX: number;
     lastY: number;
   } | null>(null);
-  const marqueeCaptureRafRef = reactHostPort.useRef(0);
   reactHostPort.useEffect(() => {
     const canvas = gl.domElement;
     if (!canvas) {
@@ -6134,14 +6219,7 @@ function MarqueeBridge() {
     const resetOverlay = () => {
       puzzle3dMarqueeOverlayStore.setSnapshot(MARQUEE_OVERLAY_IDLE);
     };
-    const cancelPendingMarqueeCapture = () => {
-      if (marqueeCaptureRafRef.current) {
-        cancelAnimationFrame(marqueeCaptureRafRef.current);
-        marqueeCaptureRafRef.current = 0;
-      }
-    };
     const cancelGesture = () => {
-      cancelPendingMarqueeCapture();
       gestureRef.current = null;
       cancelMarqueePreview();
       resetOverlay();
@@ -6160,6 +6238,7 @@ function MarqueeBridge() {
         lastX: event.clientX,
         lastY: event.clientY,
       };
+      requestAnimationFrame(() => prefetchMarqueeCandidates());
     };
     const onPointerMove = (event: PointerEvent) => {
       if (puzzle3dRelocateDragActiveRef.current) {
@@ -6197,30 +6276,11 @@ function MarqueeBridge() {
         current: { x: lastX, y: lastY },
         path,
       };
+      puzzle3dMarqueeOverlayStore.setSnapshot(overlaySnapshot);
       if (activating) {
-        puzzle3dMarqueeOverlayStore.setSnapshot(overlaySnapshot);
-        cancelPendingMarqueeCapture();
-        marqueeCaptureRafRef.current = requestAnimationFrame(() => {
-          marqueeCaptureRafRef.current = 0;
-          const currentGesture = gestureRef.current;
-          if (!currentGesture?.active) {
-            return;
-          }
-          captureMarqueeCandidates();
-          previewMarqueeSelection({
-            startX: currentGesture.startX,
-            startY: currentGesture.startY,
-            endX: currentGesture.lastX,
-            endY: currentGesture.lastY,
-            path: currentGesture.path,
-            modifiers: gestureArgs.modifiers,
-          });
-          invalidate();
-        });
-      } else {
-        puzzle3dMarqueeOverlayStore.setSnapshot(overlaySnapshot);
-        previewMarqueeSelection(gestureArgs);
+        captureMarqueeCandidates();
       }
+      previewMarqueeSelection(gestureArgs);
       invalidate();
     };
     const onPointerUp = (event: PointerEvent) => {
@@ -6258,7 +6318,7 @@ function MarqueeBridge() {
       bindings.dispose();
       resetOverlay();
     };
-  }, [cancelMarqueePreview, captureMarqueeCandidates, commitMarqueeSelection, invalidate, marquee.selectionMethod, previewMarqueeSelection, reg]);
+  }, [cancelMarqueePreview, captureMarqueeCandidates, commitMarqueeSelection, invalidate, marquee.selectionMethod, prefetchMarqueeCandidates, previewMarqueeSelection, reg]);
   return null;
 }
 
@@ -6444,6 +6504,7 @@ function RegistryProvider({
   const marqueeAttractionsRef = reactHostPort.useRef<readonly AttractionProps[]>([]);
   const marqueeCandidatesRef = reactHostPort.useRef<MarqueeCandidate[]>([]);
   const marqueeBaseSelectionRef = reactHostPort.useRef<SelectionSnapshot | null>(null);
+  const marqueePrefetchRef = reactHostPort.useRef<{ readonly key: string; readonly candidates: MarqueeCandidate[] }>({ key: "", candidates: [] });
   const notifyConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onConnect?.(payload), [hostCallbacksRef]);
   const notifyProximityConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onProximityConnect?.(payload), [hostCallbacksRef]);
   const notifyIndirectConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onIndirectConnect?.(payload), [hostCallbacksRef]);
@@ -6493,9 +6554,9 @@ function RegistryProvider({
       if (!group) {
         continue;
       }
-      const points = projectObjectGroupToScreenPoints(group, env.camera, domRect);
-      if (points.length) {
-        candidates.push({ kind: "object", id, points });
+      const footprint = projectObjectGroupToScreenPoints(group, env.camera, domRect);
+      if (footprint.hull.length) {
+        candidates.push({ kind: "object", id, points: footprint.hull, anyBehindCamera: footprint.anyBehindCamera });
       }
     }
     for (const [fullId, getter] of vortexGettersRef.current) {
@@ -6505,7 +6566,7 @@ function RegistryProvider({
       }
       const point = projectWorldToClient(world, env.camera, domRect);
       if (point) {
-        candidates.push({ kind: "vortex", id: fullId, points: [point] });
+        candidates.push({ kind: "vortex", id: fullId, points: [point], anyBehindCamera: false });
       }
     }
     for (const attraction of marqueeAttractionsRef.current) {
@@ -6525,10 +6586,14 @@ function RegistryProvider({
         }
       }
       if (points.length) {
-        candidates.push({ kind: "attraction", id: attraction.id, points });
+        candidates.push({ kind: "attraction", id: attraction.id, points, anyBehindCamera: false });
       }
     }
     return candidates;
+  }, []);
+
+  const invalidateMarqueePrefetch = reactHostPort.useCallback(() => {
+    marqueePrefetchRef.current = { key: "", candidates: [] };
   }, []);
 
   const clearMarqueeGestureCache = reactHostPort.useCallback(() => {
@@ -6536,9 +6601,36 @@ function RegistryProvider({
     marqueeBaseSelectionRef.current = null;
   }, []);
 
+  const prefetchMarqueeCandidates = reactHostPort.useCallback(() => {
+    const env = attractionThreeRef.current;
+    if (!env) {
+      return;
+    }
+    const domRect = env.gl.domElement.getBoundingClientRect();
+    const key = marqueeViewKey(env.camera, domRect);
+    if (marqueePrefetchRef.current.key === key && marqueePrefetchRef.current.candidates.length > 0) {
+      return;
+    }
+    marqueePrefetchRef.current = { key, candidates: buildMarqueeCandidates() };
+  }, [buildMarqueeCandidates]);
+
   const captureMarqueeCandidates = reactHostPort.useCallback(() => {
     marqueeBaseSelectionRef.current = selectionStore.getSnapshot();
-    marqueeCandidatesRef.current = buildMarqueeCandidates();
+    const env = attractionThreeRef.current;
+    if (env) {
+      const domRect = env.gl.domElement.getBoundingClientRect();
+      const key = marqueeViewKey(env.camera, domRect);
+      if (marqueePrefetchRef.current.key === key && marqueePrefetchRef.current.candidates.length > 0) {
+        marqueeCandidatesRef.current = marqueePrefetchRef.current.candidates;
+        return;
+      }
+    }
+    const built = buildMarqueeCandidates();
+    marqueeCandidatesRef.current = built;
+    if (env) {
+      const domRect = env.gl.domElement.getBoundingClientRect();
+      marqueePrefetchRef.current = { key: marqueeViewKey(env.camera, domRect), candidates: built };
+    }
   }, [buildMarqueeCandidates, selectionStore]);
 
   const previewMarqueeSelection = reactHostPort.useCallback(
@@ -6604,9 +6696,14 @@ function RegistryProvider({
     [publishSelection, selectionStore],
   );
 
-  const setMarqueeAttractions = reactHostPort.useCallback((attractions: readonly AttractionProps[]) => {
-    marqueeAttractionsRef.current = attractions;
-  }, []);
+  const setMarqueeAttractions = reactHostPort.useCallback(
+    (attractions: readonly AttractionProps[]) => {
+      marqueeAttractionsRef.current = attractions;
+      invalidateMarqueePrefetch();
+      scheduleDeferredCallback(prefetchMarqueeCandidates);
+    },
+    [invalidateMarqueePrefetch, prefetchMarqueeCandidates],
+  );
   const activeRelocateObjectIdRef = reactHostPort.useRef<string | null>(primarySelectionObjectId(selectionStore.getSnapshot()));
   const setActiveRelocateObjectId = reactHostPort.useCallback((id: string | null) => {
     if (activeRelocateObjectIdRef.current === id) {
@@ -6700,13 +6797,20 @@ function RegistryProvider({
     vortexPickRef.current.delete(fullId);
   }, []);
 
-  const registerObject = reactHostPort.useCallback((id: string, objectKind: string | undefined, group: Group | null) => {
-    objectGroupMap.current.set(id, group);
-    objectKindsRef.current.set(id, objectKind);
-    if (group) {
-      scheduleDeferredCallback(() => warmObjectGroupMarqueeBounds(group));
-    }
-  }, []);
+  const registerObject = reactHostPort.useCallback(
+    (id: string, objectKind: string | undefined, group: Group | null) => {
+      objectGroupMap.current.set(id, group);
+      objectKindsRef.current.set(id, objectKind);
+      invalidateMarqueePrefetch();
+      if (group) {
+        scheduleDeferredCallback(() => {
+          warmObjectGroupMarqueeBounds(group);
+          prefetchMarqueeCandidates();
+        });
+      }
+    },
+    [invalidateMarqueePrefetch, prefetchMarqueeCandidates],
+  );
 
   const collectObjectGroups = reactHostPort.useCallback((): Group[] => {
     const out: Group[] = [];
@@ -7022,9 +7126,16 @@ function RegistryProvider({
     [cancelAttractionDrag, collectPickRoots, notifyConnect, notifyIndirectConnect],
   );
 
-  const attachAttractionThreeEnv = reactHostPort.useCallback((env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
-    attractionThreeRef.current = env;
-  }, []);
+  const attachAttractionThreeEnv = reactHostPort.useCallback(
+    (env: { camera: Camera; gl: WebGLRenderer; scene: ThreeScene } | null) => {
+      attractionThreeRef.current = env;
+      if (env) {
+        invalidateMarqueePrefetch();
+        scheduleDeferredCallback(prefetchMarqueeCandidates);
+      }
+    },
+    [invalidateMarqueePrefetch, prefetchMarqueeCandidates],
+  );
 
   const findNearestProximityRelocate = reactHostPort.useCallback(
     (world: Vector3, movingObjectId: string): AttractionPayload | null => {
@@ -7122,6 +7233,7 @@ function RegistryProvider({
       selectionMode,
       commitSelection,
       captureMarqueeCandidates,
+      prefetchMarqueeCandidates,
       previewMarqueeSelection,
       cancelMarqueePreview,
       commitMarqueeSelection,
@@ -7135,6 +7247,7 @@ function RegistryProvider({
       clearSelection,
       commitMarqueeSelection,
       commitSelection,
+      prefetchMarqueeCandidates,
       previewMarqueeSelection,
       selectionMode,
       setActiveRelocateObjectId,
@@ -8422,6 +8535,32 @@ if (import.meta.vitest) {
       expect(marqueeIsCrossing(80, 100)).toBe(false);
     });
   });
+  describe("marqueeViewKey", () => {
+    it("changes when canvas size changes", () => {
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
+      camera.position.set(0, 10, 20);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld(true);
+      const a = marqueeViewKey(camera, { width: 800, height: 600, left: 0, top: 0, right: 800, bottom: 600 } as DOMRect);
+      const b = marqueeViewKey(camera, { width: 1024, height: 768, left: 0, top: 0, right: 1024, bottom: 768 } as DOMRect);
+      expect(a).not.toBe(b);
+    });
+  });
+  describe("projectObjectGroupToScreenPoints", () => {
+    it("returns a hull from warmed mesh bounds without sampling vertices", () => {
+      const camera = new ThreePerspectiveCamera(50, 1, 0.1, 1000);
+      camera.position.set(0, 10, 20);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld(true);
+      const rect = { width: 800, height: 600, left: 0, top: 0, right: 800, bottom: 600 } as DOMRect;
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(2, 2, 2));
+      root.add(mesh);
+      warmObjectGroupMarqueeBounds(root);
+      const footprint = projectObjectGroupToScreenPoints(root, camera, rect);
+      expect(footprint.hull.length).toBeGreaterThan(0);
+    });
+  });
   describe("warmObjectGroupMarqueeBounds", () => {
     it("computes geometry boundingBox for group meshes", () => {
       const root = new Group();
@@ -8451,8 +8590,8 @@ if (import.meta.vitest) {
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
         candidates: [
-          { kind: "object", id: "inside", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }] },
-          { kind: "object", id: "partial", points: [{ x: 90, y: 90 }, { x: 120, y: 120 }] },
+          { kind: "object", id: "inside", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }], anyBehindCamera: false },
+          { kind: "object", id: "partial", points: [{ x: 90, y: 90 }, { x: 120, y: 120 }], anyBehindCamera: false },
         ],
       });
       expect(snap.objectIds).toEqual(["inside"]);
@@ -8464,7 +8603,7 @@ if (import.meta.vitest) {
         rect,
         polygon: [],
         kinds: { object: true, vortex: true, attraction: true },
-        candidates: [{ kind: "object", id: "partial", points: [{ x: 90, y: 90 }, { x: 120, y: 120 }] }],
+        candidates: [{ kind: "object", id: "partial", points: [{ x: 90, y: 90 }, { x: 120, y: 120 }], anyBehindCamera: false }],
       });
       expect(snap.objectIds).toEqual(["partial"]);
     });
@@ -8476,12 +8615,84 @@ if (import.meta.vitest) {
         polygon: [],
         kinds: { object: false, vortex: true, attraction: false },
         candidates: [
-          { kind: "object", id: "obj", points: [{ x: 10, y: 10 }] },
-          { kind: "vortex", id: "a:v1", points: [{ x: 12, y: 12 }] },
+          { kind: "object", id: "obj", points: [{ x: 10, y: 10 }], anyBehindCamera: false },
+          { kind: "vortex", id: "a:v1", points: [{ x: 12, y: 12 }], anyBehindCamera: false },
         ],
       });
       expect(snap.objectIds).toEqual([]);
       expect(snap.vortexIds).toEqual(["a:v1"]);
+    });
+    it("window mode rejects objects with vertices behind the camera", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: false,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [{ kind: "object", id: "straddle", points: [{ x: 50, y: 50 }], anyBehindCamera: true }],
+      });
+      expect(snap.objectIds).toEqual([]);
+    });
+    it("window mode selects a tight hull fully inside the marquee", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: false,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "tight",
+            points: [
+              { x: 40, y: 40 },
+              { x: 60, y: 40 },
+              { x: 60, y: 60 },
+              { x: 40, y: 60 },
+            ],
+            anyBehindCamera: false,
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual(["tight"]);
+    });
+    it("crossing mode selects via convex-hull edges without any corner inside", () => {
+      const snap = marqueeSelectionFromCandidates({
+        method: "rectangle",
+        crossing: true,
+        rect,
+        polygon: [],
+        kinds: { object: true, vortex: true, attraction: true },
+        candidates: [
+          {
+            kind: "object",
+            id: "edge-hit",
+            points: [
+              { x: -10, y: 50 },
+              { x: 110, y: 50 },
+              { x: 110, y: 60 },
+              { x: -10, y: 60 },
+            ],
+            anyBehindCamera: false,
+          },
+        ],
+      });
+      expect(snap.objectIds).toEqual(["edge-hit"]);
+    });
+  });
+  describe("convexHullScreenPoints", () => {
+    it("returns the input for fewer than two unique points", () => {
+      expect(convexHullScreenPoints([{ x: 1, y: 2 }])).toEqual([{ x: 1, y: 2 }]);
+    });
+    it("orders hull vertices for a square", () => {
+      const hull = convexHullScreenPoints([
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+        { x: 5, y: 5 },
+      ]);
+      expect(hull.length).toBe(4);
     });
   });
   describe("mergeSelectionSnapshot", () => {
@@ -8495,8 +8706,8 @@ if (import.meta.vitest) {
   describe("resolveMarqueeSelectionGesture", () => {
     const rect = screenRectFromClientPoints(0, 0, 100, 100);
     const candidates = [
-      { kind: "object" as const, id: "inside", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }] },
-      { kind: "object" as const, id: "outside", points: [{ x: 200, y: 200 }] },
+      { kind: "object" as const, id: "inside", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }], anyBehindCamera: false },
+      { kind: "object" as const, id: "outside", points: [{ x: 200, y: 200 }], anyBehindCamera: false },
     ];
     const gesture = {
       startX: 0,

@@ -459,6 +459,24 @@ function morphBridgeNeeded(
 	return dispositionEmbodimentKey(participant, source) !== dispositionEmbodimentKey(participant, target);
 }
 
+/** @emoji 🎯 True when reveal.js can morph two positioned morph slots in one step without an intermediate bridge slide. */
+export function morphBridgeDirect(
+	participant: Participant,
+	source: Disposition,
+	target: Disposition,
+): boolean {
+	if (source.position === undefined || target.position === undefined) {
+		return false;
+	}
+	const sourceEmbodiment = resolveEmbodiment(participant, source.embodimentId);
+	const targetEmbodiment = resolveEmbodiment(participant, target.embodimentId);
+	return (
+		sourceEmbodiment.kind === "figure" &&
+		sourceEmbodiment.crop !== undefined &&
+		targetEmbodiment.kind === "text"
+	);
+}
+
 function morphBridgeDisposition(source: Disposition, target: Disposition): Disposition {
 	return {
 		participantId: target.participantId,
@@ -496,6 +514,9 @@ function buildMorphBridgeArrangement(
 		const participant = byId.get(targetDisposition.participantId);
 		const sourceDisposition = sourceByParticipant.get(targetDisposition.participantId);
 		if (participant && sourceDisposition && morphBridgeNeeded(participant, sourceDisposition, targetDisposition)) {
+			if (morphBridgeDirect(participant, sourceDisposition, targetDisposition)) {
+				return targetDisposition;
+			}
 			anyBridge = true;
 			return morphBridgeDisposition(sourceDisposition, targetDisposition);
 		}

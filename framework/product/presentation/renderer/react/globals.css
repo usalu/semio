@@ -163,6 +163,12 @@
 	opacity: 0;
 }
 
+.reveal .slides section.present .presentation-morph-slot--dormant {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none;
+}
+
 .reveal .presentation-disposition-frame--overlay {
 	z-index: 1;
 	background-color: var(--base);

@@ -1,12 +1,14 @@
 {
   "title": "Presentation Spec Generalization",
   "emoji": "📽",
-  "status": "closed",
+  "status": "open",
   "description": "Align @framework/presentation with the spec: introduce Slide (arrangement + optional transition), generalize Morph with auto-derived bridge slides, simplify Split to tiles only, remove bespoke column/ghost/morphTarget machinery, update renderer and 33.projektetage deck.",
-  "summary": "Restored Bauteilkatalog→Bauteilarten tile morph: catalogue-focus again uses split tiles on participant `catalogue` (10 focus tiles sharing `tileMorphId` with the assembled grid) plus invisible column crop anchors for the subsequent focus→labels morph bridge. Catalogue and focus now share `media--m0` auto-animate run. Deck tests updated and passing (6/6).",
+  "summary": "Fixed wrong Bauteilarten final frame after tile morph: hidden column-crop morph anchors were fading in at full opacity (reveal unmatched) and overlaying tiles. FigureMorphView now applies disposition style; zero-opacity crops get `presentation-morph-slot--dormant` and CSS hides them on the present slide while keeping them in DOM for focus→labels morph. Verified in browser: 10 tiles visible, cols hidden.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪13531ab51b094146b2b0664aa39353d3",
-    "⚪94c78b783e3d4cb787b763a6b88c06de"
+    "⚪94c78b783e3d4cb787b763a6b88c06de",
+    "⚪b8797ffeeb4a48a5ab834eb48b497aa6",
+    "⚪eec337fccc344c4aba197fe4b57f5794"
   ]
 }

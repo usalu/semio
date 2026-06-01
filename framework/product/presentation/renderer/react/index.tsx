@@ -597,14 +597,17 @@ function FigureMorphView({
 	embodiment,
 	emphasis,
 	position,
+	style,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position?: DispositionPosition;
+	readonly style?: DispositionStyle;
 }): ReactNode {
 	if (embodiment.crop && position) {
-		const frameStyle = dispositionFrameStyle(position, undefined);
+		const dormant = style?.opacity === 0;
+		const frameStyle = dispositionFrameStyle(position, dormant ? undefined : style);
 		return (
 			<div
 				data-id={anchorId}
@@ -612,6 +615,7 @@ function FigureMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--figure",
+					dormant ? "presentation-morph-slot--dormant" : undefined,
 					emphasisClass(emphasis),
 				]
 					.filter(Boolean)
@@ -850,6 +854,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						embodiment={embodiment}
 						emphasis={emphasis}
 						position={disposition.position}
+						style={disposition.style}
 					/>
 				);
 			}
@@ -1558,6 +1563,63 @@ if (import.meta.vitest) {
 			expect(slot?.style.backgroundImage).toContain("/catalogue.png");
 			expect(slot?.querySelector("h2.presentation-morph-slot-placeholder")).toBeTruthy();
 			expect(slot?.style.left).toBe("10%");
+		});
+
+		it("marks zero-opacity crop morph slots dormant and hides them on the present slide", () => {
+			const deck: Presentation = {
+				id: "dormant-crop",
+				name: "Dormant",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "crop",
+										participants: [
+											{
+												id: "catalogue-col1",
+												embodiments: [
+													{
+														kind: "figure",
+														id: "crop",
+														src: "/catalogue.png",
+														crop: { x: 0, y: 0, width: 0.5, height: 1 },
+													},
+												],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "focus",
+													dispositions: [
+														{
+															participantId: "catalogue-col1",
+															embodimentId: "crop",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
+															style: { opacity: 0 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--dormant') as HTMLElement | null;
+			expect(slot).toBeTruthy();
+			expect(slot?.style.opacity).toBe("0");
 		});
 
 		it("renders positioned labels with data-id on the morph slot frame", () => {

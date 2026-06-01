@@ -4,22 +4,22 @@ overview: Fix puzzle3d rectangle/lasso marquee selection false positives and fal
 todos:
   - id: ticket
     content: Open repo ticket for puzzle3d marquee selection fix via MCP ticket_open (associate with appropriate goal from repo://goals)
-    status: in_progress
+    status: completed
   - id: projection
     content: Rewrite projectObjectGroupToScreenPoints to project actual geometry vertices, track anyBehindCamera, and reduce to convex hull (add convexHull helper)
-    status: pending
+    status: completed
   - id: candidate
     content: Extend MarqueeCandidate with anyBehindCamera and update buildMarqueeCandidates / vortex / attraction candidate construction
-    status: pending
+    status: completed
   - id: hittest
     content: "Fix marqueeCandidateSelected: window mode rejects anyBehindCamera and uses tight hull containment; crossing uses convex-hull edges"
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing marquee describe blocks to cover behind-camera exclusion, tight rotated-object enclosure, and hull-edge crossing; run tests and confirm pass
-    status: pending
+    status: completed
   - id: close
     content: Verify runtime behaviour, then close ticket with summary and touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

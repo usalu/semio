@@ -3616,6 +3616,18 @@ export class Puzzle2dRenderer {
     }, 120);
   }
 
+  /** @emoji 🖱️ Applies coalesced wheel deltas before GPU/text overlay so the frame camera matches {@link Puzzle2dRenderer.syncGpuFrame}. */
+  private ensurePendingWheelFlushedBeforeFrame(): void {
+    if (this.pendingWheelScreen === null) {
+      return;
+    }
+    if (this.wheelFlushRafId !== null && globalThis.cancelAnimationFrame) {
+      globalThis.cancelAnimationFrame(this.wheelFlushRafId);
+      this.wheelFlushRafId = null;
+    }
+    this.flushPendingWheelScreen();
+  }
+
   /** @emoji 🖱️ Flushes coalesced wheel deltas once per animation frame. */
   private flushPendingWheelScreen(): void {
     const pending = this.pendingWheelScreen;
@@ -3631,7 +3643,7 @@ export class Puzzle2dRenderer {
     this.syncCameraFromWasmHostSilent();
     this.wasmPushSceneDrainAlreadyApplied = true;
     this.scheduleDeferredPublicCameraEmit();
-    this.scheduleInputInvalidate();
+    this.invalidate();
   }
 
   private schedulePendingWheelFlush(): void {
@@ -3962,6 +3974,7 @@ export class Puzzle2dRenderer {
     this.lastRenderTimestamp = timestamp;
     this.invalidated = false;
     try {
+      this.ensurePendingWheelFlushedBeforeFrame();
       if (this.renderMode === "headless-test") {
         if (!this.suppressSceneToWasmPush) {
           this.pushSceneToWasmDriver();
@@ -3986,6 +3999,9 @@ export class Puzzle2dRenderer {
         gpuReady = this.readGpuReady();
         if (gpuReady) {
           this.syncGpuFrame();
+          if (this.wasmHostOwnsViewportCamera()) {
+            this.syncLastPushedCameraFromWasmHost();
+          }
         }
       }
       this.paintTextOverlays();
@@ -4259,6 +4275,51 @@ export class Puzzle2dRenderer {
     }
   }
 
+  /** @emoji 📷 True when pan/zoom/drag left the authoritative viewport on the WASM host (do not stomp with lagging JS props). */
+  private wasmHostOwnsViewportCamera(): boolean {
+    if (this.wheelZoomGestureActive || this.wasmViewportLeading) {
+      return true;
+    }
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return false;
+    }
+    try {
+      return this.session.defersDescriptorSyncFromJs();
+    } catch {
+      return false;
+    }
+  }
+
+  /** @emoji 📷 Reads the live WASM viewport camera without mutating the JS store. */
+  private readWasmCameraSnapshot(): CameraState | null {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return null;
+    }
+    try {
+      const raw = JSON.parse(this.session.cameraJson()) as { x: number; y: number; zoom: number };
+      const zoom = clamp(raw.zoom, MIN_ZOOM, MAX_ZOOM);
+      const x = Number(raw.x);
+      const y = Number(raw.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return null;
+      }
+      return { x, y, zoom };
+    } catch {
+      return null;
+    }
+  }
+
+  /** @emoji 📌 Keeps {@link Puzzle2dRenderer.lastPushedCameraX} aligned with the WASM host after wheel/pan skips JS camera push. */
+  private syncLastPushedCameraFromWasmHost(): void {
+    const cam = this.readWasmCameraSnapshot();
+    if (!cam) {
+      return;
+    }
+    this.lastPushedCameraX = cam.x;
+    this.lastPushedCameraY = cam.y;
+    this.lastPushedCameraZoom = cam.zoom;
+  }
+
   /** @emoji 📐 Pushes viewport size and camera when the scene descriptor cache is still valid (pan/zoom/selection chrome). */
   private pushWasmViewportAndSizeToSession(): void {
     if (this.lastPushedWidth !== this.width || this.lastPushedHeight !== this.height || this.lastPushedDpr !== this.dpr) {
@@ -4266,6 +4327,9 @@ export class Puzzle2dRenderer {
       this.lastPushedWidth = this.width;
       this.lastPushedHeight = this.height;
       this.lastPushedDpr = this.dpr;
+    }
+    if (this.wasmHostOwnsViewportCamera()) {
+      return;
     }
     if (
       this.camera.x === this.lastPushedCameraX &&
@@ -4566,7 +4630,11 @@ export class Puzzle2dRenderer {
     if (!this.textOverlayPainted) {
       return true;
     }
+    if (this.wheelZoomGestureActive) {
+      return true;
+    }
     const lod = this.effectiveDrawLodLabel();
+    const wasmCam = this.readWasmCameraSnapshot();
     const selection = this.selectionStore.getSnapshot();
     const preselect = this.preselectStore.getSnapshot();
     const selectionChromeDirty =
@@ -4574,10 +4642,11 @@ export class Puzzle2dRenderer {
       !puzzle2dSelectionSnapshotsEqual(selection, this.lastOverlaySelection) ||
       this.lastOverlayPreselect === null ||
       !preselectSnapshotsEqual(preselect, this.lastOverlayPreselect);
+    const cameraDiffersFromLastOverlay = (cam: CameraState): boolean =>
+      cam.x !== this.lastOverlayCameraX || cam.y !== this.lastOverlayCameraY || !nearlyEqual(cam.zoom, this.lastOverlayCameraZoom);
     const viewportDirty =
-      this.camera.x !== this.lastOverlayCameraX ||
-      this.camera.y !== this.lastOverlayCameraY ||
-      !nearlyEqual(this.camera.zoom, this.lastOverlayCameraZoom) ||
+      cameraDiffersFromLastOverlay(this.camera) ||
+      (this.wasmHostOwnsViewportCamera() && wasmCam !== null && cameraDiffersFromLastOverlay(wasmCam)) ||
       this.width !== this.lastOverlayWidth ||
       this.height !== this.lastOverlayHeight ||
       this.dpr !== this.lastOverlayDpr ||
@@ -4671,7 +4740,7 @@ export class Puzzle2dRenderer {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
       return;
     }
-    if (!this.textOverlayDirty()) {
+    if (!this.wheelZoomGestureActive && !this.textOverlayDirty()) {
       return;
     }
     const el = this.textOverlayCanvas;
@@ -6056,25 +6125,75 @@ if (puzzle2dVitest) {
       Object.defineProperty(overlay, "getContext", { configurable: true, value: () => overlayCtx });
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "main-thread" });
       renderer.attachTextOverlayCanvas(overlay);
+      renderer.setSize(800, 600, 1);
       const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
       renderer.scene.add(node);
-      renderer.setCamera(0, 0, 1);
+      const overlayCamera = { x: 0, y: 0, zoom: 1 };
       vi.spyOn(renderer.session, "overlayPaintStateJson").mockReturnValue(
         JSON.stringify({
-          camera: { x: 0, y: 0, zoom: 1 },
+          camera: overlayCamera,
           lod: "normal",
           nodes: [{ id: "n", x: 200, y: 100 }],
         }),
       );
+      renderer.setCamera(overlayCamera.x, overlayCamera.y, overlayCamera.zoom);
       renderer["paintTextOverlays"]();
       expect(fillText).toHaveBeenCalled();
       const [, labelX, labelY] = fillText.mock.calls[0] as [string, number, number];
-      const originScreen = renderer["worldToScreenWithCamera"]({ x: 0, y: 0 }, { x: 0, y: 0, zoom: 1 });
-      const wasmScreen = renderer["worldToScreenWithCamera"]({ x: 200, y: 100 }, { x: 0, y: 0, zoom: 1 });
+      const originScreen = renderer["worldToScreenWithCamera"]({ x: 0, y: 0 }, overlayCamera);
+      const wasmScreen = renderer["worldToScreenWithCamera"]({ x: 200, y: 100 }, overlayCamera);
       expect(labelX).toBe(wasmScreen.x);
       expect(labelY).toBe(wasmScreen.y);
       expect(labelX).not.toBe(originScreen.x);
       expect(labelY).not.toBe(originScreen.y);
+      renderer.dispose();
+    });
+
+    it("pushWasmViewportAndSizeToSession does not stomp wasm camera during wheel zoom", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      const setCamera = vi.spyOn(renderer.session, "setCamera");
+      renderer.camera.x = 0;
+      renderer.camera.y = 0;
+      renderer.camera.zoom = 1;
+      renderer["lastPushedCameraX"] = 0;
+      renderer["lastPushedCameraY"] = 0;
+      renderer["lastPushedCameraZoom"] = 1;
+      renderer["wheelZoomGestureActive"] = true;
+      renderer["wasmViewportLeading"] = true;
+      vi.spyOn(renderer.session, "cameraJson").mockReturnValue(JSON.stringify({ x: 50, y: 40, zoom: 2 }));
+      renderer["pushWasmViewportAndSizeToSession"]();
+      expect(setCamera).not.toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("textOverlayDirty is true when wasm camera diverges from last painted overlay", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      renderer["rememberTextOverlayPainted"]({ x: 0, y: 0, zoom: 1 }, "normal");
+      renderer.camera.x = 0;
+      renderer.camera.y = 0;
+      renderer.camera.zoom = 1;
+      vi.spyOn(renderer.session, "cameraJson").mockReturnValue(JSON.stringify({ x: 80, y: 0, zoom: 2 }));
+      renderer["wasmViewportLeading"] = true;
+      expect(renderer.textOverlayDirty()).toBe(true);
+      renderer.dispose();
+    });
+
+    it("render flushes pending wheel before GPU and text overlay", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const wheelScreen = vi.spyOn(renderer.session, "wheelScreen");
+      renderer["pendingWheelScreen"] = { sx: 10, sy: 20, deltaY: -120 };
+      renderer.render(0);
+      expect(wheelScreen).toHaveBeenCalledWith(10, 20, -120);
+      expect(renderer["pendingWheelScreen"]).toBeNull();
       renderer.dispose();
     });
 
