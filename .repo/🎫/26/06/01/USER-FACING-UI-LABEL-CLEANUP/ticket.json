@@ -1,0 +1,10 @@
+{
+  "title": "User Facing Ui Label Cleanup",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Clean UI labels to user perspective: engagement options → Commands/toggles, no state machine lingo in user space.",
+  "goal": "🎯semio🎯ui",
+  "sessions": [
+    "⚪963db0d2e1ad4acca54842b96968fea1"
+  ]
+}

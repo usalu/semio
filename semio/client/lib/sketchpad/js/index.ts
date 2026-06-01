@@ -13677,6 +13677,14 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		return super.selectedRows(scope);
 	}
 
+	protected override buildVirtualFileSystemModel(scope: VirtualFileSystemScope): VirtualFileSystemModel {
+		const model = super.buildVirtualFileSystemModel(scope);
+		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
+			return { ...model, dragDropEnabled: false };
+		}
+		return model;
+	}
+
 	protected override runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
 		const scope = this.resolveScope(args);
 		if (scope?.appId === SKETCHPAD_HOME_APP_ID) {
@@ -15135,6 +15143,19 @@ if (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKE
 			await page.goto("/feedback", { waitUntil: "networkidle" });
 			await expect(page.getByPlaceholder("What should we know?")).toBeVisible({ timeout: 120_000 });
 			await expect(page.getByRole("button", { name: "Send feedback" })).toBeVisible({ timeout: 30_000 });
+		});
+
+		test("home vfs double-click opens kit from metabolism row", async ({ page }) => {
+			await page.goto("/", { waitUntil: "networkidle" });
+			await openSketchpadCommandPalette(page);
+			await page.getByRole("dialog").getByText("Open metabolism fixture").click();
+			await expect(page).toHaveURL(/\/kits\/[0-9a-f-]{36}/i, { timeout: 120_000 });
+			await page.goBack({ waitUntil: "networkidle" });
+			await expect(page.getByRole("columnheader", { name: "Name" })).toBeVisible({ timeout: 120_000 });
+			const metabolismRow = page.locator("tr[data-row-id]").filter({ hasText: /metabolism/i });
+			await expect(metabolismRow).toBeVisible({ timeout: 120_000 });
+			await metabolismRow.dblclick();
+			await expect(page).toHaveURL(/\/kits\/[0-9a-f-]{36}/i, { timeout: 120_000 });
 		});
 
 		test("kit vfs selects design row on click and navigates on double-click", async ({ page }) => {

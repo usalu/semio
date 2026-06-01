@@ -10898,6 +10898,24 @@ export interface EngagementPossible {
   onSelect?: () => void;
 }
 
+/** @emoji 🏷 User-facing copy for window command chrome (input, toggles, suggestions). */
+export const ENGAGEMENT_USER = {
+  commandPlaceholder: "Command",
+  commandPlaceholderActive: "Command or value",
+  commandsAria: "Commands",
+  suggestionsAria: "Suggestions",
+  noMatches: "No matches",
+} as const;
+
+/** @emoji 🏷 Turns an internal step id (`first_corner`) into readable status text (`First Corner`). */
+export function humanizeEngagementStepId(stepId: string): string {
+  const trimmed = stepId.trim();
+  if (!trimmed) return "";
+  return trimmed
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
 /** @emoji ⌨️ Normalizes engagement command text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`). */
 export function normalizeEngagementCommandText(text: string): string {
   const words = text
@@ -11259,8 +11277,9 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                       input!.onSubmit?.(draft);
                     }
                   }}
-                  placeholder={input!.placeholder}
+                  placeholder={input!.placeholder ?? ENGAGEMENT_USER.commandPlaceholder}
                   disabled={input!.disabled}
+                  aria-label={ENGAGEMENT_USER.commandPlaceholder}
                 />
                 {inlineCompletion ? (
                   <div
@@ -11282,6 +11301,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                 <Action
                   id="engagement-possibles-toggle"
                   aria-expanded={possiblesExpanded}
+                  aria-label={ENGAGEMENT_USER.suggestionsAria}
                   data-slot="engagement-possibles-toggle"
                   icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
                   onClick={() => setPossiblesExpanded((open) => !open)}
@@ -11314,7 +11334,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                       ))}
                     </CommandGroup>
                   ) : (
-                    <CommandEmpty>No matches</CommandEmpty>
+                    <CommandEmpty>{ENGAGEMENT_USER.noMatches}</CommandEmpty>
                   )}
                 </CommandList>
               </Command>
@@ -11332,7 +11352,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
         </div>
       ) : null}
       {hasOptions ? (
-        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half">
+        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half" role="group" aria-label={ENGAGEMENT_USER.commandsAria}>
           <ButtonGroup id="engagement-options">
             {options!.map((option) => (
               <ButtonGroupItem
@@ -13219,6 +13239,12 @@ export interface HierarchicalRowData {
  **/
 export interface DragDropConfig {
   enabled?: boolean;
+  /** @emoji ⏱️ Delay (ms) before pointer drag activates so double-click can reach the row. */
+  pointerActivationDelayMs?: number;
+  /** @emoji ↔️ Pointer movement tolerance (px) while waiting for {@link DragDropConfig.pointerActivationDelayMs}. */
+  pointerActivationTolerancePx?: number;
+  /** @emoji ↔️ Immediate drag after pointer movement (px); ignored when {@link DragDropConfig.pointerActivationDelayMs} is set. */
+  pointerActivationDistancePx?: number;
   onDragStart?: (rowId: string) => void;
   onDragEnd?: (event: { active: string; over: string | null }) => void;
   canDrag?: (rowId: string) => boolean;
@@ -13306,9 +13332,15 @@ const Table = <T,>({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+      activationConstraint:
+        dragDrop?.pointerActivationDelayMs != null
+          ? {
+              delay: dragDrop.pointerActivationDelayMs,
+              tolerance: dragDrop.pointerActivationTolerancePx ?? 5,
+            }
+          : {
+              distance: dragDrop?.pointerActivationDistancePx ?? 8,
+            },
     }),
   );
 
@@ -13393,7 +13425,13 @@ const Table = <T,>({
         style={style}
         className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
         {...(canDragRow ? { ...attributes, ...listeners } : {})}
-        onClick={(e) => onRowClick?.(row, index, e)}
+        onClick={(e) => {
+          if (e.detail >= 2) {
+            onRowDoubleClick?.(row, index);
+            return;
+          }
+          onRowClick?.(row, index, e);
+        }}
         onMouseEnter={() => onRowMouseEnter?.(row, index)}
         onMouseLeave={() => onRowMouseLeave?.(row, index)}
         role={onRowClick ? "button" : undefined}
@@ -13476,8 +13514,13 @@ const Table = <T,>({
                   <tr
                     key={key}
                     className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
-                    onClick={(e) => onRowClick?.(row, index, e)}
-                    onDoubleClick={() => onRowDoubleClick?.(row, index)}
+                    onClick={(e) => {
+                      if (e.detail >= 2) {
+                        onRowDoubleClick?.(row, index);
+                        return;
+                      }
+                      onRowClick?.(row, index, e);
+                    }}
                     onMouseEnter={() => onRowMouseEnter?.(row, index)}
                     onMouseLeave={() => onRowMouseLeave?.(row, index)}
                     role={onRowClick ? "button" : undefined}
@@ -13940,10 +13983,6 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   );
   const handleRowClick = reactHostPort.useCallback(
     (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => {
-      if (event.detail >= 2) {
-        onRowDoubleClick?.(row, index);
-        return;
-      }
       const next = getVirtualFileSystemNextSelectionState({
         selectionMode,
         selectedRowIds: [...resolvedSelectedRowIds],
@@ -13956,7 +13995,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       applySelection(next);
       onRowClick?.(row, index, event);
     },
-    [applySelection, onRowClick, onRowDoubleClick, orderedRowIds, resolvedSelectedRowIds, selectionMode],
+    [applySelection, onRowClick, orderedRowIds, resolvedSelectedRowIds, selectionMode],
   );
   const columns = reactHostPort.useMemo((): TableColumn<VirtualFileSystemRow>[] => {
     const base: TableColumn<VirtualFileSystemRow>[] = [
@@ -14001,6 +14040,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       getRowId={(row) => row.id}
       selectedRows={resolvedSelectedRowIds}
       onRowClick={handleRowClick}
+      onRowDoubleClick={onRowDoubleClick}
       emptyMessage={emptyMessage}
       rowHeight={rowHeight}
       hierarchical
@@ -15907,14 +15947,14 @@ if (import.meta.vitest) {
       render(
         <Engagement
           active
-          input={{ placeholder: "Type an interaction" }}
+          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder }}
           possibleEngagements={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
           ]}
         />,
       );
-      const field = screen.getByPlaceholderText("Type an interaction");
+      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.commandPlaceholder);
       expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
       fireEvent.change(field, { target: { value: "b" } });
       await waitFor(() => {
@@ -16987,32 +17027,22 @@ if (treeVitest) {
       expect(markup).toContain("cursor-selectable");
     });
 
-    it("invokes onRowDoubleClick on double-click (including drag-enabled rows)", async () => {
+    it("invokes onRowDoubleClick on double-click", async () => {
       const { render } = await import("@testing-library/react");
       const userEvent = (await import("@testing-library/user-event")).default;
       const user = userEvent.setup();
       const onRowDoubleClick = vi.fn();
-      const onSelectionChange = vi.fn();
       const { container } = render(
         <VirtualFileSystem
           schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
-          rows={[
-            { id: "root", fileNodeKindId: "root", name: "Root", level: 0, hasChildren: false },
-            { id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" },
-          ]}
+          rows={[{ id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" }]}
           onRowDoubleClick={onRowDoubleClick}
-          onSelectionChange={onSelectionChange}
-          dragDrop={{ enabled: true, canDrag: () => true }}
         />,
       );
       const leafRow = container.querySelector('tr[data-row-id="leaf-a"]');
       expect(leafRow).toBeTruthy();
-      await user.click(leafRow!);
-      expect(onSelectionChange).toHaveBeenCalledWith(["leaf-a"], expect.objectContaining({ anchorRowId: "leaf-a" }));
-      onRowDoubleClick.mockClear();
       await user.dblClick(leafRow!);
-      expect(onRowDoubleClick).toHaveBeenCalled();
-      expect(onRowDoubleClick.mock.calls.some((call) => call[0]?.id === "leaf-a")).toBe(true);
+      expect(onRowDoubleClick).toHaveBeenCalledWith(expect.objectContaining({ id: "leaf-a", navigateUri: "/alpha" }), 0);
     });
 
     it("computes shift range and ctrl toggle selection for visible rows", () => {

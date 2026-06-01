@@ -140,8 +140,16 @@
 	z-index: 1;
 }
 
-.reveal .presentation-split-column-morph-anchor {
-	z-index: 0;
+.reveal .presentation-column-label-frame {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.reveal .presentation-column-label-frame h2 {
+	margin: 0;
+	width: 100%;
 }
 
 .reveal .presentation-disposition-frame--overlay {

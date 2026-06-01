@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, focusActiveEngagementInput, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -3721,8 +3721,13 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
       }))
     : [];
   const status: { id: string; content: ReactNode }[] = [];
-  if (inputs.interactionId) status.push({ id: "engagement-state", content: `State: ${inputs.state}` });
-  if (inputs.selectionCount > 0) status.push({ id: "engagement-selection", content: `Selected: ${inputs.selectionCount}` });
+  if (inputs.interactionId) status.push({ id: "engagement-step", content: `Step: ${humanizeEngagementStepId(inputs.state)}` });
+  if (inputs.selectionCount > 0) {
+    status.push({
+      id: "engagement-selection",
+      content: inputs.selectionCount === 1 ? "1 selected" : `${inputs.selectionCount} selected`,
+    });
+  }
   if (inputs.lastResponseOk !== null) {
     status.push({
       id: "engagement-response",
@@ -3734,7 +3739,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
       ? {
           id: "engagement-input",
           value: inputs.cmdLine,
-          placeholder: inputs.boundInteractionSession ? "Type a transition or value" : "Type an interaction",
+          placeholder: inputs.boundInteractionSession ? ENGAGEMENT_USER.commandPlaceholderActive : ENGAGEMENT_USER.commandPlaceholder,
           onChange: inputs.onInputChange,
           onSubmit: inputs.onInputSubmit,
         }
@@ -3743,7 +3748,6 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
     ? inputs.transitions.map((row) => ({
         id: `engagement-possible-transition-${row.eventKind}-${row.key}`,
         label: normalizeEngagementCommandText(`${row.key} ${row.label}`),
-        detail: row.eventKind,
         onSelect: () => inputs.onTransition(row),
       }))
     : inputs.interactions.map((interaction) => ({
@@ -4916,7 +4920,8 @@ export function InteractionRepl({
                 if (interactionMenuOpen) setInteractionMenuOpen(true);
               }}
               onKeyDown={onInputKeyDown}
-              placeholder="Type an interaction or transition"
+              placeholder={ENGAGEMENT_USER.commandPlaceholder}
+              aria-label={ENGAGEMENT_USER.commandPlaceholder}
               className="col-start-1 row-start-1 border-0 bg-transparent pr-[34px] shadow-none focus-visible:ring-0"
             />
             <Button
@@ -4929,7 +4934,7 @@ export function InteractionRepl({
                 setInteractionMenuOpen((open) => !open);
                 cmdRef.current?.focus();
               }}
-              aria-label="Show matching interactions"
+              aria-label={ENGAGEMENT_USER.suggestionsAria}
             >
               v
             </Button>
@@ -4952,7 +4957,7 @@ export function InteractionRepl({
                     </button>
                   ))
                 ) : (
-                  <div className="text-muted-foreground px-single py-half text-xs">No matching interactions.</div>
+                  <div className="text-muted-foreground px-single py-half text-xs">{ENGAGEMENT_USER.noMatches}</div>
                 )}
               </div>
             ) : null}
@@ -5453,8 +5458,8 @@ if (import.meta.vitest) {
         onTransition: (row) => transitionRuns.push(row.key),
       });
       expect(spec?.options?.[0]?.label).toBe("CConfirm");
-      expect(spec?.input?.placeholder).toBe("Type a transition or value");
-      expect(spec?.status?.map((row) => row.content)).toEqual(["State: first_corner", "Selected: 2", "OK"]);
+      expect(spec?.input?.placeholder).toBe(ENGAGEMENT_USER.commandPlaceholderActive);
+      expect(spec?.status?.map((row) => row.content)).toEqual(["Step: First Corner", "2 selected", "OK"]);
       spec?.options?.[0]?.onPress?.();
       expect(transitionRuns).toEqual(["c"]);
       expect(spec?.possibleEngagements?.[0]?.label).toBe("CConfirm");
@@ -5471,7 +5476,7 @@ if (import.meta.vitest) {
         onStartInteraction: (id) => started.push(id),
       });
       expect(spec?.options).toBeUndefined();
-      expect(spec?.input?.placeholder).toBe("Type an interaction");
+      expect(spec?.input?.placeholder).toBe(ENGAGEMENT_USER.commandPlaceholder);
       expect(spec?.possibleEngagements?.map((row) => row.label)).toEqual(["Box"]);
       spec?.input?.onSubmit?.("box");
       expect(submitted).toEqual(["box"]);
@@ -5501,7 +5506,7 @@ if (import.meta.vitest) {
       });
       expect(spec?.options).toBeUndefined();
       expect(spec?.input).toBeUndefined();
-      expect(spec?.status?.map((row) => row.content)).toEqual(["Selected: 3"]);
+      expect(spec?.status?.map((row) => row.content)).toEqual(["3 selected"]);
     });
 
     it("summarizes failed responses with error counts", () => {

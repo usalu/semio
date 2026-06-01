@@ -2296,13 +2296,13 @@ if (import.meta.vitest) {
   describe("windowEngagementsEqual", () => {
     it("treats engagement snapshots with the same visible fields as equal", () => {
       const left: WindowEngagement = {
-        input: { id: "engagement-input", value: "box", placeholder: "Type an interaction" },
-        status: [{ id: "engagement-state", text: "State: idle" }],
+        input: { id: "engagement-input", value: "box", placeholder: "Command" },
+        status: [{ id: "engagement-step", text: "Step: Idle" }],
         possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b" }],
       };
       const right: WindowEngagement = {
-        input: { id: "engagement-input", value: "box", placeholder: "Type an interaction" },
-        status: [{ id: "engagement-state", text: "State: idle" }],
+        input: { id: "engagement-input", value: "box", placeholder: "Command" },
+        status: [{ id: "engagement-step", text: "Step: Idle" }],
         possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } } }],
       };
       expect(windowEngagementsEqual(left, right)).toBe(true);
@@ -2319,8 +2319,8 @@ if (import.meta.vitest) {
       const mirror = cadPlayEngagementMirror(
         {
           options: [{ id: "confirm", label: "Confirm", onPress: () => {} }],
-          input: { id: "in", value: "box", placeholder: "Type an interaction", onSubmit: () => {} },
-          status: [{ id: "state", content: "State: idle" }],
+          input: { id: "in", value: "box", placeholder: "Command", onSubmit: () => {} },
+          status: [{ id: "state", content: "Step: Idle" }],
         },
         "energy",
       );
@@ -2330,7 +2330,7 @@ if (import.meta.vitest) {
         command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementOption", args: { pane: "energy", optionId: "confirm" } },
       });
       expect(mirror?.input).toMatchObject({ value: "box", onSubmit: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane: "energy" } } });
-      expect(mirror?.status?.[0]).toEqual({ id: "state", text: "State: idle" });
+      expect(mirror?.status?.[0]).toEqual({ id: "state", text: "Step: Idle" });
     });
 
     it("mirrors possible engagements for autocomplete routing", () => {
@@ -2354,7 +2354,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       let generation = runtime.generation;
       const engagement: WindowEngagement = {
-        input: { id: "engagement-input", value: "", placeholder: "Type an interaction" },
+        input: { id: "engagement-input", value: "", placeholder: "Command" },
         possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b" }],
       };
       controller.setPaneEngagement("shape", engagement);

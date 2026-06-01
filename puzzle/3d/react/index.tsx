@@ -3,6 +3,7 @@ import {
   reactHostPort,
   sceneHostPort,
   engagementCommandTokenEquals,
+  ENGAGEMENT_USER,
   normalizeEngagementCommandText,
   type EngagementSpec,
   type ThreeEvent,
@@ -5245,15 +5246,18 @@ export interface Puzzle3dPlayEngagementInputs {
 export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs): EngagementSpec {
   const status: { id: string; content: string }[] = [];
   if (inputs.activeTool === "brush") {
-    status.push({ id: "puzzle3d.brush.hint", content: "Hover a free vortex; chevron lists compatibles; Next cycles" });
+    status.push({ id: "puzzle3d.brush.hint", content: "Point at an empty connector; open the list or press Next to cycle kinds" });
   }
   if (inputs.selectionObjectCount > 0) {
-    status.push({ id: "puzzle3d.selection", content: `Selected: ${inputs.selectionObjectCount}` });
+    status.push({
+      id: "puzzle3d.selection",
+      content: inputs.selectionObjectCount === 1 ? "1 selected" : `${inputs.selectionObjectCount} selected`,
+    });
   }
 
   const toolPossibles = [
-    { id: "puzzle3d.tool.brush", label: "Brush", detail: "tool", onSelect: inputs.onBrushTool },
-    { id: "puzzle3d.tool.select", label: "Select", detail: "tool", onSelect: inputs.onSelectTool },
+    { id: "puzzle3d.tool.brush", label: "Brush", onSelect: inputs.onBrushTool },
+    { id: "puzzle3d.tool.select", label: "Select", onSelect: inputs.onSelectTool },
   ];
 
   const brushPossibles = inputs.brushCandidates.map((candidate, index) => ({
@@ -5277,7 +5281,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     input: {
       id: "engagement-input",
       value: inputs.cmdLine,
-      placeholder: inputs.activeTool === "brush" ? "Type a kind or use chevron" : "Type Brush to place",
+      placeholder: inputs.activeTool === "brush" ? "Kind name or list" : "Brush",
       onChange: inputs.onCmdLineChange,
       onSubmit: inputs.onCmdLineSubmit,
     },

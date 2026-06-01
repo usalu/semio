@@ -1610,6 +1610,8 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 					model.dragDropEnabled
 						? {
 								enabled: true,
+								pointerActivationDelayMs: 200,
+								pointerActivationTolerancePx: 5,
 								canDrag: (rowId) => {
 									if (rowId === rows[0]?.id) return false;
 									const modelRow = model.rows.find((entry) => entry.id === rowId);

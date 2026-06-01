@@ -4213,13 +4213,13 @@ if (import.meta.vitest) {
         {
           options: [{ id: "opt", label: "Confirm", command: { controllerId: "ctrl", command: "confirm" } }],
           input: { id: "in", value: "x", placeholder: "type", onSubmit: { controllerId: "ctrl", command: "submit" } },
-          status: [{ id: "st", text: "State: idle" }],
+          status: [{ id: "st", text: "Ready" }],
         },
         bus,
       );
       expect(spec?.options?.[0]?.label).toBe("Confirm");
       expect(spec?.input?.value).toBe("x");
-      expect(spec?.status?.[0]?.content).toBe("State: idle");
+      expect(spec?.status?.[0]?.content).toBe("Ready");
       spec?.options?.[0]?.onPress?.();
       spec?.input?.onSubmit?.("hello");
       expect(dispatched).toEqual([

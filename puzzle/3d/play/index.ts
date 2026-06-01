@@ -834,13 +834,13 @@ export class Puzzle3dPlayShellController extends Controller {
       input: {
         id: "engagement-input",
         value: "",
-        placeholder: "Type Brush to place",
+        placeholder: "Brush",
         onChange: puzzle3dPlayCmd("engagementInput"),
         onSubmit: puzzle3dPlayCmd("engagementSubmit"),
       },
       possibleEngagements: [
-        { id: "puzzle3d.tool.brush", label: "Brush", detail: "tool", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.brush" }) },
-        { id: "puzzle3d.tool.select", label: "Select", detail: "tool", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.select" }) },
+        { id: "puzzle3d.tool.brush", label: "Brush", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.brush" }) },
+        { id: "puzzle3d.tool.select", label: "Select", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: "puzzle3d.tool.select" }) },
       ],
     };
   }
