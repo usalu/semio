@@ -9,13 +9,6 @@
         "command": "bun ./script.ts regenerate-metabolism-light"
       }
     },
-    "reconcile-kind-names": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "semio/fixtures",
-        "command": "bun ./script.ts reconcile-kind-names"
-      }
-    },
     "build": {
       "executor": "nx:run-commands",
       "options": {

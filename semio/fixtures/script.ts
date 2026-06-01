@@ -2,8 +2,7 @@
 /** @emoji 🧪 `@semio/fixtures` router: `bun ./script.ts regenerate-metabolism-light`. */
 import fs from "node:fs";
 import path from "node:path";
-import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBun, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";
 
 const HASH = "…";
 const SCHEMA = "🎆26🌙06⬆️1";
@@ -65,15 +64,7 @@ class RegenerateMetabolismLightScript extends BundleScript {
 	}
 }
 
-class ReconcileKindNamesScript extends BundleScript {
-	run(): void {
-		runBun([join(this.root, "reconcile-kind-names.ts")], this.root);
-	}
-}
-
-const router = new ScriptRouter(import.meta.dir)
-	.register("regenerate-metabolism-light", RegenerateMetabolismLightScript)
-	.register("reconcile-kind-names", ReconcileKindNamesScript);
+const router = new ScriptRouter(import.meta.dir).register("regenerate-metabolism-light", RegenerateMetabolismLightScript);
 
 if (import.meta.main) {
 	await runBundleScriptMain(router, import.meta.url);
