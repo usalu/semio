@@ -550,34 +550,83 @@ function FigureTileView({
 	);
 }
 
+/** @emoji 👻 One reveal.js morph slot per column: ghost (figure crop) or label (heading); identical `div > h2` + `data-id`. */
+function ColumnMorphSlotView({
+	morphId: anchorId,
+	position,
+	variant,
+	line,
+	figureEmbodiment,
+	crop,
+	textEmbodiment,
+	emphasis,
+	ghostVisibility,
+}: {
+	readonly morphId: string;
+	readonly position: DispositionPosition;
+	readonly variant: "ghost" | "label";
+	readonly line: string;
+	readonly figureEmbodiment?: FigureEmbodiment;
+	readonly crop?: SplitTile["crop"];
+	readonly textEmbodiment?: TextEmbodiment;
+	readonly emphasis: ParticipantEmphasis;
+	readonly ghostVisibility?: "shown" | "hidden";
+}): ReactNode {
+	const frameStyle = dispositionFrameStyle(position, undefined);
+	const headingClass =
+		variant === "label" && textEmbodiment
+			? centeredLineClass(anchorId, textEmbodiment, emphasis)
+			: "presentation-column-morph-slot-placeholder";
+	return (
+		<div
+			data-id={anchorId}
+			className={[
+				"presentation-disposition-frame",
+				"presentation-column-morph-slot",
+				variant === "ghost" ? "presentation-column-morph-slot--ghost" : "presentation-column-morph-slot--label",
+				variant === "ghost" && ghostVisibility === "shown" ? "presentation-column-morph-slot--shown" : undefined,
+				variant === "ghost" && ghostVisibility === "hidden" ? "presentation-column-morph-slot--hidden" : undefined,
+				emphasisClass(emphasis),
+			]
+				.filter(Boolean)
+				.join(" ")}
+			style={{
+				...frameStyle,
+				...(variant === "ghost" && figureEmbodiment && crop
+					? figureTileBackgroundStyle(figureEmbodiment, crop)
+					: {}),
+			}}
+		>
+			<h2 className={headingClass}>{line}</h2>
+		</div>
+	);
+}
+
 function SplitColumnMorphGhostView({
 	participantId,
 	column,
 	tiles,
 	embodiment,
-	visible,
+	shown,
 }: {
 	readonly participantId: string;
 	readonly column: SplitColumnGroup;
 	readonly tiles: readonly SplitTile[];
 	readonly embodiment: FigureEmbodiment;
-	readonly visible: boolean;
+	readonly shown: boolean;
 }): ReactNode {
 	const position = splitColumnBounds(tiles, column.tileKeys);
 	const crop = splitColumnCrop(tiles, column.tileKeys);
 	return (
-		<div
-			data-id={columnMorphId(participantId, column.key)}
-			className={[
-				"presentation-disposition-frame",
-				"presentation-split-column-morph-ghost",
-				visible ? "presentation-split-column-morph-ghost--visible" : "presentation-split-column-morph-ghost--hidden",
-			].join(" ")}
-			style={{
-				...dispositionFrameStyle(position, undefined),
-				...figureTileBackgroundStyle(embodiment, crop),
-			}}
-			role="presentation"
+		<ColumnMorphSlotView
+			morphId={columnMorphId(participantId, column.key)}
+			position={position}
+			variant="ghost"
+			line={column.labelLine ?? "\u00a0"}
+			figureEmbodiment={embodiment}
+			crop={crop}
+			emphasis="active"
+			ghostVisibility={shown ? "shown" : "hidden"}
 		/>
 	);
 }
@@ -603,29 +652,21 @@ function ColumnLabelMorphView({
 	embodiment,
 	emphasis,
 	position,
-	style,
 }: {
 	readonly morphId: string;
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position: DispositionPosition;
-	readonly style?: DispositionStyle;
 }): ReactNode {
-	const frameStyle = dispositionFrameStyle(position, style);
 	return (
-		<div
-			data-id={anchorId}
-			className={[
-				"presentation-disposition-frame",
-				"presentation-column-label-frame",
-				emphasisClass(emphasis),
-			]
-				.filter(Boolean)
-				.join(" ")}
-			style={frameStyle}
-		>
-			<h2 className={centeredLineClass(anchorId, embodiment, emphasis)}>{embodiment.lines[0]}</h2>
-		</div>
+		<ColumnMorphSlotView
+			morphId={anchorId}
+			position={position}
+			variant="label"
+			line={embodiment.lines[0] ?? ""}
+			textEmbodiment={embodiment}
+			emphasis={emphasis}
+		/>
 	);
 }
 
@@ -639,6 +680,7 @@ function FigureSplitMorphView({
 	const tiles = disposition.split?.tiles ?? [];
 	const columns = disposition.split?.columns ?? [];
 	const ghostsOnly = disposition.split?.columnGhostsOnly === true;
+	const ghostsShown = ghostsOnly || disposition.split?.columnGhostsVisible === true;
 	return (
 		<>
 			{columns.map((column) => (
@@ -648,7 +690,7 @@ function FigureSplitMorphView({
 					column={column}
 					tiles={tiles}
 					embodiment={embodiment}
-					visible={ghostsOnly}
+					shown={ghostsShown}
 				/>
 			))}
 			{ghostsOnly
@@ -802,7 +844,6 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						embodiment={embodiment}
 						emphasis={emphasis}
 						position={disposition.position}
-						style={disposition.style}
 					/>
 				);
 			}
@@ -904,6 +945,7 @@ export const PresentationDeck: FC<{
 		const revealOptions: Reveal.Options = {
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
+			autoAnimateUnmatched: true,
 			center: true,
 		};
 		if (options?.hash === true) {
@@ -1389,7 +1431,7 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("keeps tileMorphId on tiles and column morph layers for label auto-animate", () => {
+		it("keeps tileMorphId on tiles and pairs column morph slots with labels", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
 			const deck: Presentation = {
@@ -1421,23 +1463,7 @@ if (import.meta.vitest) {
 														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"] },
 														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"] },
 													],
-												},
-											},
-										],
-									},
-									{
-										id: "merge",
-										dispositions: [
-											{
-												participantId: "catalogue",
-												emphasis: "active",
-												split: {
-													tiles,
-													columns: [
-														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"] },
-														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"] },
-													],
-													columnGhostsOnly: true,
+													columnGhostsVisible: true,
 												},
 											},
 										],
@@ -1473,18 +1499,15 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const focus = container.querySelector('section[title="focus"]');
-			expect(focus?.querySelectorAll(".presentation-split-column-morph-ghost--hidden").length).toBe(2);
+			expect(focus?.querySelectorAll(".presentation-column-morph-slot--shown").length).toBe(2);
 			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(4);
-			const merge = container.querySelector('section[title="merge"]');
-			expect(merge?.querySelectorAll(".presentation-split-column-morph-ghost--visible").length).toBe(2);
-			expect(merge?.querySelector('[data-id^="catalogue--tile--"]')).toBeNull();
+			const ghostCol1 = focus?.querySelector('[data-id="catalogue--column--col1"]');
+			expect(ghostCol1?.querySelector("h2.presentation-column-morph-slot-placeholder")).toBeTruthy();
 			const labels = container.querySelector('section[title="labels"]');
-			expect(
-				labels?.querySelector('.presentation-column-label-frame[data-id="catalogue--column--col1"]')?.textContent,
-			).toContain("Rippendecke");
-			expect(
-				labels?.querySelector('.presentation-column-label-frame[data-id="catalogue--column--col2"]')?.textContent,
-			).toContain("Unterzug");
+			const labelCol1 = labels?.querySelector('[data-id="catalogue--column--col1"]');
+			expect(labelCol1?.classList.contains("presentation-column-morph-slot--label")).toBe(true);
+			expect(labelCol1?.textContent).toContain("Rippendecke");
+			expect(labels?.querySelector('[data-id="catalogue--column--col2"]')?.textContent).toContain("Unterzug");
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {

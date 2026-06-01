@@ -3146,7 +3146,7 @@ interface ReplSuggestion {
   readonly kind: ReplSuggestKind;
   readonly key: string;
   readonly label: string;
-  readonly detail: string;
+  readonly detail?: string;
   readonly transition?: InteractionKeybindRow;
   readonly interactionId?: string;
   readonly onRun: () => void;
@@ -3708,6 +3708,17 @@ export interface InteractionReplEngagementInputs {
   readonly onStartInteraction: (interactionId: string) => void;
   readonly onInputChange: (value: string) => void;
   readonly onInputSubmit: (value: string) => void;
+  readonly onAbort?: () => void;
+}
+
+/** @emoji 🏷 Omits machine ids from command suggestion sublines (keeps short shortcut keys). */
+export function replUserFacingSuggestionDetail(detail: string): string | undefined {
+  const trimmed = detail.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.includes(".") || trimmed.includes("_")) return undefined;
+  if (/^(action|interaction|transition)$/i.test(trimmed)) return undefined;
+  if (trimmed.length <= 2) return trimmed;
+  return undefined;
 }
 
 /** @emoji 💬 Builds the compact window {@link EngagementSpec}: an active session lists its transitions as options, idle exposes a command input to start one, plus state/selection/response status. */
@@ -3742,6 +3753,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
           placeholder: inputs.boundInteractionSession ? ENGAGEMENT_USER.commandPlaceholderActive : ENGAGEMENT_USER.commandPlaceholder,
           onChange: inputs.onInputChange,
           onSubmit: inputs.onInputSubmit,
+          onAbort: inputs.onAbort,
         }
       : undefined;
   const possibleEngagements = inputs.boundInteractionSession
@@ -3753,7 +3765,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
     : inputs.interactions.map((interaction) => ({
         id: interaction.id,
         label: normalizeEngagementCommandText(interaction.label),
-        detail: interaction.key,
+        detail: replUserFacingSuggestionDetail(interaction.key),
         onSelect: () => inputs.onStartInteraction(interaction.id),
       }));
   if (options.length === 0 && !input && status.length === 0 && possibleEngagements.length === 0) return null;
@@ -4379,7 +4391,7 @@ export function InteractionRepl({
         kind: "interaction",
         key: p.key,
         label: p.label,
-        detail: p.id,
+        detail: replUserFacingSuggestionDetail(p.key),
         interactionId: p.id,
         onRun: () => onInteractionId(p.id),
       });
@@ -4389,7 +4401,7 @@ export function InteractionRepl({
         kind: "transition",
         key: row.key,
         label: row.label,
-        detail: row.eventKind,
+        detail: undefined,
         transition: row,
         onRun: () => dispatchTransition(row),
       });
@@ -4399,7 +4411,7 @@ export function InteractionRepl({
         kind: "selection",
         key: defn.key,
         label: defn.label,
-        detail: defn.id,
+        detail: undefined,
         onRun: () => {
           void rt.query(`CALL ${defn.id}({}) YIELD data.targets AS targets`);
         },
@@ -4411,8 +4423,8 @@ export function InteractionRepl({
       out.push({
         kind: "action",
         key: tail,
-        label: actionId,
-        detail: "action",
+        label: humanizeEngagementStepId(tail),
+        detail: undefined,
         onRun: () => {
           void rt.query(`CALL ${actionId}({})`);
         },
@@ -4622,8 +4634,9 @@ export function InteractionRepl({
         onStartInteraction: (id: string) => onInteractionId(id),
         onInputChange: (value: string) => setCmdLine(replNormalizeCommandText(value, engagementCommandMode)),
         onInputSubmit: () => submitEngagementLine(),
+        onAbort: handleEscapeKey,
       }),
-    [showEngagement, engagementCommandMode, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine],
+    [showEngagement, engagementCommandMode, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine, handleEscapeKey],
   );
 
   reactHostPort.useEffect(() => {
@@ -4730,10 +4743,12 @@ export function InteractionRepl({
         setCmdLineRef.current((prev) => prev.slice(0, -1));
         return;
       }
-      if (commandInput && t !== commandInput && e.key === "Escape") {
-        e.preventDefault();
-        e.stopPropagation();
-        focusReplCommandInput();
+      if (e.key === "Escape" && commandInput) {
+        if (t !== commandInput) {
+          e.preventDefault();
+          e.stopPropagation();
+          focusReplCommandInput();
+        }
         handleEscapeKey();
         return;
       }
@@ -4900,7 +4915,7 @@ export function InteractionRepl({
           className={cn(cadChromePanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-[360px] shrink-0")}
           style={asideStyle}
         >
-          <strong className="text-sm font-semibold">Spatial play</strong>
+          <strong className="text-sm font-semibold">Editor</strong>
           <div className="flex flex-wrap gap-half">
             {transitionRows.map((row) => (
               <Button key={`${row.key}-${row.eventKind}-${row.label}`} type="button" variant="outline" size="sm" className="h-auto px-single py-half text-xs" onClick={() => runTransitionRow(row)}>
@@ -4953,7 +4968,7 @@ export function InteractionRepl({
                         <span className="border-border bg-muted text-foreground inline-flex min-w-6 items-center justify-center rounded-full border px-half py-0 text-2xs font-bold uppercase">{suggestion.key}</span>
                         <span>{suggestion.label}</span>
                       </div>
-                      <div className="text-muted-foreground text-2xs">{suggestion.detail}</div>
+                      {suggestion.detail ? <div className="text-muted-foreground text-2xs">{suggestion.detail}</div> : null}
                     </button>
                   ))
                 ) : (
@@ -4996,9 +5011,9 @@ export function InteractionRepl({
                   </select>
                 </label>
                 <span className="text-muted-foreground">
-                  {modelDefinitionScope.typologies.length} typolog{modelDefinitionScope.typologies.length === 1 ? "y" : "ies"}
+                  {modelDefinitionScope.typologies.length} kind{modelDefinitionScope.typologies.length === 1 ? "" : "s"}
                   {" · "}
-                  {modelDefinitionScope.interactions.length} interaction{modelDefinitionScope.interactions.length === 1 ? "" : "s"}
+                  {modelDefinitionScope.interactions.length} tool{modelDefinitionScope.interactions.length === 1 ? "" : "s"}
                   {" · "}
                   {modelDefinitionScope.attributeDefinitions.length} attribute{modelDefinitionScope.attributeDefinitions.length === 1 ? "" : "s"}
                   {" · "}
@@ -5401,6 +5416,15 @@ const __cadRendererTestKernel = import.meta.vitest ? await import("@cad/js/kerne
 if (import.meta.vitest) {
   const { BrepjsKernel, preciseSpatialKernelMath: M } = __cadRendererTestKernel!;
   const { describe, it, expect } = import.meta.vitest;
+
+  describe("replUserFacingSuggestionDetail", () => {
+    it("keeps short shortcut keys and drops machine ids", () => {
+      expect(replUserFacingSuggestionDetail("c")).toBe("c");
+      expect(replUserFacingSuggestionDetail("primitive.box")).toBeUndefined();
+      expect(replUserFacingSuggestionDetail("confirm")).toBeUndefined();
+      expect(replUserFacingSuggestionDetail("action")).toBeUndefined();
+    });
+  });
 
   describe("replNormalizeCommandText", () => {
     it("PascalCases engagement command text and strips whitespace in aside REPL mode", () => {

@@ -2805,14 +2805,27 @@ export class Puzzle2dRenderer {
     this.textOverlayContentEpoch += 1;
     this.lastPushedDescriptorJson = null;
     this.lastSceneWasmFingerprint = null;
-    this.lastSyncedDescriptorFingerprint = null;
     this.lastPushedSceneDescriptorEpoch = -1;
+  }
+
+  /** @emoji 🧷 Records the declarative descriptor fingerprint after a successful {@link syncPuzzle2dScene} (not cleared by {@link Puzzle2dRenderer.markSceneDescriptorDirty}). */
+  rememberDeclarativeSceneSyncFingerprint(descriptor: Puzzle2dSceneDescriptor): void {
+    this.lastSyncedDescriptorFingerprint = puzzle2dSceneDescriptorFingerprint(descriptor);
+  }
+
+  /** @emoji 🧹 Clears declarative sync coalescing after the secondary host unmounts and wipes {@link Puzzle2dRenderer.scene}. */
+  resetDeclarativeSceneSyncFingerprint(): void {
+    this.lastSyncedDescriptorFingerprint = null;
   }
 
   /** @emoji ⏭️ Skips imperative scene graph work when the declarative descriptor fingerprint is unchanged. */
   skipSceneSyncIfDescriptorUnchanged(descriptor: Puzzle2dSceneDescriptor): boolean {
     const fingerprint = puzzle2dSceneDescriptorFingerprint(descriptor);
     if (this.lastSyncedDescriptorFingerprint === fingerprint) {
+      if (!puzzle2dSceneDescriptorMatchesScene(this, descriptor)) {
+        this.lastSyncedDescriptorFingerprint = null;
+        return false;
+      }
       this.syncInteractionChrome();
       return true;
     }
@@ -5356,6 +5369,30 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
+    it("syncPuzzle2dScene does not skip after host unmount cleared the scene while the descriptor is unchanged", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      const hostMount = createPuzzle2dHostMount(renderer);
+      syncPuzzle2dScene(renderer, descriptor);
+      expect(renderer.scene.edges.size).toBe(1);
+      unmountPuzzle2dHostMount(hostMount);
+      expect(renderer.scene.edges.size).toBe(0);
+      expect(renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)).toBe(false);
+      syncPuzzle2dScene(renderer, descriptor);
+      expect(renderer.scene.edges.size).toBe(1);
+      renderer.dispose();
+    });
+
     it("coalesces nested render calls from frame listeners instead of re-entering the render pass", () => {
       const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       let frameCount = 0;
@@ -7727,6 +7764,8 @@ export function unmountPuzzle2dHostMount(root: Puzzle2dHostMount): void {
   renderer.runWithoutSceneDeleteEvents(() => {
     renderer.scene.clear();
   });
+  renderer.resetDeclarativeSceneSyncFingerprint();
+  renderer.markSceneDescriptorDirty();
   renderer.invalidate();
 }
 
@@ -8190,6 +8229,16 @@ export function puzzle2dSyncSelectionToAllAuthoringPeers(ids: readonly string[])
 }
 //#endregion 🔖MultiViewAuthoring
 
+/** @emoji 🔍 True when imperative {@link Puzzle2dRenderer.scene} counts match a declarative descriptor (guards skip after host unmount clears the graph). */
+function puzzle2dSceneDescriptorMatchesScene(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): boolean {
+  return (
+    renderer.scene.nodes.size === descriptor.nodes.length &&
+    renderer.scene.handles.size === descriptor.handles.length &&
+    renderer.scene.edges.size === descriptor.edges.length &&
+    renderer.scene.wires.size === descriptor.wires.length
+  );
+}
+
 /** @emoji 🔑 Stable fingerprint for declarative scene descriptors; skips no-op {@link syncPuzzle2dScene} passes. */
 export function puzzle2dSceneDescriptorFingerprint(descriptor: Puzzle2dSceneDescriptor): string {
   const nodeParts = descriptor.nodes
@@ -8369,6 +8418,7 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
 
   renderer.syncInteractionChrome();
   renderer.markSceneDescriptorDirty();
+  renderer.rememberDeclarativeSceneSyncFingerprint(descriptor);
   renderer.invalidate();
 }
 //#endregion 🔖Scene Sync

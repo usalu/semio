@@ -741,7 +741,21 @@ export function resolveControlLabelId(id: string): string {
   if (id.startsWith("ui.toolbar.group.")) {
     return _controlLabelIdResolver(`ui.toolbar.group.${id.slice("ui.toolbar.group.".length)}`);
   }
+  if (id === "engagement-possibles-toggle" || id === "ui.engagement.suggestions") {
+    return _controlLabelIdResolver("ui.engagement.suggestions");
+  }
+  if (id === "engagement-options" || id === "ui.engagement.commands") {
+    return _controlLabelIdResolver("ui.engagement.commands");
+  }
+  if (id === "engagement-input" || id === "ui.engagement.command") {
+    return _controlLabelIdResolver("ui.engagement.command");
+  }
   return _controlLabelIdResolver(id);
+}
+
+/** @emoji 🏷️ True for legacy engagement element ids that must not surface as humanized tooltips. */
+export function isInternalChromeControlId(id: string): boolean {
+  return id.startsWith("engagement-") || id.startsWith("engagement.");
 }
 
 /** @emoji 🔤 Turns a control id segment into a short title (e.g. `panelToggle` → `Panel Toggle`). */
@@ -765,11 +779,12 @@ export function useControlInlineText(id: string | undefined, text?: string): str
   const compact = useUiChromeCompact();
   if (compact) return undefined;
   if (text !== undefined) return text || undefined;
-  if (!id) return undefined;
+  if (!id || isInternalChromeControlId(id)) return undefined;
   const labelId = resolveControlLabelId(id);
   const localized = useLabel(labelId);
   if (localized && localized !== labelId) return localized;
-  return humanizeControlId(id);
+  if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
+  return undefined;
 }
 // #endregion 🎛️UiChromeCompact
 
@@ -872,6 +887,13 @@ export type UiTranslationSchema = {
     };
     readonly stepper: {
       readonly demo: UiLabelValue;
+    };
+    readonly engagement: {
+      readonly command: UiLabelValue;
+      readonly commandActive: UiLabelValue;
+      readonly commands: UiLabelValue;
+      readonly suggestions: UiLabelValue;
+      readonly noMatches: UiLabelValue;
     };
   };
   readonly settings: {
@@ -1080,6 +1102,38 @@ export const uiChromeTranslationBundles = {
         label: {
           normal: "Wert",
           beginner: "Wert",
+        },
+      },
+    },
+    engagement: {
+      command: {
+        label: {
+          normal: "Befehl",
+          beginner: "Befehl eingeben oder aus der Liste waehlen",
+        },
+      },
+      commandActive: {
+        label: {
+          normal: "Befehl oder Wert",
+          beginner: "Befehl oder Zahl fuer den aktuellen Schritt",
+        },
+      },
+      commands: {
+        label: {
+          normal: "Befehle",
+          beginner: "Schnellbefehle fuer den aktuellen Schritt",
+        },
+      },
+      suggestions: {
+        label: {
+          normal: "Vorschlaege",
+          beginner: "Liste der passenden Befehle oeffnen",
+        },
+      },
+      noMatches: {
+        label: {
+          normal: "Keine Treffer",
+          beginner: "Keine passenden Befehle",
         },
       },
     },
@@ -1306,6 +1360,38 @@ export const uiChromeTranslationBundles = {
         },
       },
     },
+    engagement: {
+      command: {
+        label: {
+          normal: "Command",
+          beginner: "Type a command or pick one from the list",
+        },
+      },
+      commandActive: {
+        label: {
+          normal: "Command or value",
+          beginner: "Command or number for the current step",
+        },
+      },
+      commands: {
+        label: {
+          normal: "Commands",
+          beginner: "Quick commands for the current step",
+        },
+      },
+      suggestions: {
+        label: {
+          normal: "Suggestions",
+          beginner: "Open the list of matching commands",
+        },
+      },
+      noMatches: {
+        label: {
+          normal: "No matches",
+          beginner: "No matching commands",
+        },
+      },
+    },
   },
   settings: {
     layout: {
@@ -1521,6 +1607,7 @@ export function useLabel(id: UiTranslationKey | (string & {})): string | undefin
   const value = t(id as UiTranslationKey);
 
   if (typeof value === "string") {
+    if (value === id || isInternalChromeControlId(value)) return undefined;
     return value;
   }
 
@@ -2518,14 +2605,17 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const labelId = resolveControlLabelId(id);
 
   if (mode === Expertise.EXPERT) return null;
+  if (isInternalChromeControlId(id)) return null;
 
   const manualLabel = useLabel("tooltip.manual");
   const tutorialLabel = useLabel("tooltip.tutorial");
   const value = t(labelId as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
+  const localized = useLabel(labelId);
   const label =
-    typeof value === "string"
+    localized ??
+    (typeof value === "string" && value !== labelId
       ? value
       : typeof value === "object" && value?.label
         ? typeof value.label === "string"
@@ -2539,7 +2629,9 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
                   ? String(value.label.beginner)
                   : undefined
             : undefined
-        : undefined;
+        : labelId.startsWith("ui.")
+          ? humanizeControlId(labelId)
+          : undefined);
 
   let hotkey: string | undefined;
   if (typeof value === "object" && value?.hotkey) {
@@ -3638,7 +3730,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
     </Comp>
   );
 
-  if (id) {
+  if (id && !isInternalChromeControlId(id)) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{actionElement}</TooltipTrigger>
@@ -3754,7 +3846,8 @@ function ButtonGroupItem({
   const level = context.level ?? "base";
   const Comp = asChild ? Slot : "button";
   const inlineText = useControlInlineText(id, text);
-  const ariaLabel = !inlineText && id ? useLabel(resolveControlLabelId(id)) : undefined;
+  const resolvedAriaLabel = !inlineText && id ? useLabel(resolveControlLabelId(id)) : undefined;
+  const ariaLabel = resolvedAriaLabel ?? (text && !id ? text : undefined);
 
   const buttonGroupItemElement = (
     <Comp
@@ -3777,7 +3870,7 @@ function ButtonGroupItem({
     </Comp>
   );
 
-  if (id) {
+  if (id && !isInternalChromeControlId(id)) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{buttonGroupItemElement}</TooltipTrigger>
@@ -10908,6 +11001,8 @@ export interface EngagementInput {
   placeholder?: string;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
+  /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear command. */
+  onAbort?: () => void;
   disabled?: boolean;
 }
 
@@ -10924,7 +11019,16 @@ export interface EngagementPossible {
   onSelect?: () => void;
 }
 
-/** @emoji 🏷 User-facing copy for window command chrome (input, toggles, suggestions). */
+/** @emoji 🏷 i18n keys for window command chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
+export const UI_ENGAGEMENT = {
+  command: "ui.engagement.command",
+  commandActive: "ui.engagement.commandActive",
+  commands: "ui.engagement.commands",
+  suggestions: "ui.engagement.suggestions",
+  noMatches: "ui.engagement.noMatches",
+} as const;
+
+/** @emoji 🏷 Default English copy for window command chrome (matches `ui.engagement.*` en bundle). */
 export const ENGAGEMENT_USER = {
   commandPlaceholder: "Command",
   commandPlaceholderActive: "Command or value",
@@ -11129,6 +11233,23 @@ export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefi
   return true;
 }
 
+/** @emoji ⎋ Routes Escape to {@link EngagementInput.onAbort} when window engagement chrome is active (skips other typing targets). */
+export function routeWindowEngagementEscape(
+  engagement: EngagementSpec | undefined,
+  event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">,
+  zone: { readonly chromeVisible: boolean; readonly commandActive: boolean },
+): boolean {
+  if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
+  const onAbort = engagement?.input?.onAbort;
+  if (!onAbort) return false;
+  if (!zone.chromeVisible && !zone.commandActive) return false;
+  if (isUiTypingTarget(event.target) && !isEngagementCommandTypingTarget(event.target)) return false;
+  const focused = document.activeElement;
+  if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return false;
+  onAbort();
+  return true;
+}
+
 /** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
 export interface EngagementSpec {
   options?: EngagementOption[];
@@ -11265,7 +11386,11 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                 className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0"
               >
                 <Input
-                  id={input!.id ?? "engagement-input"}
+                  id={
+                    !input!.id || input!.id === "engagement-input" || isInternalChromeControlId(input!.id)
+                      ? UI_ENGAGEMENT.command
+                      : input!.id
+                  }
                   className="relative z-[1] min-w-0 flex-1 bg-transparent"
                   value={draft}
                   tabIndex={active ? 0 : -1}
@@ -11276,6 +11401,11 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                         event.preventDefault();
                         setPossiblesExpanded(false);
                         return;
+                      }
+                      if (input!.onAbort) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        input!.onAbort();
                       }
                       return;
                     }
@@ -11325,7 +11455,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
               </div>
               {hasPossibles ? (
                 <Action
-                  id="engagement-possibles-toggle"
+                  id={UI_ENGAGEMENT.suggestions}
                   aria-expanded={possiblesExpanded}
                   aria-label={ENGAGEMENT_USER.suggestionsAria}
                   data-slot="engagement-possibles-toggle"
@@ -11379,18 +11509,23 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
       ) : null}
       {hasOptions ? (
         <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half" role="group" aria-label={ENGAGEMENT_USER.commandsAria}>
-          <ButtonGroup id="engagement-options">
-            {options!.map((option) => (
+          <ButtonGroup id={UI_ENGAGEMENT.commands}>
+            {options!.map((option) => {
+              const commandLabel = normalizeEngagementCommandText(option.label);
+              const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
+              return (
               <ButtonGroupItem
                 key={option.id}
-                id={option.id}
+                id={optionControlId}
+                aria-label={commandLabel}
                 icon={option.icon}
-                text={normalizeEngagementCommandText(option.label)}
+                text={commandLabel}
                 className={cn(option.pressed && "bg-active-base")}
                 onClick={option.onPress}
                 disabled={option.disabled}
               />
-            ))}
+            );
+            })}
           </ButtonGroup>
         </div>
       ) : null}
@@ -11471,6 +11606,20 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     const root = windowRef.current;
     if (!root) return;
     const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        routeWindowEngagementEscape(engagement, event, {
+          chromeVisible: showEngagementChrome,
+          commandActive: engagementCommandActive,
+        })
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!engagement?.input?.value?.trim()) {
+          setEngagementActivated(false);
+          setEngagementZoneFocused(false);
+        }
+        return;
+      }
       if (!routeWindowEngagementKeydown(engagement, event)) return;
       setEngagementActivated(true);
       event.preventDefault();
@@ -11479,7 +11628,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     };
     root.addEventListener("keydown", onKeyDown, true);
     return () => root.removeEventListener("keydown", onKeyDown, true);
-  }, [active, engagement]);
+  }, [active, engagement, engagementCommandActive, showEngagementChrome]);
 
   reactHostPort.useEffect(() => {
     const draft = engagement?.input?.value ?? "";
@@ -16081,6 +16230,61 @@ if (import.meta.vitest) {
       await waitFor(() => expect(document.activeElement).toBe(other));
     });
 
+    it("Engagement Escape calls onAbort when possibles list is closed", () => {
+      const aborted: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }}
+          possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]}
+        />,
+      );
+      const field = screen.getByPlaceholderText("Command");
+      fireEvent.keyDown(field, { key: "Escape" });
+      expect(aborted).toEqual(["abort"]);
+    });
+
+    it("Engagement Escape closes possibles list before onAbort", () => {
+      const scrollIntoView = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = () => undefined;
+      const aborted: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }}
+          possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]}
+        />,
+      );
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      const field = screen.getByPlaceholderText("Command");
+      fireEvent.keyDown(field, { key: "Escape" });
+      expect(aborted).toEqual([]);
+      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.keyDown(field, { key: "Escape" });
+      expect(aborted).toEqual(["abort"]);
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it("Window Escape aborts active engagement from the viewport", async () => {
+      const aborted: string[] = [];
+      const Harness = () => (
+        <Window
+          id="engagement-window"
+          active
+          engagement={{
+            input: { value: "Box", placeholder: "Command", onChange: () => {}, onAbort: () => aborted.push("abort") },
+          }}
+        >
+          <div data-testid="window-body">Body</div>
+        </Window>
+      );
+      const { container } = render(<Harness />);
+      fireEvent.pointerDown(container.querySelector('[data-slot="window-engagement-overlay"]')!);
+      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "Escape", bubbles: true });
+      expect(aborted).toEqual(["abort"]);
+    });
+
     it("Window reveals engagement on hover but activates only on click or typing", async () => {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
@@ -17272,6 +17476,27 @@ if (treeVitest) {
     it("humanizes unknown control ids when no i18n entry exists", () => {
       expect(humanizeControlId("ui.panelToggle.details")).toBe("Details");
       expect(humanizeControlSegment("puzzle2dGridSnap")).toBe("Puzzle2d Grid Snap");
+    });
+
+    it("maps legacy engagement control ids to ui.engagement i18n keys", () => {
+      expect(isInternalChromeControlId("engagement-possibles-toggle")).toBe(true);
+      expect(resolveControlLabelId("engagement-possibles-toggle")).toBe("ui.engagement.suggestions");
+      expect(resolveControlLabelId("engagement-options")).toBe("ui.engagement.commands");
+      expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
+    });
+
+    it("renders engagement suggestions toggle without internal-id humanized labels", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={false}>
+          <Engagement
+            input={{ placeholder: "Command" }}
+            possibleEngagements={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]}
+          />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain('id="ui.engagement.suggestions"');
+      expect(markup).not.toMatch(/Engagement Possibles/i);
+      expect(markup).not.toMatch(/Possibles Toggle/i);
     });
 
     it("renders panel toggle details with inline label when compact is off", () => {

@@ -1,0 +1,10 @@
+{
+  "title": "Puzzle 2d Play Missing Edges Sync Skip",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Play canvas has 180 nodes and 358 handles but 0 edges in scene/WASM. Root cause: skipSceneSyncIfDescriptorUnchanged skips imperative sync after unmountPuzzle2dHostMount clears the scene while descriptor fingerprint unchanged.",
+  "goal": "🎯puzzle2d",
+  "sessions": [
+    "⚪f8c13159316f46608d21b5aad806c951"
+  ]
+}

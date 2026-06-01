@@ -93,29 +93,33 @@ const CATALOGUE_ASSEMBLED_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
 	},
 ];
 
+const CATALOGUE_COLUMN_LABEL_LINES: Record<string, string> = {
+	col1: "Rippendecke",
+	col2: "Unterzug",
+	col3: "Stütze",
+};
+
 const CATALOGUE_FOCUS_COLUMN_GROUPS: readonly SplitColumnGroup[] = [
 	{
 		key: "col1",
 		tileKeys: ["tile-r1-c0", "tile-r1-c1", "tile-r1-c2", "tile-r1-c3", "tile-r1-c4", "tile-r2-c0"],
+		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col1,
 	},
-	{ key: "col2", tileKeys: ["tile-r2-c1", "tile-r2-c2", "tile-r2-c3"] },
-	{ key: "col3", tileKeys: ["tile-r2-c4"] },
+	{
+		key: "col2",
+		tileKeys: ["tile-r2-c1", "tile-r2-c2", "tile-r2-c3"],
+		labelLine: CATALOGUE_COLUMN_LABEL_LINES.col2,
+	},
+	{ key: "col3", tileKeys: ["tile-r2-c4"], labelLine: CATALOGUE_COLUMN_LABEL_LINES.col3 },
 ];
 
-const CATALOGUE_COLUMN_LABELS: readonly SplitMorphTarget[] = CATALOGUE_FOCUS_COLUMN_GROUPS.map((column) => {
-	const labels: Record<string, string> = {
-		col1: "Rippendecke",
-		col2: "Unterzug",
-		col3: "Stütze",
-	};
-	return {
-		columnKey: column.key,
-		position: splitColumnBounds(CATALOGUE_FOCUS_TILES, column.tileKeys),
-		lines: [labels[column.key] ?? column.key],
-		level: "heading",
-		morphRoot: "heading-line",
-	};
-});
+const CATALOGUE_COLUMN_LABELS: readonly SplitMorphTarget[] = CATALOGUE_FOCUS_COLUMN_GROUPS.map((column) => ({
+	columnKey: column.key,
+	position: splitColumnBounds(CATALOGUE_FOCUS_TILES, column.tileKeys),
+	lines: [column.labelLine ?? column.key],
+	level: "heading",
+	morphRoot: "heading-line",
+}));
 
 const introDeck = intro({
 	id: "projektetage",
@@ -233,20 +237,10 @@ const mediaThought: Thought = {
 				{
 					participantId: "catalogue",
 					emphasis: "active",
-					split: { tiles: CATALOGUE_FOCUS_TILES, columns: CATALOGUE_FOCUS_COLUMN_GROUPS },
-				},
-			],
-		},
-		{
-			id: "catalogue-merge",
-			dispositions: [
-				{
-					participantId: "catalogue",
-					emphasis: "active",
 					split: {
 						tiles: CATALOGUE_FOCUS_TILES,
 						columns: CATALOGUE_FOCUS_COLUMN_GROUPS,
-						columnGhostsOnly: true,
+						columnGhostsVisible: true,
 					},
 				},
 			],
@@ -318,7 +312,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(12);
+			expect(countArrangements(deck)).toBe(11);
 		});
 
 		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {
@@ -359,17 +353,14 @@ if (import.meta.vitest) {
 			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs catalogue columns into component labels via a ghost-only merge slide", () => {
+		it("morphs catalogue columns into component labels with visible focus ghosts", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const labels = media?.arrangements.find((a) => a.id === "catalogue-labels");
 			const targets = labels?.dispositions[0]?.morphTargets ?? [];
 			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
-			expect(media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split?.columns).toHaveLength(
-				3,
-			);
-			expect(media?.arrangements.find((a) => a.id === "catalogue-merge")?.dispositions[0]?.split?.columnGhostsOnly).toBe(
-				true,
-			);
+			const focusSplit = media?.arrangements.find((a) => a.id === "catalogue-focus")?.dispositions[0]?.split;
+			expect(focusSplit?.columns).toHaveLength(3);
+			expect(focusSplit?.columnGhostsVisible).toBe(true);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

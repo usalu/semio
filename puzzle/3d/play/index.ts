@@ -1004,6 +1004,7 @@ export class Puzzle3dPlayShellController extends Controller {
       }
       case "engagementOption":
       case "engagementInput":
+      case "engagementAbort":
         this.hostBridge?.runHostCommand(command, args);
         return;
       case "addBrushObject": {

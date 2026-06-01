@@ -276,6 +276,8 @@ export interface SplitTile {
 export interface SplitColumnGroup {
 	readonly key: string;
 	readonly tileKeys: readonly string[];
+	/** @emoji 🏷 Same line as the later label target; ghost `h2` uses it (hidden) for reveal.js text morph. */
+	readonly labelLine?: string;
 }
 
 /** @emoji 🏷 Text (or other) target at a column bounds rectangle for reveal.js column morph. */
@@ -299,6 +301,8 @@ export interface DispositionSplit {
 	readonly columns?: readonly SplitColumnGroup[];
 	/** @emoji 👻 Render only column ghosts (temporary merge before {@link Disposition.morphTargets}); tiles omitted. */
 	readonly columnGhostsOnly?: boolean;
+	/** @emoji 👁 Show column ghosts over tiles on this arrangement (pair with {@link Disposition.morphTargets} on the next slide). */
+	readonly columnGhostsVisible?: boolean;
 }
 
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */

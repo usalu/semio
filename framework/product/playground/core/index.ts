@@ -254,6 +254,7 @@ export interface WindowEngagementInput {
   readonly disabled?: boolean;
   readonly onChange?: CommandDescriptor;
   readonly onSubmit?: CommandDescriptor;
+  readonly onAbort?: CommandDescriptor;
 }
 
 /** @emoji 💬 One engagement status cell rendered as muted text. */

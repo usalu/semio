@@ -657,6 +657,7 @@ export function windowEngagementToGolden(engagement: WindowEngagement | undefine
         disabled: engagement.input.disabled,
         onChange: engagement.input.onChange ? (value: string) => bus.dispatch(engagement.input!.onChange!.controllerId, engagement.input!.onChange!.command, { ...(engagement.input!.onChange!.args as object | undefined), value }) : undefined,
         onSubmit: engagement.input.onSubmit ? (value: string) => bus.dispatch(engagement.input!.onSubmit!.controllerId, engagement.input!.onSubmit!.command, { ...(engagement.input!.onSubmit!.args as object | undefined), value }) : undefined,
+        onAbort: engagement.input.onAbort ? () => bus.dispatch(engagement.input!.onAbort!.controllerId, engagement.input!.onAbort!.command, engagement.input!.onAbort!.args) : undefined,
       }
     : undefined;
   const status = engagement.status?.map((row) => ({ id: row.id, content: row.text }));
@@ -1203,6 +1204,7 @@ export function puzzle3dPlayEngagementMirror(engagement: EngagementSpec | null):
         disabled: engagement.input.disabled,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementInput", args: {} },
         onSubmit: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: {} },
+        onAbort: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementAbort", args: {} },
       }
     : undefined;
   const status = engagement.status?.map((row) => ({ id: row.id, text: typeof row.content === "string" ? row.content : String(row.content) }));
@@ -1232,6 +1234,12 @@ function Puzzle3dPlayEngagementPublisher(props: {
   const onBrushTool = reactHostPort.useCallback(() => {
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "brush" });
   }, [bus]);
+  const onEngagementAbort = reactHostPort.useCallback(() => {
+    setCmdLine("");
+    if (snap.activeTool === "brush") {
+      onSelectTool();
+    }
+  }, [onSelectTool, snap.activeTool]);
   const onCmdLineSubmit = reactHostPort.useCallback(
     (value: string) => {
       const token = normalizeEngagementCommandText(value.trim());
@@ -1266,6 +1274,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         selectionObjectCount: selectionCount,
         onCmdLineChange: setCmdLine,
         onCmdLineSubmit,
+        onAbort: onEngagementAbort,
         onSelectTool,
         onBrushTool,
         onCycleBrushCandidate: () => brushSource.cycleCandidate(),
@@ -1273,7 +1282,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushCandidates: brushSource.candidates,
         brushTargetActive: brushSource.targetActive,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onSelectTool, selectionCount, snap.activeTool],
+    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onSelectTool, selectionCount, snap.activeTool],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -1303,6 +1312,9 @@ function Puzzle3dPlayEngagementPublisher(props: {
             engagementSpecRef.current?.input?.onSubmit?.(value);
             break;
           }
+          case "engagementAbort":
+            engagementSpecRef.current?.input?.onAbort?.();
+            break;
           case "engagementPossibleSelect": {
             const possibleId = (args as { possibleId?: string })?.possibleId;
             if (!possibleId) {

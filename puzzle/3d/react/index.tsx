@@ -2996,16 +2996,13 @@ export function brushCandidateRank(candidate: BrushCompatibleCandidate, template
   return score;
 }
 
-/** @emoji 🖌️ Whether brush placement should inherit the hovered object's orientation (stacking / same kind). */
+/** @emoji 🖌️ Whether brush placement should inherit the hovered object's orientation (same kind only; stacks use opposed directions). */
 export function brushPlacementUsesHostOrientation(target: AttractionVortexContext, sourceVortexKind: string, candidateObjectKindId: string): boolean {
-  if (candidateObjectKindId === target.objectKind) {
-    return true;
-  }
   const targetVk = target.vortexKind ?? "";
-  if (!brushStackBottomTopPair(sourceVortexKind, targetVk)) {
+  if (brushStackBottomTopPair(sourceVortexKind, targetVk)) {
     return false;
   }
-  return targetVk.startsWith("tambour ") && candidateObjectKindId === "Tambour";
+  return candidateObjectKindId === target.objectKind;
 }
 
 function brushCandidateKey(candidate: BrushCompatibleCandidate): string {
@@ -5234,6 +5231,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly selectionObjectCount: number;
   readonly onCmdLineChange: (value: string) => void;
   readonly onCmdLineSubmit: (value: string) => void;
+  readonly onAbort?: () => void;
   readonly onSelectTool: () => void;
   readonly onBrushTool: () => void;
   readonly onCycleBrushCandidate: () => void;
@@ -5284,6 +5282,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
       placeholder: inputs.activeTool === "brush" ? "Kind name or list" : "Brush",
       onChange: inputs.onCmdLineChange,
       onSubmit: inputs.onCmdLineSubmit,
+      onAbort: inputs.onAbort,
     },
     ...(options?.length ? { options } : {}),
     ...(status.length ? { status } : {}),
@@ -5742,6 +5741,10 @@ function BrushSession(props: {
       );
       if (!collides) {
         collisionHandledPreviewKeyRef.current = "";
+        return;
+      }
+      const targetVk = targetCtxRef.current?.vortexKind ?? "";
+      if (targetVk.endsWith(" top")) {
         return;
       }
       if (candidatesRef.current.length <= 1) {
@@ -8419,25 +8422,32 @@ if (import.meta.vitest) {
         expect(lastStoreyIndex).toBeGreaterThan(0);
       }
     });
-    it("computeBrushPlacementPose can inherit host orientation for stacking", () => {
-      const hostOrientation: Quat = [0, 0, 0.7071067811865475, 0.7071067811865475];
+    it("brushPlacementUsesHostOrientation is false for stack bottom on top pairs", () => {
+      const target: AttractionVortexContext = { objectId: "fs", objectKind: "First Storey", vortexKind: "tambour circular top" };
+      expect(brushPlacementUsesHostOrientation(target, "tambour circular bottom", "Tambour")).toBe(false);
+      expect(brushPlacementUsesHostOrientation(target, "door tambour east", "J")).toBe(false);
+      expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "J", vortexKind: "door capsule east" }, "door capsule east", "J")).toBe(true);
+    });
+    it("computeBrushPlacementPose stacks tambour bottom on rotated storey top with opposed directions", () => {
+      const hostOrientation: Quat = [0, 0, 0.7071067811865475, -0.7071067811865475];
       const targetPos: Vec3 = [1, 2, 30];
+      const targetDir = normalizeVec3Cad(rotateVecByCadQuat(hostOrientation, [0, 0, 1]));
       const pose = computeBrushPlacementPose({
-        sourceLocalPosition: [0, 0, 0.92],
+        sourceLocalPosition: [0, 0, 0.9166667],
         sourceLocalDirection: [0, 0, -1],
         targetWorldPositionCad: targetPos,
-        targetWorldDirectionCad: [0, 0, 1],
-        referenceOrientationCad: hostOrientation,
-        useHostOrientation: true,
+        targetWorldDirectionCad: targetDir,
+        useHostOrientation: false,
       });
-      expect(pose.orientation).toEqual(hostOrientation);
       const world = vortexWorldCadFromObject(
-        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [0, 0, 0.92], direction: [0, 0, -1] }] },
+        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [0, 0, 0.9166667], direction: [0, 0, -1] }] },
         0,
       );
       expect(world!.position[0]).toBeCloseTo(targetPos[0], 4);
       expect(world!.position[1]).toBeCloseTo(targetPos[1], 4);
       expect(world!.position[2]).toBeCloseTo(targetPos[2], 4);
+      const worldDir = world!.direction;
+      expect(worldDir[0] * targetDir[0] + worldDir[1] * targetDir[1] + worldDir[2] * targetDir[2]).toBeLessThan(0);
     });
     it("boxesIntersect detects overlapping axis-aligned boxes", () => {
       const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));

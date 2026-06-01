@@ -544,6 +544,7 @@ export function cadPlayEngagementMirror(engagement: EngagementSpec | null, pane:
         disabled: engagement.input.disabled,
         onChange: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementInput", args: { pane } },
         onSubmit: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane } },
+        onAbort: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementAbort", args: { pane } },
       }
     : undefined;
   const status = engagement.status?.map((row) => ({ id: row.id, text: typeof row.content === "string" ? row.content : String(row.content) }));
@@ -661,6 +662,7 @@ export class CadPlayShellController extends Controller {
       case "engagementOption":
       case "engagementInput":
       case "engagementSubmit":
+      case "engagementAbort":
       case "engagementPossibleSelect":
         this.hostBridge?.runHostCommand(command, args);
         break;
@@ -1779,6 +1781,12 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
             const pane = (args as { pane?: CadPlayPaneId })?.pane;
             if (!pane || !CAD_PLAY_PANE_IDS.includes(pane)) break;
             engagementSpecRefByPane.current[pane]?.input?.onSubmit?.((args as { value?: string })?.value ?? "");
+            break;
+          }
+          case "engagementAbort": {
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
+            if (!pane || !CAD_PLAY_PANE_IDS.includes(pane)) break;
+            engagementSpecRefByPane.current[pane]?.input?.onAbort?.();
             break;
           }
           case "engagementPossibleSelect": {
