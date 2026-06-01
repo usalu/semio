@@ -50,6 +50,17 @@ function familyNameById(kit: Record<string, unknown>): Map<string, string> {
   return out;
 }
 
+/** @emoji 🖼️ Asset path stem when a kind has no mesh representation (shallow kits). */
+export function iconOrImageFileStem(row: Record<string, unknown>): string {
+  for (const key of ["icon", "image"] as const) {
+    const path = String(row[key] ?? "");
+    const base = path.split("/").pop() ?? "";
+    if (!base) continue;
+    return fileStemForNaming(base);
+  }
+  return "";
+}
+
 /** @emoji 📎 Primary mesh file for a kind (non-collider `.glb`, no `_1to*` scale suffix). */
 export function primaryRepresentationFileName(row: Record<string, unknown>, files: Map<string, string>): string {
   const glbs: string[] = [];
@@ -67,7 +78,7 @@ export function primaryRepresentationFileName(row: Record<string, unknown>, file
 /** @emoji 🏷️ File stem used for naming (drops extension, collider, and scale suffixes). */
 export function fileStemForNaming(fileName: string): string {
   return fileName
-    .replace(/\.(glb|3dm)$/i, "")
+    .replace(/\.(glb|3dm|svg|png|jpg|webp)$/i, "")
     .replace(/_collider$/i, "")
     .replace(/_1to\d+$/i, "");
 }
@@ -133,17 +144,38 @@ function syncRepresentationNames(row: Record<string, unknown>, files: Map<string
   }
 }
 
+function primaryFromRepresentationNames(row: Record<string, unknown>): string {
+  for (const rep of itemsOf(row.representations)) {
+    if (!rep || typeof rep !== "object") continue;
+    const raw = String((rep as { name?: string }).name ?? "");
+    if (!raw || /collider/i.test(raw)) continue;
+    const stem = fileStemForNaming(raw.includes(".") ? raw : `${raw}.glb`);
+    if (stem && !/_1to\d+$/i.test(stem)) return stem;
+  }
+  return "";
+}
+
+function namingSourceForType(row: Record<string, unknown>, files: Map<string, string>): string {
+  return primaryRepresentationFileName(row, files) || primaryFromRepresentationNames(row) || iconOrImageFileStem(row);
+}
+
+function renameTypeRow(row: Record<string, unknown>, files: Map<string, string>): void {
+  const primary = namingSourceForType(row, files);
+  if (!primary) return;
+  const derivedName = typeNameFromFileName(primary.includes(".") ? primary : `${primary}.glb`);
+  if (derivedName) row.name = derivedName;
+  syncRepresentationNames(row, files);
+}
+
 function intendedTypologyIdForType(
   row: Record<string, unknown>,
   files: Map<string, string>,
   families: Map<string, string>,
 ): string {
-  const primary = primaryRepresentationFileName(row, files);
+  const primary = namingSourceForType(row, files);
   if (primary) {
+    renameTypeRow(row, files);
     const fromFile = typologyIdFromRepresentationFile(primary);
-    const derivedName = typeNameFromFileName(primary);
-    if (derivedName) row.name = derivedName;
-    syncRepresentationNames(row, files);
     if (fromFile) return fromFile;
   }
   const nm = String(row.name ?? "").toLowerCase();
@@ -242,9 +274,12 @@ function walkJsonFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
+const SKIP_FIXTURES = new Set(["architect.harness.kit.semio.json"]);
+
 const targets = walkJsonFiles(join(import.meta.dir, "../../../../../../semio/fixtures"));
 let changed = 0;
 for (const path of targets) {
+  if (SKIP_FIXTURES.has(path.split("/").pop() ?? "")) continue;
   let doc: Record<string, unknown>;
   try {
     doc = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;

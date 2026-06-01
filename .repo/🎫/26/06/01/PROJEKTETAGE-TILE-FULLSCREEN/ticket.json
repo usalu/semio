@@ -1,0 +1,10 @@
+{
+  "title": "Projektetage Tile Fullscreen",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix split tile fullscreen on projektetage catalogue slides: pressing fullscreen on a tile does not expand it to slide fullscreen.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪99b8fa53b0c0467ebe096529b2031eda"
+  ]
+}

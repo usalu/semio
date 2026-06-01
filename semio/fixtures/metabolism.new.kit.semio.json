@@ -27,7 +27,7 @@
                                 {
                                     "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
                                     "hash": "…",
-                                    "name": "Base",
+                                    "name": "Base.svg",
                                     "representations": {
                                         "hash": "…",
                                         "items": [
@@ -55,7 +55,7 @@
                                             {
                                                 "id": "c2aded58-7995-4ea5-b990-91bd44482bcb",
                                                 "hash": "…",
-                                                "name": "base_1to500",
+                                                "name": "base",
                                                 "tags": {
                                                     "hash": "…",
                                                     "items": [
@@ -80,7 +80,7 @@
                                             {
                                                 "id": "b45711c9-1c03-4180-9f5c-7c52f6ac1e8d",
                                                 "hash": "…",
-                                                "name": "base_1to200",
+                                                "name": "base",
                                                 "tags": {
                                                     "hash": "…",
                                                     "items": [
@@ -171,7 +171,7 @@
                                             {
                                                 "id": "6f6f705a-c893-4d60-8bf4-61b5c348f958",
                                                 "hash": "…",
-                                                "name": "base_collider",
+                                                "name": "base",
                                                 "tags": {
                                                     "hash": "…",
                                                     "items": [
