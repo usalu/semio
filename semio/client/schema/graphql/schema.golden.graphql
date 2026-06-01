@@ -1916,11 +1916,11 @@ type File implements Artifact & RichStrongEntity & StrongEntity & Entity & Node 
   url: String! # data
   mime: String! # data
   size: Int # data
-  representations: RepresentationConnection! # computed
-  types: TypeConnection! # computed
-  designs: DesignConnection! # computed
-  allTypes: TypeConnection! # computed
-  allDesigns: DesignConnection! # computed
+  hasRepresentations: RepresentationConnection! # computed
+  referencesTypes: TypeConnection! # computed
+  referencesDesigns: DesignConnection! # computed
+  referencesTypesTransitive: TypeConnection! # computed
+  referencesDesignsTransitive: DesignConnection! # computed
   tag(id: ID!): Tag # computed
   quality(id: ID!): Quality # computed
   attribute(id: ID!): Attribute # computed
@@ -5413,10 +5413,10 @@ type Representation implements Artifact & RichStrongEntity & StrongEntity & Enti
   attributes: AttributeConnection! # computed
   attribute(id: ID!): Attribute # computed
   referencedBy: PieceConnection! # computed
-  types: TypeConnection! # computed
-  files: FileConnection! # computed
+  hasTypes: TypeConnection! # computed
+  referencesFiles: FileConnection! # computed
   referencedByDesigns: DesignConnection! # computed
-  allReferencedByDesigns: DesignConnection! # computed
+  referencedByDesignsTransitive: DesignConnection! # computed
 }
 
 type RepresentationEdge implements EntityEdge {
@@ -5540,17 +5540,17 @@ type Type implements Artifact & RichStrongEntity & StrongEntity & Entity & Node 
   # Type
   image: String! # data
   unit: String! # data
-  ports: PortConnection! # computed
+  hasPorts: PortConnection! # computed
   port(id: ID!): Port # computed
-  connectors: ConnectorConnection! # computed
+  hasConnectors: ConnectorConnection! # computed
   connector(id: ID!): Connector # computed
-  representations: RepresentationConnection! # computed
+  hasRepresentations: RepresentationConnection! # computed
   representation(id: ID!): Representation # computed
   bestRepresentation: Representation # computed
-  files: FileConnection! # computed
+  referencesFiles: FileConnection! # computed
   referencedBy: PieceConnection! # computed
   referencedByDesigns: DesignConnection! # computed
-  allReferencedByDesigns: DesignConnection! # computed
+  referencedByDesignsTransitive: DesignConnection! # computed
   authors: AuthorConnection! # computed
   author(id: ID!): Author # computed
   concepts: ConceptConnection! # computed
@@ -6885,9 +6885,15 @@ type Piece implements Artifact & RichStrongEntity & StrongEntity & Entity & Node
   connectionKind: PieceConnectionKind # computed
   parentPiece: Piece # computed
   parentConnection: Connection # computed
-  childConnections: ConnectionConnection! # computed
+  isType: Type # computed
+  isDesign: Design # computed
+  isTypesTransitive: TypeConnection! # computed
+  isDesignsTransitive: DesignConnection! # computed
+  hasPieces: PieceConnection! # computed
+  hasConnections: ConnectionConnection! # computed
+  hasPiecesTransitive: PieceConnection! # computed
+  hasConnectionsTransitive: ConnectionConnection! # computed
   childConnection(id: ID!): Connection # computed
-  childPieces: PieceConnection! # computed
   childPiece(id: ID!): Piece # computed
   path: PieceConnection! # computed
   depth: Int! # computed
@@ -8385,17 +8391,23 @@ type Design implements Artifact & RichStrongEntity & StrongEntity & Entity & Nod
   stats: StatConnection! # computed
   stat(id: ID!): Stat # computed
   qualitySum: Float! # computed
-  types: TypeConnection! # computed
-  designs: DesignConnection! # computed
-  files: FileConnection! # computed
-  allTypes: TypeConnection! # computed
-  allDesigns: DesignConnection! # computed
-  allFiles: FileConnection! # computed
-  representations: RepresentationConnection! # computed
-  allRepresentations: RepresentationConnection! # computed
+  hasPieces: PieceConnection! # computed
+  hasConnections: ConnectionConnection! # computed
+  hasLayers: LayerConnection! # computed
+  hasGroups: GroupConnection! # computed
+  hasPiecesTransitive: PieceConnection! # computed
+  hasConnectionsTransitive: ConnectionConnection! # computed
+  referencesTypes: TypeConnection! # computed
+  referencesDesigns: DesignConnection! # computed
+  referencesFiles: FileConnection! # computed
+  referencesRepresentations: RepresentationConnection! # computed
+  referencesRepresentationsTransitive: RepresentationConnection! # computed
+  referencesTypesTransitive: TypeConnection! # computed
+  referencesDesignsTransitive: DesignConnection! # computed
+  referencesFilesTransitive: FileConnection! # computed
   referencedBy: PieceConnection! # computed
   referencedByDesigns: DesignConnection! # computed
-  allReferencedByDesigns: DesignConnection! # computed
+  referencedByDesignsTransitive: DesignConnection! # computed
 }
 
 type DesignEdge implements EntityEdge {
@@ -9063,14 +9075,14 @@ type Kit implements Artifact & RichStrongEntity & StrongEntity & Entity & Node &
   version: String # data
   uri: String! # data
   design(id: ID!): Design # computed
-  designs: DesignConnection! # computed
+  hasDesigns: DesignConnection! # computed
   type(id: ID!): Type # computed
-  types: TypeConnection! # computed
-  files: FileConnection! # computed
+  hasTypes: TypeConnection! # computed
+  hasFiles: FileConnection! # computed
   file(id: ID!): File # computed
-  folders: FolderConnection! # computed
+  hasFolders: FolderConnection! # computed
   folder(id: ID!): Folder # computed
-  families: FamilyConnection! # computed
+  hasFamilies: FamilyConnection! # computed
   family(id: ID!): Family # computed
   authors: AuthorConnection! # computed
   author(id: ID!): Author # computed

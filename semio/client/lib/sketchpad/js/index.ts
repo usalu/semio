@@ -10964,11 +10964,11 @@ export class SemioJsKitStore extends SemioKitStore {
 }
 
 const SKETCHPAD_KIT_READ_INNER = `id name description version createdAt updatedAt
-designs {
+hasDesigns {
   edges {
     node {
       id name description unit
-      pieces {
+      hasPieces {
         edges {
           node {
             id name
@@ -10977,32 +10977,32 @@ designs {
           }
         }
       }
-      connections {
+      hasConnections {
         edges {
           node {
             id
-            parent { piece { id } connector { id } }
-            child { piece { id } connector { id } }
+            parent { referencesPiece { id } referencesConnector { id } }
+            child { referencesPiece { id } referencesConnector { id } }
           }
         }
       }
     }
   }
 }
-types {
+hasTypes {
   edges {
     node {
       id name description
-      connectors { edges { node { id name port { id label code copatibleWith { edges { node { id } } } } } } }
-      ports { edges { node { id label code copatibleWith { edges { node { id } } } } } }
-      representations { edges { node { id name file { id } } } }
+      hasConnectors { edges { node { id name port { id label code copatibleWith { edges { node { id } } } } } } }
+      hasPorts { edges { node { id label code copatibleWith { edges { node { id } } } } } }
+      hasRepresentations { edges { node { id name file { id } } } }
     }
   }
 }
 qualities { edges { node { id key value } } }
-folders { edges { node { id path description } } }
+hasFolders { edges { node { id path description } } }
 authors { edges { node { id name } } }
-files { edges { node { id url description } } }`;
+hasFiles { edges { node { id url description } } }`;
 
 function sketchpadFormatKitTimestamp(value: unknown): string {
 	if (value == null || value === "") return "";
@@ -11039,32 +11039,43 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 		return edges.map((edge) => edge.node).filter((node): node is Record<string, unknown> => node != null);
 	};
 	const parseDesigns = (): Design[] => {
-		const edges = (data["designs"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+		const edges = (data["hasDesigns"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 		return edges
 			.map((edge) => edge.node)
 			.filter((node): node is Record<string, unknown> => node != null)
 			.map((node) => {
-				const pieceEdges = (node["pieces"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const pieceEdges = (node["hasPieces"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 				const pieces = pieceEdges.map((pe) => pe.node).filter((n): n is Record<string, unknown> => n != null) as Design["pieces"];
-				const connectionEdges = (node["connections"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
-				const connections = connectionEdges.map((ce) => ce.node).filter((n): n is Record<string, unknown> => n != null);
+				const connectionEdges = (node["hasConnections"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const connections = connectionEdges.map((ce) => {
+					const raw = ce.node;
+					if (raw == null || typeof raw !== "object") return raw;
+					const remapSide = (side: unknown): unknown => {
+						if (side == null || typeof side !== "object") return side;
+						const s = side as Record<string, unknown>;
+						const piece = s["referencesPiece"] ?? s["piece"];
+						const connector = s["referencesConnector"] ?? s["connector"];
+						return { ...s, piece, connector };
+					};
+					return { ...raw, parent: remapSide(raw["parent"]), child: remapSide(raw["child"]) };
+				}).filter((n): n is Record<string, unknown> => n != null);
 				return { ...node, pieces, connections } as Design;
 			});
 	};
 	const parseTypes = (): Type[] => {
-		const edges = (data["types"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+		const edges = (data["hasTypes"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 		return edges
 			.map((edge) => edge.node)
 			.filter((node): node is Record<string, unknown> => node != null)
 			.map((node) => {
-				const repEdges = (node["representations"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const repEdges = (node["hasRepresentations"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 				const representations = repEdges.map((re) => re.node).filter((n): n is Record<string, unknown> => n != null);
-				const portEdges = (node["ports"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const portEdges = (node["hasPorts"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 				const ports = portEdges
 					.map((pe) => pe.node)
 					.filter((n): n is Record<string, unknown> => n != null)
 					.map((port) => sketchpadPortDtoFromGraphqlNode(port));
-				const conEdges = (node["connectors"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+				const conEdges = (node["hasConnectors"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
 				const connectors = conEdges
 					.map((ce) => ce.node)
 					.filter((n): n is Record<string, unknown> => n != null)
@@ -11083,8 +11094,8 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 		version: data["version"] != null ? String(data["version"]) : undefined,
 		createdAt: data["createdAt"] != null ? String(data["createdAt"]) : undefined,
 		updatedAt: data["updatedAt"] != null ? String(data["updatedAt"]) : undefined,
-		files: nodes("files") as Kit["files"],
-		folders: nodes("folders") as Kit["folders"],
+		files: nodes("hasFiles") as Kit["files"],
+		folders: nodes("hasFolders") as Kit["folders"],
 		authors: nodes("authors") as Kit["authors"],
 		qualities: nodes("qualities") as Kit["qualities"],
 		designs: parseDesigns(),

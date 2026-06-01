@@ -1,8 +1,8 @@
 {
   "title": "Semio Is Has References Projections",
   "emoji": "🪢",
-  "status": "open",
+  "status": "closed",
   "description": "Unify is/has/references/referencedBy projection verbs with Transitive variants on Rust canonical model, GraphQL schema, and TypeScript client.",
-  "goal": "🎯semio",
-  "sessions": []
+  "summary": "Unified semio entity projections to is*/has*/references*/referencedBy* with direct and *Transitive forms on Rust (lib.rs), regenerated schema.graphql, and TypeScript client (index.ts) including VFS relay queries and tests. All 60 Rust lib tests and 18 vitest tests pass.",
+  "goal": "🎯semio"
 }

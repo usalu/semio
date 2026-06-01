@@ -1252,6 +1252,26 @@ type Connection implements Entity & FileSystemNode & StrongEntity {
 	v: Float
 	attributes: AttributeConnection!
 	attribute(id: ID!): Attribute
+	"""
+	@emoji ⛓️ Parent and child sides owned by this connection.
+	"""
+	hasSides: [Side!]!
+	"""
+	@emoji 🪢 Pieces referenced by the parent and child sides.
+	"""
+	referencesPieces: PieceConnection!
+	"""
+	@emoji ⚓ Connectors referenced by the parent and child sides.
+	"""
+	referencesConnectors: ConnectorConnection!
+	"""
+	@emoji 🪢 Pieces referenced transitively through nested design blueprints on both sides.
+	"""
+	referencesPiecesTransitive: PieceConnection!
+	"""
+	@emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
+	"""
+	referencesConnectorsTransitive: ConnectorConnection!
 }
 
 type ConnectionConnection {
@@ -2152,12 +2172,32 @@ type Design implements Entity & Node & FileSystemNode & StrongEntity {
 	unit: String
 	createdAt: Timestamp
 	updatedAt: Timestamp
-	pieces: PieceConnection!
+	"""
+	@emoji 🪢 Pieces owned directly by this design.
+	"""
+	hasPieces: PieceConnection!
 	piece(id: ID!): Piece
-	connections: ConnectionConnection!
+	"""
+	@emoji 🔗 Connections owned directly by this design.
+	"""
+	hasConnections: ConnectionConnection!
 	connection(id: ID!): Connection
-	layers: LayerConnection!
-	groups: GroupConnection!
+	"""
+	@emoji 🎨 Layers owned directly by this design.
+	"""
+	hasLayers: LayerConnection!
+	"""
+	@emoji 👥 Groups owned directly by this design.
+	"""
+	hasGroups: GroupConnection!
+	"""
+	@emoji 🪢 Pieces in this design and nested design blueprints (transitive).
+	"""
+	hasPiecesTransitive: PieceConnection!
+	"""
+	@emoji 🔗 Connections in this design and nested design blueprints (transitive).
+	"""
+	hasConnectionsTransitive: ConnectionConnection!
 	authors: AuthorConnection!
 	qualities: QualityConnection!
 	props: PropConnection!
@@ -2165,37 +2205,37 @@ type Design implements Entity & Node & FileSystemNode & StrongEntity {
 	stats: StatConnection!
 	qualitySum(qualityId: ID!): Float!
 	"""
-	@emoji 🧰 Types referenced by this design's pieces (one hop over blueprints).
+	@emoji 🧰 Kinds referenced by this design's pieces (one hop over blueprints).
 	"""
-	types: TypeConnection!
+	referencesTypes: TypeConnection!
 	"""
 	@emoji 🏘 Designs referenced by this design's pieces (one hop over blueprints).
 	"""
-	designs: DesignConnection!
+	referencesDesigns: DesignConnection!
 	"""
-	@emoji 📄 Files referenced via type blueprints on this design's pieces (one hop).
+	@emoji 📄 Files referenced via kind blueprints on this design's pieces (one hop).
 	"""
-	files: FileConnection!
+	referencesFiles: FileConnection!
 	"""
-	@emoji 💾 Representations on type blueprints referenced by this design's pieces (one hop).
+	@emoji 💾 Representations on kind blueprints referenced by this design's pieces (one hop).
 	"""
-	representations: RepresentationConnection!
+	referencesRepresentations: RepresentationConnection!
 	"""
-	@emoji 💾 Representations on types referenced transitively through nested design blueprints.
+	@emoji 💾 Representations on kinds referenced transitively through nested design blueprints.
 	"""
-	allRepresentations: RepresentationConnection!
+	referencesRepresentationsTransitive: RepresentationConnection!
 	"""
-	@emoji 🧰 Types referenced transitively through nested design blueprints.
+	@emoji 🧰 Kinds referenced transitively through nested design blueprints.
 	"""
-	allTypes: TypeConnection!
+	referencesTypesTransitive: TypeConnection!
 	"""
 	@emoji 🏘 Designs referenced transitively through nested design blueprints.
 	"""
-	allDesigns: DesignConnection!
+	referencesDesignsTransitive: DesignConnection!
 	"""
-	@emoji 📄 Files referenced transitively through nested design and type blueprints.
+	@emoji 📄 Files referenced transitively through nested design and kind blueprints.
 	"""
-	allFiles: FileConnection!
+	referencesFilesTransitive: FileConnection!
 	"""
 	@emoji 🪢 Pieces in the owner kit whose blueprint is this design.
 	"""
@@ -2207,7 +2247,7 @@ type Design implements Entity & Node & FileSystemNode & StrongEntity {
 	"""
 	@emoji 🏘 Designs that reference this design transitively through nested design blueprints.
 	"""
-	allReferencedByDesigns: DesignConnection!
+	referencedByDesignsTransitive: DesignConnection!
 }
 
 type DesignConnection {
@@ -2556,23 +2596,23 @@ type File implements Entity & FileSystemNode {
 	"""
 	@emoji 💾 Representations that reference this file.
 	"""
-	representations: RepresentationConnection!
+	hasRepresentations: RepresentationConnection!
 	"""
 	@emoji 🧰 Kinds that own a representation referencing this file.
 	"""
-	types: TypeConnection!
+	referencesTypes: TypeConnection!
 	"""
 	@emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
 	"""
-	designs: DesignConnection!
+	referencesDesigns: DesignConnection!
 	"""
-	@emoji 🧰 Kinds that reference this file (same as [`File::types`] — kinds do not nest).
+	@emoji 🧰 Kinds that reference this file (kinds do not nest; same as direct).
 	"""
-	allTypes: TypeConnection!
+	referencesTypesTransitive: TypeConnection!
 	"""
 	@emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
 	"""
-	allDesigns: DesignConnection!
+	referencesDesignsTransitive: DesignConnection!
 }
 
 type FileBackbone implements Backbone {
@@ -2783,9 +2823,15 @@ type Folder implements Entity & FileSystemNode {
 	family(id: ID!): Family
 	families: FamilyConnection!
 	type(id: ID!): Type
-	types: TypeConnection!
+	"""
+	@emoji 🧰 Kinds in this folder.
+	"""
+	hasTypes: TypeConnection!
 	design(id: ID!): Design
-	designs: DesignConnection!
+	"""
+	@emoji 🏘 Designs in this folder.
+	"""
+	hasDesigns: DesignConnection!
 }
 
 type FolderConnection {
@@ -2988,13 +3034,47 @@ type Kit implements Entity & Node & FileSystemNode & StrongEntity {
 	updatedAt: Timestamp
 	version: String
 	design(id: ID!): Design
-	designs: DesignConnection!
+	"""
+	@emoji 🏘 Designs contained in this kit.
+	"""
+	hasDesigns: DesignConnection!
 	type(id: ID!): Type
-	types: TypeConnection!
-	files: FileConnection!
-	folders: FolderConnection!
-	families: FamilyConnection!
-	typologies: TypologyConnection!
+	"""
+	@emoji 🧰 Kinds contained in this kit.
+	"""
+	hasTypes: TypeConnection!
+	"""
+	@emoji 📄 Files contained in this kit.
+	"""
+	hasFiles: FileConnection!
+	"""
+	@emoji 📁 Folders contained in this kit.
+	"""
+	hasFolders: FolderConnection!
+	"""
+	@emoji 👪 Families contained in this kit.
+	"""
+	hasFamilies: FamilyConnection!
+	"""
+	@emoji 🏛️ Typologies contained in this kit.
+	"""
+	hasTypologies: TypologyConnection!
+	"""
+	@emoji 🪢 All pieces across designs, expanding nested design blueprints.
+	"""
+	hasPiecesTransitive: PieceConnection!
+	"""
+	@emoji 🔗 All connections across designs, expanding nested design blueprints.
+	"""
+	hasConnectionsTransitive: ConnectionConnection!
+	"""
+	@emoji 🧰 All kinds referenced across designs, expanding nested design blueprints.
+	"""
+	hasTypesTransitive: TypeConnection!
+	"""
+	@emoji 🏘 All designs referenced across designs, expanding nested design blueprints.
+	"""
+	hasDesignsTransitive: DesignConnection!
 	typology(id: ID!): Typology
 	authors: AuthorConnection!
 	concepts: ConceptConnection!
@@ -3568,6 +3648,38 @@ type Piece implements Entity & Node & FileSystemNode & StrongEntity {
 	owner: Entity
 	owns: EntityConnection
 	blueprint: Entity!
+	"""
+	@emoji 🧰 Kind blueprint when this piece instances a kind.
+	"""
+	isType: Type
+	"""
+	@emoji 🏘 Design blueprint when this piece instances a nested design.
+	"""
+	isDesign: Design
+	"""
+	@emoji 🧰 Kinds reachable transitively through nested design blueprints on this piece.
+	"""
+	isTypesTransitive: TypeConnection!
+	"""
+	@emoji 🏘 Designs reachable transitively through nested design blueprints on this piece.
+	"""
+	isDesignsTransitive: DesignConnection!
+	"""
+	@emoji 🪢 Direct child pieces in the piece tree.
+	"""
+	hasPieces: PieceConnection!
+	"""
+	@emoji 🔗 Direct child connections in the piece tree.
+	"""
+	hasConnections: ConnectionConnection!
+	"""
+	@emoji 🪢 All descendant pieces in the piece tree.
+	"""
+	hasPiecesTransitive: PieceConnection!
+	"""
+	@emoji 🔗 All descendant connections in the piece tree.
+	"""
+	hasConnectionsTransitive: ConnectionConnection!
 	name: String
 	description: String
 	position: Position
@@ -3576,9 +3688,7 @@ type Piece implements Entity & Node & FileSystemNode & StrongEntity {
 	flatPosition: Position!
 	replaceableBlueprints: BlueprintConnection!
 	parentConnection: Connection
-	childConnections: [Connection!]!
 	parentPiece: Piece
-	childPieces: [Piece!]!
 	depth: Int!
 	path: [Piece!]!
 	props: [Prop!]!
@@ -4867,11 +4977,11 @@ type Representation implements Entity & FileSystemNode & StrongEntity {
 	"""
 	@emoji 🧰 Owner kind of this representation.
 	"""
-	types: TypeConnection!
+	hasTypes: TypeConnection!
 	"""
 	@emoji 📄 File linked from this representation.
 	"""
-	files: FileConnection!
+	referencesFiles: FileConnection!
 	"""
 	@emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
 	"""
@@ -4879,7 +4989,7 @@ type Representation implements Entity & FileSystemNode & StrongEntity {
 	"""
 	@emoji 🏘 Designs that reference this representation's owner kind transitively.
 	"""
-	allReferencedByDesigns: DesignConnection!
+	referencedByDesignsTransitive: DesignConnection!
 }
 
 type RepresentationConnection {
@@ -5028,10 +5138,30 @@ type Side implements StrongEntity {
 	hash: String!
 	owner: Entity
 	owns: EntityConnection
-	piece: Piece!
-	port: Port
-	designPiece: Piece
-	connector: Connector
+	"""
+	@emoji 🪢 Piece referenced by this connection end.
+	"""
+	referencesPiece: Piece!
+	"""
+	@emoji 🔘 Port referenced by this connection end.
+	"""
+	referencesPort: Port
+	"""
+	@emoji 🪢 Nested design piece referenced by this connection end.
+	"""
+	referencesDesignPiece: Piece
+	"""
+	@emoji ⚓ Connector referenced by this connection end.
+	"""
+	referencesConnector: Connector
+	"""
+	@emoji 🧰 Kinds reachable over the referenced piece, expanding nested design blueprints.
+	"""
+	referencesTypesTransitive: TypeConnection!
+	"""
+	@emoji ⚓ Connectors on kinds reachable over the referenced piece (transitive).
+	"""
+	referencesConnectorsTransitive: ConnectorConnection!
 }
 
 type SideConnection {
@@ -5346,17 +5476,26 @@ type Type implements Entity & FileSystemNode & StrongEntity {
 	unit: String!
 	created: Timestamp
 	updated: Timestamp
-	connectors: ConnectorConnection!
-	ports: PortConnection!
+	"""
+	@emoji ⚓ Connectors owned directly by this kind.
+	"""
+	hasConnectors: ConnectorConnection!
+	"""
+	@emoji 🔘 Ports owned directly by this kind.
+	"""
+	hasPorts: PortConnection!
 	port(id: ID!): Port
 	connector(id: ID!): Connector
-	representations: RepresentationConnection!
+	"""
+	@emoji 💾 Representations owned directly by this kind.
+	"""
+	hasRepresentations: RepresentationConnection!
 	representation(id: ID!): Representation
 	bestRepresentation(tagIds: [ID!]!): Representation
 	"""
 	@emoji 📄 Files referenced indirectly via representations on this kind.
 	"""
-	files: FileConnection!
+	referencesFiles: FileConnection!
 	"""
 	@emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
 	"""
@@ -5368,7 +5507,7 @@ type Type implements Entity & FileSystemNode & StrongEntity {
 	"""
 	@emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
 	"""
-	allReferencedByDesigns: DesignConnection!
+	referencedByDesignsTransitive: DesignConnection!
 	authors: AuthorConnection!
 	concepts: ConceptConnection!
 	tags: TagConnection!
@@ -5465,8 +5604,14 @@ type Typology implements Entity & FileSystemNode {
 	description: String
 	icon: String
 	folderId: ID
-	types: TypeConnection!
-	designs: DesignConnection!
+	"""
+	@emoji 🧰 Kinds owned by this typology.
+	"""
+	hasTypes: TypeConnection!
+	"""
+	@emoji 🏘 Designs owned by this typology.
+	"""
+	hasDesigns: DesignConnection!
 }
 
 type TypologyConnection {
