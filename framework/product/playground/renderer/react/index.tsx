@@ -1757,6 +1757,7 @@ import {
   PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
   PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
   Puzzle2dPlayShellController,
+  PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID,
   buildPuzzle2dPlayHierarchySections,
   puzzle2dPlayHierarchyGraphIdFromTreeItemId,
   puzzle2dPlayHierarchyTreeHighlightedIds,
@@ -1786,6 +1787,10 @@ import {
   classifyPuzzle2dIconSelectorMode,
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
+  applyBrushPlacementToFixture,
+  puzzle2dActiveRenderer,
+  DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+  DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
   puzzle2dSyncSelectionToAllAuthoringPeers,
   buildPuzzle2dSceneDescriptorFromFixture,
   clonePuzzle2dFixtureV1,
@@ -1812,6 +1817,9 @@ import {
   type Puzzle2dSelectionMethod,
   type Puzzle2dSelectionMode,
   type Puzzle2dSelectionTargets,
+  type Puzzle2dActiveTool,
+  type Puzzle2dBrushPlacePayload,
+  type Puzzle2dBrushCandidatesPayload,
   type Puzzle2dSelectionSnapshot,
   type Puzzle2dPreselectSnapshot,
   type Puzzle2dRedrawModeKind,
@@ -1972,6 +1980,12 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dSelectionTargets: (value: Puzzle2dSelectionTargets | ((prev: Puzzle2dSelectionTargets) => Puzzle2dSelectionTargets)) => void;
   puzzle2dGridSnapEnabled: boolean;
   setPuzzle2dGridSnapEnabled: (value: boolean) => void;
+  puzzle2dActiveTool: Puzzle2dActiveTool;
+  setPuzzle2dActiveTool: (tool: Puzzle2dActiveTool) => void;
+  puzzle2dBrushFlushDistance: number;
+  setPuzzle2dBrushFlushDistance: (distance: number) => void;
+  /** @emoji 🖌️ Pushes brush candidate rows into play window engagement possibles. */
+  notifyBrushCandidates: (payload: Puzzle2dBrushCandidatesPayload) => void;
   /** @emoji 📶 Per-pane LOD select value (`automatic` or a pinned tier). */
   puzzle2dLodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
   setPuzzle2dLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => void;
@@ -2450,8 +2464,10 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     activePaneId,
     patchFixture,
     queueStructuralDelete,
-      puzzle2dGridSnapEnabled,
-      sceneAuthoringEpoch,
+    puzzle2dActiveTool,
+    puzzle2dBrushFlushDistance,
+    puzzle2dGridSnapEnabled,
+    sceneAuthoringEpoch,
     puzzle2dLodModeByPane,
     puzzle2dRedrawPlaying,
     puzzle2dSelectionMethod,
@@ -2522,6 +2538,13 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     },
     [patchFixture],
   );
+  const { notifyBrushCandidates } = usePuzzle2dPlayShell();
+  const onBrushPlace = reactHostPort.useCallback(
+    (payload: Puzzle2dBrushPlacePayload) => {
+      patchFixture((prev) => applyBrushPlacementToFixture(prev, payload));
+    },
+    [patchFixture],
+  );
   return (
     <Puzzle2dPaneChrome paneId={paneId}>
       <Puzzle2dCanvas
@@ -2532,6 +2555,9 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         className="min-h-0 flex-1"
         contextMenu={showBackgroundMenu ? puzzle2dPlayCanvasBackgroundMenu : undefined}
         fixtureDragDrop
+        activeTool={puzzle2dActiveTool}
+        brushFlushDistance={puzzle2dBrushFlushDistance}
+        brushNodeSize={DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX}
         gridSnapEnabled={puzzle2dGridSnapEnabled}
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
         lodZoomThresholds={DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS}
@@ -2541,6 +2567,8 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         onDragEnd={onCanvasDragEnd}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
         onSelect={onSelect}
+        onBrushPlace={onBrushPlace}
+        onBrushCandidates={notifyBrushCandidates}
         sceneAuthoringEpoch={sceneAuthoringEpoch}
         selectionMethod={puzzle2dSelectionMethod}
         selectionMode={puzzle2dSelectionMode}
@@ -3261,6 +3289,8 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const [puzzle2dSelectionMode, setPuzzle2dSelectionMode] = reactHostPort.useState<Puzzle2dSelectionMode>("default");
   const [puzzle2dSelectionTargets, setPuzzle2dSelectionTargets] = reactHostPort.useState<Puzzle2dSelectionTargets>(() => ({ ...PUZZLE_2D_SELECTION_TARGETS_DEFAULT }));
   const [puzzle2dGridSnapEnabled, setPuzzle2dGridSnapEnabled] = reactHostPort.useState(false);
+  const [puzzle2dActiveTool, setPuzzle2dActiveTool] = reactHostPort.useState<Puzzle2dActiveTool>("select");
+  const [puzzle2dBrushFlushDistance, setPuzzle2dBrushFlushDistance] = reactHostPort.useState(DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX);
   const puzzle2dShellController = puzzle2dRuntime.getActiveApp()?.controller as Puzzle2dPlayShellController | undefined;
   const shellGeneration = reactHostPort.useSyncExternalStore(
     (onStoreChange) => puzzle2dRuntime.subscribe(onStoreChange),
@@ -3279,6 +3309,24 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     },
     [puzzle2dRuntime.commandBus],
   );
+  const notifyBrushCandidates = reactHostPort.useCallback(
+    (payload: Puzzle2dBrushCandidatesPayload) => {
+      if (puzzle2dActiveTool !== "brush") {
+        puzzle2dShellController?.setBrushEngagementPossibles([]);
+        return;
+      }
+      const rows =
+        payload.candidates.length > 0
+          ? payload.candidates.map((kindId, index) => ({
+              id: `puzzle2d.brush.${kindId}.${index}`,
+              label: kindId.split(".").pop() ?? kindId,
+            }))
+          : [];
+      puzzle2dShellController?.setBrushEngagementPossibles(rows);
+    },
+    [puzzle2dActiveTool, puzzle2dShellController],
+  );
+
   const setPuzzle2dEffectiveLodForPane = reactHostPort.useCallback(
     (pane: Puzzle2dPlayPaneId, lod: Puzzle2dDrawLodKind) => {
       puzzle2dRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
@@ -3923,6 +3971,11 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       puzzle2dSelectionMode,
       puzzle2dSelectionTargets,
       puzzle2dGridSnapEnabled,
+      puzzle2dActiveTool,
+      setPuzzle2dActiveTool,
+      puzzle2dBrushFlushDistance,
+      setPuzzle2dBrushFlushDistance,
+      notifyBrushCandidates,
       fixture,
       forceLayoutFullIterations,
       forceLayoutGravity,
@@ -3981,6 +4034,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       puzzle2dSelectionMode,
       puzzle2dSelectionTargets,
       puzzle2dGridSnapEnabled,
+      puzzle2dActiveTool,
+      puzzle2dBrushFlushDistance,
+      notifyBrushCandidates,
       puzzle2dLodModeByPane,
       setPuzzle2dLodModeForPane,
       fixture,
@@ -4064,6 +4120,8 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     }
     const bridge: Puzzle2dPlayHostBridge = {
       getToolbarState: () => ({
+        puzzle2dActiveTool,
+        puzzle2dBrushFlushDistance,
         puzzle2dGridSnapEnabled,
         puzzle2dRedrawPlaying,
         puzzle2dSelectionMethod,
@@ -4129,6 +4187,19 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
           case "redrawHandlesOnce":
             h.applyPuzzle2dRedrawHandlesOnce();
             break;
+          case "setActiveTool":
+            setPuzzle2dActiveTool((args as { tool: Puzzle2dActiveTool }).tool);
+            break;
+          case "setBrushFlushDistance":
+            setPuzzle2dBrushFlushDistance((args as { distance: number }).distance);
+            break;
+          case "pickBrushCandidate": {
+            const { index } = args as { index?: number };
+            if (typeof index === "number" && Number.isFinite(index)) {
+              puzzle2dActiveRenderer()?.setBrushCandidateIndex(index);
+            }
+            break;
+          }
           default:
             break;
         }
@@ -4136,7 +4207,19 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     };
     puzzle2dShellController.setHostBridge(bridge);
     return () => puzzle2dShellController.setHostBridge(null);
-  }, [applyPuzzle2dRedrawHandlesOnce, puzzle2dGridSnapEnabled, puzzle2dRedrawPlaying, puzzle2dSelectionMethod, puzzle2dSelectionMode, puzzle2dSelectionTargets, puzzle2dShellController]);
+  }, [
+    applyPuzzle2dRedrawHandlesOnce,
+    puzzle2dActiveTool,
+    puzzle2dBrushFlushDistance,
+    puzzle2dGridSnapEnabled,
+    puzzle2dRedrawPlaying,
+    puzzle2dSelectionMethod,
+    puzzle2dSelectionMode,
+    puzzle2dSelectionTargets,
+    puzzle2dShellController,
+    setPuzzle2dActiveTool,
+    setPuzzle2dBrushFlushDistance,
+  ]);
   // #endregion 🔖ToolbarHostBridge
 
   const shellValueRef = reactHostPort.useRef(shellValue);

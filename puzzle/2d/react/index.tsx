@@ -3508,6 +3508,21 @@ export class Puzzle2dRenderer {
     this.markDirty();
   }
 
+  /** @emoji 🖌️ Selects the active brush candidate by catalog index. */
+  setBrushCandidateIndex(index: number): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    try {
+      this.session.brushSetCandidateIndex(index);
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.scheduleInputInvalidate();
+    } catch (err) {
+      console.error("[DEBUG] brushSetCandidateIndex failed", err);
+    }
+  }
+
   /** @emoji 📐 Brush preview node span in world units. */
   setBrushNodeSize(size: number): void {
     const next = Number.isFinite(size) && size > 0 ? size : DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
@@ -4768,7 +4783,6 @@ export class Puzzle2dRenderer {
             if (payload.nodeKind === "" || payload.sourceHandleId === "" || !Number.isFinite(payload.x) || !Number.isFinite(payload.y)) {
               break;
             }
-            console.log("[DEBUG] brushPlace", payload);
             this.emitter.emit("brushPlace", payload);
             break;
           }
@@ -7382,6 +7396,29 @@ if (puzzle2dVitest) {
       expect(handles).toEqual([{ angle: 1.2, handleKind: "semio.kit.handle.a", id: "n1:h0", radius: 3 }]);
     });
 
+    it("applyBrushPlacementToFixture appends node and parent edge", () => {
+      const fixture: Puzzle2dFixtureV1 = {
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [{ id: "a", x: 0, y: 0, radius: 20, handles: [{ id: "a:h0", angle: 0, handleKind: "port" }] }],
+        edges: [],
+      };
+      const next = applyBrushPlacementToFixture(fixture, {
+        handles: [{ angle: Math.PI, handleKind: "port" }],
+        nodeKind: "brush.kind",
+        shape: "circle",
+        sourceHandleId: "a:h0",
+        targetHandleIndex: 0,
+        x: 80,
+        y: 0,
+        radius: 20,
+      });
+      expect(next.nodes).toHaveLength(2);
+      expect(next.edges).toHaveLength(1);
+      expect(next.edges[0]?.source).toBe("a:h0");
+      expect(next.edges[0]?.target).toMatch(/:h0$/);
+    });
+
     it("puzzle2dNodeKindHandlesFromKitConnectors keeps two connectors with the same handleKind at different CAD points", () => {
       const handleKind = "semio.kit.handle.core-rect-bottom";
       const handles = puzzle2dNodeKindHandlesFromKitConnectors([
@@ -8589,6 +8626,16 @@ export interface Puzzle2dCanvasProps {
   onLinkTargetRing?: (payload: Puzzle2dLinkTargetRingPayload) => void;
   /** @emoji 🔗 Host-driven link preview for cross-surface gestures (cleared when `source` is empty). */
   linkSession?: Puzzle2dLinkSessionSnapshot | null;
+  /** @emoji 🖌️ Active viewport tool forwarded to the WASM host. */
+  activeTool?: Puzzle2dActiveTool;
+  /** @emoji 📐 Brush slot offset along handle outward normal (world units). */
+  brushFlushDistance?: number;
+  /** @emoji 📐 Brush preview node span in world units. */
+  brushNodeSize?: number;
+  /** @emoji 🖌️ Paint-style brush commit when the cursor leaves a slot ({@link Puzzle2dEventMap.brushPlace}). */
+  onBrushPlace?: (payload: Puzzle2dBrushPlacePayload) => void;
+  /** @emoji 🖌️ Brush candidate node kinds while hovering a slot. */
+  onBrushCandidates?: (payload: Puzzle2dBrushCandidatesPayload) => void;
   onSelect?: (snapshot: Puzzle2dSelectionSnapshot) => void;
   /** @emoji ✅ Controlled committed selection (`onSelect` should update this). */
   selection?: Puzzle2dSelectionSnapshot | readonly string[];
@@ -9411,6 +9458,11 @@ export function Puzzle2dCanvas({
   onParentEdgeChange,
   onParentNodeChange,
   onProximityConnect,
+  activeTool,
+  brushFlushDistance,
+  brushNodeSize,
+  onBrushPlace,
+  onBrushCandidates,
   onReady,
   onSelect,
   selection,
@@ -9658,6 +9710,24 @@ export function Puzzle2dCanvas({
       }
     };
   }, [contextRenderer, onConnect, onIndirectConnect, onProximityConnect]);
+
+  reactHostPort.useEffect(() => {
+    if (!contextRenderer) {
+      return undefined;
+    }
+    const unsubs: Array<() => void> = [];
+    if (onBrushPlace) {
+      unsubs.push(contextRenderer.on("brushPlace", onBrushPlace));
+    }
+    if (onBrushCandidates) {
+      unsubs.push(contextRenderer.on("brushCandidates", onBrushCandidates));
+    }
+    return () => {
+      for (const unsub of unsubs) {
+        unsub();
+      }
+    };
+  }, [contextRenderer, onBrushCandidates, onBrushPlace]);
 
   reactHostPort.useEffect(() => {
     if (!contextRenderer) {
@@ -10005,6 +10075,30 @@ export function Puzzle2dCanvas({
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.setActiveTool(activeTool ?? "select");
+  }, [activeTool]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.setBrushFlushDistance(brushFlushDistance ?? DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX);
+  }, [brushFlushDistance]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.setBrushNodeSize(brushNodeSize ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX);
+  }, [brushNodeSize]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const renderer = rendererRef.current;
     const container = containerRef.current;
     if (!renderer || !container) {
       return;
@@ -10102,6 +10196,11 @@ export function Puzzle2dDrawLodReporter({ onLodChange }: { onLodChange?: (lod: P
     onLodChange?.(lod);
   }, [lod, onLodChange]);
   return null;
+}
+
+/** @emoji 🎯 Returns the focused {@link Puzzle2dRenderer} when a canvas is mounted (play/toolbar bridges). */
+export function puzzle2dActiveRenderer(): Puzzle2dRenderer | null {
+  return activePuzzle2dRenderer;
 }
 
 /** 🎯 Access the imperative puzzle 2d renderer from within Puzzle2dCanvas descendants (DOM or secondary host tree). */

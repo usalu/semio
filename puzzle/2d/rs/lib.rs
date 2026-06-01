@@ -4143,6 +4143,14 @@ mod board_host {
             self.brush_rebuild_preview();
         }
 
+        pub fn brush_set_candidate_index(&mut self, index: usize) {
+            if self.brush_candidate_kinds.is_empty() {
+                return;
+            }
+            self.brush_candidate_index = index % self.brush_candidate_kinds.len();
+            self.brush_rebuild_preview();
+        }
+
         fn append_brush_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod) {
             let Some(ref preview) = self.brush_preview else {
                 return;
@@ -7778,6 +7786,11 @@ impl BoardSession {
     #[wasm_bindgen(js_name = brushCycleCandidate)]
     pub fn brush_cycle_candidate_wasm(&mut self, forward: bool) {
         self.state.borrow_mut().host.brush_cycle_candidate(forward);
+    }
+
+    #[wasm_bindgen(js_name = brushSetCandidateIndex)]
+    pub fn brush_set_candidate_index_wasm(&mut self, index: u32) {
+        self.state.borrow_mut().host.brush_set_candidate_index(index as usize);
     }
 
     #[wasm_bindgen(js_name = setLinkSessionJson)]

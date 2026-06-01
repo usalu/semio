@@ -65,6 +65,7 @@ import {
   type FixtureObjectV1,
   type FixtureV1,
   type KindCatalogBundle,
+  enrichKindCatalogBundleDoorCapsules,
   type KindCompatEntry,
   type ObjectKind,
   type ObjectKindVortexTemplate,
@@ -114,7 +115,7 @@ function parseKindCompatibility(meta: Record<string, unknown> | undefined): read
 function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatalogBundle | undefined {
   const kc = meta?.kindCatalogs;
   if (!kc || typeof kc !== "object") return undefined;
-  return kc as KindCatalogBundle;
+  return enrichKindCatalogBundleDoorCapsules(kc as KindCatalogBundle);
 }
 
 /** @emoji 📋 Kind catalog rows as unique select options (last row wins per `id`; sorted by label). */

@@ -42,7 +42,10 @@ import {
 	puzzle2dLodAutomaticSelectLabel,
 	isPuzzle2dDrawLodKind,
 	parsePuzzle2dFixtureV1,
+	DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+	DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
 	type KindCatalogBundle,
+	type Puzzle2dActiveTool,
 	type Puzzle2dDrawLodKind,
 	type Puzzle2dFixtureNodeV1,
 	type Puzzle2dFixtureV1,
@@ -70,6 +73,16 @@ export function puzzle2dPlayLodTierMenuLabel(tier: Puzzle2dDrawLodKind): string 
 }
 
 export const PUZZLE_2D_PLAY_HIERARCHY_TAB_ID = "puzzle-2d-play-hierarchy";
+
+/** @emoji 🖌️ Window engagement possible id for the brush tool. */
+export const PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID = "puzzle2d.tool.brush";
+
+/** @emoji 🖱️ Window engagement possible id for the select tool. */
+export const PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle2d.tool.select";
+
+const BRUSH_FLUSH_DISTANCE_SLIDER_MIN = 0;
+const BRUSH_FLUSH_DISTANCE_SLIDER_MAX = 160;
+const BRUSH_FLUSH_DISTANCE_SLIDER_STEP = 4;
 
 const PUZZLE_2D_PLAY_WINDOW_SPECS: { readonly pane: Puzzle2dPlayPaneId; readonly label: string; readonly bodyKey: string }[] = [
 	{ pane: "2d-overview", label: "Overview", bodyKey: PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW },
@@ -346,6 +359,8 @@ function puzzle2dPlayTargetLabel(kind: Puzzle2dPlayTargetKind): string {
 
 /** @emoji 🧰 Snapshot read by {@link buildPuzzle2dPlayToolbarTools} (host-owned play state). */
 export interface Puzzle2dPlayToolbarState {
+	readonly puzzle2dActiveTool: Puzzle2dActiveTool;
+	readonly puzzle2dBrushFlushDistance: number;
 	readonly puzzle2dSelectionMethod: Puzzle2dSelectionMethod;
 	readonly puzzle2dSelectionMode: Puzzle2dSelectionMode;
 	readonly puzzle2dSelectionTargets: Puzzle2dSelectionTargets;
@@ -478,6 +493,9 @@ export class Puzzle2dPlayShellController extends Controller {
 	private lastEngagementRepeatByPane: Record<Puzzle2dPlayPaneId, string>;
 	private hostBridge: Puzzle2dPlayHostBridge | null = null;
 	private readonly hostChromeNotify: () => void;
+	private activeTool: Puzzle2dActiveTool = "select";
+	private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+	private brushEngagementPossibles: { readonly id: string; readonly label: string }[] = [];
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, hostChromeNotify: () => void) {
 		super(PUZZLE_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -506,24 +524,60 @@ export class Puzzle2dPlayShellController extends Controller {
 	}
 
 	private windowEngagementForPane(pane: Puzzle2dPlayPaneId): WindowEngagement {
+		const toolPossibles =
+			this.activeTool === "brush" && this.brushEngagementPossibles.length > 0
+				? this.brushEngagementPossibles.map((row) => ({
+						id: row.id,
+						label: row.label,
+						command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: row.id }),
+					}))
+				: [
+						{ id: PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID }) },
+						{ id: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID }) },
+						{ id: "puzzle2d.select.rectangle", label: "Rectangle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.rectangle" }) },
+						{ id: "puzzle2d.select.lasso", label: "Lasso", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.lasso" }) },
+						{ id: "puzzle2d.create.circle", label: "Circle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.circle" }) },
+						{ id: "puzzle2d.create.rectangle", label: "RectangleShape", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.rectangle" }) },
+						{ id: "puzzle2d.selection.clear", label: "Clear", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.selection.clear" }) },
+					];
 		return {
 			input: {
 				id: "engagement-input",
 				value: this.engagementInputByPane[pane],
-				placeholder: "Command",
+				placeholder: this.activeTool === "brush" ? "Brush" : "Command",
 				onChange: puzzle2dPlayCmd("engagementInput", { pane }),
 				onSubmit: puzzle2dPlayCmd("engagementSubmit", { pane }),
 				onRepeatLast: puzzle2dPlayCmd("engagementRepeatLast", { pane }),
 				onAbort: puzzle2dPlayCmd("engagementAbort", { pane }),
 			},
-			possibleEngagements: [
-				{ id: "puzzle2d.select.rectangle", label: "Rectangle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.rectangle" }) },
-				{ id: "puzzle2d.select.lasso", label: "Lasso", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.lasso" }) },
-				{ id: "puzzle2d.create.circle", label: "Circle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.circle" }) },
-				{ id: "puzzle2d.create.rectangle", label: "RectangleShape", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.rectangle" }) },
-				{ id: "puzzle2d.selection.clear", label: "Clear", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.selection.clear" }) },
-			],
+			possibleEngagements: toolPossibles,
 		};
+	}
+
+	private brushMeasures(): readonly WindowMeasure[] {
+		return [
+			{
+				kind: "slider",
+				id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-flush-distance`,
+				label: `Flush ${this.brushFlushDistance.toFixed(0)}`,
+				value: this.brushFlushDistance,
+				min: BRUSH_FLUSH_DISTANCE_SLIDER_MIN,
+				max: BRUSH_FLUSH_DISTANCE_SLIDER_MAX,
+				step: BRUSH_FLUSH_DISTANCE_SLIDER_STEP,
+				onChange: puzzle2dPlayCmd("setBrushFlushDistance"),
+			},
+		];
+	}
+
+	/** @emoji 🖌️ Mirrors brush candidate rows into window engagement possibles. */
+	setBrushEngagementPossibles(rows: readonly { readonly id: string; readonly label: string }[]): void {
+		const next = rows.map((row) => ({ id: row.id, label: row.label }));
+		if (next.length === this.brushEngagementPossibles.length && next.every((row, i) => row.id === this.brushEngagementPossibles[i]?.id)) {
+			return;
+		}
+		this.brushEngagementPossibles = next;
+		this.rebuildShellMode();
+		this.emit();
 	}
 
 	private syncWindowEngagementForPane(pane: Puzzle2dPlayPaneId): void {
@@ -570,6 +624,24 @@ export class Puzzle2dPlayShellController extends Controller {
 			runHost("appendRectangle", {});
 			return remember("puzzle2d.create.rectangle");
 		}
+		if (possibleIdOrText === PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID || token === "brush") {
+			runHost("setActiveTool", { tool: "brush" });
+			return remember(PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID);
+		}
+		if (possibleIdOrText === PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID || token === "select") {
+			runHost("setActiveTool", { tool: "select" });
+			return remember(PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID);
+		}
+		if (possibleIdOrText.startsWith("puzzle2d.brush.")) {
+			const match = possibleIdOrText.match(/^puzzle2d\.brush\.(.+)\.(\d+)$/);
+			if (match) {
+				const index = Number(match[2]);
+				if (Number.isFinite(index)) {
+					runHost("pickBrushCandidate", { index });
+				}
+			}
+			return remember(possibleIdOrText);
+		}
 		void pane;
 		return false;
 	}
@@ -598,6 +670,10 @@ export class Puzzle2dPlayShellController extends Controller {
 		this.mainMode.tools = buildPuzzle2dPlayToolbarTools(this.hostBridge.getToolbarState(), this.id);
 	}
 
+	private windowMeasuresForPane(paneId: Puzzle2dPlayPaneId): readonly WindowMeasure[] {
+		return [this.lodMeasureForPane(paneId), ...this.brushMeasures()];
+	}
+
 	private lodMeasureForPane(paneId: Puzzle2dPlayPaneId): WindowMeasure {
 		return {
 			kind: "select",
@@ -615,7 +691,7 @@ export class Puzzle2dPlayShellController extends Controller {
 	private rebuildShellMode(): void {
 		this.mainMode.windowKinds = PUZZLE_2D_PLAY_WINDOW_SPECS.map(
 			(row) =>
-				new WindowKindRuntime(row.pane, row.label, row.bodyKey, undefined, [this.lodMeasureForPane(row.pane)], this.windowEngagementForPane(row.pane)),
+				new WindowKindRuntime(row.pane, row.label, row.bodyKey, undefined, this.windowMeasuresForPane(row.pane), this.windowEngagementForPane(row.pane)),
 		);
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 2D play window "${windowKind.id}"`);
@@ -649,8 +725,29 @@ export class Puzzle2dPlayShellController extends Controller {
 			case "appendCircle":
 			case "appendRectangle":
 			case "toggleRedrawPlaying":
-			case "redrawHandlesOnce": {
+			case "redrawHandlesOnce":
+			case "addBrushNode":
+			case "pickBrushCandidate": {
 				this.hostBridge?.runHostCommand(command, args);
+				break;
+			}
+			case "setActiveTool": {
+				const tool = (args as { tool?: Puzzle2dActiveTool }).tool;
+				if (tool === "select" || tool === "brush") {
+					this.activeTool = tool;
+					if (tool === "select") {
+						this.brushEngagementPossibles = [];
+					}
+				}
+				this.hostBridge?.runHostCommand(command, args);
+				break;
+			}
+			case "setBrushFlushDistance": {
+				const distance = Number((args as { value?: number }).value);
+				if (Number.isFinite(distance)) {
+					this.brushFlushDistance = Math.max(BRUSH_FLUSH_DISTANCE_SLIDER_MIN, Math.min(BRUSH_FLUSH_DISTANCE_SLIDER_MAX, distance));
+					this.hostBridge?.runHostCommand("setBrushFlushDistance", { distance: this.brushFlushDistance });
+				}
 				break;
 			}
 			case "engagementInput": {
@@ -1009,6 +1106,13 @@ if (import.meta.vitest) {
 			const app = runtime.getActiveApp();
 			expect(app?.panelTabs).toEqual([]);
 			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
+		});
+
+		it("brush flush-distance measure is registered on play windows", () => {
+			const runtime = buildPuzzle2dPlayRuntime();
+			const controller = runtime.getActiveApp()?.controller as Puzzle2dPlayShellController;
+			const overview = controller.mainMode.windowKinds.find((wk) => wk.id === "2d-overview");
+			expect(overview?.measures?.some((m) => m.kind === "slider" && m.id.includes("brush-flush-distance"))).toBe(true);
 		});
 
 		it("setEffectiveLodForPane bumps chrome generation only", () => {

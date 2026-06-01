@@ -328,7 +328,55 @@ export function puzzle3dObjectKindVorticesFromKitConnectors(
       radius: defaultRadius,
     });
   }
-  return out;
+  return puzzle3dComplementDoorCapsuleVortexTemplates(out);
+}
+
+const DOOR_CAPSULE_EAST_VORTEX_KIND = "door capsule east";
+const DOOR_CAPSULE_WEST_VORTEX_KIND = "door capsule west";
+
+/** @emoji ↔️ Mirrors a local CAD vector across the object YZ plane (negates X). */
+export function puzzle3dMirrorCadVec3X(v: Vec3): Vec3 {
+  return [-v[0], v[1], v[2]];
+}
+
+/** @emoji 🚪 Adds `door capsule west` from `door capsule east` when the kit only models the east door connector. */
+export function puzzle3dComplementDoorCapsuleVortexTemplates(vortices: readonly ObjectKindVortexTemplate[]): ObjectKindVortexTemplate[] {
+  const hasEast = vortices.some((v) => v.vortexKind === DOOR_CAPSULE_EAST_VORTEX_KIND);
+  const hasWest = vortices.some((v) => v.vortexKind === DOOR_CAPSULE_WEST_VORTEX_KIND);
+  if (!hasEast || hasWest) {
+    return [...vortices];
+  }
+  const east = vortices.find((v) => v.vortexKind === DOOR_CAPSULE_EAST_VORTEX_KIND);
+  if (!east) {
+    return [...vortices];
+  }
+  const west: ObjectKindVortexTemplate = {
+    vortexKind: DOOR_CAPSULE_WEST_VORTEX_KIND,
+    position: puzzle3dMirrorCadVec3X(east.position),
+    ...(east.direction ? { direction: puzzle3dMirrorCadVec3X(east.direction) } : {}),
+    ...(east.radius !== undefined ? { radius: east.radius } : {}),
+  };
+  return [...vortices, west];
+}
+
+/** @emoji 🚪 Ensures palette object kinds expose both capsule door vortices for same-side brush pairing. */
+export function enrichKindCatalogBundleDoorCapsules(bundle: KindCatalogBundle | undefined): KindCatalogBundle | undefined {
+  if (!bundle?.objects?.length) {
+    return bundle;
+  }
+  let touched = false;
+  const objects = bundle.objects.map((kind) => {
+    if (!kind.vortices?.length) {
+      return kind;
+    }
+    const vortices = puzzle3dComplementDoorCapsuleVortexTemplates(kind.vortices);
+    if (vortices.length === kind.vortices.length) {
+      return kind;
+    }
+    touched = true;
+    return { ...kind, vortices };
+  });
+  return touched ? { ...bundle, objects } : bundle;
 }
 
 export interface ObjectKind {
@@ -9016,6 +9064,37 @@ if (import.meta.vitest) {
       expect(store.getRevision()).toBe(2);
     });
   });
+  describe("puzzle3dComplementDoorCapsuleVortexTemplates", () => {
+    it("adds door capsule west mirrored from east for brush on door tambour west", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "J",
+            meshUrl: "/meshes/capsule_J.glb",
+            vortices: [{ vortexKind: "door capsule east", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
+          },
+        ],
+        vortices: [{ id: "door capsule east" }, { id: "door capsule west" }, { id: "door tambour west" }],
+      };
+      const enriched = enrichKindCatalogBundleDoorCapsules(catalogs)!;
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour west" };
+      const compat: readonly KindCompatEntry[] = [
+        { bidirectional: true, specificity: "vortex", source: "door capsule west", target: "door tambour west" },
+      ];
+      const list = brushCompatibleCandidates(target, enriched, compat);
+      expect(list.some((entry) => entry.objectKindId === "J")).toBe(true);
+      const j = enriched.objects.find((k) => k.id === "J");
+      expect(j?.vortices?.some((v) => v.vortexKind === "door capsule west")).toBe(true);
+    });
+    it("does not duplicate west when already present", () => {
+      const vortices = puzzle3dComplementDoorCapsuleVortexTemplates([
+        { vortexKind: "door capsule east", position: [-1, 0, 0] },
+        { vortexKind: "door capsule west", position: [1, 0, 0] },
+      ]);
+      expect(vortices).toHaveLength(2);
+    });
+  });
+
   describe("puzzle3dObjectKindVorticesFromKitConnectors", () => {
     it("keeps two connectors with the same vortexKind at different CAD positions", () => {
       const vortexKinds: VortexKind[] = [{ id: "core rectangular bottom", name: "core rectangular bottom", color: "#000" }];
@@ -9032,6 +9111,20 @@ if (import.meta.vitest) {
       expect(vortices[0]?.vortexKind).toBe("core rectangular bottom");
       expect(vortices[0]?.position).toEqual([-7.5, -7.7, 7.5]);
       expect(vortices[1]?.position).toEqual([-18.6, -7.7, 7.5]);
+    });
+    it("complements door capsule west after kit connector extraction", () => {
+      const vortices = puzzle3dObjectKindVorticesFromKitConnectors(
+        [
+          {
+            point: { x: -1.3, y: -1.25, z: 0 },
+            direction: { x: -1, y: 0, z: 0 },
+            port: { handleKind: "door capsule east" },
+          },
+        ],
+        (hk) => hk,
+      );
+      expect(vortices.map((v) => v.vortexKind)).toEqual(["door capsule east", "door capsule west"]);
+      expect(vortices[1]?.position).toEqual([1.3, -1.25, 0]);
     });
   });
 
