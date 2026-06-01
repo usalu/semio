@@ -22,9 +22,9 @@ export default createPlaygroundPlayViteConfig({
 		{ find: /^three$/, replacement: threeModule },
 		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 	],
-	resolveDedupe: ["react", "react-dom", "three"],
+	resolveDedupe: ["react", "react-dom", "three", "@puzzle/2d/react"],
 	optimizeDeps: {
-		include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "three", "@react-three/fiber", "@react-three/drei", "lucide-react"],
+		include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "three", "@react-three/fiber", "@react-three/drei", "lucide-react", "@puzzle/2d/react"],
 		esbuildOptions: { target: "esnext" },
 	},
 	// Rebuild wasm writes to `../rs/pkg` — do not ignore pkg or play keeps stale edge rendering after `bun ./script.ts wasm`.

@@ -436,6 +436,8 @@ export function splitColumnCrop(
 /** @emoji 🖼 One slide: participants disposed with emphasis, position, and style. */
 export interface Arrangement {
 	readonly id: string;
+	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	readonly name?: string;
 	readonly dispositions: readonly Disposition[];
 }
 //#endregion 🔖Arrangement
@@ -444,6 +446,8 @@ export interface Arrangement {
 /** @emoji 💭 Idea developed across one or more slides with shared participants. */
 export interface Thought {
 	readonly id: string;
+	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	readonly name?: string;
 	readonly participants: readonly Participant[];
 	readonly arrangements: readonly Arrangement[];
 	readonly transition?: Transition;
@@ -454,16 +458,22 @@ export interface Thought {
 /** @emoji 📚 Horizontal chapter: a sequence of thoughts. */
 export interface Sequence {
 	readonly id: string;
+	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
+	readonly name?: string;
 	readonly thoughts: readonly Thought[];
 }
 //#endregion 🔖Sequence
 
 //#region 🔖Presentation
+/** @emoji 🌐 Main language of a deck; drives localized URL bookmark query keys. */
+export type PresentationLanguageKind = "de" | "en";
+
 /** @emoji 📽 Root deck: ordered sequences of thoughts. */
 export interface Presentation {
 	readonly id: string;
 	readonly name: string;
 	readonly sequences: readonly Sequence[];
+	readonly language?: PresentationLanguageKind;
 	readonly width?: number;
 	readonly height?: number;
 }
@@ -574,19 +584,50 @@ export function countArrangements(presentation: Presentation): number {
 	);
 }
 
-/** @emoji 🔖 Bookmark query keys appended after the reveal.js hash path (`#/0/2?sequence=main&thought=intro&slide=goal`). */
+/** @emoji 🔖 English bookmark query keys after the reveal.js hash path. */
 export const PRESENTATION_SEQUENCE_QUERY_PARAM = "sequence";
 export const PRESENTATION_THOUGHT_QUERY_PARAM = "thought";
 export const PRESENTATION_SLIDE_QUERY_PARAM = "slide";
 
-/** @emoji 🔗 Bookmark ids carried in the URL hash query; navigation uses only the hash path. */
-export interface PresentationSlideBookmark {
-	readonly sequenceId: string;
-	readonly thoughtId: string;
-	readonly arrangementId: string;
+/** @emoji 🔖 Localized bookmark query keys for sequence, thought, and slide. */
+export interface PresentationSlideBookmarkParamKeys {
+	readonly sequence: string;
+	readonly thought: string;
+	readonly slide: string;
 }
 
-/** @emoji 🔗 One reveal.js slide location with its arrangement id (bookmark params use {@link sequenceId}, {@link thoughtId}, {@link arrangementId}). */
+/** @emoji 🌐 Resolves a deck's main language (`en` when unset). */
+export function presentationLanguage(presentation: Presentation): PresentationLanguageKind {
+	return presentation.language ?? "en";
+}
+
+/** @emoji 🌐 Bookmark query param names for a presentation language (`sequenz`, `gedanke`, `folie` in German). */
+export function presentationSlideBookmarkParamKeys(
+	language: PresentationLanguageKind = "en",
+): PresentationSlideBookmarkParamKeys {
+	if (language === "de") {
+		return { sequence: "sequenz", thought: "gedanke", slide: "folie" };
+	}
+	return {
+		sequence: PRESENTATION_SEQUENCE_QUERY_PARAM,
+		thought: PRESENTATION_THOUGHT_QUERY_PARAM,
+		slide: PRESENTATION_SLIDE_QUERY_PARAM,
+	};
+}
+
+/** @emoji 🔗 Bookmark ids carried in the URL hash query; navigation uses only the hash path. */
+export interface PresentationSlideBookmark {
+	readonly sequence: string;
+	readonly thought: string;
+	readonly slide: string;
+}
+
+/** @emoji 🔖 Resolves the URL bookmark label for a sequence, thought, or arrangement. */
+export function presentationEntityBookmarkName(entity: { readonly id: string; readonly name?: string }): string {
+	return entity.name ?? entity.id;
+}
+
+/** @emoji 🔗 One reveal.js slide location with localized bookmark labels for the URL. */
 export interface PresentationSlideRef extends PresentationSlideBookmark {
 	readonly h: number;
 	readonly v: number;
@@ -602,9 +643,9 @@ export function collectPresentationSlides(presentation: Presentation): readonly 
 				slides.push({
 					h,
 					v,
-					sequenceId: sequence.id,
-					thoughtId: thought.id,
-					arrangementId: arrangement.id,
+					sequence: presentationEntityBookmarkName(sequence),
+					thought: presentationEntityBookmarkName(thought),
+					slide: presentationEntityBookmarkName(arrangement),
 				});
 				v += 1;
 			}
@@ -650,16 +691,18 @@ export function parsePresentationSlideHash(hash: string): { readonly h: number; 
 	return { h, v };
 }
 
-/** @emoji 🔗 Formats reveal.js hash with sequence, thought, and slide bookmark params after the path. */
+/** @emoji 🔗 Formats reveal.js hash with localized sequence, thought, and slide bookmark params after the path. */
 export function formatPresentationUrlHash(
 	indices: { readonly h: number; readonly v: number },
 	bookmark: PresentationSlideBookmark,
+	language: PresentationLanguageKind = "en",
 ): string {
 	const path = formatPresentationSlideHash(indices);
+	const keys = presentationSlideBookmarkParamKeys(language);
 	const params = new URLSearchParams([
-		[PRESENTATION_SEQUENCE_QUERY_PARAM, bookmark.sequenceId],
-		[PRESENTATION_THOUGHT_QUERY_PARAM, bookmark.thoughtId],
-		[PRESENTATION_SLIDE_QUERY_PARAM, bookmark.arrangementId],
+		[keys.sequence, bookmark.sequence],
+		[keys.thought, bookmark.thought],
+		[keys.slide, bookmark.slide],
 	]);
 	const query = params.toString();
 	if (path === "/") {
@@ -674,6 +717,7 @@ export function formatPresentationUrlHash(
 export interface IntroSpec {
 	readonly id?: string;
 	readonly name?: string;
+	readonly language?: PresentationLanguageKind;
 	readonly title: {
 		readonly full: readonly string[];
 		readonly short: string;
@@ -714,9 +758,32 @@ const INTRO_EMBODIMENT_INSTITUTIONS_STEP1 = "step1";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP2 = "step2";
 const INTRO_EMBODIMENT_INSTITUTIONS_STEP3 = "step3";
 
+const INTRO_SEQUENCE_BOOKMARK_DE = "haupt";
+const INTRO_THOUGHT_BOOKMARK_DE = "einleitung";
+const INTRO_ARRANGEMENT_BOOKMARK_DE: Record<string, string> = {
+	title: "titel",
+	description: "beschreibung",
+	goal: "ziel",
+	authors: "autoren",
+	"affiliations-1": "zugehoerigkeiten-1",
+	"affiliations-2": "zugehoerigkeiten-2",
+	"affiliations-3": "zugehoerigkeiten-3",
+};
+
+function introArrangementBookmarkName(
+	arrangementId: string,
+	language: PresentationLanguageKind | undefined,
+): string | undefined {
+	if (language !== "de") {
+		return undefined;
+	}
+	return INTRO_ARRANGEMENT_BOOKMARK_DE[arrangementId];
+}
+
 /** @emoji 🎬 Builds a seven-slide intro; each arrangement is that slide's target content for reveal.js auto-animate. */
 export function intro(spec: IntroSpec): Presentation {
 	const thoughtId = "intro";
+	const language = spec.language;
 	const participants: Participant[] = [
 		{
 			id: INTRO_PARTICIPANT_TITLE,
@@ -848,68 +915,66 @@ export function intro(spec: IntroSpec): Presentation {
 		muted(INTRO_PARTICIPANT_GOAL),
 	];
 
+	const introArrangement = (
+		arrangementId: string,
+		dispositions: Arrangement["dispositions"],
+	): Arrangement => ({
+		id: arrangementId,
+		...(introArrangementBookmarkName(arrangementId, language)
+			? { name: introArrangementBookmarkName(arrangementId, language) }
+			: {}),
+		dispositions,
+	});
+
 	const thought: Thought = {
 		id: thoughtId,
+		...(language === "de" ? { name: INTRO_THOUGHT_BOOKMARK_DE } : {}),
 		participants,
 		transition: { kind: "morph" },
 		arrangements: [
-			{
-				id: "title",
-				dispositions: [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)],
-			},
-			{
-				id: "description",
-				dispositions: [
-					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					active(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_FULL),
-				],
-			},
-			{
-				id: "goal",
-				dispositions: [
-					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
-					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
-					active(INTRO_PARTICIPANT_GOAL),
-				],
-			},
-			{
-				id: "authors",
-				dispositions: [
-					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
-				],
-			},
-			{
-				id: "affiliations-1",
-				dispositions: [
-					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1),
-					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
-				],
-			},
-			{
-				id: "affiliations-2",
-				dispositions: [
-					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2),
-					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
-				],
-			},
-			{
-				id: "affiliations-3",
-				dispositions: [
-					...introMutedAboveAuthors,
-					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3),
-					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
-				],
-			},
+			introArrangement("title", [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)]),
+			introArrangement("description", [
+				muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
+				active(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_FULL),
+			]),
+			introArrangement("goal", [
+				muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
+				muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
+				active(INTRO_PARTICIPANT_GOAL),
+			]),
+			introArrangement("authors", [
+				...introMutedAboveAuthors,
+				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
+			]),
+			introArrangement("affiliations-1", [
+				...introMutedAboveAuthors,
+				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1),
+				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
+			]),
+			introArrangement("affiliations-2", [
+				...introMutedAboveAuthors,
+				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2),
+				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
+			]),
+			introArrangement("affiliations-3", [
+				...introMutedAboveAuthors,
+				active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3),
+				active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
+			]),
 		],
 	};
 
 	return {
 		id: spec.id ?? "presentation",
 		name: spec.name ?? spec.title.short,
-		sequences: [{ id: "main", thoughts: [thought] }],
+		...(language ? { language } : {}),
+		sequences: [
+			{
+				id: "main",
+				...(language === "de" ? { name: INTRO_SEQUENCE_BOOKMARK_DE } : {}),
+				thoughts: [thought],
+			},
+		],
 	};
 }
 //#endregion 🔖Intro
@@ -1159,6 +1224,42 @@ if (import.meta.vitest) {
 				expect(uni?.suffixEmphasis).toBe("active");
 				expect(step3.embodiment.entries.find((e) => e.mark === "a")?.lineEmphasis).toBe("muted");
 			}
+		});
+		it("assigns German bookmark names when language is de", () => {
+			const deck = intro({
+				language: "de",
+				title: { full: ["A"], short: "Short" },
+				description: { full: ["D"], short: "D short" },
+				goal: ["G"],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
+						[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
+					],
+				},
+			});
+			const sequence = deck.sequences[0]!;
+			const thought = sequence.thoughts[0]!;
+			expect(sequence.name).toBe("haupt");
+			expect(thought.name).toBe("einleitung");
+			expect(thought.arrangements.map((arrangement) => arrangement.name)).toEqual([
+				"titel",
+				"beschreibung",
+				"ziel",
+				"autoren",
+				"zugehoerigkeiten-1",
+				"zugehoerigkeiten-2",
+				"zugehoerigkeiten-3",
+			]);
+			expect(collectPresentationSlides(deck)[2]).toEqual({
+				h: 0,
+				v: 2,
+				sequence: "haupt",
+				thought: "einleitung",
+				slide: "ziel",
+			});
 		});
 	});
 
@@ -1496,11 +1597,11 @@ if (import.meta.vitest) {
 				],
 			};
 			expect(collectPresentationSlides(deck)).toEqual([
-				{ h: 0, v: 0, sequenceId: "seq-a", thoughtId: "thought-a", arrangementId: "a1" },
-				{ h: 0, v: 1, sequenceId: "seq-a", thoughtId: "thought-a", arrangementId: "a2" },
-				{ h: 1, v: 0, sequenceId: "seq-b", thoughtId: "thought-b", arrangementId: "b1" },
+				{ h: 0, v: 0, sequence: "seq-a", thought: "thought-a", slide: "a1" },
+				{ h: 0, v: 1, sequence: "seq-a", thought: "thought-a", slide: "a2" },
+				{ h: 1, v: 0, sequence: "seq-b", thought: "thought-b", slide: "b1" },
 			]);
-			expect(presentationSlideAt(deck, { h: 1, v: 0 })?.arrangementId).toBe("b1");
+			expect(presentationSlideAt(deck, { h: 1, v: 0 })?.slide).toBe("b1");
 		});
 	});
 
@@ -1509,25 +1610,29 @@ if (import.meta.vitest) {
 			expect(parsePresentationSlideHash("#/")).toEqual({ h: 0, v: 0 });
 			expect(parsePresentationSlideHash("#/2/3")).toEqual({ h: 2, v: 3 });
 			expect(parsePresentationSlideHash("#/0/2?sequence=main&thought=intro&slide=goal")).toEqual({ h: 0, v: 2 });
-			expect(formatPresentationSlideHash({ h: 0, v: 0 })).toBe("/");
 			expect(formatPresentationSlideHash({ h: 2, v: 3 })).toBe("/2/3");
 		});
 
 		it("formats sequence, thought, and slide bookmark params after the hash path", () => {
-			expect(
-				formatPresentationUrlHash({ h: 0, v: 0 }, {
-					sequenceId: "main",
-					thoughtId: "intro",
-					arrangementId: "title",
-				}),
-			).toBe("#/?sequence=main&thought=intro&slide=title");
-			expect(
-				formatPresentationUrlHash({ h: 0, v: 2 }, {
-					sequenceId: "main",
-					thoughtId: "intro",
-					arrangementId: "goal",
-				}),
-			).toBe("#/0/2?sequence=main&thought=intro&slide=goal");
+			const bookmark = { sequence: "main", thought: "intro", slide: "title" };
+			expect(formatPresentationUrlHash({ h: 0, v: 0 }, bookmark)).toBe(
+				"#/?sequence=main&thought=intro&slide=title",
+			);
+			expect(formatPresentationUrlHash({ h: 0, v: 2 }, { ...bookmark, slide: "goal" })).toBe(
+				"#/0/2?sequence=main&thought=intro&slide=goal",
+			);
+		});
+
+		it("uses German bookmark query keys and intro bookmark names for de presentations", () => {
+			const bookmark = { sequence: "haupt", thought: "einleitung", slide: "ziel" };
+			expect(formatPresentationUrlHash({ h: 0, v: 2 }, bookmark, "de")).toBe(
+				"#/0/2?sequenz=haupt&gedanke=einleitung&folie=ziel",
+			);
+			expect(presentationSlideBookmarkParamKeys("de")).toEqual({
+				sequence: "sequenz",
+				thought: "gedanke",
+				slide: "folie",
+			});
 		});
 	});
 

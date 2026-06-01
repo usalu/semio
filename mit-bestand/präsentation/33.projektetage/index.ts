@@ -5,6 +5,7 @@
 // #region 🔌Adapters
 import {
 	countArrangements,
+	collectPresentationSlides,
 	intro,
 	splitFigureGrid,
 	type DispositionPosition,
@@ -143,6 +144,7 @@ const CATALOGUE_COLUMN_LABELS: readonly SplitMorphTarget[] = CATALOGUE_FOCUS_COL
 const introDeck = intro({
 	id: "projektetage",
 	name: "33. Projektetage",
+	language: "de",
 	title: {
 		full: ["Entwerfen mit Bestand"],
 		short: "Entwerfen mit Bestand",
@@ -195,6 +197,7 @@ const introDeck = intro({
 
 const mediaThought: Thought = {
 	id: "media",
+	name: "medien",
 	transition: { kind: "morph" },
 	participants: [
 		{
@@ -233,6 +236,7 @@ const mediaThought: Thought = {
 	arrangements: [
 		{
 			id: "catalogue",
+			name: "katalog",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -253,6 +257,7 @@ const mediaThought: Thought = {
 		},
 		{
 			id: "catalogue-focus",
+			name: "katalog-fokus",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -267,6 +272,7 @@ const mediaThought: Thought = {
 		},
 		{
 			id: "catalogue-labels",
+			name: "katalog-beschriftungen",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -279,6 +285,7 @@ const mediaThought: Thought = {
 		},
 		{
 			id: "media-suite",
+			name: "medien-suite",
 			dispositions: [
 				{
 					participantId: "catalogue",
@@ -304,7 +311,7 @@ const deck: Presentation = {
 	...introDeck,
 	sequences: [
 		{
-			id: "main",
+			...introDeck.sequences[0]!,
 			thoughts: [...introDeck.sequences[0]!.thoughts, mediaThought],
 		},
 	],
@@ -334,6 +341,26 @@ if (import.meta.vitest) {
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
 			expect(countArrangements(deck)).toBe(11);
+			expect(deck.language).toBe("de");
+		});
+
+		it("uses German bookmark names on intro and media slides", () => {
+			const introSlide = collectPresentationSlides(deck)[0];
+			expect(introSlide).toEqual({
+				h: 0,
+				v: 0,
+				sequence: "haupt",
+				thought: "einleitung",
+				slide: "titel",
+			});
+			const mediaSlide = collectPresentationSlides(deck)[7];
+			expect(mediaSlide).toEqual({
+				h: 0,
+				v: 7,
+				sequence: "haupt",
+				thought: "medien",
+				slide: "katalog",
+			});
 		});
 
 		it("conceals catalogue tiles under one figure for auto-animate into focus", () => {

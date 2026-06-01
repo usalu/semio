@@ -2209,6 +2209,23 @@ export class Puzzle2dSceneWire extends Puzzle2dSceneObject {
     return this;
   }
 }
+
+/** @emoji 🧪 Kind-based scene object guards (Vite may load duplicate module copies where `instanceof` fails). */
+function isPuzzle2dSceneNodeObject(obj: Puzzle2dSceneObject | undefined | null): obj is Puzzle2dSceneNode {
+  return obj?.kind === "node";
+}
+
+function isPuzzle2dSceneHandleObject(obj: Puzzle2dSceneObject | undefined | null): obj is Puzzle2dSceneHandle {
+  return obj?.kind === "handle";
+}
+
+function isPuzzle2dSceneEdgeObject(obj: Puzzle2dSceneObject | undefined | null): obj is Puzzle2dSceneEdge {
+  return obj?.kind === "edge";
+}
+
+function isPuzzle2dSceneWireObject(obj: Puzzle2dSceneObject | undefined | null): obj is Puzzle2dSceneWire {
+  return obj?.kind === "wire";
+}
 //#endregion 🔖Objects
 
 type Puzzle2dNodeObject = Puzzle2dSceneNode;
@@ -2234,7 +2251,7 @@ export class Puzzle2dScene {
   }
 
   add(object: Puzzle2dSceneObject): this {
-    if (object instanceof Puzzle2dSceneNode) {
+    if (isPuzzle2dSceneNodeObject(object)) {
       const prior = this.nodes.get(object.id);
       if (prior && prior !== object) {
         this.remove(prior);
@@ -2249,7 +2266,7 @@ export class Puzzle2dScene {
       return this;
     }
 
-    if (object instanceof Puzzle2dSceneHandle) {
+    if (isPuzzle2dSceneHandleObject(object)) {
       if (!this.nodes.has(object.node.id)) {
         this.add(object.node);
       }
@@ -2261,7 +2278,7 @@ export class Puzzle2dScene {
       return this;
     }
 
-    if (object instanceof Puzzle2dSceneWire) {
+    if (isPuzzle2dSceneWireObject(object)) {
       if (!this.nodes.has(object.source.node.id)) {
         this.add(object.source.node);
       }
@@ -2305,7 +2322,7 @@ export class Puzzle2dScene {
   }
 
   remove(object: Puzzle2dSceneObject): this {
-    if (object instanceof Puzzle2dSceneNode) {
+    if (isPuzzle2dSceneNodeObject(object)) {
       for (const edge of Array.from(this.edges.values())) {
         if (edge.source.node === object || edge.target.node === object) {
           this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
@@ -2329,7 +2346,7 @@ export class Puzzle2dScene {
       return this;
     }
 
-    if (object instanceof Puzzle2dSceneHandle) {
+    if (isPuzzle2dSceneHandleObject(object)) {
       for (const edge of Array.from(this.edges.values())) {
         if (edge.source === object || edge.target === object) {
           this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
@@ -2349,7 +2366,7 @@ export class Puzzle2dScene {
       return this;
     }
 
-    if (object instanceof Puzzle2dSceneWire) {
+    if (isPuzzle2dSceneWireObject(object)) {
       this.renderer?.emitSceneDeleteEvent("wireDestroy", { id: object.id });
       this.wires.delete(object.id);
       object.parent = null;
@@ -4437,7 +4454,7 @@ export class Puzzle2dRenderer {
             }
             const sourceObj = this.scene.getObjectById(sourceId);
             const targetObj = this.scene.getObjectById(targetId);
-            if (!(sourceObj instanceof Puzzle2dSceneHandle) || !(targetObj instanceof Puzzle2dSceneHandle)) {
+            if (!isPuzzle2dSceneHandleObject(sourceObj) || !isPuzzle2dSceneHandleObject(targetObj)) {
               break;
             }
             this.wasmHostAuthoredEdgeIds.add(id);
@@ -7515,7 +7532,7 @@ function mountEdge(renderer: Puzzle2dRenderer, edgeHost: Puzzle2dHostEdge): void
   }
   const source = renderer.scene.getObjectById(edgeHost.props.source);
   const target = renderer.scene.getObjectById(edgeHost.props.target);
-  if (!(source instanceof Puzzle2dSceneHandle) || !(target instanceof Puzzle2dSceneHandle)) {
+  if (!isPuzzle2dSceneHandleObject(source) || !isPuzzle2dSceneHandleObject(target)) {
     return;
   }
   renderer.batch(() => {
@@ -7534,14 +7551,14 @@ function mountWire(renderer: Puzzle2dRenderer, wireHost: Puzzle2dHostWire): void
     return;
   }
   const source = renderer.scene.getObjectById(wireHost.props.source);
-  if (!(source instanceof Puzzle2dSceneHandle)) {
+  if (!isPuzzle2dSceneHandleObject(source)) {
     return;
   }
   const tid = (wireHost.props.target ?? "").trim();
   let target: Puzzle2dSceneHandle | null = null;
   if (tid !== "") {
     const t = renderer.scene.getObjectById(tid);
-    if (!(t instanceof Puzzle2dSceneHandle)) {
+    if (!isPuzzle2dSceneHandleObject(t)) {
       return;
     }
     target = t;
@@ -7821,7 +7838,7 @@ const puzzle2dSceneHost = Reconciler({
       e.props = nextProps as Puzzle2dEdgeProps;
       const from = renderer.scene.getObjectById(e.props.source);
       const to = renderer.scene.getObjectById(e.props.target);
-      if (!(from instanceof Puzzle2dSceneHandle) || !(to instanceof Puzzle2dSceneHandle)) {
+      if (!isPuzzle2dSceneHandleObject(from) || !isPuzzle2dSceneHandleObject(to)) {
         return;
       }
       renderer.batch(() => {
@@ -7839,14 +7856,14 @@ const puzzle2dSceneHost = Reconciler({
       const w = instance as Puzzle2dHostWire;
       w.props = nextProps as Puzzle2dWireProps;
       const from = renderer.scene.getObjectById(w.props.source);
-      if (!(from instanceof Puzzle2dSceneHandle)) {
+      if (!isPuzzle2dSceneHandleObject(from)) {
         return;
       }
       const tid = (w.props.target ?? "").trim();
       let to: Puzzle2dSceneHandle | null = null;
       if (tid !== "") {
         const t = renderer.scene.getObjectById(tid);
-        if (!(t instanceof Puzzle2dSceneHandle)) {
+        if (!isPuzzle2dSceneHandleObject(t)) {
           return;
         }
         to = t;
@@ -7907,10 +7924,11 @@ export function createPuzzle2dHostMount(renderer: Puzzle2dRenderer): Puzzle2dHos
   );
 }
 
-/** @emoji 🔄 Schedules host work and ties post-commit to {@link Puzzle2dRenderer.invalidate}. */
-export function updatePuzzle2dHostMount(root: Puzzle2dHostMount, element: ReactElement | null, parent: null): void {
+/** @emoji 🔄 Schedules host work; optional `onCommitted` runs after the host flush (before {@link Puzzle2dRenderer.invalidate}). */
+export function updatePuzzle2dHostMount(root: Puzzle2dHostMount, element: ReactElement | null, parent: null, onCommitted?: () => void): void {
   puzzle2dSceneHost.updateContainer(element, root, parent, () => {
-    const renderer = root.containerInfo;
+    const renderer = root.containerInfo as Puzzle2dRenderer;
+    onCommitted?.();
     renderer.invalidate();
   });
 }
@@ -8371,7 +8389,7 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRende
     }
     const sourceH = renderer.scene.getObjectById(link.source);
     const targetH = renderer.scene.getObjectById(link.target);
-    if (!(sourceH instanceof Puzzle2dSceneHandle) || !(targetH instanceof Puzzle2dSceneHandle)) {
+    if (!isPuzzle2dSceneHandleObject(sourceH) || !isPuzzle2dSceneHandleObject(targetH)) {
       continue;
     }
     extra.push({
@@ -8530,7 +8548,7 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
   renderer.batch(() => {
     for (const nodeDescriptor of descriptor.nodes) {
       let existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
-      if (existingNode instanceof Puzzle2dSceneNode && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
+      if (isPuzzle2dSceneNodeObject(existingNode) && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
         renderer.runWithoutSceneDeleteEvents(() => {
           renderer.scene.remove(existingNode);
         });
@@ -8538,8 +8556,8 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
       }
       const resolvedExisting = renderer.scene.getObjectById(nodeDescriptor.id);
       const { handles: _handles, ...nodeProps } = nodeDescriptor;
-      const node = resolvedExisting instanceof Puzzle2dSceneNode ? resolvedExisting : newPuzzle2dNodeFromProps(nodeProps);
-      if (!(resolvedExisting instanceof Puzzle2dSceneNode)) {
+      const node = isPuzzle2dSceneNodeObject(resolvedExisting) ? resolvedExisting : newPuzzle2dNodeFromProps(nodeProps);
+      if (!isPuzzle2dSceneNodeObject(resolvedExisting)) {
         renderer.scene.add(node);
       }
       applyNodeProps(renderer, node, nodeProps);
@@ -8547,13 +8565,13 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
 
     for (const handleDescriptor of descriptor.handles) {
       const parentNode = renderer.scene.getObjectById(handleDescriptor.nodeId);
-      if (!(parentNode instanceof Puzzle2dSceneNode)) {
+      if (!isPuzzle2dSceneNodeObject(parentNode)) {
         continue;
       }
       const existingHandle = renderer.scene.getObjectById(handleDescriptor.id);
       const { nodeId: _nodeId, ...handleProps } = handleDescriptor;
-      const handle = existingHandle instanceof Puzzle2dSceneHandle ? existingHandle : new Puzzle2dSceneHandle({ ...handleProps, node: parentNode });
-      if (!(existingHandle instanceof Puzzle2dSceneHandle)) {
+      const handle = isPuzzle2dSceneHandleObject(existingHandle) ? existingHandle : new Puzzle2dSceneHandle({ ...handleProps, node: parentNode });
+      if (!isPuzzle2dSceneHandleObject(existingHandle)) {
         renderer.scene.add(handle);
       }
       applyHandleProps(handle, handleProps, parentNode);
@@ -8562,12 +8580,12 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
     for (const edgeDescriptor of descriptor.edges) {
       const sourceHandle = renderer.scene.getObjectById(edgeDescriptor.source);
       const targetHandle = renderer.scene.getObjectById(edgeDescriptor.target);
-      if (!(sourceHandle instanceof Puzzle2dSceneHandle) || !(targetHandle instanceof Puzzle2dSceneHandle)) {
+      if (!isPuzzle2dSceneHandleObject(sourceHandle) || !isPuzzle2dSceneHandleObject(targetHandle)) {
         continue;
       }
       const existingEdge = renderer.scene.getObjectById(edgeDescriptor.id);
-      const edge = existingEdge instanceof Puzzle2dSceneEdge ? existingEdge : new Puzzle2dSceneEdge({ ...edgeDescriptor, source: sourceHandle, target: targetHandle });
-      if (!(existingEdge instanceof Puzzle2dSceneEdge)) {
+      const edge = isPuzzle2dSceneEdgeObject(existingEdge) ? existingEdge : new Puzzle2dSceneEdge({ ...edgeDescriptor, source: sourceHandle, target: targetHandle });
+      if (!isPuzzle2dSceneEdgeObject(existingEdge)) {
         renderer.scene.add(edge);
       }
       applyEdgeProps(edge, edgeDescriptor, sourceHandle, targetHandle);
@@ -8575,14 +8593,14 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
 
     for (const wireDescriptor of descriptor.wires) {
       const sourceHandle = renderer.scene.getObjectById(wireDescriptor.source);
-      if (!(sourceHandle instanceof Puzzle2dSceneHandle)) {
+      if (!isPuzzle2dSceneHandleObject(sourceHandle)) {
         continue;
       }
       const tid = (wireDescriptor.target ?? "").trim();
       let targetHandle: Puzzle2dSceneHandle | null = null;
       if (tid !== "") {
         const t = renderer.scene.getObjectById(tid);
-        if (!(t instanceof Puzzle2dSceneHandle)) {
+        if (!isPuzzle2dSceneHandleObject(t)) {
           continue;
         }
         targetHandle = t;
@@ -8591,7 +8609,7 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
       const ex = wireDescriptor.endX;
       const ey = wireDescriptor.endY;
       const wire =
-        existingWire instanceof Puzzle2dSceneWire
+        isPuzzle2dSceneWireObject(existingWire)
           ? existingWire
           : new Puzzle2dSceneWire({
               id: wireDescriptor.id,
@@ -8604,7 +8622,7 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
               endX: typeof ex === "number" && Number.isFinite(ex) ? ex : null,
               endY: typeof ey === "number" && Number.isFinite(ey) ? ey : null,
             });
-      if (!(existingWire instanceof Puzzle2dSceneWire)) {
+      if (!isPuzzle2dSceneWireObject(existingWire)) {
         renderer.scene.add(wire);
       }
       applyWireProps(wire, wireDescriptor, sourceHandle, targetHandle);
@@ -9918,8 +9936,8 @@ if (puzzle2dReactVitest) {
           null,
         );
       });
-      expect(renderer.scene.getObjectById("host-a-node")).toBeInstanceOf(Puzzle2dSceneNode);
-      expect(renderer.scene.getObjectById("host-a-handle")).toBeInstanceOf(Puzzle2dSceneHandle);
+      expect(renderer.scene.getObjectById("host-a-node")?.kind).toBe("node");
+      expect(renderer.scene.getObjectById("host-a-handle")?.kind).toBe("handle");
       unmountPuzzle2dHostMount(hostMount);
       renderer.dispose();
     });
@@ -9993,8 +10011,8 @@ if (puzzle2dReactVitest) {
 
       const canvas = container.querySelector("canvas");
       const renderer = (canvas as HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer }).__puzzle2dRenderer;
-      expect(renderer?.scene.getObjectById("direct")).toBeInstanceOf(Puzzle2dSceneNode);
-      expect(renderer?.scene.getObjectById("direct.h")).toBeInstanceOf(Puzzle2dSceneHandle);
+      expect(renderer?.scene.getObjectById("direct")?.kind).toBe("node");
+      expect(renderer?.scene.getObjectById("direct.h")?.kind).toBe("handle");
 
       await act(async () => {
         root.unmount();
@@ -10027,8 +10045,8 @@ if (puzzle2dReactVitest) {
 
       const canvas = container.querySelector("canvas");
       const renderer = (canvas as HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer }).__puzzle2dRenderer;
-      expect(renderer?.scene.getObjectById("wrapped")).toBeInstanceOf(Puzzle2dSceneNode);
-      expect(renderer?.scene.getObjectById("wrapped.h")).toBeInstanceOf(Puzzle2dSceneHandle);
+      expect(renderer?.scene.getObjectById("wrapped")?.kind).toBe("node");
+      expect(renderer?.scene.getObjectById("wrapped.h")?.kind).toBe("handle");
 
       await act(async () => {
         root.unmount();
@@ -10055,7 +10073,7 @@ if (puzzle2dReactVitest) {
 
       const secondNode = renderer.scene.getObjectById("a");
       expect(secondNode).toBe(firstNode);
-      expect(secondNode).toBeInstanceOf(Puzzle2dSceneNode);
+      expect(secondNode?.kind).toBe("node");
       expect((secondNode as Puzzle2dSceneNode).x).toBe(40);
       expect((secondNode as Puzzle2dSceneNode).radius).toBe(30);
 
@@ -10153,7 +10171,7 @@ if (puzzle2dReactVitest) {
       });
       expect(readyRenderer).not.toBeNull();
       const createdRenderer = requireRenderer(readyRenderer);
-      expect(createdRenderer.scene.getObjectById("edge-1")).toBeInstanceOf(Puzzle2dSceneEdge);
+      expect(createdRenderer.scene.getObjectById("edge-1")?.kind).toBe("edge");
       const canvasEl = container.querySelector<HTMLCanvasElement>('[data-testid="puzzle2d-canvas"]');
       expect(canvasEl?.className).toContain("outline-none");
       expect(canvasEl?.style.outline).toBe("none");

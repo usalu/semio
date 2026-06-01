@@ -3,10 +3,12 @@
   "emoji": "🔗",
   "status": "closed",
   "description": "Presentation Slide Url Sync",
-  "summary": "Extended presentation URL bookmarks to include sequence, thought, and slide after the hash path.\n\nURL format: `#/0/1?sequence=main\u0026thought=intro\u0026slide=description`. Added `PresentationSlideBookmark`, `PRESENTATION_SEQUENCE_QUERY_PARAM`, `PRESENTATION_THOUGHT_QUERY_PARAM`, and `formatPresentationUrlHash()`. Navigation still reads only the hash path; all three query params are bookmark-only. All 32 core and 17 renderer tests pass.",
+  "summary": "German presentations now use German bookmark values in the URL, not just German query keys.\n\n- Added optional `name` on Sequence, Thought, and Arrangement (URL-only; never rendered).\n- `presentationEntityBookmarkName()` resolves `name ?? id` for URL values.\n- `intro({ language: \"de\" })` assigns German bookmark names (haupt, einleitung, titel, beschreibung, ziel, autoren, zugehoerigkeiten-*).\n- Projektetage media thought/slides use German names (medien, katalog, katalog-fokus, katalog-beschriftungen, medien-suite).\n\nGerman URL example: `#/?sequenz=haupt\u0026gedanke=einleitung\u0026folie=titel`. All core (34) and renderer (18) tests pass.",
   "goal": "🎯framework🎯presentation",
   "sessions": [
     "⚪d5b5c0521c67470d9c7f431214fcdc0e",
-    "⚪36801a881b2744129bed97ee455db11d"
+    "⚪36801a881b2744129bed97ee455db11d",
+    "⚪fe11dd6b2dbf43ebbf67cff2af3f97c6",
+    "⚪528bb134decd4c959aa17d6416db83c9"
   ]
 }

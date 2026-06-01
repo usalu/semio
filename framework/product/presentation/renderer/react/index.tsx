@@ -59,7 +59,10 @@ import {
 	formatPresentationUrlHash,
 	intro,
 	parsePresentationSlideHash,
+	presentationLanguage,
+	presentationEntityBookmarkName,
 	presentationSlideAt,
+	presentationSlideBookmarkParamKeys,
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
@@ -112,7 +115,10 @@ export {
 	PRESENTATION_SEQUENCE_QUERY_PARAM,
 	PRESENTATION_SLIDE_QUERY_PARAM,
 	PRESENTATION_THOUGHT_QUERY_PARAM,
+	presentationLanguage,
+	presentationEntityBookmarkName,
 	presentationSlideAt,
+	presentationSlideBookmarkParamKeys,
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
@@ -121,7 +127,13 @@ export {
 	splitFigureGrid,
 	tileMorphId,
 } from "@framework/presentation/core";
-export type { PresentationSlideBookmark, PresentationSlideRef, TextMorphRoot } from "@framework/presentation/core";
+export type {
+	PresentationLanguageKind,
+	PresentationSlideBookmark,
+	PresentationSlideBookmarkParamKeys,
+	PresentationSlideRef,
+	TextMorphRoot,
+} from "@framework/presentation/core";
 export { Expertise } from "@ui/react";
 
 //#region 🔖MountOptions
@@ -136,7 +148,7 @@ export interface PresentationMountOptions {
 	readonly height?: number;
 }
 
-/** @emoji 🔗 Writes reveal.js hash with `?sequence=&thought=&slide=` after the path; bookmark params are ignored for navigation. */
+/** @emoji 🔗 Writes reveal.js hash with localized bookmark params after the path; bookmark params are ignored for navigation. */
 export function syncPresentationSlideUrl(
 	presentation: Presentation,
 	indices: { readonly h: number; readonly v: number },
@@ -150,7 +162,7 @@ export function syncPresentationSlideUrl(
 	}
 	const url = new URL(window.location.href);
 	url.search = "";
-	url.hash = formatPresentationUrlHash(indices, slide);
+	url.hash = formatPresentationUrlHash(indices, slide, presentationLanguage(presentation));
 	history.replaceState(null, "", url);
 }
 
@@ -1759,6 +1771,27 @@ if (import.meta.vitest) {
 					[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
 				],
 			},
+		});
+
+		it("uses German bookmark labels for de intro decks", () => {
+			const deck = intro({
+				language: "de",
+				title: { full: ["A"], short: "Short" },
+				description: { full: ["D"], short: "D short" },
+				goal: ["G"],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
+						[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
+					],
+				},
+			});
+			history.replaceState(null, "", "/deck");
+			syncPresentationSlideUrl(deck, { h: 0, v: 2 });
+			expect(new URL(window.location.href).hash).toBe("#/0/2?sequenz=haupt&gedanke=einleitung&folie=ziel");
+			history.replaceState(null, "", "/deck");
 		});
 
 		it("writes sequence, thought, and slide bookmark params after the hash path", () => {
