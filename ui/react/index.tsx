@@ -623,7 +623,7 @@ function applyDocumentBodyBaseColors(): void {
 }
 
 /**
- * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state and resets tooltip expertise.
+ * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state, browser default input, and tooltip expertise.
  */
 export function applyElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): () => void {
   setExpertiseProvider(() => expertise);
@@ -645,6 +645,7 @@ export function applyElementsSurfaceChrome({ theme, device, expertise, compact =
     };
     applyTheme();
     bindings.listen(mq, "change", applyTheme);
+    installElementsSurfaceBrowserDefaultSuppression(bindings);
     cleanups.push(() => {
       bindings.dispose();
       root.classList.remove("dark");
@@ -11374,6 +11375,23 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   return Boolean(t.closest('[data-slot="engagement"] input, [data-slot="engagement"] textarea'));
 }
 
+/** @emoji 🚫 Capture-phase listeners: native context menu off everywhere; Tab focus traversal off outside {@link isUiTypingTarget}. */
+export function installElementsSurfaceBrowserDefaultSuppression(bindings: ReturnType<typeof createDOMEventBinding>): void {
+  if (typeof document === "undefined") return;
+  const onContextMenu = (event: Event): void => {
+    event.preventDefault();
+  };
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== "Tab") return;
+    if (isUiTypingTarget(event.target)) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && isUiTypingTarget(active)) return;
+    event.preventDefault();
+  };
+  bindings.listen(document, "contextmenu", onContextMenu as EventListener, true);
+  bindings.listen(document, "keydown", onKeyDown as EventListener, true);
+}
+
 /** @emoji ⌨️ True when the event target is already the active window engagement command field. */
 export function isEngagementCommandTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
@@ -16560,6 +16578,31 @@ if (import.meta.vitest) {
         expect(typedField.tabIndex).toBe(0);
         expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
       });
+    });
+
+    it("installElementsSurfaceBrowserDefaultSuppression blocks native context menu and Tab outside typing targets", () => {
+      const bindings = createDOMEventBinding();
+      installElementsSurfaceBrowserDefaultSuppression(bindings);
+      const panel = document.createElement("div");
+      document.body.appendChild(panel);
+      const contextEvent = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+      const contextPrevent = vi.spyOn(contextEvent, "preventDefault");
+      panel.dispatchEvent(contextEvent);
+      expect(contextPrevent).toHaveBeenCalled();
+      const tabEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+      const tabPrevent = vi.spyOn(tabEvent, "preventDefault");
+      panel.dispatchEvent(tabEvent);
+      expect(tabPrevent).toHaveBeenCalled();
+      const input = document.createElement("input");
+      document.body.appendChild(input);
+      input.focus();
+      const tabInField = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+      const tabInFieldPrevent = vi.spyOn(tabInField, "preventDefault");
+      input.dispatchEvent(tabInField);
+      expect(tabInFieldPrevent).not.toHaveBeenCalled();
+      bindings.dispose();
+      panel.remove();
+      input.remove();
     });
 
     it("isUiTypingTarget treats text inputs, collapsed fields, and command inputs as typing targets", () => {

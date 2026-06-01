@@ -1,6 +1,6 @@
 {
   "title": "Fix Interactive Disposition Resize",
-  "status": "closed",
+  "status": "open",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
   "summary": "Capsule kinds were nested under typology-default while the Capsule typology stayed empty. Fixed rs hydration to honor typology.id refs and register typologies before nesting entities; fixed js Typology hasTypes/hasDesigns parsing; flattened MetabolismKitTypes/Designs from typologies in assets; added sketchpad DTO VFS typology tree; reconciled metabolism fixtures (capsule-representation kinds → typology-capsule); fixed architect.harness; added vitest coverage.",
   "goal": "🎯r2602🎯runningsketchpad",
@@ -14,6 +14,7 @@
     "⚪b55c9f31c82b4d58b7ee8fb46bf094f5",
     "⚪e3920b7fb57f428aaf9564614be81c7e",
     "⚪bfe680f9b6f54d7f9f939d16309937bf",
-    "⚪01b598528f814e35b9e77c9045fe0576"
+    "⚪01b598528f814e35b9e77c9045fe0576",
+    "⚪cd7c4b1d508e4fe49afcd35a4c042bcd"
   ]
 }

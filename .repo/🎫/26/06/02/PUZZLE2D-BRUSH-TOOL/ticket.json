@@ -1,0 +1,15 @@
+{
+  "title": "Puzzle2d Brush Tool",
+  "emoji": "🖌️",
+  "status": "open",
+  "description": "Implement paint-style Brush tool for puzzle2d: offset slot hitboxes, compatible node preview, auto-flush on leave, Tab cycle candidates, flush-distance window measure.",
+  "goal": "🎯puzzle",
+  "plan": {
+    "client": "cursor",
+    "id": "a806828f",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/puzzle2d_brush_tool_a806828f.plan.md"
+  },
+  "sessions": [
+    "⚪bc0785fc8c7a4d08878cd726f260caab"
+  ]
+}
