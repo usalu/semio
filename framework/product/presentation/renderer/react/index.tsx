@@ -192,6 +192,14 @@ export function syncPresentationSlideSizeVars(deckEl: HTMLElement | null, deck: 
 	const size = deck.getComputedSlideSize();
 	deckEl.style.setProperty("--presentation-slide-width", `${size.width}px`);
 	deckEl.style.setProperty("--presentation-slide-height", `${size.height}px`);
+	syncPresentationAutoAnimateDurationVar(deckEl, deck);
+}
+
+/** @emoji ⏱️ Syncs reveal auto-animate duration for morph ghost/target opacity fades. */
+export function syncPresentationAutoAnimateDurationVar(deckEl: HTMLElement, deck: Reveal.Api | null): void {
+	const durationSeconds =
+		typeof deck?.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
+	deckEl.style.setProperty("--presentation-auto-animate-duration", `${durationSeconds}s`);
 }
 
 /** @emoji 🌓 Align reveal `has-dark-background` with `html.dark` from system chrome. */
@@ -319,6 +327,46 @@ export function patchAutoAnimateUniformScale(css: string): string {
 		}
 		return `scale(${Math.max(sx, sy)})`;
 	});
+}
+
+/** @emoji 👻 Opacity overrides so morph ghosts fade 1→0 and morph targets 0→1 during reveal `running`. */
+export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): string {
+	const duration = `${durationSeconds}s`;
+	return `
+.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-source[data-auto-animate-target],
+.reveal .slides section.present[data-auto-animate="pending"] .presentation-affiliation-morph-source[data-auto-animate-target] {
+	opacity: 1 !important;
+	visibility: visible !important;
+	transition: none !important;
+}
+.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target],
+.reveal .slides section.present[data-auto-animate="running"] .presentation-affiliation-morph-source[data-auto-animate-target] {
+	opacity: 0 !important;
+	visibility: visible !important;
+	transition: opacity ${duration} ease !important;
+	transition-property: opacity !important;
+}
+.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-into[data-auto-animate-target] {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	transition: none !important;
+}
+.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-into[data-auto-animate-target] {
+	opacity: 1 !important;
+	visibility: visible !important;
+	transition: opacity ${duration} ease !important;
+	transition-property: opacity !important;
+}
+`;
+}
+
+/** @emoji 🩹 Patches reveal auto-animate sheet: uniform scale, morph ghost opacity 1→0. */
+export function patchPresentationAutoAnimateStyleSheet(
+	sheet: { innerHTML: string },
+	durationSeconds: number,
+): void {
+	sheet.innerHTML =
+		patchAutoAnimateUniformScale(sheet.innerHTML) + presentationMorphGhostAutoAnimateCss(durationSeconds);
 }
 //#endregion 🔖ArrangementSettled
 
@@ -647,6 +695,7 @@ function AffiliationsMorphView({
 									data-id={`${anchorId}--${entry.mark}`}
 									className={[
 										morphTextClass(anchorId, "m-0 w-full text-center"),
+										"presentation-morph-source",
 										"presentation-affiliation-morph-source",
 									].join(" ")}
 									aria-hidden
@@ -2976,7 +3025,9 @@ export const PresentationDeck: FC<{
 		const onAutoAnimate = (event: Event): void => {
 			const sheet = (event as Event & { sheet?: { innerHTML: string } }).sheet;
 			if (sheet && typeof sheet.innerHTML === "string") {
-				sheet.innerHTML = patchAutoAnimateUniformScale(sheet.innerHTML);
+				const durationSeconds =
+					typeof deck.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
+				patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds);
 			}
 			scheduleFinalizeAutoAnimateRest();
 		};
@@ -3662,6 +3713,18 @@ if (import.meta.vitest) {
 			expect(patchAutoAnimateUniformScale("transform: translate(1px, 2px) scale(1.5, 2) !important;")).toBe(
 				"transform: translate(1px, 2px) scale(2) !important;",
 			);
+		});
+
+		it("appends morph ghost opacity 1→0 and morph-into 0→1 rules to the auto-animate sheet", () => {
+			const sheet = { innerHTML: "transform: scale(1, 2);" };
+			patchPresentationAutoAnimateStyleSheet(sheet, 0.8);
+			expect(sheet.innerHTML).toContain("scale(2)");
+			expect(sheet.innerHTML).toContain(
+				'[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target]',
+			);
+			expect(sheet.innerHTML).toContain("opacity: 0 !important");
+			expect(sheet.innerHTML).toContain("opacity: 1 !important");
+			expect(sheet.innerHTML).toContain("transition: opacity 0.8s ease !important");
 		});
 
 		it("uses stretch-fill at rest and larger cover vars only while auto-animating", () => {

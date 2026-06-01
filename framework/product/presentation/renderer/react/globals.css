@@ -615,18 +615,34 @@
 	visibility: visible;
 }
 
-.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-source,
-.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-source {
+.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-source {
 	opacity: 1 !important;
 	visibility: visible !important;
 	pointer-events: auto;
+	transition: none !important;
 }
 
-.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-into,
-.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-into {
+.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-source {
+	opacity: 0 !important;
+	visibility: visible !important;
+	pointer-events: none;
+	transition: opacity var(--presentation-auto-animate-duration, 1s) ease !important;
+	transition-property: opacity !important;
+}
+
+.reveal .slides section.present[data-auto-animate="pending"] .presentation-morph-into {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;
+	transition: none !important;
+}
+
+.reveal .slides section.present[data-auto-animate="running"] .presentation-morph-into {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: auto;
+	transition: opacity var(--presentation-auto-animate-duration, 1s) ease !important;
+	transition-property: opacity !important;
 }
 
 .reveal
@@ -723,7 +739,6 @@
 	position: absolute;
 	inset: 0;
 	margin: 0;
-	opacity: 0 !important;
 	pointer-events: none;
 }
 

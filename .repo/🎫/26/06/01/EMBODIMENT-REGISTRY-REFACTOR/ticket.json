@@ -3,11 +3,12 @@
   "emoji": "🎭",
   "status": "closed",
   "description": "Restructure @framework/presentation: embodiments in scoped sibling registries, dispositions bind participantId+embodimentId, full artifact-level scoping, tile/split templates produce embodiments+dispositions (remove DispositionSplit). Migrate renderer and 33.projektetage deck.",
-  "summary": "Fixed morph sources staying visible after spacebar transition to Bauteilbeschriftungen: reveal.js leaves data-auto-animate=running until the next morph, which kept morph-source CSS and FLIP sheet rules active. Added finalizeRevealAutoAnimateRestState after auto-animate duration and on beforeslidechange; tightened CSS to hide morph-source by default and only show on present slides during pending/running.",
+  "summary": "Morph ghosts fade opacity 1→0 during reveal running (morph-into 0→1): split pending/running CSS with transition synced to autoAnimateDuration; patch auto-animate sheet to override reveal opacity on matched morph-source/into targets; affiliation ghosts use presentation-morph-source class.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪bb34f80bdccb4ebabf0a48bc06aca0a6",
     "⚪778720ae3c2f441ebcb048eb9d46e966",
-    "⚪b10f9584d8094e44a966480c527dc3fd"
+    "⚪b10f9584d8094e44a966480c527dc3fd",
+    "⚪bf9aee1da49f40e3a91b01571ffa460c"
   ]
 }
