@@ -1310,7 +1310,7 @@ type ConnectionModificationsEdge {
 	node: ConnectionModifications!
 }
 
-type Connector implements Entity & StrongEntity & FileSystemNode {
+type Connector implements Entity & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -2706,6 +2706,7 @@ enum FileSystemNodeKind {
 	DESIGN
 	TYPE
 	FAMILY
+	TYPOLOGY
 	PIECE
 	CONNECTION
 	REPRESENTATION
@@ -2993,6 +2994,8 @@ type Kit implements Entity & Node & FileSystemNode & StrongEntity {
 	files: FileConnection!
 	folders: FolderConnection!
 	families: FamilyConnection!
+	typologies: TypologyConnection!
+	typology(id: ID!): Typology
 	authors: AuthorConnection!
 	concepts: ConceptConnection!
 	tags: TagConnection!
@@ -3920,7 +3923,7 @@ type PointModificationsEdge {
 	node: PointModifications!
 }
 
-type Port implements Entity & StrongEntity & FileSystemNode {
+type Port implements Entity & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -4841,7 +4844,7 @@ type RenamedTypeInputEdge {
 	node: RenamedTypeInput!
 }
 
-type Representation implements Entity & StrongEntity & FileSystemNode {
+type Representation implements Entity & FileSystemNode & StrongEntity {
 	id: ID!
 	hash: String!
 	owner: Entity
@@ -5451,6 +5454,30 @@ type TypeOperationConnection {
 type TypeOperationEdge {
 	cursor: String!
 	node: TypeOperation!
+}
+
+type Typology implements Entity & FileSystemNode {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String
+	icon: String
+	folderId: ID
+	types: TypeConnection!
+	designs: DesignConnection!
+}
+
+type TypologyConnection {
+	edges: [TypologyEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TypologyEdge {
+	cursor: String!
+	node: Typology!
 }
 
 type UnsavedChangeCommand {

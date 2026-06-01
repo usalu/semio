@@ -127,6 +127,10 @@ export const MetabolismKitTypes = __itemsOf(__metabolismKitInner()["types"]);
  **/
 export const MetabolismKitDesigns = __itemsOf(__metabolismKitInner()["designs"]);
 /**
+ * Metabolism kit typologies array
+ **/
+export const MetabolismKitTypologies = __itemsOf(__metabolismKitInner()["typologies"]);
+/**
  * Metabolism kit families array
  **/
 export const MetabolismKitFamilies = __itemsOf(__metabolismKitInner()["families"]);
@@ -189,6 +193,10 @@ const typeLookup = buildLookup(MetabolismKitTypes);
  **/
 const designLookup = buildLookup(MetabolismKitDesigns);
 /**
+ * Typology lookup maps by id and name
+ **/
+const typologyLookup = buildLookup(MetabolismKitTypologies);
+/**
  * Family lookup maps by id and name
  **/
 const familyLookup = buildLookup(MetabolismKitFamilies);
@@ -209,6 +217,14 @@ export const MetabolismKitDesignsById = designLookup.byId;
  * Metabolism kit designs indexed by name
  **/
 export const MetabolismKitDesignsByName = designLookup.byName;
+/**
+ * Metabolism kit typologies indexed by id
+ **/
+export const MetabolismKitTypologiesById = typologyLookup.byId;
+/**
+ * Metabolism kit typologies indexed by name
+ **/
+export const MetabolismKitTypologiesByName = typologyLookup.byName;
 /**
  * Metabolism kit families indexed by id
  **/

@@ -28,7 +28,7 @@ todos:
     status: completed
   - id: tests
     content: Extend rs/js/react/framework/sketchpad test regions and the VirtualFileSystem story; validate runtime and close ticket
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

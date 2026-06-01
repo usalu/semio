@@ -263,6 +263,68 @@ export interface ObjectKindVortexTemplate {
   readonly radius?: number;
 }
 
+/** @emoji 🔌 Kit type connector row (CAD point + port handle kind) for catalog extraction. */
+export interface KitConnectorCadRow {
+  readonly point?: { readonly x: number; readonly y: number; readonly z: number };
+  readonly direction?: { readonly x: number; readonly y: number; readonly z: number };
+  readonly port?: { readonly handleKind?: string };
+}
+
+/** @emoji 🏷️ Maps a kit port `handleKind` id to a puzzle 3d vortex-catalog id (short name when available). */
+export function puzzle3dVortexKindLabelFromHandleKind(
+  handleKind: string,
+  vortexKinds: readonly VortexKind[] | undefined,
+  handleKindRows?: readonly { readonly id: string; readonly name: string }[],
+): string {
+  const hk = handleKind.trim();
+  if (hk === "") {
+    return hk;
+  }
+  if (vortexKinds?.some((v) => v.id === hk)) {
+    return hk;
+  }
+  const name = handleKindRows?.find((h) => h.id === hk)?.name?.trim();
+  if (name && vortexKinds?.some((v) => v.id === name)) {
+    return name;
+  }
+  return name ?? hk;
+}
+
+function cadVec3FromKitPoint(row: { readonly x: number; readonly y: number; readonly z: number }): Vec3 {
+  return [row.x, row.y, row.z];
+}
+
+/** @emoji 🧲 Builds {@link ObjectKind.vortices} from kit connectors; keeps every distinct CAD position (same `vortexKind` allowed). */
+export function puzzle3dObjectKindVorticesFromKitConnectors(
+  connectors: readonly KitConnectorCadRow[],
+  labelHandleKind: (handleKind: string) => string,
+  defaultRadius = 0.36,
+): ObjectKindVortexTemplate[] {
+  const seenPositions = new Set<string>();
+  const out: ObjectKindVortexTemplate[] = [];
+  for (const connector of connectors) {
+    const handleKind = connector.port?.handleKind?.trim() ?? "";
+    const point = connector.point;
+    if (handleKind === "" || !point) {
+      continue;
+    }
+    const position = cadVec3FromKitPoint(point);
+    const posKey = position.map((n) => n.toFixed(6)).join(",");
+    if (seenPositions.has(posKey)) {
+      continue;
+    }
+    seenPositions.add(posKey);
+    const vortexKind = labelHandleKind(handleKind);
+    out.push({
+      vortexKind,
+      position,
+      ...(connector.direction ? { direction: cadVec3FromKitPoint(connector.direction) } : {}),
+      radius: defaultRadius,
+    });
+  }
+  return out;
+}
+
 export interface ObjectKind {
   id: string;
   label?: string;
@@ -418,24 +480,145 @@ export function mergeSelectionSnapshot(mode: SelectionMode, current: SelectionSn
   };
 }
 
+interface SelectionDerivation {
+  readonly snapshot: SelectionSnapshot;
+  readonly objectIdSet: ReadonlySet<string>;
+  readonly vortexIdSet: ReadonlySet<string>;
+  readonly vortexOwnerObjectIdSet: ReadonlySet<string>;
+  readonly attractionIdSet: ReadonlySet<string>;
+  readonly primaryObjectId: string | null;
+}
+
+function deriveSelectionSnapshot(snapshot: SelectionSnapshot): SelectionDerivation {
+  const objectIdSet = new Set(snapshot.objectIds);
+  const vortexIdSet = new Set(snapshot.vortexIds);
+  const vortexOwnerObjectIdSet = new Set<string>();
+  for (const fullId of snapshot.vortexIds) {
+    vortexOwnerObjectIdSet.add(parseVortexFullId(fullId).objectId);
+  }
+  return {
+    snapshot,
+    objectIdSet,
+    vortexIdSet,
+    vortexOwnerObjectIdSet,
+    attractionIdSet: new Set(snapshot.attractionIds),
+    primaryObjectId: snapshot.objectIds[0] ?? (snapshot.vortexIds[0] ? parseVortexFullId(snapshot.vortexIds[0]).objectId : null),
+  };
+}
+
+function selectionSetSymmetricDifference(left: ReadonlySet<string>, right: ReadonlySet<string>): Set<string> {
+  const changed = new Set<string>();
+  for (const id of left) {
+    if (!right.has(id)) {
+      changed.add(id);
+    }
+  }
+  for (const id of right) {
+    if (!left.has(id)) {
+      changed.add(id);
+    }
+  }
+  return changed;
+}
+
+function addPerIdListener(map: Map<string, Set<() => void>>, id: string, listener: () => void): () => void {
+  let listeners = map.get(id);
+  if (!listeners) {
+    listeners = new Set();
+    map.set(id, listeners);
+  }
+  listeners.add(listener);
+  return () => {
+    listeners!.delete(listener);
+    if (listeners!.size === 0) {
+      map.delete(id);
+    }
+  };
+}
+
+function notifyPerIdListeners(map: Map<string, Set<() => void>>, ids: Iterable<string>): void {
+  for (const id of ids) {
+    const listeners = map.get(id);
+    if (!listeners) {
+      continue;
+    }
+    for (const listener of listeners) {
+      listener();
+    }
+  }
+}
+
 /** @emoji 🔔 External selection store for synchronous pick feedback under controlled hosts. */
 export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_SELECTION_SNAPSHOT) {
-  let snapshot = initial;
-  const listeners = new Set<() => void>();
+  let derived = deriveSelectionSnapshot(initial);
+  const globalListeners = new Set<() => void>();
+  const objectListeners = new Map<string, Set<() => void>>();
+  const vortexListeners = new Map<string, Set<() => void>>();
+  const attractionListeners = new Map<string, Set<() => void>>();
+  const attractionBulkListeners = new Set<() => void>();
+  const primaryListeners = new Set<() => void>();
+
   return {
     subscribe(listener: () => void): () => void {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
+      globalListeners.add(listener);
+      return () => globalListeners.delete(listener);
     },
     getSnapshot(): SelectionSnapshot {
-      return snapshot;
+      return derived.snapshot;
+    },
+    getPrimaryObjectId(): string | null {
+      return derived.primaryObjectId;
+    },
+    getAttractionIdSet(): ReadonlySet<string> {
+      return derived.attractionIdSet;
+    },
+    isObjectSelected(objectId: string): boolean {
+      return derived.objectIdSet.has(objectId) || derived.vortexOwnerObjectIdSet.has(objectId);
+    },
+    isVortexSelected(fullId: string): boolean {
+      return derived.vortexIdSet.has(fullId);
+    },
+    isAttractionSelected(attractionId: string): boolean {
+      return derived.attractionIdSet.has(attractionId);
+    },
+    subscribeObject(objectId: string, listener: () => void): () => void {
+      return addPerIdListener(objectListeners, objectId, listener);
+    },
+    subscribeVortex(fullId: string, listener: () => void): () => void {
+      return addPerIdListener(vortexListeners, fullId, listener);
+    },
+    subscribeAttraction(attractionId: string, listener: () => void): () => void {
+      return addPerIdListener(attractionListeners, attractionId, listener);
+    },
+    subscribeAttractions(listener: () => void): () => void {
+      attractionBulkListeners.add(listener);
+      return () => attractionBulkListeners.delete(listener);
+    },
+    subscribePrimary(listener: () => void): () => void {
+      primaryListeners.add(listener);
+      return () => primaryListeners.delete(listener);
     },
     setSnapshot(next: SelectionSnapshot, equal: (left: SelectionSnapshot, right: SelectionSnapshot) => boolean = selectionSnapshotsEqual): void {
-      if (equal(snapshot, next)) {
+      if (equal(derived.snapshot, next)) {
         return;
       }
-      snapshot = next;
-      for (const listener of listeners) {
+      const prev = derived;
+      derived = deriveSelectionSnapshot(next);
+      notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet));
+      notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.vortexOwnerObjectIdSet, derived.vortexOwnerObjectIdSet));
+      notifyPerIdListeners(vortexListeners, selectionSetSymmetricDifference(prev.vortexIdSet, derived.vortexIdSet));
+      if (prev.attractionIdSet !== derived.attractionIdSet) {
+        notifyPerIdListeners(attractionListeners, selectionSetSymmetricDifference(prev.attractionIdSet, derived.attractionIdSet));
+        for (const listener of attractionBulkListeners) {
+          listener();
+        }
+      }
+      if (prev.primaryObjectId !== derived.primaryObjectId) {
+        for (const listener of primaryListeners) {
+          listener();
+        }
+      }
+      for (const listener of globalListeners) {
         listener();
       }
     },
@@ -451,13 +634,50 @@ export function primarySelectionObjectId(selection: SelectionSnapshot): string |
 
 const SelectionStoreContext = reactHostPort.createContext<SelectionSnapshotStore | null>(null);
 
-/** @emoji 🎯 Live scene selection snapshot (updates synchronously on pick). */
-export function useLiveSelection(): SelectionSnapshot {
+function useSelectionSnapshotStore(): SelectionSnapshotStore {
   const store = reactHostPort.useContext(SelectionStoreContext);
   if (!store) {
     throw new Error("Puzzle 3D selection store missing");
   }
+  return store;
+}
+
+/** @emoji 🎯 Live scene selection snapshot (updates synchronously on pick). */
+export function useLiveSelection(): SelectionSnapshot {
+  const store = useSelectionSnapshotStore();
   return reactHostPort.useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+}
+
+/** @emoji 🎯 O(1) object highlight membership (direct object or parent of selected vortex). */
+export function useObjectSelected(objectId: string): boolean {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(
+    (onStoreChange) => store.subscribeObject(objectId, onStoreChange),
+    () => store.isObjectSelected(objectId),
+    () => store.isObjectSelected(objectId),
+  );
+}
+
+/** @emoji 🎯 O(1) vortex highlight membership. */
+export function useVortexSelected(fullId: string): boolean {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(
+    (onStoreChange) => store.subscribeVortex(fullId, onStoreChange),
+    () => store.isVortexSelected(fullId),
+    () => store.isVortexSelected(fullId),
+  );
+}
+
+/** @emoji 🎯 Stable attraction-id set for batch line coloring (notifies only when attraction selection changes). */
+export function useSelectedAttractionIdSet(): ReadonlySet<string> {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(store.subscribeAttractions, store.getAttractionIdSet, store.getAttractionIdSet);
+}
+
+/** @emoji 🎯 Primary relocate object id with per-primary subscription. */
+export function usePrimarySelectionObjectId(): string | null {
+  const store = useSelectionSnapshotStore();
+  return reactHostPort.useSyncExternalStore(store.subscribePrimary, store.getPrimaryObjectId, store.getPrimaryObjectId);
 }
 
 /** @emoji 🖱️ Exclusive scene hover target (at most one active). */
@@ -2393,9 +2613,6 @@ function useAttractingChildIds(objectId: string): readonly string[] {
 
 const ObjectItemById = reactHostPort.memo(function ObjectItemById(props: {
   readonly objectId: string;
-  readonly selected?: boolean;
-  readonly relocateActive?: boolean;
-  readonly selectedVortexFullIds?: ReadonlySet<string>;
   readonly relocate?: RelocateMode | false;
 }) {
   const record = useObjectRecord(props.objectId);
@@ -2414,14 +2631,11 @@ const ObjectItemById = reactHostPort.memo(function ObjectItemById(props: {
       label={record.label}
       wormhole={record.wormhole}
       attracting={attracting}
-      selected={props.selected}
-      relocateActive={props.relocateActive}
       relocate={props.relocate}
     >
-      {record.vortices.map((vortex) => {
-        const fullId = puzzle3dVortexFullId(record.id, vortex.id);
-        return <Vortex key={vortex.id} objectId={record.id} objectKind={record.objectKind} objectOrigin={record.origin} objectOrientation={record.orientation} selected={props.selectedVortexFullIds?.has(fullId)} {...vortex} />;
-      })}
+      {record.vortices.map((vortex) => (
+        <Vortex key={vortex.id} objectId={record.id} objectKind={record.objectKind} objectOrigin={record.origin} objectOrientation={record.orientation} {...vortex} />
+      ))}
     </ObjectItem>
   );
 });
@@ -2460,9 +2674,6 @@ export function objectMatchesSelection(objectId: string, selection: SelectionSna
 }
 
 export interface ObjectsProps {
-  readonly selection?: SelectionSnapshot;
-  readonly selectedObjectId?: string | null;
-  readonly selectedVortexFullIds?: ReadonlySet<string>;
   readonly relocate?: RelocateMode | false;
 }
 
@@ -2477,14 +2688,7 @@ export const Objects = reactHostPort.memo(function Objects(props: ObjectsProps) 
   return (
     <>
       {ids.map((id) => (
-        <ObjectItemById
-          key={id}
-          objectId={id}
-          selected={objectMatchesSelection(id, props.selection) || props.selectedObjectId === id}
-          relocateActive={props.selectedObjectId === id}
-          selectedVortexFullIds={props.selectedVortexFullIds}
-          relocate={props.relocate}
-        />
+        <ObjectItemById key={id} objectId={id} relocate={props.relocate} />
       ))}
     </>
   );
@@ -3890,7 +4094,8 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
 
 export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectProps) {
   const group = reactHostPort.useRef<Group>(null);
-  const liveSelection = useLiveSelection();
+  const registrySelected = useObjectSelected(props.id);
+  const primaryObjectId = usePrimarySelectionObjectId();
   const { registerObject, relocateMode } = useRegistryCore();
   const { selectionMode, commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
   const { setHover, clearHover, isHovered } = useRegistryHover();
@@ -3898,9 +4103,8 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
   const beforeRef = reactHostPort.useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
   const [tcTarget, setTcTarget] = reactHostPort.useState<Group | null>(null);
   const objectPointerHovered = isHovered({ kind: "object", id: props.id });
-  const registrySelected = objectMatchesSelection(props.id, liveSelection);
   const selected = props.selected === true || registrySelected;
-  const relocateActive = props.relocateActive === true || primarySelectionObjectId(liveSelection) === props.id;
+  const relocateActive = props.relocateActive === true || primaryObjectId === props.id;
 
   reactHostPort.useEffect(() => {
     registerObject(props.id, props.objectKind, group.current);
@@ -4126,8 +4330,8 @@ export const Vortex = reactHostPort.memo(function Vortex(
   const root = reactHostPort.useRef<Group | null>(null);
   const reg = useRegistry();
   const { commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
-  const liveSelection = useLiveSelection();
   const fullId = props.id.includes(":") ? props.id : `${props.objectId}:${props.id}`;
+  const vortexSelected = useVortexSelected(fullId);
   const r = props.radius ?? 0.35;
   const vortexPointerGestureRef = reactHostPort.useRef<{ readonly pointerId: number; readonly x: number; readonly y: number; dragStarted: boolean } | null>(null);
 
@@ -4174,8 +4378,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
   vortexMeshUrlRef.current = props.vortexMeshUrl;
   const trackVortexLod = lodCtx.depthVariable || (props.vortexMeshByLod?.length ?? 0) > 0;
   const [lodVisual, setLodVisual] = reactHostPort.useState<VortexLodVisual>(() => vortexLodVisual(lodCtx.lod, false, props.vortexMeshByLod, props.vortexMeshUrl));
-  const vortexSelected = props.selected === true || liveSelection.vortexIds.includes(fullId);
-  const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = vortexSelected
+  const highlight: "none" | "compatible" | "ring" | "attracting" | "indirectRing" = vortexSelected || props.selected === true
     ? "attracting"
     : reg.attractionDragAttractingFullId === fullId
       ? "attracting"
@@ -4345,8 +4548,7 @@ function puzzle3dAttractionIndexFromPointerEvent(e: ThreeEvent<PointerEvent>): n
 const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attractions: readonly AttractionProps[] }) {
   const reg = useRegistry();
   const { commitSelection } = useRegistryInteraction();
-  const liveSelection = useLiveSelection();
-  const selectedAttractionIds = reactHostPort.useMemo(() => new Set(liveSelection.attractionIds), [liveSelection.attractionIds]);
+  const selectedAttractionIds = useSelectedAttractionIdSet();
   const mat = reactHostPort.useMemo(() => {
     const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
     return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true, vertexColors: true });
@@ -6744,7 +6946,6 @@ export interface PlayCanvasProps {
   readonly selectionMode?: SelectionMode;
   readonly selectionMethod?: SelectionMethod;
   readonly marqueeSelectableKinds?: MarqueeSelectableKinds;
-  readonly selectedVortexFullIds?: ReadonlySet<string>;
   readonly proximityRadius?: number;
   readonly chunkSize?: number;
   readonly gridFactor?: number;
@@ -6829,7 +7030,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       sceneFixture={props.fixture}
       {...props.lodProps}
     >
-      <Objects selection={props.selection} selectedObjectId={props.selectedId} selectedVortexFullIds={props.selectedVortexFullIds} relocate={props.relocateMode} />
+      <Objects relocate={props.relocateMode} />
       <AttractionTreeRoots />
       <MarqueeAttractionSource />
       <PlayTestBridge setSelectedId={props.setSelectedId} />
@@ -7163,6 +7364,25 @@ if (import.meta.vitest) {
       unsubscribe();
     });
   });
+  describe("puzzle3dObjectKindVorticesFromKitConnectors", () => {
+    it("keeps two connectors with the same vortexKind at different CAD positions", () => {
+      const vortexKinds: VortexKind[] = [{ id: "core rectangular bottom", name: "core rectangular bottom", color: "#000" }];
+      const handleRows = [{ id: "semio.kit.handle.core-rect-bottom", name: "core rectangular bottom" }];
+      const label = (hk: string) => puzzle3dVortexKindLabelFromHandleKind(hk, vortexKinds, handleRows);
+      const vortices = puzzle3dObjectKindVorticesFromKitConnectors(
+        [
+          { point: { x: -7.5, y: -7.7, z: 7.5 }, direction: { x: 0, y: 0, z: 1 }, port: { handleKind: handleRows[0]!.id } },
+          { point: { x: -18.6, y: -7.7, z: 7.5 }, direction: { x: 0, y: 0, z: 1 }, port: { handleKind: handleRows[0]!.id } },
+        ],
+        label,
+      );
+      expect(vortices).toHaveLength(2);
+      expect(vortices[0]?.vortexKind).toBe("core rectangular bottom");
+      expect(vortices[0]?.position).toEqual([-7.5, -7.7, 7.5]);
+      expect(vortices[1]?.position).toEqual([-18.6, -7.7, 7.5]);
+    });
+  });
+
   describe("parseFixtureV1", () => {
     it("accepts minimal fixture", () => {
       const f = parseFixtureV1({

@@ -17708,6 +17708,9 @@ func hydrateKitFiles(kit *Kit, files map[string][]byte) {
 
 func mustReadKitSchemaSQL() string {
 	candidatePaths := []string{
+		"../schema/sqlite/schema.sql",
+		"../../schema/sqlite/schema.sql",
+		"../../../schema/sqlite/schema.sql",
 		"../sqlite/schema.sql",
 		"../../sqlite/schema.sql",
 		"sqlite/schema.sql",

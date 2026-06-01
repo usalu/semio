@@ -12256,6 +12256,15 @@ const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaMod
 				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
 			],
 		},
+		typology: {
+			id: "typology",
+			name: "Typology",
+			icon: "landmark",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+			],
+		},
 		piece: {
 			id: "piece",
 			name: "Piece",
@@ -12349,6 +12358,7 @@ const SKETCHPAD_RS_FILE_NODE_KIND_TO_VFS: Readonly<Record<string, string>> = {
 	DESIGN: "design",
 	TYPE: "type",
 	FAMILY: "family",
+	TYPOLOGY: "typology",
 	PIECE: "piece",
 	CONNECTION: "connection",
 	REPRESENTATION: "representation",
@@ -12382,6 +12392,8 @@ function sketchpadRsVfsParentRef(
 			return { kind: "TYPE", id: parentId };
 		case "family":
 			return { kind: "FAMILY", id: parentId };
+		case "typology":
+			return { kind: "TYPOLOGY", id: parentId };
 		case "piece":
 			return { kind: "PIECE", id: parentId, designId: meta?.designId ?? route.designId ?? "" };
 		case "connection":

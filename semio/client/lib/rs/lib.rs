@@ -18640,14 +18640,16 @@ mod tests {
             };
             kit.files.write().await.push(file.clone());
 
-            let ty = Type::new_with_external_id(owner.clone(), "type-1".into(), "Type One".to_string()).await;
+            let topo = kit.ensure_default_typology().await;
+            let topo_owner = Arc::downgrade(&topo);
+            let ty = Type::new_with_external_id(topo_owner.clone(), "type-1".into(), "Type One".to_string()).await;
             let rep = Representation::new_with_external_id(Arc::downgrade(&ty), "rep-1".into(), "rep://a".to_string()).await;
             *rep.file.write().await = Some(file);
             ty.representations.write().await.push(rep.clone());
 
-            let d1 = Design::with_id(owner.clone(), "design-1".into(), "D1".to_string()).await;
-            let d2 = Design::with_id(owner.clone(), "design-2".into(), "D2".to_string()).await;
-            let d3 = Design::with_id(owner.clone(), "design-3".into(), "D3".to_string()).await;
+            let d1 = Design::with_id(topo_owner.clone(), "design-1".into(), "D1".to_string()).await;
+            let d2 = Design::with_id(topo_owner.clone(), "design-2".into(), "D2".to_string()).await;
+            let d3 = Design::with_id(topo_owner.clone(), "design-3".into(), "D3".to_string()).await;
 
             let pos = PositionInput::default();
             let od1 = Arc::downgrade(&d1);
@@ -18661,12 +18663,11 @@ mod tests {
             d1.insert_piece(Piece::new_fixed_with_external_id("p-ref".into(), od1, Blueprint::Design(d2.clone()), pos).await).await;
 
             {
-                let mut tys = kit.types.write().await;
-                tys.push(ty.clone());
+                topo.types.write().await.push(ty.clone());
                 kit.type_weak_by_id.write().await.insert(ty.id.clone(), Arc::downgrade(&ty));
             }
             {
-                let mut des = kit.designs.write().await;
+                let mut des = topo.designs.write().await;
                 let mut weak = kit.design_weak_by_id.write().await;
                 for d in [&d1, &d2, &d3] {
                     weak.insert(d.id.clone(), Arc::downgrade(d));
@@ -19048,8 +19049,15 @@ mod tests {
                     "items": [{ "id": "c1", "name": "c1", "port": { "id": "p1" } }]
                 }
             });
-            let ty = crate::kit::r#type::Type::new_with_external_id(
+            let topo = crate::gql_relay::Typology::new_with_external_id(
                 std::sync::Arc::downgrade(&kit),
+                "topo-hydrate".into(),
+                "Default".to_string(),
+            )
+            .await;
+            kit.typologies.write().await.push(topo.clone());
+            let ty = crate::kit::r#type::Type::new_with_external_id(
+                std::sync::Arc::downgrade(&topo),
                 "t1".into(),
                 "T1".to_string(),
             )
@@ -19419,15 +19427,17 @@ mod tests {
 
             let graph = crate::vcs::Graph::new().await;
             let kit = graph.mutable_kit.read().await.clone();
-            let owner = Arc::downgrade(&kit);
-            let ty = Type::new_with_external_id(owner.clone(), "type-vfs".into(), "Vfs Type".to_string()).await;
+            let topo = crate::gql_relay::Typology::new_with_external_id(Arc::downgrade(&kit), "topo-vfs".into(), "Default".to_string()).await;
+            kit.typologies.write().await.push(topo.clone());
+            let ty = Type::new_with_external_id(Arc::downgrade(&topo), "type-vfs".into(), "Vfs Type".to_string()).await;
             let rep = Representation::new_with_external_id(Arc::downgrade(&ty), "rep-vfs".into(), "rep://mesh".to_string()).await;
             let port = Port::new_with_external_id(Arc::downgrade(&ty), "port-vfs".into()).await;
             let connector = Connector::new_with_external_id(Arc::downgrade(&ty), "conn-vfs".into(), "frame".to_string()).await;
             ty.representations.write().await.push(rep.clone());
             ty.ports.write().await.push(port.clone());
             ty.connectors.write().await.push(connector.clone());
-            kit.types.write().await.push(ty.clone());
+            topo.types.write().await.push(ty.clone());
+            kit.type_weak_by_id.write().await.insert(ty.id.clone(), Arc::downgrade(&ty));
 
             let type_node = FileSystemNodeInterface::Type(ty);
             assert!(file_system_vfs::has_children(&type_node).await);
@@ -19441,7 +19451,7 @@ mod tests {
             let parent = file_system_vfs::parent(&rep_node).await;
             assert!(matches!(parent, Some(FileSystemNodeInterface::Type(t)) if t.id.as_str() == "type-vfs"));
             assert!(!file_system_vfs::has_children(&rep_node).await);
-            assert!(file_system_vfs::path(&rep_node).await.contains("mesh"));
+            assert!(file_system_vfs::path(&rep_node).await.contains("Vfs Type"));
         });
     }
 
@@ -19783,12 +19793,12 @@ mod tests {
                 .expect("hydrate harness");
             let mat = rt.wip_graph.materialized_head_kit().await;
             let mut design_names = Vec::new();
-            for d in mat.designs.read().await.iter() {
+            for d in mat.designs_flat().await.iter() {
                 design_names.push((*d.name.read().await).clone());
             }
             assert!(design_names.iter().any(|n| n == "Nakagin Capsule Tower"));
             assert!(design_names.iter().any(|n| n == "Other Pavilion"));
-            assert_eq!(mat.types.read().await.len(), 3);
+            assert_eq!(mat.types_flat().await.len(), 3);
         });
     }
 

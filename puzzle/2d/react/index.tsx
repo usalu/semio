@@ -1709,6 +1709,34 @@ export function puzzle2dRectangleHandleAngleFromCadPoint(x: number, y: number): 
   return Math.atan2(-x, -y);
 }
 
+/** @emoji 🔌 Kit type connector row (CAD point + port handle kind) for catalog extraction. */
+export interface KitConnectorCadRow {
+  readonly point?: { readonly x: number; readonly y: number; readonly z: number };
+  readonly direction?: { readonly x: number; readonly y: number; readonly z: number };
+  readonly port?: { readonly handleKind?: string };
+}
+
+/** @emoji 🧲 Builds {@link NodeKind.handles} from kit connectors; keeps every distinct perimeter angle (same `handleKind` allowed). */
+export function puzzle2dNodeKindHandlesFromKitConnectors(connectors: readonly KitConnectorCadRow[], defaultRadius = 3): NodeKindHandleTemplate[] {
+  const seen = new Set<string>();
+  const out: NodeKindHandleTemplate[] = [];
+  for (const connector of connectors) {
+    const handleKind = connector.port?.handleKind?.trim() ?? "";
+    const point = connector.point;
+    if (handleKind === "" || !point) {
+      continue;
+    }
+    const angle = puzzle2dRectangleHandleAngleFromCadPoint(point.x, point.y);
+    const key = `${handleKind}|${angle.toFixed(6)}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    out.push({ handleKind, angle, radius: defaultRadius });
+  }
+  return out;
+}
+
 /** @emoji 🎯 Builds fixture handles for a new node from {@link NodeKind.handles} templates. */
 export function puzzle2dFixtureHandlesFromNodeKind(nodeId: string, templates: readonly NodeKindHandleTemplate[]): Puzzle2dFixtureHandleV1[] {
   return templates.map((entry, index) => ({
@@ -6440,6 +6468,16 @@ if (puzzle2dVitest) {
     it("puzzle2dFixtureHandlesFromNodeKind maps templates to fixture handles", () => {
       const handles = puzzle2dFixtureHandlesFromNodeKind("n1", [{ angle: 1.2, radius: 3, handleKind: "semio.kit.handle.a" }]);
       expect(handles).toEqual([{ angle: 1.2, handleKind: "semio.kit.handle.a", id: "n1:h0", radius: 3 }]);
+    });
+
+    it("puzzle2dNodeKindHandlesFromKitConnectors keeps two connectors with the same handleKind at different CAD points", () => {
+      const handleKind = "semio.kit.handle.core-rect-bottom";
+      const handles = puzzle2dNodeKindHandlesFromKitConnectors([
+        { point: { x: -7.5, y: -7.7, z: 7.5 }, port: { handleKind } },
+        { point: { x: -18.6, y: -7.7, z: 7.5 }, port: { handleKind } },
+      ]);
+      expect(handles).toHaveLength(2);
+      expect(handles[0]?.angle).not.toBeCloseTo(handles[1]?.angle ?? 0, 4);
     });
 
     it("mergeKindCatalogBundleByRowId overlays rows by id", () => {

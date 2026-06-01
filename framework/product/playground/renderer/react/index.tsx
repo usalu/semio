@@ -1175,10 +1175,9 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   if (!snap.fixture) {
     return <div className="p-4 text-destructive">Invalid puzzle 3D fixture</div>;
   }
-  const kindCompatibility = parseKindCompatibility(snap.fixture.meta);
-  const kindCatalogs = parseKindCatalogs(snap.fixture.meta);
-  const blockedVortexFullIds = blockedVortexFullIdsFromAttractions(snap.fixture.attractions);
-  const selectedVortexFullIds = reactHostPort.useMemo(() => new Set(snap.selection.vortexIds), [snap.selection.vortexIds]);
+  const kindCompatibility = reactHostPort.useMemo(() => parseKindCompatibility(snap.fixture.meta), [snap.fixture]);
+  const kindCatalogs = reactHostPort.useMemo(() => parseKindCatalogs(snap.fixture.meta), [snap.fixture]);
+  const blockedVortexFullIds = reactHostPort.useMemo(() => blockedVortexFullIdsFromAttractions(snap.fixture.attractions), [snap.fixture]);
   const patchFixture = reactHostPort.useCallback(
     (updater: (prev: FixtureV1) => FixtureV1) => {
       ctrl?.patchFixture(updater);
@@ -1235,7 +1234,6 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
           selectionMode={snap.selectionMode}
           selectionMethod={snap.selectionMethod}
           marqueeSelectableKinds={snap.selectableKinds}
-          selectedVortexFullIds={selectedVortexFullIds}
           proximityRadius={snap.proximityRadius}
           chunkSize={snap.chunkSize}
           gridFactor={snap.gridFactor}

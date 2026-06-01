@@ -10,43 +10,43 @@ todos:
     status: completed
   - id: graphql
     content: Update schema.golden.graphql (Typology type/connection/diff, Kit.typologies, Folder.typologies, owner->Typology); regenerate schema.graphql
-    status: in_progress
+    status: completed
   - id: json-openapi
     content: "Update kit.json/type.json/design.json/context + openapi: add Typology/TypologyId/typologies, type/design owning typology"
-    status: pending
+    status: completed
   - id: sql
     content: "Update sqlite + hub postgres + repo server postgres: typology tables, type/design owned by typology, keep family tables"
-    status: pending
+    status: completed
   - id: yaml
     content: "Update schema.yaml conceptual model: typology anchor, kit owns typologies+families"
-    status: pending
+    status: completed
   - id: client-go
     content: "Go main.go/kit_graph.go/main_test.go: Typology type, Kit.Typologies, owner, hashing/diff/sqlite"
-    status: pending
+    status: completed
   - id: client-py
     content: "Python main.py + engine main.py: Typology model, owner, parse/serialize, helpers, tests"
-    status: pending
+    status: completed
   - id: client-net
     content: "C# Semio.cs + Tests: Typology class, Kit.Typologies, owner, export snapshots"
-    status: pending
+    status: completed
   - id: client-ts
     content: "TS js/index.ts (+ react, query): Typology class, Kit.typologies, computed types/designs, Folder.typologies"
-    status: pending
+    status: completed
   - id: client-rb
     content: "Ruby semio.rb: mirror Typology"
-    status: pending
+    status: completed
   - id: sketchpad
     content: Sketchpad VFS node kind + readers + kit-tree nesting under typologies; storybook command schema; embedded tests
-    status: pending
+    status: completed
   - id: fixtures
     content: Add typologies and owning-typology to all kit fixtures, dev metabolism tree, assets metabolism + assets/index.ts lookups
-    status: pending
+    status: completed
   - id: grasshopper
     content: "Grasshopper components.json: typology params/components"
-    status: pending
+    status: cancelled
   - id: validate
     content: Regenerate schema; run Rust/Go/Python/C#/JS/sketchpad/algorithms tests; confirm metabolism round-trip with debug logs; close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

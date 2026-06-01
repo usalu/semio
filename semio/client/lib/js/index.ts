@@ -2087,6 +2087,8 @@ export class Kit extends Entity {
   declare folders: () => Promise<readonly Folder[]>;
   declare files: () => Promise<readonly File[]>;
   declare families: () => Promise<readonly Family[]>;
+  declare typologies: () => Promise<readonly Typology[]>;
+  declare typology: (id: string) => Typology;
   declare fileSystemParent: () => Promise<Entity | null>;
   declare fileSystemChildren: () => Promise<readonly Entity[]>;
   declare fileSystemPath: () => Promise<string>;
@@ -2161,6 +2163,12 @@ const KIT_FIELDS = defineBoundKitFields([
     parse: () => [],
     coarseEvent: true,
     parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "families").map((id) => new Family(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "typologies { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) => Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "typologies").map((id) => new Typology(entity.session, id, entity.storeId))),
   },
   ...vfsKitFields(null),
 ] as const);
@@ -4406,6 +4414,53 @@ const FAMILY_FIELDS = defineBoundKitFields([
 installEntityKitMethods(Family, FAMILY_FIELDS as readonly BoundKitFieldSpec<unknown, Family>[], []);
 //#endregion 👨‍👩‍👦Family
 
+//#region 🏛️Typology
+/** @emoji 🏛️ Typology artifact: owns kit types and designs. */
+export class Typology extends Entity {
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  kitInnerPath(inner: string): string {
+    return `typology(id: ${gqlString(this.id)}) { ${inner} }`;
+  }
+
+  declare name: () => Promise<string>;
+  declare description: () => Promise<string>;
+  declare icon: () => Promise<string>;
+  declare types: () => Promise<readonly Type[]>;
+  declare designs: () => Promise<readonly Design[]>;
+  declare fileSystemParent: () => Promise<Entity | null>;
+  declare fileSystemChildren: () => Promise<readonly Entity[]>;
+  declare fileSystemPath: () => Promise<string>;
+  declare fileSystemName: () => Promise<string>;
+  declare isFileSystemRoot: () => Promise<boolean>;
+  declare fileSystemKind: () => Promise<string>;
+  declare fileSystemHasChildren: () => Promise<boolean>;
+}
+
+const TYPOLOGY_FIELDS = defineBoundKitFields([
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "typology", "icon") },
+  {
+    selection: "types { edges { node { id } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "types").map((id) => new Type(entity.session, id, entity.storeId))),
+  },
+  {
+    selection: "designs { edges { node { id } } }",
+    parse: () => [],
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseEntityConnectionIds(frag as JsonObject | null, "designs").map((id) => new Design(entity.session, id, entity.storeId))),
+  },
+  ...vfsKitFields("typology"),
+] as const);
+
+installEntityKitMethods(Typology, TYPOLOGY_FIELDS as readonly BoundKitFieldSpec<unknown, Typology>[], []);
+//#endregion 🏛️Typology
+
 //#region 📄File
 /** @emoji 📄 Kit file: inverse derived references via representations and kinds. */
 export class File extends Entity {
@@ -4510,6 +4565,10 @@ export class Folder extends Entity {
     return new Family(this.session, id, this.storeId);
   }
 
+  typology(id: string): Typology {
+    return new Typology(this.session, id, this.storeId);
+  }
+
   type(typeId: string): Type {
     return new Type(this.session, typeId, this.storeId);
   }
@@ -4524,6 +4583,7 @@ export class Folder extends Entity {
   declare subFolders: () => Promise<readonly Folder[]>;
   declare files: () => Promise<readonly File[]>;
   declare families: () => Promise<readonly Family[]>;
+  declare typologies: () => Promise<readonly Typology[]>;
   declare types: () => Promise<readonly Type[]>;
   declare designs: () => Promise<readonly Design[]>;
   declare fileSystemParent: () => Promise<Entity | null>;
@@ -4564,6 +4624,13 @@ const FOLDER_FIELDS = defineBoundKitFields([
     coarseEvent: true,
     parseEntity: (entity, frag) =>
       Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "families").map((id) => (entity as Folder).family(id))),
+  },
+  {
+    selection: "typologies { edges { node { id } } }",
+    parse: () => [],
+    coarseEvent: true,
+    parseEntity: (entity, frag) =>
+      Object.freeze(parseFolderBranchConnection(frag as JsonObject | null, "typologies").map((id) => (entity as Folder).typology(id))),
   },
   {
     selection: "types { edges { node { id } } }",

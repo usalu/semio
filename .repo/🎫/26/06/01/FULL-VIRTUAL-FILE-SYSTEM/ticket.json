@@ -1,8 +1,8 @@
 {
   "title": "Full Virtual File System",
   "emoji": "📁",
-  "status": "open",
+  "status": "closed",
   "description": "Make semio/rs FileSystemNode the single source of truth for the virtual file system. Extend with Representation/Port/Connector nodes and fileSystemHasChildren. Rewire sketchpad kit/design VFS to lazy-load children over GraphQL.",
-  "goal": "🎯semio",
-  "sessions": []
+  "summary": "Made semio/rs FileSystemNode the VFS source of truth: added REPRESENTATION/PORT/CONNECTOR kinds, Type children, fileSystemHasChildren, and VFS impls on Port/Connector/Representation. Updated GraphQL golden/working schemas. Extended semio/js vfsKitFields + fetchSemioFileSystemChildren; re-exported from semio/react. Added VirtualFileSystemController.virtualFileSystemUsesAsyncChildren + loadChildrenAsync (sync fallback when false). Rewired sketchpad kit/design VFS to GraphQL via loadChildrenAsync with InMemorySemioKitStore fallback; raw entity ids; schema icons for new kinds. Extended ui/react virtualFileSystemKindIcon and VirtualFileSystem story. Tests: framework core (13), @semio/js (16), sketchpad VFS (3), rs type VFS children.",
+  "goal": "🎯semio"
 }
