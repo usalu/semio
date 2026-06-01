@@ -2885,6 +2885,18 @@ The two specific implemtations must be used:
 
 ### 🚉platform
 
+---
+
+All platforms provide navigation mechanisms.
+The breadcrumb should dynamically suggest all the alternatives.
+The breadcrumb navigation is different to the url and the virtual file system.
+e.g. in sketchpad show
+Home > Kits > {Kit} > Typologies > {Typology} > Designs > {Design} >
+The > after Home show all alternatives: Documentation
+etc
+
+---
+
 ### 🎛️playground
 
 ### 📽️presentation

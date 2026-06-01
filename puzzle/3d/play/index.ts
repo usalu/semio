@@ -73,6 +73,10 @@ import {
   type VortexProps,
   puzzle3dBrushEngagementSourceRef,
   PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID,
+  PUZZLE_3D_ENGAGEMENT_ZOOM_ID,
+  getPuzzle3dZoomToSelectionEpoch,
+  getPuzzle3dZoomToSelectionTarget,
+  requestPuzzle3dZoomToSelection,
 } from "../react/index.tsx";
 import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
 
@@ -168,6 +172,8 @@ export const PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID = "puzzle3d.tool.brush";
 
 /** @emoji 🎯 Window engagement possible id for the select tool. */
 export const PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle3d.tool.select";
+
+export { PUZZLE_3D_ENGAGEMENT_ZOOM_ID } from "@puzzle/3d/react";
 //#endregion 🎬Play
 
 function puzzle3dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -1011,6 +1017,10 @@ export class Puzzle3dPlayShellController extends Controller {
         if (this.applyEngagementToolCommand(token)) {
           return;
         }
+        if (token === "zoom") {
+          requestPuzzle3dZoomToSelection(this.selection);
+          return;
+        }
         this.hostBridge?.runHostCommand(command, args);
         return;
       }
@@ -1018,6 +1028,10 @@ export class Puzzle3dPlayShellController extends Controller {
         const optionId = (args as { optionId?: string })?.optionId;
         if (optionId === PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID && this.activeTool === "brush") {
           puzzle3dBrushEngagementSourceRef.current.cycleCandidate();
+          return;
+        }
+        if (optionId === PUZZLE_3D_ENGAGEMENT_ZOOM_ID) {
+          requestPuzzle3dZoomToSelection(this.selection);
           return;
         }
         this.hostBridge?.runHostCommand(command, args);
@@ -2055,6 +2069,17 @@ if (import.meta.vitest) {
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       ctrl.run("engagementSubmit", { value: "brush" });
       expect(ctrl.getSnapshot().activeTool).toBe("brush");
+    });
+
+    it("engagementOption Zoom requests camera frame for current selection", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const before = getPuzzle3dZoomToSelectionEpoch();
+      ctrl.run("setSelection", { selection: { objectIds: ["tower-a"], vortexIds: [], attractionIds: [] } });
+      ctrl.run("engagementOption", { optionId: PUZZLE_3D_ENGAGEMENT_ZOOM_ID });
+      expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before + 1);
+      expect(getPuzzle3dZoomToSelectionTarget().objectIds).toEqual(["tower-a"]);
     });
 
     it("engagement bus commands route through host bridge for non-tool commands", () => {

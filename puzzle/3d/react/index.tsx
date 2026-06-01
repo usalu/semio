@@ -4257,6 +4257,90 @@ export function puzzle3dAutoFitShouldRun(behavior: AutoFitBehavior, key: string,
   return behavior === "changes" || !hasApplied;
 }
 
+/** @emoji 📐 Scene accessors for {@link boundsFromPuzzle3dSelection}. */
+export interface Puzzle3dSelectionFrameSource {
+  readonly getObjectGroup: (id: string) => Group | null;
+  readonly getVortexWorld: (fullId: string) => Vector3 | null;
+  readonly listVortexBindings: () => readonly VortexBindingMeta[];
+}
+
+/** @emoji 🔍 Axis-aligned bounds of the current puzzle 3D selection (objects, vortices, attractions). */
+export function boundsFromPuzzle3dSelection(
+  selection: SelectionSnapshot,
+  source: Puzzle3dSelectionFrameSource,
+  attractions: readonly Pick<AttractionProps, "id" | "attracting" | "attracted">[],
+): { readonly center: Vec3; readonly radius: number } | null {
+  const box = new Box3();
+  const pointBox = new Box3();
+  const pointCenter = new Vector3();
+  const pointSize = new Vector3();
+  const centerScratch = new Vector3();
+  const sizeScratch = new Vector3();
+  let has = false;
+  const unionWorldPoint = (world: Vector3, radius: number) => {
+    const r = Math.max(radius, 0.5);
+    pointSize.set(r * 2, r * 2, r * 2);
+    pointCenter.copy(world);
+    pointBox.setFromCenterAndSize(pointCenter, pointSize);
+    if (!has) {
+      box.copy(pointBox);
+      has = true;
+      return;
+    }
+    box.union(pointBox);
+  };
+  for (const objectId of selection.objectIds) {
+    const group = source.getObjectGroup(objectId);
+    if (!group) {
+      continue;
+    }
+    updateWorldMatrixChain(group);
+    const part = new Box3().setFromObject(group, true);
+    if (!Number.isFinite(part.min.x) || part.isEmpty()) {
+      continue;
+    }
+    part.getSize(sizeScratch);
+    if (sizeScratch.lengthSq() < 1e-12) {
+      continue;
+    }
+    if (!has) {
+      box.copy(part);
+      has = true;
+    } else {
+      box.union(part);
+    }
+  }
+  const vortexRadiusByFullId = new Map(source.listVortexBindings().map((meta) => [meta.fullId, meta.radiusWorld]));
+  for (const fullId of selection.vortexIds) {
+    const world = source.getVortexWorld(fullId);
+    if (!world || !vector3IsFinite(world)) {
+      continue;
+    }
+    unionWorldPoint(world, vortexRadiusByFullId.get(fullId) ?? 1);
+  }
+  const attractionById = new Map(attractions.map((row) => [row.id, row]));
+  for (const attractionId of selection.attractionIds) {
+    const attraction = attractionById.get(attractionId);
+    if (!attraction) {
+      continue;
+    }
+    const a = source.getVortexWorld(attraction.attracting);
+    const b = source.getVortexWorld(attraction.attracted);
+    if (a && vector3IsFinite(a)) {
+      unionWorldPoint(a, 0.75);
+    }
+    if (b && vector3IsFinite(b)) {
+      unionWorldPoint(b, 0.75);
+    }
+  }
+  if (!has) {
+    return null;
+  }
+  box.getCenter(centerScratch);
+  box.getSize(sizeScratch);
+  return { center: threeVec3ToCad(centerScratch), radius: Math.max(sizeScratch.length() / 2, 0.5) };
+}
+
 /** @emoji 📐 Axis-aligned bounds of registered scene object groups (camera auto-fit). */
 export function boundsFromObjectGroups(groups: readonly Group[]): { readonly center: Vec3; readonly radius: number } | null {
   if (!groups.length) return null;
@@ -5743,6 +5827,45 @@ export function getPuzzle3dBrushEngagementEpoch(): number {
 /** @emoji 🖌️ Engagement option id for cycling the active brush placement candidate. */
 export const PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID = "puzzle3d.brush.next";
 
+/** @emoji 🔍 Engagement option id for framing the orbit camera on the current selection. */
+export const PUZZLE_3D_ENGAGEMENT_ZOOM_ID = "puzzle3d.zoom";
+
+let puzzle3dZoomToSelectionEpoch = 0;
+let puzzle3dZoomToSelectionTarget: SelectionSnapshot = EMPTY_SELECTION_SNAPSHOT;
+const puzzle3dZoomToSelectionListeners = new Set<() => void>();
+
+/** @emoji 🔔 Subscribes to zoom-to-selection requests from engagement UI. */
+export function subscribePuzzle3dZoomToSelection(listener: () => void): () => void {
+  puzzle3dZoomToSelectionListeners.add(listener);
+  return () => puzzle3dZoomToSelectionListeners.delete(listener);
+}
+
+/** @emoji 🔍 Queues a one-shot camera frame on the current selection (no-op when empty). */
+export function requestPuzzle3dZoomToSelection(selection: SelectionSnapshot): void {
+  if (selection.objectIds.length === 0 && selection.vortexIds.length === 0 && selection.attractionIds.length === 0) {
+    return;
+  }
+  puzzle3dZoomToSelectionTarget = {
+    objectIds: [...selection.objectIds],
+    vortexIds: [...selection.vortexIds],
+    attractionIds: [...selection.attractionIds],
+  };
+  puzzle3dZoomToSelectionEpoch += 1;
+  for (const listener of puzzle3dZoomToSelectionListeners) {
+    listener();
+  }
+}
+
+/** @emoji 🔑 Epoch for {@link subscribePuzzle3dZoomToSelection}. */
+export function getPuzzle3dZoomToSelectionEpoch(): number {
+  return puzzle3dZoomToSelectionEpoch;
+}
+
+/** @emoji 🎯 Selection snapshot for the latest {@link requestPuzzle3dZoomToSelection}. */
+export function getPuzzle3dZoomToSelectionTarget(): SelectionSnapshot {
+  return puzzle3dZoomToSelectionTarget;
+}
+
 /** @emoji ⌨️ True when Tab should cycle brush candidates instead of moving browser focus. */
 export function routePuzzle3dBrushTabKeydown(
   brushActive: boolean,
@@ -5766,7 +5889,7 @@ export function routePuzzle3dBrushTabKeydown(
 export interface Puzzle3dPlayEngagementInputs {
   readonly activeTool: "select" | "brush";
   readonly cmdLine: string;
-  readonly selectionObjectCount: number;
+  readonly selectionCount: number;
   readonly onCmdLineChange: (value: string) => void;
   readonly onCmdLineSubmit: (value: string) => void;
   readonly onRepeatLast?: () => void;
@@ -5775,6 +5898,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly onBrushTool: () => void;
   readonly onCycleBrushCandidate: () => void;
   readonly onPickBrushCandidate: (index: number) => void;
+  readonly onZoomToSelection: () => void;
   readonly brushCandidates: readonly BrushCompatibleCandidate[];
   readonly brushTargetActive: boolean;
 }
@@ -5788,10 +5912,10 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
       status.push({ id: "puzzle3d.brush.none", content: "No collision-free placement at this connector" });
     }
   }
-  if (inputs.selectionObjectCount > 0) {
+  if (inputs.selectionCount > 0) {
     status.push({
       id: "puzzle3d.selection",
-      content: inputs.selectionObjectCount === 1 ? "1 selected" : `${inputs.selectionObjectCount} selected`,
+      content: inputs.selectionCount === 1 ? "1 selected" : `${inputs.selectionCount} selected`,
     });
   }
 
@@ -5807,13 +5931,16 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     onSelect: () => inputs.onPickBrushCandidate(index),
   }));
 
-  const options =
+  const zoomOptions =
+    inputs.selectionCount > 0 ? [{ id: PUZZLE_3D_ENGAGEMENT_ZOOM_ID, label: "Zoom", onPress: inputs.onZoomToSelection }] : [];
+  const brushOptions =
     inputs.activeTool === "brush" && inputs.brushTargetActive
       ? [
           { id: "puzzle3d.tool.select", label: "Select", onPress: inputs.onSelectTool },
           { id: PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID, label: "Next", onPress: inputs.onCycleBrushCandidate },
         ]
-      : undefined;
+      : [];
+  const options = zoomOptions.length || brushOptions.length ? [...zoomOptions, ...brushOptions] : undefined;
 
   const possibleEngagements = inputs.activeTool === "brush" && brushPossibles.length > 0 ? brushPossibles : toolPossibles;
 
@@ -5977,6 +6104,43 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
       mouseButtons={{ LEFT: null as unknown as number, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.ROTATE }}
     />
   );
+}
+
+/** @emoji 🔍 Frames orbit camera when engagement Zoom requests a selection fit. */
+function SelectionZoom(props: {
+  readonly attractions: readonly Pick<AttractionProps, "id" | "attracting" | "attracted">[];
+  readonly zoom: number;
+  readonly onCamera?: (state: CameraState) => void;
+}): null {
+  const reg = useRegistry();
+  const { camera, controls, invalidate } = useThree();
+  const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
+  const zoomEpoch = reactHostPort.useSyncExternalStore(subscribePuzzle3dZoomToSelection, getPuzzle3dZoomToSelectionEpoch, getPuzzle3dZoomToSelectionEpoch);
+  const lastAppliedEpoch = reactHostPort.useRef(0);
+  useFrame(() => {
+    if (zoomEpoch === lastAppliedEpoch.current) {
+      return;
+    }
+    const selection = getPuzzle3dZoomToSelectionTarget();
+    const bounds = boundsFromPuzzle3dSelection(selection, reg, props.attractions);
+    if (!bounds) {
+      return;
+    }
+    if (!(camera instanceof ThreePerspectiveCamera)) {
+      return;
+    }
+    lastAppliedEpoch.current = zoomEpoch;
+    const orbit = controls as { target: Vector3; update?: () => void } | null;
+    applyAutoFitCamera(camera, bounds, 1.35, orbit);
+    invalidate();
+    const tgt = orbit?.target ?? targetScratch.set(...cadVec3ToThree(bounds.center));
+    props.onCamera?.({
+      position: threeVec3ToCad(camera.position),
+      target: threeVec3ToCad(tgt),
+      zoom: props.zoom,
+    });
+  });
+  return null;
 }
 
 /** @emoji 🛰️ Frames orbit camera to loaded object bounds once meshes are measurable (initial load fit). */
@@ -8003,6 +8167,7 @@ function Inner(props: CanvasProps & {
         <CameraSeed camera={puzzle3dCamera} position={pos} target={tgt} />
         <OrbitGated camera={puzzle3dCamera} onCamera={(camera) => canvasHostRef.current.onCamera?.(camera)} zoom={zoom} />
         {autoFitCamera ? <AutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
+        <SelectionZoom attractions={sceneFixture?.attractions ?? []} zoom={zoom} onCamera={props.onCamera} />
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <MarqueeBridge />
@@ -9469,13 +9634,14 @@ if (import.meta.vitest) {
       const spec = buildPuzzle3dPlayEngagement({
         activeTool: "select",
         cmdLine: "",
-        selectionObjectCount: 0,
+        selectionCount: 0,
         onCmdLineChange: () => {},
         onCmdLineSubmit: () => {},
         onSelectTool: () => {},
         onBrushTool: () => {},
         onCycleBrushCandidate: () => {},
         onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
         brushCandidates: [],
         brushTargetActive: false,
       });
@@ -9487,18 +9653,19 @@ if (import.meta.vitest) {
       const spec = buildPuzzle3dPlayEngagement({
         activeTool: "brush",
         cmdLine: "",
-        selectionObjectCount: 1,
+        selectionCount: 1,
         onCmdLineChange: () => {},
         onCmdLineSubmit: () => {},
         onSelectTool: () => {},
         onBrushTool: () => {},
         onCycleBrushCandidate: () => {},
         onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
         brushCandidates: [{ objectKindId: "J", sourceVortexIndex: 0 }],
         brushTargetActive: true,
       });
       expect(spec.possibleEngagements?.[0]?.id).toBe("puzzle3d.brush.J.0");
-      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.tool.select", "puzzle3d.brush.next"]);
+      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.zoom", "puzzle3d.tool.select", "puzzle3d.brush.next"]);
     });
     it("engagementCommandTokenEquals matches Brush after engagement input normalization", () => {
       expect(engagementCommandTokenEquals(normalizeEngagementCommandText("brush"), "Brush")).toBe(true);
@@ -9676,17 +9843,62 @@ if (import.meta.vitest) {
       });
       expect(clear.free.length).toBe(compatible.length);
     });
-    it("buildPuzzle3dPlayEngagement falls back to tool possibles when no collision-free brush candidates", () => {
+    it("buildPuzzle3dPlayEngagement exposes Zoom option when selection is non-empty", () => {
       const spec = buildPuzzle3dPlayEngagement({
-        activeTool: "brush",
+        activeTool: "select",
         cmdLine: "",
-        selectionObjectCount: 0,
+        selectionCount: 2,
         onCmdLineChange: () => {},
         onCmdLineSubmit: () => {},
         onSelectTool: () => {},
         onBrushTool: () => {},
         onCycleBrushCandidate: () => {},
         onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [],
+        brushTargetActive: false,
+      });
+      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.zoom"]);
+    });
+    it("requestPuzzle3dZoomToSelection bumps epoch only for non-empty selection", () => {
+      const before = getPuzzle3dZoomToSelectionEpoch();
+      requestPuzzle3dZoomToSelection({ objectIds: [], vortexIds: [], attractionIds: [] });
+      expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before);
+      requestPuzzle3dZoomToSelection({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before + 1);
+      expect(getPuzzle3dZoomToSelectionTarget().objectIds).toEqual(["a"]);
+    });
+    it("boundsFromPuzzle3dSelection unions object meshes and vortex points", () => {
+      const root = new Group();
+      root.userData.puzzle3dObjectId = "obj-a";
+      const mesh = new Mesh(new BoxGeometry(10, 10, 10));
+      root.add(mesh);
+      applyObjectPose(root, [0, 0, 0], [0, 0, 0, 1], 1);
+      const vortexWorld = new Vector3(20, 0, 0);
+      const bounds = boundsFromPuzzle3dSelection(
+        { objectIds: ["obj-a"], vortexIds: ["obj-b:link"], attractionIds: [] },
+        {
+          getObjectGroup: (id) => (id === "obj-a" ? root : null),
+          getVortexWorld: (fullId) => (fullId === "obj-b:link" ? vortexWorld : null),
+          listVortexBindings: () => [{ fullId: "obj-b:link", objectId: "obj-b", objectKind: undefined, vortexKind: undefined, radiusWorld: 2 }],
+        },
+        [],
+      );
+      expect(bounds).not.toBeNull();
+      expect(bounds!.radius).toBeGreaterThan(8);
+    });
+    it("buildPuzzle3dPlayEngagement falls back to tool possibles when no collision-free brush candidates", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "brush",
+        cmdLine: "",
+        selectionCount: 0,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
         brushCandidates: [],
         brushTargetActive: true,
       });

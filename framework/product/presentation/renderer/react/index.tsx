@@ -3538,6 +3538,7 @@ if (import.meta.vitest) {
 			const fills = [...container.querySelectorAll(".presentation-figure-crop-fill")] as HTMLElement[];
 			const positions = fills.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
+			expect(first.closest(".presentation-interactive-disposition--canvas-framed")).not.toBeNull();
 		});
 
 		it("omits tiles not listed in a split disposition", () => {

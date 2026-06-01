@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
-  "summary": "Fixed slide 7 (Bauteilkatalog) and all interactive split tiles showing the full catalogue in every cell.\n\nRoot cause: `buildInteractiveSlideLayout` expands each split tile into its own disposition with `split: { tiles: [one] }`. A lone tile still satisfied `splitTilesPackedFrame`, so `FigureSplitMorphView` used assembled mode and rendered a full `\u003cimg\u003e` per cell instead of `FigureTileView` crop backgrounds.\n\nFix: `splitTilesPackedFrame` returns null when fewer than two tiles; guard assembled rendering the same way. Tests updated (core + renderer). Verified in browser on #/1/0: crop fills use distinct positions (0%, 25%, 50%…), no assembled-full layer.",
+  "summary": "Fixed tiny cropped catalogue tiles on interactive slides (e.g. Bauteilkatalog).\n\nRoot cause: per-tile interactive wrappers are already positioned on the canvas at `tile.position`, but `.presentation-figure-tile-frame` was excluded from the canvas-framed fill rule and kept absolute slide coordinates inside the wrapper — shrinking each crop to a fraction of its cell.\n\nFix: include figure tile frames in the canvas-framed `position: static; width/height: 100%` rule and use `display: block` so `.presentation-figure-crop-fill` spans the cell. Renderer tests: 55 pass.",
   "goal": "🎯framework",
   "sessions": [
     "⚪b9f5d20ffbf54da39143e48f69536ff4",
@@ -17,6 +17,7 @@
     "⚪416d875b7e544ce281ca5d969da194ee",
     "⚪d9c0c21320db422c80d0e518bba10151",
     "⚪40f9e04a329b4d18853804fddf6c67cc",
-    "⚪662a72c732b24d2291959d4b3240f75a"
+    "⚪662a72c732b24d2291959d4b3240f75a",
+    "⚪0a54874fbeb4411c8c3d0a6fe19aa8b3"
   ]
 }

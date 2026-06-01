@@ -1152,6 +1152,7 @@ import {
   buildPuzzle3dPlayEngagement,
   getPuzzle3dBrushEngagementEpoch,
   puzzle3dBrushEngagementSourceRef,
+  requestPuzzle3dZoomToSelection,
   subscribePuzzle3dBrushEngagementSource,
   type FixtureV1,
   type Puzzle3dFixtureDropDetail,
@@ -1257,6 +1258,9 @@ function Puzzle3dPlayEngagementPublisher(props: {
       onSelectTool();
     }
   }, [onSelectTool, snap.activeTool]);
+  const onZoomToSelection = reactHostPort.useCallback(() => {
+    requestPuzzle3dZoomToSelection(snap.selection);
+  }, [snap.selection]);
   const onCmdLineSubmit = reactHostPort.useCallback(
     (value: string) => {
       const token = normalizeEngagementCommandText(value.trim());
@@ -1267,6 +1271,11 @@ function Puzzle3dPlayEngagementPublisher(props: {
       }
       if (engagementCommandTokenEquals(token, "select")) {
         onSelectTool();
+        setCmdLine("");
+        return;
+      }
+      if (engagementCommandTokenEquals(token, "zoom")) {
+        onZoomToSelection();
         setCmdLine("");
         return;
       }
@@ -1281,14 +1290,14 @@ function Puzzle3dPlayEngagementPublisher(props: {
       }
       setCmdLine("");
     },
-    [brushSource, onBrushTool, onSelectTool, snap.activeTool],
+    [brushSource, onBrushTool, onSelectTool, onZoomToSelection, snap.activeTool],
   );
   const spec = reactHostPort.useMemo(
     () =>
       buildPuzzle3dPlayEngagement({
         activeTool: snap.activeTool,
         cmdLine,
-        selectionObjectCount: selectionCount,
+        selectionCount,
         onCmdLineChange: setCmdLine,
         onCmdLineSubmit,
         onRepeatLast: onRepeatLastEngagement,
@@ -1297,10 +1306,11 @@ function Puzzle3dPlayEngagementPublisher(props: {
         onBrushTool,
         onCycleBrushCandidate: () => brushSource.cycleCandidate(),
         onPickBrushCandidate: (index) => brushSource.pickCandidate(index),
+        onZoomToSelection,
         brushCandidates: brushSource.candidates,
         brushTargetActive: brushSource.targetActive,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onRepeatLastEngagement, onSelectTool, selectionCount, snap.activeTool],
+    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onRepeatLastEngagement, onSelectTool, onZoomToSelection, selectionCount, snap.activeTool],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {

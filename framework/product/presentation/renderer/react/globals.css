@@ -310,18 +310,21 @@
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
-	.presentation-disposition-frame:not(.presentation-figure-tile-frame),
-.reveal
-	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
-	.presentation-interactive-disposition__content
-	.presentation-morph-slot {
+	:is(.presentation-disposition-frame, .presentation-morph-slot) {
 	position: static !important;
 	left: auto !important;
 	top: auto !important;
 	width: 100% !important;
 	height: 100% !important;
 	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-figure-tile-frame {
+	display: block;
 }
 
 .reveal
