@@ -3,154 +3,131 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
+import type {
+    AffiliationEntry,
+    AffiliationsEmbodiment,
+    AuthorPerson,
+    AuthorsEmbodiment,
+    BulletEmbodiment,
+    DispositionPosition,
+    DispositionStyle,
+    FigureEmbodiment,
+    ParticipantEmphasis,
+    PdfEmbodiment,
+    Presentation,
+    RenderSlide,
+    ResolvedDisposition,
+    SplitTile,
+    TextEmbodiment,
+    Thought,
+    VideoEmbodiment
+} from "@framework/presentation/core";
+import {
+    abbreviateAuthorFirstName,
+    affiliationLineName,
+    centerResolvedArrangement,
+    clusterSplitTilesByVisualRow,
+    collectPresentationSlides,
+    expandThoughtSlides,
+    formatPresentationUrlHash,
+    intro,
+    parsePresentationSlideHash,
+    presentationLanguage,
+    presentationSlideAt,
+    resolveArrangement,
+    resolveTextMorphRoot,
+    splitFigureGrid,
+    splitTilesBoundingFrame,
+    splitTilesPackedFrame,
+    splitTilesUnionSourceCrop,
+    tileMorphId,
+    unionDispositionPositions
+} from "@framework/presentation/core";
+import {
+    applyElementsSurfaceChrome,
+    Expertise,
+    type ElementsSurfaceChromeInput,
+} from "@ui/react";
+import {
+    act,
+    createContext,
+    Fragment,
+    useCallback,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+    type CSSProperties,
+    type FC,
+    type ReactNode,
+    type RefObject,
+} from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { Document, Page, pdfjs } from "react-pdf";
 import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
-import { Document, Page, pdfjs } from "react-pdf";
 import "./globals.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-import {
-	applyElementsSurfaceChrome,
-	Expertise,
-	type ElementsSurfaceChromeInput,
-} from "@ui/react";
-import {
-	act,
-	createContext,
-	Fragment,
-	type CSSProperties,
-	useCallback,
-	useContext,
-	useEffect,
-	useLayoutEffect,
-	useMemo,
-	useRef,
-	useState,
-	type FC,
-	type ReactNode,
-	type RefObject,
-} from "react";
-import { createRoot, type Root } from "react-dom/client";
-import type {
-	AffiliationEntry,
-	AffiliationsEmbodiment,
-	Arrangement,
-	AuthorPerson,
-	AuthorsEmbodiment,
-	BulletEmbodiment,
-	DispositionPosition,
-	DispositionSplit,
-	DispositionStyle,
-	Embodiment,
-	FigureEmbodiment,
-	ParticipantEmphasis,
-	PdfEmbodiment,
-	Presentation,
-	RenderSlide,
-	ResolvedDisposition,
-	SplitTile,
-	TextEmbodiment,
-	Thought,
-	Transition,
-	VideoEmbodiment,
-} from "@framework/presentation/core";
-import {
-	abbreviateAuthorFirstName,
-	affiliationLineName,
-	analogy,
-	centerResolvedArrangement,
-	clusterSplitTilesByVisualRow,
-	collectPresentationSlides,
-	expandThoughtSlides,
-	formatPresentationUrlHash,
-	intro,
-	parsePresentationSlideHash,
-	presentationLanguage,
-	presentationEntityBookmarkName,
-	presentationSlideAt,
-	presentationSlideBookmarkParamKeys,
-	resolveArrangement,
-	resolveEmbodiment,
-	resolveTextMorphRoot,
-	splitFigureGrid,
-	splitTilesBoundingFrame,
-	splitTilesInGroupFrame,
-	splitTilesPackedFrame,
-	splitTilesUnionSourceCrop,
-	tileMorphId,
-	unionDispositionPositions,
-	type MorphFromSlot,
-	type TextMorphRoot,
-} from "@framework/presentation/core";
 // #endregion 🔌Adapters
 
 export type {
-	AffiliationEntry,
-	AffiliationsEmbodiment,
-	Arrangement,
-	AuthorPerson,
-	AuthorsEmbodiment,
-	BulletEmbodiment,
-	Disposition,
-	DispositionPosition,
-	DispositionSplit,
-	DispositionStyle,
-	Embodiment,
-	FigureEmbodiment,
-	Participant,
-	ParticipantEmphasis,
-	PdfEmbodiment,
-	Chapter,
-	Presentation,
-	RenderSlide,
-	ResolvedDisposition,
-	Sequence,
-	Slide,
-	SplitTile,
-	TextEmbodiment,
-	Thought,
-	Transition,
-	VideoEmbodiment,
+    AffiliationEntry,
+    AffiliationsEmbodiment,
+    Arrangement,
+    AuthorPerson,
+    AuthorsEmbodiment,
+    BulletEmbodiment, Chapter, Disposition,
+    DispositionPosition,
+    DispositionSplit,
+    DispositionStyle,
+    Embodiment,
+    FigureEmbodiment,
+    Participant,
+    ParticipantEmphasis,
+    PdfEmbodiment, Presentation,
+    RenderSlide,
+    ResolvedDisposition,
+    Sequence,
+    Slide,
+    SplitTile,
+    TextEmbodiment,
+    Thought,
+    Transition,
+    VideoEmbodiment
 } from "@framework/presentation/core";
 
 export {
-	analogy,
-	countArrangements,
-	collectPresentationSlides,
-	expandThoughtSlides,
-	formatPresentationUrlHash,
-	intro,
-	morphId,
-	parsePresentationSlideHash,
-	PRESENTATION_CHAPTER_QUERY_PARAM,
-	PRESENTATION_SEQUENCE_QUERY_PARAM,
-	PRESENTATION_SLIDE_QUERY_PARAM,
-	PRESENTATION_THOUGHT_QUERY_PARAM,
-	presentationSequences,
-	presentationLanguage,
-	presentationEntityBookmarkName,
-	presentationSlideAt,
-	presentationSlideBookmarkParamKeys,
-	resolveArrangement,
-	resolveEmbodiment,
-	resolveTextMorphRoot,
-	clusterSplitTilesByVisualRow,
-	splitFigureGrid,
-	splitTilesBoundingFrame,
-	splitTilesInGroupFrame,
-	splitTilesPackedFrame,
-	splitTilesUnionSourceCrop,
-	tileMorphId,
+    analogy, clusterSplitTilesByVisualRow, collectPresentationSlides, countArrangements, expandThoughtSlides,
+    formatPresentationUrlHash,
+    intro,
+    morphId,
+    parsePresentationSlideHash,
+    PRESENTATION_CHAPTER_QUERY_PARAM,
+    PRESENTATION_SEQUENCE_QUERY_PARAM,
+    PRESENTATION_SLIDE_QUERY_PARAM,
+    PRESENTATION_THOUGHT_QUERY_PARAM, presentationEntityBookmarkName, presentationLanguage, presentationSequences, presentationSlideAt,
+    presentationSlideBookmarkParamKeys,
+    resolveArrangement,
+    resolveEmbodiment,
+    resolveTextMorphRoot, splitFigureGrid,
+    splitTilesBoundingFrame,
+    splitTilesInGroupFrame,
+    splitTilesPackedFrame,
+    splitTilesUnionSourceCrop,
+    tileMorphId
 } from "@framework/presentation/core";
 export type {
-	MorphFromSlot,
-	PresentationLanguageKind,
-	PresentationSlideBookmark,
-	PresentationSlideBookmarkParamKeys,
-	PresentationSlideRef,
-	RenderSlide,
-	Slide,
-	TextMorphRoot,
+    MorphFromSlot,
+    PresentationLanguageKind,
+    PresentationSlideBookmark,
+    PresentationSlideBookmarkParamKeys,
+    PresentationSlideRef,
+    RenderSlide,
+    Slide,
+    TextMorphRoot
 } from "@framework/presentation/core";
 export { Expertise } from "@ui/react";
 
@@ -3790,10 +3767,10 @@ if (import.meta.vitest) {
 		it("matches auto-animate targets only by data-id", () => {
 			const fromSlide = document.createElement("section");
 			fromSlide.innerHTML =
-				'<div data-id="catalogue-col1" class="presentation-morph-slot--figure"><h2>Rippendecke</h2></div>';
+				'<div data-id="catalogue-col1" class="presentation-morph-slot--figure"><h2>Rippenplatte</h2></div>';
 			const toSlide = document.createElement("section");
 			toSlide.innerHTML =
-				'<div data-id="catalogue-col1" class="presentation-morph-slot--label"><h2>Rippendecke</h2></div>';
+				'<div data-id="catalogue-col1" class="presentation-morph-slot--label"><h2>Rippenplatte</h2></div>';
 			const host: AutoAnimateMatcherHost = {
 				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
 					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
@@ -3906,7 +3883,7 @@ if (import.meta.vitest) {
 													{
 														kind: "text",
 														id: "label",
-														lines: ["Rippendecke"],
+														lines: ["Rippenplatte"],
 														level: "heading",
 														morphRoot: "heading-line",
 													},
@@ -3939,7 +3916,7 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--label');
-			expect(slot?.querySelector("h2")?.textContent).toBe("Rippendecke");
+			expect(slot?.querySelector("h2")?.textContent).toBe("Rippenplatte");
 			expect(slot?.querySelector("h2[data-id]")).toBeNull();
 		});
 

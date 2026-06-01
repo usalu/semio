@@ -4395,19 +4395,43 @@ export function boundsFromObjectGroups(groups: readonly Group[]): { readonly cen
   return { center: threeVec3ToCad(centerScratch), radius: Math.max(radius, 0.5) };
 }
 
-/** @emoji 🛰️ Frames perspective orbit camera to fit scene object bounds (CAD center, Three world rig). */
-export function applyAutoFitCamera(camera: ThreePerspectiveCamera, bounds: { readonly center: Vec3; readonly radius: number }, padding = 1.25, controls?: { readonly target: Vector3; update?: () => void } | null): void {
+/** @emoji ⏱️ Duration of engagement selection zoom camera ease (ms). */
+export const PUZZLE_3D_SELECTION_ZOOM_DURATION_MS = 450;
+
+/** @emoji ⏱️ Ease-in-out cubic for selection zoom and other puzzle 3D camera transitions. */
+export function puzzle3dEaseInOutCubic01(t: number): number {
+  const x = Math.min(1, Math.max(0, t));
+  return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
+}
+
+/** @emoji 🛰️ Orbit position + target in Three world space for framing a bounds sphere. */
+export function puzzle3dFitCameraRigFromBounds(
+  bounds: { readonly center: Vec3; readonly radius: number },
+  padding = 1.25,
+): { readonly position: Vector3; readonly target: Vector3 } {
   const centerThree = cadVec3ToThree(bounds.center);
   const dist = Math.max(bounds.radius * padding, 2);
-  camera.position.set(centerThree[0] + dist, centerThree[1] + dist, centerThree[2] + dist * 0.85);
+  return {
+    position: new Vector3(centerThree[0] + dist, centerThree[1] + dist, centerThree[2] + dist * 0.85),
+    target: new Vector3(centerThree[0], centerThree[1], centerThree[2]),
+  };
+}
+
+/** @emoji 🛰️ Frames perspective orbit camera to fit scene object bounds (CAD center, Three world rig). */
+export function applyAutoFitCamera(camera: ThreePerspectiveCamera, bounds: { readonly center: Vec3; readonly radius: number }, padding = 1.25, controls?: { readonly target: Vector3; update?: () => void } | null): void {
+  const rig = puzzle3dFitCameraRigFromBounds(bounds, padding);
+  camera.position.copy(rig.position);
   if (controls?.target) {
-    controls.target.set(centerThree[0], centerThree[1], centerThree[2]);
+    controls.target.copy(rig.target);
     controls.update?.();
   } else {
-    camera.lookAt(centerThree[0], centerThree[1], centerThree[2]);
+    camera.lookAt(rig.target);
   }
   camera.updateProjectionMatrix();
 }
+
+/** @emoji 🔍 True while engagement selection zoom is easing the orbit camera. */
+export const puzzle3dSelectionZoomAnimatingRef = { current: false };
 
 function vector3IsFinite(v: Vector3): boolean {
   return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
@@ -6132,7 +6156,16 @@ function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; rea
   );
 }
 
-/** @emoji 🔍 Frames orbit camera when engagement Zoom requests a selection fit. */
+type SelectionZoomAnim = {
+  readonly epoch: number;
+  readonly fromPos: Vector3;
+  readonly fromTgt: Vector3;
+  readonly toPos: Vector3;
+  readonly toTgt: Vector3;
+  readonly startMs: number;
+};
+
+/** @emoji 🔍 Smoothly eases orbit camera when engagement Zoom frames the selection. */
 function SelectionZoom(props: {
   readonly attractions: readonly Pick<AttractionProps, "id" | "attracting" | "attracted">[];
   readonly zoom: number;
@@ -6141,30 +6174,84 @@ function SelectionZoom(props: {
   const reg = useRegistry();
   const { camera, controls, invalidate } = useThree();
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
+  const posScratch = reactHostPort.useMemo(() => new Vector3(), []);
   const zoomEpoch = reactHostPort.useSyncExternalStore(subscribePuzzle3dZoomToSelection, getPuzzle3dZoomToSelectionEpoch, getPuzzle3dZoomToSelectionEpoch);
-  const lastAppliedEpoch = reactHostPort.useRef(0);
+  const fulfilledEpochRef = reactHostPort.useRef(0);
+  const boundsRetryRef = reactHostPort.useRef(0);
+  const animRef = reactHostPort.useRef<SelectionZoomAnim | null>(null);
   useFrame(() => {
-    if (zoomEpoch === lastAppliedEpoch.current) {
+    if (!(camera instanceof ThreePerspectiveCamera)) {
+      return;
+    }
+    const orbit = controls as { readonly target: Vector3; readonly update?: () => void; enabled?: boolean } | null;
+    const anim = animRef.current;
+    if (anim) {
+      if (anim.epoch !== zoomEpoch) {
+        animRef.current = null;
+        puzzle3dSelectionZoomAnimatingRef.current = false;
+        if (orbit) {
+          orbit.enabled = true;
+        }
+      } else {
+        const linear = Math.min(1, (performance.now() - anim.startMs) / PUZZLE_3D_SELECTION_ZOOM_DURATION_MS);
+        const w = puzzle3dEaseInOutCubic01(linear);
+        posScratch.copy(anim.fromPos).lerp(anim.toPos, w);
+        tgtScratch.copy(anim.fromTgt).lerp(anim.toTgt, w);
+        camera.position.copy(posScratch);
+        if (orbit?.target) {
+          orbit.target.copy(tgtScratch);
+          orbit.update?.();
+        } else {
+          camera.lookAt(tgtScratch);
+        }
+        camera.updateProjectionMatrix();
+        invalidate();
+        if (linear < 1) {
+          return;
+        }
+        animRef.current = null;
+        puzzle3dSelectionZoomAnimatingRef.current = false;
+        if (orbit) {
+          orbit.enabled = true;
+        }
+        props.onCamera?.({
+          position: threeVec3ToCad(camera.position),
+          target: threeVec3ToCad(tgtScratch),
+          zoom: props.zoom,
+        });
+        return;
+      }
+    }
+    if (zoomEpoch <= fulfilledEpochRef.current) {
       return;
     }
     const selection = getPuzzle3dZoomToSelectionTarget();
     const bounds = boundsFromPuzzle3dSelection(selection, reg, props.attractions);
     if (!bounds) {
+      boundsRetryRef.current += 1;
+      if (boundsRetryRef.current > 90) {
+        fulfilledEpochRef.current = zoomEpoch;
+        boundsRetryRef.current = 0;
+      }
       return;
     }
-    if (!(camera instanceof ThreePerspectiveCamera)) {
-      return;
+    boundsRetryRef.current = 0;
+    fulfilledEpochRef.current = zoomEpoch;
+    const rig = puzzle3dFitCameraRigFromBounds(bounds, 1.35);
+    const fromTgt = orbit?.target ? orbit.target.clone() : targetScratch.set(...cadVec3ToThree(bounds.center));
+    animRef.current = {
+      epoch: zoomEpoch,
+      fromPos: camera.position.clone(),
+      fromTgt,
+      toPos: rig.position,
+      toTgt: rig.target,
+      startMs: performance.now(),
+    };
+    puzzle3dSelectionZoomAnimatingRef.current = true;
+    if (orbit) {
+      orbit.enabled = false;
     }
-    lastAppliedEpoch.current = zoomEpoch;
-    const orbit = controls as { target: Vector3; update?: () => void } | null;
-    applyAutoFitCamera(camera, bounds, 1.35, orbit);
     invalidate();
-    const tgt = orbit?.target ?? targetScratch.set(...cadVec3ToThree(bounds.center));
-    props.onCamera?.({
-      position: threeVec3ToCad(camera.position),
-      target: threeVec3ToCad(tgt),
-      zoom: props.zoom,
-    });
   });
   return null;
 }
@@ -8649,6 +8736,19 @@ if (import.meta.vitest) {
       const camera = new ThreePerspectiveCamera(50, 1, 0.1, 10_000);
       applyAutoFitCamera(camera, { center: [0, 0, 0], radius: 10 });
       expect(camera.position.length()).toBeGreaterThan(10);
+    });
+  });
+  describe("puzzle3dEaseInOutCubic01", () => {
+    it("is 0 at start and 1 at end", () => {
+      expect(puzzle3dEaseInOutCubic01(0)).toBe(0);
+      expect(puzzle3dEaseInOutCubic01(1)).toBe(1);
+      expect(puzzle3dEaseInOutCubic01(0.5)).toBe(0.5);
+    });
+  });
+  describe("puzzle3dFitCameraRigFromBounds", () => {
+    it("places camera offset from bounds center", () => {
+      const rig = puzzle3dFitCameraRigFromBounds({ center: [0, 0, 10], radius: 5 }, 1.25);
+      expect(rig.position.distanceTo(rig.target)).toBeGreaterThan(5);
     });
   });
   describe("cadVec3ToThree", () => {

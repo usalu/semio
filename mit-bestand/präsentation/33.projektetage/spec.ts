@@ -4,12 +4,12 @@
 
 // #region 🔌Adapters
 import {
-	splitFigureGrid,
-	type DispositionPosition,
-	type IntroSpec,
-	type Participant,
-	type PresentationMeta,
-	type SplitTile,
+    splitFigureGrid,
+    type DispositionPosition,
+    type IntroSpec,
+    type Participant,
+    type PresentationMeta,
+    type SplitTile,
 } from "@framework/presentation/core";
 // #endregion 🔌Adapters
 
@@ -202,7 +202,7 @@ export const CATALOGUE_COLUMN_TILE_KEYS = {
 } as const;
 
 export const CATALOGUE_COLUMN_LABELS: Record<keyof typeof CATALOGUE_COLUMN_TILE_KEYS, string> = {
-	col1: "Rippendecke",
+	col1: "Rippenplatte",
 	col2: "Unterzug",
 	col3: "Stütze",
 };
