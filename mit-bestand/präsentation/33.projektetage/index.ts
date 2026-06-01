@@ -3,13 +3,17 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { countArrangements, intro } from "@framework/presentation/core";
+import { countArrangements, intro, type Presentation, type Thought } from "@framework/presentation/core";
 import { Expertise, mountPresentation } from "@framework/presentation/renderer/react";
 import "./globals.css";
 // #endregion 🔌Adapters
 
 //#region 🔖Deck
-const deck = intro({
+const ASSET_CATALOGUE = "./Screenshot-2023-05-24-at-22-11-19-component-catalogue.png";
+const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
+const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
+
+const introDeck = intro({
 	id: "projektetage",
 	name: "33. Projektetage",
 	title: {
@@ -62,6 +66,82 @@ const deck = intro({
 	},
 });
 
+const mediaThought: Thought = {
+	id: "media",
+	transition: { kind: "morph" },
+	participants: [
+		{
+			id: "catalogue",
+			embodiments: [
+				{
+					kind: "figure",
+					src: ASSET_CATALOGUE,
+					alt: "Komponentenkatalog",
+				},
+			],
+		},
+		{
+			id: "demo-video",
+			embodiments: [
+				{
+					kind: "video",
+					src: ASSET_VIDEO,
+					muted: true,
+					controls: true,
+				},
+			],
+		},
+		{
+			id: "thesis",
+			embodiments: [
+				{
+					kind: "pdf",
+					src: ASSET_THESIS_PDF,
+					page: 1,
+					alt: "Bachelorarbeit Ueli Saluz",
+				},
+			],
+		},
+	],
+	arrangements: [
+		{
+			id: "catalogue",
+			dispositions: [
+				{
+					participantId: "catalogue",
+					emphasis: "active",
+					position: { x: 0.05, y: 0.1, width: 0.9, height: 0.75 },
+				},
+			],
+		},
+		{
+			id: "media-suite",
+			dispositions: [
+				{
+					participantId: "catalogue",
+					emphasis: "muted",
+					position: { x: 0.02, y: 0.05, width: 0.3, height: 0.35 },
+				},
+				{
+					participantId: "demo-video",
+					emphasis: "active",
+					position: { x: 0.35, y: 0.1, width: 0.6, height: 0.5 },
+				},
+				{
+					participantId: "thesis",
+					emphasis: "active",
+					position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+				},
+			],
+		},
+	],
+};
+
+const deck: Presentation = {
+	...introDeck,
+	sequences: [...introDeck.sequences, { id: "media", thoughts: [mediaThought] }],
+};
+
 function mount(): void {
 	const el = document.getElementById("root");
 	if (!el) {
@@ -85,8 +165,14 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("projektetage deck", () => {
-		it("declares seven intro slides", () => {
-			expect(countArrangements(deck)).toBe(7);
+		it("declares intro plus media arrangement slides", () => {
+			expect(countArrangements(deck)).toBe(9);
+		});
+
+		it("includes figure, video, and pdf participants in the media thought", () => {
+			const media = deck.sequences.find((s) => s.id === "media")?.thoughts[0];
+			const kinds = media?.participants.flatMap((p) => p.embodiments.map((e) => e.kind)) ?? [];
+			expect(kinds).toEqual(["figure", "video", "pdf"]);
 		});
 	});
 }

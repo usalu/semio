@@ -15,6 +15,7 @@
 		"@ui/react": "workspace:*",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
+		"react-pdf": "^10.3.0",
 		"reveal.js": "^5.2.1"
 	},
 	"devDependencies": {

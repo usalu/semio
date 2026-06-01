@@ -5,7 +5,10 @@
 // #region 🔌Adapters
 import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
+import { Document, Page, pdfjs } from "react-pdf";
 import "./globals.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 import {
 	applyElementsSurfaceChrome,
 	Expertise,
@@ -20,18 +23,23 @@ import type {
 	AuthorPerson,
 	AuthorsEmbodiment,
 	BulletEmbodiment,
+	DispositionPosition,
+	DispositionStyle,
 	Embodiment,
 	FigureEmbodiment,
 	ParticipantEmphasis,
+	PdfEmbodiment,
 	Presentation,
-	ResolvedPlacement,
+	ResolvedDisposition,
 	TextEmbodiment,
 	Thought,
 	Transition,
+	VideoEmbodiment,
 } from "@framework/presentation/core";
 import {
 	abbreviateAuthorFirstName,
 	affiliationLineName,
+	analogy,
 	intro,
 	resolveArrangement,
 	resolveTextMorphRoot,
@@ -46,20 +54,25 @@ export type {
 	AuthorPerson,
 	AuthorsEmbodiment,
 	BulletEmbodiment,
+	Disposition,
+	DispositionPosition,
+	DispositionStyle,
 	Embodiment,
 	FigureEmbodiment,
 	Participant,
 	ParticipantEmphasis,
-	ParticipantPlacement,
+	PdfEmbodiment,
 	Presentation,
-	ResolvedPlacement,
+	ResolvedDisposition,
 	Sequence,
 	TextEmbodiment,
 	Thought,
 	Transition,
+	VideoEmbodiment,
 } from "@framework/presentation/core";
 
 export {
+	analogy,
 	countArrangements,
 	intro,
 	morphId,
@@ -393,29 +406,141 @@ function FigureMorphView({
 }): ReactNode {
 	return (
 		<div data-id={anchorId} className={emphasisClass(emphasis)}>
-			<img src={embodiment.src} alt={embodiment.alt ?? ""} />
+			<img className="presentation-media-figure max-h-full max-w-full object-contain" src={embodiment.src} alt={embodiment.alt ?? ""} />
 		</div>
 	);
 }
 
-function MorphPlacementView({ placement }: { readonly placement: ResolvedPlacement }): ReactNode {
-	const { embodiment, emphasis, morphId: anchorId } = placement;
+function VideoMorphView({
+	morphId: anchorId,
+	embodiment,
+	emphasis,
+}: {
+	readonly morphId: string;
+	readonly embodiment: VideoEmbodiment;
+	readonly emphasis: ParticipantEmphasis;
+}): ReactNode {
+	return (
+		<div data-id={anchorId} className={emphasisClass(emphasis)}>
+			<video
+				className="presentation-media-video max-h-full max-w-full object-contain"
+				src={embodiment.src}
+				poster={embodiment.poster}
+				autoPlay={embodiment.autoplay ?? false}
+				loop={embodiment.loop ?? false}
+				muted={embodiment.muted ?? true}
+				controls={embodiment.controls ?? false}
+				playsInline
+			/>
+		</div>
+	);
+}
+
+function PdfMorphView({
+	morphId: anchorId,
+	embodiment,
+	emphasis,
+}: {
+	readonly morphId: string;
+	readonly embodiment: PdfEmbodiment;
+	readonly emphasis: ParticipantEmphasis;
+}): ReactNode {
+	return (
+		<div data-id={anchorId} className={emphasisClass(emphasis)}>
+			<Document file={embodiment.src} loading={null} error={null}>
+				<Page
+					className="presentation-media-pdf"
+					pageNumber={embodiment.page ?? 1}
+					renderTextLayer={false}
+					renderAnnotationLayer={false}
+				/>
+			</Document>
+		</div>
+	);
+}
+
+function dispositionFrameStyle(
+	position: DispositionPosition | undefined,
+	style: DispositionStyle | undefined,
+): React.CSSProperties | undefined {
+	if (!position && !style) {
+		return undefined;
+	}
+	const frame: React.CSSProperties = position
+		? {
+				position: "absolute",
+				left: `${position.x * 100}%`,
+				top: `${position.y * 100}%`,
+				width: `${position.width * 100}%`,
+				height: `${position.height * 100}%`,
+				boxSizing: "border-box",
+			}
+		: {};
+	if (style?.opacity !== undefined) {
+		frame.opacity = style.opacity;
+	}
+	const transforms: string[] = [];
+	if (style?.rotate !== undefined) {
+		transforms.push(`rotate(${style.rotate}deg)`);
+	}
+	if (style?.scale !== undefined) {
+		transforms.push(`scale(${style.scale})`);
+	}
+	if (transforms.length > 0) {
+		frame.transform = transforms.join(" ");
+	}
+	return frame;
+}
+
+function DispositionFrame({
+	disposition,
+	children,
+}: {
+	readonly disposition: ResolvedDisposition;
+	readonly children: ReactNode;
+}): ReactNode {
+	const frameStyle = dispositionFrameStyle(disposition.position, disposition.style);
+	if (!frameStyle) {
+		return children;
+	}
+	return (
+		<div className="presentation-disposition-frame" style={frameStyle}>
+			{children}
+		</div>
+	);
+}
+
+function MorphDispositionView({ disposition }: { readonly disposition: ResolvedDisposition }): ReactNode {
+	const { embodiment, emphasis, morphId: anchorId } = disposition;
+	let content: ReactNode;
 	switch (embodiment.kind) {
 		case "text":
-			return <TextMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			content = <TextMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			break;
 		case "authors":
-			return <AuthorsMorphView morphId={anchorId} embodiment={embodiment} />;
+			content = <AuthorsMorphView morphId={anchorId} embodiment={embodiment} />;
+			break;
 		case "affiliations":
-			return <AffiliationsMorphView morphId={anchorId} embodiment={embodiment} />;
+			content = <AffiliationsMorphView morphId={anchorId} embodiment={embodiment} />;
+			break;
 		case "bullet":
-			return <BulletMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			content = <BulletMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			break;
 		case "figure":
-			return <FigureMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			content = <FigureMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			break;
+		case "video":
+			content = <VideoMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			break;
+		case "pdf":
+			content = <PdfMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			break;
 		default: {
 			const _exhaustive: never = embodiment;
-			return _exhaustive;
+			content = _exhaustive;
 		}
 	}
+	return <DispositionFrame disposition={disposition}>{content}</DispositionFrame>;
 }
 //#endregion 🔖MorphView
 
@@ -431,15 +556,17 @@ const ArrangementSection: FC<{
 }> = ({ thought, arrangement, transition }) => {
 	const resolved = resolveArrangement(thought, arrangement.id);
 	const morph = arrangementUsesMorph(transition);
+	const positioned = resolved.some((d) => d.position !== undefined);
 	return (
 		<section
-			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": "intro" } : {})}
+			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": thought.id } : {})}
 			title={arrangement.id}
+			className={positioned ? "presentation-arrangement--positioned" : undefined}
 		>
-			{resolved.map((placement) => (
-				<MorphPlacementView
-					key={`${arrangement.id}-${placement.morphId}-${placement.embodimentId ?? "default"}`}
-					placement={placement}
+			{resolved.map((disposition) => (
+				<MorphDispositionView
+					key={`${arrangement.id}-${disposition.morphId}-${disposition.embodimentId ?? "default"}`}
+					disposition={disposition}
 				/>
 			))}
 		</section>
@@ -742,6 +869,84 @@ if (import.meta.vitest) {
 			expect(slide("title")?.querySelector('[data-id^="description"]')).toBeNull();
 			expect(slide("description")?.querySelector('[data-id^="description"]')).toBeTruthy();
 			expect(slide("goal")?.querySelector('[data-id="goal"]')).toBeTruthy();
+		});
+
+		it("renders video and pdf embodiments with data-id for auto-animate", () => {
+			const deck: Presentation = {
+				id: "media-test",
+				name: "Media",
+				sequences: [
+					{
+						id: "media",
+						thoughts: [
+							{
+								id: "media",
+								transition: { kind: "morph" },
+								participants: [
+									{ id: "clip", embodiments: [{ kind: "video", src: "/demo.mp4" }] },
+									{ id: "doc", embodiments: [{ kind: "pdf", src: "/paper.pdf", page: 1 }] },
+								],
+								arrangements: [
+									{
+										id: "slide",
+										dispositions: [
+											{ participantId: "clip", emphasis: "active" },
+											{ participantId: "doc", emphasis: "active" },
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			expect(container.querySelector('[data-id="clip"] video[src="/demo.mp4"]')).toBeTruthy();
+			expect(container.querySelector('[data-id="doc"] .react-pdf__Document')).toBeTruthy();
+		});
+
+		it("applies absolute positioning for dispositions with position", () => {
+			const deck: Presentation = {
+				id: "position-test",
+				name: "Position",
+				sequences: [
+					{
+						id: "pos",
+						thoughts: [
+							{
+								id: "pos",
+								participants: [
+									{
+										id: "box",
+										embodiments: [{ kind: "text", lines: ["A"], level: "body" }],
+									},
+								],
+								arrangements: [
+									{
+										id: "placed",
+										dispositions: [
+											{
+												participantId: "box",
+												emphasis: "active",
+												position: { x: 0.1, y: 0.2, width: 0.5, height: 0.3 },
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const frame = container.querySelector(".presentation-disposition-frame") as HTMLElement | null;
+			expect(frame?.style.position).toBe("absolute");
+			expect(frame?.style.left).toBe("10%");
+			expect(frame?.style.width).toBe("50%");
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {

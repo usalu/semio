@@ -1,5 +1,5 @@
 // #region 🧱Header
-/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Sequence}, {@link Thought}, {@link Participant}, {@link Embodiment}, {@link Arrangement}, {@link Transition}, and {@link intro}. */
+/** 🧱 `@framework/presentation/core` — Render-independent declarative presentations: {@link Presentation}, {@link Sequence}, {@link Thought}, {@link Participant}, {@link Embodiment}, {@link Disposition}, {@link Arrangement}, {@link Transition}, {@link intro}, and {@link analogy}. */
 // #endregion 🧱Header
 
 //#region 🔖Emphasis
@@ -57,6 +57,27 @@ export interface FigureEmbodiment {
 	readonly kind: "figure";
 	readonly id?: string;
 	readonly src: string;
+	readonly alt?: string;
+}
+
+/** @emoji 🎬 Video clip on a slide. */
+export interface VideoEmbodiment {
+	readonly kind: "video";
+	readonly id?: string;
+	readonly src: string;
+	readonly poster?: string;
+	readonly autoplay?: boolean;
+	readonly loop?: boolean;
+	readonly muted?: boolean;
+	readonly controls?: boolean;
+}
+
+/** @emoji 📄 PDF document page on a slide. */
+export interface PdfEmbodiment {
+	readonly kind: "pdf";
+	readonly id?: string;
+	readonly src: string;
+	readonly page?: number;
 	readonly alt?: string;
 }
 
@@ -198,7 +219,14 @@ export interface AffiliationsEmbodiment {
 }
 
 /** @emoji 🎭 One visual form a {@link Participant} may take on a slide. */
-export type Embodiment = TextEmbodiment | FigureEmbodiment | BulletEmbodiment | AuthorsEmbodiment | AffiliationsEmbodiment;
+export type Embodiment =
+	| TextEmbodiment
+	| FigureEmbodiment
+	| VideoEmbodiment
+	| PdfEmbodiment
+	| BulletEmbodiment
+	| AuthorsEmbodiment
+	| AffiliationsEmbodiment;
 //#endregion 🔖Embodiment
 
 //#region 🔖Participant
@@ -209,20 +237,37 @@ export interface Participant {
 }
 //#endregion 🔖Participant
 
-//#region 🔖Placement
-/** @emoji 📍 Which embodiment of which participant appears on one arrangement and how strongly. */
-export interface ParticipantPlacement {
+//#region 🔖Disposition
+/** @emoji 📐 Normalized slide rectangle (0..1 fractions) for a {@link Disposition}. */
+export interface DispositionPosition {
+	readonly x: number;
+	readonly y: number;
+	readonly width: number;
+	readonly height: number;
+}
+
+/** @emoji 🎨 Optional style overrides on a {@link Disposition}. */
+export interface DispositionStyle {
+	readonly opacity?: number;
+	readonly rotate?: number;
+	readonly scale?: number;
+}
+
+/** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */
+export interface Disposition {
 	readonly participantId: string;
 	readonly embodimentId?: string;
 	readonly emphasis: ParticipantEmphasis;
+	readonly position?: DispositionPosition;
+	readonly style?: DispositionStyle;
 }
-//#endregion 🔖Placement
+//#endregion 🔖Disposition
 
 //#region 🔖Arrangement
-/** @emoji 🖼 One slide: participants placed with emphasis. */
+/** @emoji 🖼 One slide: participants disposed with emphasis, position, and style. */
 export interface Arrangement {
 	readonly id: string;
-	readonly placements: readonly ParticipantPlacement[];
+	readonly dispositions: readonly Disposition[];
 }
 //#endregion 🔖Arrangement
 
@@ -257,12 +302,14 @@ export interface Presentation {
 
 //#region 🔖Resolved
 /** @emoji ✅ One participant embodiment resolved for rendering a single arrangement. */
-export interface ResolvedPlacement {
+export interface ResolvedDisposition {
 	readonly participant: Participant;
 	readonly embodiment: Embodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly embodimentId?: string;
 	readonly morphId: string;
+	readonly position?: DispositionPosition;
+	readonly style?: DispositionStyle;
 }
 //#endregion 🔖Resolved
 
@@ -283,24 +330,26 @@ export function resolveEmbodiment(participant: Participant, embodimentId?: strin
 	return first;
 }
 
-/** @emoji 🔍 Resolves all placements for one arrangement within a thought. */
-export function resolveArrangement(thought: Thought, arrangementId: string): ResolvedPlacement[] {
+/** @emoji 🔍 Resolves all dispositions for one arrangement within a thought. */
+export function resolveArrangement(thought: Thought, arrangementId: string): ResolvedDisposition[] {
 	const arrangement = thought.arrangements.find((a) => a.id === arrangementId);
 	if (!arrangement) {
 		throw new Error(`Thought "${thought.id}" has no arrangement "${arrangementId}".`);
 	}
 	const byId = new Map(thought.participants.map((p) => [p.id, p]));
-	return arrangement.placements.map((placement) => {
-		const participant = byId.get(placement.participantId);
+	return arrangement.dispositions.map((disposition) => {
+		const participant = byId.get(disposition.participantId);
 		if (!participant) {
-			throw new Error(`Thought "${thought.id}" has no participant "${placement.participantId}".`);
+			throw new Error(`Thought "${thought.id}" has no participant "${disposition.participantId}".`);
 		}
 		return {
 			participant,
-			embodiment: resolveEmbodiment(participant, placement.embodimentId),
-			emphasis: placement.emphasis,
-			embodimentId: placement.embodimentId,
+			embodiment: resolveEmbodiment(participant, disposition.embodimentId),
+			emphasis: disposition.emphasis,
+			embodimentId: disposition.embodimentId,
 			morphId: morphId(participant.id),
+			position: disposition.position,
+			style: disposition.style,
 		};
 	});
 }
@@ -475,13 +524,13 @@ export function intro(spec: IntroSpec): Presentation {
 		},
 	];
 
-	const muted = (participantId: string, embodimentId?: string): ParticipantPlacement => ({
+	const muted = (participantId: string, embodimentId?: string): Disposition => ({
 		participantId,
 		...(embodimentId ? { embodimentId } : {}),
 		emphasis: "muted",
 	});
 
-	const active = (participantId: string, embodimentId?: string): ParticipantPlacement => ({
+	const active = (participantId: string, embodimentId?: string): Disposition => ({
 		participantId,
 		...(embodimentId ? { embodimentId } : {}),
 		emphasis: "active",
@@ -500,18 +549,18 @@ export function intro(spec: IntroSpec): Presentation {
 		arrangements: [
 			{
 				id: "title",
-				placements: [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)],
+				dispositions: [active(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_FULL)],
 			},
 			{
 				id: "description",
-				placements: [
+				dispositions: [
 					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
 					active(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_FULL),
 				],
 			},
 			{
 				id: "goal",
-				placements: [
+				dispositions: [
 					muted(INTRO_PARTICIPANT_TITLE, INTRO_EMBODIMENT_TITLE_SHORT),
 					muted(INTRO_PARTICIPANT_DESCRIPTION, INTRO_EMBODIMENT_DESCRIPTION_SHORT),
 					active(INTRO_PARTICIPANT_GOAL),
@@ -519,14 +568,14 @@ export function intro(spec: IntroSpec): Presentation {
 			},
 			{
 				id: "authors",
-				placements: [
+				dispositions: [
 					...introMutedAboveAuthors,
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_PLAIN),
 				],
 			},
 			{
 				id: "affiliations-1",
-				placements: [
+				dispositions: [
 					...introMutedAboveAuthors,
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP1),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP1),
@@ -534,7 +583,7 @@ export function intro(spec: IntroSpec): Presentation {
 			},
 			{
 				id: "affiliations-2",
-				placements: [
+				dispositions: [
 					...introMutedAboveAuthors,
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP2),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP2),
@@ -542,7 +591,7 @@ export function intro(spec: IntroSpec): Presentation {
 			},
 			{
 				id: "affiliations-3",
-				placements: [
+				dispositions: [
 					...introMutedAboveAuthors,
 					active(INTRO_PARTICIPANT_AUTHORS, INTRO_EMBODIMENT_AUTHORS_MARKED_AFFILIATIONS_STEP3),
 					active(INTRO_PARTICIPANT_INSTITUTIONS, INTRO_EMBODIMENT_INSTITUTIONS_STEP3),
@@ -558,6 +607,122 @@ export function intro(spec: IntroSpec): Presentation {
 	};
 }
 //#endregion 🔖Intro
+
+//#region 🔖Analogy
+const ANALOGY_PARTICIPANT_LABEL = "label";
+const ANALOGY_PARTICIPANT_VISUAL = "visual";
+const ANALOGY_EMBODIMENT_LABEL_SOURCE = "source";
+const ANALOGY_EMBODIMENT_LABEL_TARGET = "target";
+const ANALOGY_EMBODIMENT_VISUAL_SOURCE = "source";
+const ANALOGY_EMBODIMENT_VISUAL_TARGET = "target";
+
+/** @emoji 🔀 Spec for a two-slide analogy (source concept morphs into target via shared participant ids). */
+export interface AnalogySpec {
+	readonly id?: string;
+	readonly name?: string;
+	readonly source: {
+		readonly label: string;
+		readonly figure?: string;
+	};
+	readonly target: {
+		readonly label: string;
+		readonly figure?: string;
+	};
+}
+
+/** @emoji 🔀 Builds a morph thought: source arrangement then mapping arrangement (reveal.js auto-animate). */
+export function analogy(spec: AnalogySpec): Presentation {
+	const labelParticipant: Participant = {
+		id: ANALOGY_PARTICIPANT_LABEL,
+		embodiments: [
+			{
+				kind: "text",
+				id: ANALOGY_EMBODIMENT_LABEL_SOURCE,
+				lines: [spec.source.label],
+				level: "heading",
+				morphRoot: "heading-line",
+			},
+			{
+				kind: "text",
+				id: ANALOGY_EMBODIMENT_LABEL_TARGET,
+				lines: [spec.target.label],
+				level: "heading",
+				morphRoot: "heading-line",
+			},
+		],
+	};
+
+	const visualEmbodiments: Embodiment[] = [];
+	if (spec.source.figure) {
+		visualEmbodiments.push({
+			kind: "figure",
+			id: ANALOGY_EMBODIMENT_VISUAL_SOURCE,
+			src: spec.source.figure,
+			alt: spec.source.label,
+		});
+	}
+	if (spec.target.figure) {
+		visualEmbodiments.push({
+			kind: "figure",
+			id: ANALOGY_EMBODIMENT_VISUAL_TARGET,
+			src: spec.target.figure,
+			alt: spec.target.label,
+		});
+	}
+
+	const participants: Participant[] = [labelParticipant];
+	if (visualEmbodiments.length > 0) {
+		participants.push({ id: ANALOGY_PARTICIPANT_VISUAL, embodiments: visualEmbodiments });
+	}
+
+	const sourceDispositions: Disposition[] = [
+		{
+			participantId: ANALOGY_PARTICIPANT_LABEL,
+			embodimentId: ANALOGY_EMBODIMENT_LABEL_SOURCE,
+			emphasis: "active",
+		},
+	];
+	const mappingDispositions: Disposition[] = [
+		{
+			participantId: ANALOGY_PARTICIPANT_LABEL,
+			embodimentId: ANALOGY_EMBODIMENT_LABEL_TARGET,
+			emphasis: "active",
+		},
+	];
+	if (spec.source.figure) {
+		sourceDispositions.push({
+			participantId: ANALOGY_PARTICIPANT_VISUAL,
+			embodimentId: ANALOGY_EMBODIMENT_VISUAL_SOURCE,
+			emphasis: "active",
+			position: { x: 0.1, y: 0.35, width: 0.8, height: 0.5 },
+		});
+	}
+	if (spec.target.figure) {
+		mappingDispositions.push({
+			participantId: ANALOGY_PARTICIPANT_VISUAL,
+			embodimentId: ANALOGY_EMBODIMENT_VISUAL_TARGET,
+			emphasis: "active",
+			position: { x: 0.1, y: 0.35, width: 0.8, height: 0.5 },
+		});
+	}
+
+	const thought: Thought = {
+		id: "analogy",
+		participants,
+		transition: { kind: "morph" },
+		arrangements: [
+			{ id: "source", dispositions: sourceDispositions },
+			{ id: "mapping", dispositions: mappingDispositions },
+		],
+	};
+
+	return {
+		id: spec.id ?? "analogy",
+		name: spec.name ?? `${spec.source.label} → ${spec.target.label}`,
+		sequences: [{ id: "main", thoughts: [thought] }],
+	};
+}
+//#endregion 🔖Analogy
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -729,10 +894,65 @@ if (import.meta.vitest) {
 	});
 
 	describe("resolveArrangement morphId", () => {
-		it("resolves morphId per placement", () => {
+		it("resolves morphId per disposition", () => {
 			const thought = sampleIntro.sequences[0]!.thoughts[0]!;
 			const resolved = resolveArrangement(thought, "goal");
 			expect(resolved.map((r) => r.morphId)).toEqual(["title", "description", "goal"]);
+		});
+	});
+
+	describe("analogy", () => {
+		const sampleAnalogy = analogy({
+			source: { label: "Reuse", figure: "/reuse.png" },
+			target: { label: "Remanufacture", figure: "/remanufacture.png" },
+		});
+
+		it("builds two morph arrangements", () => {
+			expect(countArrangements(sampleAnalogy)).toBe(2);
+			const thought = sampleAnalogy.sequences[0]!.thoughts[0]!;
+			expect(thought.arrangements.map((a) => a.id)).toEqual(["source", "mapping"]);
+		});
+
+		it("resolves positioned visual dispositions", () => {
+			const thought = sampleAnalogy.sequences[0]!.thoughts[0]!;
+			const mapping = resolveArrangement(thought, "mapping");
+			const visual = mapping.find((r) => r.participant.id === ANALOGY_PARTICIPANT_VISUAL);
+			expect(visual?.position).toEqual({ x: 0.1, y: 0.35, width: 0.8, height: 0.5 });
+			expect(visual?.embodiment.kind).toBe("figure");
+		});
+	});
+
+	describe("video and pdf embodiments", () => {
+		it("resolves video and pdf kinds", () => {
+			const thought: Thought = {
+				id: "media",
+				participants: [
+					{
+						id: "clip",
+						embodiments: [{ kind: "video", src: "/demo.mp4", muted: true }],
+					},
+					{
+						id: "doc",
+						embodiments: [{ kind: "pdf", src: "/paper.pdf", page: 2 }],
+					},
+				],
+				arrangements: [
+					{
+						id: "slide",
+						dispositions: [
+							{ participantId: "clip", emphasis: "active" },
+							{ participantId: "doc", emphasis: "active", position: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 } },
+						],
+					},
+				],
+			};
+			const resolved = resolveArrangement(thought, "slide");
+			expect(resolved[0]?.embodiment.kind).toBe("video");
+			expect(resolved[1]?.embodiment.kind).toBe("pdf");
+			if (resolved[1]?.embodiment.kind === "pdf") {
+				expect(resolved[1].embodiment.page).toBe(2);
+			}
+			expect(resolved[1]?.position?.width).toBe(0.6);
 		});
 	});
 }

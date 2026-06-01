@@ -90,6 +90,31 @@
 	text-align: center;
 }
 
+.reveal .slides section.presentation-arrangement--positioned {
+	position: relative;
+	height: 100%;
+}
+
+.reveal .presentation-disposition-frame {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.reveal .presentation-media-figure,
+.reveal .presentation-media-video {
+	max-height: 100%;
+	max-width: 100%;
+}
+
+.reveal .presentation-media-pdf canvas {
+	max-height: 100%;
+	max-width: 100%;
+	height: auto !important;
+	width: auto !important;
+}
+
 .reveal .slides section[data-auto-animate] [data-id="goal"] h2 {
 	white-space: nowrap;
 }
