@@ -3,7 +3,14 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { countArrangements, intro, type Presentation, type Thought } from "@framework/presentation/core";
+import {
+	countArrangements,
+	intro,
+	splitFigureGrid,
+	type Presentation,
+	type SplitTile,
+	type Thought,
+} from "@framework/presentation/core";
 import { Expertise, mountPresentation } from "@framework/presentation/renderer/react";
 import "./globals.css";
 // #endregion 🔌Adapters
@@ -12,6 +19,33 @@ import "./globals.css";
 const ASSET_CATALOGUE = "./bauteilbo\u0308rse.png";
 const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
 const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
+
+const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+const CATALOGUE_SPLIT_FRAME = { x: 0.18, y: 0.12, width: 0.64, height: 0.52 };
+const CATALOGUE_TILES_ASSEMBLED = splitFigureGrid({
+	rows: 3,
+	columns: 5,
+	frame: CATALOGUE_FRAME,
+	gap: 0,
+});
+const CATALOGUE_TILES_SPREAD = splitFigureGrid({
+	rows: 3,
+	columns: 5,
+	frame: CATALOGUE_SPLIT_FRAME,
+	gap: 0.02,
+});
+const CATALOGUE_FOCUS_TILES: SplitTile[] = CATALOGUE_TILES_SPREAD.filter((tile) =>
+	tile.key.startsWith("tile-r1-"),
+).map((tile, column) => ({
+	...tile,
+	position: {
+		x: 0.04 + column * 0.192,
+		y: 0.22,
+		width: 0.17,
+		height: 0.56,
+	},
+	emphasis: "active" as const,
+}));
 
 const introDeck = intro({
 	id: "projektetage",
@@ -110,7 +144,37 @@ const mediaThought: Thought = {
 				{
 					participantId: "catalogue",
 					emphasis: "active",
-					position: { x: 0.05, y: 0.1, width: 0.9, height: 0.75 },
+					position: CATALOGUE_FRAME,
+				},
+			],
+		},
+		{
+			id: "catalogue-tiles",
+			dispositions: [
+				{
+					participantId: "catalogue",
+					emphasis: "active",
+					split: { tiles: CATALOGUE_TILES_ASSEMBLED },
+				},
+			],
+		},
+		{
+			id: "catalogue-split",
+			dispositions: [
+				{
+					participantId: "catalogue",
+					emphasis: "active",
+					split: { tiles: CATALOGUE_TILES_SPREAD },
+				},
+			],
+		},
+		{
+			id: "catalogue-focus",
+			dispositions: [
+				{
+					participantId: "catalogue",
+					emphasis: "active",
+					split: { tiles: CATALOGUE_FOCUS_TILES },
 				},
 			],
 		},
@@ -171,7 +235,13 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus media arrangement slides", () => {
-			expect(countArrangements(deck)).toBe(9);
+			expect(countArrangements(deck)).toBe(12);
+		});
+
+		it("splits the catalogue figure into fifteen morph tiles", () => {
+			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
+			const tilesArrangement = media?.arrangements.find((a) => a.id === "catalogue-tiles");
+			expect(tilesArrangement?.dispositions[0]?.split?.tiles).toHaveLength(15);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

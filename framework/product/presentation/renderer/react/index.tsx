@@ -18,6 +18,7 @@ import {
 	act,
 	createContext,
 	Fragment,
+	type CSSProperties,
 	useContext,
 	useEffect,
 	useRef,
@@ -35,6 +36,7 @@ import type {
 	AuthorsEmbodiment,
 	BulletEmbodiment,
 	DispositionPosition,
+	DispositionSplit,
 	DispositionStyle,
 	Embodiment,
 	FigureEmbodiment,
@@ -42,6 +44,7 @@ import type {
 	PdfEmbodiment,
 	Presentation,
 	ResolvedDisposition,
+	SplitTile,
 	TextEmbodiment,
 	Thought,
 	Transition,
@@ -54,6 +57,8 @@ import {
 	intro,
 	resolveArrangement,
 	resolveTextMorphRoot,
+	splitFigureGrid,
+	tileMorphId,
 	type TextMorphRoot,
 } from "@framework/presentation/core";
 // #endregion 🔌Adapters
@@ -67,6 +72,7 @@ export type {
 	BulletEmbodiment,
 	Disposition,
 	DispositionPosition,
+	DispositionSplit,
 	DispositionStyle,
 	Embodiment,
 	FigureEmbodiment,
@@ -76,6 +82,7 @@ export type {
 	Presentation,
 	ResolvedDisposition,
 	Sequence,
+	SplitTile,
 	TextEmbodiment,
 	Thought,
 	Transition,
@@ -90,6 +97,8 @@ export {
 	resolveArrangement,
 	resolveEmbodiment,
 	resolveTextMorphRoot,
+	splitFigureGrid,
+	tileMorphId,
 } from "@framework/presentation/core";
 export type { TextMorphRoot } from "@framework/presentation/core";
 export { Expertise } from "@ui/react";
@@ -484,6 +493,45 @@ function BulletMorphView({
 	);
 }
 
+function figureTileBackgroundStyle(embodiment: FigureEmbodiment, crop: DispositionPosition): CSSProperties {
+	const bgWidth = crop.width > 0 ? 100 / crop.width : 100;
+	const bgHeight = crop.height > 0 ? 100 / crop.height : 100;
+	const posX = crop.width >= 1 ? 0 : (crop.x / (1 - crop.width)) * 100;
+	const posY = crop.height >= 1 ? 0 : (crop.y / (1 - crop.height)) * 100;
+	return {
+		backgroundImage: `url("${embodiment.src}")`,
+		backgroundRepeat: "no-repeat",
+		backgroundSize: `${bgWidth}% ${bgHeight}%`,
+		backgroundPosition: `${posX}% ${posY}%`,
+	};
+}
+
+function FigureTileView({
+	participantId,
+	tile,
+	embodiment,
+	defaultEmphasis,
+}: {
+	readonly participantId: string;
+	readonly tile: SplitTile;
+	readonly embodiment: FigureEmbodiment;
+	readonly defaultEmphasis: ParticipantEmphasis;
+}): ReactNode {
+	const emphasis = tile.emphasis ?? defaultEmphasis;
+	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
+	return (
+		<div className="presentation-disposition-frame" style={frameStyle}>
+			<div
+				data-id={tileMorphId(participantId, tile.key)}
+				className={[morphAnchorClass(emphasis), "presentation-figure-tile"].filter(Boolean).join(" ")}
+				style={figureTileBackgroundStyle(embodiment, tile.crop)}
+				role="img"
+				aria-label={embodiment.alt ?? ""}
+			/>
+		</div>
+	);
+}
+
 function FigureMorphView({
 	morphId: anchorId,
 	embodiment,
@@ -497,6 +545,29 @@ function FigureMorphView({
 		<div data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<img className="presentation-media-figure" src={embodiment.src} alt={embodiment.alt ?? ""} />
 		</div>
+	);
+}
+
+function FigureSplitMorphView({
+	disposition,
+	embodiment,
+}: {
+	readonly disposition: ResolvedDisposition;
+	readonly embodiment: FigureEmbodiment;
+}): ReactNode {
+	const tiles = disposition.split?.tiles ?? [];
+	return (
+		<>
+			{tiles.map((tile) => (
+				<FigureTileView
+					key={tile.key}
+					participantId={disposition.participant.id}
+					tile={tile}
+					embodiment={embodiment}
+					defaultEmphasis={disposition.emphasis}
+				/>
+			))}
+		</>
 	);
 }
 
@@ -631,6 +702,9 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 			content = <BulletMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 			break;
 		case "figure":
+			if (disposition.split) {
+				return <FigureSplitMorphView disposition={disposition} embodiment={embodiment} />;
+			}
 			content = <FigureMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 			break;
 		case "video":
@@ -667,7 +741,7 @@ const ArrangementSection: FC<{
 }> = ({ thought, arrangement, transition }) => {
 	const resolved = resolveArrangement(thought, arrangement.id);
 	const morph = arrangementUsesMorph(transition);
-	const positioned = resolved.some((d) => d.position !== undefined);
+	const positioned = resolved.some((d) => d.position !== undefined || d.split !== undefined);
 	const placements = resolved.map((disposition) => (
 		<MorphDispositionView
 			key={`${arrangement.id}-${disposition.morphId}-${disposition.embodimentId ?? "default"}`}
@@ -1097,6 +1171,95 @@ if (import.meta.vitest) {
 			expect(frame?.style.position).toBe("absolute");
 			expect(frame?.style.left).toBe("10%");
 			expect(frame?.style.width).toBe("50%");
+		});
+
+		it("renders split figure tiles with per-tile data-id and background crops", () => {
+			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
+			const deck: Presentation = {
+				id: "split-figure",
+				name: "Split",
+				sequences: [
+					{
+						id: "main",
+						thoughts: [
+							{
+								id: "split",
+								transition: { kind: "morph" },
+								participants: [
+									{
+										id: "catalogue",
+										embodiments: [{ kind: "figure", src: "/catalogue.png", alt: "Catalogue" }],
+									},
+								],
+								arrangements: [
+									{
+										id: "tiles",
+										dispositions: [
+											{
+												participantId: "catalogue",
+												emphasis: "active",
+												split: {
+													tiles: splitFigureGrid({ rows: 2, columns: 2, frame }),
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const tiles = container.querySelectorAll('[data-id^="catalogue--tile--"]');
+			expect(tiles.length).toBe(4);
+			const first = tiles[0] as HTMLElement;
+			expect(first.style.backgroundImage).toContain("/catalogue.png");
+			expect(first.closest(".presentation-disposition-frame")?.style.position).toBe("absolute");
+		});
+
+		it("omits tiles not listed in a split disposition", () => {
+			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
+			const allTiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			const deck: Presentation = {
+				id: "partial-split",
+				name: "Partial",
+				sequences: [
+					{
+						id: "main",
+						thoughts: [
+							{
+								id: "partial",
+								transition: { kind: "morph" },
+								participants: [
+									{
+										id: "catalogue",
+										embodiments: [{ kind: "figure", src: "/catalogue.png" }],
+									},
+								],
+								arrangements: [
+									{
+										id: "focus",
+										dispositions: [
+											{
+												participantId: "catalogue",
+												emphasis: "active",
+												split: { tiles: [allTiles[0]!, allTiles[1]!] },
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {

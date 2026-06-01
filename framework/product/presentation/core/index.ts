@@ -23,6 +23,11 @@ export function morphId(participantId: string): string {
 	return participantId;
 }
 
+/** @emoji 🧩 Stable reveal.js `data-id` for one crop tile of a split figure disposition. */
+export function tileMorphId(participantId: string, tileKey: string): string {
+	return `${participantId}--tile--${tileKey}`;
+}
+
 /** @emoji 📐 Chooses the eg-ice-25 text DOM root for reveal.js `data-id` pairing. */
 export function resolveTextMorphRoot(embodiment: TextEmbodiment): TextMorphRoot {
 	if (embodiment.morphRoot) {
@@ -253,6 +258,20 @@ export interface DispositionStyle {
 	readonly scale?: number;
 }
 
+/** @emoji 🧩 One crop of a figure source with its own slide placement (see {@link DispositionSplit}). */
+export interface SplitTile {
+	readonly key: string;
+	readonly crop: DispositionPosition;
+	readonly position: DispositionPosition;
+	readonly emphasis?: ParticipantEmphasis;
+	readonly style?: DispositionStyle;
+}
+
+/** @emoji ✂️ Splits one figure disposition into independently placed crop tiles for auto-animate. */
+export interface DispositionSplit {
+	readonly tiles: readonly SplitTile[];
+}
+
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */
 export interface Disposition {
 	readonly participantId: string;
@@ -260,8 +279,53 @@ export interface Disposition {
 	readonly emphasis: ParticipantEmphasis;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
+	readonly split?: DispositionSplit;
 }
 //#endregion 🔖Disposition
+
+//#region 🔖Split
+/** @emoji 📐 Spec for {@link splitFigureGrid}: uniform rows×columns inside a slide frame. */
+export interface SplitFigureGridSpec {
+	readonly rows: number;
+	readonly columns: number;
+	readonly frame: DispositionPosition;
+	readonly gap?: number;
+	readonly emphasis?: ParticipantEmphasis;
+	readonly keyPrefix?: string;
+}
+
+/** @emoji ✂️ Builds crop tiles that pack a figure grid into a normalized slide frame (gap=0 reconstructs the frame). */
+export function splitFigureGrid(spec: SplitFigureGridSpec): SplitTile[] {
+	const { rows, columns, frame, gap = 0, emphasis, keyPrefix = "tile" } = spec;
+	if (rows < 1 || columns < 1) {
+		throw new Error(`splitFigureGrid requires rows and columns >= 1 (got ${rows}×${columns}).`);
+	}
+	const cellWidth = (frame.width - gap * (columns - 1)) / columns;
+	const cellHeight = (frame.height - gap * (rows - 1)) / rows;
+	const tiles: SplitTile[] = [];
+	for (let row = 0; row < rows; row += 1) {
+		for (let column = 0; column < columns; column += 1) {
+			tiles.push({
+				key: `${keyPrefix}-r${row}-c${column}`,
+				crop: {
+					x: column / columns,
+					y: row / rows,
+					width: 1 / columns,
+					height: 1 / rows,
+				},
+				position: {
+					x: frame.x + column * (cellWidth + gap),
+					y: frame.y + row * (cellHeight + gap),
+					width: cellWidth,
+					height: cellHeight,
+				},
+				...(emphasis ? { emphasis } : {}),
+			});
+		}
+	}
+	return tiles;
+}
+//#endregion 🔖Split
 
 //#region 🔖Arrangement
 /** @emoji 🖼 One slide: participants disposed with emphasis, position, and style. */
@@ -310,6 +374,7 @@ export interface ResolvedDisposition {
 	readonly morphId: string;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
+	readonly split?: DispositionSplit;
 }
 //#endregion 🔖Resolved
 
@@ -350,6 +415,7 @@ export function resolveArrangement(thought: Thought, arrangementId: string): Res
 			morphId: morphId(participant.id),
 			position: disposition.position,
 			style: disposition.style,
+			split: disposition.split,
 		};
 	});
 }
@@ -869,6 +935,69 @@ if (import.meta.vitest) {
 	describe("morphId", () => {
 		it("uses participant id as reveal data-id", () => {
 			expect(morphId("title")).toBe("title");
+		});
+	});
+
+	describe("tileMorphId", () => {
+		it("scopes tile keys under the participant id", () => {
+			expect(tileMorphId("catalogue", "tile-r0-c0")).toBe("catalogue--tile--tile-r0-c0");
+		});
+	});
+
+	describe("splitFigureGrid", () => {
+		const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
+
+		it("builds rows×columns tiles with normalized crops", () => {
+			const tiles = splitFigureGrid({ rows: 3, columns: 5, frame });
+			expect(tiles).toHaveLength(15);
+			expect(tiles[0]).toMatchObject({
+				key: "tile-r0-c0",
+				crop: { x: 0, y: 0, width: 0.2, height: 1 / 3 },
+			});
+			expect(tiles[14]).toMatchObject({
+				key: "tile-r2-c4",
+				crop: { x: 0.8, y: 2 / 3, width: 0.2, height: 1 / 3 },
+			});
+		});
+
+		it("reconstructs the frame at gap zero", () => {
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			expect(tiles[0]?.position).toEqual({ x: 0.1, y: 0.2, width: 0.4, height: 0.3 });
+			expect(tiles[3]?.position).toEqual({ x: 0.5, y: 0.5, width: 0.4, height: 0.3 });
+		});
+
+		it("inserts gap between tile cells", () => {
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
+			expect(tiles[1]?.position.x).toBeCloseTo(0.1 + 0.375 + 0.05, 5);
+			expect(tiles[1]?.position.width).toBeCloseTo(0.375, 5);
+		});
+
+		it("applies default emphasis to every tile when set", () => {
+			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, emphasis: "muted" });
+			expect(tiles.every((tile) => tile.emphasis === "muted")).toBe(true);
+		});
+	});
+
+	describe("resolveArrangement split", () => {
+		it("passes split through on resolved dispositions", () => {
+			const split = { tiles: splitFigureGrid({ rows: 1, columns: 1, frame: { x: 0, y: 0, width: 1, height: 1 } }) };
+			const thought: Thought = {
+				id: "split",
+				participants: [
+					{
+						id: "fig",
+						embodiments: [{ kind: "figure", src: "/a.png" }],
+					},
+				],
+				arrangements: [
+					{
+						id: "slide",
+						dispositions: [{ participantId: "fig", emphasis: "active", split }],
+					},
+				],
+			};
+			const resolved = resolveArrangement(thought, "slide");
+			expect(resolved[0]?.split?.tiles).toHaveLength(1);
 		});
 	});
 

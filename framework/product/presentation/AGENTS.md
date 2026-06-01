@@ -40,6 +40,11 @@ A pdf embodiment of a participant.
 # Disposition
 
 A disposition is a concrete positioned, styled embodiment.
+A figure disposition may declare a `split` of crop tiles (`SplitTile`), each with its own slide position and optional emphasis or style.
+
+# Split
+
+A split divides one figure into many independently placed tiles for reveal.js auto-animate (see `splitFigureGrid` in core).
 
 # Arrangement
 
