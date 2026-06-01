@@ -68,8 +68,11 @@ import {
 	resolveEmbodiment,
 	resolveTextMorphRoot,
 	splitFigureGrid,
+	splitTilesBoundingFrame,
 	splitTilesPackedFrame,
+	splitTilesUnionSourceCrop,
 	tileMorphId,
+	type MorphFromSlot,
 	type TextMorphRoot,
 } from "@framework/presentation/core";
 // #endregion 🔌Adapters
@@ -125,10 +128,13 @@ export {
 	resolveEmbodiment,
 	resolveTextMorphRoot,
 	splitFigureGrid,
+	splitTilesBoundingFrame,
 	splitTilesPackedFrame,
+	splitTilesUnionSourceCrop,
 	tileMorphId,
 } from "@framework/presentation/core";
 export type {
+	MorphFromSlot,
 	PresentationLanguageKind,
 	PresentationSlideBookmark,
 	PresentationSlideBookmarkParamKeys,
@@ -756,6 +762,23 @@ function PositionedTextMorphView({
 	readonly style?: DispositionStyle;
 }): ReactNode {
 	const frameStyle = dispositionFrameStyle(position, style);
+	if (resolveTextMorphRoot(embodiment) === "heading-block") {
+		return (
+			<div
+				className={[
+					"presentation-disposition-frame",
+					"presentation-morph-slot",
+					"presentation-morph-slot--label",
+					emphasisClass(emphasis),
+				]
+					.filter(Boolean)
+					.join(" ")}
+				style={frameStyle}
+			>
+				<TextMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />
+			</div>
+		);
+	}
 	const headingClass = centeredLineClass(anchorId, embodiment, emphasis);
 	return (
 		<div
@@ -783,6 +806,40 @@ function FigureSplitMorphView({
 	readonly embodiment: FigureEmbodiment;
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
+	if (disposition.split?.morphParticipant) {
+		const boundingFrame = splitTilesBoundingFrame(tiles);
+		if (boundingFrame) {
+			const sourceCrop = splitTilesUnionSourceCrop(tiles);
+			const cropEmbodiment: FigureEmbodiment = embodiment.crop
+				? embodiment
+				: { ...embodiment, crop: sourceCrop };
+			return (
+				<>
+					<DispositionFrame
+						disposition={{ ...disposition, position: boundingFrame, split: undefined }}
+						overlay
+					>
+						<FigureMorphView
+							morphId={disposition.morphId}
+							embodiment={cropEmbodiment}
+							emphasis={disposition.emphasis}
+							position={boundingFrame}
+							style={{ opacity: 0 }}
+						/>
+					</DispositionFrame>
+					{tiles.map((tile) => (
+						<FigureTileView
+							key={tile.key}
+							participantId={disposition.participant.id}
+							tile={tile}
+							embodiment={embodiment}
+							defaultEmphasis={disposition.emphasis}
+						/>
+					))}
+				</>
+			);
+		}
+	}
 	const packedFrame = splitTilesPackedFrame(tiles);
 	if (packedFrame) {
 		return (

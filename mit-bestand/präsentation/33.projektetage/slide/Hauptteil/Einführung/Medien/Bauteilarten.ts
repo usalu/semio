@@ -3,11 +3,9 @@ import {
 	CATALOGUE_COL1,
 	CATALOGUE_COL2,
 	CATALOGUE_COL3,
-	CATALOGUE_COLUMN_TILE_KEYS,
-	CATALOGUE_EMBODIMENT_CROP,
-	CATALOGUE_FOCUS_TILES,
+	catalogueFocusTilesForColumn,
 	CATALOGUE_PARTICIPANT,
-	unionTilePosition,
+	CATALOGUE_FOCUS_TILES,
 } from "../../../../spec.ts";
 
 export default {
@@ -23,24 +21,18 @@ export default {
 			},
 			{
 				participantId: CATALOGUE_COL1,
-				embodimentId: CATALOGUE_EMBODIMENT_CROP,
 				emphasis: "active",
-				position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col1),
-				style: { opacity: 0 },
+				split: { tiles: catalogueFocusTilesForColumn("col1"), morphParticipant: true },
 			},
 			{
 				participantId: CATALOGUE_COL2,
-				embodimentId: CATALOGUE_EMBODIMENT_CROP,
 				emphasis: "active",
-				position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col2),
-				style: { opacity: 0 },
+				split: { tiles: catalogueFocusTilesForColumn("col2"), morphParticipant: true },
 			},
 			{
 				participantId: CATALOGUE_COL3,
-				embodimentId: CATALOGUE_EMBODIMENT_CROP,
 				emphasis: "active",
-				position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col3),
-				style: { opacity: 0 },
+				split: { tiles: catalogueFocusTilesForColumn("col3"), morphParticipant: true },
 			},
 		],
 	},

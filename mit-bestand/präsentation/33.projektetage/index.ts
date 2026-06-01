@@ -82,43 +82,38 @@ if (import.meta.vitest) {
 			expect(catalogue?.arrangement.dispositions[0]?.split?.tiles).toHaveLength(15);
 		});
 
-		it("focuses ten catalogue tiles plus hidden column morph anchors", () => {
+		it("focuses ten catalogue tiles plus per-column split morph participants", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			const focus = media?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");
 			const dispositions = focus?.arrangement.dispositions ?? [];
 			expect(dispositions[0]?.participantId).toBe(CATALOGUE_PARTICIPANT);
 			expect(dispositions[0]?.split?.tiles).toHaveLength(10);
-			expect(dispositions.slice(1).map((disposition) => disposition.participantId)).toEqual([
-				CATALOGUE_COL1,
-				CATALOGUE_COL2,
-				CATALOGUE_COL3,
-			]);
-			expect(dispositions.slice(1).every((disposition) => disposition.style?.opacity === 0)).toBe(true);
-			const col3 = dispositions.find((disposition) => disposition.participantId === CATALOGUE_COL3);
-			expect(col3?.position?.height).toBeGreaterThan(0.7);
+			const col1 = dispositions.find((disposition) => disposition.participantId === CATALOGUE_COL1);
+			expect(col1?.split?.morphParticipant).toBe(true);
+			expect(col1?.split?.tiles).toHaveLength(6);
+			expect(col1?.position).toBeUndefined();
 		});
 
-		it("morphs focus column crops to label positions on a bridge then switches to text", () => {
+		it("morphs each column participant into catalogue-labels via ghosts and a bridge", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			expect(media).toBeDefined();
 			const expanded = expandThoughtSlides(media!);
-			const catalogueSlide = expanded.find((slide) => slide.id === "catalogue");
 			const focusSlide = expanded.find((slide) => slide.id === "catalogue-focus");
 			const bridgeSlide = expanded.find((slide) => slide.id === "catalogue-labels--bridge");
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
-			expect(catalogueSlide?.autoAnimateId).toBeDefined();
-			expect(focusSlide?.autoAnimateId).toBe(catalogueSlide?.autoAnimateId);
 			expect(bridgeSlide?.derived).toBe(true);
-			expect(
-				bridgeSlide?.arrangement.dispositions.every(
-					(disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP,
-				),
-			).toBe(true);
 			expect(focusSlide?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels--bridge"]);
-			expect(labelSlide?.autoAnimateId).toBe(focusSlide?.autoAnimateId);
-			expect(
-				labelSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_LABEL),
-			).toBe(true);
+			const labelTarget = labelSlide?.arrangement.dispositions.find(
+				(disposition) => disposition.participantId === "catalogue-labels",
+			);
+			expect(labelTarget?.morphFrom).toHaveLength(3);
+			const ghosts = labelSlide?.arrangement.dispositions.filter((disposition) => disposition.morphGhost);
+			expect(ghosts).toHaveLength(3);
+			expect(ghosts?.map((disposition) => disposition.morphTargetId)).toEqual([
+				"catalogue-labels--0",
+				"catalogue-labels--1",
+				"catalogue-labels--2",
+			]);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

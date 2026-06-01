@@ -1,6 +1,7 @@
 # Presentation
 
 A presentation consists of chapters.
+The presentation is website under site /{columnIndex}/{rowIndex}?chapter={chapterName}&sequence={sequenceName}&thought={thoughtName}&slide={slideName}
 
 # Chapter
 

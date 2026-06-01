@@ -84,9 +84,11 @@ export const CATALOGUE_PARTICIPANT = "catalogue";
 export const CATALOGUE_COL1 = "catalogue-col1";
 export const CATALOGUE_COL2 = "catalogue-col2";
 export const CATALOGUE_COL3 = "catalogue-col3";
+export const CATALOGUE_LABELS = "catalogue-labels";
 
 export const CATALOGUE_EMBODIMENT_CROP = "crop";
 export const CATALOGUE_EMBODIMENT_LABEL = "label";
+export const CATALOGUE_EMBODIMENT_STACK = "stack";
 
 export const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
 export const CATALOGUE_TILES_ASSEMBLED = splitFigureGrid({
@@ -185,6 +187,14 @@ export function catalogueFocusColumnTiles(): SplitTile[] {
 
 export const CATALOGUE_FOCUS_TILES = catalogueFocusColumnTiles();
 
+/** @emoji 📐 Focus-slide tiles for one catalogue column participant. */
+export function catalogueFocusTilesForColumn(
+	column: keyof typeof CATALOGUE_COLUMN_TILE_KEYS,
+): SplitTile[] {
+	const keys = new Set<string>(CATALOGUE_COLUMN_TILE_KEYS[column]);
+	return CATALOGUE_FOCUS_TILES.filter((tile) => keys.has(tile.key));
+}
+
 export const CATALOGUE_COLUMN_TILE_KEYS = {
 	col1: ["tile-r1-c0", "tile-r1-c1", "tile-r1-c2", "tile-r1-c3", "tile-r1-c4", "tile-r2-c0"],
 	col2: ["tile-r2-c1", "tile-r2-c2", "tile-r2-c3"],
@@ -236,6 +246,24 @@ export function catalogueColumnParticipant(
 	};
 }
 
+/** @emoji 🏷 Single participant receiving independent morphs from each catalogue column. */
+export const catalogueLabelsParticipant: Participant = {
+	id: CATALOGUE_LABELS,
+	embodiments: [
+		{
+			kind: "text",
+			id: CATALOGUE_EMBODIMENT_STACK,
+			lines: [
+				CATALOGUE_COLUMN_LABELS.col1,
+				CATALOGUE_COLUMN_LABELS.col2,
+				CATALOGUE_COLUMN_LABELS.col3,
+			],
+			level: "heading",
+			morphRoot: "heading-block",
+		},
+	],
+};
+
 export const mediaParticipants: Participant[] = [
 	{
 		id: CATALOGUE_PARTICIPANT,
@@ -250,6 +278,7 @@ export const mediaParticipants: Participant[] = [
 	catalogueColumnParticipant(CATALOGUE_COL1, CATALOGUE_COLUMN_TILE_KEYS.col1, CATALOGUE_COLUMN_LABELS.col1),
 	catalogueColumnParticipant(CATALOGUE_COL2, CATALOGUE_COLUMN_TILE_KEYS.col2, CATALOGUE_COLUMN_LABELS.col2),
 	catalogueColumnParticipant(CATALOGUE_COL3, CATALOGUE_COLUMN_TILE_KEYS.col3, CATALOGUE_COLUMN_LABELS.col3),
+	catalogueLabelsParticipant,
 	{
 		id: "demo-video",
 		embodiments: [

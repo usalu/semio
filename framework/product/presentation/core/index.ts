@@ -271,6 +271,17 @@ export interface SplitTile {
 /** @emoji ✂️ Splits one figure disposition into independently placed crop tiles for auto-animate. */
 export interface DispositionSplit {
 	readonly tiles: readonly SplitTile[];
+	/** @emoji 🎯 When true, a dormant participant-scoped morph anchor covers the tile bounding box (tiles stay visible until settle). */
+	readonly morphParticipant?: boolean;
+}
+
+/** @emoji 👻 One source participant that morphs independently into a target participant slot. */
+export interface MorphFromSlot {
+	readonly participantId: string;
+	readonly position: DispositionPosition;
+	readonly embodimentId?: string;
+	/** @emoji 🎯 Line index when the target uses a multi-line text morph root (`participantId--index`). */
+	readonly targetLineIndex?: number;
 }
 
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */
@@ -281,6 +292,12 @@ export interface Disposition {
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
 	readonly split?: DispositionSplit;
+	/** @emoji 👻 Source participants that each morph into this disposition (expanded as ghost dispositions for reveal.js). */
+	readonly morphFrom?: readonly MorphFromSlot[];
+	/** @emoji 👻 True when auto-expanded from {@link Disposition.morphFrom} (not authored directly). */
+	readonly morphGhost?: boolean;
+	/** @emoji 🎯 Overrides reveal.js `data-id` for this disposition (ghost morph into a target line). */
+	readonly morphTargetId?: string;
 }
 //#endregion 🔖Disposition
 
@@ -356,6 +373,49 @@ export function splitTilesPackedFrame(tiles: readonly SplitTile[]): DispositionP
 		return null;
 	}
 	return frame;
+}
+
+/** @emoji 📐 Bounding box of slide positions for a tile set (ignores gaps between tiles). */
+export function splitTilesBoundingFrame(tiles: readonly SplitTile[]): DispositionPosition | null {
+	if (tiles.length === 0) {
+		return null;
+	}
+	let minX = 1;
+	let minY = 1;
+	let maxX = 0;
+	let maxY = 0;
+	for (const tile of tiles) {
+		const position = tile.position;
+		minX = Math.min(minX, position.x);
+		minY = Math.min(minY, position.y);
+		maxX = Math.max(maxX, position.x + position.width);
+		maxY = Math.max(maxY, position.y + position.height);
+	}
+	const width = maxX - minX;
+	const height = maxY - minY;
+	if (width <= 0 || height <= 0) {
+		return null;
+	}
+	return { x: minX, y: minY, width, height };
+}
+
+/** @emoji 📐 Union of normalized source-image crops for a tile set. */
+export function splitTilesUnionSourceCrop(tiles: readonly SplitTile[]): DispositionPosition {
+	if (tiles.length === 0) {
+		throw new Error("splitTilesUnionSourceCrop: no tiles.");
+	}
+	let minX = 1;
+	let minY = 1;
+	let maxX = 0;
+	let maxY = 0;
+	for (const tile of tiles) {
+		const crop = tile.crop;
+		minX = Math.min(minX, crop.x);
+		minY = Math.min(minY, crop.y);
+		maxX = Math.max(maxX, crop.x + crop.width);
+		maxY = Math.max(maxY, crop.y + crop.height);
+	}
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 //#endregion 🔖Split
 
@@ -557,6 +617,7 @@ function arrangementNeedsSettleBeforeMorphBridge(arrangement: Arrangement): bool
 	return arrangement.dispositions.some(
 		(disposition) =>
 			disposition.split !== undefined ||
+			disposition.morphGhost === true ||
 			(disposition.style?.opacity === 0 && disposition.embodimentId !== undefined),
 	);
 }
@@ -580,6 +641,8 @@ function morphBridgeDisposition(source: Disposition, target: Disposition): Dispo
 		emphasis: target.emphasis,
 		position: target.position,
 		style: target.style,
+		morphGhost: target.morphGhost,
+		morphTargetId: target.morphTargetId,
 	};
 }
 
@@ -587,10 +650,53 @@ function slideParticipantIds(slide: Slide): ReadonlySet<string> {
 	return new Set(slide.arrangement.dispositions.map((disposition) => disposition.participantId));
 }
 
+function slideMorphParticipantIds(slide: Slide): ReadonlySet<string> {
+	const ids = slideParticipantIds(slide);
+	for (const disposition of slide.arrangement.dispositions) {
+		for (const slot of disposition.morphFrom ?? []) {
+			ids.add(slot.participantId);
+		}
+	}
+	return ids;
+}
+
+/** @emoji 👻 Expands {@link Disposition.morphFrom} into per-source ghost dispositions for reveal.js pairing. */
+export function expandArrangementMorphFrom(
+	sourceSlide: Slide,
+	arrangement: Arrangement,
+	options?: { readonly morphLineTargets?: boolean },
+): Arrangement {
+	const sourceByParticipant = primaryDispositionByParticipant(sourceSlide.arrangement);
+	const morphLineTargets = options?.morphLineTargets ?? true;
+	const ghosts: Disposition[] = [];
+	for (const disposition of arrangement.dispositions) {
+		for (const slot of disposition.morphFrom ?? []) {
+			const sourceDisposition = sourceByParticipant.get(slot.participantId);
+			const morphTargetId =
+				morphLineTargets && slot.targetLineIndex !== undefined
+					? `${disposition.participantId}--${slot.targetLineIndex}`
+					: undefined;
+			ghosts.push({
+				participantId: slot.participantId,
+				embodimentId: slot.embodimentId ?? sourceDisposition?.embodimentId,
+				emphasis: sourceDisposition?.emphasis ?? "active",
+				position: slot.position,
+				style: { opacity: 0 },
+				morphGhost: true,
+				morphTargetId,
+			});
+		}
+	}
+	if (ghosts.length === 0) {
+		return arrangement;
+	}
+	return { ...arrangement, dispositions: [...arrangement.dispositions, ...ghosts] };
+}
+
 /** @emoji 🔗 True when two consecutive slides share at least one participant for reveal.js auto-animate pairing. */
 export function slidesShareMorphParticipants(source: Slide, target: Slide): boolean {
-	const sourceIds = slideParticipantIds(source);
-	for (const participantId of slideParticipantIds(target)) {
+	const sourceIds = slideMorphParticipantIds(source);
+	for (const participantId of slideMorphParticipantIds(target)) {
 		if (sourceIds.has(participantId)) {
 			return true;
 		}
@@ -609,6 +715,20 @@ function buildMorphBridgeArrangement(
 	const dispositions = targetSlide.arrangement.dispositions.map((targetDisposition) => {
 		const participant = byId.get(targetDisposition.participantId);
 		const sourceDisposition = sourceByParticipant.get(targetDisposition.participantId);
+		if (
+			targetDisposition.morphFrom?.length &&
+			sourceDisposition === undefined &&
+			targetDisposition.embodimentId !== undefined
+		) {
+			anyBridge = true;
+			return {
+				participantId: targetDisposition.participantId,
+				embodimentId: targetDisposition.embodimentId,
+				emphasis: targetDisposition.emphasis,
+				position: targetDisposition.position,
+				style: { opacity: 0 },
+			};
+		}
 		if (participant && sourceDisposition && morphBridgeNeeded(participant, sourceDisposition, targetDisposition)) {
 			if (morphBridgeDirect(participant, sourceDisposition, targetDisposition)) {
 				return targetDisposition;
@@ -651,8 +771,19 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 		runIndex += 1;
 		for (let slideIndex = index; slideIndex <= runEnd; slideIndex += 1) {
 			const slide = slides[slideIndex]!;
+			const sourceSlide = slideIndex > index ? slides[slideIndex - 1]! : undefined;
+			const arrangementWithMorphFrom =
+				sourceSlide === undefined
+					? slide.arrangement
+					: expandArrangementMorphFrom(sourceSlide, slide.arrangement, { morphLineTargets: true });
 			if (slideIndex > index && transitionUsesMorph(slides[slideIndex - 1]?.transition)) {
-				const bridge = buildMorphBridgeArrangement(thought, slides[slideIndex - 1]!, slide);
+				const bridgeTargetArrangement = expandArrangementMorphFrom(slides[slideIndex - 1]!, slide.arrangement, {
+					morphLineTargets: false,
+				});
+				const bridge = buildMorphBridgeArrangement(thought, slides[slideIndex - 1]!, {
+					...slide,
+					arrangement: bridgeTargetArrangement,
+				});
 				if (bridge) {
 					expanded.push({
 						id: bridge.id,
@@ -663,9 +794,16 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 					});
 				}
 			}
-			let arrangement = slide.arrangement;
+			let arrangement = arrangementWithMorphFrom;
 			if (slideIndex < runEnd && transitionUsesMorph(slide.transition)) {
-				const bridge = buildMorphBridgeArrangement(thought, slide, slides[slideIndex + 1]!);
+				const nextSlide = slides[slideIndex + 1]!;
+				const nextArrangement = expandArrangementMorphFrom(slide, nextSlide.arrangement, {
+					morphLineTargets: false,
+				});
+				const bridge = buildMorphBridgeArrangement(thought, slide, {
+					...nextSlide,
+					arrangement: nextArrangement,
+				});
 				if (bridge) {
 					arrangement = enrichSettleBeforeMorphTo(arrangement, bridge.id);
 				}
@@ -718,7 +856,7 @@ export function resolveArrangement(
 				embodiment: resolveEmbodiment(participant, disposition.embodimentId),
 				emphasis: disposition.emphasis,
 				embodimentId: disposition.embodimentId,
-				morphId: morphId(participant.id),
+				morphId: disposition.morphTargetId ?? morphId(participant.id),
 				position: disposition.position,
 				style: disposition.style,
 				split: disposition.split,
@@ -1983,6 +2121,69 @@ if (import.meta.vitest) {
 			const bridge = expanded[1]!.arrangement.dispositions[0]!;
 			expect(bridge.embodimentId).toBe("crop");
 			expect(bridge.position).toEqual({ x: 0.38, y: 0.12, width: 0.24, height: 0.24 });
+		});
+
+		it("expands morphFrom ghosts with line targets only on the final slide", () => {
+			const thought: Thought = {
+				id: "merge",
+				participants: [
+					{
+						id: "col1",
+						embodiments: [
+							{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+							{ kind: "text", id: "label", lines: ["A"], level: "heading" },
+						],
+					},
+					{
+						id: "labels",
+						embodiments: [{ kind: "text", id: "stack", lines: ["A"], level: "heading", morphRoot: "heading-block" }],
+					},
+				],
+				slides: [
+					{
+						arrangement: {
+							id: "focus",
+							dispositions: [
+								{
+									participantId: "col1",
+									embodimentId: "crop",
+									emphasis: "active",
+									position: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
+								},
+							],
+						},
+						transition: { kind: "morph" },
+					},
+					{
+						arrangement: {
+							id: "labels",
+							dispositions: [
+								{
+									participantId: "labels",
+									embodimentId: "stack",
+									emphasis: "active",
+									position: { x: 0.38, y: 0.12, width: 0.24, height: 0.24 },
+									morphFrom: [
+										{
+											participantId: "col1",
+											embodimentId: "crop",
+											position: { x: 0.38, y: 0.12, width: 0.24, height: 0.24 },
+											targetLineIndex: 0,
+										},
+									],
+								},
+							],
+						},
+					},
+				],
+			};
+			const expanded = expandThoughtSlides(thought);
+			const bridge = expanded.find((slide) => slide.id === "labels--bridge");
+			const labels = expanded.find((slide) => slide.id === "labels");
+			const bridgeGhost = bridge?.arrangement.dispositions.find((disposition) => disposition.morphGhost);
+			const labelGhost = labels?.arrangement.dispositions.find((disposition) => disposition.morphGhost);
+			expect(bridgeGhost?.morphTargetId).toBeUndefined();
+			expect(labelGhost?.morphTargetId).toBe("labels--0");
 		});
 
 		it("enriches settleBeforeMorphTo on the source slide when a morph bridge is inserted", () => {
