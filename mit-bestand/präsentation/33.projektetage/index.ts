@@ -257,7 +257,7 @@ const mediaThought: Thought = {
 		},
 		{
 			id: "catalogue-focus",
-			name: "Bauteilfokus",
+			name: "Bauteilarten",
 			dispositions: [
 				{
 					participantId: "catalogue",

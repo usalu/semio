@@ -280,6 +280,89 @@ macro_rules! file_system_node_complex_methods {
     };
 }
 
+/// @emoji 📁 `#[Object]` VFS fields resolved via `file_system_vfs::node_for_*` (must live on the GraphQL object, not a detached `ComplexObject`).
+#[macro_export]
+macro_rules! file_system_node_object_methods {
+    ($ty:ty, $node_for:path, $default_kind:ident) => {
+        pub async fn file_system_parent(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<
+            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+        > {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(None);
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::parent(&node).await)
+        }
+        pub async fn file_system_children(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok($crate::gql::interfaces::file_system_vfs::empty_connection());
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::children(&node).await)
+        }
+        pub async fn file_system_child(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+            id: $crate::id::Id,
+        ) -> crate::external_adapters::async_graphql::Result<
+            Option<$crate::gql::interfaces::FileSystemNodeInterface>,
+        > {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(None);
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::child(&node, &id).await)
+        }
+        pub async fn file_system_path(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<String> {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(String::new());
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::path(&node).await)
+        }
+        pub async fn file_system_name(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<String> {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(String::new());
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::name(&node).await)
+        }
+        pub async fn is_file_system_root(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<bool> {
+            Ok(matches!(
+                $node_for(self, ctx).await,
+                Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))
+            ))
+        }
+        pub async fn file_system_kind(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+            Ok($node_for(self, ctx).await
+                .map(|node| $crate::gql::interfaces::file_system_vfs::kind(&node))
+                .unwrap_or($crate::gql::interfaces::FileSystemNodeKind::$default_kind))
+        }
+        pub async fn file_system_has_children(
+            &self,
+            ctx: &crate::external_adapters::async_graphql::Context<'_>,
+        ) -> crate::external_adapters::async_graphql::Result<bool> {
+            let Some(node) = $node_for(self, ctx).await else {
+                return Ok(false);
+            };
+            Ok($crate::gql::interfaces::file_system_vfs::has_children(&node).await)
+        }
+    };
+}
+
 /// @emoji 📁 `#[ComplexObject]` VFS fields resolved via `file_system_vfs::node_for_*` (for `#[Object]` types without a direct `Arc` handle).
 #[macro_export]
 macro_rules! file_system_node_vfs_complex_ctx {
@@ -1579,6 +1662,12 @@ pub mod gql_relay {
         pub async fn designs(&self) -> DesignConnection {
             DesignConnection::from_designs(self.designs.read().await.clone()).await
         }
+
+        crate::file_system_node_object_methods!(
+            Typology,
+            crate::gql::interfaces::file_system_vfs::node_for_typology,
+            Typology
+        );
     }
 
     crate::entity_relay!(TypologyConnection, TypologyEdge, std::sync::Arc<Typology>);
@@ -1587,11 +1676,6 @@ pub mod gql_relay {
             Self::from_entities(entities).await
         }
     }
-
-    crate::file_system_node_vfs_complex_ctx!(
-        Typology,
-        crate::gql::interfaces::file_system_vfs::node_for_typology
-    );
     //#endregion 🏛️ typology
 }
 
@@ -3591,12 +3675,13 @@ pub mod kit {
             pub async fn stat(&self, id: Id) -> Option<Stat> {
                 self.stats.read().await.iter().find(|s| s.id == id).cloned()
             }
-        }
 
-        crate::file_system_node_vfs_complex_ctx!(
-            Type,
-            crate::gql::interfaces::file_system_vfs::node_for_type
-        );
+            crate::file_system_node_object_methods!(
+                Type,
+                crate::gql::interfaces::file_system_vfs::node_for_type,
+                Type
+            );
+        }
 
         //#endregion 🏠 type
 
@@ -4537,12 +4622,13 @@ pub mod kit {
             pub async fn all_referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
             }
-        }
 
-        crate::file_system_node_vfs_complex_ctx!(
-            Design,
-            crate::gql::interfaces::file_system_vfs::node_for_design
-        );
+            crate::file_system_node_object_methods!(
+                Design,
+                crate::gql::interfaces::file_system_vfs::node_for_design,
+                Design
+            );
+        }
         //#endregion 🏘 design
     }
     //#endregion 🏘 design
@@ -6176,9 +6262,9 @@ pub mod kit {
         pub async fn stat(&self, id: Id) -> Option<Stat> {
             self.stats.read().await.iter().find(|s| s.id == id).cloned()
         }
-    }
 
-    crate::file_system_node_vfs_complex_ctx!(Kit, crate::gql::interfaces::file_system_vfs::node_for_kit);
+        crate::file_system_node_object_methods!(Kit, crate::gql::interfaces::file_system_vfs::node_for_kit, Kit);
+    }
     //#endregion 📦 kit
 }
 

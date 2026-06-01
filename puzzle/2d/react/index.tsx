@@ -2304,6 +2304,19 @@ export class Puzzle2dScene {
       return this;
     }
 
+    if (isPuzzle2dSceneEdgeObject(object)) {
+      const edge = object as Edge;
+      const existed = this.edges.has(edge.id);
+      this.edges.set(edge.id, edge);
+      edge.parent = this;
+      edge.attachRenderer(this.renderer);
+      if (!existed) {
+        this.renderer?.emit("edgeCreate", { id: edge.id, source: edge.source.id, target: edge.target.id });
+      }
+      this.renderer?.markDirty({ observeGraph: true });
+      return this;
+    }
+
     this.edges.set(object.id, object as Edge);
     object.parent = this;
     object.attachRenderer(this.renderer);
@@ -2837,6 +2850,10 @@ export class Puzzle2dRenderer {
 
   /** @emoji ⏭️ Skips imperative scene graph work when the declarative descriptor fingerprint is unchanged. */
   skipSceneSyncIfDescriptorUnchanged(descriptor: Puzzle2dSceneDescriptor): boolean {
+    if (descriptor.edges.length > 0 && this.scene.edges.size !== descriptor.edges.length) {
+      this.lastSyncedDescriptorFingerprint = null;
+      return false;
+    }
     const fingerprint = puzzle2dSceneDescriptorFingerprint(descriptor);
     if (this.lastSyncedDescriptorFingerprint === fingerprint) {
       if (!puzzle2dSceneDescriptorMatchesScene(this, descriptor)) {
@@ -2846,7 +2863,6 @@ export class Puzzle2dRenderer {
       this.syncInteractionChrome();
       return true;
     }
-    this.lastSyncedDescriptorFingerprint = fingerprint;
     return false;
   }
 
@@ -5432,6 +5448,27 @@ if (puzzle2dVitest) {
       expect(renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)).toBe(false);
       syncPuzzle2dScene(renderer, descriptor);
       expect(renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)).toBe(true);
+      renderer.dispose();
+    });
+
+    it("skipSceneSyncIfDescriptorUnchanged does not skip when descriptor lists edges but the scene has none", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      renderer.rememberDeclarativeSceneSyncFingerprint(descriptor);
+      expect(renderer.scene.edges.size).toBe(0);
+      expect(renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)).toBe(false);
+      syncPuzzle2dScene(renderer, descriptor);
+      expect(renderer.scene.edges.size).toBe(1);
       renderer.dispose();
     });
 
@@ -8348,6 +8385,30 @@ export function buildPuzzle2dSceneDescriptor(children: ReactNode): Puzzle2dScene
 
   return descriptor;
 }
+
+/** @emoji 🗂️ Picks the richest declarative descriptor for host sync (fixture prop wins; falls back to React `children` edges). */
+function puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor: Puzzle2dSceneDescriptor | undefined, children: ReactNode): Puzzle2dSceneDescriptor {
+  const fromChildren = buildPuzzle2dSceneDescriptor(children);
+  if (!declarativeSceneDescriptor) {
+    return fromChildren;
+  }
+  if (declarativeSceneDescriptor.edges.length > 0) {
+    return declarativeSceneDescriptor;
+  }
+  if (fromChildren.edges.length > 0) {
+    return { ...declarativeSceneDescriptor, edges: fromChildren.edges };
+  }
+  return declarativeSceneDescriptor;
+}
+
+/** @emoji 🪢 Re-runs {@link syncPuzzle2dScene} when the descriptor lists edges but the imperative scene does not (WASM drain / mount race). */
+function puzzle2dEnsureSceneEdgesFromDescriptor(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): void {
+  if (descriptor.edges.length === 0 || renderer.scene.edges.size === descriptor.edges.length) {
+    return;
+  }
+  renderer.resetDeclarativeSceneSyncFingerprint();
+  syncPuzzle2dScene(renderer, descriptor);
+}
 //#endregion 🔖Descriptor Build
 
 function requireRenderer(renderer: Puzzle2dRenderer | null): Puzzle2dRenderer {
@@ -8696,8 +8757,21 @@ function Puzzle2dHostSubtree({
       mountedRendererRef.current = renderer;
     }
     updatePuzzle2dHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
-    const jsxDescriptor = declarativeSceneDescriptor ?? buildPuzzle2dSceneDescriptor(children);
-    syncPuzzle2dScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor));
+    const jsxDescriptor = puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor, children);
+    const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor);
+    syncPuzzle2dScene(renderer, merged);
+    puzzle2dEnsureSceneEdgesFromDescriptor(renderer, merged);
+    if (merged.edges.length > 0 && renderer.scene.edges.size === 0) {
+      queueMicrotask(() => {
+        if (renderer.isDisposed) {
+          return;
+        }
+        puzzle2dEnsureSceneEdgesFromDescriptor(renderer, merged);
+        if (renderer.scene.edges.size > 0) {
+          renderer.invalidate();
+        }
+      });
+    }
   }, [children, declarativeSceneDescriptor, renderer, wasmHostSceneMergeResyncEpoch]);
 
   reactHostPort.useLayoutEffect(() => {
