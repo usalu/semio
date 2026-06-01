@@ -1775,6 +1775,7 @@ import {
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
   puzzle2dSyncSelectionToAllAuthoringPeers,
+  buildPuzzle2dSceneDescriptorFromFixture,
   puzzle2dFixtureSceneMarkers,
   type Puzzle2dStructureDeletePayload,
   encodePuzzle2dFixtureForDragV1,
@@ -2464,6 +2465,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
       }),
     [demoEdgeId, demoNodeId, fixture],
   );
+  const declarativeSceneDescriptor = reactHostPort.useMemo(() => buildPuzzle2dSceneDescriptorFromFixture(fixture), [fixture]);
   const acceptCanvasStructuralDeleteRef = reactHostPort.useRef(false);
   reactHostPort.useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -2511,6 +2513,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     <Puzzle2dPaneChrome paneId={paneId}>
       <Puzzle2dCanvas
         {...lodProps}
+        declarativeSceneDescriptor={declarativeSceneDescriptor}
         onLodChange={onLodChange}
         camera={camera}
         className="min-h-0 flex-1"

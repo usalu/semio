@@ -7939,6 +7939,8 @@ import { createRoot } from "react-dom/client";
 export interface Puzzle2dCanvasProps {
   camera?: Partial<CameraState>;
   children?: ReactNode;
+  /** @emoji 🗂️ When set, imperative scene sync uses this descriptor instead of {@link buildPuzzle2dSceneDescriptor}(`children`) (play passes {@link buildPuzzle2dSceneDescriptorFromFixture}). */
+  declarativeSceneDescriptor?: Puzzle2dSceneDescriptor;
   /** @emoji 🎧 DOM-tree descendants with {@link Puzzle2dContext} (e.g. {@link usePuzzle2dEvent}); not mounted in the puzzle2d host reconciler. */
   companions?: ReactNode;
   className?: string;
@@ -8120,7 +8122,7 @@ export interface EdgeDescriptor extends Puzzle2dEdgeProps {}
 
 export interface WireDescriptor extends Puzzle2dWireProps {}
 
-interface Puzzle2dSceneDescriptor {
+export interface Puzzle2dSceneDescriptor {
   edges: EdgeDescriptor[];
   handles: HandleDescriptor[];
   nodes: NodeDescriptor[];
@@ -8219,8 +8221,33 @@ function isMarkerElement(element: ReactElement): boolean {
   return element.type === PUZZLE_2D_HOST_NODE || element.type === PUZZLE_2D_HOST_HANDLE || element.type === PUZZLE_2D_HOST_EDGE || element.type === PUZZLE_2D_HOST_WIRE;
 }
 
+function forEachPuzzle2dHostMarkerChild(node: ReactNode, visitChild: (child: ReactElement) => void): void {
+  const walk = (current: ReactNode): void => {
+    if (current == null || current === false || current === true) {
+      return;
+    }
+    if (Array.isArray(current)) {
+      for (const entry of current) {
+        walk(entry);
+      }
+      return;
+    }
+    Children.forEach(current, (child) => {
+      if (!isValidElement(child)) {
+        return;
+      }
+      if (child.type === Fragment) {
+        walk((child as ReactElement<{ children?: ReactNode }>).props.children);
+        return;
+      }
+      visitChild(child);
+    });
+  };
+  walk(node);
+}
+
 function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: HandleDescriptor[]): void {
-  Children.forEach(children, (child) => {
+  forEachPuzzle2dHostMarkerChild(children, (child) => {
     if (!isValidElement(child)) {
       return;
     }
@@ -8235,38 +8262,72 @@ function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: H
   });
 }
 
+/** @emoji 🗂️ Builds a {@link Puzzle2dSceneDescriptor} from {@link Puzzle2dFixtureV1} without walking React `children` (stable play sync). */
+export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixtureV1): Puzzle2dSceneDescriptor {
+  const nodes: NodeDescriptor[] = [];
+  const handles: HandleDescriptor[] = [];
+  for (const node of fixture.nodes) {
+    const nodeHandles: HandleDescriptor[] = node.handles.map((handle) => ({
+      angle: handle.angle,
+      handleKind: handle.handleKind,
+      id: handle.id,
+      nodeId: node.id,
+      ...(handle.color !== undefined ? { color: handle.color } : {}),
+      ...(handle.radius !== undefined ? { radius: handle.radius } : {}),
+      ...(handle.iconKind !== undefined ? { iconKind: handle.iconKind } : {}),
+    }));
+    handles.push(...nodeHandles);
+    const caption = puzzle2dFixtureNodeCaption(node);
+    const shared = {
+      draggable: true as const,
+      handles: nodeHandles,
+      id: node.id,
+      ...(caption !== undefined ? { text: caption } : {}),
+      ...(node.textAutofit === true ? { textAutofit: true as const } : {}),
+      ...(node.textFontFamily !== undefined ? { textFontFamily: node.textFontFamily } : {}),
+      ...(node.textFontSize !== undefined ? { textFontSize: node.textFontSize } : {}),
+      ...(node.textAlignment !== undefined ? { textAlignment: node.textAlignment } : {}),
+      ...(node.root === true ? { root: true as const } : {}),
+      ...(node.iconKind !== undefined ? { iconKind: node.iconKind } : {}),
+      ...(node.nodeKind !== undefined ? { nodeKind: node.nodeKind } : {}),
+      x: node.x,
+      y: node.y,
+    };
+    if (node.shape === "rectangle") {
+      nodes.push({ ...shared, height: node.height, shape: "rectangle", width: node.width });
+    } else {
+      nodes.push({ ...shared, radius: node.radius, shape: "circle" });
+    }
+  }
+  const edges: EdgeDescriptor[] = fixture.edges.map((edge) => ({
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+  }));
+  return { edges, handles, nodes, wires: [] };
+}
+
 export function buildPuzzle2dSceneDescriptor(children: ReactNode): Puzzle2dSceneDescriptor {
   const descriptor: Puzzle2dSceneDescriptor = { edges: [], handles: [], nodes: [], wires: [] };
 
-  const visit = (node: ReactNode): void => {
-    Children.forEach(node, (child) => {
-      if (!isValidElement(child)) {
-        return;
-      }
-      if (child.type === Fragment) {
-        visit((child as ReactElement<{ children?: ReactNode }>).props.children);
-        return;
-      }
-      if (child.type === PUZZLE_2D_HOST_NODE) {
-        const props = child.props as Puzzle2dNodeProps;
-        const handles: HandleDescriptor[] = [];
-        appendHandleDescriptors(props.children, props.id, handles);
-        descriptor.nodes.push({ ...props, handles });
-        descriptor.handles.push(...handles);
-        return;
-      }
-      if (child.type === PUZZLE_2D_HOST_EDGE) {
-        descriptor.edges.push(child.props as Puzzle2dEdgeProps);
-        return;
-      }
-      if (child.type === PUZZLE_2D_HOST_WIRE) {
-        descriptor.wires.push(child.props as Puzzle2dWireProps);
-        return;
-      }
-    });
-  };
+  forEachPuzzle2dHostMarkerChild(children, (child) => {
+    if (child.type === PUZZLE_2D_HOST_NODE) {
+      const props = child.props as Puzzle2dNodeProps;
+      const nodeHandles: HandleDescriptor[] = [];
+      appendHandleDescriptors(props.children, props.id, nodeHandles);
+      descriptor.nodes.push({ ...props, handles: nodeHandles });
+      descriptor.handles.push(...nodeHandles);
+      return;
+    }
+    if (child.type === PUZZLE_2D_HOST_EDGE) {
+      descriptor.edges.push(child.props as Puzzle2dEdgeProps);
+      return;
+    }
+    if (child.type === PUZZLE_2D_HOST_WIRE) {
+      descriptor.wires.push(child.props as Puzzle2dWireProps);
+    }
+  });
 
-  visit(children);
   return descriptor;
 }
 //#endregion 🔖Descriptor Build
@@ -8586,11 +8647,13 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
 function Puzzle2dHostSubtree({
   camera,
   children,
+  declarativeSceneDescriptor,
   renderer,
   sceneAuthoringEpoch,
 }: {
   camera?: Partial<CameraState>;
   children: ReactNode;
+  declarativeSceneDescriptor?: Puzzle2dSceneDescriptor;
   renderer: Puzzle2dRenderer;
   sceneAuthoringEpoch?: number;
 }): null {
@@ -8615,9 +8678,9 @@ function Puzzle2dHostSubtree({
       mountedRendererRef.current = renderer;
     }
     updatePuzzle2dHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
-    const jsxDescriptor = buildPuzzle2dSceneDescriptor(children);
+    const jsxDescriptor = declarativeSceneDescriptor ?? buildPuzzle2dSceneDescriptor(children);
     syncPuzzle2dScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor));
-  }, [children, renderer, wasmHostSceneMergeResyncEpoch]);
+  }, [children, declarativeSceneDescriptor, renderer, wasmHostSceneMergeResyncEpoch]);
 
   reactHostPort.useLayoutEffect(() => {
     if (!renderer.acceptsHostCameraProp()) {
@@ -8652,6 +8715,7 @@ function Puzzle2dHostSubtree({
 export function Puzzle2dCanvas({
   camera,
   children,
+  declarativeSceneDescriptor,
   companions,
   className,
   contextMenu,
@@ -9338,7 +9402,13 @@ export function Puzzle2dCanvas({
         {contextRenderer ? (
           <>
             <HostMountProvider>
-              <Puzzle2dHostSubtree camera={camera} children={children} renderer={contextRenderer} sceneAuthoringEpoch={sceneAuthoringEpoch} />
+              <Puzzle2dHostSubtree
+                camera={camera}
+                children={children}
+                declarativeSceneDescriptor={declarativeSceneDescriptor}
+                renderer={contextRenderer}
+                sceneAuthoringEpoch={sceneAuthoringEpoch}
+              />
               {onLodChange ? <Puzzle2dDrawLodReporter onLodChange={onLodChange} /> : null}
             </HostMountProvider>
             {companions}
@@ -9493,6 +9563,16 @@ if (puzzle2dReactVitest) {
       const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
       expect(fixture?.nodes.length).toBeGreaterThan(100);
       const descriptor = buildPuzzle2dSceneDescriptor(puzzle2dFixtureSceneMarkers(fixture!));
+      expect(descriptor.nodes.length).toBe(fixture!.nodes.length);
+      expect(descriptor.edges.length).toBe(fixture!.edges.length);
+      expect(descriptor.handles.length).toBeGreaterThan(fixture!.nodes.length);
+    });
+
+    it("buildPuzzle2dSceneDescriptorFromFixture maps nakagin fixture without React children", async () => {
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
+      expect(fixture).toBeTruthy();
+      const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture!);
       expect(descriptor.nodes.length).toBe(fixture!.nodes.length);
       expect(descriptor.edges.length).toBe(fixture!.edges.length);
       expect(descriptor.handles.length).toBeGreaterThan(fixture!.nodes.length);

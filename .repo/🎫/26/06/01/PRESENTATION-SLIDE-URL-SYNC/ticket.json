@@ -3,9 +3,10 @@
   "emoji": "🔗",
   "status": "closed",
   "description": "Presentation Slide Url Sync",
-  "summary": "Presentation URLs now track the active slide and carry a bookmark-only slide name.\n\n- Core: added `PresentationSlideRef`, `collectPresentationSlides`, `presentationSlideAt`, `formatPresentationSlideHash`, and `parsePresentationSlideHash`.\n- React renderer: slide URL sync is on by default (`hash !== false`); on each slide change writes reveal.js hash plus `?name=\u003carrangementId\u003e`. The `name` query param is never read for navigation (hash alone drives slide position).\n- Projektetage deck uses default URL sync (removed `hash: false`).\n\nVerified live on localhost:6050 — navigating updates URL like `?name=description#/0/1`. All 31 core and 17 renderer tests pass.",
+  "summary": "Extended presentation URL bookmarks to include sequence, thought, and slide after the hash path.\n\nURL format: `#/0/1?sequence=main\u0026thought=intro\u0026slide=description`. Added `PresentationSlideBookmark`, `PRESENTATION_SEQUENCE_QUERY_PARAM`, `PRESENTATION_THOUGHT_QUERY_PARAM`, and `formatPresentationUrlHash()`. Navigation still reads only the hash path; all three query params are bookmark-only. All 32 core and 17 renderer tests pass.",
   "goal": "🎯framework🎯presentation",
   "sessions": [
-    "⚪d5b5c0521c67470d9c7f431214fcdc0e"
+    "⚪d5b5c0521c67470d9c7f431214fcdc0e",
+    "⚪36801a881b2744129bed97ee455db11d"
   ]
 }

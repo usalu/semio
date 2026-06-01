@@ -574,13 +574,22 @@ export function countArrangements(presentation: Presentation): number {
 	);
 }
 
-/** @emoji 🔗 One reveal.js slide location with its arrangement id (bookmark `?name=` uses {@link arrangementId}). */
-export interface PresentationSlideRef {
-	readonly h: number;
-	readonly v: number;
+/** @emoji 🔖 Bookmark query keys appended after the reveal.js hash path (`#/0/2?sequence=main&thought=intro&slide=goal`). */
+export const PRESENTATION_SEQUENCE_QUERY_PARAM = "sequence";
+export const PRESENTATION_THOUGHT_QUERY_PARAM = "thought";
+export const PRESENTATION_SLIDE_QUERY_PARAM = "slide";
+
+/** @emoji 🔗 Bookmark ids carried in the URL hash query; navigation uses only the hash path. */
+export interface PresentationSlideBookmark {
 	readonly sequenceId: string;
 	readonly thoughtId: string;
 	readonly arrangementId: string;
+}
+
+/** @emoji 🔗 One reveal.js slide location with its arrangement id (bookmark params use {@link sequenceId}, {@link thoughtId}, {@link arrangementId}). */
+export interface PresentationSlideRef extends PresentationSlideBookmark {
+	readonly h: number;
+	readonly v: number;
 }
 
 /** @emoji 🔗 Lists every slide in reveal.js h/v order (one horizontal stack per sequence). */
@@ -626,19 +635,37 @@ export function formatPresentationSlideHash(indices: { readonly h: number; reado
 	return hash;
 }
 
-/** @emoji 🔗 Parses reveal.js slide hash into zero-based h/v indices; ignores query params like `?name=`. */
+/** @emoji 🔗 Parses reveal.js slide hash into zero-based h/v indices; ignores trailing bookmark query params. */
 export function parsePresentationSlideHash(hash: string): { readonly h: number; readonly v: number } | null {
-	const cleaned = hash.replace(/^#\/?/, "").trim();
-	if (!cleaned) {
+	const pathPart = hash.replace(/^#/, "").trim().split("?")[0]?.replace(/^\/?/, "").trim() ?? "";
+	if (!pathPart) {
 		return { h: 0, v: 0 };
 	}
-	const bits = cleaned.split("/");
+	const bits = pathPart.split("/");
 	const h = Number.parseInt(bits[0] ?? "0", 10);
 	const v = Number.parseInt(bits[1] ?? "0", 10);
 	if (!Number.isFinite(h) || !Number.isFinite(v) || Number.isNaN(h) || Number.isNaN(v)) {
 		return null;
 	}
 	return { h, v };
+}
+
+/** @emoji 🔗 Formats reveal.js hash with sequence, thought, and slide bookmark params after the path. */
+export function formatPresentationUrlHash(
+	indices: { readonly h: number; readonly v: number },
+	bookmark: PresentationSlideBookmark,
+): string {
+	const path = formatPresentationSlideHash(indices);
+	const params = new URLSearchParams([
+		[PRESENTATION_SEQUENCE_QUERY_PARAM, bookmark.sequenceId],
+		[PRESENTATION_THOUGHT_QUERY_PARAM, bookmark.thoughtId],
+		[PRESENTATION_SLIDE_QUERY_PARAM, bookmark.arrangementId],
+	]);
+	const query = params.toString();
+	if (path === "/") {
+		return `#/?${query}`;
+	}
+	return `#${path}?${query}`;
 }
 //#endregion 🔖Resolve
 
@@ -1481,8 +1508,26 @@ if (import.meta.vitest) {
 		it("round-trips reveal.js hash paths", () => {
 			expect(parsePresentationSlideHash("#/")).toEqual({ h: 0, v: 0 });
 			expect(parsePresentationSlideHash("#/2/3")).toEqual({ h: 2, v: 3 });
+			expect(parsePresentationSlideHash("#/0/2?sequence=main&thought=intro&slide=goal")).toEqual({ h: 0, v: 2 });
 			expect(formatPresentationSlideHash({ h: 0, v: 0 })).toBe("/");
 			expect(formatPresentationSlideHash({ h: 2, v: 3 })).toBe("/2/3");
+		});
+
+		it("formats sequence, thought, and slide bookmark params after the hash path", () => {
+			expect(
+				formatPresentationUrlHash({ h: 0, v: 0 }, {
+					sequenceId: "main",
+					thoughtId: "intro",
+					arrangementId: "title",
+				}),
+			).toBe("#/?sequence=main&thought=intro&slide=title");
+			expect(
+				formatPresentationUrlHash({ h: 0, v: 2 }, {
+					sequenceId: "main",
+					thoughtId: "intro",
+					arrangementId: "goal",
+				}),
+			).toBe("#/0/2?sequence=main&thought=intro&slide=goal");
 		});
 	});
 

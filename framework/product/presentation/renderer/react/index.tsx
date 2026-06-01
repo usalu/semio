@@ -56,8 +56,7 @@ import {
 	abbreviateAuthorFirstName,
 	affiliationLineName,
 	analogy,
-	collectPresentationSlides,
-	formatPresentationSlideHash,
+	formatPresentationUrlHash,
 	intro,
 	parsePresentationSlideHash,
 	presentationSlideAt,
@@ -106,10 +105,13 @@ export {
 	columnMorphId,
 	countArrangements,
 	collectPresentationSlides,
-	formatPresentationSlideHash,
+	formatPresentationUrlHash,
 	intro,
 	morphId,
 	parsePresentationSlideHash,
+	PRESENTATION_SEQUENCE_QUERY_PARAM,
+	PRESENTATION_SLIDE_QUERY_PARAM,
+	PRESENTATION_THOUGHT_QUERY_PARAM,
 	presentationSlideAt,
 	resolveArrangement,
 	resolveEmbodiment,
@@ -119,7 +121,7 @@ export {
 	splitFigureGrid,
 	tileMorphId,
 } from "@framework/presentation/core";
-export type { PresentationSlideRef, TextMorphRoot } from "@framework/presentation/core";
+export type { PresentationSlideBookmark, PresentationSlideRef, TextMorphRoot } from "@framework/presentation/core";
 export { Expertise } from "@ui/react";
 
 //#region 🔖MountOptions
@@ -134,10 +136,7 @@ export interface PresentationMountOptions {
 	readonly height?: number;
 }
 
-/** @emoji 🔖 Query param carrying the current slide name for bookmarking only (navigation uses the hash). */
-export const PRESENTATION_SLIDE_NAME_QUERY_PARAM = "name";
-
-/** @emoji 🔗 Writes `?name=<arrangementId>` plus reveal.js hash for the active slide; ignores existing `name` when reading. */
+/** @emoji 🔗 Writes reveal.js hash with `?sequence=&thought=&slide=` after the path; bookmark params are ignored for navigation. */
 export function syncPresentationSlideUrl(
 	presentation: Presentation,
 	indices: { readonly h: number; readonly v: number },
@@ -150,13 +149,12 @@ export function syncPresentationSlideUrl(
 		return;
 	}
 	const url = new URL(window.location.href);
-	url.searchParams.set(PRESENTATION_SLIDE_NAME_QUERY_PARAM, slide.arrangementId);
-	const hashPath = formatPresentationSlideHash(indices);
-	url.hash = hashPath === "/" ? "" : `#${hashPath}`;
+	url.search = "";
+	url.hash = formatPresentationUrlHash(indices, slide);
 	history.replaceState(null, "", url);
 }
 
-/** @emoji 🔗 Reads reveal.js slide indices from the URL hash; the `name` query param is ignored. */
+/** @emoji 🔗 Reads reveal.js slide indices from the URL hash; trailing bookmark query params are ignored. */
 export function readPresentationSlideIndicesFromUrl(
 	hash: string = typeof window !== "undefined" ? window.location.hash : "",
 ): { readonly h: number; readonly v: number } | null {
@@ -1054,9 +1052,7 @@ export const PresentationDeck: FC<{
 			autoAnimateUnmatched: true,
 			center: true,
 		};
-		if (slideUrlEnabled) {
-			revealOptions.hash = true;
-		}
+		// Custom hash format appends `?slide=` after the path; reveal.js hash sync stays off.
 		if (options?.slideNumber === true) {
 			revealOptions.slideNumber = true;
 		}
@@ -1737,10 +1733,15 @@ if (import.meta.vitest) {
 			style.remove();
 		});
 
-		it("does not navigate from the name query param", () => {
-			history.replaceState(null, "", "/presentation?name=goal");
-			expect(readPresentationSlideIndicesFromUrl("")).toEqual({ h: 0, v: 0 });
-			expect(readPresentationSlideIndicesFromUrl("#/0/2")).toEqual({ h: 0, v: 2 });
+		it("does not navigate from bookmark query params", () => {
+			expect(readPresentationSlideIndicesFromUrl("#/?sequence=main&thought=intro&slide=goal")).toEqual({
+				h: 0,
+				v: 0,
+			});
+			expect(readPresentationSlideIndicesFromUrl("#/0/2?sequence=main&thought=intro&slide=goal")).toEqual({
+				h: 0,
+				v: 2,
+			});
 			history.replaceState(null, "", "/presentation");
 		});
 	});
@@ -1760,16 +1761,16 @@ if (import.meta.vitest) {
 			},
 		});
 
-		it("writes arrangement id as name and reveal hash for indices", () => {
+		it("writes sequence, thought, and slide bookmark params after the hash path", () => {
 			history.replaceState(null, "", "/deck");
 			syncPresentationSlideUrl(sampleDeck, { h: 0, v: 2 });
 			const url = new URL(window.location.href);
-			expect(url.searchParams.get(PRESENTATION_SLIDE_NAME_QUERY_PARAM)).toBe("goal");
-			expect(url.hash).toBe("#/0/2");
+			expect(url.search).toBe("");
+			expect(url.hash).toBe("#/0/2?sequence=main&thought=intro&slide=goal");
 			history.replaceState(null, "", "/deck");
 		});
 
-		it("readPresentationSlideIndicesFromUrl ignores the name query param", () => {
+		it("readPresentationSlideIndicesFromUrl ignores bookmark query params", () => {
 			expect(readPresentationSlideIndicesFromUrl("#/1/3")).toEqual({ h: 1, v: 3 });
 			expect(readPresentationSlideIndicesFromUrl("")).toEqual({ h: 0, v: 0 });
 		});
