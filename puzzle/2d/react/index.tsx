@@ -3975,6 +3975,7 @@ export class Puzzle2dRenderer {
     this.invalidated = false;
     try {
       this.ensurePendingWheelFlushedBeforeFrame();
+      let syncedGpuThisFrame = false;
       if (this.renderMode === "headless-test") {
         if (!this.suppressSceneToWasmPush) {
           this.pushSceneToWasmDriver();
@@ -3998,13 +3999,13 @@ export class Puzzle2dRenderer {
         }
         gpuReady = this.readGpuReady();
         if (gpuReady) {
-          this.syncGpuFrame();
+          syncedGpuThisFrame = this.syncGpuFrame();
           if (this.wasmHostOwnsViewportCamera()) {
             this.syncLastPushedCameraFromWasmHost();
           }
         }
       }
-      this.paintTextOverlays();
+      this.paintTextOverlays(syncedGpuThisFrame);
       const frameState: FrameState = {
         camera: { ...this.camera },
         renderer: this,
@@ -4736,11 +4737,11 @@ export class Puzzle2dRenderer {
   }
 
   /** @emoji 🏷️ Draws node captions on {@link Puzzle2dRenderer.attachTextOverlayCanvas} (GPU path has no text primitives). */
-  private paintTextOverlays(): void {
+  private paintTextOverlays(syncedGpuThisFrame = false): void {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
       return;
     }
-    if (!this.wheelZoomGestureActive && !this.textOverlayDirty()) {
+    if (!syncedGpuThisFrame && !this.wheelZoomGestureActive && !this.textOverlayDirty()) {
       return;
     }
     const el = this.textOverlayCanvas;
@@ -4758,7 +4759,10 @@ export class Puzzle2dRenderer {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
     const wasmOverlay = this.readOverlayPaintStateFromWasm();
-    const overlayCamera = wasmOverlay?.camera ?? this.camera;
+    const overlayCamera =
+      wasmOverlay?.camera ??
+      (this.wasmHostOwnsViewportCamera() ? this.readWasmCameraSnapshot() : null) ??
+      this.camera;
     const lod = wasmOverlay?.lod ?? this.effectiveDrawLodLabel();
     const overlayZoom = overlayCamera.zoom;
     const chrome = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
@@ -4864,12 +4868,12 @@ export class Puzzle2dRenderer {
   }
 
   /** @emoji 🎨 Presents one GPU frame after {@link Puzzle2dRenderer.pushSceneToWasmDriver} (same order as pre-369 main-thread canvas: no WASM scene push until the swapchain exists). */
-  private syncGpuFrame(): void {
+  private syncGpuFrame(): boolean {
     if (this.renderMode === "headless-test" || !this.readGpuReady()) {
-      return;
+      return false;
     }
     if (this.wasmGpuFrameDepth > 0) {
-      return;
+      return false;
     }
     if (!this.suppressSceneToWasmPush) {
       if (this.wasmPushSceneDrainAlreadyApplied) {
@@ -4884,12 +4888,14 @@ export class Puzzle2dRenderer {
       this.session.renderFrame();
       this.gpuSurfacePresentedFrame = true;
       this.gpuSurfaceErrorDetail = "";
+      return true;
     } catch (err: unknown) {
       console.error("[DEBUG] Puzzle2dRenderer GPU surface frame failed", err);
       this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
       this.gpuSurfaceUnavailable = true;
       this.gpuSurfacePresentedFrame = false;
       this.cachedWasmGpuReady = false;
+      return false;
     } finally {
       this.wasmGpuFrameDepth -= 1;
       if (this.wasmGpuFrameDepth === 0) {
@@ -6183,6 +6189,72 @@ if (puzzle2dVitest) {
       vi.spyOn(renderer.session, "cameraJson").mockReturnValue(JSON.stringify({ x: 80, y: 0, zoom: 2 }));
       renderer["wasmViewportLeading"] = true;
       expect(renderer.textOverlayDirty()).toBe(true);
+      renderer.dispose();
+    });
+
+    it("paintTextOverlays repaints when syncedGpuThisFrame even if overlay cache is clean", () => {
+      const { canvas } = createMockCanvas();
+      const overlay = document.createElement("canvas");
+      const fillText = vi.fn();
+      const overlayCtx: Puzzle2dCanvasContext = {
+        arc: vi.fn(),
+        beginPath: vi.fn(),
+        bezierCurveTo: vi.fn(),
+        clearRect: vi.fn(),
+        clip: vi.fn(),
+        closePath: vi.fn(),
+        fill: vi.fn(),
+        fillRect: vi.fn(),
+        fillStyle: "#000000",
+        fillText,
+        font: "",
+        lineCap: "round",
+        lineJoin: "round",
+        lineTo: vi.fn(),
+        lineWidth: 1,
+        measureText: vi.fn((s: string) => ({ width: s.length * 6 })),
+        moveTo: vi.fn(),
+        rect: vi.fn(),
+        restore: vi.fn(),
+        save: vi.fn(),
+        setLineDash: vi.fn(),
+        setTransform: vi.fn(),
+        stroke: vi.fn(),
+        strokeRect: vi.fn(),
+        strokeStyle: "#000000",
+        textAlign: "start",
+        textBaseline: "alphabetic",
+      };
+      Object.defineProperty(overlay, "getContext", { configurable: true, value: () => overlayCtx });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "main-thread" });
+      renderer.attachTextOverlayCanvas(overlay);
+      renderer.setSize(800, 600, 1);
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption", textAutofit: true });
+      renderer.scene.add(node);
+      const overlayCamera = { x: 0, y: 0, zoom: 1 };
+      vi.spyOn(renderer.session, "overlayPaintStateJson").mockReturnValue(
+        JSON.stringify({
+          camera: overlayCamera,
+          lod: "normal",
+          nodes: [{ id: "n", x: 0, y: 0 }],
+        }),
+      );
+      renderer.setCamera(overlayCamera.x, overlayCamera.y, overlayCamera.zoom);
+      renderer["paintTextOverlays"](false);
+      expect(fillText).toHaveBeenCalledTimes(1);
+      fillText.mockClear();
+      renderer["rememberTextOverlayPainted"](overlayCamera, "normal");
+      expect(renderer.textOverlayDirty()).toBe(false);
+      vi.spyOn(renderer.session, "overlayPaintStateJson").mockReturnValue(
+        JSON.stringify({
+          camera: { x: 40, y: 0, zoom: 2 },
+          lod: "normal",
+          nodes: [{ id: "n", x: 0, y: 0 }],
+        }),
+      );
+      renderer["wasmViewportLeading"] = true;
+      renderer["paintTextOverlays"](true);
+      expect(fillText).toHaveBeenCalledTimes(1);
       renderer.dispose();
     });
 

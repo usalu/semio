@@ -366,8 +366,8 @@ export interface Arrangement {
 	/** @emoji 🔖 URL bookmark label only; falls back to {@link id}. Never rendered on the slide. */
 	readonly name?: string;
 	readonly dispositions: readonly Disposition[];
-	/** @emoji ⏳ Arrangement ids whose morph must finish before dormant morph anchors replace split tiles on this slide. */
-	readonly settleAfterMorphFrom?: readonly string[];
+	/** @emoji ⏳ Arrangement ids that trigger swapping split tiles for dormant morph anchors on this slide when auto-animating to them. */
+	readonly settleBeforeMorphTo?: readonly string[];
 }
 //#endregion 🔖Arrangement
 
@@ -505,6 +505,22 @@ export function morphBridgeDirect(
 		targetEmbodiment.kind === "authors" &&
 		sourceEmbodiment.id === "plain" &&
 		targetEmbodiment.id?.startsWith("marked-affiliations-step")
+	) {
+		return true;
+	}
+	if (
+		sourceEmbodiment.kind === "authors" &&
+		targetEmbodiment.kind === "authors" &&
+		sourceEmbodiment.id?.startsWith("marked-affiliations-step") &&
+		targetEmbodiment.id?.startsWith("marked-affiliations-step")
+	) {
+		return true;
+	}
+	if (
+		sourceEmbodiment.kind === "affiliations" &&
+		targetEmbodiment.kind === "affiliations" &&
+		sourceEmbodiment.id?.startsWith("step") &&
+		targetEmbodiment.id?.startsWith("step")
 	) {
 		return true;
 	}
@@ -1306,6 +1322,24 @@ if (import.meta.vitest) {
 			expect(expandThoughtSlides(thought).length).toBeGreaterThan(7);
 		});
 
+		it("skips morph bridges between affiliation steps", () => {
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
+			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual([
+				"title",
+				"description--bridge",
+				"description",
+				"goal--bridge",
+				"goal",
+				"authors",
+				"affiliations-1",
+				"affiliations-2",
+				"affiliations-3",
+			]);
+			const uniSlides = collectPresentationSlides(sampleIntro).filter((slide) => slide.slide === "Universities");
+			expect(uniSlides).toHaveLength(1);
+			expect(uniSlides[0]?.v).toBe(7);
+		});
+
 		it("uses fixed-size heading blocks without fit-text", () => {
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			const textEmbodiments = thought.participants.flatMap((p) =>
@@ -1868,8 +1902,8 @@ if (import.meta.vitest) {
 				thought: "Einleitung",
 				slide: "Universitäten",
 			};
-			const hash = formatPresentationUrlHash({ h: 0, v: 5 }, bookmark, "de");
-			expect(hash.startsWith("#/0/5?")).toBe(true);
+			const hash = formatPresentationUrlHash({ h: 0, v: 7 }, bookmark, "de");
+			expect(hash.startsWith("#/0/7?")).toBe(true);
 			const params = new URLSearchParams(hash.split("?")[1] ?? "");
 			expect(params.get("kapitel")).toBe("Hauptteil");
 			expect(params.get("sequenz")).toBe("Einführung");

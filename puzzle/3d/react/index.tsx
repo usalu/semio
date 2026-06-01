@@ -3651,7 +3651,6 @@ export interface RegistryInteractionValue {
   readonly selectionMode: SelectionMode;
   commitSelection(pick: SelectionPick): void;
   captureMarqueeCandidates(): void;
-  prefetchMarqueeCandidates(): void;
   previewMarqueeSelection(args: MarqueeGestureArgs): void;
   cancelMarqueePreview(): void;
   commitMarqueeSelection(args: MarqueeGestureArgs): void;
@@ -5328,7 +5327,7 @@ function projectWorldPointsToMarqueeFootprint(worldPoints: readonly Vector3[], c
       projected.push(sample.point);
     }
   }
-  const hull = projected.length >= 3 ? convexHullScreenPoints(projected) : projected;
+  const hull = projected.length <= 3 ? projected : convexHullScreenPoints(projected);
   return { hull, anyBehindCamera };
 }
 
@@ -6198,7 +6197,7 @@ function AttractionWindowBridge() {
 
 function MarqueeBridge() {
   const reg = useRegistry();
-  const { captureMarqueeCandidates, prefetchMarqueeCandidates, previewMarqueeSelection, cancelMarqueePreview, commitMarqueeSelection } = useRegistryInteraction();
+  const { captureMarqueeCandidates, previewMarqueeSelection, cancelMarqueePreview, commitMarqueeSelection } = useRegistryInteraction();
   const marquee = useRegistryMarquee();
   const gl = useThree((state) => state.gl);
   const invalidate = useThree((state) => state.invalidate);
@@ -6238,7 +6237,6 @@ function MarqueeBridge() {
         lastX: event.clientX,
         lastY: event.clientY,
       };
-      requestAnimationFrame(() => prefetchMarqueeCandidates());
     };
     const onPointerMove = (event: PointerEvent) => {
       if (puzzle3dRelocateDragActiveRef.current) {
@@ -6318,7 +6316,7 @@ function MarqueeBridge() {
       bindings.dispose();
       resetOverlay();
     };
-  }, [cancelMarqueePreview, captureMarqueeCandidates, commitMarqueeSelection, invalidate, marquee.selectionMethod, prefetchMarqueeCandidates, previewMarqueeSelection, reg]);
+  }, [cancelMarqueePreview, captureMarqueeCandidates, commitMarqueeSelection, invalidate, marquee.selectionMethod, previewMarqueeSelection, reg]);
   return null;
 }
 
@@ -6505,6 +6503,7 @@ function RegistryProvider({
   const marqueeCandidatesRef = reactHostPort.useRef<MarqueeCandidate[]>([]);
   const marqueeBaseSelectionRef = reactHostPort.useRef<SelectionSnapshot | null>(null);
   const marqueePrefetchRef = reactHostPort.useRef<{ readonly key: string; readonly candidates: MarqueeCandidate[] }>({ key: "", candidates: [] });
+  const marqueeObjectFootprintCacheRef = reactHostPort.useRef<Map<string, { readonly viewKey: string; readonly footprint: ObjectMarqueeFootprint }>>(new Map());
   const notifyConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onConnect?.(payload), [hostCallbacksRef]);
   const notifyProximityConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onProximityConnect?.(payload), [hostCallbacksRef]);
   const notifyIndirectConnect = reactHostPort.useCallback((payload: AttractionPayload) => hostCallbacksRef.current.onIndirectConnect?.(payload), [hostCallbacksRef]);
@@ -6549,14 +6548,22 @@ function RegistryProvider({
       return [];
     }
     const domRect = env.gl.domElement.getBoundingClientRect();
+    const viewKey = marqueeViewKey(env.camera, domRect);
+    const footprintCache = marqueeObjectFootprintCacheRef.current;
     const candidates: MarqueeCandidate[] = [];
     for (const [id, group] of objectGroupMap.current) {
       if (!group) {
         continue;
       }
-      const footprint = projectObjectGroupToScreenPoints(group, env.camera, domRect);
-      if (footprint.hull.length) {
-        candidates.push({ kind: "object", id, points: footprint.hull, anyBehindCamera: footprint.anyBehindCamera });
+      let footprint = footprintCache.get(id);
+      if (!footprint || footprint.viewKey !== viewKey) {
+        const projected = projectObjectGroupToScreenPoints(group, env.camera, domRect);
+        footprint = { viewKey, footprint: projected };
+        footprintCache.set(id, footprint);
+      }
+      const hull = footprint.footprint;
+      if (hull.hull.length) {
+        candidates.push({ kind: "object", id, points: hull.hull, anyBehindCamera: hull.anyBehindCamera });
       }
     }
     for (const [fullId, getter] of vortexGettersRef.current) {
@@ -6594,25 +6601,13 @@ function RegistryProvider({
 
   const invalidateMarqueePrefetch = reactHostPort.useCallback(() => {
     marqueePrefetchRef.current = { key: "", candidates: [] };
+    marqueeObjectFootprintCacheRef.current.clear();
   }, []);
 
   const clearMarqueeGestureCache = reactHostPort.useCallback(() => {
     marqueeCandidatesRef.current = [];
     marqueeBaseSelectionRef.current = null;
   }, []);
-
-  const prefetchMarqueeCandidates = reactHostPort.useCallback(() => {
-    const env = attractionThreeRef.current;
-    if (!env) {
-      return;
-    }
-    const domRect = env.gl.domElement.getBoundingClientRect();
-    const key = marqueeViewKey(env.camera, domRect);
-    if (marqueePrefetchRef.current.key === key && marqueePrefetchRef.current.candidates.length > 0) {
-      return;
-    }
-    marqueePrefetchRef.current = { key, candidates: buildMarqueeCandidates() };
-  }, [buildMarqueeCandidates]);
 
   const captureMarqueeCandidates = reactHostPort.useCallback(() => {
     marqueeBaseSelectionRef.current = selectionStore.getSnapshot();
@@ -6700,9 +6695,8 @@ function RegistryProvider({
     (attractions: readonly AttractionProps[]) => {
       marqueeAttractionsRef.current = attractions;
       invalidateMarqueePrefetch();
-      scheduleDeferredCallback(prefetchMarqueeCandidates);
     },
-    [invalidateMarqueePrefetch, prefetchMarqueeCandidates],
+    [invalidateMarqueePrefetch],
   );
   const activeRelocateObjectIdRef = reactHostPort.useRef<string | null>(primarySelectionObjectId(selectionStore.getSnapshot()));
   const setActiveRelocateObjectId = reactHostPort.useCallback((id: string | null) => {
@@ -6803,13 +6797,10 @@ function RegistryProvider({
       objectKindsRef.current.set(id, objectKind);
       invalidateMarqueePrefetch();
       if (group) {
-        scheduleDeferredCallback(() => {
-          warmObjectGroupMarqueeBounds(group);
-          prefetchMarqueeCandidates();
-        });
+        scheduleDeferredCallback(() => warmObjectGroupMarqueeBounds(group));
       }
     },
-    [invalidateMarqueePrefetch, prefetchMarqueeCandidates],
+    [invalidateMarqueePrefetch],
   );
 
   const collectObjectGroups = reactHostPort.useCallback((): Group[] => {
@@ -7131,10 +7122,9 @@ function RegistryProvider({
       attractionThreeRef.current = env;
       if (env) {
         invalidateMarqueePrefetch();
-        scheduleDeferredCallback(prefetchMarqueeCandidates);
       }
     },
-    [invalidateMarqueePrefetch, prefetchMarqueeCandidates],
+    [invalidateMarqueePrefetch],
   );
 
   const findNearestProximityRelocate = reactHostPort.useCallback(
@@ -7233,7 +7223,6 @@ function RegistryProvider({
       selectionMode,
       commitSelection,
       captureMarqueeCandidates,
-      prefetchMarqueeCandidates,
       previewMarqueeSelection,
       cancelMarqueePreview,
       commitMarqueeSelection,
@@ -7247,7 +7236,6 @@ function RegistryProvider({
       clearSelection,
       commitMarqueeSelection,
       commitSelection,
-      prefetchMarqueeCandidates,
       previewMarqueeSelection,
       selectionMode,
       setActiveRelocateObjectId,

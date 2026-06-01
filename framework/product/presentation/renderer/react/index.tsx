@@ -206,51 +206,35 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 //#endregion 🔖RevealChrome
 
 //#region 🔖ArrangementSettled
-/** @emoji ⏳ Swaps split tiles for dormant column morph anchors once tile morphs from the listed source slides finish. */
+/** @emoji ⏳ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
 export function syncArrangementSettledState(
 	deckEl: HTMLElement,
 	currentSlide: HTMLElement | null,
 	previousSlide: HTMLElement | null,
 ): void {
-	const settleSections = deckEl.querySelectorAll<HTMLElement>("section[data-settle-after-morph-from]");
+	const settleSections = deckEl.querySelectorAll<HTMLElement>("section[data-settle-before-morph-to]");
 	for (const section of settleSections) {
 		if (section !== currentSlide && section !== previousSlide) {
 			section.classList.remove("presentation-arrangement--settled");
 		}
 	}
-	if (!currentSlide) {
-		return;
+	if (currentSlide?.hasAttribute("data-settle-before-morph-to")) {
+		currentSlide.classList.remove("presentation-arrangement--settled");
 	}
-	const settleAfter = currentSlide.getAttribute("data-settle-after-morph-from");
-	if (!settleAfter) {
-		return;
-	}
-	const fromIds = settleAfter.split(",").filter((id) => id.length > 0);
-	const previousId = previousSlide?.getAttribute("title");
-	if (previousId && fromIds.includes(previousId)) {
-		return;
-	}
-	currentSlide.classList.add("presentation-arrangement--settled");
 }
 
-/** @emoji ⏳ Marks a slide settled after an auto-animate transition from a listed source arrangement. */
-export function settleArrangementAfterAutoAnimate(
-	toSlide: HTMLElement,
-	fromSlide: HTMLElement,
-	autoAnimateDurationSeconds: number,
-): void {
-	const settleAfter = toSlide.getAttribute("data-settle-after-morph-from");
-	if (!settleAfter) {
+/** @emoji ⏳ Swaps split tiles for dormant morph anchors on the outgoing slide when auto-animating to a listed target. */
+export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSlide: HTMLElement): void {
+	const settleBefore = fromSlide.getAttribute("data-settle-before-morph-to");
+	if (!settleBefore) {
 		return;
 	}
-	const fromIds = settleAfter.split(",").filter((id) => id.length > 0);
-	const fromId = fromSlide.getAttribute("title");
-	if (!fromId || !fromIds.includes(fromId)) {
+	const toIds = settleBefore.split(",").filter((id) => id.length > 0);
+	const toId = toSlide.getAttribute("title");
+	if (!toId || !toIds.includes(toId)) {
 		return;
 	}
-	window.setTimeout(() => {
-		toSlide.classList.add("presentation-arrangement--settled");
-	}, autoAnimateDurationSeconds * 1000 + 50);
+	fromSlide.classList.add("presentation-arrangement--settled");
 }
 //#endregion 🔖ArrangementSettled
 
@@ -990,8 +974,8 @@ const ArrangementSection: FC<{
 	return (
 		<section
 			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": renderSlide.autoAnimateId } : {})}
-			{...(renderSlide.arrangement.settleAfterMorphFrom?.length
-				? { "data-settle-after-morph-from": renderSlide.arrangement.settleAfterMorphFrom.join(",") }
+			{...(renderSlide.arrangement.settleBeforeMorphTo?.length
+				? { "data-settle-before-morph-to": renderSlide.arrangement.settleBeforeMorphTo.join(",") }
 				: {})}
 			title={renderSlide.id}
 			className={positioned ? "presentation-arrangement--positioned" : undefined}
@@ -1078,7 +1062,7 @@ export const PresentationDeck: FC<{
 			if (!fromSlide || !toSlide) {
 				return;
 			}
-			settleArrangementAfterAutoAnimate(toSlide, fromSlide, deck.getConfig().autoAnimateDuration ?? 1);
+			prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
 		};
 		const onSlideChanged = (): void => {
 			relaxHiddenPreflight();
@@ -1679,20 +1663,20 @@ if (import.meta.vitest) {
 			expect(slot?.style.left).toBe("10%");
 		});
 
-		it("settles arrangements after morph from listed sources", () => {
+		it("clears settled state when arriving on a slide and prepares it before morph to listed targets", () => {
 			const deckEl = document.createElement("div");
 			const focus = document.createElement("section");
-			focus.setAttribute("title", "focus");
-			focus.setAttribute("data-settle-after-morph-from", "catalogue");
+			focus.setAttribute("title", "catalogue-focus");
+			focus.setAttribute("data-settle-before-morph-to", "catalogue-labels");
 			focus.classList.add("presentation-arrangement--positioned");
 			deckEl.appendChild(focus);
+			focus.classList.add("presentation-arrangement--settled");
 			syncArrangementSettledState(deckEl, focus, null);
-			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(true);
-			focus.classList.remove("presentation-arrangement--settled");
-			const catalogue = document.createElement("section");
-			catalogue.setAttribute("title", "catalogue");
-			syncArrangementSettledState(deckEl, focus, catalogue);
 			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(false);
+			const labels = document.createElement("section");
+			labels.setAttribute("title", "catalogue-labels");
+			prepareArrangementBeforeAutoAnimate(focus, labels);
+			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(true);
 		});
 
 		it("marks zero-opacity crop morph slots dormant until the arrangement settles", () => {
