@@ -337,6 +337,8 @@ export interface Disposition {
 	readonly morphTargets?: readonly SplitMorphTarget[];
 	/** @emoji 🧩 Expands {@link SplitMorphTarget} `columnKey` entries into one morph slot per tile (same position). */
 	readonly morphColumnGroups?: readonly SplitColumnGroup[];
+	/** @emoji 🖼 Crop tiles for {@link morphColumnGroups} label sinks (same keys as on the source split). */
+	readonly morphSourceTiles?: readonly SplitTile[];
 }
 //#endregion 🔖Disposition
 
@@ -482,6 +484,8 @@ export interface ResolvedDisposition {
 	readonly columnMorphCompanion?: boolean;
 	/** @emoji 🏷 Column key when this label belongs to a {@link morphColumnGroups} expansion. */
 	readonly columnKey?: string;
+	/** @emoji 🧩 Figure crop tile placed at the label stack for per-tile forward auto-animate. */
+	readonly morphTile?: SplitTile;
 }
 //#endregion 🔖Resolved
 
@@ -522,20 +526,29 @@ export function resolveArrangement(thought: Thought, arrangementId: string): Res
 						: undefined;
 				const tileKeys = columnGroup?.tileKeys;
 				const keys = tileKeys && tileKeys.length > 0 ? tileKeys : [undefined];
-				return keys.map((tileKey, tileIndex) => ({
-					participant,
-					embodiment: {
-						kind: "text" as const,
-						lines: tileIndex === 0 ? target.lines : ["\u00a0"],
-						level: target.level ?? "heading",
-						morphRoot: target.morphRoot ?? "heading-line",
-					},
-					emphasis: disposition.emphasis,
-					morphId: morphTargetId(participant.id, target, tileKey),
-					position: target.position,
-					columnMorphCompanion: tileKey !== undefined && tileIndex > 0,
-					...(target.columnKey ? { columnKey: target.columnKey } : {}),
-				}));
+				return keys.map((tileKey, tileIndex) => {
+					const sourceTile =
+						tileKey && disposition.morphSourceTiles
+							? disposition.morphSourceTiles.find((tile) => tile.key === tileKey)
+							: undefined;
+					return {
+						participant,
+						embodiment: {
+							kind: "text" as const,
+							lines: tileIndex === 0 ? target.lines : ["\u00a0"],
+							level: target.level ?? "heading",
+							morphRoot: target.morphRoot ?? "heading-line",
+						},
+						emphasis: disposition.emphasis,
+						morphId: morphTargetId(participant.id, target, tileKey),
+						position: target.position,
+						columnMorphCompanion: tileKey !== undefined && tileIndex > 0,
+						...(target.columnKey ? { columnKey: target.columnKey } : {}),
+						...(sourceTile
+							? { morphTile: { ...sourceTile, position: target.position, emphasis: disposition.emphasis } }
+							: {}),
+					};
+				});
 			});
 		}
 		return [
@@ -1303,6 +1316,33 @@ if (import.meta.vitest) {
 			expect(resolved[1]?.columnMorphCompanion).toBe(true);
 			expect(resolved[1]?.columnKey).toBe("col1");
 			expect(resolved[2]?.morphId).toBe("fig--tile--tile-r1-c0");
+		});
+
+		it("resolves morphTile from morphSourceTiles for column label expansion", () => {
+			const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
+			const tiles = splitFigureGrid({ rows: 1, columns: 2, frame, gap: 0 });
+			const labelPosition = { x: 0.4, y: 0.1, width: 0.2, height: 0.2 };
+			const thought: Thought = {
+				id: "labels",
+				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
+				arrangements: [
+					{
+						id: "slide",
+						dispositions: [
+							{
+								participantId: "fig",
+								emphasis: "active",
+								morphSourceTiles: tiles,
+								morphColumnGroups: [{ key: "col1", tileKeys: ["tile-r0-c0"] }],
+								morphTargets: [{ columnKey: "col1", position: labelPosition, lines: ["Rippendecke"] }],
+							},
+						],
+					},
+				],
+			};
+			const resolved = resolveArrangement(thought, "slide");
+			expect(resolved[0]?.morphTile?.key).toBe("tile-r0-c0");
+			expect(resolved[0]?.morphTile?.position).toEqual(labelPosition);
 		});
 	});
 

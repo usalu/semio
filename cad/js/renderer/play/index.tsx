@@ -20,6 +20,7 @@ import {
   type WindowMeasure,
   type UiNode,
   type WindowLayout,
+  enforcePlaygroundWindowEngagementInput,
 } from "@framework/playground/core";
 import {
   DocumentHistory,
@@ -559,6 +560,29 @@ export function cadPlayEngagementMirror(engagement: EngagementSpec | null, pane:
   }));
   return { options, input, status, possibleEngagements };
 }
+
+/** @emoji 💬 Placeholder engagement until a pane's {@link InteractionRepl} publishes a live snapshot (requires `input`). */
+export function cadPlayPlaceholderPaneEngagement(pane: CadPlayPaneId): WindowEngagement {
+  return {
+    input: {
+      id: "engagement-input",
+      value: "",
+      placeholder: "Command",
+      onChange: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementInput", args: { pane } },
+      onSubmit: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementSubmit", args: { pane } },
+      onRepeatLast: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementRepeatLast", args: { pane } },
+      onAbort: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementAbort", args: { pane } },
+    },
+  };
+}
+
+/** @emoji 💬 Resolves shell engagement for one pane, always exposing a command {@link WindowEngagementInput}. */
+export function cadPlayResolvePaneEngagement(pane: CadPlayPaneId, stored?: WindowEngagement | undefined): WindowEngagement {
+  const placeholder = cadPlayPlaceholderPaneEngagement(pane);
+  if (!stored) return placeholder;
+  if (stored.input) return stored;
+  return { ...stored, input: placeholder.input };
+}
 //#endregion 🔖Toolbar
 
 //#region 🔖Controller
@@ -596,11 +620,17 @@ export class CadPlayShellController extends Controller {
     };
   }
 
+  private paneEngagementForShell(pane: CadPlayPaneId): WindowEngagement {
+    return cadPlayResolvePaneEngagement(pane, this.engagementByPane[pane]);
+  }
+
   /** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures and live interaction engagement per pane. */
   rebuildShellMode(): void {
-    this.mainMode.windowKinds = CAD_PLAY_PANE_SPECS.map(
-      (row) => new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)], this.engagementByPane[row.pane]),
-    );
+    this.mainMode.windowKinds = CAD_PLAY_PANE_SPECS.map((row) => {
+      const engagement = this.paneEngagementForShell(row.pane);
+      enforcePlaygroundWindowEngagementInput(engagement, `CAD play window "${row.windowKindId}"`);
+      return new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)], engagement);
+    });
   }
 
   /** @emoji 💬 Sets one pane's interaction engagement (from the live {@link InteractionRepl} snapshot) and re-renders the shell. */
@@ -610,7 +640,7 @@ export class CadPlayShellController extends Controller {
     const windowKindId = CAD_PLAY_PANE_SPECS.find((row) => row.pane === pane)?.windowKindId;
     const existing = windowKindId ? this.mainMode.windowKinds.find((wk) => wk.id === windowKindId) : undefined;
     if (existing) {
-      existing.engagement = engagement;
+      existing.engagement = this.paneEngagementForShell(pane);
       this.mainMode.windowKinds = [...this.mainMode.windowKinds];
     } else {
       this.rebuildShellMode();
@@ -2397,7 +2427,8 @@ if (import.meta.vitest) {
       const buildingWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_BUILDING_WINDOW_ID);
       expect(shapeWindow?.engagement?.options?.[0]?.id).toBe("confirm");
       expect(energyWindow?.engagement?.options?.[0]?.id).toBe("wall");
-      expect(buildingWindow?.engagement).toBeUndefined();
+      expect(buildingWindow?.engagement?.input?.id).toBe("engagement-input");
+      expect(buildingWindow?.engagement?.options).toBeUndefined();
       controller.run("engagementOption", { pane: "shape", optionId: "confirm" });
       controller.run("engagementSubmit", { pane: "energy", value: "box" });
       expect(calls).toEqual([
@@ -2408,6 +2439,15 @@ if (import.meta.vitest) {
   });
 
   describe("buildCadPlayAppRuntime", () => {
+    it("requires engagement.input on every quad window kind", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      const app = buildCadPlayAppRuntime(controller);
+      for (const windowKind of app.windowKinds) {
+        expect(windowKind.engagement?.input?.id).toBe("engagement-input");
+      }
+    });
+
     it("focuses the pane model definition when the active window changes", () => {
       const runtime = new Platform();
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());

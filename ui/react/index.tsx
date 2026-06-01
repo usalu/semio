@@ -7991,12 +7991,25 @@ const getTreeItemOrderedIds = (sections: TreeDataSection[], sectionItemsById: Re
 
 const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"]';
 
-/** @emoji 🖱️ Skip row leave when pointer moves to another tree row (avoids stale leave clearing fast-hover highlight). */
+const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]`;
+
+/** @emoji 🎨 Tree row background from committed selection vs pointer-driven {@link TreeRootProps.highlightedIds}. */
+function treeRowStateClasses(isSelected: boolean, isHighlighted: boolean): string {
+  if (isSelected) {
+    return "bg-active-base text-active-foreground";
+  }
+  if (isHighlighted) {
+    return "bg-hover-base text-foreground";
+  }
+  return "";
+}
+
+/** @emoji 🖱️ Skip row leave when pointer moves to another tree row or nested branch (avoids stale leave clearing fast-hover highlight). */
 function shouldDispatchTreeRowPointerLeave(relatedTarget: EventTarget | null): boolean {
   if (!(relatedTarget instanceof Element)) {
     return true;
   }
-  return relatedTarget.closest(treeSemanticHoverRowSelector) === null;
+  return relatedTarget.closest(treeSemanticHoverStaySelector) === null;
 }
 
 /**
@@ -8212,7 +8225,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   };
 
   const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
-  const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
+  const stateClasses = treeRowStateClasses(isSelected, isHighlighted);
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
   if (hasChildren && displayLabel) {
@@ -8554,7 +8567,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`;
-  const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
+  const stateClasses = treeRowStateClasses(isSelected, isHighlighted);
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
   const treeLabelSelectClass = draggable ? "select-none" : "select-text";
 
@@ -16827,6 +16840,24 @@ if (treeVitest) {
       expect(shouldDispatchTreeRowPointerLeave(rowA)).toBe(false);
       expect(shouldDispatchTreeRowPointerLeave(null)).toBe(true);
       expect(shouldDispatchTreeRowPointerLeave(document.body)).toBe(true);
+    });
+
+    it("shouldDispatchTreeRowPointerLeave skips leave when moving into nested tree branch content", () => {
+      document.body.innerHTML = `
+        <div data-slot="tree-item-row" id="row-a"></div>
+        <div data-slot="tree-item-content" id="branch-a"><span id="gap"></span></div>
+      `;
+      const branch = document.getElementById("branch-a")!;
+      const gap = document.getElementById("gap")!;
+      expect(shouldDispatchTreeRowPointerLeave(branch)).toBe(false);
+      expect(shouldDispatchTreeRowPointerLeave(gap)).toBe(false);
+    });
+
+    it("treeRowStateClasses uses hover tokens for highlight and active tokens for selection", () => {
+      expect(treeRowStateClasses(false, false)).toBe("");
+      expect(treeRowStateClasses(false, true)).toContain("bg-hover-base");
+      expect(treeRowStateClasses(true, true)).toContain("bg-active-base");
+      expect(treeRowStateClasses(true, false)).toContain("bg-active-base");
     });
 
     it("tree selection store notifies subscribers only when selection changes", () => {

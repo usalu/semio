@@ -610,7 +610,7 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
       return () => meshOutlinePolicyListeners.delete(listener);
     },
     isObjectSelected(objectId: string): boolean {
-      return derived.objectIdSet.has(objectId) || derived.vortexOwnerObjectIdSet.has(objectId);
+      return derived.objectIdSet.has(objectId);
     },
     isVortexSelected(fullId: string): boolean {
       return derived.vortexIdSet.has(fullId);
@@ -658,7 +658,6 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
       }
       if (derived.meshOutlineEnabled) {
         notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet));
-        notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.vortexOwnerObjectIdSet, derived.vortexOwnerObjectIdSet));
         notifyPerIdListeners(vortexListeners, selectionSetSymmetricDifference(prev.vortexIdSet, derived.vortexIdSet));
       }
       if (!selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)) {
@@ -702,7 +701,7 @@ export function useLiveSelection(): SelectionSnapshot {
   return reactHostPort.useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
 
-/** @emoji 🎯 O(1) object highlight membership (direct object or parent of selected vortex). */
+/** @emoji 🎯 O(1) object mesh-selection membership (direct object picks only; vortex picks use {@link useVortexSelected}). */
 export function useObjectSelected(objectId: string): boolean {
   const store = useSelectionSnapshotStore();
   return reactHostPort.useSyncExternalStore(
@@ -2811,20 +2810,12 @@ export const ObjectTreeNode = reactHostPort.memo(function ObjectTreeNode(props: 
   );
 });
 
-/** @emoji 🎯 True when an object is part of the current selection (directly or via a selected vortex). */
+/** @emoji 🎯 True when an object id is directly in the selection snapshot (not parent-of-vortex). */
 export function objectMatchesSelection(objectId: string, selection: SelectionSnapshot | undefined): boolean {
   if (!selection) {
     return false;
   }
-  if (selection.objectIds.includes(objectId)) {
-    return true;
-  }
-  for (const vortexFullId of selection.vortexIds) {
-    if (parseVortexFullId(vortexFullId).objectId === objectId) {
-      return true;
-    }
-  }
-  return false;
+  return selection.objectIds.includes(objectId);
 }
 
 export interface ObjectsProps {
@@ -7896,9 +7887,9 @@ if (import.meta.vitest) {
     });
   });
   describe("objectMatchesSelection", () => {
-    it("matches object id and parent of selected vortex", () => {
+    it("matches only directly selected object ids", () => {
       expect(objectMatchesSelection("a", { objectIds: ["a"], vortexIds: [], attractionIds: [] })).toBe(true);
-      expect(objectMatchesSelection("b", { objectIds: [], vortexIds: ["b:link"], attractionIds: [] })).toBe(true);
+      expect(objectMatchesSelection("b", { objectIds: [], vortexIds: ["b:link"], attractionIds: [] })).toBe(false);
       expect(objectMatchesSelection("c", { objectIds: ["a"], vortexIds: ["b:link"], attractionIds: [] })).toBe(false);
     });
   });
@@ -7941,10 +7932,10 @@ if (import.meta.vitest) {
       unsubA();
       unsubB();
     });
-    it("marks object selected when a child vortex is selected", () => {
+    it("keeps parent object unselected when only a child vortex is selected", () => {
       const store = createSelectionSnapshotStore();
       store.setSnapshot({ objectIds: [], vortexIds: ["parent:v1"], attractionIds: [] });
-      expect(store.isObjectSelected("parent")).toBe(true);
+      expect(store.isObjectSelected("parent")).toBe(false);
       expect(store.isVortexSelected("parent:v1")).toBe(true);
       expect(store.getPrimaryObjectId()).toBe("parent");
     });

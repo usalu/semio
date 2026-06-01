@@ -1,0 +1,11 @@
+{
+  "title": "Puzzle 3d Vortex Only Select",
+  "emoji": "🌀",
+  "status": "closed",
+  "description": "When clicking on a vortex in puzzle 3d, only the vortex should be selected. Currently the parent object is also marked in 3d as selected.",
+  "summary": "Fixed puzzle 3D vortex click selection so parent objects no longer receive mesh selected styling when only a vortex is in the selection snapshot. `isObjectSelected` now checks direct `objectIds` only; relocate gizmo still uses `primaryObjectId` (parent of selected vortex). Updated `objectMatchesSelection` and selection store tests.",
+  "goal": "🎯puzzle",
+  "sessions": [
+    "⚪e3419667df254eccb1d999ce07ddfac0"
+  ]
+}

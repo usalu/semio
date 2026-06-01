@@ -58,6 +58,7 @@ import {
 	analogy,
 	intro,
 	resolveArrangement,
+	resolveEmbodiment,
 	resolveTextMorphRoot,
 	columnMorphId,
 	splitColumnBounds,
@@ -521,11 +522,14 @@ function FigureTileView({
 	tile,
 	embodiment,
 	defaultEmphasis,
+	labelStackTile,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly embodiment: FigureEmbodiment;
 	readonly defaultEmphasis: ParticipantEmphasis;
+	/** @emoji 🏷 Target-side tile for column→label morph; hidden after auto-animate so only the heading stays. */
+	readonly labelStackTile?: boolean;
 }): ReactNode {
 	const emphasis = tile.emphasis ?? defaultEmphasis;
 	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
@@ -535,6 +539,7 @@ function FigureTileView({
 			className={[
 				"presentation-disposition-frame",
 				"presentation-figure-tile-frame",
+				labelStackTile ? "presentation-column-morph-label-tile" : undefined,
 				emphasisClass(emphasis),
 			]
 				.filter(Boolean)
@@ -650,7 +655,7 @@ function FigureMorphView({
 	);
 }
 
-/** @emoji 🏷 Per-tile morph sink at the label position; column heading stays fixed (no `data-id` on text). */
+/** @emoji 🏷 Per-tile figure morph into the stack; column heading stays fixed (no `data-id` on text). */
 function ColumnLabelMorphView({
 	participantId,
 	morphId: tileMorphAnchorId,
@@ -658,6 +663,8 @@ function ColumnLabelMorphView({
 	embodiment,
 	emphasis,
 	position,
+	figureEmbodiment,
+	morphTile,
 	columnMorphCompanion,
 }: {
 	readonly participantId: string;
@@ -666,6 +673,8 @@ function ColumnLabelMorphView({
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position: DispositionPosition;
+	readonly figureEmbodiment?: FigureEmbodiment;
+	readonly morphTile?: SplitTile;
 	readonly columnMorphCompanion?: boolean;
 }): ReactNode {
 	const frameStyle = dispositionFrameStyle(position, undefined);
@@ -675,19 +684,28 @@ function ColumnLabelMorphView({
 		: centeredLineClass(tileMorphAnchorId, embodiment, emphasis);
 	return (
 		<>
-			<div
-				data-id={tileMorphAnchorId}
-				className={[
-					"presentation-disposition-frame",
-					"presentation-column-morph-tile-target",
-					columnMorphCompanion ? "presentation-column-morph-tile-target--companion" : undefined,
-					emphasisClass(emphasis),
-				]
-					.filter(Boolean)
-					.join(" ")}
-				style={frameStyle}
-				aria-hidden
-			/>
+			{morphTile && figureEmbodiment ? (
+				<FigureTileView
+					participantId={participantId}
+					tile={morphTile}
+					embodiment={figureEmbodiment}
+					defaultEmphasis={emphasis}
+					labelStackTile
+				/>
+			) : (
+				<div
+					data-id={tileMorphAnchorId}
+					className={[
+						"presentation-disposition-frame",
+						"presentation-column-morph-tile-target",
+						emphasisClass(emphasis),
+					]
+						.filter(Boolean)
+						.join(" ")}
+					style={frameStyle}
+					aria-hidden
+				/>
+			)}
 			{columnMorphCompanion !== true ? (
 				<div
 					className={[
@@ -876,6 +894,14 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 	switch (embodiment.kind) {
 		case "text":
 			if (disposition.position !== undefined) {
+				const figureEmbodiment = disposition.participant.embodiments.find(
+					(candidate): candidate is FigureEmbodiment => candidate.kind === "figure",
+				);
+				if (disposition.morphTile && !figureEmbodiment) {
+					throw new Error(
+						`Participant "${disposition.participant.id}" needs a figure embodiment for column label morphs.`,
+					);
+				}
 				return (
 					<ColumnLabelMorphView
 						participantId={disposition.participant.id}
@@ -884,6 +910,8 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						embodiment={embodiment}
 						emphasis={emphasis}
 						position={disposition.position}
+						figureEmbodiment={figureEmbodiment}
+						morphTile={disposition.morphTile}
 						columnMorphCompanion={disposition.columnMorphCompanion}
 					/>
 				);
@@ -1560,6 +1588,7 @@ if (import.meta.vitest) {
 											{
 												participantId: "catalogue",
 												emphasis: "active",
+												morphSourceTiles: tiles,
 												morphColumnGroups: columns,
 												morphTargets: [
 													{
@@ -1586,14 +1615,14 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const labels = container.querySelector('section[title="labels"]');
-			const tileSinks = [...labels!.querySelectorAll(".presentation-column-morph-tile-target")].map((element) =>
+			const labelTiles = [...labels!.querySelectorAll(".presentation-column-morph-label-tile")].map((element) =>
 				element.getAttribute("data-id"),
 			);
-			expect(new Set(tileSinks).size).toBe(4);
+			expect(new Set(labelTiles).size).toBe(4);
 			expect(labels?.querySelectorAll(".presentation-column-morph-label h2").length).toBe(2);
 			expect(labels?.querySelector(".presentation-column-morph-label h2[data-id]")).toBeNull();
 			expect(
-				labels?.querySelector('.presentation-column-morph-tile-target[data-id="catalogue--tile--tile-r0-c0"]'),
+				labels?.querySelector('.presentation-column-morph-label-tile[data-id="catalogue--tile--tile-r0-c0"]'),
 			).toBeTruthy();
 		});
 

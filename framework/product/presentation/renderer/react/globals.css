@@ -187,6 +187,16 @@
 	pointer-events: none;
 }
 
+.reveal .presentation-column-morph-label-tile {
+	z-index: 1;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.reveal[data-auto-animate="running"] .presentation-column-morph-label-tile {
+	opacity: 1;
+}
+
 .reveal .presentation-column-morph-label {
 	z-index: 2;
 	pointer-events: none;

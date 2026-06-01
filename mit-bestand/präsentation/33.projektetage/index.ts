@@ -273,6 +273,7 @@ const mediaThought: Thought = {
 					emphasis: "active",
 					morphTargets: CATALOGUE_COLUMN_LABELS,
 					morphColumnGroups: CATALOGUE_FOCUS_COLUMN_GROUPS,
+					morphSourceTiles: CATALOGUE_FOCUS_TILES,
 				},
 			],
 		},
@@ -384,6 +385,7 @@ if (import.meta.vitest) {
 			expect(targets.every((target) => target.columnKey !== undefined)).toBe(true);
 			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
 			expect(labels?.dispositions[0]?.morphColumnGroups).toEqual(CATALOGUE_FOCUS_COLUMN_GROUPS);
+			expect(labels?.dispositions[0]?.morphSourceTiles).toEqual(CATALOGUE_FOCUS_TILES);
 			const ys = targets.map((target) => target.position.y);
 			expect(ys[0]).toBeLessThan(ys[1] ?? 0);
 			expect(ys[1]).toBeLessThan(ys[2] ?? 0);
