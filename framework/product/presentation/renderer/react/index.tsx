@@ -1947,13 +1947,6 @@ interface PresentationInteractionState {
 
 const PresentationInteractionContext = createContext<PresentationInteractionState | null>(null);
 
-interface PresentationRowHoverState {
-	readonly hoveredRowBandId: string | null;
-	readonly setHoveredRowBandId: (rowBandId: string | null) => void;
-}
-
-const PresentationRowHoverContext = createContext<PresentationRowHoverState | null>(null);
-
 function usePresentationInteractionState(): PresentationInteractionState {
 	const value = useContext(PresentationInteractionContext);
 	if (!value) {
@@ -2150,7 +2143,6 @@ const InteractiveRowBand: FC<{
 	readonly tileIds: readonly string[];
 }> = ({ id, frame, tileIds }) => {
 	const interaction = usePresentationInteractionState();
-	const rowHover = useContext(PresentationRowHoverContext);
 	const rowSelected = tileIds.length > 0 && tileIds.every((tileId) => interaction.isSelected(tileId));
 	const onPointerDown = (event: React.PointerEvent): void => {
 		if (event.button !== 0) {
@@ -2171,12 +2163,6 @@ const InteractiveRowBand: FC<{
 			data-row-band={id}
 			style={transformFrameStyle(frame)}
 			onPointerDown={onPointerDown}
-			onPointerEnter={() => rowHover?.setHoveredRowBandId(id)}
-			onPointerLeave={() => {
-				if (rowHover?.hoveredRowBandId === id) {
-					rowHover.setHoveredRowBandId(null);
-				}
-			}}
 			aria-hidden
 		/>
 	);
@@ -2203,7 +2189,6 @@ const InteractiveDisposition: FC<{
 }) => {
 	const slideEpoch = useContext(PresentationSlideEpochContext);
 	const interaction = usePresentationInteractionState();
-	const rowHover = useContext(PresentationRowHoverContext);
 	const registry = useSlideDispositionRegistry();
 	const rootRef = useRef<HTMLDivElement>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -2243,7 +2228,6 @@ const InteractiveDisposition: FC<{
 	const useFlowInkFrame = flowLayout && !flowSectionFrame;
 	const [inkInWrapper, setInkInWrapper] = useState<DispositionPosition | null>(null);
 	const displayDisposition = disposition;
-	const rowHovered = rowBandId !== undefined && rowHover?.hoveredRowBandId === rowBandId;
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
 		const section = sectionRef.current;
@@ -2568,7 +2552,6 @@ const InteractiveDisposition: FC<{
 	const wrapperClass = [
 		"presentation-interactive-disposition",
 		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
-		rowHovered ? "presentation-interactive-disposition--row-hovered" : undefined,
 		selected ? "presentation-interactive-disposition--selected" : undefined,
 		flowPixelOffset ? "presentation-interactive-disposition--offset" : undefined,
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
@@ -2649,18 +2632,6 @@ const InteractiveDisposition: FC<{
 			className={wrapperClass}
 			style={wrapperStyle}
 			onPointerDown={onPointerDown}
-			onPointerEnter={
-				rowBandId ? () => rowHover?.setHoveredRowBandId(rowBandId) : undefined
-			}
-			onPointerLeave={
-				rowBandId
-					? () => {
-							if (rowHover?.hoveredRowBandId === rowBandId) {
-								rowHover.setHoveredRowBandId(null);
-							}
-						}
-					: undefined
-			}
 		>
 			<div
 				ref={contentRef}
@@ -2864,11 +2835,6 @@ const ArrangementSection: FC<{
 		() => buildInteractiveSlideLayout(renderSlide.id, layoutResolved),
 		[layoutResolved, renderSlide.id],
 	);
-	const [hoveredRowBandId, setHoveredRowBandId] = useState<string | null>(null);
-	const rowHover = useMemo(
-		(): PresentationRowHoverState => ({ hoveredRowBandId, setHoveredRowBandId }),
-		[hoveredRowBandId],
-	);
 	const declaredRects = useMemo(() => {
 		const map = new Map<string, DispositionPosition | undefined>();
 		for (const entry of interactiveLayout.placements) {
@@ -2877,7 +2843,7 @@ const ArrangementSection: FC<{
 		return map;
 	}, [interactiveLayout.placements]);
 	const placements = (
-		<PresentationRowHoverContext.Provider value={rowHover}>
+		<>
 			{interactiveLayout.rowBands.map((band) => (
 				<InteractiveRowBand key={band.id} id={band.id} frame={band.frame} tileIds={band.tileIds} />
 			))}
@@ -2894,7 +2860,7 @@ const ArrangementSection: FC<{
 					rowBandId={entry.rowBandId}
 				/>
 			))}
-		</PresentationRowHoverContext.Provider>
+		</>
 	);
 	return (
 		<SlideDispositionRegistryProvider>
@@ -3275,6 +3241,9 @@ if (import.meta.vitest) {
 			}
 			expect(globalsCssSource).toMatch(
 				/\.presentation-arrangement--interactive\s*\{[^}]*overflow\s*:\s*visible/s,
+			);
+			expect(globalsCssSource).toMatch(
+				/\.presentation-arrangement-canvas\s*>\s*\.presentation-interactive-disposition\[data-id\][\s\S]*:not\(\s*\.presentation-interactive-disposition--gesturing\s*\)[\s\S]*overflow\s*:\s*hidden/s,
 			);
 			expect(globalsCssSource).not.toMatch(
 				/\.presentation-arrangement--interactive\s*\{[^}]*position\s*:\s*relative/s,
@@ -4772,6 +4741,73 @@ if (import.meta.vitest) {
 			expect(dispositions[1]!.style.left).toBe(peerBefore);
 			expect(
 				dispositions[0]!.querySelector(".presentation-interactive-disposition__content")?.style.transform,
+			).toContain("translate3d");
+		});
+
+		it("shows split tile drag preview outside the declared frame without clipping", () => {
+			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			const splitDeck: Presentation = {
+				id: "interactive-dom-split-tiles",
+				name: "Interactive DOM Split Tiles",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "tiles",
+										participants: [
+											{
+												id: "catalogue",
+												embodiments: [{ kind: "figure", src: "/catalogue.png" }],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "tiles",
+													dispositions: [
+														{
+															participantId: "catalogue",
+															emphasis: "active",
+															split: { tiles },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, splitDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const tile = container.querySelector(
+				".presentation-arrangement-canvas > .presentation-interactive-disposition[data-id]",
+			) as HTMLElement;
+			expect(tile).toBeTruthy();
+			const section = tile.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(tile, 96, 70, 384, 210);
+			const beforeLeft = tile.style.left;
+			act(() => {
+				pointerDrag(tile, 200, 140, 360, 260);
+			});
+			expect(tile.style.left).toBe(beforeLeft);
+			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
+			expect(tile.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(getComputedStyle(tile).overflow).not.toBe("hidden");
+			expect(
+				tile.querySelector(".presentation-interactive-disposition__content")?.style.transform,
 			).toContain("translate3d");
 		});
 

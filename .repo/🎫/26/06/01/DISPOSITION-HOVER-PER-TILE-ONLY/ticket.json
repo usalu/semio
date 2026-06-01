@@ -1,0 +1,10 @@
+{
+  "title": "Disposition Hover Per Tile Only",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix projektetage (presentation renderer): hovering a disposition should only highlight that disposition, not the entire visual row band.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪6287af36aef14966b8cebc66b9037618"
+  ]
+}

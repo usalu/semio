@@ -529,20 +529,17 @@
 	z-index: 1;
 }
 
-.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition[data-id] {
+.reveal
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition[data-id]:not(
+		.presentation-interactive-disposition--canvas-framed.presentation-interactive-disposition--pinned
+	):not(.presentation-interactive-disposition--gesturing) {
 	overflow: hidden;
 	box-sizing: border-box;
 }
 
-.reveal
-	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--row-hovered:not(.presentation-interactive-disposition--selected):not(:hover)
-	.presentation-figure-tile-frame::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-	background: color-mix(in oklab, var(--color-primary) 14%, transparent);
-	transition: background-color 0.15s ease;
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition--gesturing {
+	z-index: 20;
 }
 
 .reveal .presentation-disposition-frame {

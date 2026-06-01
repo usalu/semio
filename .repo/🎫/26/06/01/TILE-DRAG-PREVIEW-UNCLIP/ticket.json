@@ -1,0 +1,10 @@
+{
+  "title": "Tile Drag Preview Unclip",
+  "emoji": "🖼",
+  "status": "open",
+  "description": "Tiles are movable but remain cropped inside the original position during drag. Fix so dragged tiles preview everywhere, original space stays as-is, and other dispositions do not move.",
+  "goal": "🎯framework🎯product🎯presentation",
+  "sessions": [
+    "⚪a1ab57dec56e4e7a983c761e17beaf76"
+  ]
+}

@@ -14821,6 +14821,9 @@ if (import.meta.vitest) {
 
 	describe("Sketchpad navigation", () => {
 		it("design route trail includes typology levels and home alternatives", () => {
+			const kitId = "00000000-0000-4000-8000-000000000001";
+			const designId = "00000000-0000-4000-8000-000000000011";
+			const designSiblingId = "00000000-0000-4000-8000-000000000012";
 			const platform = new Platform({ id: "nav-test", name: "Nav" });
 			const bus = new CommandBus();
 			const ctrl = new SketchpadShellController(bus, () => platform.notify());
@@ -14834,22 +14837,22 @@ if (import.meta.vitest) {
 			);
 			platform.addApp(app);
 			const kit = {
-				id: "k1",
+				id: kitId,
 				name: "Demo Kit",
 				typologies: [
 					{
-						id: "topo-1",
+						id: "00000000-0000-4000-8000-000000000021",
 						name: "Residential",
 						types: [],
 						designs: [
-							{ id: "d1", name: "Plan A" },
-							{ id: "d2", name: "Plan B" },
+							{ id: designId, name: "Plan A" },
+							{ id: designSiblingId, name: "Plan B" },
 						],
 					},
 				],
 			} as Kit;
-			ctrl.registerKitStore("k1", new InMemorySemioKitStore(kit));
-			const trail = sketchpadNavigation(platform, "/kits/k1/designs/d1");
+			ctrl.registerKitStore(kitId, new InMemorySemioKitStore(kit));
+			const trail = sketchpadNavigation(platform, `/kits/${kitId}/designs/${designId}`);
 			expect(trail.map((level) => level.node.label)).toEqual(["Home", "Kits", "Demo Kit", "Typologies", "Residential", "Designs", "Plan A"]);
 			expect(trail[0]?.alternatives.some((alternative) => alternative.label === "Documentation")).toBe(true);
 			expect(trail[0]?.alternatives.some((alternative) => alternative.label === "Feedback")).toBe(true);

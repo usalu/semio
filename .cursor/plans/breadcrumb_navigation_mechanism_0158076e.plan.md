@@ -13,10 +13,10 @@ todos:
     status: completed
   - id: tests
     content: "Extend existing vitest regions: renderer mapping test + sketchpad navigation trail/alternatives tests; typecheck and run suites"
-    status: in_progress
+    status: completed
   - id: ticket
     content: Open repo ticket under best goal, keep temp files in ticket folder, close ticket with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 
