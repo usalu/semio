@@ -22,6 +22,22 @@ import {
   playgroundEmbedUrl,
   playgroundStaticSiteBuildOptions,
 } from "../../../../ui/styling/vite-elements-assets.ts";
+import { typeNameFromFileName } from "./kind-name-from-representation.ts";
+
+describe("typeNameFromFileName", () => {
+  test("groups storey role before Tambour with cylindric prefix", () => {
+    expect(typeNameFromFileName("cylindric-tambour_last-storey.glb")).toBe("Cylindric Last Storey Tambour");
+    expect(typeNameFromFileName("tambour_last-storey.glb")).toBe("Last Storey Tambour");
+    expect(typeNameFromFileName("tambour_first-storey.glb")).toBe("First Storey Tambour");
+    expect(typeNameFromFileName("cylindric-tambour_single-storey.glb")).toBe("Cylindric Single Storey Tambour");
+  });
+
+  test("keeps capsule and capital naming unchanged", () => {
+    expect(typeNameFromFileName("trapezoid-capsule_J.glb")).toBe("Trapezoid Capsule J");
+    expect(typeNameFromFileName("cylindric-capital.glb")).toBe("Cylindric Capital");
+    expect(typeNameFromFileName("cylindric-tambour.glb")).toBe("Cylindric Tambour");
+  });
+});
 
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {

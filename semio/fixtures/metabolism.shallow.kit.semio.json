@@ -3488,7 +3488,7 @@
                     "items": [
                         {
                             "id": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
-                            "name": "Tambour Single Storey",
+                            "name": "Single Storey Tambour",
                             "description": "🪤 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "icon": "icons/tambour_single-storey.svg",
                             "image": "images/tambour_single-storey.svg",
@@ -3508,7 +3508,7 @@
                         },
                         {
                             "id": "2951ab00-3891-4d50-b887-26f1d308bfef",
-                            "name": "Cylindric Tambour First Storey",
+                            "name": "Cylindric First Storey Tambour",
                             "description": "🪑 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
                             "icon": "icons/cylindric-tambour_first-storey.svg",
                             "image": "images/cylindric-tambour_first-storey.svg",
@@ -3528,7 +3528,7 @@
                         },
                         {
                             "id": "0271dcc8-c961-4ecf-8591-9f8027252174",
-                            "name": "Cylindric Tambour Last Storey",
+                            "name": "Cylindric Last Storey Tambour",
                             "description": "🚿 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
                             "icon": "icons/cylindric-tambour_last-storey.svg",
                             "image": "images/cylindric-tambour_last-storey.svg",
@@ -3548,7 +3548,7 @@
                         },
                         {
                             "id": "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
-                            "name": "Cylindric Tambour Single Storey",
+                            "name": "Cylindric Single Storey Tambour",
                             "description": "🛁 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
                             "icon": "icons/cylindric-tambour_single-storey.svg",
                             "image": "images/cylindric-tambour_single-storey.svg",
@@ -3608,7 +3608,7 @@
                         },
                         {
                             "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
-                            "name": "Tambour First Storey",
+                            "name": "First Storey Tambour",
                             "description": "🪟 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "icon": "icons/tambour_first-storey.svg",
                             "image": "images/tambour_first-storey.svg",
@@ -3628,7 +3628,7 @@
                         },
                         {
                             "id": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
-                            "name": "Tambour Last Storey",
+                            "name": "Last Storey Tambour",
                             "description": "🛗 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
                             "icon": "icons/tambour_last-storey.svg",
                             "image": "images/tambour_last-storey.svg",

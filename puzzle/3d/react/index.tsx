@@ -10064,7 +10064,7 @@ if (import.meta.vitest) {
             ],
           },
           {
-            id: "Tambour Last Storey",
+            id: "Last Storey Tambour",
             meshUrl: "/meshes/tambour_last-storey.glb",
             vortices: [{ vortexKind: "tambour circular bottom", position: [0, 0, 0.92], direction: [0, 0, -1], radius: 0.36 }],
           },
@@ -10074,17 +10074,17 @@ if (import.meta.vitest) {
         { bidirectional: true, specificity: "vortex", source: "tambour circular bottom", target: "tambour circular top" },
         { bidirectional: true, specificity: "vortex", source: "tambour rectangular bottom", target: "tambour rectangular top" },
       ];
-      const target: AttractionVortexContext = { objectId: "fs", objectKind: "Tambour First Storey", vortexKind: "tambour circular top" };
+      const target: AttractionVortexContext = { objectId: "fs", objectKind: "First Storey Tambour", vortexKind: "tambour circular top" };
       const list = brushCompatibleCandidates(target, stackCatalogs, stackCompat);
       expect(list[0]?.objectKindId).toBe("Tambour");
       expect(list[0]?.sourceVortexIndex).toBe(1);
-      const lastStoreyIndex = list.findIndex((entry) => entry.objectKindId === "Tambour Last Storey");
+      const lastStoreyIndex = list.findIndex((entry) => entry.objectKindId === "Last Storey Tambour");
       if (lastStoreyIndex >= 0) {
         expect(lastStoreyIndex).toBeGreaterThan(0);
       }
     });
     it("brushPlacementUsesHostOrientation is false for stack bottom on top pairs", () => {
-      const target: AttractionVortexContext = { objectId: "fs", objectKind: "Tambour First Storey", vortexKind: "tambour circular top" };
+      const target: AttractionVortexContext = { objectId: "fs", objectKind: "First Storey Tambour", vortexKind: "tambour circular top" };
       expect(brushPlacementUsesHostOrientation(target, "tambour circular bottom", "Tambour")).toBe(false);
       expect(brushPlacementUsesHostOrientation(target, "door tambour east", "J")).toBe(false);
       expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "J", vortexKind: "door capsule east" }, "door capsule east", "J")).toBe(true);

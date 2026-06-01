@@ -1620,7 +1620,7 @@ function semioFileSystemChildrenInner(parent: SemioFileSystemParentRef): string 
       return `
         hasTypologies { edges { node { id name hasTypes { edges { node { id } } } hasDesigns { edges { node { id } } } } } }
         hasFamilies { edges { node { id name } } }
-        hasFolders { edges { node { id path } } }
+        hasFolders { edges { node { id path name } } }
         hasFiles { edges { node { id name description } } }
       `;
     case "TYPOLOGY":
@@ -1633,12 +1633,11 @@ function semioFileSystemChildrenInner(parent: SemioFileSystemParentRef): string 
     case "FOLDER":
       return `
         folder(id: ${gqlString(parent.id)}) {
-          folders { edges { node { id path } } }
+          subFolders { edges { node { id path name } } }
           files { edges { node { id name description } } }
           hasDesigns { edges { node { id name } } }
           hasTypes { edges { node { id name } } }
           families { edges { node { id name } } }
-          typologies { edges { node { id name } } }
         }
       `;
     case "FILE":
@@ -1684,6 +1683,8 @@ function semioParseRelayVfsChildren(parent: SemioFileSystemParentRef, frag: Json
           connectionKey: "hasFolders",
           kind: "FOLDER",
           nameFrom: (node) => {
+            const explicit = String(node["name"] ?? "").trim();
+            if (explicit) return explicit;
             const path = String(node["path"] ?? node["id"] ?? "");
             const slash = path.lastIndexOf("/");
             return slash >= 0 ? path.slice(slash + 1) : path;
@@ -1720,9 +1721,11 @@ function semioParseRelayVfsChildren(parent: SemioFileSystemParentRef, frag: Json
       const folder = readKitPathNode(frag, ["folder"]);
       return semioRelayVfsChildrenFromFrag(folder, [
         {
-          connectionKey: "folders",
+          connectionKey: "subFolders",
           kind: "FOLDER",
           nameFrom: (node) => {
+            const explicit = String(node["name"] ?? "").trim();
+            if (explicit) return explicit;
             const path = String(node["path"] ?? node["id"] ?? "");
             const slash = path.lastIndexOf("/");
             return slash >= 0 ? path.slice(slash + 1) : path;
@@ -1737,7 +1740,6 @@ function semioParseRelayVfsChildren(parent: SemioFileSystemParentRef, frag: Json
         { connectionKey: "hasDesigns", kind: "DESIGN", nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""), mapChild: (child) => ({ ...child, designId: child.id }) },
         { connectionKey: "hasTypes", kind: "TYPE", nameFrom: (node) => String(node["name"] ?? node["id"] ?? ""), mapChild: (child) => ({ ...child, typeId: child.id }) },
         { connectionKey: "families", kind: "FAMILY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
-        { connectionKey: "typologies", kind: "TYPOLOGY", nameFrom: (node) => String(node["name"] ?? node["id"] ?? "") },
       ]);
     }
     case "FILE":
@@ -5404,10 +5406,10 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         const tambourKindNames = await Promise.all((await tambour!.hasTypes()).map((k) => k.name()));
         expect(tambourKindNames).toEqual(
           expect.arrayContaining([
-            "Cylindric Tambour First Storey",
-            "Cylindric Tambour Last Storey",
-            "Tambour First Storey",
-            "Tambour Last Storey",
+            "Cylindric First Storey Tambour",
+            "Cylindric Last Storey Tambour",
+            "First Storey Tambour",
+            "Last Storey Tambour",
           ]),
         );
         expect(tambourKindNames.some((name) => name === "First Storey" || name === "Last Storey")).toBe(false);

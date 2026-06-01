@@ -2356,7 +2356,7 @@
                         },
                         {
                             "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
-                            "name": "Tambour First Storey",
+                            "name": "First Storey Tambour",
                             "families": [
                                 {
                                     "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
@@ -2734,7 +2734,7 @@
                         },
                         {
                             "id": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
-                            "name": "Tambour Last Storey",
+                            "name": "Last Storey Tambour",
                             "families": [
                                 {
                                     "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"

@@ -1,13 +1,14 @@
 {
   "title": "Puzzle2d Brush Tool",
   "emoji": "🖌️",
-  "status": "open",
+  "status": "closed",
   "description": "Implement paint-style Brush tool for puzzle2d: offset slot hitboxes, compatible node preview, auto-flush on leave, Tab cycle candidates, flush-distance window measure.",
+  "summary": "Implemented paint-style puzzle2d Brush: WASM slot hitboxes at flush distance, compatible node preview with ghost paint, brushPlace commit on leave, Tab/candidate cycling, flush-distance window slider, play engagement tools, and fixture applyBrushPlacementToFixture. Tests: Rust board_host_brush_slot, applyBrushPlacementToFixture, brush flush measure on play windows. React 128/128, play 13/13, Rust 90/90 passed.",
   "goal": "🎯puzzle",
   "plan": {
     "client": "cursor",
     "id": "a806828f",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/puzzle2d_brush_tool_a806828f.plan.md"
+    "local": "puzzle2d_brush_tool_a806828f.plan.md"
   },
   "sessions": [
     "⚪bc0785fc8c7a4d08878cd726f260caab"
