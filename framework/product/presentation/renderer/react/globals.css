@@ -278,7 +278,12 @@
 .reveal
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--split-group:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content {
+	position: relative;
 	width: 100%;
 	height: 100%;
 	min-height: 0;
@@ -287,14 +292,21 @@
 
 .reveal
 	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
-	.presentation-interactive-disposition__content
-	.presentation-disposition-frame,
+	.presentation-interactive-disposition--split-group
+	.presentation-figure-tile-frame,
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--split-group
+	.presentation-morph-slot--figure {
+	position: absolute;
+	box-sizing: border-box;
+}
+
 .reveal
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
-	.presentation-figure-tile-frame,
+	.presentation-disposition-frame:not(.presentation-figure-tile-frame),
 .reveal
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
@@ -341,8 +353,15 @@
 	pointer-events: none;
 }
 
-.reveal .presentation-interactive-disposition--canvas-framed .presentation-interactive-disposition__chrome {
+.reveal .presentation-interactive-disposition--canvas-framed .presentation-interactive-disposition__chrome,
+.reveal .presentation-interactive-disposition--split-group .presentation-interactive-disposition__chrome {
 	box-sizing: border-box;
+}
+
+.reveal .presentation-interactive-disposition--gesturing .presentation-interactive-disposition__chrome {
+	pointer-events: none;
+	visibility: visible;
+	opacity: 1;
 }
 
 .reveal .presentation-interaction-handle {
@@ -361,48 +380,64 @@
 .reveal .presentation-interaction-handle--nw {
 	left: 0;
 	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
 	cursor: nwse-resize;
 }
 
 .reveal .presentation-interaction-handle--n {
 	left: 50%;
 	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
 	cursor: ns-resize;
 }
 
 .reveal .presentation-interaction-handle--ne {
 	left: 100%;
 	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
 	cursor: nesw-resize;
 }
 
 .reveal .presentation-interaction-handle--e {
 	left: 100%;
 	top: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0;
 	cursor: ew-resize;
 }
 
 .reveal .presentation-interaction-handle--se {
 	left: 100%;
 	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
 	cursor: nwse-resize;
 }
 
 .reveal .presentation-interaction-handle--s {
 	left: 50%;
 	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
 	cursor: ns-resize;
 }
 
 .reveal .presentation-interaction-handle--sw {
 	left: 0;
 	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
 	cursor: nesw-resize;
 }
 
 .reveal .presentation-interaction-handle--w {
 	left: 0;
 	top: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0;
 	cursor: ew-resize;
 }
 
@@ -463,6 +498,11 @@
 	flex: 0 0 auto;
 	margin: 0 auto;
 	box-sizing: border-box;
+	pointer-events: none;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition {
+	pointer-events: auto;
 }
 
 .reveal .presentation-disposition-frame {

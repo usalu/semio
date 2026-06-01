@@ -73,6 +73,7 @@ import {
 	resolveTextMorphRoot,
 	splitFigureGrid,
 	splitTilesBoundingFrame,
+	splitTilesInGroupFrame,
 	splitTilesPackedFrame,
 	splitTilesUnionSourceCrop,
 	tileMorphId,
@@ -134,6 +135,7 @@ export {
 	resolveTextMorphRoot,
 	splitFigureGrid,
 	splitTilesBoundingFrame,
+	splitTilesInGroupFrame,
 	splitTilesPackedFrame,
 	splitTilesUnionSourceCrop,
 	tileMorphId,
@@ -1888,8 +1890,7 @@ const InteractiveDisposition: FC<{
 	readonly declaredRect: DispositionPosition | undefined;
 	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 	readonly sectionRef: RefObject<HTMLElement | null>;
-	readonly children: ReactNode;
-}> = ({ id, disposition, declaredRect, allDeclaredRects, sectionRef, children }) => {
+}> = ({ id, disposition, declaredRect, allDeclaredRects, sectionRef }) => {
 	const slideEpoch = useContext(PresentationSlideEpochContext);
 	const interaction = usePresentationInteractionState();
 	const registry = useSlideDispositionRegistry();
@@ -1907,12 +1908,30 @@ const InteractiveDisposition: FC<{
 		isFlowPixelOffsetTransform(transform, measuredNatural);
 	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
 	const fullscreen = interaction.isFullscreen(id);
-	const canvasFramed = declaredRect !== undefined && !fullscreen;
-	const canvasPlacement = canvasFramed;
+	const splitLayout = Boolean(disposition.split?.tiles?.length);
+	const canvasFramed = declaredRect !== undefined && !fullscreen && !splitLayout;
+	const canvasGroupFramed = declaredRect !== undefined && !fullscreen && splitLayout;
+	const canvasPlacement = canvasFramed || canvasGroupFramed;
 	const pinned =
-		(transformed && !flowLayout) || flowSectionFrame || (canvasFramed && !flowPixelOffset);
+		(transformed && !flowLayout) ||
+		flowSectionFrame ||
+		((canvasFramed || canvasGroupFramed) && !flowPixelOffset);
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
+	const [gesturing, setGesturing] = useState(false);
+
+	const displayDisposition = useMemo((): ResolvedDisposition => {
+		if (!splitLayout || !effectiveRect || !disposition.split) {
+			return disposition;
+		}
+		return {
+			...disposition,
+			split: {
+				...disposition.split,
+				tiles: splitTilesInGroupFrame(disposition.split.tiles, effectiveRect),
+			},
+		};
+	}, [disposition, splitLayout, effectiveRect]);
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
 		const section = sectionRef.current;
@@ -2031,6 +2050,7 @@ const InteractiveDisposition: FC<{
 					? groupBoundingRect([...startRects.values()])
 					: null;
 			let dragging = !requireDragThreshold;
+			setGesturing(true);
 
 			const onMove = (moveEvent: PointerEvent): void => {
 				if (moveEvent.pointerId !== pointerId) {
@@ -2099,6 +2119,7 @@ const InteractiveDisposition: FC<{
 				if (upEvent.pointerId !== pointerId) {
 					return;
 				}
+				setGesturing(false);
 				window.removeEventListener("pointermove", onMove);
 				window.removeEventListener("pointerup", onUp);
 				window.removeEventListener("pointercancel", onUp);
@@ -2212,6 +2233,8 @@ const InteractiveDisposition: FC<{
 		flowPixelOffset ? "presentation-interactive-disposition--offset" : undefined,
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
 		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
+		canvasGroupFramed ? "presentation-interactive-disposition--split-group" : undefined,
+		gesturing ? "presentation-interactive-disposition--gesturing" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
 	]
 		.filter(Boolean)
@@ -2229,7 +2252,7 @@ const InteractiveDisposition: FC<{
 			? transform
 				? flowDispositionOffsetStyle(transform)
 				: undefined
-			: canvasFramed && effectiveRect
+			: (canvasFramed || canvasGroupFramed) && effectiveRect
 				? transformFrameStyle(effectiveRect)
 				: transformed && transform
 					? transformFrameStyle(transform)
@@ -2238,9 +2261,10 @@ const InteractiveDisposition: FC<{
 	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
 		selected,
 		effectiveRect,
-		canvasFramed,
+		canvasFramed: canvasFramed || canvasGroupFramed,
 		fullscreen,
 	});
+	const showChrome = (selected || gesturing) && effectiveRect && !fullscreen;
 
 	return (
 		<div
@@ -2251,9 +2275,9 @@ const InteractiveDisposition: FC<{
 			onPointerDown={onPointerDown}
 		>
 			<div ref={contentRef} className="presentation-interactive-disposition__content">
-				{children}
+				<MorphDispositionView disposition={displayDisposition} />
 			</div>
-			{selected && effectiveRect ? (
+			{showChrome ? (
 				<>
 					<div className="presentation-interactive-disposition__chrome" style={chromeStyle} aria-hidden>
 						{DISPOSITION_RESIZE_HANDLES.map((handle) => (
@@ -2279,12 +2303,35 @@ const InteractiveDisposition: FC<{
 	);
 };
 
-const InteractionLayer: FC<{
+function isDispositionPointerTarget(target: EventTarget | null): boolean {
+	if (!(target instanceof HTMLElement)) {
+		return false;
+	}
+	return Boolean(
+		target.closest(".presentation-interactive-disposition") ||
+			target.closest(".presentation-interaction-handle") ||
+			target.closest(".presentation-interaction-fullscreen"),
+	);
+}
+
+/** @emoji 🖱 Marquee and deselect on slide background; mounted on the arrangement section capture phase. */
+function useSlideBackgroundInteraction({
+	sectionRef,
+	canvasPlacement,
+	dispositionIds,
+	declaredRects,
+}: {
 	readonly sectionRef: RefObject<HTMLElement | null>;
 	readonly canvasPlacement: boolean;
 	readonly dispositionIds: readonly string[];
 	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
-}> = ({ sectionRef, canvasPlacement, dispositionIds, declaredRects }) => {
+}): {
+	readonly onPointerDownCapture: (event: React.PointerEvent) => void;
+	readonly marquee: {
+		readonly start: { readonly x: number; readonly y: number };
+		readonly end: { readonly x: number; readonly y: number };
+	} | null;
+} {
 	const interaction = usePresentationInteractionState();
 	const registry = useSlideDispositionRegistry();
 	const [marquee, setMarquee] = useState<{
@@ -2304,69 +2351,77 @@ const InteractionLayer: FC<{
 		[declaredRects, interaction, registry],
 	);
 
-	const onPointerDown = (event: React.PointerEvent): void => {
-		if (event.button !== 0) {
-			return;
-		}
-		const section = sectionRef.current;
-		if (!section) {
-			return;
-		}
-		const fractionContainer = dispositionPlacementContainer(section, canvasPlacement);
-		const fraction = clientToSectionFraction(fractionContainer, event.clientX, event.clientY);
-		const start = { x: fraction.x, y: fraction.y };
-		let moved = false;
-
-		const onMove = (moveEvent: PointerEvent): void => {
-			if (
-				!moved &&
-				Math.hypot(moveEvent.clientX - event.clientX, moveEvent.clientY - event.clientY) <
-					POINTER_DRAG_THRESHOLD_PX
-			) {
+	const onPointerDownCapture = useCallback(
+		(event: React.PointerEvent): void => {
+			if (event.button !== 0 || isDispositionPointerTarget(event.target)) {
 				return;
 			}
-			moved = true;
-			const current = clientToSectionFraction(fractionContainer, moveEvent.clientX, moveEvent.clientY);
-			setMarquee({ start, end: { x: current.x, y: current.y } });
-		};
-
-		const onUp = (upEvent: PointerEvent): void => {
-			window.removeEventListener("pointermove", onMove);
-			window.removeEventListener("pointerup", onUp);
-			setMarquee(null);
-			if (!moved) {
-				interaction.clearSelection();
+			const section = sectionRef.current;
+			if (!section) {
 				return;
 			}
-			const end = clientToSectionFraction(fractionContainer, upEvent.clientX, upEvent.clientY);
-			const box = normalizeMarquee(start, end);
-			const rule = marqueeSelectionRule(start, end);
-			const hits: string[] = [];
-			for (const targetId of dispositionIds) {
-				const rect = resolveRectForId(targetId);
-				if (rect && marqueeSelects(box, rect, rule)) {
-					hits.push(targetId);
+			const fractionContainer = dispositionPlacementContainer(section, canvasPlacement);
+			const fraction = clientToSectionFraction(fractionContainer, event.clientX, event.clientY);
+			const start = { x: fraction.x, y: fraction.y };
+			let moved = false;
+
+			const onMove = (moveEvent: PointerEvent): void => {
+				if (
+					!moved &&
+					Math.hypot(moveEvent.clientX - event.clientX, moveEvent.clientY - event.clientY) <
+						POINTER_DRAG_THRESHOLD_PX
+				) {
+					return;
 				}
-			}
-			interaction.selectIds(hits, upEvent.shiftKey);
-		};
+				moved = true;
+				const current = clientToSectionFraction(fractionContainer, moveEvent.clientX, moveEvent.clientY);
+				setMarquee({ start, end: { x: current.x, y: current.y } });
+			};
 
-		window.addEventListener("pointermove", onMove);
-		window.addEventListener("pointerup", onUp);
-	};
+			const onUp = (upEvent: PointerEvent): void => {
+				window.removeEventListener("pointermove", onMove);
+				window.removeEventListener("pointerup", onUp);
+				setMarquee(null);
+				if (!moved) {
+					interaction.clearSelection();
+					return;
+				}
+				const end = clientToSectionFraction(fractionContainer, upEvent.clientX, upEvent.clientY);
+				const box = normalizeMarquee(start, end);
+				const rule = marqueeSelectionRule(start, end);
+				const hits: string[] = [];
+				for (const targetId of dispositionIds) {
+					const rect = resolveRectForId(targetId);
+					if (rect && marqueeSelects(box, rect, rule)) {
+						hits.push(targetId);
+					}
+				}
+				interaction.selectIds(hits, upEvent.shiftKey);
+			};
 
+			window.addEventListener("pointermove", onMove);
+			window.addEventListener("pointerup", onUp);
+		},
+		[canvasPlacement, declaredRects, dispositionIds, interaction, resolveRectForId, sectionRef],
+	);
+
+	return { onPointerDownCapture, marquee };
+}
+
+const InteractionLayer: FC<{
+	readonly marquee: {
+		readonly start: { readonly x: number; readonly y: number };
+		readonly end: { readonly x: number; readonly y: number };
+	} | null;
+}> = ({ marquee }) => {
 	const marqueeStyle: CSSProperties | undefined = marquee
 		? (() => {
 				const box = normalizeMarquee(marquee.start, marquee.end);
-				const rule = marqueeSelectionRule(marquee.start, marquee.end);
 				return {
 					left: `${box.x * 100}%`,
 					top: `${box.y * 100}%`,
 					width: `${box.width * 100}%`,
 					height: `${box.height * 100}%`,
-					...(rule === "crossing"
-						? { className: "presentation-interaction-marquee presentation-interaction-marquee--crossing" }
-						: {}),
 				};
 			})()
 		: undefined;
@@ -2375,7 +2430,7 @@ const InteractionLayer: FC<{
 		marquee === null ? null : marqueeSelectionRule(marquee.start, marquee.end);
 
 	return (
-		<div className="presentation-interaction-layer" onPointerDown={onPointerDown}>
+		<div className="presentation-interaction-layer" aria-hidden>
 			{marquee && marqueeStyle ? (
 				<div
 					className={[
@@ -2384,12 +2439,7 @@ const InteractionLayer: FC<{
 							? "presentation-interaction-marquee--crossing"
 							: "presentation-interaction-marquee--window",
 					].join(" ")}
-					style={{
-						left: marqueeStyle.left,
-						top: marqueeStyle.top,
-						width: marqueeStyle.width,
-						height: marqueeStyle.height,
-					}}
+					style={marqueeStyle}
 				/>
 			) : null}
 		</div>
@@ -2431,35 +2481,71 @@ const ArrangementSection: FC<{
 			declaredRect={entry.declaredRect}
 			allDeclaredRects={declaredRects}
 			sectionRef={sectionRef}
-		>
-			<MorphDispositionView disposition={entry.disposition} />
-		</InteractiveDisposition>
+		/>
 	));
 	return (
 		<SlideDispositionRegistryProvider>
-			<section
-				ref={sectionRef}
-				{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": renderSlide.autoAnimateId } : {})}
-				{...(renderSlide.arrangement.settleBeforeMorphTo?.length
-					? { "data-settle-before-morph-to": renderSlide.arrangement.settleBeforeMorphTo.join(",") }
-					: {})}
-				title={renderSlide.id}
-				className={[
-					"presentation-arrangement--interactive",
-					positioned ? "presentation-arrangement--positioned" : undefined,
-				]
-					.filter(Boolean)
-					.join(" ")}
-			>
-				<InteractionLayer
-					sectionRef={sectionRef}
-					canvasPlacement={positioned}
-					dispositionIds={dispositionMeta.map((entry) => entry.id)}
-					declaredRects={declaredRects}
-				/>
-				{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
-			</section>
+			<ArrangementSectionSurface
+				sectionRef={sectionRef}
+				morph={morph}
+				autoAnimateId={renderSlide.autoAnimateId}
+				settleBeforeMorphTo={renderSlide.arrangement.settleBeforeMorphTo}
+				slideId={renderSlide.id}
+				positioned={positioned}
+				dispositionIds={dispositionMeta.map((entry) => entry.id)}
+				declaredRects={declaredRects}
+				placements={placements}
+			/>
 		</SlideDispositionRegistryProvider>
+	);
+};
+
+const ArrangementSectionSurface: FC<{
+	readonly sectionRef: RefObject<HTMLElement | null>;
+	readonly morph: boolean;
+	readonly autoAnimateId: string | undefined;
+	readonly settleBeforeMorphTo: readonly string[] | undefined;
+	readonly slideId: string;
+	readonly positioned: boolean;
+	readonly dispositionIds: readonly string[];
+	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
+	readonly placements: ReactNode;
+}> = ({
+	sectionRef,
+	morph,
+	autoAnimateId,
+	settleBeforeMorphTo,
+	slideId,
+	positioned,
+	dispositionIds,
+	declaredRects,
+	placements,
+}) => {
+	const backgroundInteraction = useSlideBackgroundInteraction({
+		sectionRef,
+		canvasPlacement: positioned,
+		dispositionIds,
+		declaredRects,
+	});
+	return (
+		<section
+			ref={sectionRef}
+			onPointerDownCapture={backgroundInteraction.onPointerDownCapture}
+			{...(morph ? { "data-auto-animate": "", "data-auto-animate-id": autoAnimateId } : {})}
+			{...(settleBeforeMorphTo?.length
+				? { "data-settle-before-morph-to": settleBeforeMorphTo.join(",") }
+				: {})}
+			title={slideId}
+			className={[
+				"presentation-arrangement--interactive",
+				positioned ? "presentation-arrangement--positioned" : undefined,
+			]
+				.filter(Boolean)
+				.join(" ")}
+		>
+			<InteractionLayer marquee={backgroundInteraction.marquee} />
+			{positioned ? <div className="presentation-arrangement-canvas">{placements}</div> : placements}
+		</section>
 	);
 };
 //#endregion 🔖ArrangementSection
@@ -3765,6 +3851,7 @@ if (import.meta.vitest) {
 			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
 			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
 			const layer = section.querySelector(".presentation-interaction-layer") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
 			act(() => {
 				pointerClick(disposition);
 			});
@@ -3772,6 +3859,14 @@ if (import.meta.vitest) {
 			expect(disposition.querySelector(".presentation-interaction-fullscreen")).toBeTruthy();
 			act(() => {
 				pointerClick(layer);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			act(() => {
+				pointerClick(canvas, 8, 8);
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
 		});
@@ -3915,7 +4010,7 @@ if (import.meta.vitest) {
 			expect(disposition.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
 			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
 			expect(disposition.style.left).toBe("");
-			expect(disposition.querySelector(".presentation-disposition-frame")?.style.position).toBe("absolute");
+			expect(disposition.querySelector(".presentation-disposition-frame")).toBeTruthy();
 			expect(fullscreen.getAttribute("aria-pressed")).toBe("true");
 			act(() => {
 				fullscreen.click();

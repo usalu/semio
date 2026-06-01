@@ -422,6 +422,25 @@ export function splitTilesBoundingFrame(tiles: readonly SplitTile[]): Dispositio
 	return { x: minX, y: minY, width, height };
 }
 
+/** @emoji 📐 Re-expresses tile positions relative to a group frame (0..1 inside the group). */
+export function splitTilesInGroupFrame(
+	tiles: readonly SplitTile[],
+	group: DispositionPosition,
+): readonly SplitTile[] {
+	if (group.width <= 0 || group.height <= 0) {
+		return tiles;
+	}
+	return tiles.map((tile) => ({
+		...tile,
+		position: {
+			x: (tile.position.x - group.x) / group.width,
+			y: (tile.position.y - group.y) / group.height,
+			width: tile.position.width / group.width,
+			height: tile.position.height / group.height,
+		},
+	}));
+}
+
 /** @emoji 📐 Union of normalized source-image crops for a tile set. */
 export function splitTilesUnionSourceCrop(tiles: readonly SplitTile[]): DispositionPosition {
 	if (tiles.length === 0) {
@@ -2347,6 +2366,19 @@ if (import.meta.vitest) {
 		it("returns null when tiles leave holes inside the bounding box", () => {
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
 			expect(splitTilesPackedFrame([tiles[0]!, tiles[3]!])).toBeNull();
+		});
+	});
+
+	describe("splitTilesInGroupFrame", () => {
+		it("expresses tile positions relative to a group bounding frame", () => {
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 } });
+			const group = splitTilesBoundingFrame(tiles);
+			expect(group).not.toBeNull();
+			const relative = splitTilesInGroupFrame(tiles, group!);
+			expect(relative[0]?.position.x).toBeCloseTo(0);
+			expect(relative[0]?.position.y).toBeCloseTo(0);
+			expect(relative[0]?.position.width).toBeGreaterThan(0);
+			expect(relative[0]?.position.width).toBeLessThanOrEqual(1);
 		});
 	});
 
