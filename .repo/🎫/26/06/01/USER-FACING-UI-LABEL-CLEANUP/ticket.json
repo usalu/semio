@@ -1,9 +1,9 @@
 {
   "title": "User Facing Ui Label Cleanup",
   "emoji": "🏷️",
-  "status": "open",
+  "status": "closed",
   "description": "Clean UI labels to user perspective: engagement options → Commands/toggles, no state machine lingo in user space.",
-  "summary": "Added ui.engagement i18n keys; mapped legacy engagement-* ids; suppressed internal-id tooltips/humanization (fixes Engagement Possibles Toggle). Engagement chrome uses ui.engagement.* control ids. CAD editor aside hides machine suggestion sublines and uses user counts (tools/kinds).",
+  "summary": "Navbar and toolbar always show button/toggle captions via UiChromeLabelPolicyProvider. useControlAccessibleLabel ensures aria-labels when compact hides inline text. Added ui.find.toggle i18n; fixed find vs search label mapping.",
   "goal": "🎯semio🎯ui",
   "sessions": [
     "⚪963db0d2e1ad4acca54842b96968fea1",

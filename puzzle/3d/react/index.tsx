@@ -5217,6 +5217,28 @@ export function getPuzzle3dBrushEngagementEpoch(): number {
   return puzzle3dBrushEngagementEpoch;
 }
 
+/** @emoji 🖌️ Engagement option id for cycling the active brush placement candidate. */
+export const PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID = "puzzle3d.brush.next";
+
+/** @emoji ⌨️ True when Tab should cycle brush candidates instead of moving browser focus. */
+export function routePuzzle3dBrushTabKeydown(
+  brushActive: boolean,
+  targetActive: boolean,
+  candidateCount: number,
+  event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "ctrlKey" | "metaKey" | "altKey">,
+): boolean {
+  if (!brushActive || !targetActive || candidateCount <= 1) {
+    return false;
+  }
+  if (event.key !== "Tab" || event.defaultPrevented) {
+    return false;
+  }
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return false;
+  }
+  return true;
+}
+
 /** @emoji 💬 Inputs for {@link buildPuzzle3dPlayEngagement} (CAD play interaction panel shape). */
 export interface Puzzle3dPlayEngagementInputs {
   readonly activeTool: "select" | "brush";
@@ -5237,7 +5259,7 @@ export interface Puzzle3dPlayEngagementInputs {
 export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs): EngagementSpec {
   const status: { id: string; content: string }[] = [];
   if (inputs.activeTool === "brush") {
-    status.push({ id: "puzzle3d.brush.hint", content: "Point at an empty connector; open the list or press Next to cycle kinds" });
+    status.push({ id: "puzzle3d.brush.hint", content: "Point at an empty connector; Tab cycles placement alternatives" });
   }
   if (inputs.selectionObjectCount > 0) {
     status.push({
@@ -5262,7 +5284,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     inputs.activeTool === "brush" && inputs.brushTargetActive
       ? [
           { id: "puzzle3d.tool.select", label: "Select", onPress: inputs.onSelectTool },
-          { id: "puzzle3d.brush.next", label: "Next", onPress: inputs.onCycleBrushCandidate },
+          { id: PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID, label: "Next", onPress: inputs.onCycleBrushCandidate },
         ]
       : undefined;
 
@@ -5655,6 +5677,15 @@ function BrushSession(props: {
     applyCandidateIndex(targetRef.current, indexRef.current);
   }, [applyCandidateIndex]);
 
+  const retreatCandidate = reactHostPort.useCallback(() => {
+    const list = candidatesRef.current;
+    if (!list.length || !targetRef.current) {
+      return;
+    }
+    indexRef.current = (indexRef.current - 1 + list.length) % list.length;
+    applyCandidateIndex(targetRef.current, indexRef.current);
+  }, [applyCandidateIndex]);
+
   const publishBrushEngagement = reactHostPort.useCallback(() => {
     const candidates = [...candidatesRef.current];
     const targetActive = targetRef.current !== null;
@@ -5774,6 +5805,7 @@ function BrushSession(props: {
         commitCurrentPreview={commitCurrentPreview}
         clearBrush={clearBrush}
         advanceCandidate={advanceCandidate}
+        retreatCandidate={retreatCandidate}
         invalidate={invalidate}
       />
       {ui.preview ? (
@@ -5793,12 +5825,42 @@ function BrushPointerBridge(props: {
   readonly commitCurrentPreview: () => void;
   readonly clearBrush: () => void;
   readonly advanceCandidate: () => void;
+  readonly retreatCandidate: () => void;
   readonly invalidate: () => void;
 }) {
   const reg = useRegistryCore();
   const { camera, gl } = useThree();
   const raycasterRef = reactHostPort.useRef(new Raycaster());
   const ndcRef = reactHostPort.useRef(new Vector2());
+
+  reactHostPort.useEffect(() => {
+    if (!props.brushActive) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        !routePuzzle3dBrushTabKeydown(
+          props.brushActive,
+          props.targetRef.current !== null,
+          props.candidatesRef.current.length,
+          event,
+        )
+      ) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.shiftKey) {
+        props.retreatCandidate();
+      } else {
+        props.advanceCandidate();
+      }
+      props.invalidate();
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(window, "keydown", onKeyDown, true);
+    return () => bindings.dispose();
+  }, [props]);
 
   reactHostPort.useEffect(() => {
     if (!props.brushActive) {
@@ -8461,6 +8523,12 @@ if (import.meta.vitest) {
       expect(world!.position[2]).toBeCloseTo(targetPos[2], 4);
       const worldDir = world!.direction;
       expect(worldDir[0] * targetDir[0] + worldDir[1] * targetDir[1] + worldDir[2] * targetDir[2]).toBeLessThan(0);
+    });
+    it("routePuzzle3dBrushTabKeydown when brush hovers a connector with multiple candidates", () => {
+      expect(routePuzzle3dBrushTabKeydown(true, true, 3, { key: "Tab", defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false })).toBe(true);
+      expect(routePuzzle3dBrushTabKeydown(true, true, 1, { key: "Tab", defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
+      expect(routePuzzle3dBrushTabKeydown(true, false, 3, { key: "Tab", defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
+      expect(routePuzzle3dBrushTabKeydown(false, true, 3, { key: "Tab", defaultPrevented: false, ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
     });
     it("boxesIntersect detects overlapping axis-aligned boxes", () => {
       const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));

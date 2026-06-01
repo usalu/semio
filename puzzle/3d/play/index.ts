@@ -69,6 +69,8 @@ import {
   type MarqueeSelectableKinds,
   type VortexKind,
   type VortexProps,
+  puzzle3dBrushEngagementSourceRef,
+  PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID,
 } from "../react/index.tsx";
 import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
 
@@ -985,6 +987,13 @@ export class Puzzle3dPlayShellController extends Controller {
         this.notifySnapshot();
         return;
       }
+      case "cycleBrushCandidate": {
+        if (this.activeTool !== "brush") {
+          return;
+        }
+        puzzle3dBrushEngagementSourceRef.current.cycleCandidate();
+        return;
+      }
       case "engagementPossibleSelect": {
         const possibleId = (args as { possibleId?: string })?.possibleId;
         if (this.applyEngagementToolCommand(possibleId)) {
@@ -1002,7 +1011,15 @@ export class Puzzle3dPlayShellController extends Controller {
         this.hostBridge?.runHostCommand(command, args);
         return;
       }
-      case "engagementOption":
+      case "engagementOption": {
+        const optionId = (args as { optionId?: string })?.optionId;
+        if (optionId === PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID && this.activeTool === "brush") {
+          puzzle3dBrushEngagementSourceRef.current.cycleCandidate();
+          return;
+        }
+        this.hostBridge?.runHostCommand(command, args);
+        return;
+      }
       case "engagementInput":
       case "engagementAbort":
         this.hostBridge?.runHostCommand(command, args);

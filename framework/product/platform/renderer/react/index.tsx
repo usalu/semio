@@ -207,6 +207,7 @@ import {
 	getLevelBgClass,
 	readStoredUiChromeCompact,
 	UiChromeCompactProvider,
+	UiChromeLabelPolicyProvider,
 	useElementsSurfaceChrome,
 	writeStoredUiChromeCompact,
 	reactHostPort,
@@ -1267,11 +1268,12 @@ const UIToolbar: React.FC<{
 
   return (
     <div className={cn("flex items-center justify-center pointer-events-none", className)}>
-      <div
-        role="toolbar"
-        id="ui.toolbar"
-        className={cn("pointer-events-auto flex max-w-full items-stretch gap-single", showCategoryNav && "w-full max-w-[min(100%,48rem)] px-2")}
-      >
+      <UiChromeLabelPolicyProvider policy="always">
+        <div
+          role="toolbar"
+          id="ui.toolbar"
+          className={cn("pointer-events-auto flex max-w-full items-stretch gap-single", showCategoryNav && "w-full max-w-[min(100%,48rem)] px-2")}
+        >
         {showCategoryNav ? (
           <>
             <ToolbarZone id="ui.toolbar.zone.categories" className="shrink-0">
@@ -1298,7 +1300,8 @@ const UIToolbar: React.FC<{
             <UIToolbarItems items={tools[populatedCategories[0]!] ?? []} />
           </ToolbarZone>
         )}
-      </div>
+        </div>
+      </UiChromeLabelPolicyProvider>
     </div>
   );
 };
@@ -3641,9 +3644,9 @@ if (import.meta.vitest) {
 			expect(markup).toContain('lucide lucide-info');
 		});
 
-		it("renders navbar buttons and toggles with inline labels when compact is off", () => {
+		it("renders navbar buttons and toggles with inline labels even when compact chrome is on", () => {
 			if (typeof localStorage !== "undefined") {
-				localStorage.setItem("ui.chrome.compact", "false");
+				localStorage.setItem("ui.chrome.compact", "true");
 			}
 			const wb = new Platform();
 			class TCtrl extends Controller {

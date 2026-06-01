@@ -516,10 +516,6 @@ function figureTileBackgroundStyle(embodiment: FigureEmbodiment, crop: Dispositi
 	};
 }
 
-function isColumnMorphId(morphId: string): boolean {
-	return morphId.includes("--column--");
-}
-
 function FigureTileView({
 	participantId,
 	tile,
@@ -546,7 +542,11 @@ function FigureTileView({
 			style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, tile.crop) }}
 			role="img"
 			aria-label={embodiment.alt ?? ""}
-		/>
+		>
+			<h2 className="presentation-figure-tile-morph-placeholder" aria-hidden>
+				{"\u00a0"}
+			</h2>
+		</div>
 	);
 }
 
@@ -874,7 +874,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 	let content: ReactNode;
 	switch (embodiment.kind) {
 		case "text":
-			if (isColumnMorphId(anchorId) && disposition.position !== undefined) {
+			if (disposition.position !== undefined) {
 				return (
 					<ColumnLabelMorphView
 						morphId={anchorId}
@@ -1468,12 +1468,12 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("keeps tileMorphId on tiles and pairs column morph slots with labels", () => {
+		it("morphs each tile data-id into a positioned label on the next slide", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
 			const deck: Presentation = {
-				id: "column-morph",
-				name: "Column morph",
+				id: "tile-label-morph",
+				name: "Tile label morph",
 				sequences: [
 					{
 						id: "main",
@@ -1494,32 +1494,7 @@ if (import.meta.vitest) {
 											{
 												participantId: "catalogue",
 												emphasis: "active",
-												split: {
-													tiles,
-													columns: [
-														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"], labelLine: "Rippendecke" },
-														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "Unterzug" },
-													],
-													columnMorphTileGhosts: true,
-												},
-											},
-										],
-									},
-									{
-										id: "merge",
-										dispositions: [
-											{
-												participantId: "catalogue",
-												emphasis: "active",
-												split: {
-													tiles,
-													columns: [
-														{ key: "col1", tileKeys: ["tile-r0-c0", "tile-r1-c0"], labelLine: "Rippendecke" },
-														{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "Unterzug" },
-													],
-													columnGhostsOnly: true,
-													columnMorphTileGhosts: true,
-												},
+												split: { tiles },
 											},
 										],
 									},
@@ -1529,18 +1504,11 @@ if (import.meta.vitest) {
 											{
 												participantId: "catalogue",
 												emphasis: "active",
-												morphTargets: [
-													{
-														columnKey: "col1",
-														position: splitColumnBounds(tiles, ["tile-r0-c0", "tile-r1-c0"]),
-														lines: ["Rippendecke"],
-													},
-													{
-														columnKey: "col2",
-														position: splitColumnBounds(tiles, ["tile-r0-c1", "tile-r1-c1"]),
-														lines: ["Unterzug"],
-													},
-												],
+												morphTargets: tiles.map((tile) => ({
+													tileKey: tile.key,
+													position: tile.position,
+													lines: ["Label"],
+												})),
 											},
 										],
 									},
@@ -1554,17 +1522,11 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const focus = container.querySelector('section[title="focus"]');
-			expect(focus?.querySelectorAll(".presentation-column-morph-tile-ghost").length).toBe(4);
-			expect(focus?.querySelectorAll(".presentation-column-morph-slot--shown").length).toBe(0);
 			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(4);
-			const merge = container.querySelector('section[title="merge"]');
-			expect(merge?.querySelectorAll(".presentation-column-morph-slot--shown").length).toBe(2);
-			expect(merge?.querySelectorAll(".presentation-column-morph-tile-ghost").length).toBe(4);
+			expect(focus?.querySelector(".presentation-figure-tile-morph-placeholder")).toBeTruthy();
 			const labels = container.querySelector('section[title="labels"]');
-			const labelCol1 = labels?.querySelector('[data-id="catalogue--column--col1"]');
-			expect(labelCol1?.classList.contains("presentation-column-morph-slot--label")).toBe(true);
-			expect(labelCol1?.textContent).toContain("Rippendecke");
-			expect(labels?.querySelector('[data-id="catalogue--column--col2"]')?.textContent).toContain("Unterzug");
+			expect(labels?.querySelector('[data-id="catalogue--tile--tile-r0-c0"]')?.textContent).toContain("Label");
+			expect(container.querySelector('section[title="merge"]')).toBeNull();
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {

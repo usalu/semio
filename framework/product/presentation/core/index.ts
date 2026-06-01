@@ -280,13 +280,25 @@ export interface SplitColumnGroup {
 	readonly labelLine?: string;
 }
 
-/** @emoji 🏷 Text (or other) target at a column bounds rectangle for reveal.js column morph. */
+/** @emoji 🏷 Text target for reveal.js morph; use {@link tileKey} per tile or {@link columnKey} for one grouped label. */
 export interface SplitMorphTarget {
-	readonly columnKey: string;
+	readonly columnKey?: string;
+	readonly tileKey?: string;
 	readonly position: DispositionPosition;
 	readonly lines: readonly string[];
 	readonly level?: TextEmbodiment["level"];
 	readonly morphRoot?: TextMorphRoot;
+}
+
+/** @emoji 🎯 Stable `data-id` for a {@link SplitMorphTarget} (tile or column). */
+export function morphTargetId(participantId: string, target: SplitMorphTarget): string {
+	if (target.tileKey) {
+		return tileMorphId(participantId, target.tileKey);
+	}
+	if (target.columnKey) {
+		return columnMorphId(participantId, target.columnKey);
+	}
+	throw new Error("SplitMorphTarget requires tileKey or columnKey.");
 }
 
 /** @emoji ✂️ Splits one figure disposition into independently placed crop tiles for auto-animate. */
@@ -498,7 +510,7 @@ export function resolveArrangement(thought: Thought, arrangementId: string): Res
 					morphRoot: target.morphRoot ?? "heading-line",
 				},
 				emphasis: disposition.emphasis,
-				morphId: columnMorphId(participant.id, target.columnKey),
+				morphId: morphTargetId(participant.id, target),
 				position: target.position,
 			}));
 		}
@@ -1159,6 +1171,33 @@ if (import.meta.vitest) {
 				arrangements: [{ id: "slide", dispositions: [{ participantId: "fig", emphasis: "active", split }] }],
 			};
 			expect(resolveArrangement(thought, "slide")[0]?.split?.concealed).toBe(true);
+		});
+
+		it("expands morphTargets with tileKey into tileMorphId text dispositions", () => {
+			const thought: Thought = {
+				id: "tile-labels",
+				participants: [{ id: "fig", embodiments: [{ kind: "figure", src: "/a.png" }] }],
+				arrangements: [
+					{
+						id: "slide",
+						dispositions: [
+							{
+								participantId: "fig",
+								emphasis: "active",
+								morphTargets: [
+									{
+										tileKey: "tile-r0-c0",
+										position: { x: 0.1, y: 0.2, width: 0.3, height: 0.4 },
+										lines: ["Rippendecke"],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			const resolved = resolveArrangement(thought, "slide");
+			expect(resolved[0]?.morphId).toBe("fig--tile--tile-r0-c0");
 		});
 
 		it("expands morphTargets into text dispositions with columnMorphId", () => {

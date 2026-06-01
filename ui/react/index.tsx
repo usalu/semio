@@ -798,17 +798,23 @@ export function humanizeControlId(id: string): string {
   return humanizeControlSegment(segment);
 }
 
-/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when compact or unset. */
-export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
-  const compact = useUiChromeCompact();
-  if (compact) return undefined;
-  if (text !== undefined) return text || undefined;
+/** @emoji 🏷️ Resolves the user-facing caption for a control (i18n, explicit text, or `ui.*` fallback). */
+export function useControlAccessibleLabel(id: string | undefined, text?: string): string | undefined {
+  if (text !== undefined && text !== "") return text;
   if (!id || isInternalChromeControlId(id)) return undefined;
   const labelId = resolveControlLabelId(id);
   const localized = useLabel(labelId);
   if (localized && localized !== labelId) return localized;
   if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
   return undefined;
+}
+
+/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when compact or unset. */
+export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
+  const compact = useUiChromeCompact();
+  const labelPolicy = useUiChromeLabelPolicy();
+  if (compact && labelPolicy !== "always") return undefined;
+  return useControlAccessibleLabel(id, text);
 }
 // #endregion 🎛️UiChromeCompact
 
@@ -882,6 +888,9 @@ export type UiTranslationSchema = {
     readonly search: {
       readonly toggle: UiLabelValue;
       readonly close: UiLabelValue;
+    };
+    readonly find: {
+      readonly toggle: UiLabelValue;
     };
     readonly panelToggle: {
       readonly windows: UiLabelValue;
@@ -1039,6 +1048,14 @@ export const uiChromeTranslationBundles = {
           "beginner": "Suche schliessen"
         }
       }
+    },
+    find: {
+      toggle: {
+        label: {
+          normal: "Suchen in Ansicht",
+          beginner: "Suchen in Ansicht",
+        },
+      },
     },
     "panelToggle": {
       "windows": {
@@ -1294,6 +1311,14 @@ export const uiChromeTranslationBundles = {
           "beginner": "Close search"
         }
       }
+    },
+    find: {
+      toggle: {
+        label: {
+          normal: "Find",
+          beginner: "Find in view",
+        },
+      },
     },
     "panelToggle": {
       "windows": {
@@ -3727,7 +3752,9 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
   const borderClass = getLevelBorderElementClass(level);
   const Comp = as;
   const inlineText = useControlInlineText(id, text);
+  const accessibleLabel = useControlAccessibleLabel(id, text);
   const hasText = Boolean(inlineText);
+  const ariaLabel = inlineText ? undefined : accessibleLabel;
 
   const actionElement = (
     <Comp
@@ -3736,6 +3763,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       role={Comp === "div" && (props as any).onClick ? "button" : undefined}
       tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
       id={id}
+      aria-label={ariaLabel}
       className={cn(
         "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single h-medium border",
         hasText && "aspect-auto gap-single",
@@ -3870,8 +3898,8 @@ function ButtonGroupItem({
   const level = context.level ?? "base";
   const Comp = asChild ? Slot : "button";
   const inlineText = useControlInlineText(id, text);
-  const resolvedAriaLabel = !inlineText && id ? useLabel(resolveControlLabelId(id)) : undefined;
-  const ariaLabel = resolvedAriaLabel ?? (text && !id ? text : undefined);
+  const accessibleLabel = useControlAccessibleLabel(id, text);
+  const ariaLabel = inlineText ? undefined : accessibleLabel;
 
   const buttonGroupItemElement = (
     <Comp
@@ -5585,7 +5613,8 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
   const context = reactHostPort.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
   const inlineText = useControlInlineText(id, text);
-  const ariaLabel = !inlineText && id ? useLabel(resolveControlLabelId(id)) : undefined;
+  const accessibleLabel = useControlAccessibleLabel(id, text);
+  const ariaLabel = inlineText ? undefined : accessibleLabel;
 
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
@@ -6514,13 +6543,15 @@ function Navbar({ items, className }: NavbarProps) {
   const bgClass = getLevelBgClass(level);
   return (
     <nav id="ui.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
-      <div className="p-single flex gap-single items-center min-w-0">
-        {items.map((item, index) => (
-          <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
-            {item.content}
-          </div>
-        ))}
-      </div>
+      <UiChromeLabelPolicyProvider policy="always">
+        <div className="p-single flex gap-single items-center min-w-0">
+          {items.map((item, index) => (
+            <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
+              {item.content}
+            </div>
+          ))}
+        </div>
+      </UiChromeLabelPolicyProvider>
     </nav>
   );
 }
@@ -17507,6 +17538,23 @@ if (treeVitest) {
       expect(resolveControlLabelId("engagement-possibles-toggle")).toBe("ui.engagement.suggestions");
       expect(resolveControlLabelId("engagement-options")).toBe("ui.engagement.commands");
       expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
+    });
+
+    it("navbar keeps inline labels when compact chrome is enabled", () => {
+      const markup = renderToStaticMarkup(
+        <UiChromeCompactProvider compact={true}>
+          <Navbar
+            items={[
+              {
+                key: "search",
+                content: <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />,
+              },
+            ]}
+          />
+        </UiChromeCompactProvider>,
+      );
+      expect(markup).toContain("Search");
+      expect(markup).toContain('id="ui.search.toggle"');
     });
 
     it("renders engagement suggestions toggle without internal-id humanized labels", () => {

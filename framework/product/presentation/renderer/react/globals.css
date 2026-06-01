@@ -134,10 +134,18 @@
 }
 
 .reveal .presentation-figure-tile-frame {
-	display: block;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	overflow: hidden;
 	background-repeat: no-repeat;
 	z-index: 1;
+}
+
+.reveal .presentation-figure-tile-morph-placeholder {
+	margin: 0;
+	width: 100%;
+	opacity: 0;
 }
 
 .reveal .presentation-column-morph-slot {
