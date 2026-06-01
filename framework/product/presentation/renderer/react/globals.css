@@ -142,10 +142,25 @@
 	z-index: 1;
 }
 
-.reveal .presentation-figure-crop-frame {
+.reveal .presentation-figure-crop-frame,
+.reveal .presentation-morph-slot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	overflow: hidden;
 	background-repeat: no-repeat;
+	box-sizing: border-box;
 	z-index: 1;
+}
+
+.reveal .presentation-morph-slot h2 {
+	margin: 0;
+	width: 100%;
+	text-align: center;
+}
+
+.reveal .presentation-morph-slot-placeholder {
+	opacity: 0;
 }
 
 .reveal .presentation-disposition-frame--overlay {

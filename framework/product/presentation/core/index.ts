@@ -469,6 +469,21 @@ function morphBridgeDisposition(source: Disposition, target: Disposition): Dispo
 	};
 }
 
+function slideParticipantIds(slide: Slide): ReadonlySet<string> {
+	return new Set(slide.arrangement.dispositions.map((disposition) => disposition.participantId));
+}
+
+/** @emoji 🔗 True when two consecutive slides share at least one participant for reveal.js auto-animate pairing. */
+export function slidesShareMorphParticipants(source: Slide, target: Slide): boolean {
+	const sourceIds = slideParticipantIds(source);
+	for (const participantId of slideParticipantIds(target)) {
+		if (sourceIds.has(participantId)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 function buildMorphBridgeArrangement(
 	thought: Thought,
 	sourceSlide: Slide,
@@ -508,6 +523,11 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 	while (index < slides.length) {
 		let runEnd = index;
 		while (runEnd < slides.length - 1 && transitionUsesMorph(slides[runEnd]?.transition)) {
+			const current = slides[runEnd]!;
+			const next = slides[runEnd + 1]!;
+			if (!slidesShareMorphParticipants(current, next)) {
+				break;
+			}
 			runEnd += 1;
 		}
 		const autoAnimateId = runEnd > index ? `${thought.id}--m${runIndex}` : undefined;
@@ -1469,6 +1489,69 @@ if (import.meta.vitest) {
 			expect(expanded[0]?.autoAnimateId).toBe("fade--m0");
 			expect(expanded[1]?.autoAnimateId).toBe("fade--m0");
 			expect(expanded[2]?.autoAnimateId).toBeUndefined();
+		});
+
+		it("starts a new morph run when consecutive slides share no participants", () => {
+			const thought: Thought = {
+				id: "media",
+				participants: [
+					{ id: "catalogue", embodiments: [{ kind: "figure", src: "/a.png" }] },
+					{
+						id: "col1",
+						embodiments: [
+							{ kind: "figure", id: "crop", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+							{ kind: "text", id: "label", lines: ["A"], level: "heading" },
+						],
+					},
+				],
+				slides: [
+					{
+						arrangement: {
+							id: "catalogue",
+							dispositions: [{ participantId: "catalogue", emphasis: "active" }],
+						},
+						transition: { kind: "morph" },
+					},
+					{
+						arrangement: {
+							id: "focus",
+							dispositions: [
+								{
+									participantId: "col1",
+									embodimentId: "crop",
+									emphasis: "active",
+									position: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
+								},
+							],
+						},
+						transition: { kind: "morph" },
+					},
+					{
+						arrangement: {
+							id: "labels",
+							dispositions: [
+								{
+									participantId: "col1",
+									embodimentId: "label",
+									emphasis: "active",
+									position: { x: 0.38, y: 0.12, width: 0.24, height: 0.24 },
+								},
+							],
+						},
+					},
+				],
+			};
+			const expanded = expandThoughtSlides(thought);
+			expect(expanded.map((slide) => slide.id)).toEqual([
+				"catalogue",
+				"focus",
+				"labels--bridge",
+				"labels",
+			]);
+			expect(expanded[0]?.autoAnimateId).toBeUndefined();
+			expect(expanded[1]?.autoAnimateId).toBe("media--m1");
+			expect(expanded[2]?.autoAnimateId).toBe("media--m1");
+			expect(expanded[3]?.autoAnimateId).toBe("media--m1");
 		});
 	});
 

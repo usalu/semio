@@ -452,17 +452,22 @@ if (import.meta.vitest) {
 			expect(col3?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs column crops into labels via auto-derived bridges", () => {
+		it("morphs column crops into labels in a dedicated morph run", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
 			expect(media).toBeDefined();
 			const expanded = expandThoughtSlides(media!);
-			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
+			const catalogueSlide = expanded.find((slide) => slide.id === "catalogue");
+			const focusSlide = expanded.find((slide) => slide.id === "catalogue-focus");
 			const bridgeSlide = expanded.find((slide) => slide.id === "catalogue-labels--bridge");
-			expect(labelSlide).toBeDefined();
+			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
+			expect(catalogueSlide?.autoAnimateId).toBeUndefined();
+			expect(focusSlide?.autoAnimateId).toMatch(/^media--m\d+$/);
 			expect(bridgeSlide?.derived).toBe(true);
-			expect(bridgeSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP)).toBe(
-				true,
-			);
+			expect(bridgeSlide?.autoAnimateId).toBe(focusSlide?.autoAnimateId);
+			expect(labelSlide?.autoAnimateId).toBe(focusSlide?.autoAnimateId);
+			expect(
+				bridgeSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP),
+			).toBe(true);
 			expect(
 				labelSlide?.arrangement.dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_LABEL),
 			).toBe(true);

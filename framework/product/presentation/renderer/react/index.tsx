@@ -608,18 +608,59 @@ function FigureMorphView({
 		return (
 			<div
 				data-id={anchorId}
-				className={["presentation-disposition-frame", "presentation-figure-crop-frame", morphAnchorClass(emphasis)]
+				className={[
+					"presentation-disposition-frame",
+					"presentation-morph-slot",
+					"presentation-morph-slot--figure",
+					emphasisClass(emphasis),
+				]
 					.filter(Boolean)
 					.join(" ")}
 				style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, embodiment.crop) }}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
-			/>
+			>
+				<h2 className="presentation-morph-slot-placeholder">{embodiment.alt ?? "\u00a0"}</h2>
+			</div>
 		);
 	}
 	return (
 		<div data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<img className="presentation-media-figure" src={embodiment.src} alt={embodiment.alt ?? ""} />
+		</div>
+	);
+}
+
+/** @emoji 🏷 Positioned text morph slot: `data-id` on the frame so reveal.js can morph figure crops into labels. */
+function PositionedTextMorphView({
+	morphId: anchorId,
+	embodiment,
+	emphasis,
+	position,
+	style,
+}: {
+	readonly morphId: string;
+	readonly embodiment: TextEmbodiment;
+	readonly emphasis: ParticipantEmphasis;
+	readonly position: DispositionPosition;
+	readonly style?: DispositionStyle;
+}): ReactNode {
+	const frameStyle = dispositionFrameStyle(position, style);
+	const headingClass = centeredLineClass(anchorId, embodiment, emphasis);
+	return (
+		<div
+			data-id={anchorId}
+			className={[
+				"presentation-disposition-frame",
+				"presentation-morph-slot",
+				"presentation-morph-slot--label",
+				emphasisClass(emphasis),
+			]
+				.filter(Boolean)
+				.join(" ")}
+			style={frameStyle}
+		>
+			<h2 className={headingClass}>{embodiment.lines[0]}</h2>
 		</div>
 	);
 }
@@ -776,6 +817,17 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 	let content: ReactNode;
 	switch (embodiment.kind) {
 		case "text":
+			if (disposition.position !== undefined) {
+				return (
+					<PositionedTextMorphView
+						morphId={anchorId}
+						embodiment={embodiment}
+						emphasis={emphasis}
+						position={disposition.position}
+						style={disposition.style}
+					/>
+				);
+			}
 			content = <TextMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
 			break;
 		case "authors":
@@ -791,14 +843,17 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 			if (disposition.split) {
 				return <FigureSplitMorphView disposition={disposition} embodiment={embodiment} />;
 			}
-			content = (
-				<FigureMorphView
-					morphId={anchorId}
-					embodiment={embodiment}
-					emphasis={emphasis}
-					position={disposition.position}
-				/>
-			);
+			if (embodiment.crop && disposition.position !== undefined) {
+				return (
+					<FigureMorphView
+						morphId={anchorId}
+						embodiment={embodiment}
+						emphasis={emphasis}
+						position={disposition.position}
+					/>
+				);
+			}
+			content = <FigureMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} position={disposition.position} />;
 			break;
 		case "video":
 			content = <VideoMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
@@ -1448,7 +1503,7 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("renders cropped figure dispositions with background positioning", () => {
+		it("renders cropped figure dispositions with matching morph slot DOM", () => {
 			const deck: Presentation = {
 				id: "crop-figure",
 				name: "Crop",
@@ -1499,9 +1554,67 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const cropFrame = container.querySelector(".presentation-figure-crop-frame") as HTMLElement | null;
-			expect(cropFrame?.style.backgroundImage).toContain("/catalogue.png");
-			expect(cropFrame?.style.left).toBe("10%");
+			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot') as HTMLElement | null;
+			expect(slot?.style.backgroundImage).toContain("/catalogue.png");
+			expect(slot?.querySelector("h2.presentation-morph-slot-placeholder")).toBeTruthy();
+			expect(slot?.style.left).toBe("10%");
+		});
+
+		it("renders positioned labels with data-id on the morph slot frame", () => {
+			const deck: Presentation = {
+				id: "label-slot",
+				name: "Labels",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "labels",
+										participants: [
+											{
+												id: "catalogue-col1",
+												embodiments: [
+													{
+														kind: "text",
+														id: "label",
+														lines: ["Rippendecke"],
+														level: "heading",
+														morphRoot: "heading-line",
+													},
+												],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "labels",
+													dispositions: [
+														{
+															participantId: "catalogue-col1",
+															embodimentId: "label",
+															emphasis: "active",
+															position: { x: 0.38, y: 0.12, width: 0.24, height: 0.24 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--label');
+			expect(slot?.querySelector("h2")?.textContent).toBe("Rippendecke");
+			expect(slot?.querySelector("h2[data-id]")).toBeNull();
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {
