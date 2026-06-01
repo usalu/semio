@@ -1,13 +1,14 @@
 {
   "title": "Projektetage Inline Catalogue Labels",
   "emoji": "🏷",
-  "status": "closed",
+  "status": "open",
   "description": "Bauteilbeschriftungen: three text dispositions on one line (Rippenplatte Unterzug Stütze). Many-to-one tile morph per column; tiles settle and morph position before embodiment switch.",
   "summary": "Fixed no auto-animate between Bauteilarten (#/0/8) and Bauteilbeschriftungen (#/0/9).\n\nRoot causes: (1) morphParticipant column anchors were never rendered (skipped by interactive layout). (2) Tile→label swap relied only on presentation-arrangement--settled from slidechanged, but reveal runs auto-animate after slidechanged while dormant anchors stayed visibility:hidden so matcher had nothing to morph. (3) autoanimate event read sheet from event.data instead of reveal-extended event.sheet, so uniform-scale patch never applied.\n\nFixes: MorphParticipantArrangementSlots; morphFrom crop ghosts on three inline label dispositions; beforeslidechange + slideChangedEventSlides for settle timing; CSS swaps tiles→dormant anchors on data-auto-animate pending/running (and settled). Integration tests confirm matcher pairs catalogue-col1/2/3 figure→label and reveal fires autoanimate on full deck navigation.\n\n61 renderer + 8 deck tests pass.",
   "goal": "🎯presentation",
   "sessions": [
     "⚪9767b61ed4b447c9942a8107d707be52",
     "⚪13918f7ca3a24a9a8c8258142bd9afaa",
-    "⚪a975acd1c4f34d4083c32eef29797bfd"
+    "⚪a975acd1c4f34d4083c32eef29797bfd",
+    "⚪783827331b984e38a0b2cb83c18398e2"
   ]
 }

@@ -1,8 +1,9 @@
 {
   "title": "Interpolate Curve Enter Finalize",
   "emoji": "⌨️",
-  "status": "open",
+  "status": "closed",
   "description": "Interpolate curve: pressing Space or Enter should finalize the command, not add another point at the cursor.",
+  "summary": "Empty Enter/Space during InterpCrv (and other length-entry + confirm interactions) was committing the live rubber-band distance as another point before finalize. REPL numeric commit now uses typed values or explicit `__lengthLock` only; a shared `tryConfirmOrNumericCommit` path finalizes first when the command line is empty, then falls back to live `pointer.down` for line-like tools without confirm. Added core tests for finalize vs live length on interpolate curve.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪36b82c654aa04fb2ac6826db2376a621"

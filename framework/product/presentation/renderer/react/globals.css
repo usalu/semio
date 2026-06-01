@@ -235,9 +235,6 @@
 	> .presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--pinned) {
 	display: flex;
 	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
 	align-items: center;
 	justify-content: center;
 	box-sizing: border-box;
@@ -671,26 +668,44 @@
 
 .reveal
 	.slides
-	section.presentation-arrangement--positioned:not([data-auto-animate="pending"]):not(
-		[data-auto-animate="running"]
-	):not(.presentation-arrangement--settled)
+	section[data-settle-before-morph-to]:not([data-auto-animate="pending"]):not([data-auto-animate="running"]):not(
+		.presentation-arrangement--settled
+	)
 	.presentation-morph-slot--dormant {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;
 }
 
-.reveal .slides section.presentation-arrangement--positioned.presentation-arrangement--settled .presentation-figure-tile-frame,
-.reveal .slides section[data-auto-animate="pending"] .presentation-figure-tile-frame,
-.reveal .slides section[data-auto-animate="running"] .presentation-figure-tile-frame {
+.reveal
+	.slides
+	section[data-settle-before-morph-to].presentation-arrangement--settled
+	.presentation-figure-tile-frame,
+.reveal
+	.slides
+	section[data-settle-before-morph-to][data-auto-animate="pending"]
+	.presentation-figure-tile-frame,
+.reveal
+	.slides
+	section[data-settle-before-morph-to][data-auto-animate="running"]
+	.presentation-figure-tile-frame {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;
 }
 
-.reveal .slides section.presentation-arrangement--positioned.presentation-arrangement--settled .presentation-morph-slot--dormant,
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-slot--dormant,
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-slot--dormant {
+.reveal
+	.slides
+	section[data-settle-before-morph-to].presentation-arrangement--settled
+	.presentation-morph-slot--dormant,
+.reveal
+	.slides
+	section[data-settle-before-morph-to][data-auto-animate="pending"]
+	.presentation-morph-slot--dormant,
+.reveal
+	.slides
+	section[data-settle-before-morph-to][data-auto-animate="running"]
+	.presentation-morph-slot--dormant {
 	opacity: 1 !important;
 	visibility: visible !important;
 }

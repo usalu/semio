@@ -764,15 +764,17 @@ function FigureMorphView({
 	emphasis,
 	position,
 	style,
+	dormantAnchor,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
+	readonly dormantAnchor?: boolean;
 }): ReactNode {
 	if (embodiment.crop && position) {
-		const dormant = style?.opacity === 0;
+		const dormant = dormantAnchor === true || style?.opacity === 0;
 		const frameStyle = dispositionFrameStyle(position, dormant ? undefined : style);
 		return (
 			<div
@@ -879,7 +881,7 @@ function FigureSplitMorphView({
 						embodiment={cropEmbodiment}
 						emphasis={disposition.emphasis}
 						position={boundingFrame}
-						style={{ opacity: 0 }}
+						dormantAnchor
 					/>
 					{tiles.map((tile) => (
 						<FigureTileView
@@ -1447,7 +1449,15 @@ export function scaleRectWithinGroup(
 	};
 }
 
-/** @emoji ⛶ Toggles slide-fullscreen rect vs stashed pre-fullscreen rect. */
+/** @emoji ⛶ Centered slide-space frame for interactive fullscreen (between typical figure thumb and video). */
+export const SLIDE_INTERACTIVE_FULLSCREEN_FRAME: DispositionPosition = {
+	x: 0.275,
+	y: 0.2875,
+	width: 0.45,
+	height: 0.425,
+};
+
+/** @emoji ⛶ Toggles uniform slide-fullscreen frame vs stashed pre-fullscreen rect. */
 export function toggleFullscreenRect(
 	current: DispositionPosition,
 	stash: DispositionPosition | undefined,
@@ -1455,7 +1465,7 @@ export function toggleFullscreenRect(
 	if (stash !== undefined) {
 		return { rect: stash, stash: undefined };
 	}
-	return { rect: { x: 0, y: 0, width: 1, height: 1 }, stash: current };
+	return { rect: SLIDE_INTERACTIVE_FULLSCREEN_FRAME, stash: current };
 }
 
 /** @emoji 📐 reveal.js nested slide section with usable layout height for pointer math. */
@@ -2600,13 +2610,7 @@ const InteractiveDisposition: FC<{
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
 	}
 	const wrapperStyle: CSSProperties | undefined = fullscreen
-		? {
-				position: "absolute",
-				inset: 0,
-				width: "100%",
-				height: "100%",
-				boxSizing: "border-box",
-			}
+		? transformFrameStyle(SLIDE_INTERACTIVE_FULLSCREEN_FRAME)
 		: Object.keys(wrapperFrame).length > 0
 			? wrapperFrame
 			: undefined;
@@ -4316,7 +4320,7 @@ if (import.meta.vitest) {
 			const scaledA = scaleRectWithinGroup(a, group!, grown);
 			expect(scaledA.x).toBeCloseTo(0);
 			const full = toggleFullscreenRect(a, undefined);
-			expect(full.rect).toEqual({ x: 0, y: 0, width: 1, height: 1 });
+			expect(full.rect).toEqual(SLIDE_INTERACTIVE_FULLSCREEN_FRAME);
 			expect(full.stash).toEqual(a);
 			const restored = toggleFullscreenRect(full.rect, full.stash);
 			expect(restored.rect).toEqual(a);
@@ -4489,39 +4493,18 @@ if (import.meta.vitest) {
 															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
 															emphasis: "active",
 															position: inlineColumnLabelPosition(0),
-															morphFrom: [
-																{
-																	participantId: CATALOGUE_COL1,
-																	embodimentId: CATALOGUE_EMBODIMENT_CROP,
-																	position: inlineColumnLabelPosition(0),
-																},
-															],
 														},
 														{
 															participantId: CATALOGUE_COL2,
 															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
 															emphasis: "active",
 															position: inlineColumnLabelPosition(1),
-															morphFrom: [
-																{
-																	participantId: CATALOGUE_COL2,
-																	embodimentId: CATALOGUE_EMBODIMENT_CROP,
-																	position: inlineColumnLabelPosition(1),
-																},
-															],
 														},
 														{
 															participantId: CATALOGUE_COL3,
 															embodimentId: CATALOGUE_EMBODIMENT_LABEL,
 															emphasis: "active",
 															position: inlineColumnLabelPosition(2),
-															morphFrom: [
-																{
-																	participantId: CATALOGUE_COL3,
-																	embodimentId: CATALOGUE_EMBODIMENT_CROP,
-																	position: inlineColumnLabelPosition(2),
-																},
-															],
 														},
 													],
 												},
@@ -4580,6 +4563,60 @@ if (import.meta.vitest) {
 			mountRoot.remove();
 		});
 
+		it("auto-animates catalogue tiles into focus layout", async () => {
+			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
+				await import("@framework/presentation/core");
+			type SlideFile = import("@framework/presentation/core").SlideFile;
+			const { presentationMeta, CATALOGUE_PARTICIPANT, CATALOGUE_TILES_ASSEMBLED, CATALOGUE_FOCUS_TILES } =
+				await import("@mit-bestand/praesentation/projektetage-spec");
+			const slideModules = import.meta.glob<{ default: SlideFile }>(
+				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
+				{ eager: true },
+			);
+			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+			const catalogueRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilkatalog");
+			const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
+			expect(catalogueRef).toBeDefined();
+			expect(focusRef).toBeDefined();
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
+			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			expect(catalogueSlide.getAttribute("data-auto-animate-id")).toBe(focusSlide.getAttribute("data-auto-animate-id"));
+			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(false);
+			catalogueSlide.setAttribute("data-auto-animate", "pending");
+			const host: AutoAnimateMatcherHost = {
+				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
+					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
+						const toElement = toScope.querySelector<HTMLElement>(
+							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
+						);
+						if (toElement) {
+							pairs.push({ from: element, to: toElement });
+						}
+					}
+				},
+			};
+			const pairs = presentationAutoAnimateMatcher.call(host, catalogueSlide, focusSlide);
+			const componentTileIds = CATALOGUE_FOCUS_TILES.map(
+				(tile) => `catalogue--tile--${tile.key}`,
+			);
+			expect(componentTileIds.every((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id))).toBe(
+				true,
+			);
+			expect(
+				catalogueSlide.querySelectorAll(
+					'[data-settle-before-morph-to] .presentation-figure-tile-frame',
+				).length,
+			).toBe(0);
+			expect(CATALOGUE_TILES_ASSEMBLED.length).toBeGreaterThan(componentTileIds.length);
+			mountRoot.remove();
+		});
+
 		it("fires reveal auto-animate when advancing projektetage focus to labels", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
 				await import("@framework/presentation/core");
@@ -4590,8 +4627,10 @@ if (import.meta.vitest) {
 				{ eager: true },
 			);
 			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+			const catalogueRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilkatalog");
 			const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
 			const labelRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilbeschriftungen");
+			expect(catalogueRef).toBeDefined();
 			expect(focusRef).toBeDefined();
 			expect(labelRef).toBeDefined();
 			const mountRoot = document.createElement("div");
@@ -4626,11 +4665,15 @@ if (import.meta.vitest) {
 				};
 				wait();
 			});
+			await revealApi!.slide(catalogueRef!.h, catalogueRef!.v);
+			await new Promise((resolve) => setTimeout(resolve, 50));
 			await revealApi!.slide(focusRef!.h, focusRef!.v);
 			await new Promise((resolve) => setTimeout(resolve, 50));
+			const afterCatalogueToFocus = autoAnimateCount;
 			await revealApi!.slide(labelRef!.h, labelRef!.v);
 			await new Promise((resolve) => setTimeout(resolve, 300));
-			expect(autoAnimateCount).toBeGreaterThan(0);
+			expect(afterCatalogueToFocus).toBeGreaterThan(0);
+			expect(autoAnimateCount).toBeGreaterThan(afterCatalogueToFocus);
 			const focusSlide = revealRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			const labelSlide = revealRoot.querySelector('section[title="catalogue-labels"]') as HTMLElement;
 			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
@@ -5262,7 +5305,8 @@ if (import.meta.vitest) {
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
 			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
-			expect(disposition.style.left).toBe("");
+			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.width * 100}%`);
+			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
 			const fullscreenOn = disposition.querySelector(
 				".presentation-interaction-fullscreen",
 			) as HTMLButtonElement;
@@ -5336,7 +5380,8 @@ if (import.meta.vitest) {
 			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
 			expect(tile.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
 			expect(tile.style.position).toBe("absolute");
-			expect(tile.style.inset).toBe("0");
+			expect(tile.style.width).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.width * 100}%`);
+			expect(tile.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
 			expect(canvas.contains(tile)).toBe(true);
 			expect(globalsCssSource).toMatch(
 				/\.presentation-interactive-disposition--fullscreen:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-tile-frame[\s\S]*width\s*:\s*100%\s*!important/s,
