@@ -55,6 +55,7 @@ import {
 	abbreviateAuthorFirstName,
 	affiliationLineName,
 	analogy,
+	centerResolvedArrangement,
 	collectPresentationSlides,
 	expandThoughtSlides,
 	formatPresentationUrlHash,
@@ -652,6 +653,10 @@ export function figureCropBackgroundVars(
 	let morphHeight = stretchHeight;
 	let morphPosX = stretchPosX;
 	let morphPosY = stretchPosY;
+	let restWidth = stretchWidth;
+	let restHeight = stretchHeight;
+	let restPosX = stretchPosX;
+	let restPosY = stretchPosY;
 	if (frame !== undefined && frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
 		const cropAspect = crop.width / crop.height;
 		const frameAspect = frame.width / frame.height;
@@ -660,11 +665,17 @@ export function figureCropBackgroundVars(
 		morphHeight = stretchHeight * coverScale;
 		morphPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
 		morphPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
+		if (coverScale > 1 + 1e-6) {
+			restWidth = morphWidth;
+			restHeight = morphHeight;
+			restPosX = morphPosX;
+			restPosY = morphPosY;
+		}
 	}
 	return {
 		backgroundImage: `url("${embodiment.src}")`,
-		["--presentation-figure-bg-size" as string]: `${stretchWidth}% ${stretchHeight}%`,
-		["--presentation-figure-bg-position" as string]: `${stretchPosX}% ${stretchPosY}%`,
+		["--presentation-figure-bg-size" as string]: `${restWidth}% ${restHeight}%`,
+		["--presentation-figure-bg-position" as string]: `${restPosX}% ${restPosY}%`,
 		["--presentation-figure-bg-size-morph" as string]: `${morphWidth}% ${morphHeight}%`,
 		["--presentation-figure-bg-position-morph" as string]: `${morphPosX}% ${morphPosY}%`,
 	};
@@ -675,18 +686,25 @@ function FigureTileView({
 	tile,
 	embodiment,
 	defaultEmphasis,
+	tileDuplicateHidden,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly embodiment: FigureEmbodiment;
 	readonly defaultEmphasis: ParticipantEmphasis;
+	readonly tileDuplicateHidden?: boolean;
 }): ReactNode {
 	const emphasis = tile.emphasis ?? defaultEmphasis;
 	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
 	return (
 		<div
 			data-id={tileMorphId(participantId, tile.key)}
-			className={["presentation-disposition-frame", "presentation-figure-tile-frame", emphasisClass(emphasis)]
+			className={[
+				"presentation-disposition-frame",
+				"presentation-figure-tile-frame",
+				tileDuplicateHidden ? "presentation-figure-tile-frame--morph-participant-duplicate" : undefined,
+				emphasisClass(emphasis),
+			]
 				.filter(Boolean)
 				.join(" ")}
 			style={frameStyle}
@@ -834,6 +852,7 @@ function FigureSplitMorphView({
 							tile={tile}
 							embodiment={embodiment}
 							defaultEmphasis={disposition.emphasis}
+							tileDuplicateHidden
 						/>
 					))}
 				</>
@@ -1093,7 +1112,8 @@ const ArrangementSection: FC<{
 	const resolved = resolveArrangement(thought.participants, renderSlide.arrangement);
 	const morph = renderSlide.autoAnimateId !== undefined;
 	const positioned = resolved.some((disposition) => disposition.position !== undefined || disposition.split !== undefined);
-	const placements = resolved.map((disposition, index) => (
+	const layoutResolved = positioned ? centerResolvedArrangement(resolved) : resolved;
+	const placements = layoutResolved.map((disposition, index) => (
 		<MorphDispositionView
 			key={`${renderSlide.id}-${disposition.morphId}-${disposition.embodimentId ?? index}`}
 			disposition={disposition}
@@ -1628,7 +1648,7 @@ if (import.meta.vitest) {
 			});
 			const frame = container.querySelector(".presentation-disposition-frame") as HTMLElement | null;
 			expect(frame?.style.position).toBe("absolute");
-			expect(frame?.style.left).toBe("10%");
+			expect(frame?.style.left).toBe("25%");
 			expect(frame?.style.width).toBe("50%");
 		});
 
@@ -1795,7 +1815,7 @@ if (import.meta.vitest) {
 			const fill = slot?.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
 			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
 			expect(slot?.querySelector("h2")).toBeNull();
-			expect(slot?.style.left).toBe("10%");
+			expect(slot?.style.left).toBe("35%");
 			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 100%");
 			expect(fill?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("0% 0%");
 		});
@@ -1820,7 +1840,8 @@ if (import.meta.vitest) {
 			);
 			expect(square["--presentation-figure-bg-size-morph" as keyof typeof square]).toBe("400% 200%");
 			expect(wide["--presentation-figure-bg-size-morph" as keyof typeof wide]).toBe("1600% 800%");
-			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("200% 100%");
+			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("1600% 800%");
+			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% 200%");
 		});
 
 		it("matches auto-animate targets only by data-id", () => {

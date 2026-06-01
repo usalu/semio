@@ -504,6 +504,116 @@ export interface ResolvedDisposition {
 	readonly style?: DispositionStyle;
 	readonly split?: DispositionSplit;
 }
+
+/** @emoji 📐 Union of normalized placement rectangles. */
+export function unionDispositionPositions(positions: readonly DispositionPosition[]): DispositionPosition {
+	if (positions.length === 0) {
+		throw new Error("unionDispositionPositions: no positions.");
+	}
+	let minX = 1;
+	let minY = 1;
+	let maxX = 0;
+	let maxY = 0;
+	for (const position of positions) {
+		minX = Math.min(minX, position.x);
+		minY = Math.min(minY, position.y);
+		maxX = Math.max(maxX, position.x + position.width);
+		maxY = Math.max(maxY, position.y + position.height);
+	}
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/** @emoji ⊕ Translation that centers {@link bounds} in the unit slide. */
+export function centerDispositionBoundsOffset(bounds: DispositionPosition): DispositionPosition {
+	return {
+		x: (1 - bounds.width) / 2 - bounds.x,
+		y: (1 - bounds.height) / 2 - bounds.y,
+		width: 0,
+		height: 0,
+	};
+}
+
+/** @emoji ↔️ Moves a placement by a normalized offset. */
+export function shiftDispositionPosition(
+	position: DispositionPosition,
+	offset: DispositionPosition,
+): DispositionPosition {
+	return {
+		x: position.x + offset.x,
+		y: position.y + offset.y,
+		width: position.width,
+		height: position.height,
+	};
+}
+
+const CENTER_ARRANGEMENT_EPSILON = 1e-6;
+
+function isDispositionVisibleForLayout(style: DispositionStyle | undefined): boolean {
+	return style?.opacity !== 0;
+}
+
+/** @emoji 📍 Slide positions for layout centering (visible tiles and frames; omits opacity-0 dispositions). */
+export function visibleArrangementPositions(resolved: readonly ResolvedDisposition[]): DispositionPosition[] {
+	const positions: DispositionPosition[] = [];
+	for (const disposition of resolved) {
+		if (!isDispositionVisibleForLayout(disposition.style)) {
+			continue;
+		}
+		if (disposition.split?.morphParticipant) {
+			continue;
+		}
+		if (disposition.split?.tiles) {
+			for (const tile of disposition.split.tiles) {
+				positions.push(tile.position);
+			}
+			continue;
+		}
+		if (disposition.position) {
+			positions.push(disposition.position);
+		}
+	}
+	return positions;
+}
+
+function shiftResolvedDisposition(
+	disposition: ResolvedDisposition,
+	offset: DispositionPosition,
+): ResolvedDisposition {
+	let next = disposition;
+	if (disposition.position) {
+		next = { ...next, position: shiftDispositionPosition(disposition.position, offset) };
+	}
+	if (disposition.split?.tiles) {
+		next = {
+			...next,
+			split: {
+				...disposition.split,
+				tiles: disposition.split.tiles.map((tile) => ({
+					...tile,
+					position: shiftDispositionPosition(tile.position, offset),
+				})),
+			},
+		};
+	}
+	return next;
+}
+
+/** @emoji ⊕ Centers visible placements in the unit slide frame. */
+export function centerResolvedArrangement(resolved: readonly ResolvedDisposition[]): ResolvedDisposition[] {
+	const positions = visibleArrangementPositions(resolved);
+	if (positions.length === 0) {
+		return [...resolved];
+	}
+	const bounds = unionDispositionPositions(positions);
+	const offset = centerDispositionBoundsOffset(bounds);
+	if (
+		Math.abs(offset.x) < CENTER_ARRANGEMENT_EPSILON &&
+		Math.abs(offset.y) < CENTER_ARRANGEMENT_EPSILON
+	) {
+		return [...resolved];
+	}
+	return resolved.map((disposition) => shiftResolvedDisposition(disposition, offset));
+}
 //#endregion 🔖Resolved
 
 //#region 🔖Expand
@@ -2418,6 +2528,23 @@ if (import.meta.vitest) {
 			expect(expanded[1]?.autoAnimateId).toBe("media--m1");
 			expect(expanded[2]?.autoAnimateId).toBe("media--m1");
 			expect(expanded[3]?.autoAnimateId).toBe("media--m1");
+		});
+	});
+
+	describe("centerResolvedArrangement", () => {
+		it("offsets placements so their bounding box is centered in the unit slide", () => {
+			const resolved: ResolvedDisposition[] = [
+				{
+					participant: { id: "a", embodiments: [{ kind: "figure", src: "/a.png" }] },
+					embodiment: { kind: "figure", src: "/a.png" },
+					emphasis: "active",
+					morphId: "a",
+					position: { x: 0.2, y: 0.1, width: 0.3, height: 0.5 },
+				},
+			];
+			const centered = centerResolvedArrangement(resolved);
+			expect(centered[0]?.position?.x).toBeCloseTo(0.35);
+			expect(centered[0]?.position?.y).toBeCloseTo(0.25);
 		});
 	});
 

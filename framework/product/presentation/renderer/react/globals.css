@@ -90,7 +90,11 @@
 	text-align: center;
 }
 
-.reveal .slides section.presentation-arrangement--positioned {
+.reveal .slides > section > section.presentation-arrangement--positioned {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
 	text-align: initial;
 }
 
@@ -100,6 +104,7 @@
 	height: var(--presentation-slide-height, 700px);
 	max-width: 100%;
 	max-height: 100%;
+	flex: 0 0 auto;
 	margin: 0 auto;
 	box-sizing: border-box;
 }
@@ -139,10 +144,16 @@
 
 .reveal .presentation-figure-tile-frame {
 	display: flex;
-	align-items: stretch;
-	justify-content: stretch;
+	align-items: center;
+	justify-content: center;
 	overflow: hidden;
 	z-index: 1;
+}
+
+.reveal .presentation-figure-tile-frame--morph-participant-duplicate {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none;
 }
 
 .reveal .presentation-figure-crop-fill {
