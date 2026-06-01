@@ -1,8 +1,9 @@
 {
   "title": "Fix Extrude Curve Selection",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "When starting extrude curve interaction, user cannot select any curve. Fix curve selection in surface.extrudeCrv interaction.",
+  "summary": "ExtrudeCrv after interpolate curve failed for two reasons: hierarchy/object selection was not resolved to wire primitives on interaction start, and open Nurbs wires could not be planar-extruded. Fixed by expandSelectionTargetsForAccept in core consumeStartSelection and renderer startRuntime, and open-wire extrusion via translate+loft with solid/heal/thicken fallbacks in brepjs.",
   "goal": "🎯cad",
   "sessions": [
     "⚪a28806c0aa404b0b972753c4f3a31584"

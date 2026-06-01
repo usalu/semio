@@ -84,11 +84,9 @@ export const CATALOGUE_PARTICIPANT = "catalogue";
 export const CATALOGUE_COL1 = "catalogue-col1";
 export const CATALOGUE_COL2 = "catalogue-col2";
 export const CATALOGUE_COL3 = "catalogue-col3";
-export const CATALOGUE_LABELS = "catalogue-labels";
 
 export const CATALOGUE_EMBODIMENT_CROP = "crop";
 export const CATALOGUE_EMBODIMENT_LABEL = "label";
-export const CATALOGUE_EMBODIMENT_STACK = "stack";
 
 export const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
 const CATALOGUE_TILES_GRID = splitFigureGrid({
@@ -241,16 +239,18 @@ export const CATALOGUE_COLUMN_LABELS: Record<keyof typeof CATALOGUE_COLUMN_TILE_
 	col3: "Stütze",
 };
 
-export const CATALOGUE_LABEL_STACK_FRAME = { x: 0.38, y: 0.12, width: 0.24, height: 0.76 };
-export const CATALOGUE_LABEL_ROW_GAP = 0.04;
+export const CATALOGUE_LABEL_INLINE_FRAME = { x: 0.1, y: 0.44, width: 0.8, height: 0.12 };
+export const CATALOGUE_LABEL_INLINE_GAP = 0.03;
 
-export function stackedColumnLabelPosition(rowIndex: number): DispositionPosition {
-	const rowHeight = (CATALOGUE_LABEL_STACK_FRAME.height - 2 * CATALOGUE_LABEL_ROW_GAP) / 3;
+/** @emoji 📐 One of three equal inline label slots on the Bauteilbeschriftungen row. */
+export function inlineColumnLabelPosition(columnIndex: 0 | 1 | 2): DispositionPosition {
+	const gap = CATALOGUE_LABEL_INLINE_GAP;
+	const colWidth = (CATALOGUE_LABEL_INLINE_FRAME.width - gap * 2) / 3;
 	return {
-		x: CATALOGUE_LABEL_STACK_FRAME.x,
-		y: CATALOGUE_LABEL_STACK_FRAME.y + rowIndex * (rowHeight + CATALOGUE_LABEL_ROW_GAP),
-		width: CATALOGUE_LABEL_STACK_FRAME.width,
-		height: rowHeight,
+		x: CATALOGUE_LABEL_INLINE_FRAME.x + columnIndex * (colWidth + gap),
+		y: CATALOGUE_LABEL_INLINE_FRAME.y,
+		width: colWidth,
+		height: CATALOGUE_LABEL_INLINE_FRAME.height,
 	};
 }
 
@@ -280,24 +280,6 @@ export function catalogueColumnParticipant(
 	};
 }
 
-/** @emoji 🏷 Single participant receiving independent morphs from each catalogue column. */
-export const catalogueLabelsParticipant: Participant = {
-	id: CATALOGUE_LABELS,
-	embodiments: [
-		{
-			kind: "text",
-			id: CATALOGUE_EMBODIMENT_STACK,
-			lines: [
-				CATALOGUE_COLUMN_LABELS.col1,
-				CATALOGUE_COLUMN_LABELS.col2,
-				CATALOGUE_COLUMN_LABELS.col3,
-			],
-			level: "heading",
-			morphRoot: "heading-block",
-		},
-	],
-};
-
 export const mediaParticipants: Participant[] = [
 	{
 		id: CATALOGUE_PARTICIPANT,
@@ -312,7 +294,6 @@ export const mediaParticipants: Participant[] = [
 	catalogueColumnParticipant(CATALOGUE_COL1, CATALOGUE_COLUMN_TILE_KEYS.col1, CATALOGUE_COLUMN_LABELS.col1),
 	catalogueColumnParticipant(CATALOGUE_COL2, CATALOGUE_COLUMN_TILE_KEYS.col2, CATALOGUE_COLUMN_LABELS.col2),
 	catalogueColumnParticipant(CATALOGUE_COL3, CATALOGUE_COLUMN_TILE_KEYS.col3, CATALOGUE_COLUMN_LABELS.col3),
-	catalogueLabelsParticipant,
 	{
 		id: "demo-video",
 		embodiments: [

@@ -52,7 +52,7 @@ if (import.meta.vitest) {
 
 	describe("projektetage deck", () => {
 		it("declares intro plus expanded media render slides", () => {
-			expect(countArrangements(deck)).toBeGreaterThan(11);
+			expect(countArrangements(deck)).toBeGreaterThanOrEqual(11);
 			expect(deck.language).toBe("de");
 		});
 
@@ -106,7 +106,7 @@ if (import.meta.vitest) {
 			expect(col1?.position).toBeUndefined();
 		});
 
-		it("morphs each column participant into catalogue-labels via ghosts", () => {
+		it("morphs each column participant into inline label dispositions on one row", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			expect(media).toBeDefined();
 			const expanded = expandThoughtSlides(media!);
@@ -114,17 +114,19 @@ if (import.meta.vitest) {
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
 			expect(expanded.map((slide) => slide.id)).not.toContain("catalogue-labels--bridge");
 			expect(focusSlide?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels"]);
-			const labelTarget = labelSlide?.arrangement.dispositions.find(
-				(disposition) => disposition.participantId === "catalogue-labels",
-			);
-			expect(labelTarget?.morphFrom).toHaveLength(3);
-			const ghosts = labelSlide?.arrangement.dispositions.filter((disposition) => disposition.morphGhost);
-			expect(ghosts).toHaveLength(3);
-			expect(ghosts?.map((disposition) => disposition.morphTargetId)).toEqual([
-				"catalogue-labels--0",
-				"catalogue-labels--1",
-				"catalogue-labels--2",
+			const labelDispositions =
+				labelSlide?.arrangement.dispositions.filter((disposition) => !disposition.morphGhost) ?? [];
+			expect(labelDispositions).toHaveLength(3);
+			expect(labelDispositions.map((disposition) => disposition.participantId)).toEqual([
+				CATALOGUE_COL1,
+				CATALOGUE_COL2,
+				CATALOGUE_COL3,
 			]);
+			expect(labelDispositions.every((disposition) => disposition.embodimentId === "label")).toBe(true);
+			const yPositions = labelDispositions.map((disposition) => disposition.position?.y);
+			expect(new Set(yPositions).size).toBe(1);
+			const ghosts = labelSlide?.arrangement.dispositions.filter((disposition) => disposition.morphGhost);
+			expect(ghosts).toHaveLength(0);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

@@ -1663,6 +1663,11 @@ export function readPuzzle2dFixtureDragDataTransfer(dataTransfer: DataTransfer):
   return decodePuzzle2dFixtureFromDragV1(plain);
 }
 
+/** @emoji 📋 Deep-clones a validated fixture for isolated React state (avoids mutating {@link PUZZLE_2D_PLAY_DEFAULT_FIXTURE}). */
+export function clonePuzzle2dFixtureV1(fixture: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
+  return JSON.parse(JSON.stringify(fixture)) as Puzzle2dFixtureV1;
+}
+
 /** @emoji 📥 Parses drag payload from {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME}. */
 export function decodePuzzle2dFixtureFromDragV1(text: string): Puzzle2dFixtureV1 | null {
   let raw: unknown;
@@ -9660,8 +9665,9 @@ export function Puzzle2dCanvas({
     if (!renderer) {
       return;
     }
-    const expected = puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor, children).edges.length;
-    renderer.setDeclarativeSceneEdgeExpectation(expected);
+    const descriptor = puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor, children);
+    renderer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+    puzzle2dEnsureSceneEdgesFromDescriptor(renderer, descriptor);
   }, [children, contextRenderer, declarativeSceneDescriptor]);
 
   reactHostPort.useLayoutEffect(() => {

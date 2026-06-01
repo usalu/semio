@@ -3,7 +3,7 @@
   "emoji": "🖌️",
   "status": "closed",
   "description": "Complete puzzle3d brush tool: engagement suggestions and commits must be collision-free. Random compatible order, probe AABB vs scene meshes (exclude host), empty placement when none free.",
-  "summary": "Brush engagement suggestions and commits are now collision-free. Added shuffleBrushCompatibleCandidates, brushPreviewCollides, brushCollisionFreeCandidates, and brushPreviewMatchesCandidate in the Brush region. BrushSession shuffles compatible candidates on vortex enter, probes AABB overlap via pooled GLB meshes (host excluded), publishes only collision-free placement candidates to engagement, guards commit when colliding or empty, and reconciles when the preview ghost loads. Engagement UI shows collision-free hint and status when no placement exists. Extended vitest coverage; all 204 react tests pass.",
+  "summary": "Fixed empty brush suggestions at high tolerance (e.g. tambour at slider 100) when many collision-free placements exist. Root cause: collision probe skipped all candidates while catalog GLBs were not in the styled mesh pool, then cleared preview so meshes never loaded. BrushSession now bootstraps a shuffled compatible preview when probe returns unknownPending, preloads unique catalog mesh URLs into the styled pool, and reconciles collision-free candidates once GLBs load. Engagement shows a probing status instead of false \"no placement\" during load. Added brushMeshUrlsForCompatibleCandidates helper and tests (238 passing).",
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
@@ -11,6 +11,7 @@
     "local": "brush_collision-free_suggestions_c18d0df1.plan.md"
   },
   "sessions": [
-    "⚪52ee497fa3b34dbe8f83cc1ce92e402d"
+    "⚪52ee497fa3b34dbe8f83cc1ce92e402d",
+    "⚪b597be8c4dc74e038540df7353f95610"
   ]
 }

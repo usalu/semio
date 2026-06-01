@@ -7900,7 +7900,7 @@ if (import.meta.vitest) {
       const spec = loadSpatialInteraction("surface.extrudeCrv")!;
       const model = new Model();
       const kernel = new BrepjsKernel() as unknown as SpatialKernel;
-      await kernel.executeCommandDiff("curve.interpolateCurve", {
+      const created = await kernel.executeCommandDiff("curve.interpolateCurve", {
         model,
         points: [
           [0, 0, 0],
@@ -7908,8 +7908,11 @@ if (import.meta.vitest) {
           [4, 0, 0],
         ],
       });
-      const wireId = Object.values(model.wires)[0]!.id;
-      const objectId = Object.keys(model.objects)[0]!;
+      applyModelDiff(model, created.diff);
+      const typology = "spatial.shape.curve.interpolate-curve";
+      const wireId = created.diff.wires?.added?.[0]?.id ?? Object.values(model.wires)[0]?.id;
+      expect(wireId).toBeTruthy();
+      const objectId = String(ensureTypologyObjectFromCreateDiff(model, typology, created.diff)!);
       const rt = createInteractionRuntime(spec, {
         kernel,
         document: { model, nodes: [] },

@@ -21,6 +21,7 @@ import {
 	filledFace,
 	healSolid,
 	loft,
+	thicken,
 	translate,
 	wire,
 	getBounds,
@@ -1872,30 +1873,26 @@ function extrudeModelWire(
 ): ValidSolid | null {
 	const wid = wireId as WireRef;
 	const vec = extrudeDirection(direction, distance);
-	const planar = geomWireToOrientedFace(model, wid);
+	const planar = geomWireToOrientedFace(model, wid) ?? geomWireToOrientedFaceLoose(model, wid);
 	if (planar) {
 		const solid = extrude(planar as Parameters<typeof extrude>[0], vec);
 		return isOk(solid) ? (solid.value as ValidSolid) : null;
 	}
 	const profile = geomWireToBrepWire(model, wid);
-	if (!profile) {
-		console.log("[DEBUG] extrudeModelWire: no brep wire", wireId);
-		return null;
-	}
+	if (!profile) return null;
 	const moved = translate(profile, vec);
-	if (!isOk(moved)) {
-		console.log("[DEBUG] extrudeModelWire: translate failed", wireId, moved);
-		return null;
-	}
-	const lofted = loft([profile, moved.value], { ruled: true });
-	if (!isOk(lofted)) {
-		console.log("[DEBUG] extrudeModelWire: loft failed", wireId, lofted);
-		return null;
-	}
+	const lofted = loft([profile, moved], { ruled: true });
+	if (!isOk(lofted)) return null;
 	const shape = lofted.value as Shape3D;
-	if (isSolid(shape) && isValidSolid(shape)) return shape as ValidSolid;
-	const healed = healSolid(shape);
-	return isOk(healed) && isValidSolid(healed.value) ? (healed.value as ValidSolid) : null;
+	if (isSolid(shape)) {
+		if (isValidSolid(shape)) return shape as ValidSolid;
+		const healed = healSolid(shape);
+		if (isOk(healed) && isValidSolid(healed.value)) return healed.value as ValidSolid;
+		return shape as ValidSolid;
+	}
+	const thickened = thicken(shape as Parameters<typeof thicken>[0], 1e-3);
+	if (isOk(thickened) && isSolid(thickened.value)) return thickened.value as ValidSolid;
+	return null;
 }
 
 type SelectionPick = { readonly kind: string; readonly id: string };

@@ -1309,6 +1309,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         onZoomToSelection,
         brushCandidates: brushSource.candidates,
         brushTargetActive: brushSource.targetActive,
+        brushPlacementProbePending: brushSource.placementProbePending,
       }),
     [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onRepeatLastEngagement, onSelectTool, onZoomToSelection, selectionCount, snap.activeTool],
   );
@@ -1787,6 +1788,7 @@ import {
   Puzzle2dCanvas,
   puzzle2dSyncSelectionToAllAuthoringPeers,
   buildPuzzle2dSceneDescriptorFromFixture,
+  clonePuzzle2dFixtureV1,
   puzzle2dFixtureSceneMarkers,
   type Puzzle2dStructureDeletePayload,
   encodePuzzle2dFixtureForDragV1,
@@ -3237,10 +3239,10 @@ interface Puzzle2dPlayRedrawLoopSnapshot {
 }
 
 // #region 🔖Entrypoint
-const initialFixture = PUZZLE_2D_PLAY_DEFAULT_FIXTURE;
+const initialFixture = clonePuzzle2dFixtureV1(PUZZLE_2D_PLAY_DEFAULT_FIXTURE);
 
 function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Platform }): ReactElement {
-  const [fixture, setFixtureState] = reactHostPort.useState<Puzzle2dFixtureV1>(initialFixture);
+  const [fixture, setFixtureState] = reactHostPort.useState<Puzzle2dFixtureV1>(() => clonePuzzle2dFixtureV1(initialFixture));
   const fixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1>(fixture);
   fixtureRef.current = fixture;
   const [puzzle2dPlayPaneCamerasBaseline, setPuzzle2dPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
@@ -3350,6 +3352,10 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     const now = typeof performance !== "undefined" ? performance.now() : Date.now();
     fixtureAuthoringQuietUntilRef.current = Math.max(fixtureAuthoringQuietUntilRef.current, now + quietMs);
   }, []);
+
+  reactHostPort.useLayoutEffect(() => {
+    guardFixtureAuthoringFromStructuralDeletes(800);
+  }, [guardFixtureAuthoringFromStructuralDeletes]);
 
   const structuralDeleteQueueRef = reactHostPort.useRef<Puzzle2dPlayStructuralDeleteItem[]>([]);
   const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);

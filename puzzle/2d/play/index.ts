@@ -850,7 +850,7 @@ export class Playground2d extends Playground {
 
 export type Puzzle2dPlayStructuralDeleteItem = { kind: "edge" | "node"; id: string };
 
-/** @emoji 🗑️ Dedupes structural deletes and drops ids absent from the fixture (descriptor resync bursts), keeping real multi-edge node deletes. */
+/** @emoji 🗑️ Dedupes structural deletes, drops ghost ids, and ignores mass node/edge resync bursts that would strip the fixture graph. */
 export function filterPuzzle2dPlayStructuralDeleteBatch(
 	batch: readonly Puzzle2dPlayStructuralDeleteItem[],
 	fixture: Puzzle2dFixtureV1,
@@ -871,9 +871,14 @@ export function filterPuzzle2dPlayStructuralDeleteBatch(
 		out.push(item);
 	}
 	const nodeDeletes = out.filter((item) => item.kind === "node");
+	const edgeDeletes = out.filter((item) => item.kind === "edge");
 	const nodeCount = fixture.nodes.length;
+	const edgeCount = fixture.edges.length;
 	if (nodeCount > 0 && nodeDeletes.length >= 2 && nodeDeletes.length > nodeCount / 2) {
 		return out.filter((item) => item.kind === "edge");
+	}
+	if (edgeCount > 0 && edgeDeletes.length >= 2 && edgeDeletes.length > edgeCount / 2 && nodeDeletes.length === 0) {
+		return out.filter((item) => item.kind === "node");
 	}
 	return out;
 }
@@ -1075,6 +1080,28 @@ if (import.meta.vitest) {
 				{ kind: "node" as const, id: "a" },
 				{ kind: "node" as const, id: "b" },
 				{ kind: "node" as const, id: "c" },
+			];
+			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual([]);
+		});
+
+		it("drops mass edge-delete resync bursts that would strip the fixture", () => {
+			const fixture: Puzzle2dFixtureV1 = {
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [
+					{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a.h0", angle: 0 }] },
+					{ id: "b", x: 40, y: 0, radius: 10, handles: [{ id: "b.h0", angle: Math.PI }] },
+				],
+				edges: [
+					{ id: "e0", source: "a.h0", target: "b.h0" },
+					{ id: "e1", source: "a.h0", target: "b.h0" },
+					{ id: "e2", source: "a.h0", target: "b.h0" },
+				],
+			};
+			const batch = [
+				{ kind: "edge" as const, id: "e0" },
+				{ kind: "edge" as const, id: "e1" },
+				{ kind: "edge" as const, id: "e2" },
 			];
 			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual([]);
 		});

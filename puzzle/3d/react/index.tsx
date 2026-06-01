@@ -3366,6 +3366,25 @@ export function brushCollisionFreeCandidates(args: {
   return { free, unknownPending };
 }
 
+/** @emoji 📦 Unique catalog mesh URLs for brush-compatible kinds (preload before AABB probe). */
+export function brushMeshUrlsForCompatibleCandidates(
+  candidates: readonly BrushCompatibleCandidate[],
+  kindCatalogs: KindCatalogBundle | undefined,
+): readonly string[] {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+  for (const candidate of candidates) {
+    const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
+    const meshUrl = kind?.meshUrl;
+    if (!meshUrl || seen.has(meshUrl)) {
+      continue;
+    }
+    seen.add(meshUrl);
+    urls.push(meshUrl);
+  }
+  return urls;
+}
+
 /** @emoji 🖌️ True when preview matches a brush catalog candidate. */
 export function brushPreviewMatchesCandidate(preview: BrushPreviewState, candidate: BrushCompatibleCandidate): boolean {
   return preview.objectKindId === candidate.objectKindId && preview.sourceVortexIndex === candidate.sourceVortexIndex;
@@ -5844,12 +5863,13 @@ const BRUSH_UI_IDLE: BrushUiSnapshot = { preview: null, candidates: [], targetAc
 export interface Puzzle3dBrushEngagementSource {
   readonly candidates: readonly BrushCompatibleCandidate[];
   readonly targetActive: boolean;
+  readonly placementProbePending: boolean;
   readonly cycleCandidate: () => void;
   readonly pickCandidate: (index: number) => void;
 }
 
 export const puzzle3dBrushEngagementSourceRef: { current: Puzzle3dBrushEngagementSource } = {
-  current: { candidates: [], targetActive: false, cycleCandidate: () => {}, pickCandidate: () => {} },
+  current: { candidates: [], targetActive: false, placementProbePending: false, cycleCandidate: () => {}, pickCandidate: () => {} },
 };
 
 let puzzle3dBrushEngagementEpoch = 0;
@@ -5951,6 +5971,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly onZoomToSelection: () => void;
   readonly brushCandidates: readonly BrushCompatibleCandidate[];
   readonly brushTargetActive: boolean;
+  readonly brushPlacementProbePending?: boolean;
 }
 
 /** @emoji 💬 Builds window {@link EngagementSpec}: command input, possibles, options, status (CAD play layout). */
@@ -5959,7 +5980,11 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
   if (inputs.activeTool === "brush") {
     status.push({ id: "puzzle3d.brush.hint", content: "Point at an empty connector; Tab cycles collision-free placements" });
     if (inputs.brushTargetActive && inputs.brushCandidates.length === 0) {
-      status.push({ id: "puzzle3d.brush.none", content: "No collision-free placement at this connector" });
+      if (inputs.brushPlacementProbePending) {
+        status.push({ id: "puzzle3d.brush.probe", content: "Checking collision-free placements…" });
+      } else {
+        status.push({ id: "puzzle3d.brush.none", content: "No collision-free placement at this connector" });
+      }
     }
   }
   if (inputs.selectionCount > 0) {
@@ -6349,6 +6374,35 @@ function brushPlacePayloadFromPreview(preview: BrushPreviewState): BrushPlacePay
   };
 }
 
+function BrushCatalogMeshPreloadEntry(props: { readonly url: string; readonly onReady: () => void }) {
+  const gltf = usePooledGltf(props.url);
+  reactHostPort.useLayoutEffect(() => {
+    if (!gltf.scene) {
+      return undefined;
+    }
+    styledMeshPoolAcquire(props.url, "highlighted", false);
+    styledMeshTemplate(props.url, "highlighted", gltf.scene, false);
+    props.onReady();
+    return () => {
+      styledMeshPoolRelease(props.url, "highlighted", false);
+    };
+  }, [gltf.scene, props.onReady, props.url]);
+  return null;
+}
+
+function BrushCatalogMeshPreload(props: { readonly urls: readonly string[]; readonly onReady: () => void }) {
+  if (!props.urls.length) {
+    return null;
+  }
+  return (
+    <>
+      {props.urls.map((url) => (
+        <BrushCatalogMeshPreloadEntry key={url} url={url} onReady={props.onReady} />
+      ))}
+    </>
+  );
+}
+
 const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   readonly preview: BrushPreviewState;
   readonly excludeObjectId?: string;
@@ -6399,9 +6453,16 @@ function BrushSession(props: {
   const previewCollidesRef = reactHostPort.useRef(false);
   const indexRef = reactHostPort.useRef(0);
   const targetWorldRef = reactHostPort.useRef<{ readonly position: Vec3; readonly direction: Vec3 } | null>(null);
+  const preloadReconcileTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const placementProbePendingRef = reactHostPort.useRef(false);
+  const [catalogPreloadUrls, setCatalogPreloadUrls] = reactHostPort.useState<readonly string[]>([]);
   const ui = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
 
   const clearBrush = reactHostPort.useCallback(() => {
+    if (preloadReconcileTimerRef.current !== null) {
+      clearTimeout(preloadReconcileTimerRef.current);
+      preloadReconcileTimerRef.current = null;
+    }
     targetRef.current = null;
     targetCtxRef.current = null;
     targetObjectIdRef.current = null;
@@ -6411,9 +6472,17 @@ function BrushSession(props: {
     previewCollidesRef.current = false;
     indexRef.current = 0;
     targetWorldRef.current = null;
+    setCatalogPreloadUrls([]);
+    placementProbePendingRef.current = false;
     puzzle3dBrushVortexHoverRef.current = false;
     puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
-    puzzle3dBrushEngagementSourceRef.current = { candidates: [], targetActive: false, cycleCandidate: () => {}, pickCandidate: () => {} };
+    puzzle3dBrushEngagementSourceRef.current = {
+      candidates: [],
+      targetActive: false,
+      placementProbePending: false,
+      cycleCandidate: () => {},
+      pickCandidate: () => {},
+    };
     notifyPuzzle3dBrushEngagementSource();
   }, []);
 
@@ -6495,6 +6564,7 @@ function BrushSession(props: {
     puzzle3dBrushEngagementSourceRef.current = {
       candidates,
       targetActive,
+      placementProbePending: placementProbePendingRef.current,
       cycleCandidate: advanceCandidate,
       pickCandidate: (index: number) => {
         if (!targetRef.current || index < 0 || index >= placementCandidatesRef.current.length) {
@@ -6509,6 +6579,37 @@ function BrushSession(props: {
     notifyPuzzle3dBrushEngagementSource();
   }, [advanceCandidate, applyCandidateIndex]);
 
+  const applyBootstrapPreview = reactHostPort.useCallback(
+    (targetFullId: string) => {
+      const world = targetWorldRef.current;
+      const targetCtx = targetCtxRef.current;
+      const probeOrder = probeOrderRef.current;
+      if (!world || !targetCtx || probeOrder.length === 0) {
+        return;
+      }
+      const index = Math.min(indexRef.current, probeOrder.length - 1);
+      const candidate = probeOrder[index]!;
+      const preview = brushPreviewFromCandidate({
+        targetVortexFullId: targetFullId,
+        candidate,
+        target: targetCtx,
+        targetWorldPositionCad: world.position,
+        targetWorldDirectionCad: world.direction,
+        referenceOrientationCad: targetOrientationRef.current,
+        kindCatalogs: props.kindCatalogs,
+      });
+      if (!preview) {
+        return;
+      }
+      previewCollidesRef.current = false;
+      const snap = puzzle3dBrushUiStore.getSnapshot();
+      puzzle3dBrushUiStore.setSnapshot({ preview, candidates: snap.candidates, targetActive: true });
+      notifyPuzzle3dBrushEngagementSource();
+      invalidate();
+    },
+    [invalidate, props.kindCatalogs],
+  );
+
   const applyPlacementProbeResult = reactHostPort.useCallback(
     (result: BrushCollisionFreeResult) => {
       placementCandidatesRef.current = result.free;
@@ -6518,12 +6619,31 @@ function BrushSession(props: {
       }
       const preview = puzzle3dBrushUiStore.getSnapshot().preview;
       if (result.free.length === 0) {
+        if (result.unknownPending && probeOrderRef.current.length > 0) {
+          placementProbePendingRef.current = true;
+          placementCandidatesRef.current = [];
+          const bootstrapCandidate = probeOrderRef.current[Math.min(indexRef.current, probeOrderRef.current.length - 1)]!;
+          const needsBootstrap =
+            preview === null ||
+            !brushPreviewMatchesCandidate(
+              preview,
+              bootstrapCandidate,
+            );
+          if (needsBootstrap) {
+            applyBootstrapPreview(targetFullId);
+          }
+          publishBrushEngagement();
+          invalidate();
+          return;
+        }
+        placementProbePendingRef.current = false;
         previewCollidesRef.current = true;
         puzzle3dBrushUiStore.setSnapshot({ preview: null, candidates: [], targetActive: true });
         publishBrushEngagement();
         invalidate();
         return;
       }
+      placementProbePendingRef.current = false;
       const previewStillValid = preview !== null && result.free.some((candidate) => brushPreviewMatchesCandidate(preview, candidate));
       if (!previewStillValid) {
         indexRef.current = 0;
@@ -6532,7 +6652,7 @@ function BrushSession(props: {
       publishBrushEngagement();
       invalidate();
     },
-    [applyCandidateIndex, invalidate, publishBrushEngagement],
+    [applyBootstrapPreview, applyCandidateIndex, invalidate, publishBrushEngagement],
   );
 
   const reconcilePlacementCandidates = reactHostPort.useCallback(() => {
@@ -6541,6 +6661,16 @@ function BrushSession(props: {
     }
     applyPlacementProbeResult(probePlacementCandidates());
   }, [applyPlacementProbeResult, probePlacementCandidates]);
+
+  const scheduleReconcileAfterCatalogPreload = reactHostPort.useCallback(() => {
+    if (preloadReconcileTimerRef.current !== null) {
+      clearTimeout(preloadReconcileTimerRef.current);
+    }
+    preloadReconcileTimerRef.current = setTimeout(() => {
+      preloadReconcileTimerRef.current = null;
+      reconcilePlacementCandidates();
+    }, 0);
+  }, [reconcilePlacementCandidates]);
 
   const commitCurrentPreview = reactHostPort.useCallback(() => {
     const preview = puzzle3dBrushUiStore.getSnapshot().preview;
@@ -6582,6 +6712,7 @@ function BrushSession(props: {
       probeOrderRef.current = shuffleBrushCompatibleCandidates(compatible);
       placementCandidatesRef.current = [];
       indexRef.current = 0;
+      setCatalogPreloadUrls(brushMeshUrlsForCompatibleCandidates(probeOrderRef.current, props.kindCatalogs));
       applyPlacementProbeResult(probePlacementCandidates());
     },
     [applyPlacementProbeResult, props.kindCatalogs, props.kindCompatibility, probePlacementCandidates, store],
@@ -6634,6 +6765,7 @@ function BrushSession(props: {
         retreatCandidate={retreatCandidate}
         invalidate={invalidate}
       />
+      <BrushCatalogMeshPreload urls={catalogPreloadUrls} onReady={scheduleReconcileAfterCatalogPreload} />
       {ui.preview ? (
         <BrushPreviewGhost
           preview={ui.preview}
@@ -9968,7 +10100,40 @@ if (import.meta.vitest) {
       });
       expect(blocked.unknownPending).toBe(false);
       expect(blocked.free).toHaveLength(0);
+    });
+    it("brushCollisionFreeCandidates sets unknownPending when catalog meshes are not pooled yet", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      const pending = brushCollisionFreeCandidates({
+        scene: { collectObjectGroups: () => [] },
+        targetVortexFullId: "host:v0",
+        candidates: compatible,
+        target,
+        targetWorldPositionCad: [0.9, 2.75, 0.2],
+        targetWorldDirectionCad: [0, 1, 0],
+        kindCatalogs: brushCatalogs,
+        excludeObjectId: "host",
+        meshRootForUrl: () => undefined,
+      });
+      expect(pending.unknownPending).toBe(true);
+      expect(pending.free).toHaveLength(0);
+    });
+    it("brushMeshUrlsForCompatibleCandidates returns unique catalog mesh URLs", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      const urls = brushMeshUrlsForCompatibleCandidates(compatible, brushCatalogs);
+      expect(urls.length).toBeGreaterThan(0);
+      expect(new Set(urls).size).toBe(urls.length);
+    });
+    it("brushCollisionFreeCandidates returns all compatible kinds when scene is clear", () => {
+      const host = new Group();
+      host.userData.puzzle3dObjectId = "host";
+      host.add(new Mesh(new BoxGeometry(1, 1, 1)));
+      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
+      const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
       const clearScene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       const clear = brushCollisionFreeCandidates({
         scene: clearScene,
         targetVortexFullId: "host:v0",
