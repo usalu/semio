@@ -40,11 +40,16 @@ A pdf embodiment of a participant.
 # Disposition
 
 A disposition is a concrete positioned, styled embodiment.
-A figure disposition may declare a `split` of crop tiles (`SplitTile`), each with its own slide position and optional emphasis or style.
 
 # Split
 
-A split divides one figure into many independently placed tiles for reveal.js auto-animate (see `splitFigureGrid` in core). Set `concealed: true` on the split and add a whole-figure disposition on the same arrangement so tiles stay at full opacity (position-only morph) while the figure hides the grid. Tiles always use `tileMorphId`. For column→label morphs set `columnMorphTiles: true` on the source split (hidden `columnMorphId` ghost per column alongside tiles) and on the target arrangement use `morphTargets` with `columnKey` only (label slots share the same `columnMorphId`; no bridge slide, no `morphColumnGroups`).
+A split divides one figure into many independently placed tiles.
+
+# Morph
+
+A morph is when one disposition changes to another disposition.
+You MUST always start by first morphing the source embodiment from the the source position and source style into the target position and target style, and then afterwards switch embodiment from source to target.
+You MUST NOT start by switching the embodiment, and then afterwards morphing the target embodiment from the the source position and source style into the target position and target style.
 
 # Arrangement
 

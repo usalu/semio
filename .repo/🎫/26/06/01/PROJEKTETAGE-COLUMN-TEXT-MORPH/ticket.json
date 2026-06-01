@@ -3,10 +3,11 @@
   "emoji": "🏷",
   "status": "closed",
   "description": "Fix projektetage tiles-to-text transition: all column tiles should morph into one shared label per column (not first tile to text then text to stack). Use column ghost bridge slide and columnMorphId labels.",
-  "summary": "Removed the `catalogue-column-ghosts` bridge arrangement (11 slides again). Column→label morph is direct: `catalogue-focus` keeps hidden `columnMorphId` ghosts alongside tiles; `catalogue-labels` uses the same ids on label slots so reveal.js morphs ghost→label in one step without a per-tile or bridge slide.",
+  "summary": "Tiles now morph into fixed column labels; label text no longer animates.\n\nRoot cause: hidden column ghosts had h2 with the same label text as the target slide. reveal.js text matching paired those headings and moved the text, while tiles only followed secondarily.\n\nFix: removed ghost rendering for columnMorphTiles splits; labels use morphColumnGroups with empty per-tile tileMorphId sinks at the stack position plus a separate heading (no data-id on h2). Each tile FLIP-morphs into its sink; headings stay fixed at the final stack layout.",
   "goal": "🎯framework",
   "sessions": [
     "⚪9fa3ba0d4a9648759940cf9e24f7fdb0",
-    "⚪53cfb2824ab24e75bcc0dcb857ae75b4"
+    "⚪53cfb2824ab24e75bcc0dcb857ae75b4",
+    "⚪3dc9c6d756d04c12b49d1817cd9bdd3f"
   ]
 }

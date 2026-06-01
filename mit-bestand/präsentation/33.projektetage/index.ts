@@ -272,6 +272,7 @@ const mediaThought: Thought = {
 					participantId: "catalogue",
 					emphasis: "active",
 					morphTargets: CATALOGUE_COLUMN_LABELS,
+					morphColumnGroups: CATALOGUE_FOCUS_COLUMN_GROUPS,
 				},
 			],
 		},
@@ -373,7 +374,7 @@ if (import.meta.vitest) {
 			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs focus tiles to labels via columnMorphId without a bridge arrangement", () => {
+		it("morphs focus tiles into fixed column labels without a bridge arrangement", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const arrangementIds = media?.arrangements.map((arrangement) => arrangement.id) ?? [];
 			expect(arrangementIds).not.toContain("catalogue-column-ghosts");
@@ -382,7 +383,7 @@ if (import.meta.vitest) {
 			expect(targets).toHaveLength(3);
 			expect(targets.every((target) => target.columnKey !== undefined)).toBe(true);
 			expect(targets.map((target) => target.lines[0])).toEqual(["Rippendecke", "Unterzug", "Stütze"]);
-			expect(labels?.dispositions[0]?.morphColumnGroups).toBeUndefined();
+			expect(labels?.dispositions[0]?.morphColumnGroups).toEqual(CATALOGUE_FOCUS_COLUMN_GROUPS);
 			const ys = targets.map((target) => target.position.y);
 			expect(ys[0]).toBeLessThan(ys[1] ?? 0);
 			expect(ys[1]).toBeLessThan(ys[2] ?? 0);

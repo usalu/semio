@@ -650,29 +650,59 @@ function FigureMorphView({
 	);
 }
 
+/** @emoji 🏷 Per-tile morph sink at the label position; column heading stays fixed (no `data-id` on text). */
 function ColumnLabelMorphView({
-	morphId: anchorId,
+	participantId,
+	morphId: tileMorphAnchorId,
+	columnKey,
 	embodiment,
 	emphasis,
 	position,
 	columnMorphCompanion,
 }: {
+	readonly participantId: string;
 	readonly morphId: string;
+	readonly columnKey?: string;
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 	readonly position: DispositionPosition;
 	readonly columnMorphCompanion?: boolean;
 }): ReactNode {
+	const frameStyle = dispositionFrameStyle(position, undefined);
+	const line = embodiment.lines[0] ?? "";
+	const labelHeadingClass = columnKey
+		? centeredLineClass(columnMorphId(participantId, columnKey), embodiment, emphasis)
+		: centeredLineClass(tileMorphAnchorId, embodiment, emphasis);
 	return (
-		<ColumnMorphSlotView
-			morphId={anchorId}
-			position={position}
-			variant="label"
-			line={embodiment.lines[0] ?? ""}
-			textEmbodiment={embodiment}
-			emphasis={emphasis}
-			labelCompanion={columnMorphCompanion === true}
-		/>
+		<>
+			<div
+				data-id={tileMorphAnchorId}
+				className={[
+					"presentation-disposition-frame",
+					"presentation-column-morph-tile-target",
+					columnMorphCompanion ? "presentation-column-morph-tile-target--companion" : undefined,
+					emphasisClass(emphasis),
+				]
+					.filter(Boolean)
+					.join(" ")}
+				style={frameStyle}
+				aria-hidden
+			/>
+			{columnMorphCompanion !== true ? (
+				<div
+					className={[
+						"presentation-disposition-frame",
+						"presentation-column-morph-label",
+						emphasisClass(emphasis),
+					]
+						.filter(Boolean)
+						.join(" ")}
+					style={frameStyle}
+				>
+					<h2 className={labelHeadingClass}>{line}</h2>
+				</div>
+			) : null}
+		</>
 	);
 }
 
@@ -686,8 +716,7 @@ function FigureSplitMorphView({
 	const tiles = disposition.split?.tiles ?? [];
 	const columns = disposition.split?.columns ?? [];
 	const ghostsOnly = disposition.split?.columnGhostsOnly === true;
-	const columnMorphTiles = disposition.split?.columnMorphTiles === true;
-	const showColumnGhosts = ghostsOnly || (columnMorphTiles && columns.length > 0);
+	const showColumnGhosts = ghostsOnly && columns.length > 0;
 	return (
 		<>
 			{showColumnGhosts
@@ -849,7 +878,9 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 			if (disposition.position !== undefined) {
 				return (
 					<ColumnLabelMorphView
+						participantId={disposition.participant.id}
 						morphId={anchorId}
+						columnKey={disposition.columnKey}
 						embodiment={embodiment}
 						emphasis={emphasis}
 						position={disposition.position}
@@ -1441,7 +1472,7 @@ if (import.meta.vitest) {
 			expect(container.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(2);
 		});
 
-		it("renders hidden column ghosts on focus when columnMorphTiles is set", () => {
+		it("does not render column ghosts on focus when only columnMorphTiles is set", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
 			const columns = [
@@ -1449,8 +1480,8 @@ if (import.meta.vitest) {
 				{ key: "col2", tileKeys: ["tile-r0-c1", "tile-r1-c1"], labelLine: "B" },
 			];
 			const deck: Presentation = {
-				id: "column-ghost-focus",
-				name: "Column ghosts",
+				id: "column-tile-focus",
+				name: "Column tiles",
 				sequences: [
 					{
 						id: "main",
@@ -1486,14 +1517,10 @@ if (import.meta.vitest) {
 			});
 			const focus = container.querySelector('section[title="focus"]');
 			expect(focus?.querySelectorAll(".presentation-figure-tile-frame").length).toBe(4);
-			const hiddenGhosts = focus?.querySelectorAll(
-				".presentation-column-morph-slot--ghost.presentation-column-morph-slot--hidden",
-			);
-			expect(hiddenGhosts?.length).toBe(2);
-			expect(hiddenGhosts?.[0]?.getAttribute("data-id")).toBe("catalogue--column--col1");
+			expect(focus?.querySelectorAll(".presentation-column-morph-slot--ghost").length).toBe(0);
 		});
 
-		it("morphs column ghosts into one label per column via columnMorphId", () => {
+		it("morphs each tile into a fixed label via tileMorphId sinks", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame, gap: 0.05 });
 			const columns = [
@@ -1533,6 +1560,7 @@ if (import.meta.vitest) {
 											{
 												participantId: "catalogue",
 												emphasis: "active",
+												morphColumnGroups: columns,
 												morphTargets: [
 													{
 														columnKey: "col1",
@@ -1557,16 +1585,16 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const focusGhosts = container
-				.querySelector('section[title="focus"]')
-				?.querySelectorAll(".presentation-column-morph-slot--ghost.presentation-column-morph-slot--hidden");
-			expect(focusGhosts?.length).toBe(2);
 			const labels = container.querySelector('section[title="labels"]');
-			const labelMorphIds = [...labels!.querySelectorAll(".presentation-column-morph-slot--label")].map((element) =>
+			const tileSinks = [...labels!.querySelectorAll(".presentation-column-morph-tile-target")].map((element) =>
 				element.getAttribute("data-id"),
 			);
-			expect(labelMorphIds).toEqual(["catalogue--column--col1", "catalogue--column--col2"]);
-			expect(labels?.querySelectorAll(".presentation-column-morph-slot--label-companion").length).toBe(0);
+			expect(new Set(tileSinks).size).toBe(4);
+			expect(labels?.querySelectorAll(".presentation-column-morph-label h2").length).toBe(2);
+			expect(labels?.querySelector(".presentation-column-morph-label h2[data-id]")).toBeNull();
+			expect(
+				labels?.querySelector('.presentation-column-morph-tile-target[data-id="catalogue--tile--tile-r0-c0"]'),
+			).toBeTruthy();
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {

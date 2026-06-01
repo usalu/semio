@@ -480,6 +480,8 @@ export interface ResolvedDisposition {
 	readonly split?: DispositionSplit;
 	/** @emoji 👥 Stacked label slot paired with the primary column label (reveal.js per-tile morph). */
 	readonly columnMorphCompanion?: boolean;
+	/** @emoji 🏷 Column key when this label belongs to a {@link morphColumnGroups} expansion. */
+	readonly columnKey?: string;
 }
 //#endregion 🔖Resolved
 
@@ -532,6 +534,7 @@ export function resolveArrangement(thought: Thought, arrangementId: string): Res
 					morphId: morphTargetId(participant.id, target, tileKey),
 					position: target.position,
 					columnMorphCompanion: tileKey !== undefined && tileIndex > 0,
+					...(target.columnKey ? { columnKey: target.columnKey } : {}),
 				}));
 			});
 		}
@@ -1298,6 +1301,7 @@ if (import.meta.vitest) {
 			expect(resolved[0]?.morphId).toBe("fig--tile--tile-r0-c0");
 			expect(resolved[1]?.morphId).toBe("fig--tile--tile-r0-c1");
 			expect(resolved[1]?.columnMorphCompanion).toBe(true);
+			expect(resolved[1]?.columnKey).toBe("col1");
 			expect(resolved[2]?.morphId).toBe("fig--tile--tile-r1-c0");
 		});
 	});
