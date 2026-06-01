@@ -1499,10 +1499,18 @@ function transformFrameStyle(transform: DispositionPosition): CSSProperties {
 	};
 }
 
-/** @emoji ↔️ Flow-layout drag: translate only, keeps centered morph layout (no absolute snap). */
-function flowDispositionOffsetStyle(transform: DispositionPosition): CSSProperties {
+/** @emoji ↔️ Flow-layout drag: section-pixel translate so pointer deltas track 1:1 (not % of element box). */
+export function flowDispositionOffsetStyle(
+	transform: DispositionPosition,
+	sectionBounds: Pick<DOMRect, "width" | "height"> | null,
+): CSSProperties {
+	if (!sectionBounds || sectionBounds.width <= 0 || sectionBounds.height <= 0) {
+		return {
+			transform: `translate(${transform.x * 100}%, ${transform.y * 100}%)`,
+		};
+	}
 	return {
-		transform: `translate(${transform.x * 100}%, ${transform.y * 100}%)`,
+		transform: `translate(${transform.x * sectionBounds.width}px, ${transform.y * sectionBounds.height}px)`,
 	};
 }
 
@@ -1986,7 +1994,7 @@ const InteractiveDisposition: FC<{
 
 	const wrapperStyle: CSSProperties | undefined = transformed
 		? flowLayout
-			? flowDispositionOffsetStyle(transform)
+			? flowDispositionOffsetStyle(transform, sectionRef.current?.getBoundingClientRect() ?? null)
 			: transformFrameStyle(transform)
 		: undefined;
 
@@ -3235,6 +3243,13 @@ if (import.meta.vitest) {
 				width: 0.3,
 				height: 0.08,
 			});
+		});
+
+		it("maps flow offsets to section pixels not element percent", () => {
+			expect(
+				flowDispositionOffsetStyle({ x: 0.1, y: 0.2, width: 0.3, height: 0.08 }, { width: 960, height: 700 })
+					.transform,
+			).toBe("translate(96px, 140px)");
 		});
 
 		it("rejects unusable measured fractions", () => {
