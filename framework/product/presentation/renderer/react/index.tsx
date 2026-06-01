@@ -60,7 +60,6 @@ import {
 	resolveArrangement,
 	resolveTextMorphRoot,
 	columnMorphId,
-	columnMorphTileId,
 	splitColumnBounds,
 	splitColumnCrop,
 	splitFigureGrid,
@@ -100,7 +99,6 @@ export type {
 export {
 	analogy,
 	columnMorphId,
-	columnMorphTileId,
 	countArrangements,
 	intro,
 	morphId,
@@ -518,45 +516,22 @@ function figureTileBackgroundStyle(embodiment: FigureEmbodiment, crop: Dispositi
 	};
 }
 
-function columnKeyForTile(columns: readonly SplitColumnGroup[], tileKey: string): string | undefined {
-	return columns.find((group) => group.tileKeys.includes(tileKey))?.key;
-}
-
-function splitTileDataId(
-	participantId: string,
-	tileKey: string,
-	columns: readonly SplitColumnGroup[] | undefined,
-	columnMorphTiles: boolean,
-): string {
-	if (columnMorphTiles && columns) {
-		const columnKey = columnKeyForTile(columns, tileKey);
-		if (columnKey) {
-			return columnMorphTileId(participantId, columnKey, tileKey);
-		}
-	}
-	return tileMorphId(participantId, tileKey);
-}
-
 function FigureTileView({
 	participantId,
 	tile,
 	embodiment,
 	defaultEmphasis,
-	columns,
-	columnMorphTiles,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly embodiment: FigureEmbodiment;
 	readonly defaultEmphasis: ParticipantEmphasis;
-	readonly columns?: readonly SplitColumnGroup[];
-	readonly columnMorphTiles?: boolean;
 }): ReactNode {
 	const emphasis = tile.emphasis ?? defaultEmphasis;
 	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
 	return (
 		<div
-			data-id={splitTileDataId(participantId, tile.key, columns, columnMorphTiles === true)}
+			data-id={tileMorphId(participantId, tile.key)}
 			className={[
 				"presentation-disposition-frame",
 				"presentation-figure-tile-frame",
@@ -567,11 +542,7 @@ function FigureTileView({
 			style={{ ...frameStyle, ...figureTileBackgroundStyle(embodiment, tile.crop) }}
 			role="img"
 			aria-label={embodiment.alt ?? ""}
-		>
-			<h2 className="presentation-figure-tile-morph-placeholder" aria-hidden>
-				{"\u00a0"}
-			</h2>
-		</div>
+		/>
 	);
 }
 
@@ -627,7 +598,9 @@ function ColumnMorphSlotView({
 					: {}),
 			}}
 		>
-			<h2 className={headingClass}>{line}</h2>
+			{variant === "ghost" || (variant === "label" && !labelCompanion) ? (
+				<h2 className={headingClass}>{line}</h2>
+			) : null}
 		</div>
 	);
 }
@@ -713,7 +686,6 @@ function FigureSplitMorphView({
 	const tiles = disposition.split?.tiles ?? [];
 	const columns = disposition.split?.columns ?? [];
 	const unifiedGhosts = disposition.split?.columnGhostsOnly === true;
-	const columnMorphTiles = disposition.split?.columnMorphTiles === true;
 	return (
 		<>
 			{unifiedGhosts
@@ -735,8 +707,6 @@ function FigureSplitMorphView({
 					tile={tile}
 					embodiment={embodiment}
 					defaultEmphasis={disposition.emphasis}
-					columns={columns}
-					columnMorphTiles={columnMorphTiles}
 				/>
 			))}
 		</>
@@ -1533,18 +1503,20 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			const focus = container.querySelector('section[title="focus"]');
-			expect(
-				focus?.querySelectorAll('.presentation-figure-tile-frame[data-id="catalogue--column--col1--tile-r0-c0"]').length,
-			).toBe(1);
-			expect(
-				focus?.querySelectorAll('.presentation-figure-tile-frame[data-id^="catalogue--column--col1--"]').length,
-			).toBe(2);
+			const focusTileIds = [
+				...focus!.querySelectorAll('.presentation-figure-tile-frame[data-id^="catalogue--tile--"]'),
+			].map((element) => element.getAttribute("data-id"));
+			expect(new Set(focusTileIds).size).toBe(4);
 			expect(focus?.querySelectorAll(".presentation-column-morph-tile-ghost").length).toBe(0);
-			expect(focus?.querySelectorAll('[data-id^="catalogue--tile--"]').length).toBe(0);
 			const labels = container.querySelector('section[title="labels"]');
-			expect(labels?.querySelectorAll('[data-id^="catalogue--column--col1--"]').length).toBe(2);
+			const labelMorphIds = [...labels!.querySelectorAll('[data-id^="catalogue--tile--"]')].map((element) =>
+				element.getAttribute("data-id"),
+			);
+			expect(new Set(labelMorphIds).size).toBe(4);
 			expect(labels?.querySelectorAll(".presentation-column-morph-slot--label-companion").length).toBe(2);
-			expect(labels?.querySelector('[data-id="catalogue--tile--tile-r0-c0"]')).toBeNull();
+			expect(
+				labels?.querySelector('.presentation-column-morph-slot--label[data-id="catalogue--tile--tile-r0-c0"] h2'),
+			).toBeTruthy();
 		});
 
 		it("relaxes Tailwind preflight [hidden] so reveal's inline display drives slide visibility", () => {

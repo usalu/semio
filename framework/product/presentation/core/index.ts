@@ -302,7 +302,7 @@ export function morphTargetId(participantId: string, target: SplitMorphTarget, t
 	}
 	if (target.columnKey) {
 		if (tileKey) {
-			return columnMorphTileId(participantId, target.columnKey, tileKey);
+			return tileMorphId(participantId, tileKey);
 		}
 		return columnMorphId(participantId, target.columnKey);
 	}
@@ -321,7 +321,7 @@ export interface DispositionSplit {
 	readonly columns?: readonly SplitColumnGroup[];
 	/** @emoji 👻 Show unified column ghost slots (one per column) on this arrangement. */
 	readonly columnGhostsOnly?: boolean;
-	/** @emoji 🎯 Visible tiles use {@link columnMorphTileId} per tile into stacked column label companions (reveal dedupes shared targets). */
+	/** @emoji 🎯 Tiles use {@link tileMorphId}; pair labels via {@link morphColumnGroups} on the labels arrangement (one morph slot per tile). */
 	readonly columnMorphTiles?: boolean;
 }
 
@@ -1295,10 +1295,10 @@ if (import.meta.vitest) {
 			};
 			const resolved = resolveArrangement(thought, "slide");
 			expect(resolved).toHaveLength(3);
-			expect(resolved[0]?.morphId).toBe("fig--column--col1--tile-r0-c0");
-			expect(resolved[1]?.morphId).toBe("fig--column--col1--tile-r0-c1");
+			expect(resolved[0]?.morphId).toBe("fig--tile--tile-r0-c0");
+			expect(resolved[1]?.morphId).toBe("fig--tile--tile-r0-c1");
 			expect(resolved[1]?.columnMorphCompanion).toBe(true);
-			expect(resolved[2]?.morphId).toBe("fig--column--col2--tile-r1-c0");
+			expect(resolved[2]?.morphId).toBe("fig--tile--tile-r1-c0");
 		});
 	});
 

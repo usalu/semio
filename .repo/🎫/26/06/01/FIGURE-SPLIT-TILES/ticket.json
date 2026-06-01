@@ -3,7 +3,7 @@
   "emoji": "🧩",
   "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
-  "summary": "Reveal.js dedupes auto-animate pairs that share the same target element, so shared columnMorphId only animated one tile per column. Added columnMorphTileId for per-tile data-id on focus tiles, morphColumnGroups to expand each column morphTarget into one stacked label slot per tile (companions invisible), and wired projektetage catalogue-labels. All tiles in a column now FLIP-morph into the same stacked label position.",
+  "summary": "Fixed catalogue→focus and focus→labels morph pairing: tiles now always use tileMorphId (columnMorphTileId broke catalogue→focus when column groups changed). Removed figure-tile h2 nbsp placeholders and companion label h2s so reveal.js text matching no longer hijacks forward auto-animate. Label morph slots still expand via morphColumnGroups with one unique tileMorphId per tile.",
   "goal": "🎯framework",
   "sessions": [
     "⚪b9f5d20ffbf54da39143e48f69536ff4",
@@ -14,6 +14,7 @@
     "⚪71ee87a7bb404f80b4e07a9e80780064",
     "⚪12a044926cda43db8314a98f191632cd",
     "⚪decdcc48ca0a4bb0a176f0943759b799",
-    "⚪416d875b7e544ce281ca5d969da194ee"
+    "⚪416d875b7e544ce281ca5d969da194ee",
+    "⚪d9c0c21320db422c80d0e518bba10151"
   ]
 }

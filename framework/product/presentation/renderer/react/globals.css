@@ -142,12 +142,6 @@
 	z-index: 1;
 }
 
-.reveal .presentation-figure-tile-morph-placeholder {
-	margin: 0;
-	width: 100%;
-	opacity: 0;
-}
-
 .reveal .presentation-column-morph-slot {
 	display: flex;
 	align-items: center;
