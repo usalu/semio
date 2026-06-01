@@ -81,6 +81,20 @@ HTMLCanvasElement.prototype.getContext = function getContext(
 	return originalGetContext.call(this, type, options);
 };
 
+class ResizeObserverStub {
+	observe(): void {
+		undefined;
+	}
+	disconnect(): void {
+		undefined;
+	}
+}
+
+if (typeof globalThis.ResizeObserver === "undefined") {
+	(globalThis as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver =
+		ResizeObserverStub as unknown as typeof ResizeObserver;
+}
+
 vi.mock("react-pdf", () => ({
 	Document: ({ children }: { readonly children?: ReactNode }) =>
 		createElement("div", { className: "react-pdf__Document" }, children),

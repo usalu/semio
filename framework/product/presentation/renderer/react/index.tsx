@@ -14,7 +14,7 @@ import {
 	Expertise,
 	type ElementsSurfaceChromeInput,
 } from "@ui/react";
-import { act, Fragment, useEffect, useRef, type FC, type ReactNode } from "react";
+import { act, Fragment, useEffect, useRef, useState, type FC, type ReactNode, type RefObject } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type {
 	AffiliationEntry,
@@ -169,6 +169,39 @@ function morphTextClass(morphId: string, extra?: string): string {
 
 function emphasisClass(emphasis: ParticipantEmphasis): string | undefined {
 	return emphasis === "muted" ? "opacity-20" : undefined;
+}
+
+function morphAnchorClass(emphasis: ParticipantEmphasis): string {
+	return ["presentation-morph-anchor", emphasisClass(emphasis)].filter(Boolean).join(" ");
+}
+
+/** @emoji 📐 Tracks a disposition frame size so react-pdf pages scale to the slide region. */
+function useFrameSize(): readonly [
+	RefObject<HTMLDivElement | null>,
+	{ readonly width?: number; readonly height?: number },
+] {
+	const ref = useRef<HTMLDivElement>(null);
+	const [size, setSize] = useState<{ readonly width?: number; readonly height?: number }>({});
+	useEffect(() => {
+		const el = ref.current;
+		if (!el || typeof ResizeObserver === "undefined") {
+			return;
+		}
+		const measure = (): void => {
+			const width = Math.floor(el.clientWidth);
+			const height = Math.floor(el.clientHeight);
+			if (width > 0 && height > 0) {
+				setSize({ width, height });
+			}
+		};
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(el);
+		return () => {
+			observer.disconnect();
+		};
+	}, []);
+	return [ref, size] as const;
 }
 
 function lineClass(morphId: string, embodiment: TextEmbodiment, emphasis: ParticipantEmphasis): string | undefined {
@@ -405,8 +438,8 @@ function FigureMorphView({
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
 	return (
-		<div data-id={anchorId} className={emphasisClass(emphasis)}>
-			<img className="presentation-media-figure max-h-full max-w-full object-contain" src={embodiment.src} alt={embodiment.alt ?? ""} />
+		<div data-id={anchorId} className={morphAnchorClass(emphasis)}>
+			<img className="presentation-media-figure" src={embodiment.src} alt={embodiment.alt ?? ""} />
 		</div>
 	);
 }
@@ -421,16 +454,17 @@ function VideoMorphView({
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
 	return (
-		<div data-id={anchorId} className={emphasisClass(emphasis)}>
+		<div data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<video
-				className="presentation-media-video max-h-full max-w-full object-contain"
+				className="presentation-media-video"
 				src={embodiment.src}
 				poster={embodiment.poster}
-				autoPlay={embodiment.autoplay ?? false}
+				autoPlay={embodiment.autoplay ?? true}
 				loop={embodiment.loop ?? false}
 				muted={embodiment.muted ?? true}
-				controls={embodiment.controls ?? false}
+				controls={embodiment.controls ?? true}
 				playsInline
+				preload="auto"
 			/>
 		</div>
 	);
@@ -445,15 +479,25 @@ function PdfMorphView({
 	readonly embodiment: PdfEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
 }): ReactNode {
+	const [frameRef, frameSize] = useFrameSize();
+	const pageHeight = frameSize.height;
 	return (
-		<div data-id={anchorId} className={emphasisClass(emphasis)}>
-			<Document file={embodiment.src} loading={null} error={null}>
-				<Page
-					className="presentation-media-pdf"
-					pageNumber={embodiment.page ?? 1}
-					renderTextLayer={false}
-					renderAnnotationLayer={false}
-				/>
+		<div ref={frameRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
+			<Document
+				className="presentation-media-pdf-document"
+				file={embodiment.src}
+				loading={<span className="presentation-media-pdf-loading">…</span>}
+				error={<span className="presentation-media-pdf-error">PDF</span>}
+			>
+				{pageHeight ? (
+					<Page
+						className="presentation-media-pdf"
+						pageNumber={embodiment.page ?? 1}
+						height={pageHeight}
+						renderTextLayer={false}
+						renderAnnotationLayer={false}
+					/>
+				) : null}
 			</Document>
 		</div>
 	);

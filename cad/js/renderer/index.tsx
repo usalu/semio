@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, focusActiveEngagementInput, Input, Label, queryWindowEngagementInput, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { Button, cn, focusActiveEngagementInput, Input, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -3160,9 +3160,9 @@ function replCommandTextWithoutSpaces(text: string): string {
   return text.replace(/\s+/g, "");
 }
 
-/** @emoji ⌨️ Normalizes REPL command text: engagement input keeps spaces, aside REPL strips them. */
-export function replNormalizeCommandText(text: string, engagementMode: boolean): string {
-  return engagementMode ? text : replCommandTextWithoutSpaces(text);
+/** @emoji ⌨️ Normalizes REPL command text: engagement uses PascalCase; aside REPL strips whitespace only. */
+export function replNormalizeCommandText(text: string, engagementMode?: boolean): string {
+  return engagementMode ? normalizeEngagementCommandText(text) : replCommandTextWithoutSpaces(text);
 }
 
 function replFirstWireId(model: Model): string | null {
@@ -3722,7 +3722,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
   const options = inputs.boundInteractionSession
     ? inputs.transitions.map((row) => ({
         id: `engagement-transition-${row.eventKind}-${row.key}`,
-        label: `${row.key.toUpperCase()} ${row.label}`,
+        label: normalizeEngagementCommandText(`${row.key} ${row.label}`),
         onPress: () => inputs.onTransition(row),
       }))
     : [];
@@ -3748,13 +3748,13 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
   const possibleEngagements = inputs.boundInteractionSession
     ? inputs.transitions.map((row) => ({
         id: `engagement-possible-transition-${row.eventKind}-${row.key}`,
-        label: `${row.key.toUpperCase()} ${row.label}`,
+        label: normalizeEngagementCommandText(`${row.key} ${row.label}`),
         detail: row.eventKind,
         onSelect: () => inputs.onTransition(row),
       }))
     : inputs.interactions.map((interaction) => ({
         id: interaction.id,
-        label: interaction.label,
+        label: normalizeEngagementCommandText(interaction.label),
         detail: interaction.key,
         onSelect: () => inputs.onStartInteraction(interaction.id),
       }));
@@ -4698,7 +4698,7 @@ export function InteractionRepl({
           e.preventDefault();
           e.stopPropagation();
           focusReplCommandInput();
-          setCmdLineRef.current((prev) => `${prev} `);
+          submitEngagementLine();
           return;
         }
         e.preventDefault();
@@ -4778,7 +4778,7 @@ export function InteractionRepl({
     };
     window.addEventListener("keydown", onWinCapture, true);
     return () => window.removeEventListener("keydown", onWinCapture, true);
-  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement, engagementCommandMode]);
+  }, [captureGlobalKeys, rt, spec, cmdLine, allSuggestions, trySubmitLine, tryCommitNumericEntry, tryFinalizeInteractionStep, handleEscapeKey, interactionActive, repeatCurrentInteraction, lastFinalizedInteractionId, runInteractionIdFromSpace, confirmInteractionSelection, onUndo, onRedo, onDeleteSelection, focusReplCommandInput, replCommandInputElement, showAside, showEngagement, engagementCommandMode, submitEngagementLine]);
 
   const onScenePointerMove = reactHostPort.useCallback(
     (p: Vec3) => {
@@ -5404,8 +5404,9 @@ if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
 
   describe("replNormalizeCommandText", () => {
-    it("keeps spaces in engagement mode and strips them in aside REPL mode", () => {
-      expect(replNormalizeCommandText("set height 5", true)).toBe("set height 5");
+    it("PascalCases engagement command text and strips whitespace in aside REPL mode", () => {
+      expect(replNormalizeCommandText("set height 5", true)).toBe("SetHeight5");
+      expect(replNormalizeCommandText("box", true)).toBe("Box");
       expect(replNormalizeCommandText("Apply Number", false)).toBe("ApplyNumber");
       expect(replNormalizeCommandText("b ", false)).toBe("b");
     });
@@ -5457,12 +5458,12 @@ if (import.meta.vitest) {
         lastResponseOk: true,
         onTransition: (row) => transitionRuns.push(row.key),
       });
-      expect(spec?.options?.[0]?.label).toBe("C Confirm");
+      expect(spec?.options?.[0]?.label).toBe("CConfirm");
       expect(spec?.input?.placeholder).toBe("Type a transition or value");
       expect(spec?.status?.map((row) => row.content)).toEqual(["State: first_corner", "Selected: 2", "OK"]);
       spec?.options?.[0]?.onPress?.();
       expect(transitionRuns).toEqual(["c"]);
-      expect(spec?.possibleEngagements?.[0]?.label).toBe("C Confirm");
+      expect(spec?.possibleEngagements?.[0]?.label).toBe("CConfirm");
     });
 
     it("exposes only a command input while idle so a window can start an interaction", () => {

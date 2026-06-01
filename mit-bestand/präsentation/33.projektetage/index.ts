@@ -9,7 +9,7 @@ import "./globals.css";
 // #endregion 🔌Adapters
 
 //#region 🔖Deck
-const ASSET_CATALOGUE = "./Screenshot-2023-05-24-at-22-11-19-component-catalogue.png";
+const ASSET_CATALOGUE = "./bauteilbo\u0308rse.png";
 const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
 const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
 
@@ -139,7 +139,12 @@ const mediaThought: Thought = {
 
 const deck: Presentation = {
 	...introDeck,
-	sequences: [...introDeck.sequences, { id: "media", thoughts: [mediaThought] }],
+	sequences: [
+		{
+			id: "main",
+			thoughts: [...introDeck.sequences[0]!.thoughts, mediaThought],
+		},
+	],
 };
 
 function mount(): void {
@@ -170,7 +175,7 @@ if (import.meta.vitest) {
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {
-			const media = deck.sequences.find((s) => s.id === "media")?.thoughts[0];
+			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const kinds = media?.participants.flatMap((p) => p.embodiments.map((e) => e.kind)) ?? [];
 			expect(kinds).toEqual(["figure", "video", "pdf"]);
 		});

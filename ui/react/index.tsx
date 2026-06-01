@@ -10661,12 +10661,23 @@ export interface EngagementPossible {
   onSelect?: () => void;
 }
 
+/** @emoji ⌨️ Normalizes engagement command text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`). */
+export function normalizeEngagementCommandText(text: string): string {
+  return text
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join("");
+}
+
 /** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
 export function filterEngagementPossibles(query: string, items: readonly EngagementPossible[]): EngagementPossible[] {
-  const trimmed = query.trim().toLowerCase();
+  const trimmed = normalizeEngagementCommandText(query).toLowerCase();
   if (!trimmed) return [...items];
   return items.filter((item) => {
-    const haystack = `${item.label} ${item.detail ?? ""} ${item.id}`.toLowerCase();
+    const haystack = `${normalizeEngagementCommandText(item.label)} ${item.detail ?? ""} ${item.id}`.toLowerCase();
     return haystack.includes(trimmed) || item.id.toLowerCase().startsWith(trimmed);
   });
 }
@@ -10677,12 +10688,12 @@ export interface EngagementInlineCompletion {
   readonly suffix: string;
 }
 
-/** @emoji ⌨️ Returns label-cased inline completion when query prefix-matches the possible's name, detail, or id. */
+/** @emoji ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
 export function engagementInlineCompletion(query: string, item: EngagementPossible | undefined): EngagementInlineCompletion | null {
   if (!query.trim() || !item) return null;
   const q = query;
   const ql = q.toLowerCase();
-  const label = item.label;
+  const label = normalizeEngagementCommandText(item.label);
   let best: EngagementInlineCompletion | null = null;
   const consider = (matched: boolean) => {
     if (!matched || !label.toLowerCase().startsWith(ql)) return;
@@ -10723,19 +10734,20 @@ export function engagementActiveCompletionSuffix(query: string, matches: readonl
 
 /** @emoji 🔎 Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
 export function engagementHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
-  const trimmed = query.trim();
-  if (!trimmed) return label;
+  const displayLabel = normalizeEngagementCommandText(label);
+  const trimmed = normalizeEngagementCommandText(query);
+  if (!trimmed) return displayLabel;
   const ql = trimmed.toLowerCase();
-  const ll = label.toLowerCase();
+  const ll = displayLabel.toLowerCase();
   let start = ll.startsWith(ql) ? 0 : -1;
   if (start < 0 && detail?.toLowerCase().startsWith(ql)) start = ll.indexOf(ql) >= 0 ? ll.indexOf(ql) : ll.indexOf(ql[0] ?? "");
-  if (start < 0) return label;
+  if (start < 0) return displayLabel;
   const end = start + trimmed.length;
   return (
     <>
-      {start > 0 ? <span>{label.slice(0, start)}</span> : null}
-      <span className="font-semibold text-foreground">{label.slice(start, end)}</span>
-      <span>{label.slice(end)}</span>
+      {start > 0 ? <span>{displayLabel.slice(0, start)}</span> : null}
+      <span className="font-semibold text-foreground">{displayLabel.slice(start, end)}</span>
+      <span>{displayLabel.slice(end)}</span>
     </>
   );
 }
@@ -10808,10 +10820,12 @@ export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefi
   const input = engagement?.input;
   if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
   if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
+  if (event.key === " ") return false;
   const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
   if (!printable) return false;
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
-  input.onChange?.(`${input.value ?? field?.value ?? ""}${event.key}`);
+  const next = normalizeEngagementCommandText(`${input.value ?? field?.value ?? ""}${event.key}`);
+  input.onChange?.(next);
   return true;
 }
 
@@ -10877,7 +10891,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
   );
 
   reactHostPort.useEffect(() => {
-    setDraft(input?.value ?? "");
+    setDraft(normalizeEngagementCommandText(input?.value ?? ""));
   }, [input?.value]);
 
   reactHostPort.useEffect(() => {
@@ -10900,8 +10914,9 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
 
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
-      setDraft(value);
-      input?.onChange?.(value);
+      const normalized = normalizeEngagementCommandText(value);
+      setDraft(normalized);
+      input?.onChange?.(normalized);
     },
     [input],
   );
@@ -10961,11 +10976,6 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                       }
                       return;
                     }
-                    if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey && showPossiblesList && hasPossibles) {
-                      event.preventDefault();
-                      activatePossible();
-                      return;
-                    }
                     if (event.key === "Tab" && !showPossiblesList && inlineCompletion) {
                       event.preventDefault();
                       applyDraft(inlineCompletion.prefix + inlineCompletion.suffix);
@@ -10981,7 +10991,10 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                       setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
                       return;
                     }
-                    if (event.key === "Enter") {
+                    if (
+                      event.key === "Enter" ||
+                      (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey)
+                    ) {
                       event.preventDefault();
                       if (showPossiblesList && activatePossible()) return;
                       input!.onSubmit?.(draft);
@@ -11067,7 +11080,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                 key={option.id}
                 id={option.id}
                 icon={option.icon}
-                text={option.label}
+                text={normalizeEngagementCommandText(option.label)}
                 className={cn(option.pressed && "bg-active-base")}
                 onClick={option.onPress}
                 disabled={option.disabled}
@@ -15585,7 +15598,7 @@ if (import.meta.vitest) {
       const longLabel = "C Confirm selection";
       const { container } = render(<Engagement options={[{ id: "engagement-transition-confirm-c", label: longLabel, onPress: () => {} }]} />);
       const item = container.querySelector('[data-slot="button-group-item"]') as HTMLElement;
-      expect(item?.textContent).toContain(longLabel);
+      expect(item?.textContent).toContain("CConfirmSelection");
       expect(item?.className).toContain("aspect-auto");
       expect(item?.className).not.toContain("aspect-square");
     });
@@ -15684,7 +15697,7 @@ if (import.meta.vitest) {
       fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
       await waitFor(() => {
         const typedField = screen.getByPlaceholderText("Command") as HTMLInputElement;
-        expect(typedField.value).toBe("b");
+        expect(typedField.value).toBe("B");
         expect(typedField.tabIndex).toBe(0);
         expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
       });
@@ -15723,15 +15736,34 @@ if (import.meta.vitest) {
       expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
       fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
       await waitFor(() => {
-        expect(activeField.value).toBe("b");
+        expect(activeField.value).toBe("B");
       });
     });
 
-    it("Engagement input keeps spaces while typing", async () => {
+    it("normalizeEngagementCommandText strips separators and PascalCases tokens", () => {
+      expect(normalizeEngagementCommandText("set height 5")).toBe("SetHeight5");
+      expect(normalizeEngagementCommandText("b ")).toBe("B");
+      expect(normalizeEngagementCommandText("box")).toBe("Box");
+    });
+
+    it("Engagement input PascalCases command text and space confirms like enter", async () => {
+      const submitted: string[] = [];
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
+          <Window
+            id="engagement-window"
+            active
+            engagement={{
+              input: {
+                id: "engagement-input",
+                value,
+                placeholder: "Command",
+                onChange: setValue,
+                onSubmit: (next) => submitted.push(next),
+              },
+            }}
+          >
             <div data-testid="window-body">Body</div>
           </Window>
         );
@@ -15740,10 +15772,11 @@ if (import.meta.vitest) {
       fireEvent.keyDown(document.querySelector('[data-slot="window"]')!, { key: "s", bubbles: true });
       const field = await waitFor(() => screen.getByPlaceholderText("Command") as HTMLInputElement);
       fireEvent.change(field, { target: { value: "set height" } });
+      await waitFor(() => expect(field.value).toBe("SetHeight"));
       fireEvent.keyDown(field, { key: " " });
-      fireEvent.change(field, { target: { value: "set height " } });
-      fireEvent.change(field, { target: { value: "set height 5" } });
-      await waitFor(() => expect(field.value).toBe("set height 5"));
+      await waitFor(() => expect(submitted).toEqual(["SetHeight"]));
+      fireEvent.keyDown(field, { key: "Enter" });
+      await waitFor(() => expect(submitted).toEqual(["SetHeight", "SetHeight"]));
     });
 
     it("Window anchors engagement in a top overlay when active", () => {

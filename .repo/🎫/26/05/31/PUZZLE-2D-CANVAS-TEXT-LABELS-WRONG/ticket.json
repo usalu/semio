@@ -3,10 +3,11 @@
   "emoji": "🏷️",
   "status": "closed",
   "description": "Puzzle 2d Canvas Text Labels Wrong",
-  "summary": "Fixed puzzle 2d text labels not following nodes during drag: WASM/GPU updated geometry each frame but textOverlayDirty ignored node position changes, so paintTextOverlays skipped while the overlay canvas kept pre-drag pixels. Added bumpTextOverlayGeometryEpoch on nodeMove drain and peer applyNodePositionSilent. Regression test textOverlayDirty after live node drag geometry. @puzzle/2d/react vitest 107/107 pass.",
+  "summary": "Fixed puzzle 2d text labels not tracking live wheel zoom: paintTextOverlays returned early while wheelZoomGestureActive (GPU still zoomed each frame). Removed that skip; bump text overlay epoch on silent WASM camera sync and camera drain. Updated regression test to expect repaint during wheel zoom. Vitest 109/109 pass.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪43522a67a3da446ba6a9f77503215e32",
-    "⚪4aafa7d2d13e42b4a701807fc6edb93c"
+    "⚪4aafa7d2d13e42b4a701807fc6edb93c",
+    "⚪ac76307c1c3c4e5aa7a8e3b0be77b335"
   ]
 }

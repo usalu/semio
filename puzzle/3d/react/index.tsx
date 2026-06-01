@@ -579,6 +579,7 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
   const attractionBulkListeners = new Set<() => void>();
   const primaryListeners = new Set<() => void>();
   const meshOutlinePolicyListeners = new Set<() => void>();
+  let controlledHostSnapshot: SelectionSnapshot | undefined;
 
   return {
     subscribe(listener: () => void): () => void {
@@ -630,6 +631,12 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
       primaryListeners.add(listener);
       return () => primaryListeners.delete(listener);
     },
+    setControlledHostSnapshot(snapshot: SelectionSnapshot | undefined): void {
+      controlledHostSnapshot = snapshot;
+    },
+    getControlledHostSnapshot(): SelectionSnapshot | undefined {
+      return controlledHostSnapshot;
+    },
     setSnapshot(next: SelectionSnapshot, equal: (left: SelectionSnapshot, right: SelectionSnapshot) => boolean = selectionSnapshotsEqual): void {
       if (equal(derived.snapshot, next)) {
         return;
@@ -645,9 +652,11 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
           listener();
         }
       }
-      notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet));
-      notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.vortexOwnerObjectIdSet, derived.vortexOwnerObjectIdSet));
-      notifyPerIdListeners(vortexListeners, selectionSetSymmetricDifference(prev.vortexIdSet, derived.vortexIdSet));
+      if (derived.meshOutlineEnabled) {
+        notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet));
+        notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.vortexOwnerObjectIdSet, derived.vortexOwnerObjectIdSet));
+        notifyPerIdListeners(vortexListeners, selectionSetSymmetricDifference(prev.vortexIdSet, derived.vortexIdSet));
+      }
       if (!selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)) {
         notifyPerIdListeners(attractionListeners, selectionSetSymmetricDifference(prev.attractionIdSet, derived.attractionIdSet));
         for (const listener of attractionBulkListeners) {
@@ -693,7 +702,12 @@ export function useLiveSelection(): SelectionSnapshot {
 export function useObjectSelected(objectId: string): boolean {
   const store = useSelectionSnapshotStore();
   return reactHostPort.useSyncExternalStore(
-    (onStoreChange) => store.subscribeObject(objectId, onStoreChange),
+    (onStoreChange) => {
+      if (!store.getMeshOutlineEnabled()) {
+        return () => {};
+      }
+      return store.subscribeObject(objectId, onStoreChange);
+    },
     () => store.isObjectSelected(objectId),
     () => store.isObjectSelected(objectId),
   );
@@ -703,7 +717,12 @@ export function useObjectSelected(objectId: string): boolean {
 export function useVortexSelected(fullId: string): boolean {
   const store = useSelectionSnapshotStore();
   return reactHostPort.useSyncExternalStore(
-    (onStoreChange) => store.subscribeVortex(fullId, onStoreChange),
+    (onStoreChange) => {
+      if (!store.getMeshOutlineEnabled()) {
+        return () => {};
+      }
+      return store.subscribeVortex(fullId, onStoreChange);
+    },
     () => store.isVortexSelected(fullId),
     () => store.isVortexSelected(fullId),
   );
@@ -3420,7 +3439,6 @@ export interface RegistryValue {
   setSelectedObjectIds(ids: readonly string[]): void;
   selectionMode: SelectionMode;
   relocateMode: RelocateMode;
-  activeRelocateObjectId: string | null;
   setActiveRelocateObjectId: (id: string | null) => void;
   attractionDragActive: boolean;
   attractionDragAttractingFullId: string | null;
@@ -3574,6 +3592,79 @@ function SelectionInvalidateBridge(): null {
   reactHostPort.useEffect(() => {
     invalidate();
   }, [revision, invalidate]);
+  return null;
+}
+
+const BULK_SELECTION_TINT_RESTORE_KEY = "puzzle3dBulkSelectionTintRestore";
+const bulkSelectionEmissiveColor = new Color();
+
+interface BulkSelectionTintRestore {
+  readonly emissive: Color;
+  readonly emissiveIntensity: number;
+}
+
+/** @emoji 🎨 Imperative bulk-select tint (avoids N React re-renders and pooled mesh reclones). */
+function applyBulkSelectionTintToGroup(group: Group, active: boolean): void {
+  const selectedColors = meshStyleColors("selected");
+  if (!selectedColors) {
+    return;
+  }
+  bulkSelectionEmissiveColor.set(cssColorForThree(selectedColors.emissiveColor));
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) {
+      return;
+    }
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      if (!(material instanceof MeshStandardMaterial)) {
+        continue;
+      }
+      if (active) {
+        if (!material.userData[BULK_SELECTION_TINT_RESTORE_KEY]) {
+          material.userData[BULK_SELECTION_TINT_RESTORE_KEY] = {
+            emissive: material.emissive.clone(),
+            emissiveIntensity: material.emissiveIntensity,
+          } satisfies BulkSelectionTintRestore;
+        }
+        material.emissive.copy(bulkSelectionEmissiveColor);
+        material.emissiveIntensity = selectedColors.emissiveIntensity;
+        material.needsUpdate = true;
+        continue;
+      }
+      const restore = material.userData[BULK_SELECTION_TINT_RESTORE_KEY] as BulkSelectionTintRestore | undefined;
+      if (!restore) {
+        continue;
+      }
+      material.emissive.copy(restore.emissive);
+      material.emissiveIntensity = restore.emissiveIntensity;
+      material.needsUpdate = true;
+      delete material.userData[BULK_SELECTION_TINT_RESTORE_KEY];
+    }
+  });
+}
+
+/** @emoji 🎨 One-pass bulk selection appearance when per-object React updates are skipped. */
+function BulkSelectionVisualBridge(): null {
+  const store = useSelectionSnapshotStore();
+  const revision = reactHostPort.useSyncExternalStore(store.subscribe, store.getRevision, store.getRevision);
+  const { collectObjectGroups } = useRegistryCore();
+  const invalidate = useThree((state) => state.invalidate);
+  reactHostPort.useLayoutEffect(() => {
+    const bulkVisual = !store.getMeshOutlineEnabled();
+    const groups = collectObjectGroups();
+    if (!bulkVisual) {
+      for (const group of groups) {
+        applyBulkSelectionTintToGroup(group, false);
+      }
+      return;
+    }
+    for (const group of groups) {
+      const objectId = group.userData.puzzle3dObjectId;
+      const active = typeof objectId === "string" && store.isObjectSelected(objectId);
+      applyBulkSelectionTintToGroup(group, active);
+    }
+    invalidate();
+  }, [collectObjectGroups, invalidate, revision, store]);
   return null;
 }
 
@@ -4137,9 +4228,10 @@ const ObjectTransformControls = reactHostPort.memo(function ObjectTransformContr
 
 export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectProps) {
   const group = reactHostPort.useRef<Group>(null);
+  const store = useSelectionSnapshotStore();
+  const bulkVisual = !store.getMeshOutlineEnabled();
   const registrySelected = useObjectSelected(props.id);
   const primaryObjectId = usePrimarySelectionObjectId();
-  const meshOutlinesEnabled = useSelectionMeshOutlinesEnabled();
   const { registerObject, relocateMode } = useRegistryCore();
   const { selectionMode, commitSelection, setActiveRelocateObjectId } = useRegistryInteraction();
   const { setHover, clearHover, isHovered } = useRegistryHover();
@@ -4147,7 +4239,8 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
   const beforeRef = reactHostPort.useRef<{ origin: Vector3; quat: Quaternion; scale: Vector3 } | null>(null);
   const [tcTarget, setTcTarget] = reactHostPort.useState<Group | null>(null);
   const objectPointerHovered = isHovered({ kind: "object", id: props.id });
-  const selected = props.selected === true || registrySelected;
+  const membershipSelected = props.selected === true || registrySelected || (bulkVisual && store.isObjectSelected(props.id));
+  const selectedForAppearance = bulkVisual ? false : membershipSelected;
   const relocateActive = props.relocateActive === true || primaryObjectId === props.id;
 
   reactHostPort.useEffect(() => {
@@ -4159,7 +4252,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
 
   reactHostPort.useEffect(() => {
     if (group.current) setTcTarget(group.current);
-  }, [selected, relocateActive, props.id]);
+  }, [membershipSelected, relocateActive, props.id]);
 
   const linkHighlighted = reactHostPort.useMemo(() => {
     if (props.highlighted === true) {
@@ -4179,13 +4272,13 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
       resolveMeshStyle({
         style: props.style,
         disabled: props.disabled,
-        selected,
+        selected: selectedForAppearance,
         highlighted: linkHighlighted,
         hovered: props.hovered === true || objectPointerHovered,
       }),
-    [props.style, props.disabled, selected, props.hovered, linkHighlighted, objectPointerHovered],
+    [props.style, props.disabled, selectedForAppearance, props.hovered, linkHighlighted, objectPointerHovered],
   );
-  const showSelectionOutline = selected && !props.disabled && meshOutlinesEnabled;
+  const showSelectionOutline = selectedForAppearance && !props.disabled;
 
   const selectObject = reactHostPort.useCallback(() => {
     if (attractionDragActive || attractionIndirectPickAwait || props.disabled || puzzle3dRelocateDragActiveRef.current) {
@@ -4240,7 +4333,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
   });
   const mode = props.relocate ?? relocateMode;
   const transSnap = mode === "translate" && lodCtx.gridSnapEnabled && lodCtx.gridStepWorld != null && lodCtx.gridStepWorld > 0 ? lodCtx.gridStepWorld : undefined;
-  const showTc = selected && relocateActive && props.relocate !== false && tcTarget;
+  const showTc = membershipSelected && relocateActive && props.relocate !== false && tcTarget;
 
   return (
     <>
@@ -5830,6 +5923,18 @@ function AttractionRubberBand() {
   return <line geometry={geo} material={mat} raycast={() => null} />;
 }
 
+/** @emoji 🎯 Syncs host-controlled selection into the scene store without re-rendering scene children. */
+function ControlledSelectionSync(props: { readonly selection?: SelectionSnapshot }): null {
+  const store = useSelectionSnapshotStore();
+  reactHostPort.useLayoutEffect(() => {
+    store.setControlledHostSnapshot(props.selection);
+    if (props.selection !== undefined) {
+      store.setSnapshot(props.selection);
+    }
+  }, [props.selection, store]);
+  return null;
+}
+
 function RegistryProvider({
   children,
   lodRef,
@@ -5840,7 +5945,6 @@ function RegistryProvider({
   proximityRelocateEnabled = true,
   selectionMode,
   relocateMode,
-  selection: controlledSelection,
   onSelect,
   onConnect,
   onProximityConnect,
@@ -5851,6 +5955,7 @@ function RegistryProvider({
   attractionSession: externalAttractionSession,
   selectionMethod = "rectangle",
   marqueeSelectableKinds = { object: true, vortex: true, attraction: true },
+  selectionStore,
 }: {
   children: ReactNode;
   lodRef: MutableRefObject<number>;
@@ -5861,7 +5966,6 @@ function RegistryProvider({
   proximityRelocateEnabled?: boolean;
   selectionMode: SelectionMode;
   relocateMode: RelocateMode;
-  selection?: SelectionSnapshot;
   onSelect?: (snap: SelectionSnapshot) => void;
   onConnect?: (p: AttractionPayload) => void;
   onProximityConnect?: (p: AttractionPayload) => void;
@@ -5872,14 +5976,8 @@ function RegistryProvider({
   attractionSession?: AttractionSessionSnapshot | null;
   selectionMethod?: SelectionMethod;
   marqueeSelectableKinds?: MarqueeSelectableKinds;
+  selectionStore: SelectionSnapshotStore;
 }) {
-  const selectionStoreRef = reactHostPort.useRef<SelectionSnapshotStore>();
-  if (!selectionStoreRef.current) {
-    selectionStoreRef.current = createSelectionSnapshotStore(controlledSelection ?? EMPTY_SELECTION_SNAPSHOT);
-  }
-  const selectionStore = selectionStoreRef.current;
-  const controlledSelectionRef = reactHostPort.useRef(controlledSelection);
-  controlledSelectionRef.current = controlledSelection;
   const onSelectRef = reactHostPort.useRef(onSelect);
   onSelectRef.current = onSelect;
   const selectionModeRef = reactHostPort.useRef(selectionMode);
@@ -5889,17 +5987,12 @@ function RegistryProvider({
   const marqueeKindsRef = reactHostPort.useRef(marqueeSelectableKinds);
   marqueeKindsRef.current = marqueeSelectableKinds;
   const marqueeAttractionsRef = reactHostPort.useRef<readonly AttractionProps[]>([]);
-  reactHostPort.useEffect(() => {
-    if (controlledSelection !== undefined) {
-      selectionStore.setSnapshot(controlledSelection);
-    }
-  }, [controlledSelection, selectionStore]);
   const publishSelection = reactHostPort.useCallback(
     (snap: SelectionSnapshot) => {
       selectionStore.setSnapshot(snap);
       const primary = primarySelectionObjectId(snap);
       activeRelocateObjectIdRef.current = primary;
-      const controlled = controlledSelectionRef.current;
+      const controlled = selectionStore.getControlledHostSnapshot();
       if (controlled !== undefined) {
         if (!selectionSnapshotsEqual(controlled, snap)) {
           onSelectRef.current?.(snap);
@@ -6032,13 +6125,6 @@ function RegistryProvider({
     }
     activeRelocateObjectIdRef.current = id;
   }, []);
-  reactHostPort.useEffect(() => {
-    if (controlledSelection === undefined) {
-      return;
-    }
-    activeRelocateObjectIdRef.current = primarySelectionObjectId(controlledSelection);
-  }, [controlledSelection]);
-  const activeRelocateObjectId = reactHostPort.useSyncExternalStore(selectionStore.subscribePrimary, selectionStore.getPrimaryObjectId, selectionStore.getPrimaryObjectId);
   const [attractionDragActive, setAttractionDragActive] = reactHostPort.useState(false);
   const [attractionDragAttractingFullId, setAttractionDragAttractingFullId] = reactHostPort.useState<string | null>(null);
   const [attractionCompatibleAttractedFullIds, setAttractionCompatibleAttractedFullIds] = reactHostPort.useState<ReadonlySet<string>>(new Set());
@@ -6065,7 +6151,7 @@ function RegistryProvider({
     setActiveRelocateObjectId(null);
     const empty = EMPTY_SELECTION_SNAPSHOT;
     selectionStore.setSnapshot(empty);
-    const controlled = controlledSelectionRef.current;
+    const controlled = selectionStore.getControlledHostSnapshot();
     if (controlled !== undefined) {
       if (controlled.objectIds.length === 0 && controlled.vortexIds.length === 0 && controlled.attractionIds.length === 0) {
         return;
@@ -6487,7 +6573,6 @@ function RegistryProvider({
       proximityRelocateEnabled,
       relocateMode,
       selectionMode,
-      activeRelocateObjectId,
       beginAttractionDragFromVortex,
       cancelAttractionDrag,
       findNearestProximityRelocate,
@@ -6523,7 +6608,6 @@ function RegistryProvider({
       proximityRelocateEnabled,
       relocateMode,
       selectionMode,
-      activeRelocateObjectId,
       beginAttractionDragFromVortex,
       cancelAttractionDrag,
       findNearestProximityRelocate,
@@ -6592,6 +6676,7 @@ function RegistryProvider({
                 <HoverMissBridge />
                 <HoverInvalidateBridge />
                 <SelectionInvalidateBridge />
+                <BulkSelectionVisualBridge />
                 <SelectionMissBridge />
               </RegistryDragContext.Provider>
             </RegistryHoverContext.Provider>
@@ -6902,29 +6987,35 @@ function Inner(props: CanvasProps & {
   const { chunked, rest } = reactHostPort.useMemo(() => splitChunkedSceneChildren(children), [children]);
   const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
   const blocked = useLiveBlockedVortexFullIds(blockedFallback);
-  return (
-    <RegistryProvider
-      lodRef={lodRef}
-      kindCatalogs={props.kindCatalogs}
-      kindCompatibility={props.kindCompatibility}
-      blockedVortexFullIds={blocked}
-      proximityRadius={proximityRadius}
-      proximityRelocateEnabled={proximityRelocateEnabled}
-      selectionMode={props.selectionMode ?? "default"}
-      relocateMode={props.relocateMode ?? "translate"}
-      selection={props.selection}
-      selectionMethod={props.selectionMethod ?? "rectangle"}
-      marqueeSelectableKinds={props.marqueeSelectableKinds ?? { object: true, vortex: true, attraction: true }}
-      onSelect={props.onSelect}
-      onConnect={props.onConnect}
-      onProximityConnect={props.onProximityConnect}
-      onIndirectConnect={props.onIndirectConnect}
-      onAttractionCompatibleObjects={props.onAttractionCompatibleObjects}
-      onAttractionTargetRing={props.onAttractionTargetRing}
-      onRelocate={props.onRelocate}
-      attractionSession={props.attractionSession}
-    >
-      <LodBridge
+  const selectionStoreRef = reactHostPort.useRef<SelectionSnapshotStore>();
+  if (!selectionStoreRef.current) {
+    selectionStoreRef.current = createSelectionSnapshotStore(EMPTY_SELECTION_SNAPSHOT);
+  }
+  const selectionStore = selectionStoreRef.current;
+  const registryScene = reactHostPort.useMemo(
+    () => (
+      <RegistryProvider
+        lodRef={lodRef}
+        kindCatalogs={props.kindCatalogs}
+        kindCompatibility={props.kindCompatibility}
+        blockedVortexFullIds={blocked}
+        proximityRadius={proximityRadius}
+        proximityRelocateEnabled={proximityRelocateEnabled}
+        selectionMode={props.selectionMode ?? "default"}
+        relocateMode={props.relocateMode ?? "translate"}
+        selectionMethod={props.selectionMethod ?? "rectangle"}
+        marqueeSelectableKinds={props.marqueeSelectableKinds ?? { object: true, vortex: true, attraction: true }}
+        onSelect={props.onSelect}
+        onConnect={props.onConnect}
+        onProximityConnect={props.onProximityConnect}
+        onIndirectConnect={props.onIndirectConnect}
+        onAttractionCompatibleObjects={props.onAttractionCompatibleObjects}
+        onAttractionTargetRing={props.onAttractionTargetRing}
+        onRelocate={props.onRelocate}
+        attractionSession={props.attractionSession}
+        selectionStore={selectionStore}
+      >
+        <LodBridge
         lodRef={lodRef}
         distanceReference={distanceReference}
         gridFactor={gridFactor}
@@ -6962,6 +7053,54 @@ function Inner(props: CanvasProps & {
         <group data-puzzle3d-unchunked>{rest}</group>
       </LodBridge>
     </RegistryProvider>
+    ),
+    [
+      props.attractionSession,
+      automaticLod,
+      blocked,
+      brushActive,
+      chunked,
+      chunkSize,
+      depthVariableLod,
+      distanceReference,
+      fixtureDragDrop,
+      gridFactor,
+      gridSnapEnabled,
+      kindCatalogs,
+      kindCompatibility,
+      manualLod,
+      maxDist,
+      onBrushPlace,
+      onFixtureDrop,
+      pos,
+      props.onAttractionCompatibleObjects,
+      props.onAttractionTargetRing,
+      props.onCamera,
+      props.onConnect,
+      props.onIndirectConnect,
+      props.onLodChange,
+      props.onProximityConnect,
+      props.onRelocate,
+      props.onSelect,
+      props.relocateMode,
+      props.selectionMethod,
+      props.selectionMode,
+      props.marqueeSelectableKinds,
+      proximityRelocateEnabled,
+      proximityRadius,
+      rest,
+      sceneFixture,
+      selectionStore,
+      showLodGrid,
+      tgt,
+      zoom,
+    ],
+  );
+  return (
+    <SelectionStoreContext.Provider value={selectionStore}>
+      <ControlledSelectionSync selection={props.selection} />
+      {registryScene}
+    </SelectionStoreContext.Provider>
   );
 }
 
