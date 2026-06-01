@@ -139,13 +139,9 @@
 	background-repeat: no-repeat;
 }
 
-.reveal .presentation-figure-tile-frame--concealed {
-	opacity: 0;
-	pointer-events: none;
-}
-
 .reveal .presentation-disposition-frame--overlay {
 	z-index: 1;
+	background-color: var(--base);
 }
 
 .reveal .presentation-disposition-frame:has(.presentation-media-pdf-document) {

@@ -511,13 +511,11 @@ function FigureTileView({
 	tile,
 	embodiment,
 	defaultEmphasis,
-	concealed,
 }: {
 	readonly participantId: string;
 	readonly tile: SplitTile;
 	readonly embodiment: FigureEmbodiment;
 	readonly defaultEmphasis: ParticipantEmphasis;
-	readonly concealed?: boolean;
 }): ReactNode {
 	const emphasis = tile.emphasis ?? defaultEmphasis;
 	const frameStyle = dispositionFrameStyle(tile.position, tile.style);
@@ -527,8 +525,7 @@ function FigureTileView({
 			className={[
 				"presentation-disposition-frame",
 				"presentation-figure-tile-frame",
-				concealed ? "presentation-figure-tile-frame--concealed" : undefined,
-				concealed ? undefined : emphasisClass(emphasis),
+				emphasisClass(emphasis),
 			]
 				.filter(Boolean)
 				.join(" ")}
@@ -563,7 +560,6 @@ function FigureSplitMorphView({
 	readonly embodiment: FigureEmbodiment;
 }): ReactNode {
 	const tiles = disposition.split?.tiles ?? [];
-	const concealed = disposition.split?.concealed === true;
 	return (
 		<>
 			{tiles.map((tile) => (
@@ -573,7 +569,6 @@ function FigureSplitMorphView({
 					tile={tile}
 					embodiment={embodiment}
 					defaultEmphasis={disposition.emphasis}
-					concealed={concealed}
 				/>
 			))}
 		</>

@@ -31,30 +31,40 @@ const CATALOGUE_TILES_ASSEMBLED = splitFigureGrid({
 
 const CATALOGUE_TILE_BY_KEY = new Map(CATALOGUE_TILES_ASSEMBLED.map((tile) => [tile.key, tile]));
 
-/** @emoji 📐 Ten catalogue tiles (5–14) in three columns after dropping the top row (1–4). */
+/** @emoji 📐 Ten catalogue tiles (5–14) as three separated columns (2×3 | 1×3 | 1×1). */
 function catalogueFocusColumnTiles(): SplitTile[] {
-	const layout: DispositionPosition = { x: 0.08, y: 0.12, width: 0.84, height: 0.76 };
-	const gap = 0.015;
-	const col1Width = layout.width * 0.48;
-	const col2Width = layout.width * 0.24;
-	const col3Width = layout.width * 0.24;
-	const col2X = layout.x + col1Width + gap;
-	const col3X = col2X + col2Width + gap;
-	const rowHeight = (layout.height - gap * 2) / 3;
-	const cellW1 = (col1Width - gap) / 2;
-	const rowY = (row: number): number => layout.y + row * (rowHeight + gap);
+	const rowGap = 0.014;
+	const innerGap = 0.01;
+	const columnGap = 0.05;
+	const col1Width = 0.44;
+	const col2Width = 0.2;
+	const col3Width = 0.2;
+	const blockWidth = col1Width + columnGap + col2Width + columnGap + col3Width;
+	const layout: DispositionPosition = {
+		x: (1 - blockWidth) / 2,
+		y: 0.11,
+		width: blockWidth,
+		height: 0.78,
+	};
+	const col1X = layout.x;
+	const col2X = col1X + col1Width + columnGap;
+	const col3X = col2X + col2Width + columnGap;
+	const rowHeight = (layout.height - rowGap * 2) / 3;
+	const cellW1 = (col1Width - innerGap) / 2;
+	const col3Height = layout.height;
+	const rowY = (row: number): number => layout.y + row * (rowHeight + rowGap);
 
 	const placements: readonly { readonly key: string; readonly position: DispositionPosition }[] = [
-		{ key: "tile-r1-c0", position: { x: layout.x, y: rowY(0), width: cellW1, height: rowHeight } },
-		{ key: "tile-r1-c1", position: { x: layout.x + cellW1 + gap, y: rowY(0), width: cellW1, height: rowHeight } },
-		{ key: "tile-r1-c2", position: { x: layout.x, y: rowY(1), width: cellW1, height: rowHeight } },
-		{ key: "tile-r1-c3", position: { x: layout.x + cellW1 + gap, y: rowY(1), width: cellW1, height: rowHeight } },
-		{ key: "tile-r1-c4", position: { x: layout.x, y: rowY(2), width: cellW1, height: rowHeight } },
-		{ key: "tile-r2-c0", position: { x: layout.x + cellW1 + gap, y: rowY(2), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c0", position: { x: col1X, y: rowY(0), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c1", position: { x: col1X + cellW1 + innerGap, y: rowY(0), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c2", position: { x: col1X, y: rowY(1), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c3", position: { x: col1X + cellW1 + innerGap, y: rowY(1), width: cellW1, height: rowHeight } },
+		{ key: "tile-r1-c4", position: { x: col1X, y: rowY(2), width: cellW1, height: rowHeight } },
+		{ key: "tile-r2-c0", position: { x: col1X + cellW1 + innerGap, y: rowY(2), width: cellW1, height: rowHeight } },
 		{ key: "tile-r2-c1", position: { x: col2X, y: rowY(0), width: col2Width, height: rowHeight } },
 		{ key: "tile-r2-c2", position: { x: col2X, y: rowY(1), width: col2Width, height: rowHeight } },
 		{ key: "tile-r2-c3", position: { x: col2X, y: rowY(2), width: col2Width, height: rowHeight } },
-		{ key: "tile-r2-c4", position: { x: col3X, y: rowY(1), width: col3Width, height: rowHeight } },
+		{ key: "tile-r2-c4", position: { x: col3X, y: layout.y, width: col3Width, height: col3Height } },
 	];
 
 	return placements.map(({ key, position }) => {
@@ -256,7 +266,8 @@ if (import.meta.vitest) {
 		it("arranges catalogue-focus as three columns without the top row", () => {
 			const media = deck.sequences[0]?.thoughts.find((t) => t.id === "media");
 			const focus = media?.arrangements.find((a) => a.id === "catalogue-focus");
-			const keys = focus?.dispositions[0]?.split?.tiles.map((tile) => tile.key) ?? [];
+			const tiles = focus?.dispositions[0]?.split?.tiles ?? [];
+			const keys = tiles.map((tile) => tile.key);
 			expect(keys).toHaveLength(10);
 			expect(keys.every((key) => !key.startsWith("tile-r0-"))).toBe(true);
 			expect(keys).toEqual([
@@ -271,6 +282,13 @@ if (import.meta.vitest) {
 				"tile-r2-c3",
 				"tile-r2-c4",
 			]);
+			const col1 = tiles.filter((tile) => tile.key.startsWith("tile-r1-") || tile.key === "tile-r2-c0");
+			const col2 = tiles.filter((tile) => ["tile-r2-c1", "tile-r2-c2", "tile-r2-c3"].includes(tile.key));
+			const col3 = tiles.filter((tile) => tile.key === "tile-r2-c4");
+			expect(col1.every((tile) => (tile.position?.x ?? 0) < 0.5)).toBe(true);
+			expect(col2.every((tile) => (tile.position?.x ?? 0) > 0.48 && (tile.position?.x ?? 0) < 0.72)).toBe(true);
+			expect(col3[0]?.position?.x).toBeGreaterThan(0.7);
+			expect(col3[0]?.position?.height).toBeGreaterThan(0.7);
 		});
 
 		it("includes figure, video, and pdf participants in the media thought", () => {

@@ -270,7 +270,10 @@ export interface SplitTile {
 /** @emoji ✂️ Splits one figure disposition into independently placed crop tiles for auto-animate. */
 export interface DispositionSplit {
 	readonly tiles: readonly SplitTile[];
-	/** @emoji 👻 Tiles stay in the DOM for reveal.js matching but are not painted until a later arrangement reveals them. */
+	/**
+	 * @emoji 👻 Pair with a whole-figure disposition on the same arrangement (stacked above via overlay).
+	 * Tiles stay at full opacity for reveal.js position morphing; the figure hides the grid until transition.
+	 */
 	readonly concealed?: boolean;
 }
 
