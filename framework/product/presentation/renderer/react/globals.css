@@ -117,10 +117,6 @@
 	overflow: visible;
 }
 
-.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition:not(.presentation-interactive-disposition--pinned) {
-	display: contents;
-}
-
 .reveal .presentation-interactive-disposition {
 	touch-action: none;
 	user-select: none;
@@ -279,30 +275,29 @@
 	will-change: transform;
 }
 
-.reveal .presentation-arrangement-canvas .presentation-interactive-disposition--pinned .presentation-interactive-disposition__content {
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content {
 	width: 100%;
 	height: 100%;
 	min-height: 0;
 	min-width: 0;
 }
 
-.reveal .presentation-interactive-disposition--pinned .presentation-interactive-disposition__content--scaled {
-	overflow: visible;
-}
-
 .reveal
 	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
 	.presentation-disposition-frame,
 .reveal
 	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
 	.presentation-figure-tile-frame,
 .reveal
 	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
 	.presentation-morph-slot {
 	position: static !important;
@@ -342,11 +337,17 @@
 .reveal .presentation-interactive-disposition__chrome {
 	position: absolute;
 	inset: 0;
+	z-index: 3;
 	pointer-events: none;
+}
+
+.reveal .presentation-interactive-disposition--canvas-framed .presentation-interactive-disposition__chrome {
+	box-sizing: border-box;
 }
 
 .reveal .presentation-interaction-handle {
 	position: absolute;
+	z-index: 4;
 	width: 10px;
 	height: 10px;
 	margin: -5px 0 0 -5px;
@@ -644,6 +645,18 @@
 
 .reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-line {
 	column-gap: 0.35em;
+}
+
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-affiliation-line-part {
+	vertical-align: top;
+}
+
+.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-affiliation-morph-source {
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	opacity: 0 !important;
+	pointer-events: none;
 }
 
 .reveal .progress span {

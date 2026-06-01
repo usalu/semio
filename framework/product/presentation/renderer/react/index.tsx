@@ -569,6 +569,32 @@ function affiliationLineMuted(partEmphasis: ParticipantEmphasis | undefined): bo
 	return partEmphasis === "muted";
 }
 
+function affiliationLineContent(
+	entry: AffiliationEntry,
+	part: "line" | "suffix",
+	label: string,
+): ReactNode {
+	const muted =
+		part === "suffix"
+			? affiliationLineMuted(entry.suffixEmphasis)
+			: affiliationLineMuted(entry.lineEmphasis);
+	const mark = part === "suffix" && entry.suffix ? entry.suffix.mark : entry.mark;
+	if (muted) {
+		return (
+			<span className="opacity-20">
+				<sup>{mark}</sup>
+				{label}
+			</span>
+		);
+	}
+	return (
+		<>
+			<sup>{mark}</sup>
+			{label}
+		</>
+	);
+}
+
 function AffiliationsMorphView({
 	morphId: anchorId,
 	embodiment,
@@ -578,47 +604,49 @@ function AffiliationsMorphView({
 }): ReactNode {
 	return (
 		<div className="presentation-intro-rows presentation-intro-affiliations flex w-full max-w-full flex-col items-center text-center">
-			{embodiment.entries.map((entry) => (
-				<div
-					key={entry.mark}
-					className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center gap-x-[0.35em]"
-				>
-					<h4
-						data-id={`${anchorId}--${entry.mark}`}
-						className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}
+			{embodiment.entries.map((entry) => {
+				const morphSourceLabel = embodiment.morphLineLabels?.[entry.mark];
+				const displayLabel = affiliationLineLabel(entry, "line");
+				return (
+					<div
+						key={entry.mark}
+						className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center gap-x-[0.35em]"
 					>
-						{affiliationLineMuted(entry.lineEmphasis) ? (
-							<span className="opacity-20">
-								<sup>{entry.mark}</sup>
-								{affiliationLineLabel(entry, "line")}
+						{morphSourceLabel !== undefined ? (
+							<span className="presentation-affiliation-line-part relative inline-flex shrink-0 items-center justify-center text-center">
+								<h4
+									data-id={`${anchorId}--${entry.mark}`}
+									className={[
+										morphTextClass(anchorId, "m-0 w-full text-center"),
+										"presentation-affiliation-morph-source",
+									].join(" ")}
+									aria-hidden
+								>
+									{affiliationLineContent(entry, "line", morphSourceLabel)}
+								</h4>
+								<h4 className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}>
+									{affiliationLineContent(entry, "line", displayLabel)}
+								</h4>
 							</span>
 						) : (
-							<>
-								<sup>{entry.mark}</sup>
-								{affiliationLineLabel(entry, "line")}
-							</>
+							<h4
+								data-id={`${anchorId}--${entry.mark}`}
+								className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}
+							>
+								{affiliationLineContent(entry, "line", displayLabel)}
+							</h4>
 						)}
-					</h4>
-					{entry.suffix ? (
-						<h4
-							data-id={`${anchorId}--${entry.suffix.mark}`}
-							className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}
-						>
-							{affiliationLineMuted(entry.suffixEmphasis) ? (
-								<span className="opacity-20">
-									<sup>{entry.suffix.mark}</sup>
-									{affiliationLineLabel(entry, "suffix")}
-								</span>
-							) : (
-								<>
-									<sup>{entry.suffix.mark}</sup>
-									{affiliationLineLabel(entry, "suffix")}
-								</>
-							)}
-						</h4>
-					) : null}
-				</div>
-			))}
+						{entry.suffix ? (
+							<h4
+								data-id={`${anchorId}--${entry.suffix.mark}`}
+								className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}
+							>
+								{affiliationLineContent(entry, "suffix", affiliationLineLabel(entry, "suffix"))}
+							</h4>
+						) : null}
+					</div>
+				);
+			})}
 		</div>
 	);
 }
@@ -1307,26 +1335,15 @@ export function dispositionFrameElement(root: HTMLElement): HTMLElement {
 	);
 }
 
-/** @emoji ⊡ Selection chrome style: canvas frame when unpinned, wrapper inset when pinned, scaled with content. */
+/** @emoji ⊡ Selection chrome style: flow slides use an explicit frame; canvas-framed slides use wrapper inset via CSS. */
 export function interactiveDispositionChromeStyle(options: {
 	readonly selected: boolean;
 	readonly effectiveRect: DispositionPosition | undefined;
-	readonly pinned: boolean;
+	readonly canvasFramed: boolean;
 	readonly fullscreen: boolean;
-	readonly contentScale: number | null;
 }): CSSProperties | undefined {
-	const { selected, effectiveRect, pinned, fullscreen, contentScale } = options;
-	if (!selected || !effectiveRect || fullscreen) {
-		return undefined;
-	}
-	if (pinned) {
-		if (contentScale !== null) {
-			return {
-				position: "absolute",
-				inset: 0,
-				...interactiveDispositionContentScaleStyle(contentScale),
-			};
-		}
+	const { selected, effectiveRect, canvasFramed, fullscreen } = options;
+	if (!selected || !effectiveRect || fullscreen || canvasFramed) {
 		return undefined;
 	}
 	return transformFrameStyle(effectiveRect);
@@ -1889,11 +1906,13 @@ const InteractiveDisposition: FC<{
 		transform !== undefined &&
 		isFlowPixelOffsetTransform(transform, measuredNatural);
 	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
-	const pinned = (transformed && !flowLayout) || flowSectionFrame;
 	const fullscreen = interaction.isFullscreen(id);
+	const canvasFramed = declaredRect !== undefined && !fullscreen;
+	const canvasPlacement = canvasFramed;
+	const pinned =
+		(transformed && !flowLayout) || flowSectionFrame || (canvasFramed && !flowPixelOffset);
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, declaredRect, interaction, registry);
-	const canvasPlacement = declaredRect !== undefined;
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
 		const section = sectionRef.current;
@@ -2102,6 +2121,18 @@ const InteractiveDisposition: FC<{
 		[id, canvasPlacement, allDeclaredRects, interaction, registry, sectionRef],
 	);
 
+	const seedCanvasTransform = useCallback((): DispositionPosition | null => {
+		if (!declaredRect) {
+			return null;
+		}
+		const existing = interaction.getTransform(id);
+		if (existing) {
+			return existing;
+		}
+		interaction.setTransform(id, declaredRect);
+		return declaredRect;
+	}, [id, declaredRect, interaction]);
+
 	const onPointerDown = (event: React.PointerEvent): void => {
 		if (event.button !== 0) {
 			return;
@@ -2120,6 +2151,7 @@ const InteractiveDisposition: FC<{
 		} else if (additive) {
 			interaction.selectIds([id], true);
 		}
+		seedCanvasTransform();
 		const rect = ensureRectForManipulation("move");
 		if (!rect) {
 			return;
@@ -2146,6 +2178,7 @@ const InteractiveDisposition: FC<{
 		if (!selected) {
 			interaction.selectIds([id], false);
 		}
+		seedCanvasTransform();
 		const rect = ensureRectForManipulation("resize");
 		if (!rect) {
 			return;
@@ -2155,7 +2188,7 @@ const InteractiveDisposition: FC<{
 				pointerId: event.pointerId,
 				clientX: event.clientX,
 				clientY: event.clientY,
-				captureEl: rootRef.current,
+				captureEl: event.currentTarget as HTMLElement,
 			},
 			handle,
 			rect,
@@ -2178,38 +2211,36 @@ const InteractiveDisposition: FC<{
 		selected ? "presentation-interactive-disposition--selected" : undefined,
 		flowPixelOffset ? "presentation-interactive-disposition--offset" : undefined,
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
+		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
 	]
 		.filter(Boolean)
 		.join(" ");
 
-	const wrapperStyle: CSSProperties | undefined = transformed
-		? flowPixelOffset
-			? flowDispositionOffsetStyle(transform)
-			: transformFrameStyle(transform)
-		: undefined;
-
-	const resizeBaseline = declaredRect ?? measuredNatural;
-	const contentScale =
-		pinned && transform && resizeBaseline
-			? interactiveDispositionContentScale(transform, resizeBaseline)
-			: null;
+	const wrapperStyle: CSSProperties | undefined = fullscreen
+		? {
+				position: "absolute",
+				inset: 0,
+				width: "100%",
+				height: "100%",
+				boxSizing: "border-box",
+			}
+		: flowPixelOffset
+			? transform
+				? flowDispositionOffsetStyle(transform)
+				: undefined
+			: canvasFramed && effectiveRect
+				? transformFrameStyle(effectiveRect)
+				: transformed && transform
+					? transformFrameStyle(transform)
+					: undefined;
 
 	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
 		selected,
 		effectiveRect,
-		pinned,
+		canvasFramed,
 		fullscreen,
-		contentScale,
 	});
-	const contentClass = [
-		"presentation-interactive-disposition__content",
-		contentScale !== null ? "presentation-interactive-disposition__content--scaled" : undefined,
-	]
-		.filter(Boolean)
-		.join(" ");
-	const contentStyle: CSSProperties | undefined =
-		contentScale !== null ? interactiveDispositionContentScaleStyle(contentScale) : undefined;
 
 	return (
 		<div
@@ -2219,7 +2250,7 @@ const InteractiveDisposition: FC<{
 			style={wrapperStyle}
 			onPointerDown={onPointerDown}
 		>
-			<div ref={contentRef} className={contentClass} style={contentStyle}>
+			<div ref={contentRef} className="presentation-interactive-disposition__content">
 				{children}
 			</div>
 			{selected && effectiveRect ? (
@@ -2798,7 +2829,11 @@ if (import.meta.vitest) {
 			expect(slide("affiliations-3")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(3);
 			expect(slide("affiliations-2")?.querySelector('h5[data-id="institutions"]')).toBeNull();
 			expect(slide("affiliations-2")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
-			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("LUH");
+			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
+			expect(slide("affiliations-3")?.querySelector(".presentation-affiliation-morph-source")).toBeTruthy();
+			expect(
+				slide("affiliations-3")?.querySelector(".presentation-intro-line h4:not([data-id])")?.textContent,
+			).toContain("LUH");
 			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--x"]')?.textContent).toContain("Chair X");
 			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
 			expect(slide("affiliations-1")?.querySelector('h4[data-id="authors--Alice Example"] sup')?.textContent).toBe("a");
@@ -2821,7 +2856,10 @@ if (import.meta.vitest) {
 			expect(aff2?.querySelector('h4[data-id="institutions--1"] .opacity-20')).toBeNull();
 			const aff3 = slide("affiliations-3");
 			expect(aff3?.querySelector('h4[data-id="institutions--a"] .opacity-20')).toBeTruthy();
-			expect(aff3?.querySelector('h4[data-id="institutions--1"] .opacity-20')?.textContent).toContain("LUH");
+			expect(
+				aff3?.querySelector(".presentation-affiliation-line-part h4:not([data-id]) .opacity-20")?.textContent,
+			).toContain("LUH");
+			expect(aff3?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
 			expect(aff3?.querySelector('h4[data-id="institutions--x"] .opacity-20')).toBeNull();
 		});
 
@@ -3496,26 +3534,24 @@ if (import.meta.vitest) {
 			expect(dispositionPlacementContainer(section, true)).toBe(canvas);
 		});
 
-		it("scales selection chrome with uniformly scaled pinned content", () => {
+		it("uses explicit chrome frame only for flow slides, not canvas-framed slides", () => {
 			const rect = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
 			expect(
 				interactiveDispositionChromeStyle({
 					selected: true,
 					effectiveRect: rect,
-					pinned: false,
+					canvasFramed: false,
 					fullscreen: false,
-					contentScale: null,
 				}),
 			).toEqual(transformFrameStyle(rect));
 			expect(
 				interactiveDispositionChromeStyle({
 					selected: true,
 					effectiveRect: rect,
-					pinned: true,
+					canvasFramed: true,
 					fullscreen: false,
-					contentScale: 0.75,
-				})?.transform,
-			).toBe("scale(0.75)");
+				}),
+			).toBeUndefined();
 		});
 
 		it("converts screen pointer delta through section visual scale", () => {
@@ -3825,20 +3861,14 @@ if (import.meta.vitest) {
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
 			expect(parseFloat(disposition.style.width)).toBeGreaterThan(40);
 			expect(parseFloat(disposition.style.height)).toBeGreaterThan(20);
-			const content = disposition.querySelector(
-				".presentation-interactive-disposition__content",
-			) as HTMLElement;
-			expect(content.classList.contains("presentation-interactive-disposition__content--scaled")).toBe(
-				true,
-			);
-			expect(content.style.transform).toContain("scale(");
 			const chrome = disposition.querySelector(
 				".presentation-interactive-disposition__chrome",
 			) as HTMLElement;
-			expect(chrome.style.transform).toBe(content.style.transform);
+			expect(chrome.isConnected).toBe(true);
+			expect(chrome.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
 		});
 
-		it("aligns unpinned chrome with the disposition frame on the arrangement canvas", () => {
+		it("aligns canvas-framed chrome with the disposition wrapper on the arrangement canvas", () => {
 			act(() => {
 				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
@@ -3849,23 +3879,27 @@ if (import.meta.vitest) {
 			mockClientRect(section, 0, 0, 1200, 900);
 			mockClientRect(canvas, 120, 100, 960, 700);
 			const frameBox = { left: 408, top: 380, width: 384, height: 140 };
+			mockClientRect(disposition, frameBox.left, frameBox.top, frameBox.width, frameBox.height);
 			mockClientRect(frame, frameBox.left, frameBox.top, frameBox.width, frameBox.height);
 			act(() => {
 				pointerClick(disposition);
 			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(
+				true,
+			);
 			const chrome = disposition.querySelector(
 				".presentation-interactive-disposition__chrome",
 			) as HTMLElement;
 			mockClientRect(chrome, frameBox.left, frameBox.top, frameBox.width, frameBox.height);
 			const chromeRect = chrome.getBoundingClientRect();
-			const frameRect = frame.getBoundingClientRect();
-			expect(chromeRect.left).toBeCloseTo(frameRect.left, 0);
-			expect(chromeRect.top).toBeCloseTo(frameRect.top, 0);
-			expect(chromeRect.width).toBeCloseTo(frameRect.width, 0);
-			expect(chromeRect.height).toBeCloseTo(frameRect.height, 0);
+			const wrapperRect = disposition.getBoundingClientRect();
+			expect(chromeRect.left).toBeCloseTo(wrapperRect.left, 0);
+			expect(chromeRect.top).toBeCloseTo(wrapperRect.top, 0);
+			expect(chromeRect.width).toBeCloseTo(wrapperRect.width, 0);
+			expect(chromeRect.height).toBeCloseTo(wrapperRect.height, 0);
 		});
 
-		it("toggles slide fullscreen without pinned transforms or inline placement", () => {
+		it("toggles slide fullscreen on a canvas-framed disposition", () => {
 			act(() => {
 				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
@@ -3878,7 +3912,7 @@ if (import.meta.vitest) {
 			act(() => {
 				fullscreen.click();
 			});
-			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
+			expect(disposition.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
 			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
 			expect(disposition.style.left).toBe("");
 			expect(disposition.querySelector(".presentation-disposition-frame")?.style.position).toBe("absolute");

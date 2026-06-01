@@ -145,6 +145,27 @@ export function affiliationLineName(entry: AffiliationEntry): string {
 	return entry.shortName ?? entry.name;
 }
 
+/** @emoji 🔀 Maps affiliation marks whose line label changes between steps to the prior label for reveal.js morph pairing. */
+export function affiliationEmbodimentMorphLabels(
+	previousStep: readonly AffiliationEntry[],
+	currentStep: readonly AffiliationEntry[],
+): Readonly<Record<string, string>> {
+	const previousByMark = new Map(previousStep.map((entry) => [entry.mark, entry]));
+	const labels: Record<string, string> = {};
+	for (const entry of currentStep) {
+		const previous = previousByMark.get(entry.mark);
+		if (!previous) {
+			continue;
+		}
+		const fromLabel = affiliationLineName(previous);
+		const toLabel = affiliationLineName(entry);
+		if (fromLabel !== toLabel) {
+			labels[entry.mark] = fromLabel;
+		}
+	}
+	return labels;
+}
+
 /** @emoji 🏛 Collects `mark` and `suffix.mark` values present in one affiliation step. */
 export function affiliationMarksInStep(step: readonly AffiliationEntry[]): ReadonlySet<string> {
 	const marks = new Set<string>();
@@ -222,6 +243,8 @@ export interface AffiliationsEmbodiment {
 	readonly kind: "affiliations";
 	readonly id?: string;
 	readonly entries: readonly AffiliationEntry[];
+	/** @emoji 🔀 Prior line labels keyed by mark when the visible label changes after position morph (e.g. full name → shortName). */
+	readonly morphLineLabels?: Readonly<Record<string, string>>;
 }
 
 /** @emoji 🎭 One visual form a {@link Participant} may take on a slide. */
@@ -1366,6 +1389,10 @@ function introParticipants(spec: IntroSpec): Participant[] {
 					kind: "affiliations",
 					id: INTRO_EMBODIMENT_INSTITUTIONS_STEP3,
 					entries: highlightAffiliationDelta(spec.affiliations.steps[2], spec.affiliations.steps[1]),
+					morphLineLabels: affiliationEmbodimentMorphLabels(
+						spec.affiliations.steps[1],
+						spec.affiliations.steps[2],
+					),
 				},
 			],
 		},
@@ -1825,6 +1852,36 @@ if (import.meta.vitest) {
 					shortName: "LUH",
 				}),
 			).toBe("LUH");
+		});
+
+		it("records prior affiliation labels for embodiment morph on chairs slide", () => {
+			const previous = [
+				{ mark: "a", name: "Faculty" },
+				{ mark: "1", name: "Leibniz Universität Hannover" },
+			] as const;
+			const current = [
+				{ mark: "a", name: "Faculty" },
+				{
+					mark: "1",
+					name: "Leibniz Universität Hannover",
+					shortName: "LUH",
+					suffix: { mark: "x", name: "Chair X" },
+				},
+			] as const;
+			expect(affiliationEmbodimentMorphLabels(previous, current)).toEqual({
+				"1": "Leibniz Universität Hannover",
+			});
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
+			const affiliations3 = thought.slides.find((slide) => slide.arrangement.id === "affiliations-3")!.arrangement;
+			const step3 = resolveArrangement(thought.participants, affiliations3).find(
+				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_INSTITUTIONS,
+			)!;
+			if (step3.embodiment.kind === "affiliations") {
+				expect(step3.embodiment.morphLineLabels).toEqual({
+					"1": "University",
+					"2": "Other University",
+				});
+			}
 		});
 
 		it("abbreviates author first names on affiliation slides", () => {

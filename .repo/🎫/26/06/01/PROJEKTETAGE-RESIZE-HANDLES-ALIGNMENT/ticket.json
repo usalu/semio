@@ -3,10 +3,11 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix interactive resize on projektetage: content scales uniformly inside the frame (no text reflow overshoot); resize handles aligned with selection chrome.",
-  "summary": "Resize handles on positioned projektetage slides now track the selected figure background.\n\n- Pinned non-uniform resize already scaled content uniformly; selection chrome now gets the same `scale()` so eight handles sit on the highlight corners instead of inside the full wrapper.\n- Drag, resize, and marquee use arrangement-canvas normalized coordinates (not the larger flex-centered section).\n- Added helpers/tests; all 44 `@framework/presentation/renderer/react` tests pass.",
+  "summary": "Fixed resize handles staying inside the selection and vanishing during resize drag.\n\n- Removed `display: contents` + unpinned/pinned mode switch on canvas slides; positioned dispositions always use a wrapper frame (`--canvas-framed`) so chrome stays `inset: 0` on the same box as the highlight.\n- Removed uniform CSS `scale()` on content/chrome during resize (it pulled handles inward); the wrapper now resizes directly.\n- Resize handles use pointer capture on the handle element; chrome/handles get higher z-index.\n- 44 renderer tests pass.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪8e72685386be43deb606fd885b24412f",
-    "⚪26dabf1cc33f4be69c7d776b1ecdf060"
+    "⚪26dabf1cc33f4be69c7d776b1ecdf060",
+    "⚪7c5329643fe54a5d8ed323e833eddf69"
   ]
 }
