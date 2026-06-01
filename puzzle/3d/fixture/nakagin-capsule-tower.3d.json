@@ -874,6 +874,34 @@
               "radius": 0.36
             },
             {
+              "vortexKind": "tambour circular bottom",
+              "position": [
+                0,
+                0,
+                0.9166667
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "tambour circular top",
+              "position": [
+                0,
+                0,
+                3.6666667
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
               "vortexKind": "door tambour west",
               "position": [
                 2.75,

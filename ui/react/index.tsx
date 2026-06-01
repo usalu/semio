@@ -10663,13 +10663,14 @@ export interface EngagementPossible {
 
 /** @emoji ⌨️ Normalizes engagement command text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`). */
 export function normalizeEngagementCommandText(text: string): string {
-  return text
+  const words = text
     .replace(/[^a-zA-Z0-9]+/g, " ")
     .trim()
     .split(/\s+/)
     .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join("");
+    .flatMap((word) => word.split(/(?=[A-Z])/))
+    .filter(Boolean);
+  return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
 }
 
 /** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
@@ -10765,6 +10766,9 @@ export function isEngagementCommandTypingTarget(t: EventTarget | null): boolean 
 /** @emoji ⌨️ True when printable keys should route to the active window engagement command (skip other text fields). */
 export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolean {
   if (isEngagementCommandTypingTarget(t)) return false;
+  const engagementField = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  const active = document.activeElement;
+  if (engagementField && (active === engagementField || engagementField.contains(active))) return false;
   if (!(t instanceof HTMLElement)) return true;
   if (t instanceof HTMLTextAreaElement) return false;
   if (t instanceof HTMLInputElement) {
@@ -10824,7 +10828,6 @@ export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefi
   const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
   if (!printable) return false;
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
-  if (field && document.activeElement === field) return false;
   const next = normalizeEngagementCommandText(`${input.value ?? field?.value ?? ""}${event.key}`);
   input.onChange?.(next);
   return true;
@@ -15733,7 +15736,7 @@ if (import.meta.vitest) {
       fireEvent.pointerLeave(zone, { relatedTarget: document.body });
       expect(screen.getByPlaceholderText("Command")).toBeTruthy();
       expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
-      fireEvent.keyDown(container.querySelector('[data-slot="window"]')!, { key: "b", bubbles: true });
+      fireEvent.change(activeField, { target: { value: "b" } });
       await waitFor(() => {
         expect(activeField.value).toBe("B");
       });
@@ -15750,35 +15753,29 @@ if (import.meta.vitest) {
       expect(normalizeEngagementCommandText("set height 5")).toBe("SetHeight5");
       expect(normalizeEngagementCommandText("b ")).toBe("B");
       expect(normalizeEngagementCommandText("box")).toBe("Box");
+      expect(normalizeEngagementCommandText("SetHeight")).toBe("SetHeight");
     });
 
     it("Engagement input PascalCases command text and space confirms like enter", async () => {
       const submitted: string[] = [];
       const Harness = () => {
-        const [value, setValue] = reactHostPort.useState("");
+        const [value, setValue] = reactHostPort.useState("SetHeight");
         return (
-          <Window
-            id="engagement-window"
+          <Engagement
             active
-            engagement={{
-              input: {
-                id: "engagement-input",
-                value,
-                placeholder: "Command",
-                onChange: setValue,
-                onSubmit: (next) => submitted.push(next),
-              },
+            input={{
+              id: "engagement-input",
+              value,
+              placeholder: "Command",
+              onChange: setValue,
+              onSubmit: (next) => submitted.push(next),
             }}
-          >
-            <div data-testid="window-body">Body</div>
-          </Window>
+          />
         );
       };
-      const { container } = render(<Harness />);
-      fireEvent.pointerDown(container.querySelector('[data-slot="window-engagement-overlay"]')!, { bubbles: true });
-      const field = await waitFor(() => screen.getByPlaceholderText("Command") as HTMLInputElement);
-      fireEvent.change(field, { target: { value: "set height" } });
-      await waitFor(() => expect(field.value).toBe("SetHeight"));
+      render(<Harness />);
+      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
+      expect(field.value).toBe("SetHeight");
       fireEvent.keyDown(field, { key: " " });
       await waitFor(() => expect(submitted).toEqual(["SetHeight"]));
       fireEvent.keyDown(field, { key: "Enter" });

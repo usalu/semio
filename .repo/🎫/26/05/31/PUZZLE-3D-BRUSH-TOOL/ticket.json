@@ -1,8 +1,9 @@
 {
   "title": "Puzzle 3D Brush Tool",
-  "status": "closed",
+  "status": "open",
   "summary": "Puzzle 3D play now mirrors CAD play engagement: live EngagementSpec from the viewport host (command input, possibles, options, status), puzzle3dPlayEngagementMirror + host bridge for engagementOption/Input/Submit/PossibleSelect, enforcePuzzle3dPlayWindowEngagement requiring engagement.input. Brush Tab/context-menu removed; tool and candidate cycling go through window engagement chevron and Next option.",
   "sessions": [
-    "⚪832954a6c04b40129e01afd7572cad87"
+    "⚪832954a6c04b40129e01afd7572cad87",
+    "⚪347a438a3aad4f87aad47f369f12985d"
   ]
 }
