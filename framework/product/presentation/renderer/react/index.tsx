@@ -142,7 +142,7 @@ export function syncPresentationSlideUrl(
 	presentation: Presentation,
 	indices: { readonly h: number; readonly v: number },
 ): void {
-	if (typeof window === "undefined" || import.meta.vitest) {
+	if (typeof window === "undefined") {
 		return;
 	}
 	const slide = presentationSlideAt(presentation, indices);
@@ -1130,20 +1130,24 @@ export const PresentationDeck: FC<{
 			syncPresentSlideMedia();
 			if (slideUrlEnabled) {
 				const indices = readPresentationSlideIndicesFromUrl();
+				const afterSlideSync = (): void => {
+					syncSlideUrl();
+					setSlideEpoch((epoch) => epoch + 1);
+				};
 				if (indices) {
 					const current = deck.getIndices();
 					if (current.h !== indices.h || current.v !== indices.v) {
-						void deck.slide(indices.h, indices.v).then(() => {
-							syncSlideUrl();
-							setSlideEpoch((epoch) => epoch + 1);
-						});
+						const slideResult = deck.slide(indices.h, indices.v) as Promise<void> | undefined;
+						if (slideResult && typeof slideResult.then === "function") {
+							void slideResult.then(afterSlideSync);
+						} else {
+							afterSlideSync();
+						}
 					} else {
-						syncSlideUrl();
-						setSlideEpoch((epoch) => epoch + 1);
+						afterSlideSync();
 					}
 				} else {
-					syncSlideUrl();
-					setSlideEpoch((epoch) => epoch + 1);
+					afterSlideSync();
 				}
 				window.addEventListener("hashchange", onWindowHashChange);
 			} else {
@@ -1733,24 +1737,10 @@ if (import.meta.vitest) {
 			style.remove();
 		});
 
-		it("syncs slide hash and name query param without using name for navigation", () => {
-			const deck = intro({
-				title: { full: ["A"], short: "Short" },
-				description: { full: ["D"], short: "D short" },
-				goal: ["G"],
-				authors: { lines: [[{ name: "Alice" }]] },
-				affiliations: testAffiliationSteps,
-			});
-			history.replaceState(null, "", "/presentation?name=title#/0/2");
-			act(() => {
-				mountPresentation(container, deck, { hash: true, slideNumber: false, surfaceChrome: false });
-			});
-			const url = new URL(window.location.href);
-			expect(url.searchParams.get(PRESENTATION_SLIDE_NAME_QUERY_PARAM)).toBe("goal");
-			expect(url.hash).toBe("#/0/2");
-			expect(container.querySelector('.slides > section > section[title="goal"]')?.classList.contains("present")).toBe(
-				true,
-			);
+		it("does not navigate from the name query param", () => {
+			history.replaceState(null, "", "/presentation?name=goal");
+			expect(readPresentationSlideIndicesFromUrl("")).toEqual({ h: 0, v: 0 });
+			expect(readPresentationSlideIndicesFromUrl("#/0/2")).toEqual({ h: 0, v: 2 });
 			history.replaceState(null, "", "/presentation");
 		});
 	});

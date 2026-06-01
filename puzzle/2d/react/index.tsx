@@ -3009,6 +3009,8 @@ export class Puzzle2dRenderer {
   private viewportWheelEmitRafId: number | null = null;
   private wheelCameraReactSyncTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private wheelZoomGestureActive = false;
+  /** @emoji 📷 While true, {@link Puzzle2dHostSubtree} must not apply a lagging controlled `camera` prop over the live WASM viewport. */
+  private wasmViewportLeading = false;
   private wheelFlushRafId: number | null = null;
   private pendingWheelScreen: { sx: number; sy: number; deltaY: number } | null = null;
   private inputInvalidateRafId: number | null = null;
@@ -3517,7 +3519,20 @@ export class Puzzle2dRenderer {
     this.camera.y = next.y;
     this.camera.zoom = next.zoom;
     this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
+    this.wasmViewportLeading = true;
     this.bumpTextOverlayGeometryEpoch();
+  }
+
+  /** @emoji 📷 Clears {@link Puzzle2dRenderer.wasmViewportLeading} once the host `camera` prop matches the live viewport; returns whether host sync may proceed. */
+  clearWasmViewportLeadingIfHostCameraMatches(host: CameraState): boolean {
+    if (!this.wasmViewportLeading) {
+      return true;
+    }
+    if (pointsEqual(this.camera, host) && nearlyEqual(this.camera.zoom, host.zoom)) {
+      this.wasmViewportLeading = false;
+      return true;
+    }
+    return false;
   }
 
   /** @emoji 🔍 Mirrors {@link Puzzle2dRenderer.wheelZoomGestureActive} to WASM (skip grid rebuild while zooming). */
@@ -4316,6 +4331,7 @@ export class Puzzle2dRenderer {
             this.camera.y = p.y;
             this.camera.zoom = nextZoom;
             this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
+            this.wasmViewportLeading = true;
             this.bumpTextOverlayGeometryEpoch();
             if (!options?.silentCamera) {
               this.emitter.emit("camera", { ...this.camera });
@@ -5773,6 +5789,19 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
+    it("textOverlayDirty when camera changes during wheel zoom", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      renderer["rememberTextOverlayPainted"]();
+      renderer["wheelZoomGestureActive"] = true;
+      renderer.camera.x = 80;
+      expect(renderer.textOverlayDirty()).toBe(true);
+      renderer.dispose();
+    });
+
     it("paintTextOverlays repaints during wheel zoom", () => {
       const { canvas } = createMockCanvas();
       const overlay = document.createElement("canvas");
@@ -5818,10 +5847,30 @@ if (puzzle2dVitest) {
       renderer["wheelZoomGestureActive"] = true;
       renderer.setCamera(120, 0, 2);
       renderer["paintTextOverlays"]();
-      expect(fillText).not.toHaveBeenCalled();
-      renderer["wheelZoomGestureActive"] = false;
-      renderer["paintTextOverlays"]();
       expect(fillText).toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("acceptsHostCameraProp is false during wheel zoom and deferred WASM gestures", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      expect(renderer.acceptsHostCameraProp()).toBe(true);
+      renderer["wheelZoomGestureActive"] = true;
+      expect(renderer.acceptsHostCameraProp()).toBe(false);
+      renderer["wheelZoomGestureActive"] = false;
+      vi.spyOn(renderer.session, "defersDescriptorSyncFromJs").mockReturnValue(true);
+      expect(renderer.acceptsHostCameraProp()).toBe(false);
+      renderer.dispose();
+    });
+
+    it("clearWasmViewportLeadingIfHostCameraMatches blocks stale host camera until props catch up", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      renderer.setCameraSilent(50, 40, 2);
+      renderer["wasmViewportLeading"] = true;
+      expect(renderer.clearWasmViewportLeadingIfHostCameraMatches({ x: 0, y: 0, zoom: 1 })).toBe(false);
+      expect(renderer.clearWasmViewportLeadingIfHostCameraMatches({ x: 50, y: 40, zoom: 2 })).toBe(true);
+      expect(renderer["wasmViewportLeading"]).toBe(false);
       renderer.dispose();
     });
 
@@ -5867,9 +5916,6 @@ if (puzzle2dVitest) {
       renderer["paintTextOverlays"]();
       fillText.mockClear();
       renderer["wheelZoomGestureActive"] = true;
-      renderer.setCamera(120, 0, 2);
-      renderer["paintTextOverlays"]();
-      expect(fillText).not.toHaveBeenCalled();
       renderer.setSelectionIdsSilent(["n"]);
       renderer["paintTextOverlays"]();
       expect(fillText).toHaveBeenCalled();
@@ -8580,6 +8626,9 @@ function Puzzle2dHostSubtree({
     const cx = camera?.x ?? 0;
     const cy = camera?.y ?? 0;
     const cz = camera?.zoom ?? 1;
+    if (!renderer.clearWasmViewportLeadingIfHostCameraMatches({ x: cx, y: cy, zoom: cz })) {
+      return;
+    }
     renderer.setCameraSilent(cx, cy, cz);
   }, [camera?.x, camera?.y, camera?.zoom, renderer]);
 
