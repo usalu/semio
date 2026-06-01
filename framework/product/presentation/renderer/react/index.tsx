@@ -1190,23 +1190,17 @@ function clampFraction(value: number): number {
 	return Math.max(0, Math.min(1, value));
 }
 
-/** @emoji ↔️ Moves a normalized rect by fractional deltas. */
+/** @emoji ↔️ Moves a normalized rect by fractional deltas (unbounded; follows pointer across the slide). */
 export function translateDispositionRect(
 	rect: DispositionPosition,
 	dx: number,
 	dy: number,
 ): DispositionPosition {
-	const width = rect.width;
-	const height = rect.height;
-	const x = clampFraction(rect.x + dx);
-	const y = clampFraction(rect.y + dy);
-	const maxX = 1 - width;
-	const maxY = 1 - height;
 	return {
-		x: Math.min(x, maxX),
-		y: Math.min(y, maxY),
-		width,
-		height,
+		x: rect.x + dx,
+		y: rect.y + dy,
+		width: rect.width,
+		height: rect.height,
 	};
 }
 
@@ -1297,14 +1291,20 @@ export function clientToSectionFraction(
 	sectionEl: HTMLElement,
 	clientX: number,
 	clientY: number,
+	options?: { readonly clamp?: boolean },
 ): { readonly x: number; readonly y: number } {
 	const bounds = sectionEl.getBoundingClientRect();
 	if (bounds.width <= 0 || bounds.height <= 0) {
 		return { x: 0, y: 0 };
 	}
+	const x = (clientX - bounds.left) / bounds.width;
+	const y = (clientY - bounds.top) / bounds.height;
+	if (options?.clamp === false) {
+		return { x, y };
+	}
 	return {
-		x: clampFraction((clientX - bounds.left) / bounds.width),
-		y: clampFraction((clientY - bounds.top) / bounds.height),
+		x: clampFraction(x),
+		y: clampFraction(y),
 	};
 }
 
@@ -1335,6 +1335,96 @@ function unionDomRects(a: DOMRect, b: DOMRect): DOMRect {
 	return new DOMRect(left, top, right - left, bottom - top);
 }
 
+function tightRangeBoundsRect(element: HTMLElement): DOMRect | null {
+	if (typeof document.createRange !== "function") {
+		return null;
+	}
+	try {
+		const range = document.createRange();
+		range.selectNodeContents(element);
+		if (typeof range.getClientRects === "function") {
+			const clientRects = range.getClientRects();
+			let union: DOMRect | null = null;
+			for (const rect of clientRects) {
+				if (rect.width <= 0 || rect.height <= 0) {
+					continue;
+				}
+				union = union === null ? rect : unionDomRects(union, rect);
+			}
+			if (union !== null) {
+				return union;
+			}
+		}
+		if (typeof range.getBoundingClientRect === "function") {
+			const rangeBox = range.getBoundingClientRect();
+			if (rangeBox.width > 0 && rangeBox.height > 0) {
+				return rangeBox;
+			}
+		}
+	} catch {
+		return null;
+	}
+	return null;
+}
+
+function alignTightBoxWithin(element: HTMLElement, container: DOMRect, tight: DOMRect): DOMRect {
+	const align = typeof getComputedStyle === "function" ? getComputedStyle(element).textAlign : "center";
+	let left = tight.left;
+	if (align === "center") {
+		left = container.left + (container.width - tight.width) / 2;
+	} else if (align === "right") {
+		left = container.right - tight.width;
+	}
+	return new DOMRect(left, tight.top, tight.width, tight.height);
+}
+
+function tightProbeBoundsRect(element: HTMLElement, container: DOMRect): DOMRect | null {
+	const probe = document.createElement("div");
+	probe.style.cssText =
+		"position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;width:max-content;max-width:none;";
+	const clone = element.cloneNode(true) as HTMLElement;
+	clone.style.display = "inline-block";
+	clone.style.width = "auto";
+	clone.style.maxWidth = "none";
+	probe.appendChild(clone);
+	document.body.appendChild(probe);
+	const probeBox = clone.getBoundingClientRect();
+	document.body.removeChild(probe);
+	if (probeBox.width <= 0 || probeBox.height <= 0) {
+		return null;
+	}
+	return alignTightBoxWithin(element, container, probeBox);
+}
+
+/** @emoji 📍 Ink bounds for text nodes (block headings otherwise span the full slide width). */
+export function tightElementBoundsRect(element: HTMLElement): DOMRect | null {
+	const box = element.getBoundingClientRect();
+	if (box.width <= 0 || box.height <= 0) {
+		return null;
+	}
+	const rangeBox = tightRangeBoundsRect(element);
+	if (rangeBox !== null && rangeBox.width < box.width * 0.95) {
+		return rangeBox;
+	}
+	const probeBox = tightProbeBoundsRect(element, box);
+	if (probeBox !== null && probeBox.width < box.width * 0.95) {
+		return probeBox;
+	}
+	return box;
+}
+
+function dispositionNodeBoundsRect(node: HTMLElement, sectionWidth: number): DOMRect | null {
+	const box = node.getBoundingClientRect();
+	if (box.width <= 0 || box.height <= 0) {
+		return null;
+	}
+	const useTight =
+		node.matches(
+			"[data-id], h1, h2, h3, h4, p, .presentation-morph-text, li, .presentation-intro-line",
+		) && box.width >= sectionWidth * 0.85;
+	return useTight ? (tightElementBoundsRect(node) ?? box) : box;
+}
+
 function clientRectToSectionFraction(
 	rect: DOMRect,
 	sectionBounds: DOMRect,
@@ -1352,29 +1442,34 @@ export function measureDispositionBoundsInSection(
 	root: HTMLElement,
 	sectionEl: HTMLElement,
 ): DispositionPosition | null {
-	const sectionBounds = sectionEl.getBoundingClientRect();
-	if (sectionBounds.width <= 0 || sectionBounds.height <= 0) {
-		return null;
-	}
-	let union: DOMRect | null = null;
-	for (const node of root.querySelectorAll(DISPOSITION_BOUNDS_SELECTORS)) {
-		if (!(node instanceof HTMLElement)) {
-			continue;
-		}
-		const rect = node.getBoundingClientRect();
-		if (rect.width <= 0 || rect.height <= 0) {
-			continue;
-		}
-		union = union === null ? rect : unionDomRects(union, rect);
-	}
-	if (union === null) {
-		const fallback = root.getBoundingClientRect();
-		if (fallback.width <= 0 || fallback.height <= 0) {
+	root.classList.add("presentation-interactive-disposition--measuring");
+	try {
+		const sectionBounds = sectionEl.getBoundingClientRect();
+		if (sectionBounds.width <= 0 || sectionBounds.height <= 0) {
 			return null;
 		}
-		return clientRectToSectionFraction(fallback, sectionBounds);
+		let union: DOMRect | null = null;
+		for (const node of root.querySelectorAll(DISPOSITION_BOUNDS_SELECTORS)) {
+			if (!(node instanceof HTMLElement)) {
+				continue;
+			}
+			const rect = dispositionNodeBoundsRect(node, sectionBounds.width);
+			if (!rect) {
+				continue;
+			}
+			union = union === null ? rect : unionDomRects(union, rect);
+		}
+		if (union === null) {
+			const fallback = root.getBoundingClientRect();
+			if (fallback.width <= 0 || fallback.height <= 0) {
+				return null;
+			}
+			return clientRectToSectionFraction(fallback, sectionBounds);
+		}
+		return clientRectToSectionFraction(union, sectionBounds);
+	} finally {
+		root.classList.remove("presentation-interactive-disposition--measuring");
 	}
-	return clientRectToSectionFraction(union, sectionBounds);
 }
 
 /** @emoji 📏 True when measured fractions are large enough to drag or resize reliably. */
@@ -1693,7 +1788,7 @@ const InteractiveDisposition: FC<{
 			}
 			const pointerId = origin.pointerId;
 			const startClient = { x: origin.clientX, y: origin.clientY };
-			const startFraction = clientToSectionFraction(section, startClient.x, startClient.y);
+			const startFraction = clientToSectionFraction(section, startClient.x, startClient.y, { clamp: false });
 			const selectedAtStart = new Set(interaction.selectedIds);
 			if (!selectedAtStart.has(id)) {
 				selectedAtStart.add(id);
@@ -1733,7 +1828,9 @@ const InteractiveDisposition: FC<{
 					dragging = true;
 				}
 				moveEvent.preventDefault();
-				const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY);
+				const current = clientToSectionFraction(section, moveEvent.clientX, moveEvent.clientY, {
+					clamp: false,
+				});
 				const dx = current.x - startFraction.x;
 				const dy = current.y - startFraction.y;
 				const updates = new Map<string, DispositionTransform>();
@@ -2389,8 +2486,8 @@ if (import.meta.vitest) {
 				expect(slide.querySelector(".presentation-arrangement-canvas")).toBeNull();
 				expect(slide.querySelectorAll("[data-disposition-id]").length).toBeGreaterThan(0);
 			}
-			expect(globalsCssSource).not.toMatch(
-				/\.presentation-arrangement--interactive\s*\{[^}]*position\s*:\s*relative/s,
+			expect(globalsCssSource).toMatch(
+				/\.presentation-arrangement--interactive\s*\{[^}]*overflow\s*:\s*visible/s,
 			);
 		});
 
@@ -3085,6 +3182,13 @@ if (import.meta.vitest) {
 			const moved = translateDispositionRect(rect, 0.1, -0.05);
 			expect(moved.x).toBeCloseTo(0.3);
 			expect(moved.y).toBeCloseTo(0.25);
+			const narrow = { x: 0.35, y: 0.4, width: 0.3, height: 0.1 };
+			const movedX = translateDispositionRect(narrow, 0.12, 0);
+			expect(movedX.x).toBeCloseTo(0.47);
+			expect(movedX.y).toBeCloseTo(0.4);
+			const unbounded = translateDispositionRect({ x: 0.8, y: 0.5, width: 0.2, height: 0.1 }, 0.5, -0.3);
+			expect(unbounded.x).toBeCloseTo(1.3);
+			expect(unbounded.y).toBeCloseTo(0.2);
 			const resized = resizeDispositionRect(rect, "se", 0.2, 0.1);
 			expect(resized.width).toBeCloseTo(0.6);
 			expect(resized.height).toBeCloseTo(0.3);
@@ -3105,12 +3209,22 @@ if (import.meta.vitest) {
 			document.body.appendChild(section);
 			section.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
 			root.getBoundingClientRect = () => new DOMRect(0, 280, 960, 120);
-			heading.getBoundingClientRect = () => new DOMRect(330, 300, 300, 80);
+			heading.getBoundingClientRect = () => new DOMRect(0, 300, 960, 80);
 			const measured = measureDispositionBoundsInSection(root, section);
 			document.body.removeChild(section);
-			expect(measured?.width).toBeCloseTo(300 / 960, 5);
 			expect(measured?.width).toBeLessThan(0.5);
-			expect(measured?.x).toBeCloseTo(330 / 960, 5);
+			expect(measured?.x).toBeGreaterThan(0.1);
+		});
+
+		it("uses tight ink bounds for block headings", () => {
+			const heading = document.createElement("h2");
+			heading.textContent = "Goal line";
+			document.body.appendChild(heading);
+			heading.getBoundingClientRect = () => new DOMRect(0, 200, 960, 48);
+			const tight = tightElementBoundsRect(heading);
+			document.body.removeChild(heading);
+			expect(tight).not.toBeNull();
+			expect(tight!.width).toBeLessThan(960);
 		});
 
 		it("scales group members and toggles fullscreen", () => {

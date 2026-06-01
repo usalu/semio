@@ -91,7 +91,9 @@
 }
 
 .reveal .slides > section > section.presentation-arrangement--interactive {
+	position: relative;
 	text-align: initial;
+	overflow: visible;
 }
 
 .reveal .slides > section > section.presentation-arrangement--positioned {
@@ -113,6 +115,7 @@
 .reveal .presentation-interactive-disposition {
 	position: relative;
 	z-index: 1;
+	overflow: visible;
 }
 
 .reveal .presentation-arrangement-canvas > .presentation-interactive-disposition:not(.presentation-interactive-disposition--pinned) {
@@ -299,6 +302,16 @@
 	width: 100% !important;
 	height: 100% !important;
 	transform: none !important;
+}
+
+.reveal
+	.presentation-interactive-disposition--measuring
+	.presentation-interactive-disposition__content
+	:is(h1, h2, h3, h4, p) {
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
 }
 
 .reveal

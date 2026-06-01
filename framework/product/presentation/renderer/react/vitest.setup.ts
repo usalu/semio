@@ -105,6 +105,23 @@ if (typeof globalThis.PointerEvent === "undefined") {
 	} as unknown as typeof PointerEvent;
 }
 
+if (typeof Range !== "undefined" && typeof Range.prototype.getClientRects !== "function") {
+	Range.prototype.getClientRects = function getClientRectsPolyfill(this: Range): DOMRectList {
+		const element =
+			this.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+				? (this.commonAncestorContainer as HTMLElement)
+				: this.commonAncestorContainer.parentElement;
+		if (!element) {
+			return [] as unknown as DOMRectList;
+		}
+		const box = element.getBoundingClientRect();
+		const text = element.textContent?.trim() ?? "";
+		const width = Math.min(Math.max(text.length * 9, 24), box.width);
+		const left = box.left + (box.width - width) / 2;
+		return [new DOMRect(left, box.top, width, box.height)] as unknown as DOMRectList;
+	};
+}
+
 vi.mock("react-pdf", () => ({
 	Document: ({ children }: { readonly children?: ReactNode }) =>
 		createElement("div", { className: "react-pdf__Document" }, children),
