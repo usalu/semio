@@ -1,8 +1,9 @@
 {
   "title": "Capsule Types Under Capsule Typology",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Fix sketchpad bug: capsule types do not appear under capsule typology.",
+  "summary": "Capsule kinds were nested under typology-default while the Capsule typology stayed empty. Fixed rs hydration to honor typology.id refs and register typologies before nesting entities; fixed js Typology hasTypes/hasDesigns parsing; flattened MetabolismKitTypes/Designs from typologies in assets; added sketchpad DTO VFS typology tree; reconciled metabolism fixtures (capsule-representation kinds → typology-capsule); fixed architect.harness; added vitest coverage.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪8e838cfdeead49bbbaceee1810ec1f00"

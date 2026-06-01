@@ -2632,24 +2632,6 @@
                     "hash": "typology-migration-stub",
                     "items": [
                         {
-                            "id": "9a890dd4-0a9c-48ac-920a-9e62666465ef",
-                            "name": "Nakagin Capsule Tower",
-                            "description": "🏺 The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
-                            "icon": "icons/nakagin-capsule-tower.svg",
-                            "image": "images/nakagin-capsule-tower.png",
-                            "unit": "m",
-                            "createdAt": "2025-11-23T01:10:21.335Z",
-                            "updatedAt": "2025-11-23T01:10:21.335Z",
-                            "families": [
-                                {
-                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-capsule"
-                            }
-                        },
-                        {
                             "id": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
                             "name": "Capsule Dream",
                             "description": "🚗 A wild dream of capsule towers.",
@@ -3827,6 +3809,37 @@
                 "designs": {
                     "hash": "typology-migration-stub",
                     "items": []
+                }
+            },
+            {
+                "id": "typology-tower",
+                "name": "Tower",
+                "types": {
+                    "hash": "typology-migration-stub",
+                    "items": []
+                },
+                "designs": {
+                    "hash": "typology-migration-stub",
+                    "items": [
+                        {
+                            "id": "9a890dd4-0a9c-48ac-920a-9e62666465ef",
+                            "name": "Nakagin Capsule Tower",
+                            "description": "🏺 The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
+                            "icon": "icons/nakagin-capsule-tower.svg",
+                            "image": "images/nakagin-capsule-tower.png",
+                            "unit": "m",
+                            "createdAt": "2025-11-23T01:10:21.335Z",
+                            "updatedAt": "2025-11-23T01:10:21.335Z",
+                            "families": [
+                                {
+                                    "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+                                }
+                            ],
+                            "typology": {
+                                "id": "typology-tower"
+                            }
+                        }
+                    ]
                 }
             }
         ]

@@ -4241,6 +4241,18 @@
                 },
                 "designs": {
                     "hash": "typology-migration-stub",
+                    "items": []
+                }
+            },
+            {
+                "id": "typology-tower",
+                "name": "Tower",
+                "types": {
+                    "hash": "typology-migration-stub",
+                    "items": []
+                },
+                "designs": {
+                    "hash": "typology-migration-stub",
                     "items": [
                         {
                             "id": "9a890dd4-0a9c-48ac-920a-9e62666465ef",
@@ -11349,7 +11361,7 @@
                             "createdAt": "2025-11-23T01:10:21.335Z",
                             "updatedAt": "2025-11-23T01:10:21.335Z",
                             "typology": {
-                                "id": "typology-capsule"
+                                "id": "typology-tower"
                             }
                         }
                     ]

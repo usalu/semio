@@ -5344,8 +5344,36 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         expect(children.some((row) => row.kind === "TYPE" && row.name === "KindBeta")).toBe(true);
         const topo = new Typology(session, capsuleTypologyId, store.id);
         const hasTypes = await eventually(() => topo.hasTypes(), (rows) => rows.length >= 2, 10_000);
-        expect(hasTypes.length).toBeGreaterThanOrEqual(2);
-        expect(hasTypes.some((row) => row.name === "KindAlpha")).toBe(true);
+        expect(hasTypes.map((row) => row.id)).toEqual(
+          expect.arrayContaining(["b2000000-0000-4000-8000-000000000001", "b2000000-0000-4000-8000-000000000002"]),
+        );
+      } finally {
+        await session.dispose();
+      }
+    });
+
+    it("installProjection places Nakagin Capsule Tower under typology-tower not typology-capsule", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/architect.harness.kit.semio.json");
+      const session = await Session.openInMemory({ timeoutMs: 120_000 });
+      try {
+        const store = (await session.stores())[0]!;
+        const installed = await store.installProjection(await readFile(fixturePath, "utf8"));
+        expect(installed.ok).toBe(true);
+        session.bus.emit({ kind: "commandSucceeded", payload: null } as never);
+        const nakaginDesignId = "c3000000-0000-4000-8000-000000000001";
+        const towerTopo = new Typology(session, "typology-tower", store.id);
+        const capsuleTopo = new Typology(session, "typology-capsule", store.id);
+        const towerDesigns = await eventually(
+          () => towerTopo.hasDesigns(),
+          (rows) => rows.some((d) => d.id === nakaginDesignId),
+          30_000,
+        );
+        expect(towerDesigns.map((d) => d.id)).toContain(nakaginDesignId);
+        const capsuleDesigns = await capsuleTopo.hasDesigns();
+        expect(capsuleDesigns.map((d) => d.id)).not.toContain(nakaginDesignId);
       } finally {
         await session.dispose();
       }

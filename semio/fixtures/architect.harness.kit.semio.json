@@ -91,6 +91,18 @@
                 },
                 "designs": {
                     "hash": "typology-migration-stub",
+                    "items": []
+                }
+            },
+            {
+                "id": "typology-tower",
+                "name": "Tower",
+                "types": {
+                    "hash": "typology-migration-stub",
+                    "items": []
+                },
+                "designs": {
+                    "hash": "typology-migration-stub",
                     "items": [
                         {
                             "id": "c3000000-0000-4000-8000-000000000001",
@@ -122,7 +134,7 @@
                                 "items": []
                             },
                             "typology": {
-                                "id": "typology-capsule"
+                                "id": "typology-tower"
                             }
                         }
                     ]

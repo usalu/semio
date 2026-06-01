@@ -4,6 +4,8 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const METABOLOGY_TOPO_NAMES = ["base", "capsule", "tambour", "capital", "bridge", "tower"] as const;
+/** @emoji 🗼 Design-name typology match order (`tower` before `capsule` so "Nakagin Capsule Tower" → Tower). */
+const METABOLOGY_DESIGN_TOPO_PRIORITY = ["tower", "bridge", "capital", "tambour", "capsule", "base"] as const;
 
 function itemsOf(block: unknown): unknown[] {
   if (Array.isArray(block)) return block;
@@ -57,12 +59,11 @@ function intendedTypologyIdForType(row: Record<string, unknown>, files: Map<stri
 }
 
 function intendedTypologyIdForDesign(row: Record<string, unknown>): string {
+  const nm = String(row.name ?? "").toLowerCase();
+  const fromName = METABOLOGY_DESIGN_TOPO_PRIORITY.find((x) => nm.includes(x));
+  if (fromName) return newTypologyId(fromName);
   const explicit = String((row.typology as { id?: string } | undefined)?.id ?? "");
   if (explicit.startsWith("typology-")) return explicit;
-  const nm = String(row.name ?? "").toLowerCase();
-  for (const x of METABOLOGY_TOPO_NAMES) {
-    if (nm.includes(x)) return newTypologyId(x);
-  }
   return "typology-default";
 }
 

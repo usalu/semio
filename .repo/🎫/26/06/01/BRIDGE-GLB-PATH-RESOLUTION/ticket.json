@@ -1,0 +1,11 @@
+{
+  "title": "Bridge Glb Path Resolution",
+  "emoji": "🌉",
+  "status": "closed",
+  "description": "Fix places where bridge.glb and other metabolism representation files resolve to wrong paths (stale assets/semio/metabolism vs fixtures/kit/dev/metabolism/representations).",
+  "summary": "Metabolism mesh files (including bridge.glb) live under semio/fixtures/kit/dev/metabolism/representations, two levels above wip/initialKit. sketchpadKitFileUrlById now resolves GLBs via ../../representations/\u003cname\u003e.glb with normalized paths; removed the parallel hardcoded representations root. Pointed @semio/assets, engine tests, and desktop E2E at the fixtures kit tree instead of the removed semio/assets/semio/metabolism path. Added unit tests for bridge.glb URL resolution.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪32c186745e3a46cdbbffcfe36157f3ea"
+  ]
+}

@@ -11249,7 +11249,17 @@ function sketchpadReadEntityId(ref: unknown): string | null {
 }
 
 const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}`;
-const SKETCHPAD_METABOLISM_REPRESENTATIONS_ROOT = "/fixtures/kit/dev/metabolism/representations";
+
+/** @emoji 📍 Normalizes a path relative to the metabolism wip kit fixture root (supports `../representations/*.glb`). */
+export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string): string {
+	if (relativePath.startsWith("/")) return relativePath;
+	const segments = SKETCHPAD_METABOLISM_KIT_ASSET_ROOT.split("/").filter(Boolean);
+	for (const part of relativePath.replace(/^\.\//, "").split("/")) {
+		if (part === "..") segments.pop();
+		else if (part !== ".") segments.push(part);
+	}
+	return `/${segments.join("/")}`;
+}
 
 /** @emoji 🗂️ Resolves kit file ids to fetchable mesh URLs (http, absolute, or metabolism assets). */
 export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
@@ -11266,12 +11276,11 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 			continue;
 		}
 		if (row.path) {
-			const path = row.path.replace(/^\.\//, "");
-			map.set(row.id, path.startsWith("/") ? path : `${SKETCHPAD_METABOLISM_KIT_ASSET_ROOT}/${path}`);
+			map.set(row.id, sketchpadFixtureUrlFromKitRelativePath(row.path));
 			continue;
 		}
 		if (row.name && row.name.endsWith(".glb")) {
-			map.set(row.id, `${SKETCHPAD_METABOLISM_REPRESENTATIONS_ROOT}/${row.name}`);
+			map.set(row.id, sketchpadFixtureUrlFromKitRelativePath(`../../representations/${row.name}`));
 		}
 	}
 	return map;
@@ -14910,6 +14919,16 @@ if (import.meta.vitest) {
 			} as Kit;
 			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:model/gltf-binary;base64,AAAA");
 		});
+
+		it("resolves metabolism representation glbs via sibling representations folder", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "bridge.glb" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe(
+				"/fixtures/kit/dev/metabolism/representations/bridge.glb",
+			);
+		});
 	});
 
 	describe("sketchpadMergeKitDtoFromBundleProjection", () => {
@@ -15322,6 +15341,14 @@ if (import.meta.vitest) {
 				files: [{ id: "f1", path: "files/mesh.glb" }],
 			} as Kit;
 			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/kit/dev/metabolism/wip/initialKit/files/mesh.glb");
+		});
+
+		it("normalizes parent-relative representation paths", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "f1", path: "../../representations/bridge.glb" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/kit/dev/metabolism/representations/bridge.glb");
 		});
 	});
 

@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 const ROOT = join(import.meta.dir, "../../../../../../");
 const METABOLOGY_TOPO_NAMES = ["base", "capsule", "tambour", "capital", "bridge", "tower"] as const;
+const METABOLOGY_DESIGN_TOPO_PRIORITY = ["tower", "bridge", "capital", "tambour", "capsule", "base"] as const;
 
 function itemsOf(block: unknown): unknown[] {
   if (Array.isArray(block)) return block;
@@ -48,13 +49,7 @@ function migrateKitObject(kit: Record<string, unknown>): void {
     if (!d || typeof d !== "object") continue;
     const row = d as Record<string, unknown>;
     const nm = String(row.name ?? "").toLowerCase();
-    let topoName = "default";
-    for (const x of METABOLOGY_TOPO_NAMES) {
-      if (nm.includes(x)) {
-        topoName = x;
-        break;
-      }
-    }
+    const topoName = METABOLOGY_DESIGN_TOPO_PRIORITY.find((x) => nm.includes(x)) ?? "default";
     const bucket = ensureTopo(topoName);
     row.typology = { id: newTypologyId(topoName) };
     bucket.designs.push(row);

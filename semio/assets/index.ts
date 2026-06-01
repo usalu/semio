@@ -11,7 +11,7 @@
 //#region 🗃️Exports
 // Builtin Metabolism kit and UI icons only — test JSON lives in `@semio/fixtures`.
 
-import MetabolismKitData from "./semio/metabolism/wip/initialKit/kit.semio.json";
+import MetabolismKitData from "../fixtures/kit/dev/metabolism/wip/initialKit/kit.semio.json";
 
 export {
   Plus as AddIcon, AlertCircle as AlertCircleIcon,

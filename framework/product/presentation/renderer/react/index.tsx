@@ -362,7 +362,7 @@ function morphAnchorClass(emphasis: ParticipantEmphasis): string {
 //#region 🔖SlideEpoch
 const PresentationSlideEpochContext = createContext(0);
 
-function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
+export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
 	const width = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-width") ?? "960");
 	const height = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-height") ?? "700");
 	return {
@@ -1416,13 +1416,47 @@ export function toggleFullscreenRect(
 	return { rect: { x: 0, y: 0, width: 1, height: 1 }, stash: current };
 }
 
-/** @emoji 🖼 Arrangement canvas when dispositions use declared slide-space frames; otherwise the slide section. */
+/** @emoji 📐 reveal.js nested slide section with usable layout height for pointer math. */
+export function slideCoordinateRoot(sectionEl: HTMLElement): HTMLElement {
+	let current: HTMLElement | null = sectionEl;
+	while (current && !current.classList.contains("slides")) {
+		if (current.offsetWidth > 0 && current.offsetHeight > 0) {
+			return current;
+		}
+		current = current.parentElement;
+	}
+	const stack = sectionEl.closest(".reveal .slides > section.present");
+	if (stack instanceof HTMLElement && stack.offsetWidth > 0 && stack.offsetHeight > 0) {
+		return stack;
+	}
+	const parent = sectionEl.parentElement;
+	if (parent instanceof HTMLElement && parent.offsetWidth > 0 && parent.offsetHeight > 0) {
+		return parent;
+	}
+	const reveal = sectionEl.closest(".reveal");
+	return reveal instanceof HTMLElement ? reveal : sectionEl;
+}
+
+/** @emoji 📐 Client/layout bounds for slide-space fractions when inner reveal sections report zero height. */
+export function slideLayoutBounds(sectionEl: HTMLElement): DOMRect {
+	const root = slideCoordinateRoot(sectionEl);
+	const rect = root.getBoundingClientRect();
+	if (rect.width > 0 && rect.height > 0) {
+		return rect;
+	}
+	const reveal = sectionEl.closest(".reveal");
+	const { width, height } = parsePresentationSlideCssSize(reveal instanceof HTMLElement ? reveal : null);
+	const anchor = sectionEl.getBoundingClientRect();
+	return new DOMRect(anchor.left, anchor.top, width, height);
+}
+
+/** @emoji 🖼 Arrangement canvas when dispositions use declared slide-space frames; otherwise the slide coordinate root. */
 export function dispositionPlacementContainer(
 	sectionEl: HTMLElement,
 	canvasPlacement: boolean,
 ): HTMLElement {
 	if (!canvasPlacement) {
-		return sectionEl;
+		return slideCoordinateRoot(sectionEl);
 	}
 	const canvas = sectionEl.querySelector(".presentation-arrangement-canvas");
 	return canvas instanceof HTMLElement ? canvas : sectionEl;
@@ -1458,7 +1492,7 @@ export function clientToSectionFraction(
 	clientY: number,
 	options?: { readonly clamp?: boolean },
 ): { readonly x: number; readonly y: number } {
-	const bounds = sectionEl.getBoundingClientRect();
+	const bounds = slideLayoutBounds(sectionEl);
 	if (bounds.width <= 0 || bounds.height <= 0) {
 		return { x: 0, y: 0 };
 	}
@@ -1478,7 +1512,7 @@ export function measureElementRectInSection(
 	element: HTMLElement,
 	sectionEl: HTMLElement,
 ): DispositionPosition | null {
-	const sectionBounds = sectionEl.getBoundingClientRect();
+	const sectionBounds = slideLayoutBounds(sectionEl);
 	if (sectionBounds.width <= 0 || sectionBounds.height <= 0) {
 		return null;
 	}
@@ -1609,7 +1643,7 @@ export function measureDispositionBoundsInSection(
 ): DispositionPosition | null {
 	root.classList.add("presentation-interactive-disposition--measuring");
 	try {
-		const sectionBounds = sectionEl.getBoundingClientRect();
+		const sectionBounds = slideLayoutBounds(sectionEl);
 		if (sectionBounds.width <= 0 || sectionBounds.height <= 0) {
 			return null;
 		}
@@ -1632,6 +1666,41 @@ export function measureDispositionBoundsInSection(
 			return clientRectToSectionFraction(fallback, sectionBounds);
 		}
 		return clientRectToSectionFraction(union, sectionBounds);
+	} finally {
+		root.classList.remove("presentation-interactive-disposition--measuring");
+	}
+}
+
+/** @emoji 📍 Ink bounds as fractions inside a container (selection chrome and fill use this space). */
+export function measureDispositionBoundsInContainer(
+	root: HTMLElement,
+	containerEl: HTMLElement,
+): DispositionPosition | null {
+	root.classList.add("presentation-interactive-disposition--measuring");
+	try {
+		const containerBounds = containerEl.getBoundingClientRect();
+		if (containerBounds.width <= 0 || containerBounds.height <= 0) {
+			return null;
+		}
+		let union: DOMRect | null = null;
+		for (const node of root.querySelectorAll(DISPOSITION_BOUNDS_SELECTORS)) {
+			if (!(node instanceof HTMLElement)) {
+				continue;
+			}
+			const rect = dispositionNodeBoundsRect(node, containerBounds.width);
+			if (!rect) {
+				continue;
+			}
+			union = union === null ? rect : unionDomRects(union, rect);
+		}
+		if (union === null) {
+			const fallback = root.getBoundingClientRect();
+			if (fallback.width <= 0 || fallback.height <= 0) {
+				return null;
+			}
+			return clientRectToSectionFraction(fallback, containerBounds);
+		}
+		return clientRectToSectionFraction(union, containerBounds);
 	} finally {
 		root.classList.remove("presentation-interactive-disposition--measuring");
 	}
@@ -1666,12 +1735,13 @@ function transformFrameStyle(transform: DispositionPosition): CSSProperties {
 
 /** @emoji 📐 reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
 export function sectionVisualScale(sectionEl: HTMLElement): number {
-	const layoutW = sectionEl.offsetWidth;
-	const layoutH = sectionEl.offsetHeight;
+	const root = slideCoordinateRoot(sectionEl);
+	const layoutW = root.offsetWidth;
+	const layoutH = root.offsetHeight;
 	if (layoutW <= 0 || layoutH <= 0) {
 		return 1;
 	}
-	const rect = sectionEl.getBoundingClientRect();
+	const rect = root.getBoundingClientRect();
 	const scaleX = rect.width / layoutW;
 	const scaleY = rect.height / layoutH;
 	const scale = Math.min(scaleX, scaleY);
@@ -1776,10 +1846,9 @@ export function flowPixelOffsetToSectionRect(
 	sectionEl: HTMLElement,
 ): DispositionPosition {
 	const scale = sectionVisualScale(sectionEl);
-	const layoutW = sectionEl.offsetWidth;
-	const layoutH = sectionEl.offsetHeight;
-	const w = layoutW > 0 ? layoutW : sectionEl.getBoundingClientRect().width / scale;
-	const h = layoutH > 0 ? layoutH : sectionEl.getBoundingClientRect().height / scale;
+	const layout = slideLayoutBounds(sectionEl);
+	const w = layout.width / scale;
+	const h = layout.height / scale;
 	return {
 		x: measured.x + transform.x / w,
 		y: measured.y + transform.y / h,
@@ -2076,6 +2145,8 @@ const InteractiveDisposition: FC<{
 
 	const effectiveRect = resolveEffectiveDispositionRect(id, interactionRect, interaction, registry);
 	const [gesturing, setGesturing] = useState(false);
+	const useFlowInkFrame = flowLayout && !flowSectionFrame;
+	const [inkInWrapper, setInkInWrapper] = useState<DispositionPosition | null>(null);
 	const displayDisposition = disposition;
 	const rowHovered = rowBandId !== undefined && rowHover?.hoveredRowBandId === rowBandId;
 
@@ -2111,6 +2182,19 @@ const InteractiveDisposition: FC<{
 		const measured = measureDispositionRect();
 		registry.registerRect(id, measured);
 	}, [id, interactionRect, transform, registry, sectionRef, slideEpoch, measureDispositionRect]);
+
+	useLayoutEffect(() => {
+		if (!useFlowInkFrame || !(selected || gesturing || flowPixelOffset)) {
+			setInkInWrapper(null);
+			return;
+		}
+		const root = rootRef.current;
+		if (!root) {
+			setInkInWrapper(null);
+			return;
+		}
+		setInkInWrapper(measureDispositionBoundsInContainer(root, root));
+	}, [useFlowInkFrame, selected, gesturing, flowPixelOffset, transform, slideEpoch, disposition]);
 
 	const ensureRectForManipulation = useCallback(
 		(kind: "move" | "resize"): DispositionPosition | null => {
@@ -2386,6 +2470,15 @@ const InteractiveDisposition: FC<{
 		.filter(Boolean)
 		.join(" ");
 
+	const flowInkActive = useFlowInkFrame && (selected || gesturing || flowPixelOffset);
+	const wrapperFrame: CSSProperties = flowInkActive ? { position: "relative" } : {};
+	if (flowPixelOffset && transform) {
+		Object.assign(wrapperFrame, flowDispositionOffsetStyle(transform));
+	} else if (canvasFramed && effectiveRect) {
+		Object.assign(wrapperFrame, transformFrameStyle(effectiveRect));
+	} else if (transformed && transform) {
+		Object.assign(wrapperFrame, transformFrameStyle(transform));
+	}
 	const wrapperStyle: CSSProperties | undefined = fullscreen
 		? {
 				position: "absolute",
@@ -2394,29 +2487,34 @@ const InteractiveDisposition: FC<{
 				height: "100%",
 				boxSizing: "border-box",
 			}
-		: flowPixelOffset
-			? transform
-				? flowDispositionOffsetStyle(transform)
-				: undefined
-			: canvasFramed && effectiveRect
-				? transformFrameStyle(effectiveRect)
-				: transformed && transform
-					? transformFrameStyle(transform)
-					: undefined;
-
-	const chromeLayoutRect =
-		flowPixelOffset && measuredNatural
-			? measuredNatural
-			: flowSectionFrame && transform
-				? transform
-				: effectiveRect;
-	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
-		selected: selected || gesturing,
-		effectiveRect: chromeLayoutRect,
-		canvasFramed,
-		fullscreen,
-	});
-	const showControls = (selected || gesturing) && Boolean(chromeLayoutRect ?? effectiveRect);
+		: Object.keys(wrapperFrame).length > 0
+			? wrapperFrame
+			: undefined;
+	const contentInkStyle: CSSProperties | undefined =
+		flowInkActive && inkInWrapper ? transformFrameStyle(inkInWrapper) : undefined;
+	const resizeContentBaseline = measuredNatural ?? interactionRect;
+	const resizeContentScale =
+		!canvasFramed &&
+		!flowPixelOffset &&
+		transform &&
+		resizeContentBaseline
+			? interactiveDispositionContentScale(transform, resizeContentBaseline)
+			: null;
+	const contentStyle: CSSProperties | undefined =
+		contentInkStyle ??
+		(resizeContentScale !== null ? interactiveDispositionContentScaleStyle(resizeContentScale) : undefined);
+	const chromeLayoutRect = flowSectionFrame && transform ? transform : effectiveRect;
+	const chromeStyle: CSSProperties | undefined = useFlowInkFrame
+		? undefined
+		: interactiveDispositionChromeStyle({
+				selected: selected || gesturing,
+				effectiveRect: chromeLayoutRect,
+				canvasFramed,
+				fullscreen,
+			});
+	const showControls =
+		(selected || gesturing) &&
+		Boolean(useFlowInkFrame ? inkInWrapper ?? measuredNatural : chromeLayoutRect ?? effectiveRect);
 	const showHandles = showControls && !fullscreen;
 
 	return (
@@ -2440,7 +2538,11 @@ const InteractiveDisposition: FC<{
 					: undefined
 			}
 		>
-			<div ref={contentRef} className="presentation-interactive-disposition__content">
+			<div
+				ref={contentRef}
+				className="presentation-interactive-disposition__content"
+				style={contentStyle}
+			>
 				<MorphDispositionView disposition={displayDisposition} />
 				{showControls ? (
 					<>
@@ -3799,8 +3901,26 @@ if (import.meta.vitest) {
 			const canvas = document.createElement("div");
 			canvas.className = "presentation-arrangement-canvas";
 			section.append(canvas);
+			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(section, "offsetHeight", { value: 700, configurable: true });
 			expect(dispositionPlacementContainer(section, false)).toBe(section);
 			expect(dispositionPlacementContainer(section, true)).toBe(canvas);
+		});
+
+		it("maps pointer fractions via parent stack when nested reveal section has zero height", () => {
+			const outer = document.createElement("section");
+			const inner = document.createElement("section");
+			outer.append(inner);
+			Object.defineProperty(outer, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(outer, "offsetHeight", { value: 700, configurable: true });
+			Object.defineProperty(inner, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(inner, "offsetHeight", { value: 0, configurable: true });
+			outer.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
+			inner.getBoundingClientRect = () => new DOMRect(0, 0, 960, 0);
+			expect(dispositionPlacementContainer(inner, false)).toBe(outer);
+			const fraction = clientToSectionFraction(inner, 480, 350, { clamp: false });
+			expect(fraction.x).toBeCloseTo(0.5);
+			expect(fraction.y).toBeCloseTo(0.5);
 		});
 
 		it("uses explicit chrome frame only for flow slides, not canvas-framed slides", () => {
@@ -3870,6 +3990,21 @@ if (import.meta.vitest) {
 			document.body.removeChild(section);
 			expect(measured?.width).toBeLessThan(0.5);
 			expect(measured?.x).toBeGreaterThan(0.1);
+		});
+
+		it("measures ink bounds relative to the disposition wrapper for selection chrome", () => {
+			const root = document.createElement("div");
+			const heading = document.createElement("h2");
+			heading.textContent = "Title";
+			root.appendChild(heading);
+			document.body.appendChild(root);
+			root.getBoundingClientRect = () => new DOMRect(0, 280, 960, 120);
+			heading.getBoundingClientRect = () => new DOMRect(330, 300, 300, 80);
+			const inWrapper = measureDispositionBoundsInContainer(root, root);
+			document.body.removeChild(root);
+			expect(inWrapper?.x).toBeCloseTo(330 / 960);
+			expect(inWrapper?.width).toBeCloseTo(300 / 960);
+			expect(inWrapper?.y).toBeCloseTo(20 / 120);
 		});
 
 		it("uses tight ink bounds for block headings", () => {
@@ -4213,9 +4348,66 @@ if (import.meta.vitest) {
 				".presentation-interactive-disposition__chrome",
 			) as HTMLElement;
 			expect(chrome.isConnected).toBe(true);
-			expect(chrome.style.left).not.toBe("");
-			expect(chrome.style.width).not.toBe("");
+			expect(chrome.style.left).toBe("");
+			expect(content.style.left).not.toBe("");
+			expect(content.style.width).not.toBe("");
 			expect(chrome.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
+		});
+
+		it("resizes flow disposition from se handle when nested reveal section has zero height", () => {
+			const deck = intro({
+				title: { full: ["A", "B", "C"], short: "Short" },
+				description: { full: ["D1"], short: "D short" },
+				goal: ["G1"],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni" },
+						],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni", shortName: "LUH", suffix: { mark: "x", name: "Chair X" } },
+						],
+					],
+				},
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const section = container.querySelector(
+				'.slides > section > section[title="title"]',
+			) as HTMLElement;
+			const stack = section.parentElement as HTMLElement;
+			section.classList.add("present");
+			stack.classList.add("present");
+			Object.defineProperty(stack, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(stack, "offsetHeight", { value: 700, configurable: true });
+			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(section, "offsetHeight", { value: 0, configurable: true });
+			const disposition = section.querySelector("[data-disposition-id]") as HTMLElement;
+			const heading = disposition.querySelector("h2") as HTMLElement;
+			mockClientRect(stack, 0, 0, 960, 700);
+			mockClientRect(section, 0, 0, 960, 0);
+			mockClientRect(disposition, 330, 300, 300, 80);
+			mockClientRect(heading, 330, 300, 300, 80);
+			act(() => {
+				pointerClick(disposition);
+			});
+			const handle = disposition.querySelector(
+				".presentation-interaction-handle--se",
+			) as HTMLElement;
+			act(() => {
+				pointerDrag(handle, 620, 370, 720, 420);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(parseFloat(disposition.style.width)).toBeGreaterThan(15);
+			expect(parseFloat(disposition.style.height)).toBeGreaterThan(5);
+			expect(disposition.querySelector(".presentation-interactive-disposition__content")?.style.transform).toContain(
+				"scale(",
+			);
 		});
 
 		it("drags positioned disposition", () => {
