@@ -293,22 +293,30 @@ const mediaThought: Thought = {
 				name: "Bauteilarten",
 				dispositions: [
 					{
+						participantId: CATALOGUE_PARTICIPANT,
+						emphasis: "active",
+						split: { tiles: CATALOGUE_FOCUS_TILES },
+					},
+					{
 						participantId: CATALOGUE_COL1,
 						embodimentId: CATALOGUE_EMBODIMENT_CROP,
 						emphasis: "active",
 						position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col1),
+						style: { opacity: 0 },
 					},
 					{
 						participantId: CATALOGUE_COL2,
 						embodimentId: CATALOGUE_EMBODIMENT_CROP,
 						emphasis: "active",
 						position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col2),
+						style: { opacity: 0 },
 					},
 					{
 						participantId: CATALOGUE_COL3,
 						embodimentId: CATALOGUE_EMBODIMENT_CROP,
 						emphasis: "active",
 						position: unionTilePosition(CATALOGUE_FOCUS_TILES, CATALOGUE_COLUMN_TILE_KEYS.col3),
+						style: { opacity: 0 },
 					},
 				],
 			},
@@ -438,21 +446,23 @@ if (import.meta.vitest) {
 			expect(catalogue?.arrangement.dispositions[0]?.split?.tiles).toHaveLength(15);
 		});
 
-		it("focuses three column crop figures", () => {
+		it("focuses ten catalogue tiles plus hidden column morph anchors", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
 			const focus = media?.slides.find((slide) => slide.arrangement.id === "catalogue-focus");
 			const dispositions = focus?.arrangement.dispositions ?? [];
-			expect(dispositions.map((disposition) => disposition.participantId)).toEqual([
+			expect(dispositions[0]?.participantId).toBe(CATALOGUE_PARTICIPANT);
+			expect(dispositions[0]?.split?.tiles).toHaveLength(10);
+			expect(dispositions.slice(1).map((disposition) => disposition.participantId)).toEqual([
 				CATALOGUE_COL1,
 				CATALOGUE_COL2,
 				CATALOGUE_COL3,
 			]);
-			expect(dispositions.every((disposition) => disposition.embodimentId === CATALOGUE_EMBODIMENT_CROP)).toBe(true);
+			expect(dispositions.slice(1).every((disposition) => disposition.style?.opacity === 0)).toBe(true);
 			const col3 = dispositions.find((disposition) => disposition.participantId === CATALOGUE_COL3);
 			expect(col3?.position?.height).toBeGreaterThan(0.7);
 		});
 
-		it("morphs column crops into labels in a dedicated morph run", () => {
+		it("morphs catalogue tiles into focus and column crops into labels in one run", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.id === "media");
 			expect(media).toBeDefined();
 			const expanded = expandThoughtSlides(media!);
@@ -460,8 +470,8 @@ if (import.meta.vitest) {
 			const focusSlide = expanded.find((slide) => slide.id === "catalogue-focus");
 			const bridgeSlide = expanded.find((slide) => slide.id === "catalogue-labels--bridge");
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
-			expect(catalogueSlide?.autoAnimateId).toBeUndefined();
-			expect(focusSlide?.autoAnimateId).toMatch(/^media--m\d+$/);
+			expect(catalogueSlide?.autoAnimateId).toBeDefined();
+			expect(focusSlide?.autoAnimateId).toBe(catalogueSlide?.autoAnimateId);
 			expect(bridgeSlide?.derived).toBe(true);
 			expect(bridgeSlide?.autoAnimateId).toBe(focusSlide?.autoAnimateId);
 			expect(labelSlide?.autoAnimateId).toBe(focusSlide?.autoAnimateId);

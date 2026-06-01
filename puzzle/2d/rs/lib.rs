@@ -2875,6 +2875,33 @@ mod board_host {
             self.current_draw_lod()
         }
 
+        fn board_draw_lod_label(lod: BoardDrawLod) -> &'static str {
+            match lod {
+                BoardDrawLod::Minimap => "minimap",
+                BoardDrawLod::Overview => "overview",
+                BoardDrawLod::Compact => "compact",
+                BoardDrawLod::Normal => "normal",
+                BoardDrawLod::Detail => "detail",
+                BoardDrawLod::Micro => "micro",
+            }
+        }
+
+        /// @emoji 🏷️ Camera, draw LOD, and visible node centers from the WASM host for the JS text overlay (must match the last GPU frame).
+        pub fn overlay_paint_state_json(&self) -> String {
+            let nodes: Vec<serde_json::Value> = self
+                .nodes
+                .values()
+                .filter(|n| n.visible)
+                .map(|n| serde_json::json!({ "id": n.id, "x": n.x, "y": n.y }))
+                .collect();
+            serde_json::json!({
+                "camera": { "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom },
+                "lod": Self::board_draw_lod_label(self.draw_lod_for_frame()),
+                "nodes": nodes,
+            })
+            .to_string()
+        }
+
         fn bump_content_scene_generation(&mut self) {
             self.content_scene_generation = self.content_scene_generation.wrapping_add(1);
             *self.world_content_cache.borrow_mut() = None;
@@ -7150,6 +7177,11 @@ impl BoardSession {
             "zoom": inner.host.camera.zoom,
         })
         .to_string()
+    }
+
+    #[wasm_bindgen(js_name = overlayPaintStateJson)]
+    pub fn overlay_paint_state_json_wasm(&self) -> String {
+        self.state.borrow().host.overlay_paint_state_json()
     }
 
     #[wasm_bindgen(js_name = setSelectionOptions)]

@@ -2344,13 +2344,18 @@ export function applyRelocateToFixture(fixture: FixtureV1, payload: RelocatePayl
 
 const ATTRACTING_CHILDREN_EMPTY: readonly string[] = [];
 
-/** @emoji ⏱️ Defers fixture persist / proximity work until after pointer release paints. */
-function scheduleRelocateCommit(run: () => void): void {
+/** @emoji ⏱️ Defers work off the pointer/input hot path (idle callback when available). */
+function scheduleDeferredCallback(run: () => void): void {
   if (typeof requestIdleCallback === "function") {
     requestIdleCallback(run, { timeout: 120 });
     return;
   }
   queueMicrotask(run);
+}
+
+/** @emoji ⏱️ Defers fixture persist / proximity work until after pointer release paints. */
+function scheduleRelocateCommit(run: () => void): void {
+  scheduleDeferredCallback(run);
 }
 
 type ObjectStoreListener = () => void;
@@ -5224,6 +5229,20 @@ export function projectWorldToClient(point: Vector3, camera: Camera, rect: DOMRe
   };
 }
 
+/** @emoji 🖱️ Precomputes mesh geometry bounding boxes so marquee {@link Box3.setFromObject} avoids a cold first-gesture stall. */
+export function warmObjectGroupMarqueeBounds(group: Group): void {
+  group.traverse((node) => {
+    if (!(node instanceof Mesh)) {
+      return;
+    }
+    const geometry = node.geometry;
+    if (!geometry || geometry.boundingBox !== null) {
+      return;
+    }
+    geometry.computeBoundingBox();
+  });
+}
+
 /** @emoji 🖱️ Projects an object group's bounds corners to client space. */
 export function projectObjectGroupToScreenPoints(group: Group, camera: Camera, rect: DOMRect): ScreenPoint[] {
   const box = new Box3().setFromObject(group, false);
@@ -6103,7 +6122,10 @@ function MarqueeBridge() {
     readonly startY: number;
     active: boolean;
     path: ScreenPoint[];
+    lastX: number;
+    lastY: number;
   } | null>(null);
+  const marqueeCaptureRafRef = reactHostPort.useRef(0);
   reactHostPort.useEffect(() => {
     const canvas = gl.domElement;
     if (!canvas) {
@@ -6112,7 +6134,14 @@ function MarqueeBridge() {
     const resetOverlay = () => {
       puzzle3dMarqueeOverlayStore.setSnapshot(MARQUEE_OVERLAY_IDLE);
     };
+    const cancelPendingMarqueeCapture = () => {
+      if (marqueeCaptureRafRef.current) {
+        cancelAnimationFrame(marqueeCaptureRafRef.current);
+        marqueeCaptureRafRef.current = 0;
+      }
+    };
     const cancelGesture = () => {
+      cancelPendingMarqueeCapture();
       gestureRef.current = null;
       cancelMarqueePreview();
       resetOverlay();
@@ -6122,7 +6151,15 @@ function MarqueeBridge() {
       if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current || puzzle3dBrushToolActiveRef.current) {
         return;
       }
-      gestureRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, active: false, path: [{ x: event.clientX, y: event.clientY }] };
+      gestureRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        active: false,
+        path: [{ x: event.clientX, y: event.clientY }],
+        lastX: event.clientX,
+        lastY: event.clientY,
+      };
     };
     const onPointerMove = (event: PointerEvent) => {
       if (puzzle3dRelocateDragActiveRef.current) {
@@ -6142,25 +6179,48 @@ function MarqueeBridge() {
           ? [...gesture.path, { x: event.clientX, y: event.clientY }]
           : [{ x: gesture.startX, y: gesture.startY }, { x: event.clientX, y: event.clientY }];
       const activating = !gesture.active;
-      gestureRef.current = { ...gesture, active: true, path };
-      if (activating) {
-        captureMarqueeCandidates();
-      }
-      puzzle3dMarqueeOverlayStore.setSnapshot({
-        active: true,
-        method: marquee.selectionMethod,
-        start: { x: gesture.startX, y: gesture.startY },
-        current: { x: event.clientX, y: event.clientY },
-        path,
-      });
-      previewMarqueeSelection({
+      const lastX = event.clientX;
+      const lastY = event.clientY;
+      gestureRef.current = { ...gesture, active: true, path, lastX, lastY };
+      const gestureArgs: MarqueeGestureArgs = {
         startX: gesture.startX,
         startY: gesture.startY,
-        endX: event.clientX,
-        endY: event.clientY,
+        endX: lastX,
+        endY: lastY,
         path,
         modifiers: { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey },
-      });
+      };
+      const overlaySnapshot = {
+        active: true as const,
+        method: marquee.selectionMethod,
+        start: { x: gesture.startX, y: gesture.startY },
+        current: { x: lastX, y: lastY },
+        path,
+      };
+      if (activating) {
+        puzzle3dMarqueeOverlayStore.setSnapshot(overlaySnapshot);
+        cancelPendingMarqueeCapture();
+        marqueeCaptureRafRef.current = requestAnimationFrame(() => {
+          marqueeCaptureRafRef.current = 0;
+          const currentGesture = gestureRef.current;
+          if (!currentGesture?.active) {
+            return;
+          }
+          captureMarqueeCandidates();
+          previewMarqueeSelection({
+            startX: currentGesture.startX,
+            startY: currentGesture.startY,
+            endX: currentGesture.lastX,
+            endY: currentGesture.lastY,
+            path: currentGesture.path,
+            modifiers: gestureArgs.modifiers,
+          });
+          invalidate();
+        });
+      } else {
+        puzzle3dMarqueeOverlayStore.setSnapshot(overlaySnapshot);
+        previewMarqueeSelection(gestureArgs);
+      }
       invalidate();
     };
     const onPointerUp = (event: PointerEvent) => {
@@ -6643,6 +6703,9 @@ function RegistryProvider({
   const registerObject = reactHostPort.useCallback((id: string, objectKind: string | undefined, group: Group | null) => {
     objectGroupMap.current.set(id, group);
     objectKindsRef.current.set(id, objectKind);
+    if (group) {
+      scheduleDeferredCallback(() => warmObjectGroupMarqueeBounds(group));
+    }
   }, []);
 
   const collectObjectGroups = reactHostPort.useCallback((): Group[] => {
@@ -8357,6 +8420,25 @@ if (import.meta.vitest) {
     it("is crossing when the drag ends left of the start", () => {
       expect(marqueeIsCrossing(100, 80)).toBe(true);
       expect(marqueeIsCrossing(80, 100)).toBe(false);
+    });
+  });
+  describe("warmObjectGroupMarqueeBounds", () => {
+    it("computes geometry boundingBox for group meshes", () => {
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+      expect(mesh.geometry.boundingBox).toBeNull();
+      root.add(mesh);
+      warmObjectGroupMarqueeBounds(root);
+      expect(mesh.geometry.boundingBox).not.toBeNull();
+    });
+    it("skips meshes that already have a boundingBox", () => {
+      const root = new Group();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1));
+      mesh.geometry.computeBoundingBox();
+      const box = mesh.geometry.boundingBox;
+      root.add(mesh);
+      warmObjectGroupMarqueeBounds(root);
+      expect(mesh.geometry.boundingBox).toBe(box);
     });
   });
   describe("marqueeSelectionFromCandidates", () => {

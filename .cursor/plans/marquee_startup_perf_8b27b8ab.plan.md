@@ -4,19 +4,19 @@ overview: Eliminate the ~2s stall on the first puzzle-3d group-selection gesture
 todos:
   - id: validate
     content: Add [DEBUG] timing around captureMarqueeCandidates/buildMarqueeCandidates/projectObjectGroupToScreenPoints and confirm setFromObject cold cost at runtime
-    status: pending
+    status: completed
   - id: warm-bbox
     content: In registerObject, compute geometry.boundingBox for group meshes (deferred/idle) so first marquee capture is warm
-    status: pending
+    status: completed
   - id: overlay-first
     content: Reorder activation to paint overlay rectangle before capture; defer capture+preview to next frame and cancel on early release
-    status: pending
+    status: completed
   - id: cleanup-test
     content: Remove [DEBUG] logs, extend existing marquee tests for warm-up, and verify in the play scene that the startup delay is gone
-    status: pending
+    status: completed
   - id: ticket
     content: Reopen/open repo MCP ticket and close it with summary of touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

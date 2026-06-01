@@ -1,7 +1,7 @@
 {
   "title": "Puzzle 2d Canvas Text Labels Wrong",
   "emoji": "🏷️",
-  "status": "closed",
+  "status": "open",
   "description": "Puzzle 2d Canvas Text Labels Wrong",
   "summary": "Fixed remaining puzzle 2d canvas label desync: textOverlayDirty no longer suppresses viewport repaints during wheel zoom; Puzzle2dHostSubtree skips controlled camera props while WASM leads the viewport (wheel/pan/drag) and until the host prop matches the live camera (wasmViewportLeading). Added regression tests. puzzle/2d/react vitest: 119 passed.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
@@ -9,6 +9,7 @@
     "⚪43522a67a3da446ba6a9f77503215e32",
     "⚪4aafa7d2d13e42b4a701807fc6edb93c",
     "⚪ac76307c1c3c4e5aa7a8e3b0be77b335",
-    "⚪b411d623133d45fb91145316a6804559"
+    "⚪b411d623133d45fb91145316a6804559",
+    "⚪2f325da413334d48a10bd7c9c5f53730"
   ]
 }

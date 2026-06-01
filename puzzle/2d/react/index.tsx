@@ -2829,6 +2829,11 @@ export class Puzzle2dRenderer {
     puzzle2dBroadcastStructuralRemove(this, structural);
   }
 
+  /** @emoji 🪢 Records how many edges the declarative host expects (0 = no gate on WASM push). */
+  setDeclarativeSceneEdgeExpectation(count: number): void {
+    this.declarativeSceneEdgeExpectation = Math.max(0, Math.floor(count));
+  }
+
   /** @emoji 🔔 Marks the WASM descriptor cache stale after scene graph or selection chrome changes. */
   markSceneDescriptorDirty(): void {
     this.sceneDescriptorEpoch += 1;
@@ -3007,6 +3012,8 @@ export class Puzzle2dRenderer {
   private lastPushedDescriptorJson: string | null = null;
   private lastSceneWasmFingerprint: string | null = null;
   private lastSyncedDescriptorFingerprint: string | null = null;
+  /** @emoji 🪢 Declarative host edge count (play fixture); blocks WASM descriptor push while the imperative scene is still edgeless. */
+  private declarativeSceneEdgeExpectation = 0;
   private sceneDescriptorEpoch = 0;
   private lastPushedSceneDescriptorEpoch = -1;
   private lastVelloThemeJson = "";
@@ -4033,7 +4040,11 @@ export class Puzzle2dRenderer {
 
   private descriptorJsonForWasmHost(): string {
     const fingerprint = puzzle2dSceneWasmFingerprintFromRenderer(this);
-    if (this.lastSceneWasmFingerprint === fingerprint && this.lastPushedDescriptorJson !== null) {
+    if (
+      this.lastSceneWasmFingerprint === fingerprint &&
+      this.lastPushedDescriptorJson !== null &&
+      puzzle2dWasmDescriptorJsonMatchesScene(this, this.lastPushedDescriptorJson)
+    ) {
       return this.lastPushedDescriptorJson;
     }
     const committedSelection = this.selectionIds;
@@ -4272,7 +4283,9 @@ export class Puzzle2dRenderer {
       return;
     }
     const descriptorCacheValid =
-      this.lastPushedDescriptorJson !== null && this.lastPushedSceneDescriptorEpoch === this.sceneDescriptorEpoch;
+      this.lastPushedDescriptorJson !== null &&
+      this.lastPushedSceneDescriptorEpoch === this.sceneDescriptorEpoch &&
+      puzzle2dWasmDescriptorJsonMatchesScene(this, this.lastPushedDescriptorJson);
     const deferDescriptorSync = this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs() || this.preselectIds.size > 0;
     if (descriptorCacheValid) {
       this.flushPendingIncrementalNodeMovesToWasm();
@@ -4311,8 +4324,9 @@ export class Puzzle2dRenderer {
         this.invalidated = true;
         return;
       }
+      const deferEdgelessWasmDescriptorPush = this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.size === 0;
       const skipFullDescriptorSync = (flushedIncrementalNodeMoves && descriptorCacheValid) || descriptorCacheValid;
-      if (!skipFullDescriptorSync) {
+      if (!deferEdgelessWasmDescriptorPush && !skipFullDescriptorSync) {
         const desc = this.descriptorJsonForWasmHost();
         if (desc !== this.lastPushedDescriptorJson) {
           try {
@@ -4325,6 +4339,8 @@ export class Puzzle2dRenderer {
         } else {
           this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
         }
+      } else if (deferEdgelessWasmDescriptorPush) {
+        this.invalidated = true;
       }
     }
     this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
@@ -5448,6 +5464,30 @@ if (puzzle2dVitest) {
       expect(renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)).toBe(false);
       syncPuzzle2dScene(renderer, descriptor);
       expect(renderer.skipSceneSyncIfDescriptorUnchanged(descriptor)).toBe(true);
+      renderer.dispose();
+    });
+
+    it("descriptorJsonForWasmHost rebuilds when scene gains edges but cached JSON was edgeless", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const nodeOnly = buildPuzzle2dSceneDescriptor(<Node draggable id="solo" radius={36} x={0} y={0} />);
+      syncPuzzle2dScene(renderer, nodeOnly);
+      const edgeless = (renderer as { descriptorJsonForWasmHost(): string }).descriptorJsonForWasmHost();
+      expect(JSON.parse(edgeless).edges.length).toBe(0);
+      const withEdge = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      syncPuzzle2dScene(renderer, withEdge);
+      expect(renderer.scene.edges.size).toBe(1);
+      const withEdgesJson = (renderer as { descriptorJsonForWasmHost(): string }).descriptorJsonForWasmHost();
+      expect(JSON.parse(withEdgesJson).edges.length).toBe(1);
       renderer.dispose();
     });
 
@@ -8561,6 +8601,39 @@ export function puzzle2dSceneDescriptorFingerprint(descriptor: Puzzle2dSceneDesc
   return `${nodeParts}#${edgeParts}#${wireParts}`;
 }
 
+function puzzle2dWasmDescriptorGraphCounts(json: string): {
+  readonly edges: number;
+  readonly handles: number;
+  readonly nodes: number;
+  readonly wires: number;
+} | null {
+  try {
+    const parsed = JSON.parse(json) as { edges?: unknown; handles?: unknown; nodes?: unknown; wires?: unknown };
+    return {
+      edges: Array.isArray(parsed.edges) ? parsed.edges.length : 0,
+      handles: Array.isArray(parsed.handles) ? parsed.handles.length : 0,
+      nodes: Array.isArray(parsed.nodes) ? parsed.nodes.length : 0,
+      wires: Array.isArray(parsed.wires) ? parsed.wires.length : 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** @emoji 🔍 True when cached WASM descriptor JSON matches imperative {@link Puzzle2dRenderer.scene} counts (guards edgeless stale cache). */
+function puzzle2dWasmDescriptorJsonMatchesScene(renderer: Puzzle2dRenderer, json: string): boolean {
+  const counts = puzzle2dWasmDescriptorGraphCounts(json);
+  if (!counts) {
+    return false;
+  }
+  return (
+    counts.nodes === renderer.scene.nodes.size &&
+    counts.handles === renderer.scene.handles.size &&
+    counts.edges === renderer.scene.edges.size &&
+    counts.wires === renderer.scene.wires.size
+  );
+}
+
 function puzzle2dSceneWasmFingerprintFromRenderer(renderer: Puzzle2dRenderer): string {
   const selection = renderer.selectionStore.getSnapshot().ids.join(",");
   const nodeParts: string[] = [];
@@ -8759,6 +8832,7 @@ function Puzzle2dHostSubtree({
     updatePuzzle2dHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
     const jsxDescriptor = puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor, children);
     const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor);
+    renderer.setDeclarativeSceneEdgeExpectation(merged.edges.length);
     syncPuzzle2dScene(renderer, merged);
     puzzle2dEnsureSceneEdgesFromDescriptor(renderer, merged);
     if (merged.edges.length > 0 && renderer.scene.edges.size === 0) {
