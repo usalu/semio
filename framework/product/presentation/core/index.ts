@@ -763,6 +763,7 @@ export function expandArrangementMorphFrom(
 				embodimentId,
 				emphasis: sourceDisposition?.emphasis ?? "active",
 				position: slot.position,
+				style: { opacity: 0 },
 				morphSource: true,
 				morphAnchorId,
 			});
@@ -843,13 +844,19 @@ export function resolveArrangement(scope: ResolutionScope, arrangement: Arrangem
 		if (!participant) {
 			throw new Error(`Arrangement "${arrangement.id}" references unknown participant "${disposition.participantId}".`);
 		}
+		const morphIntoTarget = (disposition.morphFrom?.length ?? 0) > 0;
+		const resolvedMorphId = disposition.morphSource
+			? morphId(participant.id)
+			: morphIntoTarget
+				? `${morphId(participant.id)}--label`
+				: (disposition.morphAnchorId ?? morphId(participant.id));
 		return [
 			{
 				participant,
 				embodiment: resolveEmbodiment(scope, disposition.embodimentId),
 				emphasis: disposition.emphasis,
 				embodimentId: disposition.embodimentId,
-				morphId: disposition.morphAnchorId ?? morphId(participant.id),
+				morphId: resolvedMorphId,
 				position: disposition.position,
 				style: disposition.style,
 				morphSource: disposition.morphSource,
@@ -2149,7 +2156,50 @@ if (import.meta.vitest) {
 			const morphSource = labels?.arrangement.dispositions.find((disposition) => disposition.morphSource);
 			expect(morphSource?.morphAnchorId).toBe("labels--0");
 			expect(morphSource?.morphSource).toBe(true);
+			expect(morphSource?.style).toEqual({ opacity: 0 });
 			expect(arrangementRestDispositions(labels!.arrangement)).toHaveLength(1);
+		});
+
+		it("resolves morph-into targets with --label morph ids separate from tile morph sources", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "catalogue-col1" }, { id: "Rippenplatte 1" }],
+					embodiments: [
+						{ kind: "text", id: "catalogue-col1--label", lines: ["Rippenplatte"], level: "heading" },
+						{ kind: "figure", id: "Rippenplatte 1-figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.1, height: 0.1 } },
+					],
+				},
+			]);
+			const resolved = resolveArrangement(scope, {
+				id: "labels",
+				dispositions: [
+					{
+						participantId: "catalogue-col1",
+						embodimentId: "catalogue-col1--label",
+						emphasis: "active",
+						position: { x: 0.1, y: 0.4, width: 0.2, height: 0.1 },
+						morphFrom: [
+							{
+								participantId: "Rippenplatte 1",
+								embodimentId: "Rippenplatte 1-figure",
+								position: { x: 0.1, y: 0.4, width: 0.2, height: 0.1 },
+							},
+						],
+					},
+					{
+						participantId: "Rippenplatte 1",
+						embodimentId: "Rippenplatte 1-figure",
+						emphasis: "active",
+						position: { x: 0.1, y: 0.4, width: 0.2, height: 0.1 },
+						style: { opacity: 0 },
+						morphSource: true,
+					},
+				],
+			});
+			const label = resolved.find((disposition) => disposition.morphFrom?.length);
+			const ghost = resolved.find((disposition) => disposition.morphSource);
+			expect(label?.morphId).toBe("catalogue-col1--label");
+			expect(ghost?.morphId).toBe("Rippenplatte 1");
 		});
 
 		it("preserves declarative settleBeforeMorphTo on arrangements", () => {

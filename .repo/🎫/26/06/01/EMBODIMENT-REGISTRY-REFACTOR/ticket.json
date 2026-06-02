@@ -1,7 +1,7 @@
 {
   "title": "Embodiment Registry Refactor",
   "emoji": "🎭",
-  "status": "closed",
+  "status": "open",
   "description": "Restructure @framework/presentation: embodiments in scoped sibling registries, dispositions bind participantId+embodimentId, full artifact-level scoping, tile/split templates produce embodiments+dispositions (remove DispositionSplit). Migrate renderer and 33.projektetage deck.",
   "summary": "Fixed forward 8→9 morph: morph ghost opacity no longer jumps to 0 on running (broke FLIP while present slide was labels). Use keyframed fade-out/in synced to autoAnimateDuration; apply pending/running rules without .present so both slides measure correctly; call prepareArrangementBeforeAutoAnimate from autoanimate event.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
@@ -10,6 +10,7 @@
     "⚪778720ae3c2f441ebcb048eb9d46e966",
     "⚪b10f9584d8094e44a966480c527dc3fd",
     "⚪bf9aee1da49f40e3a91b01571ffa460c",
-    "⚪3dd398d27c5b42dfb0896856d946c46f"
+    "⚪3dd398d27c5b42dfb0896856d946c46f",
+    "⚪3fedd0b11aef4ab5972a4b70351a2fb5"
   ]
 }

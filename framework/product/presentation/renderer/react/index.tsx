@@ -297,7 +297,21 @@ type AutoAnimateMatcherHost = {
 	) => void;
 };
 
-/** @emoji 🔗 reveal.js auto-animate matcher: only `data-id` pairs so figure crops never morph via placeholder label text. */
+function elementIsMorphSourceAnchor(element: HTMLElement): boolean {
+	return (
+		element.classList.contains("presentation-morph-source") ||
+		element.closest(".presentation-morph-source") !== null
+	);
+}
+
+function elementIsFigureMorphSlot(element: HTMLElement): boolean {
+	return (
+		element.classList.contains("presentation-morph-slot--figure") ||
+		element.closest(".presentation-morph-slot--figure") !== null
+	);
+}
+
+/** @emoji 🔗 reveal.js auto-animate matcher: figure tiles pair only with morph-source ghosts, never label text. */
 export function presentationAutoAnimateMatcher(
 	this: AutoAnimateMatcherHost,
 	fromSlide: HTMLElement,
@@ -310,6 +324,12 @@ export function presentationAutoAnimateMatcher(
 	const reserved: HTMLElement[] = [];
 	return pairs.filter((pair) => {
 		if (reserved.includes(pair.to)) {
+			return false;
+		}
+		if (elementIsFigureMorphSlot(pair.from) && !elementIsMorphSourceAnchor(pair.to)) {
+			return false;
+		}
+		if (elementIsMorphSourceAnchor(pair.to) && !elementIsFigureMorphSlot(pair.from)) {
 			return false;
 		}
 		reserved.push(pair.to);
@@ -852,6 +872,25 @@ function PositionedTextMorphView({
 				...(style?.opacity !== undefined ? { opacity: style.opacity } : {}),
 			}
 		: dispositionFrameStyle(position, style);
+	if (receivesMorphFrom) {
+		const headingClass = centeredLineClass(anchorId, embodiment, emphasis);
+		return (
+			<div
+				className={[
+					"presentation-disposition-frame",
+					"presentation-morph-slot",
+					"presentation-morph-slot--label",
+					"presentation-morph-into",
+					emphasisClass(emphasis),
+				]
+					.filter(Boolean)
+					.join(" ")}
+				style={frameStyle}
+			>
+				<h2 className={headingClass}>{embodiment.lines[0]}</h2>
+			</div>
+		);
+	}
 	if (resolveTextMorphRoot(embodiment) === "heading-block") {
 		return (
 			<div
@@ -859,7 +898,6 @@ function PositionedTextMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--label",
-					receivesMorphFrom ? "presentation-morph-into" : undefined,
 					emphasisClass(emphasis),
 				]
 					.filter(Boolean)
@@ -878,7 +916,6 @@ function PositionedTextMorphView({
 				"presentation-disposition-frame",
 				"presentation-morph-slot",
 				"presentation-morph-slot--label",
-				receivesMorphFrom ? "presentation-morph-into" : undefined,
 				emphasisClass(emphasis),
 			]
 				.filter(Boolean)
@@ -1192,7 +1229,8 @@ export function buildInteractiveSlideLayout(
 			disposition,
 			declaredRect,
 			sectionRect: declaredRect,
-			revealMorphId: morph && declaredRect !== undefined ? disposition.morphId : undefined,
+			revealMorphId:
+				morph && declaredRect !== undefined && disposition.morphSource ? disposition.morphId : undefined,
 		});
 	});
 	return { placements, rowBands: [] };
@@ -4409,12 +4447,10 @@ if (import.meta.vitest) {
 					),
 				).length,
 			).toBeGreaterThanOrEqual(8);
+			expect(labelSlide.querySelectorAll(".presentation-morph-into").length).toBe(3);
+			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-into[data-id]").length).toBe(0);
 			expect(
-				columnIds.every((id) =>
-					labelSlide.querySelector(
-						`.presentation-interactive-disposition.presentation-morph-into[data-id="${id}"]`,
-					),
-				),
+				tileIds.every((id) => labelSlide.querySelector(`[data-id="${id}"].presentation-morph-source`)),
 			).toBe(true);
 			expect(labelSlide.querySelectorAll(".presentation-morph-source").length).toBeGreaterThanOrEqual(8);
 			mountRoot.remove();

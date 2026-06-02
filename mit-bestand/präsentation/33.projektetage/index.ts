@@ -146,9 +146,9 @@ if (import.meta.vitest) {
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
 			expect(labelSlide).toBeDefined();
 			expect(arrangementRestDispositions(labelSlide!.arrangement)).toHaveLength(3);
-			expect(labelSlide!.arrangement.dispositions.filter((disposition) => disposition.morphSource)).toHaveLength(
-				10,
-			);
+			const morphSources = labelSlide!.arrangement.dispositions.filter((disposition) => disposition.morphSource);
+			expect(morphSources).toHaveLength(10);
+			expect(morphSources.every((disposition) => disposition.style?.opacity === 0)).toBe(true);
 		});
 
 		it("morphs tile figures into label positions before column text appears", () => {
