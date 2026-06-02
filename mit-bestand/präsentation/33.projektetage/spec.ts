@@ -10,6 +10,7 @@ import {
 	type Disposition,
 	type DispositionPosition,
 	type Embodiment,
+	type MorphToSlot,
 	type IntroSpec,
 	type Participant,
 	type PresentationMeta,
@@ -281,6 +282,24 @@ export function catalogueFocusDispositions(): readonly Disposition[] {
 		),
 		positions,
 	);
+}
+
+/** @emoji 🔀 One-to-many morphTo slots: catalogue figure into focus tiles at grid positions on the catalogue slide. */
+export function catalogueFocusMorphTo(): readonly MorphToSlot[] {
+	return CATALOGUE_FOCUS_TILES.map((tile) => {
+		const splitDisposition = CATALOGUE_SPLIT.dispositions.find(
+			(disposition) => disposition.participantId === tile.participantId,
+		);
+		const position = splitDisposition?.position;
+		if (!position) {
+			throw new Error(`catalogueFocusMorphTo: no grid position for "${tile.participantId}".`);
+		}
+		return {
+			participantId: tile.participantId,
+			embodimentId: `${tile.participantId}-figure`,
+			position,
+		};
+	});
 }
 
 /** @emoji 🔀 Many-to-one morphFrom slots: focus tiles (source figure) into one column label disposition. */

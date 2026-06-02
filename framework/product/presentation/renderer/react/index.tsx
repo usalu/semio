@@ -12,6 +12,7 @@ import type {
     DispositionPosition,
     DispositionStyle,
     FigureEmbodiment,
+    GhostKind,
     ParticipantEmphasis,
     PdfEmbodiment,
     Presentation,
@@ -312,7 +313,7 @@ export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSl
 	fromSlide.classList.add("presentation-arrangement--settled");
 	void fromSlide.offsetHeight;
 	void toSlide.offsetHeight;
-	for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-morph-source")) {
+	for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-target-ghost")) {
 		void ghost.offsetHeight;
 	}
 }
@@ -328,10 +329,24 @@ type AutoAnimateMatcherHost = {
 	) => void;
 };
 
-function elementIsMorphSourceAnchor(element: HTMLElement): boolean {
+function elementIsTargetGhostAnchor(element: HTMLElement): boolean {
 	return (
-		element.classList.contains("presentation-morph-source") ||
-		element.closest(".presentation-morph-source") !== null
+		element.classList.contains("presentation-target-ghost") ||
+		element.closest(".presentation-target-ghost") !== null
+	);
+}
+
+function elementIsSourceGhostAnchor(element: HTMLElement): boolean {
+	return (
+		element.classList.contains("presentation-source-ghost") ||
+		element.closest(".presentation-source-ghost") !== null
+	);
+}
+
+function elementIsMorphOneAnchor(element: HTMLElement): boolean {
+	return (
+		element.classList.contains("presentation-morph-one") ||
+		element.closest(".presentation-morph-one") !== null
 	);
 }
 
@@ -343,7 +358,7 @@ function elementIsFigureMorphSlot(element: HTMLElement): boolean {
 	);
 }
 
-/** @emoji 🔗 reveal.js auto-animate matcher: figure tiles pair only with morph-source ghosts, never label text. */
+/** @emoji 🔗 reveal.js auto-animate matcher: tiles pair with target/source ghosts, not morph targets or the morph-one. */
 export function presentationAutoAnimateMatcher(
 	this: AutoAnimateMatcherHost,
 	fromSlide: HTMLElement,
@@ -360,12 +375,21 @@ export function presentationAutoAnimateMatcher(
 		}
 		if (
 			elementIsFigureMorphSlot(pair.from) &&
-			pair.to.closest(".presentation-morph-into") !== null &&
-			!elementIsMorphSourceAnchor(pair.to)
+			pair.to.closest(".presentation-morph-target") !== null &&
+			!elementIsTargetGhostAnchor(pair.to)
 		) {
 			return false;
 		}
-		if (elementIsMorphSourceAnchor(pair.to) && !elementIsFigureMorphSlot(pair.from)) {
+		if (elementIsTargetGhostAnchor(pair.to) && !elementIsFigureMorphSlot(pair.from)) {
+			return false;
+		}
+		if (elementIsMorphOneAnchor(pair.from)) {
+			return false;
+		}
+		if (elementIsSourceGhostAnchor(pair.from) && !elementIsFigureMorphSlot(pair.to)) {
+			return false;
+		}
+		if (elementIsFigureMorphSlot(pair.from) && elementIsMorphOneAnchor(pair.to)) {
 			return false;
 		}
 		reserved.push(pair.to);
@@ -385,29 +409,33 @@ export function patchAutoAnimateUniformScale(css: string): string {
 	});
 }
 
-/** @emoji 👻 Opacity overrides so morph ghosts fade 1→0 and morph targets 0→1 during reveal `running`. */
+/** @emoji 👻 Opacity overrides so target ghosts fade 1→0 and morph targets 0→1 during reveal `running`. */
 export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): string {
 	const duration = `${durationSeconds}s`;
 	return `
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-source[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="pending"] .presentation-target-ghost[data-auto-animate-target],
 .reveal .slides section[data-auto-animate="pending"] .presentation-affiliation-morph-source[data-auto-animate-target] {
 	opacity: 1 !important;
 	visibility: visible !important;
 	animation: none !important;
 }
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-target-ghost[data-auto-animate-target],
 .reveal .slides section[data-auto-animate="running"] .presentation-affiliation-morph-source[data-auto-animate-target] {
 	visibility: visible !important;
-	animation: presentation-morph-source-fade-out ${duration} ease forwards !important;
+	animation: presentation-target-ghost-fade-out ${duration} ease forwards !important;
 }
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-into[data-auto-animate-target] {
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-target[data-auto-animate-target] {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	animation: none !important;
 }
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-into[data-auto-animate-target] {
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-target[data-auto-animate-target] {
 	visibility: visible !important;
-	animation: presentation-morph-into-fade-in ${duration} ease forwards !important;
+	animation: presentation-morph-target-fade-in ${duration} ease forwards !important;
+}
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-one[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-one[data-auto-animate-target] {
+	animation: presentation-morph-one-fade-out ${duration} ease forwards !important;
 }
 `;
 }
@@ -885,7 +913,7 @@ function FigureMorphView({
 	style,
 	dormantAnchor,
 	anchorOnWrapper = false,
-	morphSource = false,
+	ghost,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -894,10 +922,10 @@ function FigureMorphView({
 	readonly style?: DispositionStyle;
 	readonly dormantAnchor?: boolean;
 	readonly anchorOnWrapper?: boolean;
-	readonly morphSource?: boolean;
+	readonly ghost?: GhostKind;
 }): ReactNode {
 	if (embodiment.crop && position) {
-		const dormant = dormantAnchor === true || (!morphSource && style?.opacity === 0);
+		const dormant = dormantAnchor === true;
 		const frameStyle = anchorOnWrapper
 			? {
 					position: "relative" as const,
@@ -914,7 +942,8 @@ function FigureMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--figure",
-					morphSource ? "presentation-morph-source" : undefined,
+					ghost === "target" ? "presentation-target-ghost" : undefined,
+					ghost === "source" ? "presentation-source-ghost" : undefined,
 					dormant ? "presentation-morph-slot--dormant" : undefined,
 					emphasisClass(emphasis),
 				]
@@ -971,7 +1000,7 @@ function PositionedTextMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--label",
-					"presentation-morph-into",
+					"presentation-morph-target",
 					emphasisClass(emphasis),
 				]
 					.filter(Boolean)
@@ -1183,7 +1212,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						position={disposition.position}
 						style={disposition.style}
 						anchorOnWrapper={anchorOnWrapper}
-						morphSource={disposition.morphSource}
+						ghost={disposition.ghost}
 					/>
 				);
 			}
@@ -1194,7 +1223,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 					emphasis={emphasis}
 					position={disposition.position}
 					anchorOnWrapper={anchorOnWrapper}
-					morphSource={disposition.morphSource}
+					ghost={disposition.ghost}
 				/>
 			);
 			break;
@@ -1344,7 +1373,7 @@ export function buildInteractiveSlideLayout(
 			sectionRect: declaredRect,
 			revealMorphId:
 				morph && declaredRect !== undefined
-					? disposition.morphSource
+					? disposition.ghost !== undefined
 						? disposition.morphId
 						: disposition.morphFrom?.length
 							? undefined
@@ -1814,9 +1843,6 @@ export function isUsableMeasuredRect(rect: DispositionPosition): boolean {
 
 /** @emoji 📐 Declared placement for one resolved disposition (includes dormant morph anchors at opacity 0). */
 export function declaredDispositionRect(disposition: ResolvedDisposition): DispositionPosition | undefined {
-	if (disposition.morphSource) {
-		return disposition.position;
-	}
 	return disposition.position;
 }
 
@@ -2675,8 +2701,10 @@ const InteractiveDisposition: FC<{
 		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
 		gesturing ? "presentation-interactive-disposition--gesturing" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
-		disposition.morphSource ? "presentation-morph-source" : undefined,
-		(disposition.morphFrom?.length ?? 0) > 0 ? "presentation-morph-into" : undefined,
+		disposition.ghost === "target" ? "presentation-target-ghost" : undefined,
+		disposition.ghost === "source" ? "presentation-source-ghost" : undefined,
+		(disposition.morphFrom?.length ?? 0) > 0 ? "presentation-morph-target" : undefined,
+		(disposition.morphTo?.length ?? 0) > 0 ? "presentation-morph-one" : undefined,
 	]
 		.filter(Boolean)
 		.join(" ");
@@ -2691,9 +2719,8 @@ const InteractiveDisposition: FC<{
 		// rect (drag/resize) makes reveal.js auto-animate capture the modified frame as the morph
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
 		// 👻 Morph-source ghosts must stay on morphFrom label frames, never ephemeral focus tiles.
-		const morphAnchorRect = disposition.morphSource
-			? canvasAnchorRect
-			: (canvasLiveTransform ?? canvasAnchorRect);
+		const morphAnchorRect =
+			disposition.ghost !== undefined ? canvasAnchorRect : (canvasLiveTransform ?? canvasAnchorRect);
 		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
@@ -3179,7 +3206,7 @@ export const PresentationDeck: FC<{
 				flushSync(() => {
 					setSlideEpoch((epoch) => epoch + 1);
 				});
-				for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-morph-source")) {
+				for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-target-ghost")) {
 					void ghost.offsetHeight;
 				}
 			}
@@ -3929,11 +3956,11 @@ if (import.meta.vitest) {
 			patchPresentationAutoAnimateStyleSheet(sheet, 0.8);
 			expect(sheet.innerHTML).toContain("scale(2)");
 			expect(sheet.innerHTML).toContain(
-				'[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target]',
+				'[data-auto-animate="running"] .presentation-target-ghost[data-auto-animate-target]',
 			);
 			expect(sheet.innerHTML).toContain("opacity: 1 !important");
-			expect(sheet.innerHTML).toContain("presentation-morph-source-fade-out 0.8s ease forwards !important");
-			expect(sheet.innerHTML).toContain("presentation-morph-into-fade-in 0.8s ease forwards !important");
+			expect(sheet.innerHTML).toContain("presentation-target-ghost-fade-out 0.8s ease forwards !important");
+			expect(sheet.innerHTML).toContain("presentation-morph-target-fade-in 0.8s ease forwards !important");
 		});
 
 		it("rests morph-source ghosts with opacity only so reveal can measure FLIP targets", async () => {
@@ -3942,15 +3969,15 @@ if (import.meta.vitest) {
 			const { fileURLToPath } = await import("node:url");
 			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
 			const css = readFileSync(cssPath, "utf8");
-			const restRule = css.match(/\.reveal \.presentation-morph-source \{[\s\S]*?\}/)?.[0] ?? "";
+			const restRule = css.match(/\.reveal \.presentation-target-ghost \{[\s\S]*?\}/)?.[0] ?? "";
 			expect(restRule).toContain("opacity: 0");
 			expect(restRule).not.toContain("opacity: 0 !important");
 			expect(restRule).not.toContain("visibility: hidden");
 			const runningRule =
 				css.match(
-					/\.reveal \.slides section\[data-auto-animate="running"\] \.presentation-morph-source \{[\s\S]*?\}/,
+					/\.reveal \.slides section\[data-auto-animate="running"\] \.presentation-target-ghost \{[\s\S]*?\}/,
 				)?.[0] ?? "";
-			expect(runningRule).toContain("presentation-morph-source-fade-out");
+			expect(runningRule).toContain("presentation-target-ghost-fade-out");
 			expect(runningRule).not.toMatch(/opacity:\s*1\s*!important/);
 		});
 
@@ -4025,7 +4052,7 @@ if (import.meta.vitest) {
 			slide.classList.add("present");
 			slide.setAttribute("data-auto-animate", "running");
 			const morphSource = document.createElement("div");
-			morphSource.className = "presentation-morph-source";
+			morphSource.className = "presentation-target-ghost";
 			morphSource.dataset.autoAnimateTarget = "0";
 			slide.appendChild(morphSource);
 			deckEl.appendChild(slide);
@@ -4711,52 +4738,50 @@ if (import.meta.vitest) {
 					pairs.some(
 						(pair) =>
 							pair.from.getAttribute("data-id") === id &&
-							elementIsMorphSourceAnchor(pair.to),
+							elementIsTargetGhostAnchor(pair.to),
 					),
 				).length,
 			).toBeGreaterThanOrEqual(8);
-			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-into").length).toBe(3);
-			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-into[data-id]").length).toBe(0);
+			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-target").length).toBe(3);
+			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-target[data-id]").length).toBe(0);
 			expect(
 				tileIds.every(
 					(id) =>
-						labelSlide.querySelector(`[data-id="${id}"]`)?.closest(".presentation-morph-source") !== null,
+						labelSlide.querySelector(`[data-id="${id}"]`)?.closest(".presentation-target-ghost") !== null,
 				),
 			).toBe(true);
-			expect(labelSlide.querySelectorAll(".presentation-morph-source").length).toBeGreaterThanOrEqual(8);
+			expect(labelSlide.querySelectorAll(".presentation-target-ghost").length).toBeGreaterThanOrEqual(8);
 			const labelSlot = inlineColumnLabelPosition(2);
 			const focusStuetze = focusSlide.querySelector(
 				'[data-disposition-id^="catalogue-focus--Stütze"]',
 			) as HTMLElement | null;
 			const labelGhost = labelSlide.querySelector(
-				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-morph-source',
+				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-target-ghost',
 			) as HTMLElement | null;
 			expect(focusStuetze?.style.left).not.toBe(`${labelSlot.x * 100}%`);
 			expect(labelGhost?.style.left).toBe(`${labelSlot.x * 100}%`);
 			expect(labelGhost?.style.top).toBe(`${labelSlot.y * 100}%`);
 			expect(labelGhost?.style.width).toBe(`${labelSlot.width * 100}%`);
 			expect(labelGhost?.style.height).toBe(`${labelSlot.height * 100}%`);
-			expect(labelGhost?.classList.contains("presentation-morph-source")).toBe(true);
+			expect(labelGhost?.classList.contains("presentation-target-ghost")).toBe(true);
 			expect(labelGhost?.getAttribute("data-disposition-id")).toContain("catalogue-labels");
 			mountRoot.remove();
 		});
 
-		it("hides settled catalogue-focus tiles in stylesheet only while auto-animating into labels", async () => {
+		it("styles source ghosts hidden at rest and visible during auto-animate", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
 			const css = readFileSync(cssPath, "utf8");
+			expect(css).toContain(".reveal .presentation-source-ghost");
 			expect(css).toContain(
-				'section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="pending"]',
+				'section[data-auto-animate="pending"] .presentation-source-ghost',
 			);
-			expect(css).toContain(
-				'section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="running"]',
-			);
-			expect(css).toContain("opacity: 0 !important");
+			expect(css).not.toContain('section[title="catalogue-focus"]');
 		});
 
-		it("shows catalogue full figure at rest with dormant tile ghosts and focus tiles visible", async () => {
+		it("shows catalogue full figure at rest with source ghosts and focus tiles visible", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
 				await import("@framework/presentation/core");
 			type SlideFile = import("@framework/presentation/core").SlideFile;
@@ -4774,32 +4799,24 @@ if (import.meta.vitest) {
 			await new Promise((resolve) => setTimeout(resolve, 100));
 			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
 			expect(catalogueSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
-			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(true);
+			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(false);
 			const catalogueFigure = catalogueSlide.querySelector(
 				".presentation-media-figure",
 			) as HTMLImageElement | null;
 			expect(catalogueFigure?.src).toContain("bauteilb");
-			const dormantTiles = catalogueSlide.querySelectorAll(
-				".presentation-morph-slot--figure.presentation-morph-slot--dormant",
-			);
-			expect(dormantTiles.length).toBe(15);
-			for (const slot of dormantTiles) {
-				expect(slot.classList.contains("presentation-morph-source")).toBe(false);
-			}
+			expect(catalogueSlide.querySelectorAll(".presentation-morph-one").length).toBe(1);
+			const sourceGhosts = catalogueSlide.querySelectorAll(".presentation-source-ghost");
+			expect(sourceGhosts.length).toBe(10);
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
-			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
 			const focusSlots = focusSlide.querySelectorAll(".presentation-morph-slot--figure");
 			expect(focusSlots.length).toBe(10);
 			for (const slot of focusSlots) {
-				expect(slot.classList.contains("presentation-morph-source")).toBe(false);
-				expect(slot.classList.contains("presentation-morph-slot--dormant")).toBe(false);
+				expect(slot.classList.contains("presentation-target-ghost")).toBe(false);
+				expect(slot.classList.contains("presentation-source-ghost")).toBe(false);
 				const backgroundImage = (slot as HTMLElement).style.backgroundImage;
 				expect(backgroundImage.length).toBeGreaterThan(0);
 				expect(backgroundImage).toContain("bauteilb");
 			}
-			focusSlide.classList.add("presentation-arrangement--settled");
-			syncArrangementSettledState(mountRoot.querySelector(".reveal") as HTMLElement, focusSlide, null);
-			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
 			mountRoot.remove();
 		});
 
@@ -4864,13 +4881,7 @@ if (import.meta.vitest) {
 			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			expect(catalogueSlide.getAttribute("data-auto-animate-id")).toBe(focusSlide.getAttribute("data-auto-animate-id"));
-			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(true);
-			prepareArrangementBeforeAutoAnimate(catalogueSlide, focusSlide);
-			expect(catalogueSlide.classList.contains("presentation-arrangement--settled")).toBe(true);
-			const dormantAfterSettle = catalogueSlide.querySelectorAll(
-				".presentation-morph-slot--dormant",
-			);
-			expect(dormantAfterSettle.length).toBe(15);
+			expect(catalogueSlide.querySelectorAll(".presentation-source-ghost").length).toBe(10);
 			catalogueSlide.setAttribute("data-auto-animate", "pending");
 			const host: AutoAnimateMatcherHost = {
 				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
@@ -4892,7 +4903,7 @@ if (import.meta.vitest) {
 			mountRoot.remove();
 		});
 
-		it("places catalogue-labels morph-source ghosts at inline label frames", async () => {
+		it("places catalogue-labels target ghosts at inline label frames", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
 				await import("@framework/presentation/core");
 			type SlideFile = import("@framework/presentation/core").SlideFile;
@@ -4920,7 +4931,7 @@ if (import.meta.vitest) {
 				'[data-disposition-id^="catalogue-focus--Stütze"]',
 			) as HTMLElement | null;
 			const labelGhost = labelSlide.querySelector(
-				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-morph-source',
+				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-target-ghost',
 			) as HTMLElement | null;
 			expect(focusStuetze?.style.left).not.toBe(`${labelSlot.x * 100}%`);
 			expect(labelGhost?.style.left).toBe(`${labelSlot.x * 100}%`);
@@ -4998,7 +5009,7 @@ if (import.meta.vitest) {
 			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
 			expect(labelSlide.getAttribute("data-auto-animate")).not.toBe("running");
 			expect(labelSlide.querySelector("[data-auto-animate-target]")).toBeNull();
-			expect(labelSlide.querySelectorAll(".presentation-morph-source[data-auto-animate-target]").length).toBe(0);
+			expect(labelSlide.querySelectorAll(".presentation-target-ghost[data-auto-animate-target]").length).toBe(0);
 			mountRoot.remove();
 		});
 

@@ -151,8 +151,10 @@ if (import.meta.vitest) {
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
 			expect(labelSlide).toBeDefined();
 			expect(arrangementRestDispositions(labelSlide!.arrangement)).toHaveLength(3);
-			const morphSources = labelSlide!.arrangement.dispositions.filter((disposition) => disposition.morphSource);
-			expect(morphSources).toHaveLength(10);
+			const targetGhosts = labelSlide!.arrangement.dispositions.filter(
+				(disposition) => disposition.ghost === "target",
+			);
+			expect(targetGhosts).toHaveLength(10);
 		});
 
 		it("morphs tile figures into label positions before column text appears", () => {

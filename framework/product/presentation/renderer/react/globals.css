@@ -651,7 +651,7 @@
 	opacity: 0;
 }
 
-@keyframes presentation-morph-source-fade-out {
+@keyframes presentation-target-ghost-fade-out {
 	from {
 		opacity: 1;
 	}
@@ -660,7 +660,7 @@
 	}
 }
 
-@keyframes presentation-morph-into-fade-in {
+@keyframes presentation-morph-target-fade-in {
 	from {
 		opacity: 0;
 	}
@@ -669,100 +669,80 @@
 	}
 }
 
-.reveal .presentation-morph-source {
+@keyframes presentation-morph-one-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+.reveal .presentation-target-ghost {
 	opacity: 0;
 	visibility: visible;
 	pointer-events: none;
 }
 
-.reveal .presentation-morph-into {
+.reveal .presentation-morph-target {
 	opacity: 1;
 	visibility: visible;
 }
 
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-source {
+.reveal .presentation-source-ghost {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none;
+}
+
+.reveal .presentation-morph-one {
+	opacity: 1;
+	visibility: visible;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-target-ghost {
 	opacity: 1 !important;
 	visibility: visible !important;
 	pointer-events: auto;
 	animation: none !important;
 }
 
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-source {
+.reveal .slides section[data-auto-animate="running"] .presentation-target-ghost {
 	visibility: visible !important;
 	pointer-events: none;
-	animation: presentation-morph-source-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+	animation: presentation-target-ghost-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
 }
 
-.reveal
-	.slides
-	section[title="catalogue"].presentation-arrangement--settled[data-auto-animate="pending"]
-	.presentation-arrangement-canvas
-	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure:has(
-		.presentation-media-figure
-	),
-.reveal
-	.slides
-	section[title="catalogue"].presentation-arrangement--settled[data-auto-animate="running"]
-	.presentation-arrangement-canvas
-	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure:has(
-		.presentation-media-figure
-	) {
-	opacity: 0 !important;
-	pointer-events: none !important;
-}
-
-.reveal
-	.slides
-	section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="pending"]
-	.presentation-arrangement-canvas
-	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure,
-.reveal
-	.slides
-	section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="running"]
-	.presentation-arrangement-canvas
-	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure {
-	opacity: 0 !important;
-	pointer-events: none !important;
-}
-
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-into {
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-target {
 	opacity: 0 !important;
 	visibility: hidden !important;
 	pointer-events: none;
 	animation: none !important;
 }
 
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-into {
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-target {
 	visibility: visible !important;
 	pointer-events: auto;
-	animation: presentation-morph-into-fade-in var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+	animation: presentation-morph-target-fade-in var(--presentation-auto-animate-duration, 1s) ease forwards !important;
 }
 
-.reveal
-	.slides
-	section[data-settle-before-morph-to]:not([data-auto-animate="pending"]):not([data-auto-animate="running"]):not(
-		.presentation-arrangement--settled
-	)
-	.presentation-morph-slot--dormant {
-	opacity: 0 !important;
-	visibility: hidden !important;
+.reveal .slides section[data-auto-animate="pending"] .presentation-source-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: none;
+	animation: none !important;
+}
+
+.reveal .slides section[data-auto-animate="running"] .presentation-source-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
 	pointer-events: none;
 }
 
-.reveal
-	.slides
-	section[data-settle-before-morph-to].presentation-arrangement--settled
-	.presentation-morph-slot--dormant,
-.reveal
-	.slides
-	section[data-settle-before-morph-to][data-auto-animate="pending"]
-	.presentation-morph-slot--dormant,
-.reveal
-	.slides
-	section[data-settle-before-morph-to][data-auto-animate="running"]
-	.presentation-morph-slot--dormant {
-	opacity: 1 !important;
-	visibility: visible !important;
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-one[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-one[data-auto-animate-target] {
+	animation: presentation-morph-one-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+	pointer-events: none !important;
 }
 
 .reveal .presentation-disposition-frame--overlay {

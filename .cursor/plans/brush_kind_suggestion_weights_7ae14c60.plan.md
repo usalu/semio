@@ -7,31 +7,31 @@ todos:
     status: completed
   - id: helper
     content: Add normalizeKindWeightGroup/uniformKindWeights/weightedOrder helpers to framework playground core
-    status: in_progress
+    status: completed
   - id: wasm-2d
     content: Add node/handle kind weight state + set_brush_kind_weights to puzzle 2D WASM; weighted candidate order + weighted target-handle pick
-    status: pending
+    status: completed
   - id: renderer-2d
     content: Add Puzzle2dRenderer.setBrushKindWeights and per-frame push to WASM
-    status: pending
+    status: completed
   - id: play-2d
     content: Add 2D weights state, per-kind sliders, weight commands with proportional renorm, setKindCatalogs
-    status: pending
+    status: completed
   - id: host-2d
     content: "Wire playground host: feed 2D catalogs to controller + forward setBrushKindWeights to renderer"
-    status: pending
+    status: completed
   - id: brush-3d
     content: Add 3D kind-weights ref + weightedOrderBrushCompatibleCandidates and use it in BrushSession
-    status: pending
+    status: completed
   - id: play-3d
     content: Add 3D weights state from fixture catalogs, per-kind sliders, weight commands with renorm
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing 2D/3D/framework test files for weighting, ordering, and normalization
-    status: pending
+    status: completed
   - id: build
     content: Rebuild 2D WASM and run puzzle 2D/3D + framework-core test targets; close ticket
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

@@ -3,7 +3,7 @@ import {
 	CATALOGUE_EMBODIMENT_FULL,
 	CATALOGUE_FRAME,
 	CATALOGUE_PARTICIPANT,
-	CATALOGUE_SPLIT,
+	catalogueFocusMorphTo,
 	mediaEmbodiments,
 	mediaParticipants,
 } from "../../../../spec.ts";
@@ -15,18 +15,14 @@ export default {
 	arrangement: {
 		id: "catalogue",
 		name: "Bauteilkatalog",
-		settleBeforeMorphTo: ["catalogue-focus"],
 		dispositions: [
 			{
 				participantId: CATALOGUE_PARTICIPANT,
 				embodimentId: CATALOGUE_EMBODIMENT_FULL,
 				emphasis: "active",
 				position: CATALOGUE_FRAME,
+				morphTo: catalogueFocusMorphTo(),
 			},
-			...CATALOGUE_SPLIT.dispositions.map((disposition) => ({
-				...disposition,
-				style: { opacity: 0 },
-			})),
 		],
 	},
 	transition: { kind: "morph" },

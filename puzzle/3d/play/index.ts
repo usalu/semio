@@ -836,6 +836,7 @@ export class Puzzle3dPlayShellController extends Controller {
     const structureChanged = fixtureStateFingerprint(next) !== fixtureStateFingerprint(prev);
     if (structureChanged) {
       this.fixtureRevision += 1;
+      this.syncBrushKindWeightsFromFixture();
     }
     const poseChanged = fixturePoseFingerprint(next) !== fixturePoseFingerprint(prev);
     const appearanceChanged = fixtureAppearanceFingerprint(next) !== fixtureAppearanceFingerprint(prev);
@@ -961,6 +962,8 @@ export class Puzzle3dPlayShellController extends Controller {
         step: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setBrushPlacementCollisionTolerance" },
       },
+      ...this.kindWeightMeasures("object-kind", this.objectKindIds, this.objectKindWeights, "setObjectKindWeight"),
+      ...this.kindWeightMeasures("vortex-kind", this.vortexKindIds, this.vortexKindWeights, "setVortexKindWeight"),
     ];
   }
 
@@ -1150,6 +1153,34 @@ export class Puzzle3dPlayShellController extends Controller {
           this.brushPlacementCollisionTolerance = brushPlacementCollisionToleranceFromSlider(this.brushPlacementCollisionToleranceSlider);
         }
         this.notifySnapshot();
+        this.syncShell();
+        return;
+      }
+      case "setObjectKindWeight": {
+        const { kindId, value } = args as { kindId?: string; value?: number };
+        if (typeof kindId !== "string" || !this.objectKindIds.includes(kindId)) {
+          return;
+        }
+        const next = Number(value);
+        if (!Number.isFinite(next)) {
+          return;
+        }
+        this.objectKindWeights = normalizeKindWeightGroup(this.objectKindWeights, kindId, next);
+        publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
+        this.syncShell();
+        return;
+      }
+      case "setVortexKindWeight": {
+        const { kindId, value } = args as { kindId?: string; value?: number };
+        if (typeof kindId !== "string" || !this.vortexKindIds.includes(kindId)) {
+          return;
+        }
+        const next = Number(value);
+        if (!Number.isFinite(next)) {
+          return;
+        }
+        this.vortexKindWeights = normalizeKindWeightGroup(this.vortexKindWeights, kindId, next);
+        publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
         this.syncShell();
         return;
       }

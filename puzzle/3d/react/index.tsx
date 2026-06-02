@@ -10312,6 +10312,25 @@ if (import.meta.vitest) {
       expect(new Set(shuffled.map((row) => row.objectKindId)).size).toBe(3);
       expect(shuffled[0]?.objectKindId).toBe("B");
     });
+    it("weightedOrderBrushCompatibleCandidates favors high object and vortex weights", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          { id: "Heavy", meshUrl: "/h.glb", vortices: [{ vortexKind: "vk-heavy", position: [0, 0, 0], direction: [0, 0, 1] }] },
+          { id: "Light", meshUrl: "/l.glb", vortices: [{ vortexKind: "vk-light", position: [0, 0, 0], direction: [0, 0, 1] }] },
+        ],
+      };
+      const input: readonly BrushCompatibleCandidate[] = [
+        { objectKindId: "Light", sourceVortexIndex: 0 },
+        { objectKindId: "Heavy", sourceVortexIndex: 0 },
+      ];
+      const ordered = weightedOrderBrushCompatibleCandidates(
+        input,
+        { objectWeights: { Heavy: 0.95, Light: 0.05 }, vortexWeights: { "vk-heavy": 0.9, "vk-light": 0.1 } },
+        catalogs,
+        () => 0,
+      );
+      expect(ordered[0]?.objectKindId).toBe("Heavy");
+    });
     it("brushPreviewMeshFrameGroup applies GLB mesh frame rotation", () => {
       const meshRoot = new Mesh(new BoxGeometry(1, 2, 3));
       const frame = brushPreviewMeshFrameGroup(meshRoot);
