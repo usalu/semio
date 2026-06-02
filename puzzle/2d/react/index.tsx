@@ -10504,7 +10504,7 @@ export function Puzzle2dCanvas({
   return (
     <Puzzle2dContext.Provider value={contextRenderer}>
       <div
-        className={["relative box-border min-h-0 min-w-0 size-full", className, fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : ""].filter(Boolean).join(" ") || undefined}
+        className={["relative box-border min-h-0 min-w-0 size-full select-none", className, fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : ""].filter(Boolean).join(" ") || undefined}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}

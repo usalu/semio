@@ -16723,7 +16723,7 @@ if (import.meta.vitest) {
         </div>
       );
       const { container } = render(<Harness />);
-      fireEvent.pointerDown(container.querySelector('[data-slot="window-engagement-overlay"]')!);
+      fireEvent.pointerDown(container.querySelector('[data-slot="window-engagement-hover-zone"]')!);
       await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
       fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "Escape", bubbles: true });
       expect(aborted).toEqual(["abort"]);
@@ -16739,7 +16739,7 @@ if (import.meta.vitest) {
         );
       };
       const { container } = render(<Harness />);
-      const zone = container.querySelector('[data-slot="window-engagement-overlay"]')!;
+      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]')!;
       expect(screen.queryByPlaceholderText("Command")).toBeNull();
       fireEvent.pointerEnter(zone);
       await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
@@ -16819,19 +16819,42 @@ if (import.meta.vitest) {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
+      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]');
       expect(overlay).toBeTruthy();
-      expect(overlay?.className).toContain("inset-x-0");
-      expect(overlay?.className).toContain("h-large");
-      expect(overlay?.className).toContain("z-panel");
-      expect(overlay?.className).toContain("pointer-events-auto");
+      expect(overlay?.className).toContain("pointer-events-none");
+      expect(overlay?.className).not.toContain("inset-x-0");
+      expect(zone?.className).toContain("h-large");
+      expect(zone?.className).toContain("pointer-events-auto");
       expect(overlay?.getAttribute("data-expanded")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
-      fireEvent.pointerEnter(overlay!);
+      fireEvent.pointerEnter(zone!);
       expect(overlay?.getAttribute("data-expanded")).toBe("true");
       expect(screen.getByText("Idle")).toBeTruthy();
-      fireEvent.pointerDown(overlay!, { bubbles: true });
+      fireEvent.pointerDown(zone!, { bubbles: true });
       expect(overlay?.getAttribute("data-expanded")).toBe("true");
       expect(screen.getByText("Idle")).toBeTruthy();
+    });
+
+    it("Window engagement and measures overlays pass pointer hits through to the canvas body", () => {
+      const bodyDown = vi.fn();
+      const { container } = render(
+        <Window
+          id="canvas-window"
+          active
+          engagement={{ options: [{ id: "opt-a", label: "Alpha", onPress: () => {} }] }}
+          measures={<div data-testid="measure-slot">LOD</div>}
+        >
+          <div data-testid="window-body" className="size-full" onPointerDown={bodyDown}>
+            Body
+          </div>
+        </Window>,
+      );
+      const body = container.querySelector('[data-testid="window-body"]') as HTMLElement;
+      const bodyRect = body.getBoundingClientRect();
+      fireEvent.pointerDown(body, { clientX: bodyRect.right - 8, clientY: bodyRect.top + bodyRect.height * 0.55, bubbles: true });
+      expect(bodyDown).toHaveBeenCalledTimes(1);
+      fireEvent.pointerDown(body, { clientX: bodyRect.left + 12, clientY: bodyRect.top + 12, bubbles: true });
+      expect(bodyDown).toHaveBeenCalledTimes(2);
     });
 
     it("Window hides engagement overlay when inactive", () => {

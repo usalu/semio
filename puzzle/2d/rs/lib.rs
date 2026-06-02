@@ -6256,7 +6256,14 @@ mod board_host {
             if let Some(cached) = cache.as_ref() {
                 scene.append(&cached.2, Some(cam_aff));
             }
-            self.append_edges_wires_and_link(scene, None, lod, false, None, StyleChromePass::CachedBase);
+            let edges_in_world_space = matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Minimap);
+            if edges_in_world_space {
+                let mut edge_layer = Scene::new();
+                self.append_edges_wires_and_link(&mut edge_layer, None, lod, true, None, StyleChromePass::CachedBase);
+                scene.append(&edge_layer, Some(cam_aff));
+            } else {
+                self.append_edges_wires_and_link(scene, None, lod, false, None, StyleChromePass::CachedBase);
+            }
             let overlay_ids = self.interaction_overlay_entity_ids();
             if !overlay_ids.is_empty() {
                 let mut overlay = Scene::new();
