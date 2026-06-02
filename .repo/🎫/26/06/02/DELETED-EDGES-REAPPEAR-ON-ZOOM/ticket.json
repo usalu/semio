@@ -3,10 +3,11 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "When deleting selected edges in puzzle2d, edges disappear but reappear after zoom. Root cause: reconcileHostDeclarativeSceneEdges restores edges from hostDeclarativeSceneDescriptor when scene edge count drops below declarativeSceneEdgeExpectation without updating the snapshot after user deletes.",
-  "summary": "Edge-only Delete did not persist because playground onCanvasDelete ignored edge deletes; fixture JSX kept edges and re-sync restored them on zoom. Added puzzle2dPlayForwardsCanvasStructuralDelete and wired play canvas deletes for edges and nodes. Prior renderer host-descriptor prune fix remains.",
+  "summary": "Edge delete now propagates to all puzzle2d panes: applyStructuralRemoveSilent prunes host declarative snapshots so peers do not reconcile edges back; authoritative wasm drains commit deletes to peers via commitAuthoritativeStructuralDelete; playground applyStructuralDelete calls puzzle2dSyncFixtureDescriptorToAllAuthoringPeers after edge/node removal. Added peer edge-delete regression test.",
   "goal": "🎯ui",
   "sessions": [
     "⚪f1df5c247c8c401abe70e0b3a93e42c1",
-    "⚪057838c4c5ff4466818e50c3902d6b24"
+    "⚪057838c4c5ff4466818e50c3902d6b24",
+    "⚪29c8ab2c5c564f0398b16698fc7a6910"
   ]
 }

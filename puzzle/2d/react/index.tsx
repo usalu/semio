@@ -3150,9 +3150,16 @@ export class Puzzle2dRenderer {
     if (!graphMutated) {
       return;
     }
+    this.pruneHostDeclarativeStructuralDelete(payload);
     this.bumpWasmHostSceneMergeResyncEpoch();
     this.markSceneDescriptorDirty();
     this.invalidate();
+  }
+
+  /** @emoji ✂️ Commits an authoritative structural delete to peers and the host declarative snapshot (used when WASM drains skip scene delete events). */
+  private commitAuthoritativeStructuralDelete(payload: Puzzle2dStructureDeletePayload): void {
+    this.pruneHostDeclarativeStructuralDelete(payload);
+    puzzle2dBroadcastStructuralRemove(this, payload);
   }
 
   /** @emoji 🧹 Clears {@link Puzzle2dRenderer.applyNodePositionFromProps} caches so declarative fixture commits always win on every pane. */
@@ -4808,7 +4815,12 @@ export class Puzzle2dRenderer {
               graphMutatedForHostMerge = true;
             }
             if (!spuriousWasmEdgeDelete) {
-              this.pruneHostDeclarativeStructuralDelete({ kind: "edge", id });
+              const payload = { kind: "edge" as const, id };
+              if (this.structuralDeleteFixtureMirrorDepth > 0) {
+                this.commitAuthoritativeStructuralDelete(payload);
+              } else {
+                this.pruneHostDeclarativeStructuralDelete(payload);
+              }
             }
             break;
           }
@@ -4827,7 +4839,12 @@ export class Puzzle2dRenderer {
               graphMutatedForHostMerge = true;
             }
             if (!drainOptions.silentStructuralRemoves || this.structuralDeleteFixtureMirrorDepth > 0) {
-              this.pruneHostDeclarativeStructuralDelete({ kind: "node", id });
+              const payload = { kind: "node" as const, id };
+              if (this.structuralDeleteFixtureMirrorDepth > 0 && drainOptions.silentStructuralRemoves) {
+                this.commitAuthoritativeStructuralDelete(payload);
+              } else {
+                this.pruneHostDeclarativeStructuralDelete(payload);
+              }
             }
             break;
           }
@@ -6174,6 +6191,50 @@ if (puzzle2dVitest) {
       expect(nodeDeletes).toContain("shared");
       expect(rendererA.scene.nodes.has("shared")).toBe(false);
       expect(rendererB.scene.nodes.has("shared")).toBe(false);
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("broadcasts edge deletes to peer renderers after authoritative wasm drain", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const sourceNodeA = new Puzzle2dSceneNode({ id: "a", radius: 10, x: 0, y: 0 });
+      const targetNodeA = new Puzzle2dSceneNode({ id: "b", radius: 10, x: 40, y: 0 });
+      const sourceNodeB = new Puzzle2dSceneNode({ id: "a", radius: 10, x: 0, y: 0 });
+      const targetNodeB = new Puzzle2dSceneNode({ id: "b", radius: 10, x: 40, y: 0 });
+      const sourceHandleA = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNodeA });
+      const targetHandleA = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNodeA });
+      const sourceHandleB = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNodeB });
+      const targetHandleB = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNodeB });
+      const edgeA = new Puzzle2dSceneEdge({ id: "edge-1", source: sourceHandleA, target: targetHandleA });
+      const edgeB = new Puzzle2dSceneEdge({ id: "edge-1", source: sourceHandleB, target: targetHandleB });
+      rendererA.scene.add(sourceNodeA).add(targetNodeA).add(edgeA);
+      rendererB.scene.add(sourceNodeB).add(targetNodeB).add(edgeB);
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      rendererA.rememberHostDeclarativeSceneDescriptor(descriptor);
+      rendererB.rememberHostDeclarativeSceneDescriptor(descriptor);
+      rendererA.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+      rendererB.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+      rendererA.withFixtureStructuralDeleteMirror(() => {
+        rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "edgeDelete", payload: { id: "edge-1" } }]));
+      });
+      expect(rendererA.scene.edges.has("edge-1")).toBe(false);
+      expect(rendererB.scene.edges.has("edge-1")).toBe(false);
+      rendererA["applyWasmDrainToScene"](JSON.stringify([]), { silentStructuralRemoves: true });
+      expect(rendererA.scene.edges.has("edge-1")).toBe(false);
+      expect(rendererB.scene.edges.has("edge-1")).toBe(false);
       rendererA.dispose();
       rendererB.dispose();
     });

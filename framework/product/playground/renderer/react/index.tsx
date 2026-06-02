@@ -3411,7 +3411,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         if (!prev.edges.some((e) => e.id === id)) {
           return prev;
         }
-        return { ...prev, edges: prev.edges.filter((e) => e.id !== id) };
+        const next = { ...prev, edges: prev.edges.filter((e) => e.id !== id) };
+        puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
+        return next;
       });
       pruneSelections([id]);
       bumpSceneAuthoringEpoch();
@@ -3425,11 +3427,13 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         return prev;
       }
       const hset = new Set(n.handles.map((h) => h.id));
-      return {
+      const next = {
         ...prev,
         edges: prev.edges.filter((e) => !hset.has(e.source) && !hset.has(e.target)),
         nodes: prev.nodes.filter((x) => x.id !== id),
       };
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
+      return next;
     });
     pruneSelections([id, ...handleIds]);
     bumpSceneAuthoringEpoch();
