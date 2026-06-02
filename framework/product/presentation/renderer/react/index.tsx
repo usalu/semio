@@ -307,7 +307,8 @@ function elementIsMorphSourceAnchor(element: HTMLElement): boolean {
 function elementIsFigureMorphSlot(element: HTMLElement): boolean {
 	return (
 		element.classList.contains("presentation-morph-slot--figure") ||
-		element.closest(".presentation-morph-slot--figure") !== null
+		element.closest(".presentation-morph-slot--figure") !== null ||
+		element.querySelector(".presentation-morph-slot--figure") !== null
 	);
 }
 
@@ -326,7 +327,11 @@ export function presentationAutoAnimateMatcher(
 		if (reserved.includes(pair.to)) {
 			return false;
 		}
-		if (elementIsFigureMorphSlot(pair.from) && !elementIsMorphSourceAnchor(pair.to)) {
+		if (
+			elementIsFigureMorphSlot(pair.from) &&
+			pair.to.closest(".presentation-morph-into") !== null &&
+			!elementIsMorphSourceAnchor(pair.to)
+		) {
 			return false;
 		}
 		if (elementIsMorphSourceAnchor(pair.to) && !elementIsFigureMorphSlot(pair.from)) {
@@ -1230,7 +1235,13 @@ export function buildInteractiveSlideLayout(
 			declaredRect,
 			sectionRect: declaredRect,
 			revealMorphId:
-				morph && declaredRect !== undefined && disposition.morphSource ? disposition.morphId : undefined,
+				morph && declaredRect !== undefined
+					? disposition.morphSource
+						? disposition.morphId
+						: disposition.morphFrom?.length
+							? undefined
+							: disposition.morphId
+					: undefined,
 		});
 	});
 	return { placements, rowBands: [] };
@@ -4438,19 +4449,23 @@ if (import.meta.vitest) {
 				...CATALOGUE_COLUMN_TILE_KEYS.col2,
 				...CATALOGUE_COLUMN_TILE_KEYS.col3,
 			];
+			expect(pairs.length).toBeGreaterThanOrEqual(8);
 			expect(
 				tileIds.filter((id) =>
 					pairs.some(
 						(pair) =>
 							pair.from.getAttribute("data-id") === id &&
-							pair.to.classList.contains("presentation-morph-source"),
+							elementIsMorphSourceAnchor(pair.to),
 					),
 				).length,
 			).toBeGreaterThanOrEqual(8);
-			expect(labelSlide.querySelectorAll(".presentation-morph-into").length).toBe(3);
+			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-into").length).toBe(3);
 			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-into[data-id]").length).toBe(0);
 			expect(
-				tileIds.every((id) => labelSlide.querySelector(`[data-id="${id}"].presentation-morph-source`)),
+				tileIds.every(
+					(id) =>
+						labelSlide.querySelector(`[data-id="${id}"]`)?.closest(".presentation-morph-source") !== null,
+				),
 			).toBe(true);
 			expect(labelSlide.querySelectorAll(".presentation-morph-source").length).toBeGreaterThanOrEqual(8);
 			mountRoot.remove();

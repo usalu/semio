@@ -148,7 +148,6 @@ if (import.meta.vitest) {
 			expect(arrangementRestDispositions(labelSlide!.arrangement)).toHaveLength(3);
 			const morphSources = labelSlide!.arrangement.dispositions.filter((disposition) => disposition.morphSource);
 			expect(morphSources).toHaveLength(10);
-			expect(morphSources.every((disposition) => disposition.style?.opacity === 0)).toBe(true);
 		});
 
 		it("morphs tile figures into label positions before column text appears", () => {

@@ -763,7 +763,6 @@ export function expandArrangementMorphFrom(
 				embodimentId,
 				emphasis: sourceDisposition?.emphasis ?? "active",
 				position: slot.position,
-				style: { opacity: 0 },
 				morphSource: true,
 				morphAnchorId,
 			});
@@ -2156,7 +2155,6 @@ if (import.meta.vitest) {
 			const morphSource = labels?.arrangement.dispositions.find((disposition) => disposition.morphSource);
 			expect(morphSource?.morphAnchorId).toBe("labels--0");
 			expect(morphSource?.morphSource).toBe(true);
-			expect(morphSource?.style).toEqual({ opacity: 0 });
 			expect(arrangementRestDispositions(labels!.arrangement)).toHaveLength(1);
 		});
 
