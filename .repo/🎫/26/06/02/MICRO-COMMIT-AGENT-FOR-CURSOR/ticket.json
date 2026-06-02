@@ -1,0 +1,11 @@
+{
+  "title": "Micro Commit Agent For Cursor",
+  "emoji": "🫡",
+  "status": "closed",
+  "description": "Create .cursor/agents/micro-commit.md and .agents/skills/micro-commit/SKILL.md for fast WIP micro-commits: bump counter, parent wip header, timestamp, git diff summaries. Triggers: g, go, c, commit, +1.",
+  "summary": "Added Cursor subagent `.cursor/agents/micro-commit.md` for one-turn WIP micro-commits: preserves parent 🎆🌙☀️ wip date, bumps 3-digit 🚩 counter, stamps ⏰⌚⏱️ second line, summarizes git diffs into emoji bullets, commits on g/go/c/commit/+1 on ⛳wip or 🏗️dev branches. Added `.agents/skills/micro-commit/SKILL.md` for explicit @micro-commit / skill invocation.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repomechanisms🎯repocommitmechanism",
+  "sessions": [
+    "⚪7059dbbe0520474dbb974a75da0164f9"
+  ]
+}

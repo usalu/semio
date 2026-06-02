@@ -1550,6 +1550,8 @@ export interface InteractiveDispositionPlacement {
 	readonly sectionRect: DispositionPosition | undefined;
 	/** @emoji 🔗 reveal.js `data-id` on the canvas wrapper when the tile frame must not own it. */
 	readonly revealMorphId?: string;
+	/** @emoji 🔗 Keeps figure crop anchors off the visible tile when a source ghost owns the morph id. */
+	readonly morphAnchorOnWrapper?: boolean;
 	readonly rowBandId?: string;
 }
 
@@ -1580,21 +1582,26 @@ export function buildInteractiveSlideLayout(
 	const placements: InteractiveDispositionPlacement[] = [];
 	resolved.forEach((disposition, dispositionIndex) => {
 		const declaredRect = declaredDispositionRect(disposition);
+		const revealMorphId =
+			morph && declaredRect !== undefined
+				? disposition.revealMorphCompanion !== undefined
+					? disposition.morphId
+					: outgoingSourceMorphIds.has(disposition.morphId)
+						? undefined
+						: disposition.morphFrom?.length
+							? undefined
+							: disposition.morphId
+				: undefined;
+		const morphAnchorOnWrapper =
+			Boolean(revealMorphId && declaredRect !== undefined) ||
+			(disposition.revealMorphCompanion === undefined && outgoingSourceMorphIds.has(disposition.morphId));
 		placements.push({
 			id: dispositionInteractionId(renderSlideId, disposition, dispositionIndex),
 			disposition,
 			declaredRect,
 			sectionRect: declaredRect,
-			revealMorphId:
-				morph && declaredRect !== undefined
-					? disposition.revealMorphCompanion !== undefined
-						? disposition.morphId
-						: outgoingSourceMorphIds.has(disposition.morphId)
-							? undefined
-							: disposition.morphFrom?.length
-								? undefined
-								: disposition.morphId
-					: undefined,
+			revealMorphId,
+			morphAnchorOnWrapper,
 		});
 	});
 	return { placements, rowBands: [] };
@@ -2515,6 +2522,7 @@ const InteractiveDisposition: FC<{
 	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 	readonly sectionRef: RefObject<HTMLElement | null>;
 	readonly revealMorphId?: string;
+	readonly morphAnchorOnWrapper?: boolean;
 	readonly rowBandId?: string;
 }> = ({
 	id,
@@ -2524,6 +2532,7 @@ const InteractiveDisposition: FC<{
 	allDeclaredRects,
 	sectionRef,
 	revealMorphId,
+	morphAnchorOnWrapper,
 	rowBandId,
 }) => {
 	const slideEpoch = useContext(PresentationSlideEpochContext);
@@ -3011,7 +3020,9 @@ const InteractiveDisposition: FC<{
 			>
 				<PresentationDispositionFullscreenContext.Provider value={fullscreen}>
 					<MorphAnchorOnWrapperContext.Provider
-						value={Boolean(revealMorphId && declaredRect !== undefined)}
+						value={
+							morphAnchorOnWrapper ?? Boolean(revealMorphId && declaredRect !== undefined)
+						}
 					>
 						<MorphDispositionView disposition={displayDisposition} />
 					</MorphAnchorOnWrapperContext.Provider>
@@ -3252,6 +3263,7 @@ const ArrangementSection: FC<{
 					allDeclaredRects={declaredRects}
 					sectionRef={sectionRef}
 					revealMorphId={entry.revealMorphId}
+					morphAnchorOnWrapper={entry.morphAnchorOnWrapper}
 					rowBandId={entry.rowBandId}
 				/>
 			))}
@@ -3730,8 +3742,11 @@ if (import.meta.vitest) {
 			expect(source?.position).toEqual(tile?.position);
 			expect(source?.morphId).toBe("tile");
 			const layout = buildInteractiveSlideLayout("focus", resolved, true);
-			expect(layout.placements.find((entry) => entry.disposition === tile)?.revealMorphId).toBeUndefined();
-			expect(layout.placements.find((entry) => entry.disposition === source)?.revealMorphId).toBe("tile");
+			const tilePlacement = layout.placements.find((entry) => entry.disposition === tile);
+			const sourcePlacement = layout.placements.find((entry) => entry.disposition === source);
+			expect(tilePlacement?.revealMorphId).toBeUndefined();
+			expect(tilePlacement?.morphAnchorOnWrapper).toBe(true);
+			expect(sourcePlacement?.revealMorphId).toBe("tile");
 		});
 
 		it("appends source companions for morphTo on the whole slide", () => {
@@ -5251,7 +5266,12 @@ if (import.meta.vitest) {
 			);
 			expect(sourceGhosts.length).toBe(10);
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
-			const focusSlots = focusSlide.querySelectorAll(".presentation-morph-slot--figure");
+			expect(
+				focusSlide.querySelectorAll(".presentation-interactive-disposition.presentation-source-ghost").length,
+			).toBe(10);
+			const focusSlots = focusSlide.querySelectorAll(
+				".presentation-interactive-disposition--kind-figure:not(.presentation-source-ghost) .presentation-morph-slot--figure",
+			);
 			expect(focusSlots.length).toBe(10);
 			for (const slot of focusSlots) {
 				expect(slot.classList.contains("presentation-target-ghost")).toBe(false);
