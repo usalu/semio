@@ -1,0 +1,11 @@
+{
+  "title": "Fix WASM Loading and Refine Window Placement Snapping Resizing UI",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "check the all update and changes in mcp app for calculating energy, some thing is making problem when i am drawing some zones",
+  "summary": "Fix WASM loading issue by compiling Rust sketchpad-rs module with --target no-modules to allow safe inlining in non-module classic script context",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a4fcdc1c577d4763b1b00e60d057c731"
+  ]
+}

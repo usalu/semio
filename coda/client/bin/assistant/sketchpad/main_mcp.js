@@ -175,7 +175,75 @@ let translateControl;
 let scaleControl;
 let viewHelper;
 let selectionModeActive = false;
-let selectedObject = null;
+
+let selectedWall = null;
+let selectedWindowId = null;
+
+window.addWindowToSelectedWall = function() {
+    if (!selectedWall) return;
+    const zone = zones.find(z => z.id === selectedWall.zoneId);
+    if (!zone) return;
+    if (!zone.windows) zone.windows = [];
+    const winId = 'win_' + Date.now();
+    zone.windows.push({
+        id: winId,
+        wall_id: selectedWall.wallId,
+        u: 0,
+        v: 0,
+        width: 1.5,
+        height: 1.5
+    });
+    rebuildAndRetainSelection(winId);
+};
+
+window.removeWindow = function(zoneId, winId) {
+    const zone = zones.find(z => z.id === zoneId);
+    if (zone && zone.windows) {
+        zone.windows = zone.windows.filter(w => w.id !== winId);
+    }
+    selectedWindowId = null;
+    selectedObject = null; selectedWall = null; selectedWindowId = null; updateSelectionPanel();
+    translateControl.detach();
+    scaleControl.detach();
+    rebuildAndRetainSelection();
+};
+
+function updateSelectionPanel() {
+    const panel = document.getElementById('selection-panel');
+    const title = document.getElementById('selection-title');
+    const content = document.getElementById('selection-content');
+    if (!panel) return;
+
+    if (selectedWindowId) {
+        panel.style.display = 'block';
+        title.textContent = `Selected: Window`;
+        const zone = zones.find(z => z.windows && z.windows.find(w => w.id === selectedWindowId));
+        content.innerHTML = `
+            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">
+                Move or scale the window in the 3D view.
+            </div>
+            <button class="btn-primary" style="background: #ef4444; color: white;" onclick="removeWindow('${zone.id}', '${selectedWindowId}')">Delete Window</button>
+        `;
+    } else if (selectedWall) {
+        panel.style.display = 'block';
+        title.textContent = `Selected: Wall (${selectedWall.wallId}) of ${selectedWall.zoneId}`;
+        content.innerHTML = `
+            <button class="btn-primary" onclick="addWindowToSelectedWall()">+ Add Window</button>
+        `;
+    } else if (selectedObject && selectedObject.userData.type === 'zone') {
+        panel.style.display = 'block';
+        title.textContent = `Selected: Zone (${selectedObject.userData.zoneId})`;
+        content.innerHTML = `
+            <div style="font-size: 0.8rem; color: #94a3b8;">
+                Use the Gizmo to move or scale the entire zone. Click on a specific wall to add windows.
+            </div>
+        `;
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+let selectedObject = null; selectedWall = null; selectedWindowId = null; updateSelectionPanel();
 
 const ZONE_COLORS = [
     0x38bdf8, 0x818cf8, 0xc084fc, 0xf472b6,
@@ -294,6 +362,8 @@ function initThree() {
     translateControl = new TransformControls(camera, renderer.domElement);
     scaleControl = new TransformControls(camera, renderer.domElement);
     scaleControl.setMode('scale');
+    translateControl.setSpace('local');
+    scaleControl.setSpace('local');
     
     // Hide Z axis handles since building zones are constrained to XY plane manipulation
     translateControl.showZ = false;
@@ -331,31 +401,72 @@ function initThree() {
         } else {
             translateControl.detach();
             scaleControl.detach();
-            selectedObject = null;
+            selectedObject = null; selectedWall = null; selectedWindowId = null; updateSelectionPanel();
         }
     }
 
     translateControl.addEventListener('mouseUp', function () {
         if (selectedObject) {
-            const zoneId = selectedObject.userData.zoneId;
-            const zone = zones.find(z => z.id === zoneId);
-            if (zone) {
-                zone.geometry.x = Math.round((selectedObject.position.x - zone.geometry.width / 2) * 2) / 2;
-                zone.geometry.y = Math.round((selectedObject.position.y - zone.geometry.length / 2) * 2) / 2;
-                rebuildAndRetainSelection(zoneId);
+            if (selectedObject.userData.type === 'zone') {
+                const zoneId = selectedObject.userData.zoneId;
+                const zone = zones.find(z => z.id === zoneId);
+                if (zone) {
+                    zone.geometry.x = Math.round((selectedObject.position.x - zone.geometry.width / 2) * 2) / 2;
+                    zone.geometry.y = Math.round((selectedObject.position.y - zone.geometry.length / 2) * 2) / 2;
+                    rebuildAndRetainSelection(zoneId);
+                }
+            } else if (selectedObject.userData.type === 'window') {
+                const zone = zones.find(z => z.id === selectedObject.userData.zoneId);
+                if (zone) {
+                    const w = zone.windows.find(win => win.id === selectedObject.userData.windowId);
+                    if (w) {
+                        const storyH = parseFloat(document.getElementById('story-height').value) || 2.8;
+                        const cx = zone.geometry.x + zone.geometry.width/2;
+                        const cy = zone.geometry.y + zone.geometry.length/2;
+                        const cz = storyH / 2;
+
+                        if (w.wall_id === 'N') {
+                            w.u = selectedObject.position.x - cx;
+                            w.v = selectedObject.position.z - cz;
+                        } else if (w.wall_id === 'S') {
+                            w.u = cx - selectedObject.position.x;
+                            w.v = selectedObject.position.z - cz;
+                        } else if (w.wall_id === 'E') {
+                            w.u = cy - selectedObject.position.y;
+                            w.v = selectedObject.position.z - cz;
+                        } else if (w.wall_id === 'W') {
+                            w.u = selectedObject.position.y - cy;
+                            w.v = selectedObject.position.z - cz;
+                        }
+                        rebuildAndRetainSelection(w.id);
+                    }
+                }
             }
         }
     });
+
     scaleControl.addEventListener('mouseUp', function () {
         if (selectedObject) {
-            const zoneId = selectedObject.userData.zoneId;
-            const zone = zones.find(z => z.id === zoneId);
-            if (zone) {
-                const scaleX = selectedObject.scale.x;
-                const scaleY = selectedObject.scale.y;
-                zone.geometry.width = Math.round(zone.geometry.width * scaleX * 10) / 10;
-                zone.geometry.length = Math.round(zone.geometry.length * scaleY * 10) / 10;
-                rebuildAndRetainSelection(zoneId);
+            if (selectedObject.userData.type === 'zone') {
+                const zoneId = selectedObject.userData.zoneId;
+                const zone = zones.find(z => z.id === zoneId);
+                if (zone) {
+                    const scaleX = selectedObject.scale.x;
+                    const scaleY = selectedObject.scale.y;
+                    zone.geometry.width = Math.max(0.5, Math.round(zone.geometry.width * scaleX * 10) / 10);
+                    zone.geometry.length = Math.max(0.5, Math.round(zone.geometry.length * scaleY * 10) / 10);
+                    rebuildAndRetainSelection(zoneId);
+                }
+            } else if (selectedObject.userData.type === 'window') {
+                const zone = zones.find(z => z.id === selectedObject.userData.zoneId);
+                if (zone) {
+                    const w = zone.windows.find(win => win.id === selectedObject.userData.windowId);
+                    if (w) {
+                        w.width = Math.max(0.1, Math.round(w.width * selectedObject.scale.x * 10) / 10);
+                        w.height = Math.max(0.1, Math.round(w.height * selectedObject.scale.y * 10) / 10);
+                        rebuildAndRetainSelection(w.id);
+                    }
+                }
             }
         }
     });
@@ -443,23 +554,46 @@ function initThree() {
         const intersects = raycaster.intersectObjects(draggableObjects, false);
         if (intersects.length > 0) {
             const object = intersects[0].object;
-            if (selectedObject !== object) {
+            const userData = object.userData;
+            
+            if (userData.type === 'window') {
+                selectedWindowId = userData.windowId;
+                selectedWall = null;
                 selectedObject = object;
-                if (window.activeTransformMode === 'scale') {
-                    scaleControl.attach(selectedObject);
+                rebuildAndRetainSelection(selectedWindowId);
+            } else if (userData.type === 'zone') {
+                const nx = Math.round(intersects[0].face.normal.x);
+                const ny = Math.round(intersects[0].face.normal.y);
+                const nz = Math.round(intersects[0].face.normal.z);
+                let wallId = null;
+                if (nx === 0 && ny === 1 && nz === 0) wallId = 'N';
+                else if (nx === 0 && ny === -1 && nz === 0) wallId = 'S';
+                else if (nx === 1 && ny === 0 && nz === 0) wallId = 'E';
+                else if (nx === -1 && ny === 0 && nz === 0) wallId = 'W';
+
+                if (wallId) {
+                    selectedWall = { zoneId: userData.zoneId, wallId };
+                    selectedWindowId = null;
+                    selectedObject = null;
                     translateControl.detach();
-                } else {
-                    translateControl.attach(selectedObject);
                     scaleControl.detach();
+                    updateSelectionPanel();
+                    render3DZones();
+                } else {
+                    selectedWall = null;
+                    selectedWindowId = null;
+                    selectedObject = object;
+                    rebuildAndRetainSelection(userData.zoneId);
                 }
             }
         } else {
-            // Clicked empty space
-            if (translateControl.object || scaleControl.object) {
-                translateControl.detach();
-                scaleControl.detach();
-                selectedObject = null;
-            }
+            selectedObject = null;
+            selectedWall = null;
+            selectedWindowId = null;
+            translateControl.detach();
+            scaleControl.detach();
+            updateSelectionPanel();
+            render3DZones();
         }
     });
 
@@ -490,7 +624,7 @@ function animate() {
 
 function addZone(type, x, y, width, length) {
     zoneCounter++;
-    const zone = { id: `zone_${zoneCounter}`, type, geometry: { x, y, width, length } };
+    const zone = { id: `zone_${zoneCounter}`, type, geometry: { x, y, width, length }, windows: [] };
     zones.push(zone);
     renderZoneList();
     render3DZones();
@@ -532,7 +666,7 @@ function render3DZones() {
     if (translateControl && translateControl.object) {
         translateControl.detach();
         scaleControl.detach();
-        selectedObject = null;
+        selectedObject = null; selectedWall = null; selectedWindowId = null; updateSelectionPanel();
     }
 
     const storyHeight = parseFloat(document.getElementById('story-height').value) || 2.8;
@@ -550,7 +684,7 @@ function render3DZones() {
             const boxMesh = new THREE.Mesh(boxGeom, boxMat);
             boxMesh.position.set(x + width / 2, y + length / 2, s * storyHeight + storyHeight / 2);
             if (s === 0) {
-                boxMesh.userData = { zoneId: zone.id, storyIndex: s };
+                boxMesh.userData = { type: 'zone', zoneId: zone.id, storyIndex: s };
                 draggableObjects.push(boxMesh);
             }
             buildingGroup.add(boxMesh);
@@ -589,6 +723,110 @@ function render3DZones() {
         sprite.scale.set(3, 0.75, 1);
         sprite.position.set(x + width / 2, y + length / 2, numStories * storyHeight + 0.8);
         buildingGroup.add(sprite);
+
+        if (!zone.windows) zone.windows = [];
+        zone.windows.forEach(w => {
+            const wGeom = new THREE.PlaneGeometry(w.width, w.height);
+            const isSelected = (selectedWindowId === w.id);
+            const wColor = isSelected ? 0xef4444 : 0x38bdf8;
+            const wMat = new THREE.MeshPhongMaterial({ color: wColor, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
+            const wMesh = new THREE.Mesh(wGeom, wMat);
+            wMesh.userData = { type: 'window', windowId: w.id, zoneId: zone.id, wallId: w.wall_id };
+            
+            const cx = x + width/2;
+            const cy = y + length/2;
+            const cz = storyHeight / 2;
+            
+            let wx, wy, wz;
+            let rotX = 0, rotY = 0;
+            const offset = 0.05;
+
+            if (w.wall_id === 'N') {
+                wx = cx + w.u;
+                wy = y + length + offset;
+                wz = cz + w.v;
+                rotX = -Math.PI/2;
+            } else if (w.wall_id === 'S') {
+                wx = cx - w.u;
+                wy = y - offset;
+                wz = cz + w.v;
+                rotX = Math.PI/2;
+            } else if (w.wall_id === 'E') {
+                wx = x + width + offset;
+                wy = cy - w.u;
+                wz = cz + w.v;
+                rotY = Math.PI/2;
+            } else if (w.wall_id === 'W') {
+                wx = x - offset;
+                wy = cy + w.u;
+                wz = cz + w.v;
+                rotY = -Math.PI/2;
+            }
+            
+            wMesh.position.set(wx, wy, wz);
+            wMesh.rotation.set(rotX, rotY, 0);
+            
+            draggableObjects.push(wMesh);
+            buildingGroup.add(wMesh);
+        });
+
+        if (selectedWall && selectedWall.zoneId === zone.id) {
+            const wallId = selectedWall.wallId;
+            const isN_S = (wallId === 'N' || wallId === 'S');
+            const wWidth = isN_S ? width : length;
+            const wHeight = storyHeight;
+            
+            const wallGeom = new THREE.PlaneGeometry(wWidth, wHeight);
+            const wallMat = new THREE.MeshBasicMaterial({
+                color: 0xfacc15,
+                transparent: true,
+                opacity: 0.35,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const wallMesh = new THREE.Mesh(wallGeom, wallMat);
+            
+            const cx = x + width/2;
+            const cy = y + length/2;
+            const cz = storyHeight / 2;
+            
+            let wx, wy, wz;
+            let rotX = 0, rotY = 0;
+            const offset = 0.02;
+            
+            if (wallId === 'N') {
+                wx = cx;
+                wy = y + length + offset;
+                wz = cz;
+                rotX = -Math.PI/2;
+            } else if (wallId === 'S') {
+                wx = cx;
+                wy = y - offset;
+                wz = cz;
+                rotX = Math.PI/2;
+            } else if (wallId === 'E') {
+                wx = x + width + offset;
+                wy = cy;
+                wz = cz;
+                rotY = Math.PI/2;
+            } else if (wallId === 'W') {
+                wx = x - offset;
+                wy = cy;
+                wz = cz;
+                rotY = -Math.PI/2;
+            }
+            
+            wallMesh.position.set(wx, wy, wz);
+            wallMesh.rotation.set(rotX, rotY, 0);
+            
+            const edgesGeom = new THREE.EdgesGeometry(wallGeom);
+            const edgesMat = new THREE.LineBasicMaterial({ color: 0xeab308, linewidth: 3 });
+            const edges = new THREE.LineSegments(edgesGeom, edgesMat);
+            wallMesh.add(edges);
+            
+            buildingGroup.add(wallMesh);
+        }
+
     });
 
     if (zones.length > 0) {
@@ -677,7 +915,8 @@ function getRustStatePayload() {
         width: z.geometry.width,
         length: z.geometry.length,
         x: z.geometry.x,
-        y: z.geometry.y
+        y: z.geometry.y,
+        windows: z.windows || []
     }));
     
     return { zones: rust_zones, params };
@@ -687,7 +926,8 @@ function syncUIFromState(state) {
     zones = state.zones.map(z => ({
         id: z.id,
         type: z.room_type,
-        geometry: { width: z.width, length: z.length, x: z.x, y: z.y }
+        geometry: { width: z.width, length: z.length, x: z.x, y: z.y },
+        windows: z.windows || []
     }));
     zoneCounter = zones.length;
     
@@ -827,26 +1067,40 @@ removeZone = function(id) {
     dispatchState();
 };
 
-function rebuildAndRetainSelection(zoneId) {
+function rebuildAndRetainSelection(targetId = null) {
     renderZoneList();
     render3DZones();
     updateStats();
     dispatchState();
-    const newMesh = draggableObjects.find(obj => obj.userData.zoneId === zoneId);
-    if (newMesh) {
-        selectedObject = newMesh;
-        if (window.activeTransformMode === 'scale') {
-            scaleControl.attach(selectedObject);
-            translateControl.detach();
-        } else {
-            translateControl.attach(selectedObject);
-            scaleControl.detach();
-        }
-    } else {
-        translateControl.detach();
-        scaleControl.detach();
-        selectedObject = null;
+    
+    if (!targetId && selectedObject) {
+        targetId = selectedObject.userData.type === 'window' ? selectedObject.userData.windowId : selectedObject.userData.zoneId;
     }
+
+    if (targetId) {
+        const newMesh = draggableObjects.find(obj => 
+            (obj.userData.type === 'window' && obj.userData.windowId === targetId) ||
+            (obj.userData.type === 'zone' && obj.userData.zoneId === targetId)
+        );
+        if (newMesh) {
+            selectedObject = newMesh;
+            translateControl.showZ = false;
+            scaleControl.showZ = false;
+
+            if (window.activeTransformMode === 'scale') {
+                scaleControl.attach(selectedObject);
+                translateControl.detach();
+            } else {
+                translateControl.attach(selectedObject);
+                scaleControl.detach();
+            }
+        } else {
+            translateControl.detach();
+            scaleControl.detach();
+            selectedObject = null; selectedWall = null; selectedWindowId = null; updateSelectionPanel();
+        }
+    }
+    updateSelectionPanel();
 }
 
 function initCompass() {
@@ -913,7 +1167,7 @@ function initEventListeners() {
                 translateControl.detach();
                 scaleControl.detach();
             }
-            selectedObject = null;
+            selectedObject = null; selectedWall = null; selectedWindowId = null; updateSelectionPanel();
         });
 
         btnSelect.addEventListener('click', () => {

@@ -106,3 +106,7 @@ What happens in the real-time energy report in the UI? Also,  note that we need 
 ---
 Everything is working great. Moving forward, we need the solar gain calculation to reflect changes made to the north angle. The system should distinguish the orientation of each wall so that adjusting the rotation updates the solar gain accordingly. This logic has already been implemented in the Python codebase.
 ---
+I want to implement a geometry logic that follows topological principles, meaning our geometry consists of separated faces and nodes. However, for the MCP app, we don't need to implement the entire topological logic. What I want is the ability to select different faces in a geometry and add windows to them. We should be able to move and resize these windows directly on the face. Please explain how we can implement this. As you know, windows play a very important role: their area must be subtracted from the host wall's area, and we will factor the window's properties into our solar gain and transmission calculations.
+---
+When I click on a face, nothing happens. It doesn't let me select or isolate my chosen face. Please provide the code and explain what you did in this particular section.
+---

@@ -33,10 +33,16 @@ const { JSDOM } = jsdom;
 
 const dom = new JSDOM(`<body>
     <div id="log-console"></div>
-    <script>${inlined_rs}</script>
 </body>`, { runScripts: "dangerously" });
 
 const window = dom.window;
+window.TextDecoder = TextDecoder;
+window.TextEncoder = TextEncoder;
+
+// Run the WASM loading script
+const wasmScript = window.document.createElement("script");
+wasmScript.textContent = inlined_rs;
+window.document.body.appendChild(wasmScript);
 window.TextDecoder = TextDecoder;
 window.TextEncoder = TextEncoder;
 
