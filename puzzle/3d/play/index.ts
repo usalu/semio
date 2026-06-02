@@ -69,8 +69,10 @@ import {
   type FixtureObjectV1,
   type FixtureV1,
   type KindCatalogBundle,
-  enrichKindCatalogBundleDoorCapsules,
   type KindCompatEntry,
+  type KitConnectorCadRow,
+  puzzle3dVortexKindLabelFromHandleKind,
+  type AttractionVortexContext,
   type ObjectKind,
   type ObjectKindVortexTemplate,
   type BrushPlacePayload,
@@ -90,8 +92,185 @@ import {
   getPuzzle3dZoomToSelectionTarget,
   requestPuzzle3dZoomToSelection,
   resolveObjectKindMeshUrl,
+  brushCompatibleCandidates,
+  publishPuzzle3dBrushCandidateAccept,
+  type BrushCompatibleCandidate,
 } from "../react/index.tsx";
 import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
+
+//#region 🏗️NakaginCatalog
+function cadVec3FromKitPoint(row: { readonly x: number; readonly y: number; readonly z: number }): [number, number, number] {
+  return [row.x, row.y, row.z];
+}
+
+/** @emoji 🧲 Builds object-kind vortex templates from kit connectors (nakagin play fixture tooling). */
+export function puzzle3dPlayObjectKindVorticesFromKitConnectors(
+  connectors: readonly KitConnectorCadRow[],
+  labelHandleKind: (handleKind: string) => string,
+  defaultRadius = 0.36,
+  objectKindId?: string,
+): ObjectKindVortexTemplate[] {
+  const seenPositions = new Set<string>();
+  const out: ObjectKindVortexTemplate[] = [];
+  for (const connector of connectors) {
+    const handleKind = connector.port?.handleKind?.trim() ?? "";
+    const point = connector.point;
+    if (handleKind === "" || !point) {
+      continue;
+    }
+    const position = cadVec3FromKitPoint(point);
+    const posKey = position.map((n) => n.toFixed(6)).join(",");
+    if (seenPositions.has(posKey)) {
+      continue;
+    }
+    seenPositions.add(posKey);
+    const portName = labelHandleKind(handleKind);
+    const vortexKind = puzzle3dPlayDoorCapsuleVortexKindFromKindPortAndPoint(objectKindId, portName, point);
+    out.push({
+      vortexKind,
+      position,
+      ...(connector.direction ? { direction: cadVec3FromKitPoint(connector.direction) } : {}),
+      radius: defaultRadius,
+    });
+  }
+  return out;
+}
+
+const NAKAGIN_CAPSULE_KIND_SPECIFICITY_PREFIXES = ["Capsule With Balcony ", "Trapezoid Capsule "] as const;
+
+/** @emoji 🏷️ Picks the most specific nakagin capsule kind when a plainer alias exists in `availableKindNames`. */
+export function puzzle3dPlayPreferSpecificCapsuleKindName(kindName: string, availableKindNames: ReadonlySet<string>): string {
+  const name = kindName.trim();
+  if (name === "") {
+    return name;
+  }
+  if (NAKAGIN_CAPSULE_KIND_SPECIFICITY_PREFIXES.some((prefix) => name.startsWith(prefix))) {
+    return name;
+  }
+  const plain = /^Capsule (.+)$/.exec(name);
+  if (!plain) {
+    return name;
+  }
+  const tail = plain[1]!;
+  for (const prefix of NAKAGIN_CAPSULE_KIND_SPECIFICITY_PREFIXES) {
+    const candidate = `${prefix}${tail}`;
+    if (availableKindNames.has(candidate)) {
+      return candidate;
+    }
+  }
+  return name;
+}
+
+const DOOR_CAPSULE_RIGHT_VORTEX_KIND = "door capsule right";
+const DOOR_CAPSULE_LEFT_VORTEX_KIND = "door capsule left";
+
+function puzzle3dPlayDoorCapsuleSideFromKindName(kindName: string | undefined): "left" | "right" | null {
+  const name = kindName?.trim() ?? "";
+  if (name === "") {
+    return null;
+  }
+  const tail = /(?:Capsule(?: With Balcony)?|Trapezoid Capsule)\s+([A-Za-z])\s*$/.exec(name)?.[1] ?? /Capsule\s+([A-Za-z])\s*$/.exec(name)?.[1];
+  if (!tail) {
+    return null;
+  }
+  if (tail === "J" || tail === "S") {
+    return "right";
+  }
+  if (tail === "L" || tail === "Z") {
+    return "left";
+  }
+  return null;
+}
+
+/** @emoji 🚪 Resolves left vs right door vortex kind from port name and connector CAD. */
+export function puzzle3dPlayDoorCapsuleVortexKindFromPortNameAndPoint(
+  portName: string,
+  point: { readonly x: number; readonly y: number; readonly z: number },
+): string {
+  if (!portName.includes("door capsule")) {
+    return portName;
+  }
+  return point.x < 0 ? DOOR_CAPSULE_LEFT_VORTEX_KIND : DOOR_CAPSULE_RIGHT_VORTEX_KIND;
+}
+
+function puzzle3dPlayDoorCapsuleVortexKindFromKindPortAndPoint(
+  objectKindId: string | undefined,
+  portName: string,
+  point: { readonly x: number; readonly y: number; readonly z: number },
+): string {
+  if (!portName.includes("door capsule")) {
+    return portName;
+  }
+  const side = puzzle3dPlayDoorCapsuleSideFromKindName(objectKindId);
+  if (side === "left") {
+    return DOOR_CAPSULE_LEFT_VORTEX_KIND;
+  }
+  if (side === "right") {
+    return DOOR_CAPSULE_RIGHT_VORTEX_KIND;
+  }
+  return puzzle3dPlayDoorCapsuleVortexKindFromPortNameAndPoint(portName, point);
+}
+
+function puzzle3dPlayDominantAxisCad(direction: readonly [number, number, number]): "x" | "y" | "z" {
+  const ax = Math.abs(direction[0]);
+  const ay = Math.abs(direction[1]);
+  const az = Math.abs(direction[2]);
+  if (ax >= ay && ax >= az) {
+    return "x";
+  }
+  if (ay >= ax && ay >= az) {
+    return "y";
+  }
+  return "z";
+}
+
+/** @emoji 🖌️ Nakagin brush filter: tambour doors accept horizontal door-capsule ports only (not platform or vertical doors). */
+function puzzle3dPlayBrushCandidateAccept(
+  target: AttractionVortexContext,
+  _candidate: BrushCompatibleCandidate,
+  template: ObjectKindVortexTemplate,
+): boolean {
+  const targetVk = target.vortexKind ?? "";
+  if (!targetVk.includes("door tambour")) {
+    return true;
+  }
+  const sourceVk = template.vortexKind ?? "";
+  if (!sourceVk.includes("door capsule")) {
+    return false;
+  }
+  const direction = template.direction ?? [0, 0, -1];
+  return puzzle3dPlayDominantAxisCad(direction) === "x" && Math.abs(direction[0]) > 0.5;
+}
+
+function relabelDoorCapsuleVortexTemplate(objectKindId: string, vortex: ObjectKindVortexTemplate): ObjectKindVortexTemplate {
+  if (!vortex.vortexKind?.includes("door capsule")) {
+    return vortex;
+  }
+  const [x, y, z] = vortex.position;
+  const nextKind = puzzle3dPlayDoorCapsuleVortexKindFromKindPortAndPoint(objectKindId, vortex.vortexKind, { x, y, z });
+  return nextKind === vortex.vortexKind ? vortex : { ...vortex, vortexKind: nextKind };
+}
+
+/** @emoji 🚪 Relabels palette door vortex kinds to match nakagin capsule kind ids in the kind catalog. */
+function enrichKindCatalogBundleDoorCapsules(bundle: KindCatalogBundle | undefined): KindCatalogBundle | undefined {
+  if (!bundle?.objects?.length) {
+    return bundle;
+  }
+  let touched = false;
+  const objects = bundle.objects.map((kind) => {
+    if (!kind.vortices?.length) {
+      return kind;
+    }
+    const vortices = kind.vortices.map((vortex) => relabelDoorCapsuleVortexTemplate(kind.id, vortex));
+    if (vortices.every((v, i) => v === kind.vortices![i])) {
+      return kind;
+    }
+    touched = true;
+    return { ...kind, vortices };
+  });
+  return touched ? { ...bundle, objects } : bundle;
+}
+//#endregion 🏗️NakaginCatalog
 
 //#region 🧾Meta
 function parseKindCompatibility(meta: Record<string, unknown> | undefined): readonly KindCompatEntry[] {
@@ -732,6 +911,7 @@ export class Puzzle3dPlayShellController extends Controller {
     this.objectKindWeights = syncKindWeightMap(this.objectKindIds, this.objectKindWeights);
     this.vortexKindWeights = syncKindWeightMap(this.vortexKindIds, this.vortexKindWeights);
     publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
+    publishPuzzle3dBrushCandidateAccept(puzzle3dPlayBrushCandidateAccept);
   }
 
   /** @emoji 🔔 Subscribes to snapshot-only updates (selection, fixture, lod) without shell generation bumps. */
@@ -2186,7 +2366,7 @@ if (import.meta.vitest) {
       expect(placedKinds.has("J")).toBe(false);
     });
 
-    it("nakagin Bridge kind resolves to metabolism bridge glb", () => {
+    it("nakagin Bridge kind resolves meshUrl from catalog", () => {
       const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
       expect(resolveObjectKindMeshUrl("Bridge", catalogs, f ?? undefined)).toBe("/meshes/bridge.glb");
@@ -2200,6 +2380,122 @@ if (import.meta.vitest) {
     it("builds canonical vortex full ids", () => {
       expect(puzzle3dVortexFullId("obj", "vx")).toBe("obj:vx");
       expect(puzzle3dVortexFullId("obj", "obj:vx")).toBe("obj:vx");
+    });
+
+    describe("nakagin kind catalog helpers", () => {
+    it("upgrades plain Capsule J when a more specific catalog name exists", () => {
+      const available = new Set(["Capsule J", "Capsule With Balcony J", "Trapezoid Capsule J", "Tambour"]);
+      expect(puzzle3dPlayPreferSpecificCapsuleKindName("Capsule J", available)).toBe("Capsule With Balcony J");
+      expect(puzzle3dPlayPreferSpecificCapsuleKindName("Tambour", available)).toBe("Tambour");
+    });
+
+    it("relabels door capsule vortex kinds from kind id", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "Capsule J",
+            meshUrl: "/meshes/capsule_J.glb",
+            vortices: [{ vortexKind: "door capsule right", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
+          },
+          {
+            id: "Capsule L",
+            meshUrl: "/meshes/capsule_L.glb",
+            vortices: [{ vortexKind: "door capsule right", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
+          },
+        ],
+        vortices: [{ id: "door capsule right" }, { id: "door capsule left" }, { id: "door tambour right" }],
+      };
+      const enriched = parseKindCatalogs({ kindCatalogs: catalogs })!;
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour right" };
+      const compat: readonly KindCompatEntry[] = [
+        { bidirectional: true, specificity: "vortex", source: "door capsule right", target: "door tambour right" },
+      ];
+      const list = brushCompatibleCandidates(target, enriched, compat);
+      expect(list.some((entry) => entry.objectKindId === "Capsule J")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "Capsule L")).toBe(false);
+      expect(enriched.objects.find((k) => k.id === "Capsule L")?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
+    });
+
+    it("brush candidate accept on door tambour left lists horizontal door capsules only", () => {
+      const doorCatalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "Capsule L",
+            meshUrl: "/meshes/capsule_L.glb",
+            vortices: [{ vortexKind: "door capsule left", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
+          },
+          {
+            id: "Capsule Z",
+            meshUrl: "/meshes/capsule_z.glb",
+            vortices: [{ vortexKind: "door capsule left", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
+          },
+          {
+            id: "Capsule P",
+            meshUrl: "/meshes/capsule_p.glb",
+            vortices: [{ vortexKind: "door capsule left", position: [-0.45, -2.1, 0], direction: [0, -1, 0], radius: 0.36 }],
+          },
+          {
+            id: "Capsule Slash",
+            meshUrl: "/meshes/capsule_slash.glb",
+            vortices: [{ vortexKind: "door capsule left", position: [-0.45, -2.1, 0], direction: [0, -1, 0], radius: 0.36 }],
+          },
+          {
+            id: "Bridge",
+            meshUrl: "/meshes/bridge.glb",
+            vortices: [{ vortexKind: "platform left", position: [0, -1.3, 0], direction: [-1, 0, 0], radius: 0.36 }],
+          },
+        ],
+        vortices: [
+          { id: "door capsule left", defaultCableKind: "cable.link" },
+          { id: "door tambour left", defaultCableKind: "cable.link" },
+          { id: "platform left", defaultCableKind: "cable.link" },
+        ],
+        cables: [{ id: "cable.link", defaultAttractionKind: "puzzle3d.attraction.link" }],
+      };
+      const doorCompat: readonly KindCompatEntry[] = [
+        { bidirectional: true, specificity: "vortex", source: "door capsule left", target: "door tambour left" },
+        { bidirectional: true, specificity: "vortex", source: "platform left", target: "door tambour left" },
+      ];
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
+      publishPuzzle3dBrushCandidateAccept(puzzle3dPlayBrushCandidateAccept);
+      const list = brushCompatibleCandidates(target, doorCatalogs, doorCompat);
+      const ids = list.map((entry) => entry.objectKindId);
+      expect(ids).toContain("Capsule L");
+      expect(ids).toContain("Capsule Z");
+      expect(ids).not.toContain("Capsule P");
+      expect(ids).not.toContain("Capsule Slash");
+      expect(ids).not.toContain("Bridge");
+    });
+
+    it("relabels Capsule Z door port to door capsule left", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "Capsule Z",
+            meshUrl: "/meshes/capsule_z.glb",
+            vortices: [{ vortexKind: "door capsule right", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
+          },
+        ],
+        vortices: [{ id: "door capsule left" }, { id: "door capsule right" }, { id: "door tambour left" }],
+      };
+      const enriched = parseKindCatalogs({ kindCatalogs: catalogs })!;
+      expect(enriched.objects.find((k) => k.id === "Capsule Z")?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
+    });
+
+    it("builds vortex templates from kit connectors", () => {
+      const vortexKinds: VortexKind[] = [{ id: "core rectangular bottom", name: "core rectangular bottom", color: "#000" }];
+      const handleRows = [{ id: "kit.handle.core-rect-bottom", name: "core rectangular bottom" }];
+      const label = (hk: string) => puzzle3dVortexKindLabelFromHandleKind(hk, vortexKinds, handleRows);
+      const vortices = puzzle3dPlayObjectKindVorticesFromKitConnectors(
+        [
+          { point: { x: -7.5, y: -7.7, z: 7.5 }, direction: { x: 0, y: 0, z: 1 }, port: { handleKind: handleRows[0]!.id } },
+          { point: { x: -18.6, y: -7.7, z: 7.5 }, direction: { x: 0, y: 0, z: 1 }, port: { handleKind: handleRows[0]!.id } },
+        ],
+        label,
+      );
+      expect(vortices).toHaveLength(2);
+      expect(vortices[0]?.vortexKind).toBe("core rectangular bottom");
+    });
     });
 
     it("stores nakagin vortex positions in type-local CAD space", () => {

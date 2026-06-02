@@ -3,7 +3,7 @@
   "emoji": "🖌️",
   "status": "closed",
   "description": "Complete puzzle3d brush tool: engagement suggestions and commits must be collision-free. Random compatible order, probe AABB vs scene meshes (exclude host), empty placement when none free.",
-  "summary": "Fixed false brush collision on tambour stack commit. Collision probes used raw GLB roots without GlbMeshFrame (PI/2 X) while the preview ghost used MeshBody, so AABB probes disagreed with the visible mesh. BrushPreviewGhost also applied kind scale twice (outer pose + MeshBody), inflating the ghost AABB and failing commit/reconcile after a valid suggestion. Added brushPreviewMeshFrameGroup; brushProbeGroupFromPreview now matches scene object mesh graph; removed duplicate scale on ghost MeshBody. Tests: frame rotation, excluded-host stack probe (242 passing).",
+  "summary": "Removed semio/nakagin domain logic from puzzle/3d/react brush code. Deleted brushDoorTambour/Capsule helpers and Tambour/Base ranking boosts. Added domain-neutral publishPuzzle3dBrushCandidateAccept hook; play layer implements puzzle3dPlayBrushCandidateAccept (tambour door + horizontal capsule filter) and registers it from syncBrushKindWeightsFromFixture. Neutralized react vitest fixtures; door-tambour behavior test moved to play. React 258 + play 45 tests passing.",
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
@@ -13,6 +13,8 @@
   "sessions": [
     "⚪52ee497fa3b34dbe8f83cc1ce92e402d",
     "⚪b597be8c4dc74e038540df7353f95610",
-    "⚪e4caba2ba0674511a1f1d5d781662d04"
+    "⚪e4caba2ba0674511a1f1d5d781662d04",
+    "⚪ce617069fffd491fb842929e1fcce967",
+    "⚪72436e13ec4b44edb2d02da1f909a238"
   ]
 }

@@ -341,7 +341,6 @@ export const mediaEmbodiments: Embodiment[] = [
 		alt: "Komponentenkatalog",
 		crop: { x: 0, y: 0, width: 1, height: 1 },
 		sourceAspect: CATALOGUE_SOURCE_ASPECT,
-		fit: "contain",
 	},
 	{
 		kind: "figure",

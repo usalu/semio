@@ -1,5 +1,67 @@
-#!/bin/sh
+#!/usr/bin/env sh
+semio_micro_commit_wipe_templates() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  git config --local --unset commit.template 2>/dev/null || true
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/gkcommittemplate*.txt; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+}
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 cd "$ROOT" || exit 0
-BUN="${SEMIO_BUN:-bun}"
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0
+semio_resolve_bun() {
+  ROOT="$1"
+  if [ -n "$SEMIO_BUN" ] && [ -x "$SEMIO_BUN" ]; then
+    echo "$SEMIO_BUN"
+    return
+  fi
+  if [ -f "$ROOT/.repo/semio-micro-commit-bun" ]; then
+    B=$(head -n 1 "$ROOT/.repo/semio-micro-commit-bun" | tr -d '\r')
+    if [ -n "$B" ] && [ -x "$B" ]; then
+      echo "$B"
+      return
+    fi
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun" ]; then
+    echo "$BUN_INSTALL/bin/bun"
+    return
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun.exe" ]; then
+    echo "$BUN_INSTALL/bin/bun.exe"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun" ]; then
+    echo "$ROOT/node_modules/.bin/bun"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.cmd" ]; then
+    echo "$ROOT/node_modules/.bin/bun.cmd"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.exe" ]; then
+    echo "$ROOT/node_modules/.bin/bun.exe"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun" ]; then
+    echo "$HOME/.bun/bin/bun"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun.exe" ]; then
+    echo "$HOME/.bun/bin/bun.exe"
+    return
+  fi
+  B=$(command -v bun 2>/dev/null || true)
+  if [ -n "$B" ]; then
+    echo "$B"
+  fi
+}
+[ ! -f "$GIT_DIR/semio-micro-commit-active" ] && {
+  semio_micro_commit_wipe_templates
+  exit 0
+}
+BUN=$(semio_resolve_bun "$ROOT")
+[ -z "$BUN" ] && exit 0
 exec "$BUN" ./script.ts micro-commit prepare-commit-msg "$1" "$2"

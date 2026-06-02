@@ -494,7 +494,7 @@
           "meshUrl": "/meshes/capsule_z.glb",
           "vortices": [
             {
-              "vortexKind": "door capsule right",
+              "vortexKind": "door capsule left",
               "position": [
                 1.3,
                 -1.25,

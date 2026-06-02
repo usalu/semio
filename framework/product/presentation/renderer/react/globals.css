@@ -747,13 +747,14 @@
 	width: 100%;
 	height: 100%;
 	background-repeat: no-repeat;
-	background-size: var(--presentation-figure-bg-size);
+	background-size: cover;
 	background-position: var(--presentation-figure-bg-position);
 }
 
 .reveal .presentation-morph-slot--figure {
+	overflow: hidden;
 	background-repeat: no-repeat;
-	background-size: var(--presentation-figure-bg-size);
+	background-size: cover;
 	background-position: var(--presentation-figure-bg-position);
 }
 
@@ -766,7 +767,7 @@
 	section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"]
 	.presentation-morph-crop-from
 	.presentation-morph-slot--figure {
-	background-size: var(--presentation-figure-bg-size);
+	background-size: cover;
 	background-position: var(--presentation-figure-bg-position);
 }
 
@@ -791,7 +792,7 @@
 	section[data-auto-animate="pending"]:not(.presentation-arrangement--many-to-one-morph)
 	.presentation-morph-crop-to
 	.presentation-morph-slot--figure[data-auto-animate-target] {
-	background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size));
+	background-size: cover;
 	background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
 }
 
@@ -809,11 +810,9 @@
 
 @keyframes presentation-figure-crop-morph-grid-to-focus {
 	from {
-		background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size));
 		background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
 	}
 	to {
-		background-size: var(--presentation-figure-bg-size);
 		background-position: var(--presentation-figure-bg-position);
 	}
 }
@@ -832,22 +831,18 @@
 
 @keyframes presentation-figure-crop-morph-to-rest {
 	from {
-		background-size: var(--presentation-figure-bg-size-morph);
 		background-position: var(--presentation-figure-bg-position-morph);
 	}
 	to {
-		background-size: var(--presentation-figure-bg-size);
 		background-position: var(--presentation-figure-bg-position);
 	}
 }
 
 @keyframes presentation-figure-crop-morph-from-rest {
 	from {
-		background-size: var(--presentation-figure-bg-size);
 		background-position: var(--presentation-figure-bg-position);
 	}
 	to {
-		background-size: var(--presentation-figure-bg-size-morph);
 		background-position: var(--presentation-figure-bg-position-morph);
 	}
 }

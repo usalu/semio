@@ -57,7 +57,7 @@ EOF
 
 Counter, timestamp line, templates, Signed-off-by, validation, GitKraken files.
 
-After commit, hooks wipe templates and point GitKraken at an **empty** `gkcommittemplate-cleared.txt`. Run `g` / `prepare` again for the next change set.
+After commit, hooks **unset** `commit.template`, delete all `gkcommittemplate*.txt`, and clear `COMMIT_EDITMSG` (inline `sh` wipe; no Bun on post-commit). Hooks are installed by `bun ./script.ts setup git` (also `workspace:setup` / devcontainer post-create) with a pinned Bun path at `.repo/semio-micro-commit-bun` for GitKraken and other GUI clients. Run `g` / `prepare` again for the next change set. Close the GitKraken Commit panel after committing so it does not re-save the old draft.
 
 ## GitKraken (do not mention unless commit fails)
 

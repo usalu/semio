@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -284,10 +284,23 @@ export function shouldRefreshPreparedCommitMessage(current: string, preparedDige
   return digestMicroCommitMessage(current) === preparedDigest.trim();
 }
 
+export function clearMicroCommitTemplatesOnly(root: string): void {
+  const dir = gitDir(root);
+  git(root, ["config", "--local", "--unset", "commit.template"]);
+  for (const name of readdirSync(dir)) {
+    if (name.startsWith(GK_TEMPLATE_BASENAME)) {
+      try {
+        rmSync(join(dir, name), { force: true });
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
 export function handlePrepareCommitMsg(root: string, msgFile: string, source: string): void {
   if (!isPrepareActive(root)) {
-    resetMicroCommitTemplates(root);
-    writeFileSync(msgFile, "");
+    clearMicroCommitTemplatesOnly(root);
     return;
   }
   if (!branchAllowed(root)) return;
@@ -297,7 +310,8 @@ export function handlePrepareCommitMsg(root: string, msgFile: string, source: st
   const preparedBullets = readPreparedBullets(root);
   const newTickets = listAddedTicketPaths(root);
   if (preparedBullets.length === 0 && newTickets.length === 0) {
-    writeFileSync(msgFile, "");
+    const current = existsSync(msgFile) ? readFileSync(msgFile, "utf8") : "";
+    if (current.trim()) return;
     return;
   }
   const digestPath = preparedDigestPath(root);
@@ -309,19 +323,166 @@ export function handlePrepareCommitMsg(root: string, msgFile: string, source: st
   writeMicroCommitTemplates(root, message);
 }
 
-export function installMicroCommitGitHooks(root: string): void {
-  const hooksDir = join(root, ".git", "hooks");
-  mkdirSync(hooksDir, { recursive: true });
-  for (const name of ["pre-commit", "prepare-commit-msg", "post-commit"] as const) {
-    copyFileSync(join(root, "repo", "hooks", name), join(hooksDir, name));
-    chmodSync(join(hooksDir, name), 0o755);
+const MICRO_COMMIT_BUN_PIN = "semio-micro-commit-bun";
+
+/** 🥖Resolves the Bun executable for git hooks (GUI git often has a minimal PATH). */
+export function resolveMicroCommitBunBin(root: string): string {
+  const fromEnv = process.env.SEMIO_BUN?.trim();
+  if (fromEnv) return fromEnv;
+  const argv0 = process.argv[0] ?? "";
+  if (/bun(\.exe)?$/i.test(argv0)) return argv0;
+  const win = process.platform === "win32";
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? "";
+  const bunInstall = process.env.BUN_INSTALL ?? join(home, ".bun");
+  const candidates = [
+    join(root, "node_modules", ".bin", win ? "bun.cmd" : "bun"),
+    join(root, "node_modules", ".bin", "bun.exe"),
+    join(bunInstall, "bin", win ? "bun.exe" : "bun"),
+    join(bunInstall, "bin", "bun"),
+  ];
+  for (const c of candidates) {
+    if (c && existsSync(c)) return c;
+  }
+  const which = spawnSync(win ? "where" : "which", ["bun"], { encoding: "utf8", shell: win });
+  if (which.status === 0) {
+    const first = (which.stdout ?? "").split(/\r?\n/).map((l) => l.trim()).find(Boolean);
+    if (first && existsSync(first)) return first;
+  }
+  return win ? "bun.exe" : "bun";
+}
+
+const MICRO_COMMIT_WIPE_TEMPLATES_SH = `semio_micro_commit_wipe_templates() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  git config --local --unset commit.template 2>/dev/null || true
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/gkcommittemplate*.txt; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+}`;
+
+const MICRO_COMMIT_WIPE_FULL_SH = `${MICRO_COMMIT_WIPE_TEMPLATES_SH}
+semio_micro_commit_wipe() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  semio_micro_commit_wipe_templates
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/semio-micro-commit-*; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+  if [ -f "$GIT_DIR/COMMIT_EDITMSG" ]; then
+    : >"$GIT_DIR/COMMIT_EDITMSG" 2>/dev/null || true
+  fi
+}`;
+
+const MICRO_COMMIT_RESOLVE_BUN_SH = `semio_resolve_bun() {
+  ROOT="$1"
+  if [ -n "$SEMIO_BUN" ] && [ -x "$SEMIO_BUN" ]; then
+    echo "$SEMIO_BUN"
+    return
+  fi
+  if [ -f "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" ]; then
+    B=$(head -n 1 "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" | tr -d '\\r')
+    if [ -n "$B" ] && [ -x "$B" ]; then
+      echo "$B"
+      return
+    fi
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun" ]; then
+    echo "$BUN_INSTALL/bin/bun"
+    return
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun.exe" ]; then
+    echo "$BUN_INSTALL/bin/bun.exe"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun" ]; then
+    echo "$ROOT/node_modules/.bin/bun"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.cmd" ]; then
+    echo "$ROOT/node_modules/.bin/bun.cmd"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.exe" ]; then
+    echo "$ROOT/node_modules/.bin/bun.exe"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun" ]; then
+    echo "$HOME/.bun/bin/bun"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun.exe" ]; then
+    echo "$HOME/.bun/bin/bun.exe"
+    return
+  fi
+  B=$(command -v bun 2>/dev/null || true)
+  if [ -n "$B" ]; then
+    echo "$B"
+  fi
+}`;
+
+/** 🪝Renders a portable `sh` git hook (LF, inline wipe; Bun only when needed). */
+export function renderMicroCommitGitHook(name: "prepare-commit-msg" | "post-commit"): string {
+  const lines = [
+    "#!/usr/bin/env sh",
+    name === "post-commit" ? MICRO_COMMIT_WIPE_FULL_SH : MICRO_COMMIT_WIPE_TEMPLATES_SH,
+    'ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0',
+    'cd "$ROOT" || exit 0',
+    'GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0',
+  ];
+  if (name === "post-commit") {
+    lines.push("semio_micro_commit_wipe", "exit 0");
+  } else {
+    lines.push(
+      MICRO_COMMIT_RESOLVE_BUN_SH,
+      '[ ! -f "$GIT_DIR/semio-micro-commit-active" ] && {',
+      "  semio_micro_commit_wipe_templates",
+      "  exit 0",
+      "}",
+      'BUN=$(semio_resolve_bun "$ROOT")',
+      '[ -z "$BUN" ] && exit 0',
+      'exec "$BUN" ./script.ts micro-commit prepare-commit-msg "$1" "$2"',
+    );
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function writeMicroCommitHookFile(path: string, body: string): void {
+  writeFileSync(path, body.replace(/\r\n/g, "\n"), "utf8");
+  try {
+    chmodSync(path, 0o755);
+  } catch {
+    /* windows */
   }
 }
 
+export function installMicroCommitGitHooks(root: string): void {
+  const bunBin = resolveMicroCommitBunBin(root).replace(/\r/g, "");
+  mkdirSync(join(root, ".repo"), { recursive: true });
+  writeFileSync(join(root, ".repo", MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
+  const hooksDir = join(root, ".git", "hooks");
+  const repoHooksDir = join(root, "repo", "hooks");
+  mkdirSync(hooksDir, { recursive: true });
+  mkdirSync(repoHooksDir, { recursive: true });
+  for (const name of ["prepare-commit-msg", "post-commit"] as const) {
+    const body = renderMicroCommitGitHook(name);
+    writeMicroCommitHookFile(join(repoHooksDir, name), body);
+    writeMicroCommitHookFile(join(hooksDir, name), body);
+  }
+  const stalePreCommit = join(hooksDir, "pre-commit");
+  if (existsSync(stalePreCommit)) rmSync(stalePreCommit, { force: true });
+  const repoPreCommit = join(repoHooksDir, "pre-commit");
+  if (existsSync(repoPreCommit)) rmSync(repoPreCommit, { force: true });
+}
+
 export function resetMicroCommitTemplates(root: string): void {
+  clearMicroCommitTemplatesOnly(root);
   const dir = gitDir(root);
   for (const name of readdirSync(dir)) {
-    if (name.startsWith(GK_TEMPLATE_BASENAME)) {
+    if (name.startsWith("semio-micro-commit")) {
       try {
         rmSync(join(dir, name), { force: true });
       } catch {
@@ -329,18 +490,7 @@ export function resetMicroCommitTemplates(root: string): void {
       }
     }
   }
-  const clearedAbs = join(dir, `${GK_TEMPLATE_BASENAME}-cleared.txt`);
-  writeFileSync(clearedAbs, "");
-  writeFileSync(join(dir, `${GK_TEMPLATE_BASENAME}.txt`), "");
   writeFileSync(join(dir, "COMMIT_EDITMSG"), "");
-  git(root, ["config", "--local", "commit.template", clearedAbs]);
-  for (const p of [preparedDigestPath(root), preparedBulletsPath(root), preparedActivePath(root)]) {
-    try {
-      rmSync(p, { force: true });
-    } catch {
-      /* ignore */
-    }
-  }
 }
 
 function emitPrepareStdout(message: string): void {
@@ -349,11 +499,12 @@ function emitPrepareStdout(message: string): void {
 
 export function runMicroCommit(root: string, segments: string[]): void {
   const cmd = segments[0] ?? "prepare";
-  if (cmd === "reset" || cmd === "guard") {
-    if (cmd === "guard" && isPrepareActive(root)) {
-      process.exit(0);
-    }
+  if (cmd === "reset") {
     resetMicroCommitTemplates(root);
+    process.exit(0);
+  }
+  if (cmd === "install-hooks") {
+    installMicroCommitGitHooks(root);
     process.exit(0);
   }
   if (cmd === "prepare-commit-msg") {

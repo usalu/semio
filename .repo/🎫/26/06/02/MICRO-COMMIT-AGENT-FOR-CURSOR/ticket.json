@@ -1,9 +1,9 @@
 {
   "title": "Micro Commit Agent For Cursor",
   "emoji": "🫡",
-  "status": "closed",
+  "status": "open",
   "description": "Create .cursor/agents/micro-commit.md and .agents/skills/micro-commit/SKILL.md for fast WIP micro-commits: bump counter, parent wip header, timestamp, git diff summaries. Triggers: g, go, c, commit, +1.",
-  "summary": "Micro-commit counter now scans last 500 commit subjects and treats legacy plain-number subjects (e.g. 33) alongside full …🚩NNN lines, taking the max before incrementing. Fixes reset to 001 when last commit was manual number only.",
+  "summary": "Micro-commit git hooks are now zero-touch across macOS, Linux, Windows (Git Bash), and devcontainer: installMicroCommitGitHooks generates LF hooks with inline sh wipe (post-commit/pre-commit need no Bun), pins Bun at .repo/semio-micro-commit-bun, and resolves bun.cmd/bun.exe plus BUN_INSTALL for GUI git. Removed external micro-commit-wipe.sh. setup git / install-hooks / configure install to repo/hooks and .git/hooks.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repomechanisms🎯repocommitmechanism",
   "sessions": [
     "⚪7059dbbe0520474dbb974a75da0164f9",
@@ -19,6 +19,9 @@
     "⚪cb961d3e8cd34ab584c5817ceefbd03d",
     "⚪c22b512599e7468e9ed0acf75623e338",
     "⚪c349303eda124b699a961c5eb65903f9",
-    "⚪497d6b4763564f269af702179313d199"
+    "⚪497d6b4763564f269af702179313d199",
+    "⚪46b182c4671a4b21977bb5dad367d160",
+    "⚪d8cbe4fcdb4c4d7fba2f1a4a8e5cd230",
+    "⚪9892954db9d84b3cafaeff6298d00fd7"
   ]
 }

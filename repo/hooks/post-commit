@@ -1,5 +1,29 @@
-#!/bin/sh
+#!/usr/bin/env sh
+semio_micro_commit_wipe_templates() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  git config --local --unset commit.template 2>/dev/null || true
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/gkcommittemplate*.txt; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+}
+semio_micro_commit_wipe() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  semio_micro_commit_wipe_templates
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/semio-micro-commit-*; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+  if [ -f "$GIT_DIR/COMMIT_EDITMSG" ]; then
+    : >"$GIT_DIR/COMMIT_EDITMSG" 2>/dev/null || true
+  fi
+}
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 cd "$ROOT" || exit 0
-BUN="${SEMIO_BUN:-bun}"
-exec "$BUN" ./script.ts micro-commit reset
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0
+semio_micro_commit_wipe
+exit 0

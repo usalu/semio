@@ -16293,11 +16293,14 @@ func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
 	if !strings.Contains(output, "micro-commit hooks installed") {
 		t.Fatalf("expected micro-commit hooks install message, got %q", output)
 	}
-	for _, hookName := range []string{"pre-commit", "post-commit", "prepare-commit-msg"} {
+	for _, hookName := range []string{"post-commit", "prepare-commit-msg"} {
 		hookPath := filepath.Join(hooksDir, hookName)
 		if st, err := os.Stat(hookPath); err != nil || st.IsDir() {
 			t.Fatalf("expected micro-commit hook at %s: %v", hookPath, err)
 		}
+	}
+	if _, err := os.Stat(filepath.Join(hooksDir, "pre-commit")); err == nil {
+		t.Fatal("expected legacy pre-commit hook removed")
 	}
 	for _, path := range []string{
 		filepath.Join(repoRoot, ".github", "hooks", "repo.json"),
@@ -16327,13 +16330,15 @@ func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(repoRoot, "repo", "hooks"), 0o755); err != nil {
 		t.Fatalf("mkdir repo hooks: %v", err)
 	}
-	hookSrc := filepath.Join("..", "..", "hooks", "post-commit")
-	data, err := os.ReadFile(hookSrc)
-	if err != nil {
-		t.Fatalf("read hook source: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(repoRoot, "repo", "hooks", "post-commit"), data, 0o755); err != nil {
-		t.Fatalf("write hook source: %v", err)
+	for _, hookName := range []string{"post-commit", "prepare-commit-msg"} {
+		hookSrc := filepath.Join("..", "..", "hooks", hookName)
+		data, err := os.ReadFile(hookSrc)
+		if err != nil {
+			t.Fatalf("read hook source %s: %v", hookName, err)
+		}
+		if err := os.WriteFile(filepath.Join(repoRoot, "repo", "hooks", hookName), data, 0o755); err != nil {
+			t.Fatalf("write hook source %s: %v", hookName, err)
+		}
 	}
 	if err := installMicroCommitHooks(repoRoot); err != nil {
 		t.Fatalf("install hooks: %v", err)
@@ -16352,14 +16357,22 @@ func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("run post-commit: %v\n%s", err, out)
 	}
-	for _, p := range []string{templatePath, editMsgPath} {
-		b, err := os.ReadFile(p)
-		if err != nil {
-			t.Fatalf("read %s: %v", p, err)
-		}
-		if len(b) != 0 {
-			t.Fatalf("expected empty %s after post-commit, got %q", p, b)
-		}
+	if _, err := os.Stat(templatePath); err == nil {
+		t.Fatalf("expected %s removed after post-commit", templatePath)
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat %s: %v", templatePath, err)
+	}
+	b, err := os.ReadFile(editMsgPath)
+	if err != nil {
+		t.Fatalf("read %s: %v", editMsgPath, err)
+	}
+	if len(b) != 0 {
+		t.Fatalf("expected empty %s after post-commit, got %q", editMsgPath, b)
+	}
+	tplCfg := exec.Command("git", "config", "--local", "--get", "commit.template")
+	tplCfg.Dir = repoRoot
+	if tplCfg.Run() == nil {
+		t.Fatal("expected commit.template unset after post-commit")
 	}
 }
 

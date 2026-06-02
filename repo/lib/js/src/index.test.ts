@@ -211,6 +211,45 @@ describe("micro-commit", () => {
     if (stagedHasPresentation) expect(r.status).not.toBe(0);
   });
 
+  test("installMicroCommitGitHooks writes portable hooks and bun pin", async () => {
+    const { installMicroCommitGitHooks, renderMicroCommitGitHook } = await import("./micro-commit.ts");
+    const { mkdtempSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { spawnSync } = await import("node:child_process");
+    const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-"));
+    try {
+      const init = spawnSync("git", ["init"], { cwd: root, encoding: "utf8" });
+      expect(init.status).toBe(0);
+      installMicroCommitGitHooks(root);
+      const hook = readFileSync(join(root, ".git/hooks/post-commit"), "utf8");
+      expect(hook).toContain("semio_micro_commit_wipe");
+      expect(hook).not.toContain("\r");
+      expect(existsSync(join(root, ".repo/semio-micro-commit-bun"))).toBe(true);
+      expect(renderMicroCommitGitHook("post-commit")).toContain("#!/usr/bin/env sh");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("handlePrepareCommitMsg inactive does not clear commit message file", async () => {
+    const { handlePrepareCommitMsg } = await import("./micro-commit.ts");
+    const { mkdtempSync, writeFileSync, readFileSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { spawnSync } = await import("node:child_process");
+    const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-"));
+    try {
+      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
+      const msgFile = join(root, ".git", "COMMIT_EDITMSG");
+      writeFileSync(msgFile, "🐙ueli manual subject\n", "utf8");
+      handlePrepareCommitMsg(root, msgFile, "template");
+      expect(readFileSync(msgFile, "utf8")).toContain("manual subject");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("resetMicroCommitTemplates clears commit.template and blanks GK files", async () => {
     const { resetMicroCommitTemplates, writeMicroCommitTemplates, buildMicroCommitMessage } = await import(
       "./micro-commit.ts"
@@ -221,12 +260,8 @@ describe("micro-commit", () => {
     writeMicroCommitTemplates(root, msg);
     resetMicroCommitTemplates(root);
     const tpl = spawnSync("git", ["config", "--local", "--get", "commit.template"], { cwd: root, encoding: "utf8" });
-    expect(tpl.status).toBe(0);
-    expect(tpl.stdout?.trim()).toContain("gkcommittemplate-cleared.txt");
-    const legacy = readFileSync(join(root, ".git/gkcommittemplate.txt"), "utf8");
-    const cleared = readFileSync(join(root, ".git/gkcommittemplate-cleared.txt"), "utf8");
-    expect(legacy).toBe("");
-    expect(cleared).toBe("");
+    expect(tpl.status).not.toBe(0);
+    expect(existsSync(join(root, ".git/gkcommittemplate.txt"))).toBe(false);
     expect(existsSync(join(root, ".git/semio-micro-commit-active"))).toBe(false);
   });
 
