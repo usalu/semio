@@ -1,0 +1,10 @@
+{
+  "title": "Curve Move Body Stuck",
+  "emoji": "〰️",
+  "status": "open",
+  "description": "When selecting a curve (edge) and moving it, only endpoints move but the NURBS body stays stuck. Fix transform/move and gumball to translate all poles on selected edges, not only endpoint vertices.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪359e4f4c7e6241f6a93997fce86c17ec"
+  ]
+}

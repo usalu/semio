@@ -3130,6 +3130,7 @@ export const PresentationDeck: FC<{
 			syncArrangementSettledState(deckEl, currentSlide, previousSlide);
 			previousSlideRef.current = currentSlide;
 			setSlideEpoch((epoch) => epoch + 1);
+			scheduleFinalizeAutoAnimateRest();
 		};
 		const onWindowHashChange = (): void => {
 			if (!slideUrlEnabled) {

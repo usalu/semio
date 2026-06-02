@@ -2894,6 +2894,8 @@ export class Puzzle2dRenderer {
   readonly wasmHostAuthoredEdgeIds = new Set<string>();
   /** @emoji 🔗 Endpoint ids for each {@link Puzzle2dRenderer.wasmHostAuthoredEdgeIds} entry so merge can rebuild the descriptor if the scene edge was removed transiently (e.g. handle purge ordering). */
   readonly wasmHostAuthoredLinkByEdgeId = new Map<string, { source: string; target: string }>();
+  /** @emoji 🚫 Edge/node ids removed by user Delete; declarative resync must not resurrect them on the source pane before fixture commits. */
+  private readonly authoritativeStructuralSuppressions = new Set<string>();
 
   private batchDepth = 0;
   /** @emoji 🔇 While >0, {@link Puzzle2dScene.remove} does not emit delete events (dispose / JSX resync). */
@@ -2959,11 +2961,46 @@ export class Puzzle2dRenderer {
 
   /** @emoji 📌 Stores the declarative host descriptor used to recover edges after WASM structural drains. */
   rememberHostDeclarativeSceneDescriptor(descriptor: Puzzle2dSceneDescriptor): void {
-    this.hostDeclarativeSceneDescriptor = descriptor;
+    this.hostDeclarativeSceneDescriptor = this.descriptorWithoutAuthoritativeRemovals(descriptor);
+  }
+
+  /** @emoji 🚫 True when user Delete removed this structural id and JSX/WASM resync must not bring it back. */
+  isAuthoritativeStructuralRemovalSuppressed(kind: "edge" | "node", id: string): boolean {
+    return this.authoritativeStructuralSuppressions.has(`${kind}:${id}`);
+  }
+
+  private markAuthoritativeStructuralRemoval(payload: Puzzle2dStructureDeletePayload): void {
+    if (payload.kind === "wire") {
+      return;
+    }
+    this.authoritativeStructuralSuppressions.add(`${payload.kind}:${payload.id}`);
+  }
+
+  /** @emoji 🧹 Strips user-deleted ids from a declarative descriptor before host remember / edge ensure. */
+  descriptorWithoutAuthoritativeRemovals(descriptor: Puzzle2dSceneDescriptor): Puzzle2dSceneDescriptor {
+    const nodes = descriptor.nodes.filter((node) => !this.isAuthoritativeStructuralRemovalSuppressed("node", node.id));
+    const nodeIds = new Set(nodes.map((node) => node.id));
+    const handles = descriptor.handles.filter((handle) => nodeIds.has(handle.nodeId));
+    const handleIds = new Set(handles.map((handle) => handle.id));
+    const edges = descriptor.edges.filter(
+      (edge) => !this.isAuthoritativeStructuralRemovalSuppressed("edge", edge.id) && handleIds.has(edge.source) && handleIds.has(edge.target),
+    );
+    const wires = descriptor.wires.filter((wire) => {
+      if (!handleIds.has(wire.source)) {
+        return false;
+      }
+      return wire.target === undefined || handleIds.has(wire.target);
+    });
+    const nextNodes = nodes.map((node) => ({
+      ...node,
+      handles: node.handles.filter((handle) => handleIds.has(handle.id)),
+    }));
+    return { edges, handles, nodes: nextNodes, wires };
   }
 
   /** @emoji ✂️ Drops a structural id from {@link Puzzle2dRenderer.hostDeclarativeSceneDescriptor} after an authoritative delete so zoom drains do not resurrect it. */
   pruneHostDeclarativeStructuralDelete(payload: Puzzle2dStructureDeletePayload): void {
+    this.markAuthoritativeStructuralRemoval(payload);
     const host = this.hostDeclarativeSceneDescriptor;
     if (!host) {
       return;
@@ -2973,9 +3010,9 @@ export class Puzzle2dRenderer {
       if (edges.length === host.edges.length) {
         return;
       }
-      const next = { ...host, edges };
-      this.rememberHostDeclarativeSceneDescriptor(next);
-      this.setDeclarativeSceneEdgeExpectation(edges.length);
+      const next = this.descriptorWithoutAuthoritativeRemovals({ ...host, edges });
+      this.hostDeclarativeSceneDescriptor = next;
+      this.setDeclarativeSceneEdgeExpectation(next.edges.length);
       return;
     }
     if (payload.kind === "wire") {
@@ -2987,6 +3024,11 @@ export class Puzzle2dRenderer {
       return;
     }
     const removedHandleIds = new Set(host.handles.filter((handle) => handle.nodeId === payload.id).map((handle) => handle.id));
+    for (const edge of host.edges) {
+      if (removedHandleIds.has(edge.source) || removedHandleIds.has(edge.target)) {
+        this.markAuthoritativeStructuralRemoval({ kind: "edge", id: edge.id });
+      }
+    }
     const nodes = host.nodes.filter((node) => node.id !== payload.id);
     if (nodes.length === host.nodes.length) {
       return;
@@ -2997,9 +3039,9 @@ export class Puzzle2dRenderer {
       ...node,
       handles: node.handles.filter((handle) => handle.nodeId !== payload.id),
     }));
-    const next = { ...host, edges, handles, nodes: nextNodes };
-    this.rememberHostDeclarativeSceneDescriptor(next);
-    this.setDeclarativeSceneEdgeExpectation(edges.length);
+    const next = this.descriptorWithoutAuthoritativeRemovals({ ...host, edges, handles, nodes: nextNodes });
+    this.hostDeclarativeSceneDescriptor = next;
+    this.setDeclarativeSceneEdgeExpectation(next.edges.length);
   }
 
   /** @emoji 🪢 Re-syncs imperative edges from {@link Puzzle2dRenderer.rememberHostDeclarativeSceneDescriptor} when WASM drains cleared them but the host still expects edges. */
@@ -3009,6 +3051,10 @@ export class Puzzle2dRenderer {
       return false;
     }
     if (this.scene.edges.size >= descriptor.edges.length) {
+      return false;
+    }
+    const missingEdges = descriptor.edges.filter((edge) => !this.scene.edges.has(edge.id));
+    if (missingEdges.length === 0) {
       return false;
     }
     this.resetDeclarativeSceneSyncFingerprint();
@@ -4686,6 +4732,27 @@ export class Puzzle2dRenderer {
     this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentStructuralRemoves: true });
   }
 
+  /** @emoji 📡 Pushes the imperative scene graph to WASM immediately after user structural deletes (avoids stale WASM edges on the source pane). */
+  private pushAuthoritativeDescriptorToWasmSession(): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    if (this.scene.nodes.size === 0) {
+      return;
+    }
+    const desc = this.descriptorJsonForWasmHost();
+    try {
+      this.session.syncDescriptorJson(desc);
+      this.lastPushedDescriptorJson = desc;
+      this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
+      this.lastSceneWasmFingerprint = puzzle2dSceneWasmFingerprintFromRenderer(this);
+    } catch (err) {
+      console.error("[DEBUG] syncDescriptorJson failed", err);
+    }
+    this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentStructuralRemoves: true });
+  }
+
   private applyWasmDrainToScene(
     raw: string,
     options?: { readonly silentStructuralRemoves?: boolean; readonly silentCamera?: boolean },
@@ -4786,7 +4853,10 @@ export class Puzzle2dRenderer {
           case "edgeDelete": {
             const id = String((row.payload as { id: string }).id);
             const spuriousWasmEdgeDelete =
-              drainOptions.silentStructuralRemoves && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.has(id);
+              drainOptions.silentStructuralRemoves &&
+              this.declarativeSceneEdgeExpectation > 0 &&
+              this.scene.edges.has(id) &&
+              !this.isAuthoritativeStructuralRemovalSuppressed("edge", id);
             if (spuriousWasmEdgeDelete) {
               const edge = this.scene.edges.get(id);
               if (edge) {
@@ -4969,11 +5039,8 @@ export class Puzzle2dRenderer {
         this.bumpWasmHostSceneMergeResyncEpoch();
         this.markSceneDescriptorDirty();
       }
-      if (
-        this.declarativeSceneEdgeExpectation > 0 &&
-        this.hostDeclarativeSceneDescriptor &&
-        this.scene.edges.size < this.declarativeSceneEdgeExpectation
-      ) {
+      const hostEdgeExpectation = this.hostDeclarativeSceneDescriptor?.edges.length ?? this.declarativeSceneEdgeExpectation;
+      if (hostEdgeExpectation > 0 && this.hostDeclarativeSceneDescriptor && this.scene.edges.size < hostEdgeExpectation) {
         if (this.reconcileHostDeclarativeSceneEdges()) {
           this.markSceneDescriptorDirty();
           this.bumpWasmHostSceneMergeResyncEpoch();
@@ -5528,6 +5595,7 @@ export class Puzzle2dRenderer {
       this.session.deleteSelection();
       this.applyWasmDrainToScene(this.session.drainEventsJson());
     });
+    this.pushAuthoritativeDescriptorToWasmSession();
     this.invalidate();
   }
 
@@ -6937,6 +7005,29 @@ if (puzzle2dVitest) {
       expect(edgeDeletes).toEqual([]);
       expect(renderer.scene.edges.size).toBe(1);
       expect(renderer.scene.edges.has("edge-1")).toBe(true);
+      renderer.dispose();
+    });
+
+    it("puzzle2dEnsureSceneEdgesFromDescriptor does not resurrect authoritatively deleted edges", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      syncPuzzle2dScene(renderer, descriptor);
+      renderer.withFixtureStructuralDeleteMirror(() => {
+        renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "edgeDelete", payload: { id: "edge-1" } }]));
+      });
+      expect(renderer.scene.edges.has("edge-1")).toBe(false);
+      puzzle2dEnsureSceneEdgesFromDescriptor(renderer, descriptor);
+      expect(renderer.scene.edges.has("edge-1")).toBe(false);
       renderer.dispose();
     });
 
@@ -9430,12 +9521,13 @@ function puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor: Puzzle2d
 
 /** @emoji 🪢 Re-runs {@link syncPuzzle2dScene} when the descriptor lists edges but the imperative scene does not (WASM drain / mount race). */
 function puzzle2dEnsureSceneEdgesFromDescriptor(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): void {
-  if (descriptor.edges.length === 0 || renderer.scene.edges.size === descriptor.edges.length) {
+  const filtered = renderer.descriptorWithoutAuthoritativeRemovals(descriptor);
+  if (filtered.edges.length === 0 || renderer.scene.edges.size === filtered.edges.length) {
     return;
   }
-  renderer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+  renderer.setDeclarativeSceneEdgeExpectation(filtered.edges.length);
   renderer.resetDeclarativeSceneSyncFingerprint();
-  syncPuzzle2dScene(renderer, descriptor);
+  syncPuzzle2dScene(renderer, filtered);
 }
 //#endregion 🔖Descriptor Build
 
@@ -9449,7 +9541,8 @@ function requireRenderer(renderer: Puzzle2dRenderer | null): Puzzle2dRenderer {
 //#region 🔖Scene Sync
 /** @emoji 🔗 Merges WASM‑created edges into the JSX descriptor until React children list the same edge id (then authorship is cleared via {@link Puzzle2dRenderer.clearWasmHostAuthorshipForEdge}). */
 export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): Puzzle2dSceneDescriptor {
-  const jsxEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
+  const descriptorBase = renderer.descriptorWithoutAuthoritativeRemovals(descriptor);
+  const jsxEdgeIds = new Set(descriptorBase.edges.map((edge) => edge.id));
   for (const id of Array.from(renderer.wasmHostAuthoredEdgeIds)) {
     if (jsxEdgeIds.has(id)) {
       renderer.clearWasmHostAuthorshipForEdge(id);
@@ -9492,9 +9585,9 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRende
     });
   }
   if (extra.length === 0) {
-    return descriptor;
+    return descriptorBase;
   }
-  return { ...descriptor, edges: [...descriptor.edges, ...extra] };
+  return { ...descriptorBase, edges: [...descriptorBase.edges, ...extra] };
 }
 
 //#region 🔖MultiViewAuthoring

@@ -3755,17 +3755,17 @@ function transformDiff(params: Record<string, unknown>, ctx: { readonly model: M
   const rawTo = vec3Param(params, "to", vec3Param(params, "cursor", from));
   const to = ctx.preview.constrainMovePoint(from, rawTo, String(params.moveMode ?? params.mode ?? "free"), vec3Param(params, "cplaneNormal", [0, 0, 1]));
   const delta = ctx.preview.vec3Sub(to, from);
-  const ids = collectTargetVertices(ctx.model, targets);
-  const added: VertexRecord[] = [];
-  const modified: VertexRecordDiff[] = [];
-  for (const id of ids) {
-    const v = ctx.model.vertices[id];
-    if (!v) continue;
-    const moved = { id: (copy ? `${id}-copy-${Math.random().toString(36).slice(2, 8)}` : id) as VertexRef, position: ctx.preview.vec3Add(v.position, delta) };
-    if (copy) added.push(moved);
-    else modified.push(moved);
+  if (copy) {
+    const ids = collectTargetVertices(ctx.model, targets);
+    const added: VertexRecord[] = [];
+    for (const id of ids) {
+      const v = ctx.model.vertices[id];
+      if (!v) continue;
+      added.push({ id: `${id}-copy-${Math.random().toString(36).slice(2, 8)}` as VertexRef, position: ctx.preview.vec3Add(v.position, delta) });
+    }
+    return added.length ? { vertices: { added } } : EMPTY_MODEL_DIFF;
   }
-  return { ...(added.length ? { vertices: { added } } : {}), ...(modified.length ? { vertices: { modified } } : {}) };
+  return selectionTargetsPointTransformDiff(ctx.model, targets, (point) => ctx.preview.vec3Add(point, delta));
 }
 
 function anchorAction(params: Record<string, unknown>, ctx: { readonly model: Model; readonly preview: SpatialPreviewKernel }): ActionResult {
@@ -4175,12 +4175,40 @@ export function collectTargetVertices(model: Model, targets: readonly SelectionT
   return out;
 }
 
+/** @emoji 🎯 Collects edge ids when topology (edge/wire/face/…) is selected; excludes vertex-only picks. */
+export function collectTargetEdges(model: Model, targets: readonly SelectionTarget[]): Set<string> {
+  const out = new Set<string>();
+  const walk = (kind: ModelEntityKind, id: string) => {
+    if (kind === "edge") {
+      if (model.edges[id]) out.add(id);
+    } else if (kind === "wire") {
+      const w = model.wires[id];
+      if (w) for (const e of w.edgeIds) walk("edge", e);
+    } else if (kind === "face") {
+      const f = model.faces[id];
+      if (f) for (const w of f.wireIds) walk("wire", w);
+    } else if (kind === "shell") {
+      const s = model.shells[id];
+      if (s) for (const f of s.faceIds) walk("face", f);
+    } else if (kind === "solid" || kind === "geometry") {
+      const c = model.solids[id];
+      if (c) for (const s of c.shellIds) walk("shell", s);
+    }
+  };
+  for (const t of targets) walk(t.kind, t.id);
+  return out;
+}
+
 /** @emoji 📦 Center of the axis-aligned bounds of all vertices in `targets`. */
 export function selectionTargetsCenter(model: Model, targets: readonly SelectionTarget[], preview: SpatialPreviewKernel): Vec3 | null {
   const pts: Vec3[] = [];
   for (const vid of collectTargetVertices(model, targets)) {
     const v = model.vertices[vid];
     if (v) pts.push(v.position);
+  }
+  for (const eid of collectTargetEdges(model, targets)) {
+    const curve = model.edges[eid]?.curve;
+    if (curve?.kind === "nurbs") pts.push(...curve.poles);
   }
   const box = preview.aabbFromPoints(pts);
   if (!box) return null;
@@ -4226,7 +4254,21 @@ export function cadTransformGumballModeToControlsMode(mode: CadTransformGumballM
   return "translate";
 }
 
-function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
+function modelDiffTransformNurbsPolesOnEdges(model: Model, edgeIds: Iterable<string>, mapPoint: (point: Vec3) => Vec3): ModelDiff {
+  const edgeMods: EdgeRecordDiff[] = [];
+  for (const id of edgeIds) {
+    const edge = model.edges[id];
+    const curve = edge?.curve;
+    if (curve?.kind !== "nurbs" || curve.poles.length < 2) continue;
+    const poles = curve.poles.map((pole) => mapPoint(pole));
+    if (poles.every((pole, index) => vec3Eq(pole, curve.poles[index]!))) continue;
+    edgeMods.push({ id: edge.id, curve: { ...curve, poles } });
+  }
+  return edgeMods.length ? { edges: { modified: edgeMods } } : EMPTY_MODEL_DIFF;
+}
+
+/** @emoji 🎛 Applies `mapPoint` to vertices and nurbs poles on topology-selected edges. */
+export function selectionTargetsPointTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
   const vertexIds = collectTargetVertices(model, targets);
   const modified: VertexRecordDiff[] = [];
   for (const vid of vertexIds) {
@@ -4236,7 +4278,14 @@ function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionT
     if (next[0] === v.position[0] && next[1] === v.position[1] && next[2] === v.position[2]) continue;
     modified.push({ id: v.id, position: next });
   }
-  return modified.length ? { vertices: { modified } } : EMPTY_MODEL_DIFF;
+  const nurbsDiff = modelDiffTransformNurbsPolesOnEdges(model, collectTargetEdges(model, targets), mapPoint);
+  if (!modified.length) return nurbsDiff;
+  if (isEmptyModelDiff(nurbsDiff)) return { vertices: { modified } };
+  return { vertices: { modified }, edges: nurbsDiff.edges };
+}
+
+function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
+  return selectionTargetsPointTransformDiff(model, targets, mapPoint);
 }
 
 // #region 📍InteractionPointBinding

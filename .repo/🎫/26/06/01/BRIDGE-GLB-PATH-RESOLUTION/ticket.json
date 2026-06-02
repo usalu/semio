@@ -3,11 +3,12 @@
   "emoji": "🌉",
   "status": "closed",
   "description": "Fix places where bridge.glb and other metabolism representation files resolve to wrong paths (stale assets/semio/metabolism vs fixtures/kit/dev/metabolism/representations).",
-  "summary": "Puzzle 3d showed placeholder/wrong bridge because sketchpadKitFileUrlById could not map bridge file id to /meshes/bridge.glb: GraphQL hasFiles omitted file name (only id/url/description), and inline data: blobs took precedence over fixture meshes. Fixed by adding name to SKETCHPAD_KIT_READ_INNER, preferring /meshes/* for metabolism *.glb kit files before blobs, and merging typology-backed types in sketchpadMergeKitDtoFromBundleProjection.",
+  "summary": "Puzzle 3d play loads nakagin-capsule-tower.3d.json; Bridge kind and three Bridge scene objects explicitly used /meshes/placeholder.glb (771KB box), not bridge.glb (368KB). Updated fixture catalog + objects to /meshes/bridge.glb; Vite play already serves fixtures via puzzle3dMeshesVitePlugin. Added play test.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪32c186745e3a46cdbbffcfe36157f3ea",
     "⚪3cc4d315c9724123910e335416f9f4a3",
-    "⚪13a73382759c456486b9a72925a053c6"
+    "⚪13a73382759c456486b9a72925a053c6",
+    "⚪d187c518d56d4d4097d16c7cabc8e538"
   ]
 }

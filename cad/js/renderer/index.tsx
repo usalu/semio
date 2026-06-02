@@ -103,7 +103,7 @@ import {
   type SpatialComputeMode,
   cadTransformGumballModeToControlsMode,
   selectionTargetsCenter,
-  collectTargetVertices,
+  selectionTargetsPointTransformDiff,
   selectionTargetsHaveTransformableVertices,
   type CadTransformGumballMode,
   type ModelDiff,
@@ -1587,10 +1587,8 @@ function gumballSnapshotFromObject3D(object: THREE.Object3D): GumballMatrixSnaps
   };
 }
 
-/** @emoji 🎛 Applies a gumball world-matrix delta to all vertices reachable from `targets`. */
+/** @emoji 🎛 Applies a gumball world-matrix delta to vertices and nurbs poles on topology-selected targets. */
 export function transformGumballMatrixDiff(model: Model, targets: readonly SelectionTarget[], before: GumballMatrixSnapshot, after: GumballMatrixSnapshot): ModelDiff {
-  const vertexIds = collectTargetVertices(model, targets);
-  if (vertexIds.size === 0) return EMPTY_MODEL_DIFF;
   const mBefore = new THREE.Matrix4().compose(
     new THREE.Vector3(before.position[0], before.position[1], before.position[2]),
     new THREE.Quaternion(before.quaternion[0], before.quaternion[1], before.quaternion[2], before.quaternion[3]),
@@ -1603,17 +1601,11 @@ export function transformGumballMatrixDiff(model: Model, targets: readonly Selec
   );
   const delta = mAfter.multiply(mBefore.clone().invert());
   const point = new THREE.Vector3();
-  const modified: { id: VertexRef; position: Vec3 }[] = [];
-  for (const vid of vertexIds) {
-    const v = model.vertices[vid];
-    if (!v) continue;
-    point.set(v.position[0], v.position[1], v.position[2]);
+  return selectionTargetsPointTransformDiff(model, targets, (position) => {
+    point.set(position[0], position[1], position[2]);
     point.applyMatrix4(delta);
-    const next: Vec3 = [point.x, point.y, point.z];
-    if (next[0] === v.position[0] && next[1] === v.position[1] && next[2] === v.position[2]) continue;
-    modified.push({ id: v.id, position: next });
-  }
-  return modified.length ? { vertices: { modified } } : EMPTY_MODEL_DIFF;
+    return [point.x, point.y, point.z];
+  });
 }
 
 /** @emoji 🎛 R3F gumball for multi-target primitive transforms (pivot at selection bbox center). */

@@ -85,6 +85,7 @@ import {
   getPuzzle3dZoomToSelectionEpoch,
   getPuzzle3dZoomToSelectionTarget,
   requestPuzzle3dZoomToSelection,
+  resolveObjectKindMeshUrl,
 } from "../react/index.tsx";
 import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
 
@@ -2057,6 +2058,17 @@ if (import.meta.vitest) {
       expect(f?.domain).toBe("architecture");
       expect(f?.attractions).toEqual([]);
       expect(f?.objects.length).toBeGreaterThan(0);
+    });
+
+    it("nakagin Bridge kind resolves to metabolism bridge glb", () => {
+      const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
+      expect(resolveObjectKindMeshUrl("Bridge", catalogs, f ?? undefined)).toBe("/meshes/bridge.glb");
+      for (const object of f?.objects ?? []) {
+        if (object.objectKind === "Bridge") {
+          expect(object.meshUrl).toBe("/meshes/bridge.glb");
+        }
+      }
     });
 
     it("builds canonical vortex full ids", () => {

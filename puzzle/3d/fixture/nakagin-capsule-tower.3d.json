@@ -307,7 +307,7 @@
           "id": "Bridge",
           "label": "Bridge",
           "name": "Bridge",
-          "meshUrl": "/meshes/placeholder.glb",
+          "meshUrl": "/meshes/bridge.glb",
           "vortices": [
             {
               "vortexKind": "platform east",
@@ -3941,7 +3941,7 @@
       "id": "30f83909-7eb7-4452-8f67-9eef2175895e",
       "label": "Bridge · br_sl0_d2_t_f2_b_c0",
       "objectKind": "Bridge",
-      "meshUrl": "/meshes/placeholder.glb",
+      "meshUrl": "/meshes/bridge.glb",
       "origin": [
         -15.85,
         -8.1,
@@ -5637,7 +5637,7 @@
       "id": "5feebbf8-33d9-41ad-a13a-24c271a1860b",
       "label": "Bridge · br_sl0_d2_t_f5_b_c0",
       "objectKind": "Bridge",
-      "meshUrl": "/meshes/placeholder.glb",
+      "meshUrl": "/meshes/bridge.glb",
       "origin": [
         -15.85,
         -8.099999999999998,
@@ -6932,7 +6932,7 @@
       "id": "7d7dd65e-40aa-4f27-b580-868315237a1d",
       "label": "Bridge · br_sl0_d2_t_f8_b_c0",
       "objectKind": "Bridge",
-      "meshUrl": "/meshes/placeholder.glb",
+      "meshUrl": "/meshes/bridge.glb",
       "origin": [
         -15.85,
         -8.099999999999998,
