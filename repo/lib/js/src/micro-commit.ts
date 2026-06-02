@@ -17,7 +17,7 @@ function preparedDigestPath(root: string): string {
   return join(gitDir(root), "semio-micro-commit-digest");
 }
 
-const GK_TEMPLATE_REL = ".git/gkcommittemplate.txt";
+const GK_TEMPLATE_BASENAME = "gkcommittemplate";
 
 function git(root: string, args: string[]): { ok: boolean; out: string } {
   const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
@@ -31,12 +31,6 @@ function gitCachedNames(root: string, extra: string[] = []): string[] {
   const raw = (r.stdout ?? Buffer.alloc(0)).toString("utf8");
   if (!raw) return [];
   return raw.split("\0").filter(Boolean);
-}
-
-function unquoteGitPath(path: string): string {
-  let p = path.trim();
-  if (p.startsWith('"') && p.endsWith('"')) p = p.slice(1, -1);
-  return p.replace(/\\([0-7]{3})/g, (_, oct) => String.fromCharCode(Number.parseInt(oct, 8)));
 }
 
 function branchAllowed(root: string): boolean {
@@ -146,164 +140,63 @@ function formatSecond(now: Date): string {
   return `🎆${yy}🌙${mm}☀️${dd}⏰${hh}⌚${min}⏱️${ss}`;
 }
 
-export type CachedFileDiff = {
-  path: string;
-  addedLines: string[];
-  removedLines: string[];
-  ins: number;
-  del: number;
-  newFile: boolean;
-  deleted: boolean;
-};
-
-/** 📑Parses `git diff --cached -U0` into per-file hunks for semantic summaries. */
-function pathFromDiffGitLine(line: string): string | null {
-  const quoted = /^diff --git "a\/(.+)" "b\/(.+)"$/.exec(line);
-  if (quoted) return unquoteGitPath(quoted[2]);
-  const plain = /^diff --git a\/(.+?) b\/(.+)$/.exec(line);
-  if (plain) return unquoteGitPath(plain[2]);
-  return null;
+function preparedBulletsPath(root: string): string {
+  return join(gitDir(root), "semio-micro-commit-bullets");
 }
 
-export function parseCachedDiff(patch: string): Map<string, CachedFileDiff> {
-  const map = new Map<string, CachedFileDiff>();
-  let current: CachedFileDiff | null = null;
-  for (const line of patch.split("\n")) {
-    const path = pathFromDiffGitLine(line);
-    if (path) {
-      current = {
-        path,
-        addedLines: [],
-        removedLines: [],
-        ins: 0,
-        del: 0,
-        newFile: false,
-        deleted: false,
-      };
-      map.set(current.path, current);
-      continue;
-    }
-    if (!current) continue;
-    if (line.startsWith("new file mode ")) {
-      current.newFile = true;
-      continue;
-    }
-    if (line.startsWith("deleted file mode ")) {
-      current.deleted = true;
-      continue;
-    }
-    if (line.startsWith("rename to ")) {
-      current.path = line.slice("rename to ".length);
-      map.set(current.path, current);
-      continue;
-    }
-    if (line.startsWith("+") && !line.startsWith("+++")) {
-      current.addedLines.push(line.slice(1));
-      current.ins++;
-    } else if (line.startsWith("-") && !line.startsWith("---")) {
-      current.removedLines.push(line.slice(1));
-      current.del++;
-    }
-  }
-  return map;
+/** 📝Normalizes LLM-authored bullet lines (`- emoji text`). */
+export function normalizeBulletLines(text: string): string[] {
+  return text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !l.startsWith("#"))
+    .map((l) => (l.startsWith("- ") ? l : `- ${l}`))
+    .slice(0, 8);
 }
 
-function humanWhere(path: string): string {
-  const parts = path.split("/");
-  if (parts.length <= 2) return path;
-  return parts.slice(-2).join("/");
+function writePreparedBullets(root: string, bullets: string[]): void {
+  writeFileSync(preparedBulletsPath(root), `${bullets.join("\n")}\n`);
 }
 
-const SYMBOL_STOP = new Set(["patch", "diff", "null", "true", "false", "void", "const", "export", "import"]);
-
-function symbolsFromLines(lines: string[]): string[] {
-  const names: string[] = [];
-  const patterns = [
-    /^export\s+(?:async\s+)?function\s+(\w+)/,
-    /^export\s+(?:default\s+)?class\s+(\w+)/,
-    /^export\s+(?:type|interface)\s+(\w+)/,
-    /^(?:export\s+)?const\s+([A-Z]\w*)\s*=/,
-    /^function\s+(\w+)/,
-    /^class\s+(\w+)/,
-    /^pub\s+fn\s+(\w+)/,
-    /^func\s+(\w+)/,
-    /^def\s+(\w+)/,
-    /^#region\s+(.+)/,
-  ];
-  for (const raw of lines) {
-    const line = raw.trim();
-    for (const re of patterns) {
-      const m = re.exec(line);
-      const name = m?.[1]?.trim();
-      if (!name || name.length < 4 || SYMBOL_STOP.has(name.toLowerCase()) || /^[A-Z0-9_]+$/.test(name)) continue;
-      names.push(name);
-    }
-  }
-  return [...new Set(names)].slice(0, 2);
+function readPreparedBullets(root: string): string[] {
+  const path = preparedBulletsPath(root);
+  if (!existsSync(path)) return [];
+  return normalizeBulletLines(readFileSync(path, "utf8"));
 }
 
-function joinedAdded(diff: CachedFileDiff): string {
-  return diff.addedLines.join("\n");
+function counterFromSubjectLine(message: string): string {
+  const subject = message.split("\n")[0] ?? "";
+  const m = COUNTER_RE.exec(subject.trim());
+  return m?.[2] ?? "000";
 }
 
-/** ✍️One precise bullet line from a staged file diff (no generic “Update path”). */
-export function summarizeFileChange(diff: CachedFileDiff): string {
-  const where = humanWhere(diff.path);
-  const added = joinedAdded(diff);
-  const removed = diff.removedLines.join("\n");
-  const symbols = symbolsFromLines(diff.addedLines);
-
-  if (diff.deleted) return `Remove ${where}`;
-  if (diff.newFile) {
-    if (symbols.length) return `Add ${symbols.join(", ")} in ${where}`;
-    if (diff.path.endsWith("SKILL.md")) return `Add agent skill ${where}`;
-    if (diff.path.includes("/hooks/")) return `Add git hook ${where}`;
-    return `Add ${where}`;
+function validateBulletsAgainstStaged(bullets: string[], staged: string[]): void {
+  if (staged.length === 0) return;
+  const text = bullets.join("\n").toLowerCase();
+  const significant = staged.filter(
+    (p) => !/\/micro-commit\.ts$/.test(p) && !p.endsWith("SKILL.md") && !/\/index\.test\.ts$/.test(p),
+  );
+  if (significant.length === 0) return;
+  const covered = significant.filter((p) => {
+    const segments = p.toLowerCase().split(/[/._-]+/).filter((s) => s.length >= 5);
+    return segments.some((s) => text.includes(s));
+  });
+  if (covered.length === 0) {
+    console.error("micro-commit: bullets do not match staged changes — read `micro-commit diff` again");
+    for (const p of staged) console.error(`  ${p}`);
+    process.exit(1);
   }
-
-  if (symbols.length) {
-    const verb = diff.del > 0 ? "Refactor" : "Add";
-    return `${verb} ${symbols.join(", ")} in ${where}`;
-  }
-
-  if (added.includes("commit.template") && added.includes("gkcommittemplate")) {
-    return `Wire GitKraken commit.template to gkcommittemplate`;
-  }
-  if (added.includes("bumpCounterFromHistory") || added.includes("extractCounterFromSubject")) {
-    return `Bump micro-commit counter from recent subjects`;
-  }
-  if (added.includes("prepare-commit-msg")) return `Refresh commit message in prepare-commit-msg hook`;
-  if (added.includes("Signed-off-by")) return `Fix Signed-off-by line in micro-commit footer`;
-  if (diff.path.endsWith("SKILL.md")) {
-    if (removed.length > 0) return `Revise micro-commit skill instructions`;
-    return `Document micro-commit workflow in skill`;
-  }
-  if (diff.path.includes(".test.")) {
-    const subject = diff.path.replace(/\.test\.[^./]+$/, "").split("/").pop() ?? "module";
-    return `Extend ${subject} tests in ${where}`;
-  }
-  if (diff.path.includes("/hooks/")) return `Adjust git hook ${where}`;
-
-  if (diff.ins > 0 && diff.del === 0) return `Extend ${where}`;
-  if (diff.del > 0 && diff.ins === 0) return `Remove obsolete code in ${where}`;
-  if (diff.ins > 0 && diff.del > 0) return `Refine ${where}`;
-  return `Touch ${where}`;
 }
 
-function emojiForChange(summary: string, path: string): string {
-  const s = summary.toLowerCase();
-  const p = path.toLowerCase();
-  if (s.startsWith("add ") || s.includes("add agent")) return "✨";
-  if (s.startsWith("remove ") || s.includes("obsolete")) return "🗑️";
-  if (s.includes("test") || p.includes(".test.")) return "🧪";
-  if (s.includes("hook") || p.includes("/hooks/")) return "🔄";
-  if (p.includes("skill.md")) return "🫡";
-  if (s.includes("gitkraken") || s.includes("commit.template")) return "🦑";
-  if (s.includes("counter") || s.includes("micro-commit")) return "🎆";
-  if (p.startsWith("framework/") || p.includes("presentation/")) return "🖼️";
-  if (p.startsWith("puzzle/")) return "🧩";
-  if (p.startsWith("repo/")) return "🧰";
-  return "✏️";
+function readDiffBulletsInput(root: string, bulletsFile: string | null): string[] {
+  if (bulletsFile) {
+    const path = bulletsFile.startsWith("/") ? bulletsFile : join(root, bulletsFile);
+    return normalizeBulletLines(readFileSync(path, "utf8"));
+  }
+  if (!process.stdin.isTTY) {
+    return normalizeBulletLines(readFileSync(0, "utf8"));
+  }
+  return [];
 }
 
 function listCachedPaths(root: string): string[] {
@@ -312,26 +205,6 @@ function listCachedPaths(root: string): string[] {
 
 function listAddedTicketPaths(root: string): string[] {
   return gitCachedNames(root, ["--diff-filter=A"]).filter((p) => TICKET_JSON_RE.test(p));
-}
-
-function isTicketImportantMd(path: string): boolean {
-  return /^\.repo\/🎫\/.+\/important\.md$/.test(path);
-}
-
-function diffBullets(root: string, ticketPaths: Set<string>): string[] {
-  const files = listCachedPaths(root).filter((p) => !ticketPaths.has(p) && !isTicketImportantMd(p));
-  if (files.length === 0) return [];
-  const patch = git(root, ["diff", "--cached", "-M", "-U0"]).out;
-  const byFile = parseCachedDiff(patch);
-  const bullets: string[] = [];
-  for (const path of files) {
-    if (bullets.length >= 8) break;
-    const diff = byFile.get(path);
-    const summary = diff ? summarizeFileChange(diff) : `Touch ${humanWhere(path)}`;
-    bullets.push(`- ${emojiForChange(summary, path)} ${summary}`);
-  }
-  if (files.length > 8) bullets.push("- …");
-  return bullets;
 }
 
 function ticketBullets(root: string): string[] {
@@ -345,12 +218,14 @@ function ticketBullets(root: string): string[] {
   return bullets;
 }
 
-export function buildMicroCommitMessage(root: string, contributor: Contributor): string {
+export function buildMicroCommitMessage(root: string, contributor: Contributor, diffBullets: string[] = []): string {
   const { line1Base, nnn } = nextCounter(root, contributor);
   const now = new Date();
-  const ticketPaths = new Set(listAddedTicketPaths(root));
-  const bullets = [...ticketBullets(root), ...diffBullets(root, ticketPaths)].slice(0, 8);
-  if (bullets.length === 0) bullets.push(`- ✏️ WIP checkpoint`);
+  const authored = diffBullets.length > 0 ? normalizeBulletLines(diffBullets.join("\n")) : readPreparedBullets(root);
+  const bullets = [...ticketBullets(root), ...authored].slice(0, 8);
+  if (bullets.length === 0) {
+    throw new Error("micro-commit: at least one description bullet is required");
+  }
   const lines = [
     `${line1Base}🚩${nnn}`,
     "",
@@ -369,17 +244,25 @@ function gitDir(root: string): string {
 
 export function writeMicroCommitTemplates(root: string, message: string): void {
   const dir = gitDir(root);
-  const templateAbs = join(dir, "gkcommittemplate.txt");
-  for (const p of [templateAbs, join(dir, "COMMIT_EDITMSG")]) {
-    try {
-      rmSync(p, { force: true });
-    } catch {
-      /* ignore */
+  const nnn = counterFromSubjectLine(message);
+  const templateName = `${GK_TEMPLATE_BASENAME}-${nnn}.txt`;
+  const templateAbs = join(dir, templateName);
+  const legacyAbs = join(dir, `${GK_TEMPLATE_BASENAME}.txt`);
+
+  for (const name of readdirSync(dir)) {
+    if (name.startsWith(GK_TEMPLATE_BASENAME) && name !== templateName) {
+      try {
+        rmSync(join(dir, name), { force: true });
+      } catch {
+        /* ignore */
+      }
     }
   }
+
   writeFileSync(templateAbs, message);
+  writeFileSync(legacyAbs, message);
   writeFileSync(join(dir, "COMMIT_EDITMSG"), message);
-  git(root, ["config", "--local", "commit.template", GK_TEMPLATE_REL]);
+  git(root, ["config", "--local", "commit.template", templateAbs]);
   writeFileSync(preparedDigestPath(root), `${digestMicroCommitMessage(message)}\n`);
 }
 
@@ -401,9 +284,9 @@ export function handlePrepareCommitMsg(root: string, msgFile: string, source: st
   if (!shouldRefreshPreparedCommitMessage(current, preparedDigest)) return;
   const staged = listCachedPaths(root);
   if (staged.length === 0) git(root, ["add", "-A"]);
-  const message = buildMicroCommitMessage(root, contributor);
+  const message = buildMicroCommitMessage(root, contributor, readPreparedBullets(root));
   writeFileSync(msgFile, message);
-  writeFileSync(preparedDigestPath(root), `${digestMicroCommitMessage(message)}\n`);
+  writeMicroCommitTemplates(root, message);
 }
 
 export function installMicroCommitGitHooks(root: string): void {
@@ -417,7 +300,11 @@ export function installMicroCommitGitHooks(root: string): void {
 
 export function resetMicroCommitTemplates(root: string): void {
   const dir = gitDir(root);
-  for (const p of [join(dir, "COMMIT_EDITMSG"), join(dir, "gkcommittemplate.txt"), preparedDigestPath(root)]) {
+  const paths = [join(dir, "COMMIT_EDITMSG"), preparedDigestPath(root), preparedBulletsPath(root)];
+  for (const name of readdirSync(dir)) {
+    if (name.startsWith(GK_TEMPLATE_BASENAME)) paths.push(join(dir, name));
+  }
+  for (const p of paths) {
     try {
       rmSync(p, { force: true });
     } catch {
@@ -452,19 +339,66 @@ export function runMicroCommit(root: string, segments: string[]): void {
     handlePrepareCommitMsg(root, msgFile, segments[2] ?? "");
     process.exit(0);
   }
+  if (cmd === "stage") {
+    const staged = git(root, ["add", "-A"]);
+    if (!staged.ok) {
+      console.error(staged.out || "git add -A failed");
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+  if (cmd === "diff") {
+    const patch = git(root, ["diff", "--cached"]);
+    if (!patch.ok) {
+      console.error(patch.out || "git diff --cached failed");
+      process.exit(1);
+    }
+    process.stdout.write(patch.out ? `${patch.out}\n` : "");
+    process.exit(0);
+  }
   if (cmd !== "prepare") {
-    console.error("[micro-commit] usage: bun ./script.ts micro-commit prepare [level override tokens]");
+    console.error(
+      "[micro-commit] usage: bun ./script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]",
+    );
     process.exit(1);
   }
 
-  const level = loadLevel(root, contributor, segments.slice(1));
+  const dash = segments.indexOf("--");
+  const levelSegments = dash >= 0 ? segments.slice(1, dash) : segments.slice(1);
+  const bulletsFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
+
+  const level = loadLevel(root, contributor, levelSegments);
   const staged = git(root, ["add", "-A"]);
   if (!staged.ok) {
     console.error(staged.out || "git add -A failed");
     process.exit(1);
   }
-  const message = buildMicroCommitMessage(root, contributor);
+
+  const stagedPaths = listCachedPaths(root);
+  const diffBullets = readDiffBulletsInput(root, bulletsFile);
+  if (diffBullets.length === 0) {
+    for (const p of stagedPaths) console.error(p);
+    console.error("");
+    const patch = git(root, ["diff", "--cached"]);
+    if (patch.out) console.error(patch.out);
+    console.error(
+      "\nmicro-commit: analyze the staged paths and diff above; pass 1–8 semantic bullets on stdin (lines starting with '- ')",
+    );
+    process.exit(1);
+  }
+
+  validateBulletsAgainstStaged(diffBullets, stagedPaths);
+  writePreparedBullets(root, diffBullets);
+  let message: string;
+  try {
+    message = buildMicroCommitMessage(root, contributor, diffBullets);
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e));
+    process.exit(1);
+  }
   writeMicroCommitTemplates(root, message);
+  console.error(`[micro-commit] GitKraken template: ${join(gitDir(root), `${GK_TEMPLATE_BASENAME}-${counterFromSubjectLine(message)}.txt`)}`);
+  console.error(`[micro-commit] staged: ${stagedPaths.join(", ") || "(none)"}`);
   emitPrepareStdout(message);
 
   if (level === "prepare-only") process.exit(0);

@@ -226,6 +226,8 @@ import {
   windowMeasureTileClass,
   windowMeasureTileNestedClass,
   windowMeasureToggleClass,
+  windowMeasureToggleCompactClass,
+  windowMeasuresStackInnerClass,
 	type AssertUiToolbarParentKeysCovered,
 } from "@ui/react";
 // #endregion 🔌Adapters
@@ -573,7 +575,8 @@ const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; nested
     data-measure-id={measureId}
     className={nested ? windowMeasureTileNestedClass : windowMeasureTileClass}
   >
-    {label ? <span className={windowMeasureLabelClass}>{label}</span> : null}
+    {label && !nested ? <span className={windowMeasureLabelClass}>{label}</span> : null}
+    {label && nested ? <span className={cn(windowMeasureLabelClass, "mb-0 leading-tight")}>{label}</span> : null}
     <div className={windowMeasureControlClass}>{children}</div>
   </div>
 );
@@ -622,6 +625,21 @@ function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React
     case "separator":
       return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
     case "toggle":
+      if (nested) {
+        return (
+          <div key={measure.id} data-slot="window-measure-toggle-compact" data-measure-id={measure.id} className="pointer-events-auto w-full min-w-0 shrink-0">
+            <Toggle
+              id={measure.id}
+              className={cn(windowMeasureToggleClass, windowMeasureToggleCompactClass)}
+              pressed={measure.pressed}
+              defaultPressed={measure.defaultPressed}
+              onPressedChange={measure.onPressedChange}
+              icon={measure.icon ?? <CheckIcon className="size-small" />}
+              text={measure.text}
+            />
+          </div>
+        );
+      }
       return (
         <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
           <Toggle
@@ -755,7 +773,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React
  * 📐 Maps declarative `UIWindowMeasure` entries into compact floating tiles aligned to the right edge.
  **/
 export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ measures }) => (
-  <div data-slot="window-measures-stack-inner" className="flex w-full min-w-0 flex-col gap-half">
+  <div data-slot="window-measures-stack-inner" className={windowMeasuresStackInnerClass}>
     {measures.map((measure) => (
       <React.Fragment key={measure.id}>{renderUIWindowMeasure(measure, false)}</React.Fragment>
     ))}
@@ -3634,6 +3652,7 @@ if (import.meta.vitest) {
 			expect(markup).toContain('data-slot="collapsible"');
 			expect(markup).toContain("Brush");
 			expect(markup).toContain('data-slot="window-measure-nested"');
+			expect(markup).toContain("gap-0");
 		});
 	});
 

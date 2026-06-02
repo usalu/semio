@@ -1,63 +1,67 @@
 ---
 name: micro-commit
 description: >-
-  WIP micro-commits on semio dev branches. Returns the prepared commit message or an error.
-  Levels: prepare-only (default), prepare-and-commit, prepare-and-commit-and-push.
-  Triggers g, go, c, commit, +1, bump, gc, gp, @micro-commit.
-disable-model-invocation: true
+  WIP micro-commits on semio dev branches. You analyze git diff --cached and write semantic
+  bullets; script builds counter, tickets, GitKraken template. Triggers g, go, c, commit,
+  +1, bump, gc, gp, @micro-commit.
 ---
 
 # Micro Commit
 
-Run **only** the repo script. Reply with **exactly** what the script prints — nothing else.
+**You must use the model** — read the real staged diff every time. Never invent bullets from chat memory or prior turns.
 
-## Entrypoint
+## Workflow (two shell steps, same turn)
 
-```bash
-bun ./script.ts micro-commit prepare [override tokens]
-```
-
-Never hand-build the commit message.
-
-### Git hooks (install once per clone)
+### 1. Stage and read diff
 
 ```bash
-bun ./script.ts setup git
+bun ./script.ts micro-commit stage
+bun ./script.ts micro-commit diff
 ```
 
-GitKraken: line 1 is **Summary**; everything after the blank line is **Description** (click Description below Summary). `prepare` writes `.git/gkcommittemplate.txt` and sets `commit.template`. Reopen the Commit panel or click **WIP** to reload. If Summary is read-only, turn off *Apply this template to commit messages*.
+Read the **full** `diff` output. Bullets must describe **only** what that patch changes (presentation, puzzle, UI, etc.) — not meta-work on micro-commit unless that is all that is staged.
 
-## Assistant output (mandatory)
+### 2. Prepare with your bullets
 
-| Script result | Your entire reply |
-|---------------|-------------------|
-| exit 0, stdout has text | Paste stdout **with line breaks preserved** (subject, blank line, body, Signed-off-by each on their own line). Never join into one line. |
-| exit non-zero | Copy stderr verbatim (the error) |
+```bash
+bun ./script.ts micro-commit prepare <<'EOF'
+- 🖼️ …precise summary from diff…
+- 🧩 …
+EOF
+```
 
-No preamble, no markdown fence, no “done”, no extra lines.
+Script validates bullets against staged paths (rejects bullets that ignore real staged files). Then writes GitKraken template with a **new path per counter** (`gkcommittemplate-NNN.txt`).
 
-## Automation levels
+### 3. Reply to user
 
-| Level | Script behavior |
-|-------|-----------------|
-| `prepare-only` | `git add -A`, write templates, print message |
-| `prepare-and-commit` | + `git commit -S` (message still printed before commit) |
-| `prepare-and-commit-and-push` | + `git push` |
+Paste **only** `prepare` stdout, with **newlines preserved** (Summary / blank line / Description / Signed-off-by). No one-line mash-up.
 
-Config: `.repo/🧑‍💻/{alias}/micro-commit.json` → `{ "level": "prepare-only" }`.
+Level overrides before `--`: `gc`, `gp`, `g.`
 
-One-shot overrides: `gp`/`push!` → push level; `gc`/`commit!` → commit level; `g.`/`prepare!` → prepare-only.
+## GitKraken
 
-## Counter
+- **Summary** = line 1 (`…🚩NNN`).
+- **Description** = after the blank line (click **Description** under Summary).
+- After `prepare`, if the message is stale: close the Commit panel and reopen, or click **WIP**, or check Preferences → Commit → template path matches stderr `GitKraken template: …/gkcommittemplate-NNN.txt`.
+- If the field is read-only: turn off *Apply this template to commit messages*.
 
-Last **40** commit subjects only (fast). Accepts `…🚩NNN` or legacy plain numbers (`33`, `31`, …). Highest in that window + 1 (3-digit pad).
+`bun ./script.ts setup git` once per clone.
 
-## Branch guard
+## Script vs you
 
-Only `⛳wip` or `🏗️dev`. Otherwise script exits 1 with an error on stderr.
+| Script | You |
+|--------|-----|
+| Counter, timestamp, `ticket.json` lines, templates, Signed-off-by | 1–8 semantic bullets from **current** diff |
+| `git add -A`, bullet validation | Emoji + precise wording |
 
-## Forbidden
+**Forbidden:** bullets without reading `micro-commit diff` in this turn; generic/path-only lines; editing counter/timestamp/Signed-off-by; codebase search; tickets MCP; goals.
 
-Codebase search, tickets MCP, goals, hand-written templates, `gh pr create`, commit/push when level disallows it.
+## Automation
+
+`.repo/🧑‍💻/{alias}/micro-commit.json` → `prepare-only` | `prepare-and-commit` | `prepare-and-commit-and-push`.
+
+## Branch
+
+Only `⛳wip` or `🏗️dev`.
 
 Related: `.agents/skills/merging/SKILL.md`.

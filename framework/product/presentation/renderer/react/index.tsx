@@ -333,7 +333,8 @@ export function resolveRevealArrangement(
 	if (context.previousSlide !== undefined) {
 		companions.push(...revealMorphCompanionFromMorphFrom(scope, context.previousSlide, arrangement));
 	}
-	if (context.nextSlide !== undefined) {
+	const hasMorphTo = arrangement.dispositions.some((disposition) => (disposition.morphTo?.length ?? 0) > 0);
+	if (context.nextSlide !== undefined && hasMorphTo) {
 		companions.push(...revealMorphCompanionFromMorphTo(scope, context.nextSlide, arrangement));
 	}
 	return [...resolved, ...companions];
@@ -536,6 +537,57 @@ function elementIsFigureMorphSlot(element: HTMLElement): boolean {
 	);
 }
 
+function elementIsInteractiveFigureDisposition(element: HTMLElement): boolean {
+	return (
+		element.classList.contains("presentation-interactive-disposition") &&
+		elementIsFigureMorphSlot(element) &&
+		!elementIsSourceGhostAnchor(element) &&
+		!elementIsTargetGhostAnchor(element)
+	);
+}
+
+/** @emoji 🎯 Picks the `to` morph anchor for one `data-id` (focus tile → label target ghost, catalogue source → focus tile). */
+export function resolveMorphAutoAnimateTo(
+	fromElement: HTMLElement,
+	toSlide: HTMLElement,
+): HTMLElement | null {
+	const id = fromElement.getAttribute("data-id");
+	if (!id) {
+		return null;
+	}
+	const escapedId = id.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+	const candidates = [
+		...toSlide.querySelectorAll<HTMLElement>(`[data-id="${escapedId}"]`),
+	];
+	if (candidates.length === 0) {
+		return null;
+	}
+	if (elementIsInteractiveFigureDisposition(fromElement)) {
+		const targetGhost = candidates.find(
+			(candidate) =>
+				candidate.classList.contains("presentation-interactive-disposition") &&
+				elementIsTargetGhostAnchor(candidate),
+		);
+		if (targetGhost) {
+			return targetGhost;
+		}
+	}
+	if (elementIsSourceGhostAnchor(fromElement)) {
+		const focusTile = candidates.find((candidate) => elementIsInteractiveFigureDisposition(candidate));
+		if (focusTile) {
+			return focusTile;
+		}
+	}
+	return (
+		candidates.find(
+			(candidate) =>
+				!elementIsSourceGhostAnchor(candidate) ||
+				(elementIsTargetGhostAnchor(candidate) &&
+					candidate.classList.contains("presentation-interactive-disposition")),
+		) ?? null
+	);
+}
+
 /** @emoji 🔗 reveal.js auto-animate matcher: tiles pair with target/source ghosts, not morph targets or the morph-one. */
 export function presentationAutoAnimateMatcher(
 	this: AutoAnimateMatcherHost,
@@ -543,9 +595,12 @@ export function presentationAutoAnimateMatcher(
 	toSlide: HTMLElement,
 ): { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] {
 	const pairs: { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] = [];
-	this.findAutoAnimateMatches(pairs, fromSlide, toSlide, "[data-id]", (node) => {
-		return `${node.nodeName}:::${node.getAttribute("data-id")}`;
-	});
+	for (const fromElement of fromSlide.querySelectorAll<HTMLElement>("[data-id]")) {
+		const toElement = resolveMorphAutoAnimateTo(fromElement, toSlide);
+		if (toElement) {
+			pairs.push({ from: fromElement, to: toElement });
+		}
+	}
 	const reserved: HTMLElement[] = [];
 	return pairs.filter((pair) => {
 		if (reserved.includes(pair.to)) {
@@ -561,17 +616,13 @@ export function presentationAutoAnimateMatcher(
 		if (elementIsTargetGhostAnchor(pair.to) && !elementIsFigureMorphSlot(pair.from)) {
 			return false;
 		}
-		if (
-			elementIsTargetGhostAnchor(pair.to) &&
-			elementIsFigureMorphSlot(pair.from) &&
-			!pair.from.classList.contains("presentation-interactive-disposition")
-		) {
+		if (elementIsSourceGhostAnchor(pair.to)) {
 			return false;
 		}
 		if (elementIsMorphOneAnchor(pair.from)) {
 			return false;
 		}
-		if (elementIsSourceGhostAnchor(pair.from) && !elementIsFigureMorphSlot(pair.to)) {
+		if (elementIsSourceGhostAnchor(pair.from) && !elementIsInteractiveFigureDisposition(pair.to)) {
 			return false;
 		}
 		if (elementIsFigureMorphSlot(pair.from) && elementIsMorphOneAnchor(pair.to)) {
@@ -4180,20 +4231,11 @@ if (import.meta.vitest) {
 			const toSlide = sections.find((section) => section.title === "catalogue-focus");
 			expect(fromSlide).toBeDefined();
 			expect(toSlide).toBeDefined();
-			const host: AutoAnimateMatcherHost = {
-				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
-					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
-						const key = serializer(element);
-						const toElement = toScope.querySelector<HTMLElement>(
-							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
-						);
-						if (toElement) {
-							pairs.push({ from: element, to: toElement });
-						}
-					}
-				},
-			};
-			const pairs = presentationAutoAnimateMatcher.call(host, fromSlide!, toSlide!);
+			const pairs = presentationAutoAnimateMatcher.call(
+				{ findAutoAnimateMatches: () => {} } as AutoAnimateMatcherHost,
+				fromSlide!,
+				toSlide!,
+			);
 			expect(pairs).toHaveLength(4);
 			expect(pairs.every((pair) => pair.from.getAttribute("data-id") === pair.to.getAttribute("data-id"))).toBe(
 				true,
@@ -5129,19 +5171,15 @@ if (import.meta.vitest) {
 			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
 			prepareArrangementBeforeAutoAnimate(focusSlide, labelSlide);
 			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(true);
-			const host: AutoAnimateMatcherHost = {
-				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
-					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
-						const toElement = toScope.querySelector<HTMLElement>(
-							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
-						);
-						if (toElement) {
-							pairs.push({ from: element, to: toElement });
-						}
-					}
-				},
-			};
-			const pairs = presentationAutoAnimateMatcher.call(host, focusSlide, labelSlide);
+			const pairs = presentationAutoAnimateMatcher.call(
+				{ findAutoAnimateMatches: () => {} } as AutoAnimateMatcherHost,
+				focusSlide,
+				labelSlide,
+			);
+			expect(pairs.every((pair) => !elementIsSourceGhostAnchor(pair.from))).toBe(true);
+			expect(pairs.every((pair) => !elementIsSourceGhostAnchor(pair.to))).toBe(true);
+			expect(pairs.every((pair) => elementIsTargetGhostAnchor(pair.to))).toBe(true);
+			expect(pairs.every((pair) => elementIsInteractiveFigureDisposition(pair.from))).toBe(true);
 			const columnIds = [CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3];
 			const tileIds = [
 				...CATALOGUE_COLUMN_TILE_KEYS.col1,
@@ -5238,6 +5276,29 @@ if (import.meta.vitest) {
 			mountRoot.remove();
 		});
 
+		it("renders target ghosts but no source ghosts on focus and labels slides", async () => {
+			const { loadPresentationFromSlideGlob } = await import("@framework/presentation/core");
+			type SlideFile = import("@framework/presentation/core").SlideFile;
+			const { presentationMeta } = await import("@mit-bestand/praesentation/projektetage-spec");
+			const slideModules = import.meta.glob<{ default: SlideFile }>(
+				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
+				{ eager: true },
+			);
+			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			const labelSlide = mountRoot.querySelector('section[title="catalogue-labels"]') as HTMLElement;
+			expect(focusSlide.querySelectorAll(".presentation-source-ghost").length).toBe(0);
+			expect(labelSlide.querySelectorAll(".presentation-source-ghost").length).toBe(0);
+			expect(labelSlide.querySelectorAll(".presentation-target-ghost").length).toBeGreaterThanOrEqual(8);
+			mountRoot.remove();
+		});
+
 		it("puts reveal data-id on catalogue tile wrappers for catalogue-to-focus morph", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
 				await import("@framework/presentation/core");
@@ -5304,19 +5365,11 @@ if (import.meta.vitest) {
 					.length,
 			).toBe(10);
 			catalogueSlide.setAttribute("data-auto-animate", "pending");
-			const host: AutoAnimateMatcherHost = {
-				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
-					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
-						const toElement = toScope.querySelector<HTMLElement>(
-							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
-						);
-						if (toElement) {
-							pairs.push({ from: element, to: toElement });
-						}
-					}
-				},
-			};
-			const pairs = presentationAutoAnimateMatcher.call(host, catalogueSlide, focusSlide);
+			const pairs = presentationAutoAnimateMatcher.call(
+				{ findAutoAnimateMatches: () => {} } as AutoAnimateMatcherHost,
+				catalogueSlide,
+				focusSlide,
+			);
 			const componentTileIds = CATALOGUE_FOCUS_TILES.map((tile) => tile.participantId);
 			expect(componentTileIds.every((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id))).toBe(
 				true,

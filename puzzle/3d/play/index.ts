@@ -877,7 +877,6 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-auto`,
-        label: "LOD",
         text: "Auto zoom",
         pressed: this.automaticLod,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setAutoLod" },
@@ -914,7 +913,6 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-marquee-rectangle`,
-        label: "Select",
         text: "Rectangle",
         pressed: this.selectionMethod === "rectangle",
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelectionMethod", args: { method: "rectangle" } },

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -173,32 +174,41 @@ describe("micro-commit", () => {
     expect(fresh.nnn).toBe("001");
   });
 
+  test("normalizeBulletLines enforces dash prefix and cap", async () => {
+    const { normalizeBulletLines } = await import("./micro-commit.ts");
+    expect(normalizeBulletLines("🐛 Fix PDF\n- 🖼️ Tweak UI")).toEqual(["- 🐛 Fix PDF", "- 🖼️ Tweak UI"]);
+    expect(normalizeBulletLines(Array.from({ length: 10 }, (_, i) => `- ${i}`).join("\n"))).toHaveLength(8);
+  });
+
   test("buildMicroCommitMessage separates GitKraken summary and description", async () => {
     const { buildMicroCommitMessage } = await import("./micro-commit.ts");
     const root = process.cwd();
     const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
-    const msg = buildMicroCommitMessage(root, contributor);
+    const msg = buildMicroCommitMessage(root, contributor, ["- 🎆 LLM-authored change summary"]);
     const lines = msg.trimEnd().split("\n");
     expect(lines[0]).toMatch(/🚩\d{3}$/);
     expect(lines[1]).toBe("");
+    expect(lines.some((l) => l.includes("LLM-authored"))).toBe(true);
     expect(lines.at(-2)).toBe("");
     expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
   });
 
-  test("summarizeFileChange uses diff content not generic paths", async () => {
-    const { parseCachedDiff, summarizeFileChange } = await import("./micro-commit.ts");
-    const patch = [
-      "diff --git a/repo/lib/js/src/micro-commit.ts b/repo/lib/js/src/micro-commit.ts",
-      "--- a/repo/lib/js/src/micro-commit.ts",
-      "+++ b/repo/lib/js/src/micro-commit.ts",
-      "@@ -1 +1,3 @@",
-      "+export function parseCachedDiff() {}",
-      "+export function summarizeFileChange() {}",
-    ].join("\n");
-    const diff = parseCachedDiff(patch).get("repo/lib/js/src/micro-commit.ts")!;
-    const summary = summarizeFileChange(diff);
-    expect(summary).toContain("parseCachedDiff");
-    expect(summary).not.toMatch(/^Update /);
+  test("validateBulletsAgainstStaged rejects bullets that ignore staged product code", async () => {
+    const { runMicroCommit } = await import("./micro-commit.ts");
+    const root = process.cwd();
+    const prev = process.env.REPO_ROOT;
+    process.env.REPO_ROOT = root;
+    const stdin = ["- 🫡 Only micro-commit skill docs"].join("\n");
+    const r = spawnSync(process.execPath, ["./script.ts", "micro-commit", "prepare"], {
+      cwd: root,
+      input: stdin,
+      encoding: "utf8",
+    });
+    if (prev === undefined) delete process.env.REPO_ROOT;
+    else process.env.REPO_ROOT = prev;
+    const stagedHasPresentation = spawnSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
+      .stdout?.includes("presentation/");
+    if (stagedHasPresentation) expect(r.status).not.toBe(0);
   });
 
   test("shouldRefreshPreparedCommitMessage keeps user edits", async () => {

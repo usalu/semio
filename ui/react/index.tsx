@@ -2242,15 +2242,18 @@ export const windowMeasuresOverlayClass =
 
 /** @emoji 📐 Scrollable stack of measure tiles inside the rail (tiles opt in to hits; gaps pass through to the canvas). */
 export const windowMeasuresStackClass =
-  "pointer-events-none flex min-h-0 flex-1 flex-col gap-half overflow-y-auto overscroll-contain";
+  "pointer-events-none flex min-h-0 flex-1 flex-col gap-0 overflow-y-auto overscroll-contain";
+
+/** @emoji 📐 Vertical rhythm between top-level measure groups in the rail. */
+export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
 /** @emoji 📐 Single measure tile in the window rail. */
 export const windowMeasureTileClass =
-  "pointer-events-auto select-none border-element/40 bg-window/90 w-full min-w-0 shrink-0 rounded-sm border px-single py-half";
+  "pointer-events-auto select-none border-element/40 bg-window/90 w-full min-w-0 shrink-0 rounded-sm border px-tiny py-tiny";
 
 /** @emoji 📐 Optional measure caption above a control. */
 export const windowMeasureLabelClass =
-  "text-muted-foreground mb-half block min-w-0 truncate text-[10px] font-medium leading-none";
+  "text-muted-foreground mb-tiny block min-w-0 truncate text-[10px] font-medium leading-none";
 
 /** @emoji 📐 Measure section title without a heavy chrome box. */
 export const windowMeasureSectionClass =
@@ -2261,19 +2264,23 @@ export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 
 /** @emoji 🌳 Compact disclosure header for a nested measure group. */
 export const windowMeasureGroupHeaderClass =
-  "pointer-events-auto flex w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-tiny hover:bg-hover-window";
+  "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 hover:bg-hover-window";
 
 /** @emoji 🌳 Indented children under a measure group (minimal chrome). */
 export const windowMeasureGroupChildrenClass =
-  "pointer-events-none flex w-full min-w-0 flex-col gap-tiny border-l border-element/30 pl-single ml-tiny";
+  "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-l border-element/30 pl-tiny ml-tiny pb-0 pt-0";
 
 /** @emoji 🌳 Nested measure leaf without an outer tile border (indent only). */
 export const windowMeasureTileNestedClass =
-  "pointer-events-auto select-none w-full min-w-0 shrink-0 px-tiny py-tiny";
+  "pointer-events-auto select-none w-full min-w-0 shrink-0 px-0 py-0";
 
 /** @emoji 📐 Toggle sized to fit inside a measure tile. */
 export const windowMeasureToggleClass =
   "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:truncate";
+
+/** @emoji 📐 Dense toggle row for nested measure groups (shorter control chrome). */
+export const windowMeasureToggleCompactClass =
+  "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single";
 
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
