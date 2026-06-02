@@ -1,6 +1,6 @@
 {
   "title": "Fix Interactive Disposition Resize",
-  "status": "closed",
+  "status": "open",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
   "summary": "Added typeNameFromFileName with storey-before-Tambour ordering; reconcile-kind-names script updates kit fixtures, type semio files, and puzzle 2d/3d/5d/storybook nakagin fixtures; tests updated and passing.",
   "goal": "🎯r2602🎯runningsketchpad",
@@ -15,6 +15,7 @@
     "⚪e3920b7fb57f428aaf9564614be81c7e",
     "⚪bfe680f9b6f54d7f9f939d16309937bf",
     "⚪01b598528f814e35b9e77c9045fe0576",
-    "⚪cd7c4b1d508e4fe49afcd35a4c042bcd"
+    "⚪cd7c4b1d508e4fe49afcd35a4c042bcd",
+    "⚪35345b81b2eb4f5881864f6103501887"
   ]
 }

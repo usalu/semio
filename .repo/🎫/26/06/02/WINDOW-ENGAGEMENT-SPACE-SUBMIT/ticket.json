@@ -1,0 +1,10 @@
+{
+  "title": "Window Engagement Space Submit",
+  "emoji": "⌨️",
+  "status": "open",
+  "description": "Spacebar inside a window: empty command repeats last engagement; non-empty command submits on Space when focus is outside the engagement field (type-to-engage flow).",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪bb3fc426613547159e5315f316039e3a"
+  ]
+}

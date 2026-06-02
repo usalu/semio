@@ -268,7 +268,7 @@ export interface WindowEngagementInput {
   readonly disabled?: boolean;
   readonly onChange?: CommandDescriptor;
   readonly onSubmit?: CommandDescriptor;
-  /** @emoji 🔁 Restarts the last engagement when Space is pressed with an empty command. */
+  /** @emoji 🔁 Repeats the last finalized engagement when Space is pressed with an empty command (non-empty command uses {@link onSubmit}). */
   readonly onRepeatLast?: CommandDescriptor;
   readonly onAbort?: CommandDescriptor;
 }

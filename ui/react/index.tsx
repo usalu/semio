@@ -11216,7 +11216,7 @@ export interface EngagementInput {
   placeholder?: string;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
-  /** @emoji 🔁 Restarts the last engagement when Space is pressed with an empty command (no active session). */
+  /** @emoji 🔁 Restarts the last finalized engagement when Space is pressed with an empty command. */
   onRepeatLast?: () => void;
   /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear command. */
   onAbort?: () => void;
@@ -11454,19 +11454,24 @@ export function shouldDismissEmptyWindowEngagement(
   return true;
 }
 
-/** @emoji 🔁 Routes Space to {@link EngagementInput.onRepeatLast} when the command line is empty and focus is outside the engagement field. */
+/** @emoji 🔁 Routes Space outside the engagement field: empty draft → {@link EngagementInput.onRepeatLast}; non-empty → {@link EngagementInput.onSubmit}. */
 export function routeWindowEngagementSpace(
   engagement: EngagementSpec | undefined,
   event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">,
 ): boolean {
   const input = engagement?.input;
-  if (!input?.onRepeatLast || input.disabled || event.defaultPrevented || event.isComposing) return false;
+  if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
   if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
   if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
   const draft = normalizeEngagementCommandText(input.value ?? field?.value ?? "");
-  if (draft.trim()) return false;
-  input.onRepeatLast();
+  if (!draft.trim()) {
+    if (!input.onRepeatLast) return false;
+    input.onRepeatLast();
+    return true;
+  }
+  if (!input.onSubmit) return false;
+  input.onSubmit(draft);
   return true;
 }
 
@@ -16541,6 +16546,50 @@ if (import.meta.vitest) {
         }),
       ).toBe(true);
       expect(repeated).toEqual(["last"]);
+    });
+
+    it("routeWindowEngagementSpace calls onSubmit for non-empty command", () => {
+      const submitted: string[] = [];
+      const engagement = {
+        input: {
+          value: "Box",
+          onSubmit: (value: string) => submitted.push(value),
+          onRepeatLast: () => submitted.push("last"),
+        },
+      };
+      const body = document.createElement("div");
+      expect(
+        routeWindowEngagementSpace(engagement, {
+          key: " ",
+          ctrlKey: false,
+          metaKey: false,
+          altKey: false,
+          defaultPrevented: false,
+          isComposing: false,
+          target: body,
+        }),
+      ).toBe(true);
+      expect(submitted).toEqual(["Box"]);
+    });
+
+    it("Engagement Space with draft calls onSubmit instead of onRepeatLast", async () => {
+      const submitted: string[] = [];
+      const repeated: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{
+            value: "Box",
+            placeholder: "Command",
+            onSubmit: (value) => submitted.push(value),
+            onRepeatLast: () => repeated.push("last"),
+          }}
+        />,
+      );
+      const field = await screen.findByPlaceholderText("Command");
+      fireEvent.keyDown(field, { key: " " });
+      expect(submitted).toEqual(["Box"]);
+      expect(repeated).toEqual([]);
     });
 
     it("Engagement Space with empty draft calls onRepeatLast instead of onSubmit", async () => {
