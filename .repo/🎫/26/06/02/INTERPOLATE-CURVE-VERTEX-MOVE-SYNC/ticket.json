@@ -1,8 +1,9 @@
 {
   "title": "Interpolate Curve Vertex Move Sync",
   "emoji": "📈",
-  "status": "open",
+  "status": "closed",
   "description": "When calling interpolate curve after moving a vertex, the curve does not update. Fix live point resolution from snapped vertices during the command and sync nurbs through-curve poles when endpoint vertices move on committed geometry.",
+  "summary": "Interpolate curve kept stale geometry after vertex moves because interaction `points` were frozen at click time and committed NURBS edges stored through-points only in `edge.curve.poles`, not on endpoint vertices. `command.addPoint` now records parallel `pointSnaps`; commit and display resolve live vertex positions; `applyModelDiff` updates nurbs `through` edge poles when endpoint vertices move. Added core regression tests for both flows.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪8e867af9a6fe45cda539e2e1f0124bc4"

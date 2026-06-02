@@ -2026,6 +2026,8 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dBrushFlushDistance: (distance: number) => void;
   /** @emoji 🖌️ Pushes brush candidate rows into play window engagement possibles. */
   notifyBrushCandidates: (payload: Puzzle2dBrushCandidatesPayload) => void;
+  /** @emoji 🖌️ Commits brush placement with structural-delete guards and peer sync. */
+  commitBrushPlacement: (payload: Puzzle2dBrushPlacePayload) => void;
   /** @emoji 📶 Per-pane LOD select value (`automatic` or a pinned tier). */
   puzzle2dLodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
   setPuzzle2dLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => void;
@@ -2514,6 +2516,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     puzzle2dSelectionMode,
     puzzle2dSelectionTargets,
     fixture,
+    commitBrushPlacement,
     handleCanvasFixtureDrop,
     resetPuzzle2dRedrawProgressiveEpoch,
   } = usePuzzle2dPlayShell();
@@ -2580,21 +2583,6 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     [patchFixture],
   );
   const { notifyBrushCandidates } = usePuzzle2dPlayShell();
-  const onBrushPlace = reactHostPort.useCallback(
-    (payload: Puzzle2dBrushPlacePayload) => {
-      patchFixture((prev) => {
-        const result = applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev));
-        if (result.kind !== "placed") {
-          return prev;
-        }
-        guardFixtureAuthoringFromStructuralDeletes(200);
-        puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
-        puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
-        return result.fixture;
-      });
-    },
-    [guardFixtureAuthoringFromStructuralDeletes, patchFixture],
-  );
   return (
     <Puzzle2dPaneChrome paneId={paneId}>
       <Puzzle2dCanvas
@@ -2618,7 +2606,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         onDragEnd={onCanvasDragEnd}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
         onSelect={onSelect}
-        onBrushPlace={onBrushPlace}
+        onBrushPlace={commitBrushPlacement}
         onBrushCandidates={notifyBrushCandidates}
         sceneAuthoringEpoch={sceneAuthoringEpoch}
         selectionMethod={puzzle2dSelectionMethod}
@@ -3572,6 +3560,22 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     [guardFixtureAuthoringFromStructuralDeletes, patchFixture, setFixture, setSelectionIds],
   );
 
+  const commitBrushPlacement = reactHostPort.useCallback(
+    (payload: Puzzle2dBrushPlacePayload) => {
+      guardFixtureAuthoringFromStructuralDeletes(200);
+      patchFixture((prev) => {
+        const result = applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev));
+        if (result.kind !== "placed") {
+          return prev;
+        }
+        puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
+        puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
+        return result.fixture;
+      });
+    },
+    [guardFixtureAuthoringFromStructuralDeletes, patchFixture],
+  );
+
   const remapIdInSelections = reactHostPort.useCallback((replacedId: string, replacementId: string) => {
     if (replacedId === replacementId) {
       return;
@@ -4035,6 +4039,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       forceLayoutGravity,
       forceLayoutIdealEdgeLength,
       forceLayoutRepulsionStrength,
+      commitBrushPlacement,
       handleCanvasFixtureDrop,
       patchFixture,
       remapIdInSelections,
@@ -4098,6 +4103,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       forceLayoutGravity,
       forceLayoutIdealEdgeLength,
       forceLayoutRepulsionStrength,
+      commitBrushPlacement,
       handleCanvasFixtureDrop,
       patchFixture,
       remapIdInSelections,

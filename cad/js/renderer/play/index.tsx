@@ -59,6 +59,11 @@ import {
   type TransformationSpec,
   applyModelDiff,
   type CadTransformGumballMode,
+  CAD_PLAY_TRANSFORM_WINDOW_MODES,
+  cadPlayTransformWindowModeLabel,
+  cadTransformGumballModeFromWindowMode,
+  isCadPlayTransformWindowMode,
+  type CadPlayTransformWindowMode,
   type ModelDiff,
   deleteObjectsFromModel,
   deletableObjectIdsFromSelection,
@@ -66,6 +71,9 @@ import {
 
 /** @emoji ⚡ Per-window compute mode options for CAD play window measures. */
 export const CAD_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];
+
+/** @emoji 🎛 Default per-pane transform combobox value for CAD play window measures. */
+export const CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE: CadPlayTransformWindowMode = "none";
 
 //#region 🔖Ids
 export const CAD_PLAY_APP_ID = "cad-play";
@@ -384,7 +392,6 @@ export function buildCadPlayHierarchySections(
 export interface CadPlayToolbarState {
   readonly activeModelDefinitionId: string;
   readonly selectionCount: number;
-  readonly transformTool: CadTransformGumballMode | null;
   readonly transfersTo: readonly TransformationSpec[];
   readonly transfersFrom: readonly TransformationSpec[];
 }
@@ -443,44 +450,6 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
       command: "loadRawRequest",
     },
   ];
-  const transformTools: ToolItem[] = [
-    {
-      id: "cad.play.transform.move",
-      kind: "toggle",
-      label: "Move",
-      text: "Move",
-      title: "Move selection (gumball)",
-      order: 0,
-      pressed: state.transformTool === "move",
-      controllerId,
-      command: "setTransformTool",
-      args: { tool: "move" },
-    },
-    {
-      id: "cad.play.transform.rotate",
-      kind: "toggle",
-      label: "Rotate",
-      text: "Rotate",
-      title: "Rotate selection (gumball)",
-      order: 1,
-      pressed: state.transformTool === "rotate",
-      controllerId,
-      command: "setTransformTool",
-      args: { tool: "rotate" },
-    },
-    {
-      id: "cad.play.transform.scale",
-      kind: "toggle",
-      label: "Scale",
-      text: "Scale",
-      title: "Scale selection (gumball)",
-      order: 2,
-      pressed: state.transformTool === "scale",
-      controllerId,
-      command: "setTransformTool",
-      args: { tool: "scale" },
-    },
-  ];
   const transferTools: ToolItem[] = [
     ...state.transfersTo.map((spec, index) => ({
       id: `cad.play.transfer.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
@@ -507,7 +476,6 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
   return {
     view: viewTools,
     save: saveTools,
-    transform: transformTools,
     ...(transferTools.length > 0 ? { transfer: transferTools } : {}),
   };
 }
@@ -591,6 +559,7 @@ export class CadPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "CAD", undefined);
   private hostBridge: CadPlayHostBridge | null = null;
   private computeModeByPane: Record<CadPlayPaneId, SpatialComputeMode>;
+  private transformModeByPane: Record<CadPlayPaneId, CadPlayTransformWindowMode>;
   private engagementByPane: Record<CadPlayPaneId, WindowEngagement | undefined>;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
@@ -600,6 +569,12 @@ export class CadPlayShellController extends Controller {
       building: "fast",
       energy: "fast",
       "structure-classic": "fast",
+    };
+    this.transformModeByPane = {
+      shape: CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE,
+      building: CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE,
+      energy: CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE,
+      "structure-classic": CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE,
     };
     this.engagementByPane = { shape: undefined, building: undefined, energy: undefined, "structure-classic": undefined };
     this.rebuildShellMode();
@@ -620,6 +595,21 @@ export class CadPlayShellController extends Controller {
     };
   }
 
+  private transformMeasureForPane(pane: CadPlayPaneId): WindowMeasure {
+    return {
+      kind: "select",
+      id: `${pane}-transform`,
+      label: "Transform",
+      value: this.transformModeByPane[pane],
+      items: CAD_PLAY_TRANSFORM_WINDOW_MODES.map((mode) => ({
+        id: mode,
+        value: mode,
+        label: cadPlayTransformWindowModeLabel(mode),
+      })),
+      onChange: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "setTransformModeForPane", args: { pane } },
+    };
+  }
+
   private paneEngagementForShell(pane: CadPlayPaneId): WindowEngagement {
     return cadPlayResolvePaneEngagement(pane, this.engagementByPane[pane]);
   }
@@ -629,7 +619,7 @@ export class CadPlayShellController extends Controller {
     this.mainMode.windowKinds = CAD_PLAY_PANE_SPECS.map((row) => {
       const engagement = this.paneEngagementForShell(row.pane);
       enforcePlaygroundWindowEngagementInput(engagement, `CAD play window "${row.windowKindId}"`);
-      return new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane)], engagement);
+      return new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane), this.transformMeasureForPane(row.pane)], engagement);
     });
   }
 
@@ -658,6 +648,21 @@ export class CadPlayShellController extends Controller {
     return this.computeModeByPane;
   }
 
+  /** @emoji 🎛 Returns transform combobox value for one quad pane. */
+  getTransformWindowModeForPane(pane: CadPlayPaneId): CadPlayTransformWindowMode {
+    return this.transformModeByPane[pane];
+  }
+
+  /** @emoji 🎛 Active gumball mode for one quad pane (`null` when combobox is None). */
+  getTransformGumballModeForPane(pane: CadPlayPaneId): CadTransformGumballMode | null {
+    return cadTransformGumballModeFromWindowMode(this.transformModeByPane[pane]);
+  }
+
+  /** @emoji 🎛 Snapshot of transform combobox values for all quad panes. */
+  getTransformWindowModeByPane(): Readonly<Record<CadPlayPaneId, CadPlayTransformWindowMode>> {
+    return this.transformModeByPane;
+  }
+
   /** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
   setHostBridge(bridge: CadPlayHostBridge | null): void {
     this.hostBridge = bridge;
@@ -684,9 +689,17 @@ export class CadPlayShellController extends Controller {
         this.rebuildShellMode();
         break;
       }
+      case "setTransformModeForPane": {
+        const { pane, value } = args as { pane?: CadPlayPaneId; value?: string };
+        if (!pane || !CAD_PLAY_PANE_SPECS.some((row) => row.pane === pane)) break;
+        if (!value || !isCadPlayTransformWindowMode(value)) break;
+        if (this.transformModeByPane[pane] === value) break;
+        this.transformModeByPane = { ...this.transformModeByPane, [pane]: value };
+        this.rebuildShellMode();
+        break;
+      }
       case "focusModelDefinition":
       case "applyTransformation":
-      case "setTransformTool":
       case "saveSelected":
       case "saveInPlay":
       case "saveCurrent":
@@ -1370,6 +1383,7 @@ interface CadPlayModelSpaceValue {
   readonly history: DocumentHistory;
   readonly kernel: InteractionRuntimeOptions["kernel"];
   readonly computeModeForPane: (pane: CadPlayPaneId) => SpatialComputeMode;
+  readonly transformGumballModeForPane: (pane: CadPlayPaneId) => CadTransformGumballMode | null;
   readonly sessionRestartNonceForPane: (pane: CadPlayPaneId) => number;
   readonly rendererSelectionByModel: SpatialRendererSelectionByModel;
   readonly setRendererSelectionByModel: (value: SpatialRendererSelectionByModel) => void;
@@ -1402,8 +1416,6 @@ interface CadPlayModelSpaceValue {
   readonly handleLoadRaw: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   readonly liveModel: Model;
   readonly brepjsKernel: BrepjsKernel;
-  readonly transformGumballMode: CadTransformGumballMode | null;
-  readonly setTransformGumballMode: (value: CadTransformGumballMode | null) => void;
   readonly handleTransformGumballCommit: (modelDefinitionId: string, diff: ModelDiff) => void;
   readonly handleDeleteSelection: () => boolean;
 }
@@ -1426,6 +1438,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   );
   void shellGeneration;
   const computeModeForPane = reactHostPort.useCallback((pane: CadPlayPaneId) => shellController.getComputeModeForPane(pane), [shellController, shellGeneration]);
+  const transformGumballModeForPane = reactHostPort.useCallback((pane: CadPlayPaneId) => shellController.getTransformGumballModeForPane(pane), [shellController, shellGeneration]);
   const publishCadPlayChrome = useCadPlayChromePublish();
   const pointerFocusRef = reactHostPort.useRef<AppPointerFocusStore<string> | null>(null);
   if (!pointerFocusRef.current) {
@@ -1445,7 +1458,6 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const [rendererSelectionByModel, setRendererSelectionByModel] = reactHostPort.useState<SpatialRendererSelectionByModel>({});
   const [interactionSelectionByState, setInteractionSelectionByState] = reactHostPort.useState<SpatialInteractionSelectionByState>({});
   const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
-  const [transformGumballMode, setTransformGumballMode] = reactHostPort.useState<CadTransformGumballMode | null>(null);
   const [snapshotByPane, setSnapshotByPane] = reactHostPort.useState(emptySnapshotByPane);
   const engagementSpecRefByPane = reactHostPort.useRef<Partial<Record<CadPlayPaneId, EngagementSpec | null>>>({});
   const [fileStatus, setFileStatus] = reactHostPort.useState<string>("");
@@ -1754,7 +1766,6 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       getToolbarState: () => ({
         activeModelDefinitionId,
         selectionCount: selectionInScope.length,
-        transformTool: transformGumballMode,
         transfersTo: listTransformationsFromModelDefinition(activeModelDefinitionId),
         transfersFrom: listTransformationsIntoModelDefinition(activeModelDefinitionId),
       }),
@@ -1789,15 +1800,6 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
           case "deleteSelection":
             handleDeleteSelection();
             break;
-          case "setTransformTool": {
-            const { tool, pressed } = args as { tool?: CadTransformGumballMode; pressed?: boolean };
-            if (!tool) break;
-            setTransformGumballMode((prev) => {
-              if (pressed === false || prev === tool) return null;
-              return tool;
-            });
-            break;
-          }
           case "engagementOption": {
             const pane = (args as { pane?: CadPlayPaneId })?.pane;
             const optionId = (args as { optionId?: string })?.optionId;
@@ -1843,7 +1845,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     };
     shellController.setHostBridge(bridge);
     return () => shellController.setHostBridge(null);
-  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleDeleteSelection, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController, transformGumballMode]);
+  }, [activeModelDefinitionId, focusModelDefinition, handleApplyTransformation, handleDeleteSelection, handleLoadRawRequest, handleSaveCurrent, handleSaveInPlay, handleSaveSelected, selectionInScope, shellController]);
 
   const handleLoadRaw = reactHostPort.useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1897,6 +1899,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       history,
       kernel,
       computeModeForPane,
+      transformGumballModeForPane,
       sessionRestartNonceForPane: (pane) => interactionBootIdByPane[pane],
       rendererSelectionByModel,
       setRendererSelectionByModel,
@@ -1929,8 +1932,6 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       handleLoadRaw,
       liveModel,
       brepjsKernel,
-      transformGumballMode,
-      setTransformGumballMode,
       handleTransformGumballCommit,
       handleDeleteSelection,
     }),
@@ -1960,6 +1961,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       kernel,
       liveModel,
       computeModeForPane,
+      transformGumballModeForPane,
       modelDefinitionRevision,
       pickGeometry,
       playModelSpace,
@@ -1972,7 +1974,6 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       specForPane,
       viewObjectCount,
       brepjsKernel,
-      transformGumballMode,
       handleTransformGumballCommit,
       handleDeleteSelection,
     ],
@@ -2059,7 +2060,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     hoveredPickKey,
     onCanvasHoverTarget,
     onHoveredPickKeyChange,
-    transformGumballMode,
+    transformGumballModeForPane,
     handleTransformGumballCommit,
     handleDeleteSelection,
   } = useCadPlayModelSpace();
@@ -2096,6 +2097,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
   }
 
   const mode = computeModeForPane(pane);
+  const transformGumballMode = transformGumballModeForPane(pane);
   const autoFitMeshes = pane !== "shape";
 
   return (
@@ -2275,25 +2277,22 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("CadPlayShellController transform tools", () => {
-    it("forwards setTransformTool to the host bridge", () => {
+  describe("CadPlayShellController transform window measure", () => {
+    it("stores independent transform combobox values per quad pane", () => {
       const runtime = new Platform();
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
-      const calls: { command: string; args?: unknown }[] = [];
-      controller.setHostBridge({
-        getToolbarState: () => ({
-          activeModelDefinitionId: defaultModelDefinitionId(),
-          selectionCount: 0,
-          transformTool: null,
-          transfersTo: [],
-          transfersFrom: [],
-        }),
-        runHostCommand: (command, args) => calls.push({ command, args }),
-      });
-      controller.run("setTransformTool", { tool: "move", pressed: true });
-      expect(calls).toEqual([{ command: "setTransformTool", args: { tool: "move", pressed: true } }]);
+      expect(controller.getTransformWindowModeForPane("shape")).toBe("none");
+      expect(controller.getTransformGumballModeForPane("shape")).toBeNull();
+      controller.run("setTransformModeForPane", { pane: "energy", value: "rotate" });
+      expect(controller.getTransformWindowModeForPane("energy")).toBe("rotate");
+      expect(controller.getTransformGumballModeForPane("energy")).toBe("rotate");
+      expect(controller.getTransformWindowModeForPane("shape")).toBe("none");
+      const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_ENERGY_WINDOW_ID);
+      expect(energyWindow?.measures[1]).toMatchObject({ kind: "select", id: "energy-transform", value: "rotate", label: "Transform" });
     });
+  });
 
+  describe("CadPlayShellController delete selection", () => {
     it("forwards deleteSelection to the host bridge", () => {
       const runtime = new Platform();
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
@@ -2302,7 +2301,6 @@ if (import.meta.vitest) {
         getToolbarState: () => ({
           activeModelDefinitionId: defaultModelDefinitionId(),
           selectionCount: 1,
-          transformTool: null,
           transfersTo: [],
           transfersFrom: [],
         }),
@@ -2417,7 +2415,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
-        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transformTool: null, transfersTo: [], transfersFrom: [] }),
+        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transfersTo: [], transfersFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
       controller.setPaneEngagement("shape", { options: [{ id: "confirm", label: "Confirm" }] });
@@ -2453,7 +2451,7 @@ if (import.meta.vitest) {
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
       const calls: { command: string; args?: unknown }[] = [];
       controller.setHostBridge({
-        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transformTool: null, transfersTo: [], transfersFrom: [] }),
+        getToolbarState: () => ({ activeModelDefinitionId: defaultModelDefinitionId(), selectionCount: 0, transfersTo: [], transfersFrom: [] }),
         runHostCommand: (command, args) => calls.push({ command, args }),
       });
       const app = buildCadPlayAppRuntime(controller);
@@ -2477,12 +2475,11 @@ if (import.meta.vitest) {
   });
 
   describe("buildCadPlayToolbarTools", () => {
-    it("registers view, save, transform, and transfer categories", () => {
+    it("registers view, save, and transfer categories", () => {
       const tools = buildCadPlayToolbarTools(
         {
           activeModelDefinitionId: defaultModelDefinitionId(),
           selectionCount: 0,
-          transformTool: "move",
           transfersTo: [],
           transfersFrom: [],
         },
@@ -2491,9 +2488,7 @@ if (import.meta.vitest) {
       expect(tools.view?.length).toBeGreaterThan(0);
       expect(tools.save?.map((row) => row.id)).toEqual(["cad.play.save.selected", "cad.play.save.modelspace", "cad.play.save.current", "cad.play.save.load"]);
       expect(tools.save?.[0]?.disabled).toBe(true);
-      expect(tools.transform?.map((row) => row.id)).toEqual(["cad.play.transform.move", "cad.play.transform.rotate", "cad.play.transform.scale"]);
-      expect(tools.transform?.[0]?.pressed).toBe(true);
-      expect(tools.transform?.[1]?.pressed).toBe(false);
+      expect(tools.transform).toBeUndefined();
     });
   });
 

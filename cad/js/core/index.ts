@@ -3408,6 +3408,25 @@ export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
   applyEntityDiff(model.faces as Record<string, FaceRecord>, diff.faces, fInv);
   applyEntityDiff(model.shells as Record<string, ShellRecord>, diff.shells, sInv);
   applyEntityDiff(model.solids as Record<string, SolidRecord>, diff.solids, cInv);
+  const movedVertexIds = diff.vertices?.modified?.map((row) => row.id) ?? [];
+  let nurbsEdgeSyncApplied = false;
+  if (movedVertexIds.length > 0) {
+    const nurbsSync = modelDiffSyncNurbsThroughEdgesForMovedVertices(model, movedVertexIds);
+    if (!isEmptyModelDiff(nurbsSync)) {
+      const eInvSync: EntityDiff<EdgeRecord, EdgeRecordDiff, EdgeRef> = {};
+      applyEntityDiff(model.edges as Record<string, EdgeRecord>, nurbsSync.edges, eInvSync);
+      if (!isEntityDiffEmpty(eInvSync)) {
+        nurbsEdgeSyncApplied = true;
+        inv.edges = inv.edges
+          ? {
+              added: [...(inv.edges.added ?? []), ...(eInvSync.added ?? [])],
+              modified: [...(inv.edges.modified ?? []), ...(eInvSync.modified ?? [])],
+              removed: [...(inv.edges.removed ?? []), ...(eInvSync.removed ?? [])],
+            }
+          : eInvSync;
+      }
+    }
+  }
   if (!isEntityDiffEmpty(aInv)) inv.anchors = aInv;
   if (!isEntityDiffEmpty(vInv)) inv.vertices = vInv;
   if (!isEntityDiffEmpty(eInv)) inv.edges = eInv;
@@ -3415,7 +3434,7 @@ export function applyModelDiff(model: Model, diff: ModelDiff): ModelDiff {
   if (!isEntityDiffEmpty(fInv)) inv.faces = fInv;
   if (!isEntityDiffEmpty(sInv)) inv.shells = sInv;
   if (!isEntityDiffEmpty(cInv)) inv.solids = cInv;
-  if (!isEmptyModelDiff(diff)) model.bump();
+  if (!isEmptyModelDiff(diff) || nurbsEdgeSyncApplied) model.bump();
   return inv;
 }
 
@@ -3772,6 +3791,7 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
         const field = String(params.field ?? "points");
         const key = params.key != null ? String(params.key) : null;
         const point = vec3Param(params, "point");
+        const snap = interactionPointSnapFromEvent(params.__event as InteractionEvent | undefined);
         const cur = ctx[field];
         if (key) {
           const base = cur && typeof cur === "object" && !Array.isArray(cur) ? { ...(cur as Record<string, unknown>) } : {};
@@ -3782,7 +3802,13 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
         }
         const arr = Array.isArray(cur) ? [...(cur as Vec3[])] : [];
         arr.push(point);
-        return { diff: EMPTY_MODEL_DIFF, patch: { set: { [field]: arr } } };
+        const patch: Record<string, unknown> = { [field]: arr };
+        if (field === "points") {
+          const snaps = Array.isArray(ctx.pointSnaps) ? [...(ctx.pointSnaps as (InteractionPointSnap | null)[])] : [];
+          snaps.push(snap);
+          patch.pointSnaps = snaps;
+        }
+        return { diff: EMPTY_MODEL_DIFF, patch: { set: patch } };
       },
     },
     {
@@ -3859,10 +3885,10 @@ function modelDefinitionActionCapabilityDefs(): readonly ActionDef[] {
       id: "command.finish",
       run: async (params, ctx) => {
         const commandId = String(params.commandId ?? "");
-        const bag: Record<string, unknown> = { ...((params.__context as Record<string, unknown>) ?? {}) };
+        const bag: Record<string, unknown> = { ...withResolvedInteractionPointsContext(ctx.model, (params.__context as Record<string, unknown>) ?? {}) };
         const points = bag.points;
         if (points && typeof points === "object" && !Array.isArray(points)) Object.assign(bag, points as Record<string, unknown>);
-        for (const k of ["commandId", "resultKind", "__context", "__event"]) delete bag[k];
+        for (const k of ["commandId", "resultKind", "__context", "__event", "pointSnaps"]) delete bag[k];
         if (!ctx.kernel.executeCommandDiff) return { diff: EMPTY_MODEL_DIFF, data: params.resultKind ?? null };
         const { diff } = await ctx.kernel.executeCommandDiff(commandId, { ...bag, model: ctx.model });
         return { diff: diff ?? EMPTY_MODEL_DIFF, data: params.resultKind ?? null };
@@ -4161,8 +4187,32 @@ export function selectionTargetsCenter(model: Model, targets: readonly Selection
   return [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2];
 }
 
-/** @emoji 🎛 CAD play gumball modes (toolbar move / rotate / scale). */
+/** @emoji 🎛 CAD play gumball modes (move / rotate / scale). */
 export type CadTransformGumballMode = "move" | "rotate" | "scale";
+
+/** @emoji 🪟 Per-window transform combobox value (`none` disables the gumball). */
+export type CadPlayTransformWindowMode = "none" | CadTransformGumballMode;
+
+/** @emoji 🪟 Ordered transform combobox entries for CAD play window measures. */
+export const CAD_PLAY_TRANSFORM_WINDOW_MODES: readonly CadPlayTransformWindowMode[] = ["none", "move", "rotate", "scale"];
+
+/** @emoji 🪟 Type guard for CAD play transform window measure values. */
+export function isCadPlayTransformWindowMode(value: string): value is CadPlayTransformWindowMode {
+  return (CAD_PLAY_TRANSFORM_WINDOW_MODES as readonly string[]).includes(value);
+}
+
+/** @emoji 🪟 Maps window combobox value to active gumball mode or `null` when disabled. */
+export function cadTransformGumballModeFromWindowMode(mode: CadPlayTransformWindowMode): CadTransformGumballMode | null {
+  return mode === "none" ? null : mode;
+}
+
+/** @emoji 🪟 Human label for a CAD play transform window measure item. */
+export function cadPlayTransformWindowModeLabel(mode: CadPlayTransformWindowMode): string {
+  if (mode === "none") return "None";
+  if (mode === "move") return "Move";
+  if (mode === "rotate") return "Rotate";
+  return "Scale";
+}
 
 /** @emoji ✋ True when `targets` resolve to at least one model vertex. */
 export function selectionTargetsHaveTransformableVertices(model: Model, targets: readonly SelectionTarget[]): boolean {
@@ -4188,6 +4238,90 @@ function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionT
   }
   return modified.length ? { vertices: { modified } } : EMPTY_MODEL_DIFF;
 }
+
+// #region 📍InteractionPointBinding
+/** @emoji 📍 Optional geometry snap stored beside a committed interaction point. */
+export type InteractionPointSnap = { readonly kind: string; readonly id: string };
+
+/** @emoji 📍 Reads parallel `pointSnaps` rows aligned with `context.points`. */
+export function readInteractionPointSnaps(context: Record<string, unknown>): readonly (InteractionPointSnap | null)[] {
+  const raw = context.pointSnaps;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((row) => {
+    if (!row || typeof row !== "object") return null;
+    const kind = (row as { kind?: unknown }).kind;
+    const id = (row as { id?: unknown }).id;
+    return typeof kind === "string" && typeof id === "string" ? { kind, id } : null;
+  });
+}
+
+function interactionPointSnapFromEvent(event: InteractionEvent | undefined): InteractionPointSnap | null {
+  if (!event || typeof event !== "object") return null;
+  const snap = (event as { snap?: { kind?: unknown; id?: unknown } }).snap;
+  if (!snap || typeof snap.kind !== "string" || typeof snap.id !== "string") return null;
+  return { kind: snap.kind, id: snap.id };
+}
+
+function vec3Eq(a: Vec3, b: Vec3): boolean {
+  return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+}
+
+/** @emoji 📍 Replaces interaction points bound to moved vertices with live model positions. */
+export function resolveLiveInteractionPoints(
+  model: Model,
+  points: readonly Vec3[],
+  snaps: readonly (InteractionPointSnap | null)[],
+): readonly Vec3[] {
+  if (!snaps.length) return points;
+  return points.map((point, index) => {
+    const snap = snaps[index];
+    if (!snap || snap.kind !== "vertex") return point;
+    const live = model.vertices[snap.id as VertexRef]?.position;
+    return live ?? point;
+  });
+}
+
+/** @emoji 📍 Shallow context copy with `points` resolved from bound vertex snaps. */
+export function withResolvedInteractionPointsContext(model: Model, context: Record<string, unknown>): Record<string, unknown> {
+  const points = context.points;
+  if (!Array.isArray(points)) return context;
+  const snaps = readInteractionPointSnaps(context);
+  if (!snaps.some((row) => row?.kind === "vertex")) return context;
+  const resolved = resolveLiveInteractionPoints(model, points as Vec3[], snaps);
+  if (resolved.every((point, index) => vec3Eq(point, points[index] as Vec3))) return context;
+  return { ...context, points: [...resolved] };
+}
+
+function modelDiffSyncNurbsThroughEdgesForMovedVertices(model: Model, movedVertexIds: readonly VertexRef[]): ModelDiff {
+  const moved = new Set(movedVertexIds.map(String));
+  const edgeMods: EdgeRecordDiff[] = [];
+  for (const edge of Object.values(model.edges)) {
+    const curve = edge.curve;
+    if (curve?.kind !== "nurbs" || !curve.through || curve.poles.length < 2) continue;
+    const startId = String(edge.vertexIds[0] ?? "");
+    const endId = String(edge.vertexIds[1] ?? edge.vertexIds[0] ?? "");
+    let poles: Vec3[] | null = null;
+    if (startId && moved.has(startId)) {
+      const position = model.vertices[startId as VertexRef]?.position;
+      if (position) {
+        poles = [...curve.poles];
+        poles[0] = [position[0], position[1], position[2]];
+      }
+    }
+    if (endId && moved.has(endId)) {
+      const position = model.vertices[endId as VertexRef]?.position;
+      if (position) {
+        poles = poles ? [...poles] : [...curve.poles];
+        poles[poles.length - 1] = [position[0], position[1], position[2]];
+      }
+    }
+    if (!poles) continue;
+    if (poles.every((point, index) => vec3Eq(point, curve.poles[index]!))) continue;
+    edgeMods.push({ id: edge.id, curve: { ...curve, poles } });
+  }
+  return edgeMods.length ? { edges: { modified: edgeMods } } : EMPTY_MODEL_DIFF;
+}
+// #endregion 📍InteractionPointBinding
 
 function selectionTargetKey(target: SelectionTarget): string {
   return `${target.kind}:${target.id}`;
@@ -5010,8 +5144,9 @@ export function resolveDisplay(
   state: string,
   context: Record<string, unknown>,
   preview: SpatialPreviewKernel,
+  model?: Model,
 ): DisplayModel {
-  const env: ExprEnv = { context, preview };
+  const env: ExprEnv = { context: model ? withResolvedInteractionPointsContext(model, context) : context, preview };
   const section = spec.display?.states?.find((s) => s.state === state);
   const raw = section?.items ?? [];
   const items: DisplayItem[] = [];
@@ -5670,7 +5805,7 @@ export class InteractionRuntime {
     if (this.snapshotCache) return this.snapshotCache;
     const ctx = this.sm.getContext();
     const st = this.sm.getState();
-    const display = resolveDisplay(this.spec, st, ctx, this.previewKernel());
+    const display = resolveDisplay(this.spec, st, ctx, this.previewKernel(), this.opts.document.model);
     const spatialInteraction = mergeInteractionSpatial(this.spec);
     const flushed = this.pendingSnapshotInfos.splice(0, this.pendingSnapshotInfos.length);
     const infoDiags: Diagnostic[] = flushed.map((m) => ({ severity: "info" as const, code: m.code, message: m.message }));
@@ -6273,6 +6408,15 @@ if (import.meta.vitest) {
   });
 
   describe("@cad/js/core transformations", () => {
+    it("maps CAD play transform window combobox values to gumball modes", () => {
+      expect(cadTransformGumballModeFromWindowMode("none")).toBeNull();
+      expect(cadTransformGumballModeFromWindowMode("rotate")).toBe("rotate");
+      expect(isCadPlayTransformWindowMode("scale")).toBe(true);
+      expect(isCadPlayTransformWindowMode("nope")).toBe(false);
+      expect(cadPlayTransformWindowModeLabel("none")).toBe("None");
+      expect(cadPlayTransformWindowModeLabel("move")).toBe("Move");
+    });
+
     it("lists model definition manifests and transformation directions", () => {
       const manifests = listModelDefinitionManifests();
       expect(manifests.some((row) => row.id === "spatial.shape")).toBe(true);
@@ -7001,6 +7145,55 @@ if (import.meta.vitest) {
       expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(1);
       expect(model.objects[typology as ObjectRef]?.typology).toBe(typology);
       expect(model.objects[typology as ObjectRef]?.primitives.wire).toBeTruthy();
+    });
+
+    it("curve.interpolateCurve commit uses live snapped vertex positions after vertex move", async () => {
+      const spec = loadSpatialInteraction("curve.interpolateCurve")!;
+      const model = new Model();
+      const vertexId = "v-live" as VertexRef;
+      model.vertices[vertexId] = { id: vertexId, position: [0, 0, 0] };
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const rt = createInteractionRuntime(spec, {
+        kernel,
+        document: { model, nodes: [] },
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      await rt.send({
+        kind: "pointer.down",
+        point: [0, 0, 0],
+        modifiers: {},
+        snap: { kind: "vertex", id: vertexId, point: [0, 0, 0] },
+      } as InteractionEvent);
+      await rt.send({ kind: "pointer.down", point: [2, 0, 0], modifiers: {} });
+      model.vertices[vertexId] = { id: vertexId, position: [0, 4, 0] };
+      await rt.send({ kind: "confirm", modifiers: {} });
+      const edge = Object.values(model.edges)[0];
+      expect(edge?.curve?.kind).toBe("nurbs");
+      if (edge?.curve?.kind === "nurbs") {
+        expect(edge.curve.poles[0]).toEqual([0, 4, 0]);
+      }
+    });
+
+    it("applyModelDiff syncs nurbs through-curve poles when endpoint vertices move", async () => {
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const created = await kernel.executeCommandDiff("curve.interpolateCurve", {
+        model,
+        points: [
+          [0, 0, 0],
+          [2, 1, 0],
+          [4, 0, 0],
+        ],
+      });
+      applyModelDiff(model, created.diff);
+      const edge = Object.values(model.edges)[0]!;
+      const startId = edge.vertexIds[0]!;
+      applyModelDiff(model, { vertices: { modified: [{ id: startId, position: [0, 3, 0] }] } });
+      const updated = model.edges[edge.id]!;
+      expect(updated.curve?.kind).toBe("nurbs");
+      if (updated.curve?.kind === "nurbs") {
+        expect(updated.curve.poles[0]).toEqual([0, 3, 0]);
+      }
     });
 
     it("primitive.box commit binds typology object rows for hierarchy", async () => {
