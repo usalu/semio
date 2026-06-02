@@ -7245,6 +7245,51 @@ if (import.meta.vitest) {
       }
     });
 
+    it("selectionTargetsPointTransformDiff moves all nurbs poles when an edge is selected", async () => {
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const created = await kernel.executeCommandDiff("curve.controlPointCurve", {
+        model,
+        points: [
+          [0, 0, 0],
+          [1, 2, 0],
+          [3, 0, 0],
+        ],
+      });
+      applyModelDiff(model, created.diff);
+      const edge = Object.values(model.edges)[0]!;
+      const before = edge.curve?.kind === "nurbs" ? edge.curve.poles.map((pole) => [...pole] as Vec3) : [];
+      applyModelDiff(model, selectionTargetsPointTransformDiff(model, [{ kind: "edge", id: edge.id }], (point) => [point[0] + 1, point[1], point[2]]));
+      const updated = model.edges[edge.id]!;
+      expect(updated.curve?.kind).toBe("nurbs");
+      if (updated.curve?.kind === "nurbs") {
+        expect(updated.curve.poles).toEqual(before.map((pole) => [pole[0] + 1, pole[1], pole[2]]));
+      }
+    });
+
+    it("selectionTargetsPointTransformDiff leaves interior poles when only a vertex is selected", async () => {
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const created = await kernel.executeCommandDiff("curve.controlPointCurve", {
+        model,
+        points: [
+          [0, 0, 0],
+          [1, 2, 0],
+          [3, 0, 0],
+        ],
+      });
+      applyModelDiff(model, created.diff);
+      const edge = Object.values(model.edges)[0]!;
+      const midPole = edge.curve?.kind === "nurbs" ? [...edge.curve.poles[1]!] : null;
+      const startId = edge.vertexIds[0]!;
+      applyModelDiff(model, selectionTargetsPointTransformDiff(model, [{ kind: "vertex", id: startId }], (point) => [point[0], point[1] + 5, point[2]]));
+      const updated = model.edges[edge.id]!;
+      expect(updated.curve?.kind).toBe("nurbs");
+      if (updated.curve?.kind === "nurbs" && midPole) {
+        expect(updated.curve.poles[1]).toEqual(midPole);
+      }
+    });
+
     it("primitive.box commit binds typology object rows for hierarchy", async () => {
       const typology = "spatial.shape.primitive.box";
       const spec = loadSpatialInteraction("primitive.box")!;

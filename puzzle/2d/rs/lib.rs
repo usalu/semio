@@ -3822,24 +3822,57 @@ mod board_host {
             (self.brush_node_size * 0.5).max(1.0)
         }
 
+        /// @emoji 🖌️ Brush slot anchor follows indirect-handle layout at overview/normal LOD so hit targets match painted rings.
+        fn brush_handle_anchor_world(&self, h: &HandleData) -> Option<Point> {
+            if matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
+                self.indirect_handle_world_pos(h).or_else(|| self.handle_world_pos(h))
+            } else {
+                self.handle_world_pos(h)
+            }
+        }
+
         fn brush_slot_center_world(&self, h: &HandleData) -> Option<Point> {
             let n = self.nodes.get(&h.node_id)?;
-            let hw = self.handle_world_pos(h)?;
+            let hw = self.brush_handle_anchor_world(h)?;
             let nc = Point::new(n.x, n.y);
             let normal = crate::vcompute::normalize_or_zero(hw - nc);
             Some(hw + normal * self.brush_flush_distance)
         }
 
+        /// @emoji 🖌️ World distance from pointer to brush slot when the pointer is on the slot, anchor, or sole-free node body.
+        fn brush_slot_pointer_hit_distance(&self, world: Point, handle_id: &str, h: &HandleData) -> Option<f64> {
+            let slot_center = self.brush_slot_center_world(h)?;
+            let zoom = self.camera.zoom.max(1e-9);
+            let slot_hit_r = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.brush_slot_hit_radius_world();
+            let d_slot = distance_between(world, slot_center);
+            if d_slot <= slot_hit_r {
+                return Some(d_slot);
+            }
+            let anchor = self.brush_handle_anchor_world(h)?;
+            let anchor_hit_r = (HANDLE_HIT_TOLERANCE_PX / zoom)
+                + self.indirect_handle_marker_radius_world(h).max(self.effective_handle_radius(h));
+            if distance_between(world, anchor) <= anchor_hit_r {
+                return Some(d_slot);
+            }
+            if self.sole_eligible_indirect_handle_on_node(&h.node_id).as_deref() == Some(handle_id) {
+                let n = self.nodes.get(&h.node_id)?;
+                if self.point_in_node_world(n, world) {
+                    return Some(d_slot);
+                }
+            }
+            None
+        }
+
         fn brush_nearest_slot_source(&self, world: Point) -> Option<String> {
-            let hit_r = self.brush_slot_hit_radius_world();
             let mut best: Option<(f64, String)> = None;
             for (hid, h) in &self.handles {
                 if !self.handle_effectively_visible(hid.as_str()) || self.handle_has_incident_edge(hid.as_str()) {
                     continue;
                 }
-                let center = self.brush_slot_center_world(h)?;
-                let d = distance_between(world, center);
-                if d <= hit_r && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+                let Some(d) = self.brush_slot_pointer_hit_distance(world, hid.as_str(), h) else {
+                    continue;
+                };
+                if best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
                     best = Some((d, hid.clone()));
                 }
             }
@@ -5981,7 +6014,7 @@ mod board_host {
             }
         }
 
-        fn append_indirect_handle_ring(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, node_id: &str, chrome_pass: StyleChromePass) {
+        fn append_indirect_handle_ring(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, node_id: &str, chrome_pass: StyleChromePass, world_space: bool) {
             for h in self.handles.values() {
                 if h.node_id != node_id || !self.handle_effectively_visible(h.id.as_str()) {
                     continue;
@@ -5999,7 +6032,7 @@ mod board_host {
                 let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
                 let stroke_px = 2.0_f64;
                 let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { Some((self.vello_theme.indirect_handle_fill, self.vello_theme.indirect_handle_stroke, stroke_px)) } else { None };
-                self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, false);
+                self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, world_space);
             }
         }
 
@@ -6039,7 +6072,6 @@ mod board_host {
             let draw_handles = matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_handle_icons = lod == BoardDrawLod::Micro;
-            let indirect_ring_node_id = self.indirect_ring_node_id(lod);
             let link_source = self.active_link_source_handle_id().map(str::to_string);
             let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
             for n in self.nodes.values() {
@@ -6162,11 +6194,6 @@ mod board_host {
                 let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
                 self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space);
             }
-            if let Some(node_id) = indirect_ring_node_id {
-                if only_ids.is_none() {
-                    self.append_indirect_handle_ring(scene, tile_filter, &node_id, chrome_pass);
-                }
-            }
         }
 
         fn append_edges_wires_and_link(
@@ -6280,6 +6307,9 @@ mod board_host {
                 let p3 = self.draw_space_point(c.p3, false);
                 let curve = CubicBez::new(p0, p1, p2, p3);
                 scene.stroke(&link_wire_stroke, Affine::IDENTITY, link_wire_color, None, &curve);
+            }
+            if let Some(node_id) = self.indirect_ring_node_id(lod) {
+                self.append_indirect_handle_ring(scene, None, &node_id, StyleChromePass::CachedBase, false);
             }
             if self.active_tool == ActiveTool::Brush {
                 self.append_brush_preview_paint(scene, lod);
@@ -9651,6 +9681,25 @@ mod host_tests {
     }
 
     #[test]
+    fn board_host_indirect_ring_paints_without_rebuilding_world_cache() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 1.0);
+        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.sync_descriptor(&link_test_scene_node_a_two_free_handles()).unwrap();
+        let gen = h.test_content_scene_generation();
+        let neutral_hint = h.encoded_scene_hint();
+        h.set_selection_ids_silent(&["a".into()]);
+        assert_eq!(h.test_content_scene_generation(), gen);
+        let ha0 = h.handles.get("a:h0").unwrap();
+        let ring = h.indirect_handle_world_pos(ha0).unwrap();
+        assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("a:h0"));
+        assert!(h.encoded_scene_hint() > neutral_hint, "indirect ring must paint in the live overlay, not only in stale cached geometry");
+        h.set_selection_ids_silent(&[]);
+        assert_eq!(h.encoded_scene_hint(), neutral_hint);
+    }
+
+    #[test]
     fn board_host_link_drag_emits_compatible_nodes_and_target_ring_events() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -9978,6 +10027,73 @@ mod host_tests {
         assert!(ev2.contains("brushPlace"), "expected brushPlace on leave, got: {ev2}");
         assert!(ev2.contains("brush.kind"));
         assert!(ev2.contains("a:h0"));
+    }
+
+    #[test]
+    fn board_host_brush_slot_accepts_pointer_on_node_body_at_overview_lod() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        set_overview_lod(&mut h);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [{ "handleKind": "child", "angle": 3.141592653589793 }]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let _ = h.drain_events_json();
+        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_move_screen(inside.x, inside.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushPreview"), "expected brushPreview when hovering node body at overview LOD, got: {ev}");
+        assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
+    }
+
+    #[test]
+    fn board_host_brush_slot_accepts_pointer_on_indirect_ring_anchor() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [{ "handleKind": "child", "angle": 3.141592653589793 }]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_node_a_two_free_handles()).unwrap();
+        let _ = h.drain_events_json();
+        h.set_selection_ids(&["a".into()]);
+        let ha0 = h.handles.get("a:h0").unwrap();
+        let ring = h.indirect_handle_world_pos(ha0).unwrap();
+        let s = h.world_to_screen(ring);
+        h.pointer_move_screen(s.x, s.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushPreview"), "expected brushPreview on indirect ring anchor, got: {ev}");
     }
 }
 

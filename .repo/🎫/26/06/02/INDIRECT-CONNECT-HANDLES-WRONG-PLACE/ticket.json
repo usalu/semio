@@ -1,0 +1,11 @@
+{
+  "title": "Indirect Connect Handles Wrong Place",
+  "emoji": "🧭",
+  "status": "closed",
+  "description": "Indirect connect handle markers appear at incorrect positions in puzzle2d. Fix coordinate space mismatch between cached world-space tiles and indirect ring drawing.",
+  "summary": "Indirect-connect ghost rings were drawn inside the world-space content cache with screen-space coordinates (then camera-transformed again), and the cache does not rebuild on selection or link-drag moves — so rings appeared offset or on the wrong target. Fixed by passing world_space through append_indirect_handle_ring when embedded in cached geometry, and by painting the ring each frame in a screen-space overlay in append_cached_world_content (same path as the live link wire). Added board_host_indirect_ring_paints_without_rebuilding_world_cache regression test.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪356fde7c05aa4bb3b3d27e14c1978cdf"
+  ]
+}
