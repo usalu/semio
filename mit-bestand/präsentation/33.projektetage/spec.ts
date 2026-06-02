@@ -330,6 +330,8 @@ export const mediaEmbodiments: Embodiment[] = [
 		id: CATALOGUE_EMBODIMENT_FULL,
 		src: ASSET_CATALOGUE,
 		alt: "Komponentenkatalog",
+		crop: { x: 0, y: 0, width: 1, height: 1 },
+		fit: "fill",
 	},
 	{
 		kind: "figure",

@@ -221,9 +221,12 @@ describe("micro-commit", () => {
     writeMicroCommitTemplates(root, msg);
     resetMicroCommitTemplates(root);
     const tpl = spawnSync("git", ["config", "--local", "--get", "commit.template"], { cwd: root, encoding: "utf8" });
-    expect(tpl.status).not.toBe(0);
+    expect(tpl.status).toBe(0);
+    expect(tpl.stdout?.trim()).toContain("gkcommittemplate-cleared.txt");
     const legacy = readFileSync(join(root, ".git/gkcommittemplate.txt"), "utf8");
+    const cleared = readFileSync(join(root, ".git/gkcommittemplate-cleared.txt"), "utf8");
     expect(legacy).toBe("");
+    expect(cleared).toBe("");
     expect(existsSync(join(root, ".git/semio-micro-commit-active"))).toBe(false);
   });
 

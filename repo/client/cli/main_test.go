@@ -16293,7 +16293,7 @@ func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
 	if !strings.Contains(output, "micro-commit hooks installed") {
 		t.Fatalf("expected micro-commit hooks install message, got %q", output)
 	}
-	for _, hookName := range []string{"post-commit", "prepare-commit-msg"} {
+	for _, hookName := range []string{"pre-commit", "post-commit", "prepare-commit-msg"} {
 		hookPath := filepath.Join(hooksDir, hookName)
 		if st, err := os.Stat(hookPath); err != nil || st.IsDir() {
 			t.Fatalf("expected micro-commit hook at %s: %v", hookPath, err)

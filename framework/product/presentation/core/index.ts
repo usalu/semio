@@ -50,7 +50,12 @@ export interface TextEmbodiment {
 	readonly level: "title" | "heading" | "subheading" | "body";
 	readonly fit?: boolean;
 	readonly morphRoot?: TextMorphRoot;
+	/** @emoji 🔀 Prior lines keyed by index when visible lines shorten or relabel (e.g. full description → short). */
+	readonly morphFromLines?: readonly string[];
 }
+
+/** @emoji 🖼 How a figure region fills its disposition frame (default {@link FigureEmbodiment.fit} is cover). */
+export type FigureFit = "cover" | "fill";
 
 /** @emoji 🖼 Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
 export interface FigureEmbodiment {
@@ -59,6 +64,8 @@ export interface FigureEmbodiment {
 	readonly src: string;
 	readonly alt?: string;
 	readonly crop?: DispositionPosition;
+	/** @emoji 📐 `fill` stretches the crop into the frame (split grids); `cover` keeps uniform scale. */
+	readonly fit?: FigureFit;
 }
 
 /** @emoji 🎬 Video clip on a slide. */
@@ -370,6 +377,7 @@ export function tile(spec: TileSpec): FigureEmbodiment {
 		src: spec.source,
 		alt: spec.alt,
 		crop: spec.crop,
+		fit: "fill",
 	};
 }
 //#endregion 🔖Tile
@@ -1272,6 +1280,14 @@ const INTRO_ARRANGEMENT_BOOKMARK: Record<PresentationLanguageKind, Record<string
 	},
 };
 
+/** @emoji 🎬 Arrangement ids produced by the intro template (language-independent). */
+export const INTRO_ARRANGEMENT_IDS = new Set(Object.keys(INTRO_ARRANGEMENT_BOOKMARK.en)) as ReadonlySet<string>;
+
+/** @emoji 🎬 True when an arrangement belongs to the standard intro slide sequence. */
+export function isIntroArrangementId(arrangementId: string): boolean {
+	return INTRO_ARRANGEMENT_IDS.has(arrangementId);
+}
+
 function introBookmarkLanguage(language: PresentationLanguageKind | undefined): PresentationLanguageKind {
 	return language ?? "en";
 }
@@ -1322,6 +1338,7 @@ function introEmbodiments(spec: IntroSpec): Embodiment[] {
 			lines: [spec.description.short],
 			level: "heading",
 			morphRoot: "heading-block",
+			morphFromLines: spec.description.full,
 		},
 		{
 			kind: "text",
@@ -1803,6 +1820,11 @@ if (import.meta.vitest) {
 	});
 
 	describe("intro", () => {
+		it("recognizes intro arrangement ids regardless of bookmark language", () => {
+			expect(isIntroArrangementId("affiliations-3")).toBe(true);
+			expect(isIntroArrangementId("Lehrstühle")).toBe(false);
+		});
+
 		it("builds seven slides in one thought", () => {
 			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
 			expect(thought.slides.map((slide) => slide.arrangement.id)).toEqual([
@@ -1846,6 +1868,17 @@ if (import.meta.vitest) {
 					shortName: "LUH",
 				}),
 			).toBe("LUH");
+		});
+
+		it("records prior description lines on short embodiment for goal morph", () => {
+			const thought = sampleIntro.chapters[0]!.sequences[0]!.thoughts[0]!;
+			const goal = thought.slides.find((slide) => slide.arrangement.id === "goal")!.arrangement;
+			const description = resolveArrangement(thoughtScope(thought), goal).find(
+				(resolved) => resolved.participant.id === INTRO_PARTICIPANT_DESCRIPTION,
+			)!;
+			if (description.embodiment.kind === "text") {
+				expect(description.embodiment.morphFromLines).toEqual(["D1", "D2"]);
+			}
 		});
 
 		it("records prior affiliation labels for embodiment morph on chairs slide", () => {

@@ -1,68 +1,74 @@
 ---
 name: micro-commit
 description: >-
-  WIP micro-commits on semio dev branches. You analyze git diff --cached and write semantic
-  bullets; script builds counter, tickets, GitKraken template. Triggers g, go, c, commit,
-  +1, bump, gc, gp, @micro-commit.
+  Instant WIP micro-commit. Triggers g, go, c, commit, +1, bump — execute immediately, no reasoning.
+  Default level from micro-commit.json (prepare-only). Reply with commit message only.
 ---
 
 # Micro Commit
 
-**You must use the model** — read the real staged diff every time. Never invent bullets from chat memory or prior turns.
+## Rule (always)
 
-## Workflow (two shell steps, same turn)
+**Any trigger (`g`, `go`, `c`, `commit`, `+1`, `bump`, `@micro-commit`) = do it now.**
 
-### 1. Stage and read diff
+- **No** planning, preamble, recap, or postamble.
+- **No** visible reasoning, todos, or questions.
+- **No** describing what you are about to do.
+- **One** assistant turn: run the commands below, then reply with **only** the final `prepare` stdout (or stderr on failure).
+
+## Level (set once, then repeat)
+
+1. **First trigger in this chat** (or if the user named a mode): read `.repo/🧑‍💻/{alias}/micro-commit.json` → `level` (default `prepare-only`). Remember it for this conversation.
+2. **Every later trigger** (`g`, `go`, `c`, …): use **the same level** again. Do not re-read config or re-ask.
+3. **Override only** when the **current** user message contains `gc` / `commit!`, `gp` / `push!`, or `g.` / `prepare!` — pass that token on the `prepare` line.
+
+## Execute (every trigger, no variation)
+
+Run these **two** shell steps in the same turn (no text between them):
 
 ```bash
-bun ./script.ts micro-commit stage
-bun ./script.ts micro-commit diff
+bun ./script.ts micro-commit stage && bun ./script.ts micro-commit diff
 ```
 
-Read the **full** `diff` output. Bullets must describe **only** what that patch changes (presentation, puzzle, UI, etc.) — not meta-work on micro-commit unless that is all that is staged.
-
-### 2. Prepare with your bullets
+Read the diff **silently** (do not paste it to the user). Write 1–8 bullets: semantic, from **this** diff only — not chat memory.
 
 ```bash
-bun ./script.ts micro-commit prepare <<'EOF'
-- 🖼️ …precise summary from diff…
-- 🧩 …
+bun ./script.ts micro-commit prepare [gc|gp|g.] <<'EOF'
+- …
 EOF
 ```
 
-Script validates bullets against staged paths (rejects bullets that ignore real staged files). Then writes GitKraken template with a **new path per counter** (`gkcommittemplate-NNN.txt`).
+(`prepare` already runs `git add -A`; `stage` keeps the index explicit.)
 
-### 3. Reply to user
+## Your reply
 
-Paste **only** `prepare` stdout, with **newlines preserved** (one line each, **no blank lines**). No one-line mash-up.
+| Result | Reply |
+|--------|-------|
+| `prepare` exit 0 | **Only** stdout: full commit message, newlines preserved, **no blank lines** |
+| exit non-zero | **Only** stderr |
 
-Level overrides before `--`: `gc`, `gp`, `g.`
+## Bullets (you)
 
-## GitKraken
+- From **current** `diff` output only; precise; not path-only (`Update foo.ts` forbidden).
+- New tickets: script adds `- {emoji}{title}` from `ticket.json` — do not duplicate.
+- Format: `- {emoji} {summary}`
 
-- Line 1 = `…🚩NNN` (graph summary); following lines = timestamp, bullets, Signed-off-by (no empty lines between).
-- After `prepare`, if the message is stale: close the Commit panel and reopen, or click **WIP**, or check Preferences → Commit → template path matches stderr `GitKraken template: …/gkcommittemplate-NNN.txt`.
-- If the field is read-only: turn off *Apply this template to commit messages*.
+## Script (deterministic)
 
-`bun ./script.ts setup git` once per clone.
+Counter, timestamp line, templates, Signed-off-by, validation, GitKraken files.
 
-**After each commit** `post-commit` wipes everything (templates, bullets, `commit.template`, active flag). The next commit stays empty until you run `prepare` again with fresh bullets.
+After commit, hooks wipe templates and point GitKraken at an **empty** `gkcommittemplate-cleared.txt`. Run `g` / `prepare` again for the next change set.
 
-## Script vs you
+## GitKraken (do not mention unless commit fails)
 
-| Script | You |
-|--------|-----|
-| Counter, timestamp, `ticket.json` lines, templates, Signed-off-by | 1–8 semantic bullets from **current** diff |
-| `git add -A`, bullet validation | Emoji + precise wording |
-
-**Forbidden:** bullets without reading `micro-commit diff` in this turn; generic/path-only lines; editing counter/timestamp/Signed-off-by; codebase search; tickets MCP; goals.
-
-## Automation
-
-`.repo/🧑‍💻/{alias}/micro-commit.json` → `prepare-only` | `prepare-and-commit` | `prepare-and-commit-and-push`.
+Line 1 = `…🚩NNN`; rest = timestamp, bullets, Signed-off-by. Reopen Commit panel or **WIP** if stale.
 
 ## Branch
 
 Only `⛳wip` or `🏗️dev`.
+
+## Forbidden
+
+Reasoning in the open, codebase search, tickets MCP, goals, `gh pr create`, hand-editing counter/timestamp/Signed-off-by, inventing bullets without reading this turn's diff.
 
 Related: `.agents/skills/merging/SKILL.md`.

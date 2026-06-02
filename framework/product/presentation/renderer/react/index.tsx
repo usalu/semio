@@ -13,6 +13,7 @@ import type {
     DispositionStyle,
     Arrangement,
     FigureEmbodiment,
+    FigureFit,
     ParticipantEmphasis,
     Slide,
     PdfEmbodiment,
@@ -34,6 +35,7 @@ import {
     expandThoughtSlides,
     formatPresentationUrlHash,
     intro,
+    isIntroArrangementId,
     morphId,
     parsePresentationSlideHash,
     presentationLanguage,
@@ -565,9 +567,7 @@ export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSl
 	fromSlide.classList.add("presentation-arrangement--settled");
 	void fromSlide.offsetHeight;
 	void toSlide.offsetHeight;
-	for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-target-ghost")) {
-		void ghost.offsetHeight;
-	}
+	syncManyToOneGhostMorphFramesFromDom(fromSlide, toSlide);
 }
 
 type AutoAnimateMatcherHost = {
@@ -723,13 +723,15 @@ export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): s
 	const duration = `${durationSeconds}s`;
 	return `
 .reveal .slides section[data-auto-animate="pending"] .presentation-target-ghost[data-auto-animate-target],
-.reveal .slides section[data-auto-animate="pending"] .presentation-affiliation-morph-source[data-auto-animate-target] {
+.reveal .slides section[data-auto-animate="pending"] .presentation-affiliation-morph-source[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="pending"] .presentation-text-morph-source[data-auto-animate-target] {
 	opacity: 1 !important;
 	visibility: visible !important;
 	animation: none !important;
 }
 .reveal .slides section[data-auto-animate="running"] .presentation-target-ghost[data-auto-animate-target],
-.reveal .slides section[data-auto-animate="running"] .presentation-affiliation-morph-source[data-auto-animate-target] {
+.reveal .slides section[data-auto-animate="running"] .presentation-affiliation-morph-source[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-text-morph-source[data-auto-animate-target] {
 	visibility: visible !important;
 	animation: presentation-target-ghost-fade-out ${duration} ease forwards !important;
 }
@@ -962,6 +964,63 @@ function textMorphAnchorId(anchorId: string, lineIndex: number, lineCount: numbe
 	return lineCount === 1 ? anchorId : `${anchorId}--${lineIndex}`;
 }
 
+function textMorphLineIdCount(
+	visibleLineCount: number,
+	morphFromLines: readonly string[] | undefined,
+): number {
+	return Math.max(visibleLineCount, morphFromLines?.length ?? 0);
+}
+
+/** @emoji 🔀 Renders prior-line morph sources plus visible lines when an intro label shortens. */
+function renderTextMorphHeadingLines({
+	anchorId,
+	lines,
+	morphFromLines,
+	headingClass,
+	Tag,
+}: {
+	readonly anchorId: string;
+	readonly lines: readonly string[];
+	readonly morphFromLines: readonly string[] | undefined;
+	readonly headingClass: string;
+	readonly Tag: "h1" | "h2";
+}): ReactNode {
+	const idLineCount = textMorphLineIdCount(lines.length, morphFromLines);
+	const fromCount = morphFromLines?.length ?? 0;
+	const nodes: ReactNode[] = [];
+	for (let lineIndex = 0; lineIndex < Math.max(lines.length, fromCount); lineIndex += 1) {
+		const fromLine = morphFromLines?.[lineIndex];
+		const visibleLine = lines[lineIndex];
+		const lineId = textMorphAnchorId(anchorId, lineIndex, idLineCount);
+		if (fromLine !== undefined && fromLine !== visibleLine) {
+			nodes.push(
+				<Tag
+					key={`${lineId}-from`}
+					data-id={lineId}
+					className={[headingClass, "presentation-text-morph-source"].filter(Boolean).join(" ")}
+				>
+					{fromLine}
+				</Tag>,
+			);
+		}
+		if (visibleLine !== undefined) {
+			const relabelled = fromLine !== undefined && fromLine !== visibleLine;
+			nodes.push(
+				<Tag
+					key={relabelled ? `${lineId}-visible` : lineId}
+					{...(relabelled ? {} : { "data-id": lineId })}
+					className={[headingClass, relabelled ? "presentation-morph-target" : undefined]
+						.filter(Boolean)
+						.join(" ")}
+				>
+					{visibleLine}
+				</Tag>,
+			);
+		}
+	}
+	return nodes;
+}
+
 function TextMorphView({
 	morphId: anchorId,
 	embodiment,
@@ -974,6 +1033,7 @@ function TextMorphView({
 	const root = resolveTextMorphRoot(embodiment);
 	const centeredHeadingClass = centeredLineClass(anchorId, embodiment, emphasis);
 	const lineCount = embodiment.lines.length;
+	const morphFromLines = embodiment.morphFromLines;
 
 	switch (root) {
 		case "title":
@@ -998,6 +1058,19 @@ function TextMorphView({
 			);
 		case "heading-line":
 		case "subheading-line":
+			if (morphFromLines !== undefined) {
+				return (
+					<div className="w-full text-center">
+						{renderTextMorphHeadingLines({
+							anchorId,
+							lines: embodiment.lines,
+							morphFromLines,
+							headingClass: centeredHeadingClass,
+							Tag: "h2",
+						})}
+					</div>
+				);
+			}
 			return (
 				<h2 data-id={anchorId} className={centeredHeadingClass}>
 					{embodiment.lines[0]}
@@ -1006,11 +1079,13 @@ function TextMorphView({
 		case "heading-block":
 			return (
 				<div className="w-full text-center">
-					{embodiment.lines.map((line, lineIndex) => (
-						<h2 key={line} data-id={textMorphAnchorId(anchorId, lineIndex, lineCount)} className={centeredHeadingClass}>
-							{line}
-						</h2>
-					))}
+					{renderTextMorphHeadingLines({
+						anchorId,
+						lines: embodiment.lines,
+						morphFromLines,
+						headingClass: centeredHeadingClass,
+						Tag: "h2",
+					})}
 				</div>
 			);
 		default: {
@@ -1127,31 +1202,49 @@ function AffiliationsMorphView({
 	readonly morphId: string;
 	readonly embodiment: AffiliationsEmbodiment;
 }): ReactNode {
+	const rowClass = morphTextClass(
+		anchorId,
+		"presentation-affiliation-row m-0 inline-flex max-w-full shrink-0 flex-row flex-nowrap items-center justify-center gap-x-[0.35em] text-center",
+	);
 	return (
 		<div className="presentation-intro-rows presentation-intro-affiliations flex w-full max-w-full flex-col items-center text-center">
 			{embodiment.entries.map((entry) => {
 				const displayLabel = affiliationLineLabel(entry, "line");
+				const priorLabel = embodiment.morphLineLabels?.[entry.mark];
+				const relabelled = priorLabel !== undefined && priorLabel !== displayLabel;
+				const lineBody = (label: string) => (
+					<>
+						{affiliationLineContent(entry, "line", label)}
+						{entry.suffix ? (
+							<span
+								data-id={`${anchorId}--${entry.suffix.mark}`}
+								className="inline-flex shrink-0 items-center justify-center text-center"
+							>
+								{affiliationLineContent(entry, "suffix", affiliationLineLabel(entry, "suffix"))}
+							</span>
+						) : null}
+					</>
+				);
 				return (
 					<div
 						key={entry.mark}
 						className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center gap-x-[0.35em]"
 					>
+						{relabelled ? (
+							<h4
+								data-id={`${anchorId}--${entry.mark}`}
+								className={[rowClass, "presentation-affiliation-morph-source"].filter(Boolean).join(" ")}
+							>
+								{lineBody(priorLabel)}
+							</h4>
+						) : null}
 						<h4
-							data-id={`${anchorId}--${entry.mark}`}
-							className={morphTextClass(
-								anchorId,
-								"presentation-affiliation-row m-0 inline-flex max-w-full shrink-0 flex-row flex-nowrap items-center justify-center gap-x-[0.35em] text-center",
-							)}
+							{...(relabelled ? {} : { "data-id": `${anchorId}--${entry.mark}` })}
+							className={[rowClass, relabelled ? "presentation-morph-target" : undefined]
+								.filter(Boolean)
+								.join(" ")}
 						>
-							{affiliationLineContent(entry, "line", displayLabel)}
-							{entry.suffix ? (
-								<span
-									data-id={`${anchorId}--${entry.suffix.mark}`}
-									className="inline-flex shrink-0 items-center justify-center text-center"
-								>
-									{affiliationLineContent(entry, "suffix", affiliationLineLabel(entry, "suffix"))}
-								</span>
-							) : null}
+							{lineBody(displayLabel)}
 						</h4>
 					</div>
 				);
@@ -1194,9 +1287,15 @@ export function resolvePresentationAssetUrl(src: string): string {
 function figureCropCoverVars(
 	crop: DispositionPosition,
 	frame: DispositionPosition,
+	fit: FigureFit = "cover",
 ): { readonly width: number; readonly height: number; readonly posX: number; readonly posY: number } {
 	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
 	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
+	const centerPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
+	const centerPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
+	if (fit === "fill" && frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
+		return { width: stretchWidth, height: stretchHeight, posX: centerPosX, posY: centerPosY };
+	}
 	if (frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
 		const cropAspect = crop.width / crop.height;
 		const frameAspect = frame.width / frame.height;
@@ -1204,14 +1303,83 @@ function figureCropCoverVars(
 		return {
 			width: stretchWidth * coverScale,
 			height: stretchHeight * coverScale,
-			posX: crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100,
-			posY: crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100,
+			posX: centerPosX,
+			posY: centerPosY,
 		};
 	}
 	const uniform = Math.max(stretchWidth, stretchHeight);
-	const centerPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
-	const centerPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
 	return { width: uniform, height: uniform, posX: centerPosX, posY: centerPosY };
+}
+
+/** @emoji 📐 Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
+export function readPercentDispositionFrame(element: HTMLElement): DispositionPosition | null {
+	const read = (property: "left" | "top" | "width" | "height"): number | null => {
+		const raw = element.style.getPropertyValue(property);
+		if (!raw.endsWith("%")) {
+			return null;
+		}
+		const value = Number.parseFloat(raw);
+		return Number.isFinite(value) ? value / 100 : null;
+	};
+	const x = read("left");
+	const y = read("top");
+	const width = read("width");
+	const height = read("height");
+	if (x === null || y === null || width === null || height === null) {
+		return null;
+	}
+	return { x, y, width, height };
+}
+
+/** @emoji 🔀 Copies live focus-tile frames from slide 8 onto label-slide target ghosts before many-to-one FLIP. */
+export function syncManyToOneGhostMorphFramesFromDom(fromSlide: HTMLElement, toSlide: HTMLElement): void {
+	if (!isManyToOneMorphTransition(fromSlide, toSlide)) {
+		return;
+	}
+	for (const ghost of toSlide.querySelectorAll<HTMLElement>(
+		".presentation-target-ghost.presentation-interactive-disposition--canvas-framed",
+	)) {
+		const morphId = ghost.getAttribute("data-id");
+		if (!morphId) {
+			continue;
+		}
+		const escapedId = morphId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+		const sourceEl = fromSlide.querySelector<HTMLElement>(
+			`.presentation-interactive-disposition--canvas-framed[data-id="${escapedId}"]`,
+		);
+		if (!sourceEl) {
+			continue;
+		}
+		const sourceFrame =
+			measureElementRectInSection(sourceEl, fromSlide) ?? readPercentDispositionFrame(sourceEl);
+		if (!sourceFrame || !isUsableMeasuredRect(sourceFrame)) {
+			continue;
+		}
+		const labelFrame = readPercentDispositionFrame(ghost) ?? measureElementRectInSection(ghost, toSlide);
+		if (!labelFrame || !isUsableMeasuredRect(labelFrame)) {
+			continue;
+		}
+		applyMorphFrameCssVars(ghost, sourceFrame, labelFrame);
+		const slot = ghost.querySelector<HTMLElement>(".presentation-morph-slot--figure");
+		const cropRaw = slot?.dataset.presentationMorphCrop;
+		if (slot && cropRaw) {
+			try {
+				const crop = JSON.parse(cropRaw) as DispositionPosition;
+				applyFigureCropCssVars(
+					slot,
+					figureCropBackgroundVarsTargetGhost(
+						{ kind: "figure", src: "", crop },
+						crop,
+						sourceFrame,
+						labelFrame,
+					),
+				);
+			} catch {
+				// skip invalid crop payload
+			}
+		}
+		void ghost.offsetHeight;
+	}
 }
 
 /** @emoji 📐 Custom properties for morphing a canvas frame from `from` into `to` during reveal auto-animate. */
@@ -1231,6 +1399,28 @@ export function morphFrameCssVars(
 	};
 }
 
+/** @emoji 📐 Writes {@link morphFrameCssVars} onto an element via `style.setProperty` (required for CSS variables). */
+export function applyMorphFrameCssVars(
+	element: HTMLElement,
+	from: DispositionPosition,
+	to: DispositionPosition,
+): void {
+	for (const [key, value] of Object.entries(morphFrameCssVars(from, to))) {
+		if (typeof value === "string") {
+			element.style.setProperty(key, value);
+		}
+	}
+}
+
+/** @emoji 🖼 Applies figure crop CSS variables from a vars object via `setProperty`. */
+export function applyFigureCropCssVars(element: HTMLElement, vars: CSSProperties): void {
+	for (const [key, value] of Object.entries(vars)) {
+		if (typeof value === "string" && key.startsWith("--presentation-figure-bg-")) {
+			element.style.setProperty(key, value);
+		}
+	}
+}
+
 /** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
 export function figureCropBackgroundVars(
 	embodiment: FigureEmbodiment,
@@ -1238,10 +1428,13 @@ export function figureCropBackgroundVars(
 	frame?: DispositionPosition,
 	morphFrame?: DispositionPosition,
 ): CSSProperties {
+	const fit = embodiment.fit ?? "cover";
 	const restBasis = frame ?? morphFrame;
 	const morphBasis = morphFrame ?? frame;
-	const rest = restBasis ? figureCropCoverVars(crop, restBasis) : figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 });
-	const morph = morphBasis ? figureCropCoverVars(crop, morphBasis) : rest;
+	const rest = restBasis
+		? figureCropCoverVars(crop, restBasis, fit)
+		: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, fit);
+	const morph = morphBasis ? figureCropCoverVars(crop, morphBasis, fit) : rest;
 	return {
 		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
 		["--presentation-figure-bg-size" as string]: `${rest.width}% ${rest.height}%`,
@@ -1320,6 +1513,9 @@ function FigureMorphView({
 						? figureCropBackgroundVarsTargetGhost(embodiment, embodiment.crop, morphFrame, position)
 						: figureCropBackgroundVars(embodiment, embodiment.crop, position, morphToFrame)),
 				}}
+				{...(morphCropFrom && embodiment.crop
+					? { "data-presentation-morph-crop": JSON.stringify(embodiment.crop) }
+					: {})}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
 			/>
@@ -2278,12 +2474,15 @@ export function sectionVisualScale(sectionEl: HTMLElement): number {
 	return elementVisualScale(slideCoordinateRoot(sectionEl));
 }
 
-/** @emoji ↔️ Node that receives flow `translate3d` during drag (content when laid out, else disposition root). */
+/** @emoji ↔️ Node that receives flow `translate3d` during drag (offset wrapper, else content, else disposition root). */
 export function flowDragTransformElement(
 	sectionEl: HTMLElement,
 	root: HTMLElement | null,
 	content: HTMLElement | null,
 ): HTMLElement {
+	if (root?.classList.contains("presentation-interactive-disposition--offset")) {
+		return root;
+	}
 	if (content && content.offsetWidth > 0 && content.offsetHeight > 0) {
 		return content;
 	}
@@ -3262,25 +3461,35 @@ const InteractiveDisposition: FC<{
 	if (flowReservePx) {
 		Object.assign(wrapperFrame, flowDispositionReserveStyle(flowReservePx));
 	}
+	const flowDragOffsetStyle =
+		flowPixelOffset && transform ? flowDispositionOffsetStyle(transform) : undefined;
+	if (flowDragOffsetStyle) {
+		Object.assign(wrapperFrame, flowDragOffsetStyle);
+	}
 	if (canvasFramed && canvasAnchorRect) {
 		// 🔀 The wrapper owns the reveal `data-id` morph anchor; placing it on the live ephemeral
 		// rect (drag/resize) makes reveal.js auto-animate capture the modified frame as the morph
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
-		// 👻 Morph companions keep declared frames so reveal.js FLIP measures stable geometry.
+		// 👻 Target ghosts keep label layout; live source frames are synced from slide 8 DOM before morph.
 		const morphAnchorRect =
-			disposition.revealMorphCompanion !== undefined
+			disposition.revealMorphCompanion === "target"
 				? canvasAnchorRect
-				: (canvasLiveTransform ?? canvasAnchorRect);
+				: disposition.revealMorphCompanion === "source"
+					? canvasAnchorRect
+					: (canvasLiveTransform ?? canvasAnchorRect);
 		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
 		if (
 			morphCropFrom &&
 			disposition.revealMorphFromFrame !== undefined &&
 			disposition.position !== undefined
 		) {
-			Object.assign(
-				wrapperFrame,
+			for (const [key, value] of Object.entries(
 				morphFrameCssVars(disposition.revealMorphFromFrame, disposition.position),
-			);
+			)) {
+				if (typeof value === "string") {
+					(wrapperFrame as Record<string, string>)[key] = value;
+				}
+			}
 		}
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
@@ -3290,10 +3499,6 @@ const InteractiveDisposition: FC<{
 		: Object.keys(wrapperFrame).length > 0
 			? wrapperFrame
 			: undefined;
-	const contentInkStyle: CSSProperties | undefined =
-		flowInkActive && inkInWrapper && !flowPixelOffset ? transformFrameStyle(inkInWrapper) : undefined;
-	const flowDragOffsetStyle =
-		flowPixelOffset && transform ? flowDispositionOffsetStyle(transform) : undefined;
 	const resizeContentBaseline = measuredNatural ?? interactionRect;
 	const resizeContentScale =
 		!canvasFramed &&
@@ -3302,24 +3507,22 @@ const InteractiveDisposition: FC<{
 		resizeContentBaseline
 			? interactiveDispositionContentScale(transform, resizeContentBaseline)
 			: null;
-	const contentStyle: CSSProperties | undefined = {
-		...(contentInkStyle ?? {}),
-		...(flowDragOffsetStyle ?? {}),
-		...(resizeContentScale !== null ? interactiveDispositionContentScaleStyle(resizeContentScale) : {}),
-	};
-	const hasContentStyle = Object.keys(contentStyle).length > 0;
+	const contentStyle: CSSProperties | undefined =
+		resizeContentScale !== null
+			? interactiveDispositionContentScaleStyle(resizeContentScale)
+			: undefined;
+	const hasContentStyle = contentStyle !== undefined;
 	const chromeLayoutRect =
 		flowSectionFrame && transform
 			? transform
 			: canvasLiveTransform ?? effectiveRect;
-	const chromeStyle: CSSProperties | undefined = useFlowInkFrame
-		? undefined
-		: interactiveDispositionChromeStyle({
-				selected: selected || gesturing,
-				effectiveRect: chromeLayoutRect,
-				canvasFramed,
-				enlarged,
-			});
+	const flowInkChromeRect = useFlowInkFrame ? (inkInWrapper ?? measuredNatural) : undefined;
+	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
+		selected: selected || gesturing,
+		effectiveRect: flowInkChromeRect ?? chromeLayoutRect,
+		canvasFramed,
+		enlarged,
+	});
 	const showControls =
 		(selected || gesturing) &&
 		Boolean(useFlowInkFrame ? inkInWrapper ?? measuredNatural : chromeLayoutRect ?? effectiveRect);
@@ -3728,6 +3931,7 @@ const ArrangementSectionSurface: FC<{
 			className={[
 				"presentation-arrangement--interactive",
 				positioned ? "presentation-arrangement--positioned" : undefined,
+				isIntroArrangementId(slideId) ? "presentation-arrangement--intro" : undefined,
 			]
 				.filter(Boolean)
 				.join(" ")}
@@ -4294,6 +4498,7 @@ if (import.meta.vitest) {
 			});
 			for (const slide of container.querySelectorAll('.slides > section > section[data-auto-animate-id="einleitung--m0"]')) {
 				expect(slide.classList.contains("presentation-arrangement--interactive")).toBe(true);
+				expect(slide.classList.contains("presentation-arrangement--intro")).toBe(true);
 				expect(slide.classList.contains("presentation-arrangement--positioned")).toBe(false);
 				expect(slide.querySelector(".presentation-arrangement-canvas")).toBeNull();
 				expect(slide.querySelectorAll("[data-disposition-id]").length).toBeGreaterThan(0);
@@ -4348,7 +4553,14 @@ if (import.meta.vitest) {
 			expect(slide("description")?.querySelector('h2[data-id="title"]')).toBeTruthy();
 			expect(slide("description")?.querySelector('div[data-id="title"].presentation-disposition-frame')).toBeNull();
 			expect(slide("description")?.querySelectorAll('h2[data-id^="description"]').length).toBe(2);
-			expect(slide("goal")?.querySelector('h2[data-id="description"]')?.textContent).toBe("D short");
+			expect(
+				slide("goal")?.querySelector('h2.presentation-text-morph-source[data-id="description--0"]')?.textContent,
+			).toBe("D1");
+			expect(
+				slide("goal")?.querySelector('h2.presentation-text-morph-source[data-id="description--1"]')?.textContent,
+			).toBe("D2");
+			expect(slide("goal")?.querySelector("h2.presentation-morph-target")?.textContent).toBe("D short");
+			expect(slide("goal")?.querySelector('h2[data-id="description"]:not(.presentation-text-morph-source)')).toBeNull();
 			expect(slide("goal")?.querySelector('.presentation-interactive-disposition[data-id="description"]')).toBeNull();
 			expect(slide("description")?.querySelector('.presentation-interactive-disposition[data-id="description"]')).toBeNull();
 			expect(slide("goal")?.querySelector('h2[data-id^="goal"]')).toBeTruthy();
@@ -4359,16 +4571,29 @@ if (import.meta.vitest) {
 			expect(slide("affiliations-1")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(1);
 			expect(slide("affiliations-2")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(2);
 			expect(slide("affiliations-3")?.querySelectorAll('h4[data-id^="institutions--"]').length).toBe(2);
-			expect(slide("affiliations-3")?.querySelectorAll('[data-id^="institutions--"]').length).toBe(3);
+			expect(slide("affiliations-3")?.querySelectorAll('[data-id^="institutions--"]').length).toBe(4);
 			expect(slide("affiliations-2")?.querySelector('h5[data-id="institutions"]')).toBeNull();
 			expect(slide("affiliations-2")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
-			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("LUH");
-			expect(slide("affiliations-3")?.querySelector(".presentation-affiliation-morph-source")).toBeNull();
 			expect(
-				slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.classList.contains("presentation-affiliation-row"),
+				slide("affiliations-3")?.querySelector('h4.presentation-affiliation-morph-source[data-id="institutions--1"]')
+					?.textContent,
+			).toContain("Uni");
+			expect(
+				slide("affiliations-3")?.querySelector(
+					'h4.presentation-affiliation-row.presentation-morph-target:not([data-id])',
+				)?.textContent,
+			).toContain("LUH");
+			expect(
+				slide("affiliations-3")?.querySelector(
+					'h4.presentation-affiliation-row.presentation-morph-target:not([data-id])',
+				)?.classList.contains("presentation-affiliation-row"),
 			).toBe(true);
 			expect(slide("affiliations-3")?.querySelector('[data-id="institutions--x"]')?.textContent).toContain("Chair X");
-			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"] [data-id="institutions--x"]')).toBeTruthy();
+			expect(
+				slide("affiliations-3")?.querySelector(
+					'h4.presentation-affiliation-row.presentation-morph-target [data-id="institutions--x"]',
+				),
+			).toBeTruthy();
 			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
 			expect(slide("affiliations-1")?.querySelector('h4[data-id="authors--Alice Example"] sup')?.textContent).toBe("a");
 			const marked2 = slide("affiliations-2")?.querySelector('h4[data-id="authors--Alice Example"] sup');
@@ -4390,7 +4615,9 @@ if (import.meta.vitest) {
 			expect(aff2?.querySelector('h4[data-id="institutions--1"] .opacity-20')).toBeNull();
 			const aff3 = slide("affiliations-3");
 			expect(aff3?.querySelector('h4[data-id="institutions--a"] .opacity-20')).toBeTruthy();
-			expect(aff3?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("LUH");
+			expect(
+				aff3?.querySelector('h4.presentation-affiliation-row.presentation-morph-target')?.textContent,
+			).toContain("LUH");
 			expect(aff3?.querySelector('[data-id="institutions--x"] .opacity-20')).toBeNull();
 		});
 
@@ -4437,6 +4664,33 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			expect(container.querySelector(".r-fit-text")).toBeNull();
+		});
+
+		it("tags German einleitung morph slides for compact intro spacing", () => {
+			const deck = intro({ language: "de",
+				title: { full: ["A"], short: "Short" },
+				description: { full: ["D"], short: "D short" },
+				goal: ["G1", "G2"],
+				authors: {
+					lines: [
+						[{ name: "Alice", marks: ["a"] }, { name: "Bob", marks: ["a"] }],
+						[{ name: "Carol", marks: ["a"] }],
+					],
+				},
+				affiliations: testAffiliationSteps,
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			for (const slide of container.querySelectorAll(
+				'.slides > section > section[data-auto-animate-id="einleitung--m0"]',
+			)) {
+				expect(slide.classList.contains("presentation-arrangement--intro")).toBe(true);
+			}
+			expect(globalsCssSource).toMatch(
+				/\.presentation-arrangement--intro\s+h2\[data-id\][\s\S]*margin:\s*0/s,
+			);
+			expect(globalsCssSource).not.toMatch(/data-auto-animate-id\^="intro--"/);
 		});
 
 		it("enables reveal auto-animate and tags every morph arrangement with data-auto-animate", () => {
@@ -4595,7 +4849,7 @@ if (import.meta.vitest) {
 			) as HTMLElement;
 			expect(tileFrame).toBeTruthy();
 			expect(tileFrame.style.backgroundImage).toContain("/catalogue.png");
-			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toBe("240% 240%");
+			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 200%");
 			const tiles = [...container.querySelectorAll(".presentation-morph-slot--figure")] as HTMLElement[];
 			for (const node of tiles) {
 				const size = node.style.getPropertyValue("--presentation-figure-bg-size");
@@ -4830,7 +5084,10 @@ if (import.meta.vitest) {
 			const { fileURLToPath } = await import("node:url");
 			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
 			const css = readFileSync(cssPath, "utf8");
-			const restRule = css.match(/\.reveal \.presentation-target-ghost \{[\s\S]*?\}/)?.[0] ?? "";
+			const restRule =
+				css.match(
+					/\.reveal \.presentation-target-ghost,\s*\.reveal \.presentation-text-morph-source,\s*\.reveal \.presentation-affiliation-morph-source \{[\s\S]*?\}/,
+				)?.[0] ?? "";
 			expect(restRule).toContain("opacity: 0");
 			expect(restRule).not.toContain("opacity: 0 !important");
 			expect(restRule).not.toContain("visibility: hidden");
@@ -4885,6 +5142,18 @@ if (import.meta.vitest) {
 			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% 200%");
 			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("25% 50%");
 			expect(square["--presentation-figure-bg-position" as keyof typeof square]).toBe("25% 50%");
+		});
+
+		it("stretches full-source catalogue figures into the frame when fit is fill", () => {
+			const crop = { x: 0, y: 0, width: 1, height: 1 };
+			const frame = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+			const vars = figureCropBackgroundVars(
+				{ kind: "figure", src: "/bauteilbörse.png", crop, fit: "fill" },
+				crop,
+				frame,
+			);
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe("100% 100%");
+			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe("50% 50%");
 		});
 
 		it("assigns distinct crop background positions per split tile", () => {
@@ -4987,6 +5256,55 @@ if (import.meta.vitest) {
 			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(true);
 			expect(focus.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(true);
 			expect(labels.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(true);
+		});
+
+		it("syncManyToOneGhostMorphFramesFromDom uses live source tile geometry on target ghosts", () => {
+			const deckEl = document.createElement("div");
+			deckEl.className = "reveal";
+			const focus = document.createElement("section");
+			focus.setAttribute("title", "catalogue-focus");
+			focus.setAttribute("data-settle-before-morph-to", "catalogue-labels");
+			focus.style.cssText = "position:relative;width:960px;height:540px;";
+			const labels = document.createElement("section");
+			labels.setAttribute("title", "catalogue-labels");
+			labels.style.cssText = "position:relative;width:960px;height:540px;";
+			const source = document.createElement("div");
+			source.className =
+				"presentation-interactive-disposition presentation-interactive-disposition--canvas-framed";
+			source.setAttribute("data-id", "Stütze");
+			Object.assign(source.style, {
+				position: "absolute",
+				left: "20%",
+				top: "10%",
+				width: "15%",
+				height: "70%",
+			});
+			const ghost = document.createElement("div");
+			ghost.className =
+				"presentation-interactive-disposition presentation-target-ghost presentation-interactive-disposition--canvas-framed";
+			ghost.setAttribute("data-id", "Stütze");
+			Object.assign(ghost.style, {
+				position: "absolute",
+				left: "60%",
+				top: "44%",
+				width: "24%",
+				height: "12%",
+			});
+			const slot = document.createElement("div");
+			slot.className = "presentation-morph-slot presentation-morph-slot--figure";
+			slot.dataset.presentationMorphCrop = JSON.stringify({ x: 0, y: 0, width: 0.5, height: 1 });
+			ghost.append(slot);
+			focus.append(source);
+			labels.append(ghost);
+			deckEl.append(focus, labels);
+			document.body.append(deckEl);
+			syncManyToOneGhostMorphFramesFromDom(focus, labels);
+			expect(ghost.style.getPropertyValue("--presentation-morph-frame-left")).toBe("20%");
+			expect(ghost.style.getPropertyValue("--presentation-morph-frame-top")).toBe("10%");
+			expect(ghost.style.getPropertyValue("--presentation-morph-frame-width")).toBe("15%");
+			expect(ghost.style.getPropertyValue("--presentation-morph-frame-height")).toBe("70%");
+			expect(ghost.style.getPropertyValue("--presentation-frame-left")).toBe("60%");
+			deckEl.remove();
 		});
 
 		it("does not mark many-to-one morph for catalogue to focus auto-animate", () => {
@@ -5791,9 +6109,9 @@ if (import.meta.vitest) {
 			expect(catalogueSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
 			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(false);
 			const catalogueFigure = catalogueSlide.querySelector(
-				".presentation-media-figure",
-			) as HTMLImageElement | null;
-			expect(catalogueFigure?.src).toContain("bauteilb");
+				'.presentation-morph-one .presentation-morph-slot--figure[role="img"]',
+			) as HTMLElement | null;
+			expect(catalogueFigure?.style.backgroundImage).toContain("bauteilb");
 			expect(catalogueSlide.querySelectorAll(".presentation-morph-one").length).toBe(1);
 			const sourceGhosts = catalogueSlide.querySelectorAll(
 				".presentation-interactive-disposition.presentation-source-ghost",
@@ -6256,10 +6574,17 @@ if (import.meta.vitest) {
 				pointerClick(disposition);
 			});
 			expect(disposition.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
+			const chromeAfterSelect = disposition.querySelector(
+				".presentation-interactive-disposition__chrome",
+			) as HTMLElement;
+			expect(content.style.left).toBe("");
+			expect(content.style.top).toBe("");
+			expect(chromeAfterSelect.style.width).not.toBe("100%");
+			expect(chromeAfterSelect.style.left).toBe(`${(330 / 960) * 100}%`);
 			act(() => {
 				pointerDrag(disposition, 480, 320, 560, 360);
 			});
-			const dragMatch = content.style.transform.match(
+			const dragMatch = disposition.style.transform.match(
 				/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/,
 			);
 			expect(dragMatch).not.toBeNull();
@@ -6269,15 +6594,19 @@ if (import.meta.vitest) {
 			expect(content.style.top).toBe("");
 			expect(disposition.classList.contains("presentation-interactive-disposition--offset")).toBe(true);
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
-			expect(content.style.transform).toContain("translate");
-			expect(disposition.style.transform).toBe("");
+			expect(disposition.style.transform).toContain("translate");
+			expect(content.style.transform).toBe("");
 			expect(disposition.style.left).toBe("");
+			const actions = disposition.querySelector(".presentation-interaction-actions") as HTMLElement;
+			expect(actions).toBeTruthy();
+			expect(actions.querySelector(".presentation-interaction-enlarge")).toBeTruthy();
 			expect(disposition.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
 			const chrome = disposition.querySelector(
 				".presentation-interactive-disposition__chrome",
 			) as HTMLElement;
 			expect(chrome.isConnected).toBe(true);
-			expect(chrome.style.left).toBe("");
+			expect(chrome.style.left).toBe(`${(330 / 960) * 100}%`);
+			expect(chrome.style.width).not.toBe("100%");
 			expect(chrome.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
 		});
 

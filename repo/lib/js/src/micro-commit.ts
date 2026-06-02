@@ -286,6 +286,7 @@ export function shouldRefreshPreparedCommitMessage(current: string, preparedDige
 
 export function handlePrepareCommitMsg(root: string, msgFile: string, source: string): void {
   if (!isPrepareActive(root)) {
+    resetMicroCommitTemplates(root);
     writeFileSync(msgFile, "");
     return;
   }
@@ -311,7 +312,7 @@ export function handlePrepareCommitMsg(root: string, msgFile: string, source: st
 export function installMicroCommitGitHooks(root: string): void {
   const hooksDir = join(root, ".git", "hooks");
   mkdirSync(hooksDir, { recursive: true });
-  for (const name of ["prepare-commit-msg", "post-commit"] as const) {
+  for (const name of ["pre-commit", "prepare-commit-msg", "post-commit"] as const) {
     copyFileSync(join(root, "repo", "hooks", name), join(hooksDir, name));
     chmodSync(join(hooksDir, name), 0o755);
   }
@@ -319,7 +320,6 @@ export function installMicroCommitGitHooks(root: string): void {
 
 export function resetMicroCommitTemplates(root: string): void {
   const dir = gitDir(root);
-  git(root, ["config", "--local", "--unset", "commit.template"]);
   for (const name of readdirSync(dir)) {
     if (name.startsWith(GK_TEMPLATE_BASENAME)) {
       try {
@@ -329,8 +329,11 @@ export function resetMicroCommitTemplates(root: string): void {
       }
     }
   }
-  writeFileSync(join(dir, "COMMIT_EDITMSG"), "");
+  const clearedAbs = join(dir, `${GK_TEMPLATE_BASENAME}-cleared.txt`);
+  writeFileSync(clearedAbs, "");
   writeFileSync(join(dir, `${GK_TEMPLATE_BASENAME}.txt`), "");
+  writeFileSync(join(dir, "COMMIT_EDITMSG"), "");
+  git(root, ["config", "--local", "commit.template", clearedAbs]);
   for (const p of [preparedDigestPath(root), preparedBulletsPath(root), preparedActivePath(root)]) {
     try {
       rmSync(p, { force: true });
@@ -346,7 +349,10 @@ function emitPrepareStdout(message: string): void {
 
 export function runMicroCommit(root: string, segments: string[]): void {
   const cmd = segments[0] ?? "prepare";
-  if (cmd === "reset") {
+  if (cmd === "reset" || cmd === "guard") {
+    if (cmd === "guard" && isPrepareActive(root)) {
+      process.exit(0);
+    }
     resetMicroCommitTemplates(root);
     process.exit(0);
   }

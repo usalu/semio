@@ -38497,9 +38497,9 @@ func installMicroCommitHook(repoRoot, hookName string) error {
 	return nil
 }
 
-// 🔄installMicroCommitHooks installs prepare-commit-msg (fresh message on commit) and post-commit (reset templates).
+// 🔄installMicroCommitHooks installs micro-commit git hooks (pre-commit guard, prepare-commit-msg, post-commit reset).
 func installMicroCommitHooks(repoRoot string) error {
-	for _, name := range []string{"prepare-commit-msg", "post-commit"} {
+	for _, name := range []string{"pre-commit", "prepare-commit-msg", "post-commit"} {
 		if err := installMicroCommitHook(repoRoot, name); err != nil {
 			return err
 		}

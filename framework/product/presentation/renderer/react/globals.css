@@ -827,7 +827,9 @@
 	}
 }
 
-.reveal .presentation-target-ghost {
+.reveal .presentation-target-ghost,
+.reveal .presentation-text-morph-source,
+.reveal .presentation-affiliation-morph-source {
 	opacity: 0;
 	visibility: visible;
 	pointer-events: none;
@@ -931,28 +933,29 @@
 	white-space: nowrap;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] {
+.reveal .slides > section > section.presentation-arrangement--intro {
 	--r-heading-margin: 0 0 0.12em 0;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] h4[data-id] {
+.reveal .slides > section > section.presentation-arrangement--intro h2[data-id],
+.reveal .slides > section > section.presentation-arrangement--intro h4[data-id] {
 	margin: 0;
 	line-height: 1.1;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-rows {
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-rows {
 	row-gap: 0.15em;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-authors + .presentation-intro-affiliations {
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-authors + .presentation-intro-affiliations {
 	margin-top: 0.35em;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-line {
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-line {
 	column-gap: 0.35em;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-affiliations .presentation-affiliation-row {
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-affiliations .presentation-affiliation-row {
 	width: fit-content;
 	max-width: 100%;
 }
