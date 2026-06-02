@@ -110,3 +110,5 @@ I want to implement a geometry logic that follows topological principles, meanin
 ---
 When I click on a face, nothing happens. It doesn't let me select or isolate my chosen face. Please provide the code and explain what you did in this particular section.
 ---
+There are a few issues: when I select these faces, they don't highlight correctly. Also, I would like the window to be editable—specifically its width, height, and placement within the wall. fix these issues
+---

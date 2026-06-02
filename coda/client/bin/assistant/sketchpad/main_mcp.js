@@ -185,11 +185,23 @@ window.addWindowToSelectedWall = function() {
     if (!zone) return;
     if (!zone.windows) zone.windows = [];
     const winId = 'win_' + Date.now();
+    const storyH = parseFloat(document.getElementById('story-height').value) || 2.8;
+    const cx = zone.geometry.x + zone.geometry.width / 2;
+    const cy = zone.geometry.y + zone.geometry.length / 2;
+    const cz = storyH / 2;
+    let u = 0;
+    let v = selectedWall.clickPoint ? selectedWall.clickPoint.z - cz : 0;
+    if (selectedWall.clickPoint) {
+        if (selectedWall.wallId === 'N') u = selectedWall.clickPoint.x - cx;
+        else if (selectedWall.wallId === 'S') u = cx - selectedWall.clickPoint.x;
+        else if (selectedWall.wallId === 'E') u = cy - selectedWall.clickPoint.y;
+        else if (selectedWall.wallId === 'W') u = selectedWall.clickPoint.y - cy;
+    }
     zone.windows.push({
         id: winId,
         wall_id: selectedWall.wallId,
-        u: 0,
-        v: 0,
+        u: u,
+        v: v,
         width: 1.5,
         height: 1.5
     });
@@ -216,25 +228,36 @@ function updateSelectionPanel() {
 
     if (selectedWindowId) {
         panel.style.display = 'block';
-        title.textContent = `Selected: Window`;
+        title.textContent = 'Selected: Window';
         const zone = zones.find(z => z.windows && z.windows.find(w => w.id === selectedWindowId));
+        const w = zone && zone.windows.find(win => win.id === selectedWindowId);
+        if (!zone || !w) { panel.style.display = 'none'; return; }
+        const wallLabel = { N: 'North', S: 'South', E: 'East', W: 'West' }[w.wall_id] || w.wall_id;
         content.innerHTML = `
-            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">
-                Move or scale the window in the 3D view.
+            <div style="font-size:0.7rem; color:#64748b; margin-bottom:8px;">Wall: <span style="color:#facc15;font-weight:600;">${wallLabel}</span></div>
+            <div class="form-row">
+                <div><label>Width (m)</label><input type="number" id="win-width" value="${w.width.toFixed(2)}" step="0.1" min="0.1" onchange="updateWindowProperty('${zone.id}','${w.id}','width',+this.value)"></div>
+                <div><label>Height (m)</label><input type="number" id="win-height" value="${w.height.toFixed(2)}" step="0.1" min="0.1" onchange="updateWindowProperty('${zone.id}','${w.id}','height',+this.value)"></div>
             </div>
-            <button class="btn-primary" style="background: #ef4444; color: white;" onclick="removeWindow('${zone.id}', '${selectedWindowId}')">Delete Window</button>
+            <div class="form-row">
+                <div><label>Horiz. offset (m)</label><input type="number" id="win-u" value="${w.u.toFixed(2)}" step="0.05" onchange="updateWindowProperty('${zone.id}','${w.id}','u',+this.value)"></div>
+                <div><label>Vert. offset (m)</label><input type="number" id="win-v" value="${w.v.toFixed(2)}" step="0.05" onchange="updateWindowProperty('${zone.id}','${w.id}','v',+this.value)"></div>
+            </div>
+            <button class="btn-primary" style="background:#ef4444;color:#fff;margin-top:4px;" onclick="removeWindow('${zone.id}','${selectedWindowId}')">Delete Window</button>
         `;
     } else if (selectedWall) {
         panel.style.display = 'block';
-        title.textContent = `Selected: Wall (${selectedWall.wallId}) of ${selectedWall.zoneId}`;
+        const wallLabel = { N: 'North', S: 'South', E: 'East', W: 'West' }[selectedWall.wallId] || selectedWall.wallId;
+        title.textContent = `Selected: ${wallLabel} Wall`;
         content.innerHTML = `
-            <button class="btn-primary" onclick="addWindowToSelectedWall()">+ Add Window</button>
+            <div style="font-size:0.7rem; color:#64748b; margin-bottom:8px;">Zone: ${selectedWall.zoneId}</div>
+            <button class="btn-primary" onclick="addWindowToSelectedWall()">+ Add Window Here</button>
         `;
     } else if (selectedObject && selectedObject.userData.type === 'zone') {
         panel.style.display = 'block';
         title.textContent = `Selected: Zone (${selectedObject.userData.zoneId})`;
         content.innerHTML = `
-            <div style="font-size: 0.8rem; color: #94a3b8;">
+            <div style="font-size:0.8rem; color:#94a3b8;">
                 Use the Gizmo to move or scale the entire zone. Click on a specific wall to add windows.
             </div>
         `;
@@ -242,6 +265,16 @@ function updateSelectionPanel() {
         panel.style.display = 'none';
     }
 }
+
+window.updateWindowProperty = function(zoneId, winId, prop, val) {
+    const zone = zones.find(z => z.id === zoneId);
+    if (!zone) return;
+    const w = zone.windows && zone.windows.find(win => win.id === winId);
+    if (!w) return;
+    w[prop] = val;
+    selectedWindowId = winId;
+    rebuildAndRetainSelection(winId);
+};
 
 let selectedObject = null; selectedWall = null; selectedWindowId = null; updateSelectionPanel();
 
@@ -383,12 +416,15 @@ function initThree() {
         }
     });
     
-    function rebuildAndRetainSelection(zoneId) {
+    function rebuildAndRetainSelection(targetId) {
         renderZoneList();
         render3DZones();
         updateStats();
         if (typeof dispatchState === 'function') dispatchState();
-        const newMesh = draggableObjects.find(obj => obj.userData.zoneId === zoneId);
+        const newMesh = draggableObjects.find(obj =>
+            (obj.userData.type === 'window' && obj.userData.windowId === targetId) ||
+            (obj.userData.type === 'zone' && obj.userData.zoneId === targetId)
+        );
         if (newMesh) {
             selectedObject = newMesh;
             if (window.activeTransformMode === 'scale') {
@@ -562,17 +598,19 @@ function initThree() {
                 selectedObject = object;
                 rebuildAndRetainSelection(selectedWindowId);
             } else if (userData.type === 'zone') {
-                const nx = Math.round(intersects[0].face.normal.x);
-                const ny = Math.round(intersects[0].face.normal.y);
-                const nz = Math.round(intersects[0].face.normal.z);
+                const normalMatrix = new THREE.Matrix3().getNormalMatrix(object.matrixWorld);
+                const worldNormal = intersects[0].face.normal.clone().applyMatrix3(normalMatrix).normalize();
+                const ax = Math.abs(worldNormal.x);
+                const ay = Math.abs(worldNormal.y);
+                const az = Math.abs(worldNormal.z);
                 let wallId = null;
-                if (nx === 0 && ny === 1 && nz === 0) wallId = 'N';
-                else if (nx === 0 && ny === -1 && nz === 0) wallId = 'S';
-                else if (nx === 1 && ny === 0 && nz === 0) wallId = 'E';
-                else if (nx === -1 && ny === 0 && nz === 0) wallId = 'W';
+                if (az < 0.5) {
+                    if (ay >= ax) wallId = worldNormal.y > 0 ? 'N' : 'S';
+                    else wallId = worldNormal.x > 0 ? 'E' : 'W';
+                }
 
                 if (wallId) {
-                    selectedWall = { zoneId: userData.zoneId, wallId };
+                    selectedWall = { zoneId: userData.zoneId, wallId, clickPoint: intersects[0].point.clone() };
                     selectedWindowId = null;
                     selectedObject = null;
                     translateControl.detach();
@@ -662,11 +700,12 @@ function render3DZones() {
         buildingGroup.remove(child);
     }
     
-    // Clear selection on re-render to avoid detached gizmo
+    // Detach gizmo to avoid dangling reference — preserve selectedWall so highlight redraws
     if (translateControl && translateControl.object) {
         translateControl.detach();
         scaleControl.detach();
-        selectedObject = null; selectedWall = null; selectedWindowId = null; updateSelectionPanel();
+        selectedObject = null;
+        selectedWindowId = null;
     }
 
     const storyHeight = parseFloat(document.getElementById('story-height').value) || 2.8;
@@ -683,10 +722,8 @@ function render3DZones() {
             });
             const boxMesh = new THREE.Mesh(boxGeom, boxMat);
             boxMesh.position.set(x + width / 2, y + length / 2, s * storyHeight + storyHeight / 2);
-            if (s === 0) {
-                boxMesh.userData = { type: 'zone', zoneId: zone.id, storyIndex: s };
-                draggableObjects.push(boxMesh);
-            }
+            boxMesh.userData = { type: 'zone', zoneId: zone.id, storyIndex: s };
+            draggableObjects.push(boxMesh);
             buildingGroup.add(boxMesh);
 
             const edgesGeom = new THREE.EdgesGeometry(boxGeom);
@@ -773,10 +810,10 @@ function render3DZones() {
         if (selectedWall && selectedWall.zoneId === zone.id) {
             const wallId = selectedWall.wallId;
             const isN_S = (wallId === 'N' || wallId === 'S');
+            const fullHeight = storyHeight * numStories;
             const wWidth = isN_S ? width : length;
-            const wHeight = storyHeight;
             
-            const wallGeom = new THREE.PlaneGeometry(wWidth, wHeight);
+            const wallGeom = new THREE.PlaneGeometry(wWidth, fullHeight);
             const wallMat = new THREE.MeshBasicMaterial({
                 color: 0xfacc15,
                 transparent: true,
@@ -788,7 +825,7 @@ function render3DZones() {
             
             const cx = x + width/2;
             const cy = y + length/2;
-            const cz = storyHeight / 2;
+            const cz = fullHeight / 2;
             
             let wx, wy, wz;
             let rotX = 0, rotY = 0;
