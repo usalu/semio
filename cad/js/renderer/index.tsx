@@ -3813,7 +3813,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
     });
   }
   const input =
-    inputs.boundInteractionSession || inputs.interactions.length > 0
+    inputs.boundInteractionSession || inputs.interactions.length > 0 || inputs.onRepeatLast
       ? {
           id: "engagement-input",
           value: inputs.cmdLine,
@@ -5681,6 +5681,23 @@ if (import.meta.vitest) {
       expect(spec?.options).toBeUndefined();
       expect(spec?.input).toBeUndefined();
       expect(spec?.status?.map((row) => row.content)).toEqual(["3 selected"]);
+    });
+
+    it("keeps command input with onRepeatLast when idle without startable interactions", () => {
+      const repeated: string[] = [];
+      const spec = buildInteractionReplEngagement({
+        ...baseInputs,
+        boundInteractionSession: false,
+        interactionId: "",
+        interactions: [],
+        selectionCount: 0,
+        onRepeatLast: () => repeated.push("last"),
+      });
+      expect(spec?.options).toBeUndefined();
+      expect(spec?.possibleEngagements).toBeUndefined();
+      expect(spec?.input?.onRepeatLast).toBeTypeOf("function");
+      spec?.input?.onRepeatLast?.();
+      expect(repeated).toEqual(["last"]);
     });
 
     it("summarizes failed responses with error counts", () => {

@@ -1261,23 +1261,24 @@ function Puzzle3dPlayEngagementPublisher(props: {
   const { ctrl, snap, bus } = props;
   const [cmdLine, setCmdLine] = reactHostPort.useState("");
   const engagementSpecRef = reactHostPort.useRef<EngagementSpec | null>(null);
-  const lastEngagementToolRef = reactHostPort.useRef<"select" | "brush">("brush");
   const brushEngagementEpoch = reactHostPort.useSyncExternalStore(subscribePuzzle3dBrushEngagementSource, getPuzzle3dBrushEngagementEpoch, getPuzzle3dBrushEngagementEpoch);
   const brushSource = puzzle3dBrushEngagementSourceRef.current;
   const selectionCount = snap.selection.objectIds.length + snap.selection.vortexIds.length + snap.selection.attractionIds.length;
+  const rememberEngagementRepeat = reactHostPort.useCallback(
+    (key: string) => {
+      bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "rememberEngagementRepeat", { key });
+    },
+    [bus],
+  );
   const onSelectTool = reactHostPort.useCallback(() => {
-    lastEngagementToolRef.current = "select";
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "select" });
   }, [bus]);
   const onBrushTool = reactHostPort.useCallback(() => {
-    lastEngagementToolRef.current = "brush";
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "brush" });
   }, [bus]);
   const onRepeatLastEngagement = reactHostPort.useCallback(() => {
-    if (snap.activeTool === lastEngagementToolRef.current) return;
-    if (lastEngagementToolRef.current === "brush") onBrushTool();
-    else onSelectTool();
-  }, [onBrushTool, onSelectTool, snap.activeTool]);
+    bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "engagementRepeatLast", {});
+  }, [bus]);
   const onEngagementAbort = reactHostPort.useCallback(() => {
     setCmdLine("");
     if (snap.activeTool === "brush") {
@@ -1301,6 +1302,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         return;
       }
       if (engagementCommandTokenEquals(token, "zoom")) {
+        rememberEngagementRepeat(PUZZLE_3D_ENGAGEMENT_ZOOM_ID);
         onZoomToSelection();
         setCmdLine("");
         return;
@@ -1311,12 +1313,14 @@ function Puzzle3dPlayEngagementPublisher(props: {
           (candidate) => candidate.objectKindId === raw || engagementCommandTokenEquals(candidate.objectKindId, token),
         );
         if (idx >= 0) {
+          const candidate = brushSource.candidates[idx]!;
+          rememberEngagementRepeat(`puzzle3d.brush.${candidate.objectKindId}.${candidate.sourceVortexIndex}`);
           brushSource.pickCandidate(idx);
         }
       }
       setCmdLine("");
     },
-    [brushSource, onBrushTool, onSelectTool, onZoomToSelection, snap.activeTool],
+    [brushSource, onBrushTool, onSelectTool, onZoomToSelection, rememberEngagementRepeat, snap.activeTool],
   );
   const spec = reactHostPort.useMemo(
     () =>
@@ -1331,13 +1335,19 @@ function Puzzle3dPlayEngagementPublisher(props: {
         onSelectTool,
         onBrushTool,
         onCycleBrushCandidate: () => brushSource.cycleCandidate(),
-        onPickBrushCandidate: (index) => brushSource.pickCandidate(index),
+        onPickBrushCandidate: (index) => {
+          const candidate = brushSource.candidates[index];
+          if (candidate) {
+            rememberEngagementRepeat(`puzzle3d.brush.${candidate.objectKindId}.${candidate.sourceVortexIndex}`);
+          }
+          brushSource.pickCandidate(index);
+        },
         onZoomToSelection,
         brushCandidates: brushSource.candidates,
         brushTargetActive: brushSource.targetActive,
         brushPlacementProbePending: brushSource.placementProbePending,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onRepeatLastEngagement, onSelectTool, onZoomToSelection, selectionCount, snap.activeTool],
+    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onRepeatLastEngagement, onSelectTool, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {

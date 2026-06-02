@@ -654,6 +654,7 @@ export class Puzzle3dPlayShellController extends Controller {
   private snapshotListeners = new Set<() => void>();
   private snapshotCache: Puzzle3dPlaySnapshot | null = null;
   private windowEngagement: WindowEngagement | undefined;
+  private lastEngagementRepeat: string | null = null;
   private hostBridge: Puzzle3dPlayHostBridge | null = null;
   private hierarchySectionsCache: readonly UiTreeSectionNode[] | null = null;
   private hierarchySectionsRevision = -1;
@@ -934,6 +935,7 @@ export class Puzzle3dPlayShellController extends Controller {
         placeholder: "Brush",
         onChange: puzzle3dPlayCmd("engagementInput"),
         onSubmit: puzzle3dPlayCmd("engagementSubmit"),
+        onRepeatLast: puzzle3dPlayCmd("engagementRepeatLast"),
       },
       possibleEngagements: [
         { id: PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle3dPlayCmd("engagementPossibleSelect", { possibleId: PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID }) },
@@ -966,12 +968,36 @@ export class Puzzle3dPlayShellController extends Controller {
     this.hostBridge = bridge;
   }
 
+  /** @emoji 🔁 Records the last engagement command eligible for Space repeat. */
+  private rememberEngagementRepeat(key: string): void {
+    this.lastEngagementRepeat = key;
+  }
+
+  /** @emoji 🔁 Replays {@link lastEngagementRepeat} (tools in-shell, brush/zoom via host bridge). */
+  private repeatLastEngagement(): void {
+    const last = this.lastEngagementRepeat;
+    if (!last) {
+      return;
+    }
+    if (last === PUZZLE_3D_ENGAGEMENT_ZOOM_ID) {
+      requestPuzzle3dZoomToSelection(this.selection);
+      return;
+    }
+    if (this.applyEngagementToolCommand(last)) {
+      return;
+    }
+    if (last.startsWith("puzzle3d.brush.")) {
+      this.hostBridge?.runHostCommand("engagementPossibleSelect", { possibleId: last });
+    }
+  }
+
   /** @emoji 🖌️ Activates select or brush from engagement possibles or command-line tokens (no React host bridge required). */
   private applyEngagementToolCommand(possibleIdOrToken: string | undefined): boolean {
     if (!possibleIdOrToken) {
       return false;
     }
     if (possibleIdOrToken === PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID || puzzle3dPlayEngagementCommandToken(possibleIdOrToken) === "brush") {
+      this.rememberEngagementRepeat(PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID);
       if (this.activeTool === "brush") {
         return true;
       }
@@ -980,6 +1006,7 @@ export class Puzzle3dPlayShellController extends Controller {
       return true;
     }
     if (possibleIdOrToken === PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID || puzzle3dPlayEngagementCommandToken(possibleIdOrToken) === "select") {
+      this.rememberEngagementRepeat(PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID);
       if (this.activeTool === "select") {
         return true;
       }
@@ -1093,6 +1120,11 @@ export class Puzzle3dPlayShellController extends Controller {
       }
       case "engagementPossibleSelect": {
         const possibleId = (args as { possibleId?: string })?.possibleId;
+        if (possibleId?.startsWith("puzzle3d.brush.")) {
+          this.rememberEngagementRepeat(possibleId);
+          this.hostBridge?.runHostCommand(command, args);
+          return;
+        }
         if (this.applyEngagementToolCommand(possibleId)) {
           return;
         }
@@ -1106,6 +1138,7 @@ export class Puzzle3dPlayShellController extends Controller {
           return;
         }
         if (token === "zoom") {
+          this.rememberEngagementRepeat(PUZZLE_3D_ENGAGEMENT_ZOOM_ID);
           requestPuzzle3dZoomToSelection(this.selection);
           return;
         }
@@ -1119,14 +1152,24 @@ export class Puzzle3dPlayShellController extends Controller {
           return;
         }
         if (optionId === PUZZLE_3D_ENGAGEMENT_ZOOM_ID) {
+          this.rememberEngagementRepeat(PUZZLE_3D_ENGAGEMENT_ZOOM_ID);
           requestPuzzle3dZoomToSelection(this.selection);
           return;
         }
         this.hostBridge?.runHostCommand(command, args);
         return;
       }
-      case "engagementInput":
+      case "rememberEngagementRepeat": {
+        const key = (args as { key?: string })?.key;
+        if (key) {
+          this.rememberEngagementRepeat(key);
+        }
+        return;
+      }
       case "engagementRepeatLast":
+        this.repeatLastEngagement();
+        return;
+      case "engagementInput":
       case "engagementAbort":
         this.hostBridge?.runHostCommand(command, args);
         return;
@@ -2166,6 +2209,34 @@ if (import.meta.vitest) {
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       ctrl.run("engagementPossibleSelect", { possibleId: PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID });
       expect(ctrl.getSnapshot().activeTool).toBe("brush");
+    });
+
+    it("engagementRepeatLast replays the last remembered engagement command", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      ctrl.run("engagementPossibleSelect", { possibleId: PUZZLE_3D_ENGAGEMENT_TOOL_BRUSH_ID });
+      expect(ctrl.getSnapshot().activeTool).toBe("brush");
+      ctrl.run("setActiveTool", { tool: "select" });
+      expect(ctrl.getSnapshot().activeTool).toBe("select");
+      ctrl.run("engagementRepeatLast", {});
+      expect(ctrl.getSnapshot().activeTool).toBe("brush");
+    });
+
+    it("engagementRepeatLast forwards brush possibles to the host bridge", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const hostCalls: string[] = [];
+      ctrl.setHostBridge({
+        runHostCommand: (command) => {
+          hostCalls.push(command);
+        },
+      });
+      ctrl.run("engagementPossibleSelect", { possibleId: "puzzle3d.brush.J.0" });
+      expect(hostCalls).toEqual(["engagementPossibleSelect"]);
+      ctrl.run("engagementRepeatLast", {});
+      expect(hostCalls).toEqual(["engagementPossibleSelect", "engagementPossibleSelect"]);
     });
 
     it("engagementSubmit activates brush from normalized command text without host bridge", () => {
