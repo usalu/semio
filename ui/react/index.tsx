@@ -622,64 +622,176 @@ function applyDocumentBodyBaseColors(): void {
   document.body.style.color = "var(--foreground)";
 }
 
+/** @emoji 🌓 Resolves whether {@link ElementsSurfaceTheme} is dark for the current system preference. */
+export function resolveElementsSurfaceChromeDark(theme: ElementsSurfaceTheme): boolean {
+  if (theme === "dark") return true;
+  if (theme === "light") return false;
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+/** @emoji 🌓 True when `document.documentElement` currently carries the dark surface chrome class. */
+export function isElementsSurfaceChromeDarkApplied(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+}
+
+type ElementsSurfaceChromeLease = { readonly id: number; readonly input: ElementsSurfaceChromeInput };
+
+let elementsSurfaceChromeLeaseSeq = 0;
+const elementsSurfaceChromeLeases: ElementsSurfaceChromeLease[] = [];
+let elementsSurfaceChromeDomBindings: ReturnType<typeof createDOMEventBinding> | null = null;
+let elementsSurfaceChromeSystemListenersInstalled = false;
+let elementsSurfaceChromeDeferredClearFrame = 0;
+
+function activeElementsSurfaceChromeInput(): ElementsSurfaceChromeInput | undefined {
+  return elementsSurfaceChromeLeases[elementsSurfaceChromeLeases.length - 1]?.input;
+}
+
+function syncElementsSurfaceChromeProviders(input: ElementsSurfaceChromeInput | undefined): void {
+  if (input) {
+    setExpertiseProvider(() => input.expertise);
+    setUiChromeCompactProvider(() => input.compact ?? false);
+    return;
+  }
+  setExpertiseProvider(() => Expertise.NORMAL);
+  setUiChromeCompactProvider(() => readStoredUiChromeCompact());
+}
+
+function clearElementsSurfaceChromeDom(): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  root.classList.remove("dark");
+  root.classList.remove("touch");
+  delete root.dataset.uiDevice;
+  delete root.dataset.uiCompact;
+  delete root.dataset.uiTheme;
+  root.style.colorScheme = "";
+  document.body.style.backgroundColor = "";
+  document.body.style.color = "";
+  document.body.style.colorScheme = "";
+}
+
+function applyElementsSurfaceChromeThemeDom(theme: ElementsSurfaceTheme): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const dark = resolveElementsSurfaceChromeDark(theme);
+  root.classList.toggle("dark", dark);
+  root.dataset.uiTheme = dark ? "dark" : "light";
+  const scheme = dark ? "dark" : "light";
+  root.style.colorScheme = scheme;
+  if (document.body) {
+    document.body.style.colorScheme = scheme;
+    applyDocumentBodyBaseColors();
+  }
+}
+
+/** @emoji 🌓 Applies `html.dark` and `color-scheme` before React/CSS load (play/static entries); does not register a surface-chrome lease. */
+export function bootstrapElementsSurfaceChromeDocument(theme: ElementsSurfaceTheme = "system"): void {
+  if (typeof document === "undefined") return;
+  cancelElementsSurfaceChromeDeferredClear();
+  applyElementsSurfaceChromeThemeDom(theme);
+}
+
+function cancelElementsSurfaceChromeDeferredClear(): void {
+  if (elementsSurfaceChromeDeferredClearFrame === 0 || typeof cancelAnimationFrame === "undefined") {
+    elementsSurfaceChromeDeferredClearFrame = 0;
+    return;
+  }
+  cancelAnimationFrame(elementsSurfaceChromeDeferredClearFrame);
+  elementsSurfaceChromeDeferredClearFrame = 0;
+}
+
+function scheduleElementsSurfaceChromeDeferredClear(): void {
+  if (typeof requestAnimationFrame === "undefined") {
+    if (elementsSurfaceChromeLeases.length === 0) {
+      clearElementsSurfaceChromeDom();
+    }
+    return;
+  }
+  cancelElementsSurfaceChromeDeferredClear();
+  elementsSurfaceChromeDeferredClearFrame = requestAnimationFrame(() => {
+    elementsSurfaceChromeDeferredClearFrame = 0;
+    if (elementsSurfaceChromeLeases.length === 0) {
+      clearElementsSurfaceChromeDom();
+    }
+  });
+}
+
+function applyElementsSurfaceChromeDom(input: ElementsSurfaceChromeInput): void {
+  if (typeof document === "undefined") return;
+  cancelElementsSurfaceChromeDeferredClear();
+  applyElementsSurfaceChromeThemeDom(input.theme);
+  const root = document.documentElement;
+  root.dataset.uiDevice = input.device;
+  root.classList.toggle("touch", input.device === "tablet");
+  root.dataset.uiCompact = (input.compact ?? false) ? "true" : "false";
+}
+
+function syncElementsSurfaceChromeDomFromLeaseStack(): void {
+  const input = activeElementsSurfaceChromeInput();
+  if (!input) {
+    clearElementsSurfaceChromeDom();
+    return;
+  }
+  applyElementsSurfaceChromeDom(input);
+}
+
+function ensureElementsSurfaceChromeSystemListeners(): void {
+  if (elementsSurfaceChromeSystemListenersInstalled || typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
+  elementsSurfaceChromeSystemListenersInstalled = true;
+  const bindings = createDOMEventBinding();
+  if (typeof window.matchMedia !== "function") {
+    installElementsSurfaceBrowserDefaultSuppression(bindings);
+    elementsSurfaceChromeDomBindings = bindings;
+    return;
+  }
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const onSystemThemeChange = (event: MediaQueryListEvent): void => {
+    const input = activeElementsSurfaceChromeInput();
+    if (!input || input.theme !== "system") return;
+    const root = document.documentElement;
+    const dark = event.matches;
+    root.classList.toggle("dark", dark);
+    root.dataset.uiTheme = dark ? "dark" : "light";
+    const scheme = dark ? "dark" : "light";
+    root.style.colorScheme = scheme;
+    if (document.body) {
+      document.body.style.colorScheme = scheme;
+      applyDocumentBodyBaseColors();
+    }
+    root.dataset.uiDevice = input.device;
+    root.classList.toggle("touch", input.device === "tablet");
+    root.dataset.uiCompact = (input.compact ?? false) ? "true" : "false";
+  };
+  bindings.listen(mq, "change", onSystemThemeChange);
+  installElementsSurfaceBrowserDefaultSuppression(bindings);
+  elementsSurfaceChromeDomBindings = bindings;
+}
+
 /**
  * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state, browser default input, and tooltip expertise.
  */
-export function applyElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): () => void {
-  setExpertiseProvider(() => expertise);
-  setUiChromeCompactProvider(() => compact);
-  const cleanups: Array<() => void> = [
-    () => setExpertiseProvider(() => Expertise.NORMAL),
-    () => setUiChromeCompactProvider(() => readStoredUiChromeCompact()),
-  ];
-
-  if (typeof window !== "undefined" && typeof document !== "undefined") {
-    const root = document.documentElement;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const bindings = createDOMEventBinding();
-    const applyTheme = (): void => {
-      const prefersDark = mq.matches;
-      const dark = theme === "dark" || (theme === "system" && prefersDark);
-      root.classList.toggle("dark", dark);
-      applyDocumentBodyBaseColors();
-    };
-    applyTheme();
-    bindings.listen(mq, "change", applyTheme);
-    installElementsSurfaceBrowserDefaultSuppression(bindings);
-    cleanups.push(() => {
-      bindings.dispose();
-      root.classList.remove("dark");
-      document.body.style.backgroundColor = "";
-      document.body.style.color = "";
-    });
-  }
-
-  if (typeof document !== "undefined") {
-    const root = document.documentElement;
-    root.dataset.uiDevice = device;
-    if (device === "tablet") {
-      root.classList.add("touch");
-    } else {
-      root.classList.remove("touch");
-    }
-    cleanups.push(() => {
-      delete root.dataset.uiDevice;
-      root.classList.remove("touch");
-    });
-  }
-
-  if (typeof document !== "undefined") {
-    const root = document.documentElement;
-    root.dataset.uiCompact = compact ? "true" : "false";
-    cleanups.push(() => {
-      delete root.dataset.uiCompact;
-    });
-  }
-
+export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput): () => void {
+  const lease: ElementsSurfaceChromeLease = { id: ++elementsSurfaceChromeLeaseSeq, input };
+  elementsSurfaceChromeLeases.push(lease);
+  ensureElementsSurfaceChromeSystemListeners();
+  syncElementsSurfaceChromeProviders(input);
+  syncElementsSurfaceChromeDomFromLeaseStack();
   return () => {
-    while (cleanups.length > 0) {
-      cleanups.pop()?.();
+    const index = elementsSurfaceChromeLeases.findIndex((entry) => entry.id === lease.id);
+    if (index >= 0) {
+      elementsSurfaceChromeLeases.splice(index, 1);
     }
+    if (elementsSurfaceChromeLeases.length === 0) {
+      syncElementsSurfaceChromeProviders(undefined);
+      scheduleElementsSurfaceChromeDeferredClear();
+      return;
+    }
+    syncElementsSurfaceChromeProviders(activeElementsSurfaceChromeInput());
+    syncElementsSurfaceChromeDomFromLeaseStack();
   };
 }
 
@@ -687,7 +799,7 @@ export function applyElementsSurfaceChrome({ theme, device, expertise, compact =
  * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
  */
 export function useElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): { mobile: boolean } {
-  reactHostPort.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise, compact }), [compact, device, expertise, theme]);
+  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ theme, device, expertise, compact }), [compact, device, expertise, theme]);
 
   return { mobile: device === "mobile" };
 }
@@ -18427,6 +18539,53 @@ if (treeVitest) {
         alignment: "bottom-right",
         margin: [26, 18],
       });
+    });
+  });
+
+  describe("ElementsSurfaceChrome", () => {
+    it("keeps dark class while nested leases are active", () => {
+      const outer = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL });
+      const inner = applyElementsSurfaceChrome({ theme: "light", device: "desktop", expertise: Expertise.NORMAL });
+      expect(document.documentElement.classList.contains("dark")).toBe(false);
+      inner();
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      outer();
+      expect(document.documentElement.classList.contains("dark")).toBe(false);
+    });
+
+    it("reapplies the previous lease after the top lease releases", () => {
+      const outer = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL, compact: false });
+      const inner = applyElementsSurfaceChrome({ theme: "dark", device: "tablet", expertise: Expertise.NORMAL, compact: true });
+      expect(document.documentElement.dataset.uiDevice).toBe("tablet");
+      expect(document.documentElement.dataset.uiCompact).toBe("true");
+      inner();
+      expect(document.documentElement.dataset.uiDevice).toBe("desktop");
+      expect(document.documentElement.dataset.uiCompact).toBe("false");
+      outer();
+    });
+
+    it("defers clearing dark until the next animation frame when the last lease releases", () => {
+      const raf = vi
+        .spyOn(globalThis, "requestAnimationFrame")
+        .mockImplementation((callback: FrameRequestCallback) => {
+          callback(0);
+          return 1;
+        });
+      const release = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL });
+      release();
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      expect(raf).toHaveBeenCalled();
+      expect(document.documentElement.classList.contains("dark")).toBe(false);
+      raf.mockRestore();
+    });
+
+    it("bootstrapElementsSurfaceChromeDocument applies system dark before leases exist", () => {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      bootstrapElementsSurfaceChromeDocument("system");
+      expect(document.documentElement.classList.contains("dark")).toBe(mq.matches);
+      document.documentElement.classList.remove("dark");
+      delete document.documentElement.dataset.uiTheme;
+      document.documentElement.style.colorScheme = "";
     });
   });
 

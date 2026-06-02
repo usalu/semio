@@ -332,10 +332,10 @@ export function puzzle3dObjectKindVorticesFromKitConnectors(
   return out;
 }
 
-const DOOR_CAPSULE_EAST_VORTEX_KIND = "door capsule east";
-const DOOR_CAPSULE_WEST_VORTEX_KIND = "door capsule west";
+const DOOR_CAPSULE_RIGHT_VORTEX_KIND = "door capsule right";
+const DOOR_CAPSULE_LEFT_VORTEX_KIND = "door capsule left";
 
-/** @emoji 🚪 Resolves east vs west door vortex kind from kit port name and connector CAD (single door per kind). */
+/** @emoji 🚪 Resolves left vs right door vortex kind from kit port name and connector CAD (single door per kind). */
 export function puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(
   portName: string,
   point: { readonly x: number; readonly y: number; readonly z: number },
@@ -343,7 +343,7 @@ export function puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(
   if (!portName.includes("door capsule")) {
     return portName;
   }
-  return point.x < 0 ? DOOR_CAPSULE_WEST_VORTEX_KIND : DOOR_CAPSULE_EAST_VORTEX_KIND;
+  return point.x < 0 ? DOOR_CAPSULE_LEFT_VORTEX_KIND : DOOR_CAPSULE_RIGHT_VORTEX_KIND;
 }
 
 function relabelDoorCapsuleVortexTemplate(vortex: ObjectKindVortexTemplate): ObjectKindVortexTemplate {
@@ -355,7 +355,7 @@ function relabelDoorCapsuleVortexTemplate(vortex: ObjectKindVortexTemplate): Obj
   return nextKind === vortex.vortexKind ? vortex : { ...vortex, vortexKind: nextKind };
 }
 
-/** @emoji 🚪 Relabels palette door vortex kinds from connector CAD (one east or west per kind, never both). */
+/** @emoji 🚪 Relabels palette door vortex kinds from connector CAD (one left or right per kind, never both). */
 export function enrichKindCatalogBundleDoorCapsules(bundle: KindCatalogBundle | undefined): KindCatalogBundle | undefined {
   if (!bundle?.objects?.length) {
     return bundle;
@@ -9218,37 +9218,37 @@ if (import.meta.vitest) {
     });
   });
   describe("puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint", () => {
-    it("infers west from negative local X for brush on door tambour west", () => {
+    it("infers left from negative local X for brush on door tambour right", () => {
       const catalogs: KindCatalogBundle = {
         objects: [
           {
             id: "s",
             meshUrl: "/meshes/capsule_s.glb",
-            vortices: [{ vortexKind: "door capsule east", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
+            vortices: [{ vortexKind: "door capsule right", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
           },
           {
             id: "L",
             meshUrl: "/meshes/capsule_L.glb",
-            vortices: [{ vortexKind: "door capsule east", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
+            vortices: [{ vortexKind: "door capsule right", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
           },
         ],
-        vortices: [{ id: "door capsule east" }, { id: "door capsule west" }, { id: "door tambour west" }],
+        vortices: [{ id: "door capsule right" }, { id: "door capsule left" }, { id: "door tambour right" }],
       };
       const enriched = enrichKindCatalogBundleDoorCapsules(catalogs)!;
-      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour west" };
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour right" };
       const compat: readonly KindCompatEntry[] = [
-        { bidirectional: true, specificity: "vortex", source: "door capsule west", target: "door tambour west" },
+        { bidirectional: true, specificity: "vortex", source: "door capsule left", target: "door tambour right" },
       ];
       const list = brushCompatibleCandidates(target, enriched, compat);
       expect(list.some((entry) => entry.objectKindId === "s")).toBe(true);
       expect(list.some((entry) => entry.objectKindId === "L")).toBe(false);
       const s = enriched.objects.find((k) => k.id === "s");
-      expect(s?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule west"]);
+      expect(s?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
       expect(s?.vortices).toHaveLength(1);
     });
-    it("infers east or west from CAD X even when kit port id names the other side", () => {
-      expect(puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint("door capsule east", { x: -1, y: 0, z: 0 })).toBe("door capsule west");
-      expect(puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint("door capsule west", { x: 1, y: 0, z: 0 })).toBe("door capsule east");
+    it("infers left or right from CAD X even when kit port id names the other side", () => {
+      expect(puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint("door capsule right", { x: -1, y: 0, z: 0 })).toBe("door capsule left");
+      expect(puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint("door capsule left", { x: 1, y: 0, z: 0 })).toBe("door capsule right");
     });
   });
 
@@ -9269,18 +9269,18 @@ if (import.meta.vitest) {
       expect(vortices[0]?.position).toEqual([-7.5, -7.7, 7.5]);
       expect(vortices[1]?.position).toEqual([-18.6, -7.7, 7.5]);
     });
-    it("infers a single west door vortex from negative-X kit connector", () => {
+    it("infers a single left door vortex from negative-X kit connector", () => {
       const vortices = puzzle3dObjectKindVorticesFromKitConnectors(
         [
           {
             point: { x: -1.3, y: -1.25, z: 0 },
             direction: { x: -1, y: 0, z: 0 },
-            port: { handleKind: "door capsule east" },
+            port: { handleKind: "door capsule right" },
           },
         ],
         (hk) => hk,
       );
-      expect(vortices.map((v) => v.vortexKind)).toEqual(["door capsule west"]);
+      expect(vortices.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
       expect(vortices).toHaveLength(1);
     });
   });
@@ -10117,33 +10117,33 @@ if (import.meta.vitest) {
         {
           id: "J",
           meshUrl: "/meshes/capsule_J.glb",
-          vortices: [{ vortexKind: "door capsule east", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
+          vortices: [{ vortexKind: "door capsule right", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
         },
         {
           id: "L",
           meshUrl: "/meshes/capsule_L.glb",
-          vortices: [{ vortexKind: "door capsule east", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
+          vortices: [{ vortexKind: "door capsule right", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
         },
         {
           id: "Tambour",
           meshUrl: "/meshes/tambour.glb",
           vortices: [
-            { vortexKind: "door tambour east", position: [0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 },
-            { vortexKind: "door tambour west", position: [-0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 },
+            { vortexKind: "door tambour left", position: [0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 },
+            { vortexKind: "door tambour right", position: [-0.9, 2.75, 0.2], direction: [0, 1, 0], radius: 0.36 },
           ],
         },
       ],
       vortices: [
-        { id: "door capsule east", defaultCableKind: "cable.link" },
-        { id: "door capsule west", defaultCableKind: "cable.link" },
-        { id: "door tambour east", defaultCableKind: "cable.link" },
-        { id: "door tambour west", defaultCableKind: "cable.link" },
+        { id: "door capsule right", defaultCableKind: "cable.link" },
+        { id: "door capsule left", defaultCableKind: "cable.link" },
+        { id: "door tambour left", defaultCableKind: "cable.link" },
+        { id: "door tambour right", defaultCableKind: "cable.link" },
       ],
       cables: [{ id: "cable.link", defaultAttractionKind: "puzzle3d.attraction.link" }],
     })!;
     const brushCompat: readonly KindCompatEntry[] = [
-      { bidirectional: true, specificity: "vortex", source: "door capsule east", target: "door tambour east" },
-      { bidirectional: true, specificity: "vortex", source: "door capsule west", target: "door tambour west" },
+      { bidirectional: true, specificity: "vortex", source: "door capsule right", target: "door tambour left" },
+      { bidirectional: true, specificity: "vortex", source: "door capsule left", target: "door tambour right" },
     ];
     it("brushPlacementCollisionToleranceFromSlider maps window slider to CAD penetration depth", () => {
       expect(brushPlacementCollisionToleranceFromSlider(0)).toBe(0);
@@ -10233,14 +10233,14 @@ if (import.meta.vitest) {
       ).toBe(false);
     });
     it("brushCompatibleCandidates filters by kind compatibility", () => {
-      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       expect(list.some((entry) => entry.objectKindId === "L")).toBe(true);
       expect(list.some((entry) => entry.objectKindId === "J")).toBe(false);
       expect(list.some((entry) => entry.objectKindId === "Tambour")).toBe(false);
     });
-    it("brushCompatibleCandidates pairs door tambour west with door capsule west only", () => {
-      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour west" };
+    it("brushCompatibleCandidates pairs door tambour right with door capsule left only", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour right" };
       const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       expect(list.some((entry) => entry.objectKindId === "J")).toBe(true);
       expect(list.some((entry) => entry.objectKindId === "L")).toBe(false);
@@ -10315,8 +10315,8 @@ if (import.meta.vitest) {
       const target: AttractionVortexContext = { objectId: "fs", objectKind: "First Storey Tambour", vortexKind: "tambour circular top" };
       expect(brushPlacementUsesHostOrientation(target, "tambour circular bottom", "Tambour")).toBe(false);
       expect(brushPlacementUsesHostOrientation({ objectId: "b", objectKind: "Base", vortexKind: "core rectangular bottom" }, "core circular top", "First Storey Tambour")).toBe(false);
-      expect(brushPlacementUsesHostOrientation(target, "door tambour east", "J")).toBe(false);
-      expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "J", vortexKind: "door capsule west" }, "door capsule west", "J")).toBe(true);
+      expect(brushPlacementUsesHostOrientation(target, "door tambour left", "J")).toBe(false);
+      expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "J", vortexKind: "door capsule left" }, "door capsule left", "J")).toBe(true);
     });
     it("vortexWorldCadFromObject matches scene graph world position", () => {
       const origin: Vec3 = [10, 0, 0];
@@ -10453,7 +10453,7 @@ if (import.meta.vitest) {
       applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
       const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [host, obstacle] };
       const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
-      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       const blocked = brushCollisionFreeCandidates({
         scene,
@@ -10470,7 +10470,7 @@ if (import.meta.vitest) {
       expect(blocked.free).toHaveLength(0);
     });
     it("brushCollisionFreeCandidates sets unknownPending when catalog meshes are not pooled yet", () => {
-      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       const pending = brushCollisionFreeCandidates({
         scene: { collectObjectGroups: () => [] },
@@ -10487,7 +10487,7 @@ if (import.meta.vitest) {
       expect(pending.free).toHaveLength(0);
     });
     it("brushMeshUrlsForCompatibleCandidates returns unique catalog mesh URLs", () => {
-      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       const urls = brushMeshUrlsForCompatibleCandidates(compatible, brushCatalogs);
       expect(urls.length).toBeGreaterThan(0);
@@ -10500,7 +10500,7 @@ if (import.meta.vitest) {
       applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
       const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
       const clearScene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
-      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       const clear = brushCollisionFreeCandidates({
         scene: clearScene,
@@ -10589,7 +10589,7 @@ if (import.meta.vitest) {
             objectKind: "Tambour",
             meshUrl: "/meshes/tambour.glb",
             origin: [0, 0, 0],
-            vortices: [{ id: "host:v0", vortexKind: "door tambour east", position: [0.9, 2.75, 0.2], direction: [0, 1, 0] }],
+            vortices: [{ id: "host:v0", vortexKind: "door tambour left", position: [0.9, 2.75, 0.2], direction: [0, 1, 0] }],
           },
         ],
       };

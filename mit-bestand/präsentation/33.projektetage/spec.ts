@@ -99,7 +99,18 @@ export const CATALOGUE_EMBODIMENT_COL2_LABEL = "catalogue-col2--label";
 export const CATALOGUE_EMBODIMENT_COL3_CROP = "catalogue-col3--crop";
 export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
 
-export const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+/** @emoji 📐 `bauteilbörse.png` pixel width÷height (1222×896). */
+export const CATALOGUE_SOURCE_ASPECT = 1222 / 896;
+
+const CATALOGUE_FRAME_WIDTH = 0.746;
+const CATALOGUE_FRAME_HEIGHT = CATALOGUE_FRAME_WIDTH / CATALOGUE_SOURCE_ASPECT;
+
+export const CATALOGUE_FRAME = {
+	x: 0.127,
+	y: 0.1 + (0.75 - CATALOGUE_FRAME_HEIGHT) / 2,
+	width: CATALOGUE_FRAME_WIDTH,
+	height: CATALOGUE_FRAME_HEIGHT,
+};
 
 /** @emoji 🏷 Grid keys of all 3×5 catalogue tiles → semantic participant ids. */
 export const CATALOGUE_TILE_SEMANTIC_KEYS = {
@@ -150,6 +161,7 @@ const CATALOGUE_SPLIT_RAW = split({
 	columns: 5,
 	frame: CATALOGUE_FRAME,
 	gap: 0,
+	sourceAspect: CATALOGUE_SOURCE_ASPECT,
 });
 
 export const CATALOGUE_SPLIT = catalogueSplitWithSemanticKeys(CATALOGUE_SPLIT_RAW);
@@ -331,7 +343,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		src: ASSET_CATALOGUE,
 		alt: "Komponentenkatalog",
 		crop: { x: 0, y: 0, width: 1, height: 1 },
-		fit: "fill",
+		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{
 		kind: "figure",
@@ -339,6 +351,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		src: ASSET_CATALOGUE,
 		alt: CATALOGUE_COLUMN_LABELS.col1,
 		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col1),
+		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{
 		kind: "text",
@@ -353,6 +366,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		src: ASSET_CATALOGUE,
 		alt: CATALOGUE_COLUMN_LABELS.col2,
 		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col2),
+		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{
 		kind: "text",
@@ -367,6 +381,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		src: ASSET_CATALOGUE,
 		alt: CATALOGUE_COLUMN_LABELS.col3,
 		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col3),
+		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{
 		kind: "text",

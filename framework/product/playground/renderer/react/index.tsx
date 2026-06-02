@@ -21,6 +21,7 @@ import {
   LevelProvider,
   staticTreePanelDefinition,
   useCommandHotkey,
+  bootstrapElementsSurfaceChromeDocument,
   useElementsSurfaceChrome,
   useMediaQuery,
   type EngagementSpec,
@@ -1164,6 +1165,7 @@ type PlaygroundDomRoot = HTMLElement & { __playgroundRoot?: Root };
 /** @emoji 🚀 Mounts an arbitrary React tree into `#root` (or `rootId`) inside {@link PlaygroundShell}. */
 export function mountPlaygroundApp(element: React.ReactElement, rootId = "root"): void {
   if (typeof document === "undefined") return;
+  bootstrapElementsSurfaceChromeDocument(PLAYGROUND_SYSTEM_SURFACE_CHROME.theme);
   const rootElement = document.getElementById(rootId) as PlaygroundDomRoot | null;
   if (!rootElement) throw new Error(`React root #${rootId} missing.`);
   rootElement.__playgroundRoot ??= createRoot(rootElement);

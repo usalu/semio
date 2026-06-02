@@ -13,7 +13,6 @@ import type {
     DispositionStyle,
     Arrangement,
     FigureEmbodiment,
-    FigureFit,
     ParticipantEmphasis,
     Slide,
     PdfEmbodiment,
@@ -1283,21 +1282,23 @@ export function resolvePresentationAssetUrl(src: string): string {
 	return `${base.endsWith("/") ? base : `${base}/`}${trimmed}`.replace(/\/{2,}/g, "/");
 }
 
+/** @emoji 📐 Physical aspect of a normalized crop (width÷height in source pixels). */
+export function figureCropPhysicalAspect(crop: DispositionPosition, sourceAspect = 1): number {
+	return (crop.width / crop.height) * sourceAspect;
+}
+
 /** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
 function figureCropCoverVars(
 	crop: DispositionPosition,
 	frame: DispositionPosition,
-	fit: FigureFit = "cover",
+	sourceAspect = 1,
 ): { readonly width: number; readonly height: number; readonly posX: number; readonly posY: number } {
 	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
 	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
 	const centerPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
 	const centerPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
-	if (fit === "fill" && frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
-		return { width: stretchWidth, height: stretchHeight, posX: centerPosX, posY: centerPosY };
-	}
 	if (frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
-		const cropAspect = crop.width / crop.height;
+		const cropAspect = figureCropPhysicalAspect(crop, sourceAspect);
 		const frameAspect = frame.width / frame.height;
 		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
 		return {
@@ -1428,13 +1429,13 @@ export function figureCropBackgroundVars(
 	frame?: DispositionPosition,
 	morphFrame?: DispositionPosition,
 ): CSSProperties {
-	const fit = embodiment.fit ?? "cover";
+	const sourceAspect = embodiment.sourceAspect ?? 1;
 	const restBasis = frame ?? morphFrame;
 	const morphBasis = morphFrame ?? frame;
 	const rest = restBasis
-		? figureCropCoverVars(crop, restBasis, fit)
-		: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, fit);
-	const morph = morphBasis ? figureCropCoverVars(crop, morphBasis, fit) : rest;
+		? figureCropCoverVars(crop, restBasis, sourceAspect)
+		: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, sourceAspect);
+	const morph = morphBasis ? figureCropCoverVars(crop, morphBasis, sourceAspect) : rest;
 	return {
 		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
 		["--presentation-figure-bg-size" as string]: `${rest.width}% ${rest.height}%`,
@@ -4849,7 +4850,7 @@ if (import.meta.vitest) {
 			) as HTMLElement;
 			expect(tileFrame).toBeTruthy();
 			expect(tileFrame.style.backgroundImage).toContain("/catalogue.png");
-			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 200%");
+			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toBe("240% 240%");
 			const tiles = [...container.querySelectorAll(".presentation-morph-slot--figure")] as HTMLElement[];
 			for (const node of tiles) {
 				const size = node.style.getPropertyValue("--presentation-figure-bg-size");
@@ -5144,11 +5145,12 @@ if (import.meta.vitest) {
 			expect(square["--presentation-figure-bg-position" as keyof typeof square]).toBe("25% 50%");
 		});
 
-		it("stretches full-source catalogue figures into the frame when fit is fill", () => {
+		it("uses uniform cover for full catalogue when sourceAspect matches the frame", () => {
+			const sourceAspect = 1222 / 896;
 			const crop = { x: 0, y: 0, width: 1, height: 1 };
-			const frame = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+			const frame = { x: 0.127, y: 0.2, width: 0.746, height: 0.746 / sourceAspect };
 			const vars = figureCropBackgroundVars(
-				{ kind: "figure", src: "/bauteilbörse.png", crop, fit: "fill" },
+				{ kind: "figure", src: "/bauteilbörse.png", crop, sourceAspect },
 				crop,
 				frame,
 			);

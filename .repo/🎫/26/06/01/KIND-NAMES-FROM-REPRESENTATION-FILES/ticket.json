@@ -3,11 +3,13 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix sketchpad bug: capsule types do not appear under capsule typology.",
-  "summary": "Puzzle 2d play window engagement options and brush distribution sliders showed UUID tails because labels used kindId.split('.').pop(). Play shell now resolves labels via puzzle2dNodeKindOverlayLabel / puzzle2dHandleKindOverlayLabel from stored kind catalogs. Playground notifyBrushCandidates uses the same overlay labels for brush window possibles.",
+  "summary": "Renamed door capsule east→door capsule right and door capsule west→door capsule left across nakagin fixtures, storybook board, metabolism kit fixtures, metabolism.cypher, and puzzle/3d/react (constants DOOR_CAPSULE_RIGHT/LEFT, CAD inference unchanged: negative X=left, positive X=right). Tambour left/right and other east/west kinds untouched. 258 puzzle 3d react tests pass.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪8e838cfdeead49bbbaceee1810ec1f00",
     "⚪7fdb29f0b939436e9249d23a5b01ea27",
-    "⚪5197a3c52c8b4b4b8f3b84e5dbeae5ac"
+    "⚪5197a3c52c8b4b4b8f3b84e5dbeae5ac",
+    "⚪f58af4ffc7a44b7e991524f5b3d8ca83",
+    "⚪d65e14f090854f6fb640e4a2fc469341"
   ]
 }

@@ -2437,7 +2437,7 @@
                 },
                 {
                     "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                    "name": "door capsule east",
+                    "name": "door capsule right",
                     "compatiblePorts": [
                         {
                             "id": "019ab243-21f4-73df-8cb4-50266f6860b8"
@@ -2446,7 +2446,7 @@
                 },
                 {
                     "id": "019ab243-21f4-73df-8cb4-4f2766b68b25",
-                    "name": "door capsule west",
+                    "name": "door capsule left",
                     "compatiblePorts": [
                         {
                             "id": "019ab243-21f4-73df-8cb4-57263e420e70"
@@ -2455,25 +2455,25 @@
                 },
                 {
                     "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                    "name": "door tambour east",
+                    "name": "door tambour left",
                     "compatiblePorts": [
                         {
                             "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
                         },
                         {
-                            "id": "019ab243-21f4-73df-8cb4-58d90f95991e"
+                            "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1"
                         }
                     ]
                 },
                 {
                     "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                    "name": "door tambour west",
+                    "name": "door tambour right",
                     "compatiblePorts": [
                         {
                             "id": "019ab243-21f4-73df-8cb4-4f2766b68b25"
                         },
                         {
-                            "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1"
+                            "id": "019ab243-21f4-73df-8cb4-58d90f95991e"
                         }
                     ]
                 },

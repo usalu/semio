@@ -716,6 +716,7 @@
 /* https://reactflow.dev/learn/customization/theming */
 
 @theme inline {
+  --color-background: var(--base);
   --color-base: var(--base);
   --color-canvas: var(--canvas);
   --color-window: var(--window);

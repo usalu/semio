@@ -60,6 +60,8 @@ import {
 	type Puzzle2dSelectionTargets,
 } from "../react/index.tsx";
 
+import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+
 //#region 🔖Ids
 export type Puzzle2dPlayPaneId = "2d-overview" | "2d-detail" | "2d-selection";
 
@@ -1541,6 +1543,7 @@ if (
 	!import.meta.vitest &&
 	import.meta.env.PUZZLE_PLAY_ENTRY === "2d"
 ) {
+	bootstrapElementsSurfaceChromeDocument("system");
 	void (async () => {
 		await import("./globals.css");
 		const { boot2dPlay } = await import("@framework/playground/renderer/react/puzzle/2d");

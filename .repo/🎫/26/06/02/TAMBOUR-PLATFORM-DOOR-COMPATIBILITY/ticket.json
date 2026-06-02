@@ -1,0 +1,14 @@
+{
+  "title": "Tambour Platform Door Compatibility",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Fix fixture port compatibilities: door tambour east only with platform west; door tambour west only with platform east.",
+  "summary": "Corrected cross-side platform ↔ door tambour port compatibility across metabolism shallow/reference/light kits and Nakagin puzzle/board fixtures: door tambour east ↔ platform west only; door tambour west ↔ platform east only. Platform east/west → door tambour west/east entries were already correct.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1524"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3f7a971b13ad4f90a5e19f332cf1e4b3"
+  ]
+}

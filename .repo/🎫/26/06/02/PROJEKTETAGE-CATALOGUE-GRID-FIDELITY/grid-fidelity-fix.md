@@ -1,12 +1,13 @@
-# Catalogue grid fidelity
+# Catalogue grid fidelity (cover only)
 
 ## Cause
-Bauteilkatalog showed the full `bauteilbörse.png` via `<img object-fit: cover>` while split tiles use CSS background crops stretched per cell. Image aspect (~1.36) vs `CATALOGUE_FRAME` (~1.0) made cover crop the catalogue; the 3×5 grid no longer matched the PNG.
+Full catalogue used `<img object-fit: cover>` while split tiles used background crops with cover math that ignored bitmap aspect (normalized crop only). Wide `bauteilbörse.png` (1222×896) in an almost-square frame looked unlike the tile mosaic.
 
-## Fix
-- `FigureEmbodiment.fit`: `"cover"` | `"fill"`.
-- Full catalogue: `crop: {0,0,1,1}`, `fit: "fill"` (background slot, 100%×100% in frame).
-- Split `tile()` defaults to `fit: "fill"` so cells match the mosaic.
+## Fix (no fill / no distort)
+- Removed `fit: "fill"`.
+- `FigureEmbodiment.sourceAspect` (width÷height); cover uses physical crop aspect `(crop.w/crop.h) * sourceAspect`.
+- `CATALOGUE_FRAME` height = width / sourceAspect, vertically centered in the former slot.
+- Full catalogue + split tiles share background cover with `CATALOGUE_SOURCE_ASPECT`.
 
 ## Tests
 - Renderer 93 passed; core 43 passed.

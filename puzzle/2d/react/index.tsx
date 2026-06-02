@@ -1202,6 +1202,9 @@ function puzzle2dProbeCssComputed(property: "color" | "backgroundColor", value: 
   const el = document.createElement("span");
   const key = property === "color" ? "color" : "background-color";
   el.setAttribute("style", `${key}:${value};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
+  if (document.documentElement.classList.contains("dark")) {
+    el.classList.add("dark");
+  }
   document.documentElement.appendChild(el);
   const out = getComputedStyle(el)[property];
   el.remove();

@@ -54,9 +54,6 @@ export interface TextEmbodiment {
 	readonly morphFromLines?: readonly string[];
 }
 
-/** @emoji 🖼 How a figure region fills its disposition frame (default {@link FigureEmbodiment.fit} is cover). */
-export type FigureFit = "cover" | "fill";
-
 /** @emoji 🖼 Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
 export interface FigureEmbodiment {
 	readonly kind: "figure";
@@ -64,8 +61,8 @@ export interface FigureEmbodiment {
 	readonly src: string;
 	readonly alt?: string;
 	readonly crop?: DispositionPosition;
-	/** @emoji 📐 `fill` stretches the crop into the frame (split grids); `cover` keeps uniform scale. */
-	readonly fit?: FigureFit;
+	/** @emoji 📐 Source bitmap width÷height; used with {@link FigureEmbodiment.crop} for uniform cover (default 1). */
+	readonly sourceAspect?: number;
 }
 
 /** @emoji 🎬 Video clip on a slide. */
@@ -367,6 +364,7 @@ export interface TileSpec {
 	readonly source: string;
 	readonly crop: DispositionPosition;
 	readonly alt?: string;
+	readonly sourceAspect?: number;
 }
 
 /** @emoji 🧩 Produces one cropped {@link FigureEmbodiment} from a source figure. */
@@ -377,7 +375,7 @@ export function tile(spec: TileSpec): FigureEmbodiment {
 		src: spec.source,
 		alt: spec.alt,
 		crop: spec.crop,
-		fit: "fill",
+		...(spec.sourceAspect !== undefined ? { sourceAspect: spec.sourceAspect } : {}),
 	};
 }
 //#endregion 🔖Tile
@@ -463,6 +461,7 @@ export interface SplitSpec {
 	readonly keyPrefix?: string;
 	readonly alt?: string;
 	readonly embodimentIdSuffix?: string;
+	readonly sourceAspect?: number;
 }
 
 /** @emoji ✂️ Artifacts produced by the split template (one participant and disposition per grid cell). */
@@ -496,6 +495,7 @@ export function split(spec: SplitSpec): SplitArtifacts {
 				source: spec.source,
 				crop: cell.crop,
 				alt: spec.alt,
+				sourceAspect: spec.sourceAspect,
 			}),
 		);
 		dispositions.push({
