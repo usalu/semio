@@ -63,17 +63,18 @@ A demo is an iframe that when active has full control over keyboard etc.
 # Disposition
 
 A disposition is a concrete positioned, sized and styled embodiment.
-A disposition is ephemerally modifyable (hoverable, draggable, selectable, resizable and rotatetable).
+A disposition is modifyable (hoverable, draggable, selectable, resizable and rotatetable).
+Every disposition has two small buttons on the top right that appear when it is selected: reset, enlarge.
+The reset button resets all modifications. The enlarge button turns the large.
 A selection rectangle is started when the user clicks into empty stapce.
 When the selection rectangle is going to the left partial inclusion is enough in order to select it.
- When the selection rectangle is going to the right full inclusion is necessary in order to select it.
-Because every disposition either disappears or morphs between slides, all ephemeral modification are lost after a slide changge.
+When the selection rectangle is going to the right full inclusion is necessary in order to select it.
 You MUST NOT distort an embodiment. It is always a filled, scaled to the shorter-side, centered and covers an arbitrary target size.
 
 # Morph
 
 A morph is when source dispositions (position, size, style) morphs into target dispositions (position, size, style).
-You MUST morph from the actual disposition including ephemeral modifications.
+You MUST morph from the actual disposition including modifications.
 
 ## OneToOne
 

@@ -68,7 +68,6 @@ import {
     type ReactNode,
     type RefObject,
 } from "react";
-import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { Document, Page, pdfjs } from "react-pdf";
 import Reveal from "reveal.js";
@@ -395,6 +394,16 @@ export function centerRevealResolvedArrangement(resolved: readonly RevealResolve
 //#endregion 🔖RevealMorph
 
 //#region 🔖ArrangementSettled
+/** @emoji 🔗 True when two slide sections share the same reveal.js auto-animate run id. */
+export function slidesShareAutoAnimateId(
+	fromSlide: HTMLElement | null | undefined,
+	toSlide: HTMLElement | null | undefined,
+): boolean {
+	const fromId = fromSlide?.getAttribute("data-auto-animate-id");
+	const toId = toSlide?.getAttribute("data-auto-animate-id");
+	return fromId !== null && fromId !== undefined && fromId === toId;
+}
+
 /** @emoji ⏳ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
 export function syncArrangementSettledState(
 	deckEl: HTMLElement,
@@ -2336,6 +2345,7 @@ interface PresentationInteractionState {
 	readonly selectIds: (ids: readonly string[], additive: boolean) => void;
 	readonly clearSelection: () => void;
 	readonly toggleFullscreen: (id: string) => void;
+	readonly clearTransform: (id: string) => void;
 }
 
 const PresentationInteractionContext = createContext<PresentationInteractionState | null>(null);
@@ -2418,6 +2428,17 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 		});
 	}, []);
 
+	const clearTransform = useCallback((id: string) => {
+		setTransforms((previous) => {
+			if (!previous.has(id)) {
+				return previous;
+			}
+			const next = new Map(previous);
+			next.delete(id);
+			return next;
+		});
+	}, []);
+
 	return useMemo(
 		() => ({
 			selectedIds,
@@ -2431,6 +2452,7 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 			selectIds,
 			clearSelection,
 			toggleFullscreen,
+			clearTransform,
 		}),
 		[
 			selectedIds,
@@ -2444,6 +2466,7 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 			selectIds,
 			clearSelection,
 			toggleFullscreen,
+			clearTransform,
 		],
 	);
 }
@@ -2897,6 +2920,9 @@ const InteractiveDisposition: FC<{
 		if ((event.target as HTMLElement).closest(".presentation-interaction-fullscreen")) {
 			return;
 		}
+		if ((event.target as HTMLElement).closest(".presentation-interaction-reset")) {
+			return;
+		}
 		event.preventDefault();
 		event.stopPropagation();
 		const additive = event.shiftKey;
@@ -2973,6 +2999,15 @@ const InteractiveDisposition: FC<{
 		interaction.toggleFullscreen(id);
 	};
 
+	const onResetClick = (event: React.MouseEvent): void => {
+		event.preventDefault();
+		event.stopPropagation();
+		if (!selected) {
+			interaction.selectIds([id], false);
+		}
+		interaction.clearTransform(id);
+	};
+
 	const wrapperClass = [
 		"presentation-interactive-disposition",
 		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
@@ -3047,6 +3082,14 @@ const InteractiveDisposition: FC<{
 		(selected || gesturing) &&
 		Boolean(useFlowInkFrame ? inkInWrapper ?? measuredNatural : chromeLayoutRect ?? effectiveRect);
 	const showHandles = showControls && !fullscreen;
+	const canResetPosition =
+		canvasDragActive ||
+		Boolean(
+			flowLayout &&
+				transform &&
+				measuredNatural &&
+				dispositionPositionChanged(flowDispositionManipulationRect(measuredNatural, undefined), transform),
+		);
 
 	return (
 		<div
@@ -3087,15 +3130,27 @@ const InteractiveDisposition: FC<{
 								))}
 							</div>
 						) : null}
-						<button
-							type="button"
-							className="presentation-interaction-fullscreen"
-							title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
-							aria-pressed={fullscreen}
-							onClick={onFullscreenClick}
-						>
-							{fullscreen ? "⤢" : "⤢"}
-						</button>
+						<div className="presentation-interaction-actions">
+							<button
+								type="button"
+								className="presentation-interaction-fullscreen"
+								title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
+								aria-pressed={fullscreen}
+								onClick={onFullscreenClick}
+							>
+								⤢
+							</button>
+							{canResetPosition ? (
+								<button
+									type="button"
+									className="presentation-interaction-reset"
+									title="Reset position"
+									onClick={onResetClick}
+								>
+									↺
+								</button>
+							) : null}
+						</div>
 					</>
 				) : null}
 			</div>
@@ -3112,7 +3167,8 @@ function isDispositionPointerTarget(target: EventTarget | null): boolean {
 			target.closest(".presentation-interactive-row-band") ||
 			target.closest(".presentation-interactive-visual-row") ||
 			target.closest(".presentation-interaction-handle") ||
-			target.closest(".presentation-interaction-fullscreen"),
+			target.closest(".presentation-interaction-fullscreen") ||
+			target.closest(".presentation-interaction-reset"),
 	);
 }
 
@@ -3499,9 +3555,6 @@ export const PresentationDeck: FC<{
 			}
 			prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
 			if (toSlide.getAttribute("title") === "catalogue-labels") {
-				flushSync(() => {
-					setSlideEpoch((epoch) => epoch + 1);
-				});
 				for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-target-ghost")) {
 					void ghost.offsetHeight;
 				}
@@ -3521,7 +3574,9 @@ export const PresentationDeck: FC<{
 			}
 			syncArrangementSettledState(deckEl, currentSlide, previousSlide);
 			previousSlideRef.current = currentSlide;
-			setSlideEpoch((epoch) => epoch + 1);
+			if (!slidesShareAutoAnimateId(previousSlide, currentSlide)) {
+				setSlideEpoch((epoch) => epoch + 1);
+			}
 			scheduleFinalizeAutoAnimateRest();
 		};
 		const onWindowHashChange = (): void => {
@@ -4487,6 +4542,17 @@ if (import.meta.vitest) {
 			expect(pairs).toHaveLength(1);
 			expect(pairs[0]?.from.getAttribute("data-id")).toBe("catalogue-col1");
 			expect(pairs[0]?.from.classList.contains("presentation-morph-slot--figure")).toBe(true);
+		});
+
+		it("detects consecutive slides in the same auto-animate run", () => {
+			const focus = document.createElement("section");
+			focus.setAttribute("data-auto-animate-id", "medien--m0");
+			const labels = document.createElement("section");
+			labels.setAttribute("data-auto-animate-id", "medien--m0");
+			const overview = document.createElement("section");
+			overview.setAttribute("data-auto-animate-id", "medien--m1");
+			expect(slidesShareAutoAnimateId(focus, labels)).toBe(true);
+			expect(slidesShareAutoAnimateId(focus, overview)).toBe(false);
 		});
 
 		it("clears settled state when arriving on a slide and prepares it before morph to listed targets", () => {
@@ -6123,6 +6189,38 @@ if (import.meta.vitest) {
 				".presentation-interaction-fullscreen",
 			) as HTMLButtonElement;
 			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
+		});
+
+		it("resets a dragged canvas-framed disposition to its declared position", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			const originLeft = disposition.style.left;
+			const originTop = disposition.style.top;
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.querySelector(".presentation-interaction-reset")).toBeNull();
+			act(() => {
+				pointerDrag(disposition, 300, 280, 380, 320);
+			});
+			expect(disposition.style.left).not.toBe(originLeft);
+			const reset = disposition.querySelector(".presentation-interaction-reset") as HTMLButtonElement;
+			expect(reset).toBeTruthy();
+			const fullscreen = disposition.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
+			expect(reset.compareDocumentPosition(fullscreen) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+			act(() => {
+				reset.click();
+			});
+			expect(disposition.style.left).toBe(originLeft);
+			expect(disposition.style.top).toBe(originTop);
+			expect(disposition.querySelector(".presentation-interaction-reset")).toBeNull();
 		});
 
 		it("scales pdf pages to cover the disposition frame", async () => {

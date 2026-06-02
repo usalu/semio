@@ -489,11 +489,21 @@
 	cursor: ew-resize;
 }
 
-.reveal .presentation-interaction-fullscreen {
+.reveal .presentation-interaction-actions {
 	position: absolute;
 	top: 4px;
 	right: 4px;
 	z-index: 60;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-fullscreen,
+.reveal .presentation-interaction-reset {
+	position: static;
 	pointer-events: auto;
 	width: 1.5rem;
 	height: 1.5rem;
@@ -505,14 +515,14 @@
 	font-size: 0.75rem;
 	line-height: 1;
 	cursor: pointer;
-	pointer-events: auto;
 	transition:
 		background-color 0.15s ease,
 		color 0.15s ease,
 		border-color 0.15s ease;
 }
 
-.reveal .presentation-interaction-fullscreen:hover {
+.reveal .presentation-interaction-fullscreen:hover,
+.reveal .presentation-interaction-reset:hover {
 	background: var(--hover-panel);
 	color: var(--foreground);
 	border-color: var(--border-element-color);
