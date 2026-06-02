@@ -120,8 +120,9 @@ import {
 	ArrowRight,
 	ArrowUp,
 	ArrowRightLeft as ArrowRightLeftIcon,
-	Check as CheckIcon,
-	Filter as FilterIcon,
+  Check as CheckIcon,
+  ChevronRight as ChevronRightIcon,
+  Filter as FilterIcon,
 	Folder,
 	FolderOpen as FolderOpenIcon,
 	Hand as HandIcon,
@@ -154,11 +155,14 @@ import {
 	BasicChatPanel,
 	Breadcrumb,
 	type BreadcrumbItemData,
-	Button,
-	ButtonCycle,
-	ButtonGroup,
-	ButtonGroupItem,
-	CommandDialog,
+  Button,
+  ButtonCycle,
+  ButtonGroup,
+  ButtonGroupItem,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  CommandDialog,
 	CommandEmpty,
 	CommandGroup,
 	CommandInput,
@@ -214,11 +218,14 @@ import {
 	VirtualFileSystem as VirtualFileSystemView,
 	type VirtualFileSystemRow,
 	type VirtualFileSystemSchema,
-	windowMeasureControlClass,
-	windowMeasureLabelClass,
-	windowMeasureSectionClass,
-	windowMeasureTileClass,
-	windowMeasureToggleClass,
+  windowMeasureControlClass,
+  windowMeasureGroupChildrenClass,
+  windowMeasureGroupHeaderClass,
+  windowMeasureLabelClass,
+  windowMeasureSectionClass,
+  windowMeasureTileClass,
+  windowMeasureTileNestedClass,
+  windowMeasureToggleClass,
 	type AssertUiToolbarParentKeysCovered,
 } from "@ui/react";
 // #endregion 🔌Adapters
@@ -302,6 +309,7 @@ export type UIWindowMeasure =
   | { kind: "reading"; id: string; label?: string; text: string; monospace?: boolean }
   | { kind: "section"; id: string; title: string }
   | { kind: "separator"; id: string }
+  | { kind: "group"; id: string; label: string; defaultOpen?: boolean; children: UIWindowMeasure[] }
   | { kind: "toggle"; id: string; label?: string; pressed?: boolean; defaultPressed?: boolean; icon?: React.ReactNode; text?: string; onPressedChange?: (pressed: boolean) => void }
   | { kind: "select"; id: string; label?: string; value?: string; defaultValue?: string; items: { id: string; value: string; label: string }[]; onValueChange?: (value: string) => void }
   | { kind: "combobox"; id: string; label?: string; value?: string; placeholder?: string; choices: { value: string; label: string }[]; onValueChange?: (value: string) => void }
@@ -559,43 +567,63 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
 
 // #region 🪟WindowMeasuresOverlay
 
-const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; children: React.ReactNode }> = ({ measureId, label, children }) => (
-  <div data-slot="window-measure-float" data-measure-id={measureId} className={windowMeasureTileClass}>
+const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; nested?: boolean; children: React.ReactNode }> = ({ measureId, label, nested, children }) => (
+  <div
+    data-slot={nested ? "window-measure-nested" : "window-measure-float"}
+    data-measure-id={measureId}
+    className={nested ? windowMeasureTileNestedClass : windowMeasureTileClass}
+  >
     {label ? <span className={windowMeasureLabelClass}>{label}</span> : null}
     <div className={windowMeasureControlClass}>{children}</div>
   </div>
 );
 
-/**
- * 📐 Maps declarative `UIWindowMeasure` entries into compact floating tiles aligned to the right edge.
- **/
-export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ measures }) => (
-  <div data-slot="window-measures-stack-inner" className="flex w-full min-w-0 flex-col gap-half">
-    {measures.map((measure) => {
-      switch (measure.kind) {
-        case "display":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <div className="text-foreground max-w-full text-xs leading-snug break-words">{measure.content}</div>
-            </UIWindowMeasureFloat>
-          );
-        case "reading":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <div className={cn("text-foreground text-xs tabular-nums", measure.monospace && "font-mono")}>{measure.text}</div>
-            </UIWindowMeasureFloat>
-          );
-        case "section":
-          return (
-            <span key={measure.id} data-slot="window-measure-heading" className={windowMeasureSectionClass}>
-              {measure.title}
-            </span>
-          );
-        case "separator":
-          return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
-        case "toggle":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
+type UIWindowMeasureGroupNode = Extract<UIWindowMeasure, { kind: "group" }>;
+
+const UIWindowMeasureGroup: React.FC<{ measure: UIWindowMeasureGroupNode }> = ({ measure }) => {
+  const [open, setOpen] = React.useState(measure.defaultOpen ?? true);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="pointer-events-auto w-full min-w-0 shrink-0">
+      <CollapsibleTrigger type="button" className={windowMeasureGroupHeaderClass}>
+        <ChevronRightIcon className={cn("text-muted-foreground size-[10px] shrink-0 transition-transform", open && "rotate-90")} />
+        <span className={cn(windowMeasureSectionClass, "flex-1 px-0 py-0 text-left normal-case tracking-normal")}>{measure.label}</span>
+      </CollapsibleTrigger>
+      <CollapsibleContent className={windowMeasureGroupChildrenClass}>
+        {measure.children.map((child) => (
+          <React.Fragment key={child.id}>{renderUIWindowMeasure(child, true)}</React.Fragment>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
+function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React.ReactNode {
+  switch (measure.kind) {
+    case "group":
+      return <UIWindowMeasureGroup measure={measure} />;
+    case "display":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <div className="text-foreground max-w-full text-xs leading-snug break-words">{measure.content}</div>
+        </UIWindowMeasureFloat>
+      );
+    case "reading":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <div className={cn("text-foreground text-xs tabular-nums", measure.monospace && "font-mono")}>{measure.text}</div>
+        </UIWindowMeasureFloat>
+      );
+    case "section":
+      return (
+        <span key={measure.id} data-slot="window-measure-heading" className={windowMeasureSectionClass}>
+          {measure.title}
+        </span>
+      );
+    case "separator":
+      return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
+    case "toggle":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
               <Toggle
                 id={measure.id}
                 className={windowMeasureToggleClass}

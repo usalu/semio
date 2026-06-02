@@ -3,7 +3,7 @@
   "emoji": "🫡",
   "status": "closed",
   "description": "Create .cursor/agents/micro-commit.md and .agents/skills/micro-commit/SKILL.md for fast WIP micro-commits: bump counter, parent wip header, timestamp, git diff summaries. Triggers: g, go, c, commit, +1.",
-  "summary": "Micro-commit agent now writes commit.template (gkcommittemplate.txt) for GitKraken plus COMMIT_EDITMSG for CLI; documents GK preference to apply template and WIP panel refresh.",
+  "summary": "Removed .cursor/agents/micro-commit.md; full workflow lives only in .agents/skills/micro-commit/SKILL.md for use via @micro-commit in a general agent session.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repomechanisms🎯repocommitmechanism",
   "sessions": [
     "⚪7059dbbe0520474dbb974a75da0164f9",
@@ -11,6 +11,7 @@
     "⚪0d4d34a0d56b49edab4aad52a49ee79d",
     "⚪0b264496d53e4abb92f678fd8c95d320",
     "⚪78342385abf74fe3a88cf6b8a9abbaab",
-    "⚪d294ff5ad1f649309825e61746c0bd6b"
+    "⚪d294ff5ad1f649309825e61746c0bd6b",
+    "⚪3de30fe94526436ea604ae248255e754"
   ]
 }

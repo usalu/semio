@@ -95,7 +95,16 @@ export interface WindowMeasureToggle {
 	readonly onChange: CommandDescriptor;
 }
 
-export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle;
+/** @emoji 🌳 Collapsible branch in the window measures rail; {@link children} are leaves or nested groups. */
+export interface WindowMeasureGroup {
+	readonly kind: "group";
+	readonly id: string;
+	readonly label: string;
+	readonly defaultOpen?: boolean;
+	readonly children: readonly WindowMeasure[];
+}
+
+export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle | WindowMeasureGroup;
 //#endregion 🔖WindowMeasure
 
 //#region 🔖KindWeights

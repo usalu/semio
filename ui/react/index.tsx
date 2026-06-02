@@ -2259,6 +2259,18 @@ export const windowMeasureSectionClass =
 /** @emoji 📐 Constrains measure controls to the rail width. */
 export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 
+/** @emoji 🌳 Compact disclosure header for a nested measure group. */
+export const windowMeasureGroupHeaderClass =
+  "pointer-events-auto flex w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-tiny hover:bg-hover-window";
+
+/** @emoji 🌳 Indented children under a measure group (minimal chrome). */
+export const windowMeasureGroupChildrenClass =
+  "pointer-events-none flex w-full min-w-0 flex-col gap-tiny border-l border-element/30 pl-single ml-tiny";
+
+/** @emoji 🌳 Nested measure leaf without an outer tile border (indent only). */
+export const windowMeasureTileNestedClass =
+  "pointer-events-auto select-none w-full min-w-0 shrink-0 px-tiny py-tiny";
+
 /** @emoji 📐 Toggle sized to fit inside a measure tile. */
 export const windowMeasureToggleClass =
   "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:truncate";
