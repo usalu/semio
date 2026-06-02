@@ -695,6 +695,24 @@
 
 .reveal
 	.slides
+	section[title="catalogue"].presentation-arrangement--settled[data-auto-animate="pending"]
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure:has(
+		.presentation-media-figure
+	),
+.reveal
+	.slides
+	section[title="catalogue"].presentation-arrangement--settled[data-auto-animate="running"]
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure:has(
+		.presentation-media-figure
+	) {
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+
+.reveal
+	.slides
 	section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="pending"]
 	.presentation-arrangement-canvas
 	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure,

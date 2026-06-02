@@ -1232,6 +1232,27 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 const DISPOSITION_MIN_FRACTION = 0.02;
 const POINTER_DRAG_THRESHOLD_PX = 3;
 
+/** @emoji 🖱 Disposition ids to move/resize for this gesture (before async `selectIds` commits). */
+function resolveDispositionDragGroupIds(
+	id: string,
+	wasSelected: boolean,
+	additive: boolean,
+	selectedIds: ReadonlySet<string>,
+): readonly string[] {
+	if (!wasSelected) {
+		if (additive) {
+			const group = new Set(selectedIds);
+			group.add(id);
+			return group.size > 1 ? [...group] : [id];
+		}
+		return [id];
+	}
+	if (additive) {
+		return [id];
+	}
+	return selectedIds.size > 1 ? [...selectedIds] : [id];
+}
+
 /** @emoji 📐 Ephemeral slide-space rectangle for interactive dispositions (normalized 0..1). */
 export type DispositionTransform = DispositionPosition;
 
@@ -2406,6 +2427,7 @@ const InteractiveDisposition: FC<{
 			mode: "move" | DispositionResizeHandle,
 			initialRect: DispositionPosition,
 			requireDragThreshold: boolean,
+			dragMemberIds: readonly string[],
 		): void => {
 			const section = sectionRef.current;
 			if (!section) {
@@ -2415,12 +2437,7 @@ const InteractiveDisposition: FC<{
 			const gesturePlacementBounds = fractionContainer.getBoundingClientRect();
 			const pointerId = origin.pointerId;
 			const startClient = { x: origin.clientX, y: origin.clientY };
-			const selectedAtStart = new Set(interaction.selectedIds);
-			if (!selectedAtStart.has(id)) {
-				selectedAtStart.add(id);
-			}
-			const groupIds =
-				selectedAtStart.has(id) && selectedAtStart.size > 1 ? [...selectedAtStart] : [id];
+			const groupIds = dragMemberIds.length > 1 ? [...dragMemberIds] : [id];
 			const startRects = new Map<string, DispositionPosition>();
 			for (const memberId of groupIds) {
 				const memberDeclared = allDeclaredRects.get(memberId);
@@ -2579,6 +2596,12 @@ const InteractiveDisposition: FC<{
 		event.preventDefault();
 		event.stopPropagation();
 		const additive = event.shiftKey;
+		const dragMemberIds = resolveDispositionDragGroupIds(
+			id,
+			selected,
+			additive,
+			interaction.selectedIds,
+		);
 		if (!selected) {
 			interaction.selectIds([id], additive);
 		} else if (additive) {
@@ -2599,6 +2622,7 @@ const InteractiveDisposition: FC<{
 			"move",
 			rect,
 			true,
+			dragMemberIds,
 		);
 	};
 
@@ -2608,6 +2632,12 @@ const InteractiveDisposition: FC<{
 		}
 		event.preventDefault();
 		event.stopPropagation();
+		const dragMemberIds = resolveDispositionDragGroupIds(
+			id,
+			selected,
+			false,
+			interaction.selectedIds,
+		);
 		if (!selected) {
 			interaction.selectIds([id], false);
 		}
@@ -2626,6 +2656,7 @@ const InteractiveDisposition: FC<{
 			handle,
 			rect,
 			false,
+			dragMemberIds,
 		);
 	};
 
@@ -5371,6 +5402,75 @@ if (import.meta.vitest) {
 			expect(
 				dispositions[0]!.querySelector(".presentation-interactive-disposition__content")?.style.transform,
 			).toBe("");
+		});
+
+		it("click-drags only the newly targeted disposition when another stays selected", () => {
+			const twoBoxDeck: Presentation = {
+				id: "interactive-dom-click-drag",
+				name: "Interactive DOM Click Drag",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "placed",
+										participants: [{ id: "left" }, { id: "right" }],
+										embodiments: [
+											{ kind: "text", id: "left--main", lines: ["Left"], level: "body" },
+											{ kind: "text", id: "right--main", lines: ["Right"], level: "body" },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "placed",
+													dispositions: [
+														{
+															participantId: "left",
+															embodimentId: "left--main",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.3, width: 0.3, height: 0.2 },
+														},
+														{
+															participantId: "right",
+															embodimentId: "right--main",
+															emphasis: "active",
+															position: { x: 0.6, y: 0.3, width: 0.3, height: 0.2 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, twoBoxDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const dispositions = [...container.querySelectorAll("[data-disposition-id]")] as HTMLElement[];
+			const section = dispositions[0]!.closest(
+				"section.presentation-arrangement--interactive",
+			) as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(dispositions[0]!, 96, 210, 288, 140);
+			mockClientRect(dispositions[1]!, 576, 210, 288, 140);
+			act(() => {
+				pointerClick(dispositions[0]!, 240, 280);
+			});
+			const peerBefore = dispositions[0]!.style.left;
+			act(() => {
+				pointerDrag(dispositions[1]!, 720, 280, 880, 320);
+			});
+			expect(dispositions[0]!.style.left).toBe(peerBefore);
+			expect(parseFloat(dispositions[1]!.style.left)).toBeCloseTo(86.667, 1);
 		});
 
 		it("shows tile disposition drag preview outside the declared frame without clipping", () => {

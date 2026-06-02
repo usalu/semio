@@ -1,11 +1,13 @@
 {
   "title": "Brush Engagement No Suggestions",
   "emoji": "🖌️",
-  "status": "closed",
+  "status": "open",
   "description": "Brush tool shows no preview or engagement suggestions when hovering near unconnected nodes (e.g. tambour). Fix brush slot hit-testing and anchor positions to match indirect-handle UX.",
-  "summary": "Fixed brush slot discovery so hovering near unconnected nodes (node body, indirect ring, or flush slot) activates preview and engagement candidates. Brush anchors now use indirect-handle positions at overview/normal LOD with zoom-aware hit tolerance matching link hover.",
+  "summary": "Brush previews now finalize on slot exit: WASM host materializes the placed node/edge before clearing the overlay, brushPlace carries stable nodeId/edgeId to the fixture, and authoring peers mark the descriptor dirty and invalidate so the GPU host syncs immediately.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪ad84c03b55e748c0a3a72bd739850158"
+    "⚪ad84c03b55e748c0a3a72bd739850158",
+    "⚪0e1a987a9d854ec3a207de149131ab6b",
+    "⚪ed6441377cb54d208220a3d7ad032913"
   ]
 }

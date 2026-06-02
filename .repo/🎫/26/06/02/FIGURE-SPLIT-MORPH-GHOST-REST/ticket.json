@@ -1,0 +1,10 @@
+{
+  "title": "Figure Split Morph Ghost Rest",
+  "emoji": "🎭",
+  "status": "open",
+  "description": "Fix presentation framework 1-to-n figure-to-tiles morph: slide before split should show only the big figure with tile ghosts at opacity 0; on transition to split slide ghosts go full opacity then morph starts. Currently pre-split slide wrongly shows tiles instead of original figure.",
+  "goal": "🎯presentation",
+  "sessions": [
+    "⚪44b73e2872164fbd8dd095a47330accb"
+  ]
+}

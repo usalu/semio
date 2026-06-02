@@ -2849,6 +2849,7 @@ mod board_host {
         brush_preview: Option<BrushPreviewSnapshot>,
         brush_candidates_emit_key: Option<String>,
         brush_preview_emit_key: Option<String>,
+        brush_placement_serial: u64,
     }
 
     impl Default for Camera {
@@ -2913,6 +2914,7 @@ mod board_host {
                 brush_preview: None,
                 brush_candidates_emit_key: None,
                 brush_preview_emit_key: None,
+                brush_placement_serial: 0,
             }
         }
     }
@@ -4008,8 +4010,10 @@ mod board_host {
             })
         }
 
-        fn brush_place_json(preview: &BrushPreviewSnapshot) -> serde_json::Value {
+        fn brush_place_json(preview: &BrushPreviewSnapshot, node_id: &str, edge_id: &str) -> serde_json::Value {
             let mut flat = json!({
+                "nodeId": node_id,
+                "edgeId": edge_id,
                 "nodeKind": preview.node_kind_id,
                 "sourceHandleId": preview.source_handle_id,
                 "targetHandleIndex": preview.target_handle_index,
@@ -4088,11 +4092,91 @@ mod board_host {
             }
         }
 
+        fn brush_allocate_placement_ids(&mut self) -> (String, String) {
+            self.brush_placement_serial = self.brush_placement_serial.wrapping_add(1);
+            let serial = self.brush_placement_serial;
+            (format!("puzzle2d.brush.{serial}"), format!("puzzle2d.brush.edge.{serial}"))
+        }
+
+        /// @emoji 🖌️ Materializes a brush preview into the WASM host graph so clearing the overlay keeps the placed node visible.
+        fn apply_brush_placement_to_host(&mut self, preview: &BrushPreviewSnapshot, node_id: &str, edge_id: &str) -> bool {
+            if self.handle_has_incident_edge(preview.source_handle_id.as_str()) {
+                return false;
+            }
+            let target_handle_id = format!("{node_id}:h{}", preview.target_handle_index);
+            if self.handles.contains_key(target_handle_id.as_str()) {
+                return false;
+            }
+            if self.edges.contains_key(edge_id) {
+                return false;
+            }
+            let (radius, width, height) = match preview.shape {
+                NodeShape::Circle => (preview.radius, 0.0, 0.0),
+                NodeShape::Rectangle => (0.0, preview.width, preview.height),
+            };
+            self.nodes.insert(
+                node_id.to_string(),
+                NodeData {
+                    id: node_id.to_string(),
+                    x: preview.x,
+                    y: preview.y,
+                    shape: preview.shape,
+                    radius,
+                    width,
+                    height,
+                    scale: 1.0,
+                    draggable: true,
+                    selected: false,
+                    visible: true,
+                    root: false,
+                    style: None,
+                    text: None,
+                    icon_kind: preview.icon_kind.clone(),
+                    node_kind: preview.node_kind_id.clone(),
+                },
+            );
+            for (index, tmpl) in preview.handles.iter().enumerate() {
+                let hid = format!("{node_id}:h{index}");
+                self.handles.insert(
+                    hid.clone(),
+                    HandleData {
+                        id: hid,
+                        node_id: node_id.to_string(),
+                        angle: tmpl.angle,
+                        radius: tmpl.radius.unwrap_or(8.0),
+                        scale: 1.0,
+                        selected: false,
+                        visible: true,
+                        style: None,
+                        handle_kind: tmpl.handle_kind.clone(),
+                        color_fill: None,
+                        icon_kind: None,
+                    },
+                );
+            }
+            self.edges.insert(
+                edge_id.to_string(),
+                EdgeData {
+                    id: edge_id.to_string(),
+                    source: preview.source_handle_id.clone(),
+                    target: target_handle_id,
+                    selected: false,
+                    visible: true,
+                    style: None,
+                    edge_kind: String::new(),
+                },
+            );
+            true
+        }
+
         fn brush_commit_preview(&mut self) {
             let Some(preview) = self.brush_preview.take() else {
                 return;
             };
-            self.push_event("brushPlace", Self::brush_place_json(&preview));
+            let (node_id, edge_id) = self.brush_allocate_placement_ids();
+            if self.apply_brush_placement_to_host(&preview, node_id.as_str(), edge_id.as_str()) {
+                self.push_event("brushPlace", Self::brush_place_json(&preview, node_id.as_str(), edge_id.as_str()));
+            }
             self.bump_content_scene_generation();
             self.brush_preview_emit_key = None;
         }
@@ -10027,6 +10111,46 @@ mod host_tests {
         assert!(ev2.contains("brushPlace"), "expected brushPlace on leave, got: {ev2}");
         assert!(ev2.contains("brush.kind"));
         assert!(ev2.contains("a:h0"));
+        assert!(ev2.contains("nodeId"));
+        assert!(ev2.contains("edgeId"));
+        assert_eq!(h.nodes.len(), 3, "placed brush node must remain on the host after preview clears");
+        assert_eq!(h.edges.len(), 1);
+    }
+
+    #[test]
+    fn board_host_brush_slot_commit_survives_pointer_move_out_of_slot() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [{ "handleKind": "child", "angle": 3.141592653589793 }]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let _ = h.drain_events_json();
+        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_move_screen(inside.x, inside.y, false, false);
+        let _ = h.drain_events_json();
+        assert_eq!(h.nodes.len(), 2);
+        let far = h.world_to_screen(Point::new(500.0, 500.0));
+        h.pointer_move_screen(far.x, far.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushPlace"), "expected brushPlace when leaving slot, got: {ev}");
+        assert_eq!(h.nodes.len(), 3, "brush placement must persist on the host after leaving the slot");
+        assert_eq!(h.edges.len(), 1);
     }
 
     #[test]

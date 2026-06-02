@@ -775,8 +775,10 @@ export interface Puzzle2dBrushPlacePayload {
   readonly targetHandleIndex: number;
   readonly x: number;
   readonly y: number;
+  readonly edgeId?: string;
   readonly height?: number;
   readonly iconKind?: string;
+  readonly nodeId?: string;
   readonly radius?: number;
   readonly width?: number;
 }
@@ -1804,7 +1806,7 @@ export function applyBrushPlacementToFixture(
   payload: Puzzle2dBrushPlacePayload,
   catalogs?: KindCatalogBundle,
 ): Puzzle2dBrushPlacementApplyResult {
-  const nodeId = `puzzle2d.brush.${crypto.randomUUID()}`;
+  const nodeId = payload.nodeId?.trim() || `puzzle2d.brush.${crypto.randomUUID()}`;
   const handles = puzzle2dFixtureHandlesFromNodeKind(nodeId, payload.handles);
   const targetHandle = handles[payload.targetHandleIndex];
   if (!targetHandle) {
@@ -1816,7 +1818,7 @@ export function applyBrushPlacementToFixture(
   if (handles.some((h) => fixture.edges.some((e) => e.source === h.id || e.target === h.id))) {
     return { kind: "unchanged" };
   }
-  const edgeId = `puzzle2d.brush.edge.${crypto.randomUUID()}`;
+  const edgeId = payload.edgeId?.trim() || `puzzle2d.brush.edge.${crypto.randomUUID()}`;
   const edge: Puzzle2dFixtureEdgeV1 = { id: edgeId, source: payload.sourceHandleId, target: targetHandle.id };
   const iconKind = payload.iconKind?.trim() || puzzle2dIconKindForBrushNodeKind(fixture, catalogs, payload.nodeKind);
   const base = { handles, id: nodeId, nodeKind: payload.nodeKind, x: payload.x, y: payload.y, ...(iconKind ? { iconKind } : {}) };
@@ -5006,6 +5008,10 @@ export class Puzzle2dRenderer {
             const shape = String(p.shape ?? "circle") === "rectangle" ? "rectangle" : "circle";
             const iconKindRaw = p.iconKind;
             const iconKind = typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
+            const nodeIdRaw = p.nodeId;
+            const edgeIdRaw = p.edgeId;
+            const nodeId = typeof nodeIdRaw === "string" && nodeIdRaw.trim() !== "" ? nodeIdRaw.trim() : undefined;
+            const edgeId = typeof edgeIdRaw === "string" && edgeIdRaw.trim() !== "" ? edgeIdRaw.trim() : undefined;
             const payload: Puzzle2dBrushPlacePayload = {
               handles,
               nodeKind: String(p.nodeKind ?? ""),
@@ -5014,6 +5020,8 @@ export class Puzzle2dRenderer {
               targetHandleIndex: Number(p.targetHandleIndex ?? 0),
               x: Number(p.x),
               y: Number(p.y),
+              ...(nodeId ? { nodeId } : {}),
+              ...(edgeId ? { edgeId } : {}),
               ...(iconKind ? { iconKind } : {}),
               ...(shape === "rectangle"
                 ? { height: Number(p.height), width: Number(p.width) }
@@ -5023,6 +5031,7 @@ export class Puzzle2dRenderer {
               break;
             }
             this.emitter.emit("brushPlace", payload);
+            this.markSceneDescriptorDirty();
             break;
           }
           default:
@@ -9681,6 +9690,8 @@ export function puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture: Puzzle
     peer.resetDeclarativeSceneSyncFingerprint();
     syncPuzzle2dScene(peer, merged);
     puzzle2dEnsureSceneEdgesFromDescriptor(peer, merged);
+    peer.markSceneDescriptorDirty();
+    peer.invalidate();
   }
 }
 //#endregion 🔖MultiViewAuthoring
