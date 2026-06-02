@@ -3,7 +3,7 @@
   "emoji": "🔀",
   "status": "closed",
   "description": "Fix slides 8→9 (catalogue-focus → catalogue-labels): many-to-one tile morph via per-tile ghosts with same data-id at label position. reveal.js cannot FLIP visibility:hidden ghosts.",
-  "summary": "Fixed slides 8→9 (Bauteilarten → Bauteilbeschriftungen) morph: `.presentation-morph-source` ghosts at rest now use opacity:0 only (visibility:visible) so reveal.js can measure FLIP targets. Previously visibility:hidden made ghosts non-animatable and tiles faded as unmatched. Added CSS regression test; renderer (64) and core (40) vitest pass; projektetage focus→labels integration tests pass.",
+  "summary": "Fixed slides 8→9 morph: (1) morph-source ghosts rest with opacity:0 only (visibility:visible) for reveal FLIP measurement; (2) morph-source wrappers always use morphFrom label frames, never ephemeral canvas transforms from focus tiles; (3) declaredDispositionRect keeps morph-source positions; (4) clearRevealAutoAnimateInlineLayout strips reveal FLIP inline left/top/transform after auto-animate; (5) prepareArrangementBeforeAutoAnimate forces layout on label-slide ghosts. Tests: renderer 66, core 40 pass; DOM asserts Stütze ghost at inlineColumnLabelPosition(2) not focus layout.",
   "goal": "🎯presentation",
   "sessions": []
 }

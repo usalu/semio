@@ -4642,6 +4642,10 @@ export class Puzzle2dRenderer {
     raw: string,
     options?: { readonly silentStructuralRemoves?: boolean; readonly silentCamera?: boolean },
   ): void {
+    const silentStructuralRemoves =
+      options?.silentStructuralRemoves ??
+      (this.declarativeSceneEdgeExpectation > 0 && this.structuralDeleteFixtureMirrorDepth <= 0);
+    const drainOptions = { silentStructuralRemoves, silentCamera: options?.silentCamera };
     let rows: Array<{ name: string; payload: Record<string, unknown> }>;
     try {
       rows = JSON.parse(raw) as Array<{ name: string; payload: Record<string, unknown> }>;
@@ -4672,7 +4676,7 @@ export class Puzzle2dRenderer {
             this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
             this.wasmViewportLeading = true;
             this.bumpTextOverlayGeometryEpoch();
-            if (!options?.silentCamera) {
+            if (!drainOptions.silentCamera) {
               this.emitter.emit("camera", { ...this.camera });
             }
             break;
@@ -4733,7 +4737,7 @@ export class Puzzle2dRenderer {
           }
           case "edgeDelete": {
             const id = String((row.payload as { id: string }).id);
-            if (options?.silentStructuralRemoves && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.has(id)) {
+            if (drainOptions.silentStructuralRemoves && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.has(id)) {
               const edge = this.scene.edges.get(id);
               if (edge) {
                 this.clearWasmHostAuthorshipForEdge(id);
@@ -4750,7 +4754,7 @@ export class Puzzle2dRenderer {
               const remove = () => {
                 this.scene.remove(edge);
               };
-              if (options?.silentStructuralRemoves) {
+              if (drainOptions.silentStructuralRemoves) {
                 this.runWithoutSceneDeleteEvents(remove);
               } else {
                 remove();
@@ -4769,7 +4773,7 @@ export class Puzzle2dRenderer {
               const remove = () => {
                 this.scene.remove(node);
               };
-              if (options?.silentStructuralRemoves) {
+              if (drainOptions.silentStructuralRemoves) {
                 this.runWithoutSceneDeleteEvents(remove);
               } else {
                 remove();

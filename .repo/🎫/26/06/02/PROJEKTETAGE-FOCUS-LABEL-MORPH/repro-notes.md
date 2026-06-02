@@ -4,7 +4,12 @@
 `.reveal .presentation-morph-source` used `visibility: hidden !important` at rest. reveal.js FLIP measurement treats hidden targets as non-animatable; focus tiles were unmatched and faded instead of morphing into per-tile ghosts on `catalogue-labels`.
 
 ## Fix
-Rest ghosts with `opacity: 0` only; keep `visibility: visible` so label-position ghosts remain measurable. Pending/running rules unchanged (ghosts visible during morph, fade out; labels fade in).
+1. Rest ghosts with `opacity: 0` only; keep `visibility: visible` so label-position ghosts remain measurable.
+2. Morph-source wrappers pin to `morphFrom` label frames (never ephemeral focus drag transforms).
+3. `clearRevealAutoAnimateInlineLayout` after auto-animate so reveal FLIP inline geometry does not stick on ghosts.
+4. Force layout on label-slide `.presentation-morph-source` nodes before focus→labels morph.
+
+Expanded data already had label positions; DOM tests confirm `catalogue-labels--Stütze` uses inline label slot %, not focus column %.
 
 ## Tests
 - framework/product/presentation/renderer/react: 64 passed

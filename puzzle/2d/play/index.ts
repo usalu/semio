@@ -957,9 +957,9 @@ export class Playground2d extends Playground {
 
 export type Puzzle2dPlayStructuralDeleteItem = { kind: "edge" | "node"; id: string };
 
-/** @emoji 🪢 Restores fixture edges from a seed when resync stripped them but the node graph is intact (nakagin play recovery). */
+/** @emoji 🪢 Restores fixture edges from a seed when WASM/resync drained them (nakagin play recovery). */
 export function puzzle2dPlayRehydrateFixtureEdgesIfMissing(fixture: Puzzle2dFixtureV1, seed: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
-	if (fixture.edges.length > 0 || fixture.nodes.length !== seed.nodes.length) {
+	if (fixture.edges.length > 0 || seed.edges.length === 0) {
 		return fixture;
 	}
 	return { ...fixture, edges: seed.edges.map((edge) => ({ ...edge })) };

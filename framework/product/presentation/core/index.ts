@@ -2155,6 +2155,8 @@ if (import.meta.vitest) {
 			const morphSource = labels?.arrangement.dispositions.find((disposition) => disposition.morphSource);
 			expect(morphSource?.morphAnchorId).toBe("labels--0");
 			expect(morphSource?.morphSource).toBe(true);
+			expect(morphSource?.position).toEqual({ x: 0.38, y: 0.12, width: 0.24, height: 0.24 });
+			expect(morphSource?.position).not.toEqual({ x: 0.1, y: 0.2, width: 0.3, height: 0.6 });
 			expect(arrangementRestDispositions(labels!.arrangement)).toHaveLength(1);
 		});
 

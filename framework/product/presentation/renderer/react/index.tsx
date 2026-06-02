@@ -259,6 +259,18 @@ export function slideChangedEventSlides(event: Event): {
 	};
 }
 
+/** @emoji 🧹 Strips reveal.js FLIP inline layout so React-declared morph frames win after auto-animate. */
+export function clearRevealAutoAnimateInlineLayout(deckEl: HTMLElement): void {
+	const layoutProps = ["transform", "transition", "left", "top", "width", "height"] as const;
+	for (const element of deckEl.querySelectorAll<HTMLElement>(
+		"[data-auto-animate-target], .presentation-morph-source, .presentation-morph-into",
+	)) {
+		for (const prop of layoutProps) {
+			element.style.removeProperty(prop);
+		}
+	}
+}
+
 /** @emoji ✅ Clears reveal `pending`/`running` on slides so morph-source/into rest CSS applies after FLIP completes. */
 export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
 	for (const slide of deckEl.querySelectorAll<HTMLElement>(
@@ -266,6 +278,7 @@ export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
 	)) {
 		slide.setAttribute("data-auto-animate", "");
 	}
+	clearRevealAutoAnimateInlineLayout(deckEl);
 	for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
 		delete element.dataset.autoAnimateTarget;
 	}
@@ -284,6 +297,10 @@ export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSl
 	}
 	fromSlide.classList.add("presentation-arrangement--settled");
 	void fromSlide.offsetHeight;
+	void toSlide.offsetHeight;
+	for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-morph-source")) {
+		void ghost.offsetHeight;
+	}
 }
 
 type AutoAnimateMatcherHost = {
@@ -1702,6 +1719,9 @@ export function isUsableMeasuredRect(rect: DispositionPosition): boolean {
 
 /** @emoji 📐 Declared placement for one resolved disposition. */
 export function declaredDispositionRect(disposition: ResolvedDisposition): DispositionPosition | undefined {
+	if (disposition.morphSource) {
+		return disposition.position;
+	}
 	if (disposition.style?.opacity === 0) {
 		return undefined;
 	}
@@ -2522,7 +2542,11 @@ const InteractiveDisposition: FC<{
 		// 🔀 The wrapper owns the reveal `data-id` morph anchor; placing it on the live ephemeral
 		// rect (drag/resize) makes reveal.js auto-animate capture the modified frame as the morph
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
-		Object.assign(wrapperFrame, transformFrameStyle(canvasLiveTransform ?? canvasAnchorRect));
+		// 👻 Morph-source ghosts must stay on morphFrom label frames, never ephemeral focus tiles.
+		const morphAnchorRect = disposition.morphSource
+			? canvasAnchorRect
+			: (canvasLiveTransform ?? canvasAnchorRect);
+		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
 	}
@@ -3782,6 +3806,19 @@ if (import.meta.vitest) {
 					],
 			);
 			expect(new Set(positions).size).toBe(4);
+		});
+
+		it("clearRevealAutoAnimateInlineLayout removes reveal FLIP inline geometry from morph nodes", () => {
+			const deckEl = document.createElement("div");
+			const ghost = document.createElement("div");
+			ghost.className = "presentation-morph-source";
+			ghost.dataset.autoAnimateTarget = "0";
+			ghost.style.left = "77%";
+			ghost.style.transform = "translate(10px, 20px) scale(2)";
+			deckEl.appendChild(ghost);
+			clearRevealAutoAnimateInlineLayout(deckEl);
+			expect(ghost.style.left).toBe("");
+			expect(ghost.style.transform).toBe("");
 		});
 
 		it("finalizeRevealAutoAnimateRestState clears running so morph sources rest hidden", () => {

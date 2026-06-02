@@ -6005,10 +6005,10 @@ mod board_host {
 
         /// @emoji 📏 Screen-pixel edge stroke width (world-clip tiles and post-cache overlay).
         fn edge_screen_stroke_width_px(&self, lod: BoardDrawLod) -> f64 {
-            if lod == BoardDrawLod::Minimap {
-                1.12_f64
-            } else {
-                2.0 * self.camera.zoom.max(0.75)
+            match lod {
+                BoardDrawLod::Minimap => 1.12_f64,
+                BoardDrawLod::Overview | BoardDrawLod::Compact => (2.75_f64).max(2.0 * self.camera.zoom),
+                _ => 2.0 * self.camera.zoom.max(0.75),
             }
         }
 

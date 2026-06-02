@@ -2240,13 +2240,13 @@ export const windowMeasuresRailWidthClass = "w-[min(10rem,calc(100%-0.5rem))]";
 export const windowMeasuresOverlayClass =
   "pointer-events-none absolute inset-y-0 right-0 z-panel flex flex-col items-stretch p-single";
 
-/** @emoji 📐 Scrollable stack of measure tiles inside the rail. */
+/** @emoji 📐 Scrollable stack of measure tiles inside the rail (tiles opt in to hits; gaps pass through to the canvas). */
 export const windowMeasuresStackClass =
-  "pointer-events-auto flex min-h-0 flex-1 flex-col gap-half overflow-y-auto overscroll-contain";
+  "pointer-events-none flex min-h-0 flex-1 flex-col gap-half overflow-y-auto overscroll-contain";
 
 /** @emoji 📐 Single measure tile in the window rail. */
 export const windowMeasureTileClass =
-  "border-element/40 bg-window/90 w-full min-w-0 shrink-0 rounded-sm border px-single py-half";
+  "pointer-events-auto select-none border-element/40 bg-window/90 w-full min-w-0 shrink-0 rounded-sm border px-single py-half";
 
 /** @emoji 📐 Optional measure caption above a control. */
 export const windowMeasureLabelClass =
@@ -11946,23 +11946,23 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           ) : null}
           {engagement && active ? (
             <div
-              ref={engagementZoneRef}
               data-slot="window-engagement-overlay"
               data-expanded={showEngagementChrome ? "true" : undefined}
-              className={cn(
-                "pointer-events-auto absolute inset-x-0 top-0 z-panel flex min-h-large flex-col items-start justify-start pl-1 pt-1",
-                !showEngagementChrome && "h-large",
-              )}
-              onPointerEnter={() => setEngagementZoneHovered(true)}
-              onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
-              onPointerDownCapture={() => {
-                setEngagementActivated(true);
-                if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
-              }}
+              className="pointer-events-none absolute left-0 top-0 z-panel flex max-w-full flex-col items-start justify-start pl-1 pt-1"
             >
               <div
+                ref={engagementZoneRef}
                 data-slot="window-engagement-hover-zone"
-                className="flex w-[min(100%,28rem)] max-w-[calc(100%-5rem)] min-w-0 flex-col items-stretch"
+                className={cn(
+                  "pointer-events-auto flex w-[min(100%,28rem)] max-w-[calc(100%-5rem)] min-w-0 select-none flex-col items-stretch",
+                  !showEngagementChrome && "h-large",
+                )}
+                onPointerEnter={() => setEngagementZoneHovered(true)}
+                onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
+                onPointerDownCapture={() => {
+                  setEngagementActivated(true);
+                  if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+                }}
                 onFocusCapture={() => {
                   setEngagementActivated(true);
                   setEngagementZoneFocused(true);
