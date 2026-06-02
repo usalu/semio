@@ -3,10 +3,11 @@
   "emoji": "🌉",
   "status": "closed",
   "description": "Fix places where bridge.glb and other metabolism representation files resolve to wrong paths (stale assets/semio/metabolism vs fixtures/kit/dev/metabolism/representations).",
-  "summary": "Bridge pieces showed the puzzle 3D placeholder box because findTypeInKit only searched kit.types; metabolism keeps all kinds under typologies (root types count 0). Fixed by flattening typologies in findTypeInKit/findDesignInKit, normalizing representations {items} in sketchpadListTypeRepresentations, and routing piece mesh resolution through that helper. bridge.glb on disk (367772 bytes) was always correct — not swapped with placeholder.glb (771728 bytes).",
+  "summary": "Puzzle 3d showed placeholder/wrong bridge because sketchpadKitFileUrlById could not map bridge file id to /meshes/bridge.glb: GraphQL hasFiles omitted file name (only id/url/description), and inline data: blobs took precedence over fixture meshes. Fixed by adding name to SKETCHPAD_KIT_READ_INNER, preferring /meshes/* for metabolism *.glb kit files before blobs, and merging typology-backed types in sketchpadMergeKitDtoFromBundleProjection.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪32c186745e3a46cdbbffcfe36157f3ea",
-    "⚪3cc4d315c9724123910e335416f9f4a3"
+    "⚪3cc4d315c9724123910e335416f9f4a3",
+    "⚪13a73382759c456486b9a72925a053c6"
   ]
 }

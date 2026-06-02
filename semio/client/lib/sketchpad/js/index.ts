@@ -11002,7 +11002,7 @@ hasTypes {
 qualities { edges { node { id key value } } }
 hasFolders { edges { node { id path description } } }
 authors { edges { node { id name } } }
-hasFiles { edges { node { id url description } } }`;
+hasFiles { edges { node { id name url description } } }`;
 
 function sketchpadFormatKitTimestamp(value: unknown): string {
 	if (value == null || value === "") return "";
@@ -11384,6 +11384,11 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 	const map = new Map<string, string>();
 	for (const file of kit.files ?? []) {
 		const row = file as { id: string; url?: string; uri?: string; path?: string; name?: string; blob?: string };
+		const puzzleMesh = sketchpadPuzzle3dMeshUrlForKitFile(row);
+		if (puzzleMesh) {
+			map.set(row.id, puzzleMesh);
+			continue;
+		}
 		if (row.blob && typeof row.blob === "string" && /^(?:blob:|data:|https?:)/i.test(row.blob)) {
 			map.set(row.id, row.blob);
 			continue;
@@ -11391,11 +11396,6 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 		const direct = row.url ?? row.uri;
 		if (direct) {
 			map.set(row.id, direct);
-			continue;
-		}
-		const puzzleMesh = sketchpadPuzzle3dMeshUrlForKitFile(row);
-		if (puzzleMesh) {
-			map.set(row.id, puzzleMesh);
 			continue;
 		}
 		if (row.path) {
@@ -11435,6 +11435,14 @@ export interface SketchpadTypeRepresentationRef {
 	readonly tags?: unknown;
 }
 
+function sketchpadMergeKitTypeRepresentations(target: Type, source: Type | undefined): Type {
+	if (!source) return target;
+	const liveReps = sketchpadListTypeRepresentations(target);
+	const bundleReps = sketchpadListTypeRepresentations(source);
+	if (liveReps.length > 0 || bundleReps.length === 0) return target;
+	return { ...target, representations: source.representations } as Type;
+}
+
 /** @emoji 🔀 Overlays bundle projection types/files when GraphQL materialization omits representations. */
 export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Kit): Kit {
 	const sourceFiles = source.files ?? [];
@@ -11446,15 +11454,19 @@ export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Ki
 					...targetFiles,
 					...sourceFiles.filter((file) => !targetFiles.some((row) => row.id === file.id)),
 				];
-	const types = (target.types ?? []).map((type) => {
-		const sourceType = source.types?.find((row) => row.id === type.id);
-		if (!sourceType) return type;
-		const liveReps = sketchpadListTypeRepresentations(type);
-		const bundleReps = sketchpadListTypeRepresentations(sourceType);
-		if (liveReps.length > 0 || bundleReps.length === 0) return type;
-		return { ...type, representations: sourceType.representations } as Type;
-	});
-	return { ...target, files, types } as Kit;
+	const sourceTypes = sketchpadKitTypeRows(source);
+	const types = sketchpadKitTypeRows(target).map((type) =>
+		sketchpadMergeKitTypeRepresentations(type, sourceTypes.find((row) => row.id === type.id)),
+	);
+	const targetTypologies = sketchpadKitTypologyRows(target);
+	const sourceTypologies = sketchpadKitTypologyRows(source);
+	const typologies =
+		sourceTypologies.length === 0
+			? (target as { typologies?: unknown }).typologies
+			: targetTypologies.length === 0
+				? (source as { typologies?: unknown }).typologies
+				: (target as { typologies?: unknown }).typologies;
+	return { ...target, files, types, typologies } as Kit;
 }
 
 /** @emoji 📋 Lists representation rows on a kit kind. */
@@ -15228,12 +15240,28 @@ if (import.meta.vitest) {
 	});
 
 	describe("sketchpadKitFileUrlById", () => {
-		it("maps embedded file blobs to data URLs", () => {
+		it("maps embedded file blobs to data URLs when the row is not a metabolism glb name", () => {
 			const kit = {
 				id: "k",
-				files: [{ id: "f1", name: "mesh.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
+				files: [{ id: "f1", name: "mesh.bin", blob: "data:application/octet-stream;base64,AAAA" }],
 			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:model/gltf-binary;base64,AAAA");
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:application/octet-stream;base64,AAAA");
+		});
+
+		it("resolves metabolism glbs by file name for puzzle 3d even without url", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "bridge.glb" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/meshes/bridge.glb");
+		});
+
+		it("prefers fixture /meshes over inline blobs for metabolism glb names", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "f1", name: "bridge.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/meshes/bridge.glb");
 		});
 
 		it("resolves metabolism representation glbs for puzzle 3d via /meshes", () => {

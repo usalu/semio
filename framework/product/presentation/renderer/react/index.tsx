@@ -230,6 +230,13 @@ export function syncArrangementSettledState(
 	if (currentSlide?.hasAttribute("data-settle-before-morph-to")) {
 		currentSlide.classList.remove("presentation-arrangement--settled");
 	}
+	if (
+		currentSlide?.classList.contains("presentation-arrangement--settled") &&
+		currentSlide.getAttribute("data-auto-animate") !== "pending" &&
+		currentSlide.getAttribute("data-auto-animate") !== "running"
+	) {
+		currentSlide.classList.remove("presentation-arrangement--settled");
+	}
 }
 
 /** @emoji 🔗 Resolves the reveal.js slide section at stack indices `h` / `v`. */
@@ -280,6 +287,14 @@ export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
 	clearRevealAutoAnimateInlineLayout(deckEl);
 	for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
 		delete element.dataset.autoAnimateTarget;
+	}
+	const presentSlide = deckEl.querySelector<HTMLElement>("section.present");
+	if (
+		presentSlide?.classList.contains("presentation-arrangement--settled") &&
+		presentSlide.getAttribute("data-auto-animate") !== "pending" &&
+		presentSlide.getAttribute("data-auto-animate") !== "running"
+	) {
+		presentSlide.classList.remove("presentation-arrangement--settled");
 	}
 }
 
@@ -4635,14 +4650,59 @@ if (import.meta.vitest) {
 			mountRoot.remove();
 		});
 
-		it("hides settled catalogue-focus tiles in stylesheet while morphing into labels", async () => {
+		it("hides settled catalogue-focus tiles in stylesheet only while auto-animating into labels", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
 			const css = readFileSync(cssPath, "utf8");
-			expect(css).toContain('section[title="catalogue-focus"].presentation-arrangement--settled');
+			expect(css).toContain(
+				'section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="pending"]',
+			);
+			expect(css).toContain(
+				'section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="running"]',
+			);
 			expect(css).toContain("opacity: 0 !important");
+		});
+
+		it("shows catalogue and focus figure crops at rest without morph-source or dormant slots", async () => {
+			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
+				await import("@framework/presentation/core");
+			type SlideFile = import("@framework/presentation/core").SlideFile;
+			const { presentationMeta } = await import("@mit-bestand/praesentation/projektetage-spec");
+			const slideModules = import.meta.glob<{ default: SlideFile }>(
+				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
+				{ eager: true },
+			);
+			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			for (const title of ["catalogue", "catalogue-focus"] as const) {
+				const slide = mountRoot.querySelector(`section[title="${title}"]`) as HTMLElement;
+				expect(slide.classList.contains("presentation-arrangement--settled")).toBe(false);
+				const slots = slide.querySelectorAll(".presentation-morph-slot--figure");
+				expect(slots.length).toBeGreaterThan(0);
+				for (const slot of slots) {
+					expect(slot.classList.contains("presentation-morph-source")).toBe(false);
+					expect(slot.classList.contains("presentation-morph-slot--dormant")).toBe(false);
+				}
+				const fills = slide.querySelectorAll(".presentation-figure-crop-fill");
+				expect(fills.length).toBe(slots.length);
+				for (const fill of fills) {
+					const backgroundImage = (fill as HTMLElement).style.backgroundImage;
+					expect(backgroundImage.length).toBeGreaterThan(0);
+					expect(backgroundImage).not.toBe("none");
+				}
+			}
+			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			focusSlide.classList.add("presentation-arrangement--settled");
+			syncArrangementSettledState(mountRoot.querySelector(".reveal") as HTMLElement, focusSlide, null);
+			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
+			mountRoot.remove();
 		});
 
 		it("puts reveal data-id on catalogue tile wrappers for catalogue-to-focus morph", async () => {

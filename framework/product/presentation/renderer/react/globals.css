@@ -644,7 +644,12 @@
 
 .reveal
 	.slides
-	section[title="catalogue-focus"].presentation-arrangement--settled
+	section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="pending"]
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure,
+.reveal
+	.slides
+	section[title="catalogue-focus"].presentation-arrangement--settled[data-auto-animate="running"]
 	.presentation-arrangement-canvas
 	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure {
 	opacity: 0 !important;
