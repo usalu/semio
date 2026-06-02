@@ -211,20 +211,7 @@ function puzzle3dPlayDoorCapsuleVortexKindFromKindPortAndPoint(
   return puzzle3dPlayDoorCapsuleVortexKindFromPortNameAndPoint(portName, point);
 }
 
-function puzzle3dPlayDominantAxisCad(direction: readonly [number, number, number]): "x" | "y" | "z" {
-  const ax = Math.abs(direction[0]);
-  const ay = Math.abs(direction[1]);
-  const az = Math.abs(direction[2]);
-  if (ax >= ay && ax >= az) {
-    return "x";
-  }
-  if (ay >= ax && ay >= az) {
-    return "y";
-  }
-  return "z";
-}
-
-/** @emoji 🖌️ Nakagin brush filter: tambour doors accept horizontal door-capsule ports only (not platform or vertical doors). */
+/** @emoji 🖌️ Nakagin brush filter: tambour doors accept facade door-capsule ports only (not platform or floor-door P/Slash). */
 function puzzle3dPlayBrushCandidateAccept(
   target: AttractionVortexContext,
   _candidate: BrushCompatibleCandidate,
@@ -238,8 +225,8 @@ function puzzle3dPlayBrushCandidateAccept(
   if (!sourceVk.includes("door capsule")) {
     return false;
   }
-  const direction = template.direction ?? [0, 0, -1];
-  return puzzle3dPlayDominantAxisCad(direction) === "x" && Math.abs(direction[0]) > 0.5;
+  const [x, y] = template.position;
+  return Math.abs(x) >= 0.9 && Math.abs(y) < 1.6;
 }
 
 function relabelDoorCapsuleVortexTemplate(objectKindId: string, vortex: ObjectKindVortexTemplate): ObjectKindVortexTemplate {
@@ -301,6 +288,18 @@ function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatal
   const kc = meta?.kindCatalogs;
   if (!kc || typeof kc !== "object") return undefined;
   return enrichKindCatalogBundleDoorCapsules(kc as KindCatalogBundle);
+}
+
+/** @emoji 🖌️ Publishes play brush weights and nakagin candidate filter for {@link PlayCanvas} / playground hosts. */
+export function installPuzzle3dPlayBrushHost(meta: Record<string, unknown> | undefined): void {
+  const catalogs = parseKindCatalogs(meta);
+  const objectKindIds = catalogs?.objects?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
+  const vortexKindIds = catalogs?.vortices?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
+  publishPuzzle3dBrushKindWeights(
+    Object.fromEntries(objectKindIds.map((id) => [id, 1 / Math.max(1, objectKindIds.length)])),
+    Object.fromEntries(vortexKindIds.map((id) => [id, 1 / Math.max(1, vortexKindIds.length)])),
+  );
+  publishPuzzle3dBrushCandidateAccept(puzzle3dPlayBrushCandidateAccept);
 }
 
 /** @emoji 📋 Kind catalog rows as unique select options (last row wins per `id`; sorted by label). */
@@ -911,7 +910,7 @@ export class Puzzle3dPlayShellController extends Controller {
     this.objectKindWeights = syncKindWeightMap(this.objectKindIds, this.objectKindWeights);
     this.vortexKindWeights = syncKindWeightMap(this.vortexKindIds, this.vortexKindWeights);
     publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
-    publishPuzzle3dBrushCandidateAccept(puzzle3dPlayBrushCandidateAccept);
+    installPuzzle3dPlayBrushHost(this.fixture?.meta as Record<string, unknown> | undefined);
   }
 
   /** @emoji 🔔 Subscribes to snapshot-only updates (selection, fixture, lod) without shell generation bumps. */
@@ -2414,6 +2413,20 @@ if (import.meta.vitest) {
       expect(list.some((entry) => entry.objectKindId === "Capsule J")).toBe(true);
       expect(list.some((entry) => entry.objectKindId === "Capsule L")).toBe(false);
       expect(enriched.objects.find((k) => k.id === "Capsule L")?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
+    });
+
+    it("nakagin door tambour left has horizontal door capsule compatible candidates", () => {
+      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
+      const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
+      expect(catalogs).toBeTruthy();
+      installPuzzle3dPlayBrushHost(fixture?.meta as Record<string, unknown> | undefined);
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
+      const list = brushCompatibleCandidates(target, catalogs, compat);
+      const ids = list.map((entry) => entry.objectKindId);
+      expect(ids).toContain("Capsule L");
+      expect(ids).toContain("Capsule Z");
+      expect(ids.length).toBeGreaterThan(0);
     });
 
     it("brush candidate accept on door tambour left lists horizontal door capsules only", () => {

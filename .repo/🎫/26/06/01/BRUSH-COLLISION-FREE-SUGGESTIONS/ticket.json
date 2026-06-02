@@ -3,7 +3,7 @@
   "emoji": "🖌️",
   "status": "closed",
   "description": "Complete puzzle3d brush tool: engagement suggestions and commits must be collision-free. Random compatible order, probe AABB vs scene meshes (exclude host), empty placement when none free.",
-  "summary": "Removed semio/nakagin domain logic from puzzle/3d/react brush code. Deleted brushDoorTambour/Capsule helpers and Tambour/Base ranking boosts. Added domain-neutral publishPuzzle3dBrushCandidateAccept hook; play layer implements puzzle3dPlayBrushCandidateAccept (tambour door + horizontal capsule filter) and registers it from syncBrushKindWeightsFromFixture. Neutralized react vitest fixtures; door-tambour behavior test moved to play. React 258 + play 45 tests passing.",
+  "summary": "Brush placement collision is robust for touching meshes: BRUSH_AABB_CONTACT_EPSILON treats face contact as non-penetrating; brushPreviewCollisionBox insets preview AABB by tolerance-aware slop; brushPlacementCollisionExcludeObjectIds skips host and direct attraction partners. BrushSession passes exclude set and sceneFixture into probes. Domain-neutral publishPuzzle3dBrushCandidateAccept; play puzzle3dPlayBrushCandidateAccept filters door tambour to facade door-capsule ports; installPuzzle3dPlayBrushHost wired from play sync and playground fixture meta. Removed nakagin-specific logic from puzzle/3d/react. React 262 + play 46 tests passing.",
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
@@ -15,6 +15,7 @@
     "⚪b597be8c4dc74e038540df7353f95610",
     "⚪e4caba2ba0674511a1f1d5d781662d04",
     "⚪ce617069fffd491fb842929e1fcce967",
-    "⚪72436e13ec4b44edb2d02da1f909a238"
+    "⚪72436e13ec4b44edb2d02da1f909a238",
+    "⚪deaf962fd5cf44929b125c110049efe8"
   ]
 }

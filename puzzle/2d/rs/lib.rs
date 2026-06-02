@@ -10357,6 +10357,100 @@ mod host_tests {
     }
 
     #[test]
+    fn board_host_brush_door_tambour_left_excludes_capital_with_metabolism_compat_rules() {
+        const DOOR_TAMBOUR_LEFT: &str = "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8";
+        const CAPITAL_KIND: &str = "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e";
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
+        let compat_str = fixture
+            .get("meta")
+            .and_then(|m| m.get("kindCompatibility"))
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "[]".to_string());
+        h.set_handle_link_compat_from_json(&compat_str).unwrap();
+        let catalogs_str = fixture
+            .get("meta")
+            .and_then(|m| m.get("kindCatalogs"))
+            .map(|kc| {
+                serde_json::json!({
+                    "handleKinds": kc.get("handles"),
+                    "nodeKinds": kc.get("nodes"),
+                })
+                .to_string()
+            })
+            .unwrap_or_else(|| "{}".to_string());
+        h.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
+        let desc = SceneDescriptorJson {
+            nodes: vec![NodeDescJson {
+                id: "tambour".into(),
+                x: 0.0,
+                y: 0.0,
+                draggable: Some(true),
+                selected: None,
+                style: None,
+                text: None,
+                icon_kind: None,
+                node_kind: Some("semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7".into()),
+                user_data: None,
+                visible: None,
+                root: None,
+                shape: Some("circle".into()),
+                radius: Some(40.0),
+                width: None,
+                height: None,
+                scale: None,
+            }],
+            handles: vec![HandleDescJson {
+                id: "tambour:h0".into(),
+                node_id: "tambour".into(),
+                angle: 0.0,
+                radius: None,
+                scale: None,
+                selected: None,
+                visible: None,
+                style: None,
+                handle_kind: Some(DOOR_TAMBOUR_LEFT.into()),
+                color: None,
+                icon_kind: None,
+                user_data: None,
+            }],
+            edges: vec![],
+            wires: vec![],
+            selection_exit_highlight_ids: vec![],
+        };
+        h.sync_descriptor(&desc).unwrap();
+        let _ = h.drain_events_json();
+        let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+        let slot = hp + (hp - Point::new(0.0, 0.0)) * (40.0 / 40.0);
+        let slot_screen = h.world_to_screen(slot);
+        h.pointer_move_screen(slot_screen.x, slot_screen.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
+        let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
+        let candidates = v
+            .as_array()
+            .and_then(|rows| {
+                rows.iter()
+                    .find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates"))
+                    .and_then(|row| row.get("payload"))
+                    .and_then(|p| p.get("candidates"))
+                    .cloned()
+            })
+            .and_then(|c| c.as_array().cloned())
+            .unwrap_or_default();
+        let ids: Vec<String> = candidates.iter().filter_map(|x| x.as_str().map(str::to_string)).collect();
+        assert!(
+            !ids.iter().any(|id| id == CAPITAL_KIND),
+            "door tambour left must not suggest Capital, got: {ids:?}"
+        );
+    }
+
+    #[test]
     fn board_host_brush_slot_accepts_pointer_on_node_body_at_overview_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);

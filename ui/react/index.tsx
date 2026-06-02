@@ -11845,7 +11845,7 @@ export function routeWindowEngagementEscape(
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
   const onAbort = engagement?.input?.onAbort;
   if (!onAbort) return false;
-  if (!zone.chromeVisible && !zone.commandActive) return false;
+  if (!engagement?.sessionActive && !zone.chromeVisible && !zone.commandActive) return false;
   if (isUiTypingTarget(event.target) && !isEngagementCommandTypingTarget(event.target)) return false;
   const focused = document.activeElement;
   if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return false;
@@ -12294,6 +12294,27 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     if (!active || !engagement?.sessionActive) return;
     setEngagementActivated(true);
   }, [active, engagement?.sessionActive]);
+
+  reactHostPort.useEffect(() => {
+    if (!active || !engagement?.input?.onAbort) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        routeWindowEngagementEscape(engagement, event, {
+          chromeVisible: windowEngagementChromeVisible(engagement, {
+            hovered: engagementZoneHovered,
+            activated: engagementActivated,
+            focused: engagementZoneFocused,
+          }),
+          commandActive: engagementCommandActive,
+        })
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [active, engagement, engagementActivated, engagementCommandActive, engagementZoneFocused, engagementZoneHovered]);
 
   reactHostPort.useEffect(() => {
     if (!active) {
@@ -17474,6 +17495,21 @@ if (import.meta.vitest) {
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual(["abort"]);
       Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it("routeWindowEngagementEscape calls onAbort when sessionActive without visible chrome", () => {
+      const aborted: string[] = [];
+      const engagement: EngagementSpec = {
+        sessionActive: true,
+        input: { value: "", placeholder: "Brush", onAbort: () => aborted.push("abort") },
+      };
+      const handled = routeWindowEngagementEscape(
+        engagement,
+        { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body },
+        { chromeVisible: false, commandActive: false },
+      );
+      expect(handled).toBe(true);
+      expect(aborted).toEqual(["abort"]);
     });
 
     it("Mode Escape aborts active window engagement", async () => {

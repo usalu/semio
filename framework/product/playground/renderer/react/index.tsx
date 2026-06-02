@@ -1210,6 +1210,7 @@ import {
   PUZZLE_3D_PLAY_APP_ID,
   PUZZLE_3D_PLAY_STORE_ID,
   Puzzle3dPlayShellController,
+  installPuzzle3dPlayBrushHost,
   parseKindCatalogs,
   parseKindCompatibility,
   type Puzzle3dPlayHostBridge,
@@ -1443,6 +1444,9 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   }
   const kindCompatibility = reactHostPort.useMemo(() => parseKindCompatibility(snap.fixture.meta), [snap.fixture]);
   const kindCatalogs = reactHostPort.useMemo(() => parseKindCatalogs(snap.fixture.meta), [snap.fixture]);
+  reactHostPort.useEffect(() => {
+    installPuzzle3dPlayBrushHost(snap.fixture.meta as Record<string, unknown> | undefined);
+  }, [snap.fixture.meta]);
   const blockedVortexFullIds = reactHostPort.useMemo(() => blockedVortexFullIdsFromAttractions(snap.fixture.attractions), [snap.fixture]);
   const patchFixture = reactHostPort.useCallback(
     (updater: (prev: FixtureV1) => FixtureV1) => {
@@ -1819,6 +1823,7 @@ import {
   puzzle2dPlayForwardsCanvasStructuralDelete,
   puzzle2dPlayRehydrateFixtureEdgesIfMissing,
   puzzle2dPlayInspectorKindSectionLabel,
+  puzzle2dPlayKindCatalogSelectItems,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
   type Puzzle2dPlayStructuralDeleteItem,
@@ -1838,6 +1843,9 @@ import {
   puzzle2dFixtureMergedKindCatalogs,
   puzzle2dFixtureObjectDisplayLabel,
   puzzle2dNodeKindOverlayLabel,
+  puzzle2dHandleKindOverlayLabel,
+  puzzle2dEdgeKindOverlayLabel,
+  puzzle2dApplyNodeKindToFixtureNode,
   classifyPuzzle2dIconSelectorMode,
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
@@ -2538,7 +2546,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => applyCanvasSelection(snapshot.ids), [applyCanvasSelection]);
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
-  const kindCompatibility = reactHostPort.useMemo(() => puzzle2dFixtureMetaKindCompatibility(fixture.meta), [fixture.meta]);
+  const kindCompatibility = reactHostPort.useMemo(() => puzzle2dFixtureMetaKindCompatibility(fixture), [fixture]);
   const sceneMarkers = reactHostPort.useMemo(
     () =>
       puzzle2dFixtureSceneMarkers(fixture, {
@@ -2885,6 +2893,59 @@ function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; 
   );
 }
 
+function puzzle2dInspectorKindSelectItems(
+  catalogRows: readonly { readonly id: string; readonly name: string }[] | undefined,
+  currentKindIds: readonly string[],
+  labelForOrphan: (kindId: string) => string,
+): readonly { readonly value: string; readonly label: string }[] {
+  const byId = new Map(puzzle2dPlayKindCatalogSelectItems(catalogRows).map((row) => [row.value, row] as const));
+  for (const kindId of currentKindIds) {
+    const trimmed = kindId.trim();
+    if (trimmed !== "" && !byId.has(trimmed)) {
+      byId.set(trimmed, { value: trimmed, label: labelForOrphan(trimmed) });
+    }
+  }
+  return [...byId.values()].sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function InspectorKindSelect({
+  id,
+  items,
+  label,
+  onValueChange,
+  uniform,
+  value,
+}: {
+  id: string;
+  items: readonly { readonly value: string; readonly label: string }[];
+  label: string;
+  onValueChange: (next: string) => void;
+  uniform: boolean;
+  value: string;
+}): ReactElement {
+  const selectValue = uniform && value !== "" ? value : undefined;
+  return (
+    <Label id={id} label={label}>
+      <Select
+        key={uniform && value ? `${id}-${value}` : `${id}-mixed`}
+        onValueChange={onValueChange}
+        value={selectValue}
+      >
+        <SelectTrigger className="h-7 font-mono text-xs">
+          <SelectValue placeholder={uniform ? "kind" : "Mixed"} />
+        </SelectTrigger>
+        <SelectContent>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Label>
+  );
+}
+
 function NumericStepperRow({ id, label, onAbsolute, onDelta, step, uniform, value }: { id: string; label: string; onAbsolute: (next: number) => void; onDelta: (delta: number) => void; step: number; uniform: boolean; value: number }): ReactElement {
   return (
     <Label id={id} label={label}>
@@ -2914,10 +2975,12 @@ function NumericStepperRow({ id, label, onAbsolute, onDelta, step, uniform, valu
 /** @emoji 🟠 Batch node inspector: name (`text`), shape, center, size fields apply to every selected node. */
 function InspectorNodeBatch({
   fixture,
+  kindCatalogs,
   nodeIds,
   patchFixture,
 }: {
   fixture: Puzzle2dFixtureV1;
+  kindCatalogs: KindCatalogBundle;
   nodeIds: readonly string[];
   patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
 }): ReactElement {
@@ -2931,6 +2994,14 @@ function InspectorNodeBatch({
   const iconKinds = targets.map((n) => n.iconKind ?? "");
   const iconKindUniform = allEqual(iconKinds);
   const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
+
+  const nodeKinds = targets.map((n) => n.nodeKind ?? "");
+  const nodeKindUniform = allEqual(nodeKinds);
+  const nodeKindValue = nodeKindUniform ? (nodeKinds[0] ?? "") : "";
+  const nodeKindItems = reactHostPort.useMemo(
+    () => puzzle2dInspectorKindSelectItems(kindCatalogs.nodes, nodeKinds, (kindId) => puzzle2dNodeKindOverlayLabel(kindId, kindCatalogs)),
+    [kindCatalogs, nodeKinds],
+  );
 
   const shapes = targets.map((n) => (nodeIsRectangle(n) ? "rectangle" : "circle"));
   const shapeUniform = allEqual(shapes);
@@ -2994,11 +3065,26 @@ function InspectorNodeBatch({
     [patchNodes],
   );
 
+  const onNodeKind = reactHostPort.useCallback(
+    (next: string) => {
+      patchNodes((n) => puzzle2dApplyNodeKindToFixtureNode(n, next, kindCatalogs));
+    },
+    [kindCatalogs, patchNodes],
+  );
+
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
       <Label id="puzzle-2d-play.inspector.node.name" label="Name">
         <Input className="h-7 font-mono text-xs" onChange={(e: ChangeEvent<HTMLInputElement>) => onText(e.target.value)} placeholder={textUniform ? undefined : "Mixed"} value={textValue} />
       </Label>
+      <InspectorKindSelect
+        id="puzzle-2d-play.inspector.node.kind"
+        items={nodeKindItems}
+        label="Node kind"
+        onValueChange={onNodeKind}
+        uniform={nodeKindUniform}
+        value={nodeKindValue}
+      />
       <Label id="puzzle-2d-play.inspector.node.icon" label="Icon">
         <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.node.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
       </Label>
@@ -3063,10 +3149,12 @@ function InspectorNodeBatch({
 /** @emoji 🟣 Batch handle inspector: polar `t`, hit radius, optional id when single selection. */
 function InspectorHandleBatch({
   fixture,
+  kindCatalogs,
   handleIds,
   patchFixture,
 }: {
   fixture: Puzzle2dFixtureV1;
+  kindCatalogs: KindCatalogBundle;
   handleIds: readonly string[];
   patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
 }): ReactElement {
@@ -3082,6 +3170,14 @@ function InspectorHandleBatch({
   const iconKinds = handles.map((h) => h.iconKind ?? "");
   const iconKindUniform = allEqual(iconKinds);
   const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
+
+  const handleKinds = handles.map((h) => h.handleKind);
+  const handleKindUniform = allEqual(handleKinds);
+  const handleKindValue = handleKindUniform ? (handleKinds[0] ?? "") : "";
+  const handleKindItems = reactHostPort.useMemo(
+    () => puzzle2dInspectorKindSelectItems(kindCatalogs.handles, handleKinds, (kindId) => puzzle2dHandleKindOverlayLabel(kindId, kindCatalogs)),
+    [handleKinds, kindCatalogs],
+  );
 
   const patchHandles = reactHostPort.useCallback(
     (updater: (h: Puzzle2dFixtureHandleV1) => Puzzle2dFixtureHandleV1) => {
@@ -3104,8 +3200,27 @@ function InspectorHandleBatch({
     [patchHandles],
   );
 
+  const onHandleKind = reactHostPort.useCallback(
+    (next: string) => {
+      const trimmed = next.trim();
+      if (trimmed === "") {
+        return;
+      }
+      patchHandles((h) => ({ ...h, handleKind: trimmed }));
+    },
+    [patchHandles],
+  );
+
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
+      <InspectorKindSelect
+        id="puzzle-2d-play.inspector.handle.kind"
+        items={handleKindItems}
+        label="Handle kind"
+        onValueChange={onHandleKind}
+        uniform={handleKindUniform}
+        value={handleKindValue}
+      />
       <div className="flex flex-wrap items-start gap-4">
         <AngleTRing
           angleUniform={angleUniform}
@@ -3161,6 +3276,13 @@ function InspectorEdgeBatch({
   const sourceUniform = allEqual(sources);
   const targetUniform = allEqual(targets);
   const handleOptions = reactHostPort.useMemo(() => listHandleIds(fixture), [fixture]);
+  const edgeKinds = edges.map((e) => e.edgeKind ?? "");
+  const edgeKindUniform = allEqual(edgeKinds);
+  const edgeKindValue = edgeKindUniform ? (edgeKinds[0] ?? "") : "";
+  const edgeKindItems = reactHostPort.useMemo(
+    () => puzzle2dInspectorKindSelectItems(kindCatalogs.edges, edgeKinds, (kindId) => puzzle2dEdgeKindOverlayLabel(kindId, kindCatalogs)),
+    [edgeKinds, kindCatalogs],
+  );
 
   const patchEdges = reactHostPort.useCallback(
     (updater: (e: Puzzle2dFixtureEdgeV1) => Puzzle2dFixtureEdgeV1) => {
@@ -3172,8 +3294,30 @@ function InspectorEdgeBatch({
     [idSet, patchFixture],
   );
 
+  const onEdgeKind = reactHostPort.useCallback(
+    (next: string) => {
+      const trimmed = next.trim();
+      patchEdges((edge) => {
+        if (trimmed === "") {
+          const { edgeKind: _drop, ...rest } = edge;
+          return rest;
+        }
+        return { ...edge, edgeKind: trimmed };
+      });
+    },
+    [patchEdges],
+  );
+
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
+      <InspectorKindSelect
+        id="puzzle-2d-play.inspector.edge.kind"
+        items={edgeKindItems}
+        label="Edge kind"
+        onValueChange={onEdgeKind}
+        uniform={edgeKindUniform}
+        value={edgeKindValue}
+      />
       <Label id="puzzle-2d-play.inspector.edge.source" label="Source">
         <Select
           onValueChange={(v) => {
@@ -3264,7 +3408,7 @@ export function buildPuzzle2dPlayInspectorSections(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-nodes",
         puzzle2dPlayInspectorKindSectionLabel("node", nodeIds.length),
-        <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} />,
+        <InspectorNodeBatch fixture={fixture} kindCatalogs={kindCatalogs} nodeIds={nodeIds} patchFixture={patchFixture} />,
       ),
     );
   }
@@ -3273,7 +3417,7 @@ export function buildPuzzle2dPlayInspectorSections(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-handles",
         puzzle2dPlayInspectorKindSectionLabel("handle", handleIds.length),
-        <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} />,
+        <InspectorHandleBatch fixture={fixture} kindCatalogs={kindCatalogs} handleIds={handleIds} patchFixture={patchFixture} />,
       ),
     );
   }

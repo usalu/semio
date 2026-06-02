@@ -553,6 +553,7 @@ export class Puzzle2dPlayShellController extends Controller {
 						{ id: "puzzle2d.selection.clear", label: "Clear", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.selection.clear" }) },
 					];
 		return {
+			sessionActive: this.activeTool === "brush",
 			input: {
 				id: "engagement-input",
 				value: this.engagementInputByPane[pane],
@@ -757,6 +758,15 @@ export class Puzzle2dPlayShellController extends Controller {
 		return false;
 	}
 
+	/** @emoji ⎋ Ends the active engagement session for a pane (Escape / engagement abort). */
+	private abortEngagementForPane(pane: Puzzle2dPlayPaneId): void {
+		this.engagementInputByPane = { ...this.engagementInputByPane, [pane]: "" };
+		if (this.activeTool === "brush") {
+			this.setPlayActiveTool("select");
+		}
+		this.syncWindowEngagementForPane(pane);
+	}
+
 	private repeatLastEngagementForPane(pane: Puzzle2dPlayPaneId): void {
 		const last = this.lastEngagementRepeatByPane[pane];
 		if (!last) return;
@@ -920,8 +930,7 @@ export class Puzzle2dPlayShellController extends Controller {
 				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") {
 					break;
 				}
-				this.engagementInputByPane = { ...this.engagementInputByPane, [pane]: "" };
-				this.syncWindowEngagementForPane(pane);
+				this.abortEngagementForPane(pane);
 				break;
 			}
 			case "engagementPossibleSelect": {
@@ -1134,6 +1143,20 @@ export function flushPuzzle2dPlayStructuralDeleteBatch(
 	return pending;
 }
 
+/** @emoji 📋 Kind catalog rows as unique select options (last row wins per `id`; sorted by label). */
+export function puzzle2dPlayKindCatalogSelectItems<T extends { readonly id: string; readonly label?: string; readonly name?: string }>(
+	entries: readonly T[] | undefined,
+): readonly { readonly value: string; readonly label: string }[] {
+	if (!entries?.length) {
+		return [];
+	}
+	const byId = new Map<string, { value: string; label: string }>();
+	for (const entry of entries) {
+		byId.set(entry.id, { value: entry.id, label: entry.label?.trim() || entry.name?.trim() || entry.id });
+	}
+	return [...byId.values()].sort((a, b) => a.label.localeCompare(b.label));
+}
+
 /** @emoji 🏷 Details inspector tree section title: singular for one id, plural for many. */
 export function puzzle2dPlayInspectorKindSectionLabel(kind: "edge" | "handle" | "node", count: number): string {
 	if (count === 1) {
@@ -1278,6 +1301,36 @@ if (import.meta.vitest) {
 			expect(app?.controller.mainMode.tools ?? {}).toEqual({});
 		});
 
+		it("engagementAbort exits brush and clears command line", () => {
+			const bus = new CommandBus();
+			let hostTool: Puzzle2dActiveTool | undefined;
+			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
+			ctrl.setHostBridge({
+				getToolbarState: () => ({
+					puzzle2dActiveTool: "select",
+					puzzle2dBrushFlushDistance: DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+					puzzle2dGridSnapEnabled: false,
+					puzzle2dRedrawPlaying: false,
+					puzzle2dSelectionMethod: "rectangle",
+					puzzle2dSelectionMode: "default",
+					puzzle2dSelectionTargets: { nodes: true, edges: true, handles: true },
+				}),
+				runHostCommand: (command, args) => {
+					if (command === "setActiveTool") {
+						hostTool = (args as { tool: Puzzle2dActiveTool }).tool;
+					}
+				},
+			});
+			bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "engagementSubmit", { pane: "2d-overview", value: "Brush" });
+			expect(ctrl.getActiveTool()).toBe("brush");
+			bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "engagementAbort", { pane: "2d-overview" });
+			expect(ctrl.getActiveTool()).toBe("select");
+			expect(hostTool).toBe("select");
+			const engagement = ctrl.mainMode.windowKinds.find((wk) => wk.id === "2d-overview")?.engagement;
+			expect(engagement?.sessionActive).toBeFalsy();
+			expect(engagement?.input?.value).toBe("");
+		});
+
 		it("engagementSubmit Brush activates brush on shell and forwards setActiveTool to host", () => {
 			const bus = new CommandBus();
 			let hostTool: Puzzle2dActiveTool | undefined;
@@ -1303,6 +1356,7 @@ if (import.meta.vitest) {
 			expect(hostTool).toBe("brush");
 			const engagement = ctrl.mainMode.windowKinds.find((wk) => wk.id === "2d-overview")?.engagement;
 			expect(engagement?.input?.placeholder).toBe("Brush");
+			expect(engagement?.sessionActive).toBe(true);
 		});
 
 		it("brush flush-distance measure is registered on play windows", () => {
@@ -1487,6 +1541,18 @@ if (import.meta.vitest) {
 		const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
 		expect(nodesGroup?.items?.length).toBeGreaterThan(0);
 		expect(nodesGroup?.items?.[0]?.label).not.toBe("(none)");
+	});
+
+	describe("puzzle2dPlayKindCatalogSelectItems", () => {
+		it("dedupes duplicate catalog ids for inspector selects", () => {
+			const items = puzzle2dPlayKindCatalogSelectItems([
+				{ id: "kind-a", name: "Kind A" },
+				{ id: "kind-a", name: "Kind A (duplicate)" },
+				{ id: "kind-b", name: "Kind B" },
+			]);
+			expect(items.map((item) => item.value)).toEqual(["kind-a", "kind-b"]);
+			expect(items.find((item) => item.value === "kind-a")?.label).toBe("Kind A (duplicate)");
+		});
 	});
 
 	describe("puzzle2dPlayInspectorKindSectionLabel", () => {

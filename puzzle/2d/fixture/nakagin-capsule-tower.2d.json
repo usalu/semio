@@ -1493,7 +1493,7 @@
           "name": "Trapezoid Capsule L",
           "handles": [
             {
-              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
               "angle": 1.5707963267948966,
               "radius": 3
             }
@@ -1615,7 +1615,7 @@
           "name": "Capsule L",
           "handles": [
             {
-              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
               "angle": -0.805003494254653,
               "radius": 3
             }
@@ -1663,7 +1663,7 @@
           "name": "Capsule With Balcony L",
           "handles": [
             {
-              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
               "angle": -0.805003494254653,
               "radius": 3
             }
@@ -1685,7 +1685,7 @@
           "name": "Trapezoid Capsule Z",
           "handles": [
             {
-              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
               "angle": 1.5707963267948966,
               "radius": 3
             }
@@ -1696,7 +1696,7 @@
           "name": "Capsule L",
           "handles": [
             {
-              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
               "angle": -1.2475465231467544,
               "radius": 3
             }
@@ -1733,7 +1733,7 @@
           "name": "Capsule With Balcony Z",
           "handles": [
             {
-              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
               "angle": -0.805003494254653,
               "radius": 3
             }
@@ -1822,7 +1822,7 @@
           "name": "Capsule Z",
           "handles": [
             {
-              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
               "angle": -0.805003494254653,
               "radius": 3
             }
@@ -1899,7 +1899,7 @@
           "name": "Capsule Z",
           "handles": [
             {
-              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+              "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
               "angle": -1.2475465231467544,
               "radius": 3
             }
@@ -1917,6 +1917,18 @@
       {
         "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
         "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab",
+        "bidirectional": true,
+        "specificity": "handle"
+      },
+      {
+        "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448",
+        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab",
+        "bidirectional": true,
+        "specificity": "handle"
+      },
+      {
+        "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
+        "target": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
         "bidirectional": true,
         "specificity": "handle"
       },
@@ -2037,7 +2049,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "03b08a1d-bd01-4d7f-829e-e9008af5f8c1:link",
           "radius": 3
         }
@@ -2113,7 +2125,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "087e2e86-96d9-4034-aa11-45e360a73761:link",
           "radius": 3
         }
@@ -2246,7 +2258,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "10bbba6a-100d-4b4e-b5fa-6aa851caaa52:link",
           "radius": 3
         }
@@ -3029,7 +3041,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "3beea11e-35a1-414a-a21d-a188157591a8:link",
           "radius": 3
         }
@@ -3480,7 +3492,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "5de35caa-0f02-43d7-ae74-aa730efd3386:link",
           "radius": 3
         }
@@ -3624,7 +3636,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "60f7c606-1326-44c9-9fd7-4a3a17d15e0c:link",
           "radius": 3
         }
@@ -3643,7 +3655,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "64239b67-f7c9-4c25-9d22-4225f6668cd7:link",
           "radius": 3
         }
@@ -3897,7 +3909,7 @@
       "handles": [
         {
           "angle": 1.521916,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "6bd6036e-dd1d-4ef6-9e34-090ff050dba4:link",
           "radius": 3
         }
@@ -3916,7 +3928,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "6c2cce5c-e3ea-42e4-aa65-498c0c47c453:link",
           "radius": 3
         }
@@ -4120,7 +4132,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "794499b1-500b-41b1-a271-29e67f4629c5:link",
           "radius": 3
         }
@@ -4466,7 +4478,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "88bc30e1-0cd9-4a34-bd4d-2463f2660c78:link",
           "radius": 3
         }
@@ -4850,7 +4862,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "976cd37f-4099-46c1-b9fe-f693ac20490c:link",
           "radius": 3
         }
@@ -4907,7 +4919,7 @@
       "handles": [
         {
           "angle": 4.506401,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "9a209b1a-86b5-4852-9a90-c238c35b1038:link",
           "radius": 3
         }
@@ -4945,7 +4957,7 @@
       "handles": [
         {
           "angle": 6.23429,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "9bfa1f48-46f3-4fd7-a416-8280e06b3461:link",
           "radius": 3
         }
@@ -5288,7 +5300,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "ad940e2b-12e4-49ba-8cfa-98854e5b2f7a:link",
           "radius": 3
         }
@@ -5397,7 +5409,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "aee66807-ac00-4b12-8251-abafefdae05b:link",
           "radius": 3
         }
@@ -5473,7 +5485,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "ba35dd11-3022-4408-913f-0f6d25b40a83:link",
           "radius": 3
         }
@@ -5587,7 +5599,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "c8749a39-f9d1-48b2-b331-6d00d2615302:link",
           "radius": 3
         }
@@ -5701,7 +5713,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "d04d9e84-6f8c-45d1-93c7-068498c7d962:link",
           "radius": 3
         }
@@ -5739,7 +5751,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "d45a533d-4975-4a93-a6c4-74ea4b2fdac9:link",
           "radius": 3
         }
@@ -5796,7 +5808,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "d88f2d4c-4e31-454f-aee5-446636931c37:link",
           "radius": 3
         }
@@ -5853,7 +5865,7 @@
       "handles": [
         {
           "angle": 6.23429,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "dc6e7ac6-1515-46ca-9e94-248988badc0f:link",
           "radius": 3
         }
@@ -5872,7 +5884,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "dcf9ff79-1f52-412d-9eb4-7329f77b237c:link",
           "radius": 3
         }
@@ -5986,7 +5998,7 @@
       "handles": [
         {
           "angle": 6.23429,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "ec9ecf17-4f23-4bfb-a37d-f890951b105e:link",
           "radius": 3
         }
@@ -6005,7 +6017,7 @@
       "handles": [
         {
           "angle": 6.23429,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "ee2a19ee-04c2-4023-b048-4695dd8971f7:link",
           "radius": 3
         }
@@ -6337,7 +6349,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "fc693ca3-6a41-49b5-b5f6-258a7a06ed2e:link",
           "radius": 3
         }

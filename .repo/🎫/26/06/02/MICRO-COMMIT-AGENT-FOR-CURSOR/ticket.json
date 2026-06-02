@@ -1,9 +1,9 @@
 {
   "title": "Micro Commit Agent For Cursor",
   "emoji": "🫡",
-  "status": "open",
+  "status": "closed",
   "description": "Create .cursor/agents/micro-commit.md and .agents/skills/micro-commit/SKILL.md for fast WIP micro-commits: bump counter, parent wip header, timestamp, git diff summaries. Triggers: g, go, c, commit, +1.",
-  "summary": "Micro-commit git hooks are now zero-touch across macOS, Linux, Windows (Git Bash), and devcontainer: installMicroCommitGitHooks generates LF hooks with inline sh wipe (post-commit/pre-commit need no Bun), pins Bun at .repo/semio-micro-commit-bun, and resolves bun.cmd/bun.exe plus BUN_INSTALL for GUI git. Removed external micro-commit-wipe.sh. setup git / install-hooks / configure install to repo/hooks and .git/hooks.",
+  "summary": "Fixed commit message wiped before commit: removed pre-commit hook, split template-only vs full wipe, prepare-commit-msg no longer truncates COMMIT_EDITMSG, handlePrepareCommitMsg inactive only clears GK templates and preserves user/GK message text.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repomechanisms🎯repocommitmechanism",
   "sessions": [
     "⚪7059dbbe0520474dbb974a75da0164f9",

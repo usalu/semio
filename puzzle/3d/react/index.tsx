@@ -3250,18 +3250,62 @@ export function brushPlacementCollisionToleranceToSlider(tolerance: number): num
   return Math.round(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN + t * (BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN));
 }
 
+/** @emoji 📏 CAD slop below which AABB axis overlap counts as face contact, not penetration. */
+export const BRUSH_AABB_CONTACT_EPSILON = 0.02;
+
 /** @emoji 📦 True when AABB overlap depth along every axis exceeds {@link minPenetration} (touching faces do not count). */
-export function boxesPenetrationExceeds(a: Box3, b: Box3, minPenetration: number): boolean {
-  if (minPenetration <= 0) {
-    return boxesIntersect(a, b, 0);
-  }
+export function boxesPenetrationExceeds(
+  a: Box3,
+  b: Box3,
+  minPenetration: number,
+  contactEpsilon: number = BRUSH_AABB_CONTACT_EPSILON,
+): boolean {
   const ox = Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x);
   const oy = Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y);
   const oz = Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z);
-  if (ox <= 0 || oy <= 0 || oz <= 0) {
+  if (ox <= contactEpsilon || oy <= contactEpsilon || oz <= contactEpsilon) {
     return false;
   }
+  if (minPenetration <= 0) {
+    return true;
+  }
   return Math.min(ox, oy, oz) > minPenetration;
+}
+
+/** @emoji 📦 Axis-aligned bounds for brush probes with tolerance-aware inset (reduces grazing false hits). */
+export function brushPreviewCollisionBox(previewGroup: Group, collisionTolerance: number): Box3 {
+  const raw = new Box3().setFromObject(previewGroup, true);
+  if (!Number.isFinite(raw.min.x) || raw.isEmpty()) {
+    return raw;
+  }
+  const slop = Math.min(0.4, Math.max(BRUSH_AABB_CONTACT_EPSILON, collisionTolerance * 0.12));
+  const inset = raw.clone();
+  inset.expandByScalar(-slop);
+  if (!Number.isFinite(inset.min.x) || inset.isEmpty() || inset.min.x > inset.max.x) {
+    return raw;
+  }
+  return inset;
+}
+
+/** @emoji 🚫 Object ids skipped in brush placement collision (host plus direct attraction partners). */
+export function brushPlacementCollisionExcludeObjectIds(
+  hostObjectId: string | undefined,
+  attractions: readonly AttractionProps[] | undefined,
+): ReadonlySet<string> {
+  const excluded = new Set<string>();
+  if (!hostObjectId) {
+    return excluded;
+  }
+  excluded.add(hostObjectId);
+  for (const row of objectAttractionsFromAttractions(attractions ?? [])) {
+    if (row.attractedObjectId === hostObjectId) {
+      excluded.add(row.attractingObjectId);
+    }
+    if (row.attractingObjectId === hostObjectId) {
+      excluded.add(row.attractedObjectId);
+    }
+  }
+  return excluded;
 }
 
 function brushPreviewFromCandidate(args: {
@@ -3378,21 +3422,23 @@ export interface BrushSceneCollisionSource {
   collectObjectGroups(): readonly Group[];
 }
 
-/** @emoji 💥 True when a brush preview penetrates another object AABB beyond {@link collisionTolerance} (host may be excluded). */
+/** @emoji 💥 True when a brush preview penetrates another object AABB beyond {@link collisionTolerance} (host/partners may be excluded). */
 export function brushPreviewCollides(
   scene: BrushSceneCollisionSource,
   previewGroup: Group,
-  excludeObjectId?: string,
+  excludeObjectIds?: ReadonlySet<string> | string,
   collisionTolerance: number = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
 ): boolean {
   updateWorldMatrixChain(previewGroup);
-  const previewBox = new Box3().setFromObject(previewGroup, true);
+  const previewBox = brushPreviewCollisionBox(previewGroup, collisionTolerance);
   if (!Number.isFinite(previewBox.min.x) || previewBox.isEmpty()) {
     return false;
   }
+  const excluded =
+    typeof excludeObjectIds === "string" ? new Set<string>([excludeObjectIds]) : (excludeObjectIds ?? new Set<string>());
   for (const group of scene.collectObjectGroups()) {
     const objectId = group.userData?.puzzle3dObjectId;
-    if (typeof objectId === "string" && objectId.length > 0 && objectId === excludeObjectId) {
+    if (typeof objectId === "string" && objectId.length > 0 && excluded.has(objectId)) {
       continue;
     }
     updateWorldMatrixChain(group);
@@ -3428,14 +3474,14 @@ export function brushCandidateCollidesAtPose(
   scene: BrushSceneCollisionSource,
   preview: BrushPreviewState,
   meshRoot: Object3D | null | undefined,
-  excludeObjectId?: string,
+  excludeObjectIds?: ReadonlySet<string> | string,
   collisionTolerance: number = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
 ): boolean | null {
   if (!meshRoot) {
     return null;
   }
   const probe = brushProbeGroupFromPreview(preview, meshRoot);
-  return brushPreviewCollides(scene, probe, excludeObjectId, collisionTolerance);
+  return brushPreviewCollides(scene, probe, excludeObjectIds, collisionTolerance);
 }
 
 /** @emoji ✅ Collision-filtered brush candidates after mesh-backed AABB probes. */
@@ -3454,7 +3500,7 @@ export function brushCollisionFreeCandidates(args: {
   readonly targetWorldDirectionCad: Vec3;
   readonly referenceOrientationCad?: Quat;
   readonly kindCatalogs: KindCatalogBundle | undefined;
-  readonly excludeObjectId?: string;
+  readonly excludeObjectIds?: ReadonlySet<string> | string;
   readonly meshRootForUrl?: (meshUrl: string) => Object3D | null | undefined;
   readonly collisionTolerance?: number;
 }): BrushCollisionFreeResult {
@@ -3475,7 +3521,7 @@ export function brushCollisionFreeCandidates(args: {
       continue;
     }
     const meshRoot = args.meshRootForUrl?.(preview.meshUrl);
-    const collides = brushCandidateCollidesAtPose(args.scene, preview, meshRoot, args.excludeObjectId, collisionTolerance);
+    const collides = brushCandidateCollidesAtPose(args.scene, preview, meshRoot, args.excludeObjectIds, collisionTolerance);
     if (collides === null) {
       unknownPending = true;
       continue;
@@ -6530,7 +6576,7 @@ function BrushCatalogMeshPreload(props: { readonly urls: readonly string[]; read
 
 const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   readonly preview: BrushPreviewState;
-  readonly excludeObjectId?: string;
+  readonly excludeObjectIds: ReadonlySet<string>;
   readonly collisionTolerance: number;
   readonly onCollisionChange: (collides: boolean) => void;
 }) {
@@ -6545,13 +6591,13 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
     }
     applyObjectPose(group, props.preview.origin, props.preview.orientation, props.preview.scale);
     updateWorldMatrixChain(group);
-    const collides = brushPreviewCollides(reg, group, props.excludeObjectId, props.collisionTolerance);
+    const collides = brushPreviewCollides(reg, group, props.excludeObjectIds, props.collisionTolerance);
     if (lastCollidesRef.current !== collides) {
       lastCollidesRef.current = collides;
       props.onCollisionChange(collides);
     }
     invalidate();
-  }, [props.collisionTolerance, props.excludeObjectId, props.preview, props.onCollisionChange, reg, invalidate]);
+  }, [props.collisionTolerance, props.excludeObjectIds, props.preview, props.onCollisionChange, reg, invalidate]);
   return (
     <group ref={groupRef} raycast={() => null}>
       <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" />
@@ -6565,6 +6611,7 @@ function BrushSession(props: {
   readonly kindCatalogs: KindCatalogBundle | undefined;
   readonly kindCompatibility: readonly KindCompatEntry[] | undefined;
   readonly collisionTolerance: number;
+  readonly sceneFixture?: FixtureV1;
 }) {
   const reg = useRegistryCore();
   const { store } = useObjectState();
@@ -6617,6 +6664,10 @@ function BrushSession(props: {
     notifyPuzzle3dBrushEngagementSource();
   }, []);
 
+  const brushCollisionExcludeIds = reactHostPort.useCallback((): ReadonlySet<string> => {
+    return brushPlacementCollisionExcludeObjectIds(targetObjectIdRef.current ?? undefined, props.sceneFixture?.attractions);
+  }, [props.sceneFixture?.attractions]);
+
   const probePlacementCandidates = reactHostPort.useCallback((): BrushCollisionFreeResult => {
     const targetFullId = targetRef.current;
     const targetCtx = targetCtxRef.current;
@@ -6633,11 +6684,11 @@ function BrushSession(props: {
       targetWorldDirectionCad: world.direction,
       referenceOrientationCad: targetOrientationRef.current,
       kindCatalogs: props.kindCatalogs,
-      excludeObjectId: targetObjectIdRef.current ?? undefined,
+      excludeObjectIds: brushCollisionExcludeIds(),
       meshRootForUrl: brushMeshRootFromPool,
       collisionTolerance: props.collisionTolerance,
     });
-  }, [props.collisionTolerance, props.kindCatalogs, reg]);
+  }, [brushCollisionExcludeIds, props.collisionTolerance, props.kindCatalogs, reg]);
 
   const applyCandidateIndex = reactHostPort.useCallback(
     (targetFullId: string, index: number) => {
@@ -6909,7 +6960,7 @@ function BrushSession(props: {
       {ui.preview ? (
         <BrushPreviewGhost
           preview={ui.preview}
-          excludeObjectId={targetObjectIdRef.current ?? undefined}
+          excludeObjectIds={brushCollisionExcludeIds()}
           collisionTolerance={props.collisionTolerance}
           onCollisionChange={onPreviewCollisionChange}
         />
@@ -8636,6 +8687,7 @@ function Inner(props: CanvasProps & {
             kindCatalogs={kindCatalogs}
             kindCompatibility={kindCompatibility}
             collisionTolerance={brushPlacementCollisionTolerance}
+            sceneFixture={sceneFixture}
           />
         ) : null}
         <AttractionRubberBand />
@@ -10358,6 +10410,11 @@ if (import.meta.vitest) {
       expect(boxesIntersect(a, b)).toBe(true);
       expect(boxesIntersect(a, c)).toBe(false);
     });
+    it("boxesPenetrationExceeds treats axis overlap within contact epsilon as non-penetrating", () => {
+      const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
+      const grazing = new Box3(new Vector3(2, 0, 0), new Vector3(4, 2, 2));
+      expect(boxesPenetrationExceeds(a, grazing, 0.5, 0.02)).toBe(false);
+    });
     it("boxesPenetrationExceeds ignores face contact and shallow overlap below tolerance", () => {
       const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
       const touching = new Box3(new Vector3(2, 0, 0), new Vector3(4, 2, 2));
@@ -10403,6 +10460,15 @@ if (import.meta.vitest) {
       const frame = brushPreviewMeshFrameGroup(meshRoot);
       expect(frame.rotation.x).toBeCloseTo(GLB_MESH_FRAME_ROTATION_X, 5);
       expect(frame.children.length).toBe(1);
+    });
+    it("brushPlacementCollisionExcludeObjectIds includes host and direct attraction partners", () => {
+      const excluded = brushPlacementCollisionExcludeObjectIds("host", [
+        { id: "a1", attracting: "capsule:v0", attracted: "host:v1" },
+        { id: "a2", attracting: "host:v0", attracted: "other:v0" },
+      ]);
+      expect(excluded.has("host")).toBe(true);
+      expect(excluded.has("capsule")).toBe(true);
+      expect(excluded.has("other")).toBe(true);
     });
     it("brushPreviewCollides ignores penetration against excluded host when stacking", () => {
       const host = new Group();

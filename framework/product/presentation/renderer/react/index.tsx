@@ -1378,25 +1378,73 @@ export function figureMosaicBackgroundPosition(
 	};
 }
 
-/** @emoji 🖼 Background position for a crop; size is always CSS `cover` (never %-width/height — that distorts). */
-function figureCropCoverVars(
-	crop: DispositionPosition,
-	_frame: DispositionPosition,
-	_sourceAspect = 1,
-	mosaic?: { readonly rows: number; readonly columns: number },
-): { readonly posX: number; readonly posY: number } {
-	const mosaicCell = mosaic ? figureMosaicCellIndex(crop, mosaic) : null;
-	const { posX, posY } =
-		mosaicCell !== null
-			? figureMosaicBackgroundPosition(mosaicCell.column, mosaicCell.row, mosaic.columns, mosaic.rows)
-			: {
-					posX: crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100,
-					posY: crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100,
-				};
-	return { posX, posY };
+/** @emoji 🖼 True when the crop is the full source bitmap. */
+function figureCropIsFullImage(crop: DispositionPosition): boolean {
+	return (
+		crop.width >= 1 - FIGURE_MOSAIC_ALIGN_EPSILON && crop.height >= 1 - FIGURE_MOSAIC_ALIGN_EPSILON
+	);
 }
 
-const FIGURE_CROP_BACKGROUND_SIZE = "cover";
+/** @emoji 🖼 Positions a normalized source crop when background width is `(100/crop.width)%` (uniform, no distortion). */
+export function figureCropBackgroundPosition(crop: DispositionPosition): {
+	readonly posX: number;
+	readonly posY: number;
+} {
+	if (figureCropIsFullImage(crop)) {
+		return { posX: 50, posY: 50 };
+	}
+	const spanX = 1 - crop.width;
+	const spanY = 1 - crop.height;
+	return {
+		posX: spanX > FIGURE_MOSAIC_ALIGN_EPSILON ? (crop.x / spanX) * 100 : 50,
+		posY: spanY > FIGURE_MOSAIC_ALIGN_EPSILON ? (crop.y / spanY) * 100 : 50,
+	};
+}
+
+/** @emoji 🖼 Uniform background-size: `cover` for full image, else `N% auto` / `auto N%` zoomed to the crop (never dual-axis `%`). */
+export function figureCropBackgroundSize(
+	crop: DispositionPosition,
+	frame: DispositionPosition,
+	sourceAspect = 1,
+	mosaic = false,
+): string {
+	if (figureCropIsFullImage(crop)) {
+		return "cover";
+	}
+	if (frame.width <= 0 || frame.height <= 0 || crop.width <= 0 || crop.height <= 0) {
+		return "cover";
+	}
+	const zoomW = 100 / crop.width;
+	const zoomH = 100 / crop.height;
+	const cropSpanHAtZoomW = (crop.height * zoomW * frame.width) / sourceAspect;
+	const coverScale = mosaic
+		? 1
+		: (() => {
+				const cropAspect = figureCropPhysicalAspect(crop, sourceAspect);
+				const frameAspect = frame.width / frame.height;
+				return Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
+			})();
+	if (cropSpanHAtZoomW >= frame.height) {
+		return `${zoomW * coverScale}% auto`;
+	}
+	return `auto ${zoomH * coverScale}%`;
+}
+
+/** @emoji 🖼 Background size and position for one crop in a slide frame. */
+function figureCropCoverVars(
+	crop: DispositionPosition,
+	frame: DispositionPosition,
+	sourceAspect = 1,
+	mosaic?: { readonly rows: number; readonly columns: number },
+): { readonly size: string; readonly posX: number; readonly posY: number } {
+	const mosaicCell = mosaic ? figureMosaicCellIndex(crop, mosaic) : null;
+	const { posX, posY } = figureCropBackgroundPosition(crop);
+	return {
+		size: figureCropBackgroundSize(crop, frame, sourceAspect, mosaicCell !== null),
+		posX,
+		posY,
+	};
+}
 
 /** @emoji 📐 Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
 export function readPercentDispositionFrame(element: HTMLElement): DispositionPosition | null {
@@ -1537,13 +1585,13 @@ export function figureCropBackgroundVars(
 		: undefined;
 	const vars: CSSProperties = {
 		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
-		["--presentation-figure-bg-size" as string]: FIGURE_CROP_BACKGROUND_SIZE,
+		["--presentation-figure-bg-size" as string]: rest.size,
 		["--presentation-figure-bg-position" as string]: `${rest.posX}% ${rest.posY}%`,
-		["--presentation-figure-bg-size-morph" as string]: FIGURE_CROP_BACKGROUND_SIZE,
+		["--presentation-figure-bg-size-morph" as string]: morph.size,
 		["--presentation-figure-bg-position-morph" as string]: `${morph.posX}% ${morph.posY}%`,
 	};
 	if (gridFrom) {
-		vars["--presentation-figure-bg-grid-size" as string] = FIGURE_CROP_BACKGROUND_SIZE;
+		vars["--presentation-figure-bg-grid-size" as string] = gridFrom.size;
 		vars["--presentation-figure-bg-grid-position" as string] = `${gridFrom.posX}% ${gridFrom.posY}%`;
 	}
 	return vars;
@@ -1815,8 +1863,10 @@ function PdfMorphView({
 		containerSize.height !== undefined &&
 		containerSize.width > 0 &&
 		containerSize.height > 0;
+	const selected =
+		dispositionId !== undefined && interaction !== null && interaction.isSelected(dispositionId);
 	const showPageNav =
-		enlarged &&
+		(enlarged || selected) &&
 		dispositionId !== undefined &&
 		interaction !== null &&
 		numPages !== null &&
@@ -5141,10 +5191,10 @@ if (import.meta.vitest) {
 			) as HTMLElement;
 			expect(tileFrame).toBeTruthy();
 			expect(tileFrame.style.backgroundImage).toContain("/catalogue.png");
-			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toBe("cover");
+			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(/% auto$/);
 			const tiles = [...container.querySelectorAll(".presentation-morph-slot--figure")] as HTMLElement[];
 			for (const node of tiles) {
-				expect(node.style.getPropertyValue("--presentation-figure-bg-size")).toBe("cover");
+				expect(node.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(/% auto$/);
 			}
 			const positions = tiles.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
@@ -5319,8 +5369,8 @@ if (import.meta.vitest) {
 			expect(slot?.style.backgroundImage).toContain("/catalogue.png");
 			expect(slot?.querySelector("h2")).toBeNull();
 			expect(slot?.style.left).toBe("35%");
-			expect(slot?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("cover");
-			expect(slot?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("25% 50%");
+			expect(slot?.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(/% auto$/);
+			expect(slot?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("0% 50%");
 		});
 
 		it("rewrites non-uniform auto-animate scale() to a uniform zoom", () => {
@@ -5426,7 +5476,7 @@ if (import.meta.vitest) {
 			expect(pdfCoverScale(0, 400, 595, 842)).toBeNull();
 		});
 
-		it("uses CSS cover at rest and during auto-animate morph vars", () => {
+		it("uses cover for full image and uniform crop zoom for partial crops", () => {
 			const crop = { x: 0, y: 0, width: 0.5, height: 1 };
 			const square = figureCropBackgroundVars(
 				{ kind: "figure", src: "/catalogue.png", crop },
@@ -5438,10 +5488,10 @@ if (import.meta.vitest) {
 				crop,
 				{ x: 0, y: 0, width: 1, height: 0.25 },
 			);
-			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("cover");
-			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("cover");
-			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("25% 50%");
-			expect(square["--presentation-figure-bg-position" as keyof typeof square]).toBe("25% 50%");
+			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% auto");
+			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("1600% auto");
+			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("0% 50%");
+			expect(square["--presentation-figure-bg-position" as keyof typeof square]).toBe("0% 50%");
 		});
 
 		it("uses CSS cover for full catalogue in the catalogue frame", () => {
@@ -5483,11 +5533,14 @@ if (import.meta.vitest) {
 				labelFrame,
 				gridFrame,
 			);
-			expect(vars["--presentation-figure-bg-grid-position" as keyof typeof vars]).toBe("25% 50%");
-			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe("cover");
-			expect(vars["--presentation-figure-bg-grid-size" as keyof typeof vars]).toBe("cover");
+			const { posX, posY } = figureCropBackgroundPosition(crop);
+			expect(vars["--presentation-figure-bg-grid-position" as keyof typeof vars]).toBe(
+				`${posX}% ${posY}%`,
+			);
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toMatch(/% auto$/);
+			expect(vars["--presentation-figure-bg-grid-size" as keyof typeof vars]).toMatch(/% auto$/);
 			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBeTruthy();
-			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBe("cover");
+			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toMatch(/% auto$/);
 		});
 
 		it("sets revealMorphFromMorphToFrame from the previous slide morphTo slots", () => {
@@ -5553,7 +5606,12 @@ if (import.meta.vitest) {
 						"--presentation-figure-bg-position" as keyof ReturnType<typeof figureCropBackgroundVars>
 					],
 			);
-			expect(positions).toEqual(["0% 0%", "100% 0%", "0% 100%", "100% 100%"]);
+			expect(positions).toEqual(
+				tiles.map((tile) => {
+					const { posX, posY } = figureCropBackgroundPosition(tile.crop);
+					return `${posX}% ${posY}%`;
+				}),
+			);
 		});
 
 		it("clearRevealAutoAnimateInlineLayout removes only FLIP transform from auto-animate targets", () => {
@@ -7873,6 +7931,10 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerClick(disposition);
 			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(disposition.querySelector(".presentation-pdf-page-nav")).toBeTruthy();
 			const content = disposition.querySelector(
 				".presentation-interactive-disposition__content",
 			) as HTMLElement;

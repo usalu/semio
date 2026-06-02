@@ -192,6 +192,105 @@ export function mergeKindCatalogBundleByRowId(base: KindCatalogBundle, patch: Ki
   };
 }
 
+/** @emoji 🚪 Metabolism nakagin door-capsule right handle kind id (platform/tambour right pairing). */
+export const PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND = "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645";
+
+/** @emoji 🚪 Metabolism nakagin door-capsule left handle kind id (platform/tambour left pairing). */
+export const PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND = "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25";
+
+const PUZZLE2D_DOOR_CAPSULE_HANDLE_KINDS = new Set([PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND, PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND]);
+
+/** @emoji 🚪 Maps nakagin capsule kind names (J/S right, L/Z left) to a door-capsule side. */
+export function puzzle2dMetabolismDoorCapsuleSideFromKindName(kindName: string | undefined): "left" | "right" | null {
+  const name = kindName?.trim() ?? "";
+  if (name === "") {
+    return null;
+  }
+  const tail = /(?:Capsule(?: With Balcony)?|Trapezoid Capsule)\s+([A-Za-z])\s*$/.exec(name)?.[1] ?? /Capsule\s+([A-Za-z])\s*$/.exec(name)?.[1];
+  if (!tail) {
+    return null;
+  }
+  if (tail === "J" || tail === "S") {
+    return "right";
+  }
+  if (tail === "L" || tail === "Z") {
+    return "left";
+  }
+  return null;
+}
+
+/** @emoji 🚪 Resolves door-capsule handle kind id from a capsule kind name. */
+export function puzzle2dMetabolismDoorCapsuleHandleKindFromKindName(kindName: string | undefined): string | null {
+  const side = puzzle2dMetabolismDoorCapsuleSideFromKindName(kindName);
+  if (side === "left") {
+    return PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND;
+  }
+  if (side === "right") {
+    return PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND;
+  }
+  return null;
+}
+
+function relabelDoorCapsuleNodeKindHandleTemplate(kindName: string, template: NodeKindHandleTemplate): NodeKindHandleTemplate {
+  const nextKind = puzzle2dMetabolismDoorCapsuleHandleKindFromKindName(kindName);
+  if (!nextKind || !PUZZLE2D_DOOR_CAPSULE_HANDLE_KINDS.has(template.handleKind)) {
+    return template;
+  }
+  return nextKind === template.handleKind ? template : { ...template, handleKind: nextKind };
+}
+
+function relabelDoorCapsuleNodeKindRow(kind: NodeKind): NodeKind {
+  if (!kind.handles?.length) {
+    return kind;
+  }
+  const name = kind.name?.trim() || kind.id;
+  const handles = kind.handles.map((handle) => relabelDoorCapsuleNodeKindHandleTemplate(name, handle));
+  if (handles.every((handle, index) => handle === kind.handles![index])) {
+    return kind;
+  }
+  return { ...kind, handles };
+}
+
+/** @emoji 🚪 Relabels nakagin door-capsule handle templates in a kind catalog from capsule kind names. */
+export function enrichKindCatalogBundleDoorCapsules(bundle: KindCatalogBundle | undefined): KindCatalogBundle | undefined {
+  if (!bundle?.nodes?.length) {
+    return bundle;
+  }
+  let touched = false;
+  const nodes = bundle.nodes.map((kind) => {
+    const next = relabelDoorCapsuleNodeKindRow(kind);
+    if (next !== kind) {
+      touched = true;
+    }
+    return next;
+  });
+  return touched ? { ...bundle, nodes } : bundle;
+}
+
+function puzzle2dResolveDoorCapsuleHandleKindForNodeKind(nodeKindId: string | undefined, catalogs: KindCatalogBundle | undefined, handleKind: string): string {
+  const kindId = nodeKindId?.trim() ?? "";
+  const catalogName = kindId === "" ? "" : (catalogs?.nodes?.find((row) => row.id === kindId)?.name?.trim() ?? "");
+  const expected = puzzle2dMetabolismDoorCapsuleHandleKindFromKindName(catalogName || kindId);
+  if (!expected || !PUZZLE2D_DOOR_CAPSULE_HANDLE_KINDS.has(handleKind)) {
+    return handleKind;
+  }
+  return expected;
+}
+
+/** @emoji 🧩 Applies a semantic node kind to a fixture node and relabels door-capsule handles when needed. */
+export function puzzle2dApplyNodeKindToFixtureNode(node: Puzzle2dFixtureNodeV1, kindId: string, catalogs: KindCatalogBundle): Puzzle2dFixtureNodeV1 {
+  const trimmed = kindId.trim();
+  const handles = node.handles.map((handle) => ({
+    ...handle,
+    handleKind: puzzle2dResolveDoorCapsuleHandleKindForNodeKind(trimmed || undefined, catalogs, handle.handleKind),
+  }));
+  if (trimmed === "") {
+    const { nodeKind: _drop, ...rest } = node;
+    return { ...rest, handles };
+  }
+  return { ...node, nodeKind: trimmed, handles };
+}
+
 function parseNodeKindHandleTemplates(raw: unknown): NodeKindHandleTemplate[] | undefined {
   if (!Array.isArray(raw) || raw.length === 0) {
     return undefined;
@@ -250,17 +349,27 @@ function parseNodeKindsFromFixtureJson(raw: unknown): readonly NodeKind[] | unde
   return nodes.length ? nodes : undefined;
 }
 
-/** @emoji 🗂️ Returns `meta.kindCatalogs` from raw puzzle 2d fixture JSON when present (nodes/handles slices only). */
-export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
+function puzzle2dFixtureMetaRecord(raw: unknown): Record<string, unknown> | undefined {
   if (!raw || typeof raw !== "object") {
     return undefined;
   }
-  const root = raw as Record<string, unknown>;
-  const meta = root.meta;
-  if (!meta || typeof meta !== "object") {
+  const box = raw as Record<string, unknown>;
+  if (box.meta && typeof box.meta === "object") {
+    return box.meta as Record<string, unknown>;
+  }
+  if (box.kindCompatibility !== undefined || box.kindCatalogs !== undefined) {
+    return box;
+  }
+  return undefined;
+}
+
+/** @emoji 🗂️ Returns `meta.kindCatalogs` from raw puzzle 2d fixture JSON when present (nodes/handles slices only). */
+export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
+  const meta = puzzle2dFixtureMetaRecord(raw);
+  if (!meta) {
     return undefined;
   }
-  const kc = (meta as Record<string, unknown>).kindCatalogs;
+  const kc = meta.kindCatalogs;
   if (!kc || typeof kc !== "object") {
     return undefined;
   }
@@ -278,16 +387,19 @@ export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | 
   if (out.nodes === undefined && out.handles === undefined) {
     return undefined;
   }
-  return out;
+  return enrichKindCatalogBundleDoorCapsules(out) ?? out;
 }
 
-/** @emoji 🔗 Returns `meta.kindCompatibility` from raw puzzle 2d fixture JSON when present. */
+/** @emoji 🔗 Returns `meta.kindCompatibility` from raw puzzle 2d fixture JSON or a `meta` slice when present. */
 export function puzzle2dFixtureMetaKindCompatibility(raw: unknown): readonly KindCompatEntry[] | undefined {
-  if (!raw || typeof raw !== "object") return undefined;
-  const meta = (raw as Record<string, unknown>).meta;
-  if (!meta || typeof meta !== "object") return undefined;
-  const entries = (meta as Record<string, unknown>).kindCompatibility;
-  if (!Array.isArray(entries)) return undefined;
+  const meta = puzzle2dFixtureMetaRecord(raw);
+  if (!meta) {
+    return undefined;
+  }
+  const entries = meta.kindCompatibility;
+  if (!Array.isArray(entries)) {
+    return undefined;
+  }
   return entries as readonly KindCompatEntry[];
 }
 
@@ -556,6 +668,8 @@ export type Puzzle2dFixtureNodeV1 = Puzzle2dFixtureCircleNodeV1 | Puzzle2dFixtur
 
 /** @emoji 📄 Edge record inside {@link Puzzle2dFixtureV1}. */
 export interface Puzzle2dFixtureEdgeV1 {
+  /** @emoji 🧩 Optional semantic edge-kind id for catalog defaults and compatibility. */
+  edgeKind?: string;
   id: string;
   source: string;
   target: string;
@@ -1660,7 +1774,9 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
     if (!id || !source || !target) {
       return null;
     }
-    edges.push({ id, source, target });
+    const edgeKindRaw = edge.edgeKind ?? edge.edge_kind;
+    const edgeKind = typeof edgeKindRaw === "string" && edgeKindRaw.trim() !== "" ? edgeKindRaw.trim() : undefined;
+    edges.push({ id, source, target, ...(edgeKind !== undefined ? { edgeKind } : {}) });
   }
   const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
   return { camera, edges, meta, nodes, schema: "puzzle.2d.fixture/v1" };
@@ -2778,9 +2894,15 @@ export function puzzle2dNodeKindOverlayLabel(nodeKind: string, catalogs: KindCat
   return puzzle2dKindCatalogRowName(nodeKind, catalogs.nodes);
 }
 
+/** @emoji 🧩 Resolves an edge-kind catalog label for panels and overlays. */
+export function puzzle2dEdgeKindOverlayLabel(edgeKind: string, catalogs: KindCatalogBundle): string {
+  return puzzle2dKindCatalogRowName(edgeKind, catalogs.edges);
+}
+
 /** @emoji 🔀 Merges {@link DEFAULT_KIND_CATALOG_BUNDLE} with `meta.kindCatalogs` on a parsed fixture. */
 export function puzzle2dFixtureMergedKindCatalogs(fixture: Puzzle2dFixtureV1): KindCatalogBundle {
-  return mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, fixtureMetaKindCatalogBundle(fixture) ?? {});
+  const merged = mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, fixtureMetaKindCatalogBundle(fixture) ?? {});
+  return enrichKindCatalogBundleDoorCapsules(merged) ?? merged;
 }
 
 /** @emoji 🏷️ Icon for a brushed node: catalog `icon`, else the first fixture peer with the same `nodeKind`. */
@@ -3377,6 +3499,7 @@ export class Puzzle2dRenderer {
   private scheduledSelectEmitRafId: number | null = null;
   private pendingSelectEmitSnapshot: Puzzle2dSelectionSnapshot | null = null;
   private kindCompatJson = "[]";
+  private lastPushedKindCompatJson: string | null = null;
   private kindCatalogsBundle: KindCatalogBundle = DEFAULT_KIND_CATALOG_BUNDLE;
   private kindCatalogsJson = serializeKindCatalogBundle(DEFAULT_KIND_CATALOG_BUNDLE);
   private lastPushedKindCatalogsJson: string | null = null;
@@ -3473,7 +3596,7 @@ export class Puzzle2dRenderer {
     this.session = new BoardSession();
     const initialSel = this.selectionOptions;
     this.session.setSelectionOptions(initialSel.method, puzzle2dSelectionModeForHost(initialSel.mode), initialSel.targets.nodes, initialSel.targets.edges, initialSel.targets.handles);
-    this.session.setHandleLinkCompatJson(this.kindCompatJson);
+    this.pushKindCompatToWasmSessionIfNeeded();
     try {
       this.session.setKindCatalogsJson(this.kindCatalogsJson);
     } catch (err) {
@@ -3898,6 +4021,19 @@ export class Puzzle2dRenderer {
     this.markDirty();
   }
 
+  /** @emoji 🔗 Pushes {@link kindCompatJson} to WASM when it changed (descriptor cache must not skip compat). */
+  private pushKindCompatToWasmSessionIfNeeded(): void {
+    if (this.kindCompatJson === this.lastPushedKindCompatJson) {
+      return;
+    }
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    this.session.setHandleLinkCompatJson(this.kindCompatJson);
+    this.lastPushedKindCompatJson = this.kindCompatJson;
+  }
+
   /** @emoji 🔗 Sets kind-compatibility rules for link gestures (empty = unrestricted). */
   setKindCompatibility(entries: readonly KindCompatEntry[] | undefined): void {
     const normalized = (entries ?? []).map((p) => {
@@ -3918,8 +4054,8 @@ export class Puzzle2dRenderer {
       return;
     }
     this.kindCompatJson = json;
+    this.pushKindCompatToWasmSessionIfNeeded();
     if (this.wasmSessionCallBlockedForReentry()) {
-      this.invalidated = true;
       return;
     }
     this.pushSceneToWasmDriver();
@@ -3927,12 +4063,13 @@ export class Puzzle2dRenderer {
 
   /** @emoji 🧩 Sets WASM semantic kind catalogs (handles, wires, nodes, edges). */
   setKindCatalogs(bundle: KindCatalogBundle | undefined): void {
-    const merged: KindCatalogBundle = {
+    const mergedRaw: KindCatalogBundle = {
       edges: bundle?.edges ?? DEFAULT_KIND_CATALOG_BUNDLE.edges,
       handles: bundle?.handles ?? DEFAULT_KIND_CATALOG_BUNDLE.handles,
       nodes: bundle?.nodes ?? DEFAULT_KIND_CATALOG_BUNDLE.nodes,
       wires: bundle?.wires ?? DEFAULT_KIND_CATALOG_BUNDLE.wires,
     };
+    const merged = enrichKindCatalogBundleDoorCapsules(mergedRaw) ?? mergedRaw;
     this.kindCatalogsBundle = merged;
     const json = serializeKindCatalogBundle(merged);
     if (json === this.kindCatalogsJson) {
@@ -4529,7 +4666,7 @@ export class Puzzle2dRenderer {
     this.session.setSelectionOptions(o.method, puzzle2dSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
     this.session.setWorldRasterTiling(this.worldRasterTiling);
     this.pushLodAndGridSnapToWasmSession();
-    this.session.setHandleLinkCompatJson(this.kindCompatJson);
+    this.pushKindCompatToWasmSessionIfNeeded();
     try {
       this.session.setKindCatalogsJson(this.kindCatalogsJson);
     } catch (err) {
@@ -4859,6 +4996,7 @@ export class Puzzle2dRenderer {
       puzzle2dWasmDescriptorJsonMatchesScene(this, this.lastPushedDescriptorJson);
     const deferDescriptorSync = this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs() || this.preselectIds.size > 0;
     if (descriptorCacheValid) {
+      this.pushKindCompatToWasmSessionIfNeeded();
       this.flushPendingIncrementalNodeMovesToWasm();
       this.pushWasmViewportAndSizeToSession();
       this.pushWasmSelectionAndPreselectToSession();
@@ -4873,7 +5011,7 @@ export class Puzzle2dRenderer {
     this.session.setSelectionOptions(o.method, puzzle2dSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
     this.session.setWorldRasterTiling(this.worldRasterTiling);
     this.pushLodAndGridSnapToWasmSession();
-    this.session.setHandleLinkCompatJson(this.kindCompatJson);
+    this.pushKindCompatToWasmSessionIfNeeded();
     if (this.kindCatalogsJson !== this.lastPushedKindCatalogsJson) {
       try {
         this.session.setKindCatalogsJson(this.kindCatalogsJson);
@@ -8289,6 +8427,52 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
+    it("puzzle2dFixtureMetaKindCompatibility reads rules from fixture root or meta slice", async () => {
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as { meta?: { kindCompatibility?: unknown[] } };
+      const fromRoot = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson);
+      const fromMeta = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson.meta);
+      expect(fromRoot?.length).toBeGreaterThan(0);
+      expect(fromMeta?.length).toBe(fromRoot?.length);
+    });
+
+    it("nakagin door tambour brush excludes Capital after kindCompatibility sync on warm descriptor cache", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const compat = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson) ?? [];
+      const catalogs = fixtureMetaKindCatalogBundle(nakaginFixtureJson) ?? {};
+      const DOOR_TAMBOUR_LEFT = "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8";
+      const CAPITAL_KIND = "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e";
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      renderer.setCamera(0, 0, 1);
+      renderer.setKindCatalogs(catalogs);
+      renderer.setActiveTool("brush");
+      renderer.setBrushFlushDistance(80);
+      renderer.setBrushNodeSize(40);
+      const node = new Puzzle2dSceneNode({
+        id: "tambour",
+        nodeKind: "semio.metabolism.light.node.2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
+        radius: 40,
+        x: 0,
+        y: 0,
+      });
+      new Puzzle2dSceneHandle({ id: "tambour:h0", handleKind: DOOR_TAMBOUR_LEFT, angle: 0, node });
+      renderer.scene.add(node);
+      renderer.render();
+      renderer.setKindCompatibility(compat);
+      const handleWorld = computeHandlePosition({ height: 80, radius: 40, shape: "circle", width: 80, x: 0, y: 0 }, 0);
+      const slotWorld = { x: handleWorld.x + (handleWorld.x - 0) * 2, y: handleWorld.y + (handleWorld.y - 0) * 2 };
+      const slotScreen = renderer.worldToScreen(slotWorld);
+      let lastCandidates: readonly string[] = [];
+      renderer.on("brushCandidates", (payload) => {
+        lastCandidates = payload.candidates;
+      });
+      canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
+      expect(lastCandidates.length).toBeGreaterThan(0);
+      expect(lastCandidates).not.toContain(CAPITAL_KIND);
+      renderer.dispose();
+    });
+
     it("puzzle2dNodeKindHandlesFromKitConnectors keeps two connectors with the same handleKind at different CAD points", () => {
       const handleKind = "semio.kit.handle.core-rect-bottom";
       const handles = puzzle2dNodeKindHandlesFromKitConnectors([
@@ -9762,12 +9946,13 @@ function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: H
 
 /** @emoji 🗂️ Builds a {@link Puzzle2dSceneDescriptor} from {@link Puzzle2dFixtureV1} without walking React `children` (stable play sync). */
 export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixtureV1): Puzzle2dSceneDescriptor {
+  const catalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
   const nodes: NodeDescriptor[] = [];
   const handles: HandleDescriptor[] = [];
   for (const node of fixture.nodes) {
     const nodeHandles: HandleDescriptor[] = node.handles.map((handle) => ({
       angle: handle.angle,
-      handleKind: handle.handleKind,
+      handleKind: puzzle2dResolveDoorCapsuleHandleKindForNodeKind(node.nodeKind, catalogs, handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND),
       id: handle.id,
       nodeId: node.id,
       ...(handle.color !== undefined ? { color: handle.color } : {}),
@@ -9801,6 +9986,7 @@ export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixture
     id: edge.id,
     source: edge.source,
     target: edge.target,
+    ...(edge.edgeKind !== undefined ? { edgeKind: edge.edgeKind } : {}),
   }));
   return { edges, handles, nodes, wires: [] };
 }
@@ -11367,6 +11553,81 @@ if (puzzle2dReactVitest) {
   }
 
   describe("puzzle2d react helpers", () => {
+    it("enrichKindCatalogBundleDoorCapsules relabels Capsule L and Capsule Z to door capsule left", () => {
+      const bundle: KindCatalogBundle = {
+        handles: [
+          { id: PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND, name: "door capsule right", color: "#0f0" },
+          { id: PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND, name: "door capsule left", color: "#00f" },
+        ],
+        nodes: [
+          {
+            id: "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
+            name: "Capsule L",
+            handles: [{ handleKind: PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND, angle: -0.8, radius: 3 }],
+          },
+          {
+            id: "semio.metabolism.light.node.214a30f8-adfc-40de-840b-151d9f7e17dd",
+            name: "Capsule S",
+            handles: [{ handleKind: PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND, angle: 0.8, radius: 3 }],
+          },
+        ],
+      };
+      const enriched = enrichKindCatalogBundleDoorCapsules(bundle);
+      expect(enriched?.nodes?.find((row) => row.name === "Capsule L")?.handles?.[0]?.handleKind).toBe(PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND);
+      expect(enriched?.nodes?.find((row) => row.name === "Capsule S")?.handles?.[0]?.handleKind).toBe(PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND);
+    });
+
+    it("parsePuzzle2dFixtureV1 preserves edgeKind on edges", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a:h0", angle: 0 }] }],
+        edges: [{ id: "e1", source: "a:h0", target: "a:h0", edgeKind: BUILTIN_LINK_EDGE_KIND }],
+      });
+      expect(fixture?.edges[0]?.edgeKind).toBe(BUILTIN_LINK_EDGE_KIND);
+    });
+
+    it("buildPuzzle2dSceneDescriptorFromFixture forwards edgeKind to the descriptor", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a:h0", angle: 0 }] }],
+        edges: [{ id: "e1", source: "a:h0", target: "a:h0", edgeKind: BUILTIN_LINK_EDGE_KIND }],
+      });
+      expect(fixture).toBeTruthy();
+      const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture!);
+      expect(descriptor.edges[0]?.edgeKind).toBe(BUILTIN_LINK_EDGE_KIND);
+    });
+
+    it("puzzle2dApplyNodeKindToFixtureNode sets nodeKind on the fixture node", () => {
+      const node: Puzzle2dFixtureCircleNodeV1 = {
+        handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "n:h0" }],
+        id: "n",
+        radius: 10,
+        x: 0,
+        y: 0,
+      };
+      const catalogs: KindCatalogBundle = { nodes: [{ id: "kind-a", name: "Kind A" }] };
+      const next = puzzle2dApplyNodeKindToFixtureNode(node, "kind-a", catalogs);
+      expect(next.nodeKind).toBe("kind-a");
+    });
+
+    it("buildPuzzle2dSceneDescriptorFromFixture relabels placed Capsule L door handles", async () => {
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
+      expect(fixture).toBeTruthy();
+      const capsuleLKind = "semio.metabolism.light.node.6ed26ed1-dffa-40d3-b405-d49b35a90fcd";
+      const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture!);
+      const leftHandles = descriptor.handles.filter(
+        (handle) => fixture!.nodes.find((node) => node.id === handle.nodeId)?.nodeKind === capsuleLKind && handle.handleKind === PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND,
+      );
+      expect(leftHandles.length).toBeGreaterThan(0);
+      const wrongRight = descriptor.handles.some(
+        (handle) => fixture!.nodes.find((node) => node.id === handle.nodeId)?.nodeKind === capsuleLKind && handle.handleKind === PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND,
+      );
+      expect(wrongRight).toBe(false);
+    });
+
     it("puzzle2dFixtureSceneMarkers maps nakagin fixture into scene descriptors", async () => {
       const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
       const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
