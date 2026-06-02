@@ -1,0 +1,19 @@
+{
+  "title": "Persist Slide Modifications Across Navigation",
+  "emoji": "🎞",
+  "status": "closed",
+  "description": "Specs changed: all slides remember their modifications (drag/resize, enlarge, selection). Modifications reset only when reset buttons are pressed, not on slide navigation. Remove slideEpoch reset effect from usePresentationInteraction; clearSelection clears only selection not enlarge; add tests.",
+  "summary": "Per-slide modifications (drag/resize transforms, enlarge, selection) now persist across reveal.js navigation. Removed slideEpoch wipe from usePresentationInteraction; clearSelection clears only selection so enlarge survives empty-click deselect. Reset buttons remain the explicit way to clear modifications. Added tests for navigation persistence and enlarge-after-deselect. All 95 renderer tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1526"
+  },
+  "goal": "🎯framework🎯presentation",
+  "plan": {
+    "client": "cursor",
+    "id": "d099c372",
+    "local": "persist_slide_modifications_d099c372.plan.md"
+  },
+  "sessions": [
+    "⚪f5f21ec1bc2c49b78ed621c023719350"
+  ]
+}

@@ -54,6 +54,12 @@ export interface TextEmbodiment {
 	readonly morphFromLines?: readonly string[];
 }
 
+/** @emoji 🧩 Rows×columns grid from {@link split}; enables seam-aligned background positioning. */
+export interface FigureMosaicGrid {
+	readonly rows: number;
+	readonly columns: number;
+}
+
 /** @emoji 🖼 Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
 export interface FigureEmbodiment {
 	readonly kind: "figure";
@@ -63,6 +69,8 @@ export interface FigureEmbodiment {
 	readonly crop?: DispositionPosition;
 	/** @emoji 📐 Source bitmap width÷height; used with {@link FigureEmbodiment.crop} for uniform cover (default 1). */
 	readonly sourceAspect?: number;
+	/** @emoji 🧩 When set, crop backgrounds use edge-aligned positions so adjacent cells do not overlap. */
+	readonly mosaic?: FigureMosaicGrid;
 }
 
 /** @emoji 🎬 Video clip on a slide. */
@@ -365,6 +373,7 @@ export interface TileSpec {
 	readonly crop: DispositionPosition;
 	readonly alt?: string;
 	readonly sourceAspect?: number;
+	readonly mosaic?: FigureMosaicGrid;
 }
 
 /** @emoji 🧩 Produces one cropped {@link FigureEmbodiment} from a source figure. */
@@ -376,6 +385,7 @@ export function tile(spec: TileSpec): FigureEmbodiment {
 		alt: spec.alt,
 		crop: spec.crop,
 		...(spec.sourceAspect !== undefined ? { sourceAspect: spec.sourceAspect } : {}),
+		...(spec.mosaic !== undefined ? { mosaic: spec.mosaic } : {}),
 	};
 }
 //#endregion 🔖Tile
@@ -496,6 +506,7 @@ export function split(spec: SplitSpec): SplitArtifacts {
 				crop: cell.crop,
 				alt: spec.alt,
 				sourceAspect: spec.sourceAspect,
+				mosaic: { rows: spec.rows, columns: spec.columns },
 			}),
 		);
 		dispositions.push({

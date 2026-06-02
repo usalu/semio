@@ -9237,13 +9237,14 @@ if (import.meta.vitest) {
       const enriched = enrichKindCatalogBundleDoorCapsules(catalogs)!;
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour right" };
       const compat: readonly KindCompatEntry[] = [
-        { bidirectional: true, specificity: "vortex", source: "door capsule left", target: "door tambour right" },
+        { bidirectional: true, specificity: "vortex", source: "door capsule right", target: "door tambour right" },
       ];
       const list = brushCompatibleCandidates(target, enriched, compat);
-      expect(list.some((entry) => entry.objectKindId === "s")).toBe(true);
-      expect(list.some((entry) => entry.objectKindId === "L")).toBe(false);
+      expect(list.some((entry) => entry.objectKindId === "s")).toBe(false);
+      expect(list.some((entry) => entry.objectKindId === "L")).toBe(true);
       const s = enriched.objects.find((k) => k.id === "s");
       expect(s?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
+      expect(enriched.objects.find((k) => k.id === "L")?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule right"]);
       expect(s?.vortices).toHaveLength(1);
     });
     it("infers left or right from CAD X even when kit port id names the other side", () => {
@@ -10142,8 +10143,8 @@ if (import.meta.vitest) {
       cables: [{ id: "cable.link", defaultAttractionKind: "puzzle3d.attraction.link" }],
     })!;
     const brushCompat: readonly KindCompatEntry[] = [
-      { bidirectional: true, specificity: "vortex", source: "door capsule right", target: "door tambour left" },
-      { bidirectional: true, specificity: "vortex", source: "door capsule left", target: "door tambour right" },
+      { bidirectional: true, specificity: "vortex", source: "door capsule right", target: "door tambour right" },
+      { bidirectional: true, specificity: "vortex", source: "door capsule left", target: "door tambour left" },
     ];
     it("brushPlacementCollisionToleranceFromSlider maps window slider to CAD penetration depth", () => {
       expect(brushPlacementCollisionToleranceFromSlider(0)).toBe(0);
@@ -10235,15 +10236,15 @@ if (import.meta.vitest) {
     it("brushCompatibleCandidates filters by kind compatibility", () => {
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
-      expect(list.some((entry) => entry.objectKindId === "L")).toBe(true);
-      expect(list.some((entry) => entry.objectKindId === "J")).toBe(false);
-      expect(list.some((entry) => entry.objectKindId === "Tambour")).toBe(false);
-    });
-    it("brushCompatibleCandidates pairs door tambour right with door capsule left only", () => {
-      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour right" };
-      const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       expect(list.some((entry) => entry.objectKindId === "J")).toBe(true);
       expect(list.some((entry) => entry.objectKindId === "L")).toBe(false);
+      expect(list.some((entry) => entry.objectKindId === "Tambour")).toBe(false);
+    });
+    it("brushCompatibleCandidates pairs door tambour right with door capsule right only", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour right" };
+      const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
+      expect(list.some((entry) => entry.objectKindId === "J")).toBe(false);
+      expect(list.some((entry) => entry.objectKindId === "L")).toBe(true);
     });
     it("brushCompatibleCandidates prefers Tambour stack bottom on tambour top vortices", () => {
       const stackCatalogs: KindCatalogBundle = {

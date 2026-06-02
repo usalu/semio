@@ -3,13 +3,14 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix sketchpad bug: capsule types do not appear under capsule typology.",
-  "summary": "Renamed door capsule east→door capsule right and door capsule west→door capsule left across nakagin fixtures, storybook board, metabolism kit fixtures, metabolism.cypher, and puzzle/3d/react (constants DOOR_CAPSULE_RIGHT/LEFT, CAD inference unchanged: negative X=left, positive X=right). Tambour left/right and other east/west kinds untouched. 258 puzzle 3d react tests pass.",
+  "summary": "Renamed platform east→platform right and platform west→platform left in nakagin 2d/3d/5d fixtures, storybook board, metabolism kit fixtures (shallow, snapshot, light, reference, diffed, filtered, initialKit kit.semio.json), and metabolism.cypher. No TS code referenced platform east/west.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪8e838cfdeead49bbbaceee1810ec1f00",
     "⚪7fdb29f0b939436e9249d23a5b01ea27",
     "⚪5197a3c52c8b4b4b8f3b84e5dbeae5ac",
     "⚪f58af4ffc7a44b7e991524f5b3d8ca83",
-    "⚪d65e14f090854f6fb640e4a2fc469341"
+    "⚪d65e14f090854f6fb640e4a2fc469341",
+    "⚪9fe04360ad46432f82283fbbca704c5c"
   ]
 }

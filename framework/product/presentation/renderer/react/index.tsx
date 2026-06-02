@@ -1287,16 +1287,69 @@ export function figureCropPhysicalAspect(crop: DispositionPosition, sourceAspect
 	return (crop.width / crop.height) * sourceAspect;
 }
 
+const FIGURE_MOSAIC_ALIGN_EPSILON = 1e-4;
+
+/** @emoji 🧩 Grid column/row for a split crop, or null when the crop is not a mosaic cell. */
+export function figureMosaicCellIndex(
+	crop: DispositionPosition,
+	mosaic: { readonly rows: number; readonly columns: number },
+): { readonly column: number; readonly row: number } | null {
+	const { rows, columns } = mosaic;
+	if (rows < 1 || columns < 1) {
+		return null;
+	}
+	const colWidth = 1 / columns;
+	const rowHeight = 1 / rows;
+	if (
+		Math.abs(crop.width - colWidth) > FIGURE_MOSAIC_ALIGN_EPSILON ||
+		Math.abs(crop.height - rowHeight) > FIGURE_MOSAIC_ALIGN_EPSILON
+	) {
+		return null;
+	}
+	const column = Math.round(crop.x / colWidth);
+	const row = Math.round(crop.y / rowHeight);
+	if (column < 0 || column >= columns || row < 0 || row >= rows) {
+		return null;
+	}
+	if (
+		Math.abs(crop.x - column * colWidth) > FIGURE_MOSAIC_ALIGN_EPSILON ||
+		Math.abs(crop.y - row * rowHeight) > FIGURE_MOSAIC_ALIGN_EPSILON
+	) {
+		return null;
+	}
+	return { column, row };
+}
+
+/** @emoji 🧩 Edge-aligned background-position for one cell in a rows×columns sprite grid. */
+export function figureMosaicBackgroundPosition(
+	column: number,
+	row: number,
+	columns: number,
+	rows: number,
+): { readonly posX: number; readonly posY: number } {
+	return {
+		posX: columns <= 1 ? 50 : (column / (columns - 1)) * 100,
+		posY: rows <= 1 ? 50 : (row / (rows - 1)) * 100,
+	};
+}
+
 /** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
 function figureCropCoverVars(
 	crop: DispositionPosition,
 	frame: DispositionPosition,
 	sourceAspect = 1,
+	mosaic?: { readonly rows: number; readonly columns: number },
 ): { readonly width: number; readonly height: number; readonly posX: number; readonly posY: number } {
 	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
 	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
-	const centerPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
-	const centerPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
+	const mosaicCell = mosaic ? figureMosaicCellIndex(crop, mosaic) : null;
+	const { posX, posY } =
+		mosaicCell !== null
+			? figureMosaicBackgroundPosition(mosaicCell.column, mosaicCell.row, mosaic.columns, mosaic.rows)
+			: {
+					posX: crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100,
+					posY: crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100,
+				};
 	if (frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
 		const cropAspect = figureCropPhysicalAspect(crop, sourceAspect);
 		const frameAspect = frame.width / frame.height;
@@ -1304,12 +1357,12 @@ function figureCropCoverVars(
 		return {
 			width: stretchWidth * coverScale,
 			height: stretchHeight * coverScale,
-			posX: centerPosX,
-			posY: centerPosY,
+			posX,
+			posY,
 		};
 	}
 	const uniform = Math.max(stretchWidth, stretchHeight);
-	return { width: uniform, height: uniform, posX: centerPosX, posY: centerPosY };
+	return { width: uniform, height: uniform, posX, posY };
 }
 
 /** @emoji 📐 Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
@@ -1430,12 +1483,20 @@ export function figureCropBackgroundVars(
 	morphFrame?: DispositionPosition,
 ): CSSProperties {
 	const sourceAspect = embodiment.sourceAspect ?? 1;
+	const mosaic = embodiment.mosaic;
 	const restBasis = frame ?? morphFrame;
 	const morphBasis = morphFrame ?? frame;
 	const rest = restBasis
-		? figureCropCoverVars(crop, restBasis, sourceAspect)
+		? figureCropCoverVars(crop, restBasis, sourceAspect, mosaic)
 		: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, sourceAspect);
-	const morph = morphBasis ? figureCropCoverVars(crop, morphBasis, sourceAspect) : rest;
+	const morph = morphBasis
+		? figureCropCoverVars(
+				crop,
+				morphBasis,
+				sourceAspect,
+				morphBasis === restBasis ? mosaic : undefined,
+			)
+		: rest;
 	return {
 		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
 		["--presentation-figure-bg-size" as string]: `${rest.width}% ${rest.height}%`,
@@ -2742,17 +2803,11 @@ function usePresentationInteractionState(): PresentationInteractionState {
 	return value;
 }
 
-/** @emoji 🖱 Ephemeral selection, transforms, and enlarge flags; resets when slideEpoch changes. */
-export function usePresentationInteraction(slideEpoch: number): PresentationInteractionState {
+/** @emoji 🖱 Per-slide selection, transforms, and enlarge flags; cleared only via reset controls. */
+export function usePresentationInteraction(): PresentationInteractionState {
 	const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
 	const [transforms, setTransforms] = useState<ReadonlyMap<string, DispositionTransform>>(() => new Map());
 	const [enlargedIds, setEnlargedIds] = useState<ReadonlySet<string>>(() => new Set());
-
-	useEffect(() => {
-		setSelectedIds(new Set());
-		setTransforms(new Map());
-		setEnlargedIds(new Set());
-	}, [slideEpoch]);
 
 	const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
 
@@ -2797,7 +2852,6 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 
 	const clearSelection = useCallback(() => {
 		setSelectedIds(new Set());
-		setEnlargedIds(new Set());
 	}, []);
 
 	const toggleEnlarge = useCallback((id: string) => {
@@ -3959,10 +4013,9 @@ const ArrangementSectionSurface: FC<{
 
 //#region 🔖PresentationInteractionProvider
 const PresentationInteractionProvider: FC<{
-	readonly slideEpoch: number;
 	readonly children: ReactNode;
-}> = ({ slideEpoch, children }) => {
-	const interaction = usePresentationInteraction(slideEpoch);
+}> = ({ children }) => {
+	const interaction = usePresentationInteraction();
 	return (
 		<PresentationInteractionContext.Provider value={interaction}>{children}</PresentationInteractionContext.Provider>
 	);
@@ -4189,7 +4242,7 @@ export const PresentationDeck: FC<{
 
 	return (
 		<PresentationSlideEpochContext.Provider value={slideEpoch}>
-			<PresentationInteractionProvider slideEpoch={slideEpoch}>
+			<PresentationInteractionProvider>
 				<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
 					<div className="slides">
 						{presentation.chapters.flatMap((chapter) =>
@@ -5158,17 +5211,21 @@ if (import.meta.vitest) {
 			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe("50% 50%");
 		});
 
-		it("assigns distinct crop background positions per split tile", () => {
+		it("assigns seam-aligned mosaic positions per split tile", () => {
 			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
-			const embodiment = { kind: "figure" as const, src: "/catalogue.png" };
+			const embodiment = {
+				kind: "figure" as const,
+				src: "/catalogue.png",
+				mosaic: { rows: 2, columns: 2 },
+			};
 			const positions = tiles.map(
 				(tile) =>
 					figureCropBackgroundVars(embodiment, tile.crop, tile.position)[
 						"--presentation-figure-bg-position" as keyof ReturnType<typeof figureCropBackgroundVars>
 					],
 			);
-			expect(new Set(positions).size).toBe(4);
+			expect(positions).toEqual(["0% 0%", "100% 0%", "0% 100%", "100% 100%"]);
 		});
 
 		it("clearRevealAutoAnimateInlineLayout removes only FLIP transform from auto-animate targets", () => {
@@ -6385,6 +6442,56 @@ if (import.meta.vitest) {
 			],
 		};
 
+		const twoSlideDeck: Presentation = {
+			id: "interactive-two-slide",
+			name: "Interactive Two Slide",
+			chapters: [
+				{
+					id: "main",
+					sequences: [
+						{
+							id: "main",
+							thoughts: [
+								{
+									id: "pair",
+									participants: [{ id: "box" }],
+									embodiments: [{ kind: "text", id: "box--main", lines: ["Hello"], level: "body" }],
+									slides: [
+										{
+											arrangement: {
+												id: "alpha",
+												dispositions: [
+													{
+														participantId: "box",
+														embodimentId: "box--main",
+														emphasis: "active",
+														position: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 },
+													},
+												],
+											},
+										},
+										{
+											arrangement: {
+												id: "beta",
+												dispositions: [
+													{
+														participantId: "box",
+														embodimentId: "box--main",
+														emphasis: "active",
+														position: { x: 0.55, y: 0.55, width: 0.3, height: 0.15 },
+													},
+												],
+											},
+										},
+									],
+								},
+							],
+						},
+					],
+				},
+			],
+		};
+
 		const pointerClick = (target: Element, clientX = 20, clientY = 20): void => {
 			target.dispatchEvent(
 				new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, clientX, clientY }),
@@ -6990,6 +7097,87 @@ if (import.meta.vitest) {
 				".presentation-interaction-enlarge",
 			) as HTMLButtonElement;
 			expect(enlargeOff.getAttribute("aria-pressed")).toBe("false");
+		});
+
+		it("keeps enlarge when empty slide click clears selection", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			act(() => {
+				pointerClick(disposition);
+			});
+			const enlargeButton = disposition.querySelector(".presentation-interaction-enlarge") as HTMLButtonElement;
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			act(() => {
+				pointerClick(canvas, 8, 8);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+		});
+
+		it("remembers drag and selection after navigating away and back", async () => {
+			const alphaRef = collectPresentationSlides(twoSlideDeck)[0];
+			const betaRef = collectPresentationSlides(twoSlideDeck)[1];
+			expect(alphaRef?.slide).toBe("alpha");
+			expect(betaRef?.slide).toBe("beta");
+			let revealApi: Reveal.Api | undefined;
+			act(() => {
+				mountPresentation(container, twoSlideDeck, {
+					hash: false,
+					slideNumber: false,
+					surfaceChrome: false,
+					onRevealReady: (api) => {
+						revealApi = api;
+					},
+				});
+			});
+			await new Promise<void>((resolve) => {
+				const start = Date.now();
+				const wait = (): void => {
+					if (revealApi) {
+						resolve();
+						return;
+					}
+					if (Date.now() - start > 5000) {
+						throw new Error("reveal.js did not become ready.");
+					}
+					setTimeout(wait, 50);
+				};
+				wait();
+			});
+			const alphaSlide = container.querySelector('section[title="alpha"]') as HTMLElement;
+			const disposition = alphaSlide.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			const originLeft = disposition.style.left;
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			act(() => {
+				pointerDrag(disposition, 300, 280, 380, 320);
+			});
+			const modifiedLeft = disposition.style.left;
+			expect(modifiedLeft).not.toBe(originLeft);
+			await revealApi!.slide(betaRef!.h, betaRef!.v);
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			await revealApi!.slide(alphaRef!.h, alphaRef!.v);
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			const alphaSlideAgain = container.querySelector('section[title="alpha"]') as HTMLElement;
+			const dispositionAgain = alphaSlideAgain.querySelector("[data-disposition-id]") as HTMLElement;
+			expect(dispositionAgain.style.left).toBe(modifiedLeft);
+			expect(dispositionAgain.classList.contains("presentation-interactive-disposition--selected")).toBe(
+				true,
+			);
 		});
 
 		it("resets the whole slide from the proximity control in the top-right corner", () => {

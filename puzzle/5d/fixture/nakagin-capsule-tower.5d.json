@@ -2430,7 +2430,7 @@
       "anchors": [
         {
           "id": "e",
-          "anchorKind": "platform east",
+          "anchorKind": "platform right",
           "puzzle2d": {
             "angle": 2.783732,
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
@@ -2448,7 +2448,7 @@
               0
             ],
             "radius": 0.36,
-            "label": "platform east (e)"
+            "label": "platform right (e)"
           }
         }
       ],
@@ -4948,7 +4948,7 @@
       "anchors": [
         {
           "id": "e",
-          "anchorKind": "platform east",
+          "anchorKind": "platform right",
           "puzzle2d": {
             "angle": 2.783739,
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
@@ -4966,7 +4966,7 @@
               0
             ],
             "radius": 0.36,
-            "label": "platform east (e)"
+            "label": "platform right (e)"
           }
         }
       ],
@@ -6859,7 +6859,7 @@
       "anchors": [
         {
           "id": "e",
-          "anchorKind": "platform east",
+          "anchorKind": "platform right",
           "puzzle2d": {
             "angle": 2.783732,
             "anchorKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
@@ -6877,7 +6877,7 @@
               0
             ],
             "radius": 0.36,
-            "label": "platform east (e)"
+            "label": "platform right (e)"
           }
         }
       ],
@@ -14837,17 +14837,17 @@
         "defaultRopeKind": "cable.link"
       },
       {
-        "id": "platform east",
-        "name": "platform east",
+        "id": "platform right",
+        "name": "platform right",
         "color": "hsl(169 52% 48%)",
-        "label": "platform east",
+        "label": "platform right",
         "defaultRopeKind": "cable.link"
       },
       {
-        "id": "platform west",
-        "name": "platform west",
+        "id": "platform left",
+        "name": "platform left",
         "color": "hsl(215 52% 48%)",
-        "label": "platform west",
+        "label": "platform left",
         "defaultRopeKind": "cable.link"
       },
       {
@@ -14938,19 +14938,19 @@
     },
     {
       "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-      "bidirectional": true,
-      "specificity": "handle"
-    },
-    {
-      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
       "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
       "bidirectional": true,
       "specificity": "handle"
     },
     {
+      "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+      "bidirectional": true,
+      "specificity": "handle"
+    },
+    {
       "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
       "bidirectional": true,
       "specificity": "handle"
     },
@@ -14962,7 +14962,7 @@
     },
     {
       "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
-      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
+      "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
       "bidirectional": true,
       "specificity": "handle"
     },

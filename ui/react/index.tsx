@@ -804,6 +804,14 @@ export function useElementsSurfaceChrome({ theme, device, expertise, compact = f
   return { mobile: device === "mobile" };
 }
 
+/** @emoji 🧪 Clears surface-chrome leases and DOM overrides between vitest cases. */
+export function resetElementsSurfaceChromeForTests(): void {
+  cancelElementsSurfaceChromeDeferredClear();
+  elementsSurfaceChromeLeases.length = 0;
+  syncElementsSurfaceChromeProviders(undefined);
+  clearElementsSurfaceChromeDom();
+}
+
 // #region 🎛️UiChromeCompact
 /** @emoji 🎛️ localStorage key for icon-only button/toggle chrome. */
 export const UI_CHROME_COMPACT_STORAGE_KEY = "ui.chrome.compact";
@@ -15063,6 +15071,15 @@ function mapLayoutStacks(layout: WindowLayoutNode, mapper: (stack: WindowLayoutS
   };
 }
 
+function resolveStackPathForWindowId(layout: WindowLayoutNode, windowId: string): ModeLayoutPath | null {
+  let found: ModeLayoutPath | null = null;
+  mapLayoutStacks(layout, (stack, path) => {
+    if (stack.children.some((child) => child.id === windowId)) found = path;
+    return stack;
+  });
+  return found;
+}
+
 /** @emoji 🪟 Adds missing windows and removes stale ones from the layout tree. */
 function reconcileWindows(layout: WindowLayoutNode, windowIds: readonly string[]): WindowLayoutNode {
   const normalized = normalizeLayoutToStacks(layout);
@@ -15122,6 +15139,22 @@ function insertWindowAsTab(layout: WindowLayoutNode, stackPath: ModeLayoutPath, 
     children.splice(insertAt, 0, { kind: "window", id: windowId });
     return { ...node, children, activeId: windowId };
   });
+}
+
+/** @emoji 📑 Merges every tab from a dragged stack into another stack at the given index. */
+function mergeStackTabsIntoStack(
+  layout: WindowLayoutNode,
+  targetStackPath: ModeLayoutPath,
+  stack: WindowLayoutStackNode,
+  index: number,
+): WindowLayoutNode {
+  const insertAt = index < 0 ? undefined : index;
+  let result = layout;
+  stack.children.forEach((child, offset) => {
+    result = insertWindowAsTab(result, targetStackPath, child.id, insertAt === undefined ? undefined : insertAt + offset);
+  });
+  const activeId = stack.activeId ?? stack.children[0]?.id;
+  return activeId ? setActiveWindowInLayout(result, activeId) : result;
 }
 
 function reorderTabInStack(layout: WindowLayoutNode, stackPath: ModeLayoutPath, fromIndex: number, toIndex: number): WindowLayoutNode {
@@ -15355,14 +15388,22 @@ function computeModeDropZone(
 function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: ModeDropZone): WindowLayoutNode {
   const { dragKind, windowId, stackPath: sourcePath, tabIndex } = drag;
   if (dragKind === "stack") {
+    const targetStack = zone.kind === "tab" ? readLayoutAtPath(layout, zone.stackPath) : null;
+    const targetAnchorId =
+      targetStack?.kind === "stack" ? targetStack.activeId ?? targetStack.children[0]?.id : undefined;
     const { layout: withoutSource, stack } = extractStackFromLayout(layout, sourcePath);
     if (!stack) return layout;
     const base = withoutSource ?? { kind: "stack", children: [] };
     if (zone.kind === "root-split") return splitRootWithStack(base, stack, zone.side);
     if (zone.stackPath === sourcePath) return layout;
-    if (zone.kind === "split") return splitWithStack(base, zone.stackPath, stack, zone.side);
-    const side: ModeDockSide = zone.index <= 0 ? "left" : "right";
-    return splitWithStack(base, zone.stackPath, stack, side);
+    if (zone.kind === "split") {
+      const splitTargetPath =
+        targetAnchorId !== undefined ? resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath : zone.stackPath;
+      return splitWithStack(base, splitTargetPath, stack, zone.side);
+    }
+    const mergeTargetPath =
+      targetAnchorId !== undefined ? resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath : zone.stackPath;
+    return mergeStackTabsIntoStack(base, mergeTargetPath, stack, zone.index);
   }
   if (zone.kind === "root-split") return splitRootWithWindow(layout, windowId, zone.side);
   if (zone.kind === "split") return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
@@ -15395,18 +15436,40 @@ interface ModeTabInsertPreview {
 
 type ModeDockTabDisplayItem = { id: string; title: string; preview?: "ghost" };
 
-/** @emoji 📑 Tab bar row with a ghost tab at the drop index so layout matches the committed drop. */
+/** @emoji 📑 Tab bar row with ghost tab(s) at the drop index so layout matches the committed drop. */
 function modeDockTabsWithInsertPreview(
   tabs: readonly { id: string; title: string }[],
   insertPreview: ModeTabInsertPreview | null,
   stackPath: ModeLayoutPath,
-  ghost: { id: string; title: string },
+  ghostTabs: readonly { id: string; title: string }[],
 ): ModeDockTabDisplayItem[] {
-  if (!insertPreview || insertPreview.stackPath !== stackPath || !ghost.id) return tabs.map((tab) => ({ ...tab }));
+  if (!insertPreview || insertPreview.stackPath !== stackPath || ghostTabs.length === 0) return tabs.map((tab) => ({ ...tab }));
   const insertAt = Math.min(Math.max(0, insertPreview.index), tabs.length);
   const row: ModeDockTabDisplayItem[] = tabs.map((tab) => ({ ...tab }));
-  row.splice(insertAt, 0, { id: ghost.id, title: ghost.title, preview: "ghost" });
+  row.splice(
+    insertAt,
+    0,
+    ...ghostTabs.map((tab) => ({ id: tab.id, title: tab.title, preview: "ghost" as const })),
+  );
   return row;
+}
+
+/** @emoji 📑 Tab descriptors shown as insert-preview ghosts for the current drag. */
+function modeDockDragInsertTabs(
+  layout: WindowLayoutNode,
+  drag: ModeDragState,
+  windowTitle: (windowId: string) => string,
+): readonly { id: string; title: string }[] {
+  if (drag.dragKind === "tab") return [{ id: drag.windowId, title: windowTitle(drag.windowId) }];
+  const stack = readLayoutAtPath(layout, drag.stackPath);
+  if (!stack || stack.kind !== "stack") return [{ id: drag.windowId, title: windowTitle(drag.windowId) }];
+  return stack.children.map((child) => ({ id: child.id, title: windowTitle(child.id) }));
+}
+
+function resolveModeTabInsertPreview(drag: ModeDragState | null, zone: ModeDropZone | null): ModeTabInsertPreview | null {
+  if (!drag || zone?.kind !== "tab") return null;
+  if (drag.dragKind === "stack" && zone.stackPath === drag.stackPath) return null;
+  return { stackPath: zone.stackPath, index: zone.index };
 }
 
 const modeDockTabInsertPreviewClass =
@@ -15466,7 +15529,7 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
   tabInsertPreview: ModeTabInsertPreview | null;
-  draggedTab: { id: string; title: string } | null;
+  draggedInsertTabs: readonly { id: string; title: string }[];
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   startStackDrag: (windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => void;
@@ -15500,8 +15563,8 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-element";
   const displayTabs = reactHostPort.useMemo(
     () =>
-      modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedTab ?? { id: "", title: "" }),
-    [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedTab],
+      modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []),
+    [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedInsertTabs],
   );
   const displayChromeGrid =
     displayTabs.length > 1 ? modeDockChromeGridPlacement(
@@ -16042,15 +16105,20 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   }, []);
 
   const draggedPreviewTitle = dragState ? (windowsById.get(dragState.windowId)?.title ?? dragState.ghostLabel) : "";
-  const tabInsertPreview =
-    dragState?.dragKind === "tab" && dropZone?.kind === "tab" ? { stackPath: dropZone.stackPath, index: dropZone.index } : null;
-  const draggedTab = dragState?.dragKind === "tab" ? { id: dragState.windowId, title: draggedPreviewTitle } : null;
+  const tabInsertPreview = resolveModeTabInsertPreview(dragState, dropZone);
+  const draggedInsertTabs = reactHostPort.useMemo(
+    () =>
+      dragState
+        ? modeDockDragInsertTabs(layoutState, dragState, (windowId) => windowsById.get(windowId)?.title ?? windowId)
+        : [],
+    [dragState, layoutState, windowsById],
+  );
 
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
       dragState,
       tabInsertPreview,
-      draggedTab,
+      draggedInsertTabs,
       registerStackDropTargets,
       startTabDrag,
       startStackDrag,
@@ -16063,7 +16131,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [
       dragState,
       tabInsertPreview,
-      draggedTab,
+      draggedInsertTabs,
       registerStackDropTargets,
       startTabDrag,
       startStackDrag,
@@ -16116,7 +16184,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           {body}
         {dragState ? (
           <>
-            {dropZone?.kind !== "tab" || dragState.dragKind === "stack" ? (
+            {dropZone?.kind !== "tab" ? (
               <ModeDockDragPreview
                 title={draggedPreviewTitle}
                 content={dragState.dragKind === "stack" ? windowsById.get(dragState.windowId)?.children : undefined}
@@ -16182,6 +16250,9 @@ export {
   computeTabInsertPreview,
   modeDockOutLayout,
   modeDockTabsWithInsertPreview,
+  modeDockDragInsertTabs,
+  mergeStackTabsIntoStack,
+  resolveModeTabInsertPreview,
 };
 
 // #endregion 🧭Mode
@@ -16736,13 +16807,61 @@ if (import.meta.vitest) {
         { id: "a", title: "A" },
         { id: "b", title: "B" },
       ];
-      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 1 }, "1", { id: "drag", title: "Drag" });
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 1 }, "1", [{ id: "drag", title: "Drag" }]);
       expect(row.map((tab) => tab.id)).toEqual(["a", "drag", "b"]);
       expect(row[1]?.preview).toBe("ghost");
-      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", { id: "drag", title: "Drag" }).map((tab) => tab.id)).toEqual([
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", [{ id: "drag", title: "Drag" }]).map((tab) => tab.id)).toEqual([
         "a",
         "b",
       ]);
+    });
+
+    it("modeDockTabsWithInsertPreview inserts ghost tabs for every window in a dragged stack", () => {
+      const tabs = [
+        { id: "a", title: "A" },
+        { id: "b", title: "B" },
+      ];
+      const row = modeDockTabsWithInsertPreview(
+        tabs,
+        { stackPath: "1", index: 0 },
+        "1",
+        [
+          { id: "x", title: "X" },
+          { id: "y", title: "Y" },
+        ],
+      );
+      expect(row.map((tab) => tab.id)).toEqual(["x", "y", "a", "b"]);
+      expect(row[0]?.preview).toBe("ghost");
+      expect(row[1]?.preview).toBe("ghost");
+    });
+
+    it("applyModeDrop merges a dragged stack into another stack tab bar", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+        ],
+      };
+      const drag = {
+        dragKind: "stack" as const,
+        windowId: "a",
+        stackPath: "0",
+        tabIndex: -1,
+        pointerId: 1,
+        ghostLabel: "Stack",
+        x: 0,
+        y: 0,
+      };
+      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: "1", index: 0 });
+      const merged =
+        next.kind === "stack"
+          ? next
+          : next.kind === "row" || next.kind === "column"
+            ? next.children.find((child) => child.kind === "stack" && child.children.some((window) => window.id === "c"))
+            : null;
+      expect(merged?.kind).toBe("stack");
+      if (merged?.kind === "stack") expect(merged.children.map((child) => child.id)).toEqual(["a", "b", "c"]);
     });
 
     it("computeTabInsertPreview resolves slot geometry at tab boundaries", () => {
@@ -18544,16 +18663,20 @@ if (treeVitest) {
 
   describe("ElementsSurfaceChrome", () => {
     it("keeps dark class while nested leases are active", () => {
+      resetElementsSurfaceChromeForTests();
       const outer = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL });
       const inner = applyElementsSurfaceChrome({ theme: "light", device: "desktop", expertise: Expertise.NORMAL });
       expect(document.documentElement.classList.contains("dark")).toBe(false);
       inner();
       expect(document.documentElement.classList.contains("dark")).toBe(true);
       outer();
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      resetElementsSurfaceChromeForTests();
       expect(document.documentElement.classList.contains("dark")).toBe(false);
     });
 
     it("reapplies the previous lease after the top lease releases", () => {
+      resetElementsSurfaceChromeForTests();
       const outer = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL, compact: false });
       const inner = applyElementsSurfaceChrome({ theme: "dark", device: "tablet", expertise: Expertise.NORMAL, compact: true });
       expect(document.documentElement.dataset.uiDevice).toBe("tablet");
@@ -18562,30 +18685,32 @@ if (treeVitest) {
       expect(document.documentElement.dataset.uiDevice).toBe("desktop");
       expect(document.documentElement.dataset.uiCompact).toBe("false");
       outer();
+      resetElementsSurfaceChromeForTests();
     });
 
     it("defers clearing dark until the next animation frame when the last lease releases", () => {
-      const raf = vi
-        .spyOn(globalThis, "requestAnimationFrame")
-        .mockImplementation((callback: FrameRequestCallback) => {
-          callback(0);
-          return 1;
-        });
+      resetElementsSurfaceChromeForTests();
+      let scheduled: FrameRequestCallback | undefined;
+      const raf = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((callback: FrameRequestCallback) => {
+        scheduled = callback;
+        return 1;
+      });
       const release = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL });
       release();
       expect(document.documentElement.classList.contains("dark")).toBe(true);
       expect(raf).toHaveBeenCalled();
+      scheduled?.(0);
       expect(document.documentElement.classList.contains("dark")).toBe(false);
       raf.mockRestore();
+      resetElementsSurfaceChromeForTests();
     });
 
-    it("bootstrapElementsSurfaceChromeDocument applies system dark before leases exist", () => {
-      const mq = window.matchMedia("(prefers-color-scheme: dark)");
-      bootstrapElementsSurfaceChromeDocument("system");
-      expect(document.documentElement.classList.contains("dark")).toBe(mq.matches);
-      document.documentElement.classList.remove("dark");
-      delete document.documentElement.dataset.uiTheme;
-      document.documentElement.style.colorScheme = "";
+    it("bootstrapElementsSurfaceChromeDocument applies explicit dark before leases exist", () => {
+      resetElementsSurfaceChromeForTests();
+      bootstrapElementsSurfaceChromeDocument("dark");
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      expect(document.documentElement.dataset.uiTheme).toBe("dark");
+      resetElementsSurfaceChromeForTests();
     });
   });
 

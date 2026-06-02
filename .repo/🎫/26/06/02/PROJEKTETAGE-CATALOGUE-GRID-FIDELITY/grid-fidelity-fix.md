@@ -8,6 +8,7 @@ Full catalogue used `<img object-fit: cover>` while split tiles used background 
 - `FigureEmbodiment.sourceAspect` (width÷height); cover uses physical crop aspect `(crop.w/crop.h) * sourceAspect`.
 - `CATALOGUE_FRAME` height = width / sourceAspect, vertically centered in the former slot.
 - Full catalogue + split tiles share background cover with `CATALOGUE_SOURCE_ASPECT`.
+- Split tiles: `FigureEmbodiment.mosaic` + edge-aligned `background-position` (0%, 25%, …) instead of crop-center (10%, 30%, …) so adjacent cells do not overlap.
 
 ## Tests
 - Renderer 93 passed; core 43 passed.
