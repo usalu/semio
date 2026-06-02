@@ -64,6 +64,7 @@ import {
     type ReactNode,
     type RefObject,
 } from "react";
+import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { Document, Page, pdfjs } from "react-pdf";
 import Reveal from "reveal.js";
@@ -3033,15 +3034,28 @@ export const PresentationDeck: FC<{
 				clearTimeout(autoAnimateFinalizeTimer);
 				autoAnimateFinalizeTimer = undefined;
 			}
-			finalizeRevealAutoAnimateRestState(deckEl);
 			const slideEvent = event as Event & { readonly indexh?: number; readonly indexv?: number };
 			const fromSlide = deck.getCurrentSlide() as HTMLElement | null;
 			if (!fromSlide || slideEvent.indexh === undefined || slideEvent.indexv === undefined) {
 				return;
 			}
 			const toSlide = resolveRevealSlideAt(deckEl, { h: slideEvent.indexh, v: slideEvent.indexv });
-			if (toSlide) {
-				prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
+			if (!toSlide) {
+				return;
+			}
+			const fromAnimateId = fromSlide.getAttribute("data-auto-animate-id");
+			const toAnimateId = toSlide.getAttribute("data-auto-animate-id");
+			if (!fromAnimateId || fromAnimateId !== toAnimateId) {
+				finalizeRevealAutoAnimateRestState(deckEl);
+			}
+			prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
+			if (toSlide.getAttribute("title") === "catalogue-labels") {
+				flushSync(() => {
+					setSlideEpoch((epoch) => epoch + 1);
+				});
+				for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-morph-source")) {
+					void ghost.offsetHeight;
+				}
 			}
 		};
 		const onSlideChanged = (event: Event): void => {
@@ -4558,7 +4572,19 @@ if (import.meta.vitest) {
 			expect(labelGhost?.style.top).toBe(`${labelSlot.y * 100}%`);
 			expect(labelGhost?.style.width).toBe(`${labelSlot.width * 100}%`);
 			expect(labelGhost?.style.height).toBe(`${labelSlot.height * 100}%`);
+			expect(labelGhost?.classList.contains("presentation-morph-source")).toBe(true);
+			expect(labelGhost?.getAttribute("data-disposition-id")).toContain("catalogue-labels");
 			mountRoot.remove();
+		});
+
+		it("hides settled catalogue-focus tiles in stylesheet while morphing into labels", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, resolve } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
+			const css = readFileSync(cssPath, "utf8");
+			expect(css).toContain('section[title="catalogue-focus"].presentation-arrangement--settled');
+			expect(css).toContain("opacity: 0 !important");
 		});
 
 		it("puts reveal data-id on catalogue tile wrappers for catalogue-to-focus morph", async () => {
