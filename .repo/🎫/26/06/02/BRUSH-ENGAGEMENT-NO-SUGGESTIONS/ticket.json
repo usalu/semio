@@ -1,9 +1,9 @@
 {
   "title": "Brush Engagement No Suggestions",
   "emoji": "🖌️",
-  "status": "open",
+  "status": "closed",
   "description": "Brush tool shows no preview or engagement suggestions when hovering near unconnected nodes (e.g. tambour). Fix brush slot hit-testing and anchor positions to match indirect-handle UX.",
-  "summary": "Brush previews now finalize on slot exit: WASM host materializes the placed node/edge before clearing the overlay, brushPlace carries stable nodeId/edgeId to the fixture, and authoring peers mark the descriptor dirty and invalidate so the GPU host syncs immediately.",
+  "summary": "Brush finalize: ingest placement into imperative scene on brushPlace before fixture sync, push authoritative WASM descriptor on all panes, stop rust-only host insert that was wiped by stale sync_descriptor. Cross-pane: puzzle2dSyncBrushSessionToAllAuthoringPeers + setBrushSessionJson mirrors preview/candidates to non-driving panes.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪ad84c03b55e748c0a3a72bd739850158",

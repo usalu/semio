@@ -2060,6 +2060,17 @@ if (import.meta.vitest) {
       expect(f?.objects.length).toBeGreaterThan(0);
     });
 
+    it("nakagin fixture kind catalog uses specific human-readable object kind names", () => {
+      const catalogs = parseKindCatalogs((nakaginPuzzle3dFixtureJson as { meta?: Record<string, unknown> }).meta);
+      const objectKindIds = (catalogs?.objects ?? []).map((row) => row.id);
+      expect(objectKindIds).toEqual(expect.arrayContaining(["Capsule J", "Last Storey Tambour", "First Storey Tambour", "Cylindric Tambour"]));
+      expect(objectKindIds.some((id) => id === "J" || id === "Last Storey" || id === "Tambour Last Storey")).toBe(false);
+      const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const placedKinds = new Set((f?.objects ?? []).map((object) => object.objectKind));
+      expect(placedKinds.has("Capsule J")).toBe(true);
+      expect(placedKinds.has("J")).toBe(false);
+    });
+
     it("nakagin Bridge kind resolves to metabolism bridge glb", () => {
       const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
@@ -2344,7 +2355,7 @@ if (import.meta.vitest) {
       const targetFullId = puzzle3dVortexFullId(host.id, host.vortices[0]!.id);
       ctrl.run("addBrushObject", {
         targetVortexFullId: targetFullId,
-        objectKindId: "J",
+        objectKindId: "Capsule J",
         sourceVortexIndex: 0,
         origin: [0, 0, 0],
         orientation: [0, 0, 0, 1],

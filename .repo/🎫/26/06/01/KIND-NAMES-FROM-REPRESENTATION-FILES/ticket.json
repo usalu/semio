@@ -3,9 +3,10 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix sketchpad bug: capsule types do not appear under capsule typology.",
-  "summary": "Capsule kinds were nested under typology-default while the Capsule typology stayed empty. Fixed rs hydration to honor typology.id refs and register typologies before nesting entities; fixed js Typology hasTypes/hasDesigns parsing; flattened MetabolismKitTypes/Designs from typologies in assets; added sketchpad DTO VFS typology tree; reconciled metabolism fixtures (capsule-representation kinds → typology-capsule); fixed architect.harness; added vitest coverage.",
+  "summary": "Puzzle 3d nakagin fixture already had specific kind catalog ids (Capsule J, Last Storey Tambour, etc.). Fixed play brush test to use Capsule J. Renamed remaining single-letter hierarchy palette nodes in puzzle 2d fixture and storybook board (p/J/L/s/q/z, slash/backslash) to Capsule * names. Added 2d/3d play tests asserting catalog names. Regenerated puzzle 5d fixture.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪8e838cfdeead49bbbaceee1810ec1f00"
+    "⚪8e838cfdeead49bbbaceee1810ec1f00",
+    "⚪7fdb29f0b939436e9249d23a5b01ea27"
   ]
 }

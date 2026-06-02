@@ -1009,6 +1009,14 @@ export function filterPuzzle2dPlayStructuralDeleteBatch(
 	return out;
 }
 
+/** @emoji 🏷 Details inspector tree section title: singular for one id, plural for many. */
+export function puzzle2dPlayInspectorKindSectionLabel(kind: "edge" | "handle" | "node", count: number): string {
+	if (count === 1) {
+		return kind === "node" ? "Node" : kind === "edge" ? "Edge" : "Handle";
+	}
+	return kind === "node" ? "Nodes" : kind === "edge" ? "Edges" : "Handles";
+}
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1028,6 +1036,14 @@ if (import.meta.vitest) {
 			expect(parsePuzzle2dFixtureV1(nakaginFixtureJson as unknown)?.nodes.length).toBe(
 				PUZZLE_2D_PLAY_DEFAULT_FIXTURE.nodes.length,
 			);
+		});
+
+		it("nakagin hierarchy kind catalog uses specific human-readable node names", () => {
+			const catalogNodes = (
+				(nakaginFixtureJson as { meta?: { kindCatalogs?: { nodes?: readonly { readonly name: string }[] } } }).meta?.kindCatalogs?.nodes ?? []
+			).map((row) => row.name);
+			expect(catalogNodes).toEqual(expect.arrayContaining(["Capsule J", "Last Storey Tambour", "Cylindric Tambour"]));
+			expect(catalogNodes.some((name) => name === "J" || name === "p" || name === "/" || name === "Tambour Last Storey")).toBe(false);
 		});
 
 		it("declarative overview body references puzzle2d host surface", () => {
@@ -1320,6 +1336,17 @@ if (import.meta.vitest) {
 		const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
 		expect(nodesGroup?.items?.length).toBeGreaterThan(0);
 		expect(nodesGroup?.items?.[0]?.label).not.toBe("(none)");
+	});
+
+	describe("puzzle2dPlayInspectorKindSectionLabel", () => {
+		it("uses singular titles for one selected id and plural for many", () => {
+			expect(puzzle2dPlayInspectorKindSectionLabel("node", 1)).toBe("Node");
+			expect(puzzle2dPlayInspectorKindSectionLabel("node", 2)).toBe("Nodes");
+			expect(puzzle2dPlayInspectorKindSectionLabel("edge", 1)).toBe("Edge");
+			expect(puzzle2dPlayInspectorKindSectionLabel("edge", 3)).toBe("Edges");
+			expect(puzzle2dPlayInspectorKindSectionLabel("handle", 1)).toBe("Handle");
+			expect(puzzle2dPlayInspectorKindSectionLabel("handle", 4)).toBe("Handles");
+		});
 	});
 }
 //#endregion 🧪Tests

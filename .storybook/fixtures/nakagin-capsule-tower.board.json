@@ -1085,7 +1085,7 @@
         },
         {
           "id": "semio.metabolism.light.node.4b8563c5-37ad-49e8-9b6c-d635378bffce",
-          "name": "p"
+          "name": "Capsule P"
         },
         {
           "id": "semio.metabolism.light.node.4ca3b87b-cd76-4228-9f7e-1459b711f0ab",
@@ -1101,7 +1101,7 @@
         },
         {
           "id": "semio.metabolism.light.node.5af2d54e-309c-46a6-8454-c91b957a59f9",
-          "name": "J"
+          "name": "Capsule J"
         },
         {
           "id": "semio.metabolism.light.node.5b3e2b28-e331-420b-83bd-9a8c05ac2918",
@@ -1153,11 +1153,11 @@
         },
         {
           "id": "semio.metabolism.light.node.a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
-          "name": "L"
+          "name": "Capsule L"
         },
         {
           "id": "semio.metabolism.light.node.aa34760a-d543-46c8-afa1-d83a38d42f2b",
-          "name": "s"
+          "name": "Capsule S"
         },
         {
           "id": "semio.metabolism.light.node.af980393-c613-47c2-88a4-461298b0b8f9",
@@ -1173,7 +1173,7 @@
         },
         {
           "id": "semio.metabolism.light.node.c90e216d-d899-4709-995b-5abfcce75bcb",
-          "name": "\\"
+          "name": "Capsule Backslash"
         },
         {
           "id": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
@@ -1189,7 +1189,7 @@
         },
         {
           "id": "semio.metabolism.light.node.ccb67521-5ca1-42cf-bd81-4058c6c5348d",
-          "name": "q"
+          "name": "Capsule Q"
         },
         {
           "id": "semio.metabolism.light.node.cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9",
@@ -1205,7 +1205,7 @@
         },
         {
           "id": "semio.metabolism.light.node.eefe6d3e-f18d-474e-b82e-04bb406d290f",
-          "name": "/"
+          "name": "Capsule Slash"
         },
         {
           "id": "semio.metabolism.light.node.f1779b1f-2324-4bad-86da-773a1e90b57c",
@@ -1213,7 +1213,7 @@
         },
         {
           "id": "semio.metabolism.light.node.f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
-          "name": "z"
+          "name": "Capsule Z"
         }
       ]
     },

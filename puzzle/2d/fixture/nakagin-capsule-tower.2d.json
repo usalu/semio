@@ -1475,7 +1475,7 @@
         },
         {
           "id": "semio.metabolism.light.node.4b8563c5-37ad-49e8-9b6c-d635378bffce",
-          "name": "p",
+          "name": "Capsule P",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -1512,7 +1512,7 @@
         },
         {
           "id": "semio.metabolism.light.node.5af2d54e-309c-46a6-8454-c91b957a59f9",
-          "name": "J",
+          "name": "Capsule J",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -1693,7 +1693,7 @@
         },
         {
           "id": "semio.metabolism.light.node.a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
-          "name": "L",
+          "name": "Capsule L",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -1704,7 +1704,7 @@
         },
         {
           "id": "semio.metabolism.light.node.aa34760a-d543-46c8-afa1-d83a38d42f2b",
-          "name": "s",
+          "name": "Capsule S",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -1741,7 +1741,7 @@
         },
         {
           "id": "semio.metabolism.light.node.c90e216d-d899-4709-995b-5abfcce75bcb",
-          "name": "\\",
+          "name": "Capsule Backslash",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -1830,7 +1830,7 @@
         },
         {
           "id": "semio.metabolism.light.node.ccb67521-5ca1-42cf-bd81-4058c6c5348d",
-          "name": "q",
+          "name": "Capsule Q",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -1874,7 +1874,7 @@
         },
         {
           "id": "semio.metabolism.light.node.eefe6d3e-f18d-474e-b82e-04bb406d290f",
-          "name": "/",
+          "name": "Capsule Slash",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -1896,7 +1896,7 @@
         },
         {
           "id": "semio.metabolism.light.node.f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
-          "name": "z",
+          "name": "Capsule Z",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",

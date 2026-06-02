@@ -1805,6 +1805,7 @@ import {
   filterPuzzle2dPlayStructuralDeleteBatch,
   puzzle2dPlayForwardsCanvasStructuralDelete,
   puzzle2dPlayRehydrateFixtureEdgesIfMissing,
+  puzzle2dPlayInspectorKindSectionLabel,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
   type Puzzle2dPlayStructuralDeleteItem,
@@ -2168,30 +2169,21 @@ class Puzzle2dPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
-  private cachedSections: TreeDataSection[] | null = null;
-  private cacheKey = "";
-
-  constructor(private readonly buildSections: () => TreeDataSection[]) {
-    super();
-  }
-
-  private resolveSections(): TreeDataSection[] {
-    const sections = this.buildSections();
-    const key = sections.map((section) => `${section.id}:${section.items?.length ?? 0}`).join("|");
-    if (key === this.cacheKey && this.cachedSections) {
-      return this.cachedSections;
-    }
-    this.cacheKey = key;
-    this.cachedSections = sections;
-    return sections;
-  }
-
   buildTab(): SidePanelTabConfig {
     return {
       id: "puzzle-2d-play-inspector",
       icon: ClipboardList,
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => this.resolveSections()),
+      tree: new StaticTreePanelDefinition({
+        sections: [
+          {
+            id: "puzzle-2d-play-inspector.shell",
+            defaultOpen: true,
+            content: <Puzzle2dPlayInspectorPanel />,
+            items: [],
+          },
+        ],
+      }),
     };
   }
 }
@@ -3212,15 +3204,17 @@ function InspectorEdgeBatch({
   );
 }
 
-/** @emoji 🔎 Playground tree inspector sections for the active pane selection (every section has items). */
-function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selection: Puzzle2dPlaySelectionValue): TreeDataSection[] {
-  const { activePaneId, fixture, patchFixture } = shell;
-  const { selectionIds } = selection;
-  const kindCatalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
+function classifyPuzzle2dPlayInspectorSelection(fixture: Puzzle2dFixtureV1, selectionIds: ReadonlySet<string>): {
+  readonly nodeIds: readonly string[];
+  readonly handleIds: readonly string[];
+  readonly edgeIds: readonly string[];
+  readonly unknownIds: readonly string[];
+} {
   const ids = [...selectionIds].sort((a, b) => a.localeCompare(b));
   const nodeIds: string[] = [];
   const handleIds: string[] = [];
   const edgeIds: string[] = [];
+  const unknownIds: string[] = [];
   for (const id of ids) {
     if (findNode(fixture, id)) {
       nodeIds.push(id);
@@ -3228,33 +3222,36 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selec
       edgeIds.push(id);
     } else if (findHandleOwner(fixture, id)) {
       handleIds.push(id);
+    } else {
+      unknownIds.push(id);
     }
   }
-  if (ids.length === 0) {
+  return { nodeIds, handleIds, edgeIds, unknownIds };
+}
+
+/** @emoji 🔎 Playground tree inspector sections for the active selection (up to three kind sections). */
+export function buildPuzzle2dPlayInspectorSections(
+  fixture: Puzzle2dFixtureV1,
+  selectionIds: ReadonlySet<string>,
+  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void,
+): TreeDataSection[] {
+  const kindCatalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
+  const { nodeIds, handleIds, edgeIds, unknownIds } = classifyPuzzle2dPlayInspectorSelection(fixture, selectionIds);
+  if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0 && unknownIds.length === 0) {
     return [
       playgroundPanelSection(
         "puzzle-2d-play-inspector.empty",
         "Detail",
-        <p className="text-muted-foreground leading-snug">
-          pane: {activePaneId}. No selection. Click the graph or pick another tab.
-        </p>,
+        <p className="text-muted-foreground leading-snug">No selection. Click the graph or pick a row in the hierarchy.</p>,
       ),
     ];
   }
-  const sections: TreeDataSection[] = [
-    playgroundPanelSection(
-      "puzzle-2d-play-inspector.header",
-      "Detail",
-      <p className="text-muted-foreground text-[11px] leading-snug">
-        {activePaneId} · {ids.length} selected
-      </p>,
-    ),
-  ];
+  const sections: TreeDataSection[] = [];
   if (nodeIds.length > 0) {
     sections.push(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-nodes",
-        `Nodes (${nodeIds.length})`,
+        puzzle2dPlayInspectorKindSectionLabel("node", nodeIds.length),
         <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} />,
       ),
     );
@@ -3263,7 +3260,7 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selec
     sections.push(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-handles",
-        `Handles (${handleIds.length})`,
+        puzzle2dPlayInspectorKindSectionLabel("handle", handleIds.length),
         <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} />,
       ),
     );
@@ -3272,21 +3269,32 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selec
     sections.push(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-edges",
-        `Edges (${edgeIds.length})`,
+        puzzle2dPlayInspectorKindSectionLabel("edge", edgeIds.length),
         <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} kindCatalogs={kindCatalogs} patchFixture={patchFixture} />,
       ),
     );
   }
-  if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0) {
+  if (unknownIds.length > 0) {
     sections.push(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-unknown",
         "Selection",
-        <p className="text-[11px] text-warning-foreground leading-snug">{ids.map((id) => puzzle2dFixtureObjectDisplayLabel(id, fixture, kindCatalogs)).join(", ")}</p>,
+        <p className="text-[11px] text-warning-foreground leading-snug">{unknownIds.map((id) => puzzle2dFixtureObjectDisplayLabel(id, fixture, kindCatalogs)).join(", ")}</p>,
       ),
     );
   }
   return sections;
+}
+
+/** @emoji 🔎 Details side panel bound to play fixture + selection (reacts to context, not shell generation). */
+function Puzzle2dPlayInspectorPanel(): ReactElement {
+  const { fixture, patchFixture } = usePuzzle2dPlayShell();
+  const { selectionIds } = usePuzzle2dPlaySelection();
+  const sections = reactHostPort.useMemo(
+    () => buildPuzzle2dPlayInspectorSections(fixture, selectionIds, patchFixture),
+    [fixture, patchFixture, selectionIds],
+  );
+  return <Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={sections} />;
 }
 // #endregion 🔖SidePanels
 
@@ -3576,6 +3584,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const commitBrushPlacement = reactHostPort.useCallback(
     (payload: Puzzle2dBrushPlacePayload) => {
       guardFixtureAuthoringFromStructuralDeletes(200);
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
       patchFixture((prev) => {
         const result = applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev));
         if (result.kind !== "placed") {
@@ -3585,9 +3594,16 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
         return result.fixture;
       });
+      puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
     },
     [guardFixtureAuthoringFromStructuralDeletes, patchFixture],
   );
+
+  reactHostPort.useEffect(() => {
+    if (puzzle2dActiveTool !== "brush") {
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+    }
+  }, [puzzle2dActiveTool]);
 
   const remapIdInSelections = reactHostPort.useCallback((replacedId: string, replacementId: string) => {
     if (replacedId === replacementId) {
@@ -4295,20 +4311,10 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   ]);
   // #endregion 🔖ToolbarHostBridge
 
-  const shellValueRef = reactHostPort.useRef(shellValue);
-  shellValueRef.current = shellValue;
-  const selectionValueRef = reactHostPort.useRef(selectionValue);
-  selectionValueRef.current = selectionValue;
   const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(() => new Puzzle2dPlayHierarchyPanelDefinition(), []);
   const puzzle2dPlayLibraryPanel = reactHostPort.useMemo(() => new Puzzle2dPlayLibraryPanelDefinition(), []);
   const puzzle2dPlaySettingsPanel = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition(), []);
-  const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(
-    () =>
-      new Puzzle2dPlayInspectorPanelDefinition(() =>
-        buildPuzzle2dPlayInspectorSections(shellValueRef.current, selectionValueRef.current),
-      ),
-    [],
-  );
+  const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(() => new Puzzle2dPlayInspectorPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
       workbench: [puzzle2dPlayHierarchyPanel, puzzle2dPlayLibraryPanel],

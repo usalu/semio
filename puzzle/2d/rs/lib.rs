@@ -4098,77 +4098,6 @@ mod board_host {
             (format!("puzzle2d.brush.{serial}"), format!("puzzle2d.brush.edge.{serial}"))
         }
 
-        /// @emoji 🖌️ Materializes a brush preview into the WASM host graph so clearing the overlay keeps the placed node visible.
-        fn apply_brush_placement_to_host(&mut self, preview: &BrushPreviewSnapshot, node_id: &str, edge_id: &str) -> bool {
-            if self.handle_has_incident_edge(preview.source_handle_id.as_str()) {
-                return false;
-            }
-            let target_handle_id = format!("{node_id}:h{}", preview.target_handle_index);
-            if self.handles.contains_key(target_handle_id.as_str()) {
-                return false;
-            }
-            if self.edges.contains_key(edge_id) {
-                return false;
-            }
-            let (radius, width, height) = match preview.shape {
-                NodeShape::Circle => (preview.radius, 0.0, 0.0),
-                NodeShape::Rectangle => (0.0, preview.width, preview.height),
-            };
-            self.nodes.insert(
-                node_id.to_string(),
-                NodeData {
-                    id: node_id.to_string(),
-                    x: preview.x,
-                    y: preview.y,
-                    shape: preview.shape,
-                    radius,
-                    width,
-                    height,
-                    scale: 1.0,
-                    draggable: true,
-                    selected: false,
-                    visible: true,
-                    root: false,
-                    style: None,
-                    text: None,
-                    icon_kind: preview.icon_kind.clone(),
-                    node_kind: preview.node_kind_id.clone(),
-                },
-            );
-            for (index, tmpl) in preview.handles.iter().enumerate() {
-                let hid = format!("{node_id}:h{index}");
-                self.handles.insert(
-                    hid.clone(),
-                    HandleData {
-                        id: hid,
-                        node_id: node_id.to_string(),
-                        angle: tmpl.angle,
-                        radius: tmpl.radius.unwrap_or(8.0),
-                        scale: 1.0,
-                        selected: false,
-                        visible: true,
-                        style: None,
-                        handle_kind: tmpl.handle_kind.clone(),
-                        color_fill: None,
-                        icon_kind: None,
-                    },
-                );
-            }
-            self.edges.insert(
-                edge_id.to_string(),
-                EdgeData {
-                    id: edge_id.to_string(),
-                    source: preview.source_handle_id.clone(),
-                    target: target_handle_id,
-                    selected: false,
-                    visible: true,
-                    style: None,
-                    edge_kind: String::new(),
-                },
-            );
-            true
-        }
-
         fn brush_commit_preview(&mut self) {
             let Some(preview) = self.brush_preview.take() else {
                 return;
@@ -4257,9 +4186,12 @@ mod board_host {
             }
             self.brush_preview = match (source.as_deref(), v.get("preview")) {
                 (Some(source_id), Some(preview)) if !preview.is_null() => {
-                    let node = preview.get("node").filter(|n| !n.is_null())?;
-                    let edge = preview.get("edge").filter(|e| !e.is_null())?;
-                    Self::brush_preview_snapshot_from_session_json(node, edge, source_id)
+                    let node = preview.get("node").filter(|n| !n.is_null());
+                    let edge = preview.get("edge").filter(|e| !e.is_null());
+                    match (node, edge) {
+                        (Some(node), Some(edge)) => Self::brush_preview_snapshot_from_session_json(node, edge, source_id),
+                        _ => None,
+                    }
                 }
                 _ => None,
             };

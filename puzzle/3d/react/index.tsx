@@ -3095,6 +3095,24 @@ export function brushStackBottomTopPair(sourceVortexKind: string | undefined, ta
   return sourceBase !== null && sourceBase === targetBase;
 }
 
+/** @emoji 🔗 True when core stack ports mate across circular/rectangular variants (e.g. base bottom → first-storey top). */
+export function brushCoreCrossStackPair(sourceVortexKind: string | undefined, targetVortexKind: string | undefined): boolean {
+  const corePort = /^core (circular|rectangular) (top|bottom)$/;
+  if (!sourceVortexKind?.match(corePort) || !targetVortexKind?.match(corePort)) {
+    return false;
+  }
+  const sourceTop = sourceVortexKind.endsWith(" top");
+  const sourceBottom = sourceVortexKind.endsWith(" bottom");
+  const targetTop = targetVortexKind.endsWith(" top");
+  const targetBottom = targetVortexKind.endsWith(" bottom");
+  return (sourceTop && targetBottom) || (sourceBottom && targetTop);
+}
+
+/** @emoji 🔗 True when source and target vortices form a vertical stack mate (same-shape or core cross). */
+export function brushStackMatePair(sourceVortexKind: string | undefined, targetVortexKind: string | undefined): boolean {
+  return brushStackBottomTopPair(sourceVortexKind, targetVortexKind) || brushCoreCrossStackPair(sourceVortexKind, targetVortexKind);
+}
+
 /** @emoji 🖌️ Rank for brush candidates: same kind and stack pairs beat door attachments. */
 export function brushCandidateRank(candidate: BrushCompatibleCandidate, template: ObjectKindVortexTemplate, target: AttractionVortexContext): number {
   let score = 0;
@@ -3103,13 +3121,19 @@ export function brushCandidateRank(candidate: BrushCompatibleCandidate, template
   if (candidate.objectKindId === target.objectKind) {
     score += 10_000;
   }
-  if (brushStackBottomTopPair(sourceKind, targetKind)) {
+  if (brushStackMatePair(sourceKind, targetKind)) {
     score += 5_000;
     if (targetKind.startsWith("tambour ") && candidate.objectKindId === "Tambour") {
       score += 4_000;
     }
+    if (target.objectKind === "Base" && candidate.objectKindId === "First Storey Tambour") {
+      score += 9_000;
+    }
   }
-  if (targetKind.endsWith(" top") && !brushStackBottomTopPair(sourceKind, targetKind)) {
+  if (targetKind.endsWith(" top") && !brushStackMatePair(sourceKind, targetKind)) {
+    score -= 2_000;
+  }
+  if (targetKind.endsWith(" bottom") && !sourceKind.endsWith(" top")) {
     score -= 2_000;
   }
   return score;
@@ -3118,7 +3142,7 @@ export function brushCandidateRank(candidate: BrushCompatibleCandidate, template
 /** @emoji 🖌️ Whether brush placement should inherit the hovered object's orientation (same kind only; stacks use opposed directions). */
 export function brushPlacementUsesHostOrientation(target: AttractionVortexContext, sourceVortexKind: string, candidateObjectKindId: string): boolean {
   const targetVk = target.vortexKind ?? "";
-  if (brushStackBottomTopPair(sourceVortexKind, targetVk)) {
+  if (brushStackMatePair(sourceVortexKind, targetVk)) {
     return false;
   }
   return candidateObjectKindId === target.objectKind;
@@ -3146,6 +3170,7 @@ export function brushCompatibleCandidates(
   }
   const targetVk = target.vortexKind ?? "";
   const stackTopTarget = targetVk.endsWith(" top");
+  const stackBottomTarget = targetVk.endsWith(" bottom");
   const scored: { readonly candidate: BrushCompatibleCandidate; readonly rank: number }[] = [];
   const seen = new Set<string>();
   for (const kind of kindsById.values()) {
@@ -3155,7 +3180,10 @@ export function brushCompatibleCandidates(
     for (let sourceVortexIndex = 0; sourceVortexIndex < kind.vortices.length; sourceVortexIndex += 1) {
       const template = kind.vortices[sourceVortexIndex]!;
       const sourceVk = template.vortexKind ?? "";
-      if (stackTopTarget && !brushStackBottomTopPair(sourceVk, targetVk)) {
+      if (stackTopTarget && !brushStackMatePair(sourceVk, targetVk)) {
+        continue;
+      }
+      if (stackBottomTarget && !sourceVk.endsWith(" top")) {
         continue;
       }
       const attracting: AttractionVortexContext = {
@@ -10101,9 +10129,45 @@ if (import.meta.vitest) {
         expect(lastStoreyIndex).toBeGreaterThan(0);
       }
     });
+    it("brushCompatibleCandidates suggests First Storey Tambour on Base core rectangular bottom", () => {
+      const baseCatalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "Base",
+            meshUrl: "/meshes/base.glb",
+            vortices: [{ vortexKind: "core rectangular bottom", position: [-7.5, -7.7, 7.5], direction: [0, 0, 1], radius: 0.36 }],
+          },
+          {
+            id: "First Storey Tambour",
+            meshUrl: "/meshes/tambour_first-storey.glb",
+            vortices: [{ vortexKind: "core circular top", position: [0, 0, 0], direction: [0, 0, -1], radius: 0.36 }],
+          },
+          {
+            id: "Single Storey",
+            meshUrl: "/meshes/single-storey.glb",
+            vortices: [{ vortexKind: "core circular top", position: [0, 0, 0], direction: [0, 0, -1], radius: 0.36 }],
+          },
+        ],
+      };
+      const baseCompat: readonly KindCompatEntry[] = [
+        { bidirectional: true, specificity: "vortex", source: "core rectangular bottom", target: "core rectangular top" },
+        { bidirectional: true, specificity: "vortex", source: "core rectangular bottom", target: "core circular top" },
+      ];
+      const target: AttractionVortexContext = { objectId: "base", objectKind: "Base", vortexKind: "core rectangular bottom" };
+      const list = brushCompatibleCandidates(target, baseCatalogs, baseCompat);
+      expect(list.length).toBeGreaterThan(0);
+      expect(list[0]?.objectKindId).toBe("First Storey Tambour");
+      expect(list[0]?.sourceVortexIndex).toBe(0);
+    });
+    it("brushCoreCrossStackPair matches core circular top to core rectangular bottom", () => {
+      expect(brushCoreCrossStackPair("core circular top", "core rectangular bottom")).toBe(true);
+      expect(brushCoreCrossStackPair("core rectangular bottom", "core circular top")).toBe(true);
+      expect(brushStackMatePair("core circular top", "core rectangular bottom")).toBe(true);
+    });
     it("brushPlacementUsesHostOrientation is false for stack bottom on top pairs", () => {
       const target: AttractionVortexContext = { objectId: "fs", objectKind: "First Storey Tambour", vortexKind: "tambour circular top" };
       expect(brushPlacementUsesHostOrientation(target, "tambour circular bottom", "Tambour")).toBe(false);
+      expect(brushPlacementUsesHostOrientation({ objectId: "b", objectKind: "Base", vortexKind: "core rectangular bottom" }, "core circular top", "First Storey Tambour")).toBe(false);
       expect(brushPlacementUsesHostOrientation(target, "door tambour east", "J")).toBe(false);
       expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "J", vortexKind: "door capsule west" }, "door capsule west", "J")).toBe(true);
     });
