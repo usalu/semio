@@ -92,7 +92,10 @@ export interface PdfEmbodiment {
 	readonly kind: "pdf";
 	readonly id: string;
 	readonly src: string;
+	/** Initial page when no ephemeral override exists; must be in {@link PdfEmbodiment.pages} when that is set. */
 	readonly page?: number;
+	/** Ordered subset for prev/next navigation (e.g. thesis excerpt `[1, 12, 25, 35, 42, 43, 51]`). */
+	readonly pages?: readonly number[];
 	readonly alt?: string;
 }
 
@@ -2657,8 +2660,34 @@ if (import.meta.vitest) {
 			expect(resolved[1]?.embodiment.kind).toBe("pdf");
 			if (resolved[1]?.embodiment.kind === "pdf") {
 				expect(resolved[1].embodiment.page).toBe(2);
+				expect(resolved[1].embodiment.pages).toBeUndefined();
 			}
 			expect(resolved[1]?.position?.width).toBe(0.6);
+		});
+
+		it("resolves pdf embodiments with a page subset", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "doc" }],
+					embodiments: [
+						{
+							kind: "pdf",
+							id: "doc--pdf",
+							src: "/thesis.pdf",
+							page: 25,
+							pages: [1, 12, 25, 35],
+						},
+					],
+				},
+			]);
+			const resolved = resolveArrangement(scope, {
+				id: "slide",
+				dispositions: [{ participantId: "doc", embodimentId: "doc--pdf", emphasis: "active" }],
+			});
+			expect(resolved[0]?.embodiment.kind).toBe("pdf");
+			if (resolved[0]?.embodiment.kind === "pdf") {
+				expect(resolved[0].embodiment.pages).toEqual([1, 12, 25, 35]);
+			}
 		});
 	});
 }

@@ -13,6 +13,7 @@ import type {
     DispositionStyle,
     Arrangement,
     FigureEmbodiment,
+    FigureMosaicGrid,
     ParticipantEmphasis,
     Slide,
     PdfEmbodiment,
@@ -891,6 +892,9 @@ const PresentationDispositionEnlargeContext = createContext(false);
 /** @emoji 📐 Live slide frame for {@link FigureMorphView} cover math (drag/resize updates this). */
 const PresentationFigureCropFrameContext = createContext<DispositionPosition | undefined>(undefined);
 
+/** @emoji 📐 Slide width÷height for mosaic windowed-cover (`undefined` → use {@link FigureEmbodiment.sourceAspect}). */
+const PresentationSlideAspectContext = createContext<number | undefined>(undefined);
+
 /** @emoji 🆔 Interactive disposition id for ephemeral pdf page navigation in {@link PdfMorphView}. */
 const PresentationInteractiveDispositionIdContext = createContext<string | undefined>(undefined);
 
@@ -914,6 +918,84 @@ export function pdfCoverScale(
 		return null;
 	}
 	return Math.max(containerWidth / pageWidth, containerHeight / pageHeight);
+}
+
+/** @emoji 📑 Ordered PDF page numbers for navigation; empty means all document pages. */
+export function pdfEmbodimentPageList(embodiment: PdfEmbodiment): readonly number[] {
+	return embodiment.pages ?? [];
+}
+
+/** @emoji 📄 Starting page for a pdf embodiment (subset or single page). */
+export function pdfEmbodimentInitialPage(embodiment: PdfEmbodiment): number {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 0) {
+		const declared = embodiment.page ?? pages[0];
+		return pages.includes(declared) ? declared : pages[0];
+	}
+	return embodiment.page ?? 1;
+}
+
+/** @emoji 🧭 Whether pdf prev/next controls apply for this embodiment. */
+export function pdfPageNavEnabled(embodiment: PdfEmbodiment, numPages: number | null): boolean {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 1) {
+		return true;
+	}
+	return pages.length === 0 && numPages !== null && numPages > 1;
+}
+
+/** @emoji ◀️ True when pdf page nav can move to an earlier page. */
+export function pdfCanGoToPreviousPage(
+	currentPage: number,
+	embodiment: PdfEmbodiment,
+	numPages: number | null,
+): boolean {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 0) {
+		return pages.indexOf(currentPage) > 0;
+	}
+	return currentPage > 1;
+}
+
+/** @emoji ▶️ True when pdf page nav can move to a later page. */
+export function pdfCanGoToNextPage(
+	currentPage: number,
+	embodiment: PdfEmbodiment,
+	numPages: number | null,
+): boolean {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 0) {
+		const index = pages.indexOf(currentPage);
+		return index >= 0 && index < pages.length - 1;
+	}
+	return numPages !== null && currentPage < numPages;
+}
+
+/** @emoji 📄 Target page for prev/next within a subset or the full document. */
+export function pdfAdjacentPage(
+	currentPage: number,
+	direction: "prev" | "next",
+	embodiment: PdfEmbodiment,
+	numPages: number | null,
+): number {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 0) {
+		let index = pages.indexOf(currentPage);
+		if (index < 0) {
+			index = direction === "next" ? -1 : pages.length;
+		}
+		const nextIndex = direction === "prev" ? index - 1 : index + 1;
+		return pages[nextIndex] ?? currentPage;
+	}
+	const step = direction === "prev" ? -1 : 1;
+	const next = currentPage + step;
+	if (direction === "prev" && next < 1) {
+		return currentPage;
+	}
+	if (direction === "next" && numPages !== null && next > numPages) {
+		return currentPage;
+	}
+	return next;
 }
 
 /** @emoji 📐 Measures the react-pdf viewport from the disposition frame or enlarged slide content box. */
@@ -1030,13 +1112,17 @@ function renderTextMorphHeadingLines({
 }): ReactNode {
 	const idLineCount = textMorphLineIdCount(lines.length, morphFromLines);
 	const fromCount = morphFromLines?.length ?? 0;
-	const nodes: ReactNode[] = [];
+	const morphSources: ReactNode[] = [];
+	const visibleLines: ReactNode[] = [];
+	let stackedMorph = false;
 	for (let lineIndex = 0; lineIndex < Math.max(lines.length, fromCount); lineIndex += 1) {
 		const fromLine = morphFromLines?.[lineIndex];
 		const visibleLine = lines[lineIndex];
 		const lineId = textMorphAnchorId(anchorId, lineIndex, idLineCount);
-		if (fromLine !== undefined && fromLine !== visibleLine) {
-			nodes.push(
+		const relabelled = fromLine !== undefined && fromLine !== visibleLine;
+		if (relabelled) {
+			stackedMorph = true;
+			morphSources.push(
 				<Tag
 					key={`${lineId}-from`}
 					data-id={lineId}
@@ -1047,8 +1133,7 @@ function renderTextMorphHeadingLines({
 			);
 		}
 		if (visibleLine !== undefined) {
-			const relabelled = fromLine !== undefined && fromLine !== visibleLine;
-			nodes.push(
+			visibleLines.push(
 				<Tag
 					key={relabelled ? `${lineId}-visible` : lineId}
 					{...(relabelled ? {} : { "data-id": lineId })}
@@ -1061,7 +1146,15 @@ function renderTextMorphHeadingLines({
 			);
 		}
 	}
-	return nodes;
+	if (stackedMorph) {
+		return (
+			<div className="presentation-text-morph-slot w-full text-center">
+				{morphSources}
+				{visibleLines}
+			</div>
+		);
+	}
+	return visibleLines;
 }
 
 function TextMorphView({
@@ -1274,21 +1367,24 @@ function AffiliationsMorphView({
 						className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center gap-x-[0.35em]"
 					>
 						{relabelled ? (
-							<h4
-								data-id={`${anchorId}--${entry.mark}`}
-								className={[rowClass, "presentation-affiliation-morph-source"].filter(Boolean).join(" ")}
-							>
-								{lineBody(priorLabel)}
+							<div className="presentation-text-morph-slot inline-flex max-w-full shrink-0 justify-center text-center">
+								<h4
+									data-id={`${anchorId}--${entry.mark}`}
+									className={[rowClass, "presentation-affiliation-morph-source"].filter(Boolean).join(" ")}
+								>
+									{lineBody(priorLabel)}
+								</h4>
+								<h4
+									className={[rowClass, "presentation-morph-target"].filter(Boolean).join(" ")}
+								>
+									{lineBody(displayLabel)}
+								</h4>
+							</div>
+						) : (
+							<h4 data-id={`${anchorId}--${entry.mark}`} className={rowClass}>
+								{lineBody(displayLabel)}
 							</h4>
-						) : null}
-						<h4
-							{...(relabelled ? {} : { "data-id": `${anchorId}--${entry.mark}` })}
-							className={[rowClass, relabelled ? "presentation-morph-target" : undefined]
-								.filter(Boolean)
-								.join(" ")}
-						>
-							{lineBody(displayLabel)}
-						</h4>
+						)}
 					</div>
 				);
 			})}
@@ -1378,6 +1474,48 @@ export function figureMosaicBackgroundPosition(
 	};
 }
 
+/** @emoji 📐 Background-position along one axis when cover overflows (k≥1; k=1 → edge-aligned i/(n−1)). */
+export function overflowAxisPosition(index: number, count: number, coverOverflowK: number): number {
+	if (count <= 1) {
+		return 50;
+	}
+	if (Math.abs(coverOverflowK - 1) < FIGURE_MOSAIC_ALIGN_EPSILON) {
+		return (index / (count - 1)) * 100;
+	}
+	const cellSpan = 1 / count;
+	const numerator = (1 - coverOverflowK) / 2 - index / count;
+	const denominator = cellSpan - coverOverflowK;
+	return (numerator / denominator) * 100;
+}
+
+/** @emoji 🪟 One mosaic cell as a window onto a single cover render of `frame` (no per-crop sprite zoom). */
+export function mosaicWindowedCoverVars(
+	cell: { readonly column: number; readonly row: number },
+	grid: { readonly rows: number; readonly columns: number },
+	frame: DispositionPosition,
+	sourceAspect: number,
+	slideAspect?: number,
+): { readonly size: string; readonly posX: number; readonly posY: number } {
+	const { rows, columns } = grid;
+	const { column, row } = cell;
+	const slideAR = slideAspect ?? sourceAspect;
+	const frameAspect = (frame.width / frame.height) * slideAR;
+	if (frameAspect >= sourceAspect) {
+		const k = frameAspect / sourceAspect;
+		return {
+			size: `${columns * 100}% auto`,
+			posX: columns <= 1 ? 50 : (column / (columns - 1)) * 100,
+			posY: overflowAxisPosition(row, rows, k),
+		};
+	}
+	const k = sourceAspect / frameAspect;
+	return {
+		size: `auto ${rows * 100}%`,
+		posY: rows <= 1 ? 50 : (row / (rows - 1)) * 100,
+		posX: overflowAxisPosition(column, columns, k),
+	};
+}
+
 /** @emoji 🖼 True when the crop is the full source bitmap. */
 function figureCropIsFullImage(crop: DispositionPosition): boolean {
 	return (
@@ -1406,7 +1544,6 @@ export function figureCropBackgroundSize(
 	crop: DispositionPosition,
 	frame: DispositionPosition,
 	sourceAspect = 1,
-	mosaic = false,
 ): string {
 	if (figureCropIsFullImage(crop)) {
 		return "cover";
@@ -1417,33 +1554,42 @@ export function figureCropBackgroundSize(
 	const zoomW = 100 / crop.width;
 	const zoomH = 100 / crop.height;
 	const cropSpanHAtZoomW = (crop.height * zoomW * frame.width) / sourceAspect;
-	const coverScale = mosaic
-		? 1
-		: (() => {
-				const cropAspect = figureCropPhysicalAspect(crop, sourceAspect);
-				const frameAspect = frame.width / frame.height;
-				return Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
-			})();
+	const cropAspect = figureCropPhysicalAspect(crop, sourceAspect);
+	const frameAspect = frame.width / frame.height;
+	const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
 	if (cropSpanHAtZoomW >= frame.height) {
 		return `${zoomW * coverScale}% auto`;
 	}
 	return `auto ${zoomH * coverScale}%`;
 }
 
-/** @emoji 🖼 Background size and position for one crop in a slide frame. */
+/** @emoji 🖼 Centered crop cover in a slide frame (non-mosaic / focus morph). */
 function figureCropCoverVars(
 	crop: DispositionPosition,
 	frame: DispositionPosition,
 	sourceAspect = 1,
-	mosaic?: { readonly rows: number; readonly columns: number },
 ): { readonly size: string; readonly posX: number; readonly posY: number } {
-	const mosaicCell = mosaic ? figureMosaicCellIndex(crop, mosaic) : null;
 	const { posX, posY } = figureCropBackgroundPosition(crop);
 	return {
-		size: figureCropBackgroundSize(crop, frame, sourceAspect, mosaicCell !== null),
+		size: figureCropBackgroundSize(crop, frame, sourceAspect),
 		posX,
 		posY,
 	};
+}
+
+/** @emoji 🪟 Mosaic cell background vars (windowed cover of `mosaic.frame`). */
+function figureMosaicCellCoverVars(
+	crop: DispositionPosition,
+	mosaic: FigureMosaicGrid,
+	sourceAspect: number,
+	slideAspect?: number,
+): { readonly size: string; readonly posX: number; readonly posY: number } | null {
+	const cell = figureMosaicCellIndex(crop, mosaic);
+	if (!cell) {
+		return null;
+	}
+	const mosaicFrame = mosaic.frame ?? { x: 0, y: 0, width: 1, height: 1 };
+	return mosaicWindowedCoverVars(cell, mosaic, mosaicFrame, sourceAspect, slideAspect);
 }
 
 /** @emoji 📐 Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
@@ -1556,32 +1702,31 @@ export function applyFigureCropCssVars(element: HTMLElement, vars: CSSProperties
 	}
 }
 
-/** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
+/** @emoji 🖼 CSS vars for crop tiles: mosaic windowed cover at rest/grid; centered crop cover for focus morph. */
 export function figureCropBackgroundVars(
 	embodiment: FigureEmbodiment,
 	crop: DispositionPosition,
 	frame?: DispositionPosition,
-	morphFrame?: DispositionPosition,
+	morphToFrame?: DispositionPosition,
 	fromMorphToFrame?: DispositionPosition,
+	slideAspect?: number,
 ): CSSProperties {
 	const mosaic = embodiment.mosaic;
-	const mosaicOnRest = mosaic !== undefined && fromMorphToFrame === undefined && morphFrame === undefined;
-	const restBasis = frame ?? morphFrame;
-	const morphBasis = morphFrame ?? frame;
 	const sourceAspect = embodiment.sourceAspect ?? 1;
-	const rest = restBasis
-		? figureCropCoverVars(crop, restBasis, sourceAspect, mosaicOnRest ? mosaic : undefined)
-		: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, sourceAspect);
-	const morph = morphBasis
-		? figureCropCoverVars(
-				crop,
-				morphBasis,
-				sourceAspect,
-				morphBasis === restBasis && mosaicOnRest ? mosaic : undefined,
-			)
-		: rest;
+	const mosaicRest = mosaic ? figureMosaicCellCoverVars(crop, mosaic, sourceAspect, slideAspect) : null;
+	const restBasis = frame ?? morphToFrame;
+	const rest = mosaicRest
+		? mosaicRest
+		: restBasis
+			? figureCropCoverVars(crop, restBasis, sourceAspect)
+			: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, sourceAspect);
+	const morphBasis = morphToFrame ?? frame;
+	const morph = morphBasis ? figureCropCoverVars(crop, morphBasis, sourceAspect) : rest;
 	const gridFrom = fromMorphToFrame
-		? figureCropCoverVars(crop, fromMorphToFrame, sourceAspect, mosaic)
+		? mosaic
+			? (figureMosaicCellCoverVars(crop, mosaic, sourceAspect, slideAspect) ??
+				figureCropCoverVars(crop, fromMorphToFrame, sourceAspect))
+			: figureCropCoverVars(crop, fromMorphToFrame, sourceAspect)
 		: undefined;
 	const vars: CSSProperties = {
 		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
@@ -1634,6 +1779,7 @@ function FigureMorphView({
 }): ReactNode {
 	if (embodiment.crop && position) {
 		const cropFrame = useContext(PresentationFigureCropFrameContext) ?? position;
+		const slideAspect = useContext(PresentationSlideAspectContext);
 		const dormant = dormantAnchor === true;
 		const morphCropFrom =
 			revealMorphCompanion === "target" && morphFrame !== undefined && position !== undefined;
@@ -1674,6 +1820,7 @@ function FigureMorphView({
 								cropFrame,
 								morphToFrame,
 								fromMorphToFrame,
+								slideAspect,
 							)),
 				}}
 				{...(morphCropFrom && embodiment.crop
@@ -1815,7 +1962,7 @@ function PdfMorphView({
 	const enlarged = useContext(PresentationDispositionEnlargeContext);
 	const dispositionId = useContext(PresentationInteractiveDispositionIdContext);
 	const interaction = useContext(PresentationInteractionContext);
-	const declaredPage = embodiment.page ?? 1;
+	const declaredPage = pdfEmbodimentInitialPage(embodiment);
 	const currentPage =
 		dispositionId !== undefined && interaction !== null
 			? interaction.getPdfPage(dispositionId, declaredPage)
@@ -1869,8 +2016,7 @@ function PdfMorphView({
 		(enlarged || selected) &&
 		dispositionId !== undefined &&
 		interaction !== null &&
-		numPages !== null &&
-		numPages > 1;
+		pdfPageNavEnabled(embodiment, numPages);
 	const goToPage = useCallback(
 		(nextPage: number) => {
 			if (dispositionId === undefined || interaction === null) {
@@ -1879,6 +2025,12 @@ function PdfMorphView({
 			interaction.setPdfPage(dispositionId, nextPage, declaredPage);
 		},
 		[declaredPage, dispositionId, interaction],
+	);
+	const goToAdjacentPage = useCallback(
+		(direction: "prev" | "next") => {
+			goToPage(pdfAdjacentPage(currentPage, direction, embodiment, numPages));
+		},
+		[currentPage, embodiment, goToPage, numPages],
 	);
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
@@ -1906,10 +2058,10 @@ function PdfMorphView({
 						type="button"
 						className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--prev"
 						title="Previous page"
-						disabled={currentPage <= 1}
+						disabled={!pdfCanGoToPreviousPage(currentPage, embodiment, numPages)}
 						onClick={(event) => {
 							event.stopPropagation();
-							goToPage(currentPage - 1);
+							goToAdjacentPage("prev");
 						}}
 					>
 						‹
@@ -1918,10 +2070,10 @@ function PdfMorphView({
 						type="button"
 						className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--next"
 						title="Next page"
-						disabled={currentPage >= numPages}
+						disabled={!pdfCanGoToNextPage(currentPage, embodiment, numPages)}
 						onClick={(event) => {
 							event.stopPropagation();
-							goToPage(currentPage + 1);
+							goToAdjacentPage("next");
 						}}
 					>
 						›
@@ -2084,6 +2236,11 @@ function MorphDispositionView({ disposition }: { readonly disposition: RevealRes
 //#region 🔖Interaction
 const DISPOSITION_MIN_FRACTION = 0.02;
 const POINTER_DRAG_THRESHOLD_PX = 3;
+
+/** @emoji 🗺 Whether reveal.js is showing the slide grid (Escape overview). */
+export function revealDeckInOverview(element: Element | null): boolean {
+	return element?.closest(".reveal")?.classList.contains("overview") ?? false;
+}
 
 /** @emoji 🗺 Swallow the post-gesture click reveal.js uses to leave overview (capture on `.reveal`). */
 export function suppressRevealOverviewSlideNavigation(event: Event): void {
@@ -3992,6 +4149,7 @@ function useSlideBackgroundInteraction({
 			const fractionContainer = dispositionPlacementContainer(section, canvasPlacement);
 			const fraction = clientToSectionFraction(fractionContainer, event.clientX, event.clientY);
 			const start = { x: fraction.x, y: fraction.y };
+			const startedInOverview = revealDeckInOverview(section);
 			let moved = false;
 
 			const onMove = (moveEvent: PointerEvent): void => {
@@ -4012,7 +4170,9 @@ function useSlideBackgroundInteraction({
 				window.removeEventListener("pointerup", onUp);
 				setMarquee(null);
 				if (!moved) {
-					interaction.clearSelection();
+					if (!startedInOverview) {
+						interaction.clearSelection();
+					}
 					return;
 				}
 				suppressRevealOverviewSlideNavigation(upEvent);
@@ -4319,6 +4479,11 @@ export const PresentationDeck: FC<{
 	const deckRef = useRef<Reveal.Api | null>(null);
 	const previousSlideRef = useRef<HTMLElement | null>(null);
 	const [slideEpoch, setSlideEpoch] = useState(0);
+	const [slideAspect, setSlideAspect] = useState<number | undefined>(undefined);
+	const syncSlideAspect = useCallback((deckEl: HTMLElement): void => {
+		const { width, height } = parsePresentationSlideCssSize(deckEl);
+		setSlideAspect(width / height);
+	}, []);
 
 	useEffect(() => {
 		const deckEl = deckDivRef.current;
@@ -4378,6 +4543,7 @@ export const PresentationDeck: FC<{
 		};
 		const onResize = (): void => {
 			syncPresentationSlideSizeVars(deckEl, deck);
+			syncSlideAspect(deckEl);
 		};
 		let autoAnimateFinalizeTimer: ReturnType<typeof setTimeout> | undefined;
 		const scheduleFinalizeAutoAnimateRest = (): void => {
@@ -4417,6 +4583,7 @@ export const PresentationDeck: FC<{
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
+			syncSlideAspect(deckEl);
 			syncPresentSlideMedia();
 			syncSlideUrl();
 			const { previousSlide: eventPrevious, currentSlide: eventCurrent } = slideChangedEventSlides(event);
@@ -4472,6 +4639,7 @@ export const PresentationDeck: FC<{
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
+			syncSlideAspect(deckEl);
 			syncPresentSlideMedia();
 			if (slideUrlEnabled) {
 				const indices = readPresentationSlideIndicesFromUrl();
@@ -4530,6 +4698,7 @@ export const PresentationDeck: FC<{
 
 	return (
 		<PresentationSlideEpochContext.Provider value={slideEpoch}>
+			<PresentationSlideAspectContext.Provider value={slideAspect}>
 			<PresentationInteractionProvider>
 				<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
 					<div className="slides">
@@ -4554,6 +4723,7 @@ export const PresentationDeck: FC<{
 					</div>
 				</div>
 			</PresentationInteractionProvider>
+			</PresentationSlideAspectContext.Provider>
 		</PresentationSlideEpochContext.Provider>
 	);
 };
@@ -4901,7 +5071,12 @@ if (import.meta.vitest) {
 			expect(
 				slide("goal")?.querySelector('h2.presentation-text-morph-source[data-id="description--1"]')?.textContent,
 			).toBe("D2");
-			expect(slide("goal")?.querySelector("h2.presentation-morph-target")?.textContent).toBe("D short");
+			const descriptionMorphSlot = slide("goal")?.querySelector(".presentation-text-morph-slot");
+			expect(descriptionMorphSlot?.querySelectorAll("h2.presentation-morph-target").length).toBe(1);
+			expect(descriptionMorphSlot?.querySelector("h2.presentation-morph-target")?.textContent).toBe("D short");
+			expect(
+				descriptionMorphSlot?.querySelectorAll("h2.presentation-text-morph-source").length,
+			).toBe(2);
 			expect(slide("goal")?.querySelector('h2[data-id="description"]:not(.presentation-text-morph-source)')).toBeNull();
 			expect(slide("goal")?.querySelector('.presentation-interactive-disposition[data-id="description"]')).toBeNull();
 			expect(slide("description")?.querySelector('.presentation-interactive-disposition[data-id="description"]')).toBeNull();
@@ -5476,6 +5651,26 @@ if (import.meta.vitest) {
 			expect(pdfCoverScale(0, 400, 595, 842)).toBeNull();
 		});
 
+		it("navigates only within a declared pdf page subset", () => {
+			const thesis: PdfEmbodiment = {
+				kind: "pdf",
+				id: "thesis--doc",
+				src: "/thesis.pdf",
+				page: 25,
+				pages: [1, 12, 25, 35, 42, 43, 51],
+			};
+			expect(pdfEmbodimentInitialPage(thesis)).toBe(25);
+			expect(pdfEmbodimentInitialPage({ ...thesis, page: 99 })).toBe(1);
+			expect(pdfPageNavEnabled(thesis, null)).toBe(true);
+			expect(pdfPageNavEnabled({ ...thesis, pages: [1] }, null)).toBe(false);
+			expect(pdfCanGoToPreviousPage(25, thesis, null)).toBe(true);
+			expect(pdfCanGoToNextPage(51, thesis, null)).toBe(false);
+			expect(pdfAdjacentPage(25, "next", thesis, null)).toBe(35);
+			expect(pdfAdjacentPage(51, "next", thesis, null)).toBe(51);
+			expect(pdfAdjacentPage(51, "prev", thesis, null)).toBe(43);
+			expect(pdfAdjacentPage(1, "prev", thesis, null)).toBe(1);
+		});
+
 		it("uses cover for full image and uniform crop zoom for partial crops", () => {
 			const crop = { x: 0, y: 0, width: 0.5, height: 1 };
 			const square = figureCropBackgroundVars(
@@ -5507,9 +5702,10 @@ if (import.meta.vitest) {
 			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe("50% 50%");
 		});
 
-		it("keeps focus rest crop centered while exposing grid vars for catalogue-to-focus", () => {
+		it("uses windowed mosaic for rest and grid and centered crop for morph on catalogue-to-focus", () => {
 			const sourceAspect = 1222 / 896;
 			const catalogueFrame = { x: 0.127, y: 0.2, width: 0.746, height: 0.75 };
+			const mosaic = { rows: 3, columns: 5, frame: catalogueFrame };
 			const crop = {
 				x: catalogueFrame.x + catalogueFrame.width / 5,
 				y: catalogueFrame.y + catalogueFrame.height / 3,
@@ -5519,6 +5715,14 @@ if (import.meta.vitest) {
 			const gridFrame = { x: 0.127, y: 0.2, width: 0.1492, height: 0.1823 };
 			const focusFrame = { x: 0.1, y: 0.2, width: 0.15, height: 0.18 };
 			const labelFrame = { x: 0.6, y: 0.44, width: 0.24, height: 0.12 };
+			const windowed = mosaicWindowedCoverVars(
+				{ column: 1, row: 1 },
+				mosaic,
+				catalogueFrame,
+				sourceAspect,
+			);
+			const morphPos = figureCropBackgroundPosition(crop);
+			const morphSize = figureCropBackgroundSize(crop, labelFrame, sourceAspect);
 			const vars = figureCropBackgroundVars(
 				{
 					kind: "figure",
@@ -5526,21 +5730,40 @@ if (import.meta.vitest) {
 					src: "/bauteilbörse.png",
 					crop,
 					sourceAspect,
-					mosaic: { rows: 3, columns: 5, frame: catalogueFrame },
+					mosaic,
 				},
 				crop,
 				focusFrame,
 				labelFrame,
 				gridFrame,
 			);
-			const { posX, posY } = figureCropBackgroundPosition(crop);
-			expect(vars["--presentation-figure-bg-grid-position" as keyof typeof vars]).toBe(
-				`${posX}% ${posY}%`,
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe(windowed.size);
+			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe(
+				`${windowed.posX}% ${windowed.posY}%`,
 			);
-			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toMatch(/% auto$/);
-			expect(vars["--presentation-figure-bg-grid-size" as keyof typeof vars]).toMatch(/% auto$/);
-			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBeTruthy();
-			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toMatch(/% auto$/);
+			expect(vars["--presentation-figure-bg-grid-size" as keyof typeof vars]).toBe(windowed.size);
+			expect(vars["--presentation-figure-bg-grid-position" as keyof typeof vars]).toBe(
+				`${windowed.posX}% ${windowed.posY}%`,
+			);
+			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBe(morphSize);
+			expect(vars["--presentation-figure-bg-position-morph" as keyof typeof vars]).toBe(
+				`${morphPos.posX}% ${morphPos.posY}%`,
+			);
+		});
+
+		it("mosaic windowed cover uses columns×100% width for catalogue 3×5 on a wide slide", () => {
+			const sourceAspect = 1222 / 896;
+			const frame = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+			const slideAspect = 960 / 700;
+			const vars = mosaicWindowedCoverVars(
+				{ column: 0, row: 1 },
+				{ rows: 3, columns: 5 },
+				frame,
+				sourceAspect,
+				slideAspect,
+			);
+			expect(vars.size).toBe("500% auto");
+			expect(vars.posX).toBe(0);
 		});
 
 		it("sets revealMorphFromMorphToFrame from the previous slide morphTo slots", () => {
@@ -5592,25 +5815,28 @@ if (import.meta.vitest) {
 			);
 		});
 
-		it("assigns seam-aligned mosaic positions per split tile", () => {
+		it("assigns windowed mosaic cover per split tile", () => {
 			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
+			const mosaic = { rows: 2, columns: 2, frame };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
 			const embodiment = {
 				kind: "figure" as const,
 				src: "/catalogue.png",
-				mosaic: { rows: 2, columns: 2, frame },
+				mosaic,
 			};
-			const positions = tiles.map(
-				(tile) =>
-					figureCropBackgroundVars(embodiment, tile.crop, tile.position)[
-						"--presentation-figure-bg-position" as keyof ReturnType<typeof figureCropBackgroundVars>
-					],
+			const expected = tiles.map((tile, index) => {
+				const column = index % 2;
+				const row = Math.floor(index / 2);
+				return mosaicWindowedCoverVars({ column, row }, mosaic, frame, 1);
+			});
+			const varsList = tiles.map((tile) =>
+				figureCropBackgroundVars(embodiment, tile.crop, tile.position),
 			);
-			expect(positions).toEqual(
-				tiles.map((tile) => {
-					const { posX, posY } = figureCropBackgroundPosition(tile.crop);
-					return `${posX}% ${posY}%`;
-				}),
+			expect(varsList.map((vars) => vars["--presentation-figure-bg-size" as keyof typeof vars])).toEqual(
+				expected.map((entry) => entry.size),
+			);
+			expect(varsList.map((vars) => vars["--presentation-figure-bg-position" as keyof typeof vars])).toEqual(
+				expected.map((entry) => `${entry.posX}% ${entry.posY}%`),
 			);
 		});
 
@@ -6055,6 +6281,16 @@ if (import.meta.vitest) {
 			expect(marqueeSelects(windowMarquee, inside, "window")).toBe(true);
 			expect(marqueeSelects(windowMarquee, partial, "window")).toBe(false);
 			expect(marqueeSelects(windowMarquee, partial, "crossing")).toBe(true);
+		});
+
+		it("detects reveal overview from an element inside the deck", () => {
+			const reveal = document.createElement("div");
+			reveal.className = "reveal";
+			const section = document.createElement("section");
+			reveal.appendChild(section);
+			expect(revealDeckInOverview(section)).toBe(false);
+			reveal.classList.add("overview");
+			expect(revealDeckInOverview(section)).toBe(true);
 		});
 
 		it("suppresses the reveal overview slide click after pointer gestures", () => {
@@ -7072,6 +7308,30 @@ if (import.meta.vitest) {
 			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
 		});
 
+		it("keeps selection when empty slide click started in reveal overview", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const reveal = container.querySelector(".reveal") as HTMLElement;
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const layer = section.querySelector(".presentation-interaction-layer") as HTMLElement;
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			reveal.classList.add("overview");
+			act(() => {
+				pointerClick(layer);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			reveal.classList.remove("overview");
+			act(() => {
+				pointerClick(layer);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
+		});
+
 		it("drags flow intro title disposition", () => {
 			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
@@ -7201,6 +7461,8 @@ if (import.meta.vitest) {
 			const morphTarget = goalSlide.querySelector("h2.presentation-morph-target");
 			expect(morphSource?.textContent).toContain("Eine offene Plattform");
 			expect(morphTarget?.textContent).toContain("Plattform zum Entwerfen");
+			expect(morphSource?.closest(".presentation-text-morph-slot")).toBeTruthy();
+			expect(morphTarget?.closest(".presentation-text-morph-slot")).toBe(morphSource?.closest(".presentation-text-morph-slot"));
 			expect(
 				goalSlide.querySelectorAll('h2[data-id="description"]:not(.presentation-text-morph-source)').length,
 			).toBe(0);
@@ -7970,6 +8232,97 @@ if (import.meta.vitest) {
 			expect(
 				(disposition.querySelector(".presentation-pdf-page-nav__button--prev") as HTMLButtonElement).disabled,
 			).toBe(false);
+		});
+
+		it("navigates only within pdf pages declared on the embodiment", async () => {
+			const deck: Presentation = {
+				id: "pdf-page-subset",
+				name: "Pdf Page Subset",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "media",
+										participants: [{ id: "thesis" }],
+										embodiments: [
+											{
+												kind: "pdf",
+												id: "thesis--doc",
+												src: "/thesis.pdf",
+												page: 1,
+												pages: [1, 12, 25],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "media",
+													dispositions: [
+														{
+															participantId: "thesis",
+															embodimentId: "thesis--doc",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector(
+				".presentation-interactive-disposition--kind-pdf",
+			) as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(disposition, 96, 385, 768, 280);
+			act(() => {
+				pointerClick(disposition);
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			const nextButton = () =>
+				disposition.querySelector(".presentation-pdf-page-nav__button--next") as HTMLButtonElement;
+			const prevButton = () =>
+				disposition.querySelector(".presentation-pdf-page-nav__button--prev") as HTMLButtonElement;
+			const pageNumber = () =>
+				disposition.querySelector(".react-pdf__Page")?.getAttribute("data-page");
+			expect(pageNumber()).toBe("1");
+			act(() => {
+				nextButton().click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(pageNumber()).toBe("12");
+			act(() => {
+				nextButton().click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(pageNumber()).toBe("25");
+			expect(nextButton().disabled).toBe(true);
+			act(() => {
+				prevButton().click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(pageNumber()).toBe("12");
 		});
 
 		it("toggles enlarge on a cropped figure tile disposition", () => {

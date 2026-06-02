@@ -928,6 +928,20 @@
 	pointer-events: none !important;
 }
 
+.reveal .presentation-text-morph-slot {
+	position: relative;
+}
+
+.reveal .presentation-text-morph-slot > .presentation-text-morph-source,
+.reveal .presentation-text-morph-slot > .presentation-affiliation-morph-source {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	width: 100%;
+	margin: 0;
+}
+
 .reveal .presentation-morph-target {
 	opacity: 1;
 	visibility: visible;

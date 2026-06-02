@@ -9,8 +9,9 @@ Full catalogue used `<img object-fit: cover>` while split tiles used background 
 - `CATALOGUE_FRAME` restored to hand-tuned `{ x: 0.127, y: 0.1, width: 0.746, height: 0.75 }`.
 - Full catalogue embodiment: `crop: full image`, `fit: "contain"` (overview, not cropped sub-rectangle + cover).
 - **`splitFigureGrid` crops are frame-relative** (sub-rectangle of the bitmap), not fractions of the full image — fixes Rippenplatte 1 left clip and overlap with Rippenplatte 2.
-- Split tiles: `FigureEmbodiment.mosaic` includes `frame`; **`figureCropBackgroundPosition(crop)`** (not edge 0/25/50/100% — wrong when crops start at `CATALOGUE_FRAME.x/y`).
-- Mosaic cells: uniform `(100/crop.width)% auto` zoom with **`coverScale = 1`** (no extra cover on grid rest).
+- Split tiles: **`mosaicWindowedCoverVars`** — each cell is a window onto one cover of `CATALOGUE_FRAME` (`500% auto` for 5 columns on a wide slide, not `670%` sprite zoom).
+- `PresentationSlideAspectContext` feeds slide width÷height into overflow-aware positioning.
+- Mosaic rest/grid ignore `morphTo`; morph (`-morph` vars) stays centered crop into focus/label frame.
 - Full catalogue: `background-size: cover` on full-image crop; partial crops use single-axis `% auto` (never dual `% %`). Morph animates size + position.
 - Drag/resize: `PresentationFigureCropFrameContext` updates position; `cover` rescales with the frame without distortion.
 - Mosaic alignment only when no `morphToFrame` (slide 7 grid); slide 8 focus cells use centered uniform cover.

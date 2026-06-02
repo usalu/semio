@@ -399,6 +399,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		id: "thesis--doc",
 		src: ASSET_THESIS_PDF,
 		page: 1,
+		pages: [1, 12, 25, 35, 42, 43, 51],
 		alt: "Bachelorarbeit Ueli Saluz",
 	},
 	...CATALOGUE_SPLIT.embodiments,
