@@ -769,7 +769,7 @@ function BulletMorphView({
 	);
 }
 
-/** @emoji 🖼 CSS vars for crop tiles: stretch-fill at rest, uniform cover zoom while reveal auto-animates. */
+/** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
 export function figureCropBackgroundVars(
 	embodiment: FigureEmbodiment,
 	crop: DispositionPosition,
@@ -791,10 +791,30 @@ export function figureCropBackgroundVars(
 		const cropAspect = crop.width / crop.height;
 		const frameAspect = frame.width / frame.height;
 		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
-		morphWidth = stretchWidth * coverScale;
-		morphHeight = stretchHeight * coverScale;
-		morphPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
-		morphPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
+		const coverWidth = stretchWidth * coverScale;
+		const coverHeight = stretchHeight * coverScale;
+		const coverPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
+		const coverPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
+		morphWidth = coverWidth;
+		morphHeight = coverHeight;
+		morphPosX = coverPosX;
+		morphPosY = coverPosY;
+		restWidth = coverWidth;
+		restHeight = coverHeight;
+		restPosX = coverPosX;
+		restPosY = coverPosY;
+	} else {
+		const uniform = Math.max(stretchWidth, stretchHeight);
+		morphWidth = uniform;
+		morphHeight = uniform;
+		restWidth = uniform;
+		restHeight = uniform;
+		const centerPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
+		const centerPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
+		morphPosX = centerPosX;
+		morphPosY = centerPosY;
+		restPosX = centerPosX;
+		restPosY = centerPosY;
 	}
 	return {
 		backgroundImage: `url("${embodiment.src}")`,
@@ -3619,8 +3639,13 @@ if (import.meta.vitest) {
 			expect(tileFrame).toBeTruthy();
 			const fill = tileFrame.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
 			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
-			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 200%");
+			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("240% 240%");
 			const fills = [...container.querySelectorAll(".presentation-figure-crop-fill")] as HTMLElement[];
+			for (const node of fills) {
+				const size = node.style.getPropertyValue("--presentation-figure-bg-size");
+				const [width, height] = size.split(/\s+/);
+				expect(width).toBe(height);
+			}
 			const positions = fills.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
 			expect(first.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
@@ -3803,7 +3828,7 @@ if (import.meta.vitest) {
 			expect(slot?.querySelector("h2")).toBeNull();
 			expect(slot?.style.left).toBe("35%");
 			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 100%");
-			expect(fill?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("0% 0%");
+			expect(fill?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("25% 50%");
 		});
 
 		it("rewrites non-uniform auto-animate scale() to a uniform zoom", () => {
@@ -3842,7 +3867,7 @@ if (import.meta.vitest) {
 			expect(runningRule).not.toMatch(/opacity:\s*1\s*!important/);
 		});
 
-		it("uses stretch-fill at rest and larger cover vars only while auto-animating", () => {
+		it("uses uniform cover at rest and during auto-animate morph vars", () => {
 			const crop = { x: 0, y: 0, width: 0.5, height: 1 };
 			const square = figureCropBackgroundVars(
 				{ kind: "figure", src: "/catalogue.png", crop },
@@ -3856,9 +3881,10 @@ if (import.meta.vitest) {
 			);
 			expect(square["--presentation-figure-bg-size-morph" as keyof typeof square]).toBe("400% 200%");
 			expect(wide["--presentation-figure-bg-size-morph" as keyof typeof wide]).toBe("1600% 800%");
-			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("200% 100%");
-			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("200% 100%");
-			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("0% 0%");
+			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("1600% 800%");
+			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% 200%");
+			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("25% 50%");
+			expect(square["--presentation-figure-bg-position" as keyof typeof square]).toBe("25% 50%");
 		});
 
 		it("assigns distinct crop background positions per split tile", () => {
