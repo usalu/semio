@@ -623,7 +623,7 @@
 }
 
 .reveal .presentation-morph-source {
-	opacity: 0 !important;
+	opacity: 0;
 	visibility: visible;
 	pointer-events: none;
 }
@@ -641,7 +641,6 @@
 }
 
 .reveal .slides section[data-auto-animate="running"] .presentation-morph-source {
-	opacity: 1 !important;
 	visibility: visible !important;
 	pointer-events: none;
 	animation: presentation-morph-source-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;

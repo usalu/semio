@@ -3832,7 +3832,14 @@ if (import.meta.vitest) {
 			const css = readFileSync(cssPath, "utf8");
 			const restRule = css.match(/\.reveal \.presentation-morph-source \{[\s\S]*?\}/)?.[0] ?? "";
 			expect(restRule).toContain("opacity: 0");
+			expect(restRule).not.toContain("opacity: 0 !important");
 			expect(restRule).not.toContain("visibility: hidden");
+			const runningRule =
+				css.match(
+					/\.reveal \.slides section\[data-auto-animate="running"\] \.presentation-morph-source \{[\s\S]*?\}/,
+				)?.[0] ?? "";
+			expect(runningRule).toContain("presentation-morph-source-fade-out");
+			expect(runningRule).not.toMatch(/opacity:\s*1\s*!important/);
 		});
 
 		it("uses stretch-fill at rest and larger cover vars only while auto-animating", () => {
