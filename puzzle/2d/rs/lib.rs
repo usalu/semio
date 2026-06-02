@@ -4458,9 +4458,7 @@ mod board_host {
             let Some(ref preview) = self.brush_preview else {
                 return;
             };
-            if matches!(lod, BoardDrawLod::Minimap) {
-                return;
-            }
+            let _ = lod;
             let center = Point::new(preview.x, preview.y);
             let style = BoardElementStyleKind::Highlighted;
             let fill = Self::node_fill_for_style(&self.vello_theme, style);

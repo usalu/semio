@@ -224,8 +224,10 @@ export type RevealMorphCompanionKind = "source" | "target";
 /** @emoji ✅ Resolved disposition plus optional reveal.js morph companion metadata. */
 export interface RevealResolvedDisposition extends ResolvedDisposition {
 	readonly revealMorphCompanion?: RevealMorphCompanionKind;
-	/** @emoji 📐 Source slide frame for target-ghost crop vars during auto-animate (layout still uses {@link ResolvedDisposition.position}). */
+	/** @emoji 📐 Source slide frame for target ghosts: paired with {@link ResolvedDisposition.position} for frame and crop morph during auto-animate. */
 	readonly revealMorphFromFrame?: DispositionPosition;
+	/** @emoji 📐 Target slide frame for source tiles: paired with {@link ResolvedDisposition.position} when the next slide morphFrom references this participant. */
+	readonly revealMorphToFrame?: DispositionPosition;
 }
 
 function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, { readonly participantId: string; readonly embodimentId: string; readonly emphasis: ParticipantEmphasis }> {
@@ -321,6 +323,18 @@ function revealMorphCompanionFromMorphTo(
 	return companions;
 }
 
+function revealMorphToFrameByParticipant(nextSlide: Slide): Map<string, DispositionPosition> {
+	const map = new Map<string, DispositionPosition>();
+	for (const disposition of nextSlide.arrangement.dispositions) {
+		for (const slot of disposition.morphFrom ?? []) {
+			if (!map.has(slot.participantId)) {
+				map.set(slot.participantId, slot.position);
+			}
+		}
+	}
+	return map;
+}
+
 /** @emoji 🔀 Resolves an arrangement and appends reveal.js morph companions for one-to-many / many-to-one. */
 export function resolveRevealArrangement(
 	scope: ReturnType<typeof buildResolutionScope>,
@@ -336,7 +350,20 @@ export function resolveRevealArrangement(
 	if (context.nextSlide !== undefined && hasMorphTo) {
 		companions.push(...revealMorphCompanionFromMorphTo(scope, context.nextSlide, arrangement));
 	}
-	return [...resolved, ...companions];
+	const morphToFrames =
+		context.nextSlide !== undefined ? revealMorphToFrameByParticipant(context.nextSlide) : undefined;
+	const withMorphToFrames = morphToFrames
+		? resolved.map((disposition) => {
+				if (disposition.revealMorphCompanion !== undefined || disposition.position === undefined) {
+					return disposition;
+				}
+				const revealMorphToFrame = morphToFrames.get(disposition.participant.id);
+				return revealMorphToFrame === undefined
+					? disposition
+					: { ...disposition, revealMorphToFrame };
+			})
+		: resolved;
+	return [...withMorphToFrames, ...companions];
 }
 
 function isRevealMorphCompanionOnly(disposition: RevealResolvedDisposition): boolean {
@@ -682,6 +709,11 @@ export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): s
 .reveal .slides section[data-auto-animate="running"] .presentation-morph-one[data-auto-animate-target] {
 	animation: presentation-morph-one-fade-out ${duration} ease forwards !important;
 }
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-frame-pair[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-frame-pair[data-auto-animate-target] {
+	transform: none !important;
+	transition: none !important;
+}
 `;
 }
 
@@ -763,8 +795,8 @@ const PresentationSlideEpochContext = createContext(0);
 /** @emoji 🔗 When true, the interactive canvas wrapper owns `data-id` for reveal.js auto-animate. */
 const MorphAnchorOnWrapperContext = createContext(false);
 
-/** @emoji ⛶ When true, {@link PdfMorphView} measures against the slide-fullscreen content box, not the declared catalogue frame. */
-const PresentationDispositionFullscreenContext = createContext(false);
+/** @emoji ⛶ When true, {@link PdfMorphView} measures against the enlarged slide content box, not the declared catalogue frame. */
+const PresentationDispositionEnlargeContext = createContext(false);
 
 export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
 	const width = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-width") ?? "960");
@@ -788,12 +820,12 @@ export function pdfCoverScale(
 	return Math.max(containerWidth / pageWidth, containerHeight / pageHeight);
 }
 
-/** @emoji 📐 Measures the react-pdf viewport from the disposition frame or slide-fullscreen content box. */
+/** @emoji 📐 Measures the react-pdf viewport from the disposition frame or enlarged slide content box. */
 function usePdfContainerSize(
 	anchorRef: RefObject<HTMLDivElement | null>,
 	position: DispositionPosition | undefined,
 	slideEpoch: number,
-	fullscreen: boolean,
+	enlarged: boolean,
 ): { readonly width?: number; readonly height?: number } {
 	const [size, setSize] = useState<{ readonly width?: number; readonly height?: number }>({});
 	useEffect(() => {
@@ -802,9 +834,9 @@ function usePdfContainerSize(
 			return;
 		}
 		const measureTarget = (): HTMLElement | null => {
-			if (fullscreen) {
+			if (enlarged) {
 				return (
-					el.closest(".presentation-interactive-disposition--fullscreen")?.querySelector(
+					el.closest(".presentation-interactive-disposition--enlarged")?.querySelector(
 						".presentation-interactive-disposition__content",
 					) ?? null
 				);
@@ -822,7 +854,7 @@ function usePdfContainerSize(
 				return;
 			}
 			const slide = parsePresentationSlideCssSize(el.closest(".reveal"));
-			const frame = fullscreen ? SLIDE_INTERACTIVE_FULLSCREEN_FRAME : position;
+			const frame = enlarged ? SLIDE_INTERACTIVE_ENLARGE_FRAME : position;
 			const width = frame
 				? Math.floor(slide.width * frame.width)
 				: Math.floor(slide.width * 0.8);
@@ -853,7 +885,7 @@ function usePdfContainerSize(
 		};
 	}, [
 		anchorRef,
-		fullscreen,
+		enlarged,
 		position?.height,
 		position?.width,
 		position?.x,
@@ -1131,6 +1163,23 @@ function figureCropCoverVars(
 	return { width: uniform, height: uniform, posX: centerPosX, posY: centerPosY };
 }
 
+/** @emoji 📐 Custom properties for morphing a canvas frame from `from` into `to` during reveal auto-animate. */
+export function morphFrameCssVars(
+	from: DispositionPosition,
+	to: DispositionPosition,
+): CSSProperties {
+	return {
+		["--presentation-morph-frame-left" as string]: `${from.x * 100}%`,
+		["--presentation-morph-frame-top" as string]: `${from.y * 100}%`,
+		["--presentation-morph-frame-width" as string]: `${from.width * 100}%`,
+		["--presentation-morph-frame-height" as string]: `${from.height * 100}%`,
+		["--presentation-frame-left" as string]: `${to.x * 100}%`,
+		["--presentation-frame-top" as string]: `${to.y * 100}%`,
+		["--presentation-frame-width" as string]: `${to.width * 100}%`,
+		["--presentation-frame-height" as string]: `${to.height * 100}%`,
+	};
+}
+
 /** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
 export function figureCropBackgroundVars(
 	embodiment: FigureEmbodiment,
@@ -1161,6 +1210,7 @@ function FigureMorphView({
 	anchorOnWrapper = false,
 	revealMorphCompanion,
 	morphFrame,
+	morphToFrame,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -1171,9 +1221,13 @@ function FigureMorphView({
 	readonly anchorOnWrapper?: boolean;
 	readonly revealMorphCompanion?: RevealMorphCompanionKind;
 	readonly morphFrame?: DispositionPosition;
+	readonly morphToFrame?: DispositionPosition;
 }): ReactNode {
 	if (embodiment.crop && position) {
 		const dormant = dormantAnchor === true;
+		const morphCropFrom =
+			revealMorphCompanion === "target" && morphFrame !== undefined && position !== undefined;
+		const morphCropTo = morphToFrame !== undefined && position !== undefined;
 		const frameStyle = anchorOnWrapper
 			? {
 					position: "relative" as const,
@@ -1192,6 +1246,8 @@ function FigureMorphView({
 					"presentation-morph-slot--figure",
 					revealMorphCompanion === "target" ? "presentation-target-ghost" : undefined,
 					revealMorphCompanion === "source" ? "presentation-source-ghost" : undefined,
+					morphCropFrom ? "presentation-morph-crop-from" : undefined,
+					morphCropTo ? "presentation-morph-crop-to" : undefined,
 					dormant ? "presentation-morph-slot--dormant" : undefined,
 					emphasisClass(emphasis),
 				]
@@ -1199,7 +1255,14 @@ function FigureMorphView({
 					.join(" ")}
 				style={{
 					...frameStyle,
-					...figureCropBackgroundVars(embodiment, embodiment.crop, position, morphFrame),
+					...(morphCropFrom && morphFrame ? morphFrameCssVars(morphFrame, position) : {}),
+					...(morphCropTo && morphToFrame ? morphFrameCssVars(position, morphToFrame) : {}),
+					...figureCropBackgroundVars(
+						embodiment,
+						embodiment.crop,
+						position,
+						morphFrame ?? morphToFrame,
+					),
 				}}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
@@ -1334,8 +1397,8 @@ function PdfMorphView({
 }): ReactNode {
 	const anchorRef = useRef<HTMLDivElement>(null);
 	const slideEpoch = useContext(PresentationSlideEpochContext);
-	const fullscreen = useContext(PresentationDispositionFullscreenContext);
-	const containerSize = usePdfContainerSize(anchorRef, position, slideEpoch, fullscreen);
+	const enlarged = useContext(PresentationDispositionEnlargeContext);
+	const containerSize = usePdfContainerSize(anchorRef, position, slideEpoch, enlarged);
 	const [pageViewport, setPageViewport] = useState<{
 		readonly width: number;
 		readonly height: number;
@@ -1492,6 +1555,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: RevealRes
 						anchorOnWrapper={anchorOnWrapper}
 						revealMorphCompanion={disposition.revealMorphCompanion}
 						morphFrame={disposition.revealMorphFromFrame}
+						morphToFrame={disposition.revealMorphToFrame}
 					/>
 				);
 			}
@@ -1802,23 +1866,23 @@ export function scaleRectWithinGroup(
 	};
 }
 
-/** @emoji ⛶ Centered near-slide frame for interactive fullscreen (uniform across figure, video, pdf, tiles). */
-export const SLIDE_INTERACTIVE_FULLSCREEN_FRAME: DispositionPosition = {
+/** @emoji ⛶ Centered near-slide frame for interactive enlarge (uniform across figure, video, pdf, tiles). */
+export const SLIDE_INTERACTIVE_ENLARGE_FRAME: DispositionPosition = {
 	x: 0.05,
 	y: 0.075,
 	width: 0.9,
 	height: 0.85,
 };
 
-/** @emoji ⛶ Toggles uniform slide-fullscreen frame vs stashed pre-fullscreen rect. */
-export function toggleFullscreenRect(
+/** @emoji ⛶ Toggles uniform enlarged slide frame vs stashed pre-enlarge rect. */
+export function toggleEnlargeRect(
 	current: DispositionPosition,
 	stash: DispositionPosition | undefined,
 ): { readonly rect: DispositionPosition; readonly stash: DispositionPosition | undefined } {
 	if (stash !== undefined) {
 		return { rect: stash, stash: undefined };
 	}
-	return { rect: SLIDE_INTERACTIVE_FULLSCREEN_FRAME, stash: current };
+	return { rect: SLIDE_INTERACTIVE_ENLARGE_FRAME, stash: current };
 }
 
 /** @emoji 📐 reveal.js nested slide section with usable layout height for pointer math. */
@@ -1885,10 +1949,10 @@ export function interactiveDispositionChromeStyle(options: {
 	readonly selected: boolean;
 	readonly effectiveRect: DispositionPosition | undefined;
 	readonly canvasFramed: boolean;
-	readonly fullscreen: boolean;
+	readonly enlarged: boolean;
 }): CSSProperties | undefined {
-	const { selected, effectiveRect, canvasFramed, fullscreen } = options;
-	if (!selected || !effectiveRect || fullscreen || canvasFramed) {
+	const { selected, effectiveRect, canvasFramed, enlarged } = options;
+	if (!selected || !effectiveRect || enlarged || canvasFramed) {
 		return undefined;
 	}
 	return transformFrameStyle(effectiveRect);
@@ -2211,13 +2275,13 @@ export function dispositionPositionChanged(
 
 const SLIDE_INTERACTION_RESET_PROXIMITY_PX = 72;
 
-/** @emoji 📐 True when any disposition on the slide has ephemeral layout (drag, resize, or fullscreen). */
+/** @emoji 📐 True when any disposition on the slide has ephemeral layout (drag, resize, or enlarge). */
 export function slideHasEphemeralLayout(
 	transforms: ReadonlyMap<string, DispositionTransform>,
-	fullscreenIds: ReadonlySet<string>,
+	enlargedIds: ReadonlySet<string>,
 	declaredRects: ReadonlyMap<string, DispositionPosition | undefined>,
 ): boolean {
-	if (fullscreenIds.size > 0) {
+	if (enlargedIds.size > 0) {
 		return true;
 	}
 	for (const [id, transform] of transforms) {
@@ -2232,6 +2296,28 @@ export function slideHasEphemeralLayout(
 	return false;
 }
 
+/** @emoji 📐 True when a disposition transform differs from its declared anchor. */
+export function dispositionHasEphemeralLayout(
+	transform: DispositionTransform | undefined,
+	anchorRect: DispositionPosition | undefined,
+	measuredNatural: DispositionPosition | undefined,
+	flowLayout: boolean,
+): boolean {
+	if (!transform) {
+		return false;
+	}
+	if (!flowLayout) {
+		return anchorRect !== undefined && dispositionPositionChanged(anchorRect, transform);
+	}
+	if (measuredNatural) {
+		return dispositionPositionChanged(
+			flowDispositionManipulationRect(measuredNatural, undefined),
+			transform,
+		);
+	}
+	return true;
+}
+
 /** @emoji 🎯 Pointer is within the top-right hotspot where the slide reset control lives. */
 export function pointerNearSlideResetHotspot(
 	section: HTMLElement,
@@ -2239,11 +2325,13 @@ export function pointerNearSlideResetHotspot(
 	clientY: number,
 	proximityPx = SLIDE_INTERACTION_RESET_PROXIMITY_PX,
 ): boolean {
-	const bounds = section.getBoundingClientRect();
+	const bounds = slideLayoutBounds(section);
+	const reachX = Math.max(proximityPx, bounds.width * 0.12);
+	const reachY = Math.max(proximityPx, bounds.height * 0.12);
 	return (
-		clientX >= bounds.right - proximityPx &&
+		clientX >= bounds.right - reachX &&
 		clientY >= bounds.top &&
-		clientY <= bounds.top + proximityPx
+		clientY <= bounds.top + reachY
 	);
 }
 
@@ -2375,15 +2463,15 @@ export function flowPixelOffsetToSectionRect(
 interface PresentationInteractionState {
 	readonly selectedIds: ReadonlySet<string>;
 	readonly transforms: ReadonlyMap<string, DispositionTransform>;
-	readonly fullscreenIds: ReadonlySet<string>;
+	readonly enlargedIds: ReadonlySet<string>;
 	readonly isSelected: (id: string) => boolean;
-	readonly isFullscreen: (id: string) => boolean;
+	readonly isEnlarged: (id: string) => boolean;
 	readonly getTransform: (id: string) => DispositionTransform | undefined;
 	readonly setTransform: (id: string, rect: DispositionTransform) => void;
 	readonly setTransforms: (updates: ReadonlyMap<string, DispositionTransform>) => void;
 	readonly selectIds: (ids: readonly string[], additive: boolean) => void;
 	readonly clearSelection: () => void;
-	readonly toggleFullscreen: (id: string) => void;
+	readonly toggleEnlarge: (id: string) => void;
 	readonly clearTransform: (id: string) => void;
 	readonly resetSlide: (dispositionIds: readonly string[]) => void;
 }
@@ -2398,21 +2486,21 @@ function usePresentationInteractionState(): PresentationInteractionState {
 	return value;
 }
 
-/** @emoji 🖱 Ephemeral selection, transforms, and slide-fullscreen flags; resets when slideEpoch changes. */
+/** @emoji 🖱 Ephemeral selection, transforms, and enlarge flags; resets when slideEpoch changes. */
 export function usePresentationInteraction(slideEpoch: number): PresentationInteractionState {
 	const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
 	const [transforms, setTransforms] = useState<ReadonlyMap<string, DispositionTransform>>(() => new Map());
-	const [fullscreenIds, setFullscreenIds] = useState<ReadonlySet<string>>(() => new Set());
+	const [enlargedIds, setEnlargedIds] = useState<ReadonlySet<string>>(() => new Set());
 
 	useEffect(() => {
 		setSelectedIds(new Set());
 		setTransforms(new Map());
-		setFullscreenIds(new Set());
+		setEnlargedIds(new Set());
 	}, [slideEpoch]);
 
 	const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
 
-	const isFullscreen = useCallback((id: string) => fullscreenIds.has(id), [fullscreenIds]);
+	const isEnlarged = useCallback((id: string) => enlargedIds.has(id), [enlargedIds]);
 
 	const getTransform = useCallback((id: string) => transforms.get(id), [transforms]);
 
@@ -2453,11 +2541,11 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 
 	const clearSelection = useCallback(() => {
 		setSelectedIds(new Set());
-		setFullscreenIds(new Set());
+		setEnlargedIds(new Set());
 	}, []);
 
-	const toggleFullscreen = useCallback((id: string) => {
-		setFullscreenIds((previous) => {
+	const toggleEnlarge = useCallback((id: string) => {
+		setEnlargedIds((previous) => {
 			const next = new Set(previous);
 			if (next.has(id)) {
 				next.delete(id);
@@ -2505,7 +2593,7 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 			}
 			return next;
 		});
-		setFullscreenIds((previous) => {
+		setEnlargedIds((previous) => {
 			const next = new Set(previous);
 			for (const id of idSet) {
 				next.delete(id);
@@ -2518,30 +2606,30 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 		() => ({
 			selectedIds,
 			transforms,
-			fullscreenIds,
+			enlargedIds,
 			isSelected,
-			isFullscreen,
+			isEnlarged,
 			getTransform,
 			setTransform,
 			setTransforms: setTransformsBatch,
 			selectIds,
 			clearSelection,
-			toggleFullscreen,
+			toggleEnlarge,
 			clearTransform,
 			resetSlide,
 		}),
 		[
 			selectedIds,
 			transforms,
-			fullscreenIds,
+			enlargedIds,
 			isSelected,
-			isFullscreen,
+			isEnlarged,
 			getTransform,
 			setTransform,
 			setTransformsBatch,
 			selectIds,
 			clearSelection,
-			toggleFullscreen,
+			toggleEnlarge,
 			clearTransform,
 			resetSlide,
 		],
@@ -2697,8 +2785,8 @@ const InteractiveDisposition: FC<{
 		transform !== undefined &&
 		isFlowPixelOffsetTransform(transform, measuredNatural);
 	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
-	const fullscreen = interaction.isFullscreen(id);
-	const canvasFramed = declaredRect !== undefined && !fullscreen;
+	const enlarged = interaction.isEnlarged(id);
+	const canvasFramed = declaredRect !== undefined && !enlarged;
 	const canvasPlacement = interactionRect !== undefined;
 	const effectiveRect = resolveEffectiveDispositionRect(id, interactionRect, interaction, registry);
 	const canvasAnchorRect = interactionRect;
@@ -2707,11 +2795,11 @@ const InteractiveDisposition: FC<{
 	const canvasDragActive = Boolean(
 		canvasLiveTransform &&
 			canvasAnchorRect &&
-			!fullscreen &&
+			!enlarged &&
 			dispositionPositionChanged(canvasAnchorRect, canvasLiveTransform),
 	);
 	const pinned =
-		!fullscreen &&
+		!enlarged &&
 		((transformed && !flowLayout && !canvasFramed) ||
 			flowSectionFrame ||
 			(canvasFramed && canvasDragActive && !flowPixelOffset));
@@ -2722,7 +2810,7 @@ const InteractiveDisposition: FC<{
 	const useFlowInkFrame = flowLayout && !flowSectionFrame;
 	const [inkInWrapper, setInkInWrapper] = useState<DispositionPosition | null>(null);
 	const displayDisposition =
-		fullscreen && disposition.position !== undefined
+		enlarged && disposition.position !== undefined
 			? { ...disposition, position: undefined }
 			: disposition;
 
@@ -2997,7 +3085,7 @@ const InteractiveDisposition: FC<{
 		if ((event.target as HTMLElement).closest(".presentation-interaction-handle")) {
 			return;
 		}
-		if ((event.target as HTMLElement).closest(".presentation-interaction-fullscreen")) {
+		if ((event.target as HTMLElement).closest(".presentation-interaction-enlarge")) {
 			return;
 		}
 		if ((event.target as HTMLElement).closest(".presentation-interaction-reset")) {
@@ -3070,13 +3158,13 @@ const InteractiveDisposition: FC<{
 		);
 	};
 
-	const onFullscreenClick = (event: React.MouseEvent): void => {
+	const onEnlargeClick = (event: React.MouseEvent): void => {
 		event.preventDefault();
 		event.stopPropagation();
 		if (!selected) {
 			interaction.selectIds([id], false);
 		}
-		interaction.toggleFullscreen(id);
+		interaction.toggleEnlarge(id);
 	};
 
 	const onResetClick = (event: React.MouseEvent): void => {
@@ -3088,6 +3176,18 @@ const InteractiveDisposition: FC<{
 		interaction.clearTransform(id);
 	};
 
+	const morphFrameFrom = disposition.revealMorphFromFrame ?? disposition.position;
+	const morphFrameTo = disposition.revealMorphToFrame ?? disposition.position;
+	const morphFramePair =
+		morphFrameFrom !== undefined &&
+		morphFrameTo !== undefined &&
+		(disposition.revealMorphFromFrame !== undefined || disposition.revealMorphToFrame !== undefined);
+	const morphCropFrom =
+		disposition.revealMorphCompanion === "target" &&
+		disposition.revealMorphFromFrame !== undefined &&
+		disposition.position !== undefined;
+	const morphCropTo =
+		disposition.revealMorphToFrame !== undefined && disposition.position !== undefined;
 	const wrapperClass = [
 		"presentation-interactive-disposition",
 		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
@@ -3096,9 +3196,12 @@ const InteractiveDisposition: FC<{
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
 		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
 		gesturing ? "presentation-interactive-disposition--gesturing" : undefined,
-		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
+		enlarged ? "presentation-interactive-disposition--enlarged" : undefined,
 		disposition.revealMorphCompanion === "target" ? "presentation-target-ghost" : undefined,
 		disposition.revealMorphCompanion === "source" ? "presentation-source-ghost" : undefined,
+		morphFramePair ? "presentation-morph-frame-pair" : undefined,
+		morphCropFrom ? "presentation-morph-crop-from" : undefined,
+		morphCropTo ? "presentation-morph-crop-to" : undefined,
 		(disposition.morphFrom?.length ?? 0) > 0 ? "presentation-morph-target" : undefined,
 		(disposition.morphTo?.length ?? 0) > 0 ? "presentation-morph-one" : undefined,
 	]
@@ -3114,17 +3217,20 @@ const InteractiveDisposition: FC<{
 		// 🔀 The wrapper owns the reveal `data-id` morph anchor; placing it on the live ephemeral
 		// rect (drag/resize) makes reveal.js auto-animate capture the modified frame as the morph
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
-		// 👻 Morph-source ghosts must stay on morphFrom label frames, never ephemeral focus tiles.
+		// 👻 Morph companions keep declared frames; target ghosts also morph frame via `presentation-morph-frame-pair` CSS.
 		const morphAnchorRect =
 			disposition.revealMorphCompanion !== undefined
 				? canvasAnchorRect
 				: (canvasLiveTransform ?? canvasAnchorRect);
 		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
+		if (morphFramePair && morphFrameFrom && morphFrameTo) {
+			Object.assign(wrapperFrame, morphFrameCssVars(morphFrameFrom, morphFrameTo));
+		}
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
 	}
-	const wrapperStyle: CSSProperties | undefined = fullscreen
-		? transformFrameStyle(SLIDE_INTERACTIVE_FULLSCREEN_FRAME)
+	const wrapperStyle: CSSProperties | undefined = enlarged
+		? transformFrameStyle(SLIDE_INTERACTIVE_ENLARGE_FRAME)
 		: Object.keys(wrapperFrame).length > 0
 			? wrapperFrame
 			: undefined;
@@ -3156,20 +3262,15 @@ const InteractiveDisposition: FC<{
 				selected: selected || gesturing,
 				effectiveRect: chromeLayoutRect,
 				canvasFramed,
-				fullscreen,
+				enlarged,
 			});
 	const showControls =
 		(selected || gesturing) &&
 		Boolean(useFlowInkFrame ? inkInWrapper ?? measuredNatural : chromeLayoutRect ?? effectiveRect);
-	const showHandles = showControls && !fullscreen;
+	const showHandles = showControls && !enlarged;
 	const canResetPosition =
-		canvasDragActive ||
-		Boolean(
-			flowLayout &&
-				transform &&
-				measuredNatural &&
-				dispositionPositionChanged(flowDispositionManipulationRect(measuredNatural, undefined), transform),
-		);
+		!enlarged &&
+		dispositionHasEphemeralLayout(transform, interactionRect, measuredNatural, flowLayout);
 
 	return (
 		<div
@@ -3186,54 +3287,52 @@ const InteractiveDisposition: FC<{
 				className="presentation-interactive-disposition__content"
 				style={hasContentStyle ? contentStyle : undefined}
 			>
-				<PresentationDispositionFullscreenContext.Provider value={fullscreen}>
+				<PresentationDispositionEnlargeContext.Provider value={enlarged}>
 					<MorphAnchorOnWrapperContext.Provider
 						value={Boolean(revealMorphId && declaredRect !== undefined)}
 					>
 						<MorphDispositionView disposition={displayDisposition} />
 					</MorphAnchorOnWrapperContext.Provider>
-				</PresentationDispositionFullscreenContext.Provider>
-				{showControls ? (
-					<>
-						{showHandles ? (
+				</PresentationDispositionEnlargeContext.Provider>
+				{showHandles ? (
+					<div
+						className="presentation-interactive-disposition__chrome"
+						style={chromeStyle}
+						aria-hidden
+					>
+						{DISPOSITION_RESIZE_HANDLES.map((handle) => (
 							<div
-								className="presentation-interactive-disposition__chrome"
-								style={chromeStyle}
-								aria-hidden
-							>
-								{DISPOSITION_RESIZE_HANDLES.map((handle) => (
-									<div
-										key={handle}
-										className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
-										onPointerDown={onHandlePointerDown(handle)}
-									/>
-								))}
-							</div>
-						) : null}
-						<div className="presentation-interaction-actions">
-							{canResetPosition ? (
-								<button
-									type="button"
-									className="presentation-interaction-reset"
-									title="Reset position"
-									onClick={onResetClick}
-								>
-									↺
-								</button>
-							) : null}
-							<button
-								type="button"
-								className="presentation-interaction-fullscreen"
-								title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
-								aria-pressed={fullscreen}
-								onClick={onFullscreenClick}
-							>
-								⤢
-							</button>
-						</div>
-					</>
+								key={handle}
+								className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
+								onPointerDown={onHandlePointerDown(handle)}
+							/>
+						))}
+					</div>
 				) : null}
 			</div>
+			{showControls ? (
+				<div className="presentation-interaction-actions">
+					{canResetPosition ? (
+						<button
+							type="button"
+							className="presentation-interaction-reset"
+							title="Reset position"
+							onClick={onResetClick}
+						>
+							↺
+						</button>
+					) : null}
+					<button
+						type="button"
+						className="presentation-interaction-enlarge"
+						title={enlarged ? "Exit enlarge" : "Enlarge"}
+						aria-pressed={enlarged}
+						onClick={onEnlargeClick}
+					>
+						⤢
+					</button>
+				</div>
+			) : null}
 		</div>
 	);
 };
@@ -3247,9 +3346,10 @@ function isDispositionPointerTarget(target: EventTarget | null): boolean {
 			target.closest(".presentation-interactive-row-band") ||
 			target.closest(".presentation-interactive-visual-row") ||
 			target.closest(".presentation-interaction-handle") ||
-			target.closest(".presentation-interaction-fullscreen") ||
+			target.closest(".presentation-interaction-enlarge") ||
 			target.closest(".presentation-interaction-reset") ||
-			target.closest(".presentation-interaction-slide-reset"),
+			target.closest(".presentation-interaction-slide-reset") ||
+			target.closest(".presentation-interaction-slide-reset-host"),
 	);
 }
 
@@ -3353,43 +3453,43 @@ const SlideInteractionReset: FC<{
 	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 }> = ({ sectionRef, dispositionIds, declaredRects }) => {
 	const interaction = usePresentationInteractionState();
+	const hostRef = useRef<HTMLDivElement>(null);
 	const modified = dispositionIds.some((id) => {
-		if (interaction.isFullscreen(id)) {
+		if (interaction.isEnlarged(id)) {
 			return true;
 		}
 		const transform = interaction.getTransform(id);
-		if (!transform) {
-			return false;
-		}
 		const declared = declaredRects.get(id);
-		if (declared === undefined) {
-			return true;
-		}
-		return dispositionPositionChanged(declared, transform);
+		return dispositionHasEphemeralLayout(transform, declared, undefined, declared === undefined);
 	});
-	const [nearHotspot, setNearHotspot] = useState(false);
-	const [hovering, setHovering] = useState(false);
 
 	useEffect(() => {
 		if (!modified) {
-			setNearHotspot(false);
 			return;
 		}
 		const section = sectionRef.current;
-		if (!section) {
+		const host = hostRef.current;
+		if (!section || !host) {
 			return;
 		}
+		const syncNear = (clientX: number, clientY: number): void => {
+			host.classList.toggle(
+				"presentation-interaction-slide-reset-host--near",
+				pointerNearSlideResetHotspot(section, clientX, clientY),
+			);
+		};
 		const onMove = (event: PointerEvent): void => {
-			setNearHotspot(pointerNearSlideResetHotspot(section, event.clientX, event.clientY));
+			syncNear(event.clientX, event.clientY);
 		};
 		const onLeave = (): void => {
-			setNearHotspot(false);
+			host.classList.remove("presentation-interaction-slide-reset-host--near");
 		};
-		section.addEventListener("pointermove", onMove);
+		window.addEventListener("pointermove", onMove, { passive: true });
 		section.addEventListener("pointerleave", onLeave);
 		return () => {
-			section.removeEventListener("pointermove", onMove);
+			window.removeEventListener("pointermove", onMove);
 			section.removeEventListener("pointerleave", onLeave);
+			host.classList.remove("presentation-interaction-slide-reset-host--near");
 		};
 	}, [declaredRects, modified, sectionRef]);
 
@@ -3397,34 +3497,21 @@ const SlideInteractionReset: FC<{
 		return null;
 	}
 
-	const visible = nearHotspot || hovering;
-
 	return (
-		<button
-			type="button"
-			className={[
-				"presentation-interaction-slide-reset",
-				visible ? "presentation-interaction-slide-reset--visible" : undefined,
-			]
-				.filter(Boolean)
-				.join(" ")}
-			title="Reset slide"
-			aria-hidden={!visible}
-			tabIndex={visible ? 0 : -1}
-			onPointerEnter={() => {
-				setHovering(true);
-			}}
-			onPointerLeave={() => {
-				setHovering(false);
-			}}
-			onClick={(event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				interaction.resetSlide(dispositionIds);
-			}}
-		>
-			↺
-		</button>
+		<div ref={hostRef} className="presentation-interaction-slide-reset-host">
+			<button
+				type="button"
+				className="presentation-interaction-slide-reset"
+				title="Reset slide"
+				onClick={(event) => {
+					event.preventDefault();
+					event.stopPropagation();
+					interaction.resetSlide(dispositionIds);
+				}}
+			>
+				↺
+			</button>
+		</div>
 	);
 };
 
@@ -3589,19 +3676,21 @@ const ArrangementSectionSurface: FC<{
 				.filter(Boolean)
 				.join(" ")}
 		>
-			<InteractionLayer marquee={backgroundInteraction.marquee} />
-			<SlideInteractionReset
-				sectionRef={sectionRef}
-				dispositionIds={dispositionIds}
-				declaredRects={declaredRects}
-			/>
-			{positioned ? (
-				<div className="presentation-arrangement-canvas">
-					{placements}
-				</div>
-			) : (
-				placements
-			)}
+			<div className="presentation-arrangement-surface">
+				<InteractionLayer marquee={backgroundInteraction.marquee} />
+				{positioned ? (
+					<div className="presentation-arrangement-canvas">
+						{placements}
+					</div>
+				) : (
+					placements
+				)}
+				<SlideInteractionReset
+					sectionRef={sectionRef}
+					dispositionIds={dispositionIds}
+					declaredRects={declaredRects}
+				/>
+			</div>
 		</section>
 	);
 };
@@ -3961,6 +4050,76 @@ if (import.meta.vitest) {
 			expect(companion?.revealMorphFromFrame).toEqual({ x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
 		});
 
+		it("sets revealMorphToFrame on focus tiles when the next slide morphFrom references them", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "tile" }, { id: "col1" }],
+					embodiments: [
+						{ kind: "figure", id: "tile-figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+						{ kind: "text", id: "label", lines: ["A"], level: "heading" },
+					],
+				},
+			]);
+			const focusPosition = { x: 0.5, y: 0.5, width: 0.2, height: 0.2 };
+			const labelPosition = { x: 0.2, y: 0.3, width: 0.2, height: 0.1 };
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "focus",
+					dispositions: [
+						{
+							participantId: "tile",
+							embodimentId: "tile-figure",
+							emphasis: "active",
+							position: focusPosition,
+						},
+					],
+				},
+				{
+					nextSlide: {
+						arrangement: {
+							id: "labels",
+							dispositions: [
+								{
+									participantId: "col1",
+									embodimentId: "label",
+									emphasis: "active",
+									morphFrom: [
+										{
+											participantId: "tile",
+											embodimentId: "tile-figure",
+											position: labelPosition,
+										},
+									],
+								},
+							],
+						},
+					},
+				},
+			);
+			expect(resolved.find((entry) => entry.participant.id === "tile")?.revealMorphToFrame).toEqual(
+				labelPosition,
+			);
+		});
+
+		it("morphFrameCssVars maps normalized frames to presentation custom properties", () => {
+			expect(
+				morphFrameCssVars(
+					{ x: 0.1, y: 0.2, width: 0.3, height: 0.4 },
+					{ x: 0.5, y: 0.6, width: 0.2, height: 0.1 },
+				),
+			).toEqual({
+				"--presentation-morph-frame-left": "10%",
+				"--presentation-morph-frame-top": "20%",
+				"--presentation-morph-frame-width": "30%",
+				"--presentation-morph-frame-height": "40%",
+				"--presentation-frame-left": "50%",
+				"--presentation-frame-top": "60%",
+				"--presentation-frame-width": "20%",
+				"--presentation-frame-height": "10%",
+			});
+		});
+
 		it("keeps target-ghost morph crop vars on the source frame while resting at the label frame", () => {
 			const crop = { x: 0.8, y: 0.7, width: 0.15, height: 0.2 };
 			const embodiment = { kind: "figure" as const, src: "/catalogue.png", crop };
@@ -4091,6 +4250,9 @@ if (import.meta.vitest) {
 			);
 			expect(globalsCssSource).not.toMatch(
 				/\.presentation-arrangement--interactive\s*\{[^}]*position\s*:\s*relative/s,
+			);
+			expect(globalsCssSource).toMatch(
+				/\.presentation-arrangement-surface\s*\{[^}]*position\s*:\s*absolute/s,
 			);
 		});
 
@@ -4579,6 +4741,18 @@ if (import.meta.vitest) {
 			expect(sheet.innerHTML).toContain("presentation-morph-target-fade-in 0.8s ease forwards !important");
 		});
 
+		it("animates figure crop and target-ghost frames during auto-animate running", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, resolve } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
+			expect(css).toContain("presentation-figure-crop-morph-to-rest");
+			expect(css).toContain("presentation-figure-crop-morph-from-rest");
+			expect(css).toContain("presentation-target-ghost-frame");
+			expect(css).toContain(".presentation-morph-crop-from");
+			expect(css).toContain(".presentation-morph-crop-to");
+		});
+
 		it("rests morph-source ghosts with opacity only so reveal can measure FLIP targets", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
@@ -4954,6 +5128,15 @@ if (import.meta.vitest) {
 	});
 
 	describe("presentation interaction geometry", () => {
+		it("detects disposition ephemeral layout from anchor and transform", () => {
+			const declared = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+			expect(dispositionHasEphemeralLayout(undefined, declared, undefined, false)).toBe(false);
+			expect(dispositionHasEphemeralLayout(declared, declared, undefined, false)).toBe(false);
+			expect(
+				dispositionHasEphemeralLayout({ x: 0.3, y: 0.3, width: 0.4, height: 0.2 }, declared, undefined, false),
+			).toBe(true);
+		});
+
 		it("detects slide ephemeral layout and reset hotspot proximity", () => {
 			const declared = new Map<string, DispositionPosition | undefined>([
 				["a", { x: 0.2, y: 0.3, width: 0.4, height: 0.2 }],
@@ -5092,7 +5275,7 @@ if (import.meta.vitest) {
 					selected: true,
 					effectiveRect: rect,
 					canvasFramed: false,
-					fullscreen: false,
+					enlarged: false,
 				}),
 			).toEqual(transformFrameStyle(rect));
 			expect(
@@ -5100,7 +5283,7 @@ if (import.meta.vitest) {
 					selected: true,
 					effectiveRect: rect,
 					canvasFramed: true,
-					fullscreen: false,
+					enlarged: false,
 				}),
 			).toBeUndefined();
 		});
@@ -5245,7 +5428,7 @@ if (import.meta.vitest) {
 			expect(tight!.width).toBeLessThan(960);
 		});
 
-		it("scales group members and toggles fullscreen", () => {
+		it("scales group members and toggles enlarge", () => {
 			const a = { x: 0.1, y: 0.2, width: 0.2, height: 0.2 };
 			const b = { x: 0.5, y: 0.2, width: 0.2, height: 0.2 };
 			const group = groupBoundingRect([a, b]);
@@ -5253,10 +5436,10 @@ if (import.meta.vitest) {
 			const grown = { x: 0, y: 0.1, width: 0.8, height: 0.3 };
 			const scaledA = scaleRectWithinGroup(a, group!, grown);
 			expect(scaledA.x).toBeCloseTo(0);
-			const full = toggleFullscreenRect(a, undefined);
-			expect(full.rect).toEqual(SLIDE_INTERACTIVE_FULLSCREEN_FRAME);
+			const full = toggleEnlargeRect(a, undefined);
+			expect(full.rect).toEqual(SLIDE_INTERACTIVE_ENLARGE_FRAME);
 			expect(full.stash).toEqual(a);
-			const restored = toggleFullscreenRect(full.rect, full.stash);
+			const restored = toggleEnlargeRect(full.rect, full.stash);
 			expect(restored.rect).toEqual(a);
 		});
 
@@ -5926,7 +6109,7 @@ if (import.meta.vitest) {
 				pointerClick(disposition);
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
-			expect(disposition.querySelector(".presentation-interaction-fullscreen")).toBeTruthy();
+			expect(disposition.querySelector(".presentation-interaction-enlarge")).toBeTruthy();
 			act(() => {
 				pointerClick(layer);
 			});
@@ -6355,7 +6538,7 @@ if (import.meta.vitest) {
 			expect(chromeRect.height).toBeCloseTo(wrapperRect.height, 0);
 		});
 
-		it("toggles slide fullscreen on a canvas-framed disposition", () => {
+		it("toggles enlarge on a canvas-framed disposition", () => {
 			act(() => {
 				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
@@ -6363,27 +6546,27 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerClick(disposition);
 			});
-			const fullscreen = disposition.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
-			expect(fullscreen.getAttribute("aria-pressed")).toBe("false");
+			const enlargeButton = disposition.querySelector(".presentation-interaction-enlarge") as HTMLButtonElement;
+			expect(enlargeButton.getAttribute("aria-pressed")).toBe("false");
 			act(() => {
-				fullscreen.click();
+				enlargeButton.click();
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
-			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
-			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.width * 100}%`);
-			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
-			const fullscreenOn = disposition.querySelector(
-				".presentation-interaction-fullscreen",
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.width * 100}%`);
+			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.height * 100}%`);
+			const enlargeOn = disposition.querySelector(
+				".presentation-interaction-enlarge",
 			) as HTMLButtonElement;
-			expect(fullscreenOn.getAttribute("aria-pressed")).toBe("true");
+			expect(enlargeOn.getAttribute("aria-pressed")).toBe("true");
 			act(() => {
-				fullscreenOn.click();
+				enlargeOn.click();
 			});
-			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(false);
-			const fullscreenOff = disposition.querySelector(
-				".presentation-interaction-fullscreen",
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
+			const enlargeOff = disposition.querySelector(
+				".presentation-interaction-enlarge",
 			) as HTMLButtonElement;
-			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
+			expect(enlargeOff.getAttribute("aria-pressed")).toBe("false");
 		});
 
 		it("resets the whole slide from the proximity control in the top-right corner", () => {
@@ -6402,17 +6585,24 @@ if (import.meta.vitest) {
 				pointerDrag(disposition, 300, 280, 380, 320);
 			});
 			expect(disposition.style.left).not.toBe(originLeft);
-			const slideReset = section.querySelector(
+			const slideResetHost = section.querySelector(
+				".presentation-interaction-slide-reset-host",
+			) as HTMLElement;
+			const slideReset = slideResetHost.querySelector(
 				".presentation-interaction-slide-reset",
 			) as HTMLButtonElement;
-			expect(slideReset).toBeTruthy();
-			expect(slideReset.classList.contains("presentation-interaction-slide-reset--visible")).toBe(false);
+			expect(slideResetHost).toBeTruthy();
+			expect(slideResetHost.classList.contains("presentation-interaction-slide-reset-host--near")).toBe(
+				false,
+			);
 			act(() => {
-				section.dispatchEvent(
+				window.dispatchEvent(
 					new PointerEvent("pointermove", { bubbles: true, clientX: 920, clientY: 20, pointerId: 2 }),
 				);
 			});
-			expect(slideReset.classList.contains("presentation-interaction-slide-reset--visible")).toBe(true);
+			expect(slideResetHost.classList.contains("presentation-interaction-slide-reset-host--near")).toBe(
+				true,
+			);
 			act(() => {
 				slideReset.click();
 			});
@@ -6437,13 +6627,13 @@ if (import.meta.vitest) {
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
 			expect(disposition.style.left).not.toBe(originLeft);
-			expect(disposition.querySelector(".presentation-interaction-fullscreen")).toBeTruthy();
+			expect(disposition.querySelector(".presentation-interaction-enlarge")).toBeTruthy();
 			const reset = disposition.querySelector(".presentation-interaction-reset") as HTMLButtonElement;
 			expect(reset).toBeTruthy();
 			const actions = disposition.querySelector(".presentation-interaction-actions")!;
 			const buttons = [...actions.querySelectorAll("button")];
 			expect(buttons[0]?.classList.contains("presentation-interaction-reset")).toBe(true);
-			expect(buttons[1]?.classList.contains("presentation-interaction-fullscreen")).toBe(true);
+			expect(buttons[1]?.classList.contains("presentation-interaction-enlarge")).toBe(true);
 			act(() => {
 				reset.click();
 			});
@@ -6510,10 +6700,10 @@ if (import.meta.vitest) {
 			expect(Number(page.dataset.scale)).toBeCloseTo(expected ?? 0);
 		});
 
-		it("drops nested pdf frame and uses slide-fullscreen sizing when toggling fullscreen", () => {
+		it("drops nested pdf frame and uses enlarged slide sizing when toggling enlarge", () => {
 			const deck: Presentation = {
-				id: "pdf-fullscreen",
-				name: "Pdf Fullscreen",
+				id: "pdf-enlarge",
+				name: "Pdf Enlarge",
 				chapters: [
 					{
 						id: "main",
@@ -6564,19 +6754,19 @@ if (import.meta.vitest) {
 				pointerClick(disposition);
 			});
 			expect(disposition.querySelector(".presentation-disposition-frame")).toBeTruthy();
-			const fullscreen = disposition.querySelector(
-				".presentation-interaction-fullscreen",
+			const enlargeButton = disposition.querySelector(
+				".presentation-interaction-enlarge",
 			) as HTMLButtonElement;
 			const content = disposition.querySelector(
 				".presentation-interactive-disposition__content",
 			) as HTMLElement;
 			mockClientRect(content, 48, 52, 864, 595);
 			act(() => {
-				fullscreen.click();
+				enlargeButton.click();
 			});
-			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
-			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.width * 100}%`);
-			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.width * 100}%`);
+			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.height * 100}%`);
 			expect(disposition.querySelector(".presentation-disposition-frame")).toBeNull();
 			const pageCanvas = disposition.querySelector(
 				".presentation-media-pdf canvas",
@@ -6585,16 +6775,16 @@ if (import.meta.vitest) {
 				expect(pageCanvas.height).toBeGreaterThan(400);
 			}
 			expect(globalsCssSource).toMatch(
-				/\.presentation-interactive-disposition--kind-pdf\.presentation-interactive-disposition--fullscreen[\s\S]*\.presentation-media-pdf-document[\s\S]*height\s*:\s*100%/s,
+				/\.presentation-interactive-disposition--kind-pdf\.presentation-interactive-disposition--enlarged[\s\S]*\.presentation-media-pdf-document[\s\S]*height\s*:\s*100%/s,
 			);
 		});
 
-		it("toggles slide fullscreen on a cropped figure tile disposition", () => {
+		it("toggles enlarge on a cropped figure tile disposition", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const grid = split({ source: "/catalogue.png", rows: 2, columns: 2, frame, alt: "Catalogue" });
 			const deck: Presentation = {
-				id: "split-fullscreen",
-				name: "Split Fullscreen",
+				id: "split-enlarge",
+				name: "Split Enlarge",
 				chapters: [
 					{
 						id: "main",
@@ -6629,24 +6819,24 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerClick(tile);
 			});
-			const fullscreen = tile.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
+			const enlargeButton = tile.querySelector(".presentation-interaction-enlarge") as HTMLButtonElement;
 			act(() => {
-				fullscreen.click();
+				enlargeButton.click();
 			});
-			expect(tile.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
+			expect(tile.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
 			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
 			expect(tile.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
 			expect(tile.style.position).toBe("absolute");
-			expect(tile.style.width).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.width * 100}%`);
-			expect(tile.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
+			expect(tile.style.width).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.width * 100}%`);
+			expect(tile.style.height).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.height * 100}%`);
 			expect(canvas.contains(tile)).toBe(true);
 			expect(globalsCssSource).toMatch(
-				/\.presentation-interactive-disposition--fullscreen:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-crop-fill[\s\S]*width\s*:\s*100%\s*!important/s,
+				/\.presentation-interactive-disposition--enlarged:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-crop-fill[\s\S]*width\s*:\s*100%\s*!important/s,
 			);
 			act(() => {
-				fullscreen.click();
+				enlargeButton.click();
 			});
-			expect(tile.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(false);
+			expect(tile.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
 			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
 		});
 	});

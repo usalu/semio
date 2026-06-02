@@ -1132,6 +1132,19 @@ export function filterPuzzle2dPlayStructuralDeleteBatch(
 	return out;
 }
 
+/** @emoji 🗑️ Applies a queued structural-delete batch immediately (brush activation must flush before fixture resync). */
+export function flushPuzzle2dPlayStructuralDeleteBatch(
+	batch: readonly Puzzle2dPlayStructuralDeleteItem[],
+	fixture: Puzzle2dFixtureV1,
+	apply: (kind: "edge" | "node", id: string) => void,
+): readonly Puzzle2dPlayStructuralDeleteItem[] {
+	const pending = filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture);
+	for (const item of pending) {
+		apply(item.kind, item.id);
+	}
+	return pending;
+}
+
 /** @emoji 🏷 Details inspector tree section title: singular for one id, plural for many. */
 export function puzzle2dPlayInspectorKindSectionLabel(kind: "edge" | "handle" | "node", count: number): string {
 	if (count === 1) {
@@ -1473,6 +1486,31 @@ if (import.meta.vitest) {
 					fixture,
 				),
 			).toEqual([]);
+		});
+	});
+
+	describe("flushPuzzle2dPlayStructuralDeleteBatch", () => {
+		it("applies filtered edge deletes before brush fixture resync", () => {
+			const fixture: Puzzle2dFixtureV1 = {
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [
+					{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a.h0", angle: 0 }] },
+					{ id: "b", x: 40, y: 0, radius: 10, handles: [{ id: "b.h0", angle: Math.PI }] },
+				],
+				edges: [{ id: "e0", source: "a.h0", target: "b.h0" }],
+			};
+			const applied: Puzzle2dPlayStructuralDeleteItem[] = [];
+			let nextFixture = fixture;
+			const appliedDeletes = flushPuzzle2dPlayStructuralDeleteBatch([{ kind: "edge", id: "e0" }], nextFixture, (kind, id) => {
+				applied.push({ kind, id });
+				if (kind === "edge") {
+					nextFixture = { ...nextFixture, edges: nextFixture.edges.filter((edge) => edge.id !== id) };
+				}
+			});
+			expect(appliedDeletes).toEqual([{ kind: "edge", id: "e0" }]);
+			expect(applied).toEqual([{ kind: "edge", id: "e0" }]);
+			expect(nextFixture.edges).toEqual([]);
 		});
 	});
 

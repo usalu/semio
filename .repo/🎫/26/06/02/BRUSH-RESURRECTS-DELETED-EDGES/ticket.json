@@ -1,0 +1,13 @@
+{
+  "title": "Brush Resurrects Deleted Edges",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Fix: after delete edges + Brush Enter, edges reappear and input breaks. Flush structural delete queue before brush fixture sync.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1519"
+  },
+  "goal": "🎯puzzle🎯2d",
+  "sessions": [
+    "⚪00567a101bbd40e391ece0c18b00d070"
+  ]
+}

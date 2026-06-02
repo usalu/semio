@@ -3063,6 +3063,16 @@ export class Puzzle2dRenderer {
     this.authoritativeStructuralSuppressions.add(`${payload.kind}:${payload.id}`);
   }
 
+  /** @emoji 🔄 Clears structural suppressions for fixture ids so authoritative sync can restore edges (brush slot occupancy). */
+  clearAuthoritativeStructuralSuppressionsForDescriptor(descriptor: Puzzle2dSceneDescriptor): void {
+    for (const node of descriptor.nodes) {
+      this.authoritativeStructuralSuppressions.delete(`node:${node.id}`);
+    }
+    for (const edge of descriptor.edges) {
+      this.authoritativeStructuralSuppressions.delete(`edge:${edge.id}`);
+    }
+  }
+
   /** @emoji 🧹 Strips user-deleted ids from a declarative descriptor before host remember / edge ensure. */
   descriptorWithoutAuthoritativeRemovals(descriptor: Puzzle2dSceneDescriptor): Puzzle2dSceneDescriptor {
     const nodes = descriptor.nodes.filter((node) => !this.isAuthoritativeStructuralRemovalSuppressed("node", node.id));
@@ -3381,6 +3391,8 @@ export class Puzzle2dRenderer {
   private inputInvalidateRafId: number | null = null;
   /** @emoji 🖌️ Replays brush pointer leave/move after {@link Puzzle2dRenderer.wasmSessionCallBlockedForReentry} drops an input event. */
   private pendingBrushWasmFlush: "leave" | "move" | null = null;
+  /** @emoji 🖌️ Deferred {@link Puzzle2dRenderer.setBrushSession} JSON when WASM reentry blocks the mirror push. */
+  private pendingBrushSessionJsonForWasm: string | null = null;
   private lastPushedCameraX = Number.NaN;
   private lastPushedCameraY = Number.NaN;
   private lastPushedCameraZoom = Number.NaN;
@@ -3687,11 +3699,15 @@ export class Puzzle2dRenderer {
     if (json === this.lastBrushSessionJsonForWasm) {
       return;
     }
-    this.lastBrushSessionJsonForWasm = json;
     if (this.wasmSessionCallBlockedForReentry()) {
+      this.pendingBrushSessionJsonForWasm = json;
       this.invalidated = true;
       return;
     }
+    this.pushBrushSessionJsonToWasm(json);
+  }
+
+  private pushBrushSessionJsonToWasm(json: string): void {
     try {
       if (json.length === 0) {
         this.session.clearBrushSessionJson();
@@ -3699,10 +3715,24 @@ export class Puzzle2dRenderer {
         this.session.setBrushSessionJson(json);
       }
       this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.lastBrushSessionJsonForWasm = json;
     } catch (err) {
       console.error("[DEBUG] setBrushSession failed", err);
     }
     this.markDirty();
+  }
+
+  private flushPendingBrushSessionMirror(): void {
+    const pending = this.pendingBrushSessionJsonForWasm;
+    if (pending === null || this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
+    if (pending === this.lastBrushSessionJsonForWasm) {
+      this.pendingBrushSessionJsonForWasm = null;
+      return;
+    }
+    this.pendingBrushSessionJsonForWasm = null;
+    this.pushBrushSessionJsonToWasm(pending);
   }
 
   /** @emoji 📡 Pushes the imperative scene graph to WASM immediately (brush place and structural edits). */
@@ -4459,6 +4489,7 @@ export class Puzzle2dRenderer {
       }
       this.applyCanvasDebugAttributes();
       this.flushPendingBrushWasmInput();
+      this.flushPendingBrushSessionMirror();
     } finally {
       this.renderPipelineDepth -= 1;
       if (this.renderPipelineDepth === 0 && this.invalidated && !this.isDisposed) {
@@ -8195,6 +8226,35 @@ if (puzzle2dVitest) {
       mirror.dispose();
     });
 
+    it("flushPendingBrushSessionMirror applies deferred setBrushSession JSON", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const mirror = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      mirror.setCamera(0, 0, 1);
+      const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+      new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
+      mirror.scene.add(node);
+      mirror.setActiveTool("brush");
+      mirror.setKindCatalogs({
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      });
+      mirror.render();
+      const pendingJson = JSON.stringify({
+        sourceHandleId: "a:h0",
+        candidates: ["brush.kind"],
+        index: 0,
+        preview: {
+          edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 },
+          node: { nodeKind: "brush.kind", radius: 20, shape: "circle", x: 80, y: 0, handles: [{ handleKind: "port", angle: Math.PI }] },
+        },
+      });
+      mirror["pendingBrushSessionJsonForWasm"] = pendingJson;
+      mirror["flushPendingBrushSessionMirror"]();
+      mirror.render();
+      expect(mirror["lastBrushSessionJsonForWasm"]).toBe(pendingJson);
+      mirror.dispose();
+    });
+
     it("brushPlace fires when pointer leaves brush slot", async () => {
       await ensurePuzzle2dWasmLoaded();
       const { canvas } = createMockCanvas();
@@ -9905,8 +9965,6 @@ export function puzzle2dCommitBrushPlacementToPlay(
   });
   if (placed) {
     puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
-  } else {
-    console.warn("[DEBUG] puzzle2dCommitBrushPlacementToPlay unchanged", payload.sourceHandleId, payload.nodeId);
   }
   return placed;
 }
@@ -10070,6 +10128,7 @@ export function puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture: Puzzle
     if (!peer.authoringPeerActive()) {
       continue;
     }
+    peer.clearAuthoritativeStructuralSuppressionsForDescriptor(descriptor);
     for (const edgeId of Array.from(peer.wasmHostAuthoredEdgeIds)) {
       peer.clearWasmHostAuthorshipForEdge(edgeId);
     }
@@ -11529,6 +11588,45 @@ if (puzzle2dReactVitest) {
       expect(peerA.scene.edges.has("edge-ghost")).toBe(false);
       peerA.dispose();
       peerB.dispose();
+    });
+
+    it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers clears edge suppressions so fixture edges reach scene", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [{ id: "edge-real", source: "a:h0", target: "b:h0" }],
+        nodes: [
+          { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
+          { handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, x: 200, y: 0 },
+        ],
+        schema: "puzzle.2d.fixture/v1",
+      });
+      expect(fixture).toBeTruthy();
+      const peer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const jsx = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={40} x={0} y={0}>
+            <Handle handleKind="port" angle={0} id="a:h0" />
+          </Node>
+          <Node id="b" radius={40} x={200} y={0}>
+            <Handle handleKind="port" angle={Math.PI} id="b:h0" />
+          </Node>
+          <Edge id="edge-real" source="a:h0" target="b:h0" />
+        </>,
+      );
+      syncPuzzle2dScene(peer, jsx);
+      peer.pruneHostDeclarativeStructuralDelete({ kind: "edge", id: "edge-real" });
+      peer.runWithoutSceneDeleteEvents(() => {
+        const edge = peer.scene.edges.get("edge-real");
+        if (edge) {
+          peer.scene.remove(edge);
+        }
+      });
+      expect(peer.scene.edges.has("edge-real")).toBe(false);
+      expect(peer.isAuthoritativeStructuralRemovalSuppressed("edge", "edge-real")).toBe(true);
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture!);
+      expect(peer.isAuthoritativeStructuralRemovalSuppressed("edge", "edge-real")).toBe(false);
+      expect(peer.scene.edges.has("edge-real")).toBe(true);
+      peer.dispose();
     });
 
     it("keeps wasm-only link edges after graph drain by re-running JSX merge when children omit Edge markers", async () => {
