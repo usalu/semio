@@ -1122,10 +1122,13 @@ export {
   digestMicroCommitMessage,
   extractCounterFromSubject,
   installMicroCommitGitHooks,
+  parseCachedDiff,
   resetMicroCommitTemplates,
   runMicroCommit,
   shouldRefreshPreparedCommitMessage,
+  summarizeFileChange,
   writeMicroCommitTemplates,
 } from "./micro-commit.ts";
+export type { CachedFileDiff } from "./micro-commit.ts";
 export type { MicroCommitLevel } from "./micro-commit.ts";
 

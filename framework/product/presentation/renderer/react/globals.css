@@ -767,16 +767,15 @@
 
 .reveal .presentation-media-pdf {
 	display: block;
+	flex-shrink: 0;
 	background: #fff;
 	line-height: 0;
-	max-height: 100%;
-	max-width: 100%;
 }
 
 .reveal .presentation-media-pdf canvas {
 	display: block;
-	max-height: 100%;
-	max-width: 100%;
+	width: auto;
+	height: auto;
 }
 
 .reveal .slides section[data-auto-animate] [data-id="goal"] h2 {

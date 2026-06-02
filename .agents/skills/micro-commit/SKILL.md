@@ -25,13 +25,13 @@ Never hand-build the commit message.
 bun ./script.ts setup git
 ```
 
-GitKraken: load `.git/gkcommittemplate.txt` via **WIP** after prepare. Do **not** set `commit.template`. Turn off *Apply this template to commit messages* if the field is read-only.
+GitKraken: line 1 is **Summary**; everything after the blank line is **Description** (click Description below Summary). `prepare` writes `.git/gkcommittemplate.txt` and sets `commit.template`. Reopen the Commit panel or click **WIP** to reload. If Summary is read-only, turn off *Apply this template to commit messages*.
 
 ## Assistant output (mandatory)
 
 | Script result | Your entire reply |
 |---------------|-------------------|
-| exit 0, stdout has text | Copy stdout verbatim (the commit message) |
+| exit 0, stdout has text | Paste stdout **with line breaks preserved** (subject, blank line, body, Signed-off-by each on their own line). Never join into one line. |
 | exit non-zero | Copy stderr verbatim (the error) |
 
 No preamble, no markdown fence, no “done”, no extra lines.

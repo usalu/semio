@@ -715,8 +715,21 @@ export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { r
 	};
 }
 
+/** @emoji 📐 Uniform react-pdf scale so the page covers the disposition frame without distortion. */
+export function pdfCoverScale(
+	containerWidth: number,
+	containerHeight: number,
+	pageWidth: number,
+	pageHeight: number,
+): number | null {
+	if (containerWidth <= 0 || containerHeight <= 0 || pageWidth <= 0 || pageHeight <= 0) {
+		return null;
+	}
+	return Math.max(containerWidth / pageWidth, containerHeight / pageHeight);
+}
+
 /** @emoji 📐 Measures the react-pdf viewport from the disposition frame or slide-fullscreen content box. */
-function usePdfPageSize(
+function usePdfContainerSize(
 	anchorRef: RefObject<HTMLDivElement | null>,
 	position: DispositionPosition | undefined,
 	slideEpoch: number,
@@ -1262,8 +1275,37 @@ function PdfMorphView({
 	const anchorRef = useRef<HTMLDivElement>(null);
 	const slideEpoch = useContext(PresentationSlideEpochContext);
 	const fullscreen = useContext(PresentationDispositionFullscreenContext);
-	const pageSize = usePdfPageSize(anchorRef, position, slideEpoch, fullscreen);
-	const pageHeight = pageSize.height;
+	const containerSize = usePdfContainerSize(anchorRef, position, slideEpoch, fullscreen);
+	const [pageViewport, setPageViewport] = useState<{
+		readonly width: number;
+		readonly height: number;
+	} | null>(null);
+	useEffect(() => {
+		setPageViewport(null);
+	}, [embodiment.page, embodiment.src, slideEpoch]);
+	const onPageLoadSuccess = useCallback(
+		(page: { getViewport: (options: { readonly scale: number }) => { readonly width: number; readonly height: number } }) => {
+			const viewport = page.getViewport({ scale: 1 });
+			setPageViewport({ width: viewport.width, height: viewport.height });
+		},
+		[],
+	);
+	const coverScale = useMemo(() => {
+		if (containerSize.width === undefined || containerSize.height === undefined || pageViewport === null) {
+			return null;
+		}
+		return pdfCoverScale(
+			containerSize.width,
+			containerSize.height,
+			pageViewport.width,
+			pageViewport.height,
+		);
+	}, [containerSize.height, containerSize.width, pageViewport]);
+	const ready =
+		containerSize.width !== undefined &&
+		containerSize.height !== undefined &&
+		containerSize.width > 0 &&
+		containerSize.height > 0;
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<Document
@@ -1272,11 +1314,12 @@ function PdfMorphView({
 				loading={<span className="presentation-media-pdf-loading">…</span>}
 				error={<span className="presentation-media-pdf-error">PDF</span>}
 			>
-				{pageHeight ? (
+				{ready ? (
 					<Page
 						className="presentation-media-pdf"
 						pageNumber={embodiment.page ?? 1}
-						height={pageHeight}
+						scale={coverScale ?? 1}
+						onLoadSuccess={onPageLoadSuccess}
 						renderTextLayer={false}
 						renderAnnotationLayer={false}
 					/>
@@ -2907,7 +2950,7 @@ const InteractiveDisposition: FC<{
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
 		// 👻 Morph-source ghosts must stay on morphFrom label frames, never ephemeral focus tiles.
 		const morphAnchorRect =
-			disposition.revealMorphCompanion !== undefined || revealMorphId
+			disposition.revealMorphCompanion !== undefined
 				? canvasAnchorRect
 				: (canvasLiveTransform ?? canvasAnchorRect);
 		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
@@ -4307,6 +4350,12 @@ if (import.meta.vitest) {
 			expect(css).not.toMatch(
 				/\.presentation-interactive-disposition--kind-figure\.presentation-interactive-disposition--selected[\s\S]*?\.presentation-morph-slot--figure\s*\{[^}]*background-color:\s*var\(--color-primary\)/,
 			);
+		});
+
+		it("computes pdf cover scale from container and page viewport", () => {
+			expect(pdfCoverScale(768, 280, 595, 842)).toBeCloseTo(768 / 595);
+			expect(pdfCoverScale(200, 400, 595, 842)).toBeCloseTo(400 / 842);
+			expect(pdfCoverScale(0, 400, 595, 842)).toBeNull();
 		});
 
 		it("uses uniform cover at rest and during auto-animate morph vars", () => {
@@ -6021,6 +6070,64 @@ if (import.meta.vitest) {
 				".presentation-interaction-fullscreen",
 			) as HTMLButtonElement;
 			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
+		});
+
+		it("scales pdf pages to cover the disposition frame", async () => {
+			const deck: Presentation = {
+				id: "pdf-cover",
+				name: "Pdf Cover",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "media",
+										participants: [{ id: "thesis" }],
+										embodiments: [
+											{ kind: "pdf", id: "thesis--doc", src: "/thesis.pdf", page: 1 },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "media",
+													dispositions: [
+														{
+															participantId: "thesis",
+															embodimentId: "thesis--doc",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector(
+				".presentation-interactive-disposition--kind-pdf",
+			) as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const frame = disposition.querySelector(".presentation-disposition-frame") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(frame, 96, 385, 768, 280);
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			const page = disposition.querySelector(".react-pdf__Page") as HTMLElement;
+			const expected = pdfCoverScale(768, 280, 595, 842);
+			expect(expected).not.toBeNull();
+			expect(Number(page.dataset.scale)).toBeCloseTo(expected ?? 0);
 		});
 
 		it("drops nested pdf frame and uses slide-fullscreen sizing when toggling fullscreen", () => {

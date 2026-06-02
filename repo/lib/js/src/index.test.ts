@@ -173,6 +173,34 @@ describe("micro-commit", () => {
     expect(fresh.nnn).toBe("001");
   });
 
+  test("buildMicroCommitMessage separates GitKraken summary and description", async () => {
+    const { buildMicroCommitMessage } = await import("./micro-commit.ts");
+    const root = process.cwd();
+    const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
+    const msg = buildMicroCommitMessage(root, contributor);
+    const lines = msg.trimEnd().split("\n");
+    expect(lines[0]).toMatch(/🚩\d{3}$/);
+    expect(lines[1]).toBe("");
+    expect(lines.at(-2)).toBe("");
+    expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
+  });
+
+  test("summarizeFileChange uses diff content not generic paths", async () => {
+    const { parseCachedDiff, summarizeFileChange } = await import("./micro-commit.ts");
+    const patch = [
+      "diff --git a/repo/lib/js/src/micro-commit.ts b/repo/lib/js/src/micro-commit.ts",
+      "--- a/repo/lib/js/src/micro-commit.ts",
+      "+++ b/repo/lib/js/src/micro-commit.ts",
+      "@@ -1 +1,3 @@",
+      "+export function parseCachedDiff() {}",
+      "+export function summarizeFileChange() {}",
+    ].join("\n");
+    const diff = parseCachedDiff(patch).get("repo/lib/js/src/micro-commit.ts")!;
+    const summary = summarizeFileChange(diff);
+    expect(summary).toContain("parseCachedDiff");
+    expect(summary).not.toMatch(/^Update /);
+  });
+
   test("shouldRefreshPreparedCommitMessage keeps user edits", async () => {
     const { digestMicroCommitMessage, shouldRefreshPreparedCommitMessage } = await import("./micro-commit.ts");
     const prepared = "line1\nline2\n";
