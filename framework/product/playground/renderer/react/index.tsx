@@ -1827,13 +1827,13 @@ import {
   classifyPuzzle2dIconSelectorMode,
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
-  applyBrushPlacementToFixture,
-  puzzle2dGuardBrushPlacementStructuralDeletes,
   puzzle2dIsBrushPlacementStructuralDeleteGuarded,
   puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
   puzzle2dSyncBrushSessionToAllAuthoringPeers,
-  puzzle2dPushAuthoritativeSceneToAllAuthoringPeers,
+  puzzle2dCommitBrushPlacementToPlay,
   puzzle2dSetBrushPlaceCommitHandler,
+  puzzle2dSubscribeBrushSession,
+  type Puzzle2dBrushSessionSnapshot,
   puzzle2dActiveRenderer,
   DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
@@ -2032,6 +2032,8 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dBrushFlushDistance: (distance: number) => void;
   /** @emoji 🖌️ Pushes brush candidate rows into play window engagement possibles. */
   notifyBrushCandidates: (payload: Puzzle2dBrushCandidatesPayload) => void;
+  /** @emoji 🖌️ Shared brush preview mirrored onto non-driving play windows. */
+  mirroredBrushSession: Puzzle2dBrushSessionSnapshot | null;
   /** @emoji 🖌️ Commits brush placement with structural-delete guards and peer sync. */
   commitBrushPlacement: (payload: Puzzle2dBrushPlacePayload) => void;
   /** @emoji 📶 Per-pane LOD select value (`automatic` or a pinned tier). */
@@ -2515,6 +2517,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     fixture,
     commitBrushPlacement,
     handleCanvasFixtureDrop,
+    mirroredBrushSession,
     resetPuzzle2dRedrawProgressiveEpoch,
   } = usePuzzle2dPlayShell();
   const { camerasByPane, syncBaselineFromViewportCamera } = usePuzzle2dPlayCameras();
@@ -2591,6 +2594,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         contextMenu={showBackgroundMenu ? puzzle2dPlayCanvasBackgroundMenu : undefined}
         fixtureDragDrop
         activeTool={puzzle2dActiveTool}
+        brushSession={puzzle2dActiveTool === "brush" && activePaneId !== paneId ? mirroredBrushSession : null}
         brushFlushDistance={puzzle2dBrushFlushDistance}
         brushNodeSize={DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX}
         gridSnapEnabled={puzzle2dGridSnapEnabled}
@@ -3584,24 +3588,16 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const commitBrushPlacement = reactHostPort.useCallback(
     (payload: Puzzle2dBrushPlacePayload) => {
       guardFixtureAuthoringFromStructuralDeletes(200);
-      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
-      let placed = false;
-      patchFixture((prev) => {
-        const result = applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev));
-        if (result.kind !== "placed") {
-          return prev;
-        }
-        placed = true;
-        puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
-        puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
-        return result.fixture;
+      puzzle2dCommitBrushPlacementToPlay(payload, {
+        catalogsForFixture: puzzle2dFixtureMergedKindCatalogs,
+        patchFixture,
       });
-      if (placed) {
-        puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
-      }
     },
     [guardFixtureAuthoringFromStructuralDeletes, patchFixture],
   );
+
+  const [mirroredBrushSession, setMirroredBrushSession] = reactHostPort.useState<Puzzle2dBrushSessionSnapshot | null>(null);
+  reactHostPort.useEffect(() => puzzle2dSubscribeBrushSession(setMirroredBrushSession), []);
 
   reactHostPort.useEffect(() => {
     puzzle2dSetBrushPlaceCommitHandler(commitBrushPlacement);
@@ -4074,6 +4070,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       puzzle2dBrushFlushDistance,
       setPuzzle2dBrushFlushDistance,
       notifyBrushCandidates,
+      mirroredBrushSession,
       fixture,
       forceLayoutFullIterations,
       forceLayoutGravity,
@@ -4136,6 +4133,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       puzzle2dActiveTool,
       puzzle2dBrushFlushDistance,
       notifyBrushCandidates,
+      mirroredBrushSession,
       puzzle2dLodModeByPane,
       setPuzzle2dLodModeForPane,
       fixture,

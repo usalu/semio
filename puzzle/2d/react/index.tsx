@@ -3704,8 +3704,20 @@ export class Puzzle2dRenderer {
 
   /** @emoji 📡 Pushes the imperative scene graph to WASM immediately (brush place and structural edits). */
   pushAuthoritativeSceneToWasmHost(): void {
+    this.ensureImperativeSceneForWasmPush();
     this.pushAuthoritativeDescriptorToWasmSession();
     this.invalidate();
+  }
+
+  /** @emoji 🧩 Hydrates the imperative scene from the host descriptor when the canvas mounted before fixture sync. */
+  private ensureImperativeSceneForWasmPush(): void {
+    const descriptor = this.hostDeclarativeSceneDescriptor;
+    if (!descriptor || this.scene.nodes.size >= descriptor.nodes.length) {
+      return;
+    }
+    this.resetDeclarativeSceneSyncFingerprint();
+    syncPuzzle2dScene(this, descriptor);
+    puzzle2dEnsureSceneEdgesFromDescriptor(this, descriptor);
   }
 
   /** @emoji 🔗 Mirrors a host {@link Puzzle2dLinkSessionSnapshot} into WASM for cross-surface link preview. */
@@ -4863,6 +4875,7 @@ export class Puzzle2dRenderer {
       this.invalidated = true;
       return;
     }
+    this.ensureImperativeSceneForWasmPush();
     if (this.scene.nodes.size === 0) {
       return;
     }
@@ -8101,6 +8114,46 @@ if (puzzle2dVitest) {
       expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("other")).toBe(false);
     });
 
+    it("brush session mirrors to a second authoring pane", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const { canvas } = createMockCanvas();
+      const driving = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const mirror = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+      new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
+      driving.scene.add(node);
+      mirror.scene.add(node);
+      driving.setActiveTool("brush");
+      mirror.setActiveTool("brush");
+      driving.setBrushFlushDistance(80);
+      mirror.setBrushFlushDistance(80);
+      driving.setBrushNodeSize(40);
+      mirror.setBrushNodeSize(40);
+      driving.setKindCatalogs({
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      });
+      mirror.setKindCatalogs({
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      });
+      driving.render();
+      const handleWorld = computeHandlePosition({ height: 80, radius: 40, shape: "circle", width: 80, x: 0, y: 0 }, 0);
+      const slotWorld = { x: handleWorld.x + (handleWorld.x - 0) * 2, y: handleWorld.y + (handleWorld.y - 0) * 2 };
+      const slotScreen = driving.worldToScreen(slotWorld);
+      canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
+      expect(puzzle2dSharedBrushSessionForTests()?.preview?.node).toBeTruthy();
+      mirror.setBrushSession(puzzle2dSharedBrushSessionForTests());
+      mirror.render();
+      const mirrorHintWithPreview = mirror.session.encodedSceneHint();
+      mirror.setBrushSession(null);
+      mirror.render();
+      const mirrorHintCleared = mirror.session.encodedSceneHint();
+      expect(mirrorHintWithPreview).toBeGreaterThan(mirrorHintCleared);
+      driving.dispose();
+      mirror.dispose();
+    });
+
     it("brushPlace fires when pointer leaves brush slot", async () => {
       await ensurePuzzle2dWasmLoaded();
       const { canvas } = createMockCanvas();
@@ -9338,6 +9391,8 @@ export interface Puzzle2dCanvasProps {
   onLinkTargetRing?: (payload: Puzzle2dLinkTargetRingPayload) => void;
   /** @emoji 🔗 Host-driven link preview for cross-surface gestures (cleared when `source` is empty). */
   linkSession?: Puzzle2dLinkSessionSnapshot | null;
+  /** @emoji 🖌️ Mirrored brush slot preview for non-driving authoring panes (omit on the pane under the pointer). */
+  brushSession?: Puzzle2dBrushSessionSnapshot | null;
   /** @emoji 🖌️ Active viewport tool forwarded to the WASM host. */
   activeTool?: Puzzle2dActiveTool;
   /** @emoji 📐 Brush slot offset along handle outward normal (world units). */
@@ -9761,6 +9816,58 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRende
 const puzzle2dAuthoringPeerRenderers = new Set<Puzzle2dRenderer>();
 let puzzle2dSharedBrushSession: Puzzle2dBrushSessionSnapshot | null = null;
 let puzzle2dBrushPlaceCommitHandler: ((payload: Puzzle2dBrushPlacePayload) => void) | null = null;
+const puzzle2dBrushSessionListeners = new Set<() => void>();
+
+/** @emoji 🧪 Reads the shared brush session (tests only). */
+export function puzzle2dSharedBrushSessionForTests(): Puzzle2dBrushSessionSnapshot | null {
+  return puzzle2dSharedBrushSession;
+}
+
+/** @emoji 🖌️ Subscribes to shared brush session updates (play mirrors Overview / Zoom / Selection). */
+export function puzzle2dSubscribeBrushSession(listener: (snapshot: Puzzle2dBrushSessionSnapshot | null) => void): () => void {
+  const notify = (): void => {
+    listener(puzzle2dSharedBrushSession);
+  };
+  puzzle2dBrushSessionListeners.add(notify);
+  notify();
+  return () => {
+    puzzle2dBrushSessionListeners.delete(notify);
+  };
+}
+
+function puzzle2dNotifyBrushSessionListeners(): void {
+  for (const listener of puzzle2dBrushSessionListeners) {
+    listener();
+  }
+}
+
+/** @emoji 🖌️ Commits a WASM brush placement into the fixture and every authoring pane scene. */
+export function puzzle2dCommitBrushPlacementToPlay(
+  payload: Puzzle2dBrushPlacePayload,
+  options: {
+    readonly catalogsForFixture: (fixture: Puzzle2dFixtureV1) => KindCatalogBundle | undefined;
+    readonly patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
+  },
+): boolean {
+  puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+  let placed = false;
+  options.patchFixture((prev) => {
+    const result = applyBrushPlacementToFixture(prev, payload, options.catalogsForFixture(prev));
+    if (result.kind !== "placed") {
+      return prev;
+    }
+    placed = true;
+    puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
+    puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
+    return result.fixture;
+  });
+  if (placed) {
+    puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
+  } else {
+    console.warn("[DEBUG] puzzle2dCommitBrushPlacementToPlay unchanged", payload.sourceHandleId, payload.nodeId);
+  }
+  return placed;
+}
 
 /** @emoji 🖌️ Registers play (or host) fixture commit for WASM {@link Puzzle2dEventMap.brushPlace} drains. */
 export function puzzle2dSetBrushPlaceCommitHandler(handler: ((payload: Puzzle2dBrushPlacePayload) => void) | null): void {
@@ -9810,6 +9917,7 @@ function puzzle2dUpdateBrushSessionFromSource(
 /** @emoji 🖌️ Mirrors brush slot preview onto every authoring pane except the driving renderer. */
 export function puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot: Puzzle2dBrushSessionSnapshot | null, skip?: Puzzle2dRenderer): void {
   puzzle2dSharedBrushSession = snapshot;
+  puzzle2dNotifyBrushSessionListeners();
   for (const peer of puzzle2dAuthoringPeerRenderers) {
     if (!peer.authoringPeerActive() || peer === skip) {
       continue;
@@ -10282,6 +10390,7 @@ export function Puzzle2dCanvas({
   onLinkCompatibleNodes,
   onLinkTargetRing,
   linkSession,
+  brushSession,
   onNodeChange,
   onNodeCreate,
   onNodeDelete,
@@ -10780,6 +10889,14 @@ export function Puzzle2dCanvas({
     }
     renderer.setLinkSession(linkSession ?? null);
   }, [linkSession]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) {
+      return;
+    }
+    renderer.setBrushSession(brushSession ?? null);
+  }, [brushSession]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
