@@ -16575,18 +16575,24 @@ if (import.meta.vitest) {
     it("Engagement Space with draft calls onSubmit instead of onRepeatLast", async () => {
       const submitted: string[] = [];
       const repeated: string[] = [];
-      render(
-        <Engagement
-          active
-          input={{
-            value: "Box",
-            placeholder: "Command",
-            onSubmit: (value) => submitted.push(value),
-            onRepeatLast: () => repeated.push("last"),
-          }}
-        />,
-      );
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <Engagement
+            active
+            input={{
+              value,
+              placeholder: "Command",
+              onChange: setValue,
+              onSubmit: (draft) => submitted.push(draft),
+              onRepeatLast: () => repeated.push("last"),
+            }}
+          />
+        );
+      };
+      render(<Harness />);
       const field = await screen.findByPlaceholderText("Command");
+      fireEvent.change(field, { target: { value: "box" } });
       fireEvent.keyDown(field, { key: " " });
       expect(submitted).toEqual(["Box"]);
       expect(repeated).toEqual([]);
