@@ -6596,6 +6596,12 @@ function BrushSession(props: {
   const [catalogPreloadUrls, setCatalogPreloadUrls] = reactHostPort.useState<readonly string[]>([]);
   const ui = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
 
+  reactHostPort.useEffect(() => {
+    if (props.brushActive) {
+      reg.cancelAttractionDrag();
+    }
+  }, [props.brushActive, reg]);
+
   const clearBrush = reactHostPort.useCallback(() => {
     if (preloadReconcileTimerRef.current !== null) {
       clearTimeout(preloadReconcileTimerRef.current);
@@ -7059,10 +7065,64 @@ function AttractionThreeBinder() {
   return null;
 }
 
+/** @emoji 🔗 True when attraction drag or indirect-pick references vortices no longer in the scene. */
+export function puzzle3dAttractionSessionIsStale(
+  attractingFullId: string | null,
+  indirectPick: AttractionIndirectPickAwait | null,
+  vortexExists: (fullId: string) => boolean,
+): boolean {
+  if (attractingFullId !== null && !vortexExists(attractingFullId)) {
+    return true;
+  }
+  if (indirectPick !== null && !indirectPick.candidates.some(vortexExists)) {
+    return true;
+  }
+  return false;
+}
+
+/** @emoji 🔗 Cancels attraction drag when deleted objects remove the involved vortices. */
+function AttractionStaleSessionGuard(): null {
+  const reg = useRegistry();
+  const { store } = useObjectState();
+  const structureEpoch = reactHostPort.useSyncExternalStore(
+    (onStoreChange) => store.subscribeStructure(onStoreChange),
+    () => store.getStructureEpoch(),
+    () => store.getStructureEpoch(),
+  );
+  const attractingFullId = reg.attractionDragAttractingFullId;
+  const indirectPick = reg.attractionIndirectPickAwait;
+  reactHostPort.useEffect(() => {
+    if (!attractingFullId && !indirectPick) {
+      return;
+    }
+    const vortexExists = (fullId: string) => reg.getVortexWorld(fullId) !== null;
+    if (puzzle3dAttractionSessionIsStale(attractingFullId, indirectPick, vortexExists)) {
+      reg.cancelAttractionDrag();
+    }
+  }, [attractingFullId, indirectPick, reg, structureEpoch]);
+  return null;
+}
+
 function AttractionWindowBridge() {
   const reg = useRegistry();
   const invalidate = useThree((s) => s.invalidate);
   const attractionBusy = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null;
+  reactHostPort.useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+      if (!reg.attractionDragActive && reg.attractionIndirectPickAwait === null) {
+        return;
+      }
+      event.preventDefault();
+      reg.cancelAttractionDrag();
+      invalidate();
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(window, "keydown", onKeyDown, true);
+    return () => bindings.dispose();
+  }, [invalidate, reg]);
   reactHostPort.useEffect(() => {
     if (!attractionBusy) return;
     const onMove = (e: PointerEvent) => {
@@ -7773,6 +7833,7 @@ function RegistryProvider({
 
   const beginAttractionDragFromVortex = reactHostPort.useCallback(
     (fullId: string, objectId: string, objectKind: string | undefined, vortexKind: string | undefined) => {
+      if (puzzle3dBrushToolActiveRef.current) return;
       if (indirectPickRef.current) return;
       if (blockedVortexFullIds.has(fullId)) return;
       const attractingCtx: AttractionVortexContext = { objectId, objectKind, vortexKind };
@@ -8183,6 +8244,7 @@ function RegistryProvider({
                 <SelectionInvalidateBridge />
                 <BulkSelectionVisualBridge />
                 <SelectionMissBridge />
+                <AttractionStaleSessionGuard />
               </RegistryDragContext.Provider>
             </RegistryHoverContext.Provider>
           </RegistryMarqueeContext.Provider>
@@ -10150,6 +10212,25 @@ if (import.meta.vitest) {
     it("engagementCommandTokenEquals matches Brush after engagement input normalization", () => {
       expect(engagementCommandTokenEquals(normalizeEngagementCommandText("brush"), "Brush")).toBe(true);
       expect(engagementCommandTokenEquals(normalizeEngagementCommandText("select"), "Select")).toBe(true);
+    });
+    it("puzzle3dAttractionSessionIsStale when attracting or indirect-pick vortices are gone", () => {
+      const exists = (id: string) => id === "a:h1" || id === "b:h2";
+      expect(puzzle3dAttractionSessionIsStale("gone:h1", null, exists)).toBe(true);
+      expect(puzzle3dAttractionSessionIsStale("a:h1", null, exists)).toBe(false);
+      expect(
+        puzzle3dAttractionSessionIsStale(
+          "a:h1",
+          { attractingFullId: "a:h1", attractedObjectId: "b", candidates: ["gone:h2"] },
+          exists,
+        ),
+      ).toBe(true);
+      expect(
+        puzzle3dAttractionSessionIsStale(
+          "a:h1",
+          { attractingFullId: "a:h1", attractedObjectId: "b", candidates: ["b:h2"] },
+          exists,
+        ),
+      ).toBe(false);
     });
     it("brushCompatibleCandidates filters by kind compatibility", () => {
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour east" };

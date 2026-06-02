@@ -500,6 +500,7 @@ export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
 	)) {
 		slide.setAttribute("data-auto-animate", "");
 	}
+	clearManyToOneMorphArrangementClass(deckEl);
 	clearRevealAutoAnimateInlineLayout(deckEl);
 	for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
 		delete element.dataset.autoAnimateTarget;
@@ -514,15 +515,51 @@ export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
 	}
 }
 
-/** @emoji ⏳ Swaps split tiles for dormant morph anchors on the outgoing slide when auto-animating to a listed target. */
-export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSlide: HTMLElement): void {
+/** @emoji 🔀 Slide class while auto-animating a `data-settle-before-morph-to` many-to-one run (focus tiles → label ghosts). */
+export const PRESENTATION_MANY_TO_ONE_MORPH_CLASS = "presentation-arrangement--many-to-one-morph";
+
+/** @emoji 🔀 True when `fromSlide` settles into `toSlide` via `data-settle-before-morph-to` (arrangement id on `title`). */
+export function isManyToOneMorphTransition(fromSlide: HTMLElement, toSlide: HTMLElement): boolean {
 	const settleBefore = fromSlide.getAttribute("data-settle-before-morph-to");
 	if (!settleBefore) {
-		return;
+		return false;
 	}
-	const toIds = settleBefore.split(",").filter((id) => id.length > 0);
 	const toId = toSlide.getAttribute("title");
-	if (!toId || !toIds.includes(toId)) {
+	if (!toId) {
+		return false;
+	}
+	return settleBefore.split(",").some((entry) => entry.trim() === toId);
+}
+
+/** @emoji 🧹 Clears {@link PRESENTATION_MANY_TO_ONE_MORPH_CLASS} from all slides in the deck. */
+export function clearManyToOneMorphArrangementClass(deckEl: HTMLElement): void {
+	for (const slide of deckEl.querySelectorAll<HTMLElement>(
+		`section.${PRESENTATION_MANY_TO_ONE_MORPH_CLASS}`,
+	)) {
+		slide.classList.remove(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
+	}
+}
+
+/** @emoji 🔀 Marks the active many-to-one morph run on `fromSlide` and `toSlide` only. */
+export function syncManyToOneMorphArrangementClass(
+	deckEl: HTMLElement,
+	fromSlide: HTMLElement | null,
+	toSlide: HTMLElement | null,
+): void {
+	clearManyToOneMorphArrangementClass(deckEl);
+	if (fromSlide && toSlide && isManyToOneMorphTransition(fromSlide, toSlide)) {
+		fromSlide.classList.add(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
+		toSlide.classList.add(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
+	}
+}
+
+/** @emoji ⏳ Prepares settle + many-to-one frame/crop morph before reveal auto-animate measures FLIP. */
+export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSlide: HTMLElement): void {
+	const deckEl = fromSlide.closest(".reveal");
+	if (deckEl instanceof HTMLElement) {
+		syncManyToOneMorphArrangementClass(deckEl, fromSlide, toSlide);
+	}
+	if (!isManyToOneMorphTransition(fromSlide, toSlide)) {
 		return;
 	}
 	fromSlide.classList.add("presentation-arrangement--settled");
@@ -696,6 +733,21 @@ export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): s
 	visibility: visible !important;
 	animation: presentation-target-ghost-fade-out ${duration} ease forwards !important;
 }
+.reveal .slides section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"] .presentation-target-ghost.presentation-interactive-disposition--canvas-framed {
+	left: var(--presentation-morph-frame-left) !important;
+	top: var(--presentation-morph-frame-top) !important;
+	width: var(--presentation-morph-frame-width) !important;
+	height: var(--presentation-morph-frame-height) !important;
+	transform: none !important;
+	transition: none !important;
+}
+.reveal .slides section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"] .presentation-target-ghost.presentation-interactive-disposition--canvas-framed[data-auto-animate-target] {
+	visibility: visible !important;
+	transform: none !important;
+	transition: none !important;
+	animation: presentation-target-ghost-frame ${duration} ease forwards,
+		presentation-target-ghost-fade-out ${duration} ease forwards !important;
+}
 .reveal .slides section[data-auto-animate="pending"] .presentation-morph-target[data-auto-animate-target] {
 	opacity: 0 !important;
 	visibility: hidden !important;
@@ -709,21 +761,20 @@ export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): s
 .reveal .slides section[data-auto-animate="running"] .presentation-morph-one[data-auto-animate-target] {
 	animation: presentation-morph-one-fade-out ${duration} ease forwards !important;
 }
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-frame-pair[data-auto-animate-target],
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-frame-pair[data-auto-animate-target] {
-	transform: none !important;
-	transition: none !important;
-}
 `;
 }
 
-/** @emoji 🩹 Patches reveal auto-animate sheet: uniform scale, morph ghost opacity 1→0. */
+/** @emoji 🩹 Patches reveal auto-animate sheet: uniform scale (except many-to-one), morph ghost opacity 1→0. */
 export function patchPresentationAutoAnimateStyleSheet(
 	sheet: { innerHTML: string },
 	durationSeconds: number,
+	options?: { readonly manyToOneMorph?: boolean },
 ): void {
-	sheet.innerHTML =
-		patchAutoAnimateUniformScale(sheet.innerHTML) + presentationMorphGhostAutoAnimateCss(durationSeconds);
+	let css = sheet.innerHTML;
+	if (options?.manyToOneMorph !== true) {
+		css = patchAutoAnimateUniformScale(css);
+	}
+	sheet.innerHTML = css + presentationMorphGhostAutoAnimateCss(durationSeconds);
 }
 //#endregion 🔖ArrangementSettled
 
@@ -1200,6 +1251,16 @@ export function figureCropBackgroundVars(
 	};
 }
 
+/** @emoji 👻 Target ghost crop vars: `--presentation-figure-bg-size` = source tile frame, `-morph` = label slot (many-to-one 8→9). */
+export function figureCropBackgroundVarsTargetGhost(
+	embodiment: FigureEmbodiment,
+	crop: DispositionPosition,
+	sourceFrame: DispositionPosition,
+	labelFrame: DispositionPosition,
+): CSSProperties {
+	return figureCropBackgroundVars(embodiment, crop, sourceFrame, labelFrame);
+}
+
 function FigureMorphView({
 	morphId: anchorId,
 	embodiment,
@@ -1255,14 +1316,9 @@ function FigureMorphView({
 					.join(" ")}
 				style={{
 					...frameStyle,
-					...(morphCropFrom && morphFrame ? morphFrameCssVars(morphFrame, position) : {}),
-					...(morphCropTo && morphToFrame ? morphFrameCssVars(position, morphToFrame) : {}),
-					...figureCropBackgroundVars(
-						embodiment,
-						embodiment.crop,
-						position,
-						morphFrame ?? morphToFrame,
-					),
+					...(morphCropFrom && morphFrame
+						? figureCropBackgroundVarsTargetGhost(embodiment, embodiment.crop, morphFrame, position)
+						: figureCropBackgroundVars(embodiment, embodiment.crop, position, morphToFrame)),
 				}}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
@@ -3176,12 +3232,6 @@ const InteractiveDisposition: FC<{
 		interaction.clearTransform(id);
 	};
 
-	const morphFrameFrom = disposition.revealMorphFromFrame ?? disposition.position;
-	const morphFrameTo = disposition.revealMorphToFrame ?? disposition.position;
-	const morphFramePair =
-		morphFrameFrom !== undefined &&
-		morphFrameTo !== undefined &&
-		(disposition.revealMorphFromFrame !== undefined || disposition.revealMorphToFrame !== undefined);
 	const morphCropFrom =
 		disposition.revealMorphCompanion === "target" &&
 		disposition.revealMorphFromFrame !== undefined &&
@@ -3199,7 +3249,6 @@ const InteractiveDisposition: FC<{
 		enlarged ? "presentation-interactive-disposition--enlarged" : undefined,
 		disposition.revealMorphCompanion === "target" ? "presentation-target-ghost" : undefined,
 		disposition.revealMorphCompanion === "source" ? "presentation-source-ghost" : undefined,
-		morphFramePair ? "presentation-morph-frame-pair" : undefined,
 		morphCropFrom ? "presentation-morph-crop-from" : undefined,
 		morphCropTo ? "presentation-morph-crop-to" : undefined,
 		(disposition.morphFrom?.length ?? 0) > 0 ? "presentation-morph-target" : undefined,
@@ -3217,14 +3266,21 @@ const InteractiveDisposition: FC<{
 		// 🔀 The wrapper owns the reveal `data-id` morph anchor; placing it on the live ephemeral
 		// rect (drag/resize) makes reveal.js auto-animate capture the modified frame as the morph
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
-		// 👻 Morph companions keep declared frames; target ghosts also morph frame via `presentation-morph-frame-pair` CSS.
+		// 👻 Morph companions keep declared frames so reveal.js FLIP measures stable geometry.
 		const morphAnchorRect =
 			disposition.revealMorphCompanion !== undefined
 				? canvasAnchorRect
 				: (canvasLiveTransform ?? canvasAnchorRect);
 		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
-		if (morphFramePair && morphFrameFrom && morphFrameTo) {
-			Object.assign(wrapperFrame, morphFrameCssVars(morphFrameFrom, morphFrameTo));
+		if (
+			morphCropFrom &&
+			disposition.revealMorphFromFrame !== undefined &&
+			disposition.position !== undefined
+		) {
+			Object.assign(
+				wrapperFrame,
+				morphFrameCssVars(disposition.revealMorphFromFrame, disposition.position),
+			);
 		}
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
@@ -3810,11 +3866,6 @@ export const PresentationDeck: FC<{
 				finalizeRevealAutoAnimateRestState(deckEl);
 			}
 			prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
-			if (toSlide.getAttribute("title") === "catalogue-labels") {
-				for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-target-ghost")) {
-					void ghost.offsetHeight;
-				}
-			}
 		};
 		const onSlideChanged = (event: Event): void => {
 			relaxHiddenPreflight();
@@ -3862,7 +3913,12 @@ export const PresentationDeck: FC<{
 			if (sheet && typeof sheet.innerHTML === "string") {
 				const durationSeconds =
 					typeof deck.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
-				patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds);
+				patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds, {
+					manyToOneMorph:
+						fromSlide !== undefined &&
+						toSlide !== undefined &&
+						isManyToOneMorphTransition(fromSlide, toSlide),
+				});
 			}
 			scheduleFinalizeAutoAnimateRest();
 		};
@@ -4120,18 +4176,18 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("keeps target-ghost morph crop vars on the source frame while resting at the label frame", () => {
+		it("keeps target-ghost rest crop on the source tile frame and morph crop on the label slot", () => {
 			const crop = { x: 0.8, y: 0.7, width: 0.15, height: 0.2 };
 			const embodiment = { kind: "figure" as const, src: "/catalogue.png", crop };
 			const sourceFrame = { x: 0.77, y: 0.11, width: 0.2, height: 0.78 };
 			const labelFrame = { x: 0.653333, y: 0.44, width: 0.246667, height: 0.12 };
-			const vars = figureCropBackgroundVars(embodiment, crop, labelFrame, sourceFrame);
+			const vars = figureCropBackgroundVarsTargetGhost(embodiment, crop, sourceFrame, labelFrame);
 			const sourceOnly = figureCropBackgroundVars(embodiment, crop, sourceFrame);
 			const labelOnly = figureCropBackgroundVars(embodiment, crop, labelFrame);
-			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBe(
-				sourceOnly["--presentation-figure-bg-size-morph" as keyof typeof sourceOnly],
-			);
 			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe(
+				sourceOnly["--presentation-figure-bg-size" as keyof typeof sourceOnly],
+			);
+			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBe(
 				labelOnly["--presentation-figure-bg-size" as keyof typeof labelOnly],
 			);
 		});
@@ -4741,14 +4797,29 @@ if (import.meta.vitest) {
 			expect(sheet.innerHTML).toContain("presentation-morph-target-fade-in 0.8s ease forwards !important");
 		});
 
-		it("animates figure crop and target-ghost frames during auto-animate running", async () => {
+		it("preserves anisotropic scale() in the auto-animate sheet for many-to-one morph", () => {
+			const sheet = { innerHTML: "transform: scale(0.4, 0.9) !important;" };
+			patchPresentationAutoAnimateStyleSheet(sheet, 0.8, { manyToOneMorph: true });
+			expect(sheet.innerHTML).toContain("scale(0.4, 0.9)");
+			expect(sheet.innerHTML).not.toContain("scale(0.9)");
+			expect(sheet.innerHTML).toContain("presentation-target-ghost-frame 0.8s ease forwards");
+		});
+
+		it("animates figure crop and target-ghost frames only during many-to-one auto-animate", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
-			expect(css).toContain("presentation-figure-crop-morph-to-rest");
 			expect(css).toContain("presentation-figure-crop-morph-from-rest");
-			expect(css).toContain("presentation-target-ghost-frame");
+			expect(
+				css.match(
+					/presentation-morph-crop-from[\s\S]*?presentation-figure-crop-morph-from-rest/,
+				),
+			).toBeTruthy();
+			expect(css).toContain("@keyframes presentation-target-ghost-frame");
+			expect(css).toContain(
+				"section.presentation-arrangement--many-to-one-morph[data-auto-animate=\"running\"]",
+			);
 			expect(css).toContain(".presentation-morph-crop-from");
 			expect(css).toContain(".presentation-morph-crop-to");
 		});
@@ -4847,6 +4918,7 @@ if (import.meta.vitest) {
 			const slide = document.createElement("section");
 			slide.classList.add("present");
 			slide.setAttribute("data-auto-animate", "running");
+			slide.classList.add(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
 			const morphSource = document.createElement("div");
 			morphSource.className = "presentation-target-ghost";
 			morphSource.dataset.autoAnimateTarget = "0";
@@ -4855,6 +4927,7 @@ if (import.meta.vitest) {
 			document.body.appendChild(deckEl);
 			finalizeRevealAutoAnimateRestState(deckEl);
 			expect(slide.getAttribute("data-auto-animate")).toBe("");
+			expect(slide.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(false);
 			expect(morphSource.hasAttribute("data-auto-animate-target")).toBe(false);
 			deckEl.remove();
 		});
@@ -4898,6 +4971,7 @@ if (import.meta.vitest) {
 
 		it("clears settled state when arriving on a slide and prepares it before morph to listed targets", () => {
 			const deckEl = document.createElement("div");
+			deckEl.className = "reveal";
 			const focus = document.createElement("section");
 			focus.setAttribute("title", "catalogue-focus");
 			focus.setAttribute("data-settle-before-morph-to", "catalogue-labels");
@@ -4908,8 +4982,26 @@ if (import.meta.vitest) {
 			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(false);
 			const labels = document.createElement("section");
 			labels.setAttribute("title", "catalogue-labels");
+			deckEl.appendChild(labels);
 			prepareArrangementBeforeAutoAnimate(focus, labels);
 			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(true);
+			expect(focus.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(true);
+			expect(labels.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(true);
+		});
+
+		it("does not mark many-to-one morph for catalogue to focus auto-animate", () => {
+			const deckEl = document.createElement("div");
+			deckEl.className = "reveal";
+			const catalogue = document.createElement("section");
+			catalogue.setAttribute("title", "catalogue");
+			const focus = document.createElement("section");
+			focus.setAttribute("title", "catalogue-focus");
+			focus.setAttribute("data-settle-before-morph-to", "catalogue-labels");
+			deckEl.append(catalogue, focus);
+			expect(isManyToOneMorphTransition(catalogue, focus)).toBe(false);
+			prepareArrangementBeforeAutoAnimate(catalogue, focus);
+			expect(focus.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(false);
+			expect(catalogue.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(false);
 		});
 
 		it("renders expanded source ghosts for one-to-many morphTo", () => {

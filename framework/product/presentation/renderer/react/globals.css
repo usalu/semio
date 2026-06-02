@@ -707,36 +707,36 @@
 
 .reveal
 	.slides
-	section[data-auto-animate="pending"]
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"]
 	.presentation-morph-crop-from.presentation-morph-slot--figure,
 .reveal
 	.slides
-	section[data-auto-animate="pending"]
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"]
 	.presentation-morph-crop-from
 	.presentation-morph-slot--figure {
-	background-size: var(--presentation-figure-bg-size-morph);
-	background-position: var(--presentation-figure-bg-position-morph);
+	background-size: var(--presentation-figure-bg-size);
+	background-position: var(--presentation-figure-bg-position);
 }
 
 .reveal
 	.slides
-	section[data-auto-animate="running"]
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
 	.presentation-morph-crop-from.presentation-morph-slot--figure[data-auto-animate-target],
 .reveal
 	.slides
-	section[data-auto-animate="running"]
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
 	.presentation-morph-crop-from
 	.presentation-morph-slot--figure[data-auto-animate-target] {
-	animation: presentation-figure-crop-morph-to-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
+	animation: presentation-figure-crop-morph-from-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
 }
 
 .reveal
 	.slides
-	section[data-auto-animate="running"]
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
 	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
 .reveal
 	.slides
-	section[data-auto-animate="running"]
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
 	.presentation-morph-crop-to
 	.presentation-morph-slot--figure[data-auto-animate-target] {
 	animation: presentation-figure-crop-morph-from-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
@@ -762,23 +762,6 @@
 		background-size: var(--presentation-figure-bg-size-morph);
 		background-position: var(--presentation-figure-bg-position-morph);
 	}
-}
-
-.reveal
-	.slides
-	section[data-auto-animate="pending"]
-	.presentation-target-ghost.presentation-morph-frame-pair.presentation-interactive-disposition--canvas-framed {
-	left: var(--presentation-morph-frame-left) !important;
-	top: var(--presentation-morph-frame-top) !important;
-	width: var(--presentation-morph-frame-width) !important;
-	height: var(--presentation-morph-frame-height) !important;
-}
-
-.reveal
-	.slides
-	section[data-auto-animate="running"]
-	.presentation-morph-frame-pair.presentation-interactive-disposition--canvas-framed[data-auto-animate-target] {
-	animation: presentation-target-ghost-frame var(--presentation-auto-animate-duration, 1s) ease forwards;
 }
 
 @keyframes presentation-target-ghost-frame {

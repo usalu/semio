@@ -1,12 +1,15 @@
 {
   "title": "Projektetage Focus Label Morph",
   "emoji": "🔀",
-  "status": "open",
+  "status": "closed",
   "description": "Fix slides 8→9 (catalogue-focus → catalogue-labels): many-to-one tile morph via per-tile ghosts with same data-id at label position. reveal.js cannot FLIP visibility:hidden ghosts.",
-  "summary": "Fixed many-to-one aspect snap on catalogue-focus→catalogue-labels (slides 8→9): target ghosts now start at source tile frame/crop and animate to label frame/crop via presentation-morph-frame-pair and morph-crop-from/to CSS; focus tiles get revealMorphToFrame from next-slide morphFrom slots; reveal FLIP transform disabled on frame-pair targets so geometry is driven by CSS. Renderer vitest: 88 passed.",
+  "summary": "Fixed 8→9 size snap: skip patchAutoAnimateUniformScale for many-to-one (preserve scale(sx,sy) for Stütze vertical→horizontal); target ghosts use CSS presentation-target-ghost-frame from source tile rect to label slot with transform:none and combined frame+fade animations; morphFrameCssVars on ghost wrappers at pending. Crop rest=morph source, running animates to label. 90 tests pass.",
   "goal": "🎯presentation",
   "sessions": [
     "⚪0c92cdf33cb042428d8c609a495f5a30",
-    "⚪3800591bd5084899bcb1a50de59f4536"
+    "⚪3800591bd5084899bcb1a50de59f4536",
+    "⚪bf80bdce068844119ce9f6240f305474",
+    "⚪4cef837a86e648dab4910329dc121124",
+    "⚪12f5dbba8bc5418a98e95621de6bf6d4"
   ]
 }
