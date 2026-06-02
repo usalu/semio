@@ -4105,10 +4105,10 @@ if (import.meta.vitest) {
 			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(true);
 		});
 
-		it("marks zero-opacity crop morph slots dormant until the arrangement settles", () => {
+		it("renders expanded source ghosts for one-to-many morphTo", () => {
 			const deck: Presentation = {
-				id: "dormant-crop",
-				name: "Dormant",
+				id: "source-ghost",
+				name: "Source ghost",
 				chapters: [
 					{
 						id: "main",
@@ -4117,12 +4117,13 @@ if (import.meta.vitest) {
 								id: "main",
 								thoughts: [
 									{
-										id: "crop",
-										participants: [{ id: "catalogue-col1" }],
+										id: "split",
+										participants: [{ id: "whole" }, { id: "tile-a" }],
 										embodiments: [
+											{ kind: "figure", id: "whole--figure", src: "/catalogue.png" },
 											{
 												kind: "figure",
-												id: "catalogue-col1--crop",
+												id: "tile-a--figure",
 												src: "/catalogue.png",
 												crop: { x: 0, y: 0, width: 0.5, height: 1 },
 											},
@@ -4130,14 +4131,33 @@ if (import.meta.vitest) {
 										slides: [
 											{
 												arrangement: {
-													id: "focus",
+													id: "whole",
 													dispositions: [
 														{
-															participantId: "catalogue-col1",
-															embodimentId: "catalogue-col1--crop",
+															participantId: "whole",
+															embodimentId: "whole--figure",
 															emphasis: "active",
-															position: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
-															style: { opacity: 0 },
+															position: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 },
+															morphTo: [
+																{
+																	participantId: "tile-a",
+																	position: { x: 0.1, y: 0.1, width: 0.35, height: 0.8 },
+																},
+															],
+														},
+													],
+												},
+												transition: { kind: "morph" },
+											},
+											{
+												arrangement: {
+													id: "tiles",
+													dispositions: [
+														{
+															participantId: "tile-a",
+															embodimentId: "tile-a--figure",
+															emphasis: "active",
+															position: { x: 0.05, y: 0.2, width: 0.4, height: 0.6 },
 														},
 													],
 												},
@@ -4153,9 +4173,12 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--dormant') as HTMLElement | null;
-			expect(slot).toBeTruthy();
-			expect(slot?.classList.contains("presentation-morph-slot--dormant")).toBe(true);
+			const wholeSlide = container.querySelector('section[title="whole"]') as HTMLElement;
+			const sourceGhost = wholeSlide.querySelector(
+				'.presentation-interactive-disposition.presentation-source-ghost[data-id="tile-a"]',
+			);
+			expect(sourceGhost).toBeTruthy();
+			expect(wholeSlide.querySelectorAll(".presentation-morph-one").length).toBe(1);
 		});
 
 		it("renders positioned labels with data-id on the morph slot frame", () => {
@@ -4805,7 +4828,9 @@ if (import.meta.vitest) {
 			) as HTMLImageElement | null;
 			expect(catalogueFigure?.src).toContain("bauteilb");
 			expect(catalogueSlide.querySelectorAll(".presentation-morph-one").length).toBe(1);
-			const sourceGhosts = catalogueSlide.querySelectorAll(".presentation-source-ghost");
+			const sourceGhosts = catalogueSlide.querySelectorAll(
+				".presentation-interactive-disposition.presentation-source-ghost",
+			);
 			expect(sourceGhosts.length).toBe(10);
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			const focusSlots = focusSlide.querySelectorAll(".presentation-morph-slot--figure");
@@ -4881,7 +4906,10 @@ if (import.meta.vitest) {
 			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			expect(catalogueSlide.getAttribute("data-auto-animate-id")).toBe(focusSlide.getAttribute("data-auto-animate-id"));
-			expect(catalogueSlide.querySelectorAll(".presentation-source-ghost").length).toBe(10);
+			expect(
+				catalogueSlide.querySelectorAll(".presentation-interactive-disposition.presentation-source-ghost")
+					.length,
+			).toBe(10);
 			catalogueSlide.setAttribute("data-auto-animate", "pending");
 			const host: AutoAnimateMatcherHost = {
 				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {

@@ -170,7 +170,6 @@ if (import.meta.vitest) {
 			const expanded = expandThoughtSlides(media!);
 			const focusSlide = expanded.find((slide) => slide.id === "catalogue-focus");
 			const labelSlide = expanded.find((slide) => slide.id === "catalogue-labels");
-			expect(focusSlide?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-labels"]);
 			const labelDispositions = labelSlide ? arrangementRestDispositions(labelSlide.arrangement) : [];
 			expect(labelDispositions).toHaveLength(3);
 			expect(labelDispositions.map((disposition) => disposition.participantId)).toEqual([

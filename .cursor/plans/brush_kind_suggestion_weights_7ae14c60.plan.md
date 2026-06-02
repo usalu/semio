@@ -31,7 +31,7 @@ todos:
     status: completed
   - id: build
     content: Rebuild 2D WASM and run puzzle 2D/3D + framework-core test targets; close ticket
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

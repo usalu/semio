@@ -13,19 +13,19 @@ todos:
     status: completed
   - id: renderer-classes-css
     content: "Renderer: rename classes (target-ghost, morph-target) and add source-ghost + morph-one; replace deck-specific section[title=...] and dormant/settle CSS with generic ghost-class + auto-animate-state CSS in globals.css."
-    status: in_progress
+    status: completed
   - id: renderer-logic
     content: "Renderer: update matcher, ghost-anchor detection, presentationMorphGhostAutoAnimateCss, buildInteractiveSlideLayout revealMorphId, declaredDispositionRect, and MorphView/Figure props from morphSource to ghost; pair both morph directions, exclude the one."
-    status: pending
+    status: completed
   - id: deck
     content: "Deck: add spec.ts morphTo helper; convert Bauteilkatalog to declarative morphTo (drop manual opacity-0 tiles); adjust Bauteilarten settle; verify Bauteilbeschriftungen many-to-one."
-    status: pending
+    status: completed
   - id: renderer-tests
     content: "Renderer: update inline vitest + deck assertions to use new ghost classes and the generic one-to-many path instead of catalogue title selectors / dormant slots."
-    status: pending
+    status: completed
   - id: validate
     content: Run core + renderer + deck tests via nx (existing launch.json tasks) and confirm slide 7->8 (one-to-many) and 8->9 (many-to-one) ghost behavior at runtime.
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -10327,7 +10327,7 @@ if (import.meta.vitest) {
         input,
         { objectWeights: { Heavy: 0.95, Light: 0.05 }, vortexWeights: { "vk-heavy": 0.9, "vk-light": 0.1 } },
         catalogs,
-        () => 0,
+        () => 0.99,
       );
       expect(ordered[0]?.objectKindId).toBe("Heavy");
     });
