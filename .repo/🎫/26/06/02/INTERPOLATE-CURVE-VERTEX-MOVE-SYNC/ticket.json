@@ -1,0 +1,10 @@
+{
+  "title": "Interpolate Curve Vertex Move Sync",
+  "emoji": "📈",
+  "status": "open",
+  "description": "When calling interpolate curve after moving a vertex, the curve does not update. Fix live point resolution from snapped vertices during the command and sync nurbs through-curve poles when endpoint vertices move on committed geometry.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪8e867af9a6fe45cda539e2e1f0124bc4"
+  ]
+}

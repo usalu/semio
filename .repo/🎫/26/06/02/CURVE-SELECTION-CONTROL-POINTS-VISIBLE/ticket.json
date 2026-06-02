@@ -1,0 +1,10 @@
+{
+  "title": "Curve Selection Control Points Visible",
+  "emoji": "✨",
+  "status": "open",
+  "description": "When selecting a curve in CAD, control points should be visible in the viewport.",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪9997c82ad48341de9d2b552200d8cb25"
+  ]
+}
