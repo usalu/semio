@@ -297,13 +297,24 @@ export interface WindowEngagement {
   readonly possibleEngagements?: readonly WindowEngagementPossible[];
 }
 
+function engagementCommandDigest(cmd: CommandDescriptor | undefined): string {
+  if (!cmd) return "";
+  return `${cmd.controllerId}\u0005${cmd.command}\u0005${cmd.args === undefined ? "" : JSON.stringify(cmd.args)}`;
+}
+
 /** @emoji 🔑 Stable digest for {@link WindowEngagement} equality (skips redundant shell updates). */
 export function windowEngagementDigest(engagement: WindowEngagement | undefined): string {
   if (!engagement) return "";
-  const options = (engagement.options ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.pressed ? 1 : 0}\u0001${row.disabled ? 1 : 0}`).join("\u0002");
-  const input = engagement.input ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}` : "";
+  const options = (engagement.options ?? [])
+    .map((row) => `${row.id}\u0001${row.label}\u0001${row.pressed ? 1 : 0}\u0001${row.disabled ? 1 : 0}\u0001${engagementCommandDigest(row.command)}`)
+    .join("\u0002");
+  const input = engagement.input
+    ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}\u0001${engagementCommandDigest(engagement.input.onChange)}\u0001${engagementCommandDigest(engagement.input.onSubmit)}\u0001${engagementCommandDigest(engagement.input.onRepeatLast)}\u0001${engagementCommandDigest(engagement.input.onAbort)}`
+    : "";
   const status = (engagement.status ?? []).map((row) => `${row.id}\u0001${row.text}`).join("\u0002");
-  const possibles = (engagement.possibleEngagements ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}`).join("\u0002");
+  const possibles = (engagement.possibleEngagements ?? [])
+    .map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}\u0001${engagementCommandDigest(row.command)}`)
+    .join("\u0002");
   const session = engagement.sessionActive ? "1" : "0";
   return [session, options, input, status, possibles].join("\u0003");
 }

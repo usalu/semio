@@ -2057,17 +2057,18 @@ export function flowDragTransformElement(
 	return slideCoordinateRoot(sectionEl);
 }
 
-/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate on the flow drag target (1:1 with cursor). */
+/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate on the flow drag target. */
 export function flowPointerDeltaToLocal(
-	_transformEl: HTMLElement,
+	transformEl: HTMLElement,
 	startClientX: number,
 	startClientY: number,
 	currentClientX: number,
 	currentClientY: number,
 ): { readonly dx: number; readonly dy: number } {
+	const scale = elementVisualScale(transformEl);
 	return {
-		dx: currentClientX - startClientX,
-		dy: currentClientY - startClientY,
+		dx: (currentClientX - startClientX) / scale,
+		dy: (currentClientY - startClientY) / scale,
 	};
 }
 
@@ -2145,7 +2146,10 @@ export function isFlowPixelOffsetTransform(
 		return false;
 	}
 	if (measured !== undefined) {
-		return true;
+		if (transform.x === 0 && transform.y === 0) {
+			return true;
+		}
+		return !isNormalizedSlideFrame(transform);
 	}
 	if (Math.abs(transform.x) > 1 || Math.abs(transform.y) > 1) {
 		return true;
@@ -2627,18 +2631,25 @@ const InteractiveDisposition: FC<{
 			const startRects = new Map<string, DispositionPosition>();
 			for (const memberId of groupIds) {
 				const memberDeclared = allDeclaredRects.get(memberId);
-				let rect: DispositionPosition | undefined =
-					interaction.getTransform(memberId) ?? memberDeclared;
+				const natural = memberId === id ? initialRect : registry.getRect(memberId);
+				let rect: DispositionPosition | undefined = interaction.getTransform(memberId);
 				if (!rect) {
-					const natural = memberId === id ? initialRect : registry.getRect(memberId);
-					if (natural) {
+					if (flowLayout && natural) {
+						rect = flowDispositionManipulationRect(natural, undefined);
+					} else if (natural) {
 						rect =
 							memberDeclared !== undefined
 								? natural
 								: flowDispositionManipulationRect(natural, undefined);
+					} else {
+						rect = memberDeclared;
 					}
+				} else if (flowLayout && natural) {
+					rect = isFlowPixelOffsetTransform(rect, natural)
+						? rect
+						: flowDispositionManipulationRect(natural, undefined);
 				}
-				if (rect && (memberDeclared !== undefined || isUsableMeasuredRect(rect))) {
+				if (rect && (flowLayout || memberDeclared !== undefined || isUsableMeasuredRect(rect))) {
 					startRects.set(memberId, rect);
 				}
 			}
@@ -2656,7 +2667,7 @@ const InteractiveDisposition: FC<{
 				rootRef.current,
 				contentRef.current,
 			);
-			if (allDeclaredRects.get(id) === undefined) {
+			if (flowLayout) {
 				const root = rootRef.current;
 				if (root && root.offsetWidth > 0 && root.offsetHeight > 0) {
 					setFlowReservePx({ width: root.offsetWidth, height: root.offsetHeight });
@@ -2680,7 +2691,7 @@ const InteractiveDisposition: FC<{
 				const updates = new Map<string, DispositionTransform>();
 				if (mode === "move") {
 					for (const [memberId, rect] of startRects) {
-						if (allDeclaredRects.get(memberId) === undefined) {
+						if (flowLayout) {
 							const { dx, dy } = flowPointerDeltaToLocal(
 								flowTransformEl,
 								startClient.x,
@@ -2754,7 +2765,7 @@ const InteractiveDisposition: FC<{
 			window.addEventListener("pointerup", onUp);
 			window.addEventListener("pointercancel", onUp);
 		},
-		[id, canvasPlacement, allDeclaredRects, interaction, registry, sectionRef],
+		[id, flowLayout, canvasPlacement, allDeclaredRects, interaction, registry, sectionRef],
 	);
 
 	const seedCanvasTransform = useCallback((): DispositionPosition | null => {
@@ -4637,7 +4648,10 @@ if (import.meta.vitest) {
 			const measured = { x: 0.2, y: 0.3, width: 0.25, height: 0.1 };
 			const offset = { x: 96, y: 40, width: 0.25, height: 0.1 };
 			expect(isFlowPixelOffsetTransform(offset, measured)).toBe(true);
-			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.25, height: 0.1 }, measured)).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.25, height: 0.1 }, measured)).toBe(
+				false,
+			);
+			expect(isFlowPixelOffsetTransform({ x: 12, y: -4, width: 0.25, height: 0.1 }, measured)).toBe(true);
 			expect(isFlowPixelOffsetTransform(offset, undefined)).toBe(true);
 			expect(isFlowPixelOffsetTransform({ ...offset, width: 0.3 }, measured)).toBe(false);
 			const section = document.createElement("section");
@@ -4716,14 +4730,43 @@ if (import.meta.vitest) {
 			expect(isFlowPixelOffsetTransform({ x: 0, y: 0, width: 0.25, height: 0.1 }, measured)).toBe(true);
 		});
 
-		it("maps flow pointer delta 1:1 with screen travel", () => {
+		it("maps flow pointer delta through drag target visual scale", () => {
 			const section = document.createElement("section");
 			section.className = "presentation-arrangement--interactive";
 			document.body.appendChild(section);
+			section.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
+			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(section, "offsetHeight", { value: 700, configurable: true });
 			const delta = flowPointerDeltaToLocal(section, 100, 200, 150, 260);
 			document.body.removeChild(section);
-			expect(delta.dx).toBe(50);
-			expect(delta.dy).toBe(60);
+			expect(delta.dx).toBeCloseTo(100);
+			expect(delta.dy).toBeCloseTo(120);
+		});
+
+		it("intro morph title placements have no declared slide frame", () => {
+			const deck = intro({
+				language: "de",
+				title: { full: ["Title"], short: "T" },
+				description: { full: ["D"], short: "d" },
+				goal: ["G"],
+				authors: { lines: [[{ name: "A" }]] },
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni", shortName: "U", suffix: { mark: "x", name: "Chair" } },
+						],
+					],
+				},
+			});
+			const thought = deck.chapters[0]!.sequences[0]!.thoughts[0]!;
+			const renderSlide = expandThoughtSlides(thought)[0]!;
+			const scope = buildResolutionScope([thought]);
+			const resolved = resolveRevealArrangement(scope, renderSlide.arrangement, {});
+			const layout = buildInteractiveSlideLayout(renderSlide.id, resolved, true);
+			expect(layout.placements.every((entry) => entry.sectionRect === undefined)).toBe(true);
 		});
 
 		it("maps flow drag 1:1 when reveal stack layout is tall but drag target is slide-sized", () => {
@@ -4751,14 +4794,17 @@ if (import.meta.vitest) {
 			expect(slideCoordinateRoot(inner)).toBe(inner);
 			const delta = flowPointerDeltaToLocal(content, 100, 200, 120, 220);
 			document.body.removeChild(reveal);
-			expect(delta.dx).toBe(20);
-			expect(delta.dy).toBe(20);
+			expect(delta.dx).toBeCloseTo(40);
+			expect(delta.dy).toBeCloseTo(40);
 		});
 
 		it("does not treat sub-unit flow drag offsets as normalized slide frames", () => {
 			const measured = { x: 0.35, y: 0.4, width: 0.3, height: 0.08 };
-			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 }, measured)).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 12, y: 4, width: 0.3, height: 0.08 }, measured)).toBe(true);
 			expect(isNormalizedSlideFrame({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 })).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 }, measured)).toBe(
+				false,
+			);
 			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 }, undefined)).toBe(
 				false,
 			);

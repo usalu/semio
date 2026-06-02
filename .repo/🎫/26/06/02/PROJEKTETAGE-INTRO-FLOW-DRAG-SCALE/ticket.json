@@ -3,10 +3,11 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix projektetage intro slides 0-6 where dragging text shoots elements out quickly; slide 9 (canvas) works. Root cause likely sectionVisualScale using tall nested reveal stack offsetHeight vs viewport-sized client rect.",
-  "summary": "Fixed intro flow drag shooting text across the screen (root cause: pixel vs fraction confusion).\n\n`isFlowPixelOffsetTransform` treated any offset with |x|,|y| ≤ 1 (except 0,0) as a normalized slide frame. A few pixels of drag (e.g. x=0.5) made `flowSectionFrame` apply `left: 50%` on the wrapper instead of `translate3d` on content — huge jumps.\n\nFix: when measured fractional size is unchanged, x/y are always pixel drag storage. Added `isNormalizedSlideFrame` for the no-measured case. `flowPointerDeltaToLocal` now uses 1:1 screen-pixel deltas.\n\n68 renderer tests pass.",
+  "summary": "Fixed intro slide text drag shooting across the screen (pixel vs fraction).\n\nRoot cause: flow-layout drags store movement in pixels, but `isFlowPixelOffsetTransform` treated small values like `{ x: 0.5, y: 0.2 }` as normalized slide frames. The UI then applied `left: 50%` / `top: 20%` on the wrapper instead of `translate3d`, so a few pixels of drag jumped across the slide.\n\nFix:\n- With measured ink size, pixel offset is true unless the transform is a full normalized frame (`isNormalizedSlideFrame`).\n- Flow slides always use the pixel drag path in `attachPointerGesture` and start from `{0,0}` via `flowDispositionManipulationRect`.\n- Pointer delta uses `elementVisualScale` on the content node for reveal zoom.\n\n76 renderer tests pass.",
   "goal": "🎯presentation",
   "sessions": [
     "⚪b9caca74d18f4d7e83b5afacd69c8df4",
-    "⚪4a6952624ee5411099e4d19122f4fced"
+    "⚪4a6952624ee5411099e4d19122f4fced",
+    "⚪6c561b798c2e4baabb596810be7825c8"
   ]
 }

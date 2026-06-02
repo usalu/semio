@@ -21,6 +21,7 @@ import {
   type UiNode,
   type WindowLayout,
   enforcePlaygroundWindowEngagementInput,
+  windowEngagementsEqual,
 } from "@framework/playground/core";
 import {
   DocumentHistory,
@@ -478,22 +479,6 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
     save: saveTools,
     ...(transferTools.length > 0 ? { transfer: transferTools } : {}),
   };
-}
-
-/** @emoji 🔑 Stable digest for {@link WindowEngagement} equality (skips redundant shell updates). */
-export function windowEngagementDigest(engagement: WindowEngagement | undefined): string {
-  if (!engagement) return "";
-  const options = (engagement.options ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.pressed ? 1 : 0}\u0001${row.disabled ? 1 : 0}`).join("\u0002");
-  const input = engagement.input ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}` : "";
-  const status = (engagement.status ?? []).map((row) => `${row.id}\u0001${row.text}`).join("\u0002");
-  const possibles = (engagement.possibleEngagements ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}`).join("\u0002");
-  const session = engagement.sessionActive ? "1" : "0";
-  return [session, options, input, status, possibles].join("\u0003");
-}
-
-/** @emoji ⚖️ Returns whether two neutral engagement snapshots are equivalent for shell sync. */
-export function windowEngagementsEqual(left: WindowEngagement | undefined, right: WindowEngagement | undefined): boolean {
-  return windowEngagementDigest(left) === windowEngagementDigest(right);
 }
 
 /** @emoji 💬 Mirrors a live ui {@link EngagementSpec} into a React-neutral {@link WindowEngagement} whose option/input commands route back through the host bridge to the InteractionRepl callbacks. */
@@ -2341,19 +2326,38 @@ if (import.meta.vitest) {
   });
 
   describe("windowEngagementsEqual", () => {
-    it("treats engagement snapshots with the same visible fields as equal", () => {
+    it("treats engagement snapshots with the same visible fields and commands as equal", () => {
+      const command = { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } };
       const left: WindowEngagement = {
         input: { id: "engagement-input", value: "box", placeholder: "Command" },
         status: [{ id: "engagement-step", text: "Step: Idle" }],
-        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b" }],
+        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command }],
       };
       const right: WindowEngagement = {
         input: { id: "engagement-input", value: "box", placeholder: "Command" },
         status: [{ id: "engagement-step", text: "Step: Idle" }],
-        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } } }],
+        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command }],
       };
       expect(windowEngagementsEqual(left, right)).toBe(true);
-      expect(windowEngagementDigest(left)).toBe(windowEngagementDigest(right));
+    });
+
+    it("differs when suggestion routing commands are added", () => {
+      const left: WindowEngagement = {
+        input: { id: "engagement-input", value: "box", placeholder: "Command" },
+        possibleEngagements: [{ id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e" }],
+      };
+      const right: WindowEngagement = {
+        input: { id: "engagement-input", value: "box", placeholder: "Command" },
+        possibleEngagements: [
+          {
+            id: "surface.extrudeCrv",
+            label: "ExtrudeCrv",
+            detail: "e",
+            command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "surface.extrudeCrv" } },
+          },
+        ],
+      };
+      expect(windowEngagementsEqual(left, right)).toBe(false);
     });
   });
 
@@ -2402,13 +2406,41 @@ if (import.meta.vitest) {
       let generation = runtime.generation;
       const engagement: WindowEngagement = {
         input: { id: "engagement-input", value: "", placeholder: "Command" },
-        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b" }],
+        possibleEngagements: [
+          {
+            id: "primitive.box",
+            label: "Box",
+            detail: "b",
+            command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } },
+          },
+        ],
       };
       controller.setPaneEngagement("shape", engagement);
       const afterFirst = runtime.generation;
-      controller.setPaneEngagement("shape", { ...engagement, possibleEngagements: [{ ...engagement.possibleEngagements![0]!, command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } } }] });
+      controller.setPaneEngagement("shape", { ...engagement, input: { ...engagement.input!, value: "" } });
       expect(runtime.generation).toBe(afterFirst);
       expect(afterFirst).toBeGreaterThan(generation);
+    });
+
+    it("notifies shell when mirrored engagement gains suggestion routing commands", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      const engagement: WindowEngagement = {
+        input: { id: "engagement-input", value: "Ex", placeholder: "Command" },
+        possibleEngagements: [{ id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e" }],
+      };
+      controller.setPaneEngagement("shape", engagement);
+      const afterFirst = runtime.generation;
+      controller.setPaneEngagement("shape", {
+        ...engagement,
+        possibleEngagements: [
+          {
+            ...engagement.possibleEngagements![0]!,
+            command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "surface.extrudeCrv" } },
+          },
+        ],
+      });
+      expect(runtime.generation).toBeGreaterThan(afterFirst);
     });
 
     it("attaches engagement per pane and routes pane-scoped engagement commands to the host bridge", () => {
