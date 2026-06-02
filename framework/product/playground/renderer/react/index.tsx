@@ -2590,7 +2590,6 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         fixtureDragDrop
         activeTool={puzzle2dActiveTool}
         brushFlushDistance={puzzle2dBrushFlushDistance}
-        onBrushPlace={commitBrushPlacement}
         brushNodeSize={DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX}
         gridSnapEnabled={puzzle2dGridSnapEnabled}
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}

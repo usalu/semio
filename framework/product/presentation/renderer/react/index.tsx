@@ -237,6 +237,16 @@ function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, 
 	return map;
 }
 
+function dispositionByParticipant(arrangement: Arrangement): Map<string, Disposition> {
+	const map = new Map<string, Disposition>();
+	for (const disposition of arrangement.dispositions) {
+		if (!map.has(disposition.participantId)) {
+			map.set(disposition.participantId, disposition);
+		}
+	}
+	return map;
+}
+
 function revealMorphCompanionFromMorphFrom(
 	scope: ReturnType<typeof buildResolutionScope>,
 	sourceSlide: Slide,
@@ -267,6 +277,41 @@ function revealMorphCompanionFromMorphFrom(
 				morphId: morphId(participant.id),
 				position: slot.position,
 				revealMorphCompanion: "target",
+			});
+		}
+	}
+	return companions;
+}
+
+/** @emoji 👻 Outgoing source companions when the next slide morphFrom references participants on this slide. */
+function revealMorphCompanionFromNextSlideMorphFrom(
+	scope: ReturnType<typeof buildResolutionScope>,
+	nextSlide: Slide,
+	arrangement: Arrangement,
+): RevealResolvedDisposition[] {
+	const currentByParticipant = dispositionByParticipant(arrangement);
+	const companions: RevealResolvedDisposition[] = [];
+	for (const disposition of nextSlide.arrangement.dispositions) {
+		for (const slot of disposition.morphFrom ?? []) {
+			const sourceDisposition = currentByParticipant.get(slot.participantId);
+			if (!sourceDisposition?.position) {
+				continue;
+			}
+			const participant = scope.participants.get(slot.participantId);
+			if (!participant) {
+				throw new Error(
+					`morphFrom on "${nextSlide.arrangement.id}" references unknown participant "${slot.participantId}".`,
+				);
+			}
+			const embodimentId = slot.embodimentId ?? sourceDisposition.embodimentId;
+			companions.push({
+				participant,
+				embodiment: resolveEmbodiment(scope, embodimentId),
+				emphasis: sourceDisposition.emphasis,
+				embodimentId,
+				morphId: morphId(participant.id),
+				position: sourceDisposition.position,
+				revealMorphCompanion: "source",
 			});
 		}
 	}
@@ -319,6 +364,7 @@ export function resolveRevealArrangement(
 		companions.push(...revealMorphCompanionFromMorphFrom(scope, context.previousSlide, arrangement));
 	}
 	if (context.nextSlide !== undefined) {
+		companions.push(...revealMorphCompanionFromNextSlideMorphFrom(scope, context.nextSlide, arrangement));
 		companions.push(...revealMorphCompanionFromMorphTo(scope, context.nextSlide, arrangement));
 	}
 	return [...resolved, ...companions];
@@ -1526,6 +1572,11 @@ export function buildInteractiveSlideLayout(
 	resolved: readonly RevealResolvedDisposition[],
 	morph = false,
 ): InteractiveSlideLayout {
+	const outgoingSourceMorphIds = new Set(
+		resolved
+			.filter((disposition) => disposition.revealMorphCompanion === "source")
+			.map((disposition) => disposition.morphId),
+	);
 	const placements: InteractiveDispositionPlacement[] = [];
 	resolved.forEach((disposition, dispositionIndex) => {
 		const declaredRect = declaredDispositionRect(disposition);
@@ -1538,9 +1589,11 @@ export function buildInteractiveSlideLayout(
 				morph && declaredRect !== undefined
 					? disposition.revealMorphCompanion !== undefined
 						? disposition.morphId
-						: disposition.morphFrom?.length
+						: outgoingSourceMorphIds.has(disposition.morphId)
 							? undefined
-							: disposition.morphId
+							: disposition.morphFrom?.length
+								? undefined
+								: disposition.morphId
 					: undefined,
 		});
 	});
@@ -3626,6 +3679,61 @@ if (import.meta.vitest) {
 			expect(companion?.position).toEqual({ x: 0.2, y: 0.3, width: 0.2, height: 0.1 });
 		});
 
+		it("appends source companions on the outgoing slide when the next slide morphFrom references its tiles", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "col1" }, { id: "tile" }],
+					embodiments: [
+						{ kind: "text", id: "label", lines: ["A"], level: "heading" },
+						{ kind: "figure", id: "tile-figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					],
+				},
+			]);
+			const nextSlide: Slide = {
+				arrangement: {
+					id: "labels",
+					dispositions: [
+						{
+							participantId: "col1",
+							embodimentId: "label",
+							emphasis: "active",
+							morphFrom: [
+								{
+									participantId: "tile",
+									embodimentId: "tile-figure",
+									position: { x: 0.2, y: 0.3, width: 0.2, height: 0.1 },
+								},
+							],
+						},
+					],
+				},
+			};
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "focus",
+					dispositions: [
+						{
+							participantId: "tile",
+							embodimentId: "tile-figure",
+							emphasis: "active",
+							position: { x: 0.5, y: 0.5, width: 0.2, height: 0.2 },
+						},
+					],
+				},
+				{ nextSlide },
+			);
+			expect(resolved).toHaveLength(2);
+			const tile = resolved.find((entry) => entry.participant.id === "tile" && entry.revealMorphCompanion === undefined);
+			const source = resolved.find((entry) => entry.revealMorphCompanion === "source");
+			expect(tile?.position).toEqual({ x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
+			expect(source?.position).toEqual(tile?.position);
+			expect(source?.morphId).toBe("tile");
+			const layout = buildInteractiveSlideLayout("focus", resolved, true);
+			expect(layout.placements.find((entry) => entry.disposition === tile)?.revealMorphId).toBeUndefined();
+			expect(layout.placements.find((entry) => entry.disposition === source)?.revealMorphId).toBe("tile");
+		});
+
 		it("appends source companions for morphTo on the whole slide", () => {
 			const scope = buildResolutionScope([
 				{
@@ -5070,6 +5178,7 @@ if (import.meta.vitest) {
 					pairs.some(
 						(pair) =>
 							pair.from.getAttribute("data-id") === id &&
+							elementIsSourceGhostAnchor(pair.from) &&
 							elementIsTargetGhostAnchor(pair.to),
 					),
 				).length,
@@ -5085,7 +5194,7 @@ if (import.meta.vitest) {
 			expect(labelSlide.querySelectorAll(".presentation-target-ghost").length).toBeGreaterThanOrEqual(8);
 			const labelSlot = inlineColumnLabelPosition(2);
 			const focusStuetze = focusSlide.querySelector(
-				'[data-disposition-id^="catalogue-focus--Stütze"]',
+				'[data-disposition-id^="catalogue-focus--Stütze"].presentation-source-ghost',
 			) as HTMLElement | null;
 			const labelGhost = labelSlide.querySelector(
 				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-target-ghost',
@@ -5263,9 +5372,12 @@ if (import.meta.vitest) {
 			await new Promise((resolve) => setTimeout(resolve, 100));
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			const labelSlide = mountRoot.querySelector('section[title="catalogue-labels"]') as HTMLElement;
+			expect(
+				focusSlide.querySelectorAll(".presentation-interactive-disposition.presentation-source-ghost").length,
+			).toBeGreaterThanOrEqual(8);
 			const labelSlot = inlineColumnLabelPosition(2);
 			const focusStuetze = focusSlide.querySelector(
-				'[data-disposition-id^="catalogue-focus--Stütze"]',
+				'[data-disposition-id^="catalogue-focus--Stütze"].presentation-source-ghost',
 			) as HTMLElement | null;
 			const labelGhost = labelSlide.querySelector(
 				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-target-ghost',

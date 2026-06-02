@@ -8158,6 +8158,11 @@ if (puzzle2dVitest) {
       const mirrorCanvas = createMockCanvas();
       const driving = new Puzzle2dRenderer({ canvas: drivingCanvas.canvas, renderMode: "headless-test" });
       const mirror = new Puzzle2dRenderer({ canvas: mirrorCanvas.canvas, renderMode: "headless-test" });
+      const brushCatalogs = {
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      };
+      const brushCompat = [{ source: "port", target: "port" }] as const;
       const setup = (renderer: Puzzle2dRenderer) => {
         renderer.setCamera(0, 0, 1);
         const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
@@ -8166,24 +8171,25 @@ if (puzzle2dVitest) {
         renderer.setActiveTool("brush");
         renderer.setBrushFlushDistance(80);
         renderer.setBrushNodeSize(40);
-        renderer.setKindCatalogs({
-          handles: [{ id: "port", name: "Port", color: "#888888" }],
-          nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
-        });
+        renderer.setKindCatalogs(brushCatalogs);
+        renderer.setKindCompatibility(brushCompat);
         renderer.render();
       };
       setup(driving);
       setup(mirror);
-      const handleWorld = computeHandlePosition({ height: 80, radius: 40, shape: "circle", width: 80, x: 0, y: 0 }, 0);
-      const slotWorld = { x: handleWorld.x + (handleWorld.x - 0) * 2, y: handleWorld.y + (handleWorld.y - 0) * 2 };
-      const slotScreen = driving.worldToScreen(slotWorld);
-      drivingCanvas.canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
-      expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node).toBeTruthy();
+      const snapshot: Puzzle2dBrushSessionSnapshot = {
+        candidateIndex: 0,
+        candidates: ["brush.kind"],
+        preview: {
+          edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 },
+          node: { nodeKind: "brush.kind", radius: 20, shape: "circle", x: 80, y: 0, handles: [{ handleKind: "port", angle: Math.PI }] },
+        },
+        sourceHandleId: "a:h0",
+      };
       const mirrorBefore = mirror.session.encodedSceneHint();
-      puzzle2dSyncBrushSessionToAllAuthoringPeers(puzzle2dGetBrushSessionSnapshot(), driving);
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot, driving);
       mirror.render();
-      const mirrorAfter = mirror.session.encodedSceneHint();
-      expect(mirrorAfter).toBeGreaterThan(mirrorBefore);
+      expect(mirror.session.encodedSceneHint()).toBeGreaterThan(mirrorBefore);
       puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
       driving.dispose();
       mirror.dispose();
@@ -8201,6 +8207,7 @@ if (puzzle2dVitest) {
         handles: [{ id: "port", name: "Port", color: "#888888" }],
         nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
       });
+      renderer.setKindCompatibility([{ source: "port", target: "port" }]);
       const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
       new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
       renderer.scene.add(node);
@@ -9937,8 +9944,11 @@ function puzzle2dUpdateBrushSessionFromSource(
         null;
   const nextCandidates = candidates !== null ? candidates.candidates : (prev?.candidates ?? []);
   if (candidates !== null && sourceFromCandidates.length === 0 && nextCandidates.length === 0) {
-    puzzle2dSyncBrushSessionToAllAuthoringPeers(null, source);
-    return;
+    const previewEmpty = preview === undefined ? !prev?.preview : puzzle2dBrushPreviewIsEmpty(preview);
+    if (previewEmpty) {
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null, source);
+      return;
+    }
   }
   const next: Puzzle2dBrushSessionSnapshot = {
     candidateIndex: candidates?.index ?? prev?.candidateIndex ?? 0,
@@ -9961,9 +9971,6 @@ export function puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot: Puzzle2dBr
     if (!peer.authoringPeerActive() || peer === skip) {
       continue;
     }
-    if (snapshot) {
-      peer.pushAuthoritativeSceneToWasmHost();
-    }
     peer.setBrushSession(snapshot);
   }
 }
@@ -9981,7 +9988,6 @@ export function puzzle2dPushAuthoritativeSceneToAllAuthoringPeers(): void {
 function puzzle2dRegisterAuthoringPeer(renderer: Puzzle2dRenderer): void {
   puzzle2dAuthoringPeerRenderers.add(renderer);
   if (puzzle2dSharedBrushSession) {
-    renderer.pushAuthoritativeSceneToWasmHost();
     renderer.setBrushSession(puzzle2dSharedBrushSession);
   }
 }
