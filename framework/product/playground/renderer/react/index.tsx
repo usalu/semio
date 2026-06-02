@@ -1803,6 +1803,7 @@ import {
   buildPuzzle2dPlaySelectionDeclarativeBody,
   buildPuzzle2dPlayRuntime,
   filterPuzzle2dPlayStructuralDeleteBatch,
+  puzzle2dPlayForwardsCanvasStructuralDelete,
   puzzle2dPlayRehydrateFixtureEdgesIfMissing,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
@@ -2552,7 +2553,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   }, []);
   const onCanvasDelete = reactHostPort.useCallback(
     (payload: Puzzle2dStructureDeletePayload) => {
-      if (!acceptCanvasStructuralDeleteRef.current || payload.kind === "wire" || payload.kind === "edge") {
+      if (!puzzle2dPlayForwardsCanvasStructuralDelete(payload.kind, acceptCanvasStructuralDeleteRef.current)) {
         return;
       }
       queueStructuralDelete(payload.kind, payload.id);

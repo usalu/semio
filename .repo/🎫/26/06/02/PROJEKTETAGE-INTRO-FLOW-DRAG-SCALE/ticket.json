@@ -3,9 +3,10 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix projektetage intro slides 0-6 where dragging text shoots elements out quickly; slide 9 (canvas) works. Root cause likely sectionVisualScale using tall nested reveal stack offsetHeight vs viewport-sized client rect.",
-  "summary": "Fixed hypersensitive text drag on projektetage intro slides 0–6.\n\nRoot cause: `sectionVisualScale` compared visible slide bounds from `slideLayoutBounds` against `slideCoordinateRoot` layout size. On nested reveal.js vertical stacks, the coordinate root is the full stack (offsetHeight ≈ N× slide height) while client bounds stay one viewport tall, so scale was far too small and `flowPointerDeltaToLocal` amplified pointer movement.\n\nFix: when layout exceeds slide bounds, use CSS slide dimensions as layout reference. Added regression test for nested stack with 4900px layout vs 700px slide.\n\nFiles: `framework/product/presentation/renderer/react/index.tsx`",
+  "summary": "Fixed intro flow drag shooting text across the screen (root cause: pixel vs fraction confusion).\n\n`isFlowPixelOffsetTransform` treated any offset with |x|,|y| ≤ 1 (except 0,0) as a normalized slide frame. A few pixels of drag (e.g. x=0.5) made `flowSectionFrame` apply `left: 50%` on the wrapper instead of `translate3d` on content — huge jumps.\n\nFix: when measured fractional size is unchanged, x/y are always pixel drag storage. Added `isNormalizedSlideFrame` for the no-measured case. `flowPointerDeltaToLocal` now uses 1:1 screen-pixel deltas.\n\n68 renderer tests pass.",
   "goal": "🎯presentation",
   "sessions": [
-    "⚪b9caca74d18f4d7e83b5afacd69c8df4"
+    "⚪b9caca74d18f4d7e83b5afacd69c8df4",
+    "⚪4a6952624ee5411099e4d19122f4fced"
   ]
 }

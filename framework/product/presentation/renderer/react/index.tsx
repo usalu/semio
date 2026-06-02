@@ -1779,18 +1779,17 @@ export function flowDragTransformElement(
 	return slideCoordinateRoot(sectionEl);
 }
 
-/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate on the flow drag target. */
+/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate on the flow drag target (1:1 with cursor). */
 export function flowPointerDeltaToLocal(
-	transformEl: HTMLElement,
+	_transformEl: HTMLElement,
 	startClientX: number,
 	startClientY: number,
 	currentClientX: number,
 	currentClientY: number,
 ): { readonly dx: number; readonly dy: number } {
-	const scale = elementVisualScale(transformEl);
 	return {
-		dx: (currentClientX - startClientX) / scale,
-		dy: (currentClientY - startClientY) / scale,
+		dx: currentClientX - startClientX,
+		dy: currentClientY - startClientY,
 	};
 }
 
@@ -1836,6 +1835,22 @@ export function flowDispositionManipulationRect(
 	return { x: 0, y: 0, width: measured.width, height: measured.height };
 }
 
+/** @emoji 📐 True when x/y/width/height are a normalized slide-space frame (not pixel drag storage). */
+export function isNormalizedSlideFrame(transform: DispositionPosition): boolean {
+	return (
+		transform.x >= 0 &&
+		transform.x <= 1 &&
+		transform.y >= 0 &&
+		transform.y <= 1 &&
+		transform.width > 0 &&
+		transform.width <= 1 &&
+		transform.height > 0 &&
+		transform.height <= 1 &&
+		transform.x + transform.width <= 1 + 1e-6 &&
+		transform.y + transform.height <= 1 + 1e-6
+	);
+}
+
 /** @emoji ↔️ True when a flow transform only stores pixel translate with unchanged measured size. */
 export function isFlowPixelOffsetTransform(
 	transform: DispositionPosition,
@@ -1851,10 +1866,16 @@ export function isFlowPixelOffsetTransform(
 	if (!sizeMatches) {
 		return false;
 	}
+	if (measured !== undefined) {
+		return true;
+	}
 	if (Math.abs(transform.x) > 1 || Math.abs(transform.y) > 1) {
 		return true;
 	}
-	return transform.x === 0 && transform.y === 0;
+	if (transform.x === 0 && transform.y === 0) {
+		return true;
+	}
+	return !isNormalizedSlideFrame(transform);
 }
 
 /** @emoji 🔍 Uniform scale for pinned resize so ink zooms inside the frame without reflow overflow. */
@@ -1901,8 +1922,9 @@ export function flowPixelOffsetToSectionRect(
 	sectionEl: HTMLElement,
 	transformEl?: HTMLElement,
 ): DispositionPosition {
-	const scale = elementVisualScale(transformEl ?? flowDragTransformElement(sectionEl, null, null));
+	const el = transformEl ?? flowDragTransformElement(sectionEl, null, null);
 	const layout = slideLayoutBounds(sectionEl);
+	const scale = elementVisualScale(el);
 	const w = layout.width / scale;
 	const h = layout.height / scale;
 	return {
@@ -4163,6 +4185,7 @@ if (import.meta.vitest) {
 			const measured = { x: 0.2, y: 0.3, width: 0.25, height: 0.1 };
 			const offset = { x: 96, y: 40, width: 0.25, height: 0.1 };
 			expect(isFlowPixelOffsetTransform(offset, measured)).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.25, height: 0.1 }, measured)).toBe(true);
 			expect(isFlowPixelOffsetTransform(offset, undefined)).toBe(true);
 			expect(isFlowPixelOffsetTransform({ ...offset, width: 0.3 }, measured)).toBe(false);
 			const section = document.createElement("section");
@@ -4241,20 +4264,14 @@ if (import.meta.vitest) {
 			expect(isFlowPixelOffsetTransform({ x: 0, y: 0, width: 0.25, height: 0.1 }, measured)).toBe(true);
 		});
 
-		it("converts screen pointer delta through element visual scale", () => {
+		it("maps flow pointer delta 1:1 with screen travel", () => {
 			const section = document.createElement("section");
 			section.className = "presentation-arrangement--interactive";
-			section.style.width = "960px";
-			section.style.height = "700px";
 			document.body.appendChild(section);
-			section.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
-			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
-			Object.defineProperty(section, "offsetHeight", { value: 700, configurable: true });
-			expect(elementVisualScale(section)).toBeCloseTo(0.5);
 			const delta = flowPointerDeltaToLocal(section, 100, 200, 150, 260);
 			document.body.removeChild(section);
-			expect(delta.dx).toBeCloseTo(100);
-			expect(delta.dy).toBeCloseTo(120);
+			expect(delta.dx).toBe(50);
+			expect(delta.dy).toBe(60);
 		});
 
 		it("maps flow drag 1:1 when reveal stack layout is tall but drag target is slide-sized", () => {
@@ -4280,11 +4297,19 @@ if (import.meta.vitest) {
 			stack.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
 			content.getBoundingClientRect = () => new DOMRect(0, 280, 480, 60);
 			expect(slideCoordinateRoot(inner)).toBe(inner);
-			expect(elementVisualScale(content)).toBeCloseTo(0.5);
 			const delta = flowPointerDeltaToLocal(content, 100, 200, 120, 220);
 			document.body.removeChild(reveal);
-			expect(delta.dx).toBeCloseTo(40);
-			expect(delta.dy).toBeCloseTo(40);
+			expect(delta.dx).toBe(20);
+			expect(delta.dy).toBe(20);
+		});
+
+		it("does not treat sub-unit flow drag offsets as normalized slide frames", () => {
+			const measured = { x: 0.35, y: 0.4, width: 0.3, height: 0.08 };
+			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 }, measured)).toBe(true);
+			expect(isNormalizedSlideFrame({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 })).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 }, undefined)).toBe(
+				false,
+			);
 		});
 
 		it("rejects unusable measured fractions", () => {

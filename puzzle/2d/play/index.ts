@@ -957,6 +957,14 @@ export class Playground2d extends Playground {
 
 export type Puzzle2dPlayStructuralDeleteItem = { kind: "edge" | "node"; id: string };
 
+/** @emoji 🗑️ True when a canvas structural delete should update fixture state (wires stay canvas-only). */
+export function puzzle2dPlayForwardsCanvasStructuralDelete(kind: "edge" | "node" | "wire", acceptFromCanvas: boolean): boolean {
+	if (!acceptFromCanvas) {
+		return false;
+	}
+	return kind === "edge" || kind === "node";
+}
+
 /** @emoji 🪢 Restores fixture edges from a seed when WASM/resync drained them (nakagin play recovery). */
 export function puzzle2dPlayRehydrateFixtureEdgesIfMissing(fixture: Puzzle2dFixtureV1, seed: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
 	if (fixture.edges.length > 0 || seed.edges.length === 0) {
@@ -1174,6 +1182,18 @@ if (import.meta.vitest) {
 			});
 			expect(runtime.generation).toBe(dataGen);
 			expect(runtime.chromeGeneration).toBe(chromeGen + 1);
+		});
+	});
+
+	describe("puzzle2dPlayForwardsCanvasStructuralDelete", () => {
+		it("forwards edge and node deletes when the canvas is ready", () => {
+			expect(puzzle2dPlayForwardsCanvasStructuralDelete("edge", true)).toBe(true);
+			expect(puzzle2dPlayForwardsCanvasStructuralDelete("node", true)).toBe(true);
+		});
+
+		it("drops wire deletes and blocks until the canvas accepts structural deletes", () => {
+			expect(puzzle2dPlayForwardsCanvasStructuralDelete("wire", true)).toBe(false);
+			expect(puzzle2dPlayForwardsCanvasStructuralDelete("edge", false)).toBe(false);
 		});
 	});
 
