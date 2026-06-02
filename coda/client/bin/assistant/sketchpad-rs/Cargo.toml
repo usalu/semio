@@ -1,0 +1,19 @@
+[package]
+name = "sketchpad-rs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+lazy_static = "1.4.0"
+console_error_panic_hook = "0.1"
+geo = "0.33.1"
+geo-booleanop = "0.3.2"
+
+[profile.release]
+wasm-opt = false
