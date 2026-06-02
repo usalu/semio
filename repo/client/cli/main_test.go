@@ -16267,24 +16267,39 @@ func TestHookCommandJSONOutput(t *testing.T) {
 
 func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
 	repoRoot := t.TempDir()
+	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
+	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
+		t.Fatalf("mkdir hooks: %v", err)
+	}
+	for _, hookName := range []string{"pre-commit", "post-commit"} {
+		hookPath := filepath.Join(hooksDir, hookName)
+		if err := os.WriteFile(hookPath, []byte("#!/bin/sh\nexit 1\n"), 0o755); err != nil {
+			t.Fatalf("write hook %s: %v", hookName, err)
+		}
+	}
 	var out bytes.Buffer
 	cmd := configureCommand(nil, &Config{Repo: repoRoot})
 	cmd.SetOut(&out)
 	if err := cmd.Execute(); err != nil {
-		t.Fatalf("configure should remain a no-op: %v", err)
+		t.Fatalf("configure should succeed: %v", err)
 	}
-	if !strings.Contains(out.String(), "config generation is disabled") {
-		t.Fatalf("expected no-op message, got %q", out.String())
+	output := out.String()
+	if !strings.Contains(output, "config generation is disabled") {
+		t.Fatalf("expected no-op message, got %q", output)
+	}
+	if !strings.Contains(output, "git hooks removed") {
+		t.Fatalf("expected git hook removal message, got %q", output)
 	}
 	for _, path := range []string{
 		filepath.Join(repoRoot, ".github", "hooks", "repo.json"),
 		filepath.Join(repoRoot, ".cursor", "hooks.json"),
 		filepath.Join(repoRoot, ".claude", "settings.json"),
 		filepath.Join(repoRoot, ".kiro", "agents", "repo.json"),
-		filepath.Join(repoRoot, ".git", "hooks", "post-commit"),
+		filepath.Join(hooksDir, "post-commit"),
+		filepath.Join(hooksDir, "pre-commit"),
 	} {
 		if _, err := os.Stat(path); err == nil || !os.IsNotExist(err) {
-			t.Fatalf("configure unexpectedly created %s", path)
+			t.Fatalf("configure unexpectedly left or created %s", path)
 		}
 	}
 }

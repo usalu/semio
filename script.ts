@@ -163,7 +163,7 @@ export class SetupScript extends Script {
       }
     }
 
-    console.log("[setup] git workspace (symlinks, hooks)…");
+    console.log("[setup] git workspace (symlinks, hook cleanup)…");
     new SetupScript(this.root).run(["git"]);
 
     console.log("[setup] VS Code extension build & package…");

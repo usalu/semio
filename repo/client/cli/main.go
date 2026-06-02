@@ -38395,13 +38395,70 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
 // #region 🔷Configure
 // Configure command intentionally leaves repo config files untouched.
 
+// 🪝repoManagedGitHooks lists git hook filenames this repo may install and must never leave enabled.
+var repoManagedGitHooks = []string{
+	"pre-commit",
+	"post-commit",
+	"prepare-commit-msg",
+	"commit-msg",
+	"pre-push",
+	"pre-rebase",
+	"post-merge",
+	"post-checkout",
+	"post-rewrite",
+}
+
+// 🧹removeGitHooks deletes repo-managed git hooks so commits, rebases, and squashes stay unblocked.
+func removeGitHooks(repoRoot string) ([]string, error) {
+	if repoRoot == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		repoRoot = findRepoRoot(cwd)
+	}
+	if repoRoot == "" {
+		return nil, nil
+	}
+	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
+	var removed []string
+	for _, hookName := range repoManagedGitHooks {
+		hookPath := filepath.Join(hooksDir, hookName)
+		if err := os.Remove(hookPath); err != nil {
+			if !os.IsNotExist(err) {
+				return removed, fmt.Errorf("remove git hook %s: %w", hookName, err)
+			}
+			continue
+		}
+		removed = append(removed, hookName)
+	}
+	return removed, nil
+}
+
 // 🆕configureCommand creates the `configure` cobra command.
 func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configure",
-		Short: "No-op: repo config files are edited manually",
+		Short: "Remove blocking git hooks; repo config files are edited manually",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			repoRoot := config.Repo
+			if repoRoot == "" {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+				repoRoot = findRepoRoot(cwd)
+			}
+			removed, err := removeGitHooks(repoRoot)
+			if err != nil {
+				return err
+			}
 			fmt.Fprintln(cmd.OutOrStdout(), "repo config generation is disabled; edit checked-in config files manually")
+			if len(removed) == 0 {
+				fmt.Fprintln(cmd.OutOrStdout(), "git hooks: none to remove")
+				return nil
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "git hooks removed: %s\n", strings.Join(removed, ", "))
 			return nil
 		},
 	}
