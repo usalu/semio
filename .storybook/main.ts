@@ -28,6 +28,7 @@ const storybookScopePrefix = storybookScope ? `${storybookScope}/` : "";
 
 const uiReactDir = resolve(repoRootPath, "ui/react");
 const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
+const widgetsDir = resolve(repoRootPath, "widgets");
 const frameworkPlaygroundDir = resolve(repoRootPath, "framework/product/playground/core");
 const frameworkPlaygroundReactDir = resolve(repoRootPath, "framework/product/playground/renderer/react");
 const puzzle2dReactDir = resolve(repoRootPath, "puzzle/2d/react");
@@ -69,6 +70,8 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@puzzle/assets"] = toVitePath(puzzleAssetsDir);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
+		alias["@widgets/react"] = toVitePath(resolve(widgetsDir, "index.tsx"));
+		alias["@widgets/react/fixtures"] = toVitePath(resolve(widgetsDir, "fixtures/index.ts"));
 		alias["@framework/playground/core"] = toVitePath(frameworkPlaygroundDir);
 		alias["@framework/playground/renderer/react"] = toVitePath(frameworkPlaygroundReactDir);
 		alias["@puzzle/2d/react"] = toVitePath(puzzle2dReactDir);
@@ -87,6 +90,8 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@semio/algorithms"] = toVitePath(semioAlgorithmsEntryPath);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
+		alias["@widgets/react"] = toVitePath(resolve(widgetsDir, "index.tsx"));
+		alias["@widgets/react/fixtures"] = toVitePath(resolve(widgetsDir, "fixtures/index.ts"));
 	}
 	return alias;
 }
@@ -205,6 +210,7 @@ const config: StorybookConfig = {
 		const optimizeExclude = new Set<string>([
 			...(config.optimizeDeps.exclude || []),
 			"@ui/react",
+			"@widgets/react",
 			"@framework/playground/core",
 			"@framework/playground/renderer/react",
 			"@puzzle/2d/react",

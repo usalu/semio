@@ -205,6 +205,25 @@
       }
     },
     {
+      "name": "🛠️dev📖storybook👤semio🧩widgets",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:semio:widgets",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 75
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev👤semio🌐hub",
       "type": "node-terminal",
       "request": "launch",
@@ -373,6 +392,17 @@
       "presentation": {
         "group": "3_dev",
         "order": 70.4
+      }
+    },
+    {
+      "name": "🛠️dev🧩widgets🪁typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @widgets/react:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.45
       }
     },
     {

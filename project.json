@@ -103,6 +103,17 @@
         }
       }
     },
+    "dev-storybook-semio-widgets": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook semio widgets",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
     "dev-mcp": {
       "executor": "nx:run-commands",
       "cache": false,

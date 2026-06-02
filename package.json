@@ -6,6 +6,7 @@
   "workspaces": [
     "ui/react",
     "ui/styling/js",
+    "widgets",
     "framework/core",
     "framework/product/platform/core",
     "framework/product/platform/renderer/react",
@@ -65,6 +66,7 @@
     "dev:storybook:semio": "bun nx run workspace:dev-storybook-semio",
     "dev:storybook:semio:algorithms": "bun nx run workspace:dev-storybook-semio-algorithms",
     "dev:storybook:semio:ui": "bun nx run workspace:dev-storybook-semio-ui",
+    "dev:storybook:semio:widgets": "bun nx run workspace:dev-storybook-semio-widgets",
     "dev:puzzle:2d": "bun ./script.ts dev 2d",
     "dev:puzzle:3d": "bun ./script.ts dev 3d",
     "dev:puzzle:5d": "bun ./script.ts dev 5d",
