@@ -691,7 +691,7 @@ export function windowEngagementToGolden(engagement: WindowEngagement | undefine
   }));
   const hasContent = (options?.length ?? 0) > 0 || Boolean(input) || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
   if (!hasContent) return undefined;
-  return { options, input, status, possibleEngagements };
+  return { sessionActive: engagement.sessionActive, options, input, status, possibleEngagements };
 }
 
 export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], bus: CommandBus): UIWindowKindDefinition[] {
@@ -1250,7 +1250,7 @@ export function puzzle3dPlayEngagementMirror(engagement: EngagementSpec | null):
     detail: row.detail,
     command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { possibleId: row.id } },
   }));
-  return { options, input, status, possibleEngagements };
+  return { sessionActive: engagement.sessionActive, options, input, status, possibleEngagements };
 }
 
 function Puzzle3dPlayEngagementPublisher(props: {

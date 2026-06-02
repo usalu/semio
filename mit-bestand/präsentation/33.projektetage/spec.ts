@@ -81,7 +81,7 @@ export const introSpec: IntroSpec = {
 //#endregion 🔖Meta
 
 //#region 🔖Catalogue
-export const ASSET_CATALOGUE = "./bauteilbo\u0308rse.png";
+export const ASSET_CATALOGUE = "/bauteilbörse.png";
 export const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
 export const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
 

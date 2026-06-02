@@ -200,7 +200,22 @@
 
 .reveal
 	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
-	:is(.presentation-disposition-frame, .presentation-morph-slot--figure),
+	.presentation-morph-slot--figure::after,
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	background: color-mix(in oklab, var(--color-primary) 40%, transparent);
+	transition: background-color 0.15s ease;
+}
+
 .reveal
 	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
 	.presentation-morph-anchor,
@@ -211,9 +226,6 @@
 	transition: background-color 0.15s ease;
 }
 
-.reveal
-	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
-	:is(.presentation-disposition-frame, .presentation-morph-slot--figure)::after,
 .reveal
 	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
 	.presentation-morph-anchor::after,
@@ -331,8 +343,21 @@
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
-	:is(.presentation-disposition-frame, .presentation-morph-slot) {
+	:is(.presentation-disposition-frame, .presentation-morph-slot:not(.presentation-morph-slot--figure)) {
 	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-morph-slot--figure {
+	position: relative !important;
 	left: auto !important;
 	top: auto !important;
 	width: 100% !important;
@@ -591,8 +616,16 @@
 	background-position: var(--presentation-figure-bg-position);
 }
 
+.reveal .presentation-morph-slot--figure {
+	background-repeat: no-repeat;
+	background-size: var(--presentation-figure-bg-size);
+	background-position: var(--presentation-figure-bg-position);
+}
+
 .reveal .slides section[data-auto-animate="pending"] .presentation-figure-crop-fill,
-.reveal .slides section[data-auto-animate="running"] .presentation-figure-crop-fill {
+.reveal .slides section[data-auto-animate="running"] .presentation-figure-crop-fill,
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-slot--figure,
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-slot--figure {
 	background-size: var(--presentation-figure-bg-size-morph);
 	background-position: var(--presentation-figure-bg-position-morph);
 }

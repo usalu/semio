@@ -289,6 +289,8 @@ export interface WindowEngagementPossible {
 
 /** @emoji 💬 React-neutral floating window engagement (options/input/status) resolved to a UI panel by the renderer. */
 export interface WindowEngagement {
+  /** @emoji 🎯 Ongoing engagement session (step input + step options stay visible). */
+  readonly sessionActive?: boolean;
   readonly options?: readonly WindowEngagementOption[];
   readonly input?: WindowEngagementInput;
   readonly status?: readonly WindowEngagementStatus[];
@@ -302,7 +304,8 @@ export function windowEngagementDigest(engagement: WindowEngagement | undefined)
   const input = engagement.input ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}` : "";
   const status = (engagement.status ?? []).map((row) => `${row.id}\u0001${row.text}`).join("\u0002");
   const possibles = (engagement.possibleEngagements ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}`).join("\u0002");
-  return [options, input, status, possibles].join("\u0003");
+  const session = engagement.sessionActive ? "1" : "0";
+  return [session, options, input, status, possibles].join("\u0003");
 }
 
 /** @emoji ⚖️ Returns whether two neutral engagement snapshots are equivalent for shell sync. */

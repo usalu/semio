@@ -811,6 +811,16 @@ function BulletMorphView({
 	);
 }
 
+/** @emoji 🔗 Resolves deck-relative figure paths against the Vite base URL. */
+export function resolvePresentationAssetUrl(src: string): string {
+	if (/^(?:[a-z]+:)?\/\//i.test(src) || src.startsWith("data:") || src.startsWith("blob:")) {
+		return src;
+	}
+	const trimmed = src.replace(/^\.\//, "");
+	const base = import.meta.env.BASE_URL ?? "/";
+	return `${base.endsWith("/") ? base : `${base}/`}${trimmed}`.replace(/\/{2,}/g, "/");
+}
+
 /** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
 export function figureCropBackgroundVars(
 	embodiment: FigureEmbodiment,
@@ -859,7 +869,7 @@ export function figureCropBackgroundVars(
 		restPosY = centerPosY;
 	}
 	return {
-		backgroundImage: `url("${embodiment.src}")`,
+		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
 		["--presentation-figure-bg-size" as string]: `${restWidth}% ${restHeight}%`,
 		["--presentation-figure-bg-position" as string]: `${restPosX}% ${restPosY}%`,
 		["--presentation-figure-bg-size-morph" as string]: `${morphWidth}% ${morphHeight}%`,
@@ -910,15 +920,13 @@ function FigureMorphView({
 				]
 					.filter(Boolean)
 					.join(" ")}
-				style={frameStyle}
+				style={{
+					...frameStyle,
+					...figureCropBackgroundVars(embodiment, embodiment.crop, position),
+				}}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
-			>
-				<div
-					className="presentation-figure-crop-fill"
-					style={figureCropBackgroundVars(embodiment, embodiment.crop, position)}
-				/>
-			</div>
+			/>
 		);
 	}
 	return (
@@ -1596,7 +1604,7 @@ export function measureElementRectInSection(
 }
 
 const DISPOSITION_BOUNDS_SELECTORS =
-	"[data-id], .presentation-disposition-frame, .presentation-morph-anchor, .presentation-intro-line, .presentation-morph-text, h1, h2, h3, h4, p, li, img, video, .presentation-media-figure, .presentation-figure-crop-fill";
+	"[data-id], .presentation-disposition-frame, .presentation-morph-anchor, .presentation-intro-line, .presentation-morph-text, h1, h2, h3, h4, p, li, img, video, .presentation-media-figure, .presentation-figure-crop-fill, .presentation-morph-slot--figure";
 
 function unionDomRects(a: DOMRect, b: DOMRect): DOMRect {
 	const left = Math.min(a.left, b.left);
@@ -3684,18 +3692,19 @@ if (import.meta.vitest) {
 			const first = wrappers[0] as HTMLElement;
 			expect(first.classList.contains("presentation-interactive-disposition")).toBe(true);
 			expect(first.style.position).toBe("absolute");
-			const tileFrame = first.querySelector('.presentation-disposition-frame[data-id^="tile-r"]') as HTMLElement;
+			const tileFrame = first.querySelector(
+				'.presentation-morph-slot--figure[data-id^="tile-r"]',
+			) as HTMLElement;
 			expect(tileFrame).toBeTruthy();
-			const fill = tileFrame.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
-			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
-			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("240% 240%");
-			const fills = [...container.querySelectorAll(".presentation-figure-crop-fill")] as HTMLElement[];
-			for (const node of fills) {
+			expect(tileFrame.style.backgroundImage).toContain("/catalogue.png");
+			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toBe("240% 240%");
+			const tiles = [...container.querySelectorAll(".presentation-morph-slot--figure")] as HTMLElement[];
+			for (const node of tiles) {
 				const size = node.style.getPropertyValue("--presentation-figure-bg-size");
 				const [width, height] = size.split(/\s+/);
 				expect(width).toBe(height);
 			}
-			const positions = fills.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
+			const positions = tiles.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
 			expect(first.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
 		});
@@ -3871,13 +3880,14 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot') as HTMLElement | null;
-			const fill = slot?.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
-			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
+			const slot = container.querySelector(
+				'[data-id="catalogue-col1"].presentation-morph-slot--figure',
+			) as HTMLElement | null;
+			expect(slot?.style.backgroundImage).toContain("/catalogue.png");
 			expect(slot?.querySelector("h2")).toBeNull();
 			expect(slot?.style.left).toBe("35%");
-			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 100%");
-			expect(fill?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("25% 50%");
+			expect(slot?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 100%");
+			expect(slot?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("25% 50%");
 		});
 
 		it("rewrites non-uniform auto-animate scale() to a uniform zoom", () => {
@@ -3914,6 +3924,25 @@ if (import.meta.vitest) {
 				)?.[0] ?? "";
 			expect(runningRule).toContain("presentation-morph-source-fade-out");
 			expect(runningRule).not.toMatch(/opacity:\s*1\s*!important/);
+		});
+
+		it("resolvePresentationAssetUrl maps deck-relative paths through the Vite base", () => {
+			expect(resolvePresentationAssetUrl("/bauteilbörse.png")).toBe("/bauteilbörse.png");
+			expect(resolvePresentationAssetUrl("./bauteilbörse.png")).toBe("/bauteilbörse.png");
+		});
+
+		it("keeps figure selection chrome as a translucent overlay, not a solid fill", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, resolve } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
+			expect(css).toContain(
+				".presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected",
+			);
+			expect(css).toContain(".presentation-morph-slot--figure::after");
+			expect(css).not.toMatch(
+				/\.presentation-interactive-disposition--kind-figure\.presentation-interactive-disposition--selected[\s\S]*?\.presentation-morph-slot--figure\s*\{[^}]*background-color:\s*var\(--color-primary\)/,
+			);
 		});
 
 		it("uses uniform cover at rest and during auto-animate morph vars", () => {
@@ -4724,12 +4753,12 @@ if (import.meta.vitest) {
 					expect(slot.classList.contains("presentation-morph-source")).toBe(false);
 					expect(slot.classList.contains("presentation-morph-slot--dormant")).toBe(false);
 				}
-				const fills = slide.querySelectorAll(".presentation-figure-crop-fill");
-				expect(fills.length).toBe(slots.length);
-				for (const fill of fills) {
-					const backgroundImage = (fill as HTMLElement).style.backgroundImage;
+				expect(slots.length).toBeGreaterThan(0);
+				for (const slot of slots) {
+					const backgroundImage = (slot as HTMLElement).style.backgroundImage;
 					expect(backgroundImage.length).toBeGreaterThan(0);
 					expect(backgroundImage).not.toBe("none");
+					expect(backgroundImage).toContain("bauteilb");
 				}
 			}
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;

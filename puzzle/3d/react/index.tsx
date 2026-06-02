@@ -6072,6 +6072,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
   const possibleEngagements = inputs.activeTool === "brush" && brushPossibles.length > 0 ? brushPossibles : toolPossibles;
 
   return {
+    sessionActive: inputs.activeTool === "brush",
     input: {
       id: "engagement-input",
       value: inputs.cmdLine,

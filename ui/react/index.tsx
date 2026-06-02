@@ -11429,12 +11429,13 @@ export function focusActiveEngagementInput(): boolean {
   return true;
 }
 
-/** @emoji 👁 True when the window engagement chrome should render (non-empty command, hover, click, or focus in the engagement zone). */
+/** @emoji 👁 True when the window engagement chrome should render (active session, non-empty command, hover, click, or focus in the engagement zone). */
 export function windowEngagementChromeVisible(
   engagement: EngagementSpec | undefined,
   zone: { readonly hovered: boolean; readonly activated: boolean; readonly focused: boolean },
 ): boolean {
   if (!engagement) return false;
+  if (engagement.sessionActive) return true;
   if (engagement.input?.value?.trim()) return true;
   return zone.hovered || zone.activated || zone.focused;
 }
@@ -11447,6 +11448,7 @@ export function shouldDismissEmptyWindowEngagement(
   zone: { readonly commandActive: boolean },
 ): boolean {
   if (zone.commandActive) return false;
+  if (engagement?.sessionActive) return false;
   if (engagement?.input?.value?.trim()) return false;
   if (relatedTarget instanceof Node && zoneRoot?.contains(relatedTarget)) return false;
   if (relatedTarget instanceof Element && relatedTarget.closest('[data-slot="engagement-autocomplete"]')) return false;
@@ -11454,18 +11456,15 @@ export function shouldDismissEmptyWindowEngagement(
   return true;
 }
 
-/** @emoji 🔁 Routes Space outside the engagement field: empty draft → {@link EngagementInput.onRepeatLast}; non-empty → {@link EngagementInput.onSubmit}. */
-export function routeWindowEngagementSpace(
-  engagement: EngagementSpec | undefined,
-  event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">,
-): boolean {
-  const input = engagement?.input;
-  if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
-  if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
-  if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
-  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
-  const draft = normalizeEngagementCommandText(input.value ?? field?.value ?? "");
+/** @emoji ␣ Applies Space on an engagement command line (step submit vs repeat-last when idle). */
+export function applyEngagementSpaceAction(input: EngagementInput, draft: string, sessionActive: boolean): boolean {
+  if (input.disabled) return false;
   if (!draft.trim()) {
+    if (sessionActive) {
+      if (!input.onSubmit) return false;
+      input.onSubmit(draft);
+      return true;
+    }
     if (!input.onRepeatLast) return false;
     input.onRepeatLast();
     return true;
@@ -11473,6 +11472,20 @@ export function routeWindowEngagementSpace(
   if (!input.onSubmit) return false;
   input.onSubmit(draft);
   return true;
+}
+
+/** @emoji 🔁 Routes Space outside the engagement field: idle empty → {@link EngagementInput.onRepeatLast}; session or typed draft → {@link EngagementInput.onSubmit}. */
+export function routeWindowEngagementSpace(
+  engagement: EngagementSpec | undefined,
+  event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">,
+): boolean {
+  const input = engagement?.input;
+  if (!input || event.defaultPrevented || event.isComposing) return false;
+  if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
+  if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
+  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  const draft = normalizeEngagementCommandText(input.value ?? field?.value ?? "");
+  return applyEngagementSpaceAction(input, draft, Boolean(engagement?.sessionActive));
 }
 
 /** @emoji ⌨️ Routes a printable key to the active window engagement command when focus is elsewhere in the window. */
@@ -11508,6 +11521,8 @@ export function routeWindowEngagementEscape(
 
 /** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
 export interface EngagementSpec {
+  /** @emoji 🎯 Ongoing engagement: chrome stays visible; {@link options} are step transitions; command input accepts step values. */
+  sessionActive?: boolean;
   options?: EngagementOption[];
   input?: EngagementInput;
   status?: EngagementStatus[];
@@ -11557,10 +11572,17 @@ export interface EngagementProps extends EngagementSpec {
 }
 
 /** @emoji 💬 Top-aligned engagement: command input with optional right chevron for possibles; status and option buttons below. */
-const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
+const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, input, status, possibleEngagements, className = "", active = false }) => {
+  const commandPlaceholderLabel = useLabel(UI_ENGAGEMENT.command);
+  const commandActivePlaceholderLabel = useLabel(UI_ENGAGEMENT.commandActive);
+  const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.commands);
   const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
   const isControlledInput = !!input?.onChange;
   const draft = normalizeEngagementCommandText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
+  const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;
+  const secondaryStatus = sessionActive ? status?.filter((row) => row.id !== "engagement-step") : status;
+  const commandPlaceholder =
+    input?.placeholder ?? (sessionActive ? commandActivePlaceholderLabel || ENGAGEMENT_USER.commandPlaceholderActive : commandPlaceholderLabel || ENGAGEMENT_USER.commandPlaceholder);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -11631,9 +11653,22 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
         ref={engagementRef}
         data-slot="engagement"
         data-active={active ? "true" : undefined}
+        data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half", className)}
+        className={cn(
+          "pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half",
+          sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm",
+          className,
+        )}
       >
+      {primaryStepStatus ? (
+        <div
+          data-slot="engagement-step-heading"
+          className="text-foreground px-half text-sm font-medium leading-tight"
+        >
+          {primaryStepStatus.content}
+        </div>
+      ) : null}
       {hasInput ? (
         <Popover
           open={showPossiblesList}
@@ -11689,11 +11724,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                     if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
                       event.preventDefault();
                       if (showPossiblesList && activatePossible()) return;
-                      if (!draft.trim() && input!.onRepeatLast) {
-                        input!.onRepeatLast();
-                        return;
-                      }
-                      input!.onSubmit?.(draft);
+                      applyEngagementSpaceAction(input!, draft, sessionActive);
                       return;
                     }
                     if (event.key === "Enter") {
@@ -11702,9 +11733,9 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                       input!.onSubmit?.(draft);
                     }
                   }}
-                  placeholder={input!.placeholder ?? ENGAGEMENT_USER.commandPlaceholder}
+                  placeholder={commandPlaceholder}
                   disabled={input!.disabled}
-                  aria-label={ENGAGEMENT_USER.commandPlaceholder}
+                  aria-label={commandPlaceholder}
                 />
                 {inlineCompletion ? (
                   <div
@@ -11768,9 +11799,9 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
           ) : null}
         </Popover>
       ) : null}
-      {hasStatus ? (
+      {secondaryStatus?.length ? (
         <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
-          {status!.map((item) => (
+          {secondaryStatus.map((item) => (
             <span key={item.id} data-slot="engagement-status-item">
               {item.content}
             </span>
@@ -11778,7 +11809,13 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
         </div>
       ) : null}
       {hasOptions ? (
-        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half" role="group" aria-label={ENGAGEMENT_USER.commandsAria}>
+        <div
+          data-slot="engagement-options"
+          data-step-options={sessionActive ? "true" : undefined}
+          className="flex flex-wrap items-center justify-center gap-half"
+          role="group"
+          aria-label={sessionActive ? stepOptionsAriaLabel || ENGAGEMENT_USER.commandsAria : ENGAGEMENT_USER.commandsAria}
+        >
           <ButtonGroup id={UI_ENGAGEMENT.commands}>
             {options!.map((option) => {
               const commandLabel = normalizeEngagementCommandText(option.label);
@@ -11880,6 +11917,11 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     setEngagementActivated(true);
     queueMicrotask(() => focusActiveEngagementInput());
   }, [engagement?.input?.value]);
+
+  reactHostPort.useEffect(() => {
+    if (!active || !engagement?.sessionActive) return;
+    setEngagementActivated(true);
+  }, [active, engagement?.sessionActive]);
 
   reactHostPort.useEffect(() => {
     if (!active) {
@@ -16528,6 +16570,23 @@ if (import.meta.vitest) {
       expect(windowEngagementChromeVisible(engagement, { hovered: true, activated: false, focused: false })).toBe(true);
       expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: true, focused: false })).toBe(true);
       expect(windowEngagementChromeVisible({ input: { value: "box" } }, { hovered: false, activated: false, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible({ sessionActive: true, input: { value: "" } }, { hovered: false, activated: false, focused: false })).toBe(true);
+    });
+
+    it("applyEngagementSpaceAction submits empty draft during sessionActive", () => {
+      const submitted: string[] = [];
+      const repeated: string[] = [];
+      const input = {
+        onSubmit: (value: string) => submitted.push(value),
+        onRepeatLast: () => repeated.push("last"),
+      };
+      expect(applyEngagementSpaceAction(input, "", true)).toBe(true);
+      expect(submitted).toEqual([""]);
+      expect(repeated).toEqual([]);
+      submitted.length = 0;
+      expect(applyEngagementSpaceAction(input, "", false)).toBe(true);
+      expect(repeated).toEqual(["last"]);
+      expect(submitted).toEqual([]);
     });
 
     it("routeWindowEngagementSpace calls onRepeatLast for empty command", () => {

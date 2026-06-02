@@ -3830,6 +3830,7 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
       }));
   if (options.length === 0 && !input && status.length === 0 && possibleEngagements.length === 0) return null;
   return {
+    sessionActive: inputs.boundInteractionSession,
     options: options.length ? options : undefined,
     input,
     status: status.length ? status : undefined,
@@ -5623,6 +5624,7 @@ if (import.meta.vitest) {
         lastResponseOk: true,
         onTransition: (row) => transitionRuns.push(row.key),
       });
+      expect(spec?.sessionActive).toBe(true);
       expect(spec?.options?.[0]?.label).toBe("CConfirm");
       expect(spec?.input?.placeholder).toBe(ENGAGEMENT_USER.commandPlaceholderActive);
       expect(spec?.status?.map((row) => row.content)).toEqual(["Step: First Corner", "2 selected", "OK"]);
