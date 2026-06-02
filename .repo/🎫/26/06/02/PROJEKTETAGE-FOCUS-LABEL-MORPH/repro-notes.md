@@ -6,7 +6,7 @@
 ## Fix
 1. Rest ghosts with `opacity: 0` only; keep `visibility: visible` so label-position ghosts remain measurable.
 2. Morph-source wrappers pin to `morphFrom` label frames (never ephemeral focus drag transforms).
-3. `clearRevealAutoAnimateInlineLayout` after auto-animate so reveal FLIP inline geometry does not stick on ghosts.
+3. `clearRevealAutoAnimateInlineLayout` strips only `transform`/`transition` on `[data-auto-animate-target]` (never `left`/`top`/`width`/`height` on morph-into labels).
 4. Force layout on label-slide `.presentation-morph-source` nodes before focus→labels morph.
 
 Expanded data already had label positions; DOM tests confirm `catalogue-labels--Stütze` uses inline label slot %, not focus column %.

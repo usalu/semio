@@ -259,13 +259,11 @@ export function slideChangedEventSlides(event: Event): {
 	};
 }
 
-/** @emoji 🧹 Strips reveal.js FLIP inline layout so React-declared morph frames win after auto-animate. */
+/** @emoji 🧹 Strips reveal.js FLIP `transform`/`transition` only; never `left`/`top`/`width`/`height` (React owns those on morph frames). */
 export function clearRevealAutoAnimateInlineLayout(deckEl: HTMLElement): void {
-	const layoutProps = ["transform", "transition", "left", "top", "width", "height"] as const;
-	for (const element of deckEl.querySelectorAll<HTMLElement>(
-		"[data-auto-animate-target], .presentation-morph-source, .presentation-morph-into",
-	)) {
-		for (const prop of layoutProps) {
+	const flipProps = ["transform", "transition"] as const;
+	for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
+		for (const prop of flipProps) {
 			element.style.removeProperty(prop);
 		}
 	}
@@ -1739,26 +1737,16 @@ function transformFrameStyle(transform: DispositionPosition): CSSProperties {
 	};
 }
 
-/** @emoji 📐 reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
-export function sectionVisualScale(sectionEl: HTMLElement): number {
-	const bounds = slideLayoutBounds(sectionEl);
-	if (bounds.width <= 0 || bounds.height <= 0) {
+/** @emoji 📐 Cumulative visual scale for one element (client rect vs layout box, includes ancestor transforms). */
+export function elementVisualScale(element: HTMLElement): number {
+	const rect = element.getBoundingClientRect();
+	const layoutW = element.offsetWidth;
+	const layoutH = element.offsetHeight;
+	if (layoutW <= 0 || layoutH <= 0 || rect.width <= 0 || rect.height <= 0) {
 		return 1;
 	}
-	const root = slideCoordinateRoot(sectionEl);
-	let layoutW = root.offsetWidth;
-	let layoutH = root.offsetHeight;
-	if (layoutW <= 0 || layoutH <= 0) {
-		return 1;
-	}
-	const reveal = sectionEl.closest(".reveal");
-	const slideCss = parsePresentationSlideCssSize(reveal instanceof HTMLElement ? reveal : null);
-	if (layoutH > bounds.height * 1.02 || layoutW > bounds.width * 1.02) {
-		layoutW = slideCss.width;
-		layoutH = slideCss.height;
-	}
-	const scaleX = bounds.width / layoutW;
-	const scaleY = bounds.height / layoutH;
+	const scaleX = rect.width / layoutW;
+	const scaleY = rect.height / layoutH;
 	const scale = Math.min(scaleX, scaleY);
 	if (!Number.isFinite(scale) || scale <= 0) {
 		return 1;
@@ -1766,15 +1754,35 @@ export function sectionVisualScale(sectionEl: HTMLElement): number {
 	return Math.min(4, Math.max(0.05, scale));
 }
 
-/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate inside a scaled slide. */
-export function flowPointerDeltaToLocal(
+/** @emoji 📐 reveal.js scales slides visually; map screen-pointer deltas to local translate pixels. */
+export function sectionVisualScale(sectionEl: HTMLElement): number {
+	return elementVisualScale(slideCoordinateRoot(sectionEl));
+}
+
+/** @emoji ↔️ Node that receives flow `translate3d` during drag (content when laid out, else disposition root). */
+export function flowDragTransformElement(
 	sectionEl: HTMLElement,
+	root: HTMLElement | null,
+	content: HTMLElement | null,
+): HTMLElement {
+	if (content && content.offsetWidth > 0 && content.offsetHeight > 0) {
+		return content;
+	}
+	if (root && root.offsetWidth > 0 && root.offsetHeight > 0) {
+		return root;
+	}
+	return slideCoordinateRoot(sectionEl);
+}
+
+/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate on the flow drag target. */
+export function flowPointerDeltaToLocal(
+	transformEl: HTMLElement,
 	startClientX: number,
 	startClientY: number,
 	currentClientX: number,
 	currentClientY: number,
 ): { readonly dx: number; readonly dy: number } {
-	const scale = sectionVisualScale(sectionEl);
+	const scale = elementVisualScale(transformEl);
 	return {
 		dx: (currentClientX - startClientX) / scale,
 		dy: (currentClientY - startClientY) / scale,
@@ -1886,8 +1894,9 @@ export function flowPixelOffsetToSectionRect(
 	measured: DispositionPosition,
 	transform: DispositionPosition,
 	sectionEl: HTMLElement,
+	transformEl?: HTMLElement,
 ): DispositionPosition {
-	const scale = sectionVisualScale(sectionEl);
+	const scale = elementVisualScale(transformEl ?? flowDragTransformElement(sectionEl, null, null));
 	const layout = slideLayoutBounds(sectionEl);
 	const w = layout.width / scale;
 	const h = layout.height / scale;
@@ -2264,7 +2273,12 @@ const InteractiveDisposition: FC<{
 				}
 				registry.registerRect(id, measuredNatural);
 				if (existing && section && isFlowPixelOffsetTransform(existing, measuredNatural)) {
-					return flowPixelOffsetToSectionRect(measuredNatural, existing, section);
+					return flowPixelOffsetToSectionRect(
+						measuredNatural,
+						existing,
+						section,
+						flowDragTransformElement(section, rootRef.current, contentRef.current),
+					);
 				}
 				return existing ?? measuredNatural;
 			}
@@ -2333,6 +2347,11 @@ const InteractiveDisposition: FC<{
 					: null;
 			let dragging = !requireDragThreshold;
 			setGesturing(true);
+			const flowTransformEl = flowDragTransformElement(
+				section,
+				rootRef.current,
+				contentRef.current,
+			);
 			if (allDeclaredRects.get(id) === undefined) {
 				const root = rootRef.current;
 				if (root && root.offsetWidth > 0 && root.offsetHeight > 0) {
@@ -2359,7 +2378,7 @@ const InteractiveDisposition: FC<{
 					for (const [memberId, rect] of startRects) {
 						if (allDeclaredRects.get(memberId) === undefined) {
 							const { dx, dy } = flowPointerDeltaToLocal(
-								section,
+								flowTransformEl,
 								startClient.x,
 								startClient.y,
 								moveEvent.clientX,
@@ -3808,17 +3827,16 @@ if (import.meta.vitest) {
 			expect(new Set(positions).size).toBe(4);
 		});
 
-		it("clearRevealAutoAnimateInlineLayout removes reveal FLIP inline geometry from morph nodes", () => {
+		it("clearRevealAutoAnimateInlineLayout removes only FLIP transform from auto-animate targets", () => {
 			const deckEl = document.createElement("div");
-			const ghost = document.createElement("div");
-			ghost.className = "presentation-morph-source";
-			ghost.dataset.autoAnimateTarget = "0";
-			ghost.style.left = "77%";
-			ghost.style.transform = "translate(10px, 20px) scale(2)";
-			deckEl.appendChild(ghost);
+			const target = document.createElement("div");
+			target.dataset.autoAnimateTarget = "0";
+			target.style.left = "65%";
+			target.style.transform = "translate(10px, 20px) scale(2)";
+			deckEl.appendChild(target);
 			clearRevealAutoAnimateInlineLayout(deckEl);
-			expect(ghost.style.left).toBe("");
-			expect(ghost.style.transform).toBe("");
+			expect(target.style.left).toBe("65%");
+			expect(target.style.transform).toBe("");
 		});
 
 		it("finalizeRevealAutoAnimateRestState clears running so morph sources rest hidden", () => {
