@@ -483,6 +483,15 @@ Refactor everything
 
 ## 🧩puzzle
 
+---
+
+Every node kind/object kind and handle kind/vortex kind should have have a suggestion percentage.
+Add one slider per kind to window option.
+The total should always be 1. Hence when one slider is moved, it automatically adjust the others proportionally.
+When the brush is active make the suggestions randomized according the percentage.
+
+---
+
 ### 🏁2d
 
 ---

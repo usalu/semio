@@ -1820,13 +1820,17 @@ export function applyBrushPlacementToFixture(
   if (!targetHandle) {
     return { kind: "unchanged" };
   }
+  const edgeId = payload.edgeId?.trim() || `puzzle2d.brush.edge.${crypto.randomUUID()}`;
+  const placedEdge = fixture.edges.find((e) => e.id === edgeId);
+  if (fixture.nodes.some((n) => n.id === nodeId) && placedEdge?.source === payload.sourceHandleId) {
+    return { kind: "placed", fixture, nodeId, edgeId };
+  }
   if (fixture.edges.some((e) => e.source === payload.sourceHandleId || e.target === payload.sourceHandleId)) {
     return { kind: "unchanged" };
   }
   if (handles.some((h) => fixture.edges.some((e) => e.source === h.id || e.target === h.id))) {
     return { kind: "unchanged" };
   }
-  const edgeId = payload.edgeId?.trim() || `puzzle2d.brush.edge.${crypto.randomUUID()}`;
   const edge: Puzzle2dFixtureEdgeV1 = { id: edgeId, source: payload.sourceHandleId, target: targetHandle.id };
   const iconKind = payload.iconKind?.trim() || puzzle2dIconKindForBrushNodeKind(fixture, catalogs, payload.nodeKind);
   const base = { handles, id: nodeId, nodeKind: payload.nodeKind, x: payload.x, y: payload.y, ...(iconKind ? { iconKind } : {}) };
@@ -5136,6 +5140,7 @@ export class Puzzle2dRenderer {
             if (payload.nodeKind === "" || payload.sourceHandleId === "" || !Number.isFinite(payload.x) || !Number.isFinite(payload.y)) {
               break;
             }
+            puzzle2dInvokeBrushPlaceCommit(payload);
             this.emitter.emit("brushPlace", payload);
             break;
           }
@@ -7998,6 +8003,37 @@ if (puzzle2dVitest) {
       expect(handles).toEqual([{ angle: 1.2, handleKind: "semio.kit.handle.a", id: "n1:h0", radius: 3 }]);
     });
 
+    it("applyBrushPlacementToFixture is idempotent when the same brush ids are already in the fixture", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [{ id: "edge-a", source: "a:h0", target: "b:h0" }],
+        nodes: [
+          { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
+          { handles: [{ angle: Math.PI, id: "b:h0" }], id: "brush-node", nodeKind: "k", radius: 20, x: 120, y: 0 },
+        ],
+        schema: "puzzle.2d.fixture/v1",
+      });
+      expect(fixture).toBeTruthy();
+      const payload: Puzzle2dBrushPlacePayload = {
+        edgeId: "edge-a",
+        handles: [{ angle: Math.PI, handleKind: "port" }],
+        nodeId: "brush-node",
+        nodeKind: "k",
+        shape: "circle",
+        sourceHandleId: "a:h0",
+        targetHandleIndex: 0,
+        x: 120,
+        y: 0,
+        radius: 20,
+      };
+      const result = applyBrushPlacementToFixture(fixture!, payload);
+      expect(result.kind).toBe("placed");
+      if (result.kind === "placed") {
+        expect(result.fixture.nodes).toHaveLength(2);
+        expect(result.fixture.edges).toHaveLength(1);
+      }
+    });
+
     it("applyBrushPlacementToFixture appends node and parent edge", () => {
       const fixture: Puzzle2dFixtureV1 = {
         schema: "puzzle.2d.fixture/v1",
@@ -9724,21 +9760,47 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRende
 //#region 🔖MultiViewAuthoring
 const puzzle2dAuthoringPeerRenderers = new Set<Puzzle2dRenderer>();
 let puzzle2dSharedBrushSession: Puzzle2dBrushSessionSnapshot | null = null;
+let puzzle2dBrushPlaceCommitHandler: ((payload: Puzzle2dBrushPlacePayload) => void) | null = null;
+
+/** @emoji 🖌️ Registers play (or host) fixture commit for WASM {@link Puzzle2dEventMap.brushPlace} drains. */
+export function puzzle2dSetBrushPlaceCommitHandler(handler: ((payload: Puzzle2dBrushPlacePayload) => void) | null): void {
+  puzzle2dBrushPlaceCommitHandler = handler;
+}
+
+function puzzle2dInvokeBrushPlaceCommit(payload: Puzzle2dBrushPlacePayload): void {
+  puzzle2dBrushPlaceCommitHandler?.(payload);
+}
+
+function puzzle2dBrushPreviewIsEmpty(preview: Puzzle2dEventMap["brushPreview"] | null | undefined): boolean {
+  if (!preview) {
+    return true;
+  }
+  return preview.node === null || preview.node === undefined;
+}
 
 function puzzle2dUpdateBrushSessionFromSource(
   source: Puzzle2dRenderer,
   candidates: Puzzle2dBrushCandidatesPayload | null,
-  preview: Puzzle2dEventMap["brushPreview"] | null,
+  preview: Puzzle2dEventMap["brushPreview"] | null | undefined,
 ): void {
   const prev = puzzle2dSharedBrushSession;
-  const sourceHandleId = candidates?.sourceHandleId || prev?.sourceHandleId || preview?.edge?.sourceHandleId || null;
+  const resolvedPreview =
+    preview === undefined ? (prev?.preview ?? null) : puzzle2dBrushPreviewIsEmpty(preview) ? null : preview;
+  const sourceFromCandidates = candidates?.sourceHandleId?.trim() ?? "";
+  const sourceHandleId =
+    sourceFromCandidates.length > 0
+      ? sourceFromCandidates
+      : resolvedPreview?.edge?.sourceHandleId?.trim() ||
+        (preview !== undefined && puzzle2dBrushPreviewIsEmpty(preview) ? null : prev?.sourceHandleId) ||
+        null;
+  const nextCandidates = candidates !== null ? candidates.candidates : (prev?.candidates ?? []);
   const next: Puzzle2dBrushSessionSnapshot = {
     candidateIndex: candidates?.index ?? prev?.candidateIndex ?? 0,
-    candidates: candidates?.candidates ?? prev?.candidates ?? [],
-    preview: preview ?? prev?.preview ?? null,
+    candidates: nextCandidates,
+    preview: resolvedPreview,
     sourceHandleId: sourceHandleId && sourceHandleId.length > 0 ? sourceHandleId : null,
   };
-  if (!next.sourceHandleId && (next.preview?.node === null || next.preview?.node === undefined)) {
+  if (!next.sourceHandleId && !next.preview && next.candidates.length === 0) {
     puzzle2dSyncBrushSessionToAllAuthoringPeers(null, source);
     return;
   }
@@ -9751,6 +9813,9 @@ export function puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot: Puzzle2dBr
   for (const peer of puzzle2dAuthoringPeerRenderers) {
     if (!peer.authoringPeerActive() || peer === skip) {
       continue;
+    }
+    if (snapshot) {
+      peer.pushAuthoritativeSceneToWasmHost();
     }
     peer.setBrushSession(snapshot);
   }
@@ -9768,6 +9833,10 @@ export function puzzle2dPushAuthoritativeSceneToAllAuthoringPeers(): void {
 
 function puzzle2dRegisterAuthoringPeer(renderer: Puzzle2dRenderer): void {
   puzzle2dAuthoringPeerRenderers.add(renderer);
+  if (puzzle2dSharedBrushSession) {
+    renderer.pushAuthoritativeSceneToWasmHost();
+    renderer.setBrushSession(puzzle2dSharedBrushSession);
+  }
 }
 
 function puzzle2dUnregisterAuthoringPeer(renderer: Puzzle2dRenderer): void {

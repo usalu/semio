@@ -1833,6 +1833,7 @@ import {
   puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
   puzzle2dSyncBrushSessionToAllAuthoringPeers,
   puzzle2dPushAuthoritativeSceneToAllAuthoringPeers,
+  puzzle2dSetBrushPlaceCommitHandler,
   puzzle2dActiveRenderer,
   DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
@@ -2602,7 +2603,6 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         onDragEnd={onCanvasDragEnd}
         onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
         onSelect={onSelect}
-        onBrushPlace={commitBrushPlacement}
         onBrushCandidates={notifyBrushCandidates}
         sceneAuthoringEpoch={sceneAuthoringEpoch}
         selectionMethod={puzzle2dSelectionMethod}
@@ -3598,11 +3598,17 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       });
       if (placed) {
         puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
-        bumpSceneAuthoringEpoch();
       }
     },
-    [bumpSceneAuthoringEpoch, guardFixtureAuthoringFromStructuralDeletes, patchFixture],
+    [guardFixtureAuthoringFromStructuralDeletes, patchFixture],
   );
+
+  reactHostPort.useEffect(() => {
+    puzzle2dSetBrushPlaceCommitHandler(commitBrushPlacement);
+    return () => {
+      puzzle2dSetBrushPlaceCommitHandler(null);
+    };
+  }, [commitBrushPlacement]);
 
   reactHostPort.useEffect(() => {
     if (puzzle2dActiveTool !== "brush") {
