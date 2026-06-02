@@ -528,6 +528,41 @@
 	border-color: var(--border-element-color);
 }
 
+.reveal .presentation-interaction-slide-reset {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 70;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 1px solid var(--border-window-color);
+	border-radius: 4px;
+	background: var(--panel);
+	color: var(--foreground);
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		opacity 0.15s ease,
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.reveal .presentation-interaction-slide-reset--visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.reveal .presentation-interaction-slide-reset--visible:hover {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-element-color);
+}
+
 .reveal .presentation-interaction-marquee {
 	position: absolute;
 	box-sizing: border-box;

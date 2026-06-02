@@ -187,9 +187,9 @@ describe("micro-commit", () => {
     const msg = buildMicroCommitMessage(root, contributor, ["- 🎆 LLM-authored change summary"]);
     const lines = msg.trimEnd().split("\n");
     expect(lines[0]).toMatch(/🚩\d{3}$/);
-    expect(lines[1]).toBe("");
+    expect(lines[1]).toMatch(/^🎆/);
     expect(lines.some((l) => l.includes("LLM-authored"))).toBe(true);
-    expect(lines.at(-2)).toBe("");
+    expect(lines.every((l) => l.length > 0)).toBe(true);
     expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
   });
 
@@ -209,6 +209,21 @@ describe("micro-commit", () => {
     const stagedHasPresentation = spawnSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" })
       .stdout?.includes("presentation/");
     if (stagedHasPresentation) expect(r.status).not.toBe(0);
+  });
+
+  test("resetMicroCommitTemplates clears commit.template and blanks GK files", async () => {
+    const { resetMicroCommitTemplates, writeMicroCommitTemplates, buildMicroCommitMessage } = await import(
+      "./micro-commit.ts"
+    );
+    const root = process.cwd();
+    const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli", email: "ueli@semio-tech.com" };
+    const msg = buildMicroCommitMessage(root, contributor, ["- 🎆 test reset"]);
+    writeMicroCommitTemplates(root, msg);
+    resetMicroCommitTemplates(root);
+    const tpl = spawnSync("git", ["config", "--local", "--get", "commit.template"], { cwd: root, encoding: "utf8" });
+    expect(tpl.status).not.toBe(0);
+    const legacy = readFileSync(join(root, ".git/gkcommittemplate.txt"), "utf8");
+    expect(legacy).toBe("\n");
   });
 
   test("shouldRefreshPreparedCommitMessage keeps user edits", async () => {

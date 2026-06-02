@@ -2182,9 +2182,10 @@ export function flowPointerDeltaToLocal(
 	currentClientY: number,
 ): { readonly dx: number; readonly dy: number } {
 	const scale = elementVisualScale(transformEl);
+	const safe = Number.isFinite(scale) && scale > 0 ? Math.min(4, Math.max(0.05, scale)) : 1;
 	return {
-		dx: (currentClientX - startClientX) / scale,
-		dy: (currentClientY - startClientY) / scale,
+		dx: (currentClientX - startClientX) / safe,
+		dy: (currentClientY - startClientY) / safe,
 	};
 }
 
@@ -2205,6 +2206,44 @@ export function dispositionPositionChanged(
 		Math.abs(a.y - b.y) > 1e-6 ||
 		Math.abs(a.width - b.width) > 1e-6 ||
 		Math.abs(a.height - b.height) > 1e-6
+	);
+}
+
+const SLIDE_INTERACTION_RESET_PROXIMITY_PX = 72;
+
+/** @emoji 📐 True when any disposition on the slide has ephemeral layout (drag, resize, or fullscreen). */
+export function slideHasEphemeralLayout(
+	transforms: ReadonlyMap<string, DispositionTransform>,
+	fullscreenIds: ReadonlySet<string>,
+	declaredRects: ReadonlyMap<string, DispositionPosition | undefined>,
+): boolean {
+	if (fullscreenIds.size > 0) {
+		return true;
+	}
+	for (const [id, transform] of transforms) {
+		const declared = declaredRects.get(id);
+		if (declared === undefined) {
+			return true;
+		}
+		if (dispositionPositionChanged(declared, transform)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/** @emoji 🎯 Pointer is within the top-right hotspot where the slide reset control lives. */
+export function pointerNearSlideResetHotspot(
+	section: HTMLElement,
+	clientX: number,
+	clientY: number,
+	proximityPx = SLIDE_INTERACTION_RESET_PROXIMITY_PX,
+): boolean {
+	const bounds = section.getBoundingClientRect();
+	return (
+		clientX >= bounds.right - proximityPx &&
+		clientY >= bounds.top &&
+		clientY <= bounds.top + proximityPx
 	);
 }
 
@@ -2346,6 +2385,7 @@ interface PresentationInteractionState {
 	readonly clearSelection: () => void;
 	readonly toggleFullscreen: (id: string) => void;
 	readonly clearTransform: (id: string) => void;
+	readonly resetSlide: () => void;
 }
 
 const PresentationInteractionContext = createContext<PresentationInteractionState | null>(null);
@@ -2439,6 +2479,12 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 		});
 	}, []);
 
+	const resetSlide = useCallback(() => {
+		setSelectedIds(new Set());
+		setTransforms(new Map());
+		setFullscreenIds(new Set());
+	}, []);
+
 	return useMemo(
 		() => ({
 			selectedIds,
@@ -2453,6 +2499,7 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 			clearSelection,
 			toggleFullscreen,
 			clearTransform,
+			resetSlide,
 		}),
 		[
 			selectedIds,
@@ -2467,6 +2514,7 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 			clearSelection,
 			toggleFullscreen,
 			clearTransform,
+			resetSlide,
 		],
 	);
 }
@@ -2691,6 +2739,9 @@ const InteractiveDisposition: FC<{
 	useLayoutEffect(() => {
 		if (!useFlowInkFrame || !(selected || gesturing || flowPixelOffset)) {
 			setInkInWrapper(null);
+			return;
+		}
+		if (gesturing) {
 			return;
 		}
 		const root = rootRef.current;
@@ -3049,7 +3100,7 @@ const InteractiveDisposition: FC<{
 			? wrapperFrame
 			: undefined;
 	const contentInkStyle: CSSProperties | undefined =
-		flowInkActive && inkInWrapper ? transformFrameStyle(inkInWrapper) : undefined;
+		flowInkActive && inkInWrapper && !flowPixelOffset ? transformFrameStyle(inkInWrapper) : undefined;
 	const flowDragOffsetStyle =
 		flowPixelOffset && transform ? flowDispositionOffsetStyle(transform) : undefined;
 	const resizeContentBaseline = measuredNatural ?? interactionRect;
@@ -3131,15 +3182,6 @@ const InteractiveDisposition: FC<{
 							</div>
 						) : null}
 						<div className="presentation-interaction-actions">
-							<button
-								type="button"
-								className="presentation-interaction-fullscreen"
-								title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
-								aria-pressed={fullscreen}
-								onClick={onFullscreenClick}
-							>
-								⤢
-							</button>
 							{canResetPosition ? (
 								<button
 									type="button"
@@ -3150,6 +3192,15 @@ const InteractiveDisposition: FC<{
 									↺
 								</button>
 							) : null}
+							<button
+								type="button"
+								className="presentation-interaction-fullscreen"
+								title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
+								aria-pressed={fullscreen}
+								onClick={onFullscreenClick}
+							>
+								⤢
+							</button>
 						</div>
 					</>
 				) : null}
@@ -3168,7 +3219,8 @@ function isDispositionPointerTarget(target: EventTarget | null): boolean {
 			target.closest(".presentation-interactive-visual-row") ||
 			target.closest(".presentation-interaction-handle") ||
 			target.closest(".presentation-interaction-fullscreen") ||
-			target.closest(".presentation-interaction-reset"),
+			target.closest(".presentation-interaction-reset") ||
+			target.closest(".presentation-interaction-slide-reset"),
 	);
 }
 
@@ -3265,6 +3317,77 @@ function useSlideBackgroundInteraction({
 
 	return { onPointerDownCapture, marquee };
 }
+
+const SlideInteractionReset: FC<{
+	readonly sectionRef: RefObject<HTMLElement | null>;
+	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
+}> = ({ sectionRef, declaredRects }) => {
+	const interaction = usePresentationInteractionState();
+	const modified = slideHasEphemeralLayout(
+		interaction.transforms,
+		interaction.fullscreenIds,
+		declaredRects,
+	);
+	const [nearHotspot, setNearHotspot] = useState(false);
+	const [hovering, setHovering] = useState(false);
+
+	useEffect(() => {
+		if (!modified) {
+			setNearHotspot(false);
+			return;
+		}
+		const section = sectionRef.current;
+		if (!section) {
+			return;
+		}
+		const onMove = (event: PointerEvent): void => {
+			setNearHotspot(pointerNearSlideResetHotspot(section, event.clientX, event.clientY));
+		};
+		const onLeave = (): void => {
+			setNearHotspot(false);
+		};
+		section.addEventListener("pointermove", onMove);
+		section.addEventListener("pointerleave", onLeave);
+		return () => {
+			section.removeEventListener("pointermove", onMove);
+			section.removeEventListener("pointerleave", onLeave);
+		};
+	}, [declaredRects, modified, sectionRef]);
+
+	if (!modified) {
+		return null;
+	}
+
+	const visible = nearHotspot || hovering;
+
+	return (
+		<button
+			type="button"
+			className={[
+				"presentation-interaction-slide-reset",
+				visible ? "presentation-interaction-slide-reset--visible" : undefined,
+			]
+				.filter(Boolean)
+				.join(" ")}
+			title="Reset slide"
+			aria-hidden={!visible}
+			tabIndex={visible ? 0 : -1}
+			onPointerEnter={() => {
+				setHovering(true);
+			}}
+			onPointerLeave={() => {
+				setHovering(false);
+			}}
+			onClick={(event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				interaction.resetSlide();
+			}}
+		>
+			↺
+		</button>
+	);
+};
 
 const InteractionLayer: FC<{
 	readonly marquee: {
@@ -4787,6 +4910,34 @@ if (import.meta.vitest) {
 	});
 
 	describe("presentation interaction geometry", () => {
+		it("detects slide ephemeral layout and reset hotspot proximity", () => {
+			const declared = new Map<string, DispositionPosition | undefined>([
+				["a", { x: 0.2, y: 0.3, width: 0.4, height: 0.2 }],
+			]);
+			expect(slideHasEphemeralLayout(new Map(), new Set(), declared)).toBe(false);
+			expect(
+				slideHasEphemeralLayout(
+					new Map([["a", { x: 0.2, y: 0.3, width: 0.4, height: 0.2 }]]),
+					new Set(),
+					declared,
+				),
+			).toBe(false);
+			expect(
+				slideHasEphemeralLayout(
+					new Map([["a", { x: 0.3, y: 0.3, width: 0.4, height: 0.2 }]]),
+					new Set(),
+					declared,
+				),
+			).toBe(true);
+			expect(slideHasEphemeralLayout(new Map(), new Set(["a"]), declared)).toBe(true);
+			const section = document.createElement("section");
+			document.body.appendChild(section);
+			section.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
+			expect(pointerNearSlideResetHotspot(section, 920, 20)).toBe(true);
+			expect(pointerNearSlideResetHotspot(section, 100, 20)).toBe(false);
+			document.body.removeChild(section);
+		});
+
 		it("detects intersection and containment", () => {
 			const a = { x: 0.1, y: 0.1, width: 0.3, height: 0.3 };
 			const b = { x: 0.25, y: 0.25, width: 0.3, height: 0.3 };
@@ -5795,6 +5946,8 @@ if (import.meta.vitest) {
 			expect(dragMatch).not.toBeNull();
 			expect(Number.parseFloat(dragMatch![1]!)).toBeCloseTo(80, 0);
 			expect(Number.parseFloat(dragMatch![2]!)).toBeCloseTo(40, 0);
+			expect(content.style.left).toBe("");
+			expect(content.style.top).toBe("");
 			expect(disposition.classList.contains("presentation-interactive-disposition--offset")).toBe(true);
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
 			expect(content.style.transform).toContain("translate");
@@ -5806,8 +5959,6 @@ if (import.meta.vitest) {
 			) as HTMLElement;
 			expect(chrome.isConnected).toBe(true);
 			expect(chrome.style.left).toBe("");
-			expect(content.style.left).not.toBe("");
-			expect(content.style.width).not.toBe("");
 			expect(chrome.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
 		});
 
@@ -6191,6 +6342,40 @@ if (import.meta.vitest) {
 			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
 		});
 
+		it("resets the whole slide from the proximity control in the top-right corner", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			const originLeft = disposition.style.left;
+			expect(section.querySelector(".presentation-interaction-slide-reset")).toBeNull();
+			act(() => {
+				pointerDrag(disposition, 300, 280, 380, 320);
+			});
+			expect(disposition.style.left).not.toBe(originLeft);
+			const slideReset = section.querySelector(
+				".presentation-interaction-slide-reset",
+			) as HTMLButtonElement;
+			expect(slideReset).toBeTruthy();
+			expect(slideReset.classList.contains("presentation-interaction-slide-reset--visible")).toBe(false);
+			act(() => {
+				section.dispatchEvent(
+					new PointerEvent("pointermove", { bubbles: true, clientX: 920, clientY: 20, pointerId: 2 }),
+				);
+			});
+			expect(slideReset.classList.contains("presentation-interaction-slide-reset--visible")).toBe(true);
+			act(() => {
+				slideReset.click();
+			});
+			expect(disposition.style.left).toBe(originLeft);
+			expect(section.querySelector(".presentation-interaction-slide-reset")).toBeNull();
+		});
+
 		it("resets a dragged canvas-framed disposition to its declared position", () => {
 			act(() => {
 				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
@@ -6204,17 +6389,17 @@ if (import.meta.vitest) {
 			const originLeft = disposition.style.left;
 			const originTop = disposition.style.top;
 			act(() => {
-				pointerClick(disposition);
-			});
-			expect(disposition.querySelector(".presentation-interaction-reset")).toBeNull();
-			act(() => {
 				pointerDrag(disposition, 300, 280, 380, 320);
 			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
 			expect(disposition.style.left).not.toBe(originLeft);
+			expect(disposition.querySelector(".presentation-interaction-fullscreen")).toBeTruthy();
 			const reset = disposition.querySelector(".presentation-interaction-reset") as HTMLButtonElement;
 			expect(reset).toBeTruthy();
-			const fullscreen = disposition.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
-			expect(reset.compareDocumentPosition(fullscreen) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+			const actions = disposition.querySelector(".presentation-interaction-actions")!;
+			const buttons = [...actions.querySelectorAll("button")];
+			expect(buttons[0]?.classList.contains("presentation-interaction-reset")).toBe(true);
+			expect(buttons[1]?.classList.contains("presentation-interaction-fullscreen")).toBe(true);
 			act(() => {
 				reset.click();
 			});

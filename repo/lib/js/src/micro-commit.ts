@@ -228,10 +228,8 @@ export function buildMicroCommitMessage(root: string, contributor: Contributor, 
   }
   const lines = [
     `${line1Base}🚩${nnn}`,
-    "",
     formatSecond(now),
     ...bullets,
-    "",
     `Signed-off-by: ${contributor.name} <${contributor.email}>`,
   ];
   return `${lines.join("\n")}\n`;
@@ -278,13 +276,14 @@ export function handlePrepareCommitMsg(root: string, msgFile: string, source: st
   const contributor = findContributor(root);
   if (!contributor) return;
   if (source === "merge" || source === "squash") return;
+  const preparedBullets = readPreparedBullets(root);
+  const newTickets = listAddedTicketPaths(root);
+  if (preparedBullets.length === 0 && newTickets.length === 0) return;
   const digestPath = preparedDigestPath(root);
   const preparedDigest = existsSync(digestPath) ? readFileSync(digestPath, "utf8") : null;
   const current = existsSync(msgFile) ? readFileSync(msgFile, "utf8") : "";
   if (!shouldRefreshPreparedCommitMessage(current, preparedDigest)) return;
-  const staged = listCachedPaths(root);
-  if (staged.length === 0) git(root, ["add", "-A"]);
-  const message = buildMicroCommitMessage(root, contributor, readPreparedBullets(root));
+  const message = buildMicroCommitMessage(root, contributor, preparedBullets);
   writeFileSync(msgFile, message);
   writeMicroCommitTemplates(root, message);
 }
@@ -300,11 +299,20 @@ export function installMicroCommitGitHooks(root: string): void {
 
 export function resetMicroCommitTemplates(root: string): void {
   const dir = gitDir(root);
-  const paths = [join(dir, "COMMIT_EDITMSG"), preparedDigestPath(root), preparedBulletsPath(root)];
+  git(root, ["config", "--local", "--unset", "commit.template"]);
+  const blank = "\n";
+  writeFileSync(join(dir, "COMMIT_EDITMSG"), blank);
+  writeFileSync(join(dir, `${GK_TEMPLATE_BASENAME}.txt`), blank);
   for (const name of readdirSync(dir)) {
-    if (name.startsWith(GK_TEMPLATE_BASENAME)) paths.push(join(dir, name));
+    if (name.startsWith(GK_TEMPLATE_BASENAME) && name !== `${GK_TEMPLATE_BASENAME}.txt`) {
+      try {
+        rmSync(join(dir, name), { force: true });
+      } catch {
+        /* ignore */
+      }
+    }
   }
-  for (const p of paths) {
+  for (const p of [preparedDigestPath(root), preparedBulletsPath(root)]) {
     try {
       rmSync(p, { force: true });
     } catch {

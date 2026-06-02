@@ -34,18 +34,19 @@ Script validates bullets against staged paths (rejects bullets that ignore real 
 
 ### 3. Reply to user
 
-Paste **only** `prepare` stdout, with **newlines preserved** (Summary / blank line / Description / Signed-off-by). No one-line mash-up.
+Paste **only** `prepare` stdout, with **newlines preserved** (one line each, **no blank lines**). No one-line mash-up.
 
 Level overrides before `--`: `gc`, `gp`, `g.`
 
 ## GitKraken
 
-- **Summary** = line 1 (`…🚩NNN`).
-- **Description** = after the blank line (click **Description** under Summary).
+- Line 1 = `…🚩NNN` (graph summary); following lines = timestamp, bullets, Signed-off-by (no empty lines between).
 - After `prepare`, if the message is stale: close the Commit panel and reopen, or click **WIP**, or check Preferences → Commit → template path matches stderr `GitKraken template: …/gkcommittemplate-NNN.txt`.
 - If the field is read-only: turn off *Apply this template to commit messages*.
 
 `bun ./script.ts setup git` once per clone.
+
+**After each commit** `post-commit` clears templates, bullets, and `commit.template` so the old message does not reappear. Run `prepare` again for the next commit.
 
 ## Script vs you
 
