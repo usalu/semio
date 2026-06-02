@@ -1422,6 +1422,10 @@ export function toggleFullscreenRect(
 
 /** @emoji 📐 reveal.js nested slide section with usable layout height for pointer math. */
 export function slideCoordinateRoot(sectionEl: HTMLElement): HTMLElement {
+	const arrangement = sectionEl.closest("section.presentation-arrangement--interactive");
+	if (arrangement instanceof HTMLElement) {
+		return arrangement;
+	}
 	let current: HTMLElement | null = sectionEl;
 	while (current && !current.classList.contains("slides")) {
 		if (current.offsetWidth > 0 && current.offsetHeight > 0) {
@@ -4223,39 +4227,47 @@ if (import.meta.vitest) {
 			expect(isFlowPixelOffsetTransform({ x: 0, y: 0, width: 0.25, height: 0.1 }, measured)).toBe(true);
 		});
 
-		it("converts screen pointer delta through section visual scale", () => {
+		it("converts screen pointer delta through element visual scale", () => {
 			const section = document.createElement("section");
+			section.className = "presentation-arrangement--interactive";
 			section.style.width = "960px";
 			section.style.height = "700px";
 			document.body.appendChild(section);
 			section.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
 			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
 			Object.defineProperty(section, "offsetHeight", { value: 700, configurable: true });
-			expect(sectionVisualScale(section)).toBeCloseTo(0.5);
+			expect(elementVisualScale(section)).toBeCloseTo(0.5);
 			const delta = flowPointerDeltaToLocal(section, 100, 200, 150, 260);
 			document.body.removeChild(section);
 			expect(delta.dx).toBeCloseTo(100);
 			expect(delta.dy).toBeCloseTo(120);
 		});
 
-		it("maps flow drag 1:1 on nested reveal stacks whose layout height exceeds one slide", () => {
+		it("maps flow drag 1:1 when reveal stack layout is tall but drag target is slide-sized", () => {
 			const reveal = document.createElement("div");
 			reveal.className = "reveal";
 			reveal.style.setProperty("--presentation-slide-width", "960");
 			reveal.style.setProperty("--presentation-slide-height", "700");
 			const stack = document.createElement("section");
 			const inner = document.createElement("section");
+			inner.className = "presentation-arrangement--interactive";
+			const content = document.createElement("div");
+			content.className = "presentation-interactive-disposition__content";
+			inner.append(content);
 			stack.append(inner);
 			reveal.append(stack);
 			document.body.append(reveal);
 			Object.defineProperty(stack, "offsetWidth", { value: 960, configurable: true });
 			Object.defineProperty(stack, "offsetHeight", { value: 4900, configurable: true });
-			Object.defineProperty(inner, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(inner, "offsetWidth", { value: 0, configurable: true });
 			Object.defineProperty(inner, "offsetHeight", { value: 0, configurable: true });
+			Object.defineProperty(content, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(content, "offsetHeight", { value: 120, configurable: true });
 			stack.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
-			inner.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
-			expect(sectionVisualScale(inner)).toBeCloseTo(0.5);
-			const delta = flowPointerDeltaToLocal(inner, 100, 200, 120, 220);
+			content.getBoundingClientRect = () => new DOMRect(0, 280, 480, 60);
+			expect(slideCoordinateRoot(inner)).toBe(inner);
+			expect(elementVisualScale(content)).toBeCloseTo(0.5);
+			const delta = flowPointerDeltaToLocal(content, 100, 200, 120, 220);
 			document.body.removeChild(reveal);
 			expect(delta.dx).toBeCloseTo(40);
 			expect(delta.dy).toBeCloseTo(40);
@@ -4978,6 +4990,12 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerDrag(disposition, 480, 320, 560, 360);
 			});
+			const dragMatch = content.style.transform.match(
+				/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/,
+			);
+			expect(dragMatch).not.toBeNull();
+			expect(Number.parseFloat(dragMatch![1]!)).toBeCloseTo(80, 0);
+			expect(Number.parseFloat(dragMatch![2]!)).toBeCloseTo(40, 0);
 			expect(disposition.classList.contains("presentation-interactive-disposition--offset")).toBe(true);
 			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
 			expect(content.style.transform).toContain("translate");

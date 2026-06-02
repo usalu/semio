@@ -2948,6 +2948,7 @@ export class Puzzle2dRenderer {
     this.emit(name, payload);
     const structural: Puzzle2dStructureDeletePayload =
       name === "nodeDelete" ? { kind: "node", id: payload.id } : name === "edgeDelete" ? { kind: "edge", id: payload.id } : { kind: "wire", id: payload.id };
+    this.pruneHostDeclarativeStructuralDelete(structural);
     puzzle2dBroadcastStructuralRemove(this, structural);
   }
 
@@ -2959,6 +2960,46 @@ export class Puzzle2dRenderer {
   /** @emoji 📌 Stores the declarative host descriptor used to recover edges after WASM structural drains. */
   rememberHostDeclarativeSceneDescriptor(descriptor: Puzzle2dSceneDescriptor): void {
     this.hostDeclarativeSceneDescriptor = descriptor;
+  }
+
+  /** @emoji ✂️ Drops a structural id from {@link Puzzle2dRenderer.hostDeclarativeSceneDescriptor} after an authoritative delete so zoom drains do not resurrect it. */
+  pruneHostDeclarativeStructuralDelete(payload: Puzzle2dStructureDeletePayload): void {
+    const host = this.hostDeclarativeSceneDescriptor;
+    if (!host) {
+      return;
+    }
+    if (payload.kind === "edge") {
+      const edges = host.edges.filter((edge) => edge.id !== payload.id);
+      if (edges.length === host.edges.length) {
+        return;
+      }
+      const next = { ...host, edges };
+      this.rememberHostDeclarativeSceneDescriptor(next);
+      this.setDeclarativeSceneEdgeExpectation(edges.length);
+      return;
+    }
+    if (payload.kind === "wire") {
+      const wires = host.wires.filter((wire) => wire.id !== payload.id);
+      if (wires.length === host.wires.length) {
+        return;
+      }
+      this.rememberHostDeclarativeSceneDescriptor({ ...host, wires });
+      return;
+    }
+    const removedHandleIds = new Set(host.handles.filter((handle) => handle.nodeId === payload.id).map((handle) => handle.id));
+    const nodes = host.nodes.filter((node) => node.id !== payload.id);
+    if (nodes.length === host.nodes.length) {
+      return;
+    }
+    const handles = host.handles.filter((handle) => handle.nodeId !== payload.id);
+    const edges = host.edges.filter((edge) => !removedHandleIds.has(edge.source) && !removedHandleIds.has(edge.target));
+    const nextNodes = nodes.map((node) => ({
+      ...node,
+      handles: node.handles.filter((handle) => handle.nodeId !== payload.id),
+    }));
+    const next = { ...host, edges, handles, nodes: nextNodes };
+    this.rememberHostDeclarativeSceneDescriptor(next);
+    this.setDeclarativeSceneEdgeExpectation(edges.length);
   }
 
   /** @emoji 🪢 Re-syncs imperative edges from {@link Puzzle2dRenderer.rememberHostDeclarativeSceneDescriptor} when WASM drains cleared them but the host still expects edges. */
@@ -4737,7 +4778,9 @@ export class Puzzle2dRenderer {
           }
           case "edgeDelete": {
             const id = String((row.payload as { id: string }).id);
-            if (drainOptions.silentStructuralRemoves && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.has(id)) {
+            const spuriousWasmEdgeDelete =
+              drainOptions.silentStructuralRemoves && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.has(id);
+            if (spuriousWasmEdgeDelete) {
               const edge = this.scene.edges.get(id);
               if (edge) {
                 this.clearWasmHostAuthorshipForEdge(id);
@@ -4764,6 +4807,9 @@ export class Puzzle2dRenderer {
               this.clearWasmHostAuthorshipForEdge(id);
               graphMutatedForHostMerge = true;
             }
+            if (!spuriousWasmEdgeDelete) {
+              this.pruneHostDeclarativeStructuralDelete({ kind: "edge", id });
+            }
             break;
           }
           case "nodeDelete": {
@@ -4779,6 +4825,9 @@ export class Puzzle2dRenderer {
                 remove();
               }
               graphMutatedForHostMerge = true;
+            }
+            if (!drainOptions.silentStructuralRemoves || this.structuralDeleteFixtureMirrorDepth > 0) {
+              this.pruneHostDeclarativeStructuralDelete({ kind: "node", id });
             }
             break;
           }
@@ -6827,6 +6876,31 @@ if (puzzle2dVitest) {
       expect(edgeDeletes).toEqual([]);
       expect(renderer.scene.edges.size).toBe(1);
       expect(renderer.scene.edges.has("edge-1")).toBe(true);
+      renderer.dispose();
+    });
+
+    it("authoritative edge delete prunes host declarative snapshot so silent zoom drains do not restore edges", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      syncPuzzle2dScene(renderer, descriptor);
+      renderer.rememberHostDeclarativeSceneDescriptor(descriptor);
+      renderer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+      renderer.withFixtureStructuralDeleteMirror(() => {
+        renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "edgeDelete", payload: { id: "edge-1" } }]));
+      });
+      expect(renderer.scene.edges.has("edge-1")).toBe(false);
+      renderer["applyWasmDrainToScene"](JSON.stringify([]), { silentStructuralRemoves: true });
+      expect(renderer.scene.edges.has("edge-1")).toBe(false);
       renderer.dispose();
     });
 
