@@ -551,6 +551,7 @@ function puzzle3dPlayKindCatalogSection(
   label: string,
   entries: readonly Puzzle3dCatalogKind[] | undefined,
   vortexKinds?: readonly VortexKind[],
+  sectionDefaultOpen = true,
 ): UiTreeSectionNode | null {
   if (!entries?.length) {
     return null;
@@ -567,7 +568,7 @@ function puzzle3dPlayKindCatalogSection(
         id: `${sectionId}.${index}.${entry.id}`,
         label: puzzle3dCatalogKindLabel(entry),
         description: entry.id,
-        defaultOpen: true,
+        defaultOpen: vortexItems.length === 0,
         ...(vortexItems.length ? { items: vortexItems } : {}),
         ...(isObjectPalette
           ? {
@@ -577,14 +578,14 @@ function puzzle3dPlayKindCatalogSection(
           : {}),
       };
     });
-  return { id: sectionId, label, defaultOpen: true, items };
+  return { id: sectionId, label, defaultOpen: sectionDefaultOpen, items };
 }
 
 /** @emoji 🏷️ Workbench kinds tab: Objects, Vortices, Cables, Attractions. */
 export function buildPuzzle3dPlayKindsTree(catalogs: KindCatalogBundle | undefined): UiNode {
   const sections = [
     puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.objects, catalogs?.vortices),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.vortices),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.vortices, undefined, false),
     puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.cables", "Cables", catalogs?.cables),
     puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.attractions),
   ].filter((section): section is UiTreeSectionNode => section !== null);
@@ -2724,7 +2725,9 @@ if (import.meta.vitest) {
         },
       });
       const tree = buildPuzzle3dPlayKindsTree(catalogs);
+      expect(tree.sections.find((section) => section.id === "puzzle-3d-play-kinds.vortices")?.defaultOpen).toBe(false);
       const base = tree.sections[0]?.items?.find((item) => item.label === "Base");
+      expect(base?.defaultOpen).toBe(false);
       expect(base?.items).toHaveLength(2);
       expect(base?.items?.[0]?.label).toBe("Core rectangular bottom");
       expect(base?.items?.[0]?.description).toBe("-7.5, -7.7, 7.5");

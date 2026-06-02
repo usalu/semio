@@ -1,0 +1,10 @@
+{
+  "title": "Hide Catalog Vortices In Tree By Default",
+  "emoji": "🌀",
+  "status": "open",
+  "description": "By default all vortices from the catalog should not be shown in the puzzle3d kinds tree.",
+  "goal": "🎯puzzle",
+  "sessions": [
+    "⚪3897e28526fb474283f7a3086159337e"
+  ]
+}

@@ -8133,10 +8133,10 @@ if (puzzle2dVitest) {
       expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("other")).toBe(false);
     });
 
-    it("puzzle2dSubscribeBrushSession receives sync updates", () => {
-      const seen: Array<Puzzle2dBrushSessionSnapshot | null> = [];
-      const unsub = puzzle2dSubscribeBrushSession((snapshot) => {
-        seen.push(snapshot);
+    it("puzzle2dSubscribeBrushSession notifies on sync updates", () => {
+      let notifyCount = 0;
+      const unsub = puzzle2dSubscribeBrushSession(() => {
+        notifyCount += 1;
       });
       const snapshot: Puzzle2dBrushSessionSnapshot = {
         candidateIndex: 0,
@@ -8145,10 +8145,48 @@ if (puzzle2dVitest) {
         sourceHandleId: "a:h0",
       };
       puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot);
+      expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node).toBeTruthy();
       puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+      expect(puzzle2dGetBrushSessionSnapshot()).toBeNull();
+      expect(notifyCount).toBeGreaterThanOrEqual(2);
       unsub();
-      expect(seen.some((row) => row?.preview?.node)).toBe(true);
-      expect(seen.at(-1)).toBeNull();
+    });
+
+    it("mirrors brush session onto every authoring peer except the driving renderer", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const drivingCanvas = createMockCanvas();
+      const mirrorCanvas = createMockCanvas();
+      const driving = new Puzzle2dRenderer({ canvas: drivingCanvas.canvas, renderMode: "headless-test" });
+      const mirror = new Puzzle2dRenderer({ canvas: mirrorCanvas.canvas, renderMode: "headless-test" });
+      const setup = (renderer: Puzzle2dRenderer) => {
+        renderer.setCamera(0, 0, 1);
+        const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+        new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
+        renderer.scene.add(node);
+        renderer.setActiveTool("brush");
+        renderer.setBrushFlushDistance(80);
+        renderer.setBrushNodeSize(40);
+        renderer.setKindCatalogs({
+          handles: [{ id: "port", name: "Port", color: "#888888" }],
+          nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+        });
+        renderer.render();
+      };
+      setup(driving);
+      setup(mirror);
+      const handleWorld = computeHandlePosition({ height: 80, radius: 40, shape: "circle", width: 80, x: 0, y: 0 }, 0);
+      const slotWorld = { x: handleWorld.x + (handleWorld.x - 0) * 2, y: handleWorld.y + (handleWorld.y - 0) * 2 };
+      const slotScreen = driving.worldToScreen(slotWorld);
+      drivingCanvas.canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
+      expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node).toBeTruthy();
+      const mirrorBefore = mirror.session.encodedSceneHint();
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(puzzle2dGetBrushSessionSnapshot(), driving);
+      mirror.render();
+      const mirrorAfter = mirror.session.encodedSceneHint();
+      expect(mirrorAfter).toBeGreaterThan(mirrorBefore);
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+      driving.dispose();
+      mirror.dispose();
     });
 
     it("brushPlace fires when pointer leaves brush slot", async () => {
@@ -9388,8 +9426,6 @@ export interface Puzzle2dCanvasProps {
   onLinkTargetRing?: (payload: Puzzle2dLinkTargetRingPayload) => void;
   /** @emoji 🔗 Host-driven link preview for cross-surface gestures (cleared when `source` is empty). */
   linkSession?: Puzzle2dLinkSessionSnapshot | null;
-  /** @emoji 🖌️ Mirrored brush slot preview for non-driving panes; omit (`undefined`) on the pane under the pointer. */
-  brushSession?: Puzzle2dBrushSessionSnapshot | null | undefined;
   /** @emoji 🖌️ Active viewport tool forwarded to the WASM host. */
   activeTool?: Puzzle2dActiveTool;
   /** @emoji 📐 Brush slot offset along handle outward normal (world units). */
@@ -9820,15 +9856,16 @@ export function puzzle2dSharedBrushSessionForTests(): Puzzle2dBrushSessionSnapsh
   return puzzle2dSharedBrushSession;
 }
 
+/** @emoji 🖌️ Snapshot for {@link puzzle2dSubscribeBrushSession} / `useSyncExternalStore`. */
+export function puzzle2dGetBrushSessionSnapshot(): Puzzle2dBrushSessionSnapshot | null {
+  return puzzle2dSharedBrushSession;
+}
+
 /** @emoji 🖌️ Subscribes to shared brush session updates (play mirrors Overview / Zoom / Selection). */
-export function puzzle2dSubscribeBrushSession(listener: (snapshot: Puzzle2dBrushSessionSnapshot | null) => void): () => void {
-  const notify = (): void => {
-    listener(puzzle2dSharedBrushSession);
-  };
-  puzzle2dBrushSessionListeners.add(notify);
-  notify();
+export function puzzle2dSubscribeBrushSession(listener: () => void): () => void {
+  puzzle2dBrushSessionListeners.add(listener);
   return () => {
-    puzzle2dBrushSessionListeners.delete(notify);
+    puzzle2dBrushSessionListeners.delete(listener);
   };
 }
 
@@ -9899,6 +9936,10 @@ function puzzle2dUpdateBrushSessionFromSource(
         (preview !== undefined && puzzle2dBrushPreviewIsEmpty(preview) ? null : prev?.sourceHandleId) ||
         null;
   const nextCandidates = candidates !== null ? candidates.candidates : (prev?.candidates ?? []);
+  if (candidates !== null && sourceFromCandidates.length === 0 && nextCandidates.length === 0) {
+    puzzle2dSyncBrushSessionToAllAuthoringPeers(null, source);
+    return;
+  }
   const next: Puzzle2dBrushSessionSnapshot = {
     candidateIndex: candidates?.index ?? prev?.candidateIndex ?? 0,
     candidates: nextCandidates,
@@ -10388,7 +10429,6 @@ export function Puzzle2dCanvas({
   onLinkCompatibleNodes,
   onLinkTargetRing,
   linkSession,
-  brushSession,
   onNodeChange,
   onNodeCreate,
   onNodeDelete,
@@ -10887,17 +10927,6 @@ export function Puzzle2dCanvas({
     }
     renderer.setLinkSession(linkSession ?? null);
   }, [linkSession]);
-
-  reactHostPort.useLayoutEffect(() => {
-    if (brushSession === undefined) {
-      return;
-    }
-    const renderer = rendererRef.current;
-    if (!renderer) {
-      return;
-    }
-    renderer.setBrushSession(brushSession);
-  }, [brushSession]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
