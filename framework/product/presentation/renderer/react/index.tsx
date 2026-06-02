@@ -229,6 +229,8 @@ export interface RevealResolvedDisposition extends ResolvedDisposition {
 	readonly revealMorphFromFrame?: DispositionPosition;
 	/** @emoji 📐 Target slide frame for source tiles: paired with {@link ResolvedDisposition.position} when the next slide morphFrom references this participant. */
 	readonly revealMorphToFrame?: DispositionPosition;
+	/** @emoji 📐 Previous-slide morphTo slot frame (catalogue grid) for crop morph into {@link ResolvedDisposition.position}. */
+	readonly revealMorphFromMorphToFrame?: DispositionPosition;
 }
 
 function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, { readonly participantId: string; readonly embodimentId: string; readonly emphasis: ParticipantEmphasis }> {
@@ -336,6 +338,18 @@ function revealMorphToFrameByParticipant(nextSlide: Slide): Map<string, Disposit
 	return map;
 }
 
+function revealMorphFromMorphToFrameByParticipant(previousSlide: Slide): Map<string, DispositionPosition> {
+	const map = new Map<string, DispositionPosition>();
+	for (const disposition of previousSlide.arrangement.dispositions) {
+		for (const slot of disposition.morphTo ?? []) {
+			if (!map.has(slot.participantId)) {
+				map.set(slot.participantId, slot.position);
+			}
+		}
+	}
+	return map;
+}
+
 /** @emoji 🔀 Resolves an arrangement and appends reveal.js morph companions for one-to-many / many-to-one. */
 export function resolveRevealArrangement(
 	scope: ReturnType<typeof buildResolutionScope>,
@@ -353,18 +367,26 @@ export function resolveRevealArrangement(
 	}
 	const morphToFrames =
 		context.nextSlide !== undefined ? revealMorphToFrameByParticipant(context.nextSlide) : undefined;
-	const withMorphToFrames = morphToFrames
-		? resolved.map((disposition) => {
-				if (disposition.revealMorphCompanion !== undefined || disposition.position === undefined) {
-					return disposition;
-				}
-				const revealMorphToFrame = morphToFrames.get(disposition.participant.id);
-				return revealMorphToFrame === undefined
-					? disposition
-					: { ...disposition, revealMorphToFrame };
-			})
-		: resolved;
-	return [...withMorphToFrames, ...companions];
+	const morphFromMorphToFrames =
+		context.previousSlide !== undefined
+			? revealMorphFromMorphToFrameByParticipant(context.previousSlide)
+			: undefined;
+	const withMorphFrames = resolved.map((disposition) => {
+		if (disposition.revealMorphCompanion !== undefined || disposition.position === undefined) {
+			return disposition;
+		}
+		let updated = disposition;
+		const revealMorphToFrame = morphToFrames?.get(disposition.participant.id);
+		if (revealMorphToFrame !== undefined) {
+			updated = { ...updated, revealMorphToFrame };
+		}
+		const revealMorphFromMorphToFrame = morphFromMorphToFrames?.get(disposition.participant.id);
+		if (revealMorphFromMorphToFrame !== undefined) {
+			updated = { ...updated, revealMorphFromMorphToFrame };
+		}
+		return updated;
+	});
+	return [...withMorphFrames, ...companions];
 }
 
 function isRevealMorphCompanionOnly(disposition: RevealResolvedDisposition): boolean {
@@ -430,6 +452,22 @@ export function slidesShareAutoAnimateId(
 	const fromId = fromSlide?.getAttribute("data-auto-animate-id");
 	const toId = toSlide?.getAttribute("data-auto-animate-id");
 	return fromId !== null && fromId !== undefined && fromId === toId;
+}
+
+/** @emoji ⏳ True while reveal.js auto-animate is measuring or running on this slide (or any slide in the deck). */
+export function isRevealSlideAutoAnimating(sectionEl: HTMLElement): boolean {
+	const state = sectionEl.getAttribute("data-auto-animate");
+	if (state === "pending" || state === "running") {
+		return true;
+	}
+	const deck = sectionEl.closest(".reveal");
+	if (!(deck instanceof HTMLElement)) {
+		return false;
+	}
+	return (
+		deck.querySelector('section[data-auto-animate="pending"], section[data-auto-animate="running"]') !==
+		null
+	);
 }
 
 /** @emoji ⏳ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
@@ -849,6 +887,9 @@ const MorphAnchorOnWrapperContext = createContext(false);
 
 /** @emoji ⛶ When true, {@link PdfMorphView} measures against the enlarged slide content box, not the declared catalogue frame. */
 const PresentationDispositionEnlargeContext = createContext(false);
+
+/** @emoji 🆔 Interactive disposition id for ephemeral pdf page navigation in {@link PdfMorphView}. */
+const PresentationInteractiveDispositionIdContext = createContext<string | undefined>(undefined);
 
 export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
 	const width = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-width") ?? "960");
@@ -1292,28 +1333,29 @@ const FIGURE_MOSAIC_ALIGN_EPSILON = 1e-4;
 /** @emoji 🧩 Grid column/row for a split crop, or null when the crop is not a mosaic cell. */
 export function figureMosaicCellIndex(
 	crop: DispositionPosition,
-	mosaic: { readonly rows: number; readonly columns: number },
+	mosaic: { readonly rows: number; readonly columns: number; readonly frame?: DispositionPosition },
 ): { readonly column: number; readonly row: number } | null {
 	const { rows, columns } = mosaic;
 	if (rows < 1 || columns < 1) {
 		return null;
 	}
-	const colWidth = 1 / columns;
-	const rowHeight = 1 / rows;
+	const mosaicFrame = mosaic.frame ?? { x: 0, y: 0, width: 1, height: 1 };
+	const colWidth = mosaicFrame.width / columns;
+	const rowHeight = mosaicFrame.height / rows;
 	if (
 		Math.abs(crop.width - colWidth) > FIGURE_MOSAIC_ALIGN_EPSILON ||
 		Math.abs(crop.height - rowHeight) > FIGURE_MOSAIC_ALIGN_EPSILON
 	) {
 		return null;
 	}
-	const column = Math.round(crop.x / colWidth);
-	const row = Math.round(crop.y / rowHeight);
+	const column = Math.round((crop.x - mosaicFrame.x) / colWidth);
+	const row = Math.round((crop.y - mosaicFrame.y) / rowHeight);
 	if (column < 0 || column >= columns || row < 0 || row >= rows) {
 		return null;
 	}
 	if (
-		Math.abs(crop.x - column * colWidth) > FIGURE_MOSAIC_ALIGN_EPSILON ||
-		Math.abs(crop.y - row * rowHeight) > FIGURE_MOSAIC_ALIGN_EPSILON
+		Math.abs(crop.x - (mosaicFrame.x + column * colWidth)) > FIGURE_MOSAIC_ALIGN_EPSILON ||
+		Math.abs(crop.y - (mosaicFrame.y + row * rowHeight)) > FIGURE_MOSAIC_ALIGN_EPSILON
 	) {
 		return null;
 	}
@@ -1350,7 +1392,13 @@ function figureCropCoverVars(
 					posX: crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100,
 					posY: crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100,
 				};
-	if (frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
+	if (
+		mosaicCell === null &&
+		frame.width > 0 &&
+		frame.height > 0 &&
+		crop.width > 0 &&
+		crop.height > 0
+	) {
 		const cropAspect = figureCropPhysicalAspect(crop, sourceAspect);
 		const frameAspect = frame.width / frame.height;
 		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
@@ -1360,6 +1408,9 @@ function figureCropCoverVars(
 			posX,
 			posY,
 		};
+	}
+	if (mosaicCell !== null) {
+		return { width: stretchWidth, height: stretchHeight, posX, posY };
 	}
 	const uniform = Math.max(stretchWidth, stretchHeight);
 	return { width: uniform, height: uniform, posX, posY };
@@ -1481,29 +1532,39 @@ export function figureCropBackgroundVars(
 	crop: DispositionPosition,
 	frame?: DispositionPosition,
 	morphFrame?: DispositionPosition,
+	fromMorphToFrame?: DispositionPosition,
 ): CSSProperties {
 	const sourceAspect = embodiment.sourceAspect ?? 1;
 	const mosaic = embodiment.mosaic;
+	const mosaicOnRest = mosaic !== undefined && fromMorphToFrame === undefined && morphFrame === undefined;
 	const restBasis = frame ?? morphFrame;
 	const morphBasis = morphFrame ?? frame;
 	const rest = restBasis
-		? figureCropCoverVars(crop, restBasis, sourceAspect, mosaic)
+		? figureCropCoverVars(crop, restBasis, sourceAspect, mosaicOnRest ? mosaic : undefined)
 		: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, sourceAspect);
 	const morph = morphBasis
 		? figureCropCoverVars(
 				crop,
 				morphBasis,
 				sourceAspect,
-				morphBasis === restBasis ? mosaic : undefined,
+				morphBasis === restBasis && mosaicOnRest ? mosaic : undefined,
 			)
 		: rest;
-	return {
+	const gridFrom = fromMorphToFrame
+		? figureCropCoverVars(crop, fromMorphToFrame, sourceAspect, mosaic)
+		: undefined;
+	const vars: CSSProperties = {
 		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
 		["--presentation-figure-bg-size" as string]: `${rest.width}% ${rest.height}%`,
 		["--presentation-figure-bg-position" as string]: `${rest.posX}% ${rest.posY}%`,
 		["--presentation-figure-bg-size-morph" as string]: `${morph.width}% ${morph.height}%`,
 		["--presentation-figure-bg-position-morph" as string]: `${morph.posX}% ${morph.posY}%`,
 	};
+	if (gridFrom) {
+		vars["--presentation-figure-bg-grid-size" as string] = `${gridFrom.width}% ${gridFrom.height}%`;
+		vars["--presentation-figure-bg-grid-position" as string] = `${gridFrom.posX}% ${gridFrom.posY}%`;
+	}
+	return vars;
 }
 
 /** @emoji 👻 Target ghost crop vars: `--presentation-figure-bg-size` = source tile frame, `-morph` = label slot (many-to-one 8→9). */
@@ -1527,6 +1588,7 @@ function FigureMorphView({
 	revealMorphCompanion,
 	morphFrame,
 	morphToFrame,
+	fromMorphToFrame,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -1538,12 +1600,14 @@ function FigureMorphView({
 	readonly revealMorphCompanion?: RevealMorphCompanionKind;
 	readonly morphFrame?: DispositionPosition;
 	readonly morphToFrame?: DispositionPosition;
+	readonly fromMorphToFrame?: DispositionPosition;
 }): ReactNode {
 	if (embodiment.crop && position) {
 		const dormant = dormantAnchor === true;
 		const morphCropFrom =
 			revealMorphCompanion === "target" && morphFrame !== undefined && position !== undefined;
-		const morphCropTo = morphToFrame !== undefined && position !== undefined;
+		const morphCropTo =
+			position !== undefined && (fromMorphToFrame !== undefined || morphToFrame !== undefined);
 		const frameStyle = anchorOnWrapper
 			? {
 					position: "relative" as const,
@@ -1573,7 +1637,13 @@ function FigureMorphView({
 					...frameStyle,
 					...(morphCropFrom && morphFrame
 						? figureCropBackgroundVarsTargetGhost(embodiment, embodiment.crop, morphFrame, position)
-						: figureCropBackgroundVars(embodiment, embodiment.crop, position, morphToFrame)),
+						: figureCropBackgroundVars(
+								embodiment,
+								embodiment.crop,
+								position,
+								morphToFrame,
+								fromMorphToFrame,
+							)),
 				}}
 				{...(morphCropFrom && embodiment.crop
 					? { "data-presentation-morph-crop": JSON.stringify(embodiment.crop) }
@@ -1712,14 +1782,33 @@ function PdfMorphView({
 	const anchorRef = useRef<HTMLDivElement>(null);
 	const slideEpoch = useContext(PresentationSlideEpochContext);
 	const enlarged = useContext(PresentationDispositionEnlargeContext);
+	const dispositionId = useContext(PresentationInteractiveDispositionIdContext);
+	const interaction = useContext(PresentationInteractionContext);
+	const declaredPage = embodiment.page ?? 1;
+	const currentPage =
+		dispositionId !== undefined && interaction !== null
+			? interaction.getPdfPage(dispositionId, declaredPage)
+			: declaredPage;
 	const containerSize = usePdfContainerSize(anchorRef, position, slideEpoch, enlarged);
 	const [pageViewport, setPageViewport] = useState<{
 		readonly width: number;
 		readonly height: number;
 	} | null>(null);
+	const [numPages, setNumPages] = useState<number | null>(null);
 	useEffect(() => {
 		setPageViewport(null);
-	}, [embodiment.page, embodiment.src, slideEpoch]);
+	}, [currentPage, embodiment.src, slideEpoch]);
+	const pdfSrcRef = useRef(embodiment.src);
+	useEffect(() => {
+		if (pdfSrcRef.current === embodiment.src) {
+			return;
+		}
+		pdfSrcRef.current = embodiment.src;
+		setNumPages(null);
+	}, [embodiment.src]);
+	const onDocumentLoadSuccess = useCallback(({ numPages: total }: { readonly numPages: number }) => {
+		setNumPages(total);
+	}, []);
 	const onPageLoadSuccess = useCallback(
 		(page: { getViewport: (options: { readonly scale: number }) => { readonly width: number; readonly height: number } }) => {
 			const viewport = page.getViewport({ scale: 1 });
@@ -1743,6 +1832,21 @@ function PdfMorphView({
 		containerSize.height !== undefined &&
 		containerSize.width > 0 &&
 		containerSize.height > 0;
+	const showPageNav =
+		enlarged &&
+		dispositionId !== undefined &&
+		interaction !== null &&
+		numPages !== null &&
+		numPages > 1;
+	const goToPage = useCallback(
+		(nextPage: number) => {
+			if (dispositionId === undefined || interaction === null) {
+				return;
+			}
+			interaction.setPdfPage(dispositionId, nextPage, declaredPage);
+		},
+		[declaredPage, dispositionId, interaction],
+	);
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<Document
@@ -1750,11 +1854,12 @@ function PdfMorphView({
 				file={embodiment.src}
 				loading={<span className="presentation-media-pdf-loading">…</span>}
 				error={<span className="presentation-media-pdf-error">PDF</span>}
+				onLoadSuccess={onDocumentLoadSuccess}
 			>
 				{ready ? (
 					<Page
 						className="presentation-media-pdf"
-						pageNumber={embodiment.page ?? 1}
+						pageNumber={currentPage}
 						scale={coverScale ?? 1}
 						onLoadSuccess={onPageLoadSuccess}
 						renderTextLayer={false}
@@ -1762,6 +1867,34 @@ function PdfMorphView({
 					/>
 				) : null}
 			</Document>
+			{showPageNav ? (
+				<div className="presentation-pdf-page-nav" role="group" aria-label="PDF pages">
+					<button
+						type="button"
+						className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--prev"
+						title="Previous page"
+						disabled={currentPage <= 1}
+						onClick={(event) => {
+							event.stopPropagation();
+							goToPage(currentPage - 1);
+						}}
+					>
+						‹
+					</button>
+					<button
+						type="button"
+						className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--next"
+						title="Next page"
+						disabled={currentPage >= numPages}
+						onClick={(event) => {
+							event.stopPropagation();
+							goToPage(currentPage + 1);
+						}}
+					>
+						›
+					</button>
+				</div>
+			) : null}
 		</div>
 	);
 }
@@ -1870,6 +2003,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: RevealRes
 						revealMorphCompanion={disposition.revealMorphCompanion}
 						morphFrame={disposition.revealMorphFromFrame}
 						morphToFrame={disposition.revealMorphToFrame}
+						fromMorphToFrame={disposition.revealMorphFromMorphToFrame}
 					/>
 				);
 			}
@@ -1917,6 +2051,27 @@ function MorphDispositionView({ disposition }: { readonly disposition: RevealRes
 //#region 🔖Interaction
 const DISPOSITION_MIN_FRACTION = 0.02;
 const POINTER_DRAG_THRESHOLD_PX = 3;
+
+/** @emoji 🗺 Swallow the post-gesture click reveal.js uses to leave overview (capture on `.reveal`). */
+export function suppressRevealOverviewSlideNavigation(event: Event): void {
+	const origin = event.target;
+	if (!(origin instanceof Element)) {
+		return;
+	}
+	const reveal = origin.closest(".reveal");
+	if (!reveal) {
+		return;
+	}
+	const swallowClick = (clickEvent: MouseEvent): void => {
+		if (!(clickEvent.target instanceof Element) || !clickEvent.target.closest("section")) {
+			return;
+		}
+		clickEvent.preventDefault();
+		clickEvent.stopImmediatePropagation();
+		reveal.removeEventListener("click", swallowClick, true);
+	};
+	reveal.addEventListener("click", swallowClick, true);
+}
 
 /** @emoji 🖱 Disposition ids to move/resize for this gesture (before async `selectIds` commits). */
 function resolveDispositionDragGroupIds(
@@ -2592,13 +2747,14 @@ export function dispositionPositionChanged(
 
 const SLIDE_INTERACTION_RESET_PROXIMITY_PX = 72;
 
-/** @emoji 📐 True when any disposition on the slide has ephemeral layout (drag, resize, or enlarge). */
+/** @emoji 📐 True when any disposition on the slide has ephemeral layout (drag, resize, enlarge, or pdf page). */
 export function slideHasEphemeralLayout(
 	transforms: ReadonlyMap<string, DispositionTransform>,
 	enlargedIds: ReadonlySet<string>,
 	declaredRects: ReadonlyMap<string, DispositionPosition | undefined>,
+	pdfPageById: ReadonlyMap<string, number> = new Map(),
 ): boolean {
-	if (enlargedIds.size > 0) {
+	if (enlargedIds.size > 0 || pdfPageById.size > 0) {
 		return true;
 	}
 	for (const [id, transform] of transforms) {
@@ -2781,11 +2937,15 @@ interface PresentationInteractionState {
 	readonly selectedIds: ReadonlySet<string>;
 	readonly transforms: ReadonlyMap<string, DispositionTransform>;
 	readonly enlargedIds: ReadonlySet<string>;
+	readonly pdfPageById: ReadonlyMap<string, number>;
 	readonly isSelected: (id: string) => boolean;
 	readonly isEnlarged: (id: string) => boolean;
+	readonly hasPdfPageOverride: (id: string) => boolean;
 	readonly getTransform: (id: string) => DispositionTransform | undefined;
+	readonly getPdfPage: (id: string, defaultPage: number) => number;
 	readonly setTransform: (id: string, rect: DispositionTransform) => void;
 	readonly setTransforms: (updates: ReadonlyMap<string, DispositionTransform>) => void;
+	readonly setPdfPage: (id: string, page: number, defaultPage: number) => void;
 	readonly selectIds: (ids: readonly string[], additive: boolean) => void;
 	readonly clearSelection: () => void;
 	readonly toggleEnlarge: (id: string) => void;
@@ -2808,10 +2968,36 @@ export function usePresentationInteraction(): PresentationInteractionState {
 	const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
 	const [transforms, setTransforms] = useState<ReadonlyMap<string, DispositionTransform>>(() => new Map());
 	const [enlargedIds, setEnlargedIds] = useState<ReadonlySet<string>>(() => new Set());
+	const [pdfPageById, setPdfPageById] = useState<ReadonlyMap<string, number>>(() => new Map());
 
 	const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
 
 	const isEnlarged = useCallback((id: string) => enlargedIds.has(id), [enlargedIds]);
+
+	const hasPdfPageOverride = useCallback((id: string) => pdfPageById.has(id), [pdfPageById]);
+
+	const getPdfPage = useCallback(
+		(id: string, defaultPage: number) => pdfPageById.get(id) ?? defaultPage,
+		[pdfPageById],
+	);
+
+	const setPdfPage = useCallback((id: string, page: number, defaultPage: number) => {
+		setPdfPageById((previous) => {
+			const had = previous.has(id);
+			const same = page === defaultPage;
+			if (!had && same) {
+				return previous;
+			}
+			if (had && same) {
+				const next = new Map(previous);
+				next.delete(id);
+				return next;
+			}
+			const next = new Map(previous);
+			next.set(id, page);
+			return next;
+		});
+	}, []);
 
 	const getTransform = useCallback((id: string) => transforms.get(id), [transforms]);
 
@@ -2910,6 +3096,23 @@ export function usePresentationInteraction(): PresentationInteractionState {
 			}
 			return next;
 		});
+		setPdfPageById((previous) => {
+			let changed = false;
+			for (const id of idSet) {
+				if (previous.has(id)) {
+					changed = true;
+					break;
+				}
+			}
+			if (!changed) {
+				return previous;
+			}
+			const next = new Map(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
 	}, []);
 
 	return useMemo(
@@ -2917,11 +3120,15 @@ export function usePresentationInteraction(): PresentationInteractionState {
 			selectedIds,
 			transforms,
 			enlargedIds,
+			pdfPageById,
 			isSelected,
 			isEnlarged,
+			hasPdfPageOverride,
 			getTransform,
+			getPdfPage,
 			setTransform,
 			setTransforms: setTransformsBatch,
+			setPdfPage,
 			selectIds,
 			clearSelection,
 			toggleEnlarge,
@@ -2932,11 +3139,15 @@ export function usePresentationInteraction(): PresentationInteractionState {
 			selectedIds,
 			transforms,
 			enlargedIds,
+			pdfPageById,
 			isSelected,
 			isEnlarged,
+			hasPdfPageOverride,
 			getTransform,
+			getPdfPage,
 			setTransform,
 			setTransformsBatch,
+			setPdfPage,
 			selectIds,
 			clearSelection,
 			toggleEnlarge,
@@ -3096,6 +3307,7 @@ const InteractiveDisposition: FC<{
 		isFlowPixelOffsetTransform(transform, measuredNatural);
 	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
 	const enlarged = interaction.isEnlarged(id);
+	const morphGhost = isRevealMorphCompanionOnly(disposition);
 	const canvasFramed = declaredRect !== undefined && !enlarged;
 	const canvasPlacement = interactionRect !== undefined;
 	const effectiveRect = resolveEffectiveDispositionRect(id, interactionRect, interaction, registry);
@@ -3121,7 +3333,9 @@ const InteractiveDisposition: FC<{
 	const [inkInWrapper, setInkInWrapper] = useState<DispositionPosition | null>(null);
 	const displayDisposition =
 		enlarged && disposition.position !== undefined
-			? { ...disposition, position: undefined }
+			? disposition.embodiment.kind === "figure" && disposition.embodiment.crop !== undefined
+				? { ...disposition, position: SLIDE_INTERACTIVE_ENLARGE_FRAME }
+				: { ...disposition, position: undefined }
 			: disposition;
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
@@ -3155,7 +3369,7 @@ const InteractiveDisposition: FC<{
 			return;
 		}
 		const section = sectionRef.current;
-		if (!section || !section.classList.contains("present")) {
+		if (!section || !section.classList.contains("present") || isRevealSlideAutoAnimating(section)) {
 			registry.registerRect(id, null);
 			return;
 		}
@@ -3171,13 +3385,17 @@ const InteractiveDisposition: FC<{
 		if (gesturing) {
 			return;
 		}
+		const section = sectionRef.current;
+		if (section && isRevealSlideAutoAnimating(section)) {
+			return;
+		}
 		const root = rootRef.current;
 		if (!root) {
 			setInkInWrapper(null);
 			return;
 		}
 		setInkInWrapper(measureDispositionBoundsInContainer(root, root));
-	}, [useFlowInkFrame, selected, gesturing, flowPixelOffset, transform, slideEpoch, disposition]);
+	}, [useFlowInkFrame, selected, gesturing, flowPixelOffset, transform, slideEpoch, disposition, sectionRef]);
 
 	const ensureRectForManipulation = useCallback(
 		(kind: "move" | "resize"): DispositionPosition | null => {
@@ -3353,6 +3571,9 @@ const InteractiveDisposition: FC<{
 				if (upEvent.pointerId !== pointerId) {
 					return;
 				}
+				if (dragging) {
+					suppressRevealOverviewSlideNavigation(upEvent);
+				}
 				setGesturing(false);
 				window.removeEventListener("pointermove", onMove);
 				window.removeEventListener("pointerup", onUp);
@@ -3491,7 +3712,8 @@ const InteractiveDisposition: FC<{
 		disposition.revealMorphFromFrame !== undefined &&
 		disposition.position !== undefined;
 	const morphCropTo =
-		disposition.revealMorphToFrame !== undefined && disposition.position !== undefined;
+		disposition.position !== undefined &&
+		(disposition.revealMorphFromMorphToFrame !== undefined || disposition.revealMorphToFrame !== undefined);
 	const wrapperClass = [
 		"presentation-interactive-disposition",
 		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
@@ -3549,6 +3771,9 @@ const InteractiveDisposition: FC<{
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
 	}
+	if (morphGhost) {
+		Object.assign(wrapperFrame, { pointerEvents: "none", zIndex: 0 });
+	}
 	const wrapperStyle: CSSProperties | undefined = enlarged
 		? transformFrameStyle(SLIDE_INTERACTIVE_ENLARGE_FRAME)
 		: Object.keys(wrapperFrame).length > 0
@@ -3571,16 +3796,20 @@ const InteractiveDisposition: FC<{
 		flowSectionFrame && transform
 			? transform
 			: canvasLiveTransform ?? effectiveRect;
-	const flowInkChromeRect = useFlowInkFrame ? (inkInWrapper ?? measuredNatural) : undefined;
+	const sectionAnimating =
+		sectionRef.current !== null && isRevealSlideAutoAnimating(sectionRef.current);
+	const flowInkChromeRect = useFlowInkFrame ? inkInWrapper : undefined;
 	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
-		selected: selected || gesturing,
+		selected: (selected || gesturing) && !sectionAnimating,
 		effectiveRect: flowInkChromeRect ?? chromeLayoutRect,
 		canvasFramed,
 		enlarged,
 	});
 	const showControls =
+		!morphGhost &&
 		(selected || gesturing) &&
-		Boolean(useFlowInkFrame ? inkInWrapper ?? measuredNatural : chromeLayoutRect ?? effectiveRect);
+		!sectionAnimating &&
+		Boolean(useFlowInkFrame ? inkInWrapper : chromeLayoutRect ?? effectiveRect);
 	const showHandles = showControls && !enlarged;
 	const canResetPosition =
 		!enlarged &&
@@ -3594,20 +3823,23 @@ const InteractiveDisposition: FC<{
 			{...(rowBandId ? { "data-row-band": rowBandId } : {})}
 			className={wrapperClass}
 			style={wrapperStyle}
-			onPointerDown={onPointerDown}
+			onPointerDown={morphGhost ? undefined : onPointerDown}
+			aria-hidden={morphGhost ? true : undefined}
 		>
 			<div
 				ref={contentRef}
 				className="presentation-interactive-disposition__content"
 				style={hasContentStyle ? contentStyle : undefined}
 			>
-				<PresentationDispositionEnlargeContext.Provider value={enlarged}>
-					<MorphAnchorOnWrapperContext.Provider
-						value={Boolean(revealMorphId && declaredRect !== undefined)}
-					>
-						<MorphDispositionView disposition={displayDisposition} />
-					</MorphAnchorOnWrapperContext.Provider>
-				</PresentationDispositionEnlargeContext.Provider>
+				<PresentationInteractiveDispositionIdContext.Provider value={id}>
+					<PresentationDispositionEnlargeContext.Provider value={enlarged}>
+						<MorphAnchorOnWrapperContext.Provider
+							value={Boolean(revealMorphId && declaredRect !== undefined)}
+						>
+							<MorphDispositionView disposition={displayDisposition} />
+						</MorphAnchorOnWrapperContext.Provider>
+					</PresentationDispositionEnlargeContext.Provider>
+				</PresentationInteractiveDispositionIdContext.Provider>
 				{showHandles ? (
 					<div
 						className="presentation-interactive-disposition__chrome"
@@ -3655,12 +3887,19 @@ function isDispositionPointerTarget(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) {
 		return false;
 	}
+	if (
+		target.closest(".presentation-target-ghost") ||
+		target.closest(".presentation-source-ghost")
+	) {
+		return false;
+	}
 	return Boolean(
 		target.closest(".presentation-interactive-disposition") ||
 			target.closest(".presentation-interactive-row-band") ||
 			target.closest(".presentation-interactive-visual-row") ||
 			target.closest(".presentation-interaction-handle") ||
 			target.closest(".presentation-interaction-enlarge") ||
+			target.closest(".presentation-pdf-page-nav__button") ||
 			target.closest(".presentation-interaction-reset") ||
 			target.closest(".presentation-interaction-slide-reset") ||
 			target.closest(".presentation-interaction-slide-reset-host"),
@@ -3739,6 +3978,7 @@ function useSlideBackgroundInteraction({
 					interaction.clearSelection();
 					return;
 				}
+				suppressRevealOverviewSlideNavigation(upEvent);
 				const end = clientToSectionFraction(fractionContainer, upEvent.clientX, upEvent.clientY);
 				const box = normalizeMarquee(start, end);
 				const rule = marqueeSelectionRule(start, end);
@@ -3770,6 +4010,9 @@ const SlideInteractionReset: FC<{
 	const hostRef = useRef<HTMLDivElement>(null);
 	const modified = dispositionIds.some((id) => {
 		if (interaction.isEnlarged(id)) {
+			return true;
+		}
+		if (interaction.hasPdfPageOverride(id)) {
 			return true;
 		}
 		const transform = interaction.getTransform(id);
@@ -3910,6 +4153,13 @@ const ArrangementSection: FC<{
 		}
 		return map;
 	}, [interactiveLayout.placements]);
+	const interactiveDispositionIds = useMemo(
+		() =>
+			interactiveLayout.placements
+				.filter((entry) => !isRevealMorphCompanionOnly(entry.disposition))
+				.map((entry) => entry.id),
+		[interactiveLayout.placements],
+	);
 	const placements = (
 		<>
 			{interactiveLayout.rowBands.map((band) => (
@@ -3939,7 +4189,7 @@ const ArrangementSection: FC<{
 				settleBeforeMorphTo={renderSlide.arrangement.settleBeforeMorphTo}
 				slideId={renderSlide.id}
 				positioned={positioned}
-				dispositionIds={interactiveLayout.placements.map((entry) => entry.id)}
+				dispositionIds={interactiveDispositionIds}
 				declaredRects={declaredRects}
 				placements={placements}
 			/>
@@ -4109,6 +4359,7 @@ export const PresentationDeck: FC<{
 				clearTimeout(autoAnimateFinalizeTimer);
 				autoAnimateFinalizeTimer = undefined;
 			}
+			relaxHiddenPreflight();
 			const slideEvent = event as Event & { readonly indexh?: number; readonly indexv?: number };
 			const fromSlide = deck.getCurrentSlide() as HTMLElement | null;
 			if (!fromSlide || slideEvent.indexh === undefined || slideEvent.indexv === undefined) {
@@ -4903,12 +5154,14 @@ if (import.meta.vitest) {
 			) as HTMLElement;
 			expect(tileFrame).toBeTruthy();
 			expect(tileFrame.style.backgroundImage).toContain("/catalogue.png");
-			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toBe("240% 240%");
+			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(
+				/^222\.2222222222222\d*% 266\.6666666666667%$/,
+			);
 			const tiles = [...container.querySelectorAll(".presentation-morph-slot--figure")] as HTMLElement[];
 			for (const node of tiles) {
-				const size = node.style.getPropertyValue("--presentation-figure-bg-size");
-				const [width, height] = size.split(/\s+/);
-				expect(width).toBe(height);
+				expect(node.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(
+					/^222\.2222222222222\d*% 266\.6666666666667%$/,
+				);
 			}
 			const positions = tiles.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
@@ -5119,6 +5372,7 @@ if (import.meta.vitest) {
 			const { fileURLToPath } = await import("node:url");
 			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
 			expect(css).toContain("presentation-figure-crop-morph-from-rest");
+			expect(css).toContain("presentation-figure-crop-morph-grid-to-focus");
 			expect(
 				css.match(
 					/presentation-morph-crop-from[\s\S]*?presentation-figure-crop-morph-from-rest/,
@@ -5151,6 +5405,17 @@ if (import.meta.vitest) {
 				)?.[0] ?? "";
 			expect(runningRule).toContain("presentation-target-ghost-fade-out");
 			expect(runningRule).not.toMatch(/opacity:\s*1\s*!important/);
+			expect(restRule).toContain("pointer-events: none !important");
+			expect(restRule).toContain("z-index: 0");
+			expect(css).toContain(
+				"> .presentation-interactive-disposition:not(.presentation-target-ghost):not(.presentation-source-ghost)",
+			);
+			const pendingGhostRule =
+				css.match(
+					/\.reveal \.slides section\[data-auto-animate="pending"\] \.presentation-target-ghost \{[\s\S]*?\}/,
+				)?.[0] ?? "";
+			expect(pendingGhostRule).toContain("pointer-events: none !important");
+			expect(pendingGhostRule).not.toContain("pointer-events: auto");
 		});
 
 		it("resolvePresentationAssetUrl maps deck-relative paths through the Vite base", () => {
@@ -5211,13 +5476,97 @@ if (import.meta.vitest) {
 			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe("50% 50%");
 		});
 
+		it("keeps focus rest crop centered while exposing grid vars for catalogue-to-focus", () => {
+			const sourceAspect = 1222 / 896;
+			const catalogueFrame = { x: 0.127, y: 0.2, width: 0.746, height: 0.75 };
+			const crop = {
+				x: catalogueFrame.x + catalogueFrame.width / 5,
+				y: catalogueFrame.y + catalogueFrame.height / 3,
+				width: catalogueFrame.width / 5,
+				height: catalogueFrame.height / 3,
+			};
+			const gridFrame = { x: 0.127, y: 0.2, width: 0.1492, height: 0.1823 };
+			const focusFrame = { x: 0.1, y: 0.2, width: 0.15, height: 0.18 };
+			const labelFrame = { x: 0.6, y: 0.44, width: 0.24, height: 0.12 };
+			const vars = figureCropBackgroundVars(
+				{
+					kind: "figure",
+					id: "tile-figure",
+					src: "/bauteilbörse.png",
+					crop,
+					sourceAspect,
+					mosaic: { rows: 3, columns: 5, frame: catalogueFrame },
+				},
+				crop,
+				focusFrame,
+				labelFrame,
+				gridFrame,
+			);
+			expect(vars["--presentation-figure-bg-grid-position" as keyof typeof vars]).toBe("25% 50%");
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBeTruthy();
+			expect(vars["--presentation-figure-bg-grid-size" as keyof typeof vars]).toMatch(
+				/^670(\.\d+)?% 400(\.\d+)?%$/,
+			);
+			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBeTruthy();
+			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBeTruthy();
+		});
+
+		it("sets revealMorphFromMorphToFrame from the previous slide morphTo slots", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "tile" }],
+					embodiments: [
+						{
+							kind: "figure",
+							id: "tile-figure",
+							src: "/a.png",
+							crop: { x: 0, y: 0, width: 0.5, height: 1 },
+						},
+					],
+				},
+			]);
+			const gridFrame = { x: 0.1, y: 0.1, width: 0.2, height: 0.3 };
+			const focusFrame = { x: 0.4, y: 0.2, width: 0.15, height: 0.18 };
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "focus",
+					dispositions: [
+						{
+							participantId: "tile",
+							embodimentId: "tile-figure",
+							emphasis: "active",
+							position: focusFrame,
+						},
+					],
+				},
+				{
+					previousSlide: {
+						arrangement: {
+							id: "catalogue",
+							dispositions: [
+								{
+									participantId: "catalogue",
+									embodimentId: "catalogue--figure",
+									morphTo: [{ participantId: "tile", embodimentId: "tile-figure", position: gridFrame }],
+								},
+							],
+						},
+					},
+				},
+			);
+			expect(resolved.find((entry) => entry.participant.id === "tile")?.revealMorphFromMorphToFrame).toEqual(
+				gridFrame,
+			);
+		});
+
 		it("assigns seam-aligned mosaic positions per split tile", () => {
 			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
 			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
 			const embodiment = {
 				kind: "figure" as const,
 				src: "/catalogue.png",
-				mosaic: { rows: 2, columns: 2 },
+				mosaic: { rows: 2, columns: 2, frame },
 			};
 			const positions = tiles.map(
 				(tile) =>
@@ -5284,6 +5633,21 @@ if (import.meta.vitest) {
 			expect(pairs).toHaveLength(1);
 			expect(pairs[0]?.from.getAttribute("data-id")).toBe("catalogue-col1");
 			expect(pairs[0]?.from.classList.contains("presentation-morph-slot--figure")).toBe(true);
+		});
+
+		it("detects reveal slide auto-animate pending or running on section or deck", () => {
+			const section = document.createElement("section");
+			const deck = document.createElement("div");
+			deck.className = "reveal";
+			deck.appendChild(section);
+			expect(isRevealSlideAutoAnimating(section)).toBe(false);
+			section.setAttribute("data-auto-animate", "pending");
+			expect(isRevealSlideAutoAnimating(section)).toBe(true);
+			section.setAttribute("data-auto-animate", "");
+			const other = document.createElement("section");
+			other.setAttribute("data-auto-animate", "running");
+			deck.appendChild(other);
+			expect(isRevealSlideAutoAnimating(section)).toBe(true);
 		});
 
 		it("detects consecutive slides in the same auto-animate run", () => {
@@ -5654,6 +6018,28 @@ if (import.meta.vitest) {
 			expect(marqueeSelects(windowMarquee, inside, "window")).toBe(true);
 			expect(marqueeSelects(windowMarquee, partial, "window")).toBe(false);
 			expect(marqueeSelects(windowMarquee, partial, "crossing")).toBe(true);
+		});
+
+		it("suppresses the reveal overview slide click after pointer gestures", () => {
+			const reveal = document.createElement("div");
+			reveal.className = "reveal";
+			const slide = document.createElement("section");
+			const inner = document.createElement("div");
+			reveal.appendChild(slide);
+			slide.appendChild(inner);
+			let overviewClickCalls = 0;
+			slide.addEventListener(
+				"click",
+				() => {
+					overviewClickCalls += 1;
+				},
+				true,
+			);
+			suppressRevealOverviewSlideNavigation({ target: inner } as Event);
+			const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+			inner.dispatchEvent(click);
+			expect(overviewClickCalls).toBe(0);
+			expect(click.defaultPrevented).toBe(true);
 		});
 
 		it("translates and resizes with minimum size", () => {
@@ -6209,6 +6595,12 @@ if (import.meta.vitest) {
 			expect(focusSlide.querySelectorAll(".presentation-source-ghost").length).toBe(0);
 			expect(labelSlide.querySelectorAll(".presentation-source-ghost").length).toBe(0);
 			expect(labelSlide.querySelectorAll(".presentation-target-ghost").length).toBeGreaterThanOrEqual(8);
+			for (const ghost of labelSlide.querySelectorAll<HTMLElement>(
+				".presentation-interactive-disposition.presentation-target-ghost",
+			)) {
+				expect(ghost.style.pointerEvents).toBe("none");
+				expect(ghost.getAttribute("aria-hidden")).toBe("true");
+			}
 			mountRoot.remove();
 		});
 
@@ -6717,6 +7109,65 @@ if (import.meta.vitest) {
 			expect(chrome.style.left).toBe(`${(330 / 960) * 100}%`);
 			expect(chrome.style.width).not.toBe("100%");
 			expect(chrome.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
+		});
+
+		it("pairs intro description morph on leaf anchors for reveal auto-animate", () => {
+			unmountPresentation();
+			const deck = intro({
+				language: "de",
+				title: { full: ["Entwerfen mit Bestand"], short: "Entwerfen mit Bestand" },
+				description: {
+					full: [
+						"Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten",
+					],
+					short: "Plattform zum Entwerfen mit wiederverwendete Bauteilen",
+				},
+				goal: ["Mehr Zeit zum manuellen Entwerfen", "dank Automatisierung!"],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni" },
+						],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni", shortName: "LUH", suffix: { mark: "x", name: "Chair X" } },
+						],
+					],
+				},
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const descriptionSlide = container.querySelector(
+				'section[title="description"]',
+			) as HTMLElement;
+			const goalSlide = container.querySelector('section[title="goal"]') as HTMLElement;
+			expect(descriptionSlide.hasAttribute("data-auto-animate")).toBe(true);
+			expect(descriptionSlide.getAttribute("data-auto-animate-id")).toBe(
+				goalSlide.getAttribute("data-auto-animate-id"),
+			);
+			const pairs = presentationAutoAnimateMatcher.call(
+				{ findAutoAnimateMatches: () => {} } as AutoAnimateMatcherHost,
+				descriptionSlide,
+				goalSlide,
+			);
+			expect(pairs.some((pair) => pair.from.getAttribute("data-id") === "description")).toBe(true);
+			expect(pairs.every((pair) => pair.from.closest(".presentation-interactive-disposition[data-id]"))).toBe(
+				false,
+			);
+			const morphSource = goalSlide.querySelector(
+				'h2.presentation-text-morph-source[data-id="description"]',
+			);
+			const morphTarget = goalSlide.querySelector("h2.presentation-morph-target");
+			expect(morphSource?.textContent).toContain("Eine offene Plattform");
+			expect(morphTarget?.textContent).toContain("Plattform zum Entwerfen");
+			expect(
+				goalSlide.querySelectorAll('h2[data-id="description"]:not(.presentation-text-morph-source)').length,
+			).toBe(0);
+			expect(goalSlide.querySelector('.presentation-interactive-disposition[data-id="description"]')).toBeNull();
 		});
 
 		it("resizes flow disposition from se handle when nested reveal section has zero height", () => {
@@ -7390,6 +7841,96 @@ if (import.meta.vitest) {
 			);
 		});
 
+		it("shows center-bottom pdf page nav when enlarged and switches pages", async () => {
+			const deck: Presentation = {
+				id: "pdf-page-nav",
+				name: "Pdf Page Nav",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "media",
+										participants: [{ id: "thesis" }],
+										embodiments: [
+											{ kind: "pdf", id: "thesis--doc", src: "/thesis.pdf", page: 1 },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "media",
+													dispositions: [
+														{
+															participantId: "thesis",
+															embodimentId: "thesis--doc",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector(
+				".presentation-interactive-disposition--kind-pdf",
+			) as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 96, 385, 768, 280);
+			act(() => {
+				pointerClick(disposition);
+			});
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
+			mockClientRect(content, 48, 52, 864, 595);
+			const enlargeButton = disposition.querySelector(
+				".presentation-interaction-enlarge",
+			) as HTMLButtonElement;
+			act(() => {
+				enlargeButton.click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			const nav = disposition.querySelector(".presentation-pdf-page-nav");
+			expect(nav).toBeTruthy();
+			const page = disposition.querySelector(".react-pdf__Page") as HTMLElement;
+			expect(page.dataset.page).toBe("1");
+			const nextButton = disposition.querySelector(
+				".presentation-pdf-page-nav__button--next",
+			) as HTMLButtonElement;
+			const prevButton = disposition.querySelector(
+				".presentation-pdf-page-nav__button--prev",
+			) as HTMLButtonElement;
+			expect(prevButton.disabled).toBe(true);
+			expect(nextButton.disabled).toBe(false);
+			act(() => {
+				nextButton.click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(disposition.querySelector(".react-pdf__Page")?.getAttribute("data-page")).toBe("2");
+			expect(
+				(disposition.querySelector(".presentation-pdf-page-nav__button--prev") as HTMLButtonElement).disabled,
+			).toBe(false);
+		});
+
 		it("toggles enlarge on a cropped figure tile disposition", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const grid = split({ source: "/catalogue.png", rows: 2, columns: 2, frame, alt: "Catalogue" });
@@ -7441,6 +7982,13 @@ if (import.meta.vitest) {
 			expect(tile.style.width).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.width * 100}%`);
 			expect(tile.style.height).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.height * 100}%`);
 			expect(canvas.contains(tile)).toBe(true);
+			const cropSlot = tile.querySelector(".presentation-morph-slot--figure") as HTMLElement | null;
+			expect(cropSlot).toBeTruthy();
+			expect(tile.querySelector(".presentation-media-figure")).toBeNull();
+			expect(cropSlot?.style.backgroundImage).toContain("catalogue.png");
+			const bgSize = cropSlot?.style.getPropertyValue("--presentation-figure-bg-size");
+			expect(bgSize).toBeTruthy();
+			expect(bgSize).not.toBe("100% 100%");
 			expect(globalsCssSource).toMatch(
 				/\.presentation-interactive-disposition--enlarged:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-crop-fill[\s\S]*width\s*:\s*100%\s*!important/s,
 			);

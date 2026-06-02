@@ -22,7 +22,7 @@
   "parts": [
     {
       "id": "01890804-66f2-4544-98f0-b6f0c0615492",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 121.195,
         "y": 245.063,
@@ -70,12 +70,12 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f4_b_c1"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f4_b_c1"
       }
     },
     {
       "id": "02526a37-d870-40de-8f83-ad74773deb73",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 121.195,
         "y": 422.534,
@@ -123,12 +123,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl1_d0_t_f3_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl1_d0_t_f3_b_c1"
       }
     },
     {
       "id": "03b08a1d-bd01-4d7f-829e-e9008af5f8c1",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 21.002,
         "y": -712.446,
@@ -176,12 +176,12 @@
           1,
           0
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f9_b_c1"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f9_b_c1"
       }
     },
     {
       "id": "049888c1-42a1-4ee9-913d-2d16cbf90341",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": -222.974,
@@ -229,12 +229,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f6_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f6_b_c1"
       }
     },
     {
       "id": "072ae026-2a96-4599-b809-885ef08bf3f4",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": -587.824,
@@ -282,12 +282,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f8_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f8_b_c0"
       }
     },
     {
       "id": "085a9625-3c6d-4e2d-921a-70ac66cbc56a",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": 833.268,
@@ -335,12 +335,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f0_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f0_b_c1"
       }
     },
     {
       "id": "087e2e86-96d9-4034-aa11-45e360a73761",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 21.002,
         "y": 352.378,
@@ -388,12 +388,12 @@
           1,
           0
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f3_b_c1"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f3_b_c1"
       }
     },
     {
       "id": "0a23d9c7-b75b-4166-8730-351367df9f8a",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": 593.823,
@@ -441,12 +441,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f2_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f2_b_c0"
       }
     },
     {
       "id": "0a5ebf89-46ea-4aee-ae72-5a9424ab88f1",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": 717.675,
@@ -494,12 +494,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f1_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f1_b_c0"
       }
     },
     {
       "id": "0ab890b8-783e-44fb-8e36-d7d92c54474d",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": -841.245,
@@ -547,12 +547,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f10_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f10_b_c1"
       }
     },
     {
       "id": "0bb2a1dd-c9e3-4cb8-9590-faf1bc8d32ad",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 121.195,
         "y": 777.475,
@@ -600,12 +600,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl1_d0_t_f1_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl1_d0_t_f1_b_c1"
       }
     },
     {
       "id": "0cc16d2b-ec2e-45c1-aa33-b835a6c9d83a",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": -101.296,
@@ -653,12 +653,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f6_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f6_b_c1"
       }
     },
     {
       "id": "0fda6c60-3b37-46df-9212-2e1ce2d9baa8",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -34.438,
         "y": 677.45,
@@ -706,12 +706,12 @@
           1,
           0
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f1_b_c0"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f1_b_c0"
       }
     },
     {
       "id": "10bbba6a-100d-4b4e-b5fa-6aa851caaa52",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 151.262,
         "y": 379.594,
@@ -759,12 +759,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl1_d1_t_f3_b_c1"
+        "label": "Capsule With Balcony L · cs_sl1_d1_t_f3_b_c1"
       }
     },
     {
       "id": "10f6459b-06db-4100-b2d4-0296077c465d",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": -941.438,
@@ -812,12 +812,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f10_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f10_b_c1"
       }
     },
     {
       "id": "11028f3e-9b83-427e-ad8a-36f13e94c9c9",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": -128.283,
         "y": -394.263,
@@ -865,12 +865,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule S · cs_sl1_d0_t_f7_b_c0"
+        "label": "Capsule With Balcony S · cs_sl1_d0_t_f7_b_c0"
       }
     },
     {
       "id": "1193fcf7-e96f-48cc-8cea-cdad0b75bbd0",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -135.172,
         "y": 764.405,
@@ -918,12 +918,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Backslash · cs_sl2_d0_t_f1_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl2_d0_t_f1_b_c0"
       }
     },
     {
       "id": "14507529-de04-4eaa-bf7d-beddca7d46e9",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": 841.85,
@@ -971,12 +971,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f0_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f0_b_c1"
       }
     },
     {
       "id": "1493671a-6c3b-42c7-98f9-67903212a99e",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": 185.263,
@@ -1024,12 +1024,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f4_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f4_b_c0"
       }
     },
     {
       "id": "156383bf-3817-4c04-818a-e64892ed57fa",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": 431.116,
@@ -1077,7 +1077,7 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f3_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f3_b_c1"
       }
     },
     {
@@ -1341,7 +1341,7 @@
     },
     {
       "id": "1972af01-10c0-4da2-8267-d6672c8778c7",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -128.283,
         "y": 493.09,
@@ -1389,12 +1389,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f2_b_c0"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f2_b_c0"
       }
     },
     {
       "id": "19d94471-b440-4be4-ad4a-f6755d24a0e8",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 151.262,
         "y": -862.7,
@@ -1442,12 +1442,12 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f10_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f10_b_c1"
       }
     },
     {
       "id": "1ac5ad13-63e4-41cc-af35-cea46d5a047e",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 151.262,
         "y": 202.123,
@@ -1495,7 +1495,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f4_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f4_b_c1"
       }
     },
     {
@@ -1759,7 +1759,7 @@
     },
     {
       "id": "2473699e-f806-491e-8c80-a2bc03f60cc7",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 121.195,
         "y": -642.29,
@@ -1807,12 +1807,12 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f9_b_c1"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f9_b_c1"
       }
     },
     {
       "id": "24dc6dca-c4a8-4754-adaa-61011e2d9b7b",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": -755.386,
@@ -1860,12 +1860,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f9_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f9_b_c1"
       }
     },
     {
       "id": "25b0dba0-8f81-423a-94a1-b911a6031010",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": 948.764,
@@ -1913,12 +1913,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f0_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f0_b_c0"
       }
     },
     {
       "id": "27d9be65-dfdf-420e-a3f1-1b584af62b83",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": -45.504,
@@ -1966,12 +1966,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f5_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f5_b_c1"
       }
     },
     {
       "id": "28638ae5-5591-427a-8859-2a1d80633edc",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": -55.412,
@@ -2019,12 +2019,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f5_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f5_b_c0"
       }
     },
     {
       "id": "288f5a34-305a-4b76-87c2-3ed34b5675a9",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": 685.864,
@@ -2072,12 +2072,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f1_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f1_b_c1"
       }
     },
     {
       "id": "2c171390-ce9b-4399-94aa-71a21c482093",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": 123.385,
@@ -2125,12 +2125,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f4_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f4_b_c1"
       }
     },
     {
       "id": "2c4fd9c3-fecf-4fa1-b1cd-69ed957b94e6",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": -308.833,
@@ -2178,7 +2178,7 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f7_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f7_b_c1"
       }
     },
     {
@@ -2729,7 +2729,7 @@
     },
     {
       "id": "31c92922-b2f1-40e0-a186-bee2d209e466",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": -293.53,
@@ -2777,12 +2777,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f7_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f7_b_c0"
       }
     },
     {
       "id": "323375ad-496b-4b23-8454-3e02a76fced3",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": 655.797,
@@ -2830,12 +2830,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f1_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f1_b_c1"
       }
     },
     {
       "id": "328b32f3-28b2-4809-a43f-9431ec4143a0",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": -733.901,
@@ -2883,7 +2883,7 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f9_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f9_b_c1"
       }
     },
     {
@@ -3147,7 +3147,7 @@
     },
     {
       "id": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": 578.52,
@@ -3195,12 +3195,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f2_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f2_b_c1"
       }
     },
     {
       "id": "3beea11e-35a1-414a-a21d-a188157591a8",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 151.262,
         "y": -152.818,
@@ -3248,12 +3248,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl1_d1_t_f6_b_c1"
+        "label": "Capsule With Balcony L · cs_sl1_d1_t_f6_b_c1"
       }
     },
     {
       "id": "3f53491f-eba2-4e53-8b0e-c80f030a519f",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -34.438,
         "y": 322.508,
@@ -3301,12 +3301,12 @@
           1,
           0
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f3_b_c0"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f3_b_c0"
       }
     },
     {
       "id": "4215ae1f-2636-443e-9499-f272b12f0d17",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": 76.175,
@@ -3354,12 +3354,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f5_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f5_b_c1"
       }
     },
     {
       "id": "42cac031-0a1c-435c-aa8f-09c8598523ae",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 151.262,
         "y": -330.289,
@@ -3407,12 +3407,12 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f7_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f7_b_c1"
       }
     },
     {
       "id": "45d4a26d-fd7d-4445-b075-3e52b24de667",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": -169.678,
@@ -3460,12 +3460,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f6_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f6_b_c0"
       }
     },
     {
       "id": "4a46b7f2-2046-4f75-8366-ea8b1ada5c93",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -135.172,
         "y": 409.463,
@@ -3513,12 +3513,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl2_d0_t_f3_b_c0"
+        "label": "Capsule With Balcony J · cs_sl2_d0_t_f3_b_c0"
       }
     },
     {
       "id": "4ab8da16-00a7-4c2d-b9ae-cd694119a4da",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 121.195,
         "y": 954.946,
@@ -3566,12 +3566,12 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f0_b_c1"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f0_b_c1"
       }
     },
     {
       "id": "4b5c5bfe-7129-4bf8-bce6-3430ddb47d1f",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": -471.001,
@@ -3619,12 +3619,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f8_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f8_b_c0"
       }
     },
     {
       "id": "4c1a395f-a2b9-4482-99bf-61fc8afc18da",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": 362.734,
@@ -3672,12 +3672,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f3_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f3_b_c0"
       }
     },
     {
       "id": "4d2ede45-9474-4371-8b49-5b92fb7d904b",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": 7.793,
@@ -3725,12 +3725,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f5_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f5_b_c0"
       }
     },
     {
       "id": "4e0b6527-5198-4138-a0f3-ce7cb8c0cd30",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -34.438,
         "y": 854.92,
@@ -3778,12 +3778,12 @@
           1,
           0
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f0_b_c0"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f0_b_c0"
       }
     },
     {
       "id": "530abb65-c3fb-4271-8adf-9a94faa3d0a7",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -128.283,
         "y": -39.322,
@@ -3831,12 +3831,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f5_b_c0"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f5_b_c0"
       }
     },
     {
       "id": "536f3512-ca21-45ab-a6a8-08f48a939c8f",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": 486.908,
@@ -3884,12 +3884,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f2_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f2_b_c1"
       }
     },
     {
       "id": "537fa738-c6a1-4015-b9ea-d751d0580dd8",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -88.057,
         "y": -99.969,
@@ -3937,12 +3937,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl2_d1_t_f6_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl2_d1_t_f6_b_c0"
       }
     },
     {
       "id": "53ca4530-f017-4079-bbae-16bf1a76c2df",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": 933.461,
@@ -3990,12 +3990,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f0_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f0_b_c1"
       }
     },
     {
       "id": "549de7e4-6d98-4f86-b068-6461b88de67d",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": -633.708,
@@ -4043,12 +4043,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f9_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f9_b_c1"
       }
     },
     {
       "id": "54fd9af2-2038-4567-895c-e20c3b47e76c",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -88.057,
         "y": -277.44,
@@ -4096,12 +4096,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl2_d1_t_f7_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl2_d1_t_f7_b_c0"
       }
     },
     {
       "id": "561f418a-311e-4a28-bc04-95f35bce9011",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 121.195,
         "y": -287.349,
@@ -4149,7 +4149,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f7_b_c1"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f7_b_c1"
       }
     },
     {
@@ -4413,7 +4413,7 @@
     },
     {
       "id": "5bdc7584-ecc5-4a6b-85db-af82e511154e",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": 540.205,
@@ -4461,12 +4461,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f2_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f2_b_c0"
       }
     },
     {
       "id": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": 508.393,
@@ -4514,12 +4514,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f2_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f2_b_c1"
       }
     },
     {
       "id": "5de35caa-0f02-43d7-ae74-aa730efd3386",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 21.002,
         "y": -357.505,
@@ -4567,12 +4567,12 @@
           1,
           0
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f7_b_c1"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f7_b_c1"
       }
     },
     {
       "id": "5def8f68-d629-4c24-8e76-5e12ea88a861",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": 300.856,
@@ -4620,7 +4620,7 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f3_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f3_b_c1"
       }
     },
     {
@@ -4884,7 +4884,7 @@
     },
     {
       "id": "5f911ea2-42a3-4354-b58d-786ec2539d4b",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": -577.915,
@@ -4932,7 +4932,7 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f8_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f8_b_c1"
       }
     },
     {
@@ -4988,7 +4988,7 @@
     },
     {
       "id": "60f7c606-1326-44c9-9fd7-4a3a17d15e0c",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": 191.767,
@@ -5036,12 +5036,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f4_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f4_b_c0"
       }
     },
     {
       "id": "64239b67-f7c9-4c25-9d22-4225f6668cd7",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": 724.179,
@@ -5089,12 +5089,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f1_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f1_b_c0"
       }
     },
     {
       "id": "64cd3320-6801-46ed-8683-20a81acc673c",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": 771.294,
@@ -5142,7 +5142,7 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f1_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f1_b_c0"
       }
     },
     {
@@ -5665,7 +5665,7 @@
     },
     {
       "id": "66b5cd84-bb09-4e47-8dc9-18d5a1113b4f",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": -54.086,
@@ -5713,12 +5713,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f5_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f5_b_c1"
       }
     },
     {
       "id": "68329fc1-37b6-4b3e-9b34-28fc47e96898",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 151.262,
         "y": 24.653,
@@ -5766,7 +5766,7 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f5_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f5_b_c1"
       }
     },
     {
@@ -5823,7 +5823,7 @@
     },
     {
       "id": "69e4f5f8-1d4b-4960-be4b-a9ca323fbef8",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": -456.237,
@@ -5871,12 +5871,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f8_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f8_b_c1"
       }
     },
     {
       "id": "6bd6036e-dd1d-4ef6-9e34-090ff050dba4",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": 546.708,
@@ -5924,12 +5924,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f2_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f2_b_c0"
       }
     },
     {
       "id": "6c2cce5c-e3ea-42e4-aa65-498c0c47c453",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": 369.238,
@@ -5977,12 +5977,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f3_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f3_b_c0"
       }
     },
     {
       "id": "6f257b95-74a0-441e-8c10-c7973b00b294",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": 299.529,
@@ -6030,12 +6030,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f3_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f3_b_c0"
       }
     },
     {
       "id": "6f318d54-948f-40b7-be92-d18ccd482d17",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": -116.059,
@@ -6083,12 +6083,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f6_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f6_b_c0"
       }
     },
     {
       "id": "710f1c95-8a66-4135-99ea-245dd4b81507",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -135.172,
         "y": -122.949,
@@ -6136,7 +6136,7 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl2_d0_t_f6_b_c0"
+        "label": "Capsule With Balcony J · cs_sl2_d0_t_f6_b_c0"
       }
     },
     {
@@ -6400,7 +6400,7 @@
     },
     {
       "id": "72c81fc7-6b0e-421e-ae27-9d4e70f662c4",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -128.283,
         "y": 848.031,
@@ -6448,12 +6448,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f0_b_c0"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f0_b_c0"
       }
     },
     {
       "id": "748b60c0-6730-4f46-be70-62b435c4bb45",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": -524.619,
@@ -6501,12 +6501,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f8_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f8_b_c0"
       }
     },
     {
       "id": "775b73e2-effe-46f5-a538-1768534b86b2",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": -586.497,
@@ -6554,12 +6554,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f8_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f8_b_c1"
       }
     },
     {
       "id": "794499b1-500b-41b1-a271-29e67f4629c5",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 21.002,
         "y": 884.79,
@@ -6607,7 +6607,7 @@
           1,
           0
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f0_b_c1"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f0_b_c1"
       }
     },
     {
@@ -7233,7 +7233,7 @@
     },
     {
       "id": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": 608.587,
@@ -7281,12 +7281,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f2_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f2_b_c1"
       }
     },
     {
       "id": "7fdfbaa6-bb6f-410c-a79b-e8ff0136a236",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": -409.027,
@@ -7334,12 +7334,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f7_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f7_b_c1"
       }
     },
     {
       "id": "81fe9985-4791-4e70-8b81-012e13eab8e2",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": 863.335,
@@ -7387,12 +7387,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f0_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f0_b_c1"
       }
     },
     {
       "id": "82d258be-3368-485f-ba34-c75847d4405f",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": 330.923,
@@ -7440,12 +7440,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f3_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f3_b_c1"
       }
     },
     {
       "id": "83630a6c-b717-4fd7-8636-376d863ef176",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -88.057,
         "y": 432.443,
@@ -7493,12 +7493,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl2_d1_t_f3_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl2_d1_t_f3_b_c0"
       }
     },
     {
       "id": "859638d9-270f-413a-bfb0-b9400a3e21b7",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -135.172,
         "y": 586.934,
@@ -7546,12 +7546,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Backslash · cs_sl2_d0_t_f2_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl2_d0_t_f2_b_c0"
       }
     },
     {
       "id": "87dd15bb-a74d-4f06-b3b5-a362767d7363",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -128.283,
         "y": 313.019,
@@ -7599,12 +7599,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f3_b_c0"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f3_b_c0"
       }
     },
     {
       "id": "8821d699-009b-4001-984b-a5c20490848a",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": 309.438,
@@ -7652,12 +7652,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f3_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f3_b_c1"
       }
     },
     {
       "id": "88bc30e1-0cd9-4a34-bd4d-2463f2660c78",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": -163.174,
@@ -7705,7 +7705,7 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f6_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f6_b_c0"
       }
     },
     {
@@ -7969,7 +7969,7 @@
     },
     {
       "id": "8b8ef6bd-e8d7-4bda-bf89-cbf3f373de09",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": 46.108,
@@ -8017,12 +8017,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f5_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f5_b_c1"
       }
     },
     {
       "id": "8cadc9d3-8329-461a-b849-8e2f0df53c8d",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": 401.049,
@@ -8070,12 +8070,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f3_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f3_b_c1"
       }
     },
     {
       "id": "8cf31906-5b4c-48d7-929f-cbe0e469d423",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": 478.326,
@@ -8123,12 +8123,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f2_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f2_b_c1"
       }
     },
     {
       "id": "8ea801da-b5ad-4fc2-94bb-d6f2142a1400",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -135.172,
         "y": 231.993,
@@ -8176,12 +8176,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Backslash · cs_sl2_d0_t_f4_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl2_d0_t_f4_b_c0"
       }
     },
     {
       "id": "8ed7926a-3736-4812-941c-2471de6efb8b",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": 476.999,
@@ -8229,12 +8229,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f2_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f2_b_c0"
       }
     },
     {
       "id": "8efaff31-ae6e-4f14-9753-d9fde9a37b90",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 151.262,
         "y": -685.23,
@@ -8282,12 +8282,12 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f9_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f9_b_c1"
       }
     },
     {
       "id": "9071b6f8-7aa8-4c79-b9e1-c747518dce41",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -88.057,
         "y": 964.855,
@@ -8335,7 +8335,7 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl2_d1_t_f0_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl2_d1_t_f0_b_c0"
       }
     },
     {
@@ -8858,7 +8858,7 @@
     },
     {
       "id": "93d989bb-4066-4c09-87ee-1dab2e27c8d8",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": 416.353,
@@ -8906,12 +8906,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f3_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f3_b_c0"
       }
     },
     {
       "id": "976cd37f-4099-46c1-b9fe-f693ac20490c",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": 14.296,
@@ -8959,12 +8959,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f5_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f5_b_c0"
       }
     },
     {
       "id": "9901f61f-d0da-4a2a-a0f4-3028be4f54d8",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": 755.99,
@@ -9012,12 +9012,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f1_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f1_b_c1"
       }
     },
     {
       "id": "9a121d65-7b7b-417f-aa84-cff5b1370683",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -128.283,
         "y": 670.56,
@@ -9065,12 +9065,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f1_b_c0"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f1_b_c0"
       }
     },
     {
       "id": "9a209b1a-86b5-4852-9a90-c238c35b1038",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 21.002,
         "y": -889.917,
@@ -9118,12 +9118,12 @@
           1,
           0
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f10_b_c1"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f10_b_c1"
       }
     },
     {
       "id": "9b4f2cfe-7177-4b77-becc-fdf1f0c3bb04",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -135.172,
         "y": -477.89,
@@ -9171,12 +9171,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Backslash · cs_sl2_d0_t_f8_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl2_d0_t_f8_b_c0"
       }
     },
     {
       "id": "9bfa1f48-46f3-4fd7-a416-8280e06b3461",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -88.057,
         "y": 254.972,
@@ -9224,7 +9224,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule L · cs_sl2_d1_t_f4_b_c0"
+        "label": "Capsule With Balcony L · cs_sl2_d1_t_f4_b_c0"
       }
     },
     {
@@ -9724,7 +9724,7 @@
     },
     {
       "id": "9dda6a6c-8e71-4506-9226-77af581628d4",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": -347.149,
@@ -9772,12 +9772,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f7_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f7_b_c0"
       }
     },
     {
       "id": "9e140565-2f54-4204-b5c6-23a8f982761a",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -135.172,
         "y": 54.522,
@@ -9825,7 +9825,7 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Backslash · cs_sl2_d0_t_f5_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl2_d0_t_f5_b_c0"
       }
     },
     {
@@ -9882,7 +9882,7 @@
     },
     {
       "id": "a16ba50b-f236-4d8d-91be-3459b28bc059",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 121.195,
         "y": -819.76,
@@ -9930,12 +9930,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl1_d0_t_f10_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl1_d0_t_f10_b_c1"
       }
     },
     {
       "id": "a251d19c-5826-4599-967c-fc976947267f",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": 153.452,
@@ -9983,12 +9983,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f4_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f4_b_c1"
       }
     },
     {
       "id": "a2ad1224-5915-4ba4-be15-6850d23720ce",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -34.438,
         "y": 145.038,
@@ -10036,12 +10036,12 @@
           1,
           0
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f4_b_c0"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f4_b_c0"
       }
     },
     {
       "id": "a3ea30e7-5602-4d0c-9541-13bc1a5c6ef6",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -88.057,
         "y": 77.501,
@@ -10089,12 +10089,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl2_d1_t_f5_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl2_d1_t_f5_b_c0"
       }
     },
     {
       "id": "a4450dcd-57ce-4dcc-a235-96b3b75cc82b",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": -378.96,
@@ -10142,12 +10142,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f7_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f7_b_c1"
       }
     },
     {
       "id": "a6155a06-37a9-48d2-86cb-93d0d2be53c4",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": -763.968,
@@ -10195,12 +10195,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f9_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f9_b_c1"
       }
     },
     {
       "id": "ac8569fc-2dc4-4e7e-bd07-83e841624802",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -128.283,
         "y": 138.149,
@@ -10248,12 +10248,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f4_b_c0"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f4_b_c0"
       }
     },
     {
       "id": "ad940e2b-12e4-49ba-8cfa-98854e5b2f7a",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": -340.645,
@@ -10301,12 +10301,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f7_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f7_b_c0"
       }
     },
     {
       "id": "adeee513-f8d6-422b-bab5-05514510cd76",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -34.438,
         "y": -387.374,
@@ -10354,7 +10354,7 @@
           1,
           0
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f7_b_c0"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f7_b_c0"
       }
     },
     {
@@ -10618,7 +10618,7 @@
     },
     {
       "id": "aee66807-ac00-4b12-8251-abafefdae05b",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 151.262,
         "y": -507.759,
@@ -10666,12 +10666,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl1_d1_t_f8_b_c1"
+        "label": "Capsule With Balcony L · cs_sl1_d1_t_f8_b_c1"
       }
     },
     {
       "id": "b00a847f-6585-48a3-b9ee-4903c3e6a5b3",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": -24.019,
@@ -10719,12 +10719,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f5_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f5_b_c1"
       }
     },
     {
       "id": "b3712e24-369c-4549-b55a-ede7f3d29fbb",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -135.172,
         "y": 941.875,
@@ -10772,12 +10772,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl2_d0_t_f0_b_c0"
+        "label": "Capsule With Balcony J · cs_sl2_d0_t_f0_b_c0"
       }
     },
     {
       "id": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 151.262,
         "y": 912.006,
@@ -10825,12 +10825,12 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f0_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f0_b_c1"
       }
     },
     {
       "id": "ba35dd11-3022-4408-913f-0f6d25b40a83",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 21.002,
         "y": 707.319,
@@ -10878,12 +10878,12 @@
           1,
           0
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f1_b_c1"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f1_b_c1"
       }
     },
     {
       "id": "bacfa200-04fe-4f3d-b281-e203893124d8",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": -911.372,
@@ -10931,12 +10931,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f10_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f10_b_c1"
       }
     },
     {
       "id": "bd2a1977-cedb-41bb-bf40-543c798fd2fd",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": 131.967,
@@ -10984,12 +10984,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f4_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f4_b_c1"
       }
     },
     {
       "id": "bfc3de9f-d1f7-496d-8657-8a3334d086a2",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -34.438,
         "y": -209.904,
@@ -11037,12 +11037,12 @@
           1,
           0
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f6_b_c0"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f6_b_c0"
       }
     },
     {
       "id": "c343b2f3-f528-42e3-9ba1-fe27e00a6c8c",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": -811.178,
@@ -11090,12 +11090,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f10_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f10_b_c1"
       }
     },
     {
       "id": "c69ffa1e-add7-430d-a478-5ce92d2d7654",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": 831.941,
@@ -11143,12 +11143,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f0_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f0_b_c0"
       }
     },
     {
       "id": "c8749a39-f9d1-48b2-b331-6d00d2615302",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": 901.65,
@@ -11196,12 +11196,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f0_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f0_b_c0"
       }
     },
     {
       "id": "cb832a2c-e9db-469c-a27a-03f2de76501d",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": -932.856,
@@ -11249,12 +11249,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f10_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f10_b_c1"
       }
     },
     {
       "id": "cc03c72c-5cc8-40ce-8c49-dc45daa89170",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": -486.304,
@@ -11302,12 +11302,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f8_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f8_b_c1"
       }
     },
     {
       "id": "cd57b80c-d734-4a34-9d8d-437b12727dbd",
-      "partKind": "Capsule P",
+      "partKind": "Capsule With Balcony P",
       "puzzle2d": {
         "x": 99.74,
         "y": -231.556,
@@ -11355,12 +11355,12 @@
           1,
           0
         ],
-        "label": "Capsule P · cs_sl2_d1_t_f6_b_c1"
+        "label": "Capsule With Balcony P · cs_sl2_d1_t_f6_b_c1"
       }
     },
     {
       "id": "cfe5a195-9439-48b2-8e15-58087f5f0e6f",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": 654.47,
@@ -11408,12 +11408,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f1_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f1_b_c0"
       }
     },
     {
       "id": "d03e6df1-6332-47d0-8e2f-ba364a1cc1b3",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": -201.489,
@@ -11461,12 +11461,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f6_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f6_b_c1"
       }
     },
     {
       "id": "d04d9e84-6f8c-45d1-93c7-068498c7d962",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 21.002,
         "y": 174.907,
@@ -11514,12 +11514,12 @@
           1,
           0
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f4_b_c1"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f4_b_c1"
       }
     },
     {
       "id": "d064105d-9a9d-442b-a53f-ed010b155b89",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 121.195,
         "y": 600.005,
@@ -11567,12 +11567,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl1_d0_t_f2_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl1_d0_t_f2_b_c1"
       }
     },
     {
       "id": "d45a533d-4975-4a93-a6c4-74ea4b2fdac9",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 21.002,
         "y": -180.034,
@@ -11620,12 +11620,12 @@
           1,
           0
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f6_b_c1"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f6_b_c1"
       }
     },
     {
       "id": "d6d8d74b-68c7-434f-83ab-1eebfe388f34",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": -232.883,
@@ -11673,12 +11673,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f6_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f6_b_c0"
       }
     },
     {
       "id": "d7a393ed-e204-411c-a372-d38b0f0decff",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": 61.411,
@@ -11726,12 +11726,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f5_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f5_b_c0"
       }
     },
     {
       "id": "d88f2d4c-4e31-454f-aee5-446636931c37",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 151.262,
         "y": 734.535,
@@ -11779,12 +11779,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl1_d1_t_f1_b_c1"
+        "label": "Capsule With Balcony L · cs_sl1_d1_t_f1_b_c1"
       }
     },
     {
       "id": "db29f29d-7f80-41e9-bab2-51100d97fd01",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": -131.363,
@@ -11832,12 +11832,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f6_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f6_b_c1"
       }
     },
     {
       "id": "dc1c5b79-335b-49a7-aa1d-bcd0ed26cd9e",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -128.283,
         "y": -216.793,
@@ -11885,12 +11885,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f6_b_c0"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f6_b_c0"
       }
     },
     {
       "id": "dc6e7ac6-1515-46ca-9e94-248988badc0f",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -88.057,
         "y": 609.913,
@@ -11938,12 +11938,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule L · cs_sl2_d1_t_f2_b_c0"
+        "label": "Capsule With Balcony L · cs_sl2_d1_t_f2_b_c0"
       }
     },
     {
       "id": "dcf9ff79-1f52-412d-9eb4-7329f77b237c",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": 151.262,
         "y": 557.065,
@@ -11991,12 +11991,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl1_d1_t_f2_b_c1"
+        "label": "Capsule With Balcony L · cs_sl1_d1_t_f2_b_c1"
       }
     },
     {
       "id": "dfb776f3-e722-4c07-86ee-471dcb89d918",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": -400.445,
@@ -12044,12 +12044,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f7_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f7_b_c1"
       }
     },
     {
       "id": "e1a31a11-ebee-4934-bdfa-cc43ca63c6ff",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 121.195,
         "y": -464.819,
@@ -12097,12 +12097,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl1_d0_t_f8_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl1_d0_t_f8_b_c1"
       }
     },
     {
       "id": "e59f5903-f9e5-45ad-b153-c9f5f6268799",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": 143.08,
         "y": -556.43,
@@ -12150,12 +12150,12 @@
           1,
           0
         ],
-        "label": "Capsule S · cs_sl2_d0_t_f8_b_c1"
+        "label": "Capsule With Balcony S · cs_sl2_d0_t_f8_b_c1"
       }
     },
     {
       "id": "e69ffcb1-0d2f-4a77-bd24-df67ed998192",
-      "partKind": "Capsule S",
+      "partKind": "Capsule With Balcony S",
       "puzzle2d": {
         "x": -128.283,
         "y": -571.734,
@@ -12203,12 +12203,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule S · cs_sl1_d0_t_f8_b_c0"
+        "label": "Capsule With Balcony S · cs_sl1_d0_t_f8_b_c0"
       }
     },
     {
       "id": "e80dc9d0-a547-42f8-943d-b3df6a4165c3",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": -410.354,
@@ -12256,12 +12256,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f7_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f7_b_c0"
       }
     },
     {
       "id": "ec9ecf17-4f23-4bfb-a37d-f890951b105e",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -88.057,
         "y": -454.91,
@@ -12309,12 +12309,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule L · cs_sl2_d1_t_f8_b_c0"
+        "label": "Capsule With Balcony L · cs_sl2_d1_t_f8_b_c0"
       }
     },
     {
       "id": "ee2a19ee-04c2-4023-b048-4695dd8971f7",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -88.057,
         "y": 787.384,
@@ -12362,12 +12362,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule L · cs_sl2_d1_t_f1_b_c0"
+        "label": "Capsule With Balcony L · cs_sl2_d1_t_f1_b_c0"
       }
     },
     {
       "id": "f16efdbd-88ff-453b-a6b3-781952c6b6e6",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -81.553,
         "y": 122.058,
@@ -12415,12 +12415,12 @@
           1,
           0
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f4_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f4_b_c0"
       }
     },
     {
       "id": "f1b5e882-0d34-40af-aa83-cca07919adab",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": 963.528,
@@ -12468,12 +12468,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f0_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f0_b_c1"
       }
     },
     {
       "id": "f26701fa-20d2-4eac-a466-33478434470a",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": 253.645,
@@ -12521,7 +12521,7 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f4_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f4_b_c1"
       }
     },
     {
@@ -13044,7 +13044,7 @@
     },
     {
       "id": "f3621bd3-c6bb-40ee-8c34-cb18831c1f10",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 121.195,
         "y": -109.878,
@@ -13092,12 +13092,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl1_d0_t_f6_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl1_d0_t_f6_b_c1"
       }
     },
     {
       "id": "f44e6d7b-1386-439b-8705-1a7d9b23e83d",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 121.195,
         "y": 67.593,
@@ -13145,12 +13145,12 @@
           0.7071067811865475,
           0.7071067811865475
         ],
-        "label": "Capsule J · cs_sl1_d0_t_f5_b_c1"
+        "label": "Capsule With Balcony J · cs_sl1_d0_t_f5_b_c1"
       }
     },
     {
       "id": "f537171c-bacd-4422-abed-09e1ab19c572",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": 51.069,
         "y": 664.379,
@@ -13198,12 +13198,12 @@
           1,
           0
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f1_b_c1"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f1_b_c1"
       }
     },
     {
       "id": "f540bf88-1f95-4a3a-99ff-b7c4154a7c05",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": -278.767,
@@ -13251,12 +13251,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f7_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f7_b_c1"
       }
     },
     {
       "id": "f5828fcc-c966-431b-8d19-276123c68003",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": -151.262,
         "y": 895.146,
@@ -13304,12 +13304,12 @@
           0.7071067811865475,
           -0.7071067811865475
         ],
-        "label": "Capsule Slash · cs_sl1_d1_t_f0_b_c0"
+        "label": "Capsule With Balcony Slash · cs_sl1_d1_t_f0_b_c0"
       }
     },
     {
       "id": "f9e9746c-e5c1-4570-8d5f-4b050c5aff33",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": -663.775,
@@ -13357,12 +13357,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f9_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f9_b_c1"
       }
     },
     {
       "id": "fc693ca3-6a41-49b5-b5f6-258a7a06ed2e",
-      "partKind": "Capsule L",
+      "partKind": "Capsule With Balcony L",
       "puzzle2d": {
         "x": -18.348,
         "y": -518.115,
@@ -13410,12 +13410,12 @@
           0,
           1
         ],
-        "label": "Capsule L · cs_sl0_d1_t_f8_b_c0"
+        "label": "Capsule With Balcony L · cs_sl0_d1_t_f8_b_c0"
       }
     },
     {
       "id": "fd6dfe66-2051-441a-ab36-d551b99f575a",
-      "partKind": "Capsule Backslash",
+      "partKind": "Capsule With Balcony Backslash",
       "puzzle2d": {
         "x": -41.328,
         "y": 238.882,
@@ -13463,12 +13463,12 @@
           0,
           1
         ],
-        "label": "Capsule Backslash · cs_sl0_d0_t_f4_b_c0"
+        "label": "Capsule With Balcony Backslash · cs_sl0_d0_t_f4_b_c0"
       }
     },
     {
       "id": "fda1c2b5-1900-49ea-834b-8d2e00d50982",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": -135.172,
         "y": -300.419,
@@ -13516,12 +13516,12 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl2_d0_t_f7_b_c0"
+        "label": "Capsule With Balcony J · cs_sl2_d0_t_f7_b_c0"
       }
     },
     {
       "id": "fe8bb27a-9ac4-4731-8760-5ab24e35ed7f",
-      "partKind": "Capsule Slash",
+      "partKind": "Capsule With Balcony Slash",
       "puzzle2d": {
         "x": 72.524,
         "y": 786.057,
@@ -13569,12 +13569,12 @@
           0,
           1
         ],
-        "label": "Capsule Slash · cs_sl0_d3_t_f1_b_c1"
+        "label": "Capsule With Balcony Slash · cs_sl0_d3_t_f1_b_c1"
       }
     },
     {
       "id": "fea0125a-04d0-4b51-89b7-335c951e169c",
-      "partKind": "Capsule J",
+      "partKind": "Capsule With Balcony J",
       "puzzle2d": {
         "x": 29.584,
         "y": 223.578,
@@ -13622,7 +13622,7 @@
           0,
           1
         ],
-        "label": "Capsule J · cs_sl0_d2_t_f4_b_c1"
+        "label": "Capsule With Balcony J · cs_sl0_d2_t_f4_b_c1"
       }
     }
   ],
@@ -14529,34 +14529,9 @@
   "kindCatalogs": {
     "parts": [
       {
-        "id": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
-        "name": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939",
-        "label": "semio.metabolism.light.node.019d8734-03bb-774e-b52e-68d4f010e939"
-      },
-      {
-        "id": "Last Storey Tambour",
-        "name": "Last Storey Tambour",
-        "label": "Last Storey Tambour"
-      },
-      {
         "id": "Balcony",
         "name": "Balcony",
         "label": "Balcony"
-      },
-      {
-        "id": "Bridge",
-        "name": "Bridge",
-        "label": "Bridge"
-      },
-      {
-        "id": "Single Storey Tambour",
-        "name": "Single Storey Tambour",
-        "label": "Single Storey Tambour"
-      },
-      {
-        "id": "Capsule S",
-        "name": "Capsule S",
-        "label": "Capsule S"
       },
       {
         "id": "Base",
@@ -14564,49 +14539,14 @@
         "label": "Base"
       },
       {
-        "id": "Single Storey Tambour",
-        "name": "Single Storey Tambour",
-        "label": "Single Storey Tambour"
-      },
-      {
-        "id": "First Storey Tambour",
-        "name": "First Storey Tambour",
-        "label": "First Storey Tambour"
-      },
-      {
-        "id": "Tambour",
-        "name": "Tambour",
-        "label": "Tambour"
-      },
-      {
-        "id": "Capsule Slash",
-        "name": "Capsule Slash",
-        "label": "Capsule Slash"
-      },
-      {
-        "id": "Capsule Q",
-        "name": "Capsule Q",
-        "label": "Capsule Q"
-      },
-      {
-        "id": "Capsule P",
-        "name": "Capsule P",
-        "label": "Capsule P"
-      },
-      {
-        "id": "Capsule Slash",
-        "name": "Capsule Slash",
-        "label": "Capsule Slash"
-      },
-      {
         "id": "Base Blob",
         "name": "Base Blob",
         "label": "Base Blob"
       },
       {
-        "id": "Last Storey Tambour",
-        "name": "Last Storey Tambour",
-        "label": "Last Storey Tambour"
+        "id": "Bridge",
+        "name": "Bridge",
+        "label": "Bridge"
       },
       {
         "id": "Capital",
@@ -14614,24 +14554,14 @@
         "label": "Capital"
       },
       {
-        "id": "Capsule P",
-        "name": "Capsule P",
-        "label": "Capsule P"
+        "id": "Capsule",
+        "name": "Capsule",
+        "label": "Capsule"
       },
       {
-        "id": "Ellipsoid",
-        "name": "Ellipsoid",
-        "label": "Ellipsoid"
-      },
-      {
-        "id": "Capsule L",
-        "name": "Capsule L",
-        "label": "Capsule L"
-      },
-      {
-        "id": "Capsule S",
-        "name": "Capsule S",
-        "label": "Capsule S"
+        "id": "Capsule Backslash",
+        "name": "Capsule Backslash",
+        "label": "Capsule Backslash"
       },
       {
         "id": "Capsule J",
@@ -14639,9 +14569,24 @@
         "label": "Capsule J"
       },
       {
-        "id": "First Storey Tambour",
-        "name": "First Storey Tambour",
-        "label": "First Storey Tambour"
+        "id": "Capsule L",
+        "name": "Capsule L",
+        "label": "Capsule L"
+      },
+      {
+        "id": "Capsule P",
+        "name": "Capsule P",
+        "label": "Capsule P"
+      },
+      {
+        "id": "Capsule Q",
+        "name": "Capsule Q",
+        "label": "Capsule Q"
+      },
+      {
+        "id": "Capsule S",
+        "name": "Capsule S",
+        "label": "Capsule S"
       },
       {
         "id": "Capsule Slash",
@@ -14649,104 +14594,49 @@
         "label": "Capsule Slash"
       },
       {
-        "id": "Capsule S",
-        "name": "Capsule S",
-        "label": "Capsule S"
+        "id": "Capsule With Balcony Backslash",
+        "name": "Capsule With Balcony Backslash",
+        "label": "Capsule With Balcony Backslash"
       },
       {
-        "id": "Capsule P",
-        "name": "Capsule P",
-        "label": "Capsule P"
+        "id": "Capsule With Balcony J",
+        "name": "Capsule With Balcony J",
+        "label": "Capsule With Balcony J"
       },
       {
-        "id": "Capsule L",
-        "name": "Capsule L",
-        "label": "Capsule L"
+        "id": "Capsule With Balcony L",
+        "name": "Capsule With Balcony L",
+        "label": "Capsule With Balcony L"
       },
       {
-        "id": "Capsule",
-        "name": "Capsule",
-        "label": "Capsule"
+        "id": "Capsule With Balcony P",
+        "name": "Capsule With Balcony P",
+        "label": "Capsule With Balcony P"
       },
       {
-        "id": "Capsule Q",
-        "name": "Capsule Q",
-        "label": "Capsule Q"
+        "id": "Capsule With Balcony Q",
+        "name": "Capsule With Balcony Q",
+        "label": "Capsule With Balcony Q"
       },
       {
-        "id": "Capsule J",
-        "name": "Capsule J",
-        "label": "Capsule J"
+        "id": "Capsule With Balcony S",
+        "name": "Capsule With Balcony S",
+        "label": "Capsule With Balcony S"
       },
       {
-        "id": "Capsule J",
-        "name": "Capsule J",
-        "label": "Capsule J"
+        "id": "Capsule With Balcony Slash",
+        "name": "Capsule With Balcony Slash",
+        "label": "Capsule With Balcony Slash"
       },
       {
-        "id": "Capsule L",
-        "name": "Capsule L",
-        "label": "Capsule L"
-      },
-      {
-        "id": "Capsule Backslash",
-        "name": "Capsule Backslash",
-        "label": "Capsule Backslash"
+        "id": "Capsule With Balcony Z",
+        "name": "Capsule With Balcony Z",
+        "label": "Capsule With Balcony Z"
       },
       {
         "id": "Capsule Z",
         "name": "Capsule Z",
         "label": "Capsule Z"
-      },
-      {
-        "id": "Capsule L",
-        "name": "Capsule L",
-        "label": "Capsule L"
-      },
-      {
-        "id": "Capsule S",
-        "name": "Capsule S",
-        "label": "Capsule S"
-      },
-      {
-        "id": "Capsule J",
-        "name": "Capsule J",
-        "label": "Capsule J"
-      },
-      {
-        "id": "Trapezoid",
-        "name": "Trapezoid",
-        "label": "Trapezoid"
-      },
-      {
-        "id": "Capsule Z",
-        "name": "Capsule Z",
-        "label": "Capsule Z"
-      },
-      {
-        "id": "Capsule Backslash",
-        "name": "Capsule Backslash",
-        "label": "Capsule Backslash"
-      },
-      {
-        "id": "Capsule Backslash",
-        "name": "Capsule Backslash",
-        "label": "Capsule Backslash"
-      },
-      {
-        "id": "Cylindric Tambour",
-        "name": "Cylindric Tambour",
-        "label": "Cylindric Tambour"
-      },
-      {
-        "id": "Capsule Z",
-        "name": "Capsule Z",
-        "label": "Capsule Z"
-      },
-      {
-        "id": "Capsule Q",
-        "name": "Capsule Q",
-        "label": "Capsule Q"
       },
       {
         "id": "Cylindric Capital",
@@ -14754,29 +14644,94 @@
         "label": "Cylindric Capital"
       },
       {
-        "id": "Capsule Q",
-        "name": "Capsule Q",
-        "label": "Capsule Q"
+        "id": "Cylindric First Storey Tambour",
+        "name": "Cylindric First Storey Tambour",
+        "label": "Cylindric First Storey Tambour"
       },
       {
-        "id": "Capsule P",
-        "name": "Capsule P",
-        "label": "Capsule P"
+        "id": "Cylindric Last Storey Tambour",
+        "name": "Cylindric Last Storey Tambour",
+        "label": "Cylindric Last Storey Tambour"
       },
       {
-        "id": "Capsule Slash",
-        "name": "Capsule Slash",
-        "label": "Capsule Slash"
+        "id": "Cylindric Single Storey Tambour",
+        "name": "Cylindric Single Storey Tambour",
+        "label": "Cylindric Single Storey Tambour"
       },
       {
-        "id": "Capsule Backslash",
-        "name": "Capsule Backslash",
-        "label": "Capsule Backslash"
+        "id": "Cylindric Tambour",
+        "name": "Cylindric Tambour",
+        "label": "Cylindric Tambour"
       },
       {
-        "id": "Capsule Z",
-        "name": "Capsule Z",
-        "label": "Capsule Z"
+        "id": "Ellipsoid",
+        "name": "Ellipsoid",
+        "label": "Ellipsoid"
+      },
+      {
+        "id": "First Storey Tambour",
+        "name": "First Storey Tambour",
+        "label": "First Storey Tambour"
+      },
+      {
+        "id": "Last Storey Tambour",
+        "name": "Last Storey Tambour",
+        "label": "Last Storey Tambour"
+      },
+      {
+        "id": "Single Storey Tambour",
+        "name": "Single Storey Tambour",
+        "label": "Single Storey Tambour"
+      },
+      {
+        "id": "Tambour",
+        "name": "Tambour",
+        "label": "Tambour"
+      },
+      {
+        "id": "Trapezoid",
+        "name": "Trapezoid",
+        "label": "Trapezoid"
+      },
+      {
+        "id": "Trapezoid Capsule Backslash",
+        "name": "Trapezoid Capsule Backslash",
+        "label": "Trapezoid Capsule Backslash"
+      },
+      {
+        "id": "Trapezoid Capsule J",
+        "name": "Trapezoid Capsule J",
+        "label": "Trapezoid Capsule J"
+      },
+      {
+        "id": "Trapezoid Capsule L",
+        "name": "Trapezoid Capsule L",
+        "label": "Trapezoid Capsule L"
+      },
+      {
+        "id": "Trapezoid Capsule P",
+        "name": "Trapezoid Capsule P",
+        "label": "Trapezoid Capsule P"
+      },
+      {
+        "id": "Trapezoid Capsule Q",
+        "name": "Trapezoid Capsule Q",
+        "label": "Trapezoid Capsule Q"
+      },
+      {
+        "id": "Trapezoid Capsule S",
+        "name": "Trapezoid Capsule S",
+        "label": "Trapezoid Capsule S"
+      },
+      {
+        "id": "Trapezoid Capsule Slash",
+        "name": "Trapezoid Capsule Slash",
+        "label": "Trapezoid Capsule Slash"
+      },
+      {
+        "id": "Trapezoid Capsule Z",
+        "name": "Trapezoid Capsule Z",
+        "label": "Trapezoid Capsule Z"
       }
     ],
     "grips": [

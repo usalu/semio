@@ -102,14 +102,11 @@ export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
 /** @emoji 📐 `bauteilbörse.png` pixel width÷height (1222×896). */
 export const CATALOGUE_SOURCE_ASPECT = 1222 / 896;
 
-const CATALOGUE_FRAME_WIDTH = 0.746;
-const CATALOGUE_FRAME_HEIGHT = CATALOGUE_FRAME_WIDTH / CATALOGUE_SOURCE_ASPECT;
-
 export const CATALOGUE_FRAME = {
 	x: 0.127,
-	y: 0.1 + (0.75 - CATALOGUE_FRAME_HEIGHT) / 2,
-	width: CATALOGUE_FRAME_WIDTH,
-	height: CATALOGUE_FRAME_HEIGHT,
+	y: 0.1,
+	width: 0.746,
+	height: 0.75,
 };
 
 /** @emoji 🏷 Grid keys of all 3×5 catalogue tiles → semantic participant ids. */
@@ -342,7 +339,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		id: CATALOGUE_EMBODIMENT_FULL,
 		src: ASSET_CATALOGUE,
 		alt: "Komponentenkatalog",
-		crop: { x: 0, y: 0, width: 1, height: 1 },
+		crop: CATALOGUE_FRAME,
 		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{

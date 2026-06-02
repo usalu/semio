@@ -58,6 +58,8 @@ export interface TextEmbodiment {
 export interface FigureMosaicGrid {
 	readonly rows: number;
 	readonly columns: number;
+	/** @emoji 📐 Normalized source region the grid subdivides (default full image). */
+	readonly frame?: DispositionPosition;
 }
 
 /** @emoji 🖼 Raster or vector figure on a slide; optional {@link FigureEmbodiment.crop} for a normalized source region. */
@@ -419,15 +421,17 @@ export function splitFigureGrid(spec: SplitFigureGridSpec): SplitGridCell[] {
 	const cellWidth = (frame.width - gap * (columns - 1)) / columns;
 	const cellHeight = (frame.height - gap * (rows - 1)) / rows;
 	const cells: SplitGridCell[] = [];
+	const cropWidth = frame.width / columns;
+	const cropHeight = frame.height / rows;
 	for (let row = 0; row < rows; row += 1) {
 		for (let column = 0; column < columns; column += 1) {
 			cells.push({
 				key: `${keyPrefix}-r${row}-c${column}`,
 				crop: {
-					x: column / columns,
-					y: row / rows,
-					width: 1 / columns,
-					height: 1 / rows,
+					x: frame.x + column * cropWidth,
+					y: frame.y + row * cropHeight,
+					width: cropWidth,
+					height: cropHeight,
 				},
 				position: {
 					x: frame.x + column * (cellWidth + gap),
@@ -506,7 +510,7 @@ export function split(spec: SplitSpec): SplitArtifacts {
 				crop: cell.crop,
 				alt: spec.alt,
 				sourceAspect: spec.sourceAspect,
-				mosaic: { rows: spec.rows, columns: spec.columns },
+				mosaic: { rows: spec.rows, columns: spec.columns, frame: spec.frame },
 			}),
 		);
 		dispositions.push({
@@ -2420,17 +2424,17 @@ if (import.meta.vitest) {
 	describe("splitFigureGrid", () => {
 		const frame = { x: 0.1, y: 0.2, width: 0.8, height: 0.6 };
 
-		it("builds rows×columns tiles with normalized crops", () => {
+		it("builds rows×columns tiles with frame-relative source crops", () => {
 			const tiles = splitFigureGrid({ rows: 3, columns: 5, frame });
 			expect(tiles).toHaveLength(15);
-			expect(tiles[0]).toMatchObject({
-				key: "tile-r0-c0",
-				crop: { x: 0, y: 0, width: 0.2, height: 1 / 3 },
-			});
-			expect(tiles[14]).toMatchObject({
-				key: "tile-r2-c4",
-				crop: { x: 0.8, y: 2 / 3, width: 0.2, height: 1 / 3 },
-			});
+			expect(tiles[0]?.key).toBe("tile-r0-c0");
+			expect(tiles[0]?.crop.x).toBeCloseTo(0.1, 10);
+			expect(tiles[0]?.crop.y).toBeCloseTo(0.2, 10);
+			expect(tiles[0]?.crop.width).toBeCloseTo(0.16, 10);
+			expect(tiles[0]?.crop.height).toBeCloseTo(0.2, 10);
+			expect(tiles[14]?.key).toBe("tile-r2-c4");
+			expect(tiles[14]?.crop.x).toBeCloseTo(0.74, 10);
+			expect(tiles[14]?.crop.y).toBeCloseTo(0.6, 10);
 		});
 
 		it("reconstructs the frame at gap zero", () => {

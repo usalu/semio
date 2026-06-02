@@ -123,16 +123,28 @@ if (typeof Range !== "undefined" && typeof Range.prototype.getClientRects !== "f
 }
 
 vi.mock("react-pdf", () => ({
-	Document: ({ children }: { readonly children?: ReactNode }) =>
-		createElement("div", { className: "react-pdf__Document" }, children),
+	Document: ({
+		children,
+		onLoadSuccess,
+	}: {
+		readonly children?: ReactNode;
+		readonly onLoadSuccess?: (payload: { readonly numPages: number }) => void;
+	}) => {
+		useLayoutEffect(() => {
+			onLoadSuccess?.({ numPages: 3 });
+		}, [onLoadSuccess]);
+		return createElement("div", { className: "react-pdf__Document" }, children);
+	},
 	Page: ({
 		onLoadSuccess,
 		scale,
+		pageNumber,
 	}: {
 		readonly onLoadSuccess?: (page: {
 			getViewport: (options: { readonly scale: number }) => { readonly width: number; readonly height: number };
 		}) => void;
 		readonly scale?: number;
+		readonly pageNumber?: number;
 	}) => {
 		useLayoutEffect(() => {
 			onLoadSuccess?.({
@@ -141,10 +153,11 @@ vi.mock("react-pdf", () => ({
 					height: 842 * viewportScale,
 				}),
 			});
-		}, [onLoadSuccess]);
+		}, [onLoadSuccess, pageNumber]);
 		return createElement("div", {
 			className: "react-pdf__Page",
 			"data-scale": scale === undefined ? undefined : String(scale),
+			"data-page": pageNumber === undefined ? undefined : String(pageNumber),
 		});
 	},
 	pdfjs: { GlobalWorkerOptions: { workerSrc: "" }, version: "0.0.0" },

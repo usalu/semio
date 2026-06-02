@@ -547,6 +547,56 @@
 	border-color: var(--border-element-color);
 }
 
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged
+	.presentation-morph-anchor {
+	position: relative;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged
+	.presentation-pdf-page-nav {
+	position: absolute;
+	left: 50%;
+	bottom: 0.75rem;
+	z-index: 3;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 0.5rem;
+	transform: translateX(-50%);
+	pointer-events: auto;
+}
+
+.reveal .presentation-pdf-page-nav__button {
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: 1px solid var(--border-window-color);
+	border-radius: 4px;
+	background: color-mix(in oklab, var(--panel) 92%, transparent);
+	color: var(--foreground);
+	font-size: 1.125rem;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease,
+		opacity 0.15s ease;
+}
+
+.reveal .presentation-pdf-page-nav__button:hover:not(:disabled) {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-element-color);
+}
+
+.reveal .presentation-pdf-page-nav__button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
 .reveal .presentation-interaction-slide-reset-host {
 	position: absolute;
 	top: 0;
@@ -632,7 +682,9 @@
 	pointer-events: none;
 }
 
-.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition,
+.reveal
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition:not(.presentation-target-ghost):not(.presentation-source-ghost),
 .reveal .presentation-arrangement-canvas > .presentation-interactive-row-band {
 	pointer-events: auto;
 }
@@ -728,6 +780,42 @@
 	.presentation-morph-crop-from
 	.presentation-morph-slot--figure[data-auto-animate-target] {
 	animation: presentation-figure-crop-morph-from-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+.reveal
+	.slides
+	section[data-auto-animate="pending"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section[data-auto-animate="pending"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size));
+	background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
+}
+
+.reveal
+	.slides
+	section[data-auto-animate="running"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section[data-auto-animate="running"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	animation: presentation-figure-crop-morph-grid-to-focus var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+@keyframes presentation-figure-crop-morph-grid-to-focus {
+	from {
+		background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size));
+		background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size);
+		background-position: var(--presentation-figure-bg-position);
+	}
 }
 
 .reveal
@@ -832,7 +920,8 @@
 .reveal .presentation-affiliation-morph-source {
 	opacity: 0;
 	visibility: visible;
-	pointer-events: none;
+	z-index: 0;
+	pointer-events: none !important;
 }
 
 .reveal .presentation-morph-target {
@@ -843,7 +932,8 @@
 .reveal .presentation-source-ghost {
 	opacity: 0 !important;
 	visibility: hidden !important;
-	pointer-events: none;
+	z-index: 0;
+	pointer-events: none !important;
 }
 
 .reveal .presentation-morph-one {
@@ -854,7 +944,7 @@
 .reveal .slides section[data-auto-animate="pending"] .presentation-target-ghost {
 	opacity: 1 !important;
 	visibility: visible !important;
-	pointer-events: auto;
+	pointer-events: none !important;
 	animation: none !important;
 }
 

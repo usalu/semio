@@ -2175,11 +2175,14 @@ if (import.meta.vitest) {
     it("nakagin fixture kind catalog uses specific human-readable object kind names", () => {
       const catalogs = parseKindCatalogs((nakaginPuzzle3dFixtureJson as { meta?: Record<string, unknown> }).meta);
       const objectKindIds = (catalogs?.objects ?? []).map((row) => row.id);
-      expect(objectKindIds).toEqual(expect.arrayContaining(["Capsule J", "Last Storey Tambour", "First Storey Tambour", "Cylindric Tambour"]));
+      expect(objectKindIds).toEqual(
+        expect.arrayContaining(["Capsule With Balcony J", "Trapezoid Capsule J", "Last Storey Tambour", "First Storey Tambour", "Cylindric Tambour"]),
+      );
       expect(objectKindIds.some((id) => id === "J" || id === "Last Storey" || id === "Tambour Last Storey")).toBe(false);
       const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
       const placedKinds = new Set((f?.objects ?? []).map((object) => object.objectKind));
-      expect(placedKinds.has("Capsule J")).toBe(true);
+      expect(placedKinds.has("Capsule With Balcony J")).toBe(true);
+      expect(placedKinds.has("Capsule J")).toBe(false);
       expect(placedKinds.has("J")).toBe(false);
     });
 

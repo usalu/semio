@@ -332,6 +332,31 @@ export function puzzle3dObjectKindVorticesFromKitConnectors(
   return out;
 }
 
+const METABOLISM_CAPSULE_KIND_SPECIFICITY_PREFIXES = ["Capsule With Balcony ", "Trapezoid Capsule "] as const;
+
+/** @emoji 🏷️ Picks the most specific metabolism capsule kind when a plainer alias exists in `availableKindNames`. */
+export function puzzle3dPreferSpecificMetabolismKindName(kindName: string, availableKindNames: ReadonlySet<string>): string {
+  const name = kindName.trim();
+  if (name === "") {
+    return name;
+  }
+  if (METABOLISM_CAPSULE_KIND_SPECIFICITY_PREFIXES.some((prefix) => name.startsWith(prefix))) {
+    return name;
+  }
+  const plain = /^Capsule (.+)$/.exec(name);
+  if (!plain) {
+    return name;
+  }
+  const tail = plain[1]!;
+  for (const prefix of METABOLISM_CAPSULE_KIND_SPECIFICITY_PREFIXES) {
+    const candidate = `${prefix}${tail}`;
+    if (availableKindNames.has(candidate)) {
+      return candidate;
+    }
+  }
+  return name;
+}
+
 const DOOR_CAPSULE_RIGHT_VORTEX_KIND = "door capsule right";
 const DOOR_CAPSULE_LEFT_VORTEX_KIND = "door capsule left";
 
@@ -9217,6 +9242,24 @@ if (import.meta.vitest) {
       expect(store.getRevision()).toBe(2);
     });
   });
+  describe("puzzle3dPreferSpecificMetabolismKindName", () => {
+    const available = new Set(["Capsule J", "Capsule With Balcony J", "Trapezoid Capsule J", "Tambour"]);
+
+    it("upgrades plain Capsule J to Capsule With Balcony J when listed in the catalog", () => {
+      expect(puzzle3dPreferSpecificMetabolismKindName("Capsule J", available)).toBe("Capsule With Balcony J");
+    });
+
+    it("leaves non-capsule kinds unchanged", () => {
+      expect(puzzle3dPreferSpecificMetabolismKindName("Tambour", available)).toBe("Tambour");
+    });
+
+    it("does not rewrite already-specific names", () => {
+      expect(puzzle3dPreferSpecificMetabolismKindName("Trapezoid Capsule Slash", new Set(["Trapezoid Capsule Slash"]))).toBe(
+        "Trapezoid Capsule Slash",
+      );
+    });
+  });
+
   describe("puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint", () => {
     it("infers left from negative local X for brush on door tambour right", () => {
       const catalogs: KindCatalogBundle = {
