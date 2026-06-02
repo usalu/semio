@@ -490,6 +490,9 @@ const PresentationSlideEpochContext = createContext(0);
 /** @emoji 🔗 When true, the interactive canvas wrapper owns `data-id` for reveal.js auto-animate. */
 const MorphAnchorOnWrapperContext = createContext(false);
 
+/** @emoji ⛶ When true, {@link PdfMorphView} measures against the slide-fullscreen content box, not the declared catalogue frame. */
+const PresentationDispositionFullscreenContext = createContext(false);
+
 export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
 	const width = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-width") ?? "960");
 	const height = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-height") ?? "700");
@@ -499,11 +502,12 @@ export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { r
 	};
 }
 
-/** @emoji 📐 Measures the disposition frame for react-pdf; re-runs when the slide becomes visible. */
+/** @emoji 📐 Measures the react-pdf viewport from the disposition frame or slide-fullscreen content box. */
 function usePdfPageSize(
 	anchorRef: RefObject<HTMLDivElement | null>,
 	position: DispositionPosition | undefined,
 	slideEpoch: number,
+	fullscreen: boolean,
 ): { readonly width?: number; readonly height?: number } {
 	const [size, setSize] = useState<{ readonly width?: number; readonly height?: number }>({});
 	useEffect(() => {
@@ -511,28 +515,43 @@ function usePdfPageSize(
 		if (!el) {
 			return;
 		}
+		const measureTarget = (): HTMLElement | null => {
+			if (fullscreen) {
+				return (
+					el.closest(".presentation-interactive-disposition--fullscreen")?.querySelector(
+						".presentation-interactive-disposition__content",
+					) ?? null
+				);
+			}
+			return el.closest(".presentation-disposition-frame");
+		};
 		const measure = (): void => {
-			const frame = el.closest(".presentation-disposition-frame");
-			const frameRect = frame?.getBoundingClientRect();
-			if (frameRect && frameRect.width > 8 && frameRect.height > 8) {
+			const target = measureTarget();
+			const targetRect = target?.getBoundingClientRect();
+			if (targetRect && targetRect.width > 8 && targetRect.height > 8) {
 				setSize({
-					width: Math.floor(frameRect.width),
-					height: Math.floor(frameRect.height),
+					width: Math.floor(targetRect.width),
+					height: Math.floor(targetRect.height),
 				});
 				return;
 			}
 			const slide = parsePresentationSlideCssSize(el.closest(".reveal"));
-			const width = position ? Math.floor(slide.width * position.width) : Math.floor(slide.width * 0.8);
-			const height = position ? Math.floor(slide.height * position.height) : Math.floor(slide.height * 0.4);
+			const frame = fullscreen ? SLIDE_INTERACTIVE_FULLSCREEN_FRAME : position;
+			const width = frame
+				? Math.floor(slide.width * frame.width)
+				: Math.floor(slide.width * 0.8);
+			const height = frame
+				? Math.floor(slide.height * frame.height)
+				: Math.floor(slide.height * 0.4);
 			if (width > 0 && height > 0) {
 				setSize({ width, height });
 			}
 		};
 		measure();
-		const frame = el.closest(".presentation-disposition-frame");
+		const observed = measureTarget();
 		const observer =
-			frame && typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
-		observer?.observe(frame);
+			observed && typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+		observer?.observe(observed);
 		const visibility =
 			typeof IntersectionObserver !== "undefined"
 				? new IntersectionObserver((entries) => {
@@ -546,7 +565,15 @@ function usePdfPageSize(
 			observer?.disconnect();
 			visibility?.disconnect();
 		};
-	}, [anchorRef, position?.height, position?.width, position?.x, position?.y, slideEpoch]);
+	}, [
+		anchorRef,
+		fullscreen,
+		position?.height,
+		position?.width,
+		position?.x,
+		position?.y,
+		slideEpoch,
+	]);
 	return size;
 }
 //#endregion 🔖SlideEpoch
@@ -1022,7 +1049,8 @@ function PdfMorphView({
 }): ReactNode {
 	const anchorRef = useRef<HTMLDivElement>(null);
 	const slideEpoch = useContext(PresentationSlideEpochContext);
-	const pageSize = usePdfPageSize(anchorRef, position, slideEpoch);
+	const fullscreen = useContext(PresentationDispositionFullscreenContext);
+	const pageSize = usePdfPageSize(anchorRef, position, slideEpoch, fullscreen);
 	const pageHeight = pageSize.height;
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
@@ -2267,7 +2295,10 @@ const InteractiveDisposition: FC<{
 	);
 	const useFlowInkFrame = flowLayout && !flowSectionFrame;
 	const [inkInWrapper, setInkInWrapper] = useState<DispositionPosition | null>(null);
-	const displayDisposition = disposition;
+	const displayDisposition =
+		fullscreen && disposition.position !== undefined
+			? { ...disposition, position: undefined }
+			: disposition;
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
 		const section = sectionRef.current;
@@ -2686,11 +2717,13 @@ const InteractiveDisposition: FC<{
 				className="presentation-interactive-disposition__content"
 				style={hasContentStyle ? contentStyle : undefined}
 			>
-				<MorphAnchorOnWrapperContext.Provider
-					value={Boolean(revealMorphId && declaredRect !== undefined)}
-				>
-					<MorphDispositionView disposition={displayDisposition} />
-				</MorphAnchorOnWrapperContext.Provider>
+				<PresentationDispositionFullscreenContext.Provider value={fullscreen}>
+					<MorphAnchorOnWrapperContext.Provider
+						value={Boolean(revealMorphId && declaredRect !== undefined)}
+					>
+						<MorphDispositionView disposition={displayDisposition} />
+					</MorphAnchorOnWrapperContext.Provider>
+				</PresentationDispositionFullscreenContext.Provider>
 				{showControls ? (
 					<>
 						{showHandles ? (
@@ -5465,6 +5498,85 @@ if (import.meta.vitest) {
 				".presentation-interaction-fullscreen",
 			) as HTMLButtonElement;
 			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
+		});
+
+		it("drops nested pdf frame and uses slide-fullscreen sizing when toggling fullscreen", () => {
+			const deck: Presentation = {
+				id: "pdf-fullscreen",
+				name: "Pdf Fullscreen",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "media",
+										participants: [{ id: "thesis" }],
+										embodiments: [
+											{ kind: "pdf", id: "thesis--doc", src: "/thesis.pdf", page: 1 },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "media",
+													dispositions: [
+														{
+															participantId: "thesis",
+															embodimentId: "thesis--doc",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector(
+				".presentation-interactive-disposition--kind-pdf",
+			) as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 96, 385, 768, 280);
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.querySelector(".presentation-disposition-frame")).toBeTruthy();
+			const fullscreen = disposition.querySelector(
+				".presentation-interaction-fullscreen",
+			) as HTMLButtonElement;
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
+			mockClientRect(content, 48, 52, 864, 595);
+			act(() => {
+				fullscreen.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
+			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.width * 100}%`);
+			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
+			expect(disposition.querySelector(".presentation-disposition-frame")).toBeNull();
+			const pageCanvas = disposition.querySelector(
+				".presentation-media-pdf canvas",
+			) as HTMLCanvasElement | null;
+			if (pageCanvas) {
+				expect(pageCanvas.height).toBeGreaterThan(400);
+			}
+			expect(globalsCssSource).toMatch(
+				/\.presentation-interactive-disposition--kind-pdf\.presentation-interactive-disposition--fullscreen[\s\S]*\.presentation-media-pdf-document[\s\S]*height\s*:\s*100%/s,
+			);
 		});
 
 		it("toggles slide fullscreen on a cropped figure tile disposition", () => {

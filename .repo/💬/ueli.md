@@ -422,6 +422,13 @@ Add a checkbox element which is an action that can be checked and unchecked.
 
 ---
 
+ui:
+Spacebar is a special key when inside a window. It acts as control key.
+e.g. when no engangement is active, then pressing space repeats the last finalized engangement.
+e.g. when something is typed into the engagment input (cant have spaces) then pressing space starts the engangement.
+
+---
+
 Generalize virtual file system.
 Add FileNodeKind (which has id, name, icon, description, descriptors, etc)
 Add DescriptorKind
