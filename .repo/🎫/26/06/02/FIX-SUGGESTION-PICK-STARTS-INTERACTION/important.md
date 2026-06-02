@@ -4,4 +4,4 @@ Engagement suggestion popover called `preventDefault()` on every `pointerDown`, 
 
 ## Fix
 
-- `ui/react/index.tsx`: rank `filterEngagementPossibles`; skip `preventDefault` for command rows; `stopPropagation` on item pointer down; tests.
+- `ui/react/index.tsx`: rank `filterEngagementPossibles`; skip `preventDefault` for command rows (including text-node targets); `stopPropagation` on item pointer down capture; sync hover index; tests.

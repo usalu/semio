@@ -1043,6 +1043,16 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
   const detectedMobile = useMediaQuery(mobileQuery);
   const resolvedMobile = mobile ?? detectedMobile ?? runtime.mobile;
 
+  const toggleLastActiveLeftSidePanel = reactHostPort.useCallback(() => {
+    if (shell.workbenchTabs.length === 0) return;
+    setPanelVisibility((prev) => ({ ...prev, leftSidePanel: !prev.leftSidePanel }));
+  }, [setPanelVisibility, shell.workbenchTabs.length]);
+
+  const toggleLastActiveRightSidePanel = reactHostPort.useCallback(() => {
+    if (shell.detailsTabs.length === 0) return;
+    setPanelVisibility((prev) => ({ ...prev, rightSidePanel: !prev.rightSidePanel }));
+  }, [setPanelVisibility, shell.detailsTabs.length]);
+
   if (!shell.activeAppBase || !shell.activeApp || !shell.playgroundContextValue) return null;
 
   const navbarItems = reactHostPort.useMemo<NavbarItem[]>(
@@ -1106,6 +1116,8 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
           shell.activeAppBase!.setActiveModeId(modeId);
           runtime.notifyChrome();
         }}
+        onToggleLastActiveLeftSidePanel={toggleLastActiveLeftSidePanel}
+        onToggleLastActiveRightSidePanel={toggleLastActiveRightSidePanel}
       />
     </PlaygroundContext.Provider>
   );

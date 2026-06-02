@@ -1923,6 +1923,36 @@ export function useCommandHotkey(
   useHotkeys(finalHotkey, callback, options || {}, deps || []);
 }
 
+/** @emoji ⌨️ Chords for toggling the last active left/right chrome side panels. */
+export const SIDE_PANEL_TOGGLE_LEFT_HOTKEY = "ctrl+b,meta+b";
+export const SIDE_PANEL_TOGGLE_RIGHT_HOTKEY = "ctrl+shift+b,meta+shift+b";
+
+/**
+ * ⌨️ Binds {@link SIDE_PANEL_TOGGLE_LEFT_HOTKEY} and {@link SIDE_PANEL_TOGGLE_RIGHT_HOTKEY} when handlers are provided.
+ **/
+export function useSidePanelChromeHotkeys(options: {
+  readonly onToggleLeft?: () => void;
+  readonly onToggleRight?: () => void;
+}): void {
+  const { onToggleLeft, onToggleRight } = options;
+  useHotkeys(
+    SIDE_PANEL_TOGGLE_LEFT_HOTKEY,
+    () => {
+      onToggleLeft?.();
+    },
+    { preventDefault: true, enabled: onToggleLeft != null },
+    [onToggleLeft],
+  );
+  useHotkeys(
+    SIDE_PANEL_TOGGLE_RIGHT_HOTKEY,
+    () => {
+      onToggleRight?.();
+    },
+    { preventDefault: true, enabled: onToggleRight != null },
+    [onToggleRight],
+  );
+}
+
 /**
  * Hook returning whether a CSS media query currently matches.
  **/
@@ -2279,17 +2309,17 @@ export const windowMeasureTileNestedClass =
 
 /** @emoji 📐 Toggle sized to fit inside a measure tile. */
 export const windowMeasureToggleClass =
-  "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:truncate";
+  "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=inline-label]]:max-w-full [&_[data-slot=inline-label]]:truncate";
 
 /** @emoji 📐 Dense toggle row for nested measure groups (shorter control chrome). */
 export const windowMeasureToggleCompactClass =
-  "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single [&_[data-slot=inline-label]]:text-2xs";
+  "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single [&_[data-slot=inline-label]]:!text-tiny";
 
 /** @emoji 🌳 Typography for measure tree group headers. */
-export const windowMeasureTreeGroupLabelClass = "text-2xs font-semibold uppercase tracking-wide text-muted-foreground";
+export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-muted-foreground";
 
 /** @emoji 🌳 Typography for measure tree leaf labels. */
-export const windowMeasureTreeLeafLabelClass = "text-2xs font-normal text-foreground";
+export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-foreground";
 
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
@@ -10260,8 +10290,7 @@ export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText =
 // #region 🌳WindowMeasuresTree
 
 const windowMeasureTreeValueColumnWidthPx = 104;
-const windowMeasureTreeChromeClass =
-  "[&_[data-slot=select-trigger]]:h-small [&_[data-slot=select-trigger]]:text-2xs [&_[data-slot=slider-value]]:text-2xs";
+const windowMeasureTreeChromeClass = "text-tiny [&_[data-slot=select-trigger]]:h-small";
 const windowMeasureTreeRowClassName = "hover:bg-hover-window select-none min-h-[18px] w-full min-w-0";
 
 interface WindowMeasureTreeRowProps {
@@ -11449,6 +11478,19 @@ function engagementPossibleRankScore(query: string, item: EngagementPossible): n
   const haystack = `${label} ${detail} ${id}`;
   if (haystack.includes(ql)) return 500;
   return -1;
+}
+
+/** @emoji 🎯 Resolves a pointer event target to an element for engagement suggestion hit-testing. */
+function engagementSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Element | null {
+  const target = event.target;
+  if (target instanceof Element) return target;
+  if (target instanceof Text) return target.parentElement;
+  return null;
+}
+
+/** @emoji 🎯 True when a pointer event targets an engagement suggestion command row. */
+export function isEngagementSuggestionCommandTarget(event: Pick<PointerEvent, "target">): boolean {
+  return Boolean(engagementSuggestionPointerTarget(event)?.closest('[cmdk-item], [data-slot="command-item"]'));
 }
 
 /** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
@@ -15001,6 +15043,43 @@ function splitRootWithWindow(layout: WindowLayoutNode, windowId: string, side: M
   return { kind: horizontal ? "row" : "column", children: children as (WindowLayoutAxisNode | WindowLayoutStackNode)[] };
 }
 
+/** @emoji 🪟 Detaches a tab stack from the layout tree for stack-level drag-dock. */
+function extractStackFromLayout(
+  layout: WindowLayoutNode,
+  stackPath: ModeLayoutPath,
+): { layout: WindowLayoutNode | null; stack: WindowLayoutStackNode | null } {
+  const stack = readLayoutAtPath(layout, stackPath);
+  if (!stack || stack.kind !== "stack") return { layout, stack: null };
+  if (!stackPath) return { layout: null, stack };
+  const segments = modePathSegments(stackPath);
+  const stackIndex = segments[segments.length - 1]!;
+  const parentPath = segments.slice(0, -1).join(".");
+  const parent = readLayoutAtPath(layout, parentPath);
+  if (!parent || (parent.kind !== "row" && parent.kind !== "column")) return { layout, stack: null };
+  const nextChildren = parent.children.filter((_, index) => index !== stackIndex);
+  const nextParent = collapseLayout({ ...parent, children: nextChildren });
+  if (!parentPath) return { layout: nextParent, stack };
+  const without = updateLayoutAtPath(layout, parentPath, () => nextParent ?? { kind: "stack", children: [] });
+  return { layout: collapseLayout(without), stack };
+}
+
+/** @emoji 🪟 Splits a stack with a dragged tab stack on the given side. */
+function splitWithStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPath, stack: WindowLayoutStackNode, side: ModeDockSide): WindowLayoutNode {
+  return updateLayoutAtPath(layout, targetStackPath, (node) => {
+    if (node.kind !== "stack") return node;
+    const horizontal = side === "left" || side === "right";
+    const children = side === "left" || side === "top" ? [stack, node] : [node, stack];
+    return { kind: horizontal ? "row" : "column", children, size: node.size } as WindowLayoutAxisNode;
+  });
+}
+
+/** @emoji 🪟 Splits the mode root with a dragged tab stack on the given side. */
+function splitRootWithStack(layout: WindowLayoutNode, stack: WindowLayoutStackNode, side: ModeDockSide): WindowLayoutNode {
+  const horizontal = side === "left" || side === "right";
+  const children = side === "left" || side === "top" ? [stack, layout] : [layout, stack];
+  return { kind: horizontal ? "row" : "column", children: children as (WindowLayoutAxisNode | WindowLayoutStackNode)[] };
+}
+
 /** @emoji 🪟 Writes resizable panel percentages back onto axis children. */
 function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, sizes: Record<string, number>): WindowLayoutNode {
   return updateLayoutAtPath(layout, axisPath, (node) => {
@@ -15036,7 +15115,10 @@ type ModeDropZone =
   | { kind: "split"; stackPath: ModeLayoutPath; side: ModeDockSide }
   | { kind: "root-split"; side: ModeDockSide };
 
+type ModeDragKind = "tab" | "stack";
+
 interface ModeDragState {
+  dragKind: ModeDragKind;
   windowId: string;
   stackPath: ModeLayoutPath;
   tabIndex: number;
@@ -15047,6 +15129,7 @@ interface ModeDragState {
 }
 
 interface ModePendingDrag {
+  dragKind: ModeDragKind;
   windowId: string;
   stackPath: ModeLayoutPath;
   tabIndex: number;
@@ -15158,7 +15241,17 @@ function computeModeDropZone(
 }
 
 function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: ModeDropZone): WindowLayoutNode {
-  const { windowId, stackPath: sourcePath, tabIndex } = drag;
+  const { dragKind, windowId, stackPath: sourcePath, tabIndex } = drag;
+  if (dragKind === "stack") {
+    const { layout: withoutSource, stack } = extractStackFromLayout(layout, sourcePath);
+    if (!stack) return layout;
+    const base = withoutSource ?? { kind: "stack", children: [] };
+    if (zone.kind === "root-split") return splitRootWithStack(base, stack, zone.side);
+    if (zone.stackPath === sourcePath) return layout;
+    if (zone.kind === "split") return splitWithStack(base, zone.stackPath, stack, zone.side);
+    const side: ModeDockSide = zone.index <= 0 ? "left" : "right";
+    return splitWithStack(base, zone.stackPath, stack, side);
+  }
   if (zone.kind === "root-split") return splitRootWithWindow(layout, windowId, zone.side);
   if (zone.kind === "split") return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
   if (zone.stackPath === sourcePath) {
@@ -15174,9 +15267,13 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
   return insertWindowAsTab(without, zone.stackPath, windowId, zone.index < 0 ? undefined : zone.index);
 }
 
-/** @emoji 🪓 Removes the dragged window from the committed layout while it floats on the cursor. */
-function modeDockOutLayout(committed: WindowLayoutNode, windowId: string): WindowLayoutNode {
-  return removeWindowFromLayout(committed, windowId) ?? committed;
+/** @emoji 🪓 Removes the dragged tab or stack from the committed layout while it floats on the cursor. */
+function modeDockOutLayout(committed: WindowLayoutNode, drag: Pick<ModeDragState, "dragKind" | "windowId" | "stackPath">): WindowLayoutNode {
+  if (drag.dragKind === "stack") {
+    const { layout } = extractStackFromLayout(committed, drag.stackPath);
+    return layout ?? { kind: "stack", children: [] };
+  }
+  return removeWindowFromLayout(committed, drag.windowId) ?? committed;
 }
 
 interface ModeTabInsertPreview {
@@ -15260,6 +15357,7 @@ interface ModeDockContextValue {
   draggedTab: { id: string; title: string } | null;
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
+  startStackDrag: (windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
   closeWindow: (windowId: string) => void;
   activateWindow: (windowId: string) => void;
@@ -15333,23 +15431,10 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         dock?.clearPendingDrag?.(event.pointerId);
       }}
       onPointerDownCapture={(event) => {
-        if ((event.target as HTMLElement).closest("[data-slot='mode-dock-tab-close']")) return;
         dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event);
       }}
     >
       <span className="truncate">{tab.title}</span>
-      <button
-        type="button"
-        data-slot="mode-dock-tab-close"
-        className="ml-auto flex size-small shrink-0 items-center justify-center rounded opacity-60 hover:bg-hover-window hover:opacity-100"
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => {
-          event.stopPropagation();
-          dock?.closeWindow(tab.id);
-        }}
-      >
-        <CloseIcon className="size-tiny" />
-      </button>
     </div>
   );
 
@@ -15374,14 +15459,36 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       >
         {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
       </button>
+      {activeId ? (
+        <button
+          type="button"
+          data-slot="mode-dock-close"
+          className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-window"
+          onClick={() => dock?.closeWindow(activeId)}
+        >
+          <CloseIcon className="size-small" />
+        </button>
+      ) : null}
     </div>
   );
 
   const tabGap = (
     <div
       data-slot="mode-dock-tab-gap"
-      className={cn("relative min-h-medium min-w-0 flex-1 bg-canvas", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
-      aria-hidden
+      className={cn(
+        "relative min-h-medium min-w-0 flex-1 cursor-grab bg-canvas active:cursor-grabbing",
+        perTabActiveChrome ? "z-0" : "z-[1]",
+        gapFrameClass,
+      )}
+      onPointerUp={(event) => {
+        if (event.button !== 0) return;
+        dock?.clearPendingDrag?.(event.pointerId);
+      }}
+      onPointerDownCapture={(event) => {
+        if (!activeId) return;
+        const label = tabs.find((tab) => tab.id === activeId)?.title ?? activeId;
+        dock?.startStackDrag(activeId, stackPath, label, event);
+      }}
     />
   );
 
@@ -15724,9 +15831,27 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => {
       if (event.button !== 0) return;
       setPendingDrag({
+        dragKind: "tab",
         windowId,
         stackPath,
         tabIndex,
+        pointerId: event.pointerId,
+        ghostLabel: label,
+        startX: event.clientX,
+        startY: event.clientY,
+      });
+    },
+    [],
+  );
+
+  const startStackDrag = reactHostPort.useCallback(
+    (windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => {
+      if (event.button !== 0) return;
+      setPendingDrag({
+        dragKind: "stack",
+        windowId,
+        stackPath,
+        tabIndex: -1,
         pointerId: event.pointerId,
         ghostLabel: label,
         startX: event.clientX,
@@ -15746,6 +15871,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         if (distance < 6) return;
         dragLayoutSnapshotRef.current = layoutStateRef.current;
         setDragState({
+          dragKind: pendingDrag.dragKind,
           windowId: pendingDrag.windowId,
           stackPath: pendingDrag.stackPath,
           tabIndex: pendingDrag.tabIndex,
@@ -15805,8 +15931,8 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const draggedPreviewTitle = dragState ? (windowsById.get(dragState.windowId)?.title ?? dragState.ghostLabel) : "";
   const tabInsertPreview =
-    dragState && dropZone?.kind === "tab" ? { stackPath: dropZone.stackPath, index: dropZone.index } : null;
-  const draggedTab = dragState ? { id: dragState.windowId, title: draggedPreviewTitle } : null;
+    dragState?.dragKind === "tab" && dropZone?.kind === "tab" ? { stackPath: dropZone.stackPath, index: dropZone.index } : null;
+  const draggedTab = dragState?.dragKind === "tab" ? { id: dragState.windowId, title: draggedPreviewTitle } : null;
 
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
@@ -15815,6 +15941,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       draggedTab,
       registerStackDropTargets,
       startTabDrag,
+      startStackDrag,
       clearPendingDrag,
       closeWindow,
       activateWindow,
@@ -15827,6 +15954,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       draggedTab,
       registerStackDropTargets,
       startTabDrag,
+      startStackDrag,
       clearPendingDrag,
       closeWindow,
       activateWindow,
@@ -15838,7 +15966,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
 
   const dockOutLayout = reactHostPort.useMemo(
-    () => (dragState ? modeDockOutLayout(layoutState, dragState.windowId) : layoutState),
+    () => (dragState ? modeDockOutLayout(layoutState, dragState) : layoutState),
     [layoutState, dragState],
   );
 
@@ -15876,10 +16004,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           {body}
         {dragState ? (
           <>
-            {dropZone?.kind !== "tab" ? (
+            {dropZone?.kind !== "tab" || dragState.dragKind === "stack" ? (
               <ModeDockDragPreview
                 title={draggedPreviewTitle}
-                tabOnly
+                content={dragState.dragKind === "stack" ? windowsById.get(dragState.windowId)?.children : undefined}
+                tabOnly={dragState.dragKind === "tab"}
                 style={{
                   position: "fixed",
                   left: dragState.x + MODE_DRAG_CURSOR_OFFSET_X,
@@ -15929,6 +16058,8 @@ export {
   Mode,
   removeWindowFromLayout,
   splitWithWindow,
+  splitWithStack,
+  extractStackFromLayout,
   applyModeDrop,
   reconcileWindows,
   normalizeLayoutToStacks,
@@ -16481,9 +16612,9 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      const soloTab = container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-tab-close']");
-      expect(soloTab).toBeTruthy();
-      fireEvent.click(soloTab!);
+      const soloClose = container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-close']");
+      expect(soloClose).toBeTruthy();
+      fireEvent.click(soloClose!);
       expect(screen.queryByText("Solo Body")).toBeNull();
       expect(screen.getByText("Peer Body")).toBeTruthy();
     });
@@ -16563,7 +16694,7 @@ if (import.meta.vitest) {
           { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
         ],
       };
-      const dockedOut = modeDockOutLayout(layout, "b");
+      const dockedOut = modeDockOutLayout(layout, { dragKind: "tab", windowId: "b", stackPath: "0" });
       expect(modeCollectWindowIds(dockedOut)).toEqual(["a", "c"]);
       expect(modeCollectWindowIds(layout)).toEqual(["a", "b", "c"]);
     });
@@ -16586,6 +16717,49 @@ if (import.meta.vitest) {
       }
     });
 
+    it("modeDockOutLayout removes an entire stack for stack drag", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+        ],
+      };
+      const dockedOut = modeDockOutLayout(layout, { dragKind: "stack", windowId: "a", stackPath: "0" });
+      expect(modeCollectWindowIds(dockedOut)).toEqual(["c"]);
+      expect(modeCollectWindowIds(layout)).toEqual(["a", "b", "c"]);
+    });
+
+    it("applyModeDrop relocates a stack when dropping on another stack body edge", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+        ],
+      };
+      const drag = {
+        dragKind: "stack" as const,
+        windowId: "a",
+        stackPath: "0",
+        tabIndex: -1,
+        pointerId: 1,
+        ghostLabel: "Stack",
+        x: 0,
+        y: 0,
+      };
+      const next = applyModeDrop(layout, drag, { kind: "split", stackPath: "1", side: "left" });
+      expect(next.kind).toBe("row");
+      if (next.kind !== "row") return;
+      expect(next.children).toHaveLength(2);
+      const left = next.children[0];
+      const right = next.children[1];
+      expect(left?.kind).toBe("stack");
+      expect(right?.kind).toBe("stack");
+      if (left?.kind === "stack") expect(left.children.map((child) => child.id)).toEqual(["a", "b"]);
+      if (right?.kind === "stack") expect(right.children.map((child) => child.id)).toEqual(["c"]);
+    });
+
     it("applyModeDrop splits within the same stack when dropping on a body edge zone", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
@@ -16593,6 +16767,7 @@ if (import.meta.vitest) {
         activeId: "a",
       };
       const drag = {
+        dragKind: "tab" as const,
         windowId: "a",
         stackPath: "",
         tabIndex: 0,
@@ -16694,6 +16869,16 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("Extr", items).map((row) => row.id)).toEqual(["surface.extrudeCrv", "feature.extrudeWire"]);
     });
 
+    it("isEngagementSuggestionCommandTarget accepts text nodes inside command rows", () => {
+      const row = document.createElement("div");
+      row.setAttribute("data-slot", "command-item");
+      const label = document.createTextNode("ExtrudeCrv");
+      row.appendChild(label);
+      document.body.appendChild(row);
+      expect(isEngagementSuggestionCommandTarget({ target: label })).toBe(true);
+      row.remove();
+    });
+
     it("engagementInlineCompletion uses label casing for matched name prefix", () => {
       const box = { id: "primitive.box", label: "Box", detail: "b" };
       const sphere = { id: "primitive.sphere", label: "Sphere", detail: "s" };
@@ -16766,7 +16951,10 @@ if (import.meta.vitest) {
       fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
       const popover = await waitFor(() => document.querySelector('[data-slot="engagement-autocomplete"]')!);
       const crvRow = document.querySelector('[data-slot="command-item"][data-value="surface.extrudeCrv"]')!;
+      const crvLabel = crvRow.querySelector("span")?.firstChild;
+      expect(crvLabel).toBeTruthy();
       fireEvent.pointerDown(popover, { pointerId: 1, pointerType: "mouse", buttons: 1 });
+      fireEvent.pointerDown(crvLabel!, { pointerId: 1, pointerType: "mouse", buttons: 1 });
       fireEvent.click(crvRow);
       await waitFor(() => expect(selected).toEqual(["surface.extrudeCrv"]));
       Element.prototype.scrollIntoView = scrollIntoView;
@@ -17317,6 +17505,11 @@ if (treeVitest) {
       expect(resolveHotkeyValue("ctrl+p")).toBe("ctrl+p");
       expect(resolveHotkeyValue({ hotkey: "ctrl+f" })).toBe("ctrl+f");
       expect(resolveHotkeyValue({ label: "Search" })).toBeUndefined();
+    });
+
+    it("exposes side panel chrome toggle chords", () => {
+      expect(SIDE_PANEL_TOGGLE_LEFT_HOTKEY).toBe("ctrl+b,meta+b");
+      expect(SIDE_PANEL_TOGGLE_RIGHT_HOTKEY).toBe("ctrl+shift+b,meta+shift+b");
     });
 
     it("tree highlight store notifies subscribers only when highlighted ids change", () => {

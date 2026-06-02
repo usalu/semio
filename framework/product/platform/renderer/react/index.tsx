@@ -200,6 +200,7 @@ import {
 	useUiTranslation,
 	useCommandHotkey,
 	useMediaQuery,
+	useSidePanelChromeHotkeys,
 	type ContextMenuItem,
 	type NavbarItem,
 	Expertise,
@@ -618,7 +619,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
       return (
         <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
           <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
-            <SelectTrigger id={measure.id} className="h-medium w-full min-w-0" size="sm">
+            <SelectTrigger id={measure.id} className="h-small w-full min-w-0 py-tiny" size="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -2844,6 +2845,8 @@ export interface ProductShellProps {
 	readonly onSearchOpenChange?: (open: boolean) => void;
 	readonly findOpen?: boolean;
 	readonly onFindOpenChange?: (open: boolean) => void;
+	readonly onToggleLastActiveLeftSidePanel?: () => void;
+	readonly onToggleLastActiveRightSidePanel?: () => void;
 }
 
 /** @emoji 🪨 Navbar + canvas (windows) + footer with left/right panels floating over the canvas. */
@@ -2876,6 +2879,8 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 	onSearchOpenChange,
 	findOpen: findOpenProp,
 	onFindOpenChange,
+	onToggleLastActiveLeftSidePanel,
+	onToggleLastActiveRightSidePanel,
 }) => {
 	reactHostPort.useEffect(() => {
 		if (defaultAppId) platform.setActiveAppId(defaultAppId);
@@ -2887,6 +2892,11 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 	const searchOpen = searchOpenProp ?? internalSearchOpen;
 	const setSearchOpen = onSearchOpenChange ?? setInternalSearchOpen;
 	const findOpen = findOpenProp ?? false;
+
+	useSidePanelChromeHotkeys({
+		onToggleLeft: leftSidePanelTabs.length > 0 ? onToggleLastActiveLeftSidePanel : undefined,
+		onToggleRight: rightSidePanelTabs.length > 0 ? onToggleLastActiveRightSidePanel : undefined,
+	});
 
 	useCommandHotkey(
 		"ctrl+p,meta+p",
@@ -3295,6 +3305,11 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		(kind: PanelKind, pressed: boolean) => {
 			if (pressed) {
 				setActiveMobilePanelKind(kind);
+				if (panelSide(kind) === "left") {
+					setActiveDesktopLeftPanelKind(kind);
+				} else {
+					setActiveDesktopRightPanelKind(kind);
+				}
 				setMobilePanelVisible(true);
 				return;
 			}
@@ -3304,6 +3319,44 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		},
 		[activeMobilePanelKind],
 	);
+
+	const toggleLastActiveLeftSidePanel = reactHostPort.useCallback(() => {
+		if (leftKindsWithTabs.length === 0) return;
+		const kind = activeDesktopLeftPanelKind;
+		if (resolvedMobile) {
+			openMobilePanel(kind, !(mobilePanelVisible && activeMobilePanelKind === kind));
+			return;
+		}
+		openDesktopLeftPanel(kind, !panelVisibility.leftSidePanel);
+	}, [
+		activeDesktopLeftPanelKind,
+		activeMobilePanelKind,
+		leftKindsWithTabs.length,
+		mobilePanelVisible,
+		openDesktopLeftPanel,
+		openMobilePanel,
+		panelVisibility.leftSidePanel,
+		resolvedMobile,
+	]);
+
+	const toggleLastActiveRightSidePanel = reactHostPort.useCallback(() => {
+		if (rightKindsWithTabs.length === 0) return;
+		const kind = activeDesktopRightPanelKind;
+		if (resolvedMobile) {
+			openMobilePanel(kind, !(mobilePanelVisible && activeMobilePanelKind === kind));
+			return;
+		}
+		openDesktopRightPanel(kind, !panelVisibility.rightSidePanel);
+	}, [
+		activeDesktopRightPanelKind,
+		activeMobilePanelKind,
+		mobilePanelVisible,
+		openDesktopRightPanel,
+		openMobilePanel,
+		panelVisibility.rightSidePanel,
+		resolvedMobile,
+		rightKindsWithTabs.length,
+	]);
 
 	const navbarItems: NavbarItem[] = [];
 
@@ -3531,7 +3584,9 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 					onSearchOpenChange={setSearchOpen}
 					findOpen={findOpen}
 					onFindOpenChange={setFindOpen}
-					/>
+					onToggleLastActiveLeftSidePanel={toggleLastActiveLeftSidePanel}
+					onToggleLastActiveRightSidePanel={toggleLastActiveRightSidePanel}
+				/>
 				</UIFindProvider>
 			</AppContext.Provider>
 		</UiChromeCompactProvider>
