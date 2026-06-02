@@ -9388,8 +9388,8 @@ export interface Puzzle2dCanvasProps {
   onLinkTargetRing?: (payload: Puzzle2dLinkTargetRingPayload) => void;
   /** @emoji 🔗 Host-driven link preview for cross-surface gestures (cleared when `source` is empty). */
   linkSession?: Puzzle2dLinkSessionSnapshot | null;
-  /** @emoji 🖌️ Mirrored brush slot preview for non-driving authoring panes (omit on the pane under the pointer). */
-  brushSession?: Puzzle2dBrushSessionSnapshot | null;
+  /** @emoji 🖌️ Mirrored brush slot preview for non-driving panes; omit (`undefined`) on the pane under the pointer. */
+  brushSession?: Puzzle2dBrushSessionSnapshot | null | undefined;
   /** @emoji 🖌️ Active viewport tool forwarded to the WASM host. */
   activeTool?: Puzzle2dActiveTool;
   /** @emoji 📐 Brush slot offset along handle outward normal (world units). */
@@ -9848,12 +9848,51 @@ export function puzzle2dCommitBrushPlacementToPlay(
 ): boolean {
   puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
   let placed = false;
+  let placedFixture: Puzzle2dFixtureV1 | null = null;
   options.patchFixture((prev) => {
-    const result = applyBrushPlacementToFixture(prev, payload, options.catalogsForFixture(prev));
+    const catalogs = options.catalogsForFixture(prev);
+    const result = applyBrushPlacementToFixture(prev, payload, catalogs);
     if (result.kind !== "placed") {
-      return prev;
+      for (const peer of puzzle2dAuthoringPeerRenderers) {
+        if (!peer.authoringPeerActive()) {
+          continue;
+        }
+        if (applyBrushPlacementToRendererScene(peer, payload, catalogs)) {
+          placed = true;
+        }
+      }
+      if (!placed) {
+        return prev;
+      }
+      const sceneNodeIds = new Set<string>();
+      const sceneEdgeIds = new Set<string>();
+      for (const peer of puzzle2dAuthoringPeerRenderers) {
+        if (!peer.authoringPeerActive()) {
+          continue;
+        }
+        for (const node of peer.scene.nodes.values()) {
+          sceneNodeIds.add(node.id);
+        }
+        for (const edge of peer.scene.edges.values()) {
+          sceneEdgeIds.add(edge.id);
+        }
+      }
+      const nodeId = payload.nodeId?.trim() || `puzzle2d.brush.${crypto.randomUUID()}`;
+      const edgeId = payload.edgeId?.trim() || `puzzle2d.brush.edge.${crypto.randomUUID()}`;
+      if (!sceneNodeIds.has(nodeId)) {
+        return prev;
+      }
+      const retry = applyBrushPlacementToFixture(prev, { ...payload, nodeId, edgeId }, catalogs);
+      if (retry.kind !== "placed") {
+        return prev;
+      }
+      placedFixture = retry.fixture;
+      puzzle2dGuardBrushPlacementStructuralDeletes(retry.nodeId, retry.edgeId);
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(retry.fixture);
+      return retry.fixture;
     }
     placed = true;
+    placedFixture = result.fixture;
     puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
     puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
     return result.fixture;
@@ -10888,11 +10927,14 @@ export function Puzzle2dCanvas({
   }, [linkSession]);
 
   reactHostPort.useLayoutEffect(() => {
+    if (brushSession === undefined) {
+      return;
+    }
     const renderer = rendererRef.current;
     if (!renderer) {
       return;
     }
-    renderer.setBrushSession(brushSession ?? null);
+    renderer.setBrushSession(brushSession);
   }, [brushSession]);
 
   reactHostPort.useLayoutEffect(() => {

@@ -11,9 +11,12 @@ import type {
     BulletEmbodiment,
     DispositionPosition,
     DispositionStyle,
+    Arrangement,
     FigureEmbodiment,
-    GhostKind,
+    MorphFromSlot,
+    MorphToSlot,
     ParticipantEmphasis,
+    Slide,
     PdfEmbodiment,
     Presentation,
     RenderSlide,
@@ -214,6 +217,166 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 	deckEl.classList.toggle("has-light-background", !dark);
 }
 //#endregion 🔖RevealChrome
+
+//#region 🔖RevealMorph
+/** @emoji 👻 reveal.js-only morph companion role (not part of presentation core). */
+export type RevealMorphCompanionKind = "source" | "target";
+
+/** @emoji ✅ Resolved disposition plus optional reveal.js morph companion metadata. */
+export interface RevealResolvedDisposition extends ResolvedDisposition {
+	readonly revealMorphCompanion?: RevealMorphCompanionKind;
+}
+
+function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, { readonly participantId: string; readonly embodimentId: string; readonly emphasis: ParticipantEmphasis }> {
+	const map = new Map<string, { readonly participantId: string; readonly embodimentId: string; readonly emphasis: ParticipantEmphasis }>();
+	for (const disposition of arrangement.dispositions) {
+		if (!map.has(disposition.participantId)) {
+			map.set(disposition.participantId, disposition);
+		}
+	}
+	return map;
+}
+
+function revealMorphCompanionFromMorphFrom(
+	scope: ReturnType<typeof buildResolutionScope>,
+	sourceSlide: Slide,
+	arrangement: Arrangement,
+	options?: { readonly morphLineTargets?: boolean },
+): RevealResolvedDisposition[] {
+	const sourceByParticipant = primaryDispositionByParticipant(sourceSlide.arrangement);
+	const morphLineTargets = options?.morphLineTargets ?? true;
+	const companions: RevealResolvedDisposition[] = [];
+	for (const disposition of arrangement.dispositions) {
+		for (const slot of disposition.morphFrom ?? []) {
+			const sourceDisposition = sourceByParticipant.get(slot.participantId);
+			const participant = scope.participants.get(slot.participantId);
+			if (!participant) {
+				throw new Error(`morphFrom slot references unknown participant "${slot.participantId}".`);
+			}
+			const embodimentId = slot.embodimentId ?? sourceDisposition?.embodimentId;
+			if (!embodimentId) {
+				throw new Error(
+					`morphFrom slot for "${slot.participantId}" needs embodimentId (or a source disposition with embodimentId).`,
+				);
+			}
+			companions.push({
+				participant,
+				embodiment: resolveEmbodiment(scope, embodimentId),
+				emphasis: sourceDisposition?.emphasis ?? "active",
+				embodimentId,
+				morphId: morphId(participant.id),
+				position: slot.position,
+				revealMorphCompanion: "target",
+			});
+		}
+	}
+	return companions;
+}
+
+function revealMorphCompanionFromMorphTo(
+	scope: ReturnType<typeof buildResolutionScope>,
+	targetSlide: Slide,
+	arrangement: Arrangement,
+): RevealResolvedDisposition[] {
+	const targetByParticipant = primaryDispositionByParticipant(targetSlide.arrangement);
+	const companions: RevealResolvedDisposition[] = [];
+	for (const disposition of arrangement.dispositions) {
+		for (const slot of disposition.morphTo ?? []) {
+			const targetDisposition = targetByParticipant.get(slot.participantId);
+			const participant = scope.participants.get(slot.participantId);
+			if (!participant) {
+				throw new Error(`morphTo slot references unknown participant "${slot.participantId}".`);
+			}
+			const embodimentId = slot.embodimentId ?? targetDisposition?.embodimentId;
+			if (!embodimentId) {
+				throw new Error(
+					`morphTo slot for "${slot.participantId}" needs embodimentId (or a target disposition with embodimentId).`,
+				);
+			}
+			companions.push({
+				participant,
+				embodiment: resolveEmbodiment(scope, embodimentId),
+				emphasis: targetDisposition?.emphasis ?? disposition.emphasis,
+				embodimentId,
+				morphId: morphId(participant.id),
+				position: slot.position,
+				revealMorphCompanion: "source",
+			});
+		}
+	}
+	return companions;
+}
+
+/** @emoji 🔀 Resolves an arrangement and appends reveal.js morph companions for one-to-many / many-to-one. */
+export function resolveRevealArrangement(
+	scope: ReturnType<typeof buildResolutionScope>,
+	arrangement: Arrangement,
+	context: { readonly previousSlide?: Slide; readonly nextSlide?: Slide },
+): RevealResolvedDisposition[] {
+	const resolved = resolveArrangement(scope, arrangement) as RevealResolvedDisposition[];
+	const companions: RevealResolvedDisposition[] = [];
+	if (context.previousSlide !== undefined) {
+		companions.push(...revealMorphCompanionFromMorphFrom(scope, context.previousSlide, arrangement));
+	}
+	if (context.nextSlide !== undefined) {
+		companions.push(...revealMorphCompanionFromMorphTo(scope, context.nextSlide, arrangement));
+	}
+	return [...resolved, ...companions];
+}
+
+function isRevealMorphCompanionOnly(disposition: RevealResolvedDisposition): boolean {
+	return disposition.revealMorphCompanion !== undefined;
+}
+
+function visibleRevealArrangementPositions(resolved: readonly RevealResolvedDisposition[]): DispositionPosition[] {
+	const positions: DispositionPosition[] = [];
+	for (const disposition of resolved) {
+		if (isRevealMorphCompanionOnly(disposition)) {
+			continue;
+		}
+		if (disposition.style?.opacity === 0) {
+			continue;
+		}
+		if (disposition.position) {
+			positions.push(disposition.position);
+		}
+	}
+	return positions;
+}
+
+/** @emoji ⊕ Centers visible placements; omits reveal-only morph companions. */
+export function centerRevealResolvedArrangement(resolved: readonly RevealResolvedDisposition[]): RevealResolvedDisposition[] {
+	const positions = visibleRevealArrangementPositions(resolved);
+	if (positions.length === 0) {
+		return [...resolved];
+	}
+	const bounds = unionDispositionPositions(positions);
+	const offset = {
+		x: (1 - bounds.width) / 2 - bounds.x,
+		y: (1 - bounds.height) / 2 - bounds.y,
+		width: 0,
+		height: 0,
+	};
+	const epsilon = 1e-6;
+	if (Math.abs(offset.x) < epsilon && Math.abs(offset.y) < epsilon) {
+		return [...resolved];
+	}
+	return resolved.map((disposition) => {
+		if (!disposition.position || isRevealMorphCompanionOnly(disposition)) {
+			return disposition;
+		}
+		return {
+			...disposition,
+			position: {
+				x: disposition.position.x + offset.x,
+				y: disposition.position.y + offset.y,
+				width: disposition.position.width,
+				height: disposition.position.height,
+			},
+		};
+	});
+}
+//#endregion 🔖RevealMorph
 
 //#region 🔖ArrangementSettled
 /** @emoji ⏳ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
@@ -913,7 +1076,7 @@ function FigureMorphView({
 	style,
 	dormantAnchor,
 	anchorOnWrapper = false,
-	ghost,
+	revealMorphCompanion,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -922,7 +1085,7 @@ function FigureMorphView({
 	readonly style?: DispositionStyle;
 	readonly dormantAnchor?: boolean;
 	readonly anchorOnWrapper?: boolean;
-	readonly ghost?: GhostKind;
+	readonly revealMorphCompanion?: RevealMorphCompanionKind;
 }): ReactNode {
 	if (embodiment.crop && position) {
 		const dormant = dormantAnchor === true;
@@ -942,8 +1105,8 @@ function FigureMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--figure",
-					ghost === "target" ? "presentation-target-ghost" : undefined,
-					ghost === "source" ? "presentation-source-ghost" : undefined,
+					revealMorphCompanion === "target" ? "presentation-target-ghost" : undefined,
+					revealMorphCompanion === "source" ? "presentation-source-ghost" : undefined,
 					dormant ? "presentation-morph-slot--dormant" : undefined,
 					emphasisClass(emphasis),
 				]
@@ -1149,7 +1312,7 @@ function DispositionFrame({
 	children,
 	overlay,
 }: {
-	readonly disposition: ResolvedDisposition;
+	readonly disposition: RevealResolvedDisposition;
 	readonly children: ReactNode;
 	readonly overlay?: boolean;
 }): ReactNode {
@@ -1172,7 +1335,7 @@ function DispositionFrame({
 	);
 }
 
-function MorphDispositionView({ disposition }: { readonly disposition: ResolvedDisposition }): ReactNode {
+function MorphDispositionView({ disposition }: { readonly disposition: RevealResolvedDisposition }): ReactNode {
 	const { embodiment, emphasis, morphId: anchorId } = disposition;
 	const anchorOnWrapper = useContext(MorphAnchorOnWrapperContext);
 	let content: ReactNode;
@@ -1212,7 +1375,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						position={disposition.position}
 						style={disposition.style}
 						anchorOnWrapper={anchorOnWrapper}
-						ghost={disposition.ghost}
+						revealMorphCompanion={disposition.revealMorphCompanion}
 					/>
 				);
 			}
@@ -1223,7 +1386,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 					emphasis={emphasis}
 					position={disposition.position}
 					anchorOnWrapper={anchorOnWrapper}
-					ghost={disposition.ghost}
+					revealMorphCompanion={disposition.revealMorphCompanion}
 				/>
 			);
 			break;
@@ -1305,7 +1468,7 @@ const DISPOSITION_RESIZE_HANDLES: readonly DispositionResizeHandle[] = [
 /** @emoji 🔑 Stable id for one resolved disposition on a slide. */
 export function dispositionInteractionId(
 	renderSlideId: string,
-	disposition: ResolvedDisposition,
+	disposition: RevealResolvedDisposition,
 	index: number,
 ): string {
 	return `${renderSlideId}--${disposition.morphId}--${disposition.embodimentId ?? index}`;
@@ -1314,7 +1477,7 @@ export function dispositionInteractionId(
 /** @emoji 🔑 Stable id for one split tile on an interactive slide. */
 export function tileDispositionInteractionId(
 	renderSlideId: string,
-	disposition: ResolvedDisposition,
+	disposition: RevealResolvedDisposition,
 	dispositionIndex: number,
 	tileKey: string,
 ): string {
@@ -1324,7 +1487,7 @@ export function tileDispositionInteractionId(
 /** @emoji 🔑 Stable id for a visual row band grouping split tiles on one disposition. */
 export function rowBandInteractionId(
 	renderSlideId: string,
-	disposition: ResolvedDisposition,
+	disposition: RevealResolvedDisposition,
 	dispositionIndex: number,
 	rowIndex: number,
 ): string {
@@ -1334,7 +1497,7 @@ export function rowBandInteractionId(
 /** @emoji 🖱 One interactive placement (whole disposition or a single split tile). */
 export interface InteractiveDispositionPlacement {
 	readonly id: string;
-	readonly disposition: ResolvedDisposition;
+	readonly disposition: RevealResolvedDisposition;
 	/** @emoji 📐 Wrapper frame (row-local for tiles inside a visual row). */
 	readonly declaredRect: DispositionPosition | undefined;
 	/** @emoji 📐 Slide-space frame for marquee, drag, and resize. */
@@ -1360,7 +1523,7 @@ export interface InteractiveSlideLayout {
 /** @emoji 🧩 Builds one interactive placement per resolved disposition. */
 export function buildInteractiveSlideLayout(
 	renderSlideId: string,
-	resolved: readonly ResolvedDisposition[],
+	resolved: readonly RevealResolvedDisposition[],
 	morph = false,
 ): InteractiveSlideLayout {
 	const placements: InteractiveDispositionPlacement[] = [];
@@ -1373,7 +1536,7 @@ export function buildInteractiveSlideLayout(
 			sectionRect: declaredRect,
 			revealMorphId:
 				morph && declaredRect !== undefined
-					? disposition.ghost !== undefined
+					? disposition.revealMorphCompanion !== undefined
 						? disposition.morphId
 						: disposition.morphFrom?.length
 							? undefined
@@ -1842,7 +2005,7 @@ export function isUsableMeasuredRect(rect: DispositionPosition): boolean {
 }
 
 /** @emoji 📐 Declared placement for one resolved disposition (includes dormant morph anchors at opacity 0). */
-export function declaredDispositionRect(disposition: ResolvedDisposition): DispositionPosition | undefined {
+export function declaredDispositionRect(disposition: RevealResolvedDisposition): DispositionPosition | undefined {
 	return disposition.position;
 }
 
@@ -2289,7 +2452,7 @@ const InteractiveRowBand: FC<{
 
 const InteractiveDisposition: FC<{
 	readonly id: string;
-	readonly disposition: ResolvedDisposition;
+	readonly disposition: RevealResolvedDisposition;
 	readonly declaredRect: DispositionPosition | undefined;
 	readonly sectionDeclaredRect: DispositionPosition | undefined;
 	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
@@ -2701,8 +2864,8 @@ const InteractiveDisposition: FC<{
 		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
 		gesturing ? "presentation-interactive-disposition--gesturing" : undefined,
 		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
-		disposition.ghost === "target" ? "presentation-target-ghost" : undefined,
-		disposition.ghost === "source" ? "presentation-source-ghost" : undefined,
+		disposition.revealMorphCompanion === "target" ? "presentation-target-ghost" : undefined,
+		disposition.revealMorphCompanion === "source" ? "presentation-source-ghost" : undefined,
 		(disposition.morphFrom?.length ?? 0) > 0 ? "presentation-morph-target" : undefined,
 		(disposition.morphTo?.length ?? 0) > 0 ? "presentation-morph-one" : undefined,
 	]
@@ -2720,7 +2883,9 @@ const InteractiveDisposition: FC<{
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
 		// 👻 Morph-source ghosts must stay on morphFrom label frames, never ephemeral focus tiles.
 		const morphAnchorRect =
-			disposition.ghost !== undefined ? canvasAnchorRect : (canvasLiveTransform ?? canvasAnchorRect);
+			disposition.revealMorphCompanion !== undefined
+				? canvasAnchorRect
+				: (canvasLiveTransform ?? canvasAnchorRect);
 		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
@@ -2979,11 +3144,24 @@ const ArrangementSection: FC<{
 		() => resolutionScopeForArrangement(presentation, chapter, sequence, thought, renderSlide.arrangement),
 		[presentation, chapter, sequence, thought, renderSlide.arrangement],
 	);
-	const resolved = resolveArrangement(scope, renderSlide.arrangement);
+	const slideContext = useMemo(() => {
+		const index = thought.slides.findIndex((slide) => slide.arrangement.id === renderSlide.id);
+		if (index < 0) {
+			return {};
+		}
+		return {
+			previousSlide: index > 0 ? thought.slides[index - 1] : undefined,
+			nextSlide: index < thought.slides.length - 1 ? thought.slides[index + 1] : undefined,
+		};
+	}, [thought.slides, renderSlide.id]);
+	const resolved = useMemo(
+		() => resolveRevealArrangement(scope, renderSlide.arrangement, slideContext),
+		[scope, renderSlide.arrangement, slideContext],
+	);
 	const morph = renderSlide.autoAnimateId !== undefined;
 	const positioned = resolved.some((disposition) => disposition.position !== undefined);
 	const layoutResolved =
-		positioned && !morph ? centerResolvedArrangement(resolved) : resolved;
+		positioned && !morph ? centerRevealResolvedArrangement(resolved) : resolved;
 	const interactiveLayout = useMemo(
 		() => buildInteractiveSlideLayout(renderSlide.id, layoutResolved, morph),
 		[layoutResolved, morph, renderSlide.id],
@@ -3390,6 +3568,91 @@ if (import.meta.vitest) {
 		join(dirname(fileURLToPath(import.meta.url)), "globals.css"),
 		"utf8",
 	);
+
+	describe("resolveRevealArrangement", () => {
+		it("appends target companions for morphFrom on the labels slide", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "col1" }, { id: "tile" }],
+					embodiments: [
+						{ kind: "text", id: "label", lines: ["A"], level: "heading" },
+						{ kind: "figure", id: "tile-figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					],
+				},
+			]);
+			const previousSlide: Slide = {
+				arrangement: {
+					id: "focus",
+					dispositions: [
+						{ participantId: "tile", embodimentId: "tile-figure", emphasis: "active" },
+					],
+				},
+			};
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "labels",
+					dispositions: [
+						{
+							participantId: "col1",
+							embodimentId: "label",
+							emphasis: "active",
+							morphFrom: [
+								{
+									participantId: "tile",
+									embodimentId: "tile-figure",
+									position: { x: 0.2, y: 0.3, width: 0.2, height: 0.1 },
+								},
+							],
+						},
+					],
+				},
+				{ previousSlide },
+			);
+			expect(resolved).toHaveLength(2);
+			const companion = resolved.find((entry) => entry.revealMorphCompanion === "target");
+			expect(companion?.morphId).toBe("tile");
+			expect(companion?.position).toEqual({ x: 0.2, y: 0.3, width: 0.2, height: 0.1 });
+		});
+
+		it("appends source companions for morphTo on the whole slide", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "whole" }, { id: "tile-a" }],
+					embodiments: [
+						{ kind: "figure", id: "whole--figure", src: "/a.png" },
+						{ kind: "figure", id: "tile-a--figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					],
+				},
+			]);
+			const nextSlide: Slide = {
+				arrangement: {
+					id: "tiles",
+					dispositions: [
+						{ participantId: "tile-a", embodimentId: "tile-a--figure", emphasis: "active" },
+					],
+				},
+			};
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "whole",
+					dispositions: [
+						{
+							participantId: "whole",
+							embodimentId: "whole--figure",
+							emphasis: "active",
+							morphTo: [{ participantId: "tile-a", position: { x: 0.1, y: 0.1, width: 0.35, height: 0.8 } }],
+						},
+					],
+				},
+				{ nextSlide },
+			);
+			expect(resolved).toHaveLength(2);
+			const companion = resolved.find((entry) => entry.revealMorphCompanion === "source");
+			expect(companion?.morphId).toBe("tile-a");
+		});
+	});
 
 	describe("PresentationDeck", () => {
 		let container: HTMLDivElement;
