@@ -2552,7 +2552,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   }, []);
   const onCanvasDelete = reactHostPort.useCallback(
     (payload: Puzzle2dStructureDeletePayload) => {
-      if (!acceptCanvasStructuralDeleteRef.current || payload.kind === "wire") {
+      if (!acceptCanvasStructuralDeleteRef.current || payload.kind === "wire" || payload.kind === "edge") {
         return;
       }
       queueStructuralDelete(payload.kind, payload.id);
@@ -3445,6 +3445,10 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     guardFixtureAuthoringFromStructuralDeletes(800);
     setFixtureState((prev) => puzzle2dPlayRehydrateFixtureEdgesIfMissing(prev, initialFixture));
   }, [guardFixtureAuthoringFromStructuralDeletes]);
+
+  reactHostPort.useLayoutEffect(() => {
+    setFixtureState((prev) => puzzle2dPlayRehydrateFixtureEdgesIfMissing(prev, initialFixture));
+  }, [fixture.edges.length]);
 
   const structuralDeleteQueueRef = reactHostPort.useRef<Puzzle2dPlayStructuralDeleteItem[]>([]);
   const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);

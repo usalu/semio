@@ -995,6 +995,9 @@ export function filterPuzzle2dPlayStructuralDeleteBatch(
 	if (edgeCount > 0 && edgeDeletes.length >= 2 && edgeDeletes.length > edgeCount / 2 && nodeDeletes.length === 0) {
 		return out.filter((item) => item.kind === "node");
 	}
+	if (edgeCount > 20 && edgeDeletes.length >= 2 && nodeDeletes.length === 0) {
+		return out.filter((item) => item.kind === "node");
+	}
 	return out;
 }
 
@@ -1271,6 +1274,24 @@ if (import.meta.vitest) {
 				{ kind: "edge" as const, id: "e2" },
 			];
 			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual([]);
+		});
+
+		it("drops paired edge deletes on large nakagin-scale fixtures", () => {
+			const fixture: Puzzle2dFixtureV1 = {
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a.h0", angle: 0 }] }],
+				edges: Array.from({ length: 30 }, (_, i) => ({ id: `e${i}`, source: "a.h0", target: "a.h0" })),
+			};
+			expect(
+				filterPuzzle2dPlayStructuralDeleteBatch(
+					[
+						{ kind: "edge", id: "e0" },
+						{ kind: "edge", id: "e1" },
+					],
+					fixture,
+				),
+			).toEqual([]);
 		});
 	});
 

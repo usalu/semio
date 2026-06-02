@@ -1,0 +1,10 @@
+{
+  "title": "Center Node Text Labels In Puzzle 2d",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "The text label on puzzle 2d nodes should be centered and not left aligned.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3e182289ee8f461d92552f32baf835c6"
+  ]
+}

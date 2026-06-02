@@ -4479,6 +4479,18 @@ if (import.meta.vitest) {
 				),
 			).toBe(true);
 			expect(labelSlide.querySelectorAll(".presentation-morph-source").length).toBeGreaterThanOrEqual(8);
+			const labelSlot = inlineColumnLabelPosition(2);
+			const focusStuetze = focusSlide.querySelector(
+				'[data-disposition-id^="catalogue-focus--Stütze"]',
+			) as HTMLElement | null;
+			const labelGhost = labelSlide.querySelector(
+				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-morph-source',
+			) as HTMLElement | null;
+			expect(focusStuetze?.style.left).not.toBe(`${labelSlot.x * 100}%`);
+			expect(labelGhost?.style.left).toBe(`${labelSlot.x * 100}%`);
+			expect(labelGhost?.style.top).toBe(`${labelSlot.y * 100}%`);
+			expect(labelGhost?.style.width).toBe(`${labelSlot.width * 100}%`);
+			expect(labelGhost?.style.height).toBe(`${labelSlot.height * 100}%`);
 			mountRoot.remove();
 		});
 
@@ -4562,6 +4574,44 @@ if (import.meta.vitest) {
 			expect(componentTileIds.every((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id))).toBe(
 				true,
 			);
+			mountRoot.remove();
+		});
+
+		it("places catalogue-labels morph-source ghosts at inline label frames", async () => {
+			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
+				await import("@framework/presentation/core");
+			type SlideFile = import("@framework/presentation/core").SlideFile;
+			const { presentationMeta, inlineColumnLabelPosition } =
+				await import("@mit-bestand/praesentation/projektetage-spec");
+			const slideModules = import.meta.glob<{ default: SlideFile }>(
+				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
+				{ eager: true },
+			);
+			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+			const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
+			const labelRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilbeschriftungen");
+			expect(focusRef).toBeDefined();
+			expect(labelRef).toBeDefined();
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			const labelSlide = mountRoot.querySelector('section[title="catalogue-labels"]') as HTMLElement;
+			const labelSlot = inlineColumnLabelPosition(2);
+			const focusStuetze = focusSlide.querySelector(
+				'[data-disposition-id^="catalogue-focus--Stütze"]',
+			) as HTMLElement | null;
+			const labelGhost = labelSlide.querySelector(
+				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-morph-source',
+			) as HTMLElement | null;
+			expect(focusStuetze?.style.left).not.toBe(`${labelSlot.x * 100}%`);
+			expect(labelGhost?.style.left).toBe(`${labelSlot.x * 100}%`);
+			expect(labelGhost?.style.top).toBe(`${labelSlot.y * 100}%`);
+			expect(labelGhost?.style.width).toBe(`${labelSlot.width * 100}%`);
+			expect(labelGhost?.style.height).toBe(`${labelSlot.height * 100}%`);
 			mountRoot.remove();
 		});
 

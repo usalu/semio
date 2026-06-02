@@ -1302,8 +1302,8 @@ function serializePuzzle2dVelloThemeJson(): string {
 export const PUZZLE_2D_NODE_TEXT_ALIGNMENTS = ["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"] as const;
 export type Puzzle2dNodeTextAlignment = (typeof PUZZLE_2D_NODE_TEXT_ALIGNMENTS)[number];
 
-/** @emoji ⬅️ Default: reading-order start at west edge, vertically centered (`w`). */
-export const PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT: Puzzle2dNodeTextAlignment = "w";
+/** @emoji 🎯 Default: centered in the node box (`c`). */
+export const PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT: Puzzle2dNodeTextAlignment = "c";
 
 /** @emoji 🔤 Default overlay caption size (layout px) when `textAutofit` is false. */
 export const PUZZLE_2D_NODE_TEXT_FONT_PX_DEFAULT = 14;
@@ -2956,6 +2956,26 @@ export class Puzzle2dRenderer {
     this.declarativeSceneEdgeExpectation = Math.max(0, Math.floor(count));
   }
 
+  /** @emoji 📌 Stores the declarative host descriptor used to recover edges after WASM structural drains. */
+  rememberHostDeclarativeSceneDescriptor(descriptor: Puzzle2dSceneDescriptor): void {
+    this.hostDeclarativeSceneDescriptor = descriptor;
+  }
+
+  /** @emoji 🪢 Re-syncs imperative edges from {@link Puzzle2dRenderer.rememberHostDeclarativeSceneDescriptor} when WASM drains cleared them but the host still expects edges. */
+  reconcileHostDeclarativeSceneEdges(): boolean {
+    const descriptor = this.hostDeclarativeSceneDescriptor;
+    if (!descriptor || descriptor.edges.length === 0) {
+      return false;
+    }
+    if (this.scene.edges.size >= descriptor.edges.length) {
+      return false;
+    }
+    this.resetDeclarativeSceneSyncFingerprint();
+    syncPuzzle2dScene(this, descriptor);
+    this.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+    return true;
+  }
+
   /** @emoji 🔔 Marks the WASM descriptor cache stale after scene graph or selection chrome changes. */
   markSceneDescriptorDirty(): void {
     this.sceneDescriptorEpoch += 1;
@@ -3136,6 +3156,8 @@ export class Puzzle2dRenderer {
   private lastSyncedDescriptorFingerprint: string | null = null;
   /** @emoji 🪢 Declarative host edge count (play fixture); blocks WASM descriptor push while the imperative scene is still edgeless. */
   private declarativeSceneEdgeExpectation = 0;
+  /** @emoji 📌 Latest declarative scene from the host fixture prop; recovers edges after WASM resync drains. */
+  private hostDeclarativeSceneDescriptor: Puzzle2dSceneDescriptor | null = null;
   private sceneDescriptorEpoch = 0;
   private lastPushedSceneDescriptorEpoch = -1;
   private lastVelloThemeJson = "";
@@ -3259,7 +3281,7 @@ export class Puzzle2dRenderer {
       console.error("[DEBUG] setKindCatalogsJson failed during Puzzle2dRenderer init", err);
     }
     this.lastPushedKindCatalogsJson = this.kindCatalogsJson;
-    this.applyWasmDrainToScene(this.session.drainEventsJson());
+    this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentStructuralRemoves: true });
     this.attachCanvasListeners();
     if (this.canvas) {
       (this.canvas as Puzzle2dCanvasElement).__puzzle2dRenderer = this;
@@ -4238,7 +4260,8 @@ export class Puzzle2dRenderer {
       console.error("[DEBUG] setKindCatalogsJson failed after attach_canvas", err);
     }
     this.lastPushedKindCatalogsJson = this.kindCatalogsJson;
-    this.applyWasmDrainToScene(this.session.drainEventsJson());
+    this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentStructuralRemoves: true });
+    this.reconcileHostDeclarativeSceneEdges();
     this.syncGpuReadyCacheFromSession();
   }
 
@@ -4588,7 +4611,10 @@ export class Puzzle2dRenderer {
         this.invalidated = true;
         return;
       }
-      const deferEdgelessWasmDescriptorPush = this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.size === 0;
+      let deferEdgelessWasmDescriptorPush = this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.size === 0;
+      if (deferEdgelessWasmDescriptorPush) {
+        deferEdgelessWasmDescriptorPush = !this.reconcileHostDeclarativeSceneEdges();
+      }
       const skipFullDescriptorSync = (flushedIncrementalNodeMoves && descriptorCacheValid) || descriptorCacheValid;
       if (!deferEdgelessWasmDescriptorPush && !skipFullDescriptorSync) {
         const desc = this.descriptorJsonForWasmHost();
@@ -4872,6 +4898,16 @@ export class Puzzle2dRenderer {
         this.wasmDeferHadStructuralMutation = true;
         this.bumpWasmHostSceneMergeResyncEpoch();
         this.markSceneDescriptorDirty();
+      }
+      if (
+        this.declarativeSceneEdgeExpectation > 0 &&
+        this.hostDeclarativeSceneDescriptor &&
+        this.scene.edges.size < this.declarativeSceneEdgeExpectation
+      ) {
+        if (this.reconcileHostDeclarativeSceneEdges()) {
+          this.markSceneDescriptorDirty();
+          this.bumpWasmHostSceneMergeResyncEpoch();
+        }
       }
     }
   }
@@ -5710,6 +5746,11 @@ if (puzzle2dVitest) {
     it("anchors west at the left-middle of the node-centered box", () => {
       const a = puzzle2dNodeTextPlacementAnchor(100, 50, 80, 40, "w");
       expect(a).toEqual({ fillX: 60, fillY: 50, textAlign: "left", textBaseline: "middle" });
+    });
+
+    it("anchors center at the node box center by default", () => {
+      const a = puzzle2dNodeTextPlacementAnchor(100, 50, 80, 40, PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT);
+      expect(a).toEqual({ fillX: 100, fillY: 50, textAlign: "center", textBaseline: "middle" });
     });
   });
 
@@ -6757,6 +6798,31 @@ if (puzzle2dVitest) {
       renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "nodeDelete", payload: { id: "keep" } }]), { silentStructuralRemoves: true });
       expect(nodeDeletes).toEqual([]);
       expect(renderer.scene.nodes.has("keep")).toBe(false);
+      renderer.dispose();
+    });
+
+    it("wasm drain edgeDelete with silentStructuralRemoves restores edges from host declarative snapshot", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      syncPuzzle2dScene(renderer, descriptor);
+      renderer.rememberHostDeclarativeSceneDescriptor(descriptor);
+      renderer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+      const edgeDeletes: string[] = [];
+      renderer.on("edgeDelete", (event) => edgeDeletes.push(event.id));
+      renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "edgeDelete", payload: { id: "edge-1" } }]), { silentStructuralRemoves: true });
+      expect(edgeDeletes).toEqual([]);
+      expect(renderer.scene.edges.size).toBe(1);
+      expect(renderer.scene.edges.has("edge-1")).toBe(true);
       renderer.dispose();
     });
 
@@ -9378,6 +9444,7 @@ export function puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture: Puzzle
       continue;
     }
     const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(peer, descriptor);
+    peer.rememberHostDeclarativeSceneDescriptor(merged);
     peer.setDeclarativeSceneEdgeExpectation(merged.edges.length);
     peer.resetDeclarativeSceneSyncFingerprint();
     syncPuzzle2dScene(peer, merged);
@@ -9651,6 +9718,7 @@ function Puzzle2dHostSubtree({
     updatePuzzle2dHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
     const jsxDescriptor = puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor, children);
     const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor);
+    renderer.rememberHostDeclarativeSceneDescriptor(merged);
     renderer.setDeclarativeSceneEdgeExpectation(merged.edges.length);
     syncPuzzle2dScene(renderer, merged);
     puzzle2dEnsureSceneEdgesFromDescriptor(renderer, merged);
@@ -10190,6 +10258,7 @@ export function Puzzle2dCanvas({
       return;
     }
     const descriptor = puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor, children);
+    renderer.rememberHostDeclarativeSceneDescriptor(descriptor);
     renderer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
     puzzle2dEnsureSceneEdgesFromDescriptor(renderer, descriptor);
   }, [children, contextRenderer, declarativeSceneDescriptor]);
