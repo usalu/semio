@@ -1803,6 +1803,7 @@ import {
   buildPuzzle2dPlaySelectionDeclarativeBody,
   buildPuzzle2dPlayRuntime,
   filterPuzzle2dPlayStructuralDeleteBatch,
+  puzzle2dPlayRehydrateFixtureEdgesIfMissing,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
   type Puzzle2dPlayStructuralDeleteItem,
@@ -3442,6 +3443,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
 
   reactHostPort.useLayoutEffect(() => {
     guardFixtureAuthoringFromStructuralDeletes(800);
+    setFixtureState((prev) => puzzle2dPlayRehydrateFixtureEdgesIfMissing(prev, initialFixture));
   }, [guardFixtureAuthoringFromStructuralDeletes]);
 
   const structuralDeleteQueueRef = reactHostPort.useRef<Puzzle2dPlayStructuralDeleteItem[]>([]);

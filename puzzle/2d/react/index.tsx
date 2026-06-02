@@ -2898,6 +2898,8 @@ export class Puzzle2dRenderer {
   private batchDepth = 0;
   /** @emoji 🔇 While >0, {@link Puzzle2dScene.remove} does not emit delete events (dispose / JSX resync). */
   private suppressSceneDeleteEvents = 0;
+  /** @emoji 🎮 While >0, {@link emitSceneDeleteEvent} reaches play/fixture listeners (user Delete only); resync drains stay scene-local. */
+  private structuralDeleteFixtureMirrorDepth = 0;
   /** @emoji 🔁 Nesting depth for {@link Puzzle2dRenderer.render}; defers {@link Puzzle2dRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
   private renderPipelineDepth = 0;
   /** @emoji ⛓️ Tracks async WASM session borrows such as {@link BoardSession.attach_canvas} so sync probes like `gpuReady()` do not re-enter the same `RefCell`. */
@@ -2920,9 +2922,27 @@ export class Puzzle2dRenderer {
     }
   }
 
+  /** @emoji 🎮 True when imperative delete events should update {@link Puzzle2dFixtureV1} authorship (user Delete), not WASM/scene resync. */
+  mirrorsStructuralDeletesToFixture(): boolean {
+    return this.structuralDeleteFixtureMirrorDepth > 0;
+  }
+
+  /** @emoji 🎮 Runs `fn` while structural delete events propagate to play/fixture listeners. */
+  withFixtureStructuralDeleteMirror(fn: () => void): void {
+    this.structuralDeleteFixtureMirrorDepth += 1;
+    try {
+      fn();
+    } finally {
+      this.structuralDeleteFixtureMirrorDepth -= 1;
+    }
+  }
+
   /** @emoji 📣 Forwards structural delete events to play/fixture listeners unless suppressed or disposed. */
   emitSceneDeleteEvent<TKey extends "nodeDelete" | "edgeDelete" | "wireDestroy">(name: TKey, payload: Puzzle2dEventMap[TKey]): void {
     if (this.suppressSceneDeleteEvents > 0 || this.isDisposed) {
+      return;
+    }
+    if (this.structuralDeleteFixtureMirrorDepth <= 0) {
       return;
     }
     this.emit(name, payload);
@@ -4680,6 +4700,14 @@ export class Puzzle2dRenderer {
           case "edgeDelete": {
             const id = String((row.payload as { id: string }).id);
             if (options?.silentStructuralRemoves && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.has(id)) {
+              const edge = this.scene.edges.get(id);
+              if (edge) {
+                this.clearWasmHostAuthorshipForEdge(id);
+                this.runWithoutSceneDeleteEvents(() => {
+                  this.scene.remove(edge);
+                });
+                graphMutatedForHostMerge = true;
+              }
               break;
             }
             const edge = this.scene.edges.get(id);
@@ -5382,8 +5410,10 @@ export class Puzzle2dRenderer {
       this.invalidated = true;
       return;
     }
-    this.session.deleteSelection();
-    this.applyWasmDrainToScene(this.session.drainEventsJson());
+    this.withFixtureStructuralDeleteMirror(() => {
+      this.session.deleteSelection();
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+    });
     this.invalidate();
   }
 
@@ -6691,6 +6721,39 @@ if (puzzle2dVitest) {
       renderer.scene.add(root);
       renderer.dispose();
       expect(nodeDeletes).toEqual([]);
+    });
+
+    it("scene remove does not emit structural delete without fixture mirror", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const edgeDeletes: string[] = [];
+      renderer.on("edgeDelete", (event) => edgeDeletes.push(event.id));
+      const sourceNode = new Puzzle2dSceneNode({ id: "a", radius: 10, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "b", radius: 10, x: 40, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNode });
+      const edge = new Puzzle2dSceneEdge({ id: "e1", source: sourceHandle, target: targetHandle });
+      renderer.scene.add(sourceNode).add(targetNode).add(edge);
+      renderer.scene.remove(edge);
+      expect(edgeDeletes).toEqual([]);
+      expect(renderer.mirrorsStructuralDeletesToFixture()).toBe(false);
+      renderer.dispose();
+    });
+
+    it("scene remove emits structural delete inside fixture mirror", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const edgeDeletes: string[] = [];
+      renderer.on("edgeDelete", (event) => edgeDeletes.push(event.id));
+      const sourceNode = new Puzzle2dSceneNode({ id: "a", radius: 10, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "b", radius: 10, x: 40, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNode });
+      const edge = new Puzzle2dSceneEdge({ id: "e1", source: sourceHandle, target: targetHandle });
+      renderer.scene.add(sourceNode).add(targetNode).add(edge);
+      renderer.withFixtureStructuralDeleteMirror(() => {
+        renderer.scene.remove(edge);
+      });
+      expect(edgeDeletes).toEqual(["e1"]);
+      renderer.dispose();
     });
 
     it("deletes selected edges and nodes when Delete reaches the window listener after pointerdown", () => {

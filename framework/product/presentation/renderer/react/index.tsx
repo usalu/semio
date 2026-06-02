@@ -3741,6 +3741,17 @@ if (import.meta.vitest) {
 			expect(sheet.innerHTML).toContain("presentation-morph-into-fade-in 0.8s ease forwards !important");
 		});
 
+		it("rests morph-source ghosts with opacity only so reveal can measure FLIP targets", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, resolve } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
+			const css = readFileSync(cssPath, "utf8");
+			const restRule = css.match(/\.reveal \.presentation-morph-source \{[\s\S]*?\}/)?.[0] ?? "";
+			expect(restRule).toContain("opacity: 0");
+			expect(restRule).not.toContain("visibility: hidden");
+		});
+
 		it("uses stretch-fill at rest and larger cover vars only while auto-animating", () => {
 			const crop = { x: 0, y: 0, width: 0.5, height: 1 };
 			const square = figureCropBackgroundVars(

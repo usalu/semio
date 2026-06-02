@@ -957,6 +957,14 @@ export class Playground2d extends Playground {
 
 export type Puzzle2dPlayStructuralDeleteItem = { kind: "edge" | "node"; id: string };
 
+/** @emoji 🪢 Restores fixture edges from a seed when resync stripped them but the node graph is intact (nakagin play recovery). */
+export function puzzle2dPlayRehydrateFixtureEdgesIfMissing(fixture: Puzzle2dFixtureV1, seed: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
+	if (fixture.edges.length > 0 || fixture.nodes.length !== seed.nodes.length) {
+		return fixture;
+	}
+	return { ...fixture, edges: seed.edges.map((edge) => ({ ...edge })) };
+}
+
 /** @emoji 🗑️ Dedupes structural deletes, drops ghost ids, and ignores mass node/edge resync bursts that would strip the fixture graph. */
 export function filterPuzzle2dPlayStructuralDeleteBatch(
 	batch: readonly Puzzle2dPlayStructuralDeleteItem[],
@@ -1223,6 +1231,24 @@ if (import.meta.vitest) {
 				{ kind: "node" as const, id: "c" },
 			];
 			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual([]);
+		});
+
+		it("drops sequential edge-delete resync when most edges would be removed across flushes", () => {
+			const fixture: Puzzle2dFixtureV1 = {
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [
+					{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a.h0", angle: 0 }] },
+					{ id: "b", x: 40, y: 0, radius: 10, handles: [{ id: "b.h0", angle: Math.PI }] },
+				],
+				edges: [
+					{ id: "e0", source: "a.h0", target: "b.h0" },
+					{ id: "e1", source: "a.h0", target: "b.h0" },
+					{ id: "e2", source: "a.h0", target: "b.h0" },
+				],
+			};
+			expect(filterPuzzle2dPlayStructuralDeleteBatch([{ kind: "edge", id: "e0" }], fixture)).toEqual([{ kind: "edge", id: "e0" }]);
+			expect(filterPuzzle2dPlayStructuralDeleteBatch([{ kind: "edge", id: "e0" }, { kind: "edge", id: "e1" }, { kind: "edge", id: "e2" }], fixture)).toEqual([]);
 		});
 
 		it("drops mass edge-delete resync bursts that would strip the fixture", () => {

@@ -624,7 +624,7 @@
 
 .reveal .presentation-morph-source {
 	opacity: 0 !important;
-	visibility: hidden !important;
+	visibility: visible;
 	pointer-events: none;
 }
 

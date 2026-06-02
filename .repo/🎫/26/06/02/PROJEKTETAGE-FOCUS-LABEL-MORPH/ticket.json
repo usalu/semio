@@ -1,0 +1,9 @@
+{
+  "title": "Projektetage Focus Label Morph",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "Fix slides 8→9 (catalogue-focus → catalogue-labels): many-to-one tile morph via per-tile ghosts with same data-id at label position. reveal.js cannot FLIP visibility:hidden ghosts.",
+  "summary": "",
+  "goal": "🎯presentation",
+  "sessions": []
+}
