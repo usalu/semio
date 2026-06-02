@@ -4,16 +4,16 @@ overview: "Make both morph directions first-class and consistent with the update
 todos:
   - id: core-model
     content: "Core: unify ghost concept (GhostKind, ghost on Disposition/ResolvedDisposition replacing morphSource), add MorphToSlot + morphTo; rename isMorphSourceDisposition->isGhostDisposition."
-    status: pending
+    status: completed
   - id: core-expand
     content: "Core: set ghost:\"target\" in morphFrom expansion; add expandArrangementMorphTo (source ghosts); expand both directions in expandThoughtSlides; generalize slideMorphParticipantIds and rest/layout visibility."
-    status: pending
+    status: completed
   - id: core-resolve-tests
     content: "Core: update resolveArrangement morphId rules for both ghost kinds; extend inline vitest for one-to-many source ghosts and many-to-one target ghosts."
-    status: pending
+    status: completed
   - id: renderer-classes-css
     content: "Renderer: rename classes (target-ghost, morph-target) and add source-ghost + morph-one; replace deck-specific section[title=...] and dormant/settle CSS with generic ghost-class + auto-animate-state CSS in globals.css."
-    status: pending
+    status: in_progress
   - id: renderer-logic
     content: "Renderer: update matcher, ghost-anchor detection, presentationMorphGhostAutoAnimateCss, buildInteractiveSlideLayout revealMorphId, declaredDispositionRect, and MorphView/Figure props from morphSource to ghost; pair both morph directions, exclude the one."
     status: pending

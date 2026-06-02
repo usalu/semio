@@ -3332,6 +3332,63 @@ export function shuffleBrushCompatibleCandidates(candidates: readonly BrushCompa
   return out;
 }
 
+/** @emoji 🎚️ Per-kind brush suggestion weights (object + vortex groups each sum to 1 in the play shell). */
+export interface Puzzle3dBrushKindWeights {
+  readonly objectWeights: Readonly<Record<string, number>>;
+  readonly vortexWeights: Readonly<Record<string, number>>;
+}
+
+export const puzzle3dBrushKindWeightsRef: { current: Puzzle3dBrushKindWeights } = {
+  current: { objectWeights: {}, vortexWeights: {} },
+};
+
+/** @emoji 🎚️ Publishes brush kind weights for {@link BrushSession} weighted candidate ordering. */
+export function publishPuzzle3dBrushKindWeights(objectWeights: Readonly<Record<string, number>>, vortexWeights: Readonly<Record<string, number>>): void {
+  puzzle3dBrushKindWeightsRef.current = { objectWeights, vortexWeights };
+}
+
+function brushCandidateSuggestionWeight(candidate: BrushCompatibleCandidate, weights: Puzzle3dBrushKindWeights, kindCatalogs: KindCatalogBundle | undefined): number {
+  const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
+  const vortexKind = kind?.vortices?.[candidate.sourceVortexIndex]?.vortexKind ?? "";
+  const objectW = weights.objectWeights[candidate.objectKindId];
+  const vortexW = weights.vortexWeights[vortexKind];
+  return (objectW !== undefined && objectW > 0 ? objectW : 1) * (vortexW !== undefined && vortexW > 0 ? vortexW : 1);
+}
+
+/** @emoji 🎲 Weighted-random order for brush suggestions (higher weight → earlier in list). */
+export function weightedOrderBrushCompatibleCandidates(
+  candidates: readonly BrushCompatibleCandidate[],
+  weights: Puzzle3dBrushKindWeights,
+  kindCatalogs: KindCatalogBundle | undefined,
+  rng: BrushShuffleRng = Math.random,
+): readonly BrushCompatibleCandidate[] {
+  if (candidates.length < 2) {
+    return [...candidates];
+  }
+  const remaining = [...candidates];
+  const out: BrushCompatibleCandidate[] = [];
+  while (remaining.length > 0) {
+    const wList = remaining.map((c) => Math.max(0, brushCandidateSuggestionWeight(c, weights, kindCatalogs)));
+    const total = wList.reduce((a, b) => a + b, 0);
+    let pick = 0;
+    if (total > 0) {
+      let r = rng() * total;
+      for (let i = 0; i < remaining.length; i += 1) {
+        r -= wList[i]!;
+        if (r <= 0) {
+          pick = i;
+          break;
+        }
+      }
+    } else {
+      pick = Math.floor(rng() * remaining.length);
+    }
+    out.push(remaining[pick]!);
+    remaining.splice(pick, 1);
+  }
+  return out;
+}
+
 /** @emoji 📦 Scene groups used for brush placement overlap tests. */
 export interface BrushSceneCollisionSource {
   collectObjectGroups(): readonly Group[];
@@ -6790,7 +6847,16 @@ function BrushSession(props: {
       targetOrientationRef.current = record.orientation;
       previewCollidesRef.current = false;
       const compatible = brushCompatibleCandidates(targetCtx, props.kindCatalogs, props.kindCompatibility);
-      probeOrderRef.current = shuffleBrushCompatibleCandidates(compatible);
+      let seed = 0;
+      for (let i = 0; i < fullId.length; i += 1) {
+        seed = (Math.imul(seed, 31) + fullId.charCodeAt(i)) | 0;
+      }
+      let state = seed >>> 0;
+      const rng: BrushShuffleRng = () => {
+        state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+        return state / 0x100000000;
+      };
+      probeOrderRef.current = weightedOrderBrushCompatibleCandidates(compatible, puzzle3dBrushKindWeightsRef.current, props.kindCatalogs, rng);
       placementCandidatesRef.current = [];
       indexRef.current = 0;
       setCatalogPreloadUrls(brushMeshUrlsForCompatibleCandidates(probeOrderRef.current, props.kindCatalogs));

@@ -30,6 +30,9 @@ import {
   windowEngagementsEqual,
   type WindowEngagement,
   type WindowMeasure,
+  normalizeKindWeightGroup,
+  syncKindWeightMap,
+  type KindWeightMap,
 } from "@framework/playground/core";
 
 import {
@@ -80,6 +83,7 @@ import {
   type VortexKind,
   type VortexProps,
   puzzle3dBrushEngagementSourceRef,
+  publishPuzzle3dBrushKindWeights,
   PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID,
   PUZZLE_3D_ENGAGEMENT_ZOOM_ID,
   getPuzzle3dZoomToSelectionEpoch,
@@ -652,6 +656,10 @@ export class Puzzle3dPlayShellController extends Controller {
   private targetRingCount: number;
   private brushPlacementCollisionTolerance: number;
   private brushPlacementCollisionToleranceSlider: number;
+  private objectKindIds: string[] = [];
+  private vortexKindIds: string[] = [];
+  private objectKindWeights: KindWeightMap = {};
+  private vortexKindWeights: KindWeightMap = {};
   private snapshotListeners = new Set<() => void>();
   private snapshotCache: Puzzle3dPlaySnapshot | null = null;
   private windowEngagement: WindowEngagement | undefined;
@@ -687,9 +695,42 @@ export class Puzzle3dPlayShellController extends Controller {
     this.brushPlacementCollisionTolerance = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
     this.brushPlacementCollisionToleranceSlider = brushPlacementCollisionToleranceToSlider(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE);
     this.windowEngagement = this.placeholderWindowEngagement();
+    this.syncBrushKindWeightsFromFixture();
     this.rebuildShellMode();
     this.rebuildSnapshotCache();
     this.provideStore(PUZZLE_3D_PLAY_STORE_ID, new Puzzle3dPlaySnapshotStore(this));
+  }
+
+  private kindWeightLabel(kindId: string): string {
+    const tail = kindId.split(".").pop() ?? kindId;
+    return tail.length > 24 ? `${tail.slice(0, 21)}…` : tail;
+  }
+
+  private kindWeightMeasures(prefix: string, ids: readonly string[], weights: KindWeightMap, command: string): readonly WindowMeasure[] {
+    return ids.map((kindId) => {
+      const w = weights[kindId] ?? 0;
+      return {
+        kind: "slider" as const,
+        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-${prefix}-${kindId}`,
+        label: `${this.kindWeightLabel(kindId)} ${(w * 100).toFixed(0)}%`,
+        value: w,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        onChange: puzzle3dPlayCmd(command, { kindId }),
+      };
+    });
+  }
+
+  private syncBrushKindWeightsFromFixture(): void {
+    const catalogs = parseKindCatalogs(this.fixture?.meta as Record<string, unknown> | undefined);
+    const objects = catalogs?.objects?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
+    const vortices = catalogs?.vortices?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
+    this.objectKindIds = [...objects];
+    this.vortexKindIds = [...vortices];
+    this.objectKindWeights = syncKindWeightMap(this.objectKindIds, this.objectKindWeights);
+    this.vortexKindWeights = syncKindWeightMap(this.vortexKindIds, this.vortexKindWeights);
+    publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
   }
 
   /** @emoji 🔔 Subscribes to snapshot-only updates (selection, fixture, lod) without shell generation bumps. */

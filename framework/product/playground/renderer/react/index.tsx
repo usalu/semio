@@ -3382,6 +3382,10 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     [puzzle2dActiveTool, puzzle2dShellController],
   );
 
+  reactHostPort.useEffect(() => {
+    puzzle2dShellController?.setKindCatalogs(PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS);
+  }, [puzzle2dShellController]);
+
   const setPuzzle2dEffectiveLodForPane = reactHostPort.useCallback(
     (pane: Puzzle2dPlayPaneId, lod: Puzzle2dDrawLodKind) => {
       puzzle2dRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
@@ -4291,6 +4295,11 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
           case "setBrushFlushDistance":
             setPuzzle2dBrushFlushDistance((args as { distance: number }).distance);
             break;
+          case "setBrushKindWeights": {
+            const payload = args as { nodeWeights?: Record<string, number>; handleWeights?: Record<string, number> };
+            puzzle2dActiveRenderer()?.setBrushKindWeights(payload.nodeWeights ?? {}, payload.handleWeights ?? {});
+            break;
+          }
           case "pickBrushCandidate": {
             const { index } = args as { index?: number };
             if (typeof index === "number" && Number.isFinite(index)) {

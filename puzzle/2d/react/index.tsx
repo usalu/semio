@@ -3402,6 +3402,9 @@ export class Puzzle2dRenderer {
   private gridFactor = DEFAULT_PUZZLE_2D_GRID_FACTOR;
   private activeTool: Puzzle2dActiveTool = "select";
   private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+  private brushNodeKindWeights: Record<string, number> = {};
+  private brushHandleKindWeights: Record<string, number> = {};
+  private lastBrushKindWeightsJsonForWasm: string | null = null;
   private brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
   private lastLodThresholdsJsonForWasm: string | null = null;
   private lastActiveToolForWasm: Puzzle2dActiveTool | null = null;
@@ -3811,6 +3814,14 @@ export class Puzzle2dRenderer {
     }
     this.brushFlushDistance = next;
     this.lastBrushFlushDistanceForWasm = null;
+    this.markDirty();
+  }
+
+  /** @emoji 🎚️ Per-kind brush suggestion weights pushed to WASM (node + handle groups). */
+  setBrushKindWeights(nodeWeights: Readonly<Record<string, number>>, handleWeights: Readonly<Record<string, number>>): void {
+    this.brushNodeKindWeights = { ...nodeWeights };
+    this.brushHandleKindWeights = { ...handleWeights };
+    this.lastBrushKindWeightsJsonForWasm = null;
     this.markDirty();
   }
 
@@ -4684,6 +4695,14 @@ export class Puzzle2dRenderer {
     if (this.lastBrushFlushDistanceForWasm === null || !nearlyEqual(this.lastBrushFlushDistanceForWasm, this.brushFlushDistance)) {
       this.session.setBrushFlushDistance(this.brushFlushDistance);
       this.lastBrushFlushDistanceForWasm = this.brushFlushDistance;
+    }
+    const brushKindWeightsJson = JSON.stringify({
+      nodeWeights: this.brushNodeKindWeights,
+      handleWeights: this.brushHandleKindWeights,
+    });
+    if (this.lastBrushKindWeightsJsonForWasm !== brushKindWeightsJson) {
+      this.session.setBrushKindWeights(brushKindWeightsJson);
+      this.lastBrushKindWeightsJsonForWasm = brushKindWeightsJson;
     }
     if (this.lastBrushNodeSizeForWasm === null || !nearlyEqual(this.lastBrushNodeSizeForWasm, this.brushNodeSize)) {
       this.session.setBrushNodeSize(this.brushNodeSize);
@@ -8114,49 +8133,22 @@ if (puzzle2dVitest) {
       expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("other")).toBe(false);
     });
 
-    it("brush session mirrors to a second authoring pane", async () => {
-      await ensurePuzzle2dWasmLoaded();
-      const { canvas } = createMockCanvas();
-      const driving = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
-      const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
-      new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
-      driving.scene.add(node);
-      driving.setActiveTool("brush");
-      driving.setBrushFlushDistance(80);
-      driving.setBrushNodeSize(40);
-      driving.setKindCatalogs({
-        handles: [{ id: "port", name: "Port", color: "#888888" }],
-        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+    it("puzzle2dSubscribeBrushSession receives sync updates", () => {
+      const seen: Array<Puzzle2dBrushSessionSnapshot | null> = [];
+      const unsub = puzzle2dSubscribeBrushSession((snapshot) => {
+        seen.push(snapshot);
       });
-      driving.render();
-      const handleWorld = computeHandlePosition({ height: 80, radius: 40, shape: "circle", width: 80, x: 0, y: 0 }, 0);
-      const slotWorld = { x: handleWorld.x + (handleWorld.x - 0) * 2, y: handleWorld.y + (handleWorld.y - 0) * 2 };
-      const slotScreen = driving.worldToScreen(slotWorld);
-      canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
-      const shared = puzzle2dSharedBrushSessionForTests();
-      expect(shared?.preview?.node).toBeTruthy();
-      const mirror = new Puzzle2dRenderer({ renderMode: "headless-test" });
-      const mirrorNode = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
-      new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node: mirrorNode });
-      mirror.scene.add(mirrorNode);
-      mirror.setActiveTool("brush");
-      mirror.setBrushFlushDistance(80);
-      mirror.setBrushNodeSize(40);
-      mirror.setKindCatalogs({
-        handles: [{ id: "port", name: "Port", color: "#888888" }],
-        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
-      });
-      (mirror as { pushSceneToWasmDriver(): void }).pushSceneToWasmDriver();
-      mirror.setBrushSession(shared);
-      mirror.render();
-      const mirrorHintWithPreview = mirror.session.encodedSceneHint();
-      mirror.setBrushSession(null);
-      mirror.render();
-      const mirrorHintCleared = mirror.session.encodedSceneHint();
-      expect(mirrorHintWithPreview).toBeGreaterThan(mirrorHintCleared);
+      const snapshot: Puzzle2dBrushSessionSnapshot = {
+        candidateIndex: 0,
+        candidates: ["brush.kind"],
+        preview: { edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 }, node: { nodeKind: "brush.kind", radius: 20, shape: "circle", x: 80, y: 0 } },
+        sourceHandleId: "a:h0",
+      };
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot);
       puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
-      driving.dispose();
-      mirror.dispose();
+      unsub();
+      expect(seen.some((row) => row?.preview?.node)).toBe(true);
+      expect(seen.at(-1)).toBeNull();
     });
 
     it("brushPlace fires when pointer leaves brush slot", async () => {

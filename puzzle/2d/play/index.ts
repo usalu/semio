@@ -27,6 +27,9 @@ import {
 	type WindowLayout,
 	enforcePlaygroundWindowEngagementInput,
 	windowEngagementsEqual,
+	normalizeKindWeightGroup,
+	syncKindWeightMap,
+	type KindWeightMap,
 } from "@framework/playground/core";
 
 import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.2d.json";
@@ -496,6 +499,10 @@ export class Puzzle2dPlayShellController extends Controller {
 	private activeTool: Puzzle2dActiveTool = "select";
 	private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
 	private brushEngagementPossibles: { readonly id: string; readonly label: string }[] = [];
+	private nodeKindIds: string[] = [];
+	private handleKindIds: string[] = [];
+	private nodeKindWeights: KindWeightMap = {};
+	private handleKindWeights: KindWeightMap = {};
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, hostChromeNotify: () => void) {
 		super(PUZZLE_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -554,6 +561,27 @@ export class Puzzle2dPlayShellController extends Controller {
 		};
 	}
 
+	private kindWeightLabel(kindId: string): string {
+		const tail = kindId.split(".").pop() ?? kindId;
+		return tail.length > 24 ? `${tail.slice(0, 21)}…` : tail;
+	}
+
+	private kindWeightMeasures(prefix: string, ids: readonly string[], weights: KindWeightMap, command: string): readonly WindowMeasure[] {
+		return ids.map((kindId) => {
+			const w = weights[kindId] ?? 0;
+			return {
+				kind: "slider" as const,
+				id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-${prefix}-${kindId}`,
+				label: `${this.kindWeightLabel(kindId)} ${(w * 100).toFixed(0)}%`,
+				value: w,
+				min: 0,
+				max: 1,
+				step: 0.01,
+				onChange: puzzle2dPlayCmd(command, { kindId }),
+			};
+		});
+	}
+
 	private brushMeasures(): readonly WindowMeasure[] {
 		return [
 			{
@@ -566,7 +594,36 @@ export class Puzzle2dPlayShellController extends Controller {
 				step: BRUSH_FLUSH_DISTANCE_SLIDER_STEP,
 				onChange: puzzle2dPlayCmd("setBrushFlushDistance"),
 			},
+			...this.kindWeightMeasures("node-kind", this.nodeKindIds, this.nodeKindWeights, "setNodeKindWeight"),
+			...this.kindWeightMeasures("handle-kind", this.handleKindIds, this.handleKindWeights, "setHandleKindWeight"),
 		];
+	}
+
+	private pushBrushKindWeightsToHost(): void {
+		this.hostBridge?.runHostCommand("setBrushKindWeights", {
+			nodeWeights: this.nodeKindWeights,
+			handleWeights: this.handleKindWeights,
+		});
+	}
+
+	/** @emoji 🎚️ Syncs kind catalogs for suggestion-percentage sliders (uniform weights for new ids). */
+	setKindCatalogs(catalogs: KindCatalogBundle | undefined): void {
+		const nodes = catalogs?.nodes?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
+		const handles = catalogs?.handles?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
+		const nodeChanged =
+			nodes.length !== this.nodeKindIds.length || nodes.some((id, i) => id !== this.nodeKindIds[i]);
+		const handleChanged =
+			handles.length !== this.handleKindIds.length || handles.some((id, i) => id !== this.handleKindIds[i]);
+		if (!nodeChanged && !handleChanged) {
+			return;
+		}
+		this.nodeKindIds = [...nodes];
+		this.handleKindIds = [...handles];
+		this.nodeKindWeights = syncKindWeightMap(this.nodeKindIds, this.nodeKindWeights);
+		this.handleKindWeights = syncKindWeightMap(this.handleKindIds, this.handleKindWeights);
+		this.rebuildShellMode();
+		this.pushBrushKindWeightsToHost();
+		this.emit();
 	}
 
 	/** @emoji 🖌️ Mirrors brush candidate rows into window engagement possibles. */
@@ -758,6 +815,32 @@ export class Puzzle2dPlayShellController extends Controller {
 					this.brushFlushDistance = Math.max(BRUSH_FLUSH_DISTANCE_SLIDER_MIN, Math.min(BRUSH_FLUSH_DISTANCE_SLIDER_MAX, distance));
 					this.hostBridge?.runHostCommand("setBrushFlushDistance", { distance: this.brushFlushDistance });
 				}
+				break;
+			}
+			case "setNodeKindWeight": {
+				const { kindId, value } = args as { kindId?: string; value?: number };
+				if (typeof kindId !== "string" || !this.nodeKindIds.includes(kindId)) {
+					break;
+				}
+				const next = Number(value);
+				if (!Number.isFinite(next)) {
+					break;
+				}
+				this.nodeKindWeights = normalizeKindWeightGroup(this.nodeKindWeights, kindId, next);
+				this.pushBrushKindWeightsToHost();
+				break;
+			}
+			case "setHandleKindWeight": {
+				const { kindId, value } = args as { kindId?: string; value?: number };
+				if (typeof kindId !== "string" || !this.handleKindIds.includes(kindId)) {
+					break;
+				}
+				const next = Number(value);
+				if (!Number.isFinite(next)) {
+					break;
+				}
+				this.handleKindWeights = normalizeKindWeightGroup(this.handleKindWeights, kindId, next);
+				this.pushBrushKindWeightsToHost();
 				break;
 			}
 			case "engagementInput": {

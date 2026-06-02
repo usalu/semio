@@ -2850,6 +2850,8 @@ mod board_host {
         brush_candidates_emit_key: Option<String>,
         brush_preview_emit_key: Option<String>,
         brush_placement_serial: u64,
+        brush_node_kind_weights: HashMap<String, f64>,
+        brush_handle_kind_weights: HashMap<String, f64>,
     }
 
     impl Default for Camera {
@@ -2915,6 +2917,8 @@ mod board_host {
                 brush_candidates_emit_key: None,
                 brush_preview_emit_key: None,
                 brush_placement_serial: 0,
+                brush_node_kind_weights: HashMap::new(),
+                brush_handle_kind_weights: HashMap::new(),
             }
         }
     }
@@ -3881,20 +3885,54 @@ mod board_host {
             best.map(|(_, id)| id)
         }
 
-        fn brush_shuffle_candidates(ids: &mut [String], seed: u64) {
+        fn brush_candidate_seed(source_handle_id: &str) -> u64 {
+            source_handle_id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)))
+        }
+
+        fn brush_kind_weight(weights: &HashMap<String, f64>, id: &str, uniform_fallback: f64) -> f64 {
+            weights
+                .get(id)
+                .copied()
+                .filter(|w| w.is_finite() && *w > 0.0)
+                .unwrap_or(uniform_fallback)
+        }
+
+        fn brush_next_seed(state: u64) -> u64 {
+            state.wrapping_mul(6364136223846793005).wrapping_add(1)
+        }
+
+        fn brush_weighted_sample_index(weights: &[f64], seed: u64) -> usize {
+            let wsum: f64 = weights.iter().sum();
+            if wsum <= 0.0 {
+                return 0;
+            }
+            let unit = (seed as f64) / (u64::MAX as f64);
+            let mut r = unit * wsum;
+            for (i, w) in weights.iter().enumerate() {
+                if r <= *w || i + 1 == weights.len() {
+                    return i;
+                }
+                r -= w;
+            }
+            weights.len().saturating_sub(1)
+        }
+
+        fn brush_weighted_order_strings(ids: &mut [String], seed: u64, weight_map: &HashMap<String, f64>) {
             if ids.len() < 2 {
                 return;
             }
+            let uniform = 1.0 / ids.len() as f64;
+            let mut remaining: Vec<String> = std::mem::take(ids);
             let mut state = seed;
-            for i in (1..ids.len()).rev() {
-                state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
-                let j = (state as usize) % (i + 1);
-                ids.swap(i, j);
+            while !remaining.is_empty() {
+                let weights: Vec<f64> = remaining
+                    .iter()
+                    .map(|id| Self::brush_kind_weight(weight_map, id.as_str(), uniform))
+                    .collect();
+                state = Self::brush_next_seed(state);
+                let pick = Self::brush_weighted_sample_index(&weights, state);
+                ids.push(remaining.remove(pick));
             }
-        }
-
-        fn brush_candidate_seed(source_handle_id: &str) -> u64 {
-            source_handle_id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)))
         }
 
         fn brush_compatible_node_kind_ids(&self, source: &HandleData) -> Vec<String> {
@@ -3925,26 +3963,23 @@ mod board_host {
             let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
             let sh = source.handle_kind.as_str();
             let tn = node_kind_id;
-            let src_pos = self.handle_world_pos(source)?;
-            let center = Point::new(cx, cy);
-            let radius = self.brush_node_size * 0.5 * kind.scale;
-            let (width, height) = if kind.shape == NodeShape::Rectangle {
-                (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
-            } else {
-                (radius * 2.0, radius * 2.0)
-            };
-            let mut best: Option<(f64, usize)> = None;
+            let _ = (cx, cy);
+            let mut compatible: Vec<(usize, f64)> = Vec::new();
             for (i, tmpl) in kind.handles.iter().enumerate() {
                 if !self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
                     continue;
                 }
-                let pos = self.brush_template_world_pos(center, kind.shape, radius, width, height, tmpl.angle);
-                let d = distance_between(src_pos, pos);
-                if best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
-                    best = Some((d, i));
-                }
+                let w = Self::brush_kind_weight(&self.brush_handle_kind_weights, tmpl.handle_kind.as_str(), 1.0);
+                compatible.push((i, w));
             }
-            best.map(|(_, i)| i)
+            if compatible.is_empty() {
+                return None;
+            }
+            let weights: Vec<f64> = compatible.iter().map(|(_, w)| *w).collect();
+            let seed = Self::brush_candidate_seed(node_kind_id)
+                ^ source.id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)));
+            let pick = Self::brush_weighted_sample_index(&weights, seed);
+            Some(compatible[pick].0)
         }
 
         fn brush_build_preview(&self, source_handle_id: &str, node_kind_id: &str) -> Option<BrushPreviewSnapshot> {
@@ -4212,7 +4247,11 @@ mod board_host {
                 .get(source_handle_id.as_str())
                 .map(|h| self.brush_compatible_node_kind_ids(h))
                 .unwrap_or_default();
-            Self::brush_shuffle_candidates(&mut candidates, Self::brush_candidate_seed(&source_handle_id));
+            Self::brush_weighted_order_strings(
+                &mut candidates,
+                Self::brush_candidate_seed(&source_handle_id),
+                &self.brush_node_kind_weights,
+            );
             self.brush_candidate_kinds = candidates;
             self.brush_candidate_index = 0;
             self.brush_rebuild_preview();
@@ -4266,6 +4305,45 @@ mod board_host {
             }
             self.brush_flush_distance = d;
             if self.active_tool == ActiveTool::Brush {
+                self.brush_preview_emit_key = None;
+                self.brush_rebuild_preview();
+            }
+        }
+
+        pub fn set_brush_kind_weights(&mut self, json: &str) {
+            if json.is_empty() {
+                return;
+            }
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(json) else {
+                return;
+            };
+            self.brush_node_kind_weights.clear();
+            self.brush_handle_kind_weights.clear();
+            if let Some(obj) = v.get("nodeWeights").and_then(|x| x.as_object()) {
+                for (k, val) in obj {
+                    if let Some(w) = val.as_f64() {
+                        if w.is_finite() && w >= 0.0 {
+                            self.brush_node_kind_weights.insert(k.clone(), w);
+                        }
+                    }
+                }
+            }
+            if let Some(obj) = v.get("handleWeights").and_then(|x| x.as_object()) {
+                for (k, val) in obj {
+                    if let Some(w) = val.as_f64() {
+                        if w.is_finite() && w >= 0.0 {
+                            self.brush_handle_kind_weights.insert(k.clone(), w);
+                        }
+                    }
+                }
+            }
+            if self.active_tool != ActiveTool::Brush {
+                return;
+            }
+            if let Some(source) = self.brush_slot_source_id.clone() {
+                self.brush_slot_source_id = None;
+                self.brush_enter_slot(source);
+            } else {
                 self.brush_preview_emit_key = None;
                 self.brush_rebuild_preview();
             }
@@ -8011,6 +8089,11 @@ impl BoardSession {
     #[wasm_bindgen(js_name = setBrushFlushDistance)]
     pub fn set_brush_flush_distance_wasm(&mut self, distance: f64) {
         self.state.borrow_mut().host.set_brush_flush_distance(distance);
+    }
+
+    #[wasm_bindgen(js_name = setBrushKindWeights)]
+    pub fn set_brush_kind_weights_wasm(&mut self, json: &str) {
+        self.state.borrow_mut().host.set_brush_kind_weights(json);
     }
 
     #[wasm_bindgen(js_name = setBrushNodeSize)]

@@ -317,15 +317,27 @@ export interface DispositionStyle {
 	readonly scale?: number;
 }
 
-/** @emoji 🔀 One source participant that morphs into a target disposition (many-to-one). */
+/** @emoji 👻 Morph ghost role for reveal.js one-to-one pairing hacks. */
+export type GhostKind = "source" | "target";
+
+/** @emoji 🔀 One source participant that morphs into a target disposition (many-to-one target ghost). */
 export interface MorphFromSlot {
 	readonly participantId: string;
-	/** @emoji 📐 Target position and frame where the source embodiment travels before the target embodiment appears. */
+	/** @emoji 📐 Target position and frame where the target ghost sits during the morph. */
 	readonly position: DispositionPosition;
 	/** @emoji 🧩 Source embodiment shown during the position morph (e.g. figure crop), before switching to the target. */
 	readonly embodimentId: string;
 	/** @emoji 🎯 Line index when the target uses a multi-line text morph root (`participantId--index`). */
 	readonly targetLineIndex?: number;
+}
+
+/** @emoji 🔀 One target participant that morphs from a source disposition (one-to-many source ghost). */
+export interface MorphToSlot {
+	readonly participantId: string;
+	/** @emoji 📐 Source position and frame where the source ghost sits on the source slide. */
+	readonly position: DispositionPosition;
+	/** @emoji 🧩 Target embodiment on the next slide (fallback when the target disposition is missing). */
+	readonly embodimentId?: string;
 }
 
 /** @emoji 📍 Concrete positioned, styled embodiment of a participant on one arrangement. */
@@ -335,10 +347,12 @@ export interface Disposition {
 	readonly emphasis: ParticipantEmphasis;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
-	/** @emoji 🔀 Source participants that morph into this disposition (many-to-one); expanded as {@link Disposition.morphSource} slots. */
+	/** @emoji 🔀 Source participants that morph into this disposition (many-to-one); expanded as target {@link Disposition.ghost} slots. */
 	readonly morphFrom?: readonly MorphFromSlot[];
-	/** @emoji 🔀 True when this disposition is an expanded morph source (not shown at rest on the arrangement). */
-	readonly morphSource?: boolean;
+	/** @emoji 🔀 Target participants that morph from this disposition (one-to-many); expanded as source {@link Disposition.ghost} slots on the source slide. */
+	readonly morphTo?: readonly MorphToSlot[];
+	/** @emoji 👻 Expanded morph ghost (not shown at rest on the arrangement). */
+	readonly ghost?: GhostKind;
 	/** @emoji 🎯 Morph anchor id when it differs from {@link Participant.id} (e.g. line index on multi-line text). */
 	readonly morphAnchorId?: string;
 }
@@ -586,10 +600,12 @@ export interface ResolvedDisposition {
 	readonly morphId: string;
 	readonly position?: DispositionPosition;
 	readonly style?: DispositionStyle;
-	/** @emoji 🔀 Expanded morph source slot (many-to-one); carries source embodiment through position morph. */
-	readonly morphSource?: boolean;
+	/** @emoji 👻 Expanded morph ghost slot (source or target). */
+	readonly ghost?: GhostKind;
 	/** @emoji 🔀 Present when this disposition receives a many-to-one morph. */
 	readonly morphFrom?: readonly MorphFromSlot[];
+	/** @emoji 🔀 Present when this disposition is the one in a one-to-many morph. */
+	readonly morphTo?: readonly MorphToSlot[];
 }
 
 /** @emoji 📐 Union of normalized placement rectangles. */
@@ -636,20 +652,20 @@ export function shiftDispositionPosition(
 const CENTER_ARRANGEMENT_EPSILON = 1e-6;
 
 function isDispositionVisibleForLayout(disposition: ResolvedDisposition): boolean {
-	if (disposition.morphSource) {
+	if (disposition.ghost !== undefined) {
 		return false;
 	}
 	return disposition.style?.opacity !== 0;
 }
 
-/** @emoji 🔀 True when a disposition is an expanded morph source (not part of the resting arrangement). */
-export function isMorphSourceDisposition(disposition: Disposition): boolean {
-	return disposition.morphSource === true;
+/** @emoji 👻 True when a disposition is an expanded morph ghost (not part of the resting arrangement). */
+export function isGhostDisposition(disposition: Disposition): boolean {
+	return disposition.ghost !== undefined;
 }
 
-/** @emoji 📍 Dispositions visible on the arrangement at rest (omits expanded morph sources). */
+/** @emoji 📍 Dispositions visible on the arrangement at rest (omits expanded morph ghosts). */
 export function arrangementRestDispositions(arrangement: Arrangement): readonly Disposition[] {
-	return arrangement.dispositions.filter((disposition) => !isMorphSourceDisposition(disposition));
+	return arrangement.dispositions.filter((disposition) => !isGhostDisposition(disposition));
 }
 
 /** @emoji 📍 Slide positions for layout centering (visible tiles and frames; omits opacity-0 dispositions). */
@@ -732,11 +748,14 @@ function slideMorphParticipantIds(slide: Slide): ReadonlySet<string> {
 		for (const slot of disposition.morphFrom ?? []) {
 			ids.add(slot.participantId);
 		}
+		for (const slot of disposition.morphTo ?? []) {
+			ids.add(slot.participantId);
+		}
 	}
 	return ids;
 }
 
-/** @emoji 🔀 Expands {@link Disposition.morphFrom} into per-source {@link Disposition.morphSource} dispositions on the target arrangement. */
+/** @emoji 🔀 Expands {@link Disposition.morphFrom} into per-source target {@link Disposition.ghost} dispositions on the target arrangement. */
 export function expandArrangementMorphFrom(
 	sourceSlide: Slide,
 	arrangement: Arrangement,
@@ -744,7 +763,7 @@ export function expandArrangementMorphFrom(
 ): Arrangement {
 	const sourceByParticipant = primaryDispositionByParticipant(sourceSlide.arrangement);
 	const morphLineTargets = options?.morphLineTargets ?? true;
-	const morphSources: Disposition[] = [];
+	const targetGhosts: Disposition[] = [];
 	for (const disposition of arrangement.dispositions) {
 		for (const slot of disposition.morphFrom ?? []) {
 			const sourceDisposition = sourceByParticipant.get(slot.participantId);
@@ -758,20 +777,48 @@ export function expandArrangementMorphFrom(
 					`morphFrom slot for "${slot.participantId}" needs embodimentId (or a source disposition with embodimentId).`,
 				);
 			}
-			morphSources.push({
+			targetGhosts.push({
 				participantId: slot.participantId,
 				embodimentId,
 				emphasis: sourceDisposition?.emphasis ?? "active",
 				position: slot.position,
-				morphSource: true,
+				ghost: "target",
 				morphAnchorId,
 			});
 		}
 	}
-	if (morphSources.length === 0) {
+	if (targetGhosts.length === 0) {
 		return arrangement;
 	}
-	return { ...arrangement, dispositions: [...arrangement.dispositions, ...morphSources] };
+	return { ...arrangement, dispositions: [...arrangement.dispositions, ...targetGhosts] };
+}
+
+/** @emoji 🔀 Expands {@link Disposition.morphTo} into per-target source {@link Disposition.ghost} dispositions on the source arrangement. */
+export function expandArrangementMorphTo(targetSlide: Slide, arrangement: Arrangement): Arrangement {
+	const targetByParticipant = primaryDispositionByParticipant(targetSlide.arrangement);
+	const sourceGhosts: Disposition[] = [];
+	for (const disposition of arrangement.dispositions) {
+		for (const slot of disposition.morphTo ?? []) {
+			const targetDisposition = targetByParticipant.get(slot.participantId);
+			const embodimentId = slot.embodimentId ?? targetDisposition?.embodimentId;
+			if (!embodimentId) {
+				throw new Error(
+					`morphTo slot for "${slot.participantId}" needs embodimentId (or a target disposition with embodimentId).`,
+				);
+			}
+			sourceGhosts.push({
+				participantId: slot.participantId,
+				embodimentId,
+				emphasis: targetDisposition?.emphasis ?? disposition.emphasis,
+				position: slot.position,
+				ghost: "source",
+			});
+		}
+	}
+	if (sourceGhosts.length === 0) {
+		return arrangement;
+	}
+	return { ...arrangement, dispositions: [...arrangement.dispositions, ...sourceGhosts] };
 }
 
 /** @emoji 🔗 True when two consecutive slides share at least one participant for reveal.js auto-animate pairing. */
@@ -808,11 +855,15 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 		runIndex += 1;
 		for (let slideIndex = index; slideIndex <= runEnd; slideIndex += 1) {
 			const slide = slides[slideIndex]!;
-			const sourceSlide = slideIndex > index ? slides[slideIndex - 1]! : undefined;
-			const arrangement =
-				sourceSlide === undefined
-					? slide.arrangement
-					: expandArrangementMorphFrom(sourceSlide, slide.arrangement, { morphLineTargets: true });
+			const previousSlide = slideIndex > index ? slides[slideIndex - 1]! : undefined;
+			const nextSlide = slideIndex < runEnd ? slides[slideIndex + 1]! : undefined;
+			let arrangement = slide.arrangement;
+			if (previousSlide !== undefined) {
+				arrangement = expandArrangementMorphFrom(previousSlide, arrangement, { morphLineTargets: true });
+			}
+			if (nextSlide !== undefined) {
+				arrangement = expandArrangementMorphTo(nextSlide, arrangement);
+			}
 			expanded.push({
 				id: slide.arrangement.id,
 				name: slide.arrangement.name,
@@ -844,11 +895,12 @@ export function resolveArrangement(scope: ResolutionScope, arrangement: Arrangem
 			throw new Error(`Arrangement "${arrangement.id}" references unknown participant "${disposition.participantId}".`);
 		}
 		const morphIntoTarget = (disposition.morphFrom?.length ?? 0) > 0;
-		const resolvedMorphId = disposition.morphSource
-			? morphId(participant.id)
-			: morphIntoTarget
-				? `${morphId(participant.id)}--label`
-				: (disposition.morphAnchorId ?? morphId(participant.id));
+		const resolvedMorphId =
+			disposition.ghost !== undefined
+				? morphId(participant.id)
+				: morphIntoTarget
+					? `${morphId(participant.id)}--label`
+					: (disposition.morphAnchorId ?? morphId(participant.id));
 		return [
 			{
 				participant,
@@ -858,8 +910,9 @@ export function resolveArrangement(scope: ResolutionScope, arrangement: Arrangem
 				morphId: resolvedMorphId,
 				position: disposition.position,
 				style: disposition.style,
-				morphSource: disposition.morphSource,
+				ghost: disposition.ghost,
 				morphFrom: disposition.morphFrom,
+				morphTo: disposition.morphTo,
 			},
 		];
 	});
@@ -2152,11 +2205,11 @@ if (import.meta.vitest) {
 			};
 			const expanded = expandThoughtSlides(thought);
 			const labels = expanded.find((slide) => slide.id === "labels");
-			const morphSource = labels?.arrangement.dispositions.find((disposition) => disposition.morphSource);
-			expect(morphSource?.morphAnchorId).toBe("labels--0");
-			expect(morphSource?.morphSource).toBe(true);
-			expect(morphSource?.position).toEqual({ x: 0.38, y: 0.12, width: 0.24, height: 0.24 });
-			expect(morphSource?.position).not.toEqual({ x: 0.1, y: 0.2, width: 0.3, height: 0.6 });
+			const targetGhost = labels?.arrangement.dispositions.find((disposition) => disposition.ghost === "target");
+			expect(targetGhost?.morphAnchorId).toBe("labels--0");
+			expect(targetGhost?.ghost).toBe("target");
+			expect(targetGhost?.position).toEqual({ x: 0.38, y: 0.12, width: 0.24, height: 0.24 });
+			expect(targetGhost?.position).not.toEqual({ x: 0.1, y: 0.2, width: 0.3, height: 0.6 });
 			expect(arrangementRestDispositions(labels!.arrangement)).toHaveLength(1);
 		});
 
@@ -2192,12 +2245,12 @@ if (import.meta.vitest) {
 						emphasis: "active",
 						position: { x: 0.1, y: 0.4, width: 0.2, height: 0.1 },
 						style: { opacity: 0 },
-						morphSource: true,
+						ghost: "target",
 					},
 				],
 			});
 			const label = resolved.find((disposition) => disposition.morphFrom?.length);
-			const ghost = resolved.find((disposition) => disposition.morphSource);
+			const ghost = resolved.find((disposition) => disposition.ghost === "target");
 			expect(label?.morphId).toBe("catalogue-col1--label");
 			expect(ghost?.morphId).toBe("Rippenplatte 1");
 		});
@@ -2282,6 +2335,70 @@ if (import.meta.vitest) {
 				],
 			};
 			expect(expandThoughtSlides(thought).map((slide) => slide.id)).toEqual(["left", "right"]);
+		});
+
+		it("expands morphTo source ghosts on the source slide for one-to-many", () => {
+			const thought: Thought = {
+				id: "split",
+				participants: [{ id: "whole" }, { id: "tile-a" }, { id: "tile-b" }],
+				embodiments: [
+					{ kind: "figure", id: "whole--figure", src: "/a.png" },
+					{ kind: "figure", id: "tile-a--figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					{ kind: "figure", id: "tile-b--figure", src: "/a.png", crop: { x: 0.5, y: 0, width: 0.5, height: 1 } },
+				],
+				slides: [
+					{
+						arrangement: {
+							id: "whole",
+							dispositions: [
+								{
+									participantId: "whole",
+									embodimentId: "whole--figure",
+									emphasis: "active",
+									position: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 },
+									morphTo: [
+										{
+											participantId: "tile-a",
+											position: { x: 0.1, y: 0.1, width: 0.35, height: 0.8 },
+										},
+										{
+											participantId: "tile-b",
+											position: { x: 0.55, y: 0.1, width: 0.35, height: 0.8 },
+										},
+									],
+								},
+							],
+						},
+						transition: { kind: "morph" },
+					},
+					{
+						arrangement: {
+							id: "tiles",
+							dispositions: [
+								{
+									participantId: "tile-a",
+									embodimentId: "tile-a--figure",
+									emphasis: "active",
+									position: { x: 0.05, y: 0.2, width: 0.4, height: 0.6 },
+								},
+								{
+									participantId: "tile-b",
+									embodimentId: "tile-b--figure",
+									emphasis: "active",
+									position: { x: 0.55, y: 0.2, width: 0.4, height: 0.6 },
+								},
+							],
+						},
+					},
+				],
+			};
+			const expanded = expandThoughtSlides(thought);
+			const whole = expanded.find((slide) => slide.id === "whole");
+			const sourceGhosts = whole?.arrangement.dispositions.filter((disposition) => disposition.ghost === "source");
+			expect(sourceGhosts).toHaveLength(2);
+			expect(sourceGhosts?.map((ghost) => ghost.participantId).sort()).toEqual(["tile-a", "tile-b"]);
+			expect(sourceGhosts?.[0]?.position).toEqual({ x: 0.1, y: 0.1, width: 0.35, height: 0.8 });
+			expect(arrangementRestDispositions(whole!.arrangement)).toHaveLength(1);
 		});
 
 		it("starts a new morph run after a fade transition", () => {
