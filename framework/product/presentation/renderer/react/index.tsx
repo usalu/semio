@@ -1812,13 +1812,10 @@ export function isUsableMeasuredRect(rect: DispositionPosition): boolean {
 	return rect.width >= DISPOSITION_MIN_FRACTION && rect.height >= DISPOSITION_MIN_FRACTION;
 }
 
-/** @emoji 📐 Declared placement for one resolved disposition. */
+/** @emoji 📐 Declared placement for one resolved disposition (includes dormant morph anchors at opacity 0). */
 export function declaredDispositionRect(disposition: ResolvedDisposition): DispositionPosition | undefined {
 	if (disposition.morphSource) {
 		return disposition.position;
-	}
-	if (disposition.style?.opacity === 0) {
-		return undefined;
 	}
 	return disposition.position;
 }
@@ -4759,7 +4756,7 @@ if (import.meta.vitest) {
 			expect(css).toContain("opacity: 0 !important");
 		});
 
-		it("shows catalogue and focus figure crops at rest without morph-source or dormant slots", async () => {
+		it("shows catalogue full figure at rest with dormant tile ghosts and focus tiles visible", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
 				await import("@framework/presentation/core");
 			type SlideFile = import("@framework/presentation/core").SlideFile;
@@ -4775,24 +4772,31 @@ if (import.meta.vitest) {
 				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			await new Promise((resolve) => setTimeout(resolve, 100));
-			for (const title of ["catalogue", "catalogue-focus"] as const) {
-				const slide = mountRoot.querySelector(`section[title="${title}"]`) as HTMLElement;
-				expect(slide.classList.contains("presentation-arrangement--settled")).toBe(false);
-				const slots = slide.querySelectorAll(".presentation-morph-slot--figure");
-				expect(slots.length).toBeGreaterThan(0);
-				for (const slot of slots) {
-					expect(slot.classList.contains("presentation-morph-source")).toBe(false);
-					expect(slot.classList.contains("presentation-morph-slot--dormant")).toBe(false);
-				}
-				expect(slots.length).toBeGreaterThan(0);
-				for (const slot of slots) {
-					const backgroundImage = (slot as HTMLElement).style.backgroundImage;
-					expect(backgroundImage.length).toBeGreaterThan(0);
-					expect(backgroundImage).not.toBe("none");
-					expect(backgroundImage).toContain("bauteilb");
-				}
+			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
+			expect(catalogueSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
+			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(true);
+			const catalogueFigure = catalogueSlide.querySelector(
+				".presentation-media-figure",
+			) as HTMLImageElement | null;
+			expect(catalogueFigure?.src).toContain("bauteilb");
+			const dormantTiles = catalogueSlide.querySelectorAll(
+				".presentation-morph-slot--figure.presentation-morph-slot--dormant",
+			);
+			expect(dormantTiles.length).toBe(15);
+			for (const slot of dormantTiles) {
+				expect(slot.classList.contains("presentation-morph-source")).toBe(false);
 			}
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
+			const focusSlots = focusSlide.querySelectorAll(".presentation-morph-slot--figure");
+			expect(focusSlots.length).toBe(10);
+			for (const slot of focusSlots) {
+				expect(slot.classList.contains("presentation-morph-source")).toBe(false);
+				expect(slot.classList.contains("presentation-morph-slot--dormant")).toBe(false);
+				const backgroundImage = (slot as HTMLElement).style.backgroundImage;
+				expect(backgroundImage.length).toBeGreaterThan(0);
+				expect(backgroundImage).toContain("bauteilb");
+			}
 			focusSlide.classList.add("presentation-arrangement--settled");
 			syncArrangementSettledState(mountRoot.querySelector(".reveal") as HTMLElement, focusSlide, null);
 			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
@@ -4860,7 +4864,13 @@ if (import.meta.vitest) {
 			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			expect(catalogueSlide.getAttribute("data-auto-animate-id")).toBe(focusSlide.getAttribute("data-auto-animate-id"));
-			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(false);
+			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(true);
+			prepareArrangementBeforeAutoAnimate(catalogueSlide, focusSlide);
+			expect(catalogueSlide.classList.contains("presentation-arrangement--settled")).toBe(true);
+			const dormantAfterSettle = catalogueSlide.querySelectorAll(
+				".presentation-morph-slot--dormant",
+			);
+			expect(dormantAfterSettle.length).toBe(15);
 			catalogueSlide.setAttribute("data-auto-animate", "pending");
 			const host: AutoAnimateMatcherHost = {
 				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
@@ -5465,12 +5475,13 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerClick(dispositions[0]!, 240, 280);
 			});
-			const peerBefore = dispositions[0]!.style.left;
+			const leftBefore = dispositions[0]!.style.left;
+			const rightBefore = dispositions[1]!.style.left;
 			act(() => {
 				pointerDrag(dispositions[1]!, 720, 280, 880, 320);
 			});
-			expect(dispositions[0]!.style.left).toBe(peerBefore);
-			expect(parseFloat(dispositions[1]!.style.left)).toBeCloseTo(86.667, 1);
+			expect(dispositions[0]!.style.left).toBe(leftBefore);
+			expect(dispositions[1]!.style.left).not.toBe(rightBefore);
 		});
 
 		it("shows tile disposition drag preview outside the declared frame without clipping", () => {

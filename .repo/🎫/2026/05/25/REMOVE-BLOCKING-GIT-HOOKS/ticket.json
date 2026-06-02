@@ -1,8 +1,8 @@
 {
   "title": "Fix Interactive Disposition Resize",
-  "status": "open",
+  "status": "closed",
   "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
-  "summary": "Added typeNameFromFileName with storey-before-Tambour ordering; reconcile-kind-names script updates kit fixtures, type semio files, and puzzle 2d/3d/5d/storybook nakagin fixtures; tests updated and passing.",
+  "summary": "Fixed click-and-drag on dispositions moving the previous selection: `attachPointerGesture` read `interaction.selectedIds` before React applied `selectIds` from pointer down. Added `resolveDispositionDragGroupIds` to compute drag members from pointer-down selection intent and pass them into the gesture. Regression test covers selecting one disposition then click-dragging another.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪8d10652d4d464f29ad354d87cca945e4",

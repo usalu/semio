@@ -1830,6 +1830,8 @@ import {
   puzzle2dGuardBrushPlacementStructuralDeletes,
   puzzle2dIsBrushPlacementStructuralDeleteGuarded,
   puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
+  puzzle2dSyncBrushSessionToAllAuthoringPeers,
+  puzzle2dPushAuthoritativeSceneToAllAuthoringPeers,
   puzzle2dActiveRenderer,
   DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,

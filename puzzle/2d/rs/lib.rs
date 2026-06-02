@@ -4174,11 +4174,99 @@ mod board_host {
                 return;
             };
             let (node_id, edge_id) = self.brush_allocate_placement_ids();
-            if self.apply_brush_placement_to_host(&preview, node_id.as_str(), edge_id.as_str()) {
-                self.push_event("brushPlace", Self::brush_place_json(&preview, node_id.as_str(), edge_id.as_str()));
-            }
+            self.push_event("brushPlace", Self::brush_place_json(&preview, node_id.as_str(), edge_id.as_str()));
             self.bump_content_scene_generation();
             self.brush_preview_emit_key = None;
+        }
+
+        fn brush_preview_snapshot_from_session_json(node: &serde_json::Value, edge: &serde_json::Value, source_handle_id: &str) -> Option<BrushPreviewSnapshot> {
+            let node_kind_id = node.get("nodeKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
+            let x = node.get("x").and_then(|v| v.as_f64()).filter(|v| v.is_finite())?;
+            let y = node.get("y").and_then(|v| v.as_f64()).filter(|v| v.is_finite())?;
+            let shape = match node.get("shape").and_then(|x| x.as_str()).map(str::trim) {
+                Some("rectangle") => NodeShape::Rectangle,
+                _ => NodeShape::Circle,
+            };
+            let (radius, width, height) = match shape {
+                NodeShape::Circle => (node.get("radius").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?, 0.0, 0.0),
+                NodeShape::Rectangle => {
+                    let w = node.get("width").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?;
+                    let h = node.get("height").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?;
+                    (0.0, w, h)
+                }
+            };
+            let target_handle_index = edge.get("targetHandleIndex").and_then(|v| v.as_u64()).map(|v| v as usize)?;
+            let mut handles: Vec<NodeKindHandleTemplate> = Vec::new();
+            if let Some(arr) = node.get("handles").and_then(|x| x.as_array()) {
+                for row in arr {
+                    let ho = row.as_object()?;
+                    let handle_kind = ho.get("handleKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
+                    let angle = ho.get("angle").and_then(|v| v.as_f64()).filter(|v| v.is_finite())?;
+                    let radius = ho.get("radius").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
+                    handles.push(NodeKindHandleTemplate { handle_kind: handle_kind.to_string(), angle, radius });
+                }
+            }
+            if handles.is_empty() {
+                return None;
+            }
+            let icon_kind = node.get("iconKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+            Some(BrushPreviewSnapshot {
+                source_handle_id: source_handle_id.to_string(),
+                node_kind_id: node_kind_id.to_string(),
+                x,
+                y,
+                shape,
+                radius,
+                width,
+                height,
+                handles,
+                target_handle_index,
+                icon_kind,
+            })
+        }
+
+        /// @emoji 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
+        pub fn set_brush_session_mirror_json(&mut self, json: &str) -> Result<(), String> {
+            if json.trim().is_empty() {
+                self.brush_slot_source_id = None;
+                self.brush_candidate_kinds.clear();
+                self.brush_candidate_index = 0;
+                self.brush_preview = None;
+                self.brush_preview_emit_key = None;
+                self.brush_candidates_emit_key = None;
+                self.bump_content_scene_generation();
+                return Ok(());
+            }
+            let v: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("setBrushSessionJson: {e}"))?;
+            let source = v.get("sourceHandleId").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+            self.brush_slot_source_id = source.clone();
+            self.brush_candidate_kinds = v
+                .get("candidates")
+                .and_then(|x| x.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|x| x.as_str().map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string()))
+                        .collect()
+                })
+                .unwrap_or_default();
+            self.brush_candidate_index = v.get("index").and_then(|x| x.as_u64()).map(|i| i as usize).unwrap_or(0);
+            if self.brush_candidate_kinds.is_empty() {
+                self.brush_candidate_index = 0;
+            } else {
+                self.brush_candidate_index %= self.brush_candidate_kinds.len();
+            }
+            self.brush_preview = match (source.as_deref(), v.get("preview")) {
+                (Some(source_id), Some(preview)) if !preview.is_null() => {
+                    let node = preview.get("node").filter(|n| !n.is_null())?;
+                    let edge = preview.get("edge").filter(|e| !e.is_null())?;
+                    Self::brush_preview_snapshot_from_session_json(node, edge, source_id)
+                }
+                _ => None,
+            };
+            self.brush_preview_emit_key = None;
+            self.brush_candidates_emit_key = None;
+            self.bump_content_scene_generation();
+            Ok(())
         }
 
         fn brush_enter_slot(&mut self, source_handle_id: String) {
@@ -8008,6 +8096,20 @@ impl BoardSession {
         self.state.borrow_mut().host.brush_set_candidate_index(index as usize);
     }
 
+    #[wasm_bindgen(js_name = setBrushSessionJson)]
+    pub fn set_brush_session_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .set_brush_session_mirror_json(json)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = clearBrushSessionJson)]
+    pub fn clear_brush_session_json_wasm(&mut self) {
+        let _ = self.state.borrow_mut().host.set_brush_session_mirror_json("");
+    }
+
     #[wasm_bindgen(js_name = setLinkSessionJson)]
     pub fn set_link_session_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_external_link_preview_json(json).map_err(|e| JsValue::from_str(&e))
@@ -10113,8 +10215,6 @@ mod host_tests {
         assert!(ev2.contains("a:h0"));
         assert!(ev2.contains("nodeId"));
         assert!(ev2.contains("edgeId"));
-        assert_eq!(h.nodes.len(), 3, "placed brush node must remain on the host after preview clears");
-        assert_eq!(h.edges.len(), 1);
     }
 
     #[test]
@@ -10149,8 +10249,47 @@ mod host_tests {
         h.pointer_move_screen(far.x, far.y, false, false);
         let ev = h.drain_events_json();
         assert!(ev.contains("brushPlace"), "expected brushPlace when leaving slot, got: {ev}");
-        assert_eq!(h.nodes.len(), 3, "brush placement must persist on the host after leaving the slot");
-        assert_eq!(h.edges.len(), 1);
+    }
+
+    #[test]
+    fn board_host_brush_session_mirror_json_shows_preview_without_pointer() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_active_tool("brush");
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [{"id": "parent", "name": "Parent", "color": "#888888"}],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [{"handleKind": "parent", "angle": 3.141592653589793}]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let _ = h.drain_events_json();
+        let session = serde_json::json!({
+            "sourceHandleId": "a:h0",
+            "candidates": ["brush.kind"],
+            "index": 0,
+            "preview": {
+                "node": {
+                    "nodeKind": "brush.kind",
+                    "x": 120.0,
+                    "y": 0.0,
+                    "shape": "circle",
+                    "radius": 20.0,
+                    "handles": [{"handleKind": "parent", "angle": 3.141592653589793}]
+                },
+                "edge": { "sourceHandleId": "a:h0", "targetHandleIndex": 0 }
+            }
+        });
+        h.set_brush_session_mirror_json(&session.to_string()).unwrap();
+        let ev = h.drain_events_json();
+        assert!(!ev.contains("brushPlace"));
+        assert!(h.encoded_scene_hint() > 0);
     }
 
     #[test]

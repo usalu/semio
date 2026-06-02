@@ -790,6 +790,14 @@ export interface Puzzle2dBrushCandidatesPayload {
   readonly sourceHandleId: string;
 }
 
+/** @emoji 🖌️ Shared brush slot state mirrored across play authoring panes. */
+export interface Puzzle2dBrushSessionSnapshot {
+  readonly candidateIndex: number;
+  readonly candidates: readonly string[];
+  readonly preview: Puzzle2dEventMap["brushPreview"] | null;
+  readonly sourceHandleId: string | null;
+}
+
 /** @emoji 🔗 Host-driven link gesture preview mirrored across flat surfaces (see {@link Puzzle2dCanvasProps.linkSession}). */
 export interface Puzzle2dLinkSessionSnapshot {
   readonly source: string;
@@ -1834,7 +1842,80 @@ export function applyBrushPlacementToFixture(
   };
 }
 
-/** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
+/** @emoji 🖌️ Appends a brushed node and edge to an imperative {@link Puzzle2dRenderer} scene (same rules as {@link applyBrushPlacementToFixture}). */
+export function applyBrushPlacementToRendererScene(
+  renderer: Puzzle2dRenderer,
+  payload: Puzzle2dBrushPlacePayload,
+  catalogs?: KindCatalogBundle,
+): boolean {
+  const sourceObj = renderer.scene.getObjectById(payload.sourceHandleId);
+  if (!isPuzzle2dSceneHandleObject(sourceObj)) {
+    return false;
+  }
+  if ([...renderer.scene.edges.values()].some((e) => e.source.id === payload.sourceHandleId || e.target.id === payload.sourceHandleId)) {
+    return false;
+  }
+  const nodeId = payload.nodeId?.trim() || `puzzle2d.brush.${crypto.randomUUID()}`;
+  if (renderer.scene.nodes.has(nodeId)) {
+    return false;
+  }
+  const edgeId = payload.edgeId?.trim() || `puzzle2d.brush.edge.${crypto.randomUUID()}`;
+  if (renderer.scene.edges.has(edgeId)) {
+    return false;
+  }
+  const handles = puzzle2dFixtureHandlesFromNodeKind(nodeId, payload.handles);
+  const targetHandle = handles[payload.targetHandleIndex];
+  if (!targetHandle) {
+    return false;
+  }
+  if (handles.some((h) => [...renderer.scene.edges.values()].some((e) => e.source.id === h.id || e.target.id === h.id))) {
+    return false;
+  }
+  const catalogIcon = catalogs?.nodes?.find((row) => row.id === payload.nodeKind)?.icon?.trim();
+  const iconKind = payload.iconKind?.trim() || (catalogIcon !== "" ? catalogIcon : undefined);
+  const nodeProps =
+    payload.shape === "rectangle"
+      ? {
+          draggable: true as const,
+          height: payload.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+          iconKind,
+          id: nodeId,
+          nodeKind: payload.nodeKind,
+          shape: "rectangle" as const,
+          width: payload.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+          x: payload.x,
+          y: payload.y,
+        }
+      : {
+          draggable: true as const,
+          iconKind,
+          id: nodeId,
+          nodeKind: payload.nodeKind,
+          radius: payload.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2,
+          shape: "circle" as const,
+          x: payload.x,
+          y: payload.y,
+        };
+  const node = newPuzzle2dNodeFromProps(nodeProps);
+  renderer.scene.add(node);
+  for (const handleRow of handles) {
+    const handle = new Puzzle2dSceneHandle({
+      angle: handleRow.angle,
+      handleKind: handleRow.handleKind,
+      id: handleRow.id,
+      node,
+      ...(handleRow.radius !== undefined ? { radius: handleRow.radius } : {}),
+    });
+    renderer.scene.add(handle);
+  }
+  const targetObj = renderer.scene.getObjectById(targetHandle.id);
+  if (!isPuzzle2dSceneHandleObject(targetObj)) {
+    return false;
+  }
+  renderer.scene.ingestWasmEdge(new Puzzle2dSceneEdge({ id: edgeId, source: sourceObj, target: targetObj }));
+  renderer.markSceneDescriptorDirty();
+  return true;
+}
 export function computeHandlePosition(node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number }, angle: number): Point {
   if (node.shape === "rectangle") {
     const flat = boardHandlePositionRectangle(node.x, node.y, node.width, node.height, angle);
@@ -3584,6 +3665,44 @@ export class Puzzle2dRenderer {
   }
 
   private lastLinkSessionJsonForWasm: string | null = null;
+  private lastBrushSessionJsonForWasm: string | null = null;
+
+  /** @emoji 🖌️ Mirrors shared brush slot preview into this pane's WASM host. */
+  setBrushSession(snapshot: Puzzle2dBrushSessionSnapshot | null): void {
+    const json = snapshot
+      ? JSON.stringify({
+          sourceHandleId: snapshot.sourceHandleId ?? "",
+          candidates: snapshot.candidates,
+          index: snapshot.candidateIndex,
+          preview: snapshot.preview,
+        })
+      : "";
+    if (json === this.lastBrushSessionJsonForWasm) {
+      return;
+    }
+    this.lastBrushSessionJsonForWasm = json;
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    try {
+      if (json.length === 0) {
+        this.session.clearBrushSessionJson();
+      } else {
+        this.session.setBrushSessionJson(json);
+      }
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+    } catch (err) {
+      console.error("[DEBUG] setBrushSession failed", err);
+    }
+    this.markDirty();
+  }
+
+  /** @emoji 📡 Pushes the imperative scene graph to WASM immediately (brush place and structural edits). */
+  pushAuthoritativeSceneToWasmHost(): void {
+    this.pushAuthoritativeDescriptorToWasmSession();
+    this.invalidate();
+  }
 
   /** @emoji 🔗 Mirrors a host {@link Puzzle2dLinkSessionSnapshot} into WASM for cross-surface link preview. */
   setLinkSession(snapshot: Puzzle2dLinkSessionSnapshot | null): void {
@@ -4977,19 +5096,6 @@ export class Puzzle2dRenderer {
             });
             break;
           }
-          case "brushPreview": {
-            this.emitter.emit("brushPreview", row.payload as Puzzle2dEventMap["brushPreview"]);
-            break;
-          }
-          case "brushCandidates": {
-            const p = row.payload as { sourceHandleId?: string; candidates?: string[]; index?: number };
-            this.emitter.emit("brushCandidates", {
-              sourceHandleId: String(p.sourceHandleId ?? ""),
-              candidates: Array.isArray(p.candidates) ? p.candidates.map(String) : [],
-              index: Number(p.index ?? 0),
-            });
-            break;
-          }
           case "brushPlace": {
             const p = row.payload as Record<string, unknown>;
             const handlesRaw = Array.isArray(p.handles) ? p.handles : [];
@@ -5030,8 +5136,30 @@ export class Puzzle2dRenderer {
             if (payload.nodeKind === "" || payload.sourceHandleId === "" || !Number.isFinite(payload.x) || !Number.isFinite(payload.y)) {
               break;
             }
+            if (applyBrushPlacementToRendererScene(this, payload, this.kindCatalogsBundle)) {
+              if (payload.nodeId && payload.edgeId) {
+                puzzle2dGuardBrushPlacementStructuralDeletes(payload.nodeId, payload.edgeId);
+              }
+            }
             this.emitter.emit("brushPlace", payload);
-            this.markSceneDescriptorDirty();
+            puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
+            break;
+          }
+          case "brushPreview": {
+            const previewPayload = row.payload as Puzzle2dEventMap["brushPreview"];
+            this.emitter.emit("brushPreview", previewPayload);
+            puzzle2dUpdateBrushSessionFromSource(this, null, previewPayload);
+            break;
+          }
+          case "brushCandidates": {
+            const p = row.payload as { sourceHandleId?: string; candidates?: string[]; index?: number };
+            const candidatesPayload: Puzzle2dBrushCandidatesPayload = {
+              sourceHandleId: String(p.sourceHandleId ?? ""),
+              candidates: Array.isArray(p.candidates) ? p.candidates.map(String) : [],
+              index: Number(p.index ?? 0),
+            };
+            this.emitter.emit("brushCandidates", candidatesPayload);
+            puzzle2dUpdateBrushSessionFromSource(this, candidatesPayload, null);
             break;
           }
           default:
@@ -9601,6 +9729,48 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRende
 
 //#region 🔖MultiViewAuthoring
 const puzzle2dAuthoringPeerRenderers = new Set<Puzzle2dRenderer>();
+let puzzle2dSharedBrushSession: Puzzle2dBrushSessionSnapshot | null = null;
+
+function puzzle2dUpdateBrushSessionFromSource(
+  source: Puzzle2dRenderer,
+  candidates: Puzzle2dBrushCandidatesPayload | null,
+  preview: Puzzle2dEventMap["brushPreview"] | null,
+): void {
+  const prev = puzzle2dSharedBrushSession;
+  const sourceHandleId = candidates?.sourceHandleId || prev?.sourceHandleId || preview?.edge?.sourceHandleId || null;
+  const next: Puzzle2dBrushSessionSnapshot = {
+    candidateIndex: candidates?.index ?? prev?.candidateIndex ?? 0,
+    candidates: candidates?.candidates ?? prev?.candidates ?? [],
+    preview: preview ?? prev?.preview ?? null,
+    sourceHandleId: sourceHandleId && sourceHandleId.length > 0 ? sourceHandleId : null,
+  };
+  if (!next.sourceHandleId && (next.preview?.node === null || next.preview?.node === undefined)) {
+    puzzle2dSyncBrushSessionToAllAuthoringPeers(null, source);
+    return;
+  }
+  puzzle2dSyncBrushSessionToAllAuthoringPeers(next, source);
+}
+
+/** @emoji 🖌️ Mirrors brush slot preview onto every authoring pane except the driving renderer. */
+export function puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot: Puzzle2dBrushSessionSnapshot | null, skip?: Puzzle2dRenderer): void {
+  puzzle2dSharedBrushSession = snapshot;
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive() || peer === skip) {
+      continue;
+    }
+    peer.setBrushSession(snapshot);
+  }
+}
+
+/** @emoji 📡 Pushes the imperative scene to WASM on every authoring pane (after brush place). */
+export function puzzle2dPushAuthoritativeSceneToAllAuthoringPeers(): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.pushAuthoritativeSceneToWasmHost();
+  }
+}
 
 function puzzle2dRegisterAuthoringPeer(renderer: Puzzle2dRenderer): void {
   puzzle2dAuthoringPeerRenderers.add(renderer);

@@ -80,10 +80,15 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("assembles the catalogue as split tile dispositions", () => {
+		it("assembles the catalogue with one full figure and dormant split tiles", () => {
 			const media = deck.chapters[0]?.sequences[0]?.thoughts.find((thought) => thought.name === "Medien");
 			const catalogue = media?.slides.find((slide) => slide.arrangement.id === "catalogue");
-			expect(catalogue?.arrangement.dispositions).toHaveLength(15);
+			expect(catalogue?.arrangement.dispositions).toHaveLength(16);
+			expect(catalogue?.arrangement.settleBeforeMorphTo).toEqual(["catalogue-focus"]);
+			const dormantTiles = catalogue?.arrangement.dispositions.filter(
+				(disposition) => disposition.style?.opacity === 0,
+			);
+			expect(dormantTiles).toHaveLength(15);
 		});
 
 		it("names all fifteen catalogue tiles semantically", () => {
