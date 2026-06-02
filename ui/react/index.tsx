@@ -2386,8 +2386,8 @@ export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-s
 /** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
 export const windowMeasuresRailWidthClass = "w-[min(14rem,calc(100%-0.5rem))]";
 
-/** @emoji 📐 Left engagement chrome reserve so it does not overlap the measures rail. */
-export const windowMeasuresEngagementMaxWidthClass = "max-w-[calc(100%-14.5rem)]";
+/** @emoji 📐 Max width cap for window engagement (matches {@link Engagement} design target). */
+export const windowEngagementMaxWidthPx = 28 * 16;
 
 /** @emoji 📐 Outer overlay for floating window measures along the right edge. */
 export const windowMeasuresOverlayClass =
@@ -11990,7 +11990,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
         data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
         className={cn(
-          "pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half",
+          "pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half",
           sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm",
           className,
         )}
@@ -12234,9 +12234,43 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
 /**
  * Window holds the data fields for a Window record.
  **/
+function useWindowMeasuresReservePx(enabled: boolean, measures: React.ReactNode, bodyRef: React.RefObject<HTMLDivElement | null>, measuresOverlayRef: React.RefObject<HTMLDivElement | null>) {
+  const [measuresReservePx, setMeasuresReservePx] = reactHostPort.useState(0);
+  reactHostPort.useLayoutEffect(() => {
+    if (!enabled || !measures) {
+      setMeasuresReservePx(0);
+      return;
+    }
+    const update = () => {
+      const rail = measuresOverlayRef.current;
+      const width = rail ? Math.ceil(rail.getBoundingClientRect().width || rail.offsetWidth) : 0;
+      setMeasuresReservePx((prev) => (prev === width ? prev : width));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    if (bodyRef.current) observer.observe(bodyRef.current);
+    if (measuresOverlayRef.current) observer.observe(measuresOverlayRef.current);
+    return () => observer.disconnect();
+  }, [bodyRef, enabled, measures, measuresOverlayRef]);
+  return measuresReservePx;
+}
+
+/** @emoji 📐 Inline max-width for engagement zone: full width up to 28rem, minus measured options rail. */
+export function windowEngagementZoneMaxWidthStyle(measuresReservePx: number, hasMeasures: boolean): React.CSSProperties {
+  if (!hasMeasures) {
+    return { width: "100%", maxWidth: "min(28rem, 100%)" };
+  }
+  const reservePx = measuresReservePx > 0 ? measuresReservePx + 4 : Math.round(14.5 * 16);
+  return { width: "100%", maxWidth: `min(28rem, calc(100% - ${reservePx}px))` };
+}
+
 const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures, engagement, active = false, onActivate }) => {
   const bgClass = "bg-window";
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
+  const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementDraftRef = reactHostPort.useRef("");
   const [engagementZoneHovered, setEngagementZoneHovered] = reactHostPort.useState(false);
@@ -12320,10 +12354,10 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         className={cn(`relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden ${bgClass}`, className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div ref={windowBodyRef} className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
-            <div data-slot="window-measures-overlay" className={cn(windowMeasuresOverlayClass, windowMeasuresRailWidthClass)}>
+            <div ref={measuresOverlayRef} data-slot="window-measures-overlay" className={cn(windowMeasuresOverlayClass, windowMeasuresRailWidthClass)}>
               <div data-slot="window-measures-stack" className={windowMeasuresStackClass}>
                 {measures}
               </div>
@@ -12338,10 +12372,10 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
               <div
                 ref={engagementZoneRef}
                 data-slot="window-engagement-hover-zone"
+                style={engagementZoneSizeStyle}
                 className={cn(
-                  "pointer-events-auto flex w-[min(100%,28rem)] min-w-0 select-none flex-col items-stretch",
-                  windowMeasuresEngagementMaxWidthClass,
-                  !showEngagementChrome && "h-large",
+                  "pointer-events-auto flex min-w-0 select-none flex-col items-stretch",
+                  !showEngagementChrome && "h-large min-w-[6rem]",
                 )}
                 onPointerEnter={() => setEngagementZoneHovered(true)}
                 onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
@@ -17574,6 +17608,24 @@ if (import.meta.vitest) {
       fireEvent.pointerDown(zone!, { bubbles: true });
       expect(overlay?.getAttribute("data-expanded")).toBe("true");
       expect(screen.getByText("Idle")).toBeTruthy();
+    });
+
+    it("Window engagement max width shrinks when measures rail is present", () => {
+      const { container } = render(
+        <Window
+          id="layout-window"
+          active
+          engagement={{ input: { placeholder: "Command" } }}
+          measures={<div data-testid="measure-slot">LOD</div>}
+        >
+          <div data-testid="window-body">Body</div>
+        </Window>,
+      );
+      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
+      expect(zone.style.maxWidth).toContain("calc(100%");
+      expect(zone.style.maxWidth).toContain("min(28rem");
+      expect(windowEngagementZoneMaxWidthStyle(200, true).maxWidth).toContain("204px");
+      expect(windowEngagementZoneMaxWidthStyle(0, false).maxWidth).toBe("min(28rem, 100%)");
     });
 
     it("Window engagement and measures overlays pass pointer hits through to the canvas body", () => {

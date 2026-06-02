@@ -1830,7 +1830,7 @@
         },
         {
           "id": "semio.metabolism.light.node.ccb67521-5ca1-42cf-bd81-4058c6c5348d",
-          "name": "Capsule Q",
+          "name": "Capsule q",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
@@ -1852,7 +1852,7 @@
         },
         {
           "id": "semio.metabolism.light.node.e1878572-0fe1-4780-b877-90df9b25d31f",
-          "name": "Capsule Q",
+          "name": "Capsule q",
           "handles": [
             {
               "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",

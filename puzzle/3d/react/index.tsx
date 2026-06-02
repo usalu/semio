@@ -246,6 +246,21 @@ export interface AttractionProps {
 
 export const PLACEHOLDER_MESH_URL = "puzzle.3d.placeholder://box";
 
+/** @emoji 🧩 Drag payload only — never passed to {@link useGLTF}. */
+export const PALETTE_DRAG_SEED_MESH_URL = "puzzle3d://palette-seed";
+
+/** @emoji 🎨 True when `meshUrl` can be fetched by the GLTF loader (not palette/placeholder schemes). */
+export function isLoadableMeshUrl(meshUrl: string | undefined): boolean {
+  const url = meshUrl?.trim();
+  if (!url) {
+    return false;
+  }
+  if (url === PLACEHOLDER_MESH_URL || url === PALETTE_DRAG_SEED_MESH_URL) {
+    return false;
+  }
+  return !url.includes("://") || url.startsWith("/") || url.startsWith("http://") || url.startsWith("https://");
+}
+
 export interface AttractionKind {
   id: string;
   label?: string;
@@ -305,6 +320,7 @@ export function puzzle3dObjectKindVorticesFromKitConnectors(
   connectors: readonly KitConnectorCadRow[],
   labelHandleKind: (handleKind: string) => string,
   defaultRadius = 0.36,
+  objectKindId?: string,
 ): ObjectKindVortexTemplate[] {
   const seenPositions = new Set<string>();
   const out: ObjectKindVortexTemplate[] = [];
@@ -321,7 +337,7 @@ export function puzzle3dObjectKindVorticesFromKitConnectors(
     }
     seenPositions.add(posKey);
     const portName = labelHandleKind(handleKind);
-    const vortexKind = puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(portName, point);
+    const vortexKind = puzzle3dDoorCapsuleVortexKindFromKindPortAndPoint(objectKindId, portName, point);
     out.push({
       vortexKind,
       position,
@@ -360,6 +376,25 @@ export function puzzle3dPreferSpecificMetabolismKindName(kindName: string, avail
 const DOOR_CAPSULE_RIGHT_VORTEX_KIND = "door capsule right";
 const DOOR_CAPSULE_LEFT_VORTEX_KIND = "door capsule left";
 
+/** @emoji 🚪 Nakagin capsule letter → door side (J and S right; L left). */
+export function puzzle3dMetabolismDoorCapsuleSideFromKindName(kindName: string | undefined): "left" | "right" | null {
+  const name = kindName?.trim() ?? "";
+  if (name === "") {
+    return null;
+  }
+  const tail = /(?:Capsule(?: With Balcony)?|Trapezoid Capsule)\s+([A-Za-z])\s*$/.exec(name)?.[1] ?? /Capsule\s+([A-Za-z])\s*$/.exec(name)?.[1];
+  if (!tail) {
+    return null;
+  }
+  if (tail === "J" || tail === "S") {
+    return "right";
+  }
+  if (tail === "L") {
+    return "left";
+  }
+  return null;
+}
+
 /** @emoji 🚪 Resolves left vs right door vortex kind from kit port name and connector CAD (single door per kind). */
 export function puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(
   portName: string,
@@ -371,12 +406,31 @@ export function puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(
   return point.x < 0 ? DOOR_CAPSULE_LEFT_VORTEX_KIND : DOOR_CAPSULE_RIGHT_VORTEX_KIND;
 }
 
-function relabelDoorCapsuleVortexTemplate(vortex: ObjectKindVortexTemplate): ObjectKindVortexTemplate {
+/** @emoji 🚪 Resolves door capsule side from metabolism kind name, else port name and CAD X. */
+export function puzzle3dDoorCapsuleVortexKindFromKindPortAndPoint(
+  objectKindId: string | undefined,
+  portName: string,
+  point: { readonly x: number; readonly y: number; readonly z: number },
+): string {
+  if (!portName.includes("door capsule")) {
+    return portName;
+  }
+  const side = puzzle3dMetabolismDoorCapsuleSideFromKindName(objectKindId);
+  if (side === "left") {
+    return DOOR_CAPSULE_LEFT_VORTEX_KIND;
+  }
+  if (side === "right") {
+    return DOOR_CAPSULE_RIGHT_VORTEX_KIND;
+  }
+  return puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(portName, point);
+}
+
+function relabelDoorCapsuleVortexTemplate(objectKindId: string, vortex: ObjectKindVortexTemplate): ObjectKindVortexTemplate {
   if (!vortex.vortexKind?.includes("door capsule")) {
     return vortex;
   }
   const [x, y, z] = vortex.position;
-  const nextKind = puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint(vortex.vortexKind, { x, y, z });
+  const nextKind = puzzle3dDoorCapsuleVortexKindFromKindPortAndPoint(objectKindId, vortex.vortexKind, { x, y, z });
   return nextKind === vortex.vortexKind ? vortex : { ...vortex, vortexKind: nextKind };
 }
 
@@ -390,7 +444,7 @@ export function enrichKindCatalogBundleDoorCapsules(bundle: KindCatalogBundle | 
     if (!kind.vortices?.length) {
       return kind;
     }
-    const vortices = kind.vortices.map(relabelDoorCapsuleVortexTemplate);
+    const vortices = kind.vortices.map((vortex) => relabelDoorCapsuleVortexTemplate(kind.id, vortex));
     if (vortices.every((v, i) => v === kind.vortices![i])) {
       return kind;
     }
@@ -1647,7 +1701,7 @@ export function buildPaletteObjectDragFixture(objectKindId: string, domain: Doma
     domain,
     meta: { puzzle3dFixtureDragKind: FIXTURE_DRAG_KIND_PALETTE_OBJECT },
     attractions: [],
-    objects: [{ id: "palette-seed-object", objectKind: objectKindId, meshUrl: "puzzle3d://palette-seed", origin: [0, 0, 0], vortices: [] }],
+    objects: [{ id: "palette-seed-object", objectKind: objectKindId, meshUrl: PALETTE_DRAG_SEED_MESH_URL, origin: [0, 0, 0], vortices: [] }],
   };
 }
 
@@ -1727,18 +1781,18 @@ function catalogObjectKindById(catalogs: KindCatalogBundle | undefined, kindId: 
 export function resolveObjectKindMeshUrl(kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): string | undefined {
   const kind = catalogObjectKindById(kindCatalogs, kindId);
   const catalogMesh = kind?.meshUrl?.trim();
-  if (catalogMesh) {
+  if (isLoadableMeshUrl(catalogMesh)) {
     return catalogMesh;
   }
   const lodMesh = pickClosestMeshUrl(kind?.meshByLod, DEFAULT_MANUAL_LOD, undefined);
-  if (lodMesh) {
+  if (isLoadableMeshUrl(lodMesh)) {
     return lodMesh;
   }
   if (sceneFixture) {
     for (const object of sceneFixture.objects) {
       if (object.objectKind === kindId) {
         const sceneMesh = object.meshUrl?.trim();
-        if (sceneMesh) {
+        if (isLoadableMeshUrl(sceneMesh)) {
           return sceneMesh;
         }
       }
@@ -9261,16 +9315,16 @@ if (import.meta.vitest) {
   });
 
   describe("puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint", () => {
-    it("infers left from negative local X for brush on door tambour right", () => {
+    it("keeps Capsule J on door capsule right and Capsule L on left regardless of CAD X", () => {
       const catalogs: KindCatalogBundle = {
         objects: [
           {
-            id: "s",
-            meshUrl: "/meshes/capsule_s.glb",
+            id: "Capsule J",
+            meshUrl: "/meshes/capsule_J.glb",
             vortices: [{ vortexKind: "door capsule right", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
           },
           {
-            id: "L",
+            id: "Capsule L",
             meshUrl: "/meshes/capsule_L.glb",
             vortices: [{ vortexKind: "door capsule right", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
           },
@@ -9283,16 +9337,15 @@ if (import.meta.vitest) {
         { bidirectional: true, specificity: "vortex", source: "door capsule right", target: "door tambour right" },
       ];
       const list = brushCompatibleCandidates(target, enriched, compat);
-      expect(list.some((entry) => entry.objectKindId === "s")).toBe(false);
-      expect(list.some((entry) => entry.objectKindId === "L")).toBe(true);
-      const s = enriched.objects.find((k) => k.id === "s");
-      expect(s?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
-      expect(enriched.objects.find((k) => k.id === "L")?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule right"]);
-      expect(s?.vortices).toHaveLength(1);
+      expect(list.some((entry) => entry.objectKindId === "Capsule J")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "Capsule L")).toBe(false);
+      expect(enriched.objects.find((k) => k.id === "Capsule J")?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule right"]);
+      expect(enriched.objects.find((k) => k.id === "Capsule L")?.vortices?.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
     });
-    it("infers left or right from CAD X even when kit port id names the other side", () => {
+    it("infers left or right from CAD X when kind letter is not J, L, or S", () => {
       expect(puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint("door capsule right", { x: -1, y: 0, z: 0 })).toBe("door capsule left");
       expect(puzzle3dDoorCapsuleVortexKindFromPortNameAndPoint("door capsule left", { x: 1, y: 0, z: 0 })).toBe("door capsule right");
+      expect(puzzle3dDoorCapsuleVortexKindFromKindPortAndPoint("Capsule q", "door capsule right", { x: -1, y: 0, z: 0 })).toBe("door capsule left");
     });
   });
 
@@ -9313,7 +9366,7 @@ if (import.meta.vitest) {
       expect(vortices[0]?.position).toEqual([-7.5, -7.7, 7.5]);
       expect(vortices[1]?.position).toEqual([-18.6, -7.7, 7.5]);
     });
-    it("infers a single left door vortex from negative-X kit connector", () => {
+    it("assigns door capsule right to Capsule J kit connector", () => {
       const vortices = puzzle3dObjectKindVorticesFromKitConnectors(
         [
           {
@@ -9323,8 +9376,10 @@ if (import.meta.vitest) {
           },
         ],
         (hk) => hk,
+        0.36,
+        "Capsule J",
       );
-      expect(vortices.map((v) => v.vortexKind)).toEqual(["door capsule left"]);
+      expect(vortices.map((v) => v.vortexKind)).toEqual(["door capsule right"]);
       expect(vortices).toHaveLength(1);
     });
   });
@@ -10045,6 +10100,26 @@ if (import.meta.vitest) {
       expect(placed?.meshUrl).toBe("/meshes/base.glb");
       expect(placed?.origin).toEqual([1, 2, 3]);
     });
+    it("resolveObjectKindMeshUrl ignores palette drag seed URLs in catalog and scene", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [{ id: "Capsule q", label: "Capsule q", meshUrl: PALETTE_DRAG_SEED_MESH_URL }],
+      };
+      const scene: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [
+          { id: "palette-seed-object", objectKind: "Capsule q", meshUrl: PALETTE_DRAG_SEED_MESH_URL, origin: [0, 0, 0], vortices: [] },
+          { id: "tower-q", objectKind: "Capsule q", meshUrl: "/meshes/capsule_q.glb", origin: [1, 0, 0], vortices: [] },
+        ],
+      };
+      expect(isLoadableMeshUrl(PALETTE_DRAG_SEED_MESH_URL)).toBe(false);
+      expect(resolveObjectKindMeshUrl("Capsule q", catalogs, scene)).toBe("/meshes/capsule_q.glb");
+      const dragFixture = buildPaletteObjectDragFixture("Capsule q");
+      const placed = mergePaletteObjectFromDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs, scene);
+      expect(placed?.meshUrl).toBe("/meshes/capsule_q.glb");
+    });
     it("applyObjectKindToFixtureObject swaps meshUrl from the catalog", () => {
       const catalogs: KindCatalogBundle = {
         objects: [
@@ -10159,12 +10234,12 @@ if (import.meta.vitest) {
     const brushCatalogs = enrichKindCatalogBundleDoorCapsules({
       objects: [
         {
-          id: "J",
+          id: "Capsule J",
           meshUrl: "/meshes/capsule_J.glb",
           vortices: [{ vortexKind: "door capsule right", position: [-1.3, -1.25, 0], direction: [-1, 0, 0], radius: 0.36 }],
         },
         {
-          id: "L",
+          id: "Capsule L",
           meshUrl: "/meshes/capsule_L.glb",
           vortices: [{ vortexKind: "door capsule right", position: [1.3, -1.25, 0], direction: [1, 0, 0], radius: 0.36 }],
         },
@@ -10279,15 +10354,15 @@ if (import.meta.vitest) {
     it("brushCompatibleCandidates filters by kind compatibility", () => {
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
-      expect(list.some((entry) => entry.objectKindId === "J")).toBe(true);
-      expect(list.some((entry) => entry.objectKindId === "L")).toBe(false);
+      expect(list.some((entry) => entry.objectKindId === "Capsule L")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "Capsule J")).toBe(false);
       expect(list.some((entry) => entry.objectKindId === "Tambour")).toBe(false);
     });
     it("brushCompatibleCandidates pairs door tambour right with door capsule right only", () => {
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour right" };
       const list = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
-      expect(list.some((entry) => entry.objectKindId === "J")).toBe(false);
-      expect(list.some((entry) => entry.objectKindId === "L")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "Capsule J")).toBe(true);
+      expect(list.some((entry) => entry.objectKindId === "Capsule L")).toBe(false);
     });
     it("brushCompatibleCandidates prefers Tambour stack bottom on tambour top vortices", () => {
       const stackCatalogs: KindCatalogBundle = {

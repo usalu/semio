@@ -54,6 +54,9 @@ export interface TextEmbodiment {
 	readonly morphFromLines?: readonly string[];
 }
 
+/** @emoji 🖼 How a {@link FigureEmbodiment.crop} fills its slide frame (default {@link FigureFitCover}). */
+export type FigureFit = "cover" | "contain";
+
 /** @emoji 🧩 Rows×columns grid from {@link split}; enables seam-aligned background positioning. */
 export interface FigureMosaicGrid {
 	readonly rows: number;
@@ -73,6 +76,8 @@ export interface FigureEmbodiment {
 	readonly sourceAspect?: number;
 	/** @emoji 🧩 When set, crop backgrounds use edge-aligned positions so adjacent cells do not overlap. */
 	readonly mosaic?: FigureMosaicGrid;
+	/** @emoji 🖼 Fill rule for crop backgrounds (default cover; catalogue overview uses contain). */
+	readonly fit?: FigureFit;
 }
 
 /** @emoji 🎬 Video clip on a slide. */

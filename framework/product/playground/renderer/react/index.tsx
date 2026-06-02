@@ -3484,14 +3484,15 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
 
   const structuralDeleteQueueRef = reactHostPort.useRef<Puzzle2dPlayStructuralDeleteItem[]>([]);
   const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);
-  const flushStructuralDeleteQueue = reactHostPort.useCallback(() => {
+  const flushStructuralDeleteQueue = reactHostPort.useCallback((): number => {
     structuralDeleteFlushScheduledRef.current = false;
     const batch = structuralDeleteQueueRef.current;
     if (batch.length === 0) {
-      return;
+      return 0;
     }
     structuralDeleteQueueRef.current = [];
-    flushPuzzle2dPlayStructuralDeleteBatch(batch, fixtureRef.current, applyStructuralDelete);
+    const applied = flushPuzzle2dPlayStructuralDeleteBatch(batch, fixtureRef.current, applyStructuralDelete);
+    return applied.length;
   }, [applyStructuralDelete]);
   const queueStructuralDelete = reactHostPort.useCallback(
     (kind: "edge" | "node", id: string) => {
@@ -3620,8 +3621,11 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
       return;
     }
-    flushStructuralDeleteQueue();
-    puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixtureRef.current);
+    const flushedCount = flushStructuralDeleteQueue();
+    if (flushedCount > 0) {
+      return;
+    }
+    puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture);
   }, [fixture, puzzle2dActiveTool, flushStructuralDeleteQueue]);
 
   const remapIdInSelections = reactHostPort.useCallback((replacedId: string, replacementId: string) => {

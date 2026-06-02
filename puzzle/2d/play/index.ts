@@ -1098,7 +1098,7 @@ export function puzzle2dPlayRehydrateFixtureEdgesIfMissing(fixture: Puzzle2dFixt
 	return { ...fixture, edges: seed.edges.map((edge) => ({ ...edge })) };
 }
 
-/** @emoji 🗑️ Dedupes structural deletes, drops ghost ids, and ignores mass node/edge resync bursts that would strip the fixture graph. */
+/** @emoji 🗑️ Dedupes authoritative canvas structural deletes and drops ids absent from the fixture (renderer only emits user deletes). */
 export function filterPuzzle2dPlayStructuralDeleteBatch(
 	batch: readonly Puzzle2dPlayStructuralDeleteItem[],
 	fixture: Puzzle2dFixtureV1,
@@ -1117,19 +1117,6 @@ export function filterPuzzle2dPlayStructuralDeleteBatch(
 			continue;
 		}
 		out.push(item);
-	}
-	const nodeDeletes = out.filter((item) => item.kind === "node");
-	const edgeDeletes = out.filter((item) => item.kind === "edge");
-	const nodeCount = fixture.nodes.length;
-	const edgeCount = fixture.edges.length;
-	if (nodeCount > 0 && nodeDeletes.length >= 2 && nodeDeletes.length > nodeCount / 2) {
-		return out.filter((item) => item.kind === "edge");
-	}
-	if (edgeCount > 0 && edgeDeletes.length >= 2 && edgeDeletes.length > edgeCount / 2 && nodeDeletes.length === 0) {
-		return out.filter((item) => item.kind === "node");
-	}
-	if (edgeCount > 20 && edgeDeletes.length >= 2 && nodeDeletes.length === 0) {
-		return out.filter((item) => item.kind === "node");
 	}
 	return out;
 }
@@ -1413,7 +1400,7 @@ if (import.meta.vitest) {
 			).toEqual([{ kind: "edge", id: "e0" }]);
 		});
 
-		it("drops resync bursts that would delete most of the fixture graph", () => {
+		it("keeps mass node deletes from authoritative canvas delete", () => {
 			const fixture: Puzzle2dFixtureV1 = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -1429,10 +1416,10 @@ if (import.meta.vitest) {
 				{ kind: "node" as const, id: "b" },
 				{ kind: "node" as const, id: "c" },
 			];
-			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual([]);
+			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual(batch);
 		});
 
-		it("drops sequential edge-delete resync when most edges would be removed across flushes", () => {
+		it("keeps sequential and mass edge deletes from authoritative canvas delete", () => {
 			const fixture: Puzzle2dFixtureV1 = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -1447,47 +1434,26 @@ if (import.meta.vitest) {
 				],
 			};
 			expect(filterPuzzle2dPlayStructuralDeleteBatch([{ kind: "edge", id: "e0" }], fixture)).toEqual([{ kind: "edge", id: "e0" }]);
-			expect(filterPuzzle2dPlayStructuralDeleteBatch([{ kind: "edge", id: "e0" }, { kind: "edge", id: "e1" }, { kind: "edge", id: "e2" }], fixture)).toEqual([]);
-		});
-
-		it("drops mass edge-delete resync bursts that would strip the fixture", () => {
-			const fixture: Puzzle2dFixtureV1 = {
-				schema: "puzzle.2d.fixture/v1",
-				camera: { x: 0, y: 0, zoom: 1 },
-				nodes: [
-					{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a.h0", angle: 0 }] },
-					{ id: "b", x: 40, y: 0, radius: 10, handles: [{ id: "b.h0", angle: Math.PI }] },
-				],
-				edges: [
-					{ id: "e0", source: "a.h0", target: "b.h0" },
-					{ id: "e1", source: "a.h0", target: "b.h0" },
-					{ id: "e2", source: "a.h0", target: "b.h0" },
-				],
-			};
 			const batch = [
 				{ kind: "edge" as const, id: "e0" },
 				{ kind: "edge" as const, id: "e1" },
 				{ kind: "edge" as const, id: "e2" },
 			];
-			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual([]);
+			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual(batch);
 		});
 
-		it("drops paired edge deletes on large nakagin-scale fixtures", () => {
+		it("keeps paired edge deletes on large nakagin-scale fixtures", () => {
 			const fixture: Puzzle2dFixtureV1 = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a.h0", angle: 0 }] }],
 				edges: Array.from({ length: 30 }, (_, i) => ({ id: `e${i}`, source: "a.h0", target: "a.h0" })),
 			};
-			expect(
-				filterPuzzle2dPlayStructuralDeleteBatch(
-					[
-						{ kind: "edge", id: "e0" },
-						{ kind: "edge", id: "e1" },
-					],
-					fixture,
-				),
-			).toEqual([]);
+			const batch = [
+				{ kind: "edge" as const, id: "e0" },
+				{ kind: "edge" as const, id: "e1" },
+			];
+			expect(filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture)).toEqual(batch);
 		});
 	});
 

@@ -13,6 +13,7 @@ import type {
     DispositionStyle,
     Arrangement,
     FigureEmbodiment,
+    FigureFit,
     ParticipantEmphasis,
     Slide,
     PdfEmbodiment,
@@ -89,6 +90,7 @@ export type {
     DispositionStyle,
     Embodiment,
     FigureEmbodiment,
+    FigureFit,
     Participant,
     ParticipantEmphasis,
     PdfEmbodiment, Presentation,
@@ -888,6 +890,9 @@ const MorphAnchorOnWrapperContext = createContext(false);
 /** @emoji ⛶ When true, {@link PdfMorphView} measures against the enlarged slide content box, not the declared catalogue frame. */
 const PresentationDispositionEnlargeContext = createContext(false);
 
+/** @emoji 📐 Live slide frame for {@link FigureMorphView} cover math (drag/resize updates this). */
+const PresentationFigureCropFrameContext = createContext<DispositionPosition | undefined>(undefined);
+
 /** @emoji 🆔 Interactive disposition id for ephemeral pdf page navigation in {@link PdfMorphView}. */
 const PresentationInteractiveDispositionIdContext = createContext<string | undefined>(undefined);
 
@@ -1375,12 +1380,13 @@ export function figureMosaicBackgroundPosition(
 	};
 }
 
-/** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
+/** @emoji 🖼 CSS vars for crop tiles: uniform cover/contain only (same % width and height — never distorted). */
 function figureCropCoverVars(
 	crop: DispositionPosition,
 	frame: DispositionPosition,
 	sourceAspect = 1,
 	mosaic?: { readonly rows: number; readonly columns: number },
+	fit: FigureFit = "cover",
 ): { readonly width: number; readonly height: number; readonly posX: number; readonly posY: number } {
 	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
 	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
@@ -1392,8 +1398,8 @@ function figureCropCoverVars(
 					posX: crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100,
 					posY: crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100,
 				};
+	let uniform = Math.max(stretchWidth, stretchHeight);
 	if (
-		mosaicCell === null &&
 		frame.width > 0 &&
 		frame.height > 0 &&
 		crop.width > 0 &&
@@ -1401,18 +1407,12 @@ function figureCropCoverVars(
 	) {
 		const cropAspect = figureCropPhysicalAspect(crop, sourceAspect);
 		const frameAspect = frame.width / frame.height;
-		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
-		return {
-			width: stretchWidth * coverScale,
-			height: stretchHeight * coverScale,
-			posX,
-			posY,
-		};
+		const scale =
+			fit === "contain"
+				? Math.min(frameAspect / cropAspect, cropAspect / frameAspect)
+				: Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
+		uniform *= scale;
 	}
-	if (mosaicCell !== null) {
-		return { width: stretchWidth, height: stretchHeight, posX, posY };
-	}
-	const uniform = Math.max(stretchWidth, stretchHeight);
 	return { width: uniform, height: uniform, posX, posY };
 }
 
@@ -1536,22 +1536,24 @@ export function figureCropBackgroundVars(
 ): CSSProperties {
 	const sourceAspect = embodiment.sourceAspect ?? 1;
 	const mosaic = embodiment.mosaic;
+	const fit = embodiment.fit ?? "cover";
 	const mosaicOnRest = mosaic !== undefined && fromMorphToFrame === undefined && morphFrame === undefined;
 	const restBasis = frame ?? morphFrame;
 	const morphBasis = morphFrame ?? frame;
 	const rest = restBasis
-		? figureCropCoverVars(crop, restBasis, sourceAspect, mosaicOnRest ? mosaic : undefined)
-		: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, sourceAspect);
+		? figureCropCoverVars(crop, restBasis, sourceAspect, mosaicOnRest ? mosaic : undefined, fit)
+		: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, sourceAspect, undefined, fit);
 	const morph = morphBasis
 		? figureCropCoverVars(
 				crop,
 				morphBasis,
 				sourceAspect,
 				morphBasis === restBasis && mosaicOnRest ? mosaic : undefined,
+				fit,
 			)
 		: rest;
 	const gridFrom = fromMorphToFrame
-		? figureCropCoverVars(crop, fromMorphToFrame, sourceAspect, mosaic)
+		? figureCropCoverVars(crop, fromMorphToFrame, sourceAspect, mosaic, fit)
 		: undefined;
 	const vars: CSSProperties = {
 		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
@@ -1603,6 +1605,7 @@ function FigureMorphView({
 	readonly fromMorphToFrame?: DispositionPosition;
 }): ReactNode {
 	if (embodiment.crop && position) {
+		const cropFrame = useContext(PresentationFigureCropFrameContext) ?? position;
 		const dormant = dormantAnchor === true;
 		const morphCropFrom =
 			revealMorphCompanion === "target" && morphFrame !== undefined && position !== undefined;
@@ -1640,7 +1643,7 @@ function FigureMorphView({
 						: figureCropBackgroundVars(
 								embodiment,
 								embodiment.crop,
-								position,
+								cropFrame,
 								morphToFrame,
 								fromMorphToFrame,
 							)),
@@ -3836,7 +3839,11 @@ const InteractiveDisposition: FC<{
 						<MorphAnchorOnWrapperContext.Provider
 							value={Boolean(revealMorphId && declaredRect !== undefined)}
 						>
-							<MorphDispositionView disposition={displayDisposition} />
+							<PresentationFigureCropFrameContext.Provider
+								value={canvasLiveTransform ?? displayDisposition.position}
+							>
+								<MorphDispositionView disposition={displayDisposition} />
+							</PresentationFigureCropFrameContext.Provider>
 						</MorphAnchorOnWrapperContext.Provider>
 					</PresentationDispositionEnlargeContext.Provider>
 				</PresentationInteractiveDispositionIdContext.Provider>
@@ -5155,13 +5162,13 @@ if (import.meta.vitest) {
 			expect(tileFrame).toBeTruthy();
 			expect(tileFrame.style.backgroundImage).toContain("/catalogue.png");
 			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(
-				/^222\.2222222222222\d*% 266\.6666666666667%$/,
+				/^266\.6666666666667% 266\.6666666666667%$/,
 			);
 			const tiles = [...container.querySelectorAll(".presentation-morph-slot--figure")] as HTMLElement[];
 			for (const node of tiles) {
-				expect(node.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(
-					/^222\.2222222222222\d*% 266\.6666666666667%$/,
-				);
+				const size = node.style.getPropertyValue("--presentation-figure-bg-size");
+				const [width, height] = size.split(/\s+/);
+				expect(width).toBe(height);
 			}
 			const positions = tiles.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
@@ -5336,7 +5343,7 @@ if (import.meta.vitest) {
 			expect(slot?.style.backgroundImage).toContain("/catalogue.png");
 			expect(slot?.querySelector("h2")).toBeNull();
 			expect(slot?.style.left).toBe("35%");
-			expect(slot?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 100%");
+			expect(slot?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 200%");
 			expect(slot?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("25% 50%");
 		});
 
@@ -5455,10 +5462,10 @@ if (import.meta.vitest) {
 				crop,
 				{ x: 0, y: 0, width: 1, height: 0.25 },
 			);
-			expect(square["--presentation-figure-bg-size-morph" as keyof typeof square]).toBe("400% 200%");
-			expect(wide["--presentation-figure-bg-size-morph" as keyof typeof wide]).toBe("1600% 800%");
-			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("1600% 800%");
-			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% 200%");
+			expect(square["--presentation-figure-bg-size-morph" as keyof typeof square]).toBe("400% 400%");
+			expect(wide["--presentation-figure-bg-size-morph" as keyof typeof wide]).toBe("1600% 1600%");
+			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("1600% 1600%");
+			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% 400%");
 			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("25% 50%");
 			expect(square["--presentation-figure-bg-position" as keyof typeof square]).toBe("25% 50%");
 		});
@@ -5473,6 +5480,21 @@ if (import.meta.vitest) {
 				frame,
 			);
 			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe("100% 100%");
+			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe("50% 50%");
+		});
+
+		it("uses contain for full catalogue overview in the catalogue frame", () => {
+			const sourceAspect = 1222 / 896;
+			const crop = { x: 0, y: 0, width: 1, height: 1 };
+			const frame = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+			const vars = figureCropBackgroundVars(
+				{ kind: "figure", src: "/bauteilbörse.png", crop, sourceAspect, fit: "contain" },
+				crop,
+				frame,
+			);
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toMatch(
+				/^72\.9\d*% 72\.9\d*%$/,
+			);
 			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe("50% 50%");
 		});
 
@@ -5504,9 +5526,9 @@ if (import.meta.vitest) {
 			);
 			expect(vars["--presentation-figure-bg-grid-position" as keyof typeof vars]).toBe("25% 50%");
 			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBeTruthy();
-			expect(vars["--presentation-figure-bg-grid-size" as keyof typeof vars]).toMatch(
-				/^670(\.\d+)?% 400(\.\d+)?%$/,
-			);
+			const gridSize = vars["--presentation-figure-bg-grid-size" as keyof typeof vars] as string;
+			const [gridW, gridH] = gridSize.split(/\s+/);
+			expect(gridW).toBe(gridH);
 			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBeTruthy();
 			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBeTruthy();
 		});
