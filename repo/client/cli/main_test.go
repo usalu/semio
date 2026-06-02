@@ -16290,16 +16290,75 @@ func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
 	if !strings.Contains(output, "git hooks removed") {
 		t.Fatalf("expected git hook removal message, got %q", output)
 	}
+	if !strings.Contains(output, "micro-commit hooks installed") {
+		t.Fatalf("expected micro-commit hooks install message, got %q", output)
+	}
+	for _, hookName := range []string{"post-commit", "prepare-commit-msg"} {
+		hookPath := filepath.Join(hooksDir, hookName)
+		if st, err := os.Stat(hookPath); err != nil || st.IsDir() {
+			t.Fatalf("expected micro-commit hook at %s: %v", hookPath, err)
+		}
+	}
 	for _, path := range []string{
 		filepath.Join(repoRoot, ".github", "hooks", "repo.json"),
 		filepath.Join(repoRoot, ".cursor", "hooks.json"),
 		filepath.Join(repoRoot, ".claude", "settings.json"),
 		filepath.Join(repoRoot, ".kiro", "agents", "repo.json"),
-		filepath.Join(hooksDir, "post-commit"),
 		filepath.Join(hooksDir, "pre-commit"),
 	} {
 		if _, err := os.Stat(path); err == nil || !os.IsNotExist(err) {
 			t.Fatalf("configure unexpectedly left or created %s", path)
+		}
+	}
+}
+
+func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
+	repoRoot := t.TempDir()
+	initGit := exec.Command("git", "init")
+	initGit.Dir = repoRoot
+	if out, err := initGit.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, out)
+	}
+	gitDir := filepath.Join(repoRoot, ".git")
+	hooksDir := filepath.Join(gitDir, "hooks")
+	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
+		t.Fatalf("mkdir hooks: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(repoRoot, "repo", "hooks"), 0o755); err != nil {
+		t.Fatalf("mkdir repo hooks: %v", err)
+	}
+	hookSrc := filepath.Join("..", "..", "hooks", "post-commit")
+	data, err := os.ReadFile(hookSrc)
+	if err != nil {
+		t.Fatalf("read hook source: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(repoRoot, "repo", "hooks", "post-commit"), data, 0o755); err != nil {
+		t.Fatalf("write hook source: %v", err)
+	}
+	if err := installMicroCommitHooks(repoRoot); err != nil {
+		t.Fatalf("install hooks: %v", err)
+	}
+	templatePath := filepath.Join(gitDir, "gkcommittemplate.txt")
+	editMsgPath := filepath.Join(gitDir, "COMMIT_EDITMSG")
+	for _, p := range []string{templatePath, editMsgPath} {
+		if err := os.WriteFile(p, []byte("draft\n"), 0o644); err != nil {
+			t.Fatalf("seed %s: %v", p, err)
+		}
+	}
+	hookPath := filepath.Join(hooksDir, "post-commit")
+	cmd := exec.Command(hookPath)
+	cmd.Dir = repoRoot
+	cmd.Env = append(os.Environ(), "GIT_DIR="+gitDir, "GIT_WORK_TREE="+repoRoot)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("run post-commit: %v\n%s", err, out)
+	}
+	for _, p := range []string{templatePath, editMsgPath} {
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatalf("read %s: %v", p, err)
+		}
+		if len(b) != 0 {
+			t.Fatalf("expected empty %s after post-commit, got %q", p, b)
 		}
 	}
 }

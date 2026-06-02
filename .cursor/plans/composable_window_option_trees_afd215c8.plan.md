@@ -7,19 +7,19 @@ todos:
     status: cancelled
   - id: core-model
     content: Add WindowMeasureGroup to framework/core WindowMeasure union (recursive tree)
-    status: in_progress
+    status: completed
   - id: ui-render
     content: Add UI group node + compact UIWindowMeasureGroup collapsible renderer + rail styles; recurse in UIWindowMeasures
-    status: pending
+    status: completed
   - id: mapping
     content: Make windowMeasuresToGolden recurse into group children
-    status: pending
+    status: completed
   - id: producers
     content: Reorganize 3d/2d/5d/cad windowMeasures builders into grouped trees (Brush->Tolerance+Distribution->Objects/Vortices)
-    status: pending
+    status: completed
   - id: tests
     content: Extend inline vitest suites for tree producers + mapping recursion; runtime-verify compact rail
-    status: pending
+    status: completed
 isProject: false
 ---
 

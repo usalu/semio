@@ -38408,6 +38408,33 @@ var repoManagedGitHooks = []string{
 	"post-rewrite",
 }
 
+// 🔄installMicroCommitHook copies a repo hook script into `.git/hooks` (must stay non-blocking).
+func installMicroCommitHook(repoRoot, hookName string) error {
+	if repoRoot == "" {
+		return nil
+	}
+	src := filepath.Join(repoRoot, "repo", "hooks", hookName)
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return fmt.Errorf("read micro-commit hook %s: %w", hookName, err)
+	}
+	hookPath := filepath.Join(repoRoot, ".git", "hooks", hookName)
+	if err := os.WriteFile(hookPath, data, 0o755); err != nil {
+		return fmt.Errorf("install micro-commit hook %s: %w", hookName, err)
+	}
+	return nil
+}
+
+// 🔄installMicroCommitHooks installs prepare-commit-msg (fresh message on commit) and post-commit (reset templates).
+func installMicroCommitHooks(repoRoot string) error {
+	for _, name := range []string{"prepare-commit-msg", "post-commit"} {
+		if err := installMicroCommitHook(repoRoot, name); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // 🧹removeGitHooks deletes repo-managed git hooks so commits, rebases, and squashes stay unblocked.
 func removeGitHooks(repoRoot string) ([]string, error) {
 	if repoRoot == "" {
@@ -38453,12 +38480,15 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if err := installMicroCommitHooks(repoRoot); err != nil {
+				return err
+			}
 			fmt.Fprintln(cmd.OutOrStdout(), "repo config generation is disabled; edit checked-in config files manually")
 			if len(removed) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "git hooks: none to remove")
+				fmt.Fprintln(cmd.OutOrStdout(), "git hooks: none to remove; micro-commit hooks installed")
 				return nil
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "git hooks removed: %s\n", strings.Join(removed, ", "))
+			fmt.Fprintf(cmd.OutOrStdout(), "git hooks removed: %s; micro-commit hooks installed\n", strings.Join(removed, ", "))
 			return nil
 		},
 	}

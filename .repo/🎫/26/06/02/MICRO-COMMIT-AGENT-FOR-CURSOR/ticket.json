@@ -3,7 +3,7 @@
   "emoji": "🫡",
   "status": "closed",
   "description": "Create .cursor/agents/micro-commit.md and .agents/skills/micro-commit/SKILL.md for fast WIP micro-commits: bump counter, parent wip header, timestamp, git diff summaries. Triggers: g, go, c, commit, +1.",
-  "summary": "Removed .cursor/agents/micro-commit.md; full workflow lives only in .agents/skills/micro-commit/SKILL.md for use via @micro-commit in a general agent session.",
+  "summary": "Fixed non-editable GitKraken commit message: stopped setting git commit.template (GK read-only mode). prepare-commit-msg now only refreshes when message still matches last prepare digest; user edits preserved. post-commit removes template files instead of truncating. Integration test script in ticket folder.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repomechanisms🎯repocommitmechanism",
   "sessions": [
     "⚪7059dbbe0520474dbb974a75da0164f9",
@@ -12,6 +12,11 @@
     "⚪0b264496d53e4abb92f678fd8c95d320",
     "⚪78342385abf74fe3a88cf6b8a9abbaab",
     "⚪d294ff5ad1f649309825e61746c0bd6b",
-    "⚪3de30fe94526436ea604ae248255e754"
+    "⚪3de30fe94526436ea604ae248255e754",
+    "⚪8760de1b776841d5a522455338ba1567",
+    "⚪369e450394ea434a96296b4060df8c63",
+    "⚪c02634f0ded941cc9a2c84b9f6842b7f",
+    "⚪cb961d3e8cd34ab584c5817ceefbd03d",
+    "⚪c22b512599e7468e9ed0acf75623e338"
   ]
 }

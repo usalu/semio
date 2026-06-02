@@ -605,7 +605,17 @@ export class CadPlayShellController extends Controller {
     this.mainMode.windowKinds = CAD_PLAY_PANE_SPECS.map((row) => {
       const engagement = this.paneEngagementForShell(row.pane);
       enforcePlaygroundWindowEngagementInput(engagement, `CAD play window "${row.windowKindId}"`);
-      return new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane), this.transformMeasureForPane(row.pane)], engagement);
+      return new WindowKindRuntime(
+        row.windowKindId,
+        row.label,
+        row.bodyKey,
+        undefined,
+        [
+          { kind: "group", id: `${row.pane}-compute`, label: "Compute", children: [this.computeMeasureForPane(row.pane)] },
+          { kind: "group", id: `${row.pane}-transform`, label: "Transform", children: [this.transformMeasureForPane(row.pane)] },
+        ],
+        engagement,
+      );
     });
   }
 

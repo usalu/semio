@@ -237,16 +237,6 @@ function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, 
 	return map;
 }
 
-function dispositionByParticipant(arrangement: Arrangement): Map<string, Disposition> {
-	const map = new Map<string, Disposition>();
-	for (const disposition of arrangement.dispositions) {
-		if (!map.has(disposition.participantId)) {
-			map.set(disposition.participantId, disposition);
-		}
-	}
-	return map;
-}
-
 function revealMorphCompanionFromMorphFrom(
 	scope: ReturnType<typeof buildResolutionScope>,
 	sourceSlide: Slide,
@@ -277,41 +267,6 @@ function revealMorphCompanionFromMorphFrom(
 				morphId: morphId(participant.id),
 				position: slot.position,
 				revealMorphCompanion: "target",
-			});
-		}
-	}
-	return companions;
-}
-
-/** @emoji 👻 Outgoing source companions when the next slide morphFrom references participants on this slide. */
-function revealMorphCompanionFromNextSlideMorphFrom(
-	scope: ReturnType<typeof buildResolutionScope>,
-	nextSlide: Slide,
-	arrangement: Arrangement,
-): RevealResolvedDisposition[] {
-	const currentByParticipant = dispositionByParticipant(arrangement);
-	const companions: RevealResolvedDisposition[] = [];
-	for (const disposition of nextSlide.arrangement.dispositions) {
-		for (const slot of disposition.morphFrom ?? []) {
-			const sourceDisposition = currentByParticipant.get(slot.participantId);
-			if (!sourceDisposition?.position) {
-				continue;
-			}
-			const participant = scope.participants.get(slot.participantId);
-			if (!participant) {
-				throw new Error(
-					`morphFrom on "${nextSlide.arrangement.id}" references unknown participant "${slot.participantId}".`,
-				);
-			}
-			const embodimentId = slot.embodimentId ?? sourceDisposition.embodimentId;
-			companions.push({
-				participant,
-				embodiment: resolveEmbodiment(scope, embodimentId),
-				emphasis: sourceDisposition.emphasis,
-				embodimentId,
-				morphId: morphId(participant.id),
-				position: sourceDisposition.position,
-				revealMorphCompanion: "source",
 			});
 		}
 	}
@@ -364,7 +319,6 @@ export function resolveRevealArrangement(
 		companions.push(...revealMorphCompanionFromMorphFrom(scope, context.previousSlide, arrangement));
 	}
 	if (context.nextSlide !== undefined) {
-		companions.push(...revealMorphCompanionFromNextSlideMorphFrom(scope, context.nextSlide, arrangement));
 		companions.push(...revealMorphCompanionFromMorphTo(scope, context.nextSlide, arrangement));
 	}
 	return [...resolved, ...companions];
@@ -1550,8 +1504,6 @@ export interface InteractiveDispositionPlacement {
 	readonly sectionRect: DispositionPosition | undefined;
 	/** @emoji 🔗 reveal.js `data-id` on the canvas wrapper when the tile frame must not own it. */
 	readonly revealMorphId?: string;
-	/** @emoji 🔗 Keeps figure crop anchors off the visible tile when a source ghost owns the morph id. */
-	readonly morphAnchorOnWrapper?: boolean;
 	readonly rowBandId?: string;
 }
 
@@ -1574,34 +1526,22 @@ export function buildInteractiveSlideLayout(
 	resolved: readonly RevealResolvedDisposition[],
 	morph = false,
 ): InteractiveSlideLayout {
-	const outgoingSourceMorphIds = new Set(
-		resolved
-			.filter((disposition) => disposition.revealMorphCompanion === "source")
-			.map((disposition) => disposition.morphId),
-	);
 	const placements: InteractiveDispositionPlacement[] = [];
 	resolved.forEach((disposition, dispositionIndex) => {
 		const declaredRect = declaredDispositionRect(disposition);
-		const revealMorphId =
-			morph && declaredRect !== undefined
-				? disposition.revealMorphCompanion !== undefined
-					? disposition.morphId
-					: outgoingSourceMorphIds.has(disposition.morphId)
-						? undefined
-						: disposition.morphFrom?.length
-							? undefined
-							: disposition.morphId
-				: undefined;
-		const morphAnchorOnWrapper =
-			Boolean(revealMorphId && declaredRect !== undefined) ||
-			(disposition.revealMorphCompanion === undefined && outgoingSourceMorphIds.has(disposition.morphId));
 		placements.push({
 			id: dispositionInteractionId(renderSlideId, disposition, dispositionIndex),
 			disposition,
 			declaredRect,
 			sectionRect: declaredRect,
-			revealMorphId,
-			morphAnchorOnWrapper,
+			revealMorphId:
+				morph && declaredRect !== undefined
+					? disposition.revealMorphCompanion !== undefined
+						? disposition.morphId
+						: disposition.morphFrom?.length
+							? undefined
+							: disposition.morphId
+					: undefined,
 		});
 	});
 	return { placements, rowBands: [] };
@@ -2522,7 +2462,6 @@ const InteractiveDisposition: FC<{
 	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
 	readonly sectionRef: RefObject<HTMLElement | null>;
 	readonly revealMorphId?: string;
-	readonly morphAnchorOnWrapper?: boolean;
 	readonly rowBandId?: string;
 }> = ({
 	id,
@@ -2532,7 +2471,6 @@ const InteractiveDisposition: FC<{
 	allDeclaredRects,
 	sectionRef,
 	revealMorphId,
-	morphAnchorOnWrapper,
 	rowBandId,
 }) => {
 	const slideEpoch = useContext(PresentationSlideEpochContext);
@@ -3020,9 +2958,7 @@ const InteractiveDisposition: FC<{
 			>
 				<PresentationDispositionFullscreenContext.Provider value={fullscreen}>
 					<MorphAnchorOnWrapperContext.Provider
-						value={
-							morphAnchorOnWrapper ?? Boolean(revealMorphId && declaredRect !== undefined)
-						}
+						value={Boolean(revealMorphId && declaredRect !== undefined)}
 					>
 						<MorphDispositionView disposition={displayDisposition} />
 					</MorphAnchorOnWrapperContext.Provider>
@@ -3263,7 +3199,6 @@ const ArrangementSection: FC<{
 					allDeclaredRects={declaredRects}
 					sectionRef={sectionRef}
 					revealMorphId={entry.revealMorphId}
-					morphAnchorOnWrapper={entry.morphAnchorOnWrapper}
 					rowBandId={entry.rowBandId}
 				/>
 			))}
@@ -3689,64 +3624,6 @@ if (import.meta.vitest) {
 			const companion = resolved.find((entry) => entry.revealMorphCompanion === "target");
 			expect(companion?.morphId).toBe("tile");
 			expect(companion?.position).toEqual({ x: 0.2, y: 0.3, width: 0.2, height: 0.1 });
-		});
-
-		it("appends source companions on the outgoing slide when the next slide morphFrom references its tiles", () => {
-			const scope = buildResolutionScope([
-				{
-					participants: [{ id: "col1" }, { id: "tile" }],
-					embodiments: [
-						{ kind: "text", id: "label", lines: ["A"], level: "heading" },
-						{ kind: "figure", id: "tile-figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
-					],
-				},
-			]);
-			const nextSlide: Slide = {
-				arrangement: {
-					id: "labels",
-					dispositions: [
-						{
-							participantId: "col1",
-							embodimentId: "label",
-							emphasis: "active",
-							morphFrom: [
-								{
-									participantId: "tile",
-									embodimentId: "tile-figure",
-									position: { x: 0.2, y: 0.3, width: 0.2, height: 0.1 },
-								},
-							],
-						},
-					],
-				},
-			};
-			const resolved = resolveRevealArrangement(
-				scope,
-				{
-					id: "focus",
-					dispositions: [
-						{
-							participantId: "tile",
-							embodimentId: "tile-figure",
-							emphasis: "active",
-							position: { x: 0.5, y: 0.5, width: 0.2, height: 0.2 },
-						},
-					],
-				},
-				{ nextSlide },
-			);
-			expect(resolved).toHaveLength(2);
-			const tile = resolved.find((entry) => entry.participant.id === "tile" && entry.revealMorphCompanion === undefined);
-			const source = resolved.find((entry) => entry.revealMorphCompanion === "source");
-			expect(tile?.position).toEqual({ x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
-			expect(source?.position).toEqual(tile?.position);
-			expect(source?.morphId).toBe("tile");
-			const layout = buildInteractiveSlideLayout("focus", resolved, true);
-			const tilePlacement = layout.placements.find((entry) => entry.disposition === tile);
-			const sourcePlacement = layout.placements.find((entry) => entry.disposition === source);
-			expect(tilePlacement?.revealMorphId).toBeUndefined();
-			expect(tilePlacement?.morphAnchorOnWrapper).toBe(true);
-			expect(sourcePlacement?.revealMorphId).toBe("tile");
 		});
 
 		it("appends source companions for morphTo on the whole slide", () => {
@@ -5193,7 +5070,6 @@ if (import.meta.vitest) {
 					pairs.some(
 						(pair) =>
 							pair.from.getAttribute("data-id") === id &&
-							elementIsSourceGhostAnchor(pair.from) &&
 							elementIsTargetGhostAnchor(pair.to),
 					),
 				).length,
@@ -5209,7 +5085,7 @@ if (import.meta.vitest) {
 			expect(labelSlide.querySelectorAll(".presentation-target-ghost").length).toBeGreaterThanOrEqual(8);
 			const labelSlot = inlineColumnLabelPosition(2);
 			const focusStuetze = focusSlide.querySelector(
-				'[data-disposition-id^="catalogue-focus--Stütze"].presentation-source-ghost',
+				'[data-disposition-id^="catalogue-focus--Stütze"]',
 			) as HTMLElement | null;
 			const labelGhost = labelSlide.querySelector(
 				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-target-ghost',
@@ -5266,12 +5142,7 @@ if (import.meta.vitest) {
 			);
 			expect(sourceGhosts.length).toBe(10);
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
-			expect(
-				focusSlide.querySelectorAll(".presentation-interactive-disposition.presentation-source-ghost").length,
-			).toBe(10);
-			const focusSlots = focusSlide.querySelectorAll(
-				".presentation-interactive-disposition--kind-figure:not(.presentation-source-ghost) .presentation-morph-slot--figure",
-			);
+			const focusSlots = focusSlide.querySelectorAll(".presentation-morph-slot--figure");
 			expect(focusSlots.length).toBe(10);
 			for (const slot of focusSlots) {
 				expect(slot.classList.contains("presentation-target-ghost")).toBe(false);
@@ -5392,12 +5263,9 @@ if (import.meta.vitest) {
 			await new Promise((resolve) => setTimeout(resolve, 100));
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			const labelSlide = mountRoot.querySelector('section[title="catalogue-labels"]') as HTMLElement;
-			expect(
-				focusSlide.querySelectorAll(".presentation-interactive-disposition.presentation-source-ghost").length,
-			).toBeGreaterThanOrEqual(8);
 			const labelSlot = inlineColumnLabelPosition(2);
 			const focusStuetze = focusSlide.querySelector(
-				'[data-disposition-id^="catalogue-focus--Stütze"].presentation-source-ghost',
+				'[data-disposition-id^="catalogue-focus--Stütze"]',
 			) as HTMLElement | null;
 			const labelGhost = labelSlide.querySelector(
 				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-target-ghost',

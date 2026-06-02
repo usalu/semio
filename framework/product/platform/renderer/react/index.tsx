@@ -624,132 +624,141 @@ function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React
     case "toggle":
       return (
         <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
-              <Toggle
-                id={measure.id}
-                className={windowMeasureToggleClass}
-                pressed={measure.pressed}
-                defaultPressed={measure.defaultPressed}
-                onPressedChange={measure.onPressedChange}
-                icon={measure.icon ?? <CheckIcon className="size-small" />}
-                text={measure.text}
-              />
-            </UIWindowMeasureFloat>
-          );
-        case "select":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
-                <SelectTrigger id={measure.id} className="h-medium w-full min-w-0" size="sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {measure.items.map((item) => (
-                    <SelectItem key={item.id} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </UIWindowMeasureFloat>
-          );
-        case "combobox":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Combobox id={measure.id} value={measure.value} options={measure.choices} placeholder={measure.placeholder} onValueChange={measure.onValueChange} className={windowMeasureControlClass} />
-            </UIWindowMeasureFloat>
-          );
-        case "button":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Button id={measure.id} text={measure.text} icon={measure.icon} onClick={measure.onClick} />
-            </UIWindowMeasureFloat>
-          );
-        case "buttonCycle":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <ButtonCycle id={measure.id} value={measure.value} onValueChange={measure.onValueChange} items={measure.items} />
-            </UIWindowMeasureFloat>
-          );
-        case "input":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Input id={measure.id} lazy className={cn("h-medium", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
-            </UIWindowMeasureFloat>
-          );
-        case "textarea":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Textarea id={measure.id} lazy className={cn("min-h-[4rem]", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
-            </UIWindowMeasureFloat>
-          );
-        case "checkbox":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id}>
-              <div className="text-foreground flex w-full min-w-0 items-center gap-single text-xs">
-                <input
-                  id={measure.id}
-                  type="checkbox"
-                  className="border-element accent-foreground size-small shrink-0 rounded border"
-                  {...(measure.checked !== undefined ? { checked: measure.checked } : { defaultChecked: measure.defaultChecked })}
-                  onChange={(event) => measure.onCheckedChange?.(event.target.checked)}
-                />
-                {measure.label ? (
-                  <label htmlFor={measure.id} className="cursor-pointer select-none">
-                    {measure.label}
-                  </label>
-                ) : null}
-              </div>
-            </UIWindowMeasureFloat>
-          );
-        case "radio":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <div className="flex flex-col gap-half" role="radiogroup" aria-labelledby={measure.id}>
-                {measure.items.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    data-slot="window-measure-radio-item"
-                    className={cn(
-                      "border-element/80 hover:bg-hover-window w-full rounded border px-single py-half text-left text-xs transition-colors",
-                      measure.value === item.value && "bg-active-base text-active-foreground",
-                    )}
-                    onClick={() => measure.onChange?.(item.value)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </UIWindowMeasureFloat>
-          );
-        case "slider": {
-          const min = measure.min ?? 0;
-          const max = measure.max ?? 100;
-          const v = measure.value ?? min;
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Slider id={measure.id} value={[v]} min={min} max={max} step={measure.step} onValueChange={(vals) => measure.onValueChange?.(vals[0] ?? min)} />
-            </UIWindowMeasureFloat>
-          );
-        }
-        case "number":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Stepper id={measure.id} value={measure.value} min={measure.min} max={measure.max} step={measure.step} onChange={measure.onChange} />
-            </UIWindowMeasureFloat>
-          );
-        case "color":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Input id={measure.id} type="color" className={cn("h-medium cursor-pointer", windowMeasureControlClass)} value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
-            </UIWindowMeasureFloat>
-          );
-        default: {
-          const _exhaustive: never = measure;
-          return _exhaustive;
-        }
-      }
-    })}
+          <Toggle
+            id={measure.id}
+            className={windowMeasureToggleClass}
+            pressed={measure.pressed}
+            defaultPressed={measure.defaultPressed}
+            onPressedChange={measure.onPressedChange}
+            icon={measure.icon ?? <CheckIcon className="size-small" />}
+            text={measure.text}
+          />
+        </UIWindowMeasureFloat>
+      );
+    case "select":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
+            <SelectTrigger id={measure.id} className="h-medium w-full min-w-0" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {measure.items.map((item) => (
+                <SelectItem key={item.id} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </UIWindowMeasureFloat>
+      );
+    case "combobox":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <Combobox id={measure.id} value={measure.value} options={measure.choices} placeholder={measure.placeholder} onValueChange={measure.onValueChange} className={windowMeasureControlClass} />
+        </UIWindowMeasureFloat>
+      );
+    case "button":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <Button id={measure.id} text={measure.text} icon={measure.icon} onClick={measure.onClick} />
+        </UIWindowMeasureFloat>
+      );
+    case "buttonCycle":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <ButtonCycle id={measure.id} value={measure.value} onValueChange={measure.onValueChange} items={measure.items} />
+        </UIWindowMeasureFloat>
+      );
+    case "input":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <Input id={measure.id} lazy className={cn("h-medium", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
+        </UIWindowMeasureFloat>
+      );
+    case "textarea":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <Textarea id={measure.id} lazy className={cn("min-h-[4rem]", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
+        </UIWindowMeasureFloat>
+      );
+    case "checkbox":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} nested={nested}>
+          <div className="text-foreground flex w-full min-w-0 items-center gap-single text-xs">
+            <input
+              id={measure.id}
+              type="checkbox"
+              className="border-element accent-foreground size-small shrink-0 rounded border"
+              {...(measure.checked !== undefined ? { checked: measure.checked } : { defaultChecked: measure.defaultChecked })}
+              onChange={(event) => measure.onCheckedChange?.(event.target.checked)}
+            />
+            {measure.label ? (
+              <label htmlFor={measure.id} className="cursor-pointer select-none">
+                {measure.label}
+              </label>
+            ) : null}
+          </div>
+        </UIWindowMeasureFloat>
+      );
+    case "radio":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <div className="flex flex-col gap-half" role="radiogroup" aria-labelledby={measure.id}>
+            {measure.items.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                data-slot="window-measure-radio-item"
+                className={cn(
+                  "border-element/80 hover:bg-hover-window w-full rounded border px-single py-half text-left text-xs transition-colors",
+                  measure.value === item.value && "bg-active-base text-active-foreground",
+                )}
+                onClick={() => measure.onChange?.(item.value)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </UIWindowMeasureFloat>
+      );
+    case "slider": {
+      const min = measure.min ?? 0;
+      const max = measure.max ?? 100;
+      const v = measure.value ?? min;
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <Slider id={measure.id} value={[v]} min={min} max={max} step={measure.step} onValueChange={(vals) => measure.onValueChange?.(vals[0] ?? min)} />
+        </UIWindowMeasureFloat>
+      );
+    }
+    case "number":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <Stepper id={measure.id} value={measure.value} min={measure.min} max={measure.max} step={measure.step} onChange={measure.onChange} />
+        </UIWindowMeasureFloat>
+      );
+    case "color":
+      return (
+        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+          <Input id={measure.id} type="color" className={cn("h-medium cursor-pointer", windowMeasureControlClass)} value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
+        </UIWindowMeasureFloat>
+      );
+    default: {
+      const _exhaustive: never = measure;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
+ * 📐 Maps declarative `UIWindowMeasure` entries into compact floating tiles aligned to the right edge.
+ **/
+export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ measures }) => (
+  <div data-slot="window-measures-stack-inner" className="flex w-full min-w-0 flex-col gap-half">
+    {measures.map((measure) => (
+      <React.Fragment key={measure.id}>{renderUIWindowMeasure(measure, false)}</React.Fragment>
+    ))}
   </div>
 );
 
@@ -2554,44 +2563,55 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 	return component;
 }
 
+function mapWindowMeasureToGolden(measure: WindowMeasure, bus: CommandBus): UIWindowMeasure {
+	if (measure.kind === "group") {
+		return {
+			id: measure.id,
+			kind: "group",
+			label: measure.label,
+			defaultOpen: measure.defaultOpen,
+			children: measure.children.map((child) => mapWindowMeasureToGolden(child, bus)),
+		};
+	}
+	if (measure.kind === "select") {
+		return {
+			id: measure.id,
+			kind: "select",
+			label: measure.label,
+			value: measure.value,
+			items: measure.items.map((item) => ({ id: item.id, value: item.value, label: item.label })),
+			onValueChange: (value: string) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
+		};
+	}
+	if (measure.kind === "slider") {
+		return {
+			id: measure.id,
+			kind: "slider",
+			label: measure.label,
+			value: measure.value,
+			min: measure.min,
+			max: measure.max,
+			step: measure.step,
+			onValueChange: (value: number) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
+		};
+	}
+	if (measure.kind === "toggle") {
+		return {
+			id: measure.id,
+			kind: "toggle",
+			label: measure.label,
+			text: measure.text,
+			pressed: measure.pressed,
+			onPressedChange: (pressed: boolean) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), pressed }),
+		};
+	}
+	return { id: measure.id, kind: "display", content: null };
+}
+
 /** @emoji 📐 Maps {@link WindowMeasure} controller rows to {@link UIWindowMeasure} tiles for {@link ShellModeCanvas}. */
 export function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: CommandBus): UIWindowMeasure[] | undefined {
 	if (!measures.length) return undefined;
-	return measures.map((measure) => {
-		if (measure.kind === "select") {
-			return {
-				id: measure.id,
-				kind: "select",
-				label: measure.label,
-				value: measure.value,
-				items: measure.items.map((item) => ({ id: item.id, value: item.value, label: item.label })),
-				onValueChange: (value: string) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
-			};
-		}
-		if (measure.kind === "slider") {
-			return {
-				id: measure.id,
-				kind: "slider",
-				label: measure.label,
-				value: measure.value,
-				min: measure.min,
-				max: measure.max,
-				step: measure.step,
-				onValueChange: (value: number) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
-			};
-		}
-		if (measure.kind === "toggle") {
-			return {
-				id: measure.id,
-				kind: "toggle",
-				label: measure.label,
-				text: measure.text,
-				pressed: measure.pressed,
-				onPressedChange: (pressed: boolean) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), pressed }),
-			};
-		}
-		return { id: measure.id, kind: "display", content: null };
-	});
+	return measures.map((measure) => mapWindowMeasureToGolden(measure, bus));
 }
 
 /** @emoji ­ƒ¬ƒ Converts framework window kinds into golden-layout window definitions. */
@@ -3585,6 +3605,67 @@ if (import.meta.vitest) {
 			expect(markup).toContain('data-slot="window-measures-stack-inner"');
 			expect(markup).toContain("w-full");
 			expect(markup).not.toContain("shadow-md");
+		});
+
+		it("renders nested measure groups compactly", () => {
+			const markup = renderToStaticMarkup(
+				<UIWindowMeasures
+					measures={[
+						{
+							id: "brush",
+							kind: "group",
+							label: "Brush",
+							defaultOpen: true,
+							children: [
+								{
+									id: "tolerance",
+									kind: "slider",
+									label: "Tolerance 0.50",
+									value: 0.5,
+									min: 0,
+									max: 1,
+									onValueChange: () => {},
+								},
+							],
+						},
+					]}
+				/>,
+			);
+			expect(markup).toContain('data-slot="collapsible"');
+			expect(markup).toContain("Brush");
+			expect(markup).toContain('data-slot="window-measure-nested"');
+		});
+	});
+
+	describe("windowMeasuresToGolden", () => {
+		it("maps nested measure groups recursively", () => {
+			const bus = new CommandBus();
+			const golden = windowMeasuresToGolden(
+				[
+					{
+						kind: "group",
+						id: "brush",
+						label: "Brush",
+						defaultOpen: false,
+						children: [
+							{
+								kind: "toggle",
+								id: "tool",
+								text: "On",
+								pressed: true,
+								onChange: { controllerId: "test", command: "toggleTool" },
+							},
+						],
+					},
+				],
+				bus,
+			);
+			expect(golden?.[0]?.kind).toBe("group");
+			if (golden?.[0]?.kind !== "group") {
+				return;
+			}
+			expect(golden[0].defaultOpen).toBe(false);
+			expect(golden[0].children[0]?.kind).toBe("toggle");
 		});
 	});
 

@@ -3,7 +3,17 @@
  * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
  */
 import { spawn, spawnSync } from "node:child_process";
-import { Script, ScriptRouter, devToolingEnv, dispatchSubcommand, runCmd, runWorkspaceScriptMain, tryRun } from "./repo/lib/js/src/index.ts";
+import {
+  Script,
+  ScriptRouter,
+  devToolingEnv,
+  dispatchSubcommand,
+  runCmd,
+  installMicroCommitGitHooks,
+  runMicroCommit,
+  runWorkspaceScriptMain,
+  tryRun,
+} from "./repo/lib/js/src/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
@@ -100,6 +110,7 @@ export class SetupScript extends Script {
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
       });
     }
+    installMicroCommitGitHooks(this.root);
     const source = "AGENTS.md";
     for (const alias of ["CLAUDE.md", "GEMINI.md"]) {
       const aliasPath = join(this.root, alias);
@@ -811,6 +822,15 @@ export class PurgeScript extends Script {
 }
 //#endregion 🔖PurgeScript
 
+//#region 🔖MicroCommitScript
+/** 🎆Stages WIP changes and writes deterministic micro-commit templates (GitKraken + CLI). */
+export class MicroCommitScript extends Script {
+  run(segments: string[]): void {
+    runMicroCommit(this.root, segments);
+  }
+}
+//#endregion 🔖MicroCommitScript
+
 //#region 🔖Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("nx", NxScript)
@@ -825,7 +845,8 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("cpp", CppScript)
   .register("publish", PublishScript)
   .register("purge", PurgeScript)
-  .register("query", QueryScript);
+  .register("query", QueryScript)
+  .register("micro-commit", MicroCommitScript);
 
 await runWorkspaceScriptMain(router);
 //#endregion 🔖Dispatch

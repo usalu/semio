@@ -950,26 +950,55 @@ export class Puzzle3dPlayShellController extends Controller {
     ];
   }
 
-  private brushMeasures(): readonly WindowMeasure[] {
+  private brushMeasuresGroup(): WindowMeasure {
     const toleranceLabel = this.brushPlacementCollisionTolerance.toFixed(2);
-    return [
-      {
-        kind: "slider",
-        id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-collision-tolerance`,
-        label: `Brush tol ${toleranceLabel}`,
-        value: this.brushPlacementCollisionToleranceSlider,
-        min: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
-        max: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX,
-        step: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
-        onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setBrushPlacementCollisionTolerance" },
-      },
-      ...this.kindWeightMeasures("object-kind", this.objectKindIds, this.objectKindWeights, "setObjectKindWeight"),
-      ...this.kindWeightMeasures("vortex-kind", this.vortexKindIds, this.vortexKindWeights, "setVortexKindWeight"),
-    ];
+    return {
+      kind: "group",
+      id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush`,
+      label: "Brush",
+      children: [
+        {
+          kind: "slider",
+          id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-collision-tolerance`,
+          label: `Tolerance ${toleranceLabel}`,
+          value: this.brushPlacementCollisionToleranceSlider,
+          min: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
+          max: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX,
+          step: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
+          onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setBrushPlacementCollisionTolerance" },
+        },
+        {
+          kind: "group",
+          id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-distribution`,
+          label: "Distribution",
+          defaultOpen: false,
+          children: [
+            {
+              kind: "group",
+              id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-distribution-objects`,
+              label: "Objects",
+              defaultOpen: false,
+              children: this.kindWeightMeasures("object-kind", this.objectKindIds, this.objectKindWeights, "setObjectKindWeight"),
+            },
+            {
+              kind: "group",
+              id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-distribution-vortices`,
+              label: "Vortices",
+              defaultOpen: false,
+              children: this.kindWeightMeasures("vortex-kind", this.vortexKindIds, this.vortexKindWeights, "setVortexKindWeight"),
+            },
+          ],
+        },
+      ],
+    };
   }
 
   private windowMeasures(): readonly WindowMeasure[] {
-    return [...this.lodMeasures(), ...this.selectionMeasures(), ...this.brushMeasures()];
+    return [
+      { kind: "group", id: `${PUZZLE_3D_PLAY_WINDOW_ID}-lod`, label: "LOD", children: this.lodMeasures() },
+      { kind: "group", id: `${PUZZLE_3D_PLAY_WINDOW_ID}-select`, label: "Select", children: this.selectionMeasures() },
+      this.brushMeasuresGroup(),
+    ];
   }
 
   /** @emoji 💬 Placeholder engagement until the viewport host publishes a live snapshot (requires `input`). */
@@ -2125,6 +2154,18 @@ export class Playground3d extends Playground {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
+  function flattenWindowMeasures(measures: readonly WindowMeasure[]): WindowMeasure[] {
+    const out: WindowMeasure[] = [];
+    for (const measure of measures) {
+      if (measure.kind === "group") {
+        out.push(...flattenWindowMeasures(measure.children));
+      } else {
+        out.push(measure);
+      }
+    }
+    return out;
+  }
+
   describe("puzzle 3D play fixture", () => {
     it("parses nakagin fixture", () => {
       const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
@@ -2167,6 +2208,26 @@ if (import.meta.vitest) {
       expect(v?.position[0]).toBeCloseTo(-1.3, 5);
       expect(v?.position[1]).toBeCloseTo(-1.25, 5);
       expect(v?.position[2]).toBeCloseTo(0, 5);
+    });
+
+    it("windowMeasures groups brush tolerance and kind distribution", () => {
+      const bus = new CommandBus();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => {});
+      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      const brush = measures.find((row) => row.kind === "group" && row.id === `${PUZZLE_3D_PLAY_WINDOW_ID}-brush`);
+      expect(brush?.kind).toBe("group");
+      if (brush?.kind !== "group") {
+        return;
+      }
+      expect(brush.children.some((row) => row.kind === "slider" && row.id === `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-collision-tolerance`)).toBe(true);
+      const distribution = brush.children.find((row) => row.kind === "group" && row.label === "Distribution");
+      expect(distribution?.kind).toBe("group");
+      if (distribution?.kind !== "group") {
+        return;
+      }
+      expect(distribution.defaultOpen).toBe(false);
+      expect(distribution.children.some((row) => row.kind === "group" && row.label === "Objects")).toBe(true);
+      expect(distribution.children.some((row) => row.kind === "group" && row.label === "Vortices")).toBe(true);
     });
 
     it("patchFixture bumps revision only when structure changes", () => {
@@ -2374,7 +2435,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      const measures = flattenWindowMeasures(ctrl.mainMode.windowKinds[0]?.measures ?? []);
       const texts = measures.map((measure) => measure.text);
       expect(texts).toContain("Objects");
       expect(texts).toContain("Vortices");
@@ -2387,7 +2448,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      const measures = flattenWindowMeasures(ctrl.mainMode.windowKinds[0]?.measures ?? []);
       const brushTol = measures.find((measure) => measure.id.endsWith("-brush-collision-tolerance"));
       expect(brushTol?.kind).toBe("slider");
       expect(brushTol?.max).toBe(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX);

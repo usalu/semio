@@ -582,21 +582,46 @@ export class Puzzle2dPlayShellController extends Controller {
 		});
 	}
 
-	private brushMeasures(): readonly WindowMeasure[] {
-		return [
-			{
-				kind: "slider",
-				id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-flush-distance`,
-				label: `Flush ${this.brushFlushDistance.toFixed(0)}`,
-				value: this.brushFlushDistance,
-				min: BRUSH_FLUSH_DISTANCE_SLIDER_MIN,
-				max: BRUSH_FLUSH_DISTANCE_SLIDER_MAX,
-				step: BRUSH_FLUSH_DISTANCE_SLIDER_STEP,
-				onChange: puzzle2dPlayCmd("setBrushFlushDistance"),
-			},
-			...this.kindWeightMeasures("node-kind", this.nodeKindIds, this.nodeKindWeights, "setNodeKindWeight"),
-			...this.kindWeightMeasures("handle-kind", this.handleKindIds, this.handleKindWeights, "setHandleKindWeight"),
-		];
+	private brushMeasuresGroup(): WindowMeasure {
+		return {
+			kind: "group",
+			id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush`,
+			label: "Brush",
+			children: [
+				{
+					kind: "slider",
+					id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-flush-distance`,
+					label: `Flush ${this.brushFlushDistance.toFixed(0)}`,
+					value: this.brushFlushDistance,
+					min: BRUSH_FLUSH_DISTANCE_SLIDER_MIN,
+					max: BRUSH_FLUSH_DISTANCE_SLIDER_MAX,
+					step: BRUSH_FLUSH_DISTANCE_SLIDER_STEP,
+					onChange: puzzle2dPlayCmd("setBrushFlushDistance"),
+				},
+				{
+					kind: "group",
+					id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-distribution`,
+					label: "Distribution",
+					defaultOpen: false,
+					children: [
+						{
+							kind: "group",
+							id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-distribution-nodes`,
+							label: "Nodes",
+							defaultOpen: false,
+							children: this.kindWeightMeasures("node-kind", this.nodeKindIds, this.nodeKindWeights, "setNodeKindWeight"),
+						},
+						{
+							kind: "group",
+							id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-distribution-handles`,
+							label: "Handles",
+							defaultOpen: false,
+							children: this.kindWeightMeasures("handle-kind", this.handleKindIds, this.handleKindWeights, "setHandleKindWeight"),
+						},
+					],
+				},
+			],
+		};
 	}
 
 	private pushBrushKindWeightsToHost(): void {
@@ -742,7 +767,10 @@ export class Puzzle2dPlayShellController extends Controller {
 	}
 
 	private windowMeasuresForPane(paneId: Puzzle2dPlayPaneId): readonly WindowMeasure[] {
-		return [this.lodMeasureForPane(paneId), ...this.brushMeasures()];
+		return [
+			{ kind: "group", id: `${paneId}-lod`, label: "LOD", children: [this.lodMeasureForPane(paneId)] },
+			this.brushMeasuresGroup(),
+		];
 	}
 
 	private lodMeasureForPane(paneId: Puzzle2dPlayPaneId): WindowMeasure {

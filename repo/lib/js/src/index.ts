@@ -1115,3 +1115,15 @@ export function scriptPathFromUrl(scriptUrl: string): string {
 //#endregion 🔖Process
 //#endregion 🔖bundle-script
 
+export {
+  bumpCounterFromSubject,
+  buildMicroCommitMessage,
+  digestMicroCommitMessage,
+  installMicroCommitGitHooks,
+  resetMicroCommitTemplates,
+  runMicroCommit,
+  shouldRefreshPreparedCommitMessage,
+  writeMicroCommitTemplates,
+} from "./micro-commit.ts";
+export type { MicroCommitLevel } from "./micro-commit.ts";
+

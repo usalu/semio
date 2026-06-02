@@ -154,6 +154,29 @@ describe("ui scrollbar styling", () => {
   });
 });
 
+describe("micro-commit", () => {
+  test("bumpCounterFromSubject increments 🚩 and keeps wip date base", async () => {
+    const { bumpCounterFromSubject } = await import("./micro-commit.ts");
+    const contributor = { alias: "ueli", emoji: "🧑", name: "Ueli", email: "u@example.com" };
+    const subject = "🧑ueli🎆26🌙06☀️02🚩009";
+    const bumped = bumpCounterFromSubject(subject, contributor, new Date("2026-06-02T12:00:00"));
+    expect(bumped.line1Base).toBe("🧑ueli🎆26🌙06☀️02");
+    expect(bumped.nnn).toBe("010");
+    const fresh = bumpCounterFromSubject("unrelated subject", contributor, new Date("2026-06-02T12:00:00"));
+    expect(fresh.line1Base).toBe("🧑ueli🎆26🌙06☀️02");
+    expect(fresh.nnn).toBe("001");
+  });
+
+  test("shouldRefreshPreparedCommitMessage keeps user edits", async () => {
+    const { digestMicroCommitMessage, shouldRefreshPreparedCommitMessage } = await import("./micro-commit.ts");
+    const prepared = "line1\nline2\n";
+    const digest = digestMicroCommitMessage(prepared);
+    expect(shouldRefreshPreparedCommitMessage(prepared, digest)).toBe(true);
+    expect(shouldRefreshPreparedCommitMessage("", digest)).toBe(true);
+    expect(shouldRefreshPreparedCommitMessage(`${prepared}\nmy edit`, digest)).toBe(false);
+  });
+});
+
 describe("playground static sites", () => {
   test("PLAYGROUND_SITE_HOSTS maps each play to latest canonical host", () => {
     expect(PLAYGROUND_SITE_HOSTS.semio).toBe("play.semio-tech.com");

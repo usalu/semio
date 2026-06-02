@@ -1,0 +1,5 @@
+#!/bin/sh
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$ROOT" || exit 0
+BUN="${SEMIO_BUN:-bun}"
+exec "$BUN" ./script.ts micro-commit reset

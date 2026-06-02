@@ -276,8 +276,8 @@ export class Puzzle5dPlayShellController extends Controller {
 
   getWindowKinds(): readonly WindowKindRuntime[] {
     const windowKinds = [
-      new WindowKindRuntime(PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_2D_BODY_KEY, undefined, [this.lod2dMeasure()], this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID)),
-      new WindowKindRuntime(PUZZLE_5D_PLAY_3D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_BODY_KEY, undefined, [...this.lod3dMeasures()], this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID)),
+      new WindowKindRuntime(PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_2D_BODY_KEY, undefined, [{ kind: "group", id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`, label: "LOD", children: [this.lod2dMeasure()] }], this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID)),
+      new WindowKindRuntime(PUZZLE_5D_PLAY_3D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_BODY_KEY, undefined, [{ kind: "group", id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-lod`, label: "LOD", children: this.lod3dMeasures() }], this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID)),
     ];
     for (const windowKind of windowKinds) {
       enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 5D play window "${windowKind.id}"`);
