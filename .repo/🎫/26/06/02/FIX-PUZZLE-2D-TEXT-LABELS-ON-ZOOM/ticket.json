@@ -1,0 +1,10 @@
+{
+  "title": "Fix Puzzle 2d Text Labels On Zoom",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Text labels drift during zoom because pushSceneToWasmDriver stomps WASM camera and wheel flush drops pending deltas on reentry.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪c3822ab440d54ce992053364ce63572f"
+  ]
+}

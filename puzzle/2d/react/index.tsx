@@ -2942,7 +2942,7 @@ export class Puzzle2dRenderer {
     if (this.suppressSceneDeleteEvents > 0 || this.isDisposed) {
       return;
     }
-    if (this.structuralDeleteFixtureMirrorDepth <= 0) {
+    if (this.structuralDeleteFixtureMirrorDepth <= 0 && name !== "wireDestroy") {
       return;
     }
     this.emit(name, payload);
@@ -3802,15 +3802,17 @@ export class Puzzle2dRenderer {
   /** @emoji 🖱️ Flushes coalesced wheel deltas once per animation frame. */
   private flushPendingWheelScreen(): void {
     const pending = this.pendingWheelScreen;
-    this.pendingWheelScreen = null;
     if (!pending || !this.canvas) {
+      this.pendingWheelScreen = null;
       return;
     }
     if (this.wasmSessionCallBlockedForReentry()) {
       this.invalidated = true;
       return;
     }
+    this.pendingWheelScreen = null;
     this.session.wheelScreen(pending.sx, pending.sy, pending.deltaY);
+    this.wasmViewportLeading = true;
     this.syncCameraFromWasmHostSilent();
     this.wasmPushSceneDrainAlreadyApplied = true;
     this.scheduleDeferredPublicCameraEmit();
@@ -3996,6 +3998,7 @@ export class Puzzle2dRenderer {
     this.camera.y = next.y;
     this.camera.zoom = next.zoom;
     this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
+    this.wasmViewportLeading = false;
     this.emitter.emit("camera", { ...this.camera });
     this.pushCameraToWasmSession(z);
   }
@@ -4011,12 +4014,17 @@ export class Puzzle2dRenderer {
     this.camera.y = next.y;
     this.camera.zoom = next.zoom;
     this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
-    this.pushCameraToWasmSession(z);
+    if (!this.wasmHostOwnsViewportCamera()) {
+      this.pushCameraToWasmSession(z);
+    }
   }
 
   private pushCameraToWasmSession(zoom: number): void {
     if (this.wasmSessionCallBlockedForReentry()) {
       this.invalidated = true;
+      return;
+    }
+    if (this.wasmHostOwnsViewportCamera()) {
       return;
     }
     this.session.setCamera(this.camera.x, this.camera.y, zoom);
@@ -4599,7 +4607,7 @@ export class Puzzle2dRenderer {
         this.invalidated = true;
       }
     }
-    this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
+    this.pushWasmViewportAndSizeToSession();
     this.syncPuzzle2dAppearanceFromDocument();
     this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentStructuralRemoves: true });
   }
@@ -5000,11 +5008,11 @@ export class Puzzle2dRenderer {
     const inset = 0.88;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
+    if (syncedGpuThisFrame || this.wheelZoomGestureActive || this.wasmHostOwnsViewportCamera()) {
+      this.syncCameraFromWasmHostSilent();
+    }
     const wasmOverlay = this.readOverlayPaintStateFromWasm();
-    const overlayCamera =
-      wasmOverlay?.camera ??
-      (this.wasmHostOwnsViewportCamera() ? this.readWasmCameraSnapshot() : null) ??
-      this.camera;
+    const overlayCamera = wasmOverlay?.camera ?? this.readWasmCameraSnapshot() ?? this.camera;
     const lod = wasmOverlay?.lod ?? this.effectiveDrawLodLabel();
     const overlayZoom = overlayCamera.zoom;
     const chrome = puzzle2dElementInteractionChrome(this.selectionIds, this.preselectStore.getSnapshot());
@@ -6455,6 +6463,46 @@ if (puzzle2dVitest) {
       vi.spyOn(renderer.session, "cameraJson").mockReturnValue(JSON.stringify({ x: 50, y: 40, zoom: 2 }));
       renderer["pushWasmViewportAndSizeToSession"]();
       expect(setCamera).not.toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("pushSceneToWasmDriver does not stomp wasm camera when host owns viewport", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const node = new Puzzle2dSceneNode({ id: "n", radius: 24, x: 0, y: 0, text: "caption" });
+      renderer.scene.add(node);
+      renderer["pushSceneToWasmDriver"]();
+      const setCamera = vi.spyOn(renderer.session, "setCamera");
+      setCamera.mockClear();
+      renderer.camera.x = 0;
+      renderer.camera.y = 0;
+      renderer.camera.zoom = 1;
+      renderer["wheelZoomGestureActive"] = true;
+      renderer["wasmViewportLeading"] = true;
+      renderer["pushSceneToWasmDriver"]();
+      expect(setCamera).not.toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("setCameraSilent does not push to wasm while viewport is wasm-led", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const setCamera = vi.spyOn(renderer.session, "setCamera");
+      renderer["wasmViewportLeading"] = true;
+      renderer.setCameraSilent(80, 0, 2);
+      expect(setCamera).not.toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("flushPendingWheelScreen keeps pending wheel when wasm borrow blocks", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      renderer["wasmGpuFrameDepth"] = 1;
+      renderer["pendingWheelScreen"] = { sx: 1, sy: 2, deltaY: -40 };
+      const wheelScreen = vi.spyOn(renderer.session, "wheelScreen");
+      renderer["flushPendingWheelScreen"]();
+      expect(wheelScreen).not.toHaveBeenCalled();
+      expect(renderer["pendingWheelScreen"]).toEqual({ sx: 1, sy: 2, deltaY: -40 });
       renderer.dispose();
     });
 
@@ -10392,7 +10440,7 @@ export function Puzzle2dCanvas({
         style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
       >
         <canvas className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" data-testid="puzzle2d-canvas" ref={canvasRef} />
-        {renderMode === "headless-test" ? null : <canvas aria-hidden className="pointer-events-none absolute inset-0 min-h-0 min-w-0" data-testid="puzzle2d-text-overlay" ref={textOverlayCanvasRef} />}
+        {renderMode === "headless-test" ? null : <canvas aria-hidden className="pointer-events-none absolute inset-0 block size-full min-h-0 min-w-0" data-testid="puzzle2d-text-overlay" ref={textOverlayCanvasRef} />}
         {contextRenderer ? (
           <>
             <HostMountProvider>

@@ -10,10 +10,10 @@ todos:
     status: completed
   - id: fix
     content: "Apply targeted fix (primary: rest .presentation-morph-source ghost via opacity:0 so reveal can FLIP it; keep label .presentation-morph-into fade-in) and any data-id/matcher fix the logs require."
-    status: in_progress
+    status: completed
   - id: verify
     content: Verify in browser that 10 tiles morph into the 3 label slots and fade while labels appear (screenshot); extend existing tests; run framework + deck vitest; remove [DEBUG] logs; close ticket.
-    status: pending
+    status: completed
 isProject: false
 ---
 
