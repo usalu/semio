@@ -8118,22 +8118,13 @@ if (puzzle2dVitest) {
       await ensurePuzzle2dWasmLoaded();
       const { canvas } = createMockCanvas();
       const driving = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
-      const mirror = new Puzzle2dRenderer({ renderMode: "headless-test" });
       const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
       new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
       driving.scene.add(node);
-      mirror.scene.add(node);
       driving.setActiveTool("brush");
-      mirror.setActiveTool("brush");
       driving.setBrushFlushDistance(80);
-      mirror.setBrushFlushDistance(80);
       driving.setBrushNodeSize(40);
-      mirror.setBrushNodeSize(40);
       driving.setKindCatalogs({
-        handles: [{ id: "port", name: "Port", color: "#888888" }],
-        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
-      });
-      mirror.setKindCatalogs({
         handles: [{ id: "port", name: "Port", color: "#888888" }],
         nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
       });
@@ -8142,14 +8133,28 @@ if (puzzle2dVitest) {
       const slotWorld = { x: handleWorld.x + (handleWorld.x - 0) * 2, y: handleWorld.y + (handleWorld.y - 0) * 2 };
       const slotScreen = driving.worldToScreen(slotWorld);
       canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
-      expect(puzzle2dSharedBrushSessionForTests()?.preview?.node).toBeTruthy();
-      mirror.setBrushSession(puzzle2dSharedBrushSessionForTests());
+      const shared = puzzle2dSharedBrushSessionForTests();
+      expect(shared?.preview?.node).toBeTruthy();
+      const mirror = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const mirrorNode = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+      new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node: mirrorNode });
+      mirror.scene.add(mirrorNode);
+      mirror.setActiveTool("brush");
+      mirror.setBrushFlushDistance(80);
+      mirror.setBrushNodeSize(40);
+      mirror.setKindCatalogs({
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      });
+      (mirror as { pushSceneToWasmDriver(): void }).pushSceneToWasmDriver();
+      mirror.setBrushSession(shared);
       mirror.render();
       const mirrorHintWithPreview = mirror.session.encodedSceneHint();
       mirror.setBrushSession(null);
       mirror.render();
       const mirrorHintCleared = mirror.session.encodedSceneHint();
       expect(mirrorHintWithPreview).toBeGreaterThan(mirrorHintCleared);
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
       driving.dispose();
       mirror.dispose();
     });

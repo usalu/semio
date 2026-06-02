@@ -1,0 +1,10 @@
+{
+  "title": "Brush Kind Suggestion Percentages",
+  "emoji": "🎚️",
+  "status": "open",
+  "description": "Add per-kind suggestion percentage sliders (node/object and handle/vortex groups each sum to 1 with proportional renorm). When brush is active, weighted-random re-order brush suggestion candidates in puzzle 2D and 3D.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3c608eeb5357442c9f725daf08c01fd4"
+  ]
+}

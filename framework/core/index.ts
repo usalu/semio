@@ -98,6 +98,90 @@ export interface WindowMeasureToggle {
 export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle;
 //#endregion 🔖WindowMeasure
 
+//#region 🔖KindWeights
+export type KindWeightMap = Readonly<Record<string, number>>;
+
+/** @emoji ⚖️ Equal weights for every id; sum is 1 (or empty map when no ids). */
+export function uniformKindWeights(ids: readonly string[]): KindWeightMap {
+	if (ids.length === 0) {
+		return {};
+	}
+	const w = 1 / ids.length;
+	return Object.fromEntries(ids.map((id) => [id, w]));
+}
+
+/** @emoji 🎚️ Renormalizes one kind-weight group after a slider move so the group still sums to 1. */
+export function normalizeKindWeightGroup(weights: KindWeightMap, changedId: string, newValue: number): KindWeightMap {
+	const clamped = Math.max(0, Math.min(1, newValue));
+	const ids = Object.keys(weights);
+	if (ids.length === 0) {
+		return { [changedId]: clamped };
+	}
+	const rest = ids.filter((id) => id !== changedId);
+	const budget = 1 - clamped;
+	if (rest.length === 0) {
+		return { [changedId]: 1 };
+	}
+	const restSum = rest.reduce((acc, id) => acc + (weights[id] ?? 0), 0);
+	const next: Record<string, number> = { [changedId]: clamped };
+	if (restSum <= 0) {
+		const each = budget / rest.length;
+		for (const id of rest) {
+			next[id] = each;
+		}
+	} else {
+		for (const id of rest) {
+			next[id] = (budget * (weights[id] ?? 0)) / restSum;
+		}
+	}
+	return next;
+}
+
+/** @emoji 🔀 Merges catalog ids with existing weights (uniform for new ids, drops unknown). */
+export function syncKindWeightMap(ids: readonly string[], existing: KindWeightMap): KindWeightMap {
+	if (ids.length === 0) {
+		return {};
+	}
+	const prev = ids.map((id) => existing[id] ?? 0);
+	const sum = prev.reduce((a, b) => a + b, 0);
+	if (sum <= 0) {
+		return uniformKindWeights(ids);
+	}
+	return Object.fromEntries(ids.map((id, i) => [id, prev[i]! / sum]));
+}
+
+export type WeightedOrderRng = () => number;
+
+/** @emoji 🎲 Weighted sampling without replacement; higher weight → earlier in the list. */
+export function weightedOrder<T>(items: readonly T[], weightOf: (item: T) => number, rng: WeightedOrderRng = Math.random): readonly T[] {
+	if (items.length < 2) {
+		return [...items];
+	}
+	const remaining = [...items];
+	const out: T[] = [];
+	while (remaining.length > 0) {
+		const weights = remaining.map((item) => Math.max(0, weightOf(item)));
+		const total = weights.reduce((a, b) => a + b, 0);
+		let pick = 0;
+		if (total > 0) {
+			let r = rng() * total;
+			for (let i = 0; i < remaining.length; i += 1) {
+				r -= weights[i]!;
+				if (r <= 0) {
+					pick = i;
+					break;
+				}
+			}
+		} else {
+			pick = Math.floor(rng() * remaining.length);
+		}
+		out.push(remaining[pick]!);
+		remaining.splice(pick, 1);
+	}
+	return out;
+}
+//#endregion 🔖KindWeights
+
 //#region 🔖Layout
 /** @emoji 🪟 Single window slot in the abstract layout tree. */
 export interface WindowLayoutWindowNode {
@@ -959,6 +1043,22 @@ if (import.meta.vitest) {
 				[{ id: "x", label: "new" }],
 			);
 			expect(merged?.[0].label).toBe("new");
+		});
+	});
+
+	describe("kind weight helpers", () => {
+		it("normalizeKindWeightGroup keeps group sum at 1", () => {
+			const base = { a: 0.5, b: 0.3, c: 0.2 };
+			const next = normalizeKindWeightGroup(base, "a", 0.8);
+			const sum = Object.values(next).reduce((acc, v) => acc + v, 0);
+			expect(sum).toBeCloseTo(1, 5);
+			expect(next.a).toBeCloseTo(0.8, 5);
+		});
+
+		it("weightedOrder favors high weights at the front with fixed rng", () => {
+			const items = ["a", "b", "c"];
+			const ordered = weightedOrder(items, (id) => (id === "a" ? 100 : 1), () => 0);
+			expect(ordered[0]).toBe("a");
 		});
 	});
 

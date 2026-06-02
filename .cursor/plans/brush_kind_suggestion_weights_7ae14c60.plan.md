@@ -4,10 +4,10 @@ overview: Add a per-kind "suggestion percentage" with one window slider per node
 todos:
   - id: ticket
     content: Read repo://goals and open a new ticket for brush kind suggestion percentages
-    status: pending
+    status: completed
   - id: helper
     content: Add normalizeKindWeightGroup/uniformKindWeights/weightedOrder helpers to framework playground core
-    status: pending
+    status: in_progress
   - id: wasm-2d
     content: Add node/handle kind weight state + set_brush_kind_weights to puzzle 2D WASM; weighted candidate order + weighted target-handle pick
     status: pending
