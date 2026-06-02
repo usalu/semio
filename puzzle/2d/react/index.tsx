@@ -5136,13 +5136,7 @@ export class Puzzle2dRenderer {
             if (payload.nodeKind === "" || payload.sourceHandleId === "" || !Number.isFinite(payload.x) || !Number.isFinite(payload.y)) {
               break;
             }
-            if (applyBrushPlacementToRendererScene(this, payload, this.kindCatalogsBundle)) {
-              if (payload.nodeId && payload.edgeId) {
-                puzzle2dGuardBrushPlacementStructuralDeletes(payload.nodeId, payload.edgeId);
-              }
-            }
             this.emitter.emit("brushPlace", payload);
-            puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
             break;
           }
           case "brushPreview": {
@@ -9847,19 +9841,21 @@ export function puzzle2dIsBrushPlacementStructuralDeleteGuarded(id: string): boo
   return puzzle2dBrushStructuralDeleteGuardIds.has(id);
 }
 
-/** @emoji 🔄 Syncs a committed fixture graph into every authoring pane before WASM can push a stale descriptor. */
+/** @emoji 🔄 Syncs a committed fixture graph into every authoring pane (same descriptor on every peer). */
 export function puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture: Puzzle2dFixtureV1): void {
   const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture);
   for (const peer of puzzle2dAuthoringPeerRenderers) {
     if (!peer.authoringPeerActive()) {
       continue;
     }
-    const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(peer, descriptor);
-    peer.rememberHostDeclarativeSceneDescriptor(merged);
-    peer.setDeclarativeSceneEdgeExpectation(merged.edges.length);
+    for (const edgeId of Array.from(peer.wasmHostAuthoredEdgeIds)) {
+      peer.clearWasmHostAuthorshipForEdge(edgeId);
+    }
+    peer.rememberHostDeclarativeSceneDescriptor(descriptor);
+    peer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
     peer.resetDeclarativeSceneSyncFingerprint();
-    syncPuzzle2dScene(peer, merged);
-    puzzle2dEnsureSceneEdgesFromDescriptor(peer, merged);
+    syncPuzzle2dScene(peer, descriptor);
+    puzzle2dEnsureSceneEdgesFromDescriptor(peer, descriptor);
     peer.markSceneDescriptorDirty();
     peer.invalidate();
   }
@@ -11261,6 +11257,56 @@ if (puzzle2dReactVitest) {
       syncPuzzle2dScene(renderer, merged);
       expect(renderer.scene.edges.has("edge-link-map")).toBe(true);
       renderer.dispose();
+    });
+
+    it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers gives every pane the same graph", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [{ id: "edge-real", source: "a:h0", target: "b:h0" }],
+        nodes: [
+          { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
+          { handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, x: 200, y: 0 },
+        ],
+        schema: "puzzle.2d.fixture/v1",
+      });
+      expect(fixture).toBeTruthy();
+      const peerA = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const peerB = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const jsx = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={40} x={0} y={0}>
+            <Handle handleKind="port" angle={0} id="a:h0" />
+          </Node>
+          <Node id="b" radius={40} x={200} y={0}>
+            <Handle handleKind="port" angle={Math.PI} id="b:h0" />
+          </Node>
+        </>,
+      );
+      syncPuzzle2dScene(peerA, jsx);
+      syncPuzzle2dScene(peerB, jsx);
+      const sourceHandle = peerA.scene.handles.get("a:h0");
+      const targetHandle = peerA.scene.handles.get("b:h0");
+      expect(sourceHandle).toBeDefined();
+      expect(targetHandle).toBeDefined();
+      peerA.scene.ingestWasmEdge(
+        new Puzzle2dSceneEdge({
+          id: "edge-ghost",
+          source: sourceHandle as Puzzle2dSceneHandle,
+          target: targetHandle as Puzzle2dSceneHandle,
+        }),
+      );
+      peerA.wasmHostAuthoredEdgeIds.add("edge-ghost");
+      peerA.wasmHostAuthoredLinkByEdgeId.set("edge-ghost", { source: "a:h0", target: "b:h0" });
+      expect(peerA.scene.edges.has("edge-ghost")).toBe(true);
+      expect(peerB.scene.edges.size).toBe(0);
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture!);
+      expect(peerA.scene.edges.size).toBe(1);
+      expect(peerB.scene.edges.size).toBe(1);
+      expect(peerA.scene.edges.has("edge-real")).toBe(true);
+      expect(peerB.scene.edges.has("edge-real")).toBe(true);
+      expect(peerA.scene.edges.has("edge-ghost")).toBe(false);
+      peerA.dispose();
+      peerB.dispose();
     });
 
     it("keeps wasm-only link edges after graph drain by re-running JSX merge when children omit Edge markers", async () => {

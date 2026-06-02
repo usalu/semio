@@ -3585,18 +3585,23 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     (payload: Puzzle2dBrushPlacePayload) => {
       guardFixtureAuthoringFromStructuralDeletes(200);
       puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+      let placed = false;
       patchFixture((prev) => {
         const result = applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev));
         if (result.kind !== "placed") {
           return prev;
         }
+        placed = true;
         puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
         puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
         return result.fixture;
       });
-      puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
+      if (placed) {
+        puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
+        bumpSceneAuthoringEpoch();
+      }
     },
-    [guardFixtureAuthoringFromStructuralDeletes, patchFixture],
+    [bumpSceneAuthoringEpoch, guardFixtureAuthoringFromStructuralDeletes, patchFixture],
   );
 
   reactHostPort.useEffect(() => {
