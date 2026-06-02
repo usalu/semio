@@ -1116,9 +1116,11 @@ export function scriptPathFromUrl(scriptUrl: string): string {
 //#endregion 🔖bundle-script
 
 export {
+  bumpCounterFromHistory,
   bumpCounterFromSubject,
   buildMicroCommitMessage,
   digestMicroCommitMessage,
+  extractCounterFromSubject,
   installMicroCommitGitHooks,
   resetMicroCommitTemplates,
   runMicroCommit,

@@ -155,15 +155,21 @@ describe("ui scrollbar styling", () => {
 });
 
 describe("micro-commit", () => {
-  test("bumpCounterFromSubject increments 🚩 and keeps wip date base", async () => {
-    const { bumpCounterFromSubject } = await import("./micro-commit.ts");
-    const contributor = { alias: "ueli", emoji: "🧑", name: "Ueli", email: "u@example.com" };
-    const subject = "🧑ueli🎆26🌙06☀️02🚩009";
-    const bumped = bumpCounterFromSubject(subject, contributor, new Date("2026-06-02T12:00:00"));
-    expect(bumped.line1Base).toBe("🧑ueli🎆26🌙06☀️02");
-    expect(bumped.nnn).toBe("010");
-    const fresh = bumpCounterFromSubject("unrelated subject", contributor, new Date("2026-06-02T12:00:00"));
-    expect(fresh.line1Base).toBe("🧑ueli🎆26🌙06☀️02");
+  test("extractCounterFromSubject accepts formatted and plain legacy subjects", async () => {
+    const { extractCounterFromSubject } = await import("./micro-commit.ts");
+    expect(extractCounterFromSubject("🧑ueli🎆26🌙06☀️02🚩009")).toEqual({ nnn: 9, line1Base: "🧑ueli🎆26🌙06☀️02" });
+    expect(extractCounterFromSubject("33")).toEqual({ nnn: 33, line1Base: null });
+    expect(extractCounterFromSubject("Merge branch foo")).toBeNull();
+  });
+
+  test("bumpCounterFromHistory uses max across plain and formatted commits", async () => {
+    const { bumpCounterFromHistory } = await import("./micro-commit.ts");
+    const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli", email: "u@example.com" };
+    const subjects = ["33", "🐙ueli🎆26🌙06☀️02🚩032", "31", "unrelated"];
+    const bumped = bumpCounterFromHistory(subjects, contributor, new Date("2026-06-02T12:00:00"));
+    expect(bumped.line1Base).toBe("🐙ueli🎆26🌙06☀️02");
+    expect(bumped.nnn).toBe("034");
+    const fresh = bumpCounterFromHistory(["unrelated"], contributor, new Date("2026-06-02T12:00:00"));
     expect(fresh.nnn).toBe("001");
   });
 

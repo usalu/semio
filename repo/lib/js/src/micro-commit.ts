@@ -80,26 +80,53 @@ function pad3(n: number): string {
   return String(n).padStart(3, "0");
 }
 
+const PLAIN_COUNTER_RE = /^(\d+)$/;
+const COUNTER_LOG_DEPTH = 40;
+
+/** 🔢Reads micro-commit counter from subject: full `…🚩NNN` line or legacy plain number only. */
+export function extractCounterFromSubject(subject: string): { nnn: number; line1Base: string | null } | null {
+  const s = subject.trim();
+  const formatted = COUNTER_RE.exec(s);
+  if (formatted) return { nnn: Number.parseInt(formatted[2], 10), line1Base: formatted[1] };
+  const plain = PLAIN_COUNTER_RE.exec(s);
+  if (plain) return { nnn: Number.parseInt(plain[1], 10), line1Base: null };
+  return null;
+}
+
+/** 🎆Bumps counter from recent subjects (newest first); plain `33` or `…🚩NNN` in that window. */
+export function bumpCounterFromHistory(
+  subjectsNewestFirst: string[],
+  contributor: Contributor,
+  now = new Date(),
+): { line1Base: string; nnn: string } {
+  const yy = pad2(now.getFullYear() % 100);
+  const mm = pad2(now.getMonth() + 1);
+  const dd = pad2(now.getDate());
+  const fresh = `${contributor.emoji}${contributor.alias}🎆${yy}🌙${mm}☀️${dd}`;
+  let max = 0;
+  let line1Base: string | null = null;
+  for (const subject of subjectsNewestFirst) {
+    const hit = extractCounterFromSubject(subject);
+    if (!hit) continue;
+    max = Math.max(max, hit.nnn);
+    if (!line1Base && hit.line1Base) line1Base = hit.line1Base;
+  }
+  if (max > 0) return { line1Base: line1Base ?? fresh, nnn: pad3(max + 1) };
+  return { line1Base: fresh, nnn: "001" };
+}
+
 export function bumpCounterFromSubject(
   subject: string,
   contributor: Contributor,
   now = new Date(),
 ): { line1Base: string; nnn: string } {
-  const m = COUNTER_RE.exec(subject);
-  const yy = pad2(now.getFullYear() % 100);
-  const mm = pad2(now.getMonth() + 1);
-  const dd = pad2(now.getDate());
-  const fresh = `${contributor.emoji}${contributor.alias}🎆${yy}🌙${mm}☀️${dd}`;
-  if (m) {
-    const next = Number.parseInt(m[2], 10) + 1;
-    return { line1Base: m[1], nnn: pad3(next) };
-  }
-  return { line1Base: fresh, nnn: "001" };
+  return bumpCounterFromHistory([subject], contributor, now);
 }
 
 function nextCounter(root: string, contributor: Contributor): { line1Base: string; nnn: string } {
-  const subject = git(root, ["log", "-1", "--format=%s"]).out;
-  return bumpCounterFromSubject(subject, contributor);
+  const log = git(root, ["log", "--format=%s", `-${COUNTER_LOG_DEPTH}`]).out;
+  const subjects = log ? log.split("\n").filter(Boolean) : [];
+  return bumpCounterFromHistory(subjects, contributor);
 }
 
 function formatSecond(now: Date): string {
@@ -254,10 +281,20 @@ export function resetMicroCommitTemplates(root: string): void {
   }
 }
 
+function emitPrepareStdout(message: string): void {
+  process.stdout.write(message.endsWith("\n") ? message : `${message}\n`);
+}
+
 export function runMicroCommit(root: string, segments: string[]): void {
-  if (!branchAllowed(root)) process.exit(0);
+  if (!branchAllowed(root)) {
+    console.error("micro-commit: branch must contain ⛳wip or 🏗️dev");
+    process.exit(1);
+  }
   const contributor = findContributor(root);
-  if (!contributor) process.exit(1);
+  if (!contributor) {
+    console.error(`micro-commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
+    process.exit(1);
+  }
 
   const cmd = segments[0] ?? "prepare";
   if (cmd === "reset") {
@@ -276,9 +313,14 @@ export function runMicroCommit(root: string, segments: string[]): void {
   }
 
   const level = loadLevel(root, contributor, segments.slice(1));
-  git(root, ["add", "-A"]);
+  const staged = git(root, ["add", "-A"]);
+  if (!staged.ok) {
+    console.error(staged.out || "git add -A failed");
+    process.exit(1);
+  }
   const message = buildMicroCommitMessage(root, contributor);
   writeMicroCommitTemplates(root, message);
+  emitPrepareStdout(message);
 
   if (level === "prepare-only") process.exit(0);
 

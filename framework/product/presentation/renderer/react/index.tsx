@@ -225,10 +225,22 @@ export type RevealMorphCompanionKind = "source" | "target";
 /** @emoji ✅ Resolved disposition plus optional reveal.js morph companion metadata. */
 export interface RevealResolvedDisposition extends ResolvedDisposition {
 	readonly revealMorphCompanion?: RevealMorphCompanionKind;
+	/** @emoji 📐 Source slide frame for target-ghost crop vars during auto-animate (layout still uses {@link ResolvedDisposition.position}). */
+	readonly revealMorphFromFrame?: DispositionPosition;
 }
 
 function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, { readonly participantId: string; readonly embodimentId: string; readonly emphasis: ParticipantEmphasis }> {
 	const map = new Map<string, { readonly participantId: string; readonly embodimentId: string; readonly emphasis: ParticipantEmphasis }>();
+	for (const disposition of arrangement.dispositions) {
+		if (!map.has(disposition.participantId)) {
+			map.set(disposition.participantId, disposition);
+		}
+	}
+	return map;
+}
+
+function dispositionByParticipant(arrangement: Arrangement): Map<string, Disposition> {
+	const map = new Map<string, Disposition>();
 	for (const disposition of arrangement.dispositions) {
 		if (!map.has(disposition.participantId)) {
 			map.set(disposition.participantId, disposition);
@@ -244,11 +256,13 @@ function revealMorphCompanionFromMorphFrom(
 	options?: { readonly morphLineTargets?: boolean },
 ): RevealResolvedDisposition[] {
 	const sourceByParticipant = primaryDispositionByParticipant(sourceSlide.arrangement);
+	const sourceDeclByParticipant = dispositionByParticipant(sourceSlide.arrangement);
 	const morphLineTargets = options?.morphLineTargets ?? true;
 	const companions: RevealResolvedDisposition[] = [];
 	for (const disposition of arrangement.dispositions) {
 		for (const slot of disposition.morphFrom ?? []) {
 			const sourceDisposition = sourceByParticipant.get(slot.participantId);
+			const sourceDecl = sourceDeclByParticipant.get(slot.participantId);
 			const participant = scope.participants.get(slot.participantId);
 			if (!participant) {
 				throw new Error(`morphFrom slot references unknown participant "${slot.participantId}".`);
@@ -266,6 +280,7 @@ function revealMorphCompanionFromMorphFrom(
 				embodimentId,
 				morphId: morphId(participant.id),
 				position: slot.position,
+				revealMorphFromFrame: sourceDecl?.position,
 				revealMorphCompanion: "target",
 			});
 		}
@@ -544,6 +559,13 @@ export function presentationAutoAnimateMatcher(
 			return false;
 		}
 		if (elementIsTargetGhostAnchor(pair.to) && !elementIsFigureMorphSlot(pair.from)) {
+			return false;
+		}
+		if (
+			elementIsTargetGhostAnchor(pair.to) &&
+			elementIsFigureMorphSlot(pair.from) &&
+			!pair.from.classList.contains("presentation-interactive-disposition")
+		) {
 			return false;
 		}
 		if (elementIsMorphOneAnchor(pair.from)) {
@@ -1013,58 +1035,46 @@ export function resolvePresentationAssetUrl(src: string): string {
 }
 
 /** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
+function figureCropCoverVars(
+	crop: DispositionPosition,
+	frame: DispositionPosition,
+): { readonly width: number; readonly height: number; readonly posX: number; readonly posY: number } {
+	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
+	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
+	if (frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
+		const cropAspect = crop.width / crop.height;
+		const frameAspect = frame.width / frame.height;
+		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
+		return {
+			width: stretchWidth * coverScale,
+			height: stretchHeight * coverScale,
+			posX: crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100,
+			posY: crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100,
+		};
+	}
+	const uniform = Math.max(stretchWidth, stretchHeight);
+	const centerPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
+	const centerPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
+	return { width: uniform, height: uniform, posX: centerPosX, posY: centerPosY };
+}
+
+/** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
 export function figureCropBackgroundVars(
 	embodiment: FigureEmbodiment,
 	crop: DispositionPosition,
 	frame?: DispositionPosition,
+	morphFrame?: DispositionPosition,
 ): CSSProperties {
-	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
-	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
-	const stretchPosX = crop.width >= 1 ? 0 : (crop.x / (1 - crop.width)) * 100;
-	const stretchPosY = crop.height >= 1 ? 0 : (crop.y / (1 - crop.height)) * 100;
-	let morphWidth = stretchWidth;
-	let morphHeight = stretchHeight;
-	let morphPosX = stretchPosX;
-	let morphPosY = stretchPosY;
-	let restWidth = stretchWidth;
-	let restHeight = stretchHeight;
-	let restPosX = stretchPosX;
-	let restPosY = stretchPosY;
-	if (frame !== undefined && frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
-		const cropAspect = crop.width / crop.height;
-		const frameAspect = frame.width / frame.height;
-		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
-		const coverWidth = stretchWidth * coverScale;
-		const coverHeight = stretchHeight * coverScale;
-		const coverPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
-		const coverPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
-		morphWidth = coverWidth;
-		morphHeight = coverHeight;
-		morphPosX = coverPosX;
-		morphPosY = coverPosY;
-		restWidth = coverWidth;
-		restHeight = coverHeight;
-		restPosX = coverPosX;
-		restPosY = coverPosY;
-	} else {
-		const uniform = Math.max(stretchWidth, stretchHeight);
-		morphWidth = uniform;
-		morphHeight = uniform;
-		restWidth = uniform;
-		restHeight = uniform;
-		const centerPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
-		const centerPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
-		morphPosX = centerPosX;
-		morphPosY = centerPosY;
-		restPosX = centerPosX;
-		restPosY = centerPosY;
-	}
+	const restBasis = frame ?? morphFrame;
+	const morphBasis = morphFrame ?? frame;
+	const rest = restBasis ? figureCropCoverVars(crop, restBasis) : figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 });
+	const morph = morphBasis ? figureCropCoverVars(crop, morphBasis) : rest;
 	return {
 		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
-		["--presentation-figure-bg-size" as string]: `${restWidth}% ${restHeight}%`,
-		["--presentation-figure-bg-position" as string]: `${restPosX}% ${restPosY}%`,
-		["--presentation-figure-bg-size-morph" as string]: `${morphWidth}% ${morphHeight}%`,
-		["--presentation-figure-bg-position-morph" as string]: `${morphPosX}% ${morphPosY}%`,
+		["--presentation-figure-bg-size" as string]: `${rest.width}% ${rest.height}%`,
+		["--presentation-figure-bg-position" as string]: `${rest.posX}% ${rest.posY}%`,
+		["--presentation-figure-bg-size-morph" as string]: `${morph.width}% ${morph.height}%`,
+		["--presentation-figure-bg-position-morph" as string]: `${morph.posX}% ${morph.posY}%`,
 	};
 }
 
@@ -1077,6 +1087,7 @@ function FigureMorphView({
 	dormantAnchor,
 	anchorOnWrapper = false,
 	revealMorphCompanion,
+	morphFrame,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -1086,6 +1097,7 @@ function FigureMorphView({
 	readonly dormantAnchor?: boolean;
 	readonly anchorOnWrapper?: boolean;
 	readonly revealMorphCompanion?: RevealMorphCompanionKind;
+	readonly morphFrame?: DispositionPosition;
 }): ReactNode {
 	if (embodiment.crop && position) {
 		const dormant = dormantAnchor === true;
@@ -1114,7 +1126,7 @@ function FigureMorphView({
 					.join(" ")}
 				style={{
 					...frameStyle,
-					...figureCropBackgroundVars(embodiment, embodiment.crop, position),
+					...figureCropBackgroundVars(embodiment, embodiment.crop, position, morphFrame),
 				}}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
@@ -1376,6 +1388,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: RevealRes
 						style={disposition.style}
 						anchorOnWrapper={anchorOnWrapper}
 						revealMorphCompanion={disposition.revealMorphCompanion}
+						morphFrame={disposition.revealMorphFromFrame}
 					/>
 				);
 			}
@@ -2894,7 +2907,7 @@ const InteractiveDisposition: FC<{
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
 		// 👻 Morph-source ghosts must stay on morphFrom label frames, never ephemeral focus tiles.
 		const morphAnchorRect =
-			disposition.revealMorphCompanion !== undefined
+			disposition.revealMorphCompanion !== undefined || revealMorphId
 				? canvasAnchorRect
 				: (canvasLiveTransform ?? canvasAnchorRect);
 		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
@@ -3595,7 +3608,12 @@ if (import.meta.vitest) {
 				arrangement: {
 					id: "focus",
 					dispositions: [
-						{ participantId: "tile", embodimentId: "tile-figure", emphasis: "active" },
+						{
+							participantId: "tile",
+							embodimentId: "tile-figure",
+							emphasis: "active",
+							position: { x: 0.5, y: 0.5, width: 0.2, height: 0.2 },
+						},
 					],
 				},
 			};
@@ -3624,6 +3642,23 @@ if (import.meta.vitest) {
 			const companion = resolved.find((entry) => entry.revealMorphCompanion === "target");
 			expect(companion?.morphId).toBe("tile");
 			expect(companion?.position).toEqual({ x: 0.2, y: 0.3, width: 0.2, height: 0.1 });
+			expect(companion?.revealMorphFromFrame).toEqual({ x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
+		});
+
+		it("keeps target-ghost morph crop vars on the source frame while resting at the label frame", () => {
+			const crop = { x: 0.8, y: 0.7, width: 0.15, height: 0.2 };
+			const embodiment = { kind: "figure" as const, src: "/catalogue.png", crop };
+			const sourceFrame = { x: 0.77, y: 0.11, width: 0.2, height: 0.78 };
+			const labelFrame = { x: 0.653333, y: 0.44, width: 0.246667, height: 0.12 };
+			const vars = figureCropBackgroundVars(embodiment, crop, labelFrame, sourceFrame);
+			const sourceOnly = figureCropBackgroundVars(embodiment, crop, sourceFrame);
+			const labelOnly = figureCropBackgroundVars(embodiment, crop, labelFrame);
+			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBe(
+				sourceOnly["--presentation-figure-bg-size-morph" as keyof typeof sourceOnly],
+			);
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe(
+				labelOnly["--presentation-figure-bg-size" as keyof typeof labelOnly],
+			);
 		});
 
 		it("appends source companions for morphTo on the whole slide", () => {

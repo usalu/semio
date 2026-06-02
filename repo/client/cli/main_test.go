@@ -21433,6 +21433,43 @@ func TestGetManagementProvider(t *testing.T) {
 	}
 }
 
+func TestGoalIDForFilesystem(t *testing.T) {
+	oldRoot := rootDir
+	rootDir = findTestRepoRoot(".")
+	defer func() { rootDir = oldRoot }()
+
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"AI-OPTIMIZED-REPO/REPO-CLIENT", "AI-OPTIMIZED-REPO/REPO-CLIENT"},
+		{"🎯aioptimizedrepo🎯repoclient", "AI-OPTIMIZED-REPO/REPO-CLIENT"},
+	}
+	for _, tt := range tests {
+		got := goalIDForFilesystem(tt.in)
+		if got != tt.want {
+			t.Errorf("goalIDForFilesystem(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
+func TestGhExtractIssueURL(t *testing.T) {
+	const url = "https://github.com/usalu/semio/issues/42"
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{url + "\n", url},
+		{"Created " + url + " in repo", url},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		if got := ghExtractIssueURL(tt.in); got != tt.want {
+			t.Errorf("ghExtractIssueURL(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
 func TestNullManagementProvider(t *testing.T) {
 	p := &NullManagementProvider{}
 	if p.Kind() != "none" {

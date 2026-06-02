@@ -1,25 +1,23 @@
 ---
 name: micro-commit
 description: >-
-  Silent WIP micro-commits on semio dev branches. Levels: prepare-only (default),
-  prepare-and-commit, prepare-and-commit-and-push. Triggers g, go, c, commit, +1, bump, gc, gp,
-  @micro-commit.
+  WIP micro-commits on semio dev branches. Returns the prepared commit message or an error.
+  Levels: prepare-only (default), prepare-and-commit, prepare-and-commit-and-push.
+  Triggers g, go, c, commit, +1, bump, gc, gp, @micro-commit.
 disable-model-invocation: true
 ---
 
 # Micro Commit
 
-Dedicated-session workflow. Resolve an **automation level**, run **only** the repo script, then optionally commit and push. Stay **silent** on success.
+Run **only** the repo script. Reply with **exactly** what the script prints — nothing else.
 
-## Entrypoint (mandatory)
-
-Never hand-build the commit message, counter, or bullets. Never run raw `git add` / template shell for this workflow.
+## Entrypoint
 
 ```bash
 bun ./script.ts micro-commit prepare [override tokens]
 ```
 
-Implementation: `repo/lib/js/src/micro-commit.ts` (counter, tickets, cached diff bullets, template paths).
+Never hand-build the commit message.
 
 ### Git hooks (install once per clone)
 
@@ -27,67 +25,39 @@ Implementation: `repo/lib/js/src/micro-commit.ts` (counter, tickets, cached diff
 bun ./script.ts setup git
 ```
 
-| Hook | Role |
-|------|------|
-| `prepare-commit-msg` | Regenerates the message into `$1` when you commit (GitKraken or CLI) — **fixes a stale Commit panel** |
-| `post-commit` | Clears templates after a successful commit |
+GitKraken: load `.git/gkcommittemplate.txt` via **WIP** after prepare. Do **not** set `commit.template`. Turn off *Apply this template to commit messages* if the field is read-only.
 
-GitKraken loads `.git/gkcommittemplate.txt` (not `commit.template` — that made the message read-only). After `prepare`, click **WIP** in the commit panel to load the fresh template. **Turn off** Preferences → Commit → *Apply this template to commit messages* if the field stays locked; load with **WIP** instead.
+## Assistant output (mandatory)
 
-The `prepare-commit-msg` hook only refreshes at commit time when the message still matches the last `prepare` output (unchanged). Any edit you make is kept.
+| Script result | Your entire reply |
+|---------------|-------------------|
+| exit 0, stdout has text | Copy stdout verbatim (the commit message) |
+| exit non-zero | Copy stderr verbatim (the error) |
+
+No preamble, no markdown fence, no “done”, no extra lines.
 
 ## Automation levels
 
 | Level | Script behavior |
 |-------|-----------------|
-| `prepare-only` | `git add -A`, write templates, exit 0 |
-| `prepare-and-commit` | + `git commit -S -F COMMIT_EDITMSG` |
-| `prepare-and-commit-and-push` | + `git push` (no `--force`) |
+| `prepare-only` | `git add -A`, write templates, print message |
+| `prepare-and-commit` | + `git commit -S` (message still printed before commit) |
+| `prepare-and-commit-and-push` | + `git push` |
 
-**Default:** `prepare-only`.
+Config: `.repo/🧑‍💻/{alias}/micro-commit.json` → `{ "level": "prepare-only" }`.
 
-### Config (per dev)
+One-shot overrides: `gp`/`push!` → push level; `gc`/`commit!` → commit level; `g.`/`prepare!` → prepare-only.
 
-`.repo/🧑‍💻/{alias}/micro-commit.json`:
+## Counter
 
-```json
-{ "level": "prepare-only" }
-```
-
-### One-shot overrides (first match, case-insensitive)
-
-| Tokens | Level |
-|--------|-------|
-| `gp`, `gpush`, `push!`, `+push` | `prepare-and-commit-and-push` |
-| `gc`, `commit!`, `+commit` | `prepare-and-commit` |
-| `g.`, `gprepare`, `prepare!`, `+prepare` | `prepare-only` |
-
-Bare triggers (`g`, `go`, `c`, `commit`, `+1`, `bump`) use config only.
-
-## Silent output (mandatory)
-
-- Success: **no** assistant reply (empty).
-- Wrong branch: silent exit 0.
-- **Exception:** commit or push failed — one short error line.
+Last **40** commit subjects only (fast). Accepts `…🚩NNN` or legacy plain numbers (`33`, `31`, …). Highest in that window + 1 (3-digit pad).
 
 ## Branch guard
 
-Only `⛳wip` or `🏗️dev` in the branch name. Otherwise the script exits 0 silently.
-
-## Message shape
-
-```text
-{{devEmoji}}{{devAlias}}🎆{{wipYY}}🌙{{wipMM}}☀️{{wipDD}}🚩{{NNN}}
-🎆{{nowYY}}🌙{{nowMM}}☀️{{nowDD}}⏰{{HH}}⌚{{mm}}⏱️{{ss}}
-- {{emoji}}{{title}}          ← new ticket.json only (no space after emoji)
-- {{emoji}} {{summary}}       ← other staged changes (content emoji, not path-only)
-Signed-off-by: {{name}} <{{email}}>
-```
-
-Counter: last commit **subject** (`git log -1 --format=%s`), 3-digit `🚩`, else `001` with today’s wip date.
+Only `⛳wip` or `🏗️dev`. Otherwise script exits 1 with an error on stderr.
 
 ## Forbidden
 
-Codebase search, tickets MCP, goals, assistant prose on success, hand-written templates, `gh pr create`, commit/push when level disallows it.
+Codebase search, tickets MCP, goals, hand-written templates, `gh pr create`, commit/push when level disallows it.
 
 Related: `.agents/skills/merging/SKILL.md`.
