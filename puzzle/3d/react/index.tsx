@@ -1777,6 +1777,62 @@ function catalogObjectKindById(catalogs: KindCatalogBundle | undefined, kindId: 
   return catalogs?.objects?.find((entry) => entry.id === kindId);
 }
 
+function metabolismCapsuleTailStem(tail: string): string {
+  const token = tail.trim();
+  if (token === "Backslash") {
+    return "backslash";
+  }
+  if (token === "Slash") {
+    return "slash";
+  }
+  if (token.length === 1) {
+    return token === "J" || token === "L" ? token : token.toLowerCase();
+  }
+  return token.toLowerCase().replace(/\s+/g, "_");
+}
+
+/** @emoji 🏗️ Nakagin metabolism GLB path from palette kind display name when the catalog omits `meshUrl`. */
+export function inferMetabolismMeshUrlForKindName(kindName: string): string | undefined {
+  const name = kindName.trim();
+  if (name === "") {
+    return undefined;
+  }
+  const trapezoid = /^Trapezoid Capsule (.+)$/.exec(name);
+  if (trapezoid) {
+    return `/meshes/trapezoid-capsule_${metabolismCapsuleTailStem(trapezoid[1]!)}.glb`;
+  }
+  const balcony = /^Capsule With Balcony (.+)$/.exec(name);
+  if (balcony) {
+    return `/meshes/capsule-with-balcony_${metabolismCapsuleTailStem(balcony[1]!)}.glb`;
+  }
+  const capsule = /^Capsule (.+)$/.exec(name);
+  if (capsule) {
+    return `/meshes/capsule_${metabolismCapsuleTailStem(capsule[1]!)}.glb`;
+  }
+  if (name === "Base Blob") {
+    return "/meshes/base_blob.glb";
+  }
+  if (name === "Cylindric Capital") {
+    return "/meshes/cylindric-capital.glb";
+  }
+  if (name === "Cylindric Tambour") {
+    return "/meshes/cylindric-tambour.glb";
+  }
+  if (name === "Cylindric First Storey Tambour") {
+    return "/meshes/cylindric-tambour_first-storey.glb";
+  }
+  if (name === "Cylindric Last Storey Tambour") {
+    return "/meshes/cylindric-tambour_last-storey.glb";
+  }
+  if (name === "Cylindric Single Storey Tambour") {
+    return "/meshes/cylindric-tambour_single-storey.glb";
+  }
+  if (name === "Single Storey Tambour") {
+    return "/meshes/tambour_single-storey.glb";
+  }
+  return undefined;
+}
+
 /** @emoji 🎨 Resolves a GLB URL for an object kind from the catalog, then from matching scene objects. */
 export function resolveObjectKindMeshUrl(kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): string | undefined {
   const kind = catalogObjectKindById(kindCatalogs, kindId);
@@ -1798,7 +1854,8 @@ export function resolveObjectKindMeshUrl(kindId: string, kindCatalogs: KindCatal
       }
     }
   }
-  return undefined;
+  const inferred = inferMetabolismMeshUrlForKindName(kindId);
+  return isLoadableMeshUrl(inferred) ? inferred : undefined;
 }
 
 function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, origin: Vec3, meshUrl: string): FixtureObjectV1 {
@@ -1847,6 +1904,43 @@ export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, ki
 /** @emoji 📥 Appends a palette-dropped object kind at a CAD origin. */
 export function applyPaletteObjectDropToFixture(fixture: FixtureV1, object: FixtureObjectV1): FixtureV1 {
   return { ...fixture, objects: [...fixture.objects, object] };
+}
+
+/** @emoji 📥 Outcome of {@link resolvePuzzle3dFixtureDrop} for host fixture patching. */
+export type Puzzle3dFixtureDropResult =
+  | { readonly kind: "palette-object"; readonly object: FixtureObjectV1 }
+  | { readonly kind: "replace-fixture"; readonly fixture: FixtureV1 }
+  | { readonly kind: "ignored" };
+
+/** @emoji 📥 Resolves a canvas drop: palette kinds merge one object; full fixtures replace; palette seeds never pass through unresolved. */
+export function resolvePuzzle3dFixtureDrop(
+  detail: Puzzle3dFixtureDropDetail,
+  kindCatalogs: KindCatalogBundle | undefined,
+  sceneFixture?: FixtureV1,
+): Puzzle3dFixtureDropResult {
+  const placed = mergePaletteObjectFromDrop(detail, kindCatalogs, sceneFixture);
+  if (placed) {
+    return { kind: "palette-object", object: placed };
+  }
+  if (isPaletteObjectDragFixture(detail.fixture)) {
+    return { kind: "ignored" };
+  }
+  const parsed = parseFixtureV1(detail.fixture);
+  if (parsed) {
+    return { kind: "replace-fixture", fixture: parsed };
+  }
+  return { kind: "ignored" };
+}
+
+/** @emoji 📥 Applies {@link resolvePuzzle3dFixtureDrop} to a fixture, or returns null when ignored. */
+export function applyPuzzle3dFixtureDropResult(fixture: FixtureV1, result: Puzzle3dFixtureDropResult): FixtureV1 | null {
+  if (result.kind === "palette-object") {
+    return applyPaletteObjectDropToFixture(fixture, result.object);
+  }
+  if (result.kind === "replace-fixture") {
+    return result.fixture;
+  }
+  return null;
 }
 //#endregion ­ƒº¾Fixture
 
@@ -4788,6 +4882,9 @@ function GlbMeshFrame(props: { readonly children: ReactNode }) {
 
 /** @emoji ­ƒºè Pooled GLB body with {@link MeshStyleKind} recoloring aligned to Elements tokens. */
 export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
+  if (!isLoadableMeshUrl(props.meshUrl)) {
+    return null;
+  }
   const style = props.style ?? DEFAULT_MESH_STYLE;
   const renderRoot = usePooledStyledMesh(props.meshUrl, style, props.showOutline === true);
   if (!renderRoot) {
@@ -5005,7 +5102,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
   const resolvedMeshUrl = useResolvedMeshUrl({
     origin: props.origin,
     meshByLod: props.meshByLod,
-    fallbackMeshUrl: props.meshUrl,
+    fallbackMeshUrl: isLoadableMeshUrl(props.meshUrl) ? props.meshUrl : PLACEHOLDER_MESH_URL,
   });
   const mode = props.relocate ?? relocateMode;
   const transSnap = mode === "translate" && lodCtx.gridSnapEnabled && lodCtx.gridStepWorld != null && lodCtx.gridStepWorld > 0 ? lodCtx.gridStepWorld : undefined;
@@ -10100,6 +10197,48 @@ if (import.meta.vitest) {
       expect(placed?.meshUrl).toBe("/meshes/base.glb");
       expect(placed?.origin).toEqual([1, 2, 3]);
     });
+    it("inferMetabolismMeshUrlForKindName maps Capsule Z to capsule_z.glb", () => {
+      expect(inferMetabolismMeshUrlForKindName("Capsule Z")).toBe("/meshes/capsule_z.glb");
+      expect(inferMetabolismMeshUrlForKindName("Capsule With Balcony Q")).toBe("/meshes/capsule-with-balcony_q.glb");
+    });
+    it("resolvePuzzle3dFixtureDrop ignores palette object drag when mesh cannot be resolved", () => {
+      const catalogs: KindCatalogBundle = { objects: [{ id: "Balcony", label: "Balcony" }] };
+      const dragFixture = buildPaletteObjectDragFixture("Balcony");
+      const result = resolvePuzzle3dFixtureDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs);
+      expect(result.kind).toBe("ignored");
+    });
+    it("resolvePuzzle3dFixtureDrop infers mesh for Capsule Z without catalog meshUrl", () => {
+      const catalogs: KindCatalogBundle = { objects: [{ id: "Capsule Z", label: "Capsule Z" }] };
+      const dragFixture = buildPaletteObjectDragFixture("Capsule Z");
+      const result = resolvePuzzle3dFixtureDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [1, 2, 3] }, catalogs);
+      expect(result.kind).toBe("palette-object");
+      if (result.kind === "palette-object") {
+        expect(result.object.meshUrl).toBe("/meshes/capsule_z.glb");
+      }
+    });
+    it("resolvePuzzle3dFixtureDrop does not replace fixture with palette seed drag payload", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [{ id: "Capsule Z", label: "Capsule Z", meshUrl: "/meshes/capsule_z.glb" }],
+      };
+      const scene: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [],
+      };
+      const dragFixture = buildPaletteObjectDragFixture("Capsule Z");
+      const result = resolvePuzzle3dFixtureDrop({ fixture: dragFixture, screen: { x: 0, y: 0 }, worldCad: [4, 5, 6] }, catalogs, scene);
+      expect(result.kind).toBe("palette-object");
+      if (result.kind !== "palette-object") {
+        return;
+      }
+      expect(result.object.meshUrl).toBe("/meshes/capsule_z.glb");
+      expect(result.object.origin).toEqual([4, 5, 6]);
+      const merged = applyPuzzle3dFixtureDropResult(scene, result);
+      expect(merged?.objects).toHaveLength(1);
+      expect(merged?.objects[0]?.meshUrl).toBe("/meshes/capsule_z.glb");
+    });
     it("resolveObjectKindMeshUrl ignores palette drag seed URLs in catalog and scene", () => {
       const catalogs: KindCatalogBundle = {
         objects: [{ id: "Capsule q", label: "Capsule q", meshUrl: PALETTE_DRAG_SEED_MESH_URL }],
@@ -10722,7 +10861,7 @@ if (import.meta.vitest) {
         fixture,
         {
           targetVortexFullId: "host:v0",
-          objectKindId: "J",
+          objectKindId: "Capsule J",
           sourceVortexIndex: 0,
           origin: pose.origin,
           orientation: pose.orientation,

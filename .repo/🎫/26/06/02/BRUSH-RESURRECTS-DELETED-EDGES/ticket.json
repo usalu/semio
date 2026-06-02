@@ -3,12 +3,13 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix: after delete edges + Brush Enter, edges reappear and input breaks. Flush structural delete queue before brush fixture sync.",
-  "summary": "Fixed deleted edges reappearing when entering Brush: brush activation called puzzle2dSyncFixtureDescriptorToAllAuthoringPeers before the play structural-delete microtask updated fixture, so clearAuthoritativeStructuralSuppressionsForDescriptor restored edges from stale fixture. Added flushPuzzle2dPlayStructuralDeleteBatch in play and flush before brush fixture sync in Puzzle2dPlayInner. Tests: play flush unit test passes; react 147/147.",
+  "summary": "Removed resync-burst heuristics from filterPuzzle2dPlayStructuralDeleteBatch so authoritative user edge deletes commit to the fixture on nakagin-scale graphs. Brush activation flushes the delete queue and skips stale fixtureRef sync when deletes were applied (applyStructuralDelete already syncs peers). play filter/flush tests updated; react 147/147.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1519"
   },
   "goal": "🎯puzzle🎯2d",
   "sessions": [
-    "⚪00567a101bbd40e391ece0c18b00d070"
+    "⚪00567a101bbd40e391ece0c18b00d070",
+    "⚪e9dcc01ad5a246829f33052e8ee55734"
   ]
 }

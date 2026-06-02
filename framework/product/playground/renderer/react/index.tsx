@@ -1187,7 +1187,7 @@ import {
   applyConnectToFixture,
   applyPaletteObjectDropToFixture,
   blockedVortexFullIdsFromAttractions,
-  mergePaletteObjectFromDrop,
+  resolvePuzzle3dFixtureDrop,
   puzzle3dFixturePaletteTreeDragController,
   buildPuzzle3dPlayEngagement,
   getPuzzle3dBrushEngagementEpoch,
@@ -1459,20 +1459,19 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
   const handleFixtureDrop = reactHostPort.useCallback(
     (detail: Puzzle3dFixtureDropDetail) => {
-      const placed = mergePaletteObjectFromDrop(detail, kindCatalogs, snap.fixture);
-      if (placed) {
-        patchFixture((fixture) => applyPaletteObjectDropToFixture(fixture, placed));
+      const result = resolvePuzzle3dFixtureDrop(detail, kindCatalogs, snap.fixture);
+      if (result.kind === "palette-object") {
+        patchFixture((fixture) => applyPaletteObjectDropToFixture(fixture, result.object));
         bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelection", {
-          selection: { objectIds: [placed.id], vortexIds: [], attractionIds: [] },
+          selection: { objectIds: [result.object.id], vortexIds: [], attractionIds: [] },
         });
         return;
       }
-      const parsed = parseFixtureV1(detail.fixture);
-      if (parsed) {
-        ctrl?.patchFixture(() => parsed);
+      if (result.kind === "replace-fixture") {
+        ctrl?.patchFixture(() => result.fixture);
       }
     },
-    [bus, ctrl, kindCatalogs, patchFixture],
+    [bus, ctrl, kindCatalogs, patchFixture, snap.fixture],
   );
   return (
     <>
