@@ -46,7 +46,7 @@ Level overrides before `--`: `gc`, `gp`, `g.`
 
 `bun ./script.ts setup git` once per clone.
 
-**After each commit** `post-commit` clears templates, bullets, and `commit.template` so the old message does not reappear. Run `prepare` again for the next commit.
+**After each commit** `post-commit` wipes everything (templates, bullets, `commit.template`, active flag). The next commit stays empty until you run `prepare` again with fresh bullets.
 
 ## Script vs you
 

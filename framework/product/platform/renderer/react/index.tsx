@@ -121,7 +121,6 @@ import {
 	ArrowUp,
 	ArrowRightLeft as ArrowRightLeftIcon,
   Check as CheckIcon,
-  ChevronRight as ChevronRightIcon,
   Filter as FilterIcon,
 	Folder,
 	FolderOpen as FolderOpenIcon,
@@ -159,9 +158,6 @@ import {
   ButtonCycle,
   ButtonGroup,
   ButtonGroupItem,
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
   CommandDialog,
 	CommandEmpty,
 	CommandGroup,
@@ -219,15 +215,13 @@ import {
 	type VirtualFileSystemRow,
 	type VirtualFileSystemSchema,
   windowMeasureControlClass,
-  windowMeasureGroupChildrenClass,
-  windowMeasureGroupHeaderClass,
   windowMeasureLabelClass,
-  windowMeasureSectionClass,
   windowMeasureTileClass,
-  windowMeasureTileNestedClass,
   windowMeasureToggleClass,
   windowMeasureToggleCompactClass,
-  windowMeasuresStackInnerClass,
+  WindowMeasureTreeGroup,
+  WindowMeasureTreeLeaf,
+  WindowMeasuresTree,
 	type AssertUiToolbarParentKeysCovered,
 } from "@ui/react";
 // #endregion 🔌Adapters
@@ -569,93 +563,60 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
 
 // #region 🪟WindowMeasuresOverlay
 
-const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; nested?: boolean; children: React.ReactNode }> = ({ measureId, label, nested, children }) => (
-  <div
-    data-slot={nested ? "window-measure-nested" : "window-measure-float"}
-    data-measure-id={measureId}
-    className={nested ? windowMeasureTileNestedClass : windowMeasureTileClass}
-  >
-    {label && !nested ? <span className={windowMeasureLabelClass}>{label}</span> : null}
-    {label && nested ? <span className={cn(windowMeasureLabelClass, "mb-0 leading-tight")}>{label}</span> : null}
+const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; children: React.ReactNode }> = ({ measureId, label, children }) => (
+  <div data-slot="window-measure-float" data-measure-id={measureId} className={windowMeasureTileClass}>
+    {label ? <span className={windowMeasureLabelClass}>{label}</span> : null}
     <div className={windowMeasureControlClass}>{children}</div>
   </div>
 );
 
-type UIWindowMeasureGroupNode = Extract<UIWindowMeasure, { kind: "group" }>;
-
-const UIWindowMeasureGroup: React.FC<{ measure: UIWindowMeasureGroupNode }> = ({ measure }) => {
-  const [open, setOpen] = React.useState(measure.defaultOpen ?? true);
-  return (
-    <Collapsible open={open} onOpenChange={setOpen} className="pointer-events-auto w-full min-w-0 shrink-0">
-      <CollapsibleTrigger type="button" className={windowMeasureGroupHeaderClass}>
-        <ChevronRightIcon className={cn("text-muted-foreground size-[10px] shrink-0 transition-transform", open && "rotate-90")} />
-        <span className={cn(windowMeasureSectionClass, "flex-1 px-0 py-0 text-left normal-case tracking-normal")}>{measure.label}</span>
-      </CollapsibleTrigger>
-      <CollapsibleContent className={windowMeasureGroupChildrenClass}>
-        {measure.children.map((child) => (
-          <React.Fragment key={child.id}>{renderUIWindowMeasure(child, true)}</React.Fragment>
-        ))}
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
-
-function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React.ReactNode {
+function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
   switch (measure.kind) {
     case "group":
-      return <UIWindowMeasureGroup measure={measure} />;
+      return (
+        <WindowMeasureTreeGroup id={measure.id} label={measure.label} defaultOpen={measure.defaultOpen ?? true}>
+          {measure.children.map((child) => (
+            <React.Fragment key={child.id}>{renderUIWindowMeasure(child)}</React.Fragment>
+          ))}
+        </WindowMeasureTreeGroup>
+      );
     case "display":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
           <div className="text-foreground max-w-full text-xs leading-snug break-words">{measure.content}</div>
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "reading":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
           <div className={cn("text-foreground text-xs tabular-nums", measure.monospace && "font-mono")}>{measure.text}</div>
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "section":
       return (
-        <span key={measure.id} data-slot="window-measure-heading" className={windowMeasureSectionClass}>
-          {measure.title}
-        </span>
+        <WindowMeasureTreeGroup key={measure.id} id={measure.id} label={measure.title} defaultOpen>
+          {null}
+        </WindowMeasureTreeGroup>
       );
     case "separator":
-      return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
+      return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-tiny h-px w-8 shrink-0 rounded-full" aria-hidden />;
     case "toggle":
-      if (nested) {
-        return (
-          <div key={measure.id} data-slot="window-measure-toggle-compact" data-measure-id={measure.id} className="pointer-events-auto w-full min-w-0 shrink-0">
-            <Toggle
-              id={measure.id}
-              className={cn(windowMeasureToggleClass, windowMeasureToggleCompactClass)}
-              pressed={measure.pressed}
-              defaultPressed={measure.defaultPressed}
-              onPressedChange={measure.onPressedChange}
-              icon={measure.icon ?? <CheckIcon className="size-small" />}
-              text={measure.text}
-            />
-          </div>
-        );
-      }
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} fullWidth>
           <Toggle
             id={measure.id}
-            className={windowMeasureToggleClass}
+            className={cn(windowMeasureToggleClass, windowMeasureToggleCompactClass)}
             pressed={measure.pressed}
             defaultPressed={measure.defaultPressed}
             onPressedChange={measure.onPressedChange}
             icon={measure.icon ?? <CheckIcon className="size-small" />}
             text={measure.text}
           />
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "select":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
           <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
             <SelectTrigger id={measure.id} className="h-medium w-full min-w-0" size="sm">
               <SelectValue />
@@ -668,42 +629,42 @@ function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React
               ))}
             </SelectContent>
           </Select>
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "combobox":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
           <Combobox id={measure.id} value={measure.value} options={measure.choices} placeholder={measure.placeholder} onValueChange={measure.onValueChange} className={windowMeasureControlClass} />
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "button":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
           <Button id={measure.id} text={measure.text} icon={measure.icon} onClick={measure.onClick} />
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "buttonCycle":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
           <ButtonCycle id={measure.id} value={measure.value} onValueChange={measure.onValueChange} items={measure.items} />
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "input":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
-          <Input id={measure.id} lazy className={cn("h-medium", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
-        </UIWindowMeasureFloat>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <Input id={measure.id} lazy className={cn("h-small", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
+        </WindowMeasureTreeLeaf>
       );
     case "textarea":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
-          <Textarea id={measure.id} lazy className={cn("min-h-[4rem]", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
-        </UIWindowMeasureFloat>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
+          <Textarea id={measure.id} lazy className={cn("min-h-[3rem]", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
+        </WindowMeasureTreeLeaf>
       );
     case "checkbox":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} nested={nested}>
-          <div className="text-foreground flex w-full min-w-0 items-center gap-single text-xs">
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <div className="text-foreground flex w-full min-w-0 items-center justify-end gap-single text-xs">
             <input
               id={measure.id}
               type="checkbox"
@@ -711,25 +672,20 @@ function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React
               {...(measure.checked !== undefined ? { checked: measure.checked } : { defaultChecked: measure.defaultChecked })}
               onChange={(event) => measure.onCheckedChange?.(event.target.checked)}
             />
-            {measure.label ? (
-              <label htmlFor={measure.id} className="cursor-pointer select-none">
-                {measure.label}
-              </label>
-            ) : null}
           </div>
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "radio":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
-          <div className="flex flex-col gap-half" role="radiogroup" aria-labelledby={measure.id}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
+          <div className="flex flex-col gap-tiny" role="radiogroup" aria-labelledby={measure.id}>
             {measure.items.map((item) => (
               <button
                 key={item.value}
                 type="button"
                 data-slot="window-measure-radio-item"
                 className={cn(
-                  "border-element/80 hover:bg-hover-window w-full rounded border px-single py-half text-left text-xs transition-colors",
+                  "border-element/80 hover:bg-hover-window w-full rounded border px-tiny py-tiny text-left text-xs transition-colors",
                   measure.value === item.value && "bg-active-base text-active-foreground",
                 )}
                 onClick={() => measure.onChange?.(item.value)}
@@ -738,29 +694,29 @@ function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React
               </button>
             ))}
           </div>
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "slider": {
       const min = measure.min ?? 0;
       const max = measure.max ?? 100;
       const v = measure.value ?? min;
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
           <Slider id={measure.id} value={[v]} min={min} max={max} step={measure.step} onValueChange={(vals) => measure.onValueChange?.(vals[0] ?? min)} />
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     }
     case "number":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
           <Stepper id={measure.id} value={measure.value} min={measure.min} max={measure.max} step={measure.step} onChange={measure.onChange} />
-        </UIWindowMeasureFloat>
+        </WindowMeasureTreeLeaf>
       );
     case "color":
       return (
-        <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label} nested={nested}>
-          <Input id={measure.id} type="color" className={cn("h-medium cursor-pointer", windowMeasureControlClass)} value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
-        </UIWindowMeasureFloat>
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <Input id={measure.id} type="color" className={cn("h-small cursor-pointer", windowMeasureControlClass)} value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
+        </WindowMeasureTreeLeaf>
       );
     default: {
       const _exhaustive: never = measure;
@@ -773,11 +729,11 @@ function renderUIWindowMeasure(measure: UIWindowMeasure, nested: boolean): React
  * 📐 Maps declarative `UIWindowMeasure` entries into compact floating tiles aligned to the right edge.
  **/
 export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ measures }) => (
-  <div data-slot="window-measures-stack-inner" className={windowMeasuresStackInnerClass}>
+  <WindowMeasuresTree>
     {measures.map((measure) => (
-      <React.Fragment key={measure.id}>{renderUIWindowMeasure(measure, false)}</React.Fragment>
+      <React.Fragment key={measure.id}>{renderUIWindowMeasure(measure)}</React.Fragment>
     ))}
-  </div>
+  </WindowMeasuresTree>
 );
 
 // #endregion 🪟WindowMeasuresOverlay
@@ -3619,8 +3575,8 @@ if (import.meta.vitest) {
 					]}
 				/>,
 			);
-			expect(markup).toContain('data-slot="window-measure-float"');
-			expect(markup).toContain('data-slot="window-measures-stack-inner"');
+			expect(markup).toContain('data-slot="window-measures-tree"');
+			expect(markup).toContain('data-slot="window-measure-tree-row"');
 			expect(markup).toContain("w-full");
 			expect(markup).not.toContain("shadow-md");
 		});
@@ -3649,10 +3605,10 @@ if (import.meta.vitest) {
 					]}
 				/>,
 			);
-			expect(markup).toContain('data-slot="collapsible"');
+			expect(markup).toContain('data-slot="window-measures-tree"');
 			expect(markup).toContain("Brush");
-			expect(markup).toContain('data-slot="window-measure-nested"');
-			expect(markup).toContain("gap-0");
+			expect(markup).toContain('data-slot="tree-guide"');
+			expect(markup).toContain('data-slot="window-measure-tree-content"');
 		});
 	});
 

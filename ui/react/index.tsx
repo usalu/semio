@@ -2234,7 +2234,10 @@ export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-
 export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
 /** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
-export const windowMeasuresRailWidthClass = "w-[min(10rem,calc(100%-0.5rem))]";
+export const windowMeasuresRailWidthClass = "w-[min(14rem,calc(100%-0.5rem))]";
+
+/** @emoji 📐 Left engagement chrome reserve so it does not overlap the measures rail. */
+export const windowMeasuresEngagementMaxWidthClass = "max-w-[calc(100%-14.5rem)]";
 
 /** @emoji 📐 Outer overlay for floating window measures along the right edge. */
 export const windowMeasuresOverlayClass =
@@ -2280,7 +2283,13 @@ export const windowMeasureToggleClass =
 
 /** @emoji 📐 Dense toggle row for nested measure groups (shorter control chrome). */
 export const windowMeasureToggleCompactClass =
-  "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single";
+  "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single [&_[data-slot=inline-label]]:text-2xs";
+
+/** @emoji 🌳 Typography for measure tree group headers. */
+export const windowMeasureTreeGroupLabelClass = "text-2xs font-semibold uppercase tracking-wide text-muted-foreground";
+
+/** @emoji 🌳 Typography for measure tree leaf labels. */
+export const windowMeasureTreeLeafLabelClass = "text-2xs font-normal text-foreground";
 
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
@@ -7445,7 +7454,7 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
       return;
     }
 
-    const branchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
+    const branchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content", "window-measure-tree-content"]);
     const rowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "tree-content", "control-tree-row"]);
     const directChildren = Array.from(branchElement.children) as HTMLElement[];
     const isRowElement = (el: HTMLElement): boolean => rowSlots.has(el.dataset.slot ?? "");
@@ -8025,7 +8034,7 @@ const getTreeItemOrderedIds = (sections: TreeDataSection[], sectionItemsById: Re
 
 const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"]';
 
-const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]`;
+const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]`;
 
 /** @emoji 🎨 Tree row background from committed selection vs pointer-driven {@link TreeRootProps.highlightedIds}. */
 function treeRowStateClasses(isSelected: boolean, isHighlighted: boolean): string {
@@ -9048,11 +9057,11 @@ export interface FileTreeNode {
 
 //#region 🎃TreeHoverPath
 // 🌳Branch containers that hold child rows and render IndentationLines.
-const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
+const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content", "window-measure-tree-content"]);
 // 🔷Row-level elements that own an elbow connector.
 const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "control-tree-row"]);
 const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"]';
-const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]';
+const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]';
 const treeHoverPathAttr = "data-tree-hover-path";
 
 const clearTreeHoverPath = (root: HTMLElement) => {
@@ -10248,6 +10257,135 @@ export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText =
 
 // #endregion 🔬ControlTree
 
+// #region 🌳WindowMeasuresTree
+
+const windowMeasureTreeValueColumnWidthPx = 104;
+const windowMeasureTreeChromeClass =
+  "[&_[data-slot=select-trigger]]:h-small [&_[data-slot=select-trigger]]:text-2xs [&_[data-slot=slider-value]]:text-2xs";
+const windowMeasureTreeRowClassName = "hover:bg-hover-window select-none min-h-[18px] w-full min-w-0";
+
+interface WindowMeasureTreeRowProps {
+  left: React.ReactNode;
+  right?: React.ReactNode;
+}
+
+const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right }) => (
+  <div
+    data-slot="window-measure-tree-row"
+    className={cn("grid min-w-0 w-full items-center gap-x-[6px]", windowMeasureTreeRowClassName)}
+    style={{ gridTemplateColumns: right === undefined ? "minmax(0, 1fr)" : `minmax(0, 1fr) ${windowMeasureTreeValueColumnWidthPx}px` }}
+  >
+    <div data-slot="window-measure-tree-row-left" className="relative min-w-0">
+      {left}
+    </div>
+    {right !== undefined ? <div data-slot="window-measure-tree-row-right" className="min-w-0">{right}</div> : null}
+  </div>
+);
+
+/** @emoji 🌳 Root tree shell for the window measures rail (guide lines + indentation). */
+export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
+  <div data-slot="window-measures-tree" className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)}>
+    <Tree showLines sections={[{ id: "window-measures-root", label: "", content: children }]} />
+  </div>
+);
+
+export interface WindowMeasureTreeGroupProps {
+  id: string;
+  label: string;
+  defaultOpen?: boolean;
+  children?: React.ReactNode;
+}
+
+/** @emoji 🌳 Collapsible measure group row (same geometry as {@link ControlTree} folders). */
+export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = true, children }) => {
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const itemId = `window-measure-group-${id}`;
+  const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
+  const hasChildren = hasNonEmptyChildren(children);
+  return (
+    <>
+      <WindowMeasureTreeRow
+        left={
+          <TreeAlignedRow
+            level={level}
+            isLastAtLevel={isLastAtLevel}
+            showLines={showLines}
+            connectCurrentLevel={level > 0}
+            extendCurrentLevelToBottom={open && hasChildren}
+            slotOffsetPx={2}
+            slot={
+              hasChildren ? (
+                <button
+                  type="button"
+                  className="flex-shrink-0 cursor-pointer border-0 bg-transparent p-0"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setOpen(!open);
+                  }}
+                >
+                  {open ? <ChevronDownIcon className="size-[10px] flex-shrink-0 text-muted-foreground" /> : <ChevronRightIcon className="size-[10px] flex-shrink-0 text-muted-foreground" />}
+                </button>
+              ) : undefined
+            }
+            contentClassName="flex min-w-0 items-center gap-[6px]"
+          >
+            <span data-slot="tree-label" className={cn("flex-1 truncate select-none", windowMeasureTreeGroupLabelClass)} style={treeItemLabelStyle}>
+              {label}
+            </span>
+          </TreeAlignedRow>
+        }
+      />
+      {open && hasChildren ? (
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier }}>
+          <TreeBranchContent slot="window-measure-tree-content">{children}</TreeBranchContent>
+        </TreeContext.Provider>
+      ) : null}
+    </>
+  );
+};
+
+export interface WindowMeasureTreeLeafProps {
+  label?: string;
+  children: React.ReactNode;
+  fullWidth?: boolean;
+}
+
+/** @emoji 🌳 Measure control leaf aligned like a tree row (label + value or full-width control). */
+export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, children, fullWidth = false }) => {
+  const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
+  const labelNode = label ? (
+    <span data-slot="tree-label" className={cn("truncate select-none", windowMeasureTreeLeafLabelClass)} style={treeItemLabelStyle}>
+      {label}
+    </span>
+  ) : null;
+  if (fullWidth) {
+    return (
+      <WindowMeasureTreeRow
+        left={
+          <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="min-w-0 w-full">
+            <div data-slot="window-measure-tree-leaf-body" className="min-w-0 w-full">
+              {children}
+            </div>
+          </TreeAlignedRow>
+        }
+      />
+    );
+  }
+  return (
+    <WindowMeasureTreeRow
+      left={
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-[6px]">
+          {labelNode}
+        </TreeAlignedRow>
+      }
+      right={<div data-slot="window-measure-tree-leaf-body" className="min-w-0">{children}</div>}
+    />
+  );
+};
+
+// #endregion 🌳WindowMeasuresTree
+
 // #endregion 📜Tree
 
 // #endregion 🗼Aggregation Components
@@ -11299,14 +11437,29 @@ export function engagementCommandTokenEquals(a: string, b: string): boolean {
   return normalizeEngagementCommandText(a).toLowerCase() === normalizeEngagementCommandText(b).toLowerCase();
 }
 
+function engagementPossibleRankScore(query: string, item: EngagementPossible): number {
+  const ql = normalizeEngagementCommandText(query).toLowerCase();
+  if (!ql) return -1;
+  const label = normalizeEngagementCommandText(item.label).toLowerCase();
+  const detail = (item.detail ?? "").toLowerCase();
+  const id = item.id.toLowerCase();
+  if (label.startsWith(ql)) return 3000 - label.length;
+  if (detail.startsWith(ql)) return 2000 - detail.length;
+  if (id.startsWith(ql)) return 1000 - id.length;
+  const haystack = `${label} ${detail} ${id}`;
+  if (haystack.includes(ql)) return 500;
+  return -1;
+}
+
 /** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
 export function filterEngagementPossibles(query: string, items: readonly EngagementPossible[]): EngagementPossible[] {
   const trimmed = normalizeEngagementCommandText(query).toLowerCase();
   if (!trimmed) return [...items];
-  return items.filter((item) => {
-    const haystack = `${normalizeEngagementCommandText(item.label)} ${item.detail ?? ""} ${item.id}`.toLowerCase();
-    return haystack.includes(trimmed) || item.id.toLowerCase().startsWith(trimmed);
-  });
+  return items
+    .map((item) => ({ item, score: engagementPossibleRankScore(query, item) }))
+    .filter((row) => row.score >= 0)
+    .sort((a, b) => b.score - a.score)
+    .map((row) => row.item);
 }
 
 /** @emoji ⌨️ Inline completion segments for one {@link EngagementPossible} using label casing for the matched name prefix. */
@@ -11790,7 +11943,10 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
               className="w-[min(100vw-1rem,28rem)] p-0"
               align="end"
               onOpenAutoFocus={(event) => event.preventDefault()}
-              onPointerDown={(event) => event.preventDefault()}
+              onPointerDown={(event) => {
+                if (event.target instanceof HTMLElement && event.target.closest('[cmdk-item], [data-slot="command-item"]')) return;
+                event.preventDefault();
+              }}
             >
               <Command shouldFilter={false}>
                 <CommandList>
@@ -11802,6 +11958,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                           value={item.id}
                           data-active={index === activePossibleIndex ? "true" : undefined}
                           className={cn(index === activePossibleIndex && "bg-active-base")}
+                          onPointerDown={(event) => event.stopPropagation()}
                           onSelect={() => selectPossible(item)}
                         >
                           <span className="truncate">{engagementHighlightedLabel(item.label, draft, item.detail)}</span>
@@ -12020,7 +12177,8 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 ref={engagementZoneRef}
                 data-slot="window-engagement-hover-zone"
                 className={cn(
-                  "pointer-events-auto flex w-[min(100%,28rem)] max-w-[calc(100%-5rem)] min-w-0 select-none flex-col items-stretch",
+                  "pointer-events-auto flex w-[min(100%,28rem)] min-w-0 select-none flex-col items-stretch",
+                  windowMeasuresEngagementMaxWidthClass,
                   !showEngagementChrome && "h-large",
                 )}
                 onPointerEnter={() => setEngagementZoneHovered(true)}
@@ -16528,6 +16686,14 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
     });
 
+    it("filterEngagementPossibles ranks shorter label prefix matches first", () => {
+      const items = [
+        { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e" },
+        { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e" },
+      ];
+      expect(filterEngagementPossibles("Extr", items).map((row) => row.id)).toEqual(["surface.extrudeCrv", "feature.extrudeWire"]);
+    });
+
     it("engagementInlineCompletion uses label casing for matched name prefix", () => {
       const box = { id: "primitive.box", label: "Box", detail: "b" };
       const sphere = { id: "primitive.sphere", label: "Sphere", detail: "s" };
@@ -16580,6 +16746,29 @@ if (import.meta.vitest) {
       expect(sphereRow).toBeTruthy();
       fireEvent.click(sphereRow!);
       await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box", "primitive.sphere"]));
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it("Engagement suggestion click selects the picked row when popover keeps input focus", async () => {
+      const scrollIntoView = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = () => undefined;
+      const selected: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder, value: "Extr", onChange: () => {} }}
+          possibleEngagements={[
+            { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e", onSelect: () => selected.push("feature.extrudeWire") },
+            { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e", onSelect: () => selected.push("surface.extrudeCrv") },
+          ]}
+        />,
+      );
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      const popover = await waitFor(() => document.querySelector('[data-slot="engagement-autocomplete"]')!);
+      const crvRow = document.querySelector('[data-slot="command-item"][data-value="surface.extrudeCrv"]')!;
+      fireEvent.pointerDown(popover, { pointerId: 1, pointerType: "mouse", buttons: 1 });
+      fireEvent.click(crvRow);
+      await waitFor(() => expect(selected).toEqual(["surface.extrudeCrv"]));
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
@@ -17007,7 +17196,7 @@ if (import.meta.vitest) {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]');
-      expect(overlay?.className).toContain("min(10rem");
+      expect(overlay?.className).toContain("min(14rem");
       expect(overlay?.className).not.toContain("overflow-hidden");
       expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
     });

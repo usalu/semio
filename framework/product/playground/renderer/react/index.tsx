@@ -1824,6 +1824,7 @@ import {
   puzzle2dFixtureHandleEndpointDisplayLabel,
   puzzle2dFixtureMergedKindCatalogs,
   puzzle2dFixtureObjectDisplayLabel,
+  puzzle2dNodeKindOverlayLabel,
   classifyPuzzle2dIconSelectorMode,
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
@@ -3368,7 +3369,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         payload.candidates.length > 0
           ? payload.candidates.map((kindId, index) => ({
               id: `puzzle2d.brush.${kindId}.${index}`,
-              label: kindId.split(".").pop() ?? kindId,
+              label: puzzle2dNodeKindOverlayLabel(kindId, PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS),
             }))
           : [];
       puzzle2dShellController?.setBrushEngagementPossibles(rows);

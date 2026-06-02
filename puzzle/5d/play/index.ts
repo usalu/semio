@@ -224,7 +224,6 @@ export class Puzzle5dPlayShellController extends Controller {
     return {
       kind: "select",
       id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`,
-      label: "LOD",
       value: this.lod2dMode,
       items: [{ id: "automatic", label: puzzle2dLodAutomaticSelectLabel(this.lod2dTag), value: PUZZLE_2D_LOD_MODE_AUTOMATIC }, ...PUZZLE_5D_PLAY_LOD_TIERS_2D.map((tier) => ({ id: tier, label: puzzle5dPlayLodTierMenuLabel(tier), value: tier }))],
       onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "set2dLodMode" },
@@ -236,7 +235,6 @@ export class Puzzle5dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-auto`,
-        label: "LOD",
         text: "Auto zoom",
         pressed: this.automaticLod3d,
         onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "set3dAutoLod" },

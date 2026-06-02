@@ -570,7 +570,6 @@ export class CadPlayShellController extends Controller {
     return {
       kind: "select",
       id: `${pane}-compute`,
-      label: "Compute",
       value: this.computeModeByPane[pane],
       items: CAD_PLAY_COMPUTE_MODES.map((mode) => ({
         id: mode,
@@ -585,7 +584,6 @@ export class CadPlayShellController extends Controller {
     return {
       kind: "select",
       id: `${pane}-transform`,
-      label: "Transform",
       value: this.transformModeByPane[pane],
       items: CAD_PLAY_TRANSFORM_WINDOW_MODES.map((mode) => ({
         id: mode,

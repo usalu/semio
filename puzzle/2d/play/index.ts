@@ -42,7 +42,9 @@ import {
 	puzzle2dFixtureHandleDisplayLabel,
 	puzzle2dFixtureNodeDisplayDescription,
 	puzzle2dFixtureNodeDisplayLabel,
+	puzzle2dHandleKindOverlayLabel,
 	puzzle2dLodAutomaticSelectLabel,
+	puzzle2dNodeKindOverlayLabel,
 	isPuzzle2dDrawLodKind,
 	parsePuzzle2dFixtureV1,
 	DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
@@ -503,6 +505,7 @@ export class Puzzle2dPlayShellController extends Controller {
 	private handleKindIds: string[] = [];
 	private nodeKindWeights: KindWeightMap = {};
 	private handleKindWeights: KindWeightMap = {};
+	private kindCatalogs: KindCatalogBundle = DEFAULT_KIND_CATALOG_BUNDLE;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, hostChromeNotify: () => void) {
 		super(PUZZLE_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -561,18 +564,27 @@ export class Puzzle2dPlayShellController extends Controller {
 		};
 	}
 
-	private kindWeightLabel(kindId: string): string {
-		const tail = kindId.split(".").pop() ?? kindId;
-		return tail.length > 24 ? `${tail.slice(0, 21)}…` : tail;
+	private kindWeightLabel(kindId: string, catalogSlice: "nodes" | "handles"): string {
+		const label =
+			catalogSlice === "nodes"
+				? puzzle2dNodeKindOverlayLabel(kindId, this.kindCatalogs)
+				: puzzle2dHandleKindOverlayLabel(kindId, this.kindCatalogs);
+		return label.length > 24 ? `${label.slice(0, 21)}…` : label;
 	}
 
-	private kindWeightMeasures(prefix: string, ids: readonly string[], weights: KindWeightMap, command: string): readonly WindowMeasure[] {
+	private kindWeightMeasures(
+		prefix: string,
+		ids: readonly string[],
+		weights: KindWeightMap,
+		command: string,
+		catalogSlice: "nodes" | "handles",
+	): readonly WindowMeasure[] {
 		return ids.map((kindId) => {
 			const w = weights[kindId] ?? 0;
 			return {
 				kind: "slider" as const,
 				id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-${prefix}-${kindId}`,
-				label: `${this.kindWeightLabel(kindId)} ${(w * 100).toFixed(0)}%`,
+				label: `${this.kindWeightLabel(kindId, catalogSlice)} ${(w * 100).toFixed(0)}%`,
 				value: w,
 				min: 0,
 				max: 1,
@@ -609,14 +621,14 @@ export class Puzzle2dPlayShellController extends Controller {
 							id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-distribution-nodes`,
 							label: "Nodes",
 							defaultOpen: false,
-							children: this.kindWeightMeasures("node-kind", this.nodeKindIds, this.nodeKindWeights, "setNodeKindWeight"),
+							children: this.kindWeightMeasures("node-kind", this.nodeKindIds, this.nodeKindWeights, "setNodeKindWeight", "nodes"),
 						},
 						{
 							kind: "group",
 							id: `${PUZZLE_2D_PLAY_CONTROLLER_ID}-brush-distribution-handles`,
 							label: "Handles",
 							defaultOpen: false,
-							children: this.kindWeightMeasures("handle-kind", this.handleKindIds, this.handleKindWeights, "setHandleKindWeight"),
+							children: this.kindWeightMeasures("handle-kind", this.handleKindIds, this.handleKindWeights, "setHandleKindWeight", "handles"),
 						},
 					],
 				},
@@ -633,6 +645,7 @@ export class Puzzle2dPlayShellController extends Controller {
 
 	/** @emoji 🎚️ Syncs kind catalogs for suggestion-percentage sliders (uniform weights for new ids). */
 	setKindCatalogs(catalogs: KindCatalogBundle | undefined): void {
+		this.kindCatalogs = mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, catalogs ?? {});
 		const nodes = catalogs?.nodes?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
 		const handles = catalogs?.handles?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
 		const nodeChanged =
@@ -777,7 +790,6 @@ export class Puzzle2dPlayShellController extends Controller {
 		return {
 			kind: "select",
 			id: `${paneId}-lod`,
-			label: "LOD",
 			value: this.lodModeByPane[paneId],
 			items: [
 				{ id: "automatic", value: PUZZLE_2D_LOD_MODE_AUTOMATIC, label: puzzle2dLodAutomaticSelectLabel(this.effectiveLodByPane[paneId]) },
@@ -1296,6 +1308,28 @@ if (import.meta.vitest) {
 			const controller = runtime.getActiveApp()?.controller as Puzzle2dPlayShellController;
 			const overview = controller.mainMode.windowKinds.find((wk) => wk.id === "2d-overview");
 			expect(overview?.measures?.some((m) => m.kind === "slider" && m.id.includes("brush-flush-distance"))).toBe(true);
+		});
+
+		it("brush distribution measures label node kinds from catalog names not uuid tails", () => {
+			const bus = new CommandBus();
+			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
+			const catalogs = mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, fixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {});
+			ctrl.setKindCatalogs(catalogs);
+			const collectLabels = (measures: readonly WindowMeasure[] | undefined): string[] => {
+				const out: string[] = [];
+				for (const row of measures ?? []) {
+					if (row.kind === "group") {
+						out.push(...collectLabels(row.children));
+					} else if ("label" in row && typeof row.label === "string") {
+						out.push(row.label);
+					}
+				}
+				return out;
+			};
+			const overview = ctrl.mainMode.windowKinds.find((wk) => wk.id === "2d-overview");
+			const labels = collectLabels(overview?.measures);
+			expect(labels.some((label) => label.startsWith("Capsule J "))).toBe(true);
+			expect(labels.some((label) => /^[0-9a-f]{8}/i.test(label))).toBe(false);
 		});
 
 		it("setEffectiveLodForPane bumps chrome generation only", () => {

@@ -3,10 +3,11 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix sketchpad bug: capsule types do not appear under capsule typology.",
-  "summary": "Puzzle 3d nakagin fixture already had specific kind catalog ids (Capsule J, Last Storey Tambour, etc.). Fixed play brush test to use Capsule J. Renamed remaining single-letter hierarchy palette nodes in puzzle 2d fixture and storybook board (p/J/L/s/q/z, slash/backslash) to Capsule * names. Added 2d/3d play tests asserting catalog names. Regenerated puzzle 5d fixture.",
+  "summary": "Puzzle 2d play window engagement options and brush distribution sliders showed UUID tails because labels used kindId.split('.').pop(). Play shell now resolves labels via puzzle2dNodeKindOverlayLabel / puzzle2dHandleKindOverlayLabel from stored kind catalogs. Playground notifyBrushCandidates uses the same overlay labels for brush window possibles.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪8e838cfdeead49bbbaceee1810ec1f00",
-    "⚪7fdb29f0b939436e9249d23a5b01ea27"
+    "⚪7fdb29f0b939436e9249d23a5b01ea27",
+    "⚪5197a3c52c8b4b4b8f3b84e5dbeae5ac"
   ]
 }

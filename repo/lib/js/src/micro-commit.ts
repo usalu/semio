@@ -17,6 +17,18 @@ function preparedDigestPath(root: string): string {
   return join(gitDir(root), "semio-micro-commit-digest");
 }
 
+function preparedActivePath(root: string): string {
+  return join(gitDir(root), "semio-micro-commit-active");
+}
+
+function markPrepareActive(root: string): void {
+  writeFileSync(preparedActivePath(root), "1\n");
+}
+
+function isPrepareActive(root: string): boolean {
+  return existsSync(preparedActivePath(root));
+}
+
 const GK_TEMPLATE_BASENAME = "gkcommittemplate";
 
 function git(root: string, args: string[]): { ok: boolean; out: string } {
@@ -262,6 +274,7 @@ export function writeMicroCommitTemplates(root: string, message: string): void {
   writeFileSync(join(dir, "COMMIT_EDITMSG"), message);
   git(root, ["config", "--local", "commit.template", templateAbs]);
   writeFileSync(preparedDigestPath(root), `${digestMicroCommitMessage(message)}\n`);
+  markPrepareActive(root);
 }
 
 export function shouldRefreshPreparedCommitMessage(current: string, preparedDigest: string | null): boolean {
@@ -272,13 +285,20 @@ export function shouldRefreshPreparedCommitMessage(current: string, preparedDige
 }
 
 export function handlePrepareCommitMsg(root: string, msgFile: string, source: string): void {
+  if (!isPrepareActive(root)) {
+    writeFileSync(msgFile, "");
+    return;
+  }
   if (!branchAllowed(root)) return;
   const contributor = findContributor(root);
   if (!contributor) return;
   if (source === "merge" || source === "squash") return;
   const preparedBullets = readPreparedBullets(root);
   const newTickets = listAddedTicketPaths(root);
-  if (preparedBullets.length === 0 && newTickets.length === 0) return;
+  if (preparedBullets.length === 0 && newTickets.length === 0) {
+    writeFileSync(msgFile, "");
+    return;
+  }
   const digestPath = preparedDigestPath(root);
   const preparedDigest = existsSync(digestPath) ? readFileSync(digestPath, "utf8") : null;
   const current = existsSync(msgFile) ? readFileSync(msgFile, "utf8") : "";
@@ -300,11 +320,8 @@ export function installMicroCommitGitHooks(root: string): void {
 export function resetMicroCommitTemplates(root: string): void {
   const dir = gitDir(root);
   git(root, ["config", "--local", "--unset", "commit.template"]);
-  const blank = "\n";
-  writeFileSync(join(dir, "COMMIT_EDITMSG"), blank);
-  writeFileSync(join(dir, `${GK_TEMPLATE_BASENAME}.txt`), blank);
   for (const name of readdirSync(dir)) {
-    if (name.startsWith(GK_TEMPLATE_BASENAME) && name !== `${GK_TEMPLATE_BASENAME}.txt`) {
+    if (name.startsWith(GK_TEMPLATE_BASENAME)) {
       try {
         rmSync(join(dir, name), { force: true });
       } catch {
@@ -312,7 +329,9 @@ export function resetMicroCommitTemplates(root: string): void {
       }
     }
   }
-  for (const p of [preparedDigestPath(root), preparedBulletsPath(root)]) {
+  writeFileSync(join(dir, "COMMIT_EDITMSG"), "");
+  writeFileSync(join(dir, `${GK_TEMPLATE_BASENAME}.txt`), "");
+  for (const p of [preparedDigestPath(root), preparedBulletsPath(root), preparedActivePath(root)]) {
     try {
       rmSync(p, { force: true });
     } catch {
@@ -326,16 +345,6 @@ function emitPrepareStdout(message: string): void {
 }
 
 export function runMicroCommit(root: string, segments: string[]): void {
-  if (!branchAllowed(root)) {
-    console.error("micro-commit: branch must contain ⛳wip or 🏗️dev");
-    process.exit(1);
-  }
-  const contributor = findContributor(root);
-  if (!contributor) {
-    console.error(`micro-commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
-    process.exit(1);
-  }
-
   const cmd = segments[0] ?? "prepare";
   if (cmd === "reset") {
     resetMicroCommitTemplates(root);
@@ -346,6 +355,15 @@ export function runMicroCommit(root: string, segments: string[]): void {
     if (!msgFile) process.exit(1);
     handlePrepareCommitMsg(root, msgFile, segments[2] ?? "");
     process.exit(0);
+  }
+  if (!branchAllowed(root)) {
+    console.error("micro-commit: branch must contain ⛳wip or 🏗️dev");
+    process.exit(1);
+  }
+  const contributor = findContributor(root);
+  if (!contributor) {
+    console.error(`micro-commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
+    process.exit(1);
   }
   if (cmd === "stage") {
     const staged = git(root, ["add", "-A"]);

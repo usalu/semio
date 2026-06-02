@@ -2385,7 +2385,7 @@ interface PresentationInteractionState {
 	readonly clearSelection: () => void;
 	readonly toggleFullscreen: (id: string) => void;
 	readonly clearTransform: (id: string) => void;
-	readonly resetSlide: () => void;
+	readonly resetSlide: (dispositionIds: readonly string[]) => void;
 }
 
 const PresentationInteractionContext = createContext<PresentationInteractionState | null>(null);
@@ -2479,10 +2479,39 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 		});
 	}, []);
 
-	const resetSlide = useCallback(() => {
-		setSelectedIds(new Set());
-		setTransforms(new Map());
-		setFullscreenIds(new Set());
+	const resetSlide = useCallback((dispositionIds: readonly string[]) => {
+		const idSet = new Set(dispositionIds);
+		setSelectedIds((previous) => {
+			const next = new Set(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
+		setTransforms((previous) => {
+			let changed = false;
+			for (const id of idSet) {
+				if (previous.has(id)) {
+					changed = true;
+					break;
+				}
+			}
+			if (!changed) {
+				return previous;
+			}
+			const next = new Map(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
+		setFullscreenIds((previous) => {
+			const next = new Set(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
 	}, []);
 
 	return useMemo(
@@ -3320,14 +3349,24 @@ function useSlideBackgroundInteraction({
 
 const SlideInteractionReset: FC<{
 	readonly sectionRef: RefObject<HTMLElement | null>;
+	readonly dispositionIds: readonly string[];
 	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
-}> = ({ sectionRef, declaredRects }) => {
+}> = ({ sectionRef, dispositionIds, declaredRects }) => {
 	const interaction = usePresentationInteractionState();
-	const modified = slideHasEphemeralLayout(
-		interaction.transforms,
-		interaction.fullscreenIds,
-		declaredRects,
-	);
+	const modified = dispositionIds.some((id) => {
+		if (interaction.isFullscreen(id)) {
+			return true;
+		}
+		const transform = interaction.getTransform(id);
+		if (!transform) {
+			return false;
+		}
+		const declared = declaredRects.get(id);
+		if (declared === undefined) {
+			return true;
+		}
+		return dispositionPositionChanged(declared, transform);
+	});
 	const [nearHotspot, setNearHotspot] = useState(false);
 	const [hovering, setHovering] = useState(false);
 
@@ -3381,7 +3420,7 @@ const SlideInteractionReset: FC<{
 			onClick={(event) => {
 				event.preventDefault();
 				event.stopPropagation();
-				interaction.resetSlide();
+				interaction.resetSlide(dispositionIds);
 			}}
 		>
 			↺
@@ -3551,6 +3590,11 @@ const ArrangementSectionSurface: FC<{
 				.join(" ")}
 		>
 			<InteractionLayer marquee={backgroundInteraction.marquee} />
+			<SlideInteractionReset
+				sectionRef={sectionRef}
+				dispositionIds={dispositionIds}
+				declaredRects={declaredRects}
+			/>
 			{positioned ? (
 				<div className="presentation-arrangement-canvas">
 					{placements}

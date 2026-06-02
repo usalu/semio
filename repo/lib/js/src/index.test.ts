@@ -223,7 +223,8 @@ describe("micro-commit", () => {
     const tpl = spawnSync("git", ["config", "--local", "--get", "commit.template"], { cwd: root, encoding: "utf8" });
     expect(tpl.status).not.toBe(0);
     const legacy = readFileSync(join(root, ".git/gkcommittemplate.txt"), "utf8");
-    expect(legacy).toBe("\n");
+    expect(legacy).toBe("");
+    expect(existsSync(join(root, ".git/semio-micro-commit-active"))).toBe(false);
   });
 
   test("shouldRefreshPreparedCommitMessage keeps user edits", async () => {
