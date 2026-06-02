@@ -2503,6 +2503,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
 }): ReactElement {
   const {
     activePaneId,
+    hoverSourcePane,
     patchFixture,
     queueStructuralDelete,
     puzzle2dActiveTool,
@@ -2583,6 +2584,9 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     [patchFixture],
   );
   const { notifyBrushCandidates } = usePuzzle2dPlayShell();
+  const brushDrivingPaneId = hoverSourcePane ?? activePaneId;
+  const mirroredBrushSessionForPane =
+    puzzle2dActiveTool !== "brush" ? null : paneId === brushDrivingPaneId ? undefined : mirroredBrushSession;
   return (
     <Puzzle2dPaneChrome paneId={paneId}>
       <Puzzle2dCanvas
@@ -2594,7 +2598,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         contextMenu={showBackgroundMenu ? puzzle2dPlayCanvasBackgroundMenu : undefined}
         fixtureDragDrop
         activeTool={puzzle2dActiveTool}
-        brushSession={puzzle2dActiveTool === "brush" && activePaneId !== paneId ? mirroredBrushSession : null}
+        brushSession={mirroredBrushSessionForPane}
         brushFlushDistance={puzzle2dBrushFlushDistance}
         brushNodeSize={DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX}
         gridSnapEnabled={puzzle2dGridSnapEnabled}

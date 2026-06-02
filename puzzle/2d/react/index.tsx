@@ -9848,51 +9848,13 @@ export function puzzle2dCommitBrushPlacementToPlay(
 ): boolean {
   puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
   let placed = false;
-  let placedFixture: Puzzle2dFixtureV1 | null = null;
   options.patchFixture((prev) => {
     const catalogs = options.catalogsForFixture(prev);
     const result = applyBrushPlacementToFixture(prev, payload, catalogs);
     if (result.kind !== "placed") {
-      for (const peer of puzzle2dAuthoringPeerRenderers) {
-        if (!peer.authoringPeerActive()) {
-          continue;
-        }
-        if (applyBrushPlacementToRendererScene(peer, payload, catalogs)) {
-          placed = true;
-        }
-      }
-      if (!placed) {
-        return prev;
-      }
-      const sceneNodeIds = new Set<string>();
-      const sceneEdgeIds = new Set<string>();
-      for (const peer of puzzle2dAuthoringPeerRenderers) {
-        if (!peer.authoringPeerActive()) {
-          continue;
-        }
-        for (const node of peer.scene.nodes.values()) {
-          sceneNodeIds.add(node.id);
-        }
-        for (const edge of peer.scene.edges.values()) {
-          sceneEdgeIds.add(edge.id);
-        }
-      }
-      const nodeId = payload.nodeId?.trim() || `puzzle2d.brush.${crypto.randomUUID()}`;
-      const edgeId = payload.edgeId?.trim() || `puzzle2d.brush.edge.${crypto.randomUUID()}`;
-      if (!sceneNodeIds.has(nodeId)) {
-        return prev;
-      }
-      const retry = applyBrushPlacementToFixture(prev, { ...payload, nodeId, edgeId }, catalogs);
-      if (retry.kind !== "placed") {
-        return prev;
-      }
-      placedFixture = retry.fixture;
-      puzzle2dGuardBrushPlacementStructuralDeletes(retry.nodeId, retry.edgeId);
-      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(retry.fixture);
-      return retry.fixture;
+      return prev;
     }
     placed = true;
-    placedFixture = result.fixture;
     puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
     puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
     return result.fixture;
