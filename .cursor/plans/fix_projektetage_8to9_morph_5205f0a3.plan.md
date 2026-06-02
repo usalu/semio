@@ -4,7 +4,7 @@ overview: Fix the runtime auto-animate morph on slides 8 to 9 of the 33. Projekt
 todos:
   - id: ticket-repro
     content: Open presentation ticket; start projektetage dev server; add [DEBUG] logs in presentationAutoAnimateMatcher to dump focus->labels pairs and from/to rects; reproduce 8->9 in browser.
-    status: completed
+    status: in_progress
   - id: diagnose
     content: "Confirm root cause: ghost not animatable at FLIP time (visibility:hidden), data-id mismatch/duplication, or settle/dormant timing."
     status: completed
