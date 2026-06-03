@@ -8,7 +8,8 @@
   },
   "include": [
     "./index.tsx",
-    "./fixtures/**/*.ts"
+    "./fixtures/**/*.ts",
+    "./fixtures/**/*.json"
   ],
   "exclude": [
     "node_modules"

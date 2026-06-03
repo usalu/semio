@@ -54,6 +54,20 @@ function getAbsolutePath(value: string): string {
 	}
 }
 
+function packageExists(value: string): boolean {
+	try {
+		require.resolve(join(value, "package.json"));
+		return true;
+	} catch {
+		try {
+			require.resolve(join(repoRootPath, "node_modules", value, "package.json"));
+			return true;
+		} catch {
+			return false;
+		}
+	}
+}
+
 /** @emoji 🎯 True when `STORYBOOK_SCOPE` is unset (full Storybook) or matches `prefix` / `prefix/…`. */
 function storybookScopeMatches(prefix: string): boolean {
 	if (!storybookScope) return true;
@@ -63,6 +77,8 @@ function storybookScopeMatches(prefix: string): boolean {
 const loadUiStack = storybookScopeMatches("ui");
 const loadPuzzleStack = storybookScopeMatches("puzzle");
 const loadSemioStack = storybookScopeMatches("semio");
+const testLibraryStubPrefix = "\0storybook-test-library-stub:";
+const storybookTestLibraryStubs = new Set(["@testing-library/react", "@testing-library/user-event"]);
 
 function buildStorybookAliases(): Record<string, string> {
 	const alias: Record<string, string> = {};
@@ -105,6 +121,27 @@ function buildScopeWatchIgnores(): string[] {
 		return ["**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
 	}
 	return [];
+}
+
+/** @emoji 🧪 Resolves in-source test-only imports when Storybook scans source files. */
+function storybookTestLibraryStubPlugin() {
+	return {
+		name: "storybook-test-library-stubs",
+		resolveId(id: string) {
+			if (storybookTestLibraryStubs.has(id)) return `${testLibraryStubPrefix}${id}`;
+			return null;
+		},
+		load(id: string) {
+			if (!id.startsWith(testLibraryStubPrefix)) return null;
+			if (id.endsWith("@testing-library/user-event")) return "export default {};";
+			return `
+export const screen = {};
+export const fireEvent = {};
+export async function waitFor(callback) { return callback(); }
+export function render() { throw new Error("Storybook test-library stub: render is unavailable."); }
+`;
+		},
+	};
 }
 
 const config: StorybookConfig = {
@@ -165,6 +202,7 @@ const config: StorybookConfig = {
 		};
 
 		config.plugins = config.plugins || [];
+		config.plugins.push(storybookTestLibraryStubPlugin());
 		const hasTailwindPlugin = config.plugins.some(
 			(plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite",
 		);
@@ -206,7 +244,9 @@ const config: StorybookConfig = {
 		);
 
 		config.optimizeDeps = config.optimizeDeps || {};
-		config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
+		if (packageExists("golden-layout")) {
+			config.optimizeDeps.include = Array.from(new Set([...(config.optimizeDeps.include || []), "golden-layout"]));
+		}
 		const optimizeExclude = new Set<string>([
 			...(config.optimizeDeps.exclude || []),
 			"@ui/react",

@@ -278,8 +278,9 @@ export class DevScript extends Script {
   private async runStorybook(extra: string[]): Promise<void> {
     const storybook = this.parseStorybookSegments(extra);
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-    const port = process.env.STORYBOOK_PORT ?? "6010";
+    const preferredPort = Number(process.env.STORYBOOK_PORT ?? "6010");
     const useExactPort = process.env.STORYBOOK_EXACT_PORT === "1" || process.env.STORYBOOK_EXACT_PORT === "true";
+    const port = String(useExactPort ? preferredPort : await this.pickStorybookPort(preferredPort, host, 60));
     const storybookArgs = ["storybook", "dev", "-c", ".storybook", "-p", port, ...(useExactPort ? ["--exact-port"] : []), "--host", host, "--no-open", "--debug", ...storybook.args];
     runCmd("bunx", storybookArgs, {
       cwd: this.root,
@@ -290,6 +291,28 @@ export class DevScript extends Script {
         CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
       },
     });
+  }
+
+  private isTcpPortFree(port: number, host: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const server = createServer();
+      server.unref();
+      server.once("error", () => resolve(false));
+      server.listen(port, host, () => {
+        server.close(() => resolve(true));
+      });
+    });
+  }
+
+  private async pickStorybookPort(preferred: number, host: string, span: number): Promise<number> {
+    for (let port = preferred; port < preferred + span; port += 1) {
+      if (await this.isTcpPortFree(port, host)) {
+        if (port !== preferred) console.log(`[dev.storybook] port ${preferred} is busy; using ${port}.`);
+        return port;
+      }
+    }
+    console.error(`[dev.storybook] no free TCP port in ${preferred}..${preferred + span - 1}.`);
+    process.exit(1);
   }
 
   private async runStorybookStatic(): Promise<void> {

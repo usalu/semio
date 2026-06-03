@@ -844,9 +844,11 @@
       "version": "0.1.0",
       "dependencies": {
         "@ui/styling": "workspace:*",
+        "d3-force": "^3.0.0",
         "react": "^19.2.3",
       },
       "devDependencies": {
+        "@types/d3-force": "^3.0.10",
         "@types/react": "^19.2.8",
         "typescript": "^5.9.3",
       },

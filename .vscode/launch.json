@@ -86,7 +86,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):\\d+)",
         "uriFormat": "%s"
       }
     },
@@ -105,7 +105,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):\\d+)",
         "uriFormat": "%s"
       }
     },
@@ -124,7 +124,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):\\d+)",
         "uriFormat": "%s"
       }
     },
@@ -143,7 +143,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):\\d+)",
         "uriFormat": "%s"
       }
     },
@@ -162,7 +162,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):\\d+)",
         "uriFormat": "%s"
       }
     },
@@ -181,7 +181,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):\\d+)",
         "uriFormat": "%s"
       }
     },
@@ -200,7 +200,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):\\d+)",
         "uriFormat": "%s"
       }
     },
@@ -219,7 +219,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):\\d+)",
         "uriFormat": "%s"
       }
     },
