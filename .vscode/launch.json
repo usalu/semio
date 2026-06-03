@@ -406,6 +406,17 @@
       }
     },
     {
+      "name": "🛠️dev🧩widgets🧪test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @widgets/react:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 70.46
+      }
+    },
+    {
       "name": "🛠️dev👤semio🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",

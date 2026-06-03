@@ -57,6 +57,34 @@ export interface GraphWidgetProps extends Omit<ComponentPropsWithoutRef<"section
 	readonly width?: number;
 	readonly height?: number;
 }
+
+export interface GraphWidgetData {
+	readonly nodes: ReadonlyArray<GraphWidgetNode>;
+	readonly edges: ReadonlyArray<GraphWidgetEdge>;
+}
+
+export type SemioGraphStatement =
+	| {
+			readonly kind: "node";
+			readonly id: string;
+			readonly label: string;
+			readonly at: readonly [number, number];
+			readonly radius?: number;
+			readonly tone?: WidgetTone;
+	  }
+	| {
+			readonly kind: "edge";
+			readonly source: string;
+			readonly target: string;
+			readonly label?: string;
+			readonly tone?: WidgetTone;
+	  };
+
+export interface SemioLanguageGraph {
+	readonly kind: "semio.graph";
+	readonly title?: string;
+	readonly statements: ReadonlyArray<SemioGraphStatement>;
+}
 // #endregion 🧰Types
 
 // #region 🎨Theme
@@ -246,6 +274,35 @@ function resolveGraphNode(nodes: ReadonlyArray<GraphWidgetNode>, id: string): Gr
 
 function resolveGraphPalette(tone: WidgetTone): WidgetTonePalette {
 	return tonePaletteByTone[tone];
+}
+
+/** @emoji 🧬 Maps the lightweight semio graph language fixture into renderable widget data. */
+export function graphWidgetDataFromSemioLanguageGraph(graph: SemioLanguageGraph): GraphWidgetData {
+	const nodes = graph.statements
+		.filter((statement): statement is Extract<SemioGraphStatement, { kind: "node" }> => statement.kind === "node")
+		.map((statement) => ({
+			id: statement.id,
+			label: statement.label,
+			x: statement.at[0],
+			y: statement.at[1],
+			radius: statement.radius,
+			tone: statement.tone,
+		}));
+	const nodeIds = new Set(nodes.map((node) => node.id));
+	const edges = graph.statements
+		.filter((statement): statement is Extract<SemioGraphStatement, { kind: "edge" }> => statement.kind === "edge")
+		.map((statement) => {
+			if (!nodeIds.has(statement.source) || !nodeIds.has(statement.target)) {
+				throw new Error(`semio graph edge references missing node: ${statement.source}->${statement.target}`);
+			}
+			return {
+				source: statement.source,
+				target: statement.target,
+				label: statement.label,
+				tone: statement.tone,
+			};
+		});
+	return { nodes, edges };
 }
 
 /** @emoji 🌐 Graph widget styled against the semio CSS variable contract from `@ui/styling/ui.css`. */

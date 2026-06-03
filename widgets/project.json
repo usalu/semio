@@ -2,6 +2,14 @@
   "name": "@widgets/react",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "widgets",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {

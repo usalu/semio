@@ -70,8 +70,8 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@puzzle/assets"] = toVitePath(puzzleAssetsDir);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
-		alias["@widgets/react"] = toVitePath(resolve(widgetsDir, "index.tsx"));
 		alias["@widgets/react/fixtures"] = toVitePath(resolve(widgetsDir, "fixtures/index.ts"));
+		alias["@widgets/react"] = toVitePath(resolve(widgetsDir, "index.tsx"));
 		alias["@framework/playground/core"] = toVitePath(frameworkPlaygroundDir);
 		alias["@framework/playground/renderer/react"] = toVitePath(frameworkPlaygroundReactDir);
 		alias["@puzzle/2d/react"] = toVitePath(puzzle2dReactDir);
@@ -90,8 +90,8 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@semio/algorithms"] = toVitePath(semioAlgorithmsEntryPath);
 		alias["@ui/react"] = toVitePath(uiReactDir);
 		alias["@ui/styling"] = toVitePath(uiStylingDir);
-		alias["@widgets/react"] = toVitePath(resolve(widgetsDir, "index.tsx"));
 		alias["@widgets/react/fixtures"] = toVitePath(resolve(widgetsDir, "fixtures/index.ts"));
+		alias["@widgets/react"] = toVitePath(resolve(widgetsDir, "index.tsx"));
 	}
 	return alias;
 }
@@ -228,11 +228,22 @@ const config: StorybookConfig = {
 		};
 		config.build = config.build || {};
 		config.build.target = "es2022";
+		config.build.rollupOptions = {
+			...(config.build.rollupOptions || {}),
+			external: Array.from(
+				new Set([
+					...((Array.isArray(config.build.rollupOptions?.external) ? config.build.rollupOptions.external : []) as string[]),
+					"@testing-library/react",
+					"@testing-library/user-event",
+				]),
+			),
+		};
 		if (configType === "DEVELOPMENT") {
 			config.mode = "development";
 			config.define = {
 				...config.define,
 				"process.env.NODE_ENV": JSON.stringify("development"),
+				"import.meta.vitest": "undefined",
 				__STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
 				__STORYBOOK_LOAD_UI__: JSON.stringify(loadUiStack),
 				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(loadPuzzleStack),
@@ -243,6 +254,7 @@ const config: StorybookConfig = {
 			config.define = {
 				...config.define,
 				"process.env.NODE_ENV": JSON.stringify("production"),
+				"import.meta.vitest": "undefined",
 				__STORYBOOK_SCOPE__: JSON.stringify(""),
 				__STORYBOOK_LOAD_UI__: JSON.stringify(true),
 				__STORYBOOK_LOAD_PUZZLE__: JSON.stringify(true),

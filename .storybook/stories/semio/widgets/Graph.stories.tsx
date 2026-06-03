@@ -7,7 +7,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import { GraphWidget } from "@widgets/react";
-import { semioGraphWidgetFixture } from "@widgets/react/fixtures";
+import { semioGraphWidgetFixture, semioLanguageGraphFixture } from "@widgets/react/fixtures";
 
 const meta: Meta<typeof GraphWidget> = {
 	title: "semio/widgets/Graph",
@@ -26,7 +26,7 @@ const frame = (node: React.ReactNode) => (
 
 export const Default: Story = {
 	args: {
-		title: "Semio Graph",
+		title: semioLanguageGraphFixture.title,
 		subtitle: "Storybook target with components and fixture data kept in widgets.",
 		nodes: semioGraphWidgetFixture.nodes,
 		edges: semioGraphWidgetFixture.edges,
