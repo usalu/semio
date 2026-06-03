@@ -3,11 +3,12 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY } from "d3-force";
+import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type Simulation } from "d3-force";
 import {
 	useCallback,
 	useEffect,
 	useMemo,
+	useReducer,
 	useRef,
 	useState,
 	type ComponentPropsWithoutRef,
@@ -589,6 +590,7 @@ const networkGraphPanelStyle: CSSProperties = {
 	padding: "0.75rem",
 	maxHeight: "100%",
 	overflow: "auto",
+	boxSizing: "border-box",
 	zIndex: 10,
 };
 
@@ -732,6 +734,7 @@ export interface NamedGraphLayout {
 	readonly id: string;
 	readonly name: string;
 	readonly layout: GraphLayout;
+	readonly simulation?: ForceGraphLayoutConfig;
 }
 
 /** @emoji 🧲 Builds a force layout bound to a fixed {@link ForceGraphLayoutConfig}. */
@@ -739,23 +742,101 @@ export function forceGraphLayoutWithConfig(config: ForceGraphLayoutConfig): Grap
 	return (nodes, edges, options) => forceGraphLayout(nodes, edges, options, config);
 }
 
-export const forceGraphLayoutPresets: ReadonlyArray<NamedGraphLayout> = [
-	{ id: "force-balanced", name: "Force · Balanced", layout: forceGraphLayoutWithConfig(defaultForceGraphLayoutConfig) },
-	{
-		id: "force-spread",
-		name: "Force · Spread",
-		layout: forceGraphLayoutWithConfig({ chargeStrength: -280, linkDistance: 96, collideRadius: 22, centerStrength: 0.05 }),
-	},
-	{
-		id: "force-tight",
-		name: "Force · Tight",
-		layout: forceGraphLayoutWithConfig({ chargeStrength: -55, linkDistance: 26, collideRadius: 9, centerStrength: 0.22 }),
-	},
-	{
-		id: "force-clustered",
-		name: "Force · Clustered",
-		layout: forceGraphLayoutWithConfig({ chargeStrength: -160, linkDistance: 30, collideRadius: 8, centerStrength: 0.02 }),
-	},
+const forceGraphLayoutConfigs: ReadonlyArray<{ id: string; name: string; config: ForceGraphLayoutConfig }> = [
+	{ id: "force-balanced", name: "Force · Balanced", config: defaultForceGraphLayoutConfig },
+	{ id: "force-spread", name: "Force · Spread", config: { chargeStrength: -280, linkDistance: 96, collideRadius: 22, centerStrength: 0.05 } },
+	{ id: "force-tight", name: "Force · Tight", config: { chargeStrength: -55, linkDistance: 26, collideRadius: 9, centerStrength: 0.22 } },
+	{ id: "force-clustered", name: "Force · Clustered", config: { chargeStrength: -160, linkDistance: 30, collideRadius: 8, centerStrength: 0.02 } },
+];
+
+export const forceGraphLayoutPresets: ReadonlyArray<NamedGraphLayout> = forceGraphLayoutConfigs.map((entry) => ({
+	id: entry.id,
+	name: entry.name,
+	layout: forceGraphLayoutWithConfig(entry.config),
+	simulation: entry.config,
+}));
+
+/** @emoji 📐 Circular layout ordered by type then label. */
+export function circularGraphLayout(
+	nodes: ReadonlyArray<NetworkNode>,
+	_edges: ReadonlyArray<NetworkEdge>,
+	options: GraphLayoutOptions = {},
+): ReadonlyMap<string, { readonly x: number; readonly y: number }> {
+	const width = options.width ?? 800;
+	const height = options.height ?? 600;
+	const radius = Math.min(width, height) * 0.35;
+	const sorted = [...nodes].sort((a, b) => a.type.localeCompare(b.type) || a.label.localeCompare(b.label));
+	const positions = new Map<string, { x: number; y: number }>();
+	sorted.forEach((node, index) => {
+		const angle = (index / Math.max(sorted.length, 1)) * Math.PI * 2;
+		positions.set(node.id, { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
+	});
+	return positions;
+}
+
+/** @emoji 📐 Grid layout by type and label. */
+export function gridGraphLayout(
+	nodes: ReadonlyArray<NetworkNode>,
+	_edges: ReadonlyArray<NetworkEdge>,
+	options: GraphLayoutOptions = {},
+): ReadonlyMap<string, { readonly x: number; readonly y: number }> {
+	const width = options.width ?? 800;
+	const cols = Math.ceil(Math.sqrt(nodes.length));
+	const cell = Math.max(40, width / Math.max(cols, 1));
+	const sorted = [...nodes].sort((a, b) => a.type.localeCompare(b.type) || a.label.localeCompare(b.label));
+	const positions = new Map<string, { x: number; y: number }>();
+	sorted.forEach((node, index) => {
+		const col = index % cols;
+		const row = Math.floor(index / cols);
+		positions.set(node.id, { x: col * cell - width / 2, y: row * cell - (options.height ?? 600) / 4 });
+	});
+	return positions;
+}
+
+/** @emoji 📐 Radial BFS rings from highest-degree node. */
+export function radialGraphLayout(
+	nodes: ReadonlyArray<NetworkNode>,
+	edges: ReadonlyArray<NetworkEdge>,
+	options: GraphLayoutOptions = {},
+): ReadonlyMap<string, { readonly x: number; readonly y: number }> {
+	if (nodes.length === 0) return new Map();
+	const adjacency = buildAdjacency(edges);
+	const root = [...nodes].sort((a, b) => (adjacency.get(b.id)?.size ?? 0) - (adjacency.get(a.id)?.size ?? 0))[0]!;
+	const levels = new Map<string, number>();
+	const queue = [root.id];
+	levels.set(root.id, 0);
+	while (queue.length > 0) {
+		const current = queue.shift()!;
+		for (const neighbor of adjacency.get(current) ?? []) {
+			if (levels.has(neighbor)) continue;
+			levels.set(neighbor, (levels.get(current) ?? 0) + 1);
+			queue.push(neighbor);
+		}
+	}
+	const byLevel = new Map<number, string[]>();
+	for (const node of nodes) {
+		const level = levels.get(node.id) ?? 1;
+		const bucket = byLevel.get(level) ?? [];
+		bucket.push(node.id);
+		byLevel.set(level, bucket);
+	}
+	const positions = new Map<string, { x: number; y: number }>();
+	const ringGap = 55;
+	for (const [level, ids] of byLevel) {
+		ids.forEach((id, index) => {
+			const angle = (index / Math.max(ids.length, 1)) * Math.PI * 2;
+			positions.set(id, { x: Math.cos(angle) * level * ringGap, y: Math.sin(angle) * level * ringGap });
+		});
+	}
+	return positions;
+}
+
+export const graphLayoutRegistry: ReadonlyArray<NamedGraphLayout> = [
+	...forceGraphLayoutPresets,
+	{ id: "circular", name: "Circular", layout: circularGraphLayout },
+	{ id: "grid", name: "Grid", layout: gridGraphLayout },
+	{ id: "radial", name: "Radial", layout: radialGraphLayout },
+	{ id: "manual-pinned", name: "Manual · Pinned", layout: forceGraphLayout, simulation: defaultForceGraphLayoutConfig },
 ];
 // #endregion 🕸NetworkGraphLayout
 
@@ -924,6 +1005,711 @@ export function computeGraphStats(data: NetworkGraphData, options: ComputeGraphS
 }
 // #endregion 🕸NetworkGraphStats
 
+// #region 🕸NetworkGraphReadability
+export const NODE_READABLE_MAX = 150;
+export const NODE_RENDER_MAX = 1500;
+export const EDGE_READABLE_MAX = 800;
+export const EDGE_RENDER_MAX = 3000;
+export const LABEL_MAX = 120;
+// #endregion 🕸NetworkGraphReadability
+
+// #region 🕸NetworkGraphModel
+export interface GraphDegree {
+	readonly in: number;
+	readonly out: number;
+	readonly total: number;
+}
+
+export interface GraphCounts {
+	readonly nodes: number;
+	readonly edges: number;
+	readonly nodeTypes: number;
+	readonly edgeTypes: number;
+	readonly isolated: number;
+	readonly selfLoops: number;
+}
+
+export interface GraphModel {
+	readonly data: NetworkGraphData;
+	readonly nodes: ReadonlyArray<NetworkNode>;
+	readonly edges: ReadonlyArray<NetworkEdge>;
+	readonly nodeTypes: ReadonlyArray<GraphNodeTypeDef>;
+	readonly edgeTypes: ReadonlyArray<GraphEdgeTypeDef>;
+	readonly nodeById: ReadonlyMap<string, NetworkNode>;
+	readonly edgeById: ReadonlyMap<string, NetworkEdge>;
+	readonly outgoing: ReadonlyMap<string, ReadonlyArray<string>>;
+	readonly incoming: ReadonlyMap<string, ReadonlyArray<string>>;
+	readonly neighbors: ReadonlyMap<string, ReadonlySet<string>>;
+	readonly nodesByType: ReadonlyMap<string, ReadonlyArray<NetworkNode>>;
+	readonly edgesByType: ReadonlyMap<string, ReadonlyArray<NetworkEdge>>;
+	readonly degree: ReadonlyMap<string, GraphDegree>;
+	readonly propertyKeysByType: ReadonlyMap<string, ReadonlySet<string>>;
+	readonly counts: GraphCounts;
+	readonly warnings: ReadonlyArray<string>;
+	readonly temporalFields: ReadonlyArray<string>;
+	readonly locationFields: ReadonlyArray<string>;
+	readonly colors: ReadonlyMap<string, string>;
+}
+
+const TEMPORAL_PROPERTY_KEYS = new Set(["year_completed", "exported_at", "date", "timestamp", "created_at"]);
+const LOCATION_PROPERTY_KEYS = new Set(["lat", "lng", "latitude", "longitude", "location", "geo"]);
+
+/** @emoji 🧬 Normalizes {@link NetworkGraphData} into indexed graph structures for the view pipeline. */
+export function normalizeGraph(data: NetworkGraphData): GraphModel {
+	const nodeTypes = assignNodeTypeColors(data.nodeTypes);
+	const colors = new Map(nodeTypes.map((nodeType) => [nodeType.id, nodeType.color ?? NODE_TYPE_COLOR_TOKENS[0]]));
+	const nodeById = new Map(data.nodes.map((node) => [node.id, node]));
+	const edgeById = new Map(data.edges.map((edge) => [edge.id, edge]));
+	const outgoing = new Map<string, string[]>();
+	const incoming = new Map<string, string[]>();
+	const neighbors = new Map<string, Set<string>>();
+	const nodesByType = new Map<string, NetworkNode[]>();
+	const edgesByType = new Map<string, NetworkEdge[]>();
+	const degree = new Map<string, GraphDegree>();
+	const propertyKeysByType = new Map<string, Set<string>>();
+	let selfLoops = 0;
+	for (const node of data.nodes) {
+		degree.set(node.id, { in: 0, out: 0, total: 0 });
+		const bucket = nodesByType.get(node.type) ?? [];
+		bucket.push(node);
+		nodesByType.set(node.type, bucket);
+		const keys = propertyKeysByType.get(node.type) ?? new Set<string>();
+		for (const key of Object.keys(node.properties ?? {})) keys.add(key);
+		propertyKeysByType.set(node.type, keys);
+	}
+	for (const edge of data.edges) {
+		const out = outgoing.get(edge.source) ?? [];
+		out.push(edge.id);
+		outgoing.set(edge.source, out);
+		const inc = incoming.get(edge.target) ?? [];
+		inc.push(edge.id);
+		incoming.set(edge.target, inc);
+		const sourceNeighbors = neighbors.get(edge.source) ?? new Set();
+		sourceNeighbors.add(edge.target);
+		neighbors.set(edge.source, sourceNeighbors);
+		const targetNeighbors = neighbors.get(edge.target) ?? new Set();
+		targetNeighbors.add(edge.source);
+		neighbors.set(edge.target, targetNeighbors);
+		const edgeBucket = edgesByType.get(edge.type) ?? [];
+		edgeBucket.push(edge);
+		edgesByType.set(edge.type, edgeBucket);
+		if (edge.source === edge.target) selfLoops += 1;
+		const sourceDegree = degree.get(edge.source)!;
+		const targetDegree = degree.get(edge.target)!;
+		degree.set(edge.source, { in: sourceDegree.in, out: sourceDegree.out + 1, total: sourceDegree.total + 1 });
+		degree.set(edge.target, { in: targetDegree.in + 1, out: targetDegree.out, total: targetDegree.total + 1 });
+	}
+	const isolated = [...degree.values()].filter((entry) => entry.total === 0).length;
+	const temporalFields = [...new Set([...propertyKeysByType.values()].flatMap((keys) => [...keys]).filter((key) => TEMPORAL_PROPERTY_KEYS.has(key)))];
+	const locationFields = [...new Set([...propertyKeysByType.values()].flatMap((keys) => [...keys]).filter((key) => LOCATION_PROPERTY_KEYS.has(key)))];
+	const warnings: string[] = [];
+	if (isolated > 0) warnings.push(`${isolated} isolated nodes`);
+	if (data.nodes.length > NODE_READABLE_MAX) warnings.push(`Large graph (${data.nodes.length} nodes); schema view recommended`);
+	return {
+		data,
+		nodes: data.nodes,
+		edges: data.edges,
+		nodeTypes,
+		edgeTypes: data.edgeTypes,
+		nodeById,
+		edgeById,
+		outgoing,
+		incoming,
+		neighbors,
+		nodesByType,
+		edgesByType,
+		degree,
+		propertyKeysByType,
+		counts: {
+			nodes: data.nodes.length,
+			edges: data.edges.length,
+			nodeTypes: nodeTypes.length,
+			edgeTypes: data.edgeTypes.length,
+			isolated,
+			selfLoops,
+		},
+		warnings,
+		temporalFields,
+		locationFields,
+		colors,
+	};
+}
+// #endregion 🕸NetworkGraphModel
+
+// #region 🕸NetworkGraphState
+export type VisualizationMode = "auto" | "schema" | "full" | "subgraph" | "ego" | "path" | "process" | "clustered" | "matrix";
+export type NeighborhoodDirection = "in" | "out" | "both";
+export type GroupingMode = "none" | "type" | "property";
+export type AggregationMode = "none" | "byType" | "byGroup";
+export type NodeSizeMetric = "uniform" | "degree" | "in" | "out";
+export type EdgeWidthMetric = "uniform" | "count";
+export type PropertyFilterOp = "eq" | "neq" | "contains" | "exists";
+
+export interface PropertyFilter {
+	readonly key: string;
+	readonly op: PropertyFilterOp;
+	readonly value?: string;
+}
+
+export interface GraphViewTransform {
+	readonly x: number;
+	readonly y: number;
+	readonly k: number;
+}
+
+export interface GraphViewState {
+	readonly mode: VisualizationMode;
+	readonly layoutId: string;
+	readonly activeNodeTypes: ReadonlySet<string>;
+	readonly activeEdgeTypes: ReadonlySet<string>;
+	readonly activeLensName: string;
+	readonly selectedNodeId?: string;
+	readonly selectedEdgeId?: string;
+	readonly secondNodeId?: string;
+	readonly propertyFilters: ReadonlyArray<PropertyFilter>;
+	readonly searchQuery: string;
+	readonly depth: number;
+	readonly direction: NeighborhoodDirection;
+	readonly groupingMode: GroupingMode;
+	readonly aggregationMode: AggregationMode;
+	readonly showLabels: boolean;
+	readonly showEdges: boolean;
+	readonly nodeSizeMetric: NodeSizeMetric;
+	readonly edgeWidthMetric: EdgeWidthMetric;
+	readonly pinnedNodeIds: ReadonlySet<string>;
+	readonly collapsedGroupIds: ReadonlySet<string>;
+	readonly highlightedPath: ReadonlyArray<string>;
+	readonly transform: GraphViewTransform;
+	readonly settingsOpen: boolean;
+	readonly hoveredNodeId?: string;
+}
+
+export type GraphViewAction =
+	| { readonly type: "setMode"; readonly mode: VisualizationMode }
+	| { readonly type: "setLayoutId"; readonly layoutId: string }
+	| { readonly type: "toggleNodeType"; readonly nodeTypeId: string }
+	| { readonly type: "toggleEdgeType"; readonly edgeTypeId: string }
+	| { readonly type: "setActiveNodeTypes"; readonly nodeTypeIds: ReadonlyArray<string> }
+	| { readonly type: "setActiveEdgeTypes"; readonly edgeTypeIds: ReadonlyArray<string> }
+	| { readonly type: "applyLens"; readonly lens: NetworkLens; readonly allEdgeTypeIds: ReadonlyArray<string> }
+	| { readonly type: "selectNode"; readonly nodeId?: string }
+	| { readonly type: "selectEdge"; readonly edgeId?: string }
+	| { readonly type: "setSecondNode"; readonly nodeId?: string }
+	| { readonly type: "setSearchQuery"; readonly searchQuery: string }
+	| { readonly type: "setDepth"; readonly depth: number }
+	| { readonly type: "setDirection"; readonly direction: NeighborhoodDirection }
+	| { readonly type: "setGroupingMode"; readonly groupingMode: GroupingMode }
+	| { readonly type: "setAggregationMode"; readonly aggregationMode: AggregationMode }
+	| { readonly type: "setShowLabels"; readonly showLabels: boolean }
+	| { readonly type: "setShowEdges"; readonly showEdges: boolean }
+	| { readonly type: "setNodeSizeMetric"; readonly nodeSizeMetric: NodeSizeMetric }
+	| { readonly type: "setEdgeWidthMetric"; readonly edgeWidthMetric: EdgeWidthMetric }
+	| { readonly type: "togglePin"; readonly nodeId: string }
+	| { readonly type: "toggleGroupCollapse"; readonly groupId: string }
+	| { readonly type: "setHighlightedPath"; readonly path: ReadonlyArray<string> }
+	| { readonly type: "setTransform"; readonly transform: GraphViewTransform }
+	| { readonly type: "setSettingsOpen"; readonly settingsOpen: boolean }
+	| { readonly type: "setHoveredNode"; readonly nodeId?: string }
+	| { readonly type: "addPropertyFilter"; readonly filter: PropertyFilter }
+	| { readonly type: "removePropertyFilter"; readonly index: number }
+	| { readonly type: "resetView"; readonly model: GraphModel }
+	| { readonly type: "isolateSelection"; readonly model: GraphModel };
+
+export interface DefaultViewStateOptions {
+	readonly initialActiveNodeTypes?: ReadonlyArray<string>;
+	readonly initialActiveEdgeTypes?: ReadonlyArray<string>;
+	readonly initialLensName?: string;
+	readonly initialSelectedNodeId?: string;
+	readonly initialLayoutId?: string;
+}
+
+/** @emoji 🎛️ Initial view state derived from the normalized graph model. */
+export function defaultViewState(model: GraphModel, options: DefaultViewStateOptions = {}): GraphViewState {
+	return {
+		mode: model.counts.nodes > NODE_READABLE_MAX ? "schema" : "auto",
+		layoutId: options.initialLayoutId ?? "force-balanced",
+		activeNodeTypes: new Set(options.initialActiveNodeTypes ?? model.nodeTypes.map((nodeType) => nodeType.id)),
+		activeEdgeTypes: new Set(options.initialActiveEdgeTypes ?? model.edgeTypes.map((edgeType) => edgeType.id)),
+		activeLensName: options.initialLensName ?? model.data.lenses?.[0]?.name ?? CUSTOM_LENS_NAME,
+		selectedNodeId: options.initialSelectedNodeId,
+		propertyFilters: [],
+		searchQuery: "",
+		depth: 1,
+		direction: "both",
+		groupingMode: "none",
+		aggregationMode: "none",
+		showLabels: true,
+		showEdges: true,
+		nodeSizeMetric: "degree",
+		edgeWidthMetric: "uniform",
+		pinnedNodeIds: new Set(),
+		collapsedGroupIds: new Set(),
+		highlightedPath: [],
+		transform: { x: 0, y: 0, k: 1 },
+		settingsOpen: false,
+	};
+}
+
+/** @emoji 🎛️ Reducer for {@link GraphViewState}. */
+export function graphViewReducer(state: GraphViewState, action: GraphViewAction): GraphViewState {
+	switch (action.type) {
+		case "setMode":
+			return { ...state, mode: action.mode };
+		case "setLayoutId":
+			return { ...state, layoutId: action.layoutId };
+		case "toggleNodeType": {
+			const next = new Set(state.activeNodeTypes);
+			if (next.has(action.nodeTypeId)) next.delete(action.nodeTypeId);
+			else next.add(action.nodeTypeId);
+			return { ...state, activeNodeTypes: next, activeLensName: CUSTOM_LENS_NAME };
+		}
+		case "toggleEdgeType": {
+			const next = new Set(state.activeEdgeTypes);
+			if (next.has(action.edgeTypeId)) next.delete(action.edgeTypeId);
+			else next.add(action.edgeTypeId);
+			return { ...state, activeEdgeTypes: next, activeLensName: CUSTOM_LENS_NAME };
+		}
+		case "setActiveNodeTypes":
+			return { ...state, activeNodeTypes: new Set(action.nodeTypeIds) };
+		case "setActiveEdgeTypes":
+			return { ...state, activeEdgeTypes: new Set(action.edgeTypeIds) };
+		case "applyLens":
+			return {
+				...state,
+				activeNodeTypes: new Set(action.lens.nodeTypes),
+				activeEdgeTypes: new Set(action.lens.edgeTypes.length > 0 ? action.lens.edgeTypes : action.allEdgeTypeIds),
+				activeLensName: action.lens.name,
+			};
+		case "selectNode":
+			return { ...state, selectedNodeId: action.nodeId, selectedEdgeId: undefined, mode: action.nodeId && state.mode === "auto" ? "ego" : state.mode };
+		case "selectEdge":
+			return { ...state, selectedEdgeId: action.edgeId, selectedNodeId: undefined };
+		case "setSecondNode":
+			return { ...state, secondNodeId: action.nodeId, mode: action.nodeId && state.selectedNodeId ? "path" : state.mode };
+		case "setSearchQuery":
+			return { ...state, searchQuery: action.searchQuery };
+		case "setDepth":
+			return { ...state, depth: action.depth };
+		case "setDirection":
+			return { ...state, direction: action.direction };
+		case "setGroupingMode":
+			return { ...state, groupingMode: action.groupingMode };
+		case "setAggregationMode":
+			return { ...state, aggregationMode: action.aggregationMode };
+		case "setShowLabels":
+			return { ...state, showLabels: action.showLabels };
+		case "setShowEdges":
+			return { ...state, showEdges: action.showEdges };
+		case "setNodeSizeMetric":
+			return { ...state, nodeSizeMetric: action.nodeSizeMetric };
+		case "setEdgeWidthMetric":
+			return { ...state, edgeWidthMetric: action.edgeWidthMetric };
+		case "togglePin": {
+			const next = new Set(state.pinnedNodeIds);
+			if (next.has(action.nodeId)) next.delete(action.nodeId);
+			else next.add(action.nodeId);
+			return { ...state, pinnedNodeIds: next, layoutId: "manual-pinned" };
+		}
+		case "toggleGroupCollapse": {
+			const next = new Set(state.collapsedGroupIds);
+			if (next.has(action.groupId)) next.delete(action.groupId);
+			else next.add(action.groupId);
+			return { ...state, collapsedGroupIds: next };
+		}
+		case "setHighlightedPath":
+			return { ...state, highlightedPath: action.path };
+		case "setTransform":
+			return { ...state, transform: action.transform };
+		case "setSettingsOpen":
+			return { ...state, settingsOpen: action.settingsOpen };
+		case "setHoveredNode":
+			return { ...state, hoveredNodeId: action.nodeId };
+		case "addPropertyFilter":
+			return { ...state, propertyFilters: [...state.propertyFilters, action.filter] };
+		case "removePropertyFilter":
+			return { ...state, propertyFilters: state.propertyFilters.filter((_, index) => index !== action.index) };
+		case "resetView":
+			return defaultViewState(action.model, {
+				initialActiveNodeTypes: [...state.activeNodeTypes],
+				initialActiveEdgeTypes: [...state.activeEdgeTypes],
+				initialLensName: state.activeLensName,
+				initialLayoutId: state.layoutId,
+			});
+		case "isolateSelection": {
+			if (!state.selectedNodeId) return state;
+			const neighborIds = action.model.neighbors.get(state.selectedNodeId) ?? new Set<string>();
+			const nodeIds = new Set([state.selectedNodeId, ...neighborIds]);
+			const types = new Set(
+				[...nodeIds]
+					.map((id) => action.model.nodeById.get(id)?.type)
+					.filter((type): type is string => Boolean(type)),
+			);
+			return { ...state, activeNodeTypes: types, mode: "subgraph", activeLensName: CUSTOM_LENS_NAME };
+		}
+		default:
+			return state;
+	}
+}
+// #endregion 🕸NetworkGraphState
+
+// #region 🕸NetworkGraphModes
+export interface ModeGraph {
+	readonly nodes: NetworkNode[];
+	readonly edges: NetworkEdge[];
+	readonly schema?: boolean;
+}
+
+function filterByTypes(model: GraphModel, state: GraphViewState): ModeGraph {
+	const nodes = model.nodes.filter((node) => state.activeNodeTypes.has(node.type));
+	const nodeIds = new Set(nodes.map((node) => node.id));
+	const edges = model.edges.filter(
+		(edge) => state.activeEdgeTypes.has(edge.type) && nodeIds.has(edge.source) && nodeIds.has(edge.target),
+	);
+	return { nodes, edges };
+}
+
+function matchesPropertyFilters(node: NetworkNode, filters: ReadonlyArray<PropertyFilter>): boolean {
+	for (const filter of filters) {
+		const value = node.properties?.[filter.key];
+		if (filter.op === "exists") {
+			if (value === undefined || value === null || value === "") return false;
+			continue;
+		}
+		const text = String(value ?? "");
+		if (filter.op === "eq" && text !== (filter.value ?? "")) return false;
+		if (filter.op === "neq" && text === (filter.value ?? "")) return false;
+		if (filter.op === "contains" && !text.toLowerCase().includes((filter.value ?? "").toLowerCase())) return false;
+	}
+	return true;
+}
+
+function filterBySearch(nodes: NetworkNode[], query: string): NetworkNode[] {
+	const trimmed = query.trim().toLowerCase();
+	if (!trimmed) return nodes;
+	return nodes.filter((node) => {
+		if (node.label.toLowerCase().includes(trimmed) || node.id.toLowerCase().includes(trimmed)) return true;
+		for (const value of Object.values(node.properties ?? {})) {
+			if (String(value).toLowerCase().includes(trimmed)) return true;
+		}
+		return false;
+	});
+}
+
+function applySchemaMode(model: GraphModel, state: GraphViewState): ModeGraph {
+	const nodes: NetworkNode[] = model.nodeTypes
+		.filter((nodeType) => state.activeNodeTypes.has(nodeType.id))
+		.map((nodeType) => ({
+			id: `schema:${nodeType.id}`,
+			type: nodeType.id,
+			label: nodeType.label,
+			properties: { count: nodeType.count ?? model.nodesByType.get(nodeType.id)?.length ?? 0 },
+		}));
+	const nodeIds = new Set(nodes.map((node) => node.id));
+	const edgeCounts = new Map<string, { type: string; source: string; target: string; count: number }>();
+	for (const edge of model.edges) {
+		if (!state.activeEdgeTypes.has(edge.type)) continue;
+		const sourceNode = model.nodeById.get(edge.source);
+		const targetNode = model.nodeById.get(edge.target);
+		if (!sourceNode || !targetNode) continue;
+		if (!state.activeNodeTypes.has(sourceNode.type) || !state.activeNodeTypes.has(targetNode.type)) continue;
+		const sourceId = `schema:${sourceNode.type}`;
+		const targetId = `schema:${targetNode.type}`;
+		if (!nodeIds.has(sourceId) || !nodeIds.has(targetId)) continue;
+		const key = `${edge.type}:${sourceId}:${targetId}`;
+		const existing = edgeCounts.get(key);
+		if (existing) existing.count += 1;
+		else edgeCounts.set(key, { type: edge.type, source: sourceId, target: targetId, count: 1 });
+	}
+	const edges: NetworkEdge[] = [...edgeCounts.values()].map((entry, index) => ({
+		id: `schema-edge:${index}`,
+		source: entry.source,
+		target: entry.target,
+		type: entry.type,
+	}));
+	return { nodes, edges, schema: true };
+}
+
+function bfsNeighborhood(
+	model: GraphModel,
+	rootId: string,
+	depth: number,
+	direction: NeighborhoodDirection,
+): Set<string> {
+	const visited = new Set<string>([rootId]);
+	const queue: Array<{ id: string; level: number }> = [{ id: rootId, level: 0 }];
+	while (queue.length > 0) {
+		const current = queue.shift()!;
+		if (current.level >= depth) continue;
+		if (direction === "out" || direction === "both") {
+			for (const edgeId of model.outgoing.get(current.id) ?? []) {
+				const edge = model.edgeById.get(edgeId);
+				if (!edge) continue;
+				if (!visited.has(edge.target)) {
+					visited.add(edge.target);
+					queue.push({ id: edge.target, level: current.level + 1 });
+				}
+			}
+		}
+		if (direction === "in" || direction === "both") {
+			for (const edgeId of model.incoming.get(current.id) ?? []) {
+				const edge = model.edgeById.get(edgeId);
+				if (!edge) continue;
+				if (!visited.has(edge.source)) {
+					visited.add(edge.source);
+					queue.push({ id: edge.source, level: current.level + 1 });
+				}
+			}
+		}
+	}
+	return visited;
+}
+
+function shortestPathNodeIds(model: GraphModel, startId: string, endId: string): string[] {
+	if (startId === endId) return [startId];
+	const queue = [startId];
+	const previous = new Map<string, string>();
+	const visited = new Set([startId]);
+	while (queue.length > 0) {
+		const current = queue.shift()!;
+		if (current === endId) {
+			const path = [endId];
+			let cursor = previous.get(endId);
+			while (cursor) {
+				path.unshift(cursor);
+				cursor = previous.get(cursor);
+			}
+			return path;
+		}
+		for (const neighbor of model.neighbors.get(current) ?? []) {
+			if (visited.has(neighbor)) continue;
+			visited.add(neighbor);
+			previous.set(neighbor, current);
+			queue.push(neighbor);
+		}
+	}
+	return [];
+}
+
+function applyEgoMode(model: GraphModel, state: GraphViewState, base: ModeGraph): ModeGraph {
+	if (!state.selectedNodeId) return applySchemaMode(model, state);
+	const allowed = bfsNeighborhood(model, state.selectedNodeId, state.depth, state.direction);
+	const nodes = base.nodes.filter((node) => allowed.has(node.id));
+	const nodeIds = new Set(nodes.map((node) => node.id));
+	const edges = base.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target));
+	return { nodes, edges };
+}
+
+function applyPathMode(model: GraphModel, state: GraphViewState, base: ModeGraph): ModeGraph {
+	if (!state.selectedNodeId || !state.secondNodeId) return applyEgoMode(model, state, base);
+	const pathIds = shortestPathNodeIds(model, state.selectedNodeId, state.secondNodeId);
+	if (pathIds.length === 0) return applyEgoMode(model, state, base);
+	const allowed = new Set(pathIds);
+	const nodes = base.nodes.filter((node) => allowed.has(node.id));
+	const nodeIds = new Set(nodes.map((node) => node.id));
+	const edges = base.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target));
+	return { nodes, edges };
+}
+
+function applyModeGraph(model: GraphModel, state: GraphViewState, mode: VisualizationMode): ModeGraph {
+	let base = filterByTypes(model, state);
+	base = { nodes: filterBySearch(base.nodes, state.searchQuery), edges: base.edges };
+	base = {
+		nodes: base.nodes.filter((node) => matchesPropertyFilters(node, state.propertyFilters)),
+		edges: base.edges,
+	};
+	const nodeIds = new Set(base.nodes.map((node) => node.id));
+	base = { nodes: base.nodes, edges: base.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)) };
+	switch (mode) {
+		case "schema":
+			return applySchemaMode(model, state);
+		case "ego":
+			return applyEgoMode(model, state, base);
+		case "path":
+			return applyPathMode(model, state, base);
+		case "full":
+			return base;
+		case "process":
+		case "clustered":
+		case "matrix":
+		case "subgraph":
+		default:
+			return base;
+	}
+}
+
+/** @emoji 🎯 Suggests a visualization mode from graph size and selection. */
+export function suggestMode(model: GraphModel, state: GraphViewState): { mode: VisualizationMode; reason: string } {
+	if (state.selectedNodeId && state.secondNodeId) return { mode: "path", reason: "Two nodes selected" };
+	if (state.selectedNodeId) return { mode: "ego", reason: "Node selected" };
+	if (model.counts.nodes > NODE_READABLE_MAX) return { mode: "schema", reason: "Large graph" };
+	if (model.counts.edges > EDGE_READABLE_MAX) return { mode: "matrix", reason: "Dense graph" };
+	return { mode: "full", reason: "Readable overview" };
+}
+
+function resolveEffectiveMode(model: GraphModel, state: GraphViewState): VisualizationMode {
+	if (state.mode !== "auto") return state.mode;
+	return suggestMode(model, state).mode;
+}
+
+/** @emoji 📐 Layouts available for the active visualization mode. */
+export function availableLayoutsForMode(mode: VisualizationMode, _model: GraphModel): ReadonlyArray<NamedGraphLayout> {
+	if (mode === "matrix") return graphLayoutRegistry.filter((entry) => entry.id === "grid");
+	if (mode === "schema") return graphLayoutRegistry.filter((entry) => ["circular", "grid", "force-balanced"].includes(entry.id));
+	return graphLayoutRegistry;
+}
+// #endregion 🕸NetworkGraphModes
+
+// #region 🕸NetworkGraphPipeline
+export interface RenderNode {
+	readonly id: string;
+	readonly label: string;
+	readonly type: string;
+	readonly color: string;
+	readonly size: number;
+	readonly pinned: boolean;
+	readonly dimmed: boolean;
+	readonly isGroup: boolean;
+	readonly memberIds?: ReadonlyArray<string>;
+	readonly schema?: boolean;
+}
+
+export interface RenderEdge {
+	readonly id: string;
+	readonly source: string;
+	readonly target: string;
+	readonly type: string;
+	readonly color: string;
+	readonly width: number;
+	readonly directed: boolean;
+	readonly dashed: boolean;
+	readonly dimmed: boolean;
+	readonly count?: number;
+}
+
+export interface RenderLegendEntry {
+	readonly id: string;
+	readonly label: string;
+	readonly color: string;
+}
+
+export interface RenderGraph {
+	readonly nodes: ReadonlyArray<RenderNode>;
+	readonly edges: ReadonlyArray<RenderEdge>;
+	readonly layoutNodes: ReadonlyArray<NetworkNode>;
+	readonly layoutEdges: ReadonlyArray<NetworkEdge>;
+	readonly effectiveMode: VisualizationMode;
+	readonly layoutId: string;
+	readonly legend: {
+		readonly nodeTypes: ReadonlyArray<RenderLegendEntry>;
+		readonly edgeTypes: ReadonlyArray<RenderLegendEntry>;
+		readonly sizeMetric: NodeSizeMetric;
+		readonly widthMetric: EdgeWidthMetric;
+	};
+	readonly warnings: ReadonlyArray<string>;
+	readonly suggestions: ReadonlyArray<{ action: string; reason: string }>;
+	readonly showLabels: boolean;
+	readonly matrix?: boolean;
+}
+
+function nodeSizeForMetric(model: GraphModel, node: NetworkNode, metric: NodeSizeMetric, schema?: boolean): number {
+	if (schema) return 12;
+	if (metric === "uniform") return 6;
+	const degree = model.degree.get(node.id);
+	if (!degree) return 5;
+	if (metric === "in") return Math.min(14, 4 + degree.in);
+	if (metric === "out") return Math.min(14, 4 + degree.out);
+	return Math.min(14, 4 + Math.sqrt(degree.total));
+}
+
+function edgeWidthForMetric(metric: EdgeWidthMetric, count = 1): number {
+	if (metric === "count") return Math.min(4, 1 + Math.log2(count + 1));
+	return 1.5;
+}
+
+/** @emoji 🔀 Builds a render-ready view graph from model and view state. */
+export function buildViewGraph(
+	model: GraphModel,
+	state: GraphViewState,
+	viewport: { width: number; height: number },
+): RenderGraph {
+	const effectiveMode = resolveEffectiveMode(model, state);
+	const modeGraph = applyModeGraph(model, state, effectiveMode);
+	const warnings = [...model.warnings];
+	const suggestions: Array<{ action: string; reason: string }> = [];
+	let showLabels = state.showLabels;
+	if (modeGraph.nodes.length > LABEL_MAX) {
+		showLabels = false;
+		warnings.push(`Labels hidden (${modeGraph.nodes.length} nodes)`);
+		suggestions.push({ action: "Filter types", reason: "Too many nodes for labels" });
+	}
+	if (modeGraph.nodes.length > NODE_RENDER_MAX) {
+		warnings.push(`Rendering capped; switch to schema view`);
+		suggestions.push({ action: "Schema view", reason: "Graph too large" });
+	}
+	const selectedNeighbors = state.selectedNodeId
+		? new Set([state.selectedNodeId, ...(model.neighbors.get(state.selectedNodeId) ?? [])])
+		: null;
+	const renderNodes: RenderNode[] = modeGraph.nodes.map((node) => {
+		const dimmed = selectedNeighbors ? !selectedNeighbors.has(node.id) : false;
+		return {
+			id: node.id,
+			label: node.label,
+			type: node.type,
+			color: model.colors.get(node.type) ?? NODE_TYPE_COLOR_TOKENS[0],
+			size: nodeSizeForMetric(model, node, state.nodeSizeMetric, modeGraph.schema),
+			pinned: state.pinnedNodeIds.has(node.id),
+			dimmed,
+			isGroup: node.id.startsWith("schema:"),
+			schema: modeGraph.schema,
+		};
+	});
+	const edgeTypeColors = new Map(model.edgeTypes.map((edgeType, index) => [edgeType.id, NODE_TYPE_COLOR_TOKENS[index % NODE_TYPE_COLOR_TOKENS.length]]));
+	const renderEdges: RenderEdge[] = state.showEdges
+		? modeGraph.edges.map((edge) => {
+				const highlighted =
+					!selectedNeighbors || (selectedNeighbors.has(edge.source) && selectedNeighbors.has(edge.target));
+				const parallelKey = `${edge.type}:${edge.source}:${edge.target}`;
+				return {
+					id: edge.id,
+					source: edge.source,
+					target: edge.target,
+					type: edge.type,
+					color: edgeTypeColors.get(edge.type) ?? "var(--muted-foreground, #7b827d)",
+					width: edgeWidthForMetric(state.edgeWidthMetric, modeGraph.schema ? 2 : 1),
+					directed: true,
+					dashed: Boolean(modeGraph.schema),
+					dimmed: !highlighted,
+					count: modeGraph.schema ? 2 : undefined,
+				};
+			})
+		: [];
+	const activeNodeTypeLegend = model.nodeTypes
+		.filter((nodeType) => state.activeNodeTypes.has(nodeType.id))
+		.map((nodeType) => ({ id: nodeType.id, label: nodeType.label, color: model.colors.get(nodeType.id) ?? NODE_TYPE_COLOR_TOKENS[0] }));
+	const activeEdgeTypeLegend = model.edgeTypes
+		.filter((edgeType) => state.activeEdgeTypes.has(edgeType.id))
+		.map((edgeType) => ({ id: edgeType.id, label: edgeType.label, color: edgeTypeColors.get(edgeType.id) ?? "var(--muted-foreground, #7b827d)" }));
+	return {
+		nodes: renderNodes,
+		edges: renderEdges,
+		layoutNodes: modeGraph.nodes,
+		layoutEdges: modeGraph.edges,
+		effectiveMode,
+		layoutId: state.layoutId,
+		legend: {
+			nodeTypes: activeNodeTypeLegend,
+			edgeTypes: activeEdgeTypeLegend,
+			sizeMetric: state.nodeSizeMetric,
+			widthMetric: state.edgeWidthMetric,
+		},
+		warnings,
+		suggestions,
+		showLabels,
+		matrix: effectiveMode === "matrix" && modeGraph.nodes.length <= 40,
+	};
+}
+// #endregion 🕸NetworkGraphPipeline
+
 // #region 🕸NetworkGraphWidget
 function fitTransform(
 	positions: ReadonlyMap<string, { readonly x: number; readonly y: number }>,
@@ -963,7 +1749,7 @@ export function NetworkGraphWidget({
 	initialLensName,
 	initialSelectedNodeId,
 	layout,
-	layouts = forceGraphLayoutPresets,
+	layouts = graphLayoutRegistry,
 	initialLayoutId,
 	layoutOptions,
 	height = "100%",
@@ -974,26 +1760,64 @@ export function NetworkGraphWidget({
 	const shellRef = useRef<HTMLElement>(null);
 	const canvasAreaRef = useRef<HTMLDivElement>(null);
 	const [shellSize, setShellSize] = useState({ width: 800, height: 520 });
-	const colors = useMemo(() => nodeTypeColorMap(data), [data]);
-	const allNodeTypeIds = useMemo(() => data.nodeTypes.map((nodeType) => nodeType.id), [data.nodeTypes]);
-	const allEdgeTypeIds = useMemo(() => data.edgeTypes.map((edgeType) => edgeType.id), [data.edgeTypes]);
+	const model = useMemo(() => normalizeGraph(data), [data]);
+	const allEdgeTypeIds = useMemo(() => model.edgeTypes.map((edgeType) => edgeType.id), [model.edgeTypes]);
 	const lenses = lensesProp ?? data.lenses ?? [];
-	const [activeNodeTypes, setActiveNodeTypes] = useState<Set<string>>(
-		() => new Set(initialActiveNodeTypes ?? allNodeTypeIds),
+	const [viewState, dispatch] = useReducer(
+		graphViewReducer,
+		undefined,
+		() =>
+			defaultViewState(model, {
+				initialActiveNodeTypes,
+				initialActiveEdgeTypes,
+				initialLensName,
+				initialSelectedNodeId,
+				initialLayoutId,
+			}),
 	);
-	const [activeEdgeTypes, setActiveEdgeTypes] = useState<Set<string>>(
-		() => new Set(initialActiveEdgeTypes ?? allEdgeTypeIds),
+	const renderState = useMemo<GraphViewState>(
+		() => ({
+			...viewState,
+			transform: { x: 0, y: 0, k: 1 },
+			settingsOpen: false,
+			hoveredNodeId: undefined,
+		}),
+		[
+			viewState.mode,
+			viewState.layoutId,
+			viewState.activeNodeTypes,
+			viewState.activeEdgeTypes,
+			viewState.activeLensName,
+			viewState.selectedNodeId,
+			viewState.selectedEdgeId,
+			viewState.secondNodeId,
+			viewState.propertyFilters,
+			viewState.searchQuery,
+			viewState.depth,
+			viewState.direction,
+			viewState.groupingMode,
+			viewState.aggregationMode,
+			viewState.showLabels,
+			viewState.showEdges,
+			viewState.nodeSizeMetric,
+			viewState.edgeWidthMetric,
+			viewState.pinnedNodeIds,
+			viewState.collapsedGroupIds,
+			viewState.highlightedPath,
+		],
 	);
-	const [activeLensName, setActiveLensName] = useState(initialLensName ?? lenses[0]?.name ?? CUSTOM_LENS_NAME);
-	const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(initialSelectedNodeId);
-	const [hoveredNodeId, setHoveredNodeId] = useState<string | undefined>();
-	const [showLabels, setShowLabels] = useState(true);
-	const [settingsOpen, setSettingsOpen] = useState(false);
-	const [selectedLayoutId, setSelectedLayoutId] = useState(initialLayoutId ?? layouts[0]?.id);
-	const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
-	const activeLayout = useMemo(
-		() => layout ?? layouts.find((entry) => entry.id === selectedLayoutId)?.layout ?? layouts[0]?.layout ?? forceGraphLayout,
-		[layout, layouts, selectedLayoutId],
+	const viewGraph = useMemo(() => buildViewGraph(model, renderState, shellSize), [model, renderState, shellSize]);
+	const modeLayouts = useMemo(
+		() => availableLayoutsForMode(viewGraph.effectiveMode, model),
+		[model, viewGraph.effectiveMode],
+	);
+	const activeLayoutFn = useMemo(
+		() =>
+			layout ??
+			modeLayouts.find((entry) => entry.id === viewState.layoutId)?.layout ??
+			modeLayouts[0]?.layout ??
+			graphLayoutRegistry[0]!.layout,
+		[layout, modeLayouts, viewState.layoutId],
 	);
 	const panRef = useRef<{ active: boolean; x: number; y: number; originX: number; originY: number }>({
 		active: false,
@@ -1017,93 +1841,54 @@ export function NetworkGraphWidget({
 
 	const positions = useMemo(
 		() =>
-			activeLayout(data.nodes, data.edges, {
+			activeLayoutFn(viewGraph.layoutNodes, viewGraph.layoutEdges, {
 				width: shellSize.width,
 				height: shellSize.height,
 				...layoutOptions,
 			}),
-		[activeLayout, data.nodes, data.edges, layoutOptions, shellSize.height, shellSize.width],
+		[activeLayoutFn, viewGraph.layoutNodes, viewGraph.layoutEdges, layoutOptions, shellSize.height, shellSize.width],
 	);
-
-	const visibleNodes = useMemo(
-		() => data.nodes.filter((node) => activeNodeTypes.has(node.type)),
-		[data.nodes, activeNodeTypes],
-	);
-	const visibleNodeIds = useMemo(() => new Set(visibleNodes.map((node) => node.id)), [visibleNodes]);
-	const visibleEdges = useMemo(
-		() =>
-			data.edges.filter(
-				(edge) =>
-					activeEdgeTypes.has(edge.type) && visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
-			),
-		[data.edges, activeEdgeTypes, visibleNodeIds],
-	);
-
-	const adjacency = useMemo(() => buildAdjacency(visibleEdges), [visibleEdges]);
-	const neighborIds = useMemo(() => {
-		if (!selectedNodeId) return new Set<string>();
-		const neighbors = adjacency.get(selectedNodeId) ?? new Set<string>();
-		return new Set([selectedNodeId, ...neighbors]);
-	}, [adjacency, selectedNodeId]);
 
 	const selectedType = useMemo(
-		() => (selectedNodeId ? data.nodes.find((node) => node.id === selectedNodeId)?.type : undefined),
-		[data.nodes, selectedNodeId],
+		() => (viewState.selectedNodeId ? model.nodeById.get(viewState.selectedNodeId)?.type : undefined),
+		[model, viewState.selectedNodeId],
 	);
 
 	const stats = useMemo(
 		() =>
 			computeGraphStats(data, {
-				activeNodeTypes,
-				activeEdgeTypes,
+				activeNodeTypes: viewState.activeNodeTypes,
+				activeEdgeTypes: viewState.activeEdgeTypes,
 				statDefinitions: statDefinitionsProp ?? data.statDefinitions,
 				selectedType,
 			}),
-		[data, activeNodeTypes, activeEdgeTypes, statDefinitionsProp, selectedType],
+		[data, viewState.activeNodeTypes, viewState.activeEdgeTypes, statDefinitionsProp, selectedType],
 	);
 
-	const resetView = useCallback(() => {
+	const resetCamera = useCallback(() => {
 		const fit = fitTransform(
 			positions,
-			visibleNodes.map((node) => node.id),
+			viewGraph.nodes.map((node) => node.id),
 			shellSize.width,
 			shellSize.height,
 		);
-		setTransform(fit);
-	}, [positions, shellSize.height, shellSize.width, visibleNodes]);
+		dispatch({ type: "setTransform", transform: fit });
+	}, [positions, shellSize.height, shellSize.width, viewGraph.nodes]);
 
+	const fitSignature = `${viewGraph.effectiveMode}|${viewState.layoutId}|${viewGraph.nodes.length}|${Math.round(shellSize.width)}x${Math.round(shellSize.height)}`;
+	const lastFitRef = useRef<string>("");
 	useEffect(() => {
-		resetView();
-	}, [resetView]);
-
-	const applyLens = useCallback((lens: NetworkLens) => {
-		setActiveNodeTypes(new Set(lens.nodeTypes));
-		setActiveEdgeTypes(new Set(lens.edgeTypes.length > 0 ? lens.edgeTypes : allEdgeTypeIds));
-		setActiveLensName(lens.name);
-	}, [allEdgeTypeIds]);
-
-	const toggleNodeType = useCallback(
-		(nodeTypeId: string) => {
-			setActiveNodeTypes((previous) => {
-				const next = new Set(previous);
-				if (next.has(nodeTypeId)) next.delete(nodeTypeId);
-				else next.add(nodeTypeId);
-				return next;
-			});
-			setActiveLensName(CUSTOM_LENS_NAME);
-		},
-		[],
-	);
-
-	const toggleEdgeType = useCallback((edgeTypeId: string) => {
-		setActiveEdgeTypes((previous) => {
-			const next = new Set(previous);
-			if (next.has(edgeTypeId)) next.delete(edgeTypeId);
-			else next.add(edgeTypeId);
-			return next;
-		});
-		setActiveLensName(CUSTOM_LENS_NAME);
-	}, []);
+		if (lastFitRef.current === fitSignature) return;
+		if (viewGraph.nodes.length === 0) return;
+		lastFitRef.current = fitSignature;
+		const fit = fitTransform(
+			positions,
+			viewGraph.nodes.map((node) => node.id),
+			shellSize.width,
+			shellSize.height,
+		);
+		dispatch({ type: "setTransform", transform: fit });
+	}, [fitSignature, positions, viewGraph.nodes, shellSize.width, shellSize.height]);
 
 	const onWheel = useCallback((event: ReactWheelEvent<SVGSVGElement>) => {
 		event.preventDefault();
@@ -1111,25 +1896,38 @@ export function NetworkGraphWidget({
 		const px = event.clientX - rect.left;
 		const py = event.clientY - rect.top;
 		const factor = event.deltaY < 0 ? 1.12 : 0.88;
-		setTransform((previous) => {
-			const nextK = Math.min(4, Math.max(0.15, previous.k * factor));
-			const graphX = (px - previous.x) / previous.k;
-			const graphY = (py - previous.y) / previous.k;
-			return { k: nextK, x: px - graphX * nextK, y: py - graphY * nextK };
-		});
-	}, []);
+		const previous = viewState.transform;
+		const nextK = Math.min(4, Math.max(0.15, previous.k * factor));
+		const graphX = (px - previous.x) / previous.k;
+		const graphY = (py - previous.y) / previous.k;
+		dispatch({ type: "setTransform", transform: { k: nextK, x: px - graphX * nextK, y: py - graphY * nextK } });
+	}, [viewState.transform]);
 
-	const onPointerDown = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-		if (event.button !== 0) return;
-		panRef.current = { active: true, x: event.clientX, y: event.clientY, originX: transform.x, originY: transform.y };
-		event.currentTarget.setPointerCapture(event.pointerId);
-	}, [transform.x, transform.y]);
+	const onPointerDown = useCallback(
+		(event: ReactPointerEvent<SVGSVGElement>) => {
+			if (event.button !== 0) return;
+			panRef.current = {
+				active: true,
+				x: event.clientX,
+				y: event.clientY,
+				originX: viewState.transform.x,
+				originY: viewState.transform.y,
+			};
+			event.currentTarget.setPointerCapture(event.pointerId);
+		},
+		[viewState.transform.x, viewState.transform.y],
+	);
 
+	const transformRef = useRef(viewState.transform);
+	transformRef.current = viewState.transform;
 	const onPointerMove = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
 		if (!panRef.current.active) return;
 		const dx = event.clientX - panRef.current.x;
 		const dy = event.clientY - panRef.current.y;
-		setTransform((previous) => ({ ...previous, x: panRef.current.originX + dx, y: panRef.current.originY + dy }));
+		dispatch({
+			type: "setTransform",
+			transform: { ...transformRef.current, x: panRef.current.originX + dx, y: panRef.current.originY + dy },
+		});
 	}, []);
 
 	const onPointerUp = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
@@ -1137,8 +1935,12 @@ export function NetworkGraphWidget({
 		event.currentTarget.releasePointerCapture(event.pointerId);
 	}, []);
 
-	const hoveredNode = hoveredNodeId ? data.nodes.find((node) => node.id === hoveredNodeId) : undefined;
+	const hoveredNode = viewState.hoveredNodeId ? model.nodeById.get(viewState.hoveredNodeId) : undefined;
+	const selectedNode = viewState.selectedNodeId ? model.nodeById.get(viewState.selectedNodeId) : undefined;
+	const selectedEdge = viewState.selectedEdgeId ? model.edgeById.get(viewState.selectedEdgeId) : undefined;
+	const modeSuggestion = useMemo(() => suggestMode(model, viewState), [model, viewState]);
 	const labelMinZoom = 1.8;
+	const transform = viewState.transform;
 
 	return (
 		<section
@@ -1161,7 +1963,7 @@ export function NetworkGraphWidget({
 				}}
 			>
 				{data.edgeTypes.map((edgeType) => {
-					const active = activeEdgeTypes.has(edgeType.id);
+					const active = viewState.activeEdgeTypes.has(edgeType.id);
 					return (
 						<button
 							key={edgeType.id}
@@ -1173,7 +1975,7 @@ export function NetworkGraphWidget({
 									? "color-mix(in srgb, var(--window, #ebe8d9) 75%, transparent)"
 									: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
 							}}
-							onClick={() => toggleEdgeType(edgeType.id)}
+							onClick={() => dispatch({ type: "toggleEdgeType", edgeTypeId: edgeType.id })}
 						>
 							{edgeType.label}
 						</button>
@@ -1200,71 +2002,99 @@ export function NetworkGraphWidget({
 					onPointerLeave={onPointerUp}
 				>
 					<rect width="100%" height="100%" fill="transparent" />
+					<defs>
+						<marker id="network-graph-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+							<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted-foreground, #7b827d)" />
+						</marker>
+					</defs>
 					<g transform={`translate(${transform.x} ${transform.y}) scale(${transform.k})`}>
-						{visibleEdges.map((edge) => {
-							const source = positions.get(edge.source);
-							const target = positions.get(edge.target);
-							if (!source || !target) return null;
-							const highlighted =
-								!selectedNodeId || (neighborIds.has(edge.source) && neighborIds.has(edge.target));
-							return (
-								<line
-									key={edge.id}
-									x1={source.x}
-									y1={source.y}
-									x2={target.x}
-									y2={target.y}
-									stroke={highlighted ? "var(--muted-foreground, #7b827d)" : "color-mix(in srgb, var(--muted-foreground, #7b827d) 35%, transparent)"}
-									strokeWidth={highlighted ? 1.5 : 1}
-								/>
-							);
-						})}
-						{visibleNodes.map((node) => {
-							const position = positions.get(node.id);
-							if (!position) return null;
-							const color = colors.get(node.type) ?? NODE_TYPE_COLOR_TOKENS[0];
-							const selected = selectedNodeId === node.id;
-							const neighbor = selectedNodeId ? neighborIds.has(node.id) : true;
-							const dimmed = selectedNodeId && !neighbor;
-							const radius = node.type === "Projekt" ? 5 : node.type === "Bauteilgruppe" ? 4 : 6;
-							return (
-								<g
-									key={node.id}
-									style={{ cursor: "pointer" }}
-									onPointerEnter={() => setHoveredNodeId(node.id)}
-									onPointerLeave={() => setHoveredNodeId((current) => (current === node.id ? undefined : current))}
-									onClick={(event) => {
-										event.stopPropagation();
-										setSelectedNodeId((current) => (current === node.id ? undefined : node.id));
-									}}
-								>
-									<circle
-										cx={position.x}
-										cy={position.y}
-										r={radius}
-										fill={color}
-										fillOpacity={dimmed ? 0.25 : 0.9}
-										stroke={selected ? "var(--active-base, #ff344f)" : color}
-										strokeWidth={selected ? 2.5 : 1}
-									/>
-									{showLabels && transform.k >= labelMinZoom ? (
-										<text
-											x={position.x}
-											y={position.y}
-											textAnchor="middle"
-											dominantBaseline="central"
-											fill="var(--foreground, #001117)"
-											fontSize={Math.max(radius * 0.7, 6 / transform.k)}
-											fontFamily="var(--font-sans, sans-serif)"
-											style={{ pointerEvents: "none" }}
-											opacity={dimmed ? 0.35 : 1}
+						{viewGraph.matrix ? (
+							viewGraph.nodes.map((node, rowIndex) =>
+								viewGraph.nodes.map((columnNode, columnIndex) => {
+									const cellSize = 18;
+									const hasEdge = viewGraph.edges.some(
+										(edge) => edge.source === node.id && edge.target === columnNode.id,
+									);
+									if (!hasEdge) return null;
+									return (
+										<rect
+											key={`${node.id}:${columnNode.id}`}
+											x={columnIndex * cellSize - (viewGraph.nodes.length * cellSize) / 2}
+											y={rowIndex * cellSize - (viewGraph.nodes.length * cellSize) / 2}
+											width={cellSize - 2}
+											height={cellSize - 2}
+											fill="color-mix(in srgb, var(--accent-secondary, #34d1bf) 55%, transparent)"
+										/>
+									);
+								}),
+							)
+						) : (
+							<>
+								{viewGraph.edges.map((edge) => {
+									const source = positions.get(edge.source);
+									const target = positions.get(edge.target);
+									if (!source || !target) return null;
+									return (
+										<line
+											key={edge.id}
+											x1={source.x}
+											y1={source.y}
+											x2={target.x}
+											y2={target.y}
+											stroke={edge.dimmed ? "color-mix(in srgb, var(--muted-foreground, #7b827d) 35%, transparent)" : edge.color}
+											strokeWidth={edge.width}
+											strokeDasharray={edge.dashed ? "4 4" : undefined}
+											markerEnd={edge.directed ? "url(#network-graph-arrow)" : undefined}
+										/>
+									);
+								})}
+								{viewGraph.nodes.map((node) => {
+									const position = positions.get(node.id);
+									if (!position) return null;
+									const selected = viewState.selectedNodeId === node.id;
+									return (
+										<g
+											key={node.id}
+											style={{ cursor: "pointer" }}
+											onPointerEnter={() => dispatch({ type: "setHoveredNode", nodeId: node.id })}
+											onPointerLeave={() => dispatch({ type: "setHoveredNode", nodeId: undefined })}
+											onClick={(event) => {
+												event.stopPropagation();
+												dispatch({
+													type: "selectNode",
+													nodeId: viewState.selectedNodeId === node.id ? undefined : node.id,
+												});
+											}}
 										>
-											{node.label.length > 12 ? `${node.label.slice(0, 11)}…` : node.label}
-										</text>
-									) : null}
-								</g>
-							);
-						})}
+											<circle
+												cx={position.x}
+												cy={position.y}
+												r={node.size}
+												fill={node.color}
+												fillOpacity={node.dimmed ? 0.25 : 0.9}
+												stroke={selected ? "var(--active-base, #ff344f)" : node.color}
+												strokeWidth={selected ? 2.5 : 1}
+											/>
+											{viewGraph.showLabels && viewState.showLabels && transform.k >= labelMinZoom ? (
+												<text
+													x={position.x}
+													y={position.y}
+													textAnchor="middle"
+													dominantBaseline="central"
+													fill="var(--foreground, #001117)"
+													fontSize={Math.max(node.size * 0.7, 6 / transform.k)}
+													fontFamily="var(--font-sans, sans-serif)"
+													style={{ pointerEvents: "none" }}
+													opacity={node.dimmed ? 0.35 : 1}
+												>
+													{node.label.length > 12 ? `${node.label.slice(0, 11)}…` : node.label}
+												</text>
+											) : null}
+										</g>
+									);
+								})}
+							</>
+						)}
 					</g>
 				</svg>
 
@@ -1273,16 +2103,65 @@ export function NetworkGraphWidget({
 						...networkGraphPanelStyle,
 						position: "absolute",
 						top: "0.75rem",
+						bottom: "0.75rem",
 						left: "0.75rem",
-						width: "min(14rem, calc(100% - 1.5rem))",
-						maxWidth: "14rem",
-						maxHeight: "calc(100% - 1.5rem)",
+						width: "min(15rem, calc(100% - 1.5rem))",
+						maxWidth: "15rem",
+						maxHeight: "none",
+						alignContent: "start",
 					}}
 				>
 					<p style={eyebrowStyle}>Graph Stats</p>
-					<div style={{ display: "grid", gap: "0.35rem" }}>
-						{stats.map((row) => (
-							<div key={row.id} style={{ display: "grid", gap: "0.1rem" }}>
+					<p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>
+						Mode: {viewGraph.effectiveMode}
+						{viewState.mode === "auto" ? ` (${modeSuggestion.reason})` : ""}
+					</p>
+					{viewGraph.warnings.map((warning) => (
+						<p key={warning} style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem", color: "var(--warning-border, #fccf05)" }}>
+							{warning}
+						</p>
+					))}
+					{selectedNode ? (
+						<div style={{ display: "grid", gap: "0.25rem", paddingBottom: "0.35rem", borderBottom: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)" }}>
+							<p style={{ ...titleStyle, fontSize: "0.8rem", margin: 0 }}>{selectedNode.label}</p>
+							<p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>
+								{selectedNode.type} · in {model.degree.get(selectedNode.id)?.in ?? 0} · out {model.degree.get(selectedNode.id)?.out ?? 0}
+							</p>
+							<div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
+								<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "isolateSelection", model })}>
+									Isolate
+								</button>
+								<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "setMode", mode: "ego" })}>
+									Ego
+								</button>
+								<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "togglePin", nodeId: selectedNode.id })}>
+									{viewState.pinnedNodeIds.has(selectedNode.id) ? "Unpin" : "Pin"}
+								</button>
+							</div>
+						</div>
+					) : null}
+					{selectedEdge ? (
+						<div style={{ display: "grid", gap: "0.25rem", paddingBottom: "0.35rem", borderBottom: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)" }}>
+							<p style={{ ...titleStyle, fontSize: "0.8rem", margin: 0 }}>{selectedEdge.type}</p>
+							<p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>
+								{model.nodeById.get(selectedEdge.source)?.label ?? selectedEdge.source} → {model.nodeById.get(selectedEdge.target)?.label ?? selectedEdge.target}
+							</p>
+						</div>
+					) : null}
+					<div style={{ display: "grid" }}>
+						{stats.map((row, index) => (
+							<div
+								key={row.id}
+								style={{
+									display: "grid",
+									gap: "0.1rem",
+									padding: "0.4rem 0",
+									borderTop:
+										index === 0
+											? "none"
+											: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)",
+								}}
+							>
 								<p style={{ ...metricLabelStyle, margin: 0, fontSize: "0.7rem" }}>{row.label}</p>
 								<p
 									style={{
@@ -1305,35 +2184,16 @@ export function NetworkGraphWidget({
 						...networkGraphPanelStyle,
 						position: "absolute",
 						top: "0.75rem",
+						bottom: "0.75rem",
 						right: "0.75rem",
 						width: "min(15rem, calc(100% - 1.5rem))",
 						maxWidth: "15rem",
-						maxHeight: "calc(100% - 1.5rem)",
+						maxHeight: "none",
+						alignContent: "start",
 					}}
 				>
-					{!layout && layouts.length > 1 ? (
-						<div style={{ display: "grid", gap: "0.35rem" }}>
-							<p style={eyebrowStyle}>Layout</p>
-							<select
-								value={selectedLayoutId}
-								onChange={(event) => setSelectedLayoutId(event.target.value)}
-								style={{
-									...networkGraphChipStyle,
-									width: "100%",
-									justifyContent: "flex-start",
-									cursor: "pointer",
-								}}
-							>
-								{layouts.map((entry) => (
-									<option key={entry.id} value={entry.id}>
-										{entry.name}
-									</option>
-								))}
-							</select>
-						</div>
-					) : null}
 					<p style={eyebrowStyle}>Network Lenses</p>
-					<p style={{ ...titleStyle, fontSize: "0.95rem", margin: 0 }}>Active Lens: {activeLensName}</p>
+					<p style={{ ...titleStyle, fontSize: "0.95rem", margin: 0 }}>Active Lens: {viewState.activeLensName}</p>
 					<div style={{ display: "grid", gap: "0.5rem" }}>
 						{lenses.map((lens) => (
 							<article
@@ -1359,7 +2219,7 @@ export function NetworkGraphWidget({
 										marginTop: "0.35rem",
 										borderColor: "var(--accent, #ff344f)",
 									}}
-									onClick={() => applyLens(lens)}
+									onClick={() => dispatch({ type: "applyLens", lens, allEdgeTypeIds })}
 								>
 									Apply Lens
 								</button>
@@ -1386,7 +2246,7 @@ export function NetworkGraphWidget({
 						<span style={{ color: "var(--muted-foreground, #7b827d)" }}> · {hoveredNode.type}</span>
 						<span style={{ fontFamily: "var(--font-mono, monospace)" }}>
 							{" "}
-							· deg {adjacency.get(hoveredNode.id)?.size ?? 0}
+							· deg {model.degree.get(hoveredNode.id)?.total ?? 0}
 						</span>
 					</div>
 				) : null}
@@ -1406,8 +2266,8 @@ export function NetworkGraphWidget({
 				}}
 			>
 				{data.nodeTypes.map((nodeType) => {
-					const active = activeNodeTypes.has(nodeType.id);
-					const color = colors.get(nodeType.id) ?? NODE_TYPE_COLOR_TOKENS[0];
+					const active = viewState.activeNodeTypes.has(nodeType.id);
+					const color = model.colors.get(nodeType.id) ?? NODE_TYPE_COLOR_TOKENS[0];
 					return (
 						<button
 							key={nodeType.id}
@@ -1419,7 +2279,7 @@ export function NetworkGraphWidget({
 									? `color-mix(in srgb, ${color} 22%, transparent)`
 									: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
 							}}
-							onClick={() => toggleNodeType(nodeType.id)}
+							onClick={() => dispatch({ type: "toggleNodeType", nodeTypeId: nodeType.id })}
 						>
 							<span style={{ width: 8, height: 8, background: color, display: "inline-block" }} />
 							{nodeType.label}
@@ -1433,26 +2293,94 @@ export function NetworkGraphWidget({
 				<button
 					type="button"
 					aria-label="Settings"
-					aria-expanded={settingsOpen}
+					aria-expanded={viewState.settingsOpen}
 					style={{
 						...networkGraphChipStyle,
 						padding: "0.25rem 0.45rem",
-						background: settingsOpen
+						background: viewState.settingsOpen
 							? "color-mix(in srgb, var(--window, #ebe8d9) 75%, transparent)"
 							: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
 					}}
-					onClick={() => setSettingsOpen((value) => !value)}
+					onClick={() => dispatch({ type: "setSettingsOpen", settingsOpen: !viewState.settingsOpen })}
 				>
 					⚙ Settings
 				</button>
-				{settingsOpen ? (
-					<div style={{ ...networkGraphPanelStyle, padding: "0.6rem", width: "11rem", gap: "0.4rem" }}>
+				{viewState.settingsOpen ? (
+					<div style={{ ...networkGraphPanelStyle, padding: "0.6rem", width: "13rem", gap: "0.45rem", maxHeight: "calc(100vh - 4rem)", overflow: "auto" }}>
+						<p style={eyebrowStyle}>Visualization</p>
+						<select
+							value={viewState.mode}
+							onChange={(event) => dispatch({ type: "setMode", mode: event.target.value as VisualizationMode })}
+							style={{ ...networkGraphChipStyle, width: "100%", cursor: "pointer" }}
+						>
+							{["auto", "schema", "full", "subgraph", "ego", "path", "process", "clustered", "matrix"].map((mode) => (
+								<option key={mode} value={mode}>
+									{mode}
+								</option>
+							))}
+						</select>
+						{!layout ? (
+							<select
+								value={viewState.layoutId}
+								onChange={(event) => dispatch({ type: "setLayoutId", layoutId: event.target.value })}
+								style={{ ...networkGraphChipStyle, width: "100%", cursor: "pointer" }}
+							>
+								{modeLayouts.map((entry) => (
+									<option key={entry.id} value={entry.id}>
+										{entry.name}
+									</option>
+								))}
+							</select>
+						) : null}
+						<p style={eyebrowStyle}>Neighborhood</p>
+						<input
+							type="range"
+							min={1}
+							max={4}
+							value={viewState.depth}
+							onChange={(event) => dispatch({ type: "setDepth", depth: Number(event.target.value) })}
+							style={{ width: "100%" }}
+						/>
+						<select
+							value={viewState.direction}
+							onChange={(event) => dispatch({ type: "setDirection", direction: event.target.value as NeighborhoodDirection })}
+							style={{ ...networkGraphChipStyle, width: "100%", cursor: "pointer" }}
+						>
+							<option value="both">Both</option>
+							<option value="in">Incoming</option>
+							<option value="out">Outgoing</option>
+						</select>
+						<p style={eyebrowStyle}>Search</p>
+						<input
+							type="search"
+							value={viewState.searchQuery}
+							onChange={(event) => dispatch({ type: "setSearchQuery", searchQuery: event.target.value })}
+							style={{ ...networkGraphChipStyle, width: "100%" }}
+							placeholder="Node label or property"
+						/>
+						<p style={eyebrowStyle}>Encoding</p>
+						<select
+							value={viewState.nodeSizeMetric}
+							onChange={(event) => dispatch({ type: "setNodeSizeMetric", nodeSizeMetric: event.target.value as NodeSizeMetric })}
+							style={{ ...networkGraphChipStyle, width: "100%", cursor: "pointer" }}
+						>
+							<option value="uniform">Uniform size</option>
+							<option value="degree">Degree</option>
+							<option value="in">In-degree</option>
+							<option value="out">Out-degree</option>
+						</select>
 						<p style={eyebrowStyle}>View</p>
-						<button type="button" style={networkGraphChipStyle} onClick={() => setShowLabels((value) => !value)}>
-							{showLabels ? "Hide labels" : "Show labels"}
+						<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "setShowLabels", showLabels: !viewState.showLabels })}>
+							{viewState.showLabels ? "Hide labels" : "Show labels"}
 						</button>
-						<button type="button" style={networkGraphChipStyle} onClick={resetView}>
-							Reset view
+						<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "setShowEdges", showEdges: !viewState.showEdges })}>
+							{viewState.showEdges ? "Hide edges" : "Show edges"}
+						</button>
+						<button type="button" style={networkGraphChipStyle} onClick={resetCamera}>
+							Reset camera
+						</button>
+						<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "resetView", model })}>
+							Reset all
 						</button>
 					</div>
 				) : null}

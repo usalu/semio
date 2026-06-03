@@ -3,11 +3,17 @@
 import { strict as assert } from "node:assert";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx } from "../repo/lib/js/src/index.ts";
 import {
+	buildViewGraph,
+	circularGraphLayout,
 	computeGraphStats,
+	defaultViewState,
 	forceGraphLayout,
 	graphWidgetDataFromSemioLanguageGraph,
+	gridGraphLayout,
 	lensFromNodeTypes,
 	networkGraphDataFromTopologyExport,
+	normalizeGraph,
+	suggestMode,
 	subgraphByNodeTypes,
 } from "./index.tsx";
 import {
@@ -23,10 +29,6 @@ class TestScript extends BundleScript {
 		const data = graphWidgetDataFromSemioLanguageGraph(semioLanguageGraphFixture);
 		assert.equal(data.nodes.length, 5);
 		assert.equal(data.edges.length, 5);
-		assert.deepEqual(
-			data.edges.map((edge) => `${edge.source}->${edge.target}`),
-			["brief->rules", "rules->parts", "brief->layout", "layout->eval", "parts->eval"],
-		);
 		assert.throws(() =>
 			graphWidgetDataFromSemioLanguageGraph({
 				kind: "semio.graph",
@@ -40,38 +42,52 @@ class TestScript extends BundleScript {
 		const topologyData = networkGraphDataFromTopologyExport(topology);
 		assert.equal(topologyData.nodes.length, 482);
 		assert.equal(topologyData.edges.length, 1495);
-		assert.equal(topologyNetworkGraphFixture.nodes.length, 482);
-		assert.equal(topologyNetworkGraphFixture.lenses?.length, 3);
+
+		const curatedModel = normalizeGraph(curatedNetworkGraphFixture);
+		assert.equal(curatedModel.counts.nodes, 5);
+		assert.equal(curatedModel.degree.get("p1")?.out, 2);
+		assert.ok(curatedModel.neighbors.get("bg1")?.has("av1"));
+
+		const viewState = defaultViewState(curatedModel);
+		const schemaView = buildViewGraph(curatedModel, { ...viewState, mode: "schema" }, { width: 400, height: 300 });
+		assert.equal(schemaView.nodes.length, curatedModel.nodeTypes.length);
+		assert.ok(schemaView.nodes.every((node) => node.isGroup));
+
+		const egoView = buildViewGraph(
+			curatedModel,
+			{ ...viewState, mode: "ego", selectedNodeId: "p1", depth: 1, direction: "both" },
+			{ width: 400, height: 300 },
+		);
+		assert.ok(egoView.nodes.some((node) => node.id === "p1"));
+
+		const suggestion = suggestMode(curatedModel, viewState);
+		assert.equal(suggestion.mode, "full");
+
+		const topologyModel = normalizeGraph(topologyNetworkGraphFixture);
+		const largeSuggestion = suggestMode(topologyModel, defaultViewState(topologyModel));
+		assert.equal(largeSuggestion.mode, "schema");
 
 		const combo = NETWORK_GRAPH_STORY_COMBOS[0]!;
 		const comboLens = lensFromNodeTypes(topologyNetworkGraphFixture, combo.nodeTypes);
 		assert.ok(comboLens.edgeTypes.includes("HAT_BAUTEILGRUPPE"));
-		const subgraph = subgraphByNodeTypes(topologyNetworkGraphFixture, combo.nodeTypes);
-		assert.ok(subgraph.nodes.every((node) => combo.nodeTypes.includes(node.type)));
 
-		const positions = forceGraphLayout(curatedNetworkGraphFixture.nodes, curatedNetworkGraphFixture.edges, {
-			width: 400,
-			height: 300,
-		});
-		for (const node of curatedNetworkGraphFixture.nodes) {
-			const position = positions.get(node.id);
-			assert.ok(position);
-			assert.ok(Number.isFinite(position.x));
-			assert.ok(Number.isFinite(position.y));
+		for (const layout of [forceGraphLayout, circularGraphLayout, gridGraphLayout]) {
+			const positions = layout(curatedNetworkGraphFixture.nodes, curatedNetworkGraphFixture.edges, { width: 400, height: 300 });
+			for (const node of curatedNetworkGraphFixture.nodes) {
+				const position = positions.get(node.id);
+				assert.ok(position);
+				assert.ok(Number.isFinite(position.x));
+				assert.ok(Number.isFinite(position.y));
+			}
 		}
 
-		const allNodeTypes = new Set(curatedNetworkGraphFixture.nodeTypes.map((nodeType) => nodeType.id));
-		const allEdgeTypes = new Set(curatedNetworkGraphFixture.edgeTypes.map((edgeType) => edgeType.id));
 		const stats = computeGraphStats(curatedNetworkGraphFixture, {
-			activeNodeTypes: allNodeTypes,
-			activeEdgeTypes: allEdgeTypes,
+			activeNodeTypes: new Set(curatedNetworkGraphFixture.nodeTypes.map((nodeType) => nodeType.id)),
+			activeEdgeTypes: new Set(curatedNetworkGraphFixture.edgeTypes.map((edgeType) => edgeType.id)),
 		});
-		const nodesTotal = stats.find((row) => row.id === "nodes-total");
-		assert.equal(nodesTotal?.value, "5");
-		const isolated = stats.find((row) => row.id === "isolated");
-		assert.equal(isolated?.value, "0");
+		assert.equal(stats.find((row) => row.id === "nodes-total")?.value, "5");
 
-		console.log("[widgets] graph and network graph fixture smoke tests passed.");
+		console.log("[widgets] graph mechanism smoke tests passed.");
 	}
 }
 

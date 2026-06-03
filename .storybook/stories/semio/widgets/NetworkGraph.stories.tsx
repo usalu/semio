@@ -51,6 +51,22 @@ export const Topology: Story = {
 		),
 };
 
+export const SchemaView: Story = {
+	render: () =>
+		frame(<NetworkGraphWidget data={topologyNetworkGraphFixture} initialActiveNodeTypes={topologyNetworkGraphFixture.nodeTypes.map((t) => t.id)} />),
+};
+
+export const EgoCurated: Story = {
+	render: () =>
+		frame(
+			<NetworkGraphWidget
+				data={curatedNetworkGraphFixture}
+				initialSelectedNodeId="p1"
+				initialActiveNodeTypes={["Projekt", "Bauteilgruppe", "Aufbereitungsverfahren", "WiederverwendungsArt"]}
+			/>,
+		),
+};
+
 function comboStory(combo: NetworkGraphStoryCombo): Story {
 	const fixture = networkGraphFixtureForCombo(combo);
 	const lens = lensFromNodeTypes(fixture, combo.nodeTypes);
