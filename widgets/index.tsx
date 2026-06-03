@@ -540,6 +540,8 @@ export interface NetworkGraphWidgetProps extends Omit<ComponentPropsWithoutRef<"
 	readonly initialLensName?: string;
 	readonly initialSelectedNodeId?: string;
 	readonly layout?: GraphLayout;
+	readonly layouts?: ReadonlyArray<NamedGraphLayout>;
+	readonly initialLayoutId?: string;
 	readonly layoutOptions?: GraphLayoutOptions;
 	readonly height?: number | string;
 }
@@ -558,10 +560,10 @@ const NODE_TYPE_COLOR_TOKENS = [
 const CUSTOM_LENS_NAME = "Custom Lens";
 
 const glassPanelStyle: CSSProperties = {
-	background: "color-mix(in srgb, var(--panel, #c9c8bd) 62%, transparent)",
-	backdropFilter: "blur(12px)",
-	WebkitBackdropFilter: "blur(12px)",
-	border: "1px solid var(--border-window-color, #7b827d)",
+	background: "color-mix(in srgb, var(--panel, #c9c8bd) 34%, transparent)",
+	backdropFilter: "blur(14px)",
+	WebkitBackdropFilter: "blur(14px)",
+	border: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 70%, transparent)",
 	borderRadius: 0,
 	boxShadow: "none",
 	fontFamily: "var(--font-sans, sans-serif)",
@@ -570,7 +572,8 @@ const glassPanelStyle: CSSProperties = {
 
 const networkGraphShellStyle: CSSProperties = {
 	position: "relative",
-	display: "grid",
+	display: "flex",
+	flexDirection: "column",
 	width: "100%",
 	minHeight: 420,
 	height: "100%",
@@ -595,7 +598,9 @@ const networkGraphChipStyle: CSSProperties = {
 	gap: "0.35rem",
 	padding: "0.25rem 0.5rem",
 	border: "1px solid var(--border-window-color, #7b827d)",
-	background: "transparent",
+	background: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
+	backdropFilter: "blur(8px)",
+	WebkitBackdropFilter: "blur(8px)",
 	color: "var(--foreground, #001117)",
 	fontFamily: "var(--font-sans, sans-serif)",
 	fontSize: "0.75rem",
@@ -722,6 +727,36 @@ export function forceGraphLayout(
 	for (const node of nodesCopy) positions.set(node.id, { x: node.x ?? 0, y: node.y ?? 0 });
 	return positions;
 }
+
+export interface NamedGraphLayout {
+	readonly id: string;
+	readonly name: string;
+	readonly layout: GraphLayout;
+}
+
+/** @emoji 🧲 Builds a force layout bound to a fixed {@link ForceGraphLayoutConfig}. */
+export function forceGraphLayoutWithConfig(config: ForceGraphLayoutConfig): GraphLayout {
+	return (nodes, edges, options) => forceGraphLayout(nodes, edges, options, config);
+}
+
+export const forceGraphLayoutPresets: ReadonlyArray<NamedGraphLayout> = [
+	{ id: "force-balanced", name: "Force · Balanced", layout: forceGraphLayoutWithConfig(defaultForceGraphLayoutConfig) },
+	{
+		id: "force-spread",
+		name: "Force · Spread",
+		layout: forceGraphLayoutWithConfig({ chargeStrength: -280, linkDistance: 96, collideRadius: 22, centerStrength: 0.05 }),
+	},
+	{
+		id: "force-tight",
+		name: "Force · Tight",
+		layout: forceGraphLayoutWithConfig({ chargeStrength: -55, linkDistance: 26, collideRadius: 9, centerStrength: 0.22 }),
+	},
+	{
+		id: "force-clustered",
+		name: "Force · Clustered",
+		layout: forceGraphLayoutWithConfig({ chargeStrength: -160, linkDistance: 30, collideRadius: 8, centerStrength: 0.02 }),
+	},
+];
 // #endregion 🕸NetworkGraphLayout
 
 // #region 🕸NetworkGraphStats
@@ -776,35 +811,23 @@ function countComponents(nodes: ReadonlyArray<NetworkNode>, edges: ReadonlyArray
 }
 
 function defaultStatDefinitions(data: NetworkGraphData): GraphStatDefinition[] {
-	const defs: GraphStatDefinition[] = [
-		{ id: "nodes-total", label: "Visible nodes", kind: "count" },
-		{ id: "edges-total", label: "Visible edges", kind: "count", numerator: "edges" },
-		{ id: "density", label: "Edge density", kind: "ratio" },
-		{ id: "isolated", label: "Isolated nodes", kind: "isolated" },
-		{ id: "components", label: "Connected groups", kind: "components" },
-		{ id: "degree", label: "Avg degree", kind: "degree" },
-	];
-	for (const nodeType of data.nodeTypes) {
-		defs.push({ id: `count-${nodeType.id}`, label: nodeType.label, kind: "count", nodeType: nodeType.id });
-	}
+	const defs: GraphStatDefinition[] = [];
 	if (data.nodeTypes.length >= 2) {
 		defs.push({
 			id: "compare-main",
-			label: "Type comparison",
+			label: `${data.nodeTypes[0]!.label} vs ${data.nodeTypes[1]!.label}`,
 			kind: "compare",
 			nodeTypes: [data.nodeTypes[0]!.id, data.nodeTypes[1]!.id],
 		});
 	}
-	const aufbereitung = data.edgeTypes.find((edgeType) => edgeType.id === "HAT_AUFBEREITUNG");
-	if (aufbereitung) {
-		defs.push({
-			id: "coverage-aufbereitung",
-			label: "Bauteilgruppe · Aufbereitung",
-			kind: "coverage",
-			nodeType: "Bauteilgruppe",
-			edgeType: "HAT_AUFBEREITUNG",
-		});
-	}
+	defs.push(
+		{ id: "nodes-total", label: "Visible nodes", kind: "count" },
+		{ id: "edges-total", label: "Visible edges", kind: "count", numerator: "edges" },
+		{ id: "density", label: "Edge density", kind: "ratio" },
+		{ id: "degree", label: "Avg degree", kind: "degree" },
+		{ id: "components", label: "Connected groups", kind: "components" },
+		{ id: "isolated", label: "Isolated nodes", kind: "isolated" },
+	);
 	return defs;
 }
 
@@ -939,7 +962,9 @@ export function NetworkGraphWidget({
 	initialActiveEdgeTypes,
 	initialLensName,
 	initialSelectedNodeId,
-	layout = forceGraphLayout,
+	layout,
+	layouts = forceGraphLayoutPresets,
+	initialLayoutId,
 	layoutOptions,
 	height = "100%",
 	className,
@@ -947,6 +972,7 @@ export function NetworkGraphWidget({
 	...props
 }: NetworkGraphWidgetProps) {
 	const shellRef = useRef<HTMLElement>(null);
+	const canvasAreaRef = useRef<HTMLDivElement>(null);
 	const [shellSize, setShellSize] = useState({ width: 800, height: 520 });
 	const colors = useMemo(() => nodeTypeColorMap(data), [data]);
 	const allNodeTypeIds = useMemo(() => data.nodeTypes.map((nodeType) => nodeType.id), [data.nodeTypes]);
@@ -962,7 +988,13 @@ export function NetworkGraphWidget({
 	const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(initialSelectedNodeId);
 	const [hoveredNodeId, setHoveredNodeId] = useState<string | undefined>();
 	const [showLabels, setShowLabels] = useState(true);
+	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [selectedLayoutId, setSelectedLayoutId] = useState(initialLayoutId ?? layouts[0]?.id);
 	const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
+	const activeLayout = useMemo(
+		() => layout ?? layouts.find((entry) => entry.id === selectedLayoutId)?.layout ?? layouts[0]?.layout ?? forceGraphLayout,
+		[layout, layouts, selectedLayoutId],
+	);
 	const panRef = useRef<{ active: boolean; x: number; y: number; originX: number; originY: number }>({
 		active: false,
 		x: 0,
@@ -972,7 +1004,7 @@ export function NetworkGraphWidget({
 	});
 
 	useEffect(() => {
-		const element = shellRef.current;
+		const element = canvasAreaRef.current;
 		if (!element) return;
 		const observer = new ResizeObserver((entries) => {
 			const entry = entries[0];
@@ -984,8 +1016,13 @@ export function NetworkGraphWidget({
 	}, []);
 
 	const positions = useMemo(
-		() => layout(data.nodes, data.edges, { width: shellSize.width, height: shellSize.height, ...layoutOptions }),
-		[data.nodes, data.edges, layout, layoutOptions, shellSize.height, shellSize.width],
+		() =>
+			activeLayout(data.nodes, data.edges, {
+				width: shellSize.width,
+				height: shellSize.height,
+				...layoutOptions,
+			}),
+		[activeLayout, data.nodes, data.edges, layoutOptions, shellSize.height, shellSize.width],
 	);
 
 	const visibleNodes = useMemo(
@@ -1110,144 +1147,16 @@ export function NetworkGraphWidget({
 			className={classNames("network-graph-widget", className)}
 			style={{ ...networkGraphShellStyle, height, ...style }}
 		>
-			<aside
-				style={{
-					...networkGraphPanelStyle,
-					position: "absolute",
-					top: "0.75rem",
-					left: "0.75rem",
-					width: "min(14rem, calc(100% - 1.5rem))",
-					maxWidth: "14rem",
-				}}
-			>
-				<p style={eyebrowStyle}>Graph Stats</p>
-				<p style={{ ...titleStyle, fontSize: "0.95rem" }}>Active Lens: {activeLensName}</p>
-				<div style={{ display: "grid", gap: "0.35rem" }}>
-					{stats.map((row) => (
-						<div key={row.id} style={{ display: "grid", gap: "0.1rem" }}>
-							<p style={{ ...metricLabelStyle, margin: 0, fontSize: "0.7rem" }}>{row.label}</p>
-							<p
-								style={{
-									...metricValueStyle,
-									margin: 0,
-									fontSize: "1.1rem",
-									fontFamily: "var(--font-mono, monospace)",
-								}}
-							>
-								{row.value}
-							</p>
-							{row.hint ? <p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>{row.hint}</p> : null}
-						</div>
-					))}
-				</div>
-			</aside>
-
-			<aside
-				style={{
-					...networkGraphPanelStyle,
-					position: "absolute",
-					top: "0.75rem",
-					right: "0.75rem",
-					width: "min(15rem, calc(100% - 1.5rem))",
-					maxWidth: "15rem",
-				}}
-			>
-				<p style={eyebrowStyle}>Network Lenses</p>
-				<div style={{ display: "grid", gap: "0.5rem" }}>
-					{lenses.map((lens) => (
-						<article
-							key={lens.id}
-							style={{
-								...widgetCardStyle,
-								padding: "0.5rem",
-								borderColor: "var(--border-window-color, #7b827d)",
-								background: "color-mix(in srgb, var(--window, #ebe8d9) 70%, transparent)",
-							}}
-						>
-							<p style={{ ...titleStyle, fontSize: "0.85rem", margin: 0 }}>{lens.name}</p>
-							{lens.description ? (
-								<p style={{ ...descriptionStyle, fontSize: "0.75rem", margin: "0.25rem 0 0" }}>{lens.description}</p>
-							) : null}
-							<p style={{ ...metricHintStyle, margin: "0.35rem 0 0", fontSize: "0.65rem" }}>
-								{lens.nodeTypes.join(", ")}
-							</p>
-							<button
-								type="button"
-								style={{
-									...networkGraphChipStyle,
-									marginTop: "0.35rem",
-									borderColor: "var(--accent, #ff344f)",
-								}}
-								onClick={() => applyLens(lens)}
-							>
-								Apply Lens
-							</button>
-						</article>
-					))}
-				</div>
-			</aside>
-
 			<div
 				style={{
-					...networkGraphPanelStyle,
-					position: "absolute",
-					left: "0.75rem",
-					right: "0.75rem",
-					bottom: "0.75rem",
-					gridTemplateColumns: "1fr auto",
-					alignItems: "center",
-					gap: "0.75rem",
-					padding: "0.5rem 0.75rem",
-				}}
-			>
-				<div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", alignItems: "center" }}>
-					<p style={{ ...eyebrowStyle, margin: 0, marginRight: "0.25rem" }}>Node Types</p>
-					{data.nodeTypes.map((nodeType) => {
-						const active = activeNodeTypes.has(nodeType.id);
-						const color = colors.get(nodeType.id) ?? NODE_TYPE_COLOR_TOKENS[0];
-						return (
-							<button
-								key={nodeType.id}
-								type="button"
-								style={{
-									...networkGraphChipStyle,
-									borderColor: color,
-									background: active ? `color-mix(in srgb, ${color} 22%, transparent)` : "transparent",
-								}}
-								onClick={() => toggleNodeType(nodeType.id)}
-							>
-								<span
-									style={{
-										width: 8,
-										height: 8,
-										background: color,
-										display: "inline-block",
-									}}
-								/>
-								{nodeType.label}
-								<span style={{ color: "var(--muted-foreground, #7b827d)" }}>{nodeType.count ?? ""}</span>
-							</button>
-						);
-					})}
-				</div>
-				<div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-					<button type="button" style={networkGraphChipStyle} onClick={() => setShowLabels((value) => !value)}>
-						{showLabels ? "Hide labels" : "Show labels"}
-					</button>
-					<button type="button" style={networkGraphChipStyle} onClick={resetView}>
-						Reset view
-					</button>
-				</div>
-			</div>
-
-			<div
-				style={{
-					position: "absolute",
-					top: "0.5rem",
-					left: "50%",
-					transform: "translateX(-50%)",
+					flex: "0 0 auto",
 					display: "flex",
+					flexWrap: "wrap",
+					alignItems: "center",
+					justifyContent: "center",
 					gap: "0.35rem",
+					padding: "0.5rem 2.5rem",
+					background: "transparent",
 					zIndex: 11,
 				}}
 			>
@@ -1260,7 +1169,9 @@ export function NetworkGraphWidget({
 							style={{
 								...networkGraphChipStyle,
 								fontSize: "0.65rem",
-								background: active ? "var(--window, #ebe8d9)" : "transparent",
+								background: active
+									? "color-mix(in srgb, var(--window, #ebe8d9) 75%, transparent)"
+									: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
 							}}
 							onClick={() => toggleEdgeType(edgeType.id)}
 						>
@@ -1270,107 +1181,282 @@ export function NetworkGraphWidget({
 				})}
 			</div>
 
-			<svg
-				role="img"
-				aria-label="Network graph canvas"
-				style={{ width: "100%", height: "100%", cursor: panRef.current.active ? "grabbing" : "grab", touchAction: "none" }}
-				onWheel={onWheel}
-				onPointerDown={onPointerDown}
-				onPointerMove={onPointerMove}
-				onPointerUp={onPointerUp}
-				onPointerLeave={onPointerUp}
-			>
-				<rect width="100%" height="100%" fill="transparent" />
-				<g transform={`translate(${transform.x} ${transform.y}) scale(${transform.k})`}>
-					{visibleEdges.map((edge) => {
-						const source = positions.get(edge.source);
-						const target = positions.get(edge.target);
-						if (!source || !target) return null;
-						const highlighted =
-							!selectedNodeId || (neighborIds.has(edge.source) && neighborIds.has(edge.target));
-						return (
-							<line
-								key={edge.id}
-								x1={source.x}
-								y1={source.y}
-								x2={target.x}
-								y2={target.y}
-								stroke={highlighted ? "var(--muted-foreground, #7b827d)" : "color-mix(in srgb, var(--muted-foreground, #7b827d) 35%, transparent)"}
-								strokeWidth={highlighted ? 1.5 : 1}
-							/>
-						);
-					})}
-					{visibleNodes.map((node) => {
-						const position = positions.get(node.id);
-						if (!position) return null;
-						const color = colors.get(node.type) ?? NODE_TYPE_COLOR_TOKENS[0];
-						const selected = selectedNodeId === node.id;
-						const neighbor = selectedNodeId ? neighborIds.has(node.id) : true;
-						const dimmed = selectedNodeId && !neighbor;
-						const radius = node.type === "Projekt" ? 5 : node.type === "Bauteilgruppe" ? 4 : 6;
-						return (
-							<g
-								key={node.id}
-								style={{ cursor: "pointer" }}
-								onPointerEnter={() => setHoveredNodeId(node.id)}
-								onPointerLeave={() => setHoveredNodeId((current) => (current === node.id ? undefined : current))}
-								onClick={(event) => {
-									event.stopPropagation();
-									setSelectedNodeId((current) => (current === node.id ? undefined : node.id));
-								}}
-							>
-								<circle
-									cx={position.x}
-									cy={position.y}
-									r={radius}
-									fill={color}
-									fillOpacity={dimmed ? 0.25 : 0.9}
-									stroke={selected ? "var(--active-base, #ff344f)" : color}
-									strokeWidth={selected ? 2.5 : 1}
-								/>
-								{showLabels && transform.k >= labelMinZoom ? (
-									<text
-										x={position.x}
-										y={position.y}
-										textAnchor="middle"
-										dominantBaseline="central"
-										fill="var(--foreground, #001117)"
-										fontSize={Math.max(radius * 0.7, 6 / transform.k)}
-										fontFamily="var(--font-sans, sans-serif)"
-										style={{ pointerEvents: "none" }}
-										opacity={dimmed ? 0.35 : 1}
-									>
-										{node.label.length > 12 ? `${node.label.slice(0, 11)}…` : node.label}
-									</text>
-								) : null}
-							</g>
-						);
-					})}
-				</g>
-			</svg>
-
-			{hoveredNode ? (
-				<div
+			<div ref={canvasAreaRef} style={{ position: "relative", flex: "1 1 auto", minHeight: 0, overflow: "hidden" }}>
+				<svg
+					role="img"
+					aria-label="Network graph canvas"
 					style={{
-						...glassPanelStyle,
 						position: "absolute",
-						bottom: "4.5rem",
-						left: "50%",
-						transform: "translateX(-50%)",
-						padding: "0.5rem 0.75rem",
-						pointerEvents: "none",
-						zIndex: 12,
-						fontSize: "0.8rem",
+						inset: 0,
+						width: "100%",
+						height: "100%",
+						cursor: panRef.current.active ? "grabbing" : "grab",
+						touchAction: "none",
+					}}
+					onWheel={onWheel}
+					onPointerDown={onPointerDown}
+					onPointerMove={onPointerMove}
+					onPointerUp={onPointerUp}
+					onPointerLeave={onPointerUp}
+				>
+					<rect width="100%" height="100%" fill="transparent" />
+					<g transform={`translate(${transform.x} ${transform.y}) scale(${transform.k})`}>
+						{visibleEdges.map((edge) => {
+							const source = positions.get(edge.source);
+							const target = positions.get(edge.target);
+							if (!source || !target) return null;
+							const highlighted =
+								!selectedNodeId || (neighborIds.has(edge.source) && neighborIds.has(edge.target));
+							return (
+								<line
+									key={edge.id}
+									x1={source.x}
+									y1={source.y}
+									x2={target.x}
+									y2={target.y}
+									stroke={highlighted ? "var(--muted-foreground, #7b827d)" : "color-mix(in srgb, var(--muted-foreground, #7b827d) 35%, transparent)"}
+									strokeWidth={highlighted ? 1.5 : 1}
+								/>
+							);
+						})}
+						{visibleNodes.map((node) => {
+							const position = positions.get(node.id);
+							if (!position) return null;
+							const color = colors.get(node.type) ?? NODE_TYPE_COLOR_TOKENS[0];
+							const selected = selectedNodeId === node.id;
+							const neighbor = selectedNodeId ? neighborIds.has(node.id) : true;
+							const dimmed = selectedNodeId && !neighbor;
+							const radius = node.type === "Projekt" ? 5 : node.type === "Bauteilgruppe" ? 4 : 6;
+							return (
+								<g
+									key={node.id}
+									style={{ cursor: "pointer" }}
+									onPointerEnter={() => setHoveredNodeId(node.id)}
+									onPointerLeave={() => setHoveredNodeId((current) => (current === node.id ? undefined : current))}
+									onClick={(event) => {
+										event.stopPropagation();
+										setSelectedNodeId((current) => (current === node.id ? undefined : node.id));
+									}}
+								>
+									<circle
+										cx={position.x}
+										cy={position.y}
+										r={radius}
+										fill={color}
+										fillOpacity={dimmed ? 0.25 : 0.9}
+										stroke={selected ? "var(--active-base, #ff344f)" : color}
+										strokeWidth={selected ? 2.5 : 1}
+									/>
+									{showLabels && transform.k >= labelMinZoom ? (
+										<text
+											x={position.x}
+											y={position.y}
+											textAnchor="middle"
+											dominantBaseline="central"
+											fill="var(--foreground, #001117)"
+											fontSize={Math.max(radius * 0.7, 6 / transform.k)}
+											fontFamily="var(--font-sans, sans-serif)"
+											style={{ pointerEvents: "none" }}
+											opacity={dimmed ? 0.35 : 1}
+										>
+											{node.label.length > 12 ? `${node.label.slice(0, 11)}…` : node.label}
+										</text>
+									) : null}
+								</g>
+							);
+						})}
+					</g>
+				</svg>
+
+				<aside
+					style={{
+						...networkGraphPanelStyle,
+						position: "absolute",
+						top: "0.75rem",
+						left: "0.75rem",
+						width: "min(14rem, calc(100% - 1.5rem))",
+						maxWidth: "14rem",
+						maxHeight: "calc(100% - 1.5rem)",
 					}}
 				>
-					<strong>{hoveredNode.label}</strong>
-					<span style={{ color: "var(--muted-foreground, #7b827d)" }}> · {hoveredNode.type}</span>
-					<span style={{ fontFamily: "var(--font-mono, monospace)" }}>
-						{" "}
-						· deg {adjacency.get(hoveredNode.id)?.size ?? 0}
-					</span>
-				</div>
-			) : null}
+					<p style={eyebrowStyle}>Graph Stats</p>
+					<div style={{ display: "grid", gap: "0.35rem" }}>
+						{stats.map((row) => (
+							<div key={row.id} style={{ display: "grid", gap: "0.1rem" }}>
+								<p style={{ ...metricLabelStyle, margin: 0, fontSize: "0.7rem" }}>{row.label}</p>
+								<p
+									style={{
+										...metricValueStyle,
+										margin: 0,
+										fontSize: "1.1rem",
+										fontFamily: "var(--font-mono, monospace)",
+									}}
+								>
+									{row.value}
+								</p>
+								{row.hint ? <p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>{row.hint}</p> : null}
+							</div>
+						))}
+					</div>
+				</aside>
+
+				<aside
+					style={{
+						...networkGraphPanelStyle,
+						position: "absolute",
+						top: "0.75rem",
+						right: "0.75rem",
+						width: "min(15rem, calc(100% - 1.5rem))",
+						maxWidth: "15rem",
+						maxHeight: "calc(100% - 1.5rem)",
+					}}
+				>
+					{!layout && layouts.length > 1 ? (
+						<div style={{ display: "grid", gap: "0.35rem" }}>
+							<p style={eyebrowStyle}>Layout</p>
+							<select
+								value={selectedLayoutId}
+								onChange={(event) => setSelectedLayoutId(event.target.value)}
+								style={{
+									...networkGraphChipStyle,
+									width: "100%",
+									justifyContent: "flex-start",
+									cursor: "pointer",
+								}}
+							>
+								{layouts.map((entry) => (
+									<option key={entry.id} value={entry.id}>
+										{entry.name}
+									</option>
+								))}
+							</select>
+						</div>
+					) : null}
+					<p style={eyebrowStyle}>Network Lenses</p>
+					<p style={{ ...titleStyle, fontSize: "0.95rem", margin: 0 }}>Active Lens: {activeLensName}</p>
+					<div style={{ display: "grid", gap: "0.5rem" }}>
+						{lenses.map((lens) => (
+							<article
+								key={lens.id}
+								style={{
+									...widgetCardStyle,
+									padding: "0.5rem",
+									borderColor: "var(--border-window-color, #7b827d)",
+									background: "color-mix(in srgb, var(--window, #ebe8d9) 45%, transparent)",
+								}}
+							>
+								<p style={{ ...titleStyle, fontSize: "0.85rem", margin: 0 }}>{lens.name}</p>
+								{lens.description ? (
+									<p style={{ ...descriptionStyle, fontSize: "0.75rem", margin: "0.25rem 0 0" }}>{lens.description}</p>
+								) : null}
+								<p style={{ ...metricHintStyle, margin: "0.35rem 0 0", fontSize: "0.65rem" }}>
+									{lens.nodeTypes.join(", ")}
+								</p>
+								<button
+									type="button"
+									style={{
+										...networkGraphChipStyle,
+										marginTop: "0.35rem",
+										borderColor: "var(--accent, #ff344f)",
+									}}
+									onClick={() => applyLens(lens)}
+								>
+									Apply Lens
+								</button>
+							</article>
+						))}
+					</div>
+				</aside>
+
+				{hoveredNode ? (
+					<div
+						style={{
+							...glassPanelStyle,
+							position: "absolute",
+							bottom: "0.75rem",
+							left: "50%",
+							transform: "translateX(-50%)",
+							padding: "0.5rem 0.75rem",
+							pointerEvents: "none",
+							zIndex: 12,
+							fontSize: "0.8rem",
+						}}
+					>
+						<strong>{hoveredNode.label}</strong>
+						<span style={{ color: "var(--muted-foreground, #7b827d)" }}> · {hoveredNode.type}</span>
+						<span style={{ fontFamily: "var(--font-mono, monospace)" }}>
+							{" "}
+							· deg {adjacency.get(hoveredNode.id)?.size ?? 0}
+						</span>
+					</div>
+				) : null}
+			</div>
+
+			<div
+				style={{
+					flex: "0 0 auto",
+					display: "flex",
+					flexWrap: "wrap",
+					alignItems: "center",
+					justifyContent: "center",
+					gap: "0.35rem",
+					padding: "0.5rem 0.6rem",
+					background: "transparent",
+					zIndex: 11,
+				}}
+			>
+				{data.nodeTypes.map((nodeType) => {
+					const active = activeNodeTypes.has(nodeType.id);
+					const color = colors.get(nodeType.id) ?? NODE_TYPE_COLOR_TOKENS[0];
+					return (
+						<button
+							key={nodeType.id}
+							type="button"
+							style={{
+								...networkGraphChipStyle,
+								borderColor: color,
+								background: active
+									? `color-mix(in srgb, ${color} 22%, transparent)`
+									: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
+							}}
+							onClick={() => toggleNodeType(nodeType.id)}
+						>
+							<span style={{ width: 8, height: 8, background: color, display: "inline-block" }} />
+							{nodeType.label}
+							<span style={{ color: "var(--muted-foreground, #7b827d)" }}>{nodeType.count ?? ""}</span>
+						</button>
+					);
+				})}
+			</div>
+
+			<div style={{ position: "absolute", top: "0.5rem", right: "0.6rem", zIndex: 13, display: "grid", gap: "0.35rem", justifyItems: "end" }}>
+				<button
+					type="button"
+					aria-label="Settings"
+					aria-expanded={settingsOpen}
+					style={{
+						...networkGraphChipStyle,
+						padding: "0.25rem 0.45rem",
+						background: settingsOpen
+							? "color-mix(in srgb, var(--window, #ebe8d9) 75%, transparent)"
+							: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
+					}}
+					onClick={() => setSettingsOpen((value) => !value)}
+				>
+					⚙ Settings
+				</button>
+				{settingsOpen ? (
+					<div style={{ ...networkGraphPanelStyle, padding: "0.6rem", width: "11rem", gap: "0.4rem" }}>
+						<p style={eyebrowStyle}>View</p>
+						<button type="button" style={networkGraphChipStyle} onClick={() => setShowLabels((value) => !value)}>
+							{showLabels ? "Hide labels" : "Show labels"}
+						</button>
+						<button type="button" style={networkGraphChipStyle} onClick={resetView}>
+							Reset view
+						</button>
+					</div>
+				) : null}
+			</div>
 		</section>
 	);
 }

@@ -18,8 +18,9 @@ semio_resolve_bun() {
     echo "$SEMIO_BUN"
     return
   fi
-  if [ -f "$ROOT/.repo/semio-micro-commit-bun" ]; then
-    B=$(head -n 1 "$ROOT/.repo/semio-micro-commit-bun" | tr -d '\r')
+  GIT_DIR_FOR_BUN=$(git rev-parse --git-dir 2>/dev/null || true)
+  if [ -n "$GIT_DIR_FOR_BUN" ] && [ -f "$GIT_DIR_FOR_BUN/semio-micro-commit-bun" ]; then
+    B=$(head -n 1 "$GIT_DIR_FOR_BUN/semio-micro-commit-bun" | tr -d '\r')
     if [ -n "$B" ] && [ -x "$B" ]; then
       echo "$B"
       return

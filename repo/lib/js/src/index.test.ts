@@ -180,6 +180,26 @@ describe("micro-commit", () => {
     expect(normalizeBulletLines(Array.from({ length: 10 }, (_, i) => `- ${i}`).join("\n"))).toHaveLength(8);
   });
 
+  test("loadMicroCommitLevel pushes by default and keeps overrides", async () => {
+    const { loadMicroCommitLevel } = await import("./micro-commit.ts");
+    const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-level-"));
+    const contributor = { alias: "kinan", emoji: "kinan", name: "Kinan", email: "kinan.sarak@gmail.com" };
+    try {
+      expect(loadMicroCommitLevel(root, contributor, [])).toBe("prepare-and-commit-and-push");
+      expect(loadMicroCommitLevel(root, contributor, ["g."])).toBe("prepare-only");
+      expect(loadMicroCommitLevel(root, contributor, ["gc"])).toBe("prepare-and-commit");
+      const dir = join(root, ".repo", "🧑‍💻", "kinan");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, "micro-commit.json"), '{ "level": "prepare-only" }', "utf8");
+      expect(loadMicroCommitLevel(root, contributor, [])).toBe("prepare-only");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("buildMicroCommitMessage separates GitKraken summary and description", async () => {
     const { buildMicroCommitMessage } = await import("./micro-commit.ts");
     const root = process.cwd();
@@ -221,11 +241,15 @@ describe("micro-commit", () => {
     try {
       const init = spawnSync("git", ["init"], { cwd: root, encoding: "utf8" });
       expect(init.status).toBe(0);
+      expect(spawnSync("git", ["config", "--local", "core.hooksPath", ".husky/_"], { cwd: root, encoding: "utf8" }).status).toBe(0);
       installMicroCommitGitHooks(root);
       const hook = readFileSync(join(root, ".git/hooks/post-commit"), "utf8");
+      const activeHook = readFileSync(join(root, ".husky/_/prepare-commit-msg"), "utf8");
       expect(hook).toContain("semio_micro_commit_wipe");
+      expect(activeHook).toContain("micro-commit prepare-commit-msg");
       expect(hook).not.toContain("\r");
-      expect(existsSync(join(root, ".repo/semio-micro-commit-bun"))).toBe(true);
+      expect(activeHook).not.toContain("\r");
+      expect(existsSync(join(root, ".git/semio-micro-commit-bun"))).toBe(true);
       expect(renderMicroCommitGitHook("post-commit")).toContain("#!/usr/bin/env sh");
     } finally {
       rmSync(root, { recursive: true, force: true });

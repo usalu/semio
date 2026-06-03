@@ -2,7 +2,7 @@
 name: micro-commit
 description: >-
   Instant WIP micro-commit. Triggers g, go, c, commit, +1, bump — execute immediately, no reasoning.
-  Default level from micro-commit.json (prepare-only). Reply with commit message only.
+  Default level from micro-commit.json (prepare-and-commit-and-push when missing). Reply with commit message only.
 ---
 
 # Micro Commit
@@ -18,7 +18,7 @@ description: >-
 
 ## Level (set once, then repeat)
 
-1. **First trigger in this chat** (or if the user named a mode): read `.repo/🧑‍💻/{alias}/micro-commit.json` → `level` (default `prepare-only`). Remember it for this conversation.
+1. **First trigger in this chat** (or if the user named a mode): read `.repo/🧑‍💻/{alias}/micro-commit.json` → `level` (default `prepare-and-commit-and-push` when missing). Remember it for this conversation.
 2. **Every later trigger** (`g`, `go`, `c`, …): use **the same level** again. Do not re-read config or re-ask.
 3. **Override only** when the **current** user message contains `gc` / `commit!`, `gp` / `push!`, or `g.` / `prepare!` — pass that token on the `prepare` line.
 

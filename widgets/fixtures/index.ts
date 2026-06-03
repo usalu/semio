@@ -54,26 +54,24 @@ export const topologyLenses: ReadonlyArray<NetworkLens> = [
 ];
 
 export const topologyStatDefinitions = [
+	{
+		id: "compare-main",
+		label: "Bauteilgruppe vs Projekt",
+		kind: "compare" as const,
+		nodeTypes: ["Bauteilgruppe", "Projekt"],
+	},
 	{ id: "nodes-total", label: "Visible nodes", kind: "count" as const },
 	{ id: "edges-total", label: "Visible edges", kind: "count" as const, numerator: "edges" },
 	{ id: "density", label: "Edge density", kind: "ratio" as const },
-	{ id: "isolated", label: "Isolated nodes", kind: "isolated" as const },
-	{ id: "components", label: "Connected groups", kind: "components" as const },
 	{ id: "degree", label: "Avg degree", kind: "degree" as const },
-	{ id: "count-bauteilgruppe", label: "Bauteilgruppe", kind: "count" as const, nodeType: "Bauteilgruppe" },
-	{ id: "count-projekt", label: "Projekt", kind: "count" as const, nodeType: "Projekt" },
+	{ id: "components", label: "Connected groups", kind: "components" as const },
+	{ id: "isolated", label: "Isolated nodes", kind: "isolated" as const },
 	{
 		id: "coverage-aufbereitung",
 		label: "Bauteilgruppe · Aufbereitung",
 		kind: "coverage" as const,
 		nodeType: "Bauteilgruppe",
 		edgeType: "HAT_AUFBEREITUNG",
-	},
-	{
-		id: "compare-main",
-		label: "Bauteilgruppe vs Projekt",
-		kind: "compare" as const,
-		nodeTypes: ["Bauteilgruppe", "Projekt"],
 	},
 ];
 

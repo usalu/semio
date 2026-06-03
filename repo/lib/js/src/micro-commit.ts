@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 export type MicroCommitLevel = "prepare-only" | "prepare-and-commit" | "prepare-and-commit-and-push";
 
-type Contributor = { alias: string; emoji: string; name: string; email: string; emails?: string[] };
+export type Contributor = { alias: string; emoji: string; name: string; email: string; emails?: string[] };
 
 const COUNTER_RE = /^(.+🎆\d{2}🌙\d{2}☀️\d{2})🚩(\d+)$/;
 const TICKET_JSON_RE = /^\.repo\/🎫\/.+\/ticket\.json$/;
@@ -70,11 +70,11 @@ function findContributor(root: string): Contributor | null {
   return null;
 }
 
-function loadLevel(root: string, contributor: Contributor, segments: string[]): MicroCommitLevel {
-  const token = segments.join(" ").toLowerCase();
-  if (/\b(gp|gpush|push!|\+push)\b/.test(token)) return "prepare-and-commit-and-push";
-  if (/\b(gc|commit!|\+commit)\b/.test(token)) return "prepare-and-commit";
-  if (/\b(g\.|gprepare|prepare!|\+prepare)\b/.test(token)) return "prepare-only";
+export function loadMicroCommitLevel(root: string, contributor: Contributor, segments: string[]): MicroCommitLevel {
+  const tokens = segments.flatMap((segment) => segment.toLowerCase().split(/\s+/)).filter(Boolean);
+  if (tokens.some((token) => ["gp", "gpush", "push!", "+push"].includes(token))) return "prepare-and-commit-and-push";
+  if (tokens.some((token) => ["gc", "commit!", "+commit"].includes(token))) return "prepare-and-commit";
+  if (tokens.some((token) => ["g.", "gprepare", "prepare!", "+prepare"].includes(token))) return "prepare-only";
   const path = join(root, ".repo", "🧑‍💻", contributor.alias, "micro-commit.json");
   if (existsSync(path)) {
     const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
@@ -82,7 +82,7 @@ function loadLevel(root: string, contributor: Contributor, segments: string[]): 
       return j.level;
     }
   }
-  return "prepare-only";
+  return "prepare-and-commit-and-push";
 }
 
 function pad2(n: number): string {
@@ -249,7 +249,7 @@ export function buildMicroCommitMessage(root: string, contributor: Contributor, 
 
 function gitDir(root: string): string {
   const out = git(root, ["rev-parse", "--git-dir"]).out;
-  return out.startsWith("/") ? out : join(root, out);
+  return isAbsolute(out) ? out : join(root, out);
 }
 
 export function writeMicroCommitTemplates(root: string, message: string): void {
@@ -323,6 +323,8 @@ export function handlePrepareCommitMsg(root: string, msgFile: string, source: st
   writeMicroCommitTemplates(root, message);
 }
 
+//#region MicroCommitGitHooks
+
 const MICRO_COMMIT_BUN_PIN = "semio-micro-commit-bun";
 
 /** 🥖Resolves the Bun executable for git hooks (GUI git often has a minimal PATH). */
@@ -383,8 +385,9 @@ const MICRO_COMMIT_RESOLVE_BUN_SH = `semio_resolve_bun() {
     echo "$SEMIO_BUN"
     return
   fi
-  if [ -f "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" ]; then
-    B=$(head -n 1 "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" | tr -d '\\r')
+  GIT_DIR_FOR_BUN=$(git rev-parse --git-dir 2>/dev/null || true)
+  if [ -n "$GIT_DIR_FOR_BUN" ] && [ -f "$GIT_DIR_FOR_BUN/${MICRO_COMMIT_BUN_PIN}" ]; then
+    B=$(head -n 1 "$GIT_DIR_FOR_BUN/${MICRO_COMMIT_BUN_PIN}" | tr -d '\\r')
     if [ -n "$B" ] && [ -x "$B" ]; then
       echo "$B"
       return
@@ -459,24 +462,36 @@ function writeMicroCommitHookFile(path: string, body: string): void {
   }
 }
 
+function activeGitHookDirs(root: string): string[] {
+  const hooksDir = resolve(root, ".git", "hooks");
+  const hooksPath = git(root, ["config", "--local", "--get", "core.hooksPath"]).out;
+  if (!hooksPath) return [hooksDir];
+  const active = isAbsolute(hooksPath) ? resolve(hooksPath) : resolve(root, hooksPath);
+  return Array.from(new Set([hooksDir, active]));
+}
+
 export function installMicroCommitGitHooks(root: string): void {
   const bunBin = resolveMicroCommitBunBin(root).replace(/\r/g, "");
   mkdirSync(join(root, ".repo"), { recursive: true });
-  writeFileSync(join(root, ".repo", MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
-  const hooksDir = join(root, ".git", "hooks");
+  writeFileSync(join(gitDir(root), MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
+  const hookDirs = activeGitHookDirs(root);
   const repoHooksDir = join(root, "repo", "hooks");
-  mkdirSync(hooksDir, { recursive: true });
   mkdirSync(repoHooksDir, { recursive: true });
+  for (const hooksDir of hookDirs) mkdirSync(hooksDir, { recursive: true });
   for (const name of ["prepare-commit-msg", "post-commit"] as const) {
     const body = renderMicroCommitGitHook(name);
     writeMicroCommitHookFile(join(repoHooksDir, name), body);
-    writeMicroCommitHookFile(join(hooksDir, name), body);
+    for (const hooksDir of hookDirs) writeMicroCommitHookFile(join(hooksDir, name), body);
   }
-  const stalePreCommit = join(hooksDir, "pre-commit");
-  if (existsSync(stalePreCommit)) rmSync(stalePreCommit, { force: true });
+  for (const hooksDir of hookDirs) {
+    const stalePreCommit = join(hooksDir, "pre-commit");
+    if (existsSync(stalePreCommit)) rmSync(stalePreCommit, { force: true });
+  }
   const repoPreCommit = join(repoHooksDir, "pre-commit");
   if (existsSync(repoPreCommit)) rmSync(repoPreCommit, { force: true });
 }
+
+//#endregion MicroCommitGitHooks
 
 export function resetMicroCommitTemplates(root: string): void {
   clearMicroCommitTemplatesOnly(root);
@@ -550,7 +565,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   const levelSegments = dash >= 0 ? segments.slice(1, dash) : segments.slice(1);
   const bulletsFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
 
-  const level = loadLevel(root, contributor, levelSegments);
+  const level = loadMicroCommitLevel(root, contributor, levelSegments);
   const staged = git(root, ["add", "-A"]);
   if (!staged.ok) {
     console.error(staged.out || "git add -A failed");
