@@ -8,6 +8,8 @@ import {
 	computeGraphStats,
 	defaultViewState,
 	forceGraphLayout,
+	forceGraphLayoutPresets,
+	graphLayoutRegistry,
 	graphWidgetDataFromSemioLanguageGraph,
 	gridGraphLayout,
 	lensFromNodeTypes,
@@ -80,6 +82,10 @@ class TestScript extends BundleScript {
 				assert.ok(Number.isFinite(position.y));
 			}
 		}
+
+		assert.ok(forceGraphLayoutPresets.every((preset) => preset.simulation != null));
+		assert.ok(graphLayoutRegistry.find((entry) => entry.id === "force-balanced")?.simulation != null);
+		assert.equal(graphLayoutRegistry.find((entry) => entry.id === "circular")?.simulation, undefined);
 
 		const stats = computeGraphStats(curatedNetworkGraphFixture, {
 			activeNodeTypes: new Set(curatedNetworkGraphFixture.nodeTypes.map((nodeType) => nodeType.id)),

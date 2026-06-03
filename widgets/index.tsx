@@ -1739,6 +1739,144 @@ function fitTransform(
 	return { x: width / 2 - cx * k, y: height / 2 - cy * k, k };
 }
 
+interface SimulationNode {
+	id: string;
+	x: number;
+	y: number;
+	vx?: number;
+	vy?: number;
+	fx?: number | null;
+	fy?: number | null;
+}
+
+interface SimulationLink {
+	source: string;
+	target: string;
+}
+
+interface GraphPositionsController {
+	readonly positions: ReadonlyMap<string, { readonly x: number; readonly y: number }>;
+	readonly version: number;
+	readonly live: boolean;
+	beginNodeDrag(nodeId: string, x: number, y: number): void;
+	moveNodeDrag(nodeId: string, x: number, y: number): void;
+	endNodeDrag(nodeId: string, keepFixed: boolean): void;
+}
+
+/** @emoji 🧲 Drives node positions through a live d3-force simulation (animated, draggable) or a static layout. */
+function useGraphPositions(params: {
+	nodes: ReadonlyArray<NetworkNode>;
+	edges: ReadonlyArray<NetworkEdge>;
+	width: number;
+	height: number;
+	staticLayout?: GraphLayout;
+	simulationConfig?: ForceGraphLayoutConfig;
+	layoutOptions?: GraphLayoutOptions;
+	pinnedNodeIds: ReadonlySet<string>;
+	onReady: (positions: ReadonlyMap<string, { readonly x: number; readonly y: number }>) => void;
+}): GraphPositionsController {
+	const { nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, onReady } = params;
+	const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+	const simRef = useRef<Simulation<SimulationNode, undefined> | null>(null);
+	const simNodesRef = useRef<Map<string, SimulationNode>>(new Map());
+	const onReadyRef = useRef(onReady);
+	onReadyRef.current = onReady;
+	const [version, setVersion] = useState(0);
+	const live = !staticLayout && simulationConfig != null;
+
+	useEffect(() => {
+		simRef.current?.stop();
+		simRef.current = null;
+		simNodesRef.current = new Map();
+		if (nodes.length === 0) {
+			positionsRef.current = new Map();
+			setVersion((value) => value + 1);
+			return;
+		}
+		if (!live || !simulationConfig) {
+			const layoutFn = staticLayout ?? circularGraphLayout;
+			const computed = layoutFn(nodes, edges, { width, height, ...layoutOptions });
+			positionsRef.current = new Map([...computed].map(([id, point]) => [id, { x: point.x, y: point.y }]));
+			setVersion((value) => value + 1);
+			onReadyRef.current(positionsRef.current);
+			return;
+		}
+		const previous = positionsRef.current;
+		const simNodes: SimulationNode[] = nodes.map((node, index) => {
+			const prior = previous.get(node.id);
+			const x = prior?.x ?? (index % 12) * 40 - width / 2;
+			const y = prior?.y ?? Math.floor(index / 12) * 40 - height / 2;
+			const fixed = pinnedNodeIds.has(node.id);
+			return { id: node.id, x, y, fx: fixed ? x : undefined, fy: fixed ? y : undefined };
+		});
+		const byId = new Map(simNodes.map((node) => [node.id, node]));
+		simNodesRef.current = byId;
+		const links: SimulationLink[] = edges
+			.filter((edge) => byId.has(edge.source) && byId.has(edge.target))
+			.map((edge) => ({ source: edge.source, target: edge.target }));
+		const writePositions = () => {
+			const next = new Map<string, { x: number; y: number }>();
+			for (const node of simNodes) next.set(node.id, { x: node.x, y: node.y });
+			positionsRef.current = next;
+			setVersion((value) => value + 1);
+		};
+		writePositions();
+		onReadyRef.current(positionsRef.current);
+		const simulation = forceSimulation<SimulationNode>(simNodes)
+			.force("charge", forceManyBody<SimulationNode>().strength(simulationConfig.chargeStrength))
+			.force(
+				"link",
+				forceLink<SimulationNode, SimulationLink>(links)
+					.id((node) => node.id)
+					.distance(simulationConfig.linkDistance),
+			)
+			.force("collide", forceCollide<SimulationNode>(simulationConfig.collideRadius))
+			.force("x", forceX<SimulationNode>(0).strength(simulationConfig.centerStrength))
+			.force("y", forceY<SimulationNode>(0).strength(simulationConfig.centerStrength));
+		simulation.on("tick", writePositions);
+		simulation.on("end", () => {
+			writePositions();
+			onReadyRef.current(positionsRef.current);
+		});
+		simRef.current = simulation;
+		return () => {
+			simulation.on("tick", null);
+			simulation.on("end", null);
+			simulation.stop();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, live]);
+
+	const beginNodeDrag = useCallback((nodeId: string, x: number, y: number) => {
+		const simulation = simRef.current;
+		const node = simNodesRef.current.get(nodeId);
+		if (!simulation || !node) return;
+		node.fx = x;
+		node.fy = y;
+		simulation.alphaTarget(0.3).restart();
+	}, []);
+
+	const moveNodeDrag = useCallback((nodeId: string, x: number, y: number) => {
+		const node = simNodesRef.current.get(nodeId);
+		if (!node) return;
+		node.fx = x;
+		node.fy = y;
+	}, []);
+
+	const endNodeDrag = useCallback((nodeId: string, keepFixed: boolean) => {
+		const simulation = simRef.current;
+		const node = simNodesRef.current.get(nodeId);
+		if (!simulation || !node) return;
+		if (!keepFixed) {
+			node.fx = undefined;
+			node.fy = undefined;
+		}
+		simulation.alphaTarget(0);
+	}, []);
+
+	return { positions: positionsRef.current, version, live, beginNodeDrag, moveNodeDrag, endNodeDrag };
+}
+
 /** @emoji 🕸 Interactive network graph with stats, lenses, and type filtering. */
 export function NetworkGraphWidget({
 	data,
@@ -1811,14 +1949,12 @@ export function NetworkGraphWidget({
 		() => availableLayoutsForMode(viewGraph.effectiveMode, model),
 		[model, viewGraph.effectiveMode],
 	);
-	const activeLayoutFn = useMemo(
-		() =>
-			layout ??
-			modeLayouts.find((entry) => entry.id === viewState.layoutId)?.layout ??
-			modeLayouts[0]?.layout ??
-			graphLayoutRegistry[0]!.layout,
-		[layout, modeLayouts, viewState.layoutId],
+	const activeNamed = useMemo(
+		() => modeLayouts.find((entry) => entry.id === viewState.layoutId) ?? modeLayouts[0] ?? graphLayoutRegistry[0]!,
+		[modeLayouts, viewState.layoutId],
 	);
+	const staticLayoutFn = layout ?? (activeNamed.simulation ? undefined : activeNamed.layout);
+	const simulationConfig = layout ? undefined : activeNamed.simulation;
 	const panRef = useRef<{ active: boolean; x: number; y: number; originX: number; originY: number }>({
 		active: false,
 		x: 0,
@@ -1826,6 +1962,9 @@ export function NetworkGraphWidget({
 		originX: 0,
 		originY: 0,
 	});
+	const svgRef = useRef<SVGSVGElement>(null);
+	const draggingNodeRef = useRef<string | null>(null);
+	const dragMovedRef = useRef(false);
 
 	useEffect(() => {
 		const element = canvasAreaRef.current;
@@ -1839,15 +1978,32 @@ export function NetworkGraphWidget({
 		return () => observer.disconnect();
 	}, []);
 
-	const positions = useMemo(
-		() =>
-			activeLayoutFn(viewGraph.layoutNodes, viewGraph.layoutEdges, {
-				width: shellSize.width,
-				height: shellSize.height,
-				...layoutOptions,
-			}),
-		[activeLayoutFn, viewGraph.layoutNodes, viewGraph.layoutEdges, layoutOptions, shellSize.height, shellSize.width],
+	const handleLayoutReady = useCallback(
+		(layoutPositions: ReadonlyMap<string, { readonly x: number; readonly y: number }>) => {
+			if (layoutPositions.size === 0) return;
+			const fit = fitTransform(
+				layoutPositions,
+				viewGraph.nodes.map((node) => node.id),
+				shellSize.width,
+				shellSize.height,
+			);
+			dispatch({ type: "setTransform", transform: fit });
+		},
+		[viewGraph.nodes, shellSize.width, shellSize.height],
 	);
+
+	const positionsController = useGraphPositions({
+		nodes: viewGraph.layoutNodes,
+		edges: viewGraph.layoutEdges,
+		width: shellSize.width,
+		height: shellSize.height,
+		staticLayout: staticLayoutFn,
+		simulationConfig,
+		layoutOptions,
+		pinnedNodeIds: viewState.pinnedNodeIds,
+		onReady: handleLayoutReady,
+	});
+	const positions = positionsController.positions;
 
 	const selectedType = useMemo(
 		() => (viewState.selectedNodeId ? model.nodeById.get(viewState.selectedNodeId)?.type : undefined),
@@ -1874,21 +2030,6 @@ export function NetworkGraphWidget({
 		);
 		dispatch({ type: "setTransform", transform: fit });
 	}, [positions, shellSize.height, shellSize.width, viewGraph.nodes]);
-
-	const fitSignature = `${viewGraph.effectiveMode}|${viewState.layoutId}|${viewGraph.nodes.length}|${Math.round(shellSize.width)}x${Math.round(shellSize.height)}`;
-	const lastFitRef = useRef<string>("");
-	useEffect(() => {
-		if (lastFitRef.current === fitSignature) return;
-		if (viewGraph.nodes.length === 0) return;
-		lastFitRef.current = fitSignature;
-		const fit = fitTransform(
-			positions,
-			viewGraph.nodes.map((node) => node.id),
-			shellSize.width,
-			shellSize.height,
-		);
-		dispatch({ type: "setTransform", transform: fit });
-	}, [fitSignature, positions, viewGraph.nodes, shellSize.width, shellSize.height]);
 
 	const onWheel = useCallback((event: ReactWheelEvent<SVGSVGElement>) => {
 		event.preventDefault();
@@ -1920,20 +2061,62 @@ export function NetworkGraphWidget({
 
 	const transformRef = useRef(viewState.transform);
 	transformRef.current = viewState.transform;
-	const onPointerMove = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-		if (!panRef.current.active) return;
-		const dx = event.clientX - panRef.current.x;
-		const dy = event.clientY - panRef.current.y;
-		dispatch({
-			type: "setTransform",
-			transform: { ...transformRef.current, x: panRef.current.originX + dx, y: panRef.current.originY + dy },
-		});
+	const clientToGraph = useCallback((clientX: number, clientY: number) => {
+		const svg = svgRef.current;
+		if (!svg) return null;
+		const rect = svg.getBoundingClientRect();
+		const current = transformRef.current;
+		return { x: (clientX - rect.left - current.x) / current.k, y: (clientY - rect.top - current.y) / current.k };
 	}, []);
 
-	const onPointerUp = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-		panRef.current.active = false;
-		event.currentTarget.releasePointerCapture(event.pointerId);
-	}, []);
+	const onNodePointerDown = useCallback(
+		(event: ReactPointerEvent<SVGGElement>, nodeId: string) => {
+			if (event.button !== 0 || !positionsController.live) return;
+			event.stopPropagation();
+			draggingNodeRef.current = nodeId;
+			dragMovedRef.current = false;
+		},
+		[positionsController.live],
+	);
+
+	const onPointerMove = useCallback(
+		(event: ReactPointerEvent<SVGSVGElement>) => {
+			const draggingNode = draggingNodeRef.current;
+			if (draggingNode) {
+				const graph = clientToGraph(event.clientX, event.clientY);
+				if (!graph) return;
+				if (!dragMovedRef.current) {
+					dragMovedRef.current = true;
+					event.currentTarget.setPointerCapture(event.pointerId);
+					positionsController.beginNodeDrag(draggingNode, graph.x, graph.y);
+				} else {
+					positionsController.moveNodeDrag(draggingNode, graph.x, graph.y);
+				}
+				return;
+			}
+			if (!panRef.current.active) return;
+			const dx = event.clientX - panRef.current.x;
+			const dy = event.clientY - panRef.current.y;
+			dispatch({
+				type: "setTransform",
+				transform: { ...transformRef.current, x: panRef.current.originX + dx, y: panRef.current.originY + dy },
+			});
+		},
+		[positionsController, clientToGraph],
+	);
+
+	const onPointerUp = useCallback(
+		(event: ReactPointerEvent<SVGSVGElement>) => {
+			const draggingNode = draggingNodeRef.current;
+			if (draggingNode) {
+				if (dragMovedRef.current) positionsController.endNodeDrag(draggingNode, viewState.pinnedNodeIds.has(draggingNode));
+				draggingNodeRef.current = null;
+			}
+			panRef.current.active = false;
+			if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+		},
+		[positionsController, viewState.pinnedNodeIds],
+	);
 
 	const hoveredNode = viewState.hoveredNodeId ? model.nodeById.get(viewState.hoveredNodeId) : undefined;
 	const selectedNode = viewState.selectedNodeId ? model.nodeById.get(viewState.selectedNodeId) : undefined;
@@ -1985,6 +2168,7 @@ export function NetworkGraphWidget({
 
 			<div ref={canvasAreaRef} style={{ position: "relative", flex: "1 1 auto", minHeight: 0, overflow: "hidden" }}>
 				<svg
+					ref={svgRef}
 					role="img"
 					aria-label="Network graph canvas"
 					style={{
@@ -2055,11 +2239,16 @@ export function NetworkGraphWidget({
 									return (
 										<g
 											key={node.id}
-											style={{ cursor: "pointer" }}
+											style={{ cursor: positionsController.live ? "grab" : "pointer" }}
 											onPointerEnter={() => dispatch({ type: "setHoveredNode", nodeId: node.id })}
 											onPointerLeave={() => dispatch({ type: "setHoveredNode", nodeId: undefined })}
+											onPointerDown={(event) => onNodePointerDown(event, node.id)}
 											onClick={(event) => {
 												event.stopPropagation();
+												if (dragMovedRef.current) {
+													dragMovedRef.current = false;
+													return;
+												}
 												dispatch({
 													type: "selectNode",
 													nodeId: viewState.selectedNodeId === node.id ? undefined : node.id,
