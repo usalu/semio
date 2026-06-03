@@ -3,6 +3,7 @@
 import { strict as assert } from "node:assert";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx } from "../repo/lib/js/src/index.ts";
 import {
+	anchorPoint,
 	buildViewGraph,
 	circularGraphLayout,
 	computeGraphStats,
@@ -86,6 +87,22 @@ class TestScript extends BundleScript {
 		assert.ok(forceGraphLayoutPresets.every((preset) => preset.simulation != null));
 		assert.ok(graphLayoutRegistry.find((entry) => entry.id === "force-balanced")?.simulation != null);
 		assert.equal(graphLayoutRegistry.find((entry) => entry.id === "circular")?.simulation, undefined);
+
+		assert.deepEqual(anchorPoint("center", 800, 600), { x: 0, y: 0 });
+		assert.equal(anchorPoint("auto", 800, 600), undefined);
+		assert.ok((anchorPoint("left", 800, 600)?.x ?? 0) < 0);
+		assert.ok((anchorPoint("bottom", 800, 600)?.y ?? 0) > 0);
+
+		const anchorOf = (node: { type: string }) =>
+			node.type === "Bauteilgruppe" ? { x: 0, y: 0 } : undefined;
+		for (const layout of [circularGraphLayout, gridGraphLayout]) {
+			const anchored = layout(curatedNetworkGraphFixture.nodes, curatedNetworkGraphFixture.edges, { width: 800, height: 600, anchorOf });
+			const centered = curatedNetworkGraphFixture.nodes.filter((node) => node.type === "Bauteilgruppe");
+			const others = curatedNetworkGraphFixture.nodes.filter((node) => node.type !== "Bauteilgruppe");
+			const maxAnchoredRadius = Math.max(...centered.map((node) => Math.hypot(anchored.get(node.id)!.x, anchored.get(node.id)!.y)));
+			const minOtherRadius = Math.min(...others.map((node) => Math.hypot(anchored.get(node.id)!.x, anchored.get(node.id)!.y)));
+			assert.ok(maxAnchoredRadius < minOtherRadius, "anchored type must sit closer to center than free nodes");
+		}
 
 		const stats = computeGraphStats(curatedNetworkGraphFixture, {
 			activeNodeTypes: new Set(curatedNetworkGraphFixture.nodeTypes.map((nodeType) => nodeType.id)),

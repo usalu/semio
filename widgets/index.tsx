@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🧩 `@widgets/react` — standalone React widgets styled against the semio UI token surface. */
+/** @emoji 🧩 `@widgets/react` — standalone React widgets styled against the semio UI token surface. Supports per-type layout anchors. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -496,6 +496,9 @@ export interface TopologyExport {
 	readonly edges: ReadonlyArray<TopologyExportEdge>;
 }
 
+/** @emoji 📌 Named anchor slot that pins a node (or whole node type) to a region of the canvas across any layout. */
+export type GraphAnchorSlot = "auto" | "center" | "top" | "bottom" | "left" | "right";
+
 export interface GraphLayoutOptions {
 	readonly width?: number;
 	readonly height?: number;
@@ -503,6 +506,7 @@ export interface GraphLayoutOptions {
 	readonly linkDistance?: number;
 	readonly collideRadius?: number;
 	readonly centerStrength?: number;
+	readonly anchorOf?: (node: NetworkNode) => { readonly x: number; readonly y: number } | undefined;
 }
 
 export type GraphLayout = (
@@ -684,6 +688,74 @@ export function subgraphByNodeTypes(data: NetworkGraphData, nodeTypeIds: Readonl
 // #endregion 🕸NetworkGraphAdapter
 
 // #region 🕸NetworkGraphLayout
+// #region 📌Anchors
+/** @emoji 📌 Resolves an anchor slot to an origin-centered graph point, or `undefined` for free placement. */
+export function anchorPoint(slot: GraphAnchorSlot, width: number, height: number): { readonly x: number; readonly y: number } | undefined {
+	const dx = width * 0.32;
+	const dy = height * 0.32;
+	switch (slot) {
+		case "center":
+			return { x: 0, y: 0 };
+		case "top":
+			return { x: 0, y: -dy };
+		case "bottom":
+			return { x: 0, y: dy };
+		case "left":
+			return { x: -dx, y: 0 };
+		case "right":
+			return { x: dx, y: 0 };
+		default:
+			return undefined;
+	}
+}
+
+/** @emoji 📌 Packs `count` points into a phyllotaxis disc around `center` so anchored groups stay compact yet readable. */
+export function clusterPositions(
+	center: { readonly x: number; readonly y: number },
+	count: number,
+	spacing = 30,
+): Array<{ readonly x: number; readonly y: number }> {
+	const golden = Math.PI * (3 - Math.sqrt(5));
+	const out: Array<{ x: number; y: number }> = [];
+	for (let index = 0; index < count; index++) {
+		const radius = spacing * Math.sqrt(index);
+		const angle = index * golden;
+		out.push({ x: center.x + radius * Math.cos(angle), y: center.y + radius * Math.sin(angle) });
+	}
+	return out;
+}
+
+function splitByAnchor(
+	nodes: ReadonlyArray<NetworkNode>,
+	anchorOf?: GraphLayoutOptions["anchorOf"],
+): { free: NetworkNode[]; clusters: Map<string, { point: { x: number; y: number }; ids: string[] }> } {
+	const free: NetworkNode[] = [];
+	const clusters = new Map<string, { point: { x: number; y: number }; ids: string[] }>();
+	for (const node of nodes) {
+		const anchor = anchorOf?.(node);
+		if (!anchor) {
+			free.push(node);
+			continue;
+		}
+		const key = `${anchor.x.toFixed(1)}:${anchor.y.toFixed(1)}`;
+		const bucket = clusters.get(key) ?? { point: { x: anchor.x, y: anchor.y }, ids: [] };
+		bucket.ids.push(node.id);
+		clusters.set(key, bucket);
+	}
+	return { free, clusters };
+}
+
+function placeClusters(
+	positions: Map<string, { x: number; y: number }>,
+	clusters: Map<string, { point: { x: number; y: number }; ids: string[] }>,
+): void {
+	for (const { point, ids } of clusters.values()) {
+		const seats = clusterPositions(point, ids.length);
+		ids.forEach((id, index) => positions.set(id, seats[index] ?? point));
+	}
+}
+// #endregion 📌Anchors
+
 interface ForceLayoutNode {
 	readonly id: string;
 	x?: number;
@@ -756,7 +828,7 @@ export const forceGraphLayoutPresets: ReadonlyArray<NamedGraphLayout> = forceGra
 	simulation: entry.config,
 }));
 
-/** @emoji 📐 Circular layout ordered by type then label. */
+/** @emoji 📐 Circular layout: free nodes ride a type-grouped ring sized to the node count; anchored types cluster at their slot. */
 export function circularGraphLayout(
 	nodes: ReadonlyArray<NetworkNode>,
 	_edges: ReadonlyArray<NetworkEdge>,
@@ -764,70 +836,82 @@ export function circularGraphLayout(
 ): ReadonlyMap<string, { readonly x: number; readonly y: number }> {
 	const width = options.width ?? 800;
 	const height = options.height ?? 600;
-	const radius = Math.min(width, height) * 0.35;
-	const sorted = [...nodes].sort((a, b) => a.type.localeCompare(b.type) || a.label.localeCompare(b.label));
+	const { free, clusters } = splitByAnchor(nodes, options.anchorOf);
 	const positions = new Map<string, { x: number; y: number }>();
+	const sorted = [...free].sort((a, b) => a.type.localeCompare(b.type) || a.label.localeCompare(b.label));
+	const spacing = 34;
+	const radius = Math.max(Math.min(width, height) * 0.32, (sorted.length * spacing) / (2 * Math.PI));
 	sorted.forEach((node, index) => {
-		const angle = (index / Math.max(sorted.length, 1)) * Math.PI * 2;
+		const angle = (index / Math.max(sorted.length, 1)) * Math.PI * 2 - Math.PI / 2;
 		positions.set(node.id, { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
 	});
+	placeClusters(positions, clusters);
 	return positions;
 }
 
-/** @emoji 📐 Grid layout by type and label. */
+/** @emoji 📐 Grid layout: free nodes fill a centered fixed-cell grid grouped by type; anchored types cluster at their slot. */
 export function gridGraphLayout(
 	nodes: ReadonlyArray<NetworkNode>,
 	_edges: ReadonlyArray<NetworkEdge>,
 	options: GraphLayoutOptions = {},
 ): ReadonlyMap<string, { readonly x: number; readonly y: number }> {
-	const width = options.width ?? 800;
-	const cols = Math.ceil(Math.sqrt(nodes.length));
-	const cell = Math.max(40, width / Math.max(cols, 1));
-	const sorted = [...nodes].sort((a, b) => a.type.localeCompare(b.type) || a.label.localeCompare(b.label));
+	const { free, clusters } = splitByAnchor(nodes, options.anchorOf);
+	const sorted = [...free].sort((a, b) => a.type.localeCompare(b.type) || a.label.localeCompare(b.label));
+	const cell = 64;
+	const cols = Math.max(1, Math.ceil(Math.sqrt(sorted.length)));
+	const rows = Math.max(1, Math.ceil(sorted.length / cols));
+	const offsetX = ((cols - 1) * cell) / 2;
+	const offsetY = ((rows - 1) * cell) / 2;
 	const positions = new Map<string, { x: number; y: number }>();
 	sorted.forEach((node, index) => {
 		const col = index % cols;
 		const row = Math.floor(index / cols);
-		positions.set(node.id, { x: col * cell - width / 2, y: row * cell - (options.height ?? 600) / 4 });
+		positions.set(node.id, { x: col * cell - offsetX, y: row * cell - offsetY });
 	});
+	placeClusters(positions, clusters);
 	return positions;
 }
 
-/** @emoji 📐 Radial BFS rings from highest-degree node. */
+/** @emoji 📐 Radial BFS rings from the highest-degree node; anchored types are pulled out into their slot cluster. */
 export function radialGraphLayout(
 	nodes: ReadonlyArray<NetworkNode>,
 	edges: ReadonlyArray<NetworkEdge>,
 	options: GraphLayoutOptions = {},
 ): ReadonlyMap<string, { readonly x: number; readonly y: number }> {
 	if (nodes.length === 0) return new Map();
+	const { free, clusters } = splitByAnchor(nodes, options.anchorOf);
 	const adjacency = buildAdjacency(edges);
-	const root = [...nodes].sort((a, b) => (adjacency.get(b.id)?.size ?? 0) - (adjacency.get(a.id)?.size ?? 0))[0]!;
-	const levels = new Map<string, number>();
-	const queue = [root.id];
-	levels.set(root.id, 0);
-	while (queue.length > 0) {
-		const current = queue.shift()!;
-		for (const neighbor of adjacency.get(current) ?? []) {
-			if (levels.has(neighbor)) continue;
-			levels.set(neighbor, (levels.get(current) ?? 0) + 1);
-			queue.push(neighbor);
+	const positions = new Map<string, { x: number; y: number }>();
+	if (free.length > 0) {
+		const root = [...free].sort((a, b) => (adjacency.get(b.id)?.size ?? 0) - (adjacency.get(a.id)?.size ?? 0))[0]!;
+		const freeIds = new Set(free.map((node) => node.id));
+		const levels = new Map<string, number>();
+		const queue = [root.id];
+		levels.set(root.id, 0);
+		while (queue.length > 0) {
+			const current = queue.shift()!;
+			for (const neighbor of adjacency.get(current) ?? []) {
+				if (levels.has(neighbor) || !freeIds.has(neighbor)) continue;
+				levels.set(neighbor, (levels.get(current) ?? 0) + 1);
+				queue.push(neighbor);
+			}
+		}
+		const byLevel = new Map<number, string[]>();
+		for (const node of free) {
+			const level = levels.get(node.id) ?? 1;
+			const bucket = byLevel.get(level) ?? [];
+			bucket.push(node.id);
+			byLevel.set(level, bucket);
+		}
+		const ringGap = 64;
+		for (const [level, ids] of byLevel) {
+			ids.forEach((id, index) => {
+				const angle = (index / Math.max(ids.length, 1)) * Math.PI * 2;
+				positions.set(id, { x: Math.cos(angle) * level * ringGap, y: Math.sin(angle) * level * ringGap });
+			});
 		}
 	}
-	const byLevel = new Map<number, string[]>();
-	for (const node of nodes) {
-		const level = levels.get(node.id) ?? 1;
-		const bucket = byLevel.get(level) ?? [];
-		bucket.push(node.id);
-		byLevel.set(level, bucket);
-	}
-	const positions = new Map<string, { x: number; y: number }>();
-	const ringGap = 55;
-	for (const [level, ids] of byLevel) {
-		ids.forEach((id, index) => {
-			const angle = (index / Math.max(ids.length, 1)) * Math.PI * 2;
-			positions.set(id, { x: Math.cos(angle) * level * ringGap, y: Math.sin(angle) * level * ringGap });
-		});
-	}
+	placeClusters(positions, clusters);
 	return positions;
 }
 
@@ -836,7 +920,6 @@ export const graphLayoutRegistry: ReadonlyArray<NamedGraphLayout> = [
 	{ id: "circular", name: "Circular", layout: circularGraphLayout },
 	{ id: "grid", name: "Grid", layout: gridGraphLayout },
 	{ id: "radial", name: "Radial", layout: radialGraphLayout },
-	{ id: "manual-pinned", name: "Manual · Pinned", layout: forceGraphLayout, simulation: defaultForceGraphLayoutConfig },
 ];
 // #endregion 🕸NetworkGraphLayout
 
@@ -1177,6 +1260,7 @@ export interface GraphViewState {
 	readonly nodeSizeMetric: NodeSizeMetric;
 	readonly edgeWidthMetric: EdgeWidthMetric;
 	readonly pinnedNodeIds: ReadonlySet<string>;
+	readonly typeAnchors: ReadonlyMap<string, GraphAnchorSlot>;
 	readonly collapsedGroupIds: ReadonlySet<string>;
 	readonly highlightedPath: ReadonlyArray<string>;
 	readonly transform: GraphViewTransform;
@@ -1205,6 +1289,8 @@ export type GraphViewAction =
 	| { readonly type: "setNodeSizeMetric"; readonly nodeSizeMetric: NodeSizeMetric }
 	| { readonly type: "setEdgeWidthMetric"; readonly edgeWidthMetric: EdgeWidthMetric }
 	| { readonly type: "togglePin"; readonly nodeId: string }
+	| { readonly type: "setTypeAnchor"; readonly nodeType: string; readonly slot: GraphAnchorSlot }
+	| { readonly type: "clearTypeAnchors" }
 	| { readonly type: "toggleGroupCollapse"; readonly groupId: string }
 	| { readonly type: "setHighlightedPath"; readonly path: ReadonlyArray<string> }
 	| { readonly type: "setTransform"; readonly transform: GraphViewTransform }
@@ -1243,6 +1329,7 @@ export function defaultViewState(model: GraphModel, options: DefaultViewStateOpt
 		nodeSizeMetric: "degree",
 		edgeWidthMetric: "uniform",
 		pinnedNodeIds: new Set(),
+		typeAnchors: new Map(),
 		collapsedGroupIds: new Set(),
 		highlightedPath: [],
 		transform: { x: 0, y: 0, k: 1 },
@@ -1308,8 +1395,16 @@ export function graphViewReducer(state: GraphViewState, action: GraphViewAction)
 			const next = new Set(state.pinnedNodeIds);
 			if (next.has(action.nodeId)) next.delete(action.nodeId);
 			else next.add(action.nodeId);
-			return { ...state, pinnedNodeIds: next, layoutId: "manual-pinned" };
+			return { ...state, pinnedNodeIds: next };
 		}
+		case "setTypeAnchor": {
+			const next = new Map(state.typeAnchors);
+			if (action.slot === "auto") next.delete(action.nodeType);
+			else next.set(action.nodeType, action.slot);
+			return { ...state, typeAnchors: next };
+		}
+		case "clearTypeAnchors":
+			return { ...state, typeAnchors: new Map() };
 		case "toggleGroupCollapse": {
 			const next = new Set(state.collapsedGroupIds);
 			if (next.has(action.groupId)) next.delete(action.groupId);
@@ -1773,9 +1868,10 @@ function useGraphPositions(params: {
 	simulationConfig?: ForceGraphLayoutConfig;
 	layoutOptions?: GraphLayoutOptions;
 	pinnedNodeIds: ReadonlySet<string>;
+	typeAnchors: ReadonlyMap<string, GraphAnchorSlot>;
 	onReady: (positions: ReadonlyMap<string, { readonly x: number; readonly y: number }>) => void;
 }): GraphPositionsController {
-	const { nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, onReady } = params;
+	const { nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, typeAnchors, onReady } = params;
 	const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 	const simRef = useRef<Simulation<SimulationNode, undefined> | null>(null);
 	const simNodesRef = useRef<Map<string, SimulationNode>>(new Map());
@@ -1793,9 +1889,16 @@ function useGraphPositions(params: {
 			setVersion((value) => value + 1);
 			return;
 		}
+		const anchorById = new Map<string, { x: number; y: number }>();
+		for (const node of nodes) {
+			const slot = typeAnchors.get(node.type) ?? "auto";
+			const point = anchorPoint(slot, width, height);
+			if (point) anchorById.set(node.id, point);
+		}
+		const anchorOf = anchorById.size > 0 ? (node: NetworkNode) => anchorById.get(node.id) : undefined;
 		if (!live || !simulationConfig) {
 			const layoutFn = staticLayout ?? circularGraphLayout;
-			const computed = layoutFn(nodes, edges, { width, height, ...layoutOptions });
+			const computed = layoutFn(nodes, edges, { width, height, ...layoutOptions, anchorOf });
 			positionsRef.current = new Map([...computed].map(([id, point]) => [id, { x: point.x, y: point.y }]));
 			setVersion((value) => value + 1);
 			onReadyRef.current(positionsRef.current);
@@ -1804,8 +1907,9 @@ function useGraphPositions(params: {
 		const previous = positionsRef.current;
 		const simNodes: SimulationNode[] = nodes.map((node, index) => {
 			const prior = previous.get(node.id);
-			const x = prior?.x ?? (index % 12) * 40 - width / 2;
-			const y = prior?.y ?? Math.floor(index / 12) * 40 - height / 2;
+			const anchor = anchorById.get(node.id);
+			const x = prior?.x ?? anchor?.x ?? (index % 12) * 40 - width / 2;
+			const y = prior?.y ?? anchor?.y ?? Math.floor(index / 12) * 40 - height / 2;
 			const fixed = pinnedNodeIds.has(node.id);
 			return { id: node.id, x, y, fx: fixed ? x : undefined, fy: fixed ? y : undefined };
 		});
@@ -1822,6 +1926,7 @@ function useGraphPositions(params: {
 		};
 		writePositions();
 		onReadyRef.current(positionsRef.current);
+		const anchorStrength = 0.55;
 		const simulation = forceSimulation<SimulationNode>(simNodes)
 			.force("charge", forceManyBody<SimulationNode>().strength(simulationConfig.chargeStrength))
 			.force(
@@ -1831,8 +1936,18 @@ function useGraphPositions(params: {
 					.distance(simulationConfig.linkDistance),
 			)
 			.force("collide", forceCollide<SimulationNode>(simulationConfig.collideRadius))
-			.force("x", forceX<SimulationNode>(0).strength(simulationConfig.centerStrength))
-			.force("y", forceY<SimulationNode>(0).strength(simulationConfig.centerStrength));
+			.force(
+				"x",
+				forceX<SimulationNode>((node) => anchorById.get(node.id)?.x ?? 0).strength((node) =>
+					anchorById.has(node.id) ? anchorStrength : simulationConfig.centerStrength,
+				),
+			)
+			.force(
+				"y",
+				forceY<SimulationNode>((node) => anchorById.get(node.id)?.y ?? 0).strength((node) =>
+					anchorById.has(node.id) ? anchorStrength : simulationConfig.centerStrength,
+				),
+			);
 		simulation.on("tick", writePositions);
 		simulation.on("end", () => {
 			writePositions();
@@ -1845,7 +1960,7 @@ function useGraphPositions(params: {
 			simulation.stop();
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, live]);
+	}, [nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, typeAnchors, live]);
 
 	const beginNodeDrag = useCallback((nodeId: string, x: number, y: number) => {
 		const simulation = simRef.current;
@@ -2001,6 +2116,7 @@ export function NetworkGraphWidget({
 		simulationConfig,
 		layoutOptions,
 		pinnedNodeIds: viewState.pinnedNodeIds,
+		typeAnchors: viewState.typeAnchors,
 		onReady: handleLayoutReady,
 	});
 	const positions = positionsController.positions;
@@ -2520,6 +2636,40 @@ export function NetworkGraphWidget({
 									</option>
 								))}
 							</select>
+						) : null}
+						<p style={eyebrowStyle}>Layout anchors</p>
+						{model.nodeTypes
+							.filter((nodeType) => viewState.activeNodeTypes.has(nodeType.id))
+							.map((nodeType) => (
+								<div key={nodeType.id} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+									<span
+										style={{
+											width: "0.7rem",
+											height: "0.7rem",
+											flex: "0 0 auto",
+											background: model.colors.get(nodeType.id) ?? NODE_TYPE_COLOR_TOKENS[0],
+										}}
+									/>
+									<span style={{ flex: "1 1 auto", fontSize: "0.7rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+										{nodeType.label}
+									</span>
+									<select
+										value={viewState.typeAnchors.get(nodeType.id) ?? "auto"}
+										onChange={(event) => dispatch({ type: "setTypeAnchor", nodeType: nodeType.id, slot: event.target.value as GraphAnchorSlot })}
+										style={{ ...networkGraphChipStyle, flex: "0 0 auto", padding: "0.15rem 0.3rem", fontSize: "0.65rem", cursor: "pointer" }}
+									>
+										{(["auto", "center", "top", "bottom", "left", "right"] as const).map((slot) => (
+											<option key={slot} value={slot}>
+												{slot}
+											</option>
+										))}
+									</select>
+								</div>
+							))}
+						{viewState.typeAnchors.size > 0 ? (
+							<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "clearTypeAnchors" })}>
+								Clear anchors
+							</button>
 						) : null}
 						<p style={eyebrowStyle}>Neighborhood</p>
 						<input
