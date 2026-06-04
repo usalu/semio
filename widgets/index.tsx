@@ -504,9 +504,10 @@ export interface GraphLayoutOptions {
 	readonly height?: number;
 	readonly chargeStrength?: number;
 	readonly linkDistance?: number;
-	readonly collideRadius?: number;
+	readonly collidePadding?: number;
 	readonly centerStrength?: number;
 	readonly anchorOf?: (node: NetworkNode) => { readonly x: number; readonly y: number } | undefined;
+	readonly radiusOf?: (node: NetworkNode) => number;
 }
 
 export type GraphLayout = (
@@ -515,18 +516,25 @@ export type GraphLayout = (
 	options?: GraphLayoutOptions,
 ) => ReadonlyMap<string, { readonly x: number; readonly y: number }>;
 
+/**
+ * @emoji 🧲 Neo4j-style force tuning.
+ * @see https://github.com/neo4j/neo4j-browser force-simulation constants (charge -400, collide radius+padding strength 1, weak centering 0.03, velocityDecay 0.4).
+ * `linkDistance` is the gap added on top of the two endpoint radii; `collidePadding` is added to each node radius.
+ */
 export interface ForceGraphLayoutConfig {
 	readonly chargeStrength: number;
 	readonly linkDistance: number;
-	readonly collideRadius: number;
+	readonly collidePadding: number;
 	readonly centerStrength: number;
+	readonly velocityDecay: number;
 }
 
 export const defaultForceGraphLayoutConfig: ForceGraphLayoutConfig = {
-	chargeStrength: -120,
-	linkDistance: 48,
-	collideRadius: 14,
-	centerStrength: 0.12,
+	chargeStrength: -400,
+	linkDistance: 45,
+	collidePadding: 16,
+	centerStrength: 0.04,
+	velocityDecay: 0.4,
 };
 
 export interface ComputeGraphStatsOptions {
@@ -553,6 +561,10 @@ export interface NetworkGraphWidgetProps extends Omit<ComponentPropsWithoutRef<"
 // #endregion 🕸NetworkGraphTypes
 
 // #region 🕸NetworkGraphTheme
+/**
+ * @emoji 🎨 Distinct graph palette shared by node and edge types.
+ * Node types claim the front slice, edge types continue after them, so the two groups never collide and colors do not repeat until the palette is exhausted.
+ */
 const NODE_TYPE_COLOR_TOKENS = [
 	"var(--accent, #ff344f)",
 	"var(--accent-secondary, #34d1bf)",
@@ -560,6 +572,20 @@ const NODE_TYPE_COLOR_TOKENS = [
 	"var(--success-border, #7eb77f)",
 	"var(--warning-border, #fccf05)",
 	"var(--info-border, #dbbea1)",
+	"#6c8cff",
+	"#c061cb",
+	"#00a3a3",
+	"#e0607e",
+	"#8bc34a",
+	"#b07d48",
+	"#5b8def",
+	"#ed4192",
+	"#945ecf",
+	"#13a4b4",
+	"#9c6b4f",
+	"#cc3c5d",
+	"#525df4",
+	"#ad6ee8",
 ] as const;
 
 const CUSTOM_LENS_NAME = "Custom Lens";
@@ -626,6 +652,18 @@ function assignNodeTypeColors(nodeTypes: ReadonlyArray<GraphNodeTypeDef>): Reado
 function nodeTypeColorMap(data: NetworkGraphData): ReadonlyMap<string, string> {
 	const colored = assignNodeTypeColors(data.nodeTypes);
 	return new Map(colored.map((nodeType) => [nodeType.id, nodeType.color ?? NODE_TYPE_COLOR_TOKENS[0]]));
+}
+
+/** @emoji 🎨 Maps edge types onto the palette slice that follows the node types so node and edge colors never repeat. */
+function edgeTypeColorMap(graph: { readonly nodeTypes: ReadonlyArray<GraphNodeTypeDef>; readonly edgeTypes: ReadonlyArray<GraphEdgeTypeDef> }): ReadonlyMap<string, string> {
+	const offset = graph.nodeTypes.length;
+	const sorted = [...graph.edgeTypes].sort((a, b) => a.id.localeCompare(b.id));
+	return new Map(
+		graph.edgeTypes.map((edgeType) => {
+			const index = sorted.findIndex((entry) => entry.id === edgeType.id);
+			return [edgeType.id, edgeType.color ?? NODE_TYPE_COLOR_TOKENS[(offset + index) % NODE_TYPE_COLOR_TOKENS.length]];
+		}),
+	);
 }
 // #endregion 🕸NetworkGraphTheme
 
@@ -758,6 +796,7 @@ function placeClusters(
 
 interface ForceLayoutNode {
 	readonly id: string;
+	readonly radius: number;
 	x?: number;
 	y?: number;
 }
@@ -777,21 +816,27 @@ export function forceGraphLayout(
 	if (nodes.length === 0) return new Map();
 	const width = options.width ?? 800;
 	const height = options.height ?? 600;
+	const radiusOf = options.radiusOf ?? (() => 8);
+	const radiusById = new Map(nodes.map((node) => [node.id, radiusOf(node)]));
 	const nodesCopy: ForceLayoutNode[] = nodes.map((node, index) => ({
 		id: node.id,
-		x: (index % 12) * 40 - width / 2,
-		y: Math.floor(index / 12) * 40 - height / 2,
+		radius: radiusById.get(node.id) ?? 8,
+		x: options.anchorOf?.(node)?.x ?? (index % 12) * 40 - width / 2,
+		y: options.anchorOf?.(node)?.y ?? Math.floor(index / 12) * 40 - height / 2,
 	}));
 	const linksCopy: ForceLayoutLink[] = edges.map((edge) => ({ source: edge.source, target: edge.target }));
+	const endpointRadius = (end: string | ForceLayoutNode) =>
+		typeof end === "object" ? end.radius : radiusById.get(end) ?? 8;
 	const simulation = forceSimulation(nodesCopy)
-		.force("charge", forceManyBody().strength(config.chargeStrength))
+		.velocityDecay(config.velocityDecay)
+		.force("charge", forceManyBody<ForceLayoutNode>().strength(config.chargeStrength))
 		.force(
 			"link",
 			forceLink<ForceLayoutNode, ForceLayoutLink>(linksCopy)
 				.id((node) => node.id)
-				.distance(config.linkDistance),
+				.distance((link) => endpointRadius(link.source as never) + endpointRadius(link.target as never) + config.linkDistance),
 		)
-		.force("collide", forceCollide(config.collideRadius))
+		.force("collide", forceCollide<ForceLayoutNode>((node) => node.radius + config.collidePadding).strength(1))
 		.force("x", forceX(0).strength(config.centerStrength))
 		.force("y", forceY(0).strength(config.centerStrength))
 		.stop();
@@ -816,9 +861,9 @@ export function forceGraphLayoutWithConfig(config: ForceGraphLayoutConfig): Grap
 
 const forceGraphLayoutConfigs: ReadonlyArray<{ id: string; name: string; config: ForceGraphLayoutConfig }> = [
 	{ id: "force-balanced", name: "Force · Balanced", config: defaultForceGraphLayoutConfig },
-	{ id: "force-spread", name: "Force · Spread", config: { chargeStrength: -280, linkDistance: 96, collideRadius: 22, centerStrength: 0.05 } },
-	{ id: "force-tight", name: "Force · Tight", config: { chargeStrength: -55, linkDistance: 26, collideRadius: 9, centerStrength: 0.22 } },
-	{ id: "force-clustered", name: "Force · Clustered", config: { chargeStrength: -160, linkDistance: 30, collideRadius: 8, centerStrength: 0.02 } },
+	{ id: "force-spread", name: "Force · Spread", config: { chargeStrength: -800, linkDistance: 90, collidePadding: 28, centerStrength: 0.025, velocityDecay: 0.4 } },
+	{ id: "force-tight", name: "Force · Tight", config: { chargeStrength: -180, linkDistance: 20, collidePadding: 6, centerStrength: 0.09, velocityDecay: 0.45 } },
+	{ id: "force-clustered", name: "Force · Clustered", config: { chargeStrength: -300, linkDistance: 24, collidePadding: 10, centerStrength: 0.015, velocityDecay: 0.5 } },
 ];
 
 export const forceGraphLayoutPresets: ReadonlyArray<NamedGraphLayout> = forceGraphLayoutConfigs.map((entry) => ({
@@ -1707,13 +1752,13 @@ export interface RenderGraph {
 }
 
 function nodeSizeForMetric(model: GraphModel, node: NetworkNode, metric: NodeSizeMetric, schema?: boolean): number {
-	if (schema) return 12;
-	if (metric === "uniform") return 6;
+	if (schema) return 14;
+	if (metric === "uniform") return 9;
 	const degree = model.degree.get(node.id);
-	if (!degree) return 5;
-	if (metric === "in") return Math.min(14, 4 + degree.in);
-	if (metric === "out") return Math.min(14, 4 + degree.out);
-	return Math.min(14, 4 + Math.sqrt(degree.total));
+	if (!degree) return 7;
+	if (metric === "in") return Math.min(26, 7 + 1.6 * degree.in);
+	if (metric === "out") return Math.min(26, 7 + 1.6 * degree.out);
+	return Math.min(26, 7 + 2.4 * Math.sqrt(degree.total));
 }
 
 function edgeWidthForMetric(metric: EdgeWidthMetric, count = 1): number {
@@ -1758,7 +1803,7 @@ export function buildViewGraph(
 			schema: modeGraph.schema,
 		};
 	});
-	const edgeTypeColors = new Map(model.edgeTypes.map((edgeType, index) => [edgeType.id, NODE_TYPE_COLOR_TOKENS[index % NODE_TYPE_COLOR_TOKENS.length]]));
+	const edgeTypeColors = edgeTypeColorMap(model);
 	const renderEdges: RenderEdge[] = state.showEdges
 		? modeGraph.edges.map((edge) => {
 				const highlighted =
@@ -1836,6 +1881,7 @@ function fitTransform(
 
 interface SimulationNode {
 	id: string;
+	radius: number;
 	x: number;
 	y: number;
 	vx?: number;
@@ -1856,6 +1902,7 @@ interface GraphPositionsController {
 	beginNodeDrag(nodeId: string, x: number, y: number): void;
 	moveNodeDrag(nodeId: string, x: number, y: number): void;
 	endNodeDrag(nodeId: string, keepFixed: boolean): void;
+	cancelAutoFit(): void;
 }
 
 /** @emoji 🧲 Drives node positions through a live d3-force simulation (animated, draggable) or a static layout. */
@@ -1869,14 +1916,16 @@ function useGraphPositions(params: {
 	layoutOptions?: GraphLayoutOptions;
 	pinnedNodeIds: ReadonlySet<string>;
 	typeAnchors: ReadonlyMap<string, GraphAnchorSlot>;
+	nodeRadii: ReadonlyMap<string, number>;
 	onReady: (positions: ReadonlyMap<string, { readonly x: number; readonly y: number }>) => void;
 }): GraphPositionsController {
-	const { nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, typeAnchors, onReady } = params;
+	const { nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, typeAnchors, nodeRadii, onReady } = params;
 	const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 	const simRef = useRef<Simulation<SimulationNode, undefined> | null>(null);
 	const simNodesRef = useRef<Map<string, SimulationNode>>(new Map());
 	const onReadyRef = useRef(onReady);
 	onReadyRef.current = onReady;
+	const autoFitRef = useRef(true);
 	const [version, setVersion] = useState(0);
 	const live = !staticLayout && simulationConfig != null;
 
@@ -1884,6 +1933,7 @@ function useGraphPositions(params: {
 		simRef.current?.stop();
 		simRef.current = null;
 		simNodesRef.current = new Map();
+		autoFitRef.current = true;
 		if (nodes.length === 0) {
 			positionsRef.current = new Map();
 			setVersion((value) => value + 1);
@@ -1896,9 +1946,10 @@ function useGraphPositions(params: {
 			if (point) anchorById.set(node.id, point);
 		}
 		const anchorOf = anchorById.size > 0 ? (node: NetworkNode) => anchorById.get(node.id) : undefined;
+		const radiusOf = (node: NetworkNode) => nodeRadii.get(node.id) ?? 8;
 		if (!live || !simulationConfig) {
 			const layoutFn = staticLayout ?? circularGraphLayout;
-			const computed = layoutFn(nodes, edges, { width, height, ...layoutOptions, anchorOf });
+			const computed = layoutFn(nodes, edges, { width, height, ...layoutOptions, anchorOf, radiusOf });
 			positionsRef.current = new Map([...computed].map(([id, point]) => [id, { x: point.x, y: point.y }]));
 			setVersion((value) => value + 1);
 			onReadyRef.current(positionsRef.current);
@@ -1911,7 +1962,7 @@ function useGraphPositions(params: {
 			const x = prior?.x ?? anchor?.x ?? (index % 12) * 40 - width / 2;
 			const y = prior?.y ?? anchor?.y ?? Math.floor(index / 12) * 40 - height / 2;
 			const fixed = pinnedNodeIds.has(node.id);
-			return { id: node.id, x, y, fx: fixed ? x : undefined, fy: fixed ? y : undefined };
+			return { id: node.id, radius: radiusOf(node), x, y, fx: fixed ? x : undefined, fy: fixed ? y : undefined };
 		});
 		const byId = new Map(simNodes.map((node) => [node.id, node]));
 		simNodesRef.current = byId;
@@ -1927,15 +1978,17 @@ function useGraphPositions(params: {
 		writePositions();
 		onReadyRef.current(positionsRef.current);
 		const anchorStrength = 0.55;
+		const endpointRadius = (end: string | SimulationNode) => (typeof end === "object" ? end.radius : byId.get(end)?.radius ?? 8);
 		const simulation = forceSimulation<SimulationNode>(simNodes)
+			.velocityDecay(simulationConfig.velocityDecay)
 			.force("charge", forceManyBody<SimulationNode>().strength(simulationConfig.chargeStrength))
 			.force(
 				"link",
 				forceLink<SimulationNode, SimulationLink>(links)
 					.id((node) => node.id)
-					.distance(simulationConfig.linkDistance),
+					.distance((link) => endpointRadius(link.source as never) + endpointRadius(link.target as never) + simulationConfig.linkDistance),
 			)
-			.force("collide", forceCollide<SimulationNode>(simulationConfig.collideRadius))
+			.force("collide", forceCollide<SimulationNode>((node) => node.radius + simulationConfig.collidePadding).strength(1))
 			.force(
 				"x",
 				forceX<SimulationNode>((node) => anchorById.get(node.id)?.x ?? 0).strength((node) =>
@@ -1948,10 +2001,14 @@ function useGraphPositions(params: {
 					anchorById.has(node.id) ? anchorStrength : simulationConfig.centerStrength,
 				),
 			);
-		simulation.on("tick", writePositions);
+		simulation.on("tick", () => {
+			writePositions();
+			if (autoFitRef.current) onReadyRef.current(positionsRef.current);
+		});
 		simulation.on("end", () => {
 			writePositions();
-			onReadyRef.current(positionsRef.current);
+			if (autoFitRef.current) onReadyRef.current(positionsRef.current);
+			autoFitRef.current = false;
 		});
 		simRef.current = simulation;
 		return () => {
@@ -1960,15 +2017,20 @@ function useGraphPositions(params: {
 			simulation.stop();
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, typeAnchors, live]);
+	}, [nodes, edges, width, height, staticLayout, simulationConfig, layoutOptions, pinnedNodeIds, typeAnchors, nodeRadii, live]);
 
 	const beginNodeDrag = useCallback((nodeId: string, x: number, y: number) => {
 		const simulation = simRef.current;
 		const node = simNodesRef.current.get(nodeId);
 		if (!simulation || !node) return;
+		autoFitRef.current = false;
 		node.fx = x;
 		node.fy = y;
 		simulation.alphaTarget(0.3).restart();
+	}, []);
+
+	const cancelAutoFit = useCallback(() => {
+		autoFitRef.current = false;
 	}, []);
 
 	const moveNodeDrag = useCallback((nodeId: string, x: number, y: number) => {
@@ -1989,7 +2051,7 @@ function useGraphPositions(params: {
 		simulation.alphaTarget(0);
 	}, []);
 
-	return { positions: positionsRef.current, version, live, beginNodeDrag, moveNodeDrag, endNodeDrag };
+	return { positions: positionsRef.current, version, live, beginNodeDrag, moveNodeDrag, endNodeDrag, cancelAutoFit };
 }
 
 /** @emoji 🕸 Interactive network graph with stats, lenses, and type filtering. */
@@ -2015,6 +2077,7 @@ export function NetworkGraphWidget({
 	const [shellSize, setShellSize] = useState({ width: 800, height: 520 });
 	const model = useMemo(() => normalizeGraph(data), [data]);
 	const allEdgeTypeIds = useMemo(() => model.edgeTypes.map((edgeType) => edgeType.id), [model.edgeTypes]);
+	const edgeTypeColors = useMemo(() => edgeTypeColorMap(model), [model]);
 	const lenses = lensesProp ?? data.lenses ?? [];
 	const [viewState, dispatch] = useReducer(
 		graphViewReducer,
@@ -2107,6 +2170,7 @@ export function NetworkGraphWidget({
 		[viewGraph.nodes, shellSize.width, shellSize.height],
 	);
 
+	const nodeRadii = useMemo(() => new Map(viewGraph.nodes.map((node) => [node.id, node.size])), [viewGraph.nodes]);
 	const positionsController = useGraphPositions({
 		nodes: viewGraph.layoutNodes,
 		edges: viewGraph.layoutEdges,
@@ -2117,6 +2181,7 @@ export function NetworkGraphWidget({
 		layoutOptions,
 		pinnedNodeIds: viewState.pinnedNodeIds,
 		typeAnchors: viewState.typeAnchors,
+		nodeRadii,
 		onReady: handleLayoutReady,
 	});
 	const positions = positionsController.positions;
@@ -2149,6 +2214,7 @@ export function NetworkGraphWidget({
 
 	const onWheel = useCallback((event: ReactWheelEvent<SVGSVGElement>) => {
 		event.preventDefault();
+		positionsController.cancelAutoFit();
 		const rect = event.currentTarget.getBoundingClientRect();
 		const px = event.clientX - rect.left;
 		const py = event.clientY - rect.top;
@@ -2158,11 +2224,12 @@ export function NetworkGraphWidget({
 		const graphX = (px - previous.x) / previous.k;
 		const graphY = (py - previous.y) / previous.k;
 		dispatch({ type: "setTransform", transform: { k: nextK, x: px - graphX * nextK, y: py - graphY * nextK } });
-	}, [viewState.transform]);
+	}, [positionsController, viewState.transform]);
 
 	const onPointerDown = useCallback(
 		(event: ReactPointerEvent<SVGSVGElement>) => {
 			if (event.button !== 0) return;
+			positionsController.cancelAutoFit();
 			panRef.current = {
 				active: true,
 				x: event.clientX,
@@ -2172,7 +2239,7 @@ export function NetworkGraphWidget({
 			};
 			event.currentTarget.setPointerCapture(event.pointerId);
 		},
-		[viewState.transform.x, viewState.transform.y],
+		[positionsController, viewState.transform.x, viewState.transform.y],
 	);
 
 	const transformRef = useRef(viewState.transform);
@@ -2248,40 +2315,6 @@ export function NetworkGraphWidget({
 			className={classNames("network-graph-widget", className)}
 			style={{ ...networkGraphShellStyle, height, ...style }}
 		>
-			<div
-				style={{
-					flex: "0 0 auto",
-					display: "flex",
-					flexWrap: "wrap",
-					alignItems: "center",
-					justifyContent: "center",
-					gap: "0.35rem",
-					padding: "0.5rem 2.5rem",
-					background: "transparent",
-					zIndex: 11,
-				}}
-			>
-				{data.edgeTypes.map((edgeType) => {
-					const active = viewState.activeEdgeTypes.has(edgeType.id);
-					return (
-						<button
-							key={edgeType.id}
-							type="button"
-							style={{
-								...networkGraphChipStyle,
-								fontSize: "0.65rem",
-								background: active
-									? "color-mix(in srgb, var(--window, #ebe8d9) 75%, transparent)"
-									: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
-							}}
-							onClick={() => dispatch({ type: "toggleEdgeType", edgeTypeId: edgeType.id })}
-						>
-							{edgeType.label}
-						</button>
-					);
-				})}
-			</div>
-
 			<div ref={canvasAreaRef} style={{ position: "relative", flex: "1 1 auto", minHeight: 0, overflow: "hidden" }}>
 				<svg
 					ref={svgRef}
@@ -2416,71 +2449,57 @@ export function NetworkGraphWidget({
 						alignContent: "start",
 					}}
 				>
-					<p style={eyebrowStyle}>Graph Stats</p>
-					<p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>
-						Mode: {viewGraph.effectiveMode}
-						{viewState.mode === "auto" ? ` (${modeSuggestion.reason})` : ""}
-					</p>
-					{viewGraph.warnings.map((warning) => (
-						<p key={warning} style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem", color: "var(--warning-border, #fccf05)" }}>
-							{warning}
-						</p>
-					))}
-					{selectedNode ? (
-						<div style={{ display: "grid", gap: "0.25rem", paddingBottom: "0.35rem", borderBottom: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)" }}>
-							<p style={{ ...titleStyle, fontSize: "0.8rem", margin: 0 }}>{selectedNode.label}</p>
-							<p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>
-								{selectedNode.type} · in {model.degree.get(selectedNode.id)?.in ?? 0} · out {model.degree.get(selectedNode.id)?.out ?? 0}
-							</p>
-							<div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
-								<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "isolateSelection", model })}>
-									Isolate
-								</button>
-								<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "setMode", mode: "ego" })}>
-									Ego
-								</button>
-								<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "togglePin", nodeId: selectedNode.id })}>
-									{viewState.pinnedNodeIds.has(selectedNode.id) ? "Unpin" : "Pin"}
-								</button>
-							</div>
-						</div>
-					) : null}
-					{selectedEdge ? (
-						<div style={{ display: "grid", gap: "0.25rem", paddingBottom: "0.35rem", borderBottom: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)" }}>
-							<p style={{ ...titleStyle, fontSize: "0.8rem", margin: 0 }}>{selectedEdge.type}</p>
-							<p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>
-								{model.nodeById.get(selectedEdge.source)?.label ?? selectedEdge.source} → {model.nodeById.get(selectedEdge.target)?.label ?? selectedEdge.target}
-							</p>
-						</div>
-					) : null}
-					<div style={{ display: "grid" }}>
-						{stats.map((row, index) => (
-							<div
-								key={row.id}
-								style={{
-									display: "grid",
-									gap: "0.1rem",
-									padding: "0.4rem 0",
-									borderTop:
-										index === 0
-											? "none"
-											: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)",
-								}}
-							>
-								<p style={{ ...metricLabelStyle, margin: 0, fontSize: "0.7rem" }}>{row.label}</p>
-								<p
+					<p style={eyebrowStyle}>Node Types</p>
+					<div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+						{data.nodeTypes.map((nodeType) => {
+							const active = viewState.activeNodeTypes.has(nodeType.id);
+							const color = model.colors.get(nodeType.id) ?? NODE_TYPE_COLOR_TOKENS[0];
+							return (
+								<button
+									key={nodeType.id}
+									type="button"
 									style={{
-										...metricValueStyle,
-										margin: 0,
-										fontSize: "1.1rem",
-										fontFamily: "var(--font-mono, monospace)",
+										...networkGraphChipStyle,
+										fontSize: "0.7rem",
+										borderColor: color,
+										background: active
+											? `color-mix(in srgb, ${color} 22%, transparent)`
+											: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
 									}}
+									onClick={() => dispatch({ type: "toggleNodeType", nodeTypeId: nodeType.id })}
 								>
-									{row.value}
-								</p>
-								{row.hint ? <p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>{row.hint}</p> : null}
-							</div>
-						))}
+									<span style={{ width: 8, height: 8, background: color, display: "inline-block" }} />
+									{nodeType.label}
+									<span style={{ color: "var(--muted-foreground, #7b827d)" }}>{nodeType.count ?? ""}</span>
+								</button>
+							);
+						})}
+					</div>
+					<p style={eyebrowStyle}>Edge Types</p>
+					<div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+						{data.edgeTypes.map((edgeType) => {
+							const active = viewState.activeEdgeTypes.has(edgeType.id);
+							const color = edgeTypeColors.get(edgeType.id) ?? "var(--muted-foreground, #7b827d)";
+							return (
+								<button
+									key={edgeType.id}
+									type="button"
+									style={{
+										...networkGraphChipStyle,
+										fontSize: "0.65rem",
+										borderColor: color,
+										background: active
+											? `color-mix(in srgb, ${color} 22%, transparent)`
+											: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
+									}}
+									onClick={() => dispatch({ type: "toggleEdgeType", edgeTypeId: edgeType.id })}
+								>
+									<span style={{ width: 8, height: 8, background: color, display: "inline-block" }} />
+									{edgeType.label}
+									<span style={{ color: "var(--muted-foreground, #7b827d)" }}>{edgeType.count ?? ""}</span>
+								</button>
+							);
+						})}
 					</div>
 				</aside>
 
@@ -2499,37 +2518,67 @@ export function NetworkGraphWidget({
 				>
 					<p style={eyebrowStyle}>Network Lenses</p>
 					<p style={{ ...titleStyle, fontSize: "0.95rem", margin: 0 }}>Active Lens: {viewState.activeLensName}</p>
-					<div style={{ display: "grid", gap: "0.5rem" }}>
-						{lenses.map((lens) => (
-							<article
-								key={lens.id}
-								style={{
-									...widgetCardStyle,
-									padding: "0.5rem",
-									borderColor: "var(--border-window-color, #7b827d)",
-									background: "color-mix(in srgb, var(--window, #ebe8d9) 45%, transparent)",
-								}}
-							>
-								<p style={{ ...titleStyle, fontSize: "0.85rem", margin: 0 }}>{lens.name}</p>
-								{lens.description ? (
-									<p style={{ ...descriptionStyle, fontSize: "0.75rem", margin: "0.25rem 0 0" }}>{lens.description}</p>
-								) : null}
-								<p style={{ ...metricHintStyle, margin: "0.35rem 0 0", fontSize: "0.65rem" }}>
-									{lens.nodeTypes.join(", ")}
-								</p>
+					<div style={{ display: "grid", gap: "0.3rem" }}>
+						{lenses.map((lens) => {
+							const active = viewState.activeLensName === lens.name;
+							const lensEdgeTypes = lens.edgeTypes.length > 0 ? lens.edgeTypes : allEdgeTypeIds;
+							return (
 								<button
+									key={lens.id}
 									type="button"
+									title={lens.description ?? lens.name}
+									onClick={() => dispatch({ type: "applyLens", lens, allEdgeTypeIds })}
 									style={{
 										...networkGraphChipStyle,
-										marginTop: "0.35rem",
-										borderColor: "var(--accent, #ff344f)",
+										flexDirection: "column",
+										alignItems: "stretch",
+										gap: "0.3rem",
+										padding: "0.4rem 0.5rem",
+										textAlign: "left",
+										borderColor: active ? "var(--accent, #ff344f)" : "var(--border-window-color, #7b827d)",
+										background: active
+											? "color-mix(in srgb, var(--accent, #ff344f) 16%, transparent)"
+											: "color-mix(in srgb, var(--window, #ebe8d9) 45%, transparent)",
 									}}
-									onClick={() => dispatch({ type: "applyLens", lens, allEdgeTypeIds })}
 								>
-									Apply Lens
+									<span style={{ ...titleStyle, fontSize: "0.78rem", margin: 0 }}>{lens.name}</span>
+									{lens.description ? (
+										<span
+											style={{
+												...descriptionStyle,
+												fontSize: "0.65rem",
+												margin: 0,
+												display: "block",
+												whiteSpace: "nowrap",
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+											}}
+										>
+											{lens.description}
+										</span>
+									) : null}
+									<span style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.25rem" }}>
+										{lens.nodeTypes.map((typeId) => (
+											<span
+												key={typeId}
+												title={typeId}
+												style={{ width: 9, height: 9, background: model.colors.get(typeId) ?? NODE_TYPE_COLOR_TOKENS[0] }}
+											/>
+										))}
+										{lensEdgeTypes.length > 0 ? (
+											<span style={{ color: "var(--muted-foreground, #7b827d)", fontSize: "0.7rem", lineHeight: 1 }}>·</span>
+										) : null}
+										{lensEdgeTypes.map((edgeId) => (
+											<span
+												key={edgeId}
+												title={edgeId}
+												style={{ width: 13, height: 3, background: edgeTypeColors.get(edgeId) ?? "var(--muted-foreground, #7b827d)" }}
+											/>
+										))}
+									</span>
 								</button>
-							</article>
-						))}
+							);
+						})}
 					</div>
 				</aside>
 
@@ -2561,35 +2610,69 @@ export function NetworkGraphWidget({
 				style={{
 					flex: "0 0 auto",
 					display: "flex",
-					flexWrap: "wrap",
-					alignItems: "center",
+					flexWrap: "nowrap",
+					alignItems: "stretch",
 					justifyContent: "center",
-					gap: "0.35rem",
-					padding: "0.5rem 0.6rem",
+					gap: "0.6rem",
+					padding: "0.5rem 0.75rem",
+					overflowX: "auto",
 					background: "transparent",
 					zIndex: 11,
 				}}
 			>
-				{data.nodeTypes.map((nodeType) => {
-					const active = viewState.activeNodeTypes.has(nodeType.id);
-					const color = model.colors.get(nodeType.id) ?? NODE_TYPE_COLOR_TOKENS[0];
+				{viewGraph.warnings.length > 0 ? (
+					<div style={{ display: "grid", gap: "0.1rem", alignContent: "center", flex: "0 0 auto" }}>
+						{viewGraph.warnings.map((warning) => (
+							<p key={warning} style={{ ...metricHintStyle, margin: 0, fontSize: "0.6rem", color: "var(--warning-border, #fccf05)", whiteSpace: "nowrap" }}>
+								{warning}
+							</p>
+						))}
+					</div>
+				) : null}
+				{selectedNode ? (
+					<div style={{ display: "grid", gap: "0.2rem", alignContent: "center", flex: "0 0 auto", paddingLeft: "0.6rem", borderLeft: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)" }}>
+						<p style={{ ...titleStyle, fontSize: "0.8rem", margin: 0 }}>{selectedNode.label}</p>
+						<div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
+							<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "isolateSelection", model })}>
+								Isolate
+							</button>
+							<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "setMode", mode: "ego" })}>
+								Ego
+							</button>
+							<button type="button" style={networkGraphChipStyle} onClick={() => dispatch({ type: "togglePin", nodeId: selectedNode.id })}>
+								{viewState.pinnedNodeIds.has(selectedNode.id) ? "Unpin" : "Pin"}
+							</button>
+						</div>
+					</div>
+				) : null}
+				{selectedEdge ? (
+					<div style={{ display: "grid", gap: "0.2rem", alignContent: "center", flex: "0 0 auto", paddingLeft: "0.6rem", borderLeft: "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)" }}>
+						<p style={{ ...titleStyle, fontSize: "0.8rem", margin: 0 }}>{selectedEdge.type}</p>
+						<p style={{ ...metricHintStyle, margin: 0, fontSize: "0.65rem" }}>
+							{model.nodeById.get(selectedEdge.source)?.label ?? selectedEdge.source} → {model.nodeById.get(selectedEdge.target)?.label ?? selectedEdge.target}
+						</p>
+					</div>
+				) : null}
+				{stats.map((row, index) => {
+					const hasLeading = viewGraph.warnings.length > 0 || Boolean(selectedNode) || Boolean(selectedEdge) || index > 0;
 					return (
-						<button
-							key={nodeType.id}
-							type="button"
-							style={{
-								...networkGraphChipStyle,
-								borderColor: color,
-								background: active
-									? `color-mix(in srgb, ${color} 22%, transparent)`
-									: "color-mix(in srgb, var(--panel, #c9c8bd) 30%, transparent)",
-							}}
-							onClick={() => dispatch({ type: "toggleNodeType", nodeTypeId: nodeType.id })}
-						>
-							<span style={{ width: 8, height: 8, background: color, display: "inline-block" }} />
-							{nodeType.label}
-							<span style={{ color: "var(--muted-foreground, #7b827d)" }}>{nodeType.count ?? ""}</span>
-						</button>
+					<div
+						key={row.id}
+						style={{
+							display: "grid",
+							gap: "0.1rem",
+							alignContent: "center",
+							flex: "0 0 auto",
+							paddingLeft: hasLeading ? "0.6rem" : 0,
+							borderLeft: hasLeading ? "1px solid color-mix(in srgb, var(--border-window-color, #7b827d) 45%, transparent)" : "none",
+						}}
+					>
+						<p style={{ ...metricLabelStyle, margin: 0, fontSize: "0.65rem", whiteSpace: "nowrap" }}>{row.label}</p>
+						<p style={{ ...metricValueStyle, margin: 0, fontSize: "1.05rem", fontFamily: "var(--font-mono, monospace)", whiteSpace: "nowrap" }}>
+							{row.value}
+						</p>
+						{row.hint ? <p style={{ ...metricHintStyle, margin: 0, fontSize: "0.6rem", whiteSpace: "nowrap" }}>{row.hint}</p> : null}
+					</div>
 					);
 				})}
 			</div>

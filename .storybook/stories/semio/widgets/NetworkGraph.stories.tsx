@@ -35,7 +35,7 @@ export const Curated: Story = {
 		frame(
 			<NetworkGraphWidget
 				data={curatedNetworkGraphFixture}
-				initialActiveNodeTypes={["Projekt", "Bauteilgruppe", "Aufbereitungsverfahren", "WiederverwendungsArt"]}
+				initialActiveNodeTypes={curatedNetworkGraphFixture.nodeTypes.map((type) => type.id)}
 				initialLensName={curatedNetworkGraphFixture.lenses?.[0]?.name}
 			/>,
 		),
@@ -62,7 +62,7 @@ export const EgoCurated: Story = {
 			<NetworkGraphWidget
 				data={curatedNetworkGraphFixture}
 				initialSelectedNodeId="p1"
-				initialActiveNodeTypes={["Projekt", "Bauteilgruppe", "Aufbereitungsverfahren", "WiederverwendungsArt"]}
+				initialActiveNodeTypes={curatedNetworkGraphFixture.nodeTypes.map((type) => type.id)}
 			/>,
 		),
 };
