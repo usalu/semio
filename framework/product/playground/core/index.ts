@@ -48,6 +48,7 @@ export interface UiTextNode {
 export interface UiButtonNode {
   readonly type: "button";
   readonly id?: string;
+  readonly iconId: string;
   readonly label: string;
   readonly command: CommandDescriptor;
   readonly style?: StyleSpec;
@@ -505,6 +506,7 @@ export function buildPlaygroundKindToggleTools<K extends string>(prefix: "select
   return kinds.map((kind, order) => ({
     id: `playground.${prefix}.${kind}`,
     kind: "toggle" as const,
+    iconId: `playground.${prefix}.${kind}`,
     text: labels(kind),
     order,
     pressed: values[kind],
@@ -519,6 +521,7 @@ export function buildPlaygroundClearSelectionTool(controllerId: string, order: n
   return {
     id: "playground.selection.clear",
     kind: "button",
+    iconId: "x",
     label: "Clear",
     order,
     controllerId,

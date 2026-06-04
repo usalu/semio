@@ -415,11 +415,20 @@ export interface CadPlayHostBridge {
   runHostCommand(command: string, args?: unknown): void;
 }
 
+const CAD_GUMBALL_GROUP_ICON: Record<CadGumballGroupKey, string> = {
+  moveAxes: "move",
+  movePlanes: "move-3d",
+  rotate: "rotate-cw",
+  scaleAxes: "maximize-2",
+  scaleUniform: "box",
+};
+
 /** @emoji 🧰 Playground {@link AppTools} for CAD play (view, save, transfer). */
 export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerId: string): AppTools {
   const viewTools: ToolItem[] = listModelDefinitionManifests().map((row, index) => ({
     id: `cad.play.view.${row.id}`,
     kind: "toggle",
+    iconId: "box",
     text: row.label,
     title: row.id,
     order: index,
@@ -432,6 +441,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
     {
       id: "cad.play.save.selected",
       kind: "button",
+      iconId: "save",
       label: "Selected",
       order: 0,
       disabled: state.selectionCount === 0,
@@ -441,6 +451,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
     {
       id: "cad.play.save.modelspace",
       kind: "button",
+      iconId: "hard-drive",
       label: "Model space",
       order: 1,
       controllerId,
@@ -449,6 +460,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
     {
       id: "cad.play.save.current",
       kind: "button",
+      iconId: "save",
       label: "Current",
       order: 2,
       controllerId,
@@ -457,6 +469,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
     {
       id: "cad.play.save.load",
       kind: "button",
+      iconId: "folder-open",
       label: "Load",
       order: 3,
       controllerId,
@@ -467,6 +480,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
     ...state.transfersTo.map((spec, index) => ({
       id: `cad.play.transfer.to.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
       kind: "button" as const,
+      iconId: "arrow-right",
       label: `→ ${spec.label}`,
       title: spec.target.modelDefinition,
       order: index,
@@ -478,6 +492,7 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
     ...state.transfersFrom.map((spec, index) => ({
       id: `cad.play.transfer.from.${qualifiedTransformationId(spec.modelDefinitionId, spec.id)}`,
       kind: "button" as const,
+      iconId: "arrow-left",
       label: `← ${spec.label}`,
       title: spec.source.modelDefinition,
       order: state.transfersTo.length + (state.transfersTo.length > 0 && state.transfersFrom.length > 0 ? 1 : 0) + index,
@@ -603,6 +618,7 @@ export class CadPlayShellController extends Controller {
       children: CAD_GUMBALL_GROUPS.map((row) => ({
         kind: "toggle" as const,
         id: `${pane}-gumball-${row.key}`,
+        iconId: CAD_GUMBALL_GROUP_ICON[row.key],
         label: row.label,
         text: row.label,
         pressed: config[row.key] !== false,

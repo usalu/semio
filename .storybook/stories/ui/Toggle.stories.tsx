@@ -64,9 +64,9 @@ const dropdownArgs = {
   kind: "dropdown" as const,
   defaultValue: "option1",
   items: [
-    { value: "option1", label: <Box /> },
-    { value: "option2", label: <Network /> },
-    { value: "option3", label: <List /> },
+    { value: "option1", icon: <Box /> },
+    { value: "option2", icon: <Network /> },
+    { value: "option3", icon: <List /> },
   ],
   dropdownId: "toggle-dropdown-action",
   showLabel: true,

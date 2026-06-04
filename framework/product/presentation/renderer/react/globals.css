@@ -95,14 +95,11 @@
 	overflow: visible;
 }
 
-.reveal .slides > section > section.presentation-arrangement--interactive:not(.presentation-arrangement--positioned) {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-}
-
-.reveal .slides > section > section.presentation-arrangement--interactive > .presentation-arrangement-surface {
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--positioned
+	> .presentation-arrangement-surface {
 	position: absolute;
 	inset: 0;
 	width: 100%;
@@ -1047,15 +1044,6 @@
 
 .reveal .slides > section > section.presentation-arrangement--intro {
 	--r-heading-margin: 0 0 0.12em 0;
-}
-
-.reveal
-	.slides
-	> section
-	> section.presentation-arrangement--intro:not(.presentation-arrangement--positioned) {
-	display: flex;
-	align-items: center;
-	justify-content: center;
 }
 
 .reveal .slides > section > section.presentation-arrangement--intro .presentation-text-morph-block {

@@ -524,12 +524,12 @@ export type Puzzle3dPlaySelection = SelectionSnapshot;
 
 export type Puzzle3dGumballGroupKey = keyof Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scaleUniform">;
 
-export const PUZZLE_3D_GUMBALL_GROUPS: readonly { readonly key: Puzzle3dGumballGroupKey; readonly label: string }[] = [
-  { key: "moveAxes", label: "Move Axes" },
-  { key: "movePlanes", label: "Move Planes" },
-  { key: "rotate", label: "Rotate" },
-  { key: "scaleAxes", label: "Scale Axes" },
-  { key: "scaleUniform", label: "Scale Uniform" },
+export const PUZZLE_3D_GUMBALL_GROUPS: readonly { readonly key: Puzzle3dGumballGroupKey; readonly label: string; readonly iconId: string }[] = [
+  { key: "moveAxes", label: "Move Axes", iconId: "move" },
+  { key: "movePlanes", label: "Move Planes", iconId: "move-3d" },
+  { key: "rotate", label: "Rotate", iconId: "rotate-cw" },
+  { key: "scaleAxes", label: "Scale Axes", iconId: "maximize-2" },
+  { key: "scaleUniform", label: "Scale Uniform", iconId: "box" },
 ];
 
 export const PUZZLE_3D_PLAY_EMPTY_SELECTION: Puzzle3dPlaySelection = {
@@ -1240,6 +1240,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-auto`,
+        iconId: "zoom-in",
         text: "Auto zoom",
         pressed: this.automaticLod,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setAutoLod" },
@@ -1247,6 +1248,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-depth`,
+        iconId: "layers",
         text: "Depth-variable",
         pressed: this.depthVariableLod,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setDepthLod" },
@@ -1264,6 +1266,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-lod-grid`,
+        iconId: "layout-grid",
         text: "Grid",
         pressed: this.showLodGrid,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setShowLodGrid" },
@@ -1276,6 +1279,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-marquee-rectangle`,
+        iconId: "square",
         text: "Rectangle",
         pressed: this.selectionMethod === "rectangle",
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelectionMethod", args: { method: "rectangle" } },
@@ -1283,6 +1287,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-marquee-lasso`,
+        iconId: "lasso",
         text: "Lasso",
         pressed: this.selectionMethod === "lasso",
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelectionMethod", args: { method: "lasso" } },
@@ -1290,6 +1295,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-select-objects`,
+        iconId: "box",
         text: "Objects",
         pressed: this.selectableKinds.object,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "toggleSelectableKind", args: { kind: "object" } },
@@ -1297,6 +1303,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-select-vortices`,
+        iconId: "circle-dot",
         text: "Vortices",
         pressed: this.selectableKinds.vortex,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "toggleSelectableKind", args: { kind: "vortex" } },
@@ -1304,6 +1311,7 @@ export class Puzzle3dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_3D_PLAY_WINDOW_ID}-select-attractions`,
+        iconId: "link",
         text: "Attractions",
         pressed: this.selectableKinds.attraction,
         onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "toggleSelectableKind", args: { kind: "attraction" } },
@@ -1466,9 +1474,10 @@ export class Puzzle3dPlayShellController extends Controller {
     this.mainMode.windowKinds = [
       new WindowKindRuntime(PUZZLE_3D_PLAY_WINDOW_ID, PUZZLE_3D_PLAY_WINDOW_LABEL, PUZZLE_3D_PLAY_BODY_KEY, undefined, this.windowMeasures(), this.windowEngagement, PUZZLE_3D_VIEW_TEMPLATES),
     ];
-    const relocateTools: ToolItem[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label }, order) => ({
+    const relocateTools: ToolItem[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label, iconId }, order) => ({
       id: `puzzle3d.gumball.${key}`,
       kind: "toggle" as const,
+      iconId,
       text: label,
       order,
       pressed: this.gumballConfig[key] !== false,

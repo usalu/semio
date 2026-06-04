@@ -180,7 +180,6 @@
     --destructive-foreground: var(--color-danger);
     --destructive-border: var(--color-danger);
     --scrollbar-size: var(--spacing-double);
-    --scrollbar-track: color-mix(in srgb, var(--muted) 55%, transparent);
     --scrollbar-thumb: var(--border-color);
     --scrollbar-thumb-hover: var(--muted-foreground);
     --color-new: var(--success-border);
@@ -219,12 +218,18 @@
 
     html {
       scrollbar-width: thin;
-      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+      scrollbar-color: transparent transparent;
     }
 
     * {
       scrollbar-width: thin;
-      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+      scrollbar-color: transparent transparent;
+    }
+
+    @supports not selector(::-webkit-scrollbar) {
+      *:hover {
+        scrollbar-color: var(--scrollbar-thumb) transparent;
+      }
     }
 
     *::-webkit-scrollbar {
@@ -233,24 +238,30 @@
     }
 
     *::-webkit-scrollbar-track {
-      background: var(--scrollbar-track);
+      background: transparent;
     }
 
     *::-webkit-scrollbar-thumb {
-      background-color: var(--scrollbar-thumb);
+      background-color: transparent;
       border-radius: 0;
+      transition: background-color 120ms ease;
     }
 
-    *::-webkit-scrollbar-thumb:hover {
+    *::-webkit-scrollbar:hover::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+    }
+
+    *::-webkit-scrollbar-thumb:hover,
+    *::-webkit-scrollbar-thumb:active {
       background-color: var(--scrollbar-thumb-hover);
     }
 
     *::-webkit-scrollbar-corner {
-      background: var(--scrollbar-track);
+      background: transparent;
     }
 
     [data-slot="scroll-area-scrollbar"] {
-      background: var(--scrollbar-track);
+      background: transparent;
     }
 
     [data-slot="scroll-area-scrollbar"][data-orientation="vertical"] {
@@ -264,6 +275,12 @@
     [data-slot="scroll-area-thumb"] {
       background-color: var(--scrollbar-thumb);
       border-radius: 0;
+      opacity: 0;
+      transition: opacity 120ms ease, background-color 120ms ease;
+    }
+
+    [data-slot="scroll-area-scrollbar"]:hover [data-slot="scroll-area-thumb"] {
+      opacity: 1;
     }
 
     [data-slot="scroll-area-thumb"]:hover {

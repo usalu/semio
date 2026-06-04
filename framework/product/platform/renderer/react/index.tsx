@@ -238,6 +238,7 @@ import {
 // #endregion 🔌Adapters
 
 import type { AppToolCategory } from "@framework/core";
+import { ICONS } from "@ui/assets";
 
 const _assertFrameworkToolbarParentKeys: AssertUiToolbarParentKeysCovered<AppToolCategory> = true;
 
@@ -246,9 +247,8 @@ const _assertFrameworkToolbarParentKeys: AssertUiToolbarParentKeysCovered<AppToo
 /** @emoji 👣 Footer row rendered by the product shell. */
 export interface ChromeFooterRow {
 	readonly id: string;
-	readonly icon?: React.ReactNode;
+	readonly icon: React.ReactNode;
 	readonly text?: string;
-	readonly content?: React.ReactNode;
 	readonly order?: number;
 	readonly onClick?: () => void;
 	readonly className?: string;
@@ -306,11 +306,11 @@ export type UIWindowMeasure =
   | { kind: "section"; id: string; title: string }
   | { kind: "separator"; id: string }
   | { kind: "group"; id: string; label: string; defaultOpen?: boolean; children: UIWindowMeasure[] }
-  | { kind: "toggle"; id: string; label?: string; pressed?: boolean; defaultPressed?: boolean; icon?: React.ReactNode; text?: string; onPressedChange?: (pressed: boolean) => void }
+  | { kind: "toggle"; id: string; label?: string; pressed?: boolean; defaultPressed?: boolean; icon: React.ReactNode; text?: string; onPressedChange?: (pressed: boolean) => void }
   | { kind: "select"; id: string; label?: string; value?: string; defaultValue?: string; items: { id: string; value: string; label: string }[]; onValueChange?: (value: string) => void }
   | { kind: "combobox"; id: string; label?: string; value?: string; placeholder?: string; choices: { value: string; label: string }[]; onValueChange?: (value: string) => void }
-  | { kind: "button"; id: string; label?: string; text: string; icon?: React.ReactNode; onClick?: () => void }
-  | { kind: "buttonCycle"; id: string; label?: string; value?: string; items: { value: string; label: string; icon?: React.ReactNode; text?: string; id?: string }[]; onValueChange?: (value: string) => void }
+  | { kind: "button"; id: string; label?: string; text: string; icon: React.ReactNode; onClick?: () => void }
+  | { kind: "buttonCycle"; id: string; label?: string; value?: string; items: { value: string; label: string; icon: React.ReactNode; text?: string; id?: string }[]; onValueChange?: (value: string) => void }
   | { kind: "input"; id: string; label?: string; value?: string; placeholder?: string; onLazyChange?: (value: string) => void }
   | { kind: "textarea"; id: string; label?: string; value?: string; placeholder?: string; rows?: number; onLazyChange?: (value: string) => void }
   | { kind: "checkbox"; id: string; label?: string; checked?: boolean; defaultChecked?: boolean; onCheckedChange?: (checked: boolean) => void }
@@ -613,7 +613,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
             pressed={measure.pressed}
             defaultPressed={measure.defaultPressed}
             onPressedChange={measure.onPressedChange}
-            icon={measure.icon ?? <Icon icon="check" size="small" />}
+            icon={measure.icon}
             text={measure.text}
           />
         </WindowMeasureTreeLeaf>
@@ -1005,7 +1005,7 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 				</Select>
 			);
 		case "toggle":
-			return <Toggle id={control.id} pressed={control.pressed} text={control.text} onPressedChange={(pressed) => dispatchUiCommand(commandBus, control.onChange, { pressed })} />;
+			return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId)} onPressedChange={(pressed) => dispatchUiCommand(commandBus, control.onChange, { pressed })} />;
 		case "vec3": {
 			const mixed = control.value === null;
 			const axes = ["x", "y", "z"] as const;
@@ -1049,6 +1049,7 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 				<Button
 					id={control.id}
 					text={control.label}
+					icon={resolveDeclarativeControlIcon(control.iconId)}
 					onClick={() => commandBus.dispatch(control.command.controllerId, control.command.command, control.command.args)}
 				/>
 			);
@@ -1365,6 +1366,7 @@ function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConf
 						host.setCompact(pressed);
 						writeStoredUiChromeCompact(pressed);
 					}}
+					icon={<Icon icon="layout-grid" size="small" />}
 				/>
 			),
 		},
@@ -1919,17 +1921,27 @@ const UIFind: React.FC<{
 /**
  * A toolbar action item registered by an app or the UI.
  **/
-export interface UIToolbarItem {
-  id: string;
-  icon?: React.ReactNode;
-  label?: string;
-  text?: string;
-  onClick?: () => void;
-  kind?: "button" | "toggle" | "separator";
-  pressed?: boolean;
-  onPressedChange?: (pressed: boolean) => void;
-  order?: number;
-}
+export type UIToolbarItem =
+  | { id: string; kind: "separator"; order?: number }
+  | {
+      id: string;
+      icon: React.ReactNode;
+      label?: string;
+      text?: string;
+      onClick?: () => void;
+      kind?: "button";
+      order?: number;
+    }
+  | {
+      id: string;
+      icon: React.ReactNode;
+      label?: string;
+      text?: string;
+      kind: "toggle";
+      pressed?: boolean;
+      onPressedChange?: (pressed: boolean) => void;
+      order?: number;
+    };
 
 /** @emoji 🗂️ Per-category toolbar tools registered by an app or global UI shell (React view layer). */
 export type ToolbarViewTools = Partial<Record<AppToolCategory, UIToolbarItem[]>>;
@@ -3553,6 +3565,7 @@ function mapWindowMeasureToGolden(measure: WindowMeasure, bus: CommandBus): UIWi
 			label: measure.label,
 			text: measure.text,
 			pressed: measure.pressed,
+			icon: <Icon icon={measure.iconId in ICONS ? (measure.iconId as IconName) : "circle-dot"} size="small" />,
 			onPressedChange: (pressed: boolean) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), pressed }),
 		};
 	}
@@ -3635,7 +3648,7 @@ export function declarativeFooterToChromeRows(items: readonly DeclarativeFooterI
 		order: item.order,
 		className: item.className,
 		disabled: item.disabled,
-		icon: item.iconId ? resolveElementIcon(item.iconId) : undefined,
+		icon: resolveDeclarativeControlIcon(item.iconId),
 		onClick: item.controllerId && item.command ? () => bus.dispatch(item.controllerId!, item.command!, item.args) : undefined,
 	}));
 }
@@ -3653,11 +3666,21 @@ export function mergePlatformFooterChromeRows(
 	].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
+function resolveDeclarativeControlIcon(iconId: string, size: number | "tiny" | "small" | "base" | "large" = 16): React.ReactNode {
+	return resolveElementIcon(iconId, typeof size === "number" ? size : 16) ?? <Icon icon={iconId in ICONS ? (iconId as IconName) : "circle-dot"} size={size} />;
+}
+
+export { resolveDeclarativeControlIcon };
+
+function resolveToolItemIcon(iconId: string, size = 16): React.ReactNode {
+	return resolveDeclarativeControlIcon(iconId, size);
+}
+
 function shellToolToToolbarItem(item: ToolItem, bus: CommandBus): UIToolbarItem {
 	if (item.kind === "separator") {
 		return { id: item.id, kind: "separator", order: item.order };
 	}
-	const iconNode = item.iconId ? resolveElementIcon(item.iconId) : undefined;
+	const iconNode = resolveToolItemIcon(item.iconId);
 	if (item.kind === "toggle") {
 		return {
 			id: item.id,
@@ -4434,9 +4457,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		key: "navBack",
 		content: (
 			<ButtonGroup id="ui.nav.back">
-				<ButtonGroupItem id="ui.nav.back" onClick={onGoBack} className={cn(!canGoBackProp && "opacity-30 pointer-events-none")}>
-					<Icon icon="arrow-left" size="small" />
-				</ButtonGroupItem>
+				<ButtonGroupItem id="ui.nav.back" onClick={onGoBack} className={cn(!canGoBackProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-left" size="small" />} />
 			</ButtonGroup>
 		),
 	});
@@ -4444,9 +4465,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		key: "navForward",
 		content: (
 			<ButtonGroup id="ui.nav.forward">
-				<ButtonGroupItem id="ui.nav.forward" onClick={onGoForward} className={cn(!canGoForwardProp && "opacity-30 pointer-events-none")}>
-					<Icon icon="arrow-right" size="small" />
-				</ButtonGroupItem>
+				<ButtonGroupItem id="ui.nav.forward" onClick={onGoForward} className={cn(!canGoForwardProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-right" size="small" />} />
 			</ButtonGroup>
 		),
 	});
@@ -4454,9 +4473,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		key: "navUp",
 		content: (
 			<ButtonGroup id="ui.nav.up">
-				<ButtonGroupItem id="ui.nav.up" onClick={onGoUp} className={cn(!canGoUpProp && "opacity-30 pointer-events-none")}>
-					<Icon icon="arrow-up" size="small" />
-				</ButtonGroupItem>
+				<ButtonGroupItem id="ui.nav.up" onClick={onGoUp} className={cn(!canGoUpProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-up" size="small" />} />
 			</ButtonGroup>
 		),
 	});
@@ -4686,6 +4703,7 @@ if (import.meta.vitest) {
 							id: "auto",
 							kind: "toggle",
 							label: "LOD",
+							icon: <Icon icon="zoom-in" size="small" />,
 							text: "Auto zoom",
 							pressed: true,
 							onPressedChange: () => {},
@@ -4746,6 +4764,7 @@ if (import.meta.vitest) {
 							{
 								kind: "toggle",
 								id: "tool",
+								iconId: "circle-dot",
 								text: "On",
 								pressed: true,
 								onChange: { controllerId: "test", command: "toggleTool" },
@@ -4891,7 +4910,9 @@ if (import.meta.vitest) {
 			expect(markup).toContain('id="ui.panelToggle.workbench"');
 			expect(markup).toContain('id="ui.panelToggle.details"');
 			expect(markup).toContain('id="ui.panelToggle.settings"');
+			expect(markup).toContain('id="ui.panelToggle.display"');
 			expect(markup).not.toContain("data-missing-icon");
+			expect(markup).toContain('data-icon="layout-grid"');
 			expect(markup).toContain('data-icon="folder"');
 			expect(markup).toContain('data-icon="info"');
 			expect(markup).toContain('data-icon="settings-2"');
@@ -4962,11 +4983,11 @@ if (import.meta.vitest) {
 			const app = new AppRuntime("app", "App", undefined, new TCtrl(), createTabStackLayout(["base"], ["Base"]), [
 				new WindowKindRuntime("base", "Base", "test.workbench-view.base"),
 			]);
-			app.tools = { selection: [{ id: "base-tool", kind: "button", label: "Base", controllerId: "tctrl", command: "x" }] };
+			app.tools = { selection: [{ id: "base-tool", kind: "button", iconId: "circle-dot", label: "Base", controllerId: "tctrl", command: "x" }] };
 			app.selection = { base: true };
 			app.options = { snap: true };
 			const inspect = new ModeRuntime("inspect", "Inspect", undefined);
-			inspect.tools = { actions: [{ id: "mode-tool", kind: "button", label: "Mode", controllerId: "tctrl", command: "y" }] };
+			inspect.tools = { actions: [{ id: "mode-tool", kind: "button", iconId: "circle-dot", label: "Mode", controllerId: "tctrl", command: "y" }] };
 			inspect.selection = { mode: true };
 			inspect.options = { isolate: true };
 			inspect.windowKinds = [new WindowKindRuntime("mode", "Mode", "test.workbench-view.mode")];

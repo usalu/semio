@@ -52,6 +52,7 @@ export interface UiTextNode {
 export interface UiButtonNode {
 	readonly type: "button";
 	readonly id?: string;
+	readonly iconId: string;
 	readonly label: string;
 	readonly command: CommandDescriptor;
 	readonly style?: StyleSpec;
@@ -86,6 +87,7 @@ export interface UiSelectNode {
 export interface UiToggleNode {
 	readonly type: "toggle";
 	readonly id: string;
+	readonly iconId: string;
 	readonly pressed: boolean;
 	readonly text?: string;
 	readonly onChange: CommandDescriptor;

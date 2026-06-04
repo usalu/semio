@@ -207,9 +207,10 @@ export class Puzzle5dPlayShellController extends Controller {
   }
 
   private rebuildShellMode(): void {
-    const relocateTools: ToolItem[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label }, order) => ({
+    const relocateTools: ToolItem[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label, iconId }, order) => ({
       id: `puzzle5d.gumball.${key}`,
       kind: "toggle" as const,
+      iconId,
       text: label,
       order,
       pressed: this.gumballConfig[key] !== false,
@@ -236,6 +237,7 @@ export class Puzzle5dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-auto`,
+        iconId: "zoom-in",
         text: "Auto zoom",
         pressed: this.automaticLod3d,
         onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "set3dAutoLod" },
@@ -243,6 +245,7 @@ export class Puzzle5dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-depth`,
+        iconId: "layers",
         text: "Depth-variable",
         pressed: this.depthVariableLod3d,
         onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "set3dDepthLod" },

@@ -141,5 +141,9 @@
   opacity: 1;
   pointer-events: auto;
 }
+
+[data-ghost="true"][data-ghost-region] {
+  border-color: transparent !important;
+}
 /* #endregion 👻PanelGhost */
 

@@ -532,10 +532,7 @@ export function slideChangedEventSlides(event: Event): {
 /** @emoji 🧹 Strips reveal.js FLIP `transform`/`transition` only; never `left`/`top`/`width`/`height` (React owns those on morph frames). */
 export function clearRevealAutoAnimateInlineLayout(deckEl: HTMLElement): void {
 	const flipProps = ["transform", "transition"] as const;
-	const selectors = [
-		"[data-auto-animate-target]",
-		".presentation-arrangement--intro :is(h1, h2, h3, h4, p)",
-	];
+	const selectors = ["[data-auto-animate-target]"];
 	for (const selector of selectors) {
 		for (const element of deckEl.querySelectorAll<HTMLElement>(selector)) {
 			for (const prop of flipProps) {
@@ -553,11 +550,14 @@ export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
 		slide.setAttribute("data-auto-animate", "");
 	}
 	clearManyToOneMorphArrangementClass(deckEl);
-	clearRevealAutoAnimateInlineLayout(deckEl);
-	for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
-		delete element.dataset.autoAnimateTarget;
-	}
 	const presentSlide = deckEl.querySelector<HTMLElement>("section.present");
+	const introFlowPresent = presentSlide !== null && isIntroFlowSlide(presentSlide);
+	if (!introFlowPresent) {
+		clearRevealAutoAnimateInlineLayout(deckEl);
+		for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
+			delete element.dataset.autoAnimateTarget;
+		}
+	}
 	if (
 		presentSlide?.classList.contains("presentation-arrangement--settled") &&
 		presentSlide.getAttribute("data-auto-animate") !== "pending" &&
@@ -793,7 +793,14 @@ export function presentationAutoAnimateMatcher(
 		this.findAutoAnimateMatches(pairs, fromSlide, toSlide, "[data-id]", (node) => {
 			return `${node.nodeName}:::${node.getAttribute("data-id")}`;
 		});
-		return pairs;
+		const reserved: HTMLElement[] = [];
+		return pairs.filter((pair) => {
+			if (reserved.includes(pair.to)) {
+				return false;
+			}
+			reserved.push(pair.to);
+			return true;
+		});
 	}
 
 	const pairs: { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] = [];
@@ -4599,21 +4606,27 @@ const ArrangementSectionSurface: FC<{
 				.filter(Boolean)
 				.join(" ")}
 		>
-			<div className="presentation-arrangement-surface">
-				<InteractionLayer marquee={backgroundInteraction.marquee} />
-				{positioned ? (
-					<div className="presentation-arrangement-canvas">
-						{placements}
-					</div>
-				) : (
-					placements
-				)}
-				<SlideInteractionReset
-					sectionRef={sectionRef}
-					dispositionIds={dispositionIds}
-					declaredRects={declaredRects}
-				/>
-			</div>
+			{positioned ? (
+				<div className="presentation-arrangement-surface">
+					<InteractionLayer marquee={backgroundInteraction.marquee} />
+					<div className="presentation-arrangement-canvas">{placements}</div>
+					<SlideInteractionReset
+						sectionRef={sectionRef}
+						dispositionIds={dispositionIds}
+						declaredRects={declaredRects}
+					/>
+				</div>
+			) : (
+				<>
+					<InteractionLayer marquee={backgroundInteraction.marquee} />
+					{placements}
+					<SlideInteractionReset
+						sectionRef={sectionRef}
+						dispositionIds={dispositionIds}
+						declaredRects={declaredRects}
+					/>
+				</>
+			)}
 		</section>
 	);
 };
@@ -4696,7 +4709,7 @@ export const PresentationDeck: FC<{
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
 			autoAnimateMatcher: presentationAutoAnimateMatcher,
-			autoAnimateUnmatched: false,
+			autoAnimateUnmatched: true,
 			center: true,
 		};
 		// Custom hash format appends `?slide=` after the path; reveal.js hash sync stays off.
@@ -4825,19 +4838,25 @@ export const PresentationDeck: FC<{
 			}
 			const sheet = animateEvent.sheet;
 			if (sheet && typeof sheet.innerHTML === "string") {
-				const durationSeconds =
-					typeof deck.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
-				patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds, {
-					manyToOneMorph:
-						fromSlide !== undefined &&
-						toSlide !== undefined &&
-						isManyToOneMorphTransition(fromSlide, toSlide),
-					introFlowMorph:
-						fromSlide !== undefined &&
-						toSlide !== undefined &&
-						isIntroFlowSlide(fromSlide) &&
-						isIntroFlowSlide(toSlide),
-				});
+				if (
+					fromSlide !== undefined &&
+					toSlide !== undefined &&
+					isIntroFlowSlide(fromSlide) &&
+					isIntroFlowSlide(toSlide)
+				) {
+					sheet.innerHTML = patchAutoAnimateUniformScale(sheet.innerHTML);
+				} else {
+					const durationSeconds =
+						typeof deck.getConfig().autoAnimateDuration === "number"
+							? deck.getConfig().autoAnimateDuration
+							: 1;
+					patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds, {
+						manyToOneMorph:
+							fromSlide !== undefined &&
+							toSlide !== undefined &&
+							isManyToOneMorphTransition(fromSlide, toSlide),
+					});
+				}
 			}
 			scheduleFinalizeAutoAnimateRest();
 		};
@@ -5387,7 +5406,7 @@ if (import.meta.vitest) {
 			expect(container.querySelector(".r-fit-text")).toBeNull();
 		});
 
-		it("enables reveal auto-animate on intro morph slides without forcing unmatched fade-in", () => {
+		it("enables reveal auto-animate on intro morph slides with unmatched layering", () => {
 			const deck = intro({ language: "de",
 				title: { full: ["A"], short: "Short" },
 				description: { full: ["D"], short: "D short" },
@@ -5407,7 +5426,8 @@ if (import.meta.vitest) {
 				'.slides > section > section[data-auto-animate-id="einleitung--m0"]',
 			)) {
 				expect(slide.classList.contains("presentation-arrangement--intro")).toBe(true);
-				expect(slide.hasAttribute("data-auto-animate-unmatched")).toBe(false);
+				expect(slide.hasAttribute("data-auto-animate")).toBe(true);
+				expect(slide.querySelector(".presentation-arrangement-surface")).toBeNull();
 			}
 			expect(globalsCssSource).toMatch(
 				/\.presentation-arrangement--intro:not\(\.presentation-arrangement--positioned\)[\s\S]*:is\(h1,\s*h2,\s*h3,\s*h4,\s*p\)[\s\S]*margin:\s*0/s,

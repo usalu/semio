@@ -574,6 +574,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 		{
 			id: "puzzle2d.select.rectangle",
 			kind: "toggle",
+			iconId: "square",
 			text: "Rectangle",
 			order: 0,
 			pressed: state.puzzle2dSelectionMethod === "rectangle",
@@ -584,6 +585,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 		{
 			id: "puzzle2d.select.lasso",
 			kind: "toggle",
+			iconId: "lasso",
 			text: "Lasso",
 			order: 1,
 			pressed: state.puzzle2dSelectionMethod === "lasso",
@@ -594,6 +596,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 		{
 			id: "puzzle2d.select.mode.default",
 			kind: "toggle",
+			iconId: "mouse-pointer-2",
 			text: "Default",
 			order: 2,
 			pressed: state.puzzle2dSelectionMode === "default",
@@ -604,6 +607,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 		{
 			id: "puzzle2d.select.mode.additive",
 			kind: "toggle",
+			iconId: "plus",
 			text: "Add",
 			order: 3,
 			pressed: state.puzzle2dSelectionMode === "additive",
@@ -614,6 +618,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 		{
 			id: "puzzle2d.select.mode.subtractive",
 			kind: "toggle",
+			iconId: "minus",
 			text: "Subtract",
 			order: 4,
 			pressed: state.puzzle2dSelectionMode === "subtractive",
@@ -624,6 +629,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 		{
 			id: "puzzle2d.select.mode.invertive",
 			kind: "toggle",
+			iconId: "arrow-right-left",
 			text: "Invert",
 			order: 5,
 			pressed: state.puzzle2dSelectionMode === "invertive",
@@ -635,6 +641,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 		{
 			id: "puzzle2d.selection.clear",
 			kind: "button",
+			iconId: "x",
 			label: "Clear",
 			order: 20,
 			controllerId,
@@ -647,6 +654,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 			{
 				id: "puzzle2d.grid.snap",
 				kind: "toggle",
+				iconId: "layout-grid",
 				text: "Grid snap",
 				order: 0,
 				pressed: state.puzzle2dGridSnapEnabled,
@@ -655,20 +663,21 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 			},
 		],
 		create: [
-			{ id: "puzzle2d.create.circle", kind: "button", label: "Circle", order: 0, controllerId, command: "appendCircle" },
-			{ id: "puzzle2d.create.rectangle", kind: "button", label: "Rectangle", order: 1, controllerId, command: "appendRectangle" },
+			{ id: "puzzle2d.create.circle", kind: "button", iconId: "circle", label: "Circle", order: 0, controllerId, command: "appendCircle" },
+			{ id: "puzzle2d.create.rectangle", kind: "button", iconId: "square", label: "Rectangle", order: 1, controllerId, command: "appendRectangle" },
 		],
 		actions: [
 			{
 				id: "puzzle2d.redraw.play",
 				kind: "toggle",
+				iconId: "play",
 				text: "Redraw",
 				order: 0,
 				pressed: state.puzzle2dRedrawPlaying,
 				controllerId,
 				command: "toggleRedrawPlaying",
 			},
-			{ id: "puzzle2d.redraw.handles", kind: "button", label: "Handles", title: "Redraw handles once", order: 1, controllerId, command: "redrawHandlesOnce" },
+			{ id: "puzzle2d.redraw.handles", kind: "button", iconId: "grip-vertical", label: "Handles", title: "Redraw handles once", order: 1, controllerId, command: "redrawHandlesOnce" },
 		],
 	};
 }

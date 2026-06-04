@@ -186,6 +186,7 @@ export class PresentationPlayController extends Controller {
 				{
 					id: "presentation.play.seed-3x5",
 					kind: "button",
+					iconId: "layout-grid",
 					label: "3×5 grid",
 					order: 0,
 					controllerId: PRESENTATION_PLAY_CONTROLLER_ID,
@@ -195,6 +196,7 @@ export class PresentationPlayController extends Controller {
 				{
 					id: "presentation.play.add",
 					kind: "button",
+					iconId: "plus",
 					label: "Add tile",
 					order: 1,
 					controllerId: PRESENTATION_PLAY_CONTROLLER_ID,
@@ -203,6 +205,7 @@ export class PresentationPlayController extends Controller {
 				{
 					id: "presentation.play.clear",
 					kind: "button",
+					iconId: "x",
 					label: "Clear",
 					order: 2,
 					controllerId: PRESENTATION_PLAY_CONTROLLER_ID,
@@ -213,6 +216,7 @@ export class PresentationPlayController extends Controller {
 				{
 					id: "presentation.play.copy",
 					kind: "button",
+					iconId: "copy",
 					label: "Copy prompt",
 					order: 0,
 					controllerId: PRESENTATION_PLAY_CONTROLLER_ID,
@@ -221,6 +225,7 @@ export class PresentationPlayController extends Controller {
 				{
 					id: "presentation.play.delete",
 					kind: "button",
+					iconId: "trash-2",
 					label: "Delete",
 					order: 1,
 					controllerId: PRESENTATION_PLAY_CONTROLLER_ID,

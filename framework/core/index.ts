@@ -51,6 +51,7 @@ export interface UiTextNode {
 export interface UiButtonNode {
 	readonly type: "button";
 	readonly id?: string;
+	readonly iconId: string;
 	readonly label: string;
 	readonly command: CommandDescriptor;
 	readonly style?: StyleSpec;
@@ -89,6 +90,7 @@ export interface WindowMeasureSlider {
 export interface WindowMeasureToggle {
 	readonly kind: "toggle";
 	readonly id: string;
+	readonly iconId: string;
 	readonly label?: string;
 	readonly pressed: boolean;
 	readonly text?: string;
@@ -393,20 +395,40 @@ export const APP_TOOL_CATEGORY_ORDER: readonly AppToolCategory[] = [
 ];
 
 /** @emoji 🎛 Declarative toolbar item; interactions route through {@link CommandBus}. */
-export interface ToolItem {
-	readonly id: string;
-	readonly kind: "button" | "toggle" | "separator";
-	readonly iconId?: string;
-	readonly label?: string;
-	readonly text?: string;
-	readonly title?: string;
-	readonly order?: number;
-	readonly pressed?: boolean;
-	readonly disabled?: boolean;
-	readonly controllerId?: string;
-	readonly command?: string;
-	readonly args?: unknown;
-}
+export type ToolItem =
+	| {
+			readonly id: string;
+			readonly kind: "separator";
+			readonly order?: number;
+			readonly disabled?: boolean;
+	  }
+	| {
+			readonly id: string;
+			readonly kind: "button";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly disabled?: boolean;
+			readonly controllerId?: string;
+			readonly command?: string;
+			readonly args?: unknown;
+	  }
+	| {
+			readonly id: string;
+			readonly kind: "toggle";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly pressed?: boolean;
+			readonly disabled?: boolean;
+			readonly controllerId?: string;
+			readonly command?: string;
+			readonly args?: unknown;
+	  };
 
 /** @emoji 🗂️ Per-category toolbar maps. */
 export type AppTools = Partial<Record<AppToolCategory, readonly ToolItem[]>>;
@@ -490,15 +512,14 @@ export interface SideTabSpec {
 /** @emoji 👣 Footer strip item with optional command dispatch. */
 export interface FooterItem {
 	readonly id: string;
+	readonly iconId: string;
 	readonly text?: string;
 	readonly order?: number;
-	readonly iconId?: string;
 	readonly className?: string;
 	readonly disabled?: boolean;
 	readonly controllerId?: string;
 	readonly command?: string;
 	readonly args?: unknown;
-	readonly content?: unknown;
 }
 //#endregion 🔖Footer
 
@@ -1209,8 +1230,8 @@ if (import.meta.vitest) {
 
 	describe("mergeAppTools", () => {
 		it("merges tools per category", () => {
-			const base: AppTools = { view: [{ id: "a", kind: "button", label: "A" }] };
-			const ext: AppTools = { view: [{ id: "b", kind: "button", label: "B" }] };
+			const base: AppTools = { view: [{ id: "a", kind: "button", iconId: "circle-dot", label: "A" }] };
+			const ext: AppTools = { view: [{ id: "b", kind: "button", iconId: "circle-dot", label: "B" }] };
 			const merged = mergeAppTools(base, ext);
 			expect(merged?.view?.length).toBe(2);
 		});

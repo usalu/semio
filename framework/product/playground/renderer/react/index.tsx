@@ -153,6 +153,7 @@ import {
   sideTabsToPanelTabs,
   uiTreeNodeToTreePanelConfig,
   renderUiControl,
+  resolveDeclarativeControlIcon,
   declareToolsToViewTools,
   DisplayHostContext,
   SettingsHostContext,
@@ -644,6 +645,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
           id={toggle.id}
           pressed={toggle.pressed}
           text={toggle.text}
+          icon={resolveDeclarativeControlIcon(toggle.iconId)}
           onPressedChange={(pressed) => dispatchUiCommand(commandBus, toggle.onChange, { pressed })}
         />
       );

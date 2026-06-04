@@ -83,6 +83,20 @@ const GIS_MAP_LOD_MENU_LABEL: Record<GisMapLodId, string> = Object.fromEntries(
   getGisMapLodScale().map((lod) => [lod.id, lod.name]),
 ) as Record<GisMapLodId, string>;
 
+const GIS_MAP_LAYER_ICON: Record<GisMapLayerId, string> = {
+  raster: "image",
+  water: "globe",
+  land: "globe",
+  roads: "network",
+  buildings: "landmark",
+  borders: "hexagon",
+  labels: "tags",
+  positions: "crosshair",
+  positionLabels: "tags",
+  routes: "arrow-right",
+  regions: "layout-grid",
+};
+
 export interface MapPlaySnapshot {
   readonly renderMode: MapRenderMode;
   readonly renderModeByInstance: Readonly<Record<string, MapRenderMode>>;
@@ -195,6 +209,7 @@ function mapPlayLayerMeasures(
     out.push({
       kind: "toggle",
       id: `gis-map-layer-${layer}`,
+      iconId: GIS_MAP_LAYER_ICON[layer],
       text: GIS_MAP_LAYER_LABEL[layer],
       pressed: visibility[layer],
       onChange: mapPlayCmd("setLayerVisible", { layer }),

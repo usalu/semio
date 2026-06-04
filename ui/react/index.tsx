@@ -255,6 +255,26 @@ export type IconSource =
   | { readonly url: string }
   | { readonly node: React.ReactNode };
 
+/** @emoji 🎛 Required icon slot for chrome controls (buttons, toggles, actions). */
+export type ControlIcon = IconSource | React.ReactElement;
+
+function isIconSource(value: ControlIcon): value is IconSource {
+  if (typeof value === "string") return true;
+  if (typeof value === "object" && value !== null && !React.isValidElement(value)) {
+    return "name" in value || "svg" in value || "url" in value || "node" in value;
+  }
+  return false;
+}
+
+/** @emoji 🎛 Renders a control icon or a visible missing-icon placeholder. */
+export function renderControlIcon(icon: ControlIcon | undefined, size: number | IconSizeToken = "small"): React.ReactNode {
+  if (icon === undefined || icon === null || icon === false) {
+    return <span data-missing-icon className="inline-flex size-small shrink-0 rounded-sm bg-destructive/30" aria-hidden />;
+  }
+  if (isIconSource(icon)) return <Icon icon={icon} size={size} />;
+  return icon;
+}
+
 export interface IconProps {
   icon: IconSource;
   size?: number | IconSizeToken;
@@ -352,6 +372,7 @@ const Maximize2Icon = createIconComponent("maximize-2");
 const MessageSquareIcon = createIconComponent("message-square");
 const Minimize2Icon = createIconComponent("minimize-2");
 const MoreHorizontalIcon = createIconComponent("more-horizontal");
+const PanelRightIcon = createIconComponent("panel-right");
 const MousePointerIcon = createIconComponent("mouse-pointer-2");
 const NavigateBackIcon = createIconComponent("arrow-left");
 const NavigateForwardIcon = createIconComponent("arrow-right");
@@ -2531,6 +2552,10 @@ function useGhostController(): GhostController {
 /** @emoji 👻 Mounts global ghost detection and interaction context for layout + panels. */
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ghost = useGhostController();
+  reactHostPort.useEffect(() => {
+    setPanelGhostSessionBridge({ begin: ghost.begin, end: ghost.end });
+    return () => setPanelGhostSessionBridge(null);
+  }, [ghost.begin, ghost.end]);
   const panelGhostValue = reactHostPort.useMemo<PanelGhostValue>(
     () => ({ active: ghost.active, begin: ghost.begin, end: ghost.end }),
     [ghost.active, ghost.begin, ghost.end],
@@ -2692,6 +2717,24 @@ export const panelGlassFillClass = glassPanelClass;
 /** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
 export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
 
+/** @emoji 📑 Panel tab strip; dividers use the same {@link secondaryLineClass} stroke as {@link panelChromeBorderClass}. */
+export const panelTabBarClass = cn("relative z-10 flex items-stretch shrink-0 overflow-x-auto border-b divide-x divide-element", secondaryLineClass);
+
+/** @emoji 📑 Panel tab icon button (no per-tab borders — {@link panelTabBarClass} owns dividers). */
+export const panelTabButtonClass = "flex items-center justify-center h-full cursor-pointer transition-colors hover:bg-hover-panel";
+
+/** @emoji 📑 Side panel tab strip height. */
+export const sidePanelTabBarClass = cn(panelTabBarClass, "h-medium");
+
+/** @emoji 📑 Side panel tab icon button padding. */
+export const sidePanelTabButtonClass = cn(panelTabButtonClass, "px-small");
+
+/** @emoji 📑 Mobile panel tab strip height. */
+export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
+
+/** @emoji 📑 Mobile panel tab icon button padding. */
+export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-medium");
+
 /** @emoji ↔️ Accent stroke on the panel resize edge while hovered or dragging. */
 export function panelResizeEdgeAccentClass(resizeSide: ResizeSide, active: boolean): string | undefined {
   if (!active) return undefined;
@@ -2795,8 +2838,30 @@ export const windowMeasuresOverlayClass =
 /** @emoji 📐 Scrollable frosted rail for window measures (height follows content, capped by the window body). */
 export const windowMeasuresStackClass = cn(
   glassWindowOptionsClass,
-  "pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-y-auto overscroll-contain rounded-md border border-element/40 p-tiny shadow-sm",
+  "pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden rounded-md border border-element/40 p-0 shadow-sm",
 );
+
+/** @emoji 📐 Window measures rail spanning the full window body. */
+export const windowMeasuresOverlayExpandedClass = "inset-0 z-overlay items-stretch";
+
+/** @emoji 📐 Collapsed options chrome hugging the top-right corner. */
+export const windowMeasuresOverlayFoldedClass = "w-fit max-w-[min(14rem,calc(100%-0.5rem))]";
+
+/** @emoji 📐 Stack layout when window options fill the window. */
+export const windowMeasuresStackExpandedClass = "h-full max-h-full min-h-0";
+
+/** @emoji 📐 Stack width when options are folded to the right edge. */
+export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
+
+/** @emoji 📐 Compact title bar on top of the window options stack. */
+export const windowMeasuresChromeClass =
+  "pointer-events-auto flex h-small shrink-0 items-center justify-between gap-tiny border-b border-element/40 px-tiny py-0";
+
+/** @emoji 📐 Square icon action in the window options chrome bar. */
+export const windowMeasuresChromeActionClass = "size-small min-h-small min-w-small max-h-small max-w-small shrink-0 p-0";
+
+/** @emoji 📐 Scrollable measure tree body below the options chrome bar. */
+export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain p-tiny";
 
 /** @emoji 📐 Vertical rhythm between top-level measure groups in the rail. */
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
@@ -3053,9 +3118,8 @@ export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, Comma
  **/
 export interface FooterItem {
   id: string;
-  icon?: React.ReactNode;
+  icon: ControlIcon;
   text?: string;
-  content?: React.ReactNode;
   order?: number;
   onClick?: () => void;
   className?: string;
@@ -3083,9 +3147,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup className="border">
           {sortedItems.map((item) => (
-            <ActionGroupItem key={item.id} as={item.onClick ? "button" : "div"} id={item.id} text={item.text} onClick={item.onClick} disabled={item.disabled} className={cn(item.content && !item.text && "aspect-auto", item.className)}>
-              {item.content ?? item.icon}
-            </ActionGroupItem>
+            <ActionGroupItem key={item.id} as={item.onClick ? "button" : "div"} id={item.id} icon={item.icon} text={item.text} onClick={item.onClick} disabled={item.disabled} className={item.className} />
           ))}
         </ActionGroup>
       </div>
@@ -4303,11 +4365,13 @@ function ActionGroupItem({
   className,
   children,
   id,
+  icon,
   text,
   as: Component = "button",
   ...props
 }: React.ComponentProps<"button"> & {
   id?: string;
+  icon: ControlIcon;
   text?: string;
   as?: "button" | "div";
 }) {
@@ -4336,6 +4400,7 @@ function ActionGroupItem({
       )}
       {...(props as any)}
     >
+      {renderControlIcon(icon, "tiny")}
       {children}
       {text && <span className="text-tiny whitespace-nowrap">{text}</span>}
     </Component>
@@ -4349,7 +4414,7 @@ function ActionGroupItem({
  **/
 interface ActionDropdownOption {
   value: string;
-  icon: React.ReactNode;
+  icon: ControlIcon;
   label?: string;
 }
 
@@ -4392,9 +4457,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <ActionGroup id={id} className={className}>
-          <ActionGroupItem id={id} {...props}>
-            {selectedOption?.icon}
-          </ActionGroupItem>
+          <ActionGroupItem id={id} icon={selectedOption?.icon ?? "chevron-down"} {...props} />
         </ActionGroup>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
@@ -4405,7 +4468,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
               onClick={() => handleSelect(option.value)}
               className={cn("flex items-center gap-single p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === option.value && "bg-active-temporary")}
             >
-              <span className="flex items-center justify-center size-3">{option.icon}</span>
+              <span className="flex items-center justify-center size-3">{renderControlIcon(option.icon, "tiny")}</span>
               {option.label && <span className="flex-1 text-left">{option.label}</span>}
               {value === option.value && <CheckIcon className="size-tiny ml-auto" />}
             </button>
@@ -4424,7 +4487,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
 interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
   as?: "button" | "div";
   loading?: boolean;
-  icon?: React.ReactNode;
+  icon: ControlIcon;
   text?: string;
   id?: string;
 }
@@ -4463,7 +4526,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       )}
       {...(props as any)}
     >
-      {icon}
+      {renderControlIcon(icon, "tiny")}
       {inlineText ? <span className="text-tiny whitespace-nowrap">{inlineText}</span> : null}
     </Comp>
   );
@@ -4568,7 +4631,7 @@ function ButtonGroupItem({
   ...props
 }: React.ComponentProps<"button"> & {
   id?: string;
-  icon?: React.ReactNode;
+  icon: ControlIcon;
   text?: string;
   asChild?: boolean;
 }) {
@@ -4596,7 +4659,8 @@ function ButtonGroupItem({
       )}
       {...(props as any)}
     >
-      {icon || children}
+      {renderControlIcon(icon)}
+      {children}
       {inlineText ? <span className="text-xs whitespace-nowrap">{inlineText}</span> : null}
     </Comp>
   );
@@ -4611,7 +4675,7 @@ type ButtonProps = React.ComponentProps<"button"> &
   Omit<VariantProps<typeof buttonGroupItemVariants>, "level"> & {
     asChild?: boolean;
     id?: string;
-    icon?: React.ReactNode;
+    icon: ControlIcon;
     text?: string;
     children?: React.ReactNode;
   };
@@ -4622,7 +4686,7 @@ type ButtonProps = React.ComponentProps<"button"> &
 interface ButtonCycleItem<T extends string> {
   value: T;
   label: string;
-  icon?: React.ReactNode;
+  icon: ControlIcon;
   text?: string;
   id?: string;
 }
@@ -4669,7 +4733,7 @@ function ButtonCycle<T extends string = string>({ className, id, showLabel, valu
 
   return (
     <ButtonGroup id={id} showLabel={showLabel} className={className}>
-      <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem?.icon} text={cycleText} {...props} />
+      <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem.icon} text={cycleText} {...props} />
     </ButtonGroup>
   );
 }
@@ -4741,10 +4805,14 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <ButtonGroup detailPanelWidthMode="fill" style={{ opacity: comboboxEmptyOpacity, transition: "opacity 150ms" }}>
-          <ButtonGroupItem id={id} role="combobox" aria-expanded={open} className="w-full min-w-0 justify-between">
-            {selectedOption ? selectedOption.label : computedPlaceholder}
-            <ChevronsUpDownIcon className="ml-2 size-tiny shrink-0 opacity-50" />
-          </ButtonGroupItem>
+          <ButtonGroupItem
+            id={id}
+            role="combobox"
+            aria-expanded={open}
+            className="w-full min-w-0 justify-between"
+            icon="chevrons-up-down"
+            text={selectedOption ? selectedOption.label : computedPlaceholder}
+          />
         </ButtonGroup>
       </PopoverTrigger>
       <PopoverContent className="w-full" align="start">
@@ -6129,7 +6197,7 @@ const toggleVariants = cva(
  **/
 export interface ToggleItem<T extends string> {
   value: T;
-  label: React.ReactNode;
+  icon: ControlIcon;
   text?: string;
   dropdownText?: string;
   id?: string;
@@ -6142,7 +6210,7 @@ interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePri
   kind?: "default" | "icon" | "single";
   i18nPressed?: string;
   showLabel?: boolean;
-  icon?: React.ReactNode;
+  icon: ControlIcon;
   text?: string;
 }
 
@@ -6151,11 +6219,11 @@ interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePri
  **/
 interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
   kind: "withAction";
-  actionIcon: React.ReactNode;
+  actionIcon: ControlIcon;
   onActionClick: () => void;
   showLabel?: boolean;
   actionId?: string;
-  icon: React.ReactNode;
+  icon: ControlIcon;
   text?: string;
 }
 
@@ -6202,7 +6270,7 @@ const ToggleGroupContext = reactHostPort.createContext<{ level: Level }>({
  **/
 type ToggleGroupItemProps = Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Item>, "children"> & {
   id?: string;
-  icon: React.ReactNode;
+  icon: ControlIcon;
   text?: string;
   action?: React.ReactNode;
   value: string;
@@ -6292,7 +6360,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       )}
       {...props}
     >
-      <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{icon as React.ReactNode}</span>
+      <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{renderControlIcon(icon)}</span>
       {inlineText ? (
         <span data-slot="inline-label" className="text-xs whitespace-nowrap">
           {inlineText}
@@ -6318,7 +6386,9 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
 
 /**
  **/
-const addIconSize = (element: React.ReactNode): React.ReactNode => {
+const addIconSize = (element: ControlIcon): ControlIcon => {
+  if (typeof element === "string") return element;
+  if (typeof element === "object" && element !== null && !React.isValidElement(element)) return element;
   if (React.isValidElement(element)) {
     const existingClassName = (element.props as any).className || "";
     if (!existingClassName.includes("size-")) {
@@ -6435,7 +6505,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
               const buttonElement = (
                 <button key={item.value} onClick={() => handleSelect(item.value)} className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}>
                   <span className="flex flex-1 items-center gap-single text-left">
-                    <span className="flex items-center">{addIconSize(item.label)}</span>
+                    <span className="flex items-center">{renderControlIcon(addIconSize(item.icon))}</span>
                     {dropdownText ? <span className="text-xs">{dropdownText}</span> : null}
                   </span>
                 </button>
@@ -6462,7 +6532,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       items: [
         {
           value: selectedItem.value,
-          icon: addIconSize(selectedItem.label),
+          icon: addIconSize(selectedItem.icon),
           text: selectedItem.text,
           action: dropdownAction,
 
@@ -7576,13 +7646,8 @@ export function IconSelector({
 			/>
 			<div className="bg-muted/30 flex min-h-[56px] items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
 			<div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-				<Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline">
-					<Puzzle2dIconFileImportIcon className="size-3.5" />
-					Import file…
-				</Button>
-				<Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost">
-					Clear
-				</Button>
+				<Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text="Import file…" />
+				<Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text="Clear" />
 			</div>
 			<input accept="image/png,image/jpeg,image/svg+xml,.svg,.png,.jpg,.jpeg" className="hidden" onChange={onPickFiles} ref={fileInputRef} type="file" />
 		</div>
@@ -7968,7 +8033,7 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
  **/
 export interface TreeSectionAction {
   kind?: "button";
-  icon: React.ReactNode;
+  icon: ControlIcon;
   onClick: () => void;
   title?: string;
   text?: string;
@@ -8579,6 +8644,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   if (!isExpandable) {
     return (
       <div
+        data-dim
         data-slot="tree-section-row"
         data-tree-row-kind="section"
         id={id}
@@ -8621,6 +8687,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
         <div
+          data-dim
           data-slot="tree-section-row"
           data-tree-row-kind="section"
           id={id}
@@ -8722,6 +8789,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       return (
         <>
           <div
+            data-dim
             data-slot="tree-item-row"
             data-tree-row-kind="group"
             data-tree-group
@@ -8793,6 +8861,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     return (
       <>
         <div
+          data-dim
           data-slot="tree-item-row"
           data-tree-row-kind="group"
           data-tree-group
@@ -8868,6 +8937,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   if (layoutKind === "property") {
     return (
       <div
+        data-dim
         data-slot="tree-item-row"
         data-tree-row-kind="property"
         role="treeitem"
@@ -8904,6 +8974,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
 
   return (
     <div
+      data-dim
       data-slot="tree-item-row"
       data-tree-row-kind="leaf"
       role="treeitem"
@@ -9390,7 +9461,7 @@ export const TreeRow: React.FC<{
   if (!isTree) {
     return (
       <TreeRowAlignmentContext.Provider value={true}>
-        <div data-slot="tree-row" data-tree-row-kind={rowKind} className={cn("min-w-0 w-full min-h-[24px]", className)}>
+        <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn("min-w-0 w-full min-h-[24px]", className)}>
           {children}
         </div>
       </TreeRowAlignmentContext.Provider>
@@ -9399,7 +9470,7 @@ export const TreeRow: React.FC<{
 
   return (
     <TreeRowAlignmentContext.Provider value={true}>
-      <div data-slot="tree-row" data-tree-row-kind={rowKind} className={cn("relative min-w-0 w-full", className)}>
+      <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn("relative min-w-0 w-full", className)}>
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" anchorOffsetPx={rowKind === "property" ? detailPanelHeaderLineCenterPx : undefined}>
           {children}
         </TreeAlignedRow>
@@ -10268,8 +10339,8 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
           placeholder={`Write a message for ${title.toLowerCase()}...`}
         />
         <div className="flex items-center justify-end gap-single">
-          <Button type="button" id={`${id}.clear`} data-testid="basic-chat-clear" text="Clear" onClick={clearMessages} />
-          <Button type="button" id={`${id}.send`} data-testid="basic-chat-send" text="Send" onClick={sendDraft} disabled={!draft.trim()} />
+          <Button type="button" id={`${id}.clear`} data-testid="basic-chat-clear" text="Clear" icon="trash-2" onClick={clearMessages} />
+          <Button type="button" id={`${id}.send`} data-testid="basic-chat-send" text="Send" icon="arrow-right" onClick={sendDraft} disabled={!draft.trim()} />
         </div>
       </div>
     </div>
@@ -10547,7 +10618,7 @@ interface ControlTreeRowProps {
   right?: React.ReactNode;
 }
 const ControlTreeRow: React.FC<ControlTreeRowProps> = ({ className, left, right }) => (
-  <div data-slot="control-tree-row" className={cn("grid min-w-0 w-full items-center gap-x-[8px] min-h-[20px]", className)} style={{ gridTemplateColumns: `minmax(0, 1fr) ${controlTreeValueColumnWidthPx}px` }}>
+  <div data-dim data-slot="control-tree-row" className={cn("grid min-w-0 w-full items-center gap-x-[8px] min-h-[20px]", className)} style={{ gridTemplateColumns: `minmax(0, 1fr) ${controlTreeValueColumnWidthPx}px` }}>
     <div data-slot="control-tree-row-left" className="relative min-w-0">
       {left}
     </div>
@@ -10828,6 +10899,60 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
 
 // #endregion 🌳WindowMeasuresTree
 
+// #region 🪟WindowMeasuresChrome
+
+interface WindowMeasuresChromeProps {
+  windowId: string;
+  folded: boolean;
+  expanded: boolean;
+  onFold: () => void;
+  onUnfold: () => void;
+  onExpand: () => void;
+  onCollapseExpand: () => void;
+}
+
+/** @emoji 🪟 Title bar for the window options rail (label left, fold / span right). */
+const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, folded, expanded, onFold, onUnfold, onExpand, onCollapseExpand }) => (
+  <div
+    data-slot="window-measures-chrome"
+    data-folded={folded ? "true" : undefined}
+    data-expanded={expanded ? "true" : undefined}
+    className={cn(windowMeasuresChromeClass, folded && "border-b-0")}
+  >
+    <div data-slot="window-measures-title" className="flex min-w-0 items-center gap-tiny">
+      <PanelRightIcon className="text-muted-foreground size-tiny shrink-0" />
+      <span className="text-tiny text-foreground truncate font-medium">Window Options</span>
+    </div>
+    <ActionGroup id={`${windowId}-window-measures-actions`} className="h-small shrink-0">
+      {folded ? (
+        <ActionGroupItem
+          id={`${windowId}-window-measures-unfold`}
+          icon="chevron-left"
+          className={windowMeasuresChromeActionClass}
+          onClick={onUnfold}
+        />
+      ) : (
+        <>
+          <ActionGroupItem
+            id={`${windowId}-window-measures-span`}
+            icon={expanded ? "minimize-2" : "maximize-2"}
+            className={windowMeasuresChromeActionClass}
+            onClick={expanded ? onCollapseExpand : onExpand}
+          />
+          <ActionGroupItem
+            id={`${windowId}-window-measures-fold`}
+            icon="chevron-right"
+            className={windowMeasuresChromeActionClass}
+            onClick={onFold}
+          />
+        </>
+      )}
+    </ActionGroup>
+  </div>
+);
+
+// #endregion 🪟WindowMeasuresChrome
+
 // #endregion 📜Tree
 
 // #endregion 🗼Aggregation Components
@@ -11041,7 +11166,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
   return (
     <div className="flex items-center justify-between border-t border-element pt-4 mt-8">
       {prev ? (
-        <Button id="ui.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
+        <Button id="ui.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single" icon="chevron-left">
           <div className="text-left">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.previous")}</div>
             <div className="font-medium">{prev.title}</div>
@@ -11051,7 +11176,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
         <div />
       )}
       {next ? (
-        <Button id="ui.docs.navigation.next" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
+        <Button id="ui.docs.navigation.next" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single" icon="chevron-right">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.next")}</div>
             <div className="font-medium">{next.title}</div>
@@ -11235,8 +11360,8 @@ const Panel: React.FC<PanelProps> = ({
   }, [additionalContent, emptyMessage, hasContent, panelKey, sortedSections]);
   return (
     <LevelProvider level="panel">
-      <PanelGhostRoot data-panel={panelKey} className={cn(containerClass, showBackground && frameClass)} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
-        {showBackground ? <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", panelGlassFillClass)} /> : null}
+      <PanelGhostRoot data-panel={panelKey} className={containerClass} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
+        {showBackground ? <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", frameClass, panelGlassFillClass)} /> : null}
         <Scrollable className="relative z-10 h-full">
           <div className={`${className || "p-single"} overflow-hidden min-w-0`}>
             <TreeStateProvider>
@@ -11628,13 +11753,13 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
       <PanelGhostRoot
         data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"}
         data-panel-visible={visible ? "true" : "false"}
-        className={cn("absolute min-w-0 overflow-hidden flex flex-col box-border", visible ? "text-foreground" : "hidden pointer-events-none", visible && frameClass, className)}
+        className={cn("absolute min-w-0 overflow-hidden flex flex-col box-border", visible ? "text-foreground" : "hidden pointer-events-none", className)}
         style={positionStyle}
         aria-hidden={visible ? undefined : true}
       >
-        {visible ? <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", panelGlassFillClass)} /> : null}
+        {visible ? <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", frameClass, panelGlassFillClass)} /> : null}
         {showTabBar && (
-          <div data-dim data-slot="side-panel-tabs" className={cn("relative z-10 flex items-center h-medium border-b shrink-0 overflow-x-auto", secondaryLineClass)}>
+          <div data-dim data-slot="side-panel-tabs" className={sidePanelTabBarClass}>
             {sortedTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = tab.id === activeTab?.id;
@@ -11643,8 +11768,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
                   <button
                     data-slot="side-panel-tab-button"
                     id={tab.id}
+                    data-active={isActive ? "true" : undefined}
                     onClick={() => handleTabChange(tab.id)}
-                    className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                    className={cn(sidePanelTabButtonClass, isActive && "bg-hover-panel")}
                   >
                     <Icon size={16} />
                   </button>
@@ -11719,10 +11845,10 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
 
   return (
     <LevelProvider level="panel">
-      <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", panelChromeBorderClass, className)} style={{ height: `${height}px` }}>
-        <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", panelGlassFillClass)} />
+      <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", className)} style={{ height: `${height}px` }}>
+        <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", panelChromeBorderClass, panelGlassFillClass)} />
         {showTabBar && (
-          <div data-dim data-slot="mobile-panel-tabs" className={cn("relative z-10 flex items-center h-large border-b shrink-0 overflow-x-auto", secondaryLineClass)}>
+          <div data-dim data-slot="mobile-panel-tabs" className={mobilePanelTabBarClass}>
             {sortedTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = tab.id === activeTab?.id;
@@ -11731,8 +11857,9 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
                   <button
                     data-slot="mobile-panel-tab-button"
                     id={tab.id}
+                    data-active={isActive ? "true" : undefined}
                     onClick={() => handleTabChange(tab.id)}
-                    className={cn("flex items-center justify-center h-full px-medium border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                    className={cn(mobilePanelTabButtonClass, isActive && "bg-hover-panel")}
                   >
                     <Icon size={20} />
                   </button>
@@ -11828,7 +11955,7 @@ export { ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone };
 export interface EngagementOption {
   id: string;
   label?: string;
-  icon?: React.ReactNode;
+  icon: ControlIcon;
   pressed?: boolean;
   disabled?: boolean;
   onPress?: () => void;
@@ -12751,6 +12878,8 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(false);
+  const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
   const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -12827,19 +12956,13 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
       {(showControls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
         <ActionGroup id={`${id}-window-controls`}>
           {onOpenInNewWindow && (
-            <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow}>
-              <ExternalLinkIcon />
-            </ActionGroupItem>
+            <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} />
           )}
           {(onMaximize || onMinimize) && (
-            <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize}>
-              <Maximize2Icon />
-            </ActionGroupItem>
+            <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize} icon={<Maximize2Icon />} />
           )}
           {onClose && (
-            <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose}>
-              <CloseIcon />
-            </ActionGroupItem>
+            <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} />
           )}
         </ActionGroup>
       )}
@@ -12869,9 +12992,43 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
             <GlassTierProvider tier="windowOptions">
-              <div ref={measuresOverlayRef} data-slot="window-measures-overlay" className={cn(windowMeasuresOverlayClass, windowMeasuresRailWidthClass)}>
-                <div data-dim data-slot="window-measures-stack" className={windowMeasuresStackClass}>
-                  {measures}
+              <div
+                ref={measuresOverlayRef}
+                data-slot="window-measures-overlay"
+                data-expanded={measuresExpanded ? "true" : undefined}
+                className={cn(
+                  windowMeasuresOverlayClass,
+                  measuresExpanded
+                    ? windowMeasuresOverlayExpandedClass
+                    : measuresFolded
+                      ? windowMeasuresOverlayFoldedClass
+                      : windowMeasuresRailWidthClass,
+                )}
+              >
+                <div
+                  data-dim
+                  data-slot="window-measures-stack"
+                  data-folded={measuresFolded ? "true" : undefined}
+                  className={cn(
+                    windowMeasuresStackClass,
+                    measuresExpanded && windowMeasuresStackExpandedClass,
+                    measuresFolded && windowMeasuresStackFoldedClass,
+                  )}
+                >
+                  <WindowMeasuresChrome
+                    windowId={id}
+                    folded={measuresFolded}
+                    expanded={measuresExpanded}
+                    onFold={() => setMeasuresFolded(true)}
+                    onUnfold={() => setMeasuresFolded(false)}
+                    onExpand={() => setMeasuresExpanded(true)}
+                    onCollapseExpand={() => setMeasuresExpanded(false)}
+                  />
+                  {!measuresFolded ? (
+                    <div data-slot="window-measures-body" className={windowMeasuresBodyClass}>
+                      {measures}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </GlassTierProvider>
@@ -16148,16 +16305,26 @@ export interface WindowTemplateDragSession {
   readonly label: string;
 }
 
+type PanelGhostSessionBridge = Pick<PanelGhostValue, "begin" | "end">;
+
+let panelGhostSessionBridge: PanelGhostSessionBridge | null = null;
+
+function setPanelGhostSessionBridge(bridge: PanelGhostSessionBridge | null): void {
+  panelGhostSessionBridge = bridge;
+}
+
 let activeWindowTemplateDragSession: WindowTemplateDragSession | null = null;
 
 /** @emoji 🪟 Records the active palette template drag until drop or dragend. */
 export function beginWindowTemplateDrag(session: WindowTemplateDragSession): void {
   activeWindowTemplateDragSession = session;
+  panelGhostSessionBridge?.begin(null);
 }
 
 /** @emoji 🪟 Clears the active palette template drag session. */
 export function endWindowTemplateDrag(): void {
   activeWindowTemplateDragSession = null;
+  panelGhostSessionBridge?.end();
 }
 
 /** @emoji 🪟 Returns the in-flight palette template drag, if any. */
@@ -17622,7 +17789,7 @@ export { App };
 export interface UiAppDescriptor {
   id: string;
   label?: string;
-  icon?: React.ReactNode;
+  icon?: ControlIcon;
   children: React.ReactNode;
 }
 
@@ -17656,10 +17823,9 @@ const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, f
               id={`ui.appNav.${app.id}`}
               className={cn(activeAppId === app.id && "bg-active-base")}
               onClick={() => onActiveAppChange?.(app.id)}
+              icon={app.icon ?? "layout-grid"}
               text={app.label}
-            >
-              {app.icon ?? app.label ?? app.id}
-            </ButtonGroupItem>
+            />
           ))}
         </ButtonGroup>
       ),
@@ -18397,7 +18563,7 @@ if (import.meta.vitest) {
     it("Engagement renders options, input, and status lines", () => {
       const { container } = render(
         <Engagement
-          options={[{ id: "opt-a", label: "Option A", onPress: () => {} }]}
+          options={[{ id: "opt-a", label: "Option A", icon: "circle-dot", onPress: () => {} }]}
           input={{ placeholder: "Type here" }}
           status={[{ id: "status-a", content: "Ready" }]}
         />,
@@ -18410,7 +18576,7 @@ if (import.meta.vitest) {
 
     it("Engagement option buttons size to label text without clipping", () => {
       const longLabel = "C Confirm selection";
-      const { container } = render(<Engagement options={[{ id: "engagement-transition-confirm-c", label: longLabel, onPress: () => {} }]} />);
+      const { container } = render(<Engagement options={[{ id: "engagement-transition-confirm-c", label: longLabel, icon: "circle-dot", onPress: () => {} }]} />);
       const item = container.querySelector('[data-slot="button-group-item"]') as HTMLElement;
       expect(item?.textContent).toContain("CConfirmSelection");
       expect(item?.className).toContain("aspect-auto");
@@ -18996,7 +19162,7 @@ if (import.meta.vitest) {
           id="canvas-window"
           active
           fill
-          engagement={{ options: [{ id: "opt-a", label: "Alpha", onPress: () => {} }] }}
+          engagement={{ options: [{ id: "opt-a", label: "Alpha", icon: "circle-dot", onPress: () => {} }] }}
           measures={<div data-testid="measure-slot">LOD</div>}
         >
           <div data-testid="window-body" className="size-full" onPointerDown={bodyDown}>
@@ -19032,8 +19198,46 @@ if (import.meta.vitest) {
       expect(overlay?.className).toContain("min(14rem");
       expect(overlay?.className).toContain("top-0");
       expect(overlay?.className).not.toContain("inset-y-0");
-      expect(overlay?.className).not.toContain("overflow-hidden");
       expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-chrome"]')).toBeTruthy();
+      expect(screen.getByText("Window Options")).toBeTruthy();
+    });
+
+    it("Window measures chrome fold hides the options body and unfold restores it", () => {
+      const { container } = render(
+        <Window id="measures-fold-window" measures={<div data-testid="measure-slot">LOD</div>}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
+      const title = container.querySelector('[data-slot="window-measures-title"]') as HTMLElement;
+      const actions = container.querySelector('[data-slot="action-group"]') as HTMLElement;
+      expect(title.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
+      fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-fold`)!);
+      expect(container.querySelector('[data-slot="window-measures-body"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBe("true");
+      expect(overlay.className).toContain("w-fit");
+      fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-unfold`)!);
+      expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBeNull();
+      expect(overlay.className).toContain("min(14rem");
+    });
+
+    it("Window measures chrome span expands the overlay across the window body", () => {
+      const { container } = render(
+        <Window id="measures-span-window" measures={<div data-testid="measure-slot">LOD</div>}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
+      expect(overlay.getAttribute("data-expanded")).toBeNull();
+      fireEvent.click(container.querySelector(`#measures-span-window-window-measures-span`)!);
+      expect(overlay.getAttribute("data-expanded")).toBe("true");
+      expect(overlay.className).toContain("inset-0");
+      fireEvent.click(container.querySelector(`#measures-span-window-window-measures-span`)!);
+      expect(overlay.getAttribute("data-expanded")).toBeNull();
+      expect(overlay.className).toContain("top-0");
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {
@@ -19437,7 +19641,7 @@ if (treeVitest) {
     it("anchors fit-content button and toggle controls to the shared property edge", () => {
       const buttonMarkup = renderToStaticMarkup(
         <Label id="tooltip.manual">
-          <Button text="Apply" />
+          <Button text="Apply" icon="check" />
         </Label>,
       );
       const toggleMarkup = renderToStaticMarkup(<Toggle id="tooltip.manual" icon={<CheckIcon />} showLabel />);
@@ -20178,6 +20382,30 @@ if (treeVitest) {
       expect(markup).not.toContain(">Compact<");
     });
 
+    it("renders panel toggles with icons including display", () => {
+      const markup = renderToStaticMarkup(
+        <Toggle id="ui.panelToggle.display" pressed={false} onPressedChange={() => undefined} icon="layout-grid" />,
+      );
+      expect(markup).toContain('id="ui.panelToggle.display"');
+      expect(markup).toContain('data-icon="layout-grid"');
+      expect(markup).not.toContain("data-missing-icon");
+    });
+
+    it("surfaces missing icons at runtime when control icon is absent", () => {
+      const markup = renderToStaticMarkup(
+        <ToggleGroup
+          items={[
+            {
+              value: "on",
+              id: "ui.panelToggle.display",
+              icon: undefined as unknown as ControlIcon,
+            },
+          ]}
+        />,
+      );
+      expect(markup).toContain("data-missing-icon");
+    });
+
     it("maps ui shell ids to domain-neutral ui i18n keys by default", () => {
       expect(resolveControlLabelId("ui.nav.back")).toBe("ui.nav.back");
       expect(resolveControlLabelId("ui.panelToggle.workbench")).toBe("ui.panelToggle.workbench");
@@ -20217,9 +20445,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <UiChromeCompactProvider compact={false}>
           <ButtonGroup id="ui.nav.back">
-            <ButtonGroupItem id="ui.nav.back">
-              <NavigateBackIcon className="size-small" />
-            </ButtonGroupItem>
+            <ButtonGroupItem id="ui.nav.back" icon="arrow-left" />
           </ButtonGroup>
         </UiChromeCompactProvider>,
       );
@@ -20231,7 +20457,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <LevelProvider level="window">
           <ButtonGroup>
-            <ButtonGroupItem id="ui.engagement.commands" text="Next" />
+            <ButtonGroupItem id="ui.engagement.commands" text="Next" icon="arrow-right" />
           </ButtonGroup>
         </LevelProvider>,
       );
