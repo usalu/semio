@@ -41,6 +41,7 @@ export default createPlaygroundPlayViteConfig({
 			"three",
 			"@react-three/fiber",
 			"@react-three/drei",
+			"@infinite/world/r3f",
 			"brepjs",
 			"brepjs-opencascade",
 			"golden-layout",

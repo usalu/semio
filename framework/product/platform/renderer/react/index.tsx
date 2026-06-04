@@ -1481,7 +1481,7 @@ export function resolveShellModeWindowBody(cache: Map<string, ShellModeWindowBod
       value={{ instanceId: windowKind.id, windowKindId: windowKind.windowKindId ?? windowKind.id, templateId: windowKind.templateId }}
     >
       <ContextMenu items={windowKind.contextMenu}>
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
           <WindowComponent />
         </div>
       </ContextMenu>

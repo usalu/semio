@@ -1165,3 +1165,17 @@
 [data-slot="mode-dock-stack-body"]:has([data-testid="puzzle2d-canvas"]) {
   padding: 0;
 }
+
+/* #region SelectionMarquee */
+.selection-marquee rect,
+.selection-marquee polygon {
+  fill: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  stroke: var(--color-primary);
+  stroke-width: 1.5;
+}
+
+.selection-marquee[data-coverage="partial"] rect,
+.selection-marquee[data-coverage="partial"] polygon {
+  stroke-dasharray: 5 4;
+}
+/* #endregion SelectionMarquee */

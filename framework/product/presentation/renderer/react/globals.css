@@ -688,23 +688,6 @@
 	border-color: var(--border-element-color);
 }
 
-.reveal .presentation-interaction-marquee {
-	position: absolute;
-	box-sizing: border-box;
-	pointer-events: none;
-	border-width: 2px;
-	border-style: solid;
-}
-
-.reveal .presentation-interaction-marquee--crossing {
-	border-color: color-mix(in srgb, var(--color-primary) 85%, transparent);
-	background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-}
-
-.reveal .presentation-interaction-marquee--window {
-	border-color: color-mix(in srgb, var(--color-secondary) 85%, transparent);
-	background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
-}
 /* #endregion 🔖Interaction */
 
 .reveal .presentation-arrangement-canvas {

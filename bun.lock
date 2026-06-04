@@ -720,6 +720,7 @@
       "dependencies": {
         "@framework/core": "workspace:*",
         "@framework/platform/core": "workspace:*",
+        "@framework/platform/renderer/react": "workspace:*",
         "@mdx-js/react": "^3.1.1",
         "@reasoning/mindmap/wires/react": "workspace:*",
         "@semio/js": "*",
@@ -730,7 +731,6 @@
         "react-dom": "^19.2.0",
       },
       "devDependencies": {
-        "@framework/platform/renderer/react": "workspace:*",
         "@mdx-js/rollup": "^3.1.1",
         "@playwright/test": "^1.57.0",
         "@semio/assets": "^1.0.0",

@@ -363,7 +363,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     const Host = gisMapSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
+        <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
           <Host node={node} />
         </div>
       );
@@ -1166,7 +1166,13 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     () => (shell.activeApp && shell.activeApp.windowKinds.length > 0 ? createFrameworkDisplayPanelTabs(() => displayHost, shell.bus) : []),
     [displayHost, shell.activeApp, shell.bus],
   );
-  const displayIcon = reactHostPort.useMemo(() => <Icon icon="layout-grid" size={16} />, []);
+  const displayIcon = reactHostPort.useMemo(
+    () =>
+      displayTabs[0]?.icon
+        ? reactHostPort.createElement(displayTabs[0].icon, { size: 16 })
+        : "layout-grid",
+    [displayTabs],
+  );
 
   const hasModeNav = (shell.activeAppBase?.modes.length ?? 0) > 1;
   const setActiveModeId = reactHostPort.useCallback(
@@ -1211,14 +1217,15 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     setPanelVisibility((prev) => ({ ...prev, rightSidePanel: !prev.rightSidePanel }));
   }, [rightSidePanelTabs.length, setPanelVisibility]);
 
-  if (!shell.activeAppBase || !shell.activeApp || !shell.playgroundContextValue) return null;
-
-  const navbarItems = reactHostPort.useMemo<NavbarItem[]>(
-    () => [
+  const navbarItems = reactHostPort.useMemo<NavbarItem[]>(() => {
+    if (!shell.activeApp) {
+      return [];
+    }
+    return [
       {
         key: "title",
         className: "flex-1 min-w-0",
-        content: <span className="truncate px-single text-sm font-medium">{shell.activeApp!.label}</span>,
+        content: <span className="truncate px-single text-sm font-medium">{shell.activeApp.label}</span>,
       },
       {
         key: "panelToggles",
@@ -1269,21 +1276,22 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
           </div>
         ),
       },
-    ],
-    [
-      activeLeftPanelKind,
-      activeRightPanelKind,
-      displayIcon,
-      displayTabs.length,
-      panelVisibility.leftSidePanel,
-      panelVisibility.rightSidePanel,
-      setPanelVisibility,
-      settingsIcon,
-      shell.activeApp,
-      shell.detailsIcon,
-      shell.workbenchIcon,
-    ],
-  );
+    ];
+  }, [
+    activeLeftPanelKind,
+    activeRightPanelKind,
+    displayIcon,
+    displayTabs.length,
+    panelVisibility.leftSidePanel,
+    panelVisibility.rightSidePanel,
+    setPanelVisibility,
+    settingsIcon,
+    shell.activeApp,
+    shell.detailsIcon,
+    shell.workbenchIcon,
+  ]);
+
+  if (!shell.activeAppBase || !shell.activeApp || !shell.playgroundContextValue) return null;
 
   if (!namedLayoutStore) return null;
 
@@ -5815,6 +5823,35 @@ if (import.meta.vitest) {
       runtime.setPanelVisibility({ leftSidePanel: true, rightSidePanel: false });
       expect(runtime.generation).toBe(dataGen);
       expect(runtime.chromeGeneration).toBeGreaterThan(0);
+    });
+
+    it("renders display panel toggle with layout-grid icon when app has window kinds", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const { AppRuntime, Controller, createTabStackLayout } = await import("@framework/playground/core");
+      const runtime = new Platform({ initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true } });
+      class TestController extends Controller {
+        constructor() {
+          super("playground-view-test", runtime.commandBus, () => runtime.notify());
+        }
+        run(): void {}
+      }
+      const app = new AppRuntime("playground-view-test", "Playground View Test", undefined, new TestController(), createTabStackLayout(["main"], ["Main"]), [
+        new WindowKindRuntime("main", "Main", "playground.view.test.main"),
+      ]);
+      app.panelTabs = [
+        { id: "workbench", iconId: "folder", panel: "workbench", order: 0, bodyKey: "playground.view.test.workbench" },
+        { id: "details", iconId: "info", panel: "details", order: 0, bodyKey: "playground.view.test.details" },
+      ];
+      registerWindowBody("playground.view.test.main", () => <div>Main</div>);
+      registerSidePanelBody("playground.view.test.workbench", () => <div data-testid="playground-view-test.workbench" />);
+      registerSidePanelBody("playground.view.test.details", () => <div data-testid="playground-view-test.details" />);
+      runtime.addApp(app);
+      const markup = renderToStaticMarkup(
+        <PlaygroundView runtime={runtime} defaultAppId="playground-view-test" initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,
+      );
+      expect(markup).toContain('id="ui.panelToggle.display"');
+      expect(markup).not.toContain("data-missing-icon");
+      expect(markup).toContain('data-icon="layout-grid"');
     });
   });
 

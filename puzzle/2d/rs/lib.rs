@@ -863,6 +863,8 @@ mod board_host {
         pub events: Vec<serde_json::Value>,
         /// Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
         pub selection_screen_preview: Option<Vec<Point>>,
+        /// @emoji ↔️ True when area-select drag is crossing (right-to-left); drives dashed preview stroke.
+        pub selection_preview_crossing: bool,
         /// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
         pub link_screen_preview: Option<Vec<Point>>,
         pub vello_theme: VelloThemePalette,
@@ -935,6 +937,7 @@ mod board_host {
                 world_raster_tiling: "world-clip".into(),
                 events: Vec::new(),
                 selection_screen_preview: None,
+                selection_preview_crossing: false,
                 link_screen_preview: None,
                 vello_theme: VelloThemePalette::default(),
                 grid_factor: GRID_FACTOR_DEFAULT,
@@ -3190,6 +3193,9 @@ mod board_host {
 
         pub fn set_selection_screen_preview(&mut self, points: Option<Vec<Point>>) {
             self.selection_screen_preview = points;
+            if points.is_none() {
+                self.selection_preview_crossing = false;
+            }
         }
 
         pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
@@ -3383,12 +3389,14 @@ mod board_host {
         fn sync_selection_screen_overlay(&mut self, start_screen: Point, screen_points: &[Point]) {
             if screen_points.len() < 2 {
                 self.selection_screen_preview = None;
+                self.selection_preview_crossing = false;
                 return;
             }
+            let last = *screen_points.last().unwrap_or(&start_screen);
+            self.selection_preview_crossing = last.x < start_screen.x;
             self.selection_screen_preview = Some(if self.selection_options.method == "lasso" {
                 screen_points.to_vec()
             } else {
-                let last = *screen_points.last().unwrap_or(&start_screen);
                 vec![start_screen, Point::new(last.x, start_screen.y), last, Point::new(start_screen.x, last.y)]
             });
         }
@@ -5280,7 +5288,11 @@ mod board_host {
                     }
                     path.close_path();
                     inner.fill(Fill::NonZero, Affine::IDENTITY, self.vello_theme.selection_preview_fill, None, &path);
-                    inner.stroke(&Stroke::new(1.5), Affine::IDENTITY, self.vello_theme.selection_preview_stroke, None, &path);
+                    let mut preview_stroke = Stroke::new(1.5);
+                    if self.selection_preview_crossing {
+                        preview_stroke.dash_pattern = vec![5.0, 4.0].into();
+                    }
+                    inner.stroke(&preview_stroke, Affine::IDENTITY, self.vello_theme.selection_preview_stroke, None, &path);
                 }
             }
             self.append_cached_world_content(&mut inner, lod);

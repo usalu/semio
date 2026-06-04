@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-/** 🧭 `@semio/sketchpad-js` router: `bun ./script.ts <policy|test> [args…]`. */
+/** 🧭 `@semio/sketchpad-js` router: `bun ./script.ts dev|test|policy [args…]`. */
+import { existsSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import type { FileLinter } from "../../../../../repo/lib/js/src/index.ts";
 import {
 	BundleScript,
@@ -10,6 +12,7 @@ import {
 	runBundleScriptMain,
 	runPolicyOnlyMain,
 	runVitest,
+	runViteBunxDevPlain,
 } from "../../../../../repo/lib/js/src/index.ts";
 
 export const policyFile = "index.ts";
@@ -20,13 +23,22 @@ export const policy = defineLint("@semio/sketchpad-js-index", (l: FileLinter) =>
 	return dependencyBoundaryBreachesForFile(repoRoot, file, l.content(), file);
 });
 
+class DevScript extends BundleScript {
+	run(segments: string[]): void {
+		const viteCache = join(this.root, "node_modules", ".vite");
+		if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
+		const args = segments.includes("--force") ? segments : ["--force", ...segments];
+		runViteBunxDevPlain(this.root, args);
+	}
+}
+
 class TestScript extends BundleScript {
 	run(segments: string[]): void {
 		runVitest(this.root, segments);
 	}
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("test", TestScript);
 
 if (import.meta.main) {
 	const cmd = process.argv[2];

@@ -130,12 +130,12 @@ const BOARD_PAINT_ROWS: &[BoardPaintRow<'_>] = &[
 	BoardPaintRow {
 		const_name: "SELECTION_PREVIEW_FILL",
 		src: BoardPaintSrc::Token { key: "primary" },
-		alpha: 0.14,
+		alpha: 0.12,
 	},
 	BoardPaintRow {
 		const_name: "SELECTION_PREVIEW_STROKE",
 		src: BoardPaintSrc::Token { key: "primary" },
-		alpha: 0.75,
+		alpha: 1.0,
 	},
 ];
 

@@ -850,13 +850,14 @@ export function MapCanvas({
     if (!container) {
       return { w: 1, h: 1 };
     }
+    const rect = container.getBoundingClientRect();
     return {
-      w: Math.max(1, Math.round(container.clientWidth)),
-      h: Math.max(1, Math.round(container.clientHeight)),
+      w: Math.max(1, Math.round(rect.width || container.clientWidth)),
+      h: Math.max(1, Math.round(rect.height || container.clientHeight)),
     };
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) {
@@ -878,6 +879,43 @@ export function MapCanvas({
     let disposed = false;
     const dpr = globalThis.devicePixelRatio || 1;
 
+    const applySize = (): void => {
+      const nextDpr = globalThis.devicePixelRatio || 1;
+      const { w, h } = readContainerSize();
+      if (!renderer.setSize(w, h, nextDpr)) {
+        return;
+      }
+      renderer.scheduleRefreshTiles();
+    };
+
+    let resizeRafId: number | null = null;
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => {
+            if (resizeRafId !== null) {
+              return;
+            }
+            const schedule =
+              typeof globalThis.requestAnimationFrame === "function"
+                ? (fn: () => void) => {
+                    resizeRafId = globalThis.requestAnimationFrame(() => {
+                      resizeRafId = null;
+                      fn();
+                    });
+                  }
+                : (fn: () => void) => {
+                    queueMicrotask(fn);
+                  };
+            schedule(() => {
+              if (disposed) {
+                return;
+              }
+              applySize();
+            });
+          });
+    resizeObserver?.observe(container);
+
     const boot = async (): Promise<void> => {
       let { w, h } = readContainerSize();
       for (let attempt = 0; attempt < 120 && (w < 8 || h < 8); attempt += 1) {
@@ -898,8 +936,7 @@ export function MapCanvas({
         renderer.session.free();
         return;
       }
-      const settled = readContainerSize();
-      renderer.setSize(settled.w, settled.h, dpr);
+      applySize();
       if (!userAdjustedCameraRef.current) {
         renderer.session.fitWorldCamera();
         const bootCamera = renderer.readCameraFromSession();
@@ -923,6 +960,10 @@ export function MapCanvas({
 
     return () => {
       disposed = true;
+      resizeObserver?.disconnect();
+      if (resizeRafId !== null && typeof globalThis.cancelAnimationFrame === "function") {
+        globalThis.cancelAnimationFrame(resizeRafId);
+      }
       renderer.dispose();
       rendererRef.current = null;
     };
@@ -948,54 +989,6 @@ export function MapCanvas({
   useEffect(() => {
     rendererRef.current?.setLayerStrokeScale(layerStrokeScale);
   }, [layerStrokeScaleJson]);
-
-  useLayoutEffect(() => {
-    const renderer = rendererRef.current;
-    const container = containerRef.current;
-    if (!renderer || !container) {
-      return;
-    }
-
-    const applySize = (): void => {
-      const dpr = globalThis.devicePixelRatio || 1;
-      const { w, h } = readContainerSize();
-      if (!renderer.session.gpuReady()) {
-        return;
-      }
-      if (!renderer.setSize(w, h, dpr)) {
-        return;
-      }
-      renderer.scheduleRefreshTiles();
-    };
-
-    applySize();
-    if (typeof ResizeObserver === "undefined") {
-      return undefined;
-    }
-
-    let resizeRafId: number | null = null;
-    const observer = new ResizeObserver(() => {
-      if (resizeRafId !== null) {
-        return;
-      }
-      const schedule =
-        typeof globalThis.requestAnimationFrame === "function"
-          ? (fn: () => void) => {
-              resizeRafId = globalThis.requestAnimationFrame(() => {
-                resizeRafId = null;
-                fn();
-              });
-            }
-          : (fn: () => void) => {
-              queueMicrotask(fn);
-            };
-      schedule(applySize);
-    });
-    observer.observe(container);
-    return () => {
-      observer.disconnect();
-    };
-  }, [readContainerSize]);
 
   useEffect(() => {
     rendererRef.current?.syncDescriptor(descriptorJson);
@@ -1197,5 +1190,6 @@ if (import.meta.vitest) {
       expect(parsed.landStroke[3]).toBe(0);
     });
   });
+
 }
 // #endregion 🧪Tests

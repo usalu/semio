@@ -725,14 +725,19 @@ function OntologyTreeNodeView({ node, defaultExpanded = true }: { node: Ontology
       id={node.id}
       defaultOpen={defaultExpanded}
       label={
-        <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="inline-flex items-center justify-center h-5 min-w-5 rounded bg-info-bg px-1 text-[10px] font-bold text-info-foreground shrink-0" title={node.kind}>
-              {descriptor.icon}
-            </span>
-            <span className="min-w-0 truncate text-sm font-medium text-foreground">{descriptor.primaryText}</span>
+        <span className="flex min-w-0 items-center gap-2 overflow-hidden">
+          <span className="inline-flex items-center justify-center h-5 min-w-5 rounded bg-info-bg px-1 text-[10px] font-bold text-info-foreground shrink-0" title={node.kind}>
+            {descriptor.icon}
           </span>
-          {descriptor.secondaryText && <span className="pl-7 text-[11px] text-muted-foreground">{descriptor.secondaryText}</span>}
+          <span className="min-w-0 truncate text-sm">
+            <span className="font-medium text-foreground">{descriptor.primaryText}</span>
+            {descriptor.secondaryText ? (
+              <>
+                {" "}
+                <span className="text-[10px] leading-none text-muted-foreground">{descriptor.secondaryText}</span>
+              </>
+            ) : null}
+          </span>
         </span>
       }
     >

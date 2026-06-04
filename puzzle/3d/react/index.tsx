@@ -14,6 +14,7 @@ import {
   type GumballHandleKind,
   type ThreeEvent,
   type TreeDragAndDropController,
+  SelectionMarquee,
 } from "@ui/react";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactNode } from "react";
 import {
@@ -7571,34 +7572,23 @@ function Puzzle3dMarqueeOverlay() {
     return null;
   }
   const toLocal = (point: ScreenPoint) => ({ x: point.x - overlay.clientOrigin.x, y: point.y - overlay.clientOrigin.y });
+  const coverage = marqueeIsCrossing(overlay.start.x, overlay.current.x) ? "partial" : "full";
   if (overlay.method === "lasso" && overlay.path.length >= 2) {
-    const points = overlay.path.map((point) => `${toLocal(point).x},${toLocal(point).y}`).join(" ");
-    return (
-      <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden>
-        <polyline points={points} fill="color-mix(in oklab, var(--color-primary) 12%, transparent)" stroke="var(--color-primary)" strokeWidth={1.5} />
-      </svg>
-    );
+    return <SelectionMarquee coverage={coverage} shape="polygon" points={overlay.path.map(toLocal)} />;
   }
   const start = toLocal(overlay.start);
   const current = toLocal(overlay.current);
-  const left = Math.min(start.x, current.x);
-  const top = Math.min(start.y, current.y);
-  const width = Math.abs(current.x - start.x);
-  const height = Math.abs(current.y - start.y);
-  const crossing = marqueeIsCrossing(overlay.start.x, overlay.current.x);
   return (
-    <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden>
-      <rect
-        x={left}
-        y={top}
-        width={width}
-        height={height}
-        fill={crossing ? "color-mix(in oklab, var(--color-primary) 10%, transparent)" : "color-mix(in oklab, var(--color-primary) 16%, transparent)"}
-        stroke="var(--color-primary)"
-        strokeWidth={1.5}
-        strokeDasharray={crossing ? "4 3" : undefined}
-      />
-    </svg>
+    <SelectionMarquee
+      coverage={coverage}
+      shape="rect"
+      rect={{
+        x: Math.min(start.x, current.x),
+        y: Math.min(start.y, current.y),
+        width: Math.abs(current.x - start.x),
+        height: Math.abs(current.y - start.y),
+      }}
+    />
   );
 }
 

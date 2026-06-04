@@ -575,10 +575,34 @@ export type Puzzle3dActiveTool = "select" | "brush" | "fill";
 
 export { puzzle3dVortexFullId };
 
-/** @emoji 🏷️ Tree/inspector label: trimmed fixture label, else fallback id. */
+const puzzle3dPlayFixtureCaptionSeparator = " · ";
+
+/** @emoji 🏷️ Tree/inspector primary caption (fixture ` · ` captions split to the name only). */
 export function puzzle3dPlayFixtureRowLabel(label: string | undefined, fallbackId: string): string {
+  return puzzle3dPlayFixtureTreeRowFields(label, fallbackId).label;
+}
+
+/** @emoji 🏷️ Hierarchy row fields: primary name with optional muted id on the same line (no separator glyph). */
+export function puzzle3dPlayFixtureTreeRowFields(
+  label: string | undefined,
+  id: string,
+): Pick<UiTreeItemNode, "label" | "description"> {
   const trimmed = label?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : fallbackId;
+  if (trimmed?.includes(puzzle3dPlayFixtureCaptionSeparator)) {
+    const separatorIndex = trimmed.indexOf(puzzle3dPlayFixtureCaptionSeparator);
+    const name = trimmed.slice(0, separatorIndex).trim();
+    const captionId = trimmed.slice(separatorIndex + puzzle3dPlayFixtureCaptionSeparator.length).trim();
+    if (name.length > 0 && captionId.length > 0) {
+      return { label: name, description: captionId };
+    }
+  }
+  if (!trimmed || trimmed.length === 0) {
+    return { label: id };
+  }
+  if (trimmed === id) {
+    return { label: id };
+  }
+  return { label: trimmed, description: id };
 }
 
 /** @emoji 🎯 Resolved selection label for play chrome (objects, vortices, attractions). */
@@ -762,7 +786,7 @@ export function buildPuzzle3dPlayHierarchySections(fixture: FixtureV1): readonly
       const fullId = puzzle3dVortexFullId(object.id, vortex.id);
       return {
         id: `puzzle-3d-play-hierarchy.vortex.${fullId}`,
-        label: puzzle3dPlayFixtureRowLabel(vortex.label, fullId),
+        ...puzzle3dPlayFixtureTreeRowFields(vortex.label, fullId),
         command: puzzle3dPlaySelectVortexCommand(fullId),
       };
     });
@@ -774,7 +798,7 @@ export function buildPuzzle3dPlayHierarchySections(fixture: FixtureV1): readonly
     };
     return {
       id: `puzzle-3d-play-hierarchy.object.${object.id}`,
-      label: puzzle3dPlayFixtureRowLabel(object.label, object.id),
+      ...puzzle3dPlayFixtureTreeRowFields(object.label, object.id),
       defaultOpen: true,
       command: puzzle3dPlaySelectObjectCommand(object.id),
       items: [vorticesGroup],
@@ -2649,6 +2673,14 @@ if (import.meta.vitest) {
     it("builds canonical vortex full ids", () => {
       expect(puzzle3dVortexFullId("obj", "vx")).toBe("obj:vx");
       expect(puzzle3dVortexFullId("obj", "obj:vx")).toBe("obj:vx");
+    });
+
+    it("splits fixture captions into primary label and muted id without a separator glyph", () => {
+      expect(puzzle3dPlayFixtureTreeRowFields("Ellipsoid Capsule · cs_1_d0_t_f4_b_c1", "object-1")).toEqual({
+        label: "Ellipsoid Capsule",
+        description: "cs_1_d0_t_f4_b_c1",
+      });
+      expect(puzzle3dPlayFixtureRowLabel("Ellipsoid Capsule · cs_1_d0_t_f4_b_c1", "object-1")).toBe("Ellipsoid Capsule");
     });
 
     describe("nakagin kind catalog helpers", () => {

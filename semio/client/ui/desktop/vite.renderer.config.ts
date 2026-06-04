@@ -211,7 +211,7 @@ export default defineConfig(async ({ mode }) => {
       __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
     },
     resolve: {
-      dedupe: ["cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements"],
+      dedupe: ["cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements", "@react-three/fiber", "@react-three/drei"],
       // `shim/index.js` is CJS (`module.exports`); Vite would serve it as ESM and break `import { useSyncExternalStore }`.
       // Point bare specifiers at the CJS builds under `cjs/` so Rollup/commonjs rewrites exports (VS Code / zustand compatible).
       alias: [

@@ -52,9 +52,12 @@ export const PRESENTATION_PLAY_STORE_ID = "presentation-tile-play.snapshot";
 export const PRESENTATION_PLAY_ICON_HIERARCHY = "presentation.play.icon.hierarchy";
 export const PRESENTATION_PLAY_ICON_DETAILS = "presentation.play.icon.details";
 
+/** @emoji 🖼 Default catalogue crop — aligned with `mit-bestand/präsentation/33.projektetage/spec.ts` (`CATALOGUE_FRAME`, `CATALOGUE_SOURCE_ASPECT`). */
 export const PRESENTATION_PLAY_DEFAULT_SOURCE: FigureTileSource = {
-	src: "",
-	frame: { x: 0, y: 0, width: 1, height: 1 },
+	src: "/bauteilbörse.png",
+	kind: "figure",
+	frame: { x: 0.127, y: 0.1, width: 0.746, height: 0.75 },
+	sourceAspect: 1222 / 896,
 };
 
 function presentationPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -723,10 +726,11 @@ if (import.meta.vitest) {
 			expect(ctrl.tiles).toHaveLength(2);
 		});
 
-		it("starts without a figure and loads one via setSource", () => {
+		it("loads catalogue figure by default and replaces via setSource", () => {
 			const bus = new CommandBus();
 			const ctrl = new PresentationPlayController(bus, () => undefined);
-			expect(ctrl.source.src).toBe("");
+			expect(ctrl.source.src).toBe("/bauteilbörse.png");
+			expect(ctrl.source.sourceAspect).toBeCloseTo(1222 / 896);
 			bus.dispatch(PRESENTATION_PLAY_CONTROLLER_ID, "setSource", { src: "/figure.png", sourceAspect: 2, kind: "figure" });
 			expect(ctrl.source.src).toBe("/figure.png");
 			expect(ctrl.source.kind).toBe("figure");

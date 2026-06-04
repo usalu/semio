@@ -229,6 +229,51 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// #region 🔖SelectionMarquee
+/** @emoji ⬚ Canonical area-select overlay coverage (drag right-to-left = partial). */
+export type SelectionMarqueeCoverage = "partial" | "full";
+
+export type SelectionMarqueeRect = {
+  readonly x: number | string;
+  readonly y: number | string;
+  readonly width: number | string;
+  readonly height: number | string;
+};
+
+export type SelectionMarqueePoint = {
+  readonly x: number;
+  readonly y: number;
+};
+
+export type SelectionMarqueeProps = {
+  readonly coverage: SelectionMarqueeCoverage;
+  readonly className?: string;
+} & (
+  | { readonly shape: "rect"; readonly rect: SelectionMarqueeRect }
+  | { readonly shape: "polygon"; readonly points: readonly SelectionMarqueePoint[] }
+);
+
+/** @emoji ⬚ Shared SVG marquee for spatial area selection (primary fill/stroke; dashed when partial). */
+export function SelectionMarquee(props: SelectionMarqueeProps): React.ReactElement {
+  const { coverage, className } = props;
+  const svgClass = cn("selection-marquee pointer-events-none absolute inset-0 h-full w-full overflow-visible", className);
+  if (props.shape === "rect") {
+    const { rect } = props;
+    return (
+      <svg className={svgClass} data-coverage={coverage} aria-hidden>
+        <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} />
+      </svg>
+    );
+  }
+  const points = props.points.map((point) => `${point.x},${point.y}`).join(" ");
+  return (
+    <svg className={svgClass} data-coverage={coverage} aria-hidden>
+      <polygon points={points} />
+    </svg>
+  );
+}
+// #endregion 🔖SelectionMarquee
+
 // #region 🔖Icon
 /** @emoji 📐 Named size tokens for {@link Icon}. */
 export type IconSizeToken = "tiny" | "small" | "base" | "large";
@@ -2699,6 +2744,12 @@ export function getLevelZClass(level: Level): string {
 	}
 }
 
+/** @emoji 📏 Shell chrome edge (`border-border`) — navbar, footer, floating panels, toolbar. */
+export const chromeShellEdgeClass = "border-border";
+
+/** @emoji 📏 Full shell chrome frame for floating panels and toolbar. */
+export const chromeShellBorderClass = `border ${chromeShellEdgeClass}`;
+
 /** @emoji 📏 Secondary chrome line (`border-element`) for window frames and in-window controls. */
 export const secondaryLineClass = "border-element";
 
@@ -2709,7 +2760,7 @@ export const activeLineClass = "border-active-base";
 export const windowFrameClass = `border ${secondaryLineClass}`;
 
 /** @emoji 🪟 Panel chrome stroke only; mount on the panel root (`box-border`) so scrollbars stay inside the frame. */
-export const panelChromeBorderClass = windowFrameClass;
+export const panelChromeBorderClass = chromeShellBorderClass;
 
 /** @emoji 🪟 Frosted fill layer behind panel content (no stroke — border lives on the root). */
 export const panelGlassFillClass = glassPanelClass;
@@ -2717,8 +2768,8 @@ export const panelGlassFillClass = glassPanelClass;
 /** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
 export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
 
-/** @emoji 📑 Panel tab strip; dividers use the same {@link secondaryLineClass} stroke as {@link panelChromeBorderClass}. */
-export const panelTabBarClass = cn("relative z-10 flex items-stretch shrink-0 overflow-x-auto border-b divide-x divide-element", secondaryLineClass);
+/** @emoji 📑 Panel tab strip; outer edge uses {@link chromeShellEdgeClass}; tab dividers use {@link secondaryLineClass}. */
+export const panelTabBarClass = cn("relative z-10 flex items-stretch shrink-0 overflow-x-auto border-b divide-x divide-element", chromeShellEdgeClass);
 
 /** @emoji 📑 Panel tab icon button (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = "flex items-center justify-center h-full cursor-pointer transition-colors hover:bg-hover-panel";
@@ -3143,7 +3194,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
   return (
-    <footer id="ui.footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
+    <footer id="ui.footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", chromeShellEdgeClass, bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup className="border">
           {sortedItems.map((item) => (
@@ -7240,7 +7291,7 @@ function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   return (
-    <nav id="ui.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", chromeShellEdgeClass, bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0">
           {items.map((item, index) => (
@@ -7801,6 +7852,8 @@ const treeSubtreeGapPx = 0;
 const treeSectionBoundaryGapPx = 10;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
+const treeItemLabelSlotClassName = "flex min-w-0 flex-1 items-center overflow-hidden text-xs font-normal text-foreground select-text";
+const treeItemSecondaryTextClassName = "text-[10px] leading-none text-muted-foreground";
 const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-muted-foreground";
 
 /** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
@@ -8780,7 +8833,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
+  const baseClasses = `relative w-full h-[24px] min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
   const stateClasses = treeRowStateClasses(isSelected, isHighlighted);
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
@@ -8831,7 +8884,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                   {renderTreeRowIcon(icon, "folder")}
                   <span
                     data-slot="tree-label"
-                    className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
+                    className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
                     style={treeItemLabelStyle}
                     onClick={(e) => {
                       if (e.detail > 1) return;
@@ -8903,7 +8956,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                 {renderTreeRowIcon(icon, "folder")}
                 <span
                   data-slot="tree-label"
-                  className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
+                  className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
                   style={treeItemLabelStyle}
                   onClick={(e) => {
                     if (e.detail > 1) return;
@@ -8961,7 +9014,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             <div className={treeHeaderMainClassName}>
               {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
               {renderTreeRowIcon(icon, "file-text")}
-              <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground select-text" style={treeItemLabelStyle}>
+              <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treeItemLabelStyle}>
                 {displayLabel as React.ReactNode}
               </span>
             </div>
@@ -8998,7 +9051,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           <div className={treeHeaderMainClassName}>
             {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
             {renderTreeRowIcon(icon, "file-text")}
-            <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground select-text" style={treeItemLabelStyle}>
+            <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treeItemLabelStyle}>
               {displayLabel as React.ReactNode}
             </span>
           </div>
@@ -9127,7 +9180,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const baseClasses = `relative w-full min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`;
+  const baseClasses = `relative w-full h-[24px] min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`;
   const stateClasses = treeRowStateClasses(isSelected, isHighlighted);
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
   const treeLabelSelectClass = draggable ? "select-none" : "select-text";
@@ -9277,7 +9330,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 {renderTreeRowIcon(icon, "folder")}
                 <span
                   data-slot="tree-label"
-                  className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
+                  className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
                   style={treeItemLabelStyle}
                   onClick={(e) => {
                     if (e.detail > 1) return;
@@ -9366,7 +9419,11 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           <div className={treeHeaderMainClassName}>
             {loading && <Spinner size="small" className="text-muted-foreground" />}
             {renderTreeRowIcon(icon, "file-text")}
-            <span data-slot="tree-label" className={cn("flex-1 text-xs font-normal truncate text-foreground", draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
+            <span
+              data-slot="tree-label"
+              className={cn(treeItemLabelSlotClassName, draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)}
+              style={treeItemLabelStyle}
+            >
               {resolvedLabel as React.ReactNode}
             </span>
           </div>
@@ -9518,14 +9575,13 @@ export const HelperRow: React.FC<{ children: React.ReactNode; className?: string
 
 const getTreeItemLabel = (item: TreeDataItem): React.ReactNode => {
   if (!item.description) {
-    return item.label;
+    return <span className="min-w-0 truncate">{item.label}</span>;
   }
 
   return (
-    <div className="flex min-w-0 flex-col">
-      <span className="truncate">{item.label}</span>
-      <span className="truncate text-[10px] text-muted-foreground">{item.description}</span>
-    </div>
+    <span className="min-w-0 truncate">
+      <span className="text-foreground">{item.label}</span> <span className={treeItemSecondaryTextClassName}>{item.description}</span>
+    </span>
   );
 };
 
@@ -11908,7 +11964,7 @@ function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
     <div
       data-slot="toolbar-zone"
       className={cn(
-        cn(glassToolbarClass, "flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border border-element"),
+        cn(glassToolbarClass, "flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden", chromeShellBorderClass),
         className,
       )}
       {...props}
@@ -19611,6 +19667,27 @@ if (treeVitest) {
       expect(markup).toContain('data-tree-row-kind="leaf"');
     });
 
+    it("renders tree item descriptions inline on one row with muted secondary text", () => {
+      const markup = renderToStaticMarkup(
+        <Tree
+          sections={[
+            {
+              id: "tree.inline-description",
+              items: [{ id: "tree.inline-description.item", label: "Capsule J", description: "capsule-j" }],
+            },
+          ]}
+        />,
+      );
+
+      expect(markup).not.toContain("flex-col gap-0.5");
+      expect(markup).not.toContain(" - ");
+      expect(markup).toContain(treeItemSecondaryTextClassName);
+      expect(markup).toContain("Capsule J");
+      expect(markup).toContain("capsule-j");
+      expect(markup).toContain('data-slot="tree-item-row"');
+      expect(markup).toContain("h-[24px]");
+    });
+
     it("renders steppers at full control width with the current numeric value visible", () => {
       const markup = renderToStaticMarkup(<Stepper id="ui.stepper.demo" value={12.5} />);
 
@@ -20515,6 +20592,27 @@ if (treeVitest) {
       expect(resolveControlLabelId("engagement-possibles-toggle")).toBe("ui.engagement.suggestions");
       expect(resolveControlLabelId("engagement-options")).toBe("ui.engagement.commands");
       expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
+    });
+
+    it("uses border-border on navbar, footer, panel chrome, and toolbar outlines", () => {
+      expect(panelChromeBorderClass).toContain("border-border");
+      expect(panelChromeBorderClass).not.toContain("border-element");
+      const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
+      expect(navbarMarkup).toContain("border-b");
+      expect(navbarMarkup).toContain("border-border");
+      const footerMarkup = renderToStaticMarkup(<Footer items={[{ id: "ui.footer.minimize", icon: "minus" }]} />);
+      expect(footerMarkup).toContain("border-t");
+      expect(footerMarkup).toContain("border-border");
+      const toolbarMarkup = renderToStaticMarkup(
+        <ToolbarZone>
+          <ToolbarItem>Tool</ToolbarItem>
+        </ToolbarZone>,
+      );
+      expect(toolbarMarkup).toContain("border-border");
+      const panelMarkup = renderToStaticMarkup(
+        <SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, tree: { sections: [] } }]} />,
+      );
+      expect(panelMarkup).toContain("border-border");
     });
 
     it("navbar keeps inline labels when compact chrome is enabled", () => {

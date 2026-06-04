@@ -13,6 +13,7 @@
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
 // #region 🔌Adapters
+import { readFileSync } from "node:fs";
 import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -72,26 +73,37 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
   };
 }
 
+const SKETCHPAD_EMBEDDED_NODE_TEST_REGIONS = [
+  /\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/,
+  /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/,
+];
+
+function isSketchpadIndexModule(id: string): boolean {
+  return id.replace(/\\/g, "/").endsWith("/semio/client/lib/sketchpad/js/index.ts");
+}
+
+/** @emoji ✂️ Drops embedded vitest + Playwright regions from the browser bundle (Node runners use source + pw-loader). */
+function stripSketchpadEmbeddedNodeTests(source: string): string {
+  let next = source;
+  for (const region of SKETCHPAD_EMBEDDED_NODE_TEST_REGIONS) {
+    next = next.replace(region, "");
+  }
+  return next;
+}
+
 /** @emoji ✂️ Drops embedded vitest + Playwright regions from the browser bundle (Node runners use source + pw-loader). */
 function stripSketchpadEmbeddedNodeTestsPlugin(): Plugin {
-  const regions = [
-    /\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/,
-    /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/,
-  ];
   return {
     name: "semio-sketchpad-strip-embedded-node-tests",
     enforce: "pre",
+    load(id) {
+      if (!isSketchpadIndexModule(id)) return;
+      return stripSketchpadEmbeddedNodeTests(readFileSync(id, "utf8"));
+    },
     transform(code, id) {
-      if (!id.replace(/\\/g, "/").endsWith("/semio/client/lib/sketchpad/js/index.ts")) return;
-      let next = code;
-      let changed = false;
-      for (const region of regions) {
-        if (region.test(next)) {
-          next = next.replace(region, "");
-          changed = true;
-        }
-      }
-      if (!changed) return;
+      if (!isSketchpadIndexModule(id)) return;
+      const next = stripSketchpadEmbeddedNodeTests(code);
+      if (next === code) return;
       return { code: next, map: null };
     },
   };
@@ -113,6 +125,39 @@ function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
         return opts.schedulerEntry;
       }
       return undefined;
+    },
+  };
+}
+
+const PLAYWRIGHT_DEV_STUB_ID = "\0semio-sketchpad-playwright-dev-stub";
+
+/** @emoji 🧱 Keeps Playwright out of the browser dev graph when embedded E2E regions are scanned. */
+function monorepoPlaywrightDevStubPlugin(): Plugin {
+  return {
+    name: "semio-sketchpad-playwright-dev-stub",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === "@playwright/test" || id === "playwright" || id === "playwright-core") return PLAYWRIGHT_DEV_STUB_ID;
+      return undefined;
+    },
+    load(id) {
+      if (id !== PLAYWRIGHT_DEV_STUB_ID) return;
+      return "export default {}; export const test = () => {}; export const expect = () => ({ toBe: () => {}, toEqual: () => {} });";
+    },
+  };
+}
+
+/** @emoji 🔀 Pre-resolves monorepo workspace package names before import-analysis. */
+function monorepoWorkspaceResolvePlugin(aliases: Array<{ find: string | RegExp; replacement: string }>): Plugin {
+  const exact = new Map<string, string>();
+  for (const alias of aliases) {
+    if (typeof alias.find === "string") exact.set(alias.find, alias.replacement);
+  }
+  return {
+    name: "semio-monorepo-workspace-resolve",
+    enforce: "pre",
+    resolveId(id) {
+      return exact.get(id);
     },
   };
 }
@@ -194,6 +239,46 @@ export default defineConfig(async ({ mode }) => {
   const schedulerRoot = path.resolve(workspaceRoot, "node_modules/scheduler/cjs");
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
   const viteInternalFallback = path.resolve(workspaceRoot, "node_modules/vite/dist/node/index.js");
+  const workspaceAliases: Array<{ find: string | RegExp; replacement: string }> = [
+    { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
+    { find: "@semio/react", replacement: path.resolve(__dirname, "../../react") },
+    { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg/semio.js") },
+    { find: "@semio/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
+    { find: "@ui/react", replacement: path.resolve(__dirname, "../../../../../ui/react") },
+    { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
+    { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
+    { find: "@semio/assets/icons", replacement: path.resolve(__dirname, "../../../../assets/index.ts") },
+    { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
+    { find: "@framework/core", replacement: path.resolve(__dirname, "../../../../../framework/core/index.ts") },
+    { find: "@framework/platform/core", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/core/index.ts") },
+    { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/renderer/react/index.tsx") },
+    { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/core/index.ts") },
+    { find: "@framework/playground/renderer/react/puzzle/2d", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx") },
+    { find: "@framework/playground/renderer/react/puzzle/3d", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx") },
+    { find: "@framework/playground/renderer/react/puzzle/5d", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx") },
+    { find: "@framework/playground/renderer/react/shell", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx") },
+    { find: "@framework/playground/renderer/react/boot", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx") },
+    { find: "@framework/playground/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx") },
+    { find: "@reasoning/mindmap/wires/react", replacement: path.resolve(__dirname, "../../../../../reasoning/mindmap/wires/react/index.ts") },
+    { find: "@reasoning/mindmap/react", replacement: path.resolve(__dirname, "../../../../../reasoning/mindmap/react/index.tsx") },
+    { find: "@infinite/cavas/react-renderer", replacement: path.resolve(__dirname, "../../../../../infinite/cavas/react-renderer/index.tsx") },
+    { find: "@infinite/world/r3f", replacement: path.resolve(__dirname, "../../../../../infinite/world/r3f/index.tsx") },
+    { find: "@gis/map/play", replacement: path.resolve(__dirname, "../../../../../gis/map/play/index.ts") },
+    { find: "@gis/map/react", replacement: path.resolve(__dirname, "../../../../../gis/map/react/index.tsx") },
+    { find: "@puzzle/2d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
+    { find: "@puzzle/3d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/3d/react/index.tsx") },
+    { find: "@puzzle/5d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/5d/react/index.tsx") },
+    { find: "@cad/js/renderer", replacement: path.resolve(__dirname, "../../../../../cad/js/renderer/index.tsx") },
+    { find: /^@elements\/board$/, replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
+    { find: /^@elements\/scene$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/scene/index.tsx") },
+    { find: /^@elements\/topology$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/topology/react/index.tsx") },
+    { find: /^@elements\/ui-shell$/, replacement: path.resolve(__dirname, "../../../../../elements/core/index.ts") },
+    { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../../../../elements/renderer/react/index.tsx") },
+    { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },
+    { find: /^use-sync-external-store\/shim(?:\.js)?$/, replacement: shimMain },
+    { find: "scheduler", replacement: schedulerEntry },
+    { find: "vite/internal", replacement: viteInternalFallback },
+  ];
   return {
     define: {
       __SEMIO_JS_RUN_BENCHMARKS__: "false",
@@ -202,74 +287,14 @@ export default defineConfig(async ({ mode }) => {
       "import.meta.env.SEMIO_SKETCHPAD_E2E": JSON.stringify(process.env.SEMIO_SKETCHPAD_E2E ?? ""),
     },
     resolve: {
-      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three", "@radix-ui/react-compose-refs", "@radix-ui/react-slot"],
-      alias: [
-        { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
-        { find: "@semio/react", replacement: path.resolve(__dirname, "../../react") },
-        // 🧷 Point directly at `semio.js` (the wasm-bindgen entry) so we don't depend on `pkg/package.json`,
-        // which `wasm-pack build --no-pack` regenerates / wipes on every rebuild. Resilient to rebuilds.
-        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg/semio.js") },
-        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
-        { find: "@ui/react", replacement: path.resolve(__dirname, "../../../../../ui/react") },
-        { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
-        { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
-        { find: "@semio/assets/icons", replacement: path.resolve(__dirname, "../../../../assets/index.ts") },
-        { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../../assets") },
-        { find: "@framework/core", replacement: path.resolve(__dirname, "../../../../../framework/core/index.ts") },
-        { find: "@framework/platform/core", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/core/index.ts") },
-        { find: "@framework/platform/renderer/react", replacement: path.resolve(__dirname, "../../../../../framework/product/platform/renderer/react/index.tsx") },
-        { find: "@framework/playground/core", replacement: path.resolve(__dirname, "../../../../../framework/product/playground/core/index.ts") },
-        {
-          find: "@framework/playground/renderer/react/puzzle/2d",
-          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
-        },
-        {
-          find: "@framework/playground/renderer/react/puzzle/3d",
-          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
-        },
-        {
-          find: "@framework/playground/renderer/react/puzzle/5d",
-          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
-        },
-        {
-          find: "@framework/playground/renderer/react/shell",
-          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
-        },
-        {
-          find: "@framework/playground/renderer/react/boot",
-          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
-        },
-        {
-          find: "@framework/playground/renderer/react",
-          replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
-        },
-        {
-          find: "@reasoning/mindmap/wires/react",
-          replacement: path.resolve(__dirname, "../../../../../reasoning/mindmap/wires/react/index.ts"),
-        },
-        { find: "@reasoning/mindmap/react", replacement: path.resolve(__dirname, "../../../../../reasoning/mindmap/react/index.tsx") },
-        { find: "@infinite/cavas/react-renderer", replacement: path.resolve(__dirname, "../../../../../infinite/cavas/react-renderer/index.tsx") },
-        { find: "@infinite/world/r3f", replacement: path.resolve(__dirname, "../../../../../infinite/world/r3f/index.tsx") },
-        { find: "@gis/map/play", replacement: path.resolve(__dirname, "../../../../../gis/map/play/index.ts") },
-        { find: "@gis/map/react", replacement: path.resolve(__dirname, "../../../../../gis/map/react/index.tsx") },
-        { find: "@puzzle/2d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
-        { find: "@puzzle/3d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/3d/react/index.tsx") },
-        { find: "@puzzle/5d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/5d/react/index.tsx") },
-        { find: "@cad/js/renderer", replacement: path.resolve(__dirname, "../../../../../cad/js/renderer/index.tsx") },
-        { find: /^@elements\/board$/, replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
-        { find: /^@elements\/scene$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/scene/index.tsx") },
-        { find: /^@elements\/topology$/, replacement: path.resolve(__dirname, "../../../../../elements/client/lib/topology/react/index.tsx") },
-        { find: /^@elements\/ui-shell$/, replacement: path.resolve(__dirname, "../../../../../elements/core/index.ts") },
-        { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../../../../elements/renderer/react/index.tsx") },
-        { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },
-        { find: /^use-sync-external-store\/shim(?:\.js)?$/, replacement: shimMain },
-        { find: "scheduler", replacement: schedulerEntry },
-        { find: "vite/internal", replacement: viteInternalFallback },
-      ],
+      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three", "@react-three/fiber", "@react-three/drei", "@radix-ui/react-compose-refs", "@radix-ui/react-slot"],
+      alias: workspaceAliases,
     },
     plugins: [
       ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/assets")),
       ...puzzle3dMeshesVitePlugin(workspaceRoot),
+      monorepoPlaywrightDevStubPlugin(),
+      monorepoWorkspaceResolvePlugin(workspaceAliases),
       stripSketchpadEmbeddedNodeTestsPlugin(),
       monorepoWorkspaceTransformPlugin(workspaceRoot),
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
@@ -297,10 +322,24 @@ export default defineConfig(async ({ mode }) => {
       },
     ],
     optimizeDeps: {
-      include: ["golden-layout", "scheduler", "use-sync-external-store/shim", "use-sync-external-store/shim/with-selector", "use-sync-external-store/with-selector"],
-      exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core"],
+      include: ["golden-layout", "scheduler", "use-sync-external-store/shim", "use-sync-external-store/shim/with-selector", "use-sync-external-store/with-selector", "@react-three/fiber", "@react-three/drei"],
+      exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core", "chromium-bidi", "fsevents"],
       esbuildOptions: {
         target: "es2020",
+        plugins: [
+          {
+            name: "semio-sketchpad-strip-embedded-node-tests-depcrawl",
+            setup(build) {
+              build.onLoad({ filter: /index\.ts$/ }, (args) => {
+                if (!isSketchpadIndexModule(args.path)) return;
+                return {
+                  contents: stripSketchpadEmbeddedNodeTests(readFileSync(args.path, "utf8")),
+                  loader: "ts",
+                };
+              });
+            },
+          },
+        ],
       },
     },
     server: {

@@ -18,7 +18,7 @@
       "dependsOn": ["@semio/rs:wasm"],
       "options": {
         "cwd": "semio/client/lib/sketchpad/js",
-        "command": "vite",
+        "command": "bun ./script.ts dev",
         "forwardAllArgs": true,
         "env": {
           "WATCHPACK_POLLING": "true",

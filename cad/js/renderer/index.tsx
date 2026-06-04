@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, UnifiedGumball, type EngagementControl, type EngagementSpec, type GumballConfig, type ThreeEvent } from "@ui/react";
+import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, type EngagementControl, type EngagementSpec, type GumballConfig, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -5061,30 +5061,21 @@ export function InteractionRepl({
           />
         </InteractionCanvas>
         {dragSelection && dragOverlayRect ? (
-          <svg
-            className={cn("pointer-events-none absolute inset-0 z-[4] h-full w-full", dragSelection.coverage === "partial" ? "text-accent" : "text-foreground")}
-            width="100%"
-            height="100%"
-          >
-            {dragSelection.method === "rectangle" ? (
-              <rect
-                x={Math.min(dragOverlayPoints[0]?.x ?? 0, dragOverlayPoints[1]?.x ?? 0)}
-                y={Math.min(dragOverlayPoints[0]?.y ?? 0, dragOverlayPoints[1]?.y ?? 0)}
-                width={Math.abs((dragOverlayPoints[1]?.x ?? 0) - (dragOverlayPoints[0]?.x ?? 0))}
-                height={Math.abs((dragOverlayPoints[1]?.y ?? 0) - (dragOverlayPoints[0]?.y ?? 0))}
-                className="fill-current/10 stroke-current"
-                strokeDasharray={dragSelection.coverage === "partial" ? "5 4" : undefined}
-                strokeWidth={1.5}
-              />
-            ) : (
-              <polygon
-                points={dragOverlayPoints.map((point) => `${point.x},${point.y}`).join(" ")}
-                className="fill-current/10 stroke-current"
-                strokeDasharray={dragSelection.coverage === "partial" ? "5 4" : undefined}
-                strokeWidth={1.5}
-              />
-            )}
-          </svg>
+          dragSelection.method === "rectangle" ? (
+            <SelectionMarquee
+              className="z-[4]"
+              coverage={dragSelection.coverage}
+              shape="rect"
+              rect={{
+                x: Math.min(dragOverlayPoints[0]?.x ?? 0, dragOverlayPoints[1]?.x ?? 0),
+                y: Math.min(dragOverlayPoints[0]?.y ?? 0, dragOverlayPoints[1]?.y ?? 0),
+                width: Math.abs((dragOverlayPoints[1]?.x ?? 0) - (dragOverlayPoints[0]?.x ?? 0)),
+                height: Math.abs((dragOverlayPoints[1]?.y ?? 0) - (dragOverlayPoints[0]?.y ?? 0)),
+              }}
+            />
+          ) : (
+            <SelectionMarquee className="z-[4]" coverage={dragSelection.coverage} shape="polygon" points={dragOverlayPoints} />
+          )
         ) : null}
         {selectionMenu ? (
           <div

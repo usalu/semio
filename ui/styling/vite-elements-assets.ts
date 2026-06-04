@@ -362,6 +362,9 @@ export type PlaygroundPlayViteOptions = {
   readonly resolveDedupe?: readonly string[];
 };
 
+/** @emoji 🎬 R3F packages that must resolve once with {@link sceneHostPort} and drei controls. */
+export const PLAYGROUND_SCENE_HOST_DEDUPE = ["@react-three/fiber", "@react-three/drei"] as const;
+
 //#region 🔖MapTileCache
 /** @emoji 🗺 Compliant User-Agent for OSM / MapLibre demotiles in map play. */
 export const GIS_MAP_TILE_USER_AGENT = "SemioGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)";
@@ -739,7 +742,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     },
     resolve: {
       alias: [...rendererAliases, ...extraAliases],
-      ...(resolveDedupe ? { dedupe: [...resolveDedupe] } : {}),
+      dedupe: [...PLAYGROUND_SCENE_HOST_DEDUPE, ...(resolveDedupe ?? [])],
     },
     ...(optimizeDeps ? { optimizeDeps } : {}),
   });

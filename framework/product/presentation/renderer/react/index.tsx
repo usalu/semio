@@ -53,6 +53,7 @@ import {
     applyElementsSurfaceChrome,
     Expertise,
     Icon,
+    SelectionMarquee,
     type ElementsSurfaceChromeInput,
 } from "@ui/react";
 import {
@@ -2453,12 +2454,12 @@ export function normalizeMarquee(
 	};
 }
 
-/** @emoji ↔️ Crossing when dragged left-to-right (end.x >= start.x), else window. */
+/** @emoji ↔️ Crossing when dragged right-to-left (end.x < start.x), else window. */
 export function marqueeSelectionRule(
 	start: { readonly x: number; readonly y: number },
 	end: { readonly x: number; readonly y: number },
 ): MarqueeSelectionRule {
-	return end.x >= start.x ? "crossing" : "window";
+	return end.x < start.x ? "crossing" : "window";
 }
 
 /** @emoji 🎯 Whether a marquee selects a target rect under crossing or window rules. */
@@ -4461,14 +4462,15 @@ const InteractionLayer: FC<{
 	return (
 		<div className="presentation-interaction-layer" aria-hidden>
 			{marquee && marqueeStyle ? (
-				<div
-					className={[
-						"presentation-interaction-marquee",
-						marqueeRule === "crossing"
-							? "presentation-interaction-marquee--crossing"
-							: "presentation-interaction-marquee--window",
-					].join(" ")}
-					style={marqueeStyle}
+				<SelectionMarquee
+					coverage={marqueeRule === "crossing" ? "partial" : "full"}
+					shape="rect"
+					rect={{
+						x: marqueeStyle.left,
+						y: marqueeStyle.top,
+						width: marqueeStyle.width,
+						height: marqueeStyle.height,
+					}}
 				/>
 			) : null}
 		</div>
@@ -6616,10 +6618,10 @@ if (import.meta.vitest) {
 		it("applies crossing vs window marquee rules", () => {
 			const inside = { x: 0.2, y: 0.2, width: 0.1, height: 0.1 };
 			const partial = { x: 0.55, y: 0.55, width: 0.3, height: 0.3 };
-			const crossingMarquee = normalizeMarquee({ x: 0.1, y: 0.1 }, { x: 0.5, y: 0.5 });
-			const windowMarquee = normalizeMarquee({ x: 0.7, y: 0.7 }, { x: 0.1, y: 0.1 });
-			expect(marqueeSelectionRule({ x: 0.1, y: 0.1 }, { x: 0.5, y: 0.5 })).toBe("crossing");
-			expect(marqueeSelectionRule({ x: 0.7, y: 0.7 }, { x: 0.1, y: 0.1 })).toBe("window");
+			const crossingMarquee = normalizeMarquee({ x: 0.7, y: 0.7 }, { x: 0.1, y: 0.1 });
+			const windowMarquee = normalizeMarquee({ x: 0.1, y: 0.1 }, { x: 0.5, y: 0.5 });
+			expect(marqueeSelectionRule({ x: 0.7, y: 0.7 }, { x: 0.1, y: 0.1 })).toBe("crossing");
+			expect(marqueeSelectionRule({ x: 0.1, y: 0.1 }, { x: 0.5, y: 0.5 })).toBe("window");
 			expect(marqueeSelects(crossingMarquee, inside, "crossing")).toBe(true);
 			expect(marqueeSelects(windowMarquee, inside, "window")).toBe(true);
 			expect(marqueeSelects(windowMarquee, partial, "window")).toBe(false);
