@@ -20,7 +20,7 @@ pub struct Edge {
 }
 
 // #region 🔖EdgeEndpointResolution
-/// 🔗 Resolves an edge endpoint to a node id: handle lookup first, then direct node id (normal graph port).
+/// 🔗 Resolves a ported edge endpoint to a node id (handle lookup, then node id).
 fn resolve_endpoint_node_id(endpoint_id: &str, handle_to_node: &std::collections::HashMap<String, String>) -> String {
     handle_to_node.get(endpoint_id).cloned().unwrap_or_else(|| endpoint_id.to_string())
 }
@@ -28,530 +28,21 @@ fn resolve_endpoint_node_id(endpoint_id: &str, handle_to_node: &std::collections
 
 // #region 🕸️ForceGraphLayout
 pub mod force_graph {
-    use serde::{Deserialize, Serialize};
     use serde_json::Value;
-    use std::collections::{HashMap, HashSet};
-    use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
+    use std::collections::HashMap;
 
     use crate::cavas::board_json_visible_or_true;
-    use crate::fixture_edge_handle_ids_from_object;
+    pub use mathematical_graph_normal_undirected::ForceGraphLayoutOptions;
 
-    // #region 🔖Vec2
-    /// 📐 Tiny 2-vector for force layout only (no external linear-algebra crate).
-    #[derive(Clone, Copy, Debug)]
-    struct Vec2 {
-        x: f64,
-        y: f64,
-    }
-
-    impl Vec2 {
-        const ZERO: Self = Self { x: 0.0, y: 0.0 };
-        #[inline]
-        fn new(x: f64, y: f64) -> Self {
-            Self { x, y }
-        }
-        #[inline]
-        fn norm(self) -> f64 {
-            (self.x * self.x + self.y * self.y).sqrt()
-        }
-    }
-
-    impl Add for Vec2 {
-        type Output = Self;
-        #[inline]
-        fn add(self, rhs: Self) -> Self {
-            Self::new(self.x + rhs.x, self.y + rhs.y)
-        }
-    }
-
-    impl AddAssign for Vec2 {
-        #[inline]
-        fn add_assign(&mut self, rhs: Self) {
-            self.x += rhs.x;
-            self.y += rhs.y;
-        }
-    }
-
-    impl Sub for Vec2 {
-        type Output = Self;
-        #[inline]
-        fn sub(self, rhs: Self) -> Self {
-            Self::new(self.x - rhs.x, self.y - rhs.y)
-        }
-    }
-
-    impl SubAssign for Vec2 {
-        #[inline]
-        fn sub_assign(&mut self, rhs: Self) {
-            self.x -= rhs.x;
-            self.y -= rhs.y;
-        }
-    }
-
-    impl Mul<f64> for Vec2 {
-        type Output = Self;
-        #[inline]
-        fn mul(self, s: f64) -> Self {
-            Self::new(self.x * s, self.y * s)
-        }
-    }
-
-    impl Mul<Vec2> for f64 {
-        type Output = Vec2;
-        #[inline]
-        fn mul(self, v: Vec2) -> Vec2 {
-            v * self
-        }
-    }
-
-    impl MulAssign<f64> for Vec2 {
-        #[inline]
-        fn mul_assign(&mut self, s: f64) {
-            self.x *= s;
-            self.y *= s;
-        }
-    }
-
-    impl Div<f64> for Vec2 {
-        type Output = Self;
-        #[inline]
-        fn div(self, s: f64) -> Self {
-            Self::new(self.x / s, self.y / s)
-        }
-    }
-    // #endregion
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct ForceGraphLayoutOptions {
-        #[serde(default = "default_iterations")]
-        pub iterations: u32,
-        #[serde(default = "default_ideal_edge_length")]
-        pub ideal_edge_length: f64,
-        #[serde(default = "default_repulsion_strength")]
-        pub repulsion_strength: f64,
-        #[serde(default = "default_spring_strength")]
-        pub spring_strength: f64,
-        #[serde(default = "default_gravity")]
-        pub gravity: f64,
-        #[serde(default)]
-        pub center_x: Option<f64>,
-        #[serde(default)]
-        pub center_y: Option<f64>,
-        #[serde(default = "default_time_step")]
-        pub time_step: f64,
-        #[serde(default = "default_velocity_damping")]
-        pub velocity_damping: f64,
-        #[serde(default = "default_max_speed")]
-        pub max_speed: f64,
-        #[serde(default = "default_random_seed")]
-        pub random_seed: u64,
-        /// Barnes–Hut opening angle θ (`width / distance`); smaller is more accurate, larger is faster.
-        #[serde(default = "default_barnes_hut_theta")]
-        pub barnes_hut_theta: f64,
-        /// Use exact O(n²) repulsion when the visible body count is at most this (tiny graphs / tests).
-        #[serde(default = "default_pairwise_repulsion_max_bodies")]
-        pub pairwise_repulsion_max_bodies: u32,
-        /// Node ids whose `x`/`y` stay fixed for this layout pass (pinned bodies still participate in repulsion and springs).
-        #[serde(default)]
-        pub locked_node_ids: Vec<String>,
-    }
-
-    fn default_iterations() -> u32 {
-        420
-    }
-    fn default_ideal_edge_length() -> f64 {
-        140.0
-    }
-    fn default_repulsion_strength() -> f64 {
-        6500.0
-    }
-    fn default_spring_strength() -> f64 {
-        0.028
-    }
-    fn default_gravity() -> f64 {
-        0.018
-    }
-    fn default_time_step() -> f64 {
-        0.85
-    }
-    fn default_velocity_damping() -> f64 {
-        0.88
-    }
-    fn default_max_speed() -> f64 {
-        48.0
-    }
-    fn default_random_seed() -> u64 {
-        0x5eedfaced0u64
-    }
-    fn default_barnes_hut_theta() -> f64 {
-        0.78
-    }
-    fn default_pairwise_repulsion_max_bodies() -> u32 {
-        56
-    }
-
-    impl Default for ForceGraphLayoutOptions {
-        fn default() -> Self {
-            Self {
-                iterations: default_iterations(),
-                ideal_edge_length: default_ideal_edge_length(),
-                repulsion_strength: default_repulsion_strength(),
-                spring_strength: default_spring_strength(),
-                gravity: default_gravity(),
-                center_x: None,
-                center_y: None,
-                time_step: default_time_step(),
-                velocity_damping: default_velocity_damping(),
-                max_speed: default_max_speed(),
-                random_seed: default_random_seed(),
-                barnes_hut_theta: default_barnes_hut_theta(),
-                pairwise_repulsion_max_bodies: default_pairwise_repulsion_max_bodies(),
-                locked_node_ids: Vec::new(),
-            }
-        }
-    }
-
-    fn split_mix64(mut z: u64) -> u64 {
-        z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-        z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-        z ^ (z >> 31)
-    }
-
-    fn rand_unit_interval(seed: &mut u64) -> f64 {
-        *seed = split_mix64(*seed);
-        (*seed as f64) / (u64::MAX as f64)
-    }
-
-    fn node_repulsion_radius(node: &Value) -> f64 {
-        let Some(obj) = node.as_object() else {
-            return 32.0;
-        };
-        if obj.get("shape").and_then(|v| v.as_str()) == Some("rectangle") {
-            let w = obj.get("width").and_then(|v| v.as_f64()).unwrap_or(40.0);
-            let h = obj.get("height").and_then(|v| v.as_f64()).unwrap_or(40.0);
-            return ((w * w + h * h).sqrt() * 0.5).max(8.0);
-        }
-        obj.get("radius").and_then(|v| v.as_f64()).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(32.0)
-    }
-
-    // #region 🔖ForceGraphRepulsion
-    /// 📐 Repulsive acceleration on body `i` from body `j` (shared by pairwise sweep and Barnes–Hut leaves).
-    #[inline]
-    fn pairwise_repulsion_on_i_from_j(i: usize, j: usize, positions: &[Vec2], radii: &[f64], cool: f64, k_rep: f64) -> Vec2 {
-        let delta = positions[j] - positions[i];
-        let dist = delta.norm().max(1e-4);
-        let rep = k_rep * cool * (radii[i] * radii[j]).max(1.0) / (dist * dist);
-        (delta / dist) * (-rep)
-    }
-
-    mod barnes_hut {
-        use super::{pairwise_repulsion_on_i_from_j, Vec2};
-
-        const NO_CHILD: u32 = u32::MAX;
-
-        /// 🌌 Quadtree cell: empty leaf, occupied leaf, or internal node with four children.
-        #[derive(Clone, Debug)]
-        struct Cell {
-            min_x: f64,
-            min_y: f64,
-            max_x: f64,
-            max_y: f64,
-            body: Option<usize>,
-            children: [u32; 4],
-            com: Vec2,
-            mass: f64,
-            max_r: f64,
-        }
-
-        /// 🌲 Point quadtree for one repulsion pass over a fixed body set.
-        pub(super) struct QuadTree {
-            cells: Vec<Cell>,
-        }
-
-        #[inline]
-        fn is_internal(c: &Cell) -> bool {
-            c.children[0] != NO_CHILD
-        }
-
-        #[inline]
-        fn cell_width(c: &Cell) -> f64 {
-            (c.max_x - c.min_x).max(c.max_y - c.min_y)
-        }
-
-        #[inline]
-        fn point_in_cell(px: f64, py: f64, c: &Cell) -> bool {
-            px >= c.min_x && px <= c.max_x && py >= c.min_y && py <= c.max_y
-        }
-
-        fn quadrant_bounds(min_x: f64, min_y: f64, max_x: f64, max_y: f64, q: usize) -> (f64, f64, f64, f64) {
-            let mx = (min_x + max_x) * 0.5;
-            let my = (min_y + max_y) * 0.5;
-            match q {
-                0 => (min_x, min_y, mx, my),
-                1 => (mx, min_y, max_x, my),
-                2 => (min_x, my, mx, max_y),
-                3 => (mx, my, max_x, max_y),
-                _ => (min_x, min_y, max_x, max_y),
-            }
-        }
-
-        #[inline]
-        fn quadrant_index(px: f64, py: f64, mx: f64, my: f64) -> usize {
-            let east = if px >= mx { 1usize } else { 0 };
-            let north = if py >= my { 2usize } else { 0 };
-            east + north
-        }
-
-        fn empty_leaf(min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> Cell {
-            Cell { min_x, min_y, max_x, max_y, body: None, children: [NO_CHILD; 4], com: Vec2::ZERO, mass: 0.0, max_r: 0.0 }
-        }
-
-        fn subdivide_leaf(tree: &mut Vec<Cell>, ni: usize) {
-            let (min_x, min_y, max_x, max_y) = (tree[ni].min_x, tree[ni].min_y, tree[ni].max_x, tree[ni].max_y);
-            let mut ch = [NO_CHILD; 4];
-            for q in 0..4usize {
-                let (a, b, c, d) = quadrant_bounds(min_x, min_y, max_x, max_y, q);
-                let idx = tree.len();
-                tree.push(empty_leaf(a, b, c, d));
-                ch[q] = idx as u32;
-            }
-            tree[ni].body = None;
-            tree[ni].children = ch;
-            tree[ni].mass = 0.0;
-            tree[ni].com = Vec2::ZERO;
-            tree[ni].max_r = 0.0;
-        }
-
-        fn aggregate(tree: &mut Vec<Cell>, ni: usize) {
-            if !is_internal(&tree[ni]) {
-                return;
-            }
-            let mut m = 0.0f64;
-            let mut sx = 0.0f64;
-            let mut sy = 0.0f64;
-            let mut mxr = 0.0f64;
-            let ch = tree[ni].children;
-            for q in 0..4usize {
-                let chn = &tree[ch[q] as usize];
-                m += chn.mass;
-                sx += chn.com.x * chn.mass;
-                sy += chn.com.y * chn.mass;
-                mxr = mxr.max(chn.max_r);
-            }
-            if m > 0.0 {
-                sx /= m;
-                sy /= m;
-            }
-            tree[ni].mass = m;
-            tree[ni].com = Vec2::new(sx, sy);
-            tree[ni].max_r = mxr;
-        }
-
-        fn insert(tree: &mut Vec<Cell>, ni: usize, idx: usize, pos: Vec2, r: f64, positions: &[Vec2], radii: &[f64]) {
-            if is_internal(&tree[ni]) {
-                let mx = (tree[ni].min_x + tree[ni].max_x) * 0.5;
-                let my = (tree[ni].min_y + tree[ni].max_y) * 0.5;
-                let q = quadrant_index(pos.x, pos.y, mx, my);
-                let ci = tree[ni].children[q] as usize;
-                insert(tree, ci, idx, pos, r, positions, radii);
-                aggregate(tree, ni);
-                return;
-            }
-            if tree[ni].mass <= 0.0 && tree[ni].body.is_none() {
-                tree[ni].body = Some(idx);
-                tree[ni].com = pos;
-                tree[ni].mass = 1.0;
-                tree[ni].max_r = r;
-                return;
-            }
-            if let Some(ex) = tree[ni].body {
-                if ex == idx {
-                    return;
-                }
-                let p_ex = positions[ex];
-                let r_ex = radii[ex];
-                subdivide_leaf(tree, ni);
-                insert(tree, ni, ex, p_ex, r_ex, positions, radii);
-                insert(tree, ni, idx, pos, r, positions, radii);
-            }
-        }
-
-        fn square_bounds(positions: &[Vec2]) -> (f64, f64, f64, f64) {
-            let mut min_x = f64::INFINITY;
-            let mut min_y = f64::INFINITY;
-            let mut max_x = f64::NEG_INFINITY;
-            let mut max_y = f64::NEG_INFINITY;
-            for p in positions {
-                min_x = min_x.min(p.x);
-                min_y = min_y.min(p.y);
-                max_x = max_x.max(p.x);
-                max_y = max_y.max(p.y);
-            }
-            if !min_x.is_finite() || !max_x.is_finite() {
-                return (-1.0, -1.0, 1.0, 1.0);
-            }
-            let pad = 1e-3f64;
-            let w = ((max_x - min_x).max(max_y - min_y) + pad * 2.0).max(1e-6);
-            let cx = (min_x + max_x) * 0.5;
-            let cy = (min_y + max_y) * 0.5;
-            let h = w * 0.5;
-            (cx - h, cy - h, cx + h, cy + h)
-        }
-
-        fn repulsion_rec(cells: &[Cell], ni: usize, i: usize, p_i: Vec2, r_i: f64, theta: f64, cool: f64, k_rep: f64, positions: &[Vec2], radii: &[f64]) -> Vec2 {
-            let node = &cells[ni];
-            if node.mass <= 0.0 {
-                return Vec2::ZERO;
-            }
-            if !is_internal(node) {
-                if let Some(j) = node.body {
-                    if j == i {
-                        return Vec2::ZERO;
-                    }
-                    return pairwise_repulsion_on_i_from_j(i, j, positions, radii, cool, k_rep);
-                }
-                return Vec2::ZERO;
-            }
-            let width = cell_width(node);
-            let delta_c = node.com - p_i;
-            let d = delta_c.norm().max(1e-6);
-            if point_in_cell(p_i.x, p_i.y, node) {
-                let mut acc = Vec2::ZERO;
-                for q in 0..4usize {
-                    let c = node.children[q];
-                    if c != NO_CHILD {
-                        acc += repulsion_rec(cells, c as usize, i, p_i, r_i, theta, cool, k_rep, positions, radii);
-                    }
-                }
-                return acc;
-            }
-            if width / d < theta {
-                let rep = k_rep * cool * (r_i * node.max_r).max(1.0) / (d * d);
-                return (p_i - node.com) / d * rep;
-            }
-            let mut acc = Vec2::ZERO;
-            for q in 0..4usize {
-                let c = node.children[q];
-                if c != NO_CHILD {
-                    acc += repulsion_rec(cells, c as usize, i, p_i, r_i, theta, cool, k_rep, positions, radii);
-                }
-            }
-            acc
-        }
-
-        impl QuadTree {
-            pub(super) fn build(positions: &[Vec2], radii: &[f64]) -> Self {
-                let (a, b, c, d) = square_bounds(positions);
-                let mut cells = vec![empty_leaf(a, b, c, d)];
-                for i in 0..positions.len() {
-                    insert(&mut cells, 0, i, positions[i], radii[i], positions, radii);
-                }
-                Self { cells }
-            }
-
-            pub(super) fn repulsion_on_body(&self, i: usize, positions: &[Vec2], radii: &[f64], theta: f64, cool: f64, k_rep: f64) -> Vec2 {
-                repulsion_rec(&self.cells, 0, i, positions[i], radii[i], theta, cool, k_rep, positions, radii)
-            }
-        }
-    }
-
-    fn add_repulsion_forces(forces: &mut [Vec2], positions: &[Vec2], radii: &[f64], n: usize, cool: f64, k_rep: f64, theta: f64, pair_cap: usize) {
-        if n <= pair_cap {
-            for i in 0..n {
-                for j in (i + 1)..n {
-                    let f = pairwise_repulsion_on_i_from_j(i, j, positions, radii, cool, k_rep);
-                    forces[i] += f;
-                    forces[j] -= f;
-                }
-            }
-        } else {
-            let tree = barnes_hut::QuadTree::build(positions, radii);
-            for i in 0..n {
-                forces[i] += tree.repulsion_on_body(i, positions, radii, theta, cool, k_rep);
-            }
-        }
-    }
-    // #endregion
-
-    // #region 🔖ForceGraphIntegration
-    fn add_spring_forces(forces: &mut [Vec2], positions: &[Vec2], edge_pairs: &[(usize, usize)], ideal_len: f64, spring_k: f64, cool: f64) {
-        for &(i, j) in edge_pairs {
-            let delta = positions[j] - positions[i];
-            let dist = delta.norm().max(1e-4);
-            let dir = delta / dist;
-            let displacement = dist - ideal_len;
-            let f = dir * (spring_k * cool * displacement);
-            forces[i] += f;
-            forces[j] -= f;
-        }
-    }
-
-    fn add_gravity_toward(forces: &mut [Vec2], positions: &[Vec2], gx: f64, gy: f64, gamma: f64, cool: f64) {
-        if gamma <= 0.0 {
-            return;
-        }
-        let g = gamma * cool;
-        for i in 0..forces.len() {
-            let to_c = Vec2::new(gx - positions[i].x, gy - positions[i].y);
-            forces[i] += to_c * g;
-        }
-    }
-
-    fn integrate_velocity_and_positions(positions: &mut [Vec2], velocities: &mut [Vec2], forces: &[Vec2], dt_base: f64, cool: f64, damping: f64, v_max: f64) {
-        let dt = dt_base * cool.sqrt();
-        for i in 0..positions.len() {
-            let mut v = (velocities[i] + forces[i] * dt) * damping;
-            let spd = v.norm();
-            if spd > v_max {
-                v *= v_max / spd;
-            }
-            velocities[i] = v;
-            positions[i] += v * dt;
-        }
-    }
-
-    fn zero_forces_on_pinned(forces: &mut [Vec2], pin: &[Option<Vec2>]) {
-        for i in 0..forces.len() {
-            if pin[i].is_some() {
-                forces[i] = Vec2::ZERO;
-            }
-        }
-    }
-
-    fn enforce_pin_constraints(positions: &mut [Vec2], velocities: &mut [Vec2], pin: &[Option<Vec2>]) {
-        for i in 0..positions.len() {
-            if let Some(p) = pin[i] {
-                positions[i] = p;
-                velocities[i] = Vec2::ZERO;
-            }
-        }
-    }
-    // #endregion
-
-    pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
-        let Some(root) = fixture.as_object_mut() else {
-            return Err("fixture root must be object".into());
-        };
-        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
-            return Err("schema must be puzzle.2d.fixture/v1".into());
-        }
-        let edges = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-        let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
-            return Err("nodes array missing".into());
-        };
-        if nodes.is_empty() {
-            return Ok(());
-        }
-        let locked_ids: HashSet<String> = opts.locked_node_ids.iter().cloned().collect();
+    fn build_handle_to_node(nodes: &[Value]) -> HashMap<String, String> {
         let mut handle_to_node: HashMap<String, String> = HashMap::new();
-        for node in nodes.iter() {
+        for node in nodes {
             let Some(obj) = node.as_object() else {
                 continue;
             };
             if !board_json_visible_or_true(obj) {
                 continue;
-            }
+            };
             let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
                 continue;
             };
@@ -564,150 +55,42 @@ pub mod force_graph {
                 };
                 if !board_json_visible_or_true(ho) {
                     continue;
-                }
+                };
                 if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
                     handle_to_node.insert(hid.to_string(), nid.to_string());
                 }
             }
         }
-        let mut id_to_index: HashMap<String, usize> = HashMap::new();
-        let mut visible_node_indices: Vec<usize> = Vec::new();
-        let mut optional_xy: Vec<Option<(f64, f64)>> = Vec::new();
-        let mut is_locked: Vec<bool> = Vec::new();
-        let mut positions: Vec<Vec2> = Vec::new();
-        let mut velocities: Vec<Vec2> = Vec::new();
-        let mut radii: Vec<f64> = Vec::new();
-        for (raw_idx, node) in nodes.iter().enumerate() {
-            let Some(obj) = node.as_object() else {
-                return Err("node must be object".into());
-            };
-            if !board_json_visible_or_true(obj) {
-                continue;
-            }
-            let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
-                return Err("node id missing".into());
-            };
-            let x_opt = obj.get("x").and_then(|v| v.as_f64());
-            let y_opt = obj.get("y").and_then(|v| v.as_f64());
-            let xy = match (x_opt, y_opt) {
-                (Some(x), Some(y)) if x.is_finite() && y.is_finite() => Some((x, y)),
-                _ => None,
-            };
-            id_to_index.insert(nid.to_string(), positions.len());
-            visible_node_indices.push(raw_idx);
-            optional_xy.push(xy);
-            is_locked.push(locked_ids.contains(nid));
-            positions.push(Vec2::ZERO);
-            velocities.push(Vec2::ZERO);
-            radii.push(node_repulsion_radius(node));
-        }
-        let n = positions.len();
-        if n == 0 {
-            return Ok(());
-        }
-        let mut sum = Vec2::ZERO;
-        let mut finite_ct: u32 = 0;
-        for xy in &optional_xy {
-            if let Some((x, y)) = xy {
-                sum += Vec2::new(*x, *y);
-                finite_ct += 1;
-            }
-        }
-        let anchor = if finite_ct > 0 { sum / (finite_ct as f64) } else { Vec2::new(opts.center_x.unwrap_or(0.0), opts.center_y.unwrap_or(0.0)) };
-        let mut seed_rng = opts.random_seed;
-        for i in 0..n {
-            positions[i] = if let Some((x, y)) = optional_xy[i] {
-                Vec2::new(x, y)
-            } else {
-                let t = i as f64;
-                let ang = t * 2.39996322972865332;
-                let r = 10.0 + t.sqrt() * 22.0;
-                let jx = (rand_unit_interval(&mut seed_rng) - 0.5) * 6.0;
-                let jy = (rand_unit_interval(&mut seed_rng) - 0.5) * 6.0;
-                anchor + Vec2::new(r * ang.cos() + jx, r * ang.sin() + jy)
-            };
-        }
-        let pin: Vec<Option<Vec2>> = (0..n).map(|i| if is_locked[i] { Some(positions[i]) } else { None }).collect();
-        let mut edge_pairs: Vec<(usize, usize)> = Vec::new();
-        let mut seen: HashSet<(usize, usize)> = HashSet::new();
-        for e in &edges {
-            let Some(eo) = e.as_object() else {
-                continue;
-            };
-            if !board_json_visible_or_true(eo) {
-                continue;
-            }
-            let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
-                continue;
-            };
-            let a = crate::resolve_endpoint_node_id(src_h, &handle_to_node);
-            let b = crate::resolve_endpoint_node_id(tgt_h, &handle_to_node);
-            if a == b {
-                continue;
-            }
-            let Some(&ia) = id_to_index.get(&a) else {
-                continue;
-            };
-            let Some(&ib) = id_to_index.get(&b) else {
-                continue;
-            };
-            let lo = ia.min(ib);
-            let hi = ia.max(ib);
-            if seen.insert((lo, hi)) {
-                edge_pairs.push((lo, hi));
-            }
-        }
-        let mut cx = 0.0f64;
-        let mut cy = 0.0f64;
-        for p in &positions {
-            cx += p.x;
-            cy += p.y;
-        }
-        cx /= n as f64;
-        cy /= n as f64;
-        let gx = opts.center_x.unwrap_or(cx);
-        let gy = opts.center_y.unwrap_or(cy);
-        let k = opts.ideal_edge_length.max(1e-6);
-        let mut rng = opts.random_seed;
-        for i in 0..n {
-            if pin[i].is_some() {
-                continue;
-            }
-            if (positions[i].x - gx).abs() < 1e-6 && (positions[i].y - gy).abs() < 1e-6 {
-                let jx = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
-                let jy = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
-                positions[i] += Vec2::new(jx, jy);
-            }
-        }
-        let iters = opts.iterations.max(1);
-        for iter in 0..iters {
-            let cool = (1.0 - iter as f64 / iters as f64).max(0.08);
-            let mut forces = vec![Vec2::ZERO; n];
-            let theta = opts.barnes_hut_theta.clamp(0.2, 1.35);
-            let pair_cap = opts.pairwise_repulsion_max_bodies.max(4) as usize;
-            add_repulsion_forces(&mut forces, &positions, &radii, n, cool, opts.repulsion_strength, theta, pair_cap);
-            add_spring_forces(&mut forces, &positions, &edge_pairs, k, opts.spring_strength, cool);
-            add_gravity_toward(&mut forces, &positions, gx, gy, opts.gravity, cool);
-            zero_forces_on_pinned(&mut forces, &pin);
-            integrate_velocity_and_positions(&mut positions, &mut velocities, &forces, opts.time_step, cool, opts.velocity_damping, opts.max_speed);
-            enforce_pin_constraints(&mut positions, &mut velocities, &pin);
-        }
-        for (idx, raw_idx) in visible_node_indices.into_iter().enumerate() {
-            let Some(node) = nodes.get_mut(raw_idx) else {
-                continue;
-            };
-            let Some(obj) = node.as_object_mut() else {
-                continue;
-            };
-            obj.insert("x".into(), serde_json::json!(positions[idx].x));
-            obj.insert("y".into(), serde_json::json!(positions[idx].y));
-        }
-        Ok(())
+        handle_to_node
     }
 
+    /// 🕸️ Ported force layout: resolves handle endpoints, then delegates to normal undirected physics.
+    pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
+        let nodes = fixture
+            .as_object()
+            .and_then(|root| root.get("nodes"))
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let handle_to_node = build_handle_to_node(&nodes);
+        mathematical_graph_normal_undirected::apply_force_graph_layout_to_fixture_v1_value_resolved(
+            fixture,
+            opts,
+            |endpoint, id_to_index| {
+                let node_id = handle_to_node.get(endpoint).cloned().unwrap_or_else(|| endpoint.to_string());
+                id_to_index.contains_key(&node_id).then_some(node_id)
+            },
+        )
+    }
+
+    /// 🕸️ JSON entry for ported force layout (handle endpoints resolved before undirected physics).
     pub fn apply_force_graph_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
         let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
-        let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() { ForceGraphLayoutOptions::default() } else { serde_json::from_str(options_json).map_err(|e| e.to_string())? };
+        let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() {
+            ForceGraphLayoutOptions::default()
+        } else {
+            serde_json::from_str(options_json).map_err(|e| e.to_string())?
+        };
         apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &opts)?;
         serde_json::to_string(&fixture).map_err(|e| e.to_string())
     }

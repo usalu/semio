@@ -497,11 +497,20 @@ export type PlaygroundFocusFilter<K extends string> = "all" | K;
 //#endregion 🔖Ids
 
 //#region 🔖Fixture
+/** @emoji ∅ Sentinel id for the navbar “No fixture” row (shared with {@link NAVBAR_NO_FIXTURE_ID} in `@ui/react`). */
+export const PLAYGROUND_NO_FIXTURE_ID = "__none__";
+
 /** @emoji 🧪 One selectable playground fixture (kit, graph, shape source, …). */
 export interface PlaygroundFixtureOption {
   readonly id: string;
   readonly label: string;
 }
+
+/** @emoji ∅ Standard “No fixture” navbar row. */
+export const PLAYGROUND_NO_FIXTURE_OPTION: PlaygroundFixtureOption = {
+  id: PLAYGROUND_NO_FIXTURE_ID,
+  label: "No fixture",
+};
 
 /** @emoji 📋 Active fixture plus choices for the navbar center dropdown. */
 export interface PlaygroundFixtureCatalog {
@@ -514,14 +523,45 @@ export interface PlaygroundFixtureHost {
   getFixtureCatalog(): PlaygroundFixtureCatalog | null;
 }
 
+/** @emoji ∅ True when the navbar selection is empty / “No fixture”. */
+export function isPlaygroundNoFixtureId(fixtureId: string | null | undefined): boolean {
+  return fixtureId == null || fixtureId === "" || fixtureId === PLAYGROUND_NO_FIXTURE_ID;
+}
+
+const playgroundFixtureCatalogWithNoOptionCache = new Map<string, PlaygroundFixtureCatalog>();
+
+function playgroundFixtureCatalogCacheKey(activeFixtureId: string, options: readonly PlaygroundFixtureOption[]): string {
+  const normalizedId = isPlaygroundNoFixtureId(activeFixtureId) ? PLAYGROUND_NO_FIXTURE_ID : activeFixtureId;
+  return `${normalizedId}\0${options.map((row) => `${row.id}\u0001${row.label}`).join("\0")}`;
+}
+
+/** @emoji 📋 Prepends {@link PLAYGROUND_NO_FIXTURE_OPTION} and normalizes the active id. */
+export function playgroundFixtureCatalogWithNoOption(
+  activeFixtureId: string,
+  options: readonly PlaygroundFixtureOption[],
+): PlaygroundFixtureCatalog {
+  const key = playgroundFixtureCatalogCacheKey(activeFixtureId, options);
+  const cached = playgroundFixtureCatalogWithNoOptionCache.get(key);
+  if (cached) {
+    return cached;
+  }
+  const withoutNone = options.filter((row) => row.id !== PLAYGROUND_NO_FIXTURE_ID);
+  const catalog: PlaygroundFixtureCatalog = {
+    activeFixtureId: isPlaygroundNoFixtureId(activeFixtureId) ? PLAYGROUND_NO_FIXTURE_ID : activeFixtureId,
+    options: [PLAYGROUND_NO_FIXTURE_OPTION, ...withoutNone],
+  };
+  playgroundFixtureCatalogWithNoOptionCache.set(key, catalog);
+  return catalog;
+}
+
 /** @emoji 🔎 Reads a fixture catalog from a controller when it implements {@link PlaygroundFixtureHost}. */
 export function resolvePlaygroundFixtureCatalog(controller: Controller | undefined): PlaygroundFixtureCatalog | null {
   if (!controller) return null;
   const host = controller as Controller & PlaygroundFixtureHost;
   if (typeof host.getFixtureCatalog !== "function") return null;
   const catalog = host.getFixtureCatalog();
-  if (!catalog?.options.length) return null;
-  return catalog;
+  if (!catalog) return null;
+  return playgroundFixtureCatalogWithNoOption(catalog.activeFixtureId, catalog.options);
 }
 //#endregion 🔖Fixture
 
@@ -958,6 +998,15 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("playgroundFixtureCatalogWithNoOption", () => {
+    it("prepends No fixture and normalizes empty active ids", () => {
+      const catalog = playgroundFixtureCatalogWithNoOption("", [{ id: "a", label: "Alpha" }]);
+      expect(catalog.activeFixtureId).toBe(PLAYGROUND_NO_FIXTURE_ID);
+      expect(catalog.options[0]).toEqual(PLAYGROUND_NO_FIXTURE_OPTION);
+      expect(catalog.options).toHaveLength(2);
+    });
+  });
+
   describe("resolvePlaygroundFixtureCatalog", () => {
     it("returns null when the controller does not host fixtures", () => {
       const bus = new CommandBus();
@@ -965,7 +1014,7 @@ if (import.meta.vitest) {
       expect(resolvePlaygroundFixtureCatalog(ctrl)).toBeNull();
     });
 
-    it("returns catalog when the controller implements PlaygroundFixtureHost", () => {
+    it("returns catalog with No fixture when the controller implements PlaygroundFixtureHost", () => {
       class FixtureDemoController extends Controller implements PlaygroundFixtureHost {
         activeFixtureId = "a";
 
@@ -988,7 +1037,35 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const ctrl = new FixtureDemoController(bus);
       expect(resolvePlaygroundFixtureCatalog(ctrl)?.activeFixtureId).toBe("a");
-      expect(resolvePlaygroundFixtureCatalog(ctrl)?.options).toHaveLength(2);
+      expect(resolvePlaygroundFixtureCatalog(ctrl)?.options[0]?.id).toBe(PLAYGROUND_NO_FIXTURE_ID);
+      expect(resolvePlaygroundFixtureCatalog(ctrl)?.options).toHaveLength(3);
+    });
+
+    it("playgroundFixtureCatalogWithNoOption returns a stable catalog reference for identical inputs", () => {
+      const options = [
+        { id: "a", label: "Alpha" },
+        { id: "b", label: "Beta" },
+      ] as const;
+      const first = playgroundFixtureCatalogWithNoOption("a", options);
+      const second = playgroundFixtureCatalogWithNoOption("a", options);
+      expect(second).toBe(first);
+    });
+
+    it("returns only No fixture when the host lists no presets", () => {
+      class EmptyFixtureController extends Controller implements PlaygroundFixtureHost {
+        constructor(bus: CommandBus) {
+          super("empty-fixture", bus, () => undefined);
+        }
+
+        getFixtureCatalog(): PlaygroundFixtureCatalog {
+          return { activeFixtureId: PLAYGROUND_NO_FIXTURE_ID, options: [] };
+        }
+
+        run(): void {}
+      }
+      const bus = new CommandBus();
+      const catalog = resolvePlaygroundFixtureCatalog(new EmptyFixtureController(bus));
+      expect(catalog?.options).toEqual([PLAYGROUND_NO_FIXTURE_OPTION]);
     });
   });
 

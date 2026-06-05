@@ -41,6 +41,14 @@
         "command": "bun ./script.ts tiles",
         "forwardAllArgs": true
       }
+    },
+    "fixture": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "gis/map/play",
+        "command": "bun ./script.ts fixture",
+        "forwardAllArgs": true
+      }
     }
   }
 }

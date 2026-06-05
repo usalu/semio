@@ -2948,8 +2948,11 @@ dependencies = [
 name = "mathematical_graph_normal_undirected"
 version = "0.1.0"
 dependencies = [
+ "infinite_cavas",
  "mathematical_core",
  "mathematical_graph",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2959,6 +2962,7 @@ dependencies = [
  "infinite_cavas",
  "mathematical_core",
  "mathematical_graph",
+ "mathematical_graph_normal_undirected",
  "serde",
  "serde_json",
 ]
@@ -3804,6 +3808,7 @@ dependencies = [
  "image",
  "infinite_cavas",
  "js-sys",
+ "mathematical_graph_normal_undirected",
  "mathematical_graph_port_directed",
  "reasoning_mindmap",
  "serde",
@@ -4070,7 +4075,7 @@ name = "reasoning_mindmap_wires"
 version = "0.1.0"
 dependencies = [
  "infinite_cavas",
- "mathematical_graph_normal_directed",
+ "mathematical_graph_normal_undirected",
  "reasoning_mindmap",
  "serde",
  "serde_json",

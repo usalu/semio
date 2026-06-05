@@ -7349,6 +7349,9 @@ function Navbar({ items, className }: NavbarProps) {
 
 export { Navbar };
 
+/** @emoji ∅ Sentinel id for the navbar “No fixture” row (matches {@link PLAYGROUND_NO_FIXTURE_ID}). */
+export const NAVBAR_NO_FIXTURE_ID = "__none__";
+
 /** @emoji 🧪 One selectable fixture row for {@link NavbarFixtureSelect}. */
 export interface NavbarFixtureOption {
   readonly id: string;
@@ -7363,20 +7366,27 @@ export interface NavbarFixtureSelectProps {
   readonly options: readonly NavbarFixtureOption[];
   readonly onValueChange: (fixtureId: string) => void;
   readonly className?: string;
+  readonly includeNoFixture?: boolean;
 }
 
 /** @emoji 🧪 Center-navbar dropdown for switching playground fixtures (kits, graphs, shape sources). */
-function NavbarFixtureSelect({ id, label = "Fixture", value, options, onValueChange, className }: NavbarFixtureSelectProps) {
-  if (options.length === 0) return null;
+function NavbarFixtureSelect({ id, label = "Fixture", value, options, onValueChange, className, includeNoFixture = true }: NavbarFixtureSelectProps) {
+  const resolvedOptions = reactHostPort.useMemo(() => {
+    const withoutNone = options.filter((row) => row.id !== NAVBAR_NO_FIXTURE_ID);
+    if (!includeNoFixture) return withoutNone;
+    return [{ id: NAVBAR_NO_FIXTURE_ID, label: "No fixture" }, ...withoutNone];
+  }, [includeNoFixture, options]);
+  if (resolvedOptions.length === 0) return null;
+  const resolvedValue = !value || value === NAVBAR_NO_FIXTURE_ID ? NAVBAR_NO_FIXTURE_ID : value;
   return (
     <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
       <Label id={`${id}.label`} label={label} className="sr-only" />
-      <Select value={value} onValueChange={onValueChange}>
+      <Select value={resolvedValue} onValueChange={onValueChange}>
         <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
           <SelectValue placeholder={label} />
         </SelectTrigger>
         <SelectContent>
-          {options.map((row) => (
+          {resolvedOptions.map((row) => (
             <SelectItem key={row.id} value={row.id}>
               {row.label}
             </SelectItem>

@@ -1027,6 +1027,14 @@ pub struct PositionData {
     pub lat: f64,
     #[serde(default)]
     pub label: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub kind: Option<String>,
+    #[serde(default)]
+    pub icon: Option<String>,
+    #[serde(default, alias = "sourceUrl")]
+    pub source_url: Option<String>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -1603,11 +1611,50 @@ impl MapHost {
         self.clamp_camera_to_world();
     }
 
-    pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64) {
-        if matches!(self.interaction, MapInteraction::Pan { .. }) {
+    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
+        let click = if let MapInteraction::Pan { start_screen, .. } = &self.interaction {
+            let dx = sx - start_screen.x;
+            let dy = sy - start_screen.y;
+            (dx * dx + dy * dy).sqrt() < 6.0
+        } else {
+            false
+        };
+        if click {
+            if let Some(id) = self.hit_test_position(sx, sy) {
+                self.push_event("selectPosition", serde_json::json!({ "id": id }));
+            } else {
+                self.push_event("selectPosition", serde_json::json!({ "id": null }));
+            }
+        } else if matches!(self.interaction, MapInteraction::Pan { .. }) {
             self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
         }
         self.interaction = MapInteraction::None;
+    }
+
+    fn hit_test_position(&self, sx: f64, sy: f64) -> Option<String> {
+        let hit_r = 14.0;
+        let hit_r2 = hit_r * hit_r;
+        let mut best: Option<(String, f64)> = None;
+        for pos in self.positions.values() {
+            let w = projection::lonlat_to_world(pos.lon, pos.lat);
+            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
+            let dx = s.x - sx;
+            let dy = s.y - sy;
+            let d2 = dx * dx + dy * dy;
+            if d2 <= hit_r2 && best.as_ref().map_or(true, |(_, best_d2)| d2 < *best_d2) {
+                best = Some((pos.id.clone(), d2));
+            }
+        }
+        best.map(|(id, _)| id)
+    }
+
+    pub fn position_screen_json(&self, id: &str) -> String {
+        let Some(pos) = self.positions.get(id) else {
+            return "null".into();
+        };
+        let w = projection::lonlat_to_world(pos.lon, pos.lat);
+        let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
+        serde_json::to_string(&serde_json::json!({ "x": s.x, "y": s.y })).unwrap_or_else(|_| "null".into())
     }
 
     fn push_event(&mut self, kind: &str, payload: serde_json::Value) {
@@ -2331,8 +2378,6 @@ impl MapHost {
         if !self.layer_visibility.positions {
             return;
         }
-        let fill = self.theme.position_fill;
-        let stroke = self.theme.position_stroke;
         let label_fill = self.theme.label_fill;
         let label_halo = self.theme.label_halo;
         let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
@@ -2340,6 +2385,11 @@ impl MapHost {
         let pos_scale = self.layer_stroke_scale.positions;
         let pos_label_px = zoom_px * self.layer_stroke_scale.position_labels;
         for pos in self.positions.values() {
+            let fill = match pos.kind.as_deref() {
+                Some("donor") => self.theme.route_stroke,
+                _ => self.theme.position_fill,
+            };
+            let stroke = self.theme.position_stroke;
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
             let r = 8.0 * pos_scale;
@@ -2347,7 +2397,13 @@ impl MapHost {
             scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
             scene.stroke(&Stroke::new(2.0 * pos_scale), Affine::IDENTITY, stroke, None, &circle);
             if self.layer_visibility.position_labels {
-                if let Some(label) = pos.label.as_deref().map(str::trim).filter(|t| !t.is_empty()) {
+                let label = pos
+                    .name
+                    .as_deref()
+                    .or(pos.label.as_deref())
+                    .map(str::trim)
+                    .filter(|t| !t.is_empty());
+                if let Some(label) = label {
                     let anchor = Point::new(s.x, s.y - r - 6.0);
                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
                 }
@@ -2602,6 +2658,11 @@ impl MapSession {
     #[wasm_bindgen(js_name = drainEventsJson)]
     pub fn drain_events_json(&mut self) -> String {
         self.state.borrow_mut().host.drain_events_json()
+    }
+
+    #[wasm_bindgen(js_name = positionScreenJson)]
+    pub fn position_screen_json_wasm(&self, id: &str) -> String {
+        self.state.borrow().host.position_screen_json(id)
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
@@ -3096,6 +3157,47 @@ mod tests {
         host.sync_map_json(json).expect("descriptor");
         let pos = host.positions.get("zurich").expect("position");
         assert_eq!(pos.label.as_deref(), Some("Zürich"));
+    }
+
+    #[test]
+    fn sync_map_json_parses_rich_position_metadata() {
+        let mut host = super::MapHost::new();
+        let json = r#"{"positions":[{"id":"donor-1","lon":8.54,"lat":47.37,"name":"Donor site","kind":"donor","icon":"package","sourceUrl":"https://example.test/donor"}],"routes":[],"regions":[]}"#;
+        host.sync_map_json(json).expect("descriptor");
+        let pos = host.positions.get("donor-1").expect("position");
+        assert_eq!(pos.name.as_deref(), Some("Donor site"));
+        assert_eq!(pos.kind.as_deref(), Some("donor"));
+        assert_eq!(pos.icon.as_deref(), Some("package"));
+        assert_eq!(pos.source_url.as_deref(), Some("https://example.test/donor"));
+    }
+
+    #[test]
+    fn position_screen_json_projects_known_position() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#)
+            .expect("descriptor");
+        let raw: serde_json::Value = serde_json::from_str(&host.position_screen_json("zurich")).expect("json");
+        assert!(raw.get("x").and_then(|v| v.as_f64()).is_some());
+        assert!(raw.get("y").and_then(|v| v.as_f64()).is_some());
+        assert_eq!(host.position_screen_json("missing"), "null");
+    }
+
+    #[test]
+    fn pointer_up_emits_select_position_on_pin_click() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#)
+            .expect("descriptor");
+        let screen: serde_json::Value = serde_json::from_str(&host.position_screen_json("zurich")).expect("json");
+        let sx = screen["x"].as_f64().expect("x");
+        let sy = screen["y"].as_f64().expect("y");
+        host.pointer_down_screen(sx, sy, 0);
+        host.pointer_up_screen(sx, sy);
+        let events: Vec<serde_json::Value> = serde_json::from_str(&host.drain_events_json()).expect("events");
+        assert!(events.iter().any(|row| row["type"] == "selectPosition" && row["payload"]["id"] == "zurich"));
     }
 
     #[test]

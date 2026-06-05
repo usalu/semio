@@ -3,13 +3,36 @@
 
 pub use infinite_cavas::{self as cavas, *};
 pub use cavas::vello::kurbo::{CubicBez, Point, Vec2};
+pub use mathematical_graph_normal_undirected::{
+    apply_force_graph_layout_to_fixture_v1_json as apply_undirected_force_graph_layout_to_fixture_v1_json,
+    apply_force_graph_layout_to_fixture_v1_value as apply_undirected_force_graph_layout_to_fixture_v1_value,
+    apply_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json, ForceGraphLayoutOptions,
+};
 pub use mathematical_graph_port_directed::{self as graph, handle_position, BoardEngine, BoardEvent, Camera, Edge, EdgeId, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection};
 pub use graph::{
-    apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_redraw_layout_to_fixture_v1_json,
-    ForceGraphLayoutOptions, GraphExtension,
+    apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value,
+    apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json, GraphExtension,
 };
 pub use gis_map as map;
 pub use reasoning_mindmap as mindmap;
+
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+fn is_undirected_fixture_schema(schema: &str) -> bool {
+    matches!(schema, "reasoning.mindmap.fixture/v1" | "reasoning.wires.fixture/v1")
+}
+
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
+    let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+    let schema = fixture.get("schema").and_then(|v| v.as_str()).unwrap_or("");
+    let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+    let mode = opts.get("mode").and_then(|v| v.as_str()).unwrap_or("force-graph");
+    if mode == "force-graph" && is_undirected_fixture_schema(schema) {
+        apply_normal_undirected_redraw_layout_to_fixture_v1_json(fixture_json, options_json)
+    } else {
+        apply_ported_redraw_layout_to_fixture_v1_json(fixture_json, options_json)
+    }
+}
 
 pub use vello_svg::usvg;
 pub use vello_svg::vello;
@@ -6401,7 +6424,7 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardRedrawLayoutFixtureJson)]
 pub fn board_redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, JsValue> {
-    graph::apply_redraw_layout_to_fixture_v1_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
+    redraw_layout_fixture_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -9445,9 +9468,8 @@ mod host_tests {
 
 #[cfg(test)]
 mod force_graph_tests {
-    use crate::graph::{
-        apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json,
-    };
+    use crate::graph::apply_edge_handle_snap_to_fixture_v1_json;
+    use crate::{apply_force_graph_layout_to_fixture_v1_json, apply_normal_undirected_redraw_layout_to_fixture_v1_json};
     use serde_json::json;
     use std::collections::HashMap;
 
@@ -9573,6 +9595,36 @@ mod force_graph_tests {
         let nodes = parsed["nodes"].as_array().unwrap();
         assert!((nodes[0]["x"].as_f64().unwrap() - 0.0).abs() < 1e-9);
         assert!((nodes[0]["y"].as_f64().unwrap() - 0.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
+        let fixture = json!({
+            "schema": "reasoning.mindmap.fixture/v1",
+            "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+            "nodes": [
+                { "id": "a", "x": 0.0, "y": 0.0, "radius": 40.0 },
+                { "id": "b", "x": 1.0, "y": 0.0, "radius": 40.0 }
+            ],
+            "edges": [{ "id": "e1", "source": "a", "target": "b" }]
+        });
+        let opts = json!({
+            "mode": "force-graph",
+            "randomSeed": 7,
+            "forceGraph": {
+                "iterations": 200,
+                "idealEdgeLength": 180.0,
+                "repulsionStrength": 0.0,
+                "springStrength": 0.04,
+                "gravity": 0.0
+            }
+        });
+        let out = apply_normal_undirected_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+        let nodes = parsed["nodes"].as_array().unwrap();
+        let ax = nodes[0]["x"].as_f64().unwrap();
+        let bx = nodes[1]["x"].as_f64().unwrap();
+        assert!((bx - ax).abs() > 80.0, "expected mindmap undirected springs, got a={ax} b={bx}");
     }
 
     #[test]

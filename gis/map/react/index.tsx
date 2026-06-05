@@ -4,6 +4,7 @@
 
 // #region 🔌Adapters
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Icon, type IconName } from "@ui/react";
 import initGisMapWasm, { MapSession } from "../rs/pkg/gis_map.js";
 
 if (import.meta.env.VITEST) {
@@ -34,6 +35,10 @@ export interface MapPositionProps {
   lon: number;
   lat: number;
   label?: string;
+  name?: string;
+  icon?: IconName;
+  sourceUrl?: string;
+  kind?: string;
 }
 
 export interface MapRouteProps {
@@ -329,10 +334,42 @@ function collectMapDescriptor(children: ReactNode): MapDescriptor {
 
 export function mapDescriptorToJson(descriptor: MapDescriptor): string {
   return JSON.stringify({
-    positions: descriptor.positions.map((p) => ({ id: p.id, lon: p.lon, lat: p.lat, label: p.label })),
+    positions: descriptor.positions.map((p) => ({
+      id: p.id,
+      lon: p.lon,
+      lat: p.lat,
+      label: p.label,
+      name: p.name,
+      icon: p.icon,
+      kind: p.kind,
+      source_url: p.sourceUrl,
+    })),
     routes: descriptor.routes.map((r) => ({ id: r.id, points: r.points, stroke_width: r.strokeWidth ?? 2 })),
     regions: descriptor.regions.map((reg) => ({ id: reg.id, ring: reg.ring })),
   });
+}
+
+function parseMapPositionScreen(raw: string): { x: number; y: number } | null {
+  if (raw === "null") {
+    return null;
+  }
+  try {
+    const v = JSON.parse(raw) as { x?: number; y?: number };
+    if (typeof v.x !== "number" || typeof v.y !== "number") {
+      return null;
+    }
+    return { x: v.x, y: v.y };
+  } catch {
+    return null;
+  }
+}
+
+function isMapSelectPositionEvent(value: unknown): value is { type: "selectPosition"; payload: { id: string | null } } {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const row = value as { type?: string; payload?: { id?: string | null } };
+  return row.type === "selectPosition" && row.payload != null && ("id" in row.payload);
 }
 // #endregion 🔖Descriptor
 
@@ -781,6 +818,10 @@ export class MapRenderer {
       return [];
     }
   }
+
+  positionScreen(id: string): { x: number; y: number } | null {
+    return parseMapPositionScreen(this.session.positionScreenJson(id));
+  }
 }
 // #endregion 🔖MapRenderer
 
@@ -807,8 +848,11 @@ export function MapCanvas({
   const panningRef = useRef(false);
   const descriptor = useMemo(() => collectMapDescriptor(children), [children]);
   const descriptorJson = useMemo(() => mapDescriptorToJson(descriptor), [descriptor]);
+  const positionMetaById = useMemo(() => new Map(descriptor.positions.map((row) => [row.id, row])), [descriptor]);
   const layerVisibilityJson = useMemo(() => mapLayerVisibilityToJson(layerVisibility), [layerVisibility]);
   const layerStrokeScaleJson = useMemo(() => mapLayerStrokeScaleToJson(layerStrokeScale), [layerStrokeScale]);
+  const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   const clampMapZoom = useCallback((zoom: number): number => {
     const { min, max } = getGisMapCameraLimits(rendererRef.current?.session);
@@ -843,6 +887,16 @@ export function MapCanvas({
   }, [camera, onCamera, reportEffectiveLod]);
 
   mirrorSessionCameraToReactRef.current = mirrorSessionCameraToReact;
+
+  const drainMapSelectionEvents = useCallback(() => {
+    const events = rendererRef.current?.drainEvents() ?? [];
+    for (const event of events) {
+      if (!isMapSelectPositionEvent(event)) {
+        continue;
+      }
+      setSelectedPositionId(event.payload.id);
+    }
+  }, []);
 
   const applyCameraToSession = useCallback(
     (next: MapCamera): void => {
@@ -1031,6 +1085,24 @@ export function MapCanvas({
   }, [descriptorJson]);
 
   useEffect(() => {
+    if (!selectedPositionId) {
+      return undefined;
+    }
+    let raf = 0;
+    const tick = () => {
+      const screen = rendererRef.current?.positionScreen(selectedPositionId);
+      const popup = popupRef.current;
+      if (screen && popup) {
+        popup.style.left = `${screen.x}px`;
+        popup.style.top = `${screen.y}px`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [selectedPositionId]);
+
+  useEffect(() => {
     if (!camera || panningRef.current) {
       return;
     }
@@ -1126,6 +1198,7 @@ export function MapCanvas({
             canvas.releasePointerCapture(e.pointerId);
           }
           mirrorSessionCameraToReact();
+          drainMapSelectionEvents();
           r?.scheduleRefreshTiles();
         }}
         onPointerCancel={(e) => {
@@ -1138,6 +1211,36 @@ export function MapCanvas({
           mirrorSessionCameraToReact();
         }}
       />
+      {selectedPositionId ? (
+        <div
+          ref={popupRef}
+          className="pointer-events-auto absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] rounded-md border border-border bg-popover px-2 py-1.5 text-popover-foreground shadow-md"
+          style={{ left: 0, top: 0 }}
+        >
+          {(() => {
+            const meta = positionMetaById.get(selectedPositionId);
+            const title = meta?.name ?? meta?.label ?? selectedPositionId;
+            return (
+              <div className="flex items-start gap-1.5">
+                {meta?.icon ? <Icon icon={meta.icon} size="small" className="mt-0.5 shrink-0" /> : null}
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium">{title}</div>
+                  {meta?.sourceUrl ? (
+                    <a
+                      href={meta.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-secondary underline-offset-2 hover:underline"
+                    >
+                      Source
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      ) : null}
       {children}
     </div>
   );
@@ -1157,6 +1260,27 @@ if (import.meta.vitest) {
       });
       expect(json).toContain("zurich");
       expect(json).toContain("Zürich");
+    });
+
+    it("serializes rich position metadata", () => {
+      const json = mapDescriptorToJson({
+        positions: [
+          {
+            id: "donor-1",
+            lon: 8.54,
+            lat: 47.37,
+            name: "Donor site",
+            kind: "donor",
+            icon: "box",
+            sourceUrl: "https://example.test/donor",
+          },
+        ],
+        routes: [],
+        regions: [],
+      });
+      expect(json).toContain("Donor site");
+      expect(json).toContain("source_url");
+      expect(json).toContain("https://example.test/donor");
     });
   });
 

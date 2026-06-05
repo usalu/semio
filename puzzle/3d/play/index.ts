@@ -11,8 +11,10 @@ import {
   Expertise,
   ModeRuntime,
   Playground,
+  PLAYGROUND_NO_FIXTURE_ID,
   type PlaygroundFixtureCatalog,
   type PlaygroundFixtureHost,
+  isPlaygroundNoFixtureId,
   Platform,
   WindowKindRuntime,
   buildPlaygroundBrowseFilterTools,
@@ -575,6 +577,7 @@ export const PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle3d.tool.select";
 
 export {
   PUZZLE_3D_ENGAGEMENT_ZOOM_ID,
+  PUZZLE_3D_FILL_COUNT_MAX,
   applyBrushFillPlacementsToFixture,
   brushMeshUrlsForFillSession,
   buildBrushFillSequence,
@@ -1450,7 +1453,20 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     return this.fixtureCatalogCache;
   }
 
+  private clearFixture(): void {
+    this.fixture = null;
+    this.fixtureRevision += 1;
+    this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
+    this.hierarchySectionsCache = null;
+    this.hierarchySectionsRevision = -1;
+    this.syncShell();
+  }
+
   private loadFixtureById(fixtureId: string): void {
+    if (isPlaygroundNoFixtureId(fixtureId)) {
+      this.clearFixture();
+      return;
+    }
     const raw = PUZZLE_3D_PLAY_FIXTURE_JSON_BY_ID[fixtureId];
     if (!raw) return;
     const parsed = parseFixtureV1(raw);
@@ -1824,10 +1840,12 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   override run(command: string, args?: unknown): void {
     switch (command) {
       case "setActiveFixture": {
-        const fixtureId = (args as { fixtureId?: string }).fixtureId;
-        if (!fixtureId || fixtureId === this.activeFixtureId) return;
-        this.activeFixtureId = fixtureId;
-        this.loadFixtureById(fixtureId);
+        const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
+        const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+        if (nextId === this.activeFixtureId) return;
+        this.activeFixtureId = nextId;
+        this.fixtureCatalogCache = null;
+        this.loadFixtureById(nextId);
         return;
       }
       case ORBIT_CAMERA_VIEW_COMMAND: {

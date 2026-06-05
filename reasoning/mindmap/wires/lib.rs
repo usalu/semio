@@ -1,8 +1,8 @@
 //! 🔗 WIRES mindmap: Owns, Is, References, Has on a flexible identity-kind set.
 
 pub use infinite_cavas as cavas;
+pub use mathematical_graph_normal_undirected as graph;
 pub use reasoning_mindmap as mindmap;
-pub use reasoning_mindmap::graph;
 
 // #region 🔖RelationshipKind
 /// 🔗 One of the four WIRES relationship kinds.
@@ -31,7 +31,7 @@ impl RelationshipKind {
 // #endregion 🔖RelationshipKind
 
 // #region 🔖WiresExtension
-/// 🔗 WIRES semantics over a mindmap (normal directed graph).
+/// 🔗 WIRES semantics over a mindmap (normal undirected graph).
 pub trait WiresExtension: mindmap::MindmapExtension {
     fn relationship_kind_label(&self, relationship_id: graph::EdgeId) -> Option<&str>;
     fn validate_identity_set(&self, identities: &[mindmap::TopicId]) -> Result<(), String>;

@@ -662,6 +662,7 @@ export function fiveDApplyLiveForceGraphStep(
   const fixture = project2d(store.read());
   if (fixture.nodes.length === 0) return;
   const camera = store.get2dCamera(instanceId);
+  const locked = lockedNodeIds.length ? [...lockedNodeIds] : undefined;
   const laid = layoutPuzzle2dFixtureRedrawNodes(fixture, {
     centerX: camera.x,
     centerY: camera.y,
@@ -671,11 +672,21 @@ export function fiveDApplyLiveForceGraphStep(
       iterations: FIVE_D_LIVE_FORCE_ITERS_PER_FRAME,
       repulsionStrength: 80,
     },
-    lockedNodeIds: lockedNodeIds.length ? [...lockedNodeIds] : undefined,
+    lockedNodeIds: locked,
     mode: "force-graph",
     redrawHandlesAfter: false,
   } satisfies Puzzle2dRedrawLayoutOptions);
+  const model = store.read();
   const centers = new Map(laid.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
+  if (locked != null) {
+    for (const partId of locked) {
+      const part = model.parts.find((row) => row.id === partId);
+      const aspect2d = part?.puzzle2d;
+      if (aspect2d != null) {
+        centers.set(partId, { x: aspect2d.x, y: aspect2d.y });
+      }
+    }
+  }
   store.applyFlatNodeCenters(centers);
 }
 

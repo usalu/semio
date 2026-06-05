@@ -100,6 +100,8 @@ import {
   type UiTableHostSurfaceNode,
   enforcePlaygroundWindowEngagementInput,
   enforceWindowKindsEngagementInput,
+  isPlaygroundNoFixtureId,
+  PLAYGROUND_NO_FIXTURE_ID,
   resolvePlaygroundFixtureCatalog,
   type PlaygroundFixtureCatalog,
   type WindowBodyViewContext,
@@ -129,7 +131,13 @@ export type {
 } from "@framework/playground/core";
 
 export type { PlaygroundFixtureCatalog, PlaygroundFixtureHost, PlaygroundFixtureOption } from "@framework/playground/core";
-export { resolvePlaygroundFixtureCatalog } from "@framework/playground/core";
+export {
+  isPlaygroundNoFixtureId,
+  PLAYGROUND_NO_FIXTURE_ID,
+  PLAYGROUND_NO_FIXTURE_OPTION,
+  playgroundFixtureCatalogWithNoOption,
+  resolvePlaygroundFixtureCatalog,
+} from "@framework/playground/core";
 
 export {
   APP_TOOL_CATEGORY_ORDER,
@@ -999,6 +1007,20 @@ export interface PlaygroundViewProps {
 
 const playgroundFixtureCatalogSnapshotCache = new WeakMap<object, PlaygroundFixtureCatalog | null>();
 
+function playgroundFixtureCatalogSemanticallyEqual(a: PlaygroundFixtureCatalog, b: PlaygroundFixtureCatalog): boolean {
+  if (a.activeFixtureId !== b.activeFixtureId || a.options.length !== b.options.length) {
+    return false;
+  }
+  for (let i = 0; i < a.options.length; i += 1) {
+    const left = a.options[i];
+    const right = b.options[i];
+    if (!left || !right || left.id !== right.id || left.label !== right.label) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /** @emoji 🔔 Subscribes to controller snapshot or platform generation for navbar fixture catalog. */
 function usePlaygroundFixtureCatalog(runtime: Platform, controllerId: string | undefined): PlaygroundFixtureCatalog | null {
   return reactHostPort.useSyncExternalStore(
@@ -1017,12 +1039,15 @@ function usePlaygroundFixtureCatalog(runtime: Platform, controllerId: string | u
     },
     () => {
       const controller = runtime.getActiveApp()?.controller;
-      const next = resolvePlaygroundFixtureCatalog(controller);
       if (!controller) {
         return null;
       }
+      const next = resolvePlaygroundFixtureCatalog(controller);
       const cached = playgroundFixtureCatalogSnapshotCache.get(controller);
-      if (cached && next && cached.activeFixtureId === next.activeFixtureId && cached.options === next.options) {
+      if (cached === next) {
+        return cached;
+      }
+      if (cached && next && playgroundFixtureCatalogSemanticallyEqual(cached, next)) {
         return cached;
       }
       playgroundFixtureCatalogSnapshotCache.set(controller, next);
@@ -2333,6 +2358,7 @@ import {
   PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
   PUZZLE_2D_PLAY_CONTROLLER_ID,
   PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
+  PUZZLE_2D_PLAY_EMPTY_FIXTURE,
   PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
   PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
 } from "@puzzle/2d/play";
@@ -2670,6 +2696,10 @@ interface Puzzle2dPlayShellValue {
   setPuzzle2dRedrawProgressiveAutoStopMs: (value: number) => void;
   /** @emoji 🔁 Restarts progressive iteration ramp and auto-stop clock (used when the user drags a node during play). */
   resetPuzzle2dRedrawProgressiveEpoch: () => void;
+  /** @emoji 🖱️ Live force-graph play: pins dragged node centers in the fixture and passes them to WASM as locked. */
+  notePuzzle2dPlayNodeDragMove: (payload: { readonly id: string; readonly x: number; readonly y: number }) => void;
+  /** @emoji 🏁 Clears live force-graph drag pins after {@link Puzzle2dEventMap.nodeDragEnd}. */
+  clearPuzzle2dPlayNodeDrag: () => void;
   treeLayoutLayerSpacing: number;
   setTreeLayoutLayerSpacing: (value: number) => void;
   treeLayoutSiblingGap: number;
@@ -2953,10 +2983,12 @@ function puzzle2dPlayRedrawLayoutOpts(
   treeSiblingGap: number,
   treeDirection: Puzzle2dHierarchicalTreeDirectionKind,
   redrawHandlesAfter: boolean,
+  lockedNodeIds?: readonly string[],
 ): Puzzle2dRedrawLayoutOptions {
   const cam = camerasByPane[pane];
   const cx = cam.x;
   const cy = cam.y;
+  const locked = lockedNodeIds?.length ? [...lockedNodeIds] : undefined;
   if (mode === "hierarchical-tree") {
     return {
       centerX: cx,
@@ -2968,6 +3000,7 @@ function puzzle2dPlayRedrawLayoutOpts(
       },
       mode: "hierarchical-tree",
       redrawHandlesAfter,
+      ...(locked !== undefined ? { lockedNodeIds: locked } : {}),
     };
   }
   const fg: Puzzle2dForceGraphLayoutOptions = {
@@ -2978,7 +3011,31 @@ function puzzle2dPlayRedrawLayoutOpts(
     iterations: Math.max(1, Math.min(5000, Math.round(forceIters))),
     repulsionStrength: Math.max(40, Math.min(120, Math.round(forceRepulsion))),
   };
-  return { centerX: cx, centerY: cy, forceGraph: fg, mode: "force-graph", redrawHandlesAfter };
+  return {
+    centerX: cx,
+    centerY: cy,
+    forceGraph: fg,
+    mode: "force-graph",
+    redrawHandlesAfter,
+    ...(locked !== undefined ? { lockedNodeIds: locked } : {}),
+  };
+}
+
+/** @emoji 🖱️ Re-applies authoritative drag centers after a layout pass so RAF cannot stomp an in-flight pointer drag. */
+function puzzle2dPlayFixtureWithDragAnchors(
+  fixture: Puzzle2dFixtureV1,
+  dragAnchors: ReadonlyMap<string, { readonly x: number; readonly y: number }>,
+): Puzzle2dFixtureV1 {
+  if (dragAnchors.size === 0) {
+    return fixture;
+  }
+  return {
+    ...fixture,
+    nodes: fixture.nodes.map((node) => {
+      const anchor = dragAnchors.get(node.id);
+      return anchor ? { ...node, x: anchor.x, y: anchor.y } : node;
+    }),
+  };
 }
 // #endregion 🔖PlayRedrawHelpers
 
@@ -3181,6 +3238,8 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     commitBrushPlacement,
     handleCanvasFixtureDrop,
     resetPuzzle2dRedrawProgressiveEpoch,
+    notePuzzle2dPlayNodeDragMove,
+    clearPuzzle2dPlayNodeDrag,
     hoveredId,
     hoveredKind,
     setHoverForPane,
@@ -3224,15 +3283,14 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     [queueStructuralDelete],
   );
   const onCanvasDrag = reactHostPort.useCallback(
-    (_payload: { id: string; x: number; y: number }) => {
-      if (puzzle2dRedrawPlaying) {
-        resetPuzzle2dRedrawProgressiveEpoch();
-      }
+    (payload: { id: string; x: number; y: number }) => {
+      notePuzzle2dPlayNodeDragMove(payload);
     },
-    [puzzle2dRedrawPlaying, resetPuzzle2dRedrawProgressiveEpoch],
+    [notePuzzle2dPlayNodeDragMove],
   );
   const onCanvasDragEnd = reactHostPort.useCallback(
     (payload: { moves: Array<{ id: string; x: number; y: number }> }) => {
+      clearPuzzle2dPlayNodeDrag();
       if (payload.moves.length === 0) {
         return;
       }
@@ -3245,7 +3303,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
         }),
       }));
     },
-    [patchFixture],
+    [clearPuzzle2dPlayNodeDrag, patchFixture],
   );
   const { notifyBrushCandidates } = usePuzzle2dPlayShell();
   const onCanvasHover = reactHostPort.useCallback(
@@ -4034,6 +4092,9 @@ const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_OPTIONS = PUZZLE_2D_PLAY_IS_WIRES
 const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID = PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_FIXTURE_METABOLISM_ID : PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID;
 
 function puzzle2dPlayFixtureForNavbarId(fixtureId: string): Puzzle2dFixtureV1 {
+  if (isPlaygroundNoFixtureId(fixtureId)) {
+    return clonePuzzle2dFixtureV1(PUZZLE_2D_PLAY_EMPTY_FIXTURE);
+  }
   if (fixtureId === WIRES_PLAY_FIXTURE_METABOLISM_ID) {
     return clonePuzzle2dFixtureV1(WIRES_PLAY_DEFAULT_FIXTURE);
   }
@@ -4665,6 +4726,34 @@ function Puzzle2dPlayInner({
 
   const redrawPlayingRef = reactHostPort.useRef(false);
   const redrawProgressiveEpochRef = reactHostPort.useRef(0);
+  const puzzle2dPlayDraggingNodeIdsRef = reactHostPort.useRef<Set<string>>(new Set());
+  const puzzle2dPlayDragAnchorsRef = reactHostPort.useRef<Map<string, { x: number; y: number }>>(new Map());
+
+  const notePuzzle2dPlayNodeDragMove = reactHostPort.useCallback(
+    (payload: { readonly id: string; readonly x: number; readonly y: number }) => {
+      puzzle2dPlayDraggingNodeIdsRef.current.add(payload.id);
+      puzzle2dPlayDragAnchorsRef.current.set(payload.id, { x: payload.x, y: payload.y });
+      if (!puzzle2dRedrawPlayingRef.current) {
+        return;
+      }
+      redrawProgressiveEpochRef.current = typeof performance !== "undefined" ? performance.now() : Date.now();
+      patchFixture((prev) => ({
+        ...prev,
+        nodes: prev.nodes.map((node) => (node.id === payload.id ? { ...node, x: payload.x, y: payload.y } : node)),
+      }));
+    },
+    [patchFixture],
+  );
+
+  const clearPuzzle2dPlayNodeDrag = reactHostPort.useCallback(() => {
+    puzzle2dPlayDraggingNodeIdsRef.current.clear();
+    puzzle2dPlayDragAnchorsRef.current.clear();
+  }, []);
+
+  const puzzle2dPlayLiveDragLockedNodeIds = reactHostPort.useCallback((): readonly string[] | undefined => {
+    const ids = puzzle2dPlayDraggingNodeIdsRef.current;
+    return ids.size > 0 ? [...ids] : undefined;
+  }, []);
   const redrawLoopSnapshotRef = reactHostPort.useRef<Puzzle2dPlayRedrawLoopSnapshot>({
     activePaneId: "2d-overview",
     puzzle2dRedrawHandlesAfterNodes: false,
@@ -4717,22 +4806,28 @@ function Puzzle2dPlayInner({
       "2d-selection": { ...camerasByPane["2d-selection"] },
     };
     const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
+    const lockedNodeIds = puzzle2dPlayLiveDragLockedNodeIds();
+    const dragAnchors = puzzle2dPlayDragAnchorsRef.current;
     patchFixture((prev) => {
-      const laidOut = layoutPuzzle2dFixtureRedrawNodes(
-        prev,
-        puzzle2dPlayRedrawLayoutOpts(
-          activePaneId,
-          camerasByPane,
-          puzzle2dRedrawMode,
-          full,
-          forceLayoutIdealEdgeLength,
-          forceLayoutGravity,
-          forceLayoutRepulsionStrength,
-          treeLayoutLayerSpacing,
-          treeLayoutSiblingGap,
-          treeLayoutDirection,
-          puzzle2dRedrawHandlesAfterNodes,
+      const laidOut = puzzle2dPlayFixtureWithDragAnchors(
+        layoutPuzzle2dFixtureRedrawNodes(
+          prev,
+          puzzle2dPlayRedrawLayoutOpts(
+            activePaneId,
+            camerasByPane,
+            puzzle2dRedrawMode,
+            full,
+            forceLayoutIdealEdgeLength,
+            forceLayoutGravity,
+            forceLayoutRepulsionStrength,
+            treeLayoutLayerSpacing,
+            treeLayoutSiblingGap,
+            treeLayoutDirection,
+            puzzle2dRedrawHandlesAfterNodes,
+            lockedNodeIds,
+          ),
         ),
+        dragAnchors,
       );
       return { ...laidOut, camera: { ...prev.camera } };
     });
@@ -4750,6 +4845,7 @@ function Puzzle2dPlayInner({
     treeLayoutLayerSpacing,
     treeLayoutDirection,
     treeLayoutSiblingGap,
+    puzzle2dPlayLiveDragLockedNodeIds,
   ]);
 
   reactHostPort.useEffect(() => {
@@ -4765,6 +4861,8 @@ function Puzzle2dPlayInner({
         return;
       }
       const snap = redrawLoopSnapshotRef.current;
+      const lockedNodeIds = puzzle2dPlayLiveDragLockedNodeIds();
+      const dragAnchors = puzzle2dPlayDragAnchorsRef.current;
       const now = typeof performance !== "undefined" ? performance.now() : Date.now();
       const elapsed = now - redrawProgressiveEpochRef.current;
       if (snap.puzzle2dRedrawProgressiveAutoStopMs > 0 && elapsed >= snap.puzzle2dRedrawProgressiveAutoStopMs) {
@@ -4785,21 +4883,25 @@ function Puzzle2dPlayInner({
           return prev;
         }
         if (snap.mode === "hierarchical-tree") {
-          return layoutPuzzle2dFixtureRedrawNodes(
-            prev,
-            puzzle2dPlayRedrawLayoutOpts(
-              snap.activePaneId,
-              snap.camerasByPane,
-              snap.mode,
-              1,
-              snap.forceLayoutIdealEdgeLength,
-              snap.forceLayoutGravity,
-              snap.forceLayoutRepulsionStrength,
-              snap.treeLayoutLayerSpacing,
-              snap.treeLayoutSiblingGap,
-              snap.treeLayoutDirection,
-              snap.puzzle2dRedrawHandlesAfterNodes,
+          return puzzle2dPlayFixtureWithDragAnchors(
+            layoutPuzzle2dFixtureRedrawNodes(
+              prev,
+              puzzle2dPlayRedrawLayoutOpts(
+                snap.activePaneId,
+                snap.camerasByPane,
+                snap.mode,
+                1,
+                snap.forceLayoutIdealEdgeLength,
+                snap.forceLayoutGravity,
+                snap.forceLayoutRepulsionStrength,
+                snap.treeLayoutLayerSpacing,
+                snap.treeLayoutSiblingGap,
+                snap.treeLayoutDirection,
+                snap.puzzle2dRedrawHandlesAfterNodes,
+                lockedNodeIds,
+              ),
             ),
+            dragAnchors,
           );
         }
         const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -4819,10 +4921,11 @@ function Puzzle2dPlayInner({
               snap.treeLayoutSiblingGap,
               snap.treeLayoutDirection,
               snap.puzzle2dRedrawHandlesAfterNodes,
+              lockedNodeIds,
             ),
           );
         }
-        return cur;
+        return puzzle2dPlayFixtureWithDragAnchors(cur, dragAnchors);
       });
       raf = requestAnimationFrame(step);
     };
@@ -4831,7 +4934,7 @@ function Puzzle2dPlayInner({
       redrawPlayingRef.current = false;
       cancelAnimationFrame(raf);
     };
-  }, [puzzle2dRedrawPlaying, patchFixture, setPuzzle2dRedrawPlaying]);
+  }, [patchFixture, puzzle2dPlayLiveDragLockedNodeIds, puzzle2dRedrawPlaying, setPuzzle2dRedrawPlaying]);
 
   const shellValue = reactHostPort.useMemo<Puzzle2dPlayShellValue>(
     () => ({
@@ -4866,6 +4969,8 @@ function Puzzle2dPlayInner({
       patchFixture,
       remapIdInSelections,
       resetPuzzle2dRedrawProgressiveEpoch,
+      notePuzzle2dPlayNodeDragMove,
+      clearPuzzle2dPlayNodeDrag,
       setActivePaneId,
       setPuzzle2dRedrawHandlesAfterNodes,
       setPuzzle2dRedrawMode,
@@ -4935,6 +5040,8 @@ function Puzzle2dPlayInner({
       patchFixture,
       remapIdInSelections,
       resetPuzzle2dRedrawProgressiveEpoch,
+      notePuzzle2dPlayNodeDragMove,
+      clearPuzzle2dPlayNodeDrag,
       setSelectionIds,
       sceneAuthoringEpoch,
       hoveredId,
@@ -5164,11 +5271,12 @@ function Puzzle2dPlayInner({
 
   const applyNavbarFixtureId = reactHostPort.useCallback(
     (fixtureId: string) => {
-      if (fixtureId === activeFixtureId) return;
-      setActiveFixtureId(fixtureId);
-      const next = puzzle2dPlayFixtureForNavbarId(fixtureId);
+      const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+      if (nextId === activeFixtureId) return;
+      setActiveFixtureId(nextId);
+      const next = puzzle2dPlayFixtureForNavbarId(nextId);
       setFixtureState(next);
-      setSelectionIdsState(selectionSeedForFixture(next));
+      setSelectionIdsState(isPlaygroundNoFixtureId(nextId) ? new Set() : selectionSeedForFixture(next));
       setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
       puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
       bumpSceneAuthoringEpoch();
@@ -5256,7 +5364,7 @@ import {
   buildMapPlayMainDeclarativeBody,
   type MapPlayController,
 } from "@gis/map/play";
-import { MapCanvas, Position, Region, Route, type GisMapLodId } from "@gis/map/react";
+import { MapCanvas, Position, Route, type GisMapLodId } from "@gis/map/react";
 import type { UiGisMapHostSurfaceNode } from "@framework/platform/core";
 
 let mapPlayChromeRegistered = false;
@@ -5276,6 +5384,7 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
   const scopeId = shellWindowScopeId(shellInstance, GIS_MAP_PLAY_WINDOW_KIND_ID);
   const ctrl = useMapPlayController();
   const snapshot = useMapPlaySnapshot();
+  const activeFixture = snapshot.activeFixture ?? ctrl?.getActiveFixture() ?? null;
   const renderMode = ctrl?.getRenderModeForScope(scopeId) ?? snapshot.renderModeByInstance[scopeId] ?? snapshot.renderMode;
   const vectorStyle = ctrl?.getVectorStyleForScope(scopeId) ?? snapshot.vectorStyleByInstance[scopeId] ?? snapshot.vectorStyle;
   const lodMode = ctrl?.getLodModeForScope(scopeId) ?? snapshot.lodModeByInstance[scopeId] ?? snapshot.lodMode;
@@ -5287,6 +5396,14 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
     },
     [ctrl, scopeId],
   );
+  reactHostPort.useEffect(() => {
+    if (!activeFixture) {
+      return;
+    }
+    console.log(
+      `[DEBUG] gis map fixture loaded: ${activeFixture.positions.length} positions, ${activeFixture.routes.length} routes`,
+    );
+  }, [activeFixture]);
   return (
     <MapCanvas
       renderMode={renderMode}
@@ -5296,25 +5413,22 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
       layerStrokeScale={layerStrokeScale}
       onEffectiveLodChange={reportEffectiveLod}
     >
-      <Position id="zurich" lon={8.54} lat={47.37} label="Zürich" />
-      <Position id="bern" lon={7.45} lat={46.95} label="Bern" />
-      <Route
-        id="alps-route"
-        points={[
-          [8.54, 47.37],
-          [7.45, 46.95],
-          [9.2, 46.5],
-        ]}
-      />
-      <Region
-        id="lake-region"
-        ring={[
-          [8.2, 47.6],
-          [8.9, 47.6],
-          [8.9, 47.1],
-          [8.2, 47.1],
-        ]}
-      />
+      {activeFixture?.positions.map((position) => (
+        <Position
+          key={position.id}
+          id={position.id}
+          lon={position.lon}
+          lat={position.lat}
+          label={position.label}
+          name={position.name}
+          icon={position.icon}
+          sourceUrl={position.sourceUrl}
+          kind={position.kind}
+        />
+      ))}
+      {activeFixture?.routes.map((route) => (
+        <Route key={route.id} id={route.id} points={route.points} />
+      ))}
     </MapCanvas>
   );
 }

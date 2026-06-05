@@ -6,6 +6,10 @@ import {
   CommandBus,
   Controller,
   Playground,
+  PLAYGROUND_NO_FIXTURE_ID,
+  type PlaygroundFixtureCatalog,
+  type PlaygroundFixtureHost,
+  isPlaygroundNoFixtureId,
   Platform,
   AppRuntime,
   ModeRuntime,
@@ -23,6 +27,8 @@ import { Store } from "@framework/core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
 
+import type { IconName } from "@ui/react";
+
 import {
   GIS_MAP_LAYER_IDS,
   GIS_MAP_LAYER_LABEL,
@@ -39,12 +45,17 @@ import {
   isGisMapLodId,
   type GisMapLayerId,
   type GisMapLodId,
+  type MapDescriptor,
   type MapLayerStrokeScale,
   type MapLayerVisibility,
   type MapLodModeKind,
+  type MapPositionProps,
   type MapRenderMode,
+  type MapRouteProps,
   type MapVectorStyle,
 } from "@gis/map/react";
+
+import reuseMapFixtureJson from "../fixture/reuse.map.gis.json";
 
 export const GIS_MAP_PLAY_APP_ID = "gis-map-play";
 export const GIS_MAP_PLAY_CONTROLLER_ID = "gis-map-play";
@@ -52,6 +63,106 @@ export const GIS_MAP_PLAY_SURFACE_ID = "gis.map.play/v1";
 export const GIS_MAP_PLAY_BODY_KEY_MAIN = "gis.map.play.main";
 export const GIS_MAP_PLAY_STORE_ID = "gis-map-play.snapshot";
 export const GIS_MAP_PLAY_WINDOW_KIND_ID = "gis-map-main";
+export const GIS_MAP_PLAY_FIXTURE_REUSE_ID = "reuse";
+
+export interface GisMapFixturePositionV1 {
+  readonly id: string;
+  readonly lon: number;
+  readonly lat: number;
+  readonly label: string;
+  readonly name: string;
+  readonly kind: "receiver" | "donor";
+  readonly icon: IconName;
+  readonly sourceUrl?: string;
+}
+
+export interface GisMapFixtureRouteV1 {
+  readonly id: string;
+  readonly points: readonly (readonly [number, number])[];
+  readonly kind: "reuse";
+  readonly label?: string;
+}
+
+export interface GisMapFixtureV1 {
+  readonly schema: "gis.map.fixture/v1";
+  readonly name: string;
+  readonly positions: readonly GisMapFixturePositionV1[];
+  readonly routes: readonly GisMapFixtureRouteV1[];
+  readonly regions: readonly [];
+}
+
+export const GIS_MAP_PLAY_FIXTURE_OPTIONS = [{ id: GIS_MAP_PLAY_FIXTURE_REUSE_ID, label: "Reuse map" }] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function parseGisMapFixturePositionV1(raw: unknown): GisMapFixturePositionV1 | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.id !== "string" || typeof raw.lon !== "number" || typeof raw.lat !== "number") return null;
+  if (typeof raw.label !== "string" || typeof raw.name !== "string") return null;
+  if (raw.kind !== "receiver" && raw.kind !== "donor") return null;
+  if (typeof raw.icon !== "string") return null;
+  return {
+    id: raw.id,
+    lon: raw.lon,
+    lat: raw.lat,
+    label: raw.label,
+    name: raw.name,
+    kind: raw.kind,
+    icon: raw.icon as IconName,
+    ...(typeof raw.sourceUrl === "string" ? { sourceUrl: raw.sourceUrl } : {}),
+  };
+}
+
+function parseGisMapFixtureRouteV1(raw: unknown): GisMapFixtureRouteV1 | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.id !== "string" || !Array.isArray(raw.points) || raw.kind !== "reuse") return null;
+  const points = raw.points
+    .map((row) => (Array.isArray(row) && typeof row[0] === "number" && typeof row[1] === "number" ? ([row[0], row[1]] as const) : null))
+    .filter((row): row is readonly [number, number] => row !== null);
+  if (points.length < 2) return null;
+  return {
+    id: raw.id,
+    points,
+    kind: "reuse",
+    ...(typeof raw.label === "string" ? { label: raw.label } : {}),
+  };
+}
+
+/** @emoji 🧩 Parses a GIS map fixture document. */
+export function parseGisMapFixtureV1(raw: unknown): GisMapFixtureV1 | null {
+  if (!isRecord(raw) || raw.schema !== "gis.map.fixture/v1" || typeof raw.name !== "string") return null;
+  const positions = Array.isArray(raw.positions)
+    ? raw.positions.map(parseGisMapFixturePositionV1).filter((row): row is GisMapFixturePositionV1 => row !== null)
+    : [];
+  const routes = Array.isArray(raw.routes)
+    ? raw.routes.map(parseGisMapFixtureRouteV1).filter((row): row is GisMapFixtureRouteV1 => row !== null)
+    : [];
+  return { schema: "gis.map.fixture/v1", name: raw.name, positions, routes, regions: [] };
+}
+
+export const GIS_MAP_PLAY_DEFAULT_FIXTURE: GisMapFixtureV1 =
+  parseGisMapFixtureV1(reuseMapFixtureJson as unknown) ?? (reuseMapFixtureJson as GisMapFixtureV1);
+
+/** @emoji 🗺️ Maps a GIS map fixture into declarative overlay props. */
+export function gisMapFixtureToDescriptor(fixture: GisMapFixtureV1): MapDescriptor {
+  const positions: MapPositionProps[] = fixture.positions.map((row) => ({
+    id: row.id,
+    lon: row.lon,
+    lat: row.lat,
+    label: row.label,
+    name: row.name,
+    kind: row.kind,
+    icon: row.icon,
+    sourceUrl: row.sourceUrl,
+  }));
+  const routes: MapRouteProps[] = fixture.routes.map((row) => ({
+    id: row.id,
+    points: row.points,
+  }));
+  return { positions, routes, regions: [] };
+}
 
 const MAP_RENDER_MODES: readonly MapRenderMode[] = ["image", "vector", "combined"];
 
@@ -108,6 +219,7 @@ export interface MapPlaySnapshot {
   readonly layerVisibilityByInstance: Readonly<Record<string, MapLayerVisibility>>;
   readonly layerStrokeScale: MapLayerStrokeScale;
   readonly layerStrokeScaleByInstance: Readonly<Record<string, MapLayerStrokeScale>>;
+  readonly activeFixture: GisMapFixtureV1 | null;
 }
 
 export const GIS_MAP_PLAY_IDLE_SNAPSHOT: MapPlaySnapshot = {
@@ -121,6 +233,7 @@ export const GIS_MAP_PLAY_IDLE_SNAPSHOT: MapPlaySnapshot = {
   layerVisibilityByInstance: {},
   layerStrokeScale: defaultMapLayerStrokeScale(),
   layerStrokeScaleByInstance: {},
+  activeFixture: null,
 };
 
 function mapPlayLayerWeightLabel(scale: number): string {
@@ -260,8 +373,10 @@ function mapPlayWindowMeasures(
   ];
 }
 
-export class MapPlayController extends Controller {
+export class MapPlayController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
+  private activeFixtureId = GIS_MAP_PLAY_FIXTURE_REUSE_ID;
+  private activeFixture: GisMapFixtureV1 | null = GIS_MAP_PLAY_DEFAULT_FIXTURE;
   private readonly snapshotStore: MapPlaySnapshotStore;
   private snapshotCache: MapPlaySnapshot | null = null;
   renderMode: MapRenderMode = "image";
@@ -281,6 +396,7 @@ export class MapPlayController extends Controller {
     super(GIS_MAP_PLAY_CONTROLLER_ID, commandBus, notify);
     this.snapshotStore = new MapPlaySnapshotStore(this);
     this.provideStore(GIS_MAP_PLAY_STORE_ID, this.snapshotStore);
+    this.applyFixtureLayersForData();
     this.rebuildSnapshotCache();
     this.rebuildShellMode();
   }
@@ -322,7 +438,12 @@ export class MapPlayController extends Controller {
       layerVisibilityByInstance: { ...this.layerVisibilityByInstance },
       layerStrokeScale: { ...this.layerStrokeScale },
       layerStrokeScaleByInstance: { ...this.layerStrokeScaleByInstance },
+      activeFixture: this.activeFixture,
     };
+  }
+
+  getActiveFixture(): GisMapFixtureV1 | null {
+    return this.activeFixture;
   }
 
   getSnapshot(): MapPlaySnapshot {
@@ -359,7 +480,40 @@ export class MapPlayController extends Controller {
     ];
   }
 
+  getFixtureCatalog(): PlaygroundFixtureCatalog {
+    return { activeFixtureId: this.activeFixtureId, options: [...GIS_MAP_PLAY_FIXTURE_OPTIONS] };
+  }
+
+  private applyFixtureLayersForData(): void {
+    const visibility = { ...this.layerVisibility, positions: true, positionLabels: true, routes: true };
+    this.layerVisibility = visibility;
+    this.layerVisibilityByInstance = {};
+  }
+
   run(command: string, args?: unknown): void {
+    if (command === "setActiveFixture") {
+      const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
+      const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+      if (nextId === this.activeFixtureId) return;
+      this.activeFixtureId = nextId;
+      if (isPlaygroundNoFixtureId(nextId)) {
+        this.activeFixture = null;
+        this.layerVisibility = defaultMapLayerVisibility();
+        this.layerVisibilityByInstance = {};
+        this.layerStrokeScale = defaultMapLayerStrokeScale();
+        this.layerStrokeScaleByInstance = {};
+        this.rebuildShellMode();
+        this.bumpSnapshot();
+        return;
+      }
+      if (nextId === GIS_MAP_PLAY_FIXTURE_REUSE_ID) {
+        this.activeFixture = GIS_MAP_PLAY_DEFAULT_FIXTURE;
+        this.applyFixtureLayersForData();
+        this.rebuildShellMode();
+        this.bumpSnapshot();
+      }
+      return;
+    }
     if (command === "setRenderMode") {
       const { mode, value, instanceId } = (args ?? {}) as { mode?: string; value?: string; instanceId?: string };
       const resolved = mode ?? value;
@@ -713,6 +867,30 @@ if (import.meta.vitest) {
       }
       expect(layersWorld.children.find((row) => row.id === "gis-map-layer-weight-roads")).toBeUndefined();
       expect(layersStreet.children.find((row) => row.id === "gis-map-layer-weight-roads")?.kind).toBe("slider");
+    });
+  });
+
+  describe("MapPlayController fixtures", () => {
+    it("loads the reuse fixture by default", () => {
+      const runtime = new Platform({ id: "test" });
+      const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());
+      expect(ctrl.getFixtureCatalog().activeFixtureId).toBe(GIS_MAP_PLAY_FIXTURE_REUSE_ID);
+      expect(ctrl.getSnapshot().activeFixture?.schema).toBe("gis.map.fixture/v1");
+      expect(ctrl.getSnapshot().activeFixture?.positions.length).toBeGreaterThan(0);
+      expect(ctrl.getSnapshot().activeFixture?.routes.length).toBeGreaterThan(0);
+    });
+
+    it("clears fixture overlays when No fixture is selected", () => {
+      const runtime = new Platform({ id: "test" });
+      const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());
+      ctrl.run("setActiveFixture", { fixtureId: PLAYGROUND_NO_FIXTURE_ID });
+      expect(ctrl.getSnapshot().activeFixture).toBeNull();
+    });
+
+    it("maps fixture positions into a map descriptor", () => {
+      const descriptor = gisMapFixtureToDescriptor(GIS_MAP_PLAY_DEFAULT_FIXTURE);
+      expect(descriptor.positions[0]?.sourceUrl).toBeTruthy();
+      expect(descriptor.routes.length).toBe(GIS_MAP_PLAY_DEFAULT_FIXTURE.routes.length);
     });
   });
 }

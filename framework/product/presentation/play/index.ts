@@ -6,6 +6,10 @@ import {
 	CommandBus,
 	Controller,
 	Playground,
+	PLAYGROUND_NO_FIXTURE_ID,
+	type PlaygroundFixtureCatalog,
+	type PlaygroundFixtureHost,
+	isPlaygroundNoFixtureId,
 	Platform,
 	AppRuntime,
 	ModeRuntime,
@@ -114,8 +118,9 @@ function newTileId(prefix = "tile"): string {
 }
 
 /** @emoji 🎛 Presentation tile play controller: grid seed, tile edits, LLM prompt export. */
-export class PresentationPlayController extends Controller {
+export class PresentationPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Tile Morph", undefined);
+	private activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
 	private readonly snapshotStore: PresentationPlaySnapshotStore;
 	private snapshotCache: PresentationPlaySnapshot | null = null;
 	source: FigureTileSource = { ...PRESENTATION_PLAY_DEFAULT_SOURCE };
@@ -296,8 +301,25 @@ export class PresentationPlayController extends Controller {
 		this.emit();
 	}
 
+	getFixtureCatalog(): PlaygroundFixtureCatalog {
+		return { activeFixtureId: this.activeFixtureId, options: [] };
+	}
+
 	override run(command: string, args?: unknown): void {
 		switch (command) {
+			case "setActiveFixture": {
+				const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
+				const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+				if (nextId === this.activeFixtureId) break;
+				this.activeFixtureId = nextId;
+				if (isPlaygroundNoFixtureId(nextId)) {
+					this.source = { ...PRESENTATION_PLAY_DEFAULT_SOURCE };
+					this.tiles = [];
+					this.selectedIds = [];
+					this.syncShell();
+				}
+				break;
+			}
 			case "setSource": {
 				const { src, sourceAspect, kind, pdfPage } = args as {
 					src?: string;

@@ -803,6 +803,7 @@ import "./globals.css";
 import {
   Label,
   NavbarFixtureSelect,
+  NAVBAR_NO_FIXTURE_ID,
   reactHostPort,
   type EngagementSpec,
   type TreeDataItem,
@@ -2052,16 +2053,15 @@ function CadPlayDetailsAside(): ReactNode {
 /** @emoji 🧪 Navbar fixture dropdown for CAD play shape sources (replaces workbench catalog picker). */
 function CadPlayFixtureNavbarSelect(): ReactNode {
   const { shapeAssetId, handleShapeAssetChange } = useCadPlayModelSpace();
-  const activeId = shapeAssetId || SHAPE_ASSETS[0]?.id || "";
   return (
     <NavbarFixtureSelect
       id="cad.play.fixture"
-      value={activeId}
+      value={shapeAssetId || NAVBAR_NO_FIXTURE_ID}
       options={SHAPE_ASSETS.map((row) => ({
         id: row.id,
         label: `[${row.key}] ${row.label} (${modelVertexCount(row.json)} verts)`,
       }))}
-      onValueChange={handleShapeAssetChange}
+      onValueChange={(fixtureId) => handleShapeAssetChange(fixtureId === NAVBAR_NO_FIXTURE_ID ? "" : fixtureId)}
     />
   );
 }

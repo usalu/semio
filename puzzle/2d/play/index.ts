@@ -176,6 +176,13 @@ export const PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
 
 export const PUZZLE_2D_PLAY_FIXTURE_OPTIONS = [{ id: PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" }] as const;
 
+export const PUZZLE_2D_PLAY_EMPTY_FIXTURE: Puzzle2dFixtureV1 = {
+	schema: "puzzle.2d.fixture/v1",
+	camera: { x: 0, y: 0, zoom: 1 },
+	nodes: [],
+	edges: [],
+};
+
 export const PUZZLE_2D_PLAY_LAYOUT: WindowLayout = {
 	root: {
 		kind: "row",

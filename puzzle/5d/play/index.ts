@@ -20,8 +20,10 @@ import {
   type WindowMeasure,
   type UiNode,
   Playground,
+  PLAYGROUND_NO_FIXTURE_ID,
   type PlaygroundFixtureCatalog,
   type PlaygroundFixtureHost,
+  isPlaygroundNoFixtureId,
   playgroundTreePanelRootItems,
   platformFromViewContext,
   type UiTreeItemNode,
@@ -155,6 +157,18 @@ function loadNakagin5dModel(): Puzzle5dV1 {
   const model = parseV1(nakagin5dJson as unknown);
   if (!model) throw new Error("nakagin-capsule-tower.5d.json must use schema puzzle.5d/v1");
   return model;
+}
+
+function puzzle5dPlayEmptyModel(): Puzzle5dV1 {
+  return {
+    schema: "puzzle.5d/v1",
+    domain: "architecture",
+    camera2d: { x: 0, y: 0, zoom: 1 },
+    camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+    parts: [],
+    ties: [],
+    label: "",
+  };
 }
 
 export const PUZZLE_5D_PLAY_STORE_ID = "puzzle-5d";
@@ -299,8 +313,9 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   }
 
   private loadFixtureById(fixtureId: string): void {
-    if (fixtureId !== PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID) return;
-    this.puzzle5dStore.replaceModel(loadNakagin5dModel());
+    const model = isPlaygroundNoFixtureId(fixtureId) ? puzzle5dPlayEmptyModel() : fixtureId === PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID ? loadNakagin5dModel() : null;
+    if (!model) return;
+    this.puzzle5dStore.replaceModel(model);
     this.selected2d = new Set();
     this.selected3d = null;
     const snap = this.puzzle5dStore.read();
@@ -314,13 +329,14 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     let changed = true;
     switch (command) {
       case "setActiveFixture": {
-        const fixtureId = (args as { fixtureId?: string }).fixtureId;
-        if (!fixtureId || fixtureId === this.activeFixtureId) {
+        const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
+        const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+        if (nextId === this.activeFixtureId) {
           changed = false;
           break;
         }
-        this.activeFixtureId = fixtureId;
-        this.loadFixtureById(fixtureId);
+        this.activeFixtureId = nextId;
+        this.loadFixtureById(nextId);
         changed = false;
         break;
       }

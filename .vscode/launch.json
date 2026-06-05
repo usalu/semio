@@ -776,6 +776,17 @@
       }
     },
     {
+      "name": "🛠️dev🌐gis📍map🧩fixture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @gis/map/play:fixture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 177
+      }
+    },
+    {
       "name": "🛠️dev🧩puzzle📷3d",
       "type": "node-terminal",
       "request": "launch",

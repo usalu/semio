@@ -10,6 +10,7 @@ path = "lib.rs"
 
 [dependencies]
 mathematical_graph = { path = "../.." }
+mathematical_graph_normal_undirected = { path = "../../normal/undirected" }
 mathematical_core = { path = "../../../core" }
 infinite_cavas = { path = "../../../../infinite/cavas/vello" }
 serde = { version = "1.0.219", features = ["derive"] }

@@ -4559,6 +4559,7 @@ function ControlledHoverSync(props: {
   const hoverControlled = props.hoverTargetProp !== undefined || props.kindHoverProp !== undefined;
   const suppressEmitRef = reactHostPort.useRef(false);
   const lastEmittedRef = reactHostPort.useRef<Puzzle3dHoverPayload>({ hoverTarget: null, kindHover: null });
+  const lastAppliedPropsRef = reactHostPort.useRef<Puzzle3dHoverPayload>({ hoverTarget: null, kindHover: null });
 
   reactHostPort.useLayoutEffect(() => {
     if (!hoverControlled) {
@@ -4566,19 +4567,21 @@ function ControlledHoverSync(props: {
     }
     const nextTarget = props.hoverTargetProp ?? null;
     const nextKind = props.kindHoverProp ?? null;
-    if (puzzle3dHoverTargetsEqual(hoverTarget, nextTarget) && puzzle3dKindHoversEqual(kindHover, nextKind)) {
+    const lastApplied = lastAppliedPropsRef.current;
+    if (puzzle3dHoverTargetsEqual(lastApplied.hoverTarget, nextTarget) && puzzle3dKindHoversEqual(lastApplied.kindHover, nextKind)) {
       return;
     }
+    lastAppliedPropsRef.current = { hoverTarget: nextTarget, kindHover: nextKind };
     suppressEmitRef.current = true;
-    if (nextKind) {
-      setKindHover(nextKind);
-    } else if (nextTarget) {
+    if (nextTarget) {
       setHover(nextTarget);
+    } else if (nextKind) {
+      setKindHover(nextKind);
     } else {
       clearHoverAll();
     }
     suppressEmitRef.current = false;
-  }, [clearHoverAll, hoverControlled, hoverTarget, kindHover, props.hoverTargetProp, props.kindHoverProp, setHover, setKindHover]);
+  }, [clearHoverAll, hoverControlled, props.hoverTargetProp, props.kindHoverProp, setHover, setKindHover]);
 
   reactHostPort.useEffect(() => {
     if (!props.onHover || suppressEmitRef.current) {
@@ -7130,15 +7133,18 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
     const group = groupRef.current;
     if (group) {
       applyObjectPose(group, props.preview.origin, props.preview.orientation, props.preview.scale);
+      invalidate();
     }
+  }, [props.preview.meshUrl, props.preview.origin, props.preview.orientation, props.preview.scale, invalidate]);
+  reactHostPort.useLayoutEffect(() => {
     const collides = brushPreviewCollides(reg, props.preview, props.overlapBudget);
     const blocked = collides === true;
-    if (lastCollidesRef.current !== blocked) {
-      lastCollidesRef.current = blocked;
-      props.onCollisionChange(blocked);
+    if (lastCollidesRef.current === blocked) {
+      return;
     }
-    invalidate();
-  }, [props.overlapBudget, props.preview, props.onCollisionChange, reg, invalidate]);
+    lastCollidesRef.current = blocked;
+    props.onCollisionChange(blocked);
+  }, [props.overlapBudget, props.preview.meshUrl, props.preview.origin, props.preview.orientation, props.preview.scale, props.onCollisionChange, reg]);
   return (
     <group ref={groupRef} raycast={() => null}>
       <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" scale={props.preview.scale} />

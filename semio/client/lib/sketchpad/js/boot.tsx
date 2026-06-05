@@ -7,7 +7,7 @@ import { MDXProvider } from "@mdx-js/react";
 import type { Platform } from "@framework/core";
 import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
 import { mountReactApp, PlatformShell, PlatformViewWithHistory, registerUiPanelSurfaceHost } from "@framework/platform/renderer/react";
-import { Aside, Button, Card, CardGrid, FileTree, Input, NavbarFixtureSelect, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@ui/react";
+import { Aside, Button, Card, CardGrid, FileTree, Input, NavbarFixtureSelect, NAVBAR_NO_FIXTURE_ID, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@ui/react";
 import React, { Suspense, useEffect, useState } from "react";
 import {
 	SKETCHPAD_SHELL_CONTROLLER_ID,
@@ -178,7 +178,7 @@ function SketchpadFeedbackFormHost({
 registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_DOCS_PAGE, SketchpadDocsMdxHost);
 registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_FEEDBACK_FORM, SketchpadFeedbackFormHost);
 
-function SketchpadKitFixtureNavbar({ platform }: { readonly platform: Platform }): React.ReactElement | null {
+function SketchpadKitFixtureNavbar({ platform }: { readonly platform: Platform }): React.ReactElement {
 	const [tick, setTick] = useState(0);
 	useEffect(() => {
 		const ctrl = getSketchpadShellController();
@@ -190,9 +190,9 @@ function SketchpadKitFixtureNavbar({ platform }: { readonly platform: Platform }
 	const ctrl = getSketchpadShellController();
 	const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
 	const openKitIds = shell?.openKitIds ?? [];
-	if (openKitIds.length === 0) return null;
 	const pathOnly = platform.uri.split("?")[0] ?? "/";
-	const activeKitId = parseSketchpadRouteScopeFromPath(pathOnly).kitId ?? openKitIds[openKitIds.length - 1]!;
+	const routeKitId = parseSketchpadRouteScopeFromPath(pathOnly).kitId;
+	const activeKitId = routeKitId ?? NAVBAR_NO_FIXTURE_ID;
 	const options = openKitIds.map((kitId) => {
 		const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
 		return { id: kitId, label: kit?.name ?? kitId };
@@ -204,6 +204,10 @@ function SketchpadKitFixtureNavbar({ platform }: { readonly platform: Platform }
 			value={activeKitId}
 			options={options}
 			onValueChange={(kitId) => {
+				if (kitId === NAVBAR_NO_FIXTURE_ID) {
+					platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "navigate", { path: "/" });
+					return;
+				}
 				platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "navigate", { path: `/kits/${kitId}` });
 			}}
 		/>
