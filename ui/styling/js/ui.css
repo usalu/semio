@@ -797,8 +797,30 @@
   border-color: var(--border-normal-color);
 }
 
+@utility border-element {
+  border-color: var(--border-element-color);
+}
+
+@utility divide-element {
+  --tw-divide-color: var(--border-element-color);
+}
+
 @utility border-emphasized {
   border-color: var(--border-emphasized-color);
+}
+
+[data-slot="toolbar-zone"],
+[data-slot="toggle-group"],
+[data-slot="button-group"],
+[data-slot="action-group"],
+[data-slot="app-panel-toggle-group"] {
+  border-color: var(--border-normal-color);
+}
+
+[data-slot="toggle-group"].divide-x > :not(:last-child),
+[data-slot="button-group"].divide-x > :not(:last-child),
+[data-slot="action-group"].divide-x > :not(:last-child) {
+  border-color: var(--border-normal-color);
 }
 
 @utility gap-single {
@@ -1146,10 +1168,12 @@
 }
 
 [data-slot="side-panel-tabs"],
-[data-slot="mobile-panel-tabs"] {
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: var(--border-normal-color) !important;
+[data-slot="mobile-panel-tabs"],
+[data-slot="accordion-item"],
+[data-slot="command-input-wrapper"],
+table tbody tr,
+table thead.border-b {
+  border-bottom-color: var(--border-normal-color);
 }
 
 @utility ui-glass-toolbar {

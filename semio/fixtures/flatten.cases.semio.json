@@ -2,14 +2,14 @@
   "cases": [
     {
       "name": "nakagin_capsule_tower",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designPath": [
         "Nakagin Capsule Tower"
       ]
     },
     {
       "name": "nakagin_capsule_tower_slanted",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designPath": [
         "Nakagin Capsule Tower",
         "Slanted"
@@ -17,7 +17,7 @@
     },
     {
       "name": "nakagin_capsule_tower_twisted",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designPath": [
         "Nakagin Capsule Tower",
         "Twisted"
@@ -25,7 +25,7 @@
     },
     {
       "name": "nakagin_capsule_tower_dancing",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designPath": [
         "Nakagin Capsule Tower",
         "Dancing"
@@ -33,7 +33,7 @@
     },
     {
       "name": "capsule_dream",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designPath": [
         "Capsule Dream"
       ]

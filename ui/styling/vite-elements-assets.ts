@@ -681,24 +681,17 @@ export function mapLibreVectorTileProxyVitePlugin(cacheDir: string): Plugin {
   };
 }
 
-/** @emoji 🛝 `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
-export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
-  const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
-  const uiAssetsRoot = resolve(repoRoot, "ui/assets");
+/** @emoji 🔀 Vite resolve aliases shared by playground play hosts and renderer vitest graphs. */
+export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> {
   const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
-  const playgroundCore = resolve(repoRoot, "framework/product/playground/core/index.ts");
-  const platformCore = resolve(repoRoot, "framework/product/platform/core/index.ts");
-  const platformRenderer = resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx");
-  const frameworkCore = resolve(repoRoot, "framework/core/index.ts");
-  const uiReact = resolve(repoRoot, "ui/react/index.tsx");
   const rendererIndex = resolve(rendererRoot, "index.tsx");
-  const rendererAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [
+  return [
     { find: /^@framework\/playground\/renderer\/react$/, replacement: rendererIndex },
-    { find: /^@framework\/playground\/core$/, replacement: playgroundCore },
-    { find: /^@framework\/platform\/core$/, replacement: platformCore },
-    { find: /^@framework\/platform\/renderer\/react$/, replacement: platformRenderer },
-    { find: /^@framework\/core$/, replacement: frameworkCore },
-    { find: "@ui/react", replacement: uiReact },
+    { find: /^@framework\/playground\/core$/, replacement: resolve(repoRoot, "framework/product/playground/core/index.ts") },
+    { find: /^@framework\/platform\/core$/, replacement: resolve(repoRoot, "framework/product/platform/core/index.ts") },
+    { find: /^@framework\/platform\/renderer\/react$/, replacement: resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx") },
+    { find: /^@framework\/core$/, replacement: resolve(repoRoot, "framework/core/index.ts") },
+    { find: "@ui/react", replacement: resolve(repoRoot, "ui/react/index.tsx") },
     { find: "@ui/assets", replacement: resolve(repoRoot, "ui/assets/index.ts") },
     { find: "@infinite/cavas/react-renderer", replacement: resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx") },
     { find: "@infinite/world/r3f", replacement: resolve(repoRoot, "infinite/world/r3f/index.tsx") },
@@ -712,10 +705,20 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     { find: "@gis/map/react", replacement: resolve(repoRoot, "gis/map/react/index.tsx") },
     { find: "@reasoning/mindmap/wires/play", replacement: resolve(repoRoot, "reasoning/mindmap/wires/play/index.ts") },
     { find: "@reasoning/mindmap/wires/react", replacement: resolve(repoRoot, "reasoning/mindmap/wires/react/index.ts") },
+    { find: "@reasoning/mindmap/react", replacement: resolve(repoRoot, "reasoning/mindmap/react/index.tsx") },
     { find: "@framework/presentation/play", replacement: resolve(repoRoot, "framework/product/presentation/play/index.ts") },
     { find: "@framework/presentation/core", replacement: resolve(repoRoot, "framework/product/presentation/core/index.ts") },
     { find: "@framework/presentation/renderer/react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
   ];
+}
+
+/** @emoji 🛝 `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
+export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
+  const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
+  const uiAssetsRoot = resolve(repoRoot, "ui/assets");
+  const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
+  const rendererIndex = resolve(rendererRoot, "index.tsx");
+  const rendererAliases = playgroundRendererResolveAliases(repoRoot);
   return defineConfig({
     root: playDir,
     base: "./",

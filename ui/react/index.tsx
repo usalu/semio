@@ -2744,13 +2744,19 @@ export function getLevelZClass(level: Level): string {
 	}
 }
 
-/** @emoji 📏 Foreground chrome stroke (navbar, footer, panel frame, toolbar outline, windows). */
+/** @emoji 📏 Foreground shell stroke — panel frame, navbar bottom, footer top only. */
 export const borderEmphasizedClass = "!border-emphasized";
 
 /** @emoji 📏 Emphasized chrome frame (`border` + {@link borderEmphasizedClass}). */
 export const borderEmphasizedFrameClass = `box-border border border-solid ${borderEmphasizedClass}`;
 
-/** @emoji 📏 Subtle normal separator (`border-b` + {@link borderNormalClass}). */
+/** @emoji 📏 Emphasized navbar bottom edge. */
+export const borderEmphasizedBottomClass = `border-b ${borderEmphasizedClass}`;
+
+/** @emoji 📏 Emphasized footer top edge. */
+export const borderEmphasizedTopClass = `border-t ${borderEmphasizedClass}`;
+
+/** @emoji 📏 Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
 export const borderNormalClass = "!border-normal";
 
 /** @emoji 📏 Normal bottom edge under panel tabs — not {@link borderEmphasizedClass}. */
@@ -2785,7 +2791,7 @@ export const panelChromeFrameLayerClass = cn(
 export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
 
 /** @emoji 📑 Panel tab strip — {@link borderNormalBottomClass} under tabs; outer outline is {@link panelChromeBorderClass}. */
-export const panelTabBarClass = cn("relative z-40 flex items-stretch shrink-0 overflow-x-auto", borderNormalBottomClass);
+export const panelTabBarClass = cn("relative z-20 flex items-stretch shrink-0 overflow-x-auto", borderNormalBottomClass);
 
 /** @emoji 📑 Panel tab icon button (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = "flex items-center justify-center h-full cursor-pointer transition-colors hover:bg-hover-panel";
@@ -2818,19 +2824,19 @@ export function panelResizeEdgeAccentClass(resizeSide: ResizeSide, active: boole
 }
 
 /** @emoji 📏 Top cap sides only — no bottom edge; z-index covers the body top stroke under the cap. */
-export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${borderEmphasizedClass} bg-window`;
+export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${borderNormalClass} bg-window`;
 
 /** @emoji 📏 Top cap with primary chrome line when the stack owns the globally active window. */
 export const windowCapFrameActiveClass = `relative z-[2] border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
 /** @emoji 📏 Canvas gap stroke — horizontal segment of the U between tab and fullscreen caps. */
-export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${borderEmphasizedClass}`;
+export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${borderNormalClass}`;
 
 /** @emoji 📏 Canvas gap stroke with primary chrome line when the stack is globally active. */
 export const windowGapFrameActiveClass = `border-x-0 border-t-0 border-b ${activeLineClass}`;
 
 /** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap sides). */
-export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${borderEmphasizedClass} bg-canvas`;
+export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${borderNormalClass} bg-canvas`;
 
 /** @emoji 📏 U-shaped body frame with primary chrome line when the stack owns the globally active window. */
 export const windowBodyFrameActiveClass = `relative z-0 -mt-px border-b border-l border-r border-t-0 ${activeLineClass} bg-canvas`;
@@ -2867,24 +2873,27 @@ export function modeDockChromeGridPlacement(
   };
 }
 
-/** @emoji 📏 Inactive sibling tab — emphasized pill resting on the U-frame baseline. */
+/** @emoji 📏 Inactive sibling tab — normal pill resting on the U-frame baseline. */
 export const modeDockInactiveTabClass =
-  `relative z-30 box-border min-h-medium shrink-0 border ${borderEmphasizedClass} bg-window`;
+  `relative z-30 box-border min-h-medium shrink-0 border ${borderNormalClass} bg-window`;
 
 /** @emoji 📏 Inactive tab before gap — no bottom stroke; gap owns the horizontal segment before controls. */
 export const modeDockInactiveTabBeforeGapClass =
-  `relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderEmphasizedClass} bg-window`;
+  `relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderNormalClass} bg-window`;
 
 /** @emoji 📏 Filled primary for the globally active dock tab (matches single-tab selection). */
 export const modeDockActiveTabFillClass =
   "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground";
 
+/** @emoji 📑 Active panel tab — primary fill matching dock/toolbar selection. */
+export const panelTabActiveClass = modeDockActiveTabFillClass;
+
 /** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body. */
 export const modeDockActiveTabClass =
   `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 ${activeLineClass} ${modeDockActiveTabFillClass}`;
 
-/** @emoji 📏 Maximize cap on the right of the gap (emphasized chrome line). */
-export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${borderEmphasizedClass} bg-window`;
+/** @emoji 📏 Maximize cap on the right of the gap (normal chrome line). */
+export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${borderNormalClass} bg-window`;
 
 /** @emoji 📏 Maximize cap when the stack owns the globally active window. */
 export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
@@ -2974,14 +2983,14 @@ export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold upperca
 /** @emoji 🌳 Typography for measure tree leaf labels. */
 export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-foreground";
 
-/** @emoji 🎨 Tailwind border token class for a {@link Level}. */
+/** @emoji 🎨 Normal border stroke for controls and in-chrome dividers at a {@link Level}. */
 export function getLevelBorderElementClass(_level: Level): string {
-	return borderElementClass;
+	return borderNormalClass;
 }
 
 /** @emoji 🎨 Tailwind divide token class for a {@link Level}. */
 export function getLevelDivideElementClass(_level: Level): string {
-	return "divide-element";
+	return "divide-normal";
 }
 // #endregion 🎈Level Context
 
@@ -3082,7 +3091,7 @@ function CommandDialog({
  **/
 function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
-    <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b px-tiny">
+    <div data-slot="command-input-wrapper" className={cn("flex h-medium items-center gap-single px-tiny", borderNormalBottomClass)}>
       <SearchIcon className="size-small shrink-0 opacity-50" />
       <CommandPrimitive.Input data-slot="command-input" className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)} {...uiFormControlBrowserDefaultProps} {...props} />
     </div>
@@ -3184,7 +3193,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
   return (
-    <footer id="ui.footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
+    <footer id="ui.footer" data-slot="footer" className={cn(borderEmphasizedTopClass, "flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup className="border">
           {sortedItems.map((item) => (
@@ -6847,7 +6856,7 @@ function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.
  * AccordionItem holds the data fields for a AccordionItem record.
  **/
 function AccordionItem({ className, ...props }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
-  return <AccordionPrimitive.Item data-slot="accordion-item" className={cn("border-b last:border-b-0", className)} {...props} />;
+  return <AccordionPrimitive.Item data-slot="accordion-item" className={cn(borderNormalBottomClass, "last:border-b-0", className)} {...props} />;
 }
 
 /**
@@ -7281,7 +7290,7 @@ function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   return (
-    <nav id="ui.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" className={cn(borderEmphasizedBottomClass, "h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0">
           {items.map((item, index) => (
@@ -11210,7 +11219,7 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
           </button>
         </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
-          <DropdownMenuPrimitive.Content align="center" sideOffset={8} className={cn(glassWindowOptionsClass, "w-auto overflow-hidden border p-single z-temporary")}>
+          <DropdownMenuPrimitive.Content align="center" sideOffset={8} className={cn(glassWindowOptionsClass, "w-auto overflow-hidden border p-single z-temporary", borderNormalClass)}>
             {options.map((item, index) => {
               const menuItem = (
                 <DropdownMenuPrimitive.Item
@@ -11891,7 +11900,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
                     id={tab.id}
                     data-active={isActive ? "true" : undefined}
                     onClick={() => handleTabChange(tab.id)}
-                    className={cn(sidePanelTabButtonClass, isActive && "bg-hover-panel")}
+                    className={cn(sidePanelTabButtonClass, isActive && panelTabActiveClass)}
                   >
                     <Icon size={16} />
                   </button>
@@ -11981,7 +11990,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
                     id={tab.id}
                     data-active={isActive ? "true" : undefined}
                     onClick={() => handleTabChange(tab.id)}
-                    className={cn(mobilePanelTabButtonClass, isActive && "bg-hover-panel")}
+                    className={cn(mobilePanelTabButtonClass, isActive && panelTabActiveClass)}
                   >
                     <Icon size={20} />
                   </button>
@@ -12030,7 +12039,11 @@ function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
     <div
       data-slot="toolbar-zone"
       className={cn(
-        cn(glassToolbarClass, "flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border"),
+        cn(
+          glassToolbarClass,
+          "flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border",
+          borderNormalClass,
+        ),
         className,
       )}
       {...props}
@@ -15520,7 +15533,7 @@ function TableDraggableRow<T>({
     setDraggableRef(node);
     setDroppableRef(node);
   };
-  const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
+  const baseRowClassName = `${borderNormalBottomClass} ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
   const isDragging = activeId === rowId || isDraggingHook;
   return (
     <tr
@@ -15689,7 +15702,7 @@ const Table = <T,>({
     return (
       <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
         <table className="w-full border-collapse">
-          <thead className={`${headerBgClass} border-b ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
+          <thead className={`${headerBgClass} ${borderNormalBottomClass} ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
                 <th key={column.id} className={`text-left p-single font-medium h-large ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
@@ -15733,7 +15746,7 @@ const Table = <T,>({
                   );
                 }
 
-                const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
+                const baseRowClassName = `${borderNormalBottomClass} ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
                 const isDragging = activeId === rowId;
 
                 return (
@@ -15798,7 +15811,7 @@ export interface TableSkeletonProps {
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">
-      <thead className="bg-window border-b sticky top-0 z-panel">
+      <thead className={cn("bg-window sticky top-0 z-panel", borderNormalBottomClass)}>
         <tr className="h-large">
           {columns.map((column) => (
             <th key={column.id} className={`text-left p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
@@ -15809,7 +15822,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
       </thead>
       <tbody>
         {Array.from({ length: rowCount }).map((_, index) => (
-          <tr key={index} className="border-b h-medium">
+          <tr key={index} className={cn(borderNormalBottomClass, "h-medium")}>
             {columns.map((column) => (
               <td key={column.id} className={`h-medium px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
                 <div className="flex items-center h-full min-w-0">
@@ -17054,7 +17067,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const perTabActiveChrome = Boolean(chromeGrid);
   const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
   const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
-  const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-emphasized";
+  const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : borderNormalBottomClass;
   const displayTabs = reactHostPort.useMemo(
     () =>
       modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []),
@@ -18061,6 +18074,20 @@ if (import.meta.vitest) {
       expect(screen.getByText("Review Mode")).toBeTruthy();
     });
 
+    it("SidePanel marks the active tab with primary fill below the emphasized frame", () => {
+      const StubIcon = (): null => null;
+      const tabs: SidePanelTabConfig[] = [
+        { id: "tab-a", icon: StubIcon, tree: { sections: [] } },
+        { id: "tab-b", icon: StubIcon, tree: { sections: [] } },
+      ];
+      const { container } = render(<SidePanel position="left" visible tabs={tabs} activeTabId="tab-b" />);
+      const activeButton = container.querySelector('[data-slot="side-panel-tab-button"][data-active="true"]');
+      expect(activeButton?.className).toContain("bg-active-base");
+      expect(activeButton?.className).toContain("text-active-foreground");
+      expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("z-20");
+      expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
+    });
+
     it("SidePanel stays mounted when visible is false", () => {
       const StubIcon = (): null => null;
       const tabs: SidePanelTabConfig[] = [
@@ -18163,7 +18190,8 @@ if (import.meta.vitest) {
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-b-0");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-l-0");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-emphasized");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-normal");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-emphasized");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-active-base");
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("-mt-px");
@@ -18171,9 +18199,12 @@ if (import.meta.vitest) {
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-b");
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-emphasized");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-emphasized");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-emphasized");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-normal");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-normal");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-normal");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("border-emphasized");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).not.toContain("border-emphasized");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("border-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-emphasized");
     });
 
@@ -18211,14 +18242,16 @@ if (import.meta.vitest) {
       const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
       const inactiveStackTab = inactiveStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
       const activeStackTab = activeStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
-      expect(inactiveStackTab?.className).toContain("border-emphasized");
+      expect(inactiveStackTab?.className).toContain("border-normal");
+      expect(inactiveStackTab?.className).not.toContain("border-emphasized");
       expect(inactiveStackTab?.className).not.toContain("border-active-base");
       expect(inactiveStackTab?.className).not.toContain("border-b-0");
       expect(activeStackTab?.className).toContain("border-active-base");
       expect(activeStackTab?.className).toContain("border-b-0");
       expect(activeStackTab?.className).toContain("bg-active-base");
       expect(activeStackTab?.className).toContain("text-active-foreground");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-emphasized");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-normal");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-emphasized");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-active-base");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
@@ -18322,7 +18355,8 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).not.toContain("border-r-0");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-emphasized");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-normal");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).not.toContain("border-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-b-0");
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-stack-body"]')).toBeTruthy();
@@ -18380,7 +18414,8 @@ if (import.meta.vitest) {
       expect(gapCell?.className).toContain("flex");
       expect(gapCell?.className).toContain("items-stretch");
       const inactiveTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="shape"]');
-      expect(inactiveTab?.className).toContain("border-emphasized");
+      expect(inactiveTab?.className).toContain("border-normal");
+      expect(inactiveTab?.className).not.toContain("border-emphasized");
       expect(inactiveTab?.className).not.toContain("border-active-base");
       const activeTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="energy"]');
       expect(activeTab?.className).toContain("border-active-base");
@@ -20681,6 +20716,7 @@ if (treeVitest) {
         </ToolbarZone>,
       );
       expect(toolbarMarkup).toMatch(/\bborder\b/);
+      expect(toolbarMarkup).toContain(borderNormalClass);
       expect(toolbarMarkup).not.toContain("border-emphasized");
       const panelMarkup = renderToStaticMarkup(
         <SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, tree: { sections: [] } }]} />,
@@ -20691,6 +20727,8 @@ if (treeVitest) {
       expect(panelMarkup).toContain(borderNormalClass);
       expect(panelMarkup).not.toContain("border-b-current");
       expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-emphasized/);
+      expect(panelMarkup).toMatch(/side-panel-tabs[^>]*z-20/);
+      expect(panelMarkup).toMatch(/panel-chrome-frame[^>]*z-30/);
       const measuresMarkup = renderToStaticMarkup(
         <div data-slot="window-measures-stack" className={windowMeasuresStackClass} />,
       );

@@ -802,12 +802,8 @@ import "./globals.css";
 // #region 🔌Adapters
 import {
   Label,
+  NavbarFixtureSelect,
   reactHostPort,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   type EngagementSpec,
   type TreeDataItem,
   type TreeDataSection,
@@ -2053,33 +2049,34 @@ function CadPlayDetailsAside(): ReactNode {
   );
 }
 
-/** @emoji 📦 Workbench catalog: shape fixtures and file I/O status (toolbar handles save/load). */
+/** @emoji 🧪 Navbar fixture dropdown for CAD play shape sources (replaces workbench catalog picker). */
+function CadPlayFixtureNavbarSelect(): ReactNode {
+  const { shapeAssetId, handleShapeAssetChange } = useCadPlayModelSpace();
+  const activeId = shapeAssetId || SHAPE_ASSETS[0]?.id || "";
+  return (
+    <NavbarFixtureSelect
+      id="cad.play.fixture"
+      value={activeId}
+      options={SHAPE_ASSETS.map((row) => ({
+        id: row.id,
+        label: `[${row.key}] ${row.label} (${modelVertexCount(row.json)} verts)`,
+      }))}
+      onValueChange={handleShapeAssetChange}
+    />
+  );
+}
+
+/** @emoji 📦 Workbench catalog: file I/O status (fixture picker lives in the navbar; toolbar handles save/load). */
 function CadPlayCatalogAside(): ReactNode {
-  const { activeModelDefinitionId, shapeAssetId, handleShapeAssetChange, fileStatus } = useCadPlayModelSpace();
+  const { activeModelDefinitionId, fileStatus } = useCadPlayModelSpace();
   const statusTone = fileStatus.startsWith("Load failed") || fileStatus.startsWith("Save failed") ? "text-destructive" : "text-muted-foreground";
   return (
     <>
-      {isShapeModelDefinition(activeModelDefinitionId) ? (
-        <Label id="cad.play.catalog.shape" label="Shape asset">
-          <Select value={shapeAssetId || "__none__"} onValueChange={(value) => handleShapeAssetChange(value === "__none__" ? "" : value)}>
-            <SelectTrigger className="h-medium w-full" id="cad.play.catalog.shape.trigger" size="sm">
-              <SelectValue placeholder="No asset" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">No asset</SelectItem>
-              {SHAPE_ASSETS.map((g) => (
-                <SelectItem key={g.id} value={g.id}>
-                  [{g.key}] {g.label} ({modelVertexCount(g.json)} verts)
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Label>
-      ) : (
+      {!isShapeModelDefinition(activeModelDefinitionId) ? (
         <p className="text-muted-foreground leading-snug">
-          Shape assets apply to <code className="text-foreground">spatial.shape</code>. Focus the Shape pane to load source geometry.
+          Shape fixtures apply to <code className="text-foreground">spatial.shape</code>. Use the navbar fixture menu or focus the Shape pane.
         </p>
-      )}
+      ) : null}
       {fileStatus ? <p className={statusTone}>{fileStatus}</p> : null}
     </>
   );
@@ -2292,11 +2289,12 @@ function CadPlayRoot(): ReactNode {
     [chromeSnapshot, hierarchyBuild.sections, hierarchyHighlightedIds],
   );
   const detailsTabs = reactHostPort.useMemo(() => [new CadPlayDetailsPanelDefinition().resolveTab()], []);
+  const slotNavbarCenter = reactHostPort.useMemo(() => <CadPlayFixtureNavbarSelect />, []);
   return (
     <CadPlayChromeContext.Provider value={chromeContextValue}>
       <CadPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
         <CadPlayLoadInput />
-        <PlaygroundView runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} />
+        <PlaygroundView runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} slotNavbarCenter={slotNavbarCenter} />
       </CadPlayModelSpaceProvider>
     </CadPlayChromeContext.Provider>
   );

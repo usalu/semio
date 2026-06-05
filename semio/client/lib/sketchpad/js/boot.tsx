@@ -1,13 +1,13 @@
 // #region 🧲Header
-/** @emoji 🚀 Vite entry: {@link mountPlatform} + sketchpad {@link Platform} + docs MDX host. */
+/** @emoji 🚀 Vite entry: sketchpad {@link Platform} shell + docs MDX host. */
 // #endregion 🧲Header
 
 import "./globals.css";
 import { MDXProvider } from "@mdx-js/react";
 import type { Platform } from "@framework/core";
 import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
-import { mountPlatform, registerUiPanelSurfaceHost } from "@framework/platform/renderer/react";
-import { Aside, Button, Card, CardGrid, FileTree, Input, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@ui/react";
+import { mountReactApp, PlatformShell, PlatformViewWithHistory, registerUiPanelSurfaceHost } from "@framework/platform/renderer/react";
+import { Aside, Button, Card, CardGrid, FileTree, Input, NavbarFixtureSelect, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@ui/react";
 import React, { Suspense, useEffect, useState } from "react";
 import {
 	SKETCHPAD_SHELL_CONTROLLER_ID,
@@ -178,4 +178,42 @@ function SketchpadFeedbackFormHost({
 registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_DOCS_PAGE, SketchpadDocsMdxHost);
 registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_FEEDBACK_FORM, SketchpadFeedbackFormHost);
 
-void mountPlatform(ensureSketchpadPlatform);
+function SketchpadKitFixtureNavbar({ platform }: { readonly platform: Platform }): React.ReactElement | null {
+	const [tick, setTick] = useState(0);
+	useEffect(() => {
+		const ctrl = getSketchpadShellController();
+		const shellStore = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
+		if (!shellStore) return;
+		return shellStore.subscribe(() => setTick((n) => n + 1));
+	}, []);
+	void tick;
+	const ctrl = getSketchpadShellController();
+	const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
+	const openKitIds = shell?.openKitIds ?? [];
+	if (openKitIds.length === 0) return null;
+	const pathOnly = platform.uri.split("?")[0] ?? "/";
+	const activeKitId = parseSketchpadRouteScopeFromPath(pathOnly).kitId ?? openKitIds[openKitIds.length - 1]!;
+	const options = openKitIds.map((kitId) => {
+		const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
+		return { id: kitId, label: kit?.name ?? kitId };
+	});
+	return (
+		<NavbarFixtureSelect
+			id="semio.sketchpad.navbar.fixture"
+			label="Kit"
+			value={activeKitId}
+			options={options}
+			onValueChange={(kitId) => {
+				platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "navigate", { path: `/kits/${kitId}` });
+			}}
+		/>
+	);
+}
+
+void ensureSketchpadPlatform().then((platform) => {
+	mountReactApp(
+		<PlatformShell>
+			<PlatformViewWithHistory platform={platform} slotNavbarCenter={<SketchpadKitFixtureNavbar platform={platform} />} />
+		</PlatformShell>,
+	);
+});

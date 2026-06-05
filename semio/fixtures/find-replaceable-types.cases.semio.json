@@ -3,7 +3,7 @@
   "cases": [
     {
       "name": "selection_asset_returns_compatible_ids",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "selectionAsset": "nakagin-capsule-tower.copy.design.selection.semio.json",
       "expectedSelectionPieceCount": 10,
@@ -18,7 +18,7 @@
     },
     {
       "name": "parent_piece_yields_only_exact_design_matches",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "pieceNames": [
         "t_f1_b_c0"
@@ -33,7 +33,7 @@
     },
     {
       "name": "isolated_piece",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Flat",
       "designParentName": "Nakagin Capsule Tower",
       "usePieceIndex": 0,
@@ -43,7 +43,7 @@
     },
     {
       "name": "capital_piece",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "lookupTypeName": "Capital",
       "expectNonEmptyTypes": true,
@@ -55,7 +55,7 @@
     },
     {
       "name": "multiple_selected_pieces",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "pieceNames": [
         "t_f1_b_c0",
@@ -71,7 +71,7 @@
     },
     {
       "name": "empty_selection",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "pieceNames": [],
       "expectConnectorlessTypeCount": true,
@@ -79,7 +79,7 @@
     }
   ],
   "boundaryCases": {
-    "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+    "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
     "designName": "Nakagin Capsule Tower",
     "singleCapsulePieces": [
       "cs_sl2_d0_t_f9_b_c1"

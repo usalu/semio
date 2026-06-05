@@ -2,7 +2,7 @@
   "cases": [
     {
       "name": "sum_effective_floor_area",
-      "kit": "stores/metabolism/wip/initialKit/kit.semio.json",
+      "kit": "kit/dev/metabolism/wip/initialKit/kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "qualityName": "effective floor area",
       "expected": 2349.53,

@@ -128,6 +128,9 @@ export type {
   WindowLayout,
 } from "@framework/playground/core";
 
+export type { PlaygroundFixtureCatalog, PlaygroundFixtureHost, PlaygroundFixtureOption } from "@framework/playground/core";
+export { resolvePlaygroundFixtureCatalog } from "@framework/playground/core";
+
 export {
   APP_TOOL_CATEGORY_ORDER,
   AppRuntime,
@@ -1281,7 +1284,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     items.push({
         key: "panelToggles",
         content: (
-          <div className="flex min-w-0 items-stretch border border-emphasized h-medium">
+          <div className="flex min-w-0 items-stretch border border-normal h-medium">
             {displayTabs.length > 0 ? (
               <Toggle
                 id="ui.panelToggle.display"

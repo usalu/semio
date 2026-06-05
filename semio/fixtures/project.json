@@ -13,7 +13,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/fixtures",
-        "command": "bun -e \"import { assembleSplitInitialKitFromDirectory } from './script.ts'; console.log(JSON.stringify(assembleSplitInitialKitFromDirectory('stores/metabolism/wip/initialKit')).length)\""
+        "command": "bun -e \"import { assembleSplitInitialKitFromDirectory } from './script.ts'; console.log(JSON.stringify(assembleSplitInitialKitFromDirectory('kit/dev/metabolism/wip/initialKit')).length)\""
       }
     },
     "build": {

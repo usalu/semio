@@ -17,7 +17,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const MetabolismKitData = assembleSplitInitialKitFromDirectory(
-  join(dirname(fileURLToPath(import.meta.url)), "../fixtures/stores/metabolism/wip/initialKit"),
+  join(dirname(fileURLToPath(import.meta.url)), "../fixtures/kit/dev/metabolism/wip/initialKit"),
 );
 
 //#region 🔖Icons

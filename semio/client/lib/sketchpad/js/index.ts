@@ -10652,7 +10652,7 @@ export async function openSketchpadKitFromImport(
 }
 
 /** @emoji 🧪 Full metabolism WIP kit (~19MB, served from `/fixtures/` in sketchpad Vite). */
-const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH = "stores/metabolism/wip/initialKit";
+const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH = "kit/dev/metabolism/wip/initialKit";
 const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}/kit.semio.json`;
 
 /** @emoji 🧪 Default dev auto-seed kit (served from `/fixtures/` in sketchpad Vite). */
@@ -15595,7 +15595,7 @@ if (import.meta.vitest) {
 
 	describe("sketchpad dev fixtures", () => {
 		it("auto-seeds from nakagin filtered fixture URL", () => {
-			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
+			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixtures/kit/dev/metabolism/wip/initialKit/kit.semio.json");
 		});
 
 		it("preloads dev fixture on home without navigating to kit app", async () => {
@@ -15603,13 +15603,13 @@ if (import.meta.vitest) {
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const { readInitialKitFixtureFromPath } = await import("../../../../fixtures/script.ts");
-			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
+			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/kit/dev/metabolism/wip/initialKit/kit.semio.json");
 			const fixtureJson = JSON.stringify(readInitialKitFixtureFromPath(fixturePath));
 			const previousFetch = globalThis.fetch;
 			globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 				const url =
 					typeof input === "string" ? input : input instanceof URL ? input.href : input instanceof Request ? input.url : String(input);
-				if (url.includes("stores/metabolism/wip/initialKit/kit.semio.json")) {
+				if (url.includes("kit/dev/metabolism/wip/initialKit/kit.semio.json")) {
 					return new Response(fixtureJson, { status: 200, headers: { "Content-Type": "application/json" } });
 				}
 				return previousFetch(input, init);
@@ -15755,7 +15755,7 @@ if (import.meta.vitest) {
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const { readInitialKitFixtureFromPath } = await import("../../../../fixtures/script.ts");
-			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
+			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/kit/dev/metabolism/wip/initialKit/kit.semio.json");
 			const bundleKit = sketchpadKitFromDecodedBundle(readInitialKitFixtureFromPath(fixturePath));
 			const bundleType = bundleKit?.types?.find((t) => (t.representations?.length ?? 0) > 0);
 			expect(bundleType).toBeDefined();
@@ -16558,7 +16558,7 @@ if (import.meta.vitest) {
 				id: "k",
 				files: [{ id: "f1", path: "files/mesh.glb" }],
 			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/stores/metabolism/wip/initialKit/files/mesh.glb");
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/kit/dev/metabolism/wip/initialKit/files/mesh.glb");
 		});
 
 		it("maps parent-relative representation paths to /meshes", () => {

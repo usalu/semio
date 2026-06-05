@@ -144,7 +144,7 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: 
   };
 
   return (
-    <div className="h-96 border border-emphasized">
+    <div className="h-96 border border-normal">
       <VirtualFileSystem
         schema={semioKitSchema}
         rows={rows}
@@ -200,7 +200,7 @@ export const StaticRows: Story = {
       },
     ];
     return (
-      <div className="h-64 border border-emphasized">
+      <div className="h-64 border border-normal">
         <VirtualFileSystem schema={semioKitSchema} rows={rows} />
       </div>
     );

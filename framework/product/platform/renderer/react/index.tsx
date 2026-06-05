@@ -227,6 +227,7 @@ import {
   windowMeasureTileClass,
   windowMeasureToggleClass,
   windowMeasureToggleCompactClass,
+  borderNormalClass,
   WindowMeasureTreeGroup,
   WindowMeasureTreeLeaf,
   WindowMeasuresTree,
@@ -672,7 +673,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
             <input
               id={measure.id}
               type="checkbox"
-              className="border-emphasized accent-foreground size-small shrink-0 rounded border"
+              className={cn("accent-foreground size-small shrink-0 rounded border", borderNormalClass)}
               {...(measure.checked !== undefined ? { checked: measure.checked } : { defaultChecked: measure.defaultChecked })}
               onChange={(event) => measure.onCheckedChange?.(event.target.checked)}
             />
@@ -689,7 +690,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
                 type="button"
                 data-slot="window-measure-radio-item"
                 className={cn(
-                  "border-emphasized/80 hover:bg-hover-window w-full rounded border px-tiny py-tiny text-left text-xs transition-colors",
+                  "border-normal/80 hover:bg-hover-window w-full rounded border px-tiny py-tiny text-left text-xs transition-colors",
                   measure.value === item.value && "bg-active-base text-active-foreground",
                 )}
                 onClick={() => measure.onChange?.(item.value)}
@@ -2206,6 +2207,8 @@ export interface PlatformViewProps {
 	className?: string;
 	resolvedWindowKindsOverride?: UIWindowKindDefinition[];
 	slotToolbar?: React.ReactNode;
+	/** @emoji 🧪 Center navbar slot (e.g. sketchpad kit / open document picker). */
+	slotNavbarCenter?: React.ReactNode;
 	extraFooterItems?: ChromeFooterRow[];
 	augmentPanelTabs?: Partial<Record<PanelKind, SidePanelTabConfig[]>>;
 	initialPanelVisibility?: UIPanelVisibility;
@@ -3809,7 +3812,7 @@ function readBrowserUri(): string {
 /**
  * Left panel toggle for the navbar.
  * Uses the first tab icon as the toggle icon.
- * Panel toggle strip: border border-emphasized, h-medium.
+ * Panel toggle strip: normal border, h-medium.
  **/
 const UIPanelToggleGroup: React.FC<{
   items: Array<{
@@ -3820,7 +3823,7 @@ const UIPanelToggleGroup: React.FC<{
     pressed: boolean;
   }>;
 }> = ({ items }) => (
-  <div data-slot="app-panel-toggle-group" className="flex min-w-0 items-stretch border border-emphasized h-medium">
+  <div data-slot="app-panel-toggle-group" className={cn("flex min-w-0 items-stretch border h-medium", borderNormalClass)}>
     {items.map((item, index) => (
       <Toggle
         key={item.id}
@@ -3828,7 +3831,7 @@ const UIPanelToggleGroup: React.FC<{
         text={item.text}
         pressed={item.pressed}
         onPressedChange={item.onPressedChange}
-        className={cn("border-0 rounded-none shrink-0", index > 0 && "border-l")}
+        className={cn("border-0 rounded-none shrink-0", index > 0 && cn("border-l", borderNormalClass))}
         icon={item.icon}
       />
     ))}
@@ -4116,7 +4119,8 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 //#endregion 🪨ProductShell
 
 /** @emoji 🧭 Wraps {@link PlatformView} with browser History API sync and {@link useUIHistory}. */
-const PlatformViewWithHistory: React.FC<Omit<PlatformViewProps, "uri" | "onNavigate" | "canGoBack" | "onGoBack" | "canGoForward" | "onGoForward" | "canGoUp" | "onGoUp">> = ({
+/** @emoji 🧭 {@link PlatformView} with browser History API sync and {@link useUIHistory}. */
+export const PlatformViewWithHistory: React.FC<Omit<PlatformViewProps, "uri" | "onNavigate" | "canGoBack" | "onGoBack" | "canGoForward" | "onGoForward" | "canGoUp" | "onGoUp">> = ({
 	platform,
 	...rest
 }) => {
@@ -4197,6 +4201,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	initialPanelVisibility,
 	resolvedWindowKindsOverride,
 	slotToolbar,
+	slotNavbarCenter,
 	extraFooterItems,
 	augmentPanelTabs,
 }) => {
@@ -4478,9 +4483,17 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	navbarItems.push({
 		key: "breadcrumb",
-		className: "flex-1 min-w-0",
+		className: slotNavbarCenter ? "min-w-0 shrink-0 max-w-[40%]" : "flex-1 min-w-0",
 		content: <Breadcrumb className="min-w-0" items={breadcrumbItems} />,
 	});
+
+	if (slotNavbarCenter) {
+		navbarItems.push({
+			key: "fixture",
+			className: "flex-1 min-w-0 flex justify-center",
+			content: slotNavbarCenter,
+		});
+	}
 
 	navbarItems.push({
 		key: "search",
