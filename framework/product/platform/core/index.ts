@@ -324,7 +324,10 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
 		return { id: `${fallbackId}.text`, label: node.value };
 	}
 	if (node.type === "field") {
-		return { id: node.id, label: node.label, control: node };
+		if (node.child.type === "text") {
+			return { id: node.id, label: node.label, description: node.child.value };
+		}
+		return { id: node.id, label: node.label, control: node.child };
 	}
 	if (node.type === "button") {
 		return { id: node.id ?? fallbackId, label: node.label, control: node };
@@ -1491,7 +1494,7 @@ export class ModeRuntime extends BaseModeRuntime {
 	commands: SearchItemSpec[] = [];
 	findItems: FindItem[] = [];
 	onFindSelect?: (itemId: string) => void;
-	onActiveWindowChange?: (windowKindId: string) => void;
+	onActiveWindowChange?: (windowKindId: string | null) => void;
 	selection: Record<string, unknown> = {};
 	hover: Record<string, unknown> = {};
 	options: Record<string, unknown> = {};
@@ -1520,7 +1523,7 @@ export interface ResolvedAppState {
 	readonly footerItems: FooterItem[];
 	readonly findItems: FindItem[];
 	readonly onFindSelect?: (itemId: string) => void;
-	readonly onActiveWindowChange?: (windowKindId: string) => void;
+	readonly onActiveWindowChange?: (windowKindId: string | null) => void;
 	readonly selection: Record<string, unknown>;
 	readonly hover: Record<string, unknown>;
 	readonly options: Record<string, unknown>;
@@ -1559,7 +1562,7 @@ export class AppRuntime extends BaseAppRuntime {
 	commands: SearchItemSpec[] = [];
 	findItems: FindItem[] = [];
 	onFindSelect?: (itemId: string) => void;
-	onActiveWindowChange?: (windowKindId: string) => void;
+	onActiveWindowChange?: (windowKindId: string | null) => void;
 	selection: Record<string, unknown> = {};
 	hover: Record<string, unknown> = {};
 	options: Record<string, unknown> = {};

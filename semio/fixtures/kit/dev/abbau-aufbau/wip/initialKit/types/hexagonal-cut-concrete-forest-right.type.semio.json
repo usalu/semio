@@ -191,6 +191,90 @@
                 },
                 "mandatory": false,
                 "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c-p2-l-b",
+                "name": "c-p2-l-b",
+                "t": 0,
+                "point": {
+                    "x": 7.6,
+                    "y": 0,
+                    "z": 0
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -1
+                },
+                "port": {
+                    "id": "c-b",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c-p2-l-t",
+                "name": "c-p2-l-t",
+                "t": 0,
+                "point": {
+                    "x": 7.6,
+                    "y": 0,
+                    "z": 3
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 1
+                },
+                "port": {
+                    "id": "c-t",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c-p2-r-b",
+                "name": "c-p2-r-b",
+                "t": 0,
+                "point": {
+                    "x": 12.8,
+                    "y": 0,
+                    "z": 0
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 0,
+                    "z": -1
+                },
+                "port": {
+                    "id": "c-b",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "c-p2-r-t",
+                "name": "c-p2-r-t",
+                "t": 0,
+                "point": {
+                    "x": 12.8,
+                    "y": 0,
+                    "z": 3
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 1
+                },
+                "port": {
+                    "id": "c-t",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
             }
         ]
     },

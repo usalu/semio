@@ -1289,6 +1289,7 @@ export type UiTranslationSchema = {
       readonly saveLayout: UiLabelValue;
       readonly saveLayoutPlaceholder: UiLabelValue;
       readonly deleteLayout: UiLabelValue;
+      readonly emptyShell: UiLabelValue;
     };
     readonly settings: {
       readonly tab: {
@@ -1548,6 +1549,12 @@ export const uiChromeTranslationBundles = {
       saveLayout: { label: { normal: "Layout speichern", beginner: "Layout speichern" } },
       saveLayoutPlaceholder: { label: { normal: "Layoutname", beginner: "Layoutname" } },
       deleteLayout: { label: { normal: "Loeschen", beginner: "Loeschen" } },
+      emptyShell: {
+        label: {
+          normal: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
+          beginner: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
+        },
+      },
     },
     settings: {
       tab: {
@@ -1875,6 +1882,12 @@ export const uiChromeTranslationBundles = {
       saveLayout: { label: { normal: "Save layout", beginner: "Save layout" } },
       saveLayoutPlaceholder: { label: { normal: "Layout name", beginner: "Layout name" } },
       deleteLayout: { label: { normal: "Delete", beginner: "Delete" } },
+      emptyShell: {
+        label: {
+          normal: "Drag windows from Display in the navbar, or restore a saved layout.",
+          beginner: "Drag windows from Display in the navbar, or restore a saved layout.",
+        },
+      },
     },
     settings: {
       tab: {
@@ -5215,6 +5228,18 @@ function CollapsedFieldDisplay({ allowStackedOverflow = false, className, disabl
 
 // #endregion 📨Input Collapse Helpers
 
+//#region Number formatting
+
+/** 🔢 Strip IEEE-754 float artifacts for display without losing real precision. */
+export function formatNumber(value: number | string): string {
+  const n = typeof value === "string" ? Number(value) : value;
+  if (typeof value === "string" && !Number.isFinite(n)) return value;
+  if (!Number.isFinite(n)) return "";
+  return Number.parseFloat(n.toPrecision(12)).toString();
+}
+
+//#endregion Number formatting
+
 /**
  * InputProps holds the data fields for a InputProps record.
  **/
@@ -5235,7 +5260,7 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
 function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
   const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
-  const [localValue, setLocalValue] = reactHostPort.useState(externalValue?.toString() || "");
+  const [localValue, setLocalValue] = reactHostPort.useState(type === "number" ? formatNumber(externalValue ?? "") : externalValue?.toString() || "");
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const inputRef = reactHostPort.useRef<HTMLInputElement>(null);
@@ -5248,8 +5273,8 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const computedPlaceholder = mixed ? mixedLabel || "—" : placeholderId ? placeholderLabel : placeholder;
 
   reactHostPort.useEffect(() => {
-    if (!isEditing) setLocalValue(externalValue?.toString() || "");
-  }, [externalValue, isEditing]);
+    if (!isEditing) setLocalValue(type === "number" ? formatNumber(externalValue ?? "") : externalValue?.toString() || "");
+  }, [externalValue, isEditing, type]);
 
   reactHostPort.useEffect(() => {
     if (isFocused && inputRef.current) {
@@ -5303,7 +5328,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
       } else if (e.key === "Escape") {
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
-        setLocalValue(externalValue?.toString() || "");
+        setLocalValue(type === "number" ? formatNumber(externalValue ?? "") : externalValue?.toString() || "");
         transaction?.abort?.();
         (e.target as HTMLInputElement).blur();
       }
@@ -5313,7 +5338,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
 
   const inputValue = lazy ? localValue : externalValue;
 
-  const inputDisplayValue = inputValue?.toString() || "";
+  const inputDisplayValue = type === "number" && !isFocused ? formatNumber(inputValue ?? "") : inputValue?.toString() || "";
   const showCollapsedDisplay = !!showLabel && !isFocused && isCollapsibleInputType(type);
   const allowStackedOverflow = isStackedOverflowInputType(type);
 
@@ -5655,7 +5680,7 @@ function Slider({
 
   const handleValueClick = () => {
     if (!hasBeenEdited) setHasBeenEdited(true);
-    setEditValue(displayValue.toString());
+    setEditValue(formatNumber(displayValue));
     setIsEditing(true);
     transaction?.start?.();
   };
@@ -5788,7 +5813,7 @@ function Slider({
           />
         ) : (
           <span data-slot="slider-value" className="w-[28px] text-right text-xs leading-none select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
-            {displayValue}
+            {formatNumber(displayValue)}
           </span>
         )}
       </div>
@@ -5991,7 +6016,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         type="number"
         data-slot="input"
         data-stepper-input="true"
-        value={displayedValue}
+        value={isEditing ? displayedValue : formatNumber(displayedValue)}
         onChange={handleInputChange}
         onFocus={() => {
           if (!hasBeenEdited) setHasBeenEdited(true);
@@ -9793,11 +9818,16 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
   const [activeBranchIndex, setActiveBranchIndex] = reactHostPort.useState(0);
   const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
   const childItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
-  const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), getTreeItemDefaultOpen(item));
   const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
   const hasDynamicChildren = Boolean(item.getItems);
   const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
   const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
+  const hasControl = Boolean(item.control);
+  const propertyLayout = hasControl;
+  const hasNestedTreeItems = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
+  const defaultOpen = hasControl ? true : getTreeItemDefaultOpen(item);
+  const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), defaultOpen);
+  const propertyExpandable = hasControl ? hasNestedTreeItems : isExpandable;
 
   reactHostPort.useEffect(() => {
     if (treeOpenState.open && hasDynamicChildren) {
@@ -9807,8 +9837,6 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
 
   const palettePointerProps = buildPalettePointerProps(item, section);
   const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && (item.draggable || item.dragData) ? "touch-none" : undefined;
-  const hasControl = Boolean(item.control);
-  const propertyLayout = hasControl;
 
   return (
     <TreeItem
@@ -9819,10 +9847,10 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       isSelected={isRowSelected}
       isHighlighted={isRowHighlighted}
       isDragHandle={item.isDragHandle}
-      defaultOpen={getTreeItemDefaultOpen(item)}
+      defaultOpen={defaultOpen}
       open={treeOpenState.open}
       onOpenChange={treeOpenState.setOpen}
-      expandable={isExpandable}
+      expandable={propertyExpandable}
       loading={isLoading}
       isLastItem={isLastItem}
       actions={item.actions}
@@ -9842,9 +9870,9 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       onBranchChange={setActiveBranchIndex}
     >
       {hasControl ? (
-        <TreeItem>
-          <TreeContent className="min-w-0 flex-1 py-half">{item.control}</TreeContent>
-        </TreeItem>
+        <Label id={item.id} label="">
+          {item.control}
+        </Label>
       ) : null}
       {childItems.map((childItem, index) => (
         <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
@@ -16480,7 +16508,8 @@ export interface WindowTemplateDropPayload {
 export interface ModeProps {
   windows: ModeWindowDescriptor[];
   activeWindowId: string | null;
-  onActiveWindowChange?: (windowId: string) => void;
+  onActiveWindowChange?: (windowId: string | null) => void;
+  onWindowClose?: (windowId: string) => void;
   layout?: WindowLayoutNode;
   onLayoutChange?: (layout: WindowLayoutNode) => void;
   onTemplateDrop?: (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => void;
@@ -17385,7 +17414,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
 //#endregion 🧭ModeRender
 
 /** @emoji 🪟 Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
-const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, onLayoutChange, onTemplateDrop, children, className = "" }) => {
+const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, layout, onLayoutChange, onTemplateDrop, children, className = "" }) => {
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
@@ -17481,17 +17510,15 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const closeWindow = reactHostPort.useCallback(
     (windowId: string) => {
+      onWindowClose?.(windowId);
       setLayoutState((prev) => {
         const next = collapseLayout(removeWindowFromLayout(prev, windowId)) ?? { kind: "stack", children: [] };
         const remaining = modeCollectWindowIds(next);
-        if (activeWindowId === windowId) {
-          const fallback = remaining[0] ?? null;
-          if (fallback) onActiveWindowChange?.(fallback);
-        }
+        if (activeWindowId === windowId) onActiveWindowChange?.(remaining[0] ?? null);
         return next;
       });
     },
-    [activeWindowId, onActiveWindowChange],
+    [activeWindowId, onActiveWindowChange, onWindowClose],
   );
 
   const toggleMaximize = reactHostPort.useCallback((stackPath: ModeLayoutPath) => {
@@ -17762,6 +17789,9 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         })()
       : null;
 
+  const hasWindows = modeCollectWindowIds(dockOutLayout).length > 0;
+  const emptyShellNotice = resolveTranslationLabel(uiI18n.t("ui.display.emptyShell"));
+
   const body =
     children ??
     (maximizedStack ? (
@@ -17787,7 +17817,13 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           onDragOver={onTemplateDrop ? handleExternalTemplateDragOver : undefined}
           onDrop={onTemplateDrop ? handleExternalTemplateDrop : undefined}
         >
-          {body}
+          {!hasWindows ? (
+            <div data-slot="mode-empty" className="flex flex-1 items-center justify-center p-large text-center text-sm text-muted-foreground">
+              {emptyShellNotice}
+            </div>
+          ) : (
+            body
+          )}
         {previewDragState ? (
           <>
             {dropZone?.kind !== "tab" ? (
@@ -17994,6 +18030,18 @@ export { Ui };
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
+
+  describe("formatNumber", () => {
+    it("strips IEEE-754 float artifacts for display", () => {
+      expect(formatNumber(-2.5999999999999996)).toBe("-2.6");
+      expect(formatNumber(0.1 + 0.2)).toBe("0.3");
+      expect(formatNumber(42)).toBe("42");
+      expect(formatNumber(1e-7)).toBe("1e-7");
+      expect(formatNumber(NaN)).toBe("");
+      expect(formatNumber(Infinity)).toBe("");
+      expect(formatNumber("not-a-number")).toBe("not-a-number");
+    });
+  });
 
   describe("UnifiedGumball math", () => {
     it("computes axis translate, plane hit, rotate angle, scale factor, and snapping", () => {
@@ -18565,6 +18613,22 @@ if (import.meta.vitest) {
       expect(readActiveWindowTemplateDragSession()?.label).toBe("Top");
       endWindowTemplateDrag();
       expect(readActiveWindowTemplateDragSession()).toBeNull();
+    });
+
+    it("reconcileWindows drops closed windows instead of re-adding them", () => {
+      const layout: WindowLayoutNode = {
+        kind: "stack",
+        children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }],
+        activeId: "a",
+      };
+      const next = reconcileWindows(layout, ["a"]);
+      expect(modeCollectWindowIds(next)).toEqual(["a"]);
+    });
+
+    it("resolveTranslationLabel exposes the empty shell notice", () => {
+      const label = resolveTranslationLabel(uiI18n.t("ui.display.emptyShell"));
+      expect(label).toBeTruthy();
+      expect(label).toContain("Display");
     });
 
     it("insertWindowAtDropZone adds a window on root-split", () => {
@@ -19708,6 +19772,34 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="tree-row"');
       expect(markup).toContain('data-tree-row-kind="content"');
+    });
+
+    it("renders Tree data rows with inline controls in the property column", () => {
+      const markup = renderToStaticMarkup(
+        <TreeStateProvider>
+          <Tree
+            sections={[
+              {
+                id: "inspector.objects",
+                label: "Objects (1)",
+                defaultOpen: true,
+                items: [
+                  {
+                    id: "inspector.object.id",
+                    label: "Id",
+                    control: <input id="inspector.object.id.input" value="seed-left-001" readOnly />,
+                  },
+                ],
+              },
+            ]}
+          />
+        </TreeStateProvider>,
+      );
+
+      expect(markup).toContain('data-slot="tree-property-content"');
+      expect(markup).toContain('data-slot="property-control"');
+      expect(markup).toContain('id="inspector.object.id.input"');
+      expect(markup).toContain("seed-left-001");
     });
 
     it("renders property-layout tree items with a dedicated control column", () => {

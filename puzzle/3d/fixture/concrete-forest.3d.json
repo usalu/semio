@@ -44,6 +44,20 @@
           "name": "b-s-m",
           "color": "hsl(124 52% 48%)",
           "defaultCableKind": "cable.link"
+        },
+        {
+          "id": "c-b",
+          "label": "c-b",
+          "name": "c-b",
+          "color": "hsl(37 52% 48%)",
+          "defaultCableKind": "cable.link"
+        },
+        {
+          "id": "c-t",
+          "label": "c-t",
+          "name": "c-t",
+          "color": "hsl(169 52% 48%)",
+          "defaultCableKind": "cable.link"
         }
       ],
       "objects": [
@@ -150,6 +164,62 @@
                 0
               ],
               "radius": 0.36
+            },
+            {
+              "vortexKind": "c-b",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "c-t",
+              "position": [
+                0,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "c-b",
+              "position": [
+                5.2,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "c-t",
+              "position": [
+                5.2,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
             }
           ]
         },
@@ -254,6 +324,62 @@
                 -1,
                 0,
                 0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "c-b",
+              "position": [
+                7.6,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "c-t",
+              "position": [
+                7.6,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                0,
+                1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "c-b",
+              "position": [
+                12.8,
+                0,
+                0
+              ],
+              "direction": [
+                0,
+                0,
+                -1
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "c-t",
+              "position": [
+                12.8,
+                0,
+                3
+              ],
+              "direction": [
+                0,
+                0,
+                1
               ],
               "radius": 0.36
             }
@@ -372,6 +498,12 @@
         "specificity": "vortex",
         "source": "b-s-m",
         "target": "b-s-m"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "c-b",
+        "target": "c-t"
       }
     ]
   },
@@ -503,6 +635,70 @@
             1,
             0,
             0
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v7",
+          "vortexKind": "c-b",
+          "label": "c-b",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "direction": [
+            0,
+            0,
+            -1
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v8",
+          "vortexKind": "c-t",
+          "label": "c-t",
+          "position": [
+            0,
+            0,
+            3
+          ],
+          "direction": [
+            0,
+            0,
+            1
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v9",
+          "vortexKind": "c-b",
+          "label": "c-b",
+          "position": [
+            5.2,
+            0,
+            0
+          ],
+          "direction": [
+            0,
+            0,
+            -1
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v10",
+          "vortexKind": "c-t",
+          "label": "c-t",
+          "position": [
+            5.2,
+            0,
+            3
+          ],
+          "direction": [
+            0,
+            0,
+            1
           ],
           "radius": 0.36
         }

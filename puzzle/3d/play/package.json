@@ -16,7 +16,8 @@
   "dependencies": {
     "@framework/playground/core": "workspace:*",
     "@infinite/world/r3f": "workspace:*",
-    "@puzzle/3d/react": "workspace:*"
+    "@puzzle/3d/react": "workspace:*",
+    "@ui/react": "workspace:*"
   },
   "devDependencies": {
     "@framework/playground/renderer/react": "workspace:*",

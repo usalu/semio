@@ -55,6 +55,9 @@ import {
   WORLD_LOD_GRID_SMALL_MAX_LOD,
   WORLD_LOD_SLIDER_MAX,
   WORLD_LOD_SLIDER_MIN,
+  WORLD_MESH_BORDER_CSS,
+  WORLD_MESH_OUTLINE_USER_DATA_KEY,
+  applyWorldMeshEdgeBorders,
   type LodContextValue,
   type LodGridLayer,
 } from "@infinite/world/r3f";
@@ -85,7 +88,6 @@ const {
   BoxGeometry,
   BufferGeometry,
   Color,
-  EdgesGeometry,
   Euler,
   Float32BufferAttribute,
   GridHelper,
@@ -616,6 +618,7 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
   derived = { ...derived, revision: 1 };
   const globalListeners = new Set<() => void>();
   const objectListeners = new Map<string, Set<() => void>>();
+  const objectVortexRevealListeners = new Map<string, Set<() => void>>();
   const vortexListeners = new Map<string, Set<() => void>>();
   const attractionListeners = new Map<string, Set<() => void>>();
   const attractionBulkListeners = new Set<() => void>();
@@ -653,11 +656,17 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
     isVortexSelected(fullId: string): boolean {
       return derived.vortexIdSet.has(fullId);
     },
+    isObjectVortexRevealSelected(objectId: string): boolean {
+      return derived.objectIdSet.has(objectId) || derived.vortexOwnerObjectIdSet.has(objectId);
+    },
     isAttractionSelected(attractionId: string): boolean {
       return derived.attractionIdSet.has(attractionId);
     },
     subscribeObject(objectId: string, listener: () => void): () => void {
       return addPerIdListener(objectListeners, objectId, listener);
+    },
+    subscribeObjectVortexReveal(objectId: string, listener: () => void): () => void {
+      return addPerIdListener(objectVortexRevealListeners, objectId, listener);
     },
     subscribeVortex(fullId: string, listener: () => void): () => void {
       return addPerIdListener(vortexListeners, fullId, listener);
@@ -698,6 +707,14 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
         notifyPerIdListeners(objectListeners, selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet));
         notifyPerIdListeners(vortexListeners, selectionSetSymmetricDifference(prev.vortexIdSet, derived.vortexIdSet));
       }
+      const vortexRevealChanged = new Set<string>();
+      for (const id of selectionSetSymmetricDifference(prev.objectIdSet, derived.objectIdSet)) {
+        vortexRevealChanged.add(id);
+      }
+      for (const id of selectionSetSymmetricDifference(prev.vortexOwnerObjectIdSet, derived.vortexOwnerObjectIdSet)) {
+        vortexRevealChanged.add(id);
+      }
+      notifyPerIdListeners(objectVortexRevealListeners, vortexRevealChanged);
       if (!selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)) {
         notifyPerIdListeners(attractionListeners, selectionSetSymmetricDifference(prev.attractionIdSet, derived.attractionIdSet));
         for (const listener of attractionBulkListeners) {
@@ -752,6 +769,32 @@ export function useObjectSelected(objectId: string): boolean {
     () => store.isObjectSelected(objectId),
     () => store.isObjectSelected(objectId),
   );
+}
+
+/** @emoji 🌀 True when vortex chrome should show for a parent object (hover or selection on object or its vortices). */
+export function objectVorticesRevealed(objectId: string, hoverTarget: HoverTarget | null, selectionRevealSelected: boolean): boolean {
+  if (selectionRevealSelected) {
+    return true;
+  }
+  if (hoverTarget?.kind === "object" && hoverTarget.id === objectId) {
+    return true;
+  }
+  if (hoverTarget?.kind === "vortex" && parseVortexFullId(hoverTarget.fullId).objectId === objectId) {
+    return true;
+  }
+  return false;
+}
+
+/** @emoji 🌀 Subscribes to hover + selection state that reveals an object's vortices. */
+export function useObjectVorticesRevealed(objectId: string): boolean {
+  const store = useSelectionSnapshotStore();
+  const { hoverTarget } = useRegistryHover();
+  const selectionRevealSelected = reactHostPort.useSyncExternalStore(
+    (onStoreChange) => store.subscribeObjectVortexReveal(objectId, onStoreChange),
+    () => store.isObjectVortexRevealSelected(objectId),
+    () => store.isObjectVortexRevealSelected(objectId),
+  );
+  return objectVorticesRevealed(objectId, hoverTarget, selectionRevealSelected);
 }
 
 /** @emoji 🎯 O(1) vortex highlight membership. */
@@ -2948,6 +2991,37 @@ function normalizeVec3Cad(v: Vec3): Vec3 {
   return [v[0] / len, v[1] / len, v[2] / len] as Vec3;
 }
 
+/** @emoji · Dot product of two CAD vectors. */
+function vec3Dot(a: Vec3, b: Vec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+/** @emoji ✕ Cross product of two CAD vectors. */
+function vec3Cross(a: Vec3, b: Vec3): Vec3 {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]] as Vec3;
+}
+
+const BRUSH_PLACEMENT_PARALLEL_TOLERANCE = 1e-6;
+
+/** @emoji 🔄 180° quaternion about a unit axis (w = 0). */
+function quaternionFrom180DegreeAxis(axis: Vec3): Quat {
+  const unit = normalizeVec3Cad(axis);
+  return [unit[0], unit[1], unit[2], 0];
+}
+
+/** @emoji 🧭 Deterministic orientation when source and target vortex directions are collinear (mirrors Rhino {@link ComputeChildPlane}). */
+function antiParallelBrushOrientation(targetDir: Vec3): Quat {
+  const zAxis: Vec3 = [0, 0, 1];
+  if (Math.abs(targetDir[2]) < BRUSH_PLACEMENT_PARALLEL_TOLERANCE) {
+    return quaternionFrom180DegreeAxis(zAxis);
+  }
+  const axis = vec3Cross(zAxis, targetDir);
+  if (Math.hypot(axis[0], axis[1], axis[2]) < BRUSH_PLACEMENT_PARALLEL_TOLERANCE) {
+    return quaternionFrom180DegreeAxis([1, 0, 0]);
+  }
+  return quaternionFrom180DegreeAxis(axis);
+}
+
 function vec3ScaleCad(v: Vec3, scale: number | Vec3 | undefined): Vec3 {
   if (scale === undefined) {
     return v;
@@ -3133,16 +3207,24 @@ export function computeBrushPlacementPose(args: {
   readonly useHostOrientation?: boolean;
 }): { readonly origin: Vec3; readonly orientation: Quat } {
   const scaledLocal = vec3ScaleCad(args.sourceLocalPosition, args.scale);
-  if (args.useHostOrientation && args.referenceOrientationCad) {
-    const orientation = args.referenceOrientationCad;
-    const origin = vec3Sub(args.targetWorldPositionCad, quatRotateVec(orientation, scaledLocal));
-    return { origin, orientation };
-  }
   const localDir = normalizeVec3Cad(args.sourceLocalDirection);
   const targetDir = normalizeVec3Cad(args.targetWorldDirectionCad);
+  if (args.useHostOrientation && args.referenceOrientationCad) {
+    const hostOrientation = args.referenceOrientationCad;
+    const worldSourceDir = normalizeVec3Cad(quatRotateVec(hostOrientation, localDir));
+    if (vec3Dot(worldSourceDir, targetDir) < -BRUSH_PLACEMENT_PARALLEL_TOLERANCE) {
+      const origin = vec3Sub(args.targetWorldPositionCad, quatRotateVec(hostOrientation, scaledLocal));
+      return { origin, orientation: hostOrientation };
+    }
+  }
   const desiredWorldDir = negateVec3Cad(targetDir);
-  const qThree = new Quaternion().setFromUnitVectors(new Vector3(...localDir), new Vector3(...desiredWorldDir));
-  const orientation: Quat = [qThree.x, qThree.y, qThree.z, qThree.w];
+  let orientation: Quat;
+  if (vec3Dot(localDir, desiredWorldDir) < -1 + BRUSH_PLACEMENT_PARALLEL_TOLERANCE) {
+    orientation = antiParallelBrushOrientation(targetDir);
+  } else {
+    const qThree = new Quaternion().setFromUnitVectors(new Vector3(...localDir), new Vector3(...desiredWorldDir));
+    orientation = [qThree.x, qThree.y, qThree.z, qThree.w];
+  }
   const origin = vec3Sub(args.targetWorldPositionCad, quatRotateVec(orientation, scaledLocal));
   return { origin, orientation };
 }
@@ -3815,13 +3897,11 @@ const CSS_HIGHLIGHTED_LINE = "var(--color-secondary)";
 const CSS_HOVERED_MESH = "var(--color-hover-panel)";
 const CSS_HOVERED_LINE = "var(--color-hover-base)";
 const CSS_NEUTRAL_MESH = "var(--color-panel)";
-const CSS_NEUTRAL_LINE = "var(--color-emphasized)";
+const CSS_NEUTRAL_LINE = WORLD_MESH_BORDER_CSS;
 const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
 const CSS_DISABLED_LINE = "var(--color-muted-foreground)";
 const CSS_ATTRACTION_ENDPOINT_LINE = "var(--color-muted-foreground)";
 const CSS_ATTRACTION_LINE = "var(--color-accent)";
-
-const MESH_OUTLINE_USER_DATA_KEY = "__elementsMeshBodyOutline";
 
 interface MeshStyleColors {
   readonly meshColor: string;
@@ -3836,7 +3916,7 @@ const meshStyleColorCache = new Map<Exclude<MeshStyleKind, "original">, MeshStyl
 const MESH_STYLE_HEADLESS: Record<Exclude<MeshStyleKind, "original">, MeshStyleColors> = {
   neutral: {
     meshColor: "#eeeadb",
-    lineColor: "#001117",
+    lineColor: "#808080",
     emissiveColor: "#000000",
     emissiveIntensity: 0,
     opacity: 1,
@@ -3974,13 +4054,6 @@ function createStyledLineMaterial(color: string, state: MeshStyleColors): LineBa
   return mat;
 }
 
-function createMeshOutline(geometry: BufferGeometry, color: string, state: MeshStyleColors): LineSegments {
-  const outline = new LineSegments(new EdgesGeometry(geometry), createStyledLineMaterial(color, state));
-  outline.userData[MESH_OUTLINE_USER_DATA_KEY] = true;
-  outline.scale.setScalar(1.001);
-  return outline;
-}
-
 function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind, edgeOutlines = true): void {
   const colors = meshStyleColors(style);
   if (!colors) {
@@ -3994,14 +4067,10 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind, edgeOutl
       } else {
         object.material = meshMaterial;
       }
-      const geometry = object.geometry;
-      if (edgeOutlines && geometry && !object.children.some((c) => c.userData[MESH_OUTLINE_USER_DATA_KEY])) {
-        object.add(createMeshOutline(geometry, colors.lineColor, colors));
-      }
       return;
     }
     if (object instanceof ThreeLine || object instanceof LineSegments) {
-      if (object.userData[MESH_OUTLINE_USER_DATA_KEY]) {
+      if (object.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY]) {
         return;
       }
       object.material = createStyledLineMaterial(colors.lineColor, colors);
@@ -4016,6 +4085,9 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind, edgeOutl
       });
     }
   });
+  if (edgeOutlines) {
+    applyWorldMeshEdgeBorders(root);
+  }
 }
 
 /** @emoji ­ƒÄ¿ Chooses the effective mesh style from explicit prop and interaction flags. */
@@ -4826,7 +4898,7 @@ export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
     return null;
   }
   const style = props.style ?? DEFAULT_MESH_STYLE;
-  const renderRoot = usePooledStyledMesh(props.meshUrl, style, props.showOutline === true);
+  const renderRoot = usePooledStyledMesh(props.meshUrl, style, true);
   if (!renderRoot) {
     return null;
   }
@@ -5324,7 +5396,10 @@ export const Vortex = reactHostPort.memo(function Vortex(
     const next = vortexLodVisual(lod, lingerRef.current, vortexMeshByLodRef.current, vortexMeshUrlRef.current);
     setLodVisual((prev) => (vortexLodVisualEqual(prev, next) ? prev : next));
   });
-  const drawVortexBody = trackVortexLod ? lodVisual.drawVortexBody || linger : lodVortexPrimaryVisible(lodCtx.lod) || linger;
+  const objectRevealed = useObjectVorticesRevealed(props.objectId);
+  const showVortexChrome = objectRevealed || linger;
+  const baseDrawVortexBody = trackVortexLod ? lodVisual.drawVortexBody : lodVortexPrimaryVisible(lodCtx.lod);
+  const drawVortexBody = showVortexChrome && (baseDrawVortexBody || linger);
   const meshUrl = trackVortexLod ? lodVisual.meshUrl : pickClosestMeshUrl(props.vortexMeshByLod, lodCtx.lod, props.vortexMeshUrl);
 
   const positionThree = reactHostPort.useMemo(() => cadObjectLocalToThreeGroupLocal(props.position, props.objectOrigin, props.objectOrientation), [props.position, props.objectOrigin, props.objectOrientation]);
@@ -5348,7 +5423,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
     [fullId, reg],
   );
 
-  const vis = props.visible !== false;
+  const vis = props.visible !== false && showVortexChrome;
   const showDirection = vis && isVec3(props.direction);
   return (
     <group ref={bindRoot} position={positionThree} userData={{ puzzle3dVortexFullId: fullId, vortexKind: props.vortexKind }} data-puzzle3d-vortex={fullId} visible={vis} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onVortexClick}>
@@ -5364,10 +5439,12 @@ export const Vortex = reactHostPort.memo(function Vortex(
       ) : drawVortexBody ? (
         <VortexFallbackMesh fullId={fullId} radius={r} highlight={highlight} hovered={vortexPointerHovered} {...vortexPointerHoverHandlers} />
       ) : null}
-      <mesh userData={{ puzzle3dVortexFullId: fullId }} raycast={vortexPickRaycast} renderOrder={-1} {...vortexPointerHoverHandlers}>
-        <sphereGeometry args={[r * 1.15, 12, 12]} />
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
-      </mesh>
+      {showVortexChrome ? (
+        <mesh userData={{ puzzle3dVortexFullId: fullId }} raycast={vortexPickRaycast} renderOrder={-1} {...vortexPointerHoverHandlers}>
+          <sphereGeometry args={[r * 1.15, 12, 12]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
+        </mesh>
+      ) : null}
     </group>
   );
 });
@@ -9399,6 +9476,21 @@ if (import.meta.vitest) {
       expect(store.isVortexSelected("parent:v1")).toBe(true);
       expect(store.getPrimaryObjectId()).toBe("parent");
     });
+    it("reveals vortices when parent object or child vortex is selected", () => {
+      const store = createSelectionSnapshotStore();
+      expect(store.isObjectVortexRevealSelected("tower")).toBe(false);
+      store.setSnapshot({ objectIds: ["tower"], vortexIds: [], attractionIds: [] });
+      expect(store.isObjectVortexRevealSelected("tower")).toBe(true);
+      store.setSnapshot({ objectIds: [], vortexIds: ["tower:link"], attractionIds: [] });
+      expect(store.isObjectVortexRevealSelected("tower")).toBe(true);
+      let revealCount = 0;
+      const unsub = store.subscribeObjectVortexReveal("tower", () => {
+        revealCount += 1;
+      });
+      store.setSnapshot({ objectIds: ["tower"], vortexIds: [], attractionIds: [] });
+      expect(revealCount).toBe(1);
+      unsub();
+    });
     it("notifies attraction bulk listeners only when attraction membership changes", () => {
       const store = createSelectionSnapshotStore();
       let bulkCount = 0;
@@ -9542,6 +9634,13 @@ if (import.meta.vitest) {
       expect(puzzle3dHoverTargetsEqual({ kind: "object", id: "a" }, { kind: "object", id: "b" })).toBe(false);
       expect(puzzle3dHoverTargetsEqual({ kind: "vortex", fullId: "o:v" }, { kind: "object", id: "o" })).toBe(false);
       expect(puzzle3dHoverTargetsEqual({ kind: "attraction", id: "e1" }, { kind: "attraction", id: "e1" })).toBe(true);
+    });
+    it("reveals vortices only when parent object is hovered or selected", () => {
+      expect(objectVorticesRevealed("tower", null, false)).toBe(false);
+      expect(objectVorticesRevealed("tower", { kind: "object", id: "tower" }, false)).toBe(true);
+      expect(objectVorticesRevealed("tower", { kind: "vortex", fullId: "tower:link" }, false)).toBe(true);
+      expect(objectVorticesRevealed("tower", { kind: "object", id: "other" }, false)).toBe(false);
+      expect(objectVorticesRevealed("tower", null, true)).toBe(true);
     });
 
     it("orders disabled, selected, highlighted, hovered, then default", () => {
@@ -10383,6 +10482,134 @@ if (import.meta.vitest) {
       expect(world!.direction[0]).toBeCloseTo(0, 4);
       expect(world!.direction[1]).toBeCloseTo(-1, 4);
       expect(world!.direction[2]).toBeCloseTo(0, 4);
+    });
+    it("computeBrushPlacementPose keeps upright when horizontal vortex directions are collinear", () => {
+      const targetPos: Vec3 = [5, 10, 15];
+      const targetDir: Vec3 = [1, 0, 0];
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [2, 0, 0],
+        sourceLocalDirection: [1, 0, 0],
+        targetWorldPositionCad: targetPos,
+        targetWorldDirectionCad: targetDir,
+      });
+      const world = vortexWorldCadFromObject(
+        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [2, 0, 0], direction: [1, 0, 0] }] },
+        0,
+      );
+      expect(world).not.toBeNull();
+      expect(world!.position[0]).toBeCloseTo(targetPos[0], 4);
+      expect(world!.position[1]).toBeCloseTo(targetPos[1], 4);
+      expect(world!.position[2]).toBeCloseTo(targetPos[2], 4);
+      expect(world!.direction[0]).toBeCloseTo(-1, 4);
+      expect(world!.direction[1]).toBeCloseTo(0, 4);
+      expect(world!.direction[2]).toBeCloseTo(0, 4);
+      const worldUp = quatRotateVec(pose.orientation, [0, 0, 1]);
+      expect(worldUp[0]).toBeCloseTo(0, 4);
+      expect(worldUp[1]).toBeCloseTo(0, 4);
+      expect(worldUp[2]).toBeCloseTo(1, 4);
+    });
+    it("computeBrushPlacementPose flips predictably when vertical vortex directions are collinear", () => {
+      const targetPos: Vec3 = [0, 0, 20];
+      const targetDir: Vec3 = [0, 0, 1];
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [0, 0, 1],
+        sourceLocalDirection: [0, 0, 1],
+        targetWorldPositionCad: targetPos,
+        targetWorldDirectionCad: targetDir,
+      });
+      const world = vortexWorldCadFromObject(
+        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [0, 0, 1], direction: [0, 0, 1] }] },
+        0,
+      );
+      expect(world).not.toBeNull();
+      expect(world!.position[0]).toBeCloseTo(targetPos[0], 4);
+      expect(world!.position[1]).toBeCloseTo(targetPos[1], 4);
+      expect(world!.position[2]).toBeCloseTo(targetPos[2], 4);
+      expect(world!.direction[0]).toBeCloseTo(0, 4);
+      expect(world!.direction[1]).toBeCloseTo(0, 4);
+      expect(world!.direction[2]).toBeCloseTo(-1, 4);
+      const worldUp = quatRotateVec(pose.orientation, [0, 0, 1]);
+      expect(worldUp[0]).toBeCloseTo(0, 4);
+      expect(worldUp[1]).toBeCloseTo(0, 4);
+      expect(worldUp[2]).toBeCloseTo(-1, 4);
+    });
+    it("computeBrushPlacementPose aligns directions when same-kind host orientation would not oppose", () => {
+      const hostOrientation: Quat = [0, 0, 0, 1];
+      const targetPos: Vec3 = [0, 0, 10];
+      const targetDir: Vec3 = [1, 0, 0];
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [0, 0, 0],
+        sourceLocalDirection: [1, 0, 0],
+        targetWorldPositionCad: targetPos,
+        targetWorldDirectionCad: targetDir,
+        referenceOrientationCad: hostOrientation,
+        useHostOrientation: true,
+      });
+      const world = vortexWorldCadFromObject(
+        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [0, 0, 0], direction: [1, 0, 0] }] },
+        0,
+      );
+      expect(world).not.toBeNull();
+      expect(world!.direction[0]).toBeCloseTo(-1, 4);
+      expect(world!.direction[1]).toBeCloseTo(0, 4);
+      expect(world!.direction[2]).toBeCloseTo(0, 4);
+      expect(vec3Dot(world!.direction, targetDir)).toBeLessThan(-0.99);
+    });
+    it("computeBrushPlacementPose keeps host orientation when same-kind ports already oppose", () => {
+      const hostOrientation: Quat = [0, 0, 0.7071067811865475, 0.7071067811865475];
+      const targetPos: Vec3 = [3, 4, 5];
+      const targetDir = normalizeVec3Cad(quatRotateVec(hostOrientation, [-1, 0, 0]));
+      const pose = computeBrushPlacementPose({
+        sourceLocalPosition: [2, 0, 0],
+        sourceLocalDirection: [1, 0, 0],
+        targetWorldPositionCad: targetPos,
+        targetWorldDirectionCad: targetDir,
+        referenceOrientationCad: hostOrientation,
+        useHostOrientation: true,
+      });
+      expect(pose.orientation[0]).toBeCloseTo(hostOrientation[0], 4);
+      expect(pose.orientation[1]).toBeCloseTo(hostOrientation[1], 4);
+      expect(pose.orientation[2]).toBeCloseTo(hostOrientation[2], 4);
+      expect(pose.orientation[3]).toBeCloseTo(hostOrientation[3], 4);
+      const world = vortexWorldCadFromObject(
+        { origin: pose.origin, orientation: pose.orientation, vortices: [{ id: "v0", position: [2, 0, 0], direction: [1, 0, 0] }] },
+        0,
+      );
+      expect(vec3Dot(world!.direction, targetDir)).toBeLessThan(-0.99);
+    });
+    it("brushPreviewFromCandidate always places opposed vortex directions", () => {
+      const target: AttractionVortexContext = { objectId: "host", objectKind: "KindA", vortexKind: "port-a" };
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "KindA",
+            meshUrl: "/a.glb",
+            vortices: [
+              { vortexKind: "port-a", position: [0, 0, 0], direction: [1, 0, 0] },
+              { vortexKind: "port-b", position: [0, 0, 0], direction: [-1, 0, 0] },
+            ],
+          },
+        ],
+      };
+      const preview = brushPreviewFromCandidate({
+        targetVortexFullId: "host:v0",
+        candidate: { objectKindId: "KindA", sourceVortexIndex: 0 },
+        target,
+        targetWorldPositionCad: [0, 0, 0],
+        targetWorldDirectionCad: [1, 0, 0],
+        referenceOrientationCad: [0, 0, 0, 1],
+        kindCatalogs: catalogs,
+      });
+      expect(preview).not.toBeNull();
+      const world = vortexWorldCadFromObject(
+        {
+          origin: preview!.origin,
+          orientation: preview!.orientation,
+          vortices: [{ id: "v0", position: [0, 0, 0], direction: [1, 0, 0] }],
+        },
+        0,
+      );
+      expect(vec3Dot(world!.direction, [1, 0, 0])).toBeLessThan(-0.99);
     });
     it("buildPuzzle3dPlayEngagement always includes command input and tool possibles", () => {
       const spec = buildPuzzle3dPlayEngagement({

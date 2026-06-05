@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🌍 `@infinite/world/r3f` — generic r3f infinite-world engine: layers, chunking, view radius, pooling, precision, LOD/grid. */
+/** @emoji 🌍 `@infinite/world/r3f` — generic r3f infinite-world engine: layers, chunking, view radius, pooling, precision, LOD/grid, mesh borders. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -12,9 +12,14 @@ const useThree = sceneHostPort.fiber.useThree;
 const OrbitControls = sceneHostPort.drei.OrbitControls;
 const PerspectiveCamera = sceneHostPort.drei.PerspectiveCamera;
 const {
+  BufferGeometry,
+  Color,
+  EdgesGeometry,
   GridHelper,
   LineBasicMaterial,
+  LineSegments,
   Matrix4,
+  Mesh,
   MOUSE,
   Object3D,
   PerspectiveCamera: ThreePerspectiveCamera,
@@ -144,6 +149,104 @@ export function gridPlacementAnchorCad(controlsTargetThree: Vector3 | null | und
   return [orbitCad[0], orbitCad[1], datum[2]];
 }
 // #endregion 🧭Precision
+
+// #region 🎨MeshBorder
+/** @emoji 📏 UI normal border token for infinite-world mesh edge strokes ({@link borderNormalClass}). */
+export const WORLD_MESH_BORDER_CSS = "var(--border-normal-color)";
+
+/** @emoji 📏 Marks {@link LineSegments} added by {@link applyWorldMeshEdgeBorders}. */
+export const WORLD_MESH_OUTLINE_USER_DATA_KEY = "__worldMeshBorderOutline";
+
+const WORLD_MESH_BORDER_HEADLESS = "#808080";
+
+let worldMeshBorderColorCache: string | null = null;
+
+function probeWorldCssColor(property: "color" | "backgroundColor", expr: string): string {
+  if (typeof document === "undefined") {
+    return "";
+  }
+  const el = document.createElement("span");
+  const key = property === "color" ? "color" : "background-color";
+  el.setAttribute("style", `${key}:${expr};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
+  if (document.documentElement.classList.contains("dark")) {
+    el.classList.add("dark");
+  }
+  document.documentElement.appendChild(el);
+  const out = getComputedStyle(el)[property];
+  el.remove();
+  return out;
+}
+
+function cssColorForThree(css: string): string {
+  if (!css) {
+    return css;
+  }
+  if (!/^(oklab|oklch|lab|lch|color)\(/iu.test(css)) {
+    return css;
+  }
+  if (typeof document === "undefined") {
+    return WORLD_MESH_BORDER_HEADLESS;
+  }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return WORLD_MESH_BORDER_HEADLESS;
+  }
+  ctx.fillStyle = "#000000";
+  ctx.fillStyle = css;
+  const converted = ctx.fillStyle;
+  if (/^(oklab|oklch|lab|lch|color)\(/iu.test(converted)) {
+    return WORLD_MESH_BORDER_HEADLESS;
+  }
+  return converted;
+}
+
+function resolveWorldMeshBorderCssColor(): string {
+  const raw = probeWorldCssColor("color", WORLD_MESH_BORDER_CSS);
+  if (!raw || raw === "rgba(0, 0, 0, 0)") {
+    return WORLD_MESH_BORDER_HEADLESS;
+  }
+  return cssColorForThree(raw);
+}
+
+/** @emoji 📏 Resolves {@link WORLD_MESH_BORDER_CSS} to an sRGB color string for Three.js materials. */
+export function worldMeshBorderColor(): string {
+  if (worldMeshBorderColorCache) {
+    return worldMeshBorderColorCache;
+  }
+  worldMeshBorderColorCache = resolveWorldMeshBorderCssColor();
+  return worldMeshBorderColorCache;
+}
+
+/** @emoji 🔄 Clears cached mesh border color (tests or theme switches). */
+export function resetWorldMeshBorderColorCache(): void {
+  worldMeshBorderColorCache = null;
+}
+
+/** @emoji 📏 Edge-segment outline for one mesh geometry using the UI normal border color. */
+export function createWorldMeshEdgeOutline(geometry: BufferGeometry, borderColor?: string): LineSegments {
+  const color = borderColor ?? worldMeshBorderColor();
+  const outline = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: new Color(cssColorForThree(color)) }));
+  outline.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY] = true;
+  outline.scale.setScalar(1.001);
+  return outline;
+}
+
+/** @emoji 📏 Adds normal-border edge outlines to every mesh under `root` (idempotent per mesh). */
+export function applyWorldMeshEdgeBorders(root: Object3D, borderColor?: string): void {
+  const color = borderColor ?? worldMeshBorderColor();
+  root.traverse((object) => {
+    if (!(object instanceof Mesh)) {
+      return;
+    }
+    const geometry = object.geometry;
+    if (!geometry || object.children.some((child) => child.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY])) {
+      return;
+    }
+    object.add(createWorldMeshEdgeOutline(geometry, color));
+  });
+}
+// #endregion 🎨MeshBorder
 
 // #region 🧱Chunking
 /** @emoji 🧱 Stable chunk bucket key for a world-space origin. */
@@ -1112,6 +1215,29 @@ if (import.meta.vitest) {
         expect(child.raycast).toBe(worldRaycastNone);
       });
       expect(childCount).toBeGreaterThan(0);
+    });
+  });
+
+  describe("worldMeshBorderColor", () => {
+    it("returns an srgb-compatible color", () => {
+      resetWorldMeshBorderColorCache();
+      const color = worldMeshBorderColor();
+      expect(color.length).toBeGreaterThan(0);
+      expect(color).not.toMatch(/^oklab\(/iu);
+    });
+  });
+
+  describe("applyWorldMeshEdgeBorders", () => {
+    it("adds one outline child per mesh", () => {
+      const { BoxGeometry } = sceneHostPort.three;
+      const root = new Object3D();
+      const mesh = new Mesh(new BoxGeometry(1, 1, 1), new LineBasicMaterial());
+      root.add(mesh);
+      applyWorldMeshEdgeBorders(root, "#336699");
+      expect(mesh.children).toHaveLength(1);
+      expect(mesh.children[0]?.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY]).toBe(true);
+      applyWorldMeshEdgeBorders(root, "#336699");
+      expect(mesh.children).toHaveLength(1);
     });
   });
 }

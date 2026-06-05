@@ -183,7 +183,9 @@ import {
 	Window,
 	App,
 	Mode,
+	collapseLayout,
 	insertWindowAtDropZone,
+	removeWindowFromLayout,
 	SEMIO_WINDOW_TEMPLATE_MIME,
 	beginWindowTemplateDrag,
 	endWindowTemplateDrag,
@@ -1501,7 +1503,7 @@ export const ShellModeCanvas: React.FC<{
   namedLayoutStore: NamedLayoutStore;
   commandBus: CommandBus;
   activeWindowId: string | null;
-  onActiveWindowChange?: (windowId: string) => void;
+  onActiveWindowChange?: (windowId: string | null) => void;
   onDisplayHostReady?: (host: DisplayHostApi) => void;
 }> = reactHostPort.memo(function ShellModeCanvas({
   windowKinds,
@@ -1577,6 +1579,18 @@ export const ShellModeCanvas: React.FC<{
     liveFrameworkLayoutRef.current = shellLayoutToFrameworkLayout(layout, instancesRef.current);
   }, []);
 
+  const handleWindowClose = reactHostPort.useCallback(
+    (windowId: string) => {
+      setInstances((prev) => {
+        const next = prev.filter((instance) => instance.instanceId !== windowId);
+        if (activeWindowId === windowId) onActiveWindowChange?.(next[0]?.instanceId ?? null);
+        return next;
+      });
+      setShellLayout((prev) => collapseLayout(removeWindowFromLayout(prev, windowId)) ?? { kind: "stack", children: [] });
+    },
+    [activeWindowId, onActiveWindowChange],
+  );
+
   const handleTemplateDrop = reactHostPort.useCallback(
     (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
       const kind = windowKindCatalog.find((entry) => entry.id === payload.windowKindId);
@@ -1641,6 +1655,7 @@ export const ShellModeCanvas: React.FC<{
       layout={shellLayout}
       activeWindowId={activeWindowId}
       onActiveWindowChange={onActiveWindowChange}
+      onWindowClose={handleWindowClose}
       onLayoutChange={handleLayoutChange}
       onTemplateDrop={handleTemplateDrop}
       className="h-full w-full"
@@ -3194,6 +3209,15 @@ if (import.meta.vitest) {
 			});
 			expect(overviewA).not.toBe(overviewB);
 		});
+
+		it("removeWindowFromLayout and collapseLayout produce an empty stack for the last closed window", () => {
+			const layout: ShellWindowLayoutNode = {
+				kind: "stack",
+				children: [{ kind: "window", id: "gis-map-main" }],
+			};
+			const next = collapseLayout(removeWindowFromLayout(layout, "gis-map-main")) ?? { kind: "stack", children: [] };
+			expect(next).toEqual({ kind: "stack", children: [] });
+		});
 	});
 
 	describe("display windows tree", () => {
@@ -4362,9 +4386,9 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	}, [activeApp, activeWindowKindsKey, activeWindowLayoutKey]);
 
 	const handleActiveWindowChange = reactHostPort.useCallback(
-		(windowKindId: string) => {
+		(windowKindId: string | null) => {
 			setActiveWindowKindId(windowKindId);
-			activeApp.onActiveWindowChange?.(windowKindId);
+			if (windowKindId) activeApp.onActiveWindowChange?.(windowKindId);
 		},
 		[activeApp],
 	);

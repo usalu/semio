@@ -2,7 +2,7 @@
 // 💻 puzzle/3d/play/index.ts — Puzzle 3D play on `@framework/playground/core`: Nakagin fixture, LOD measures, selection/filter tools (no React).
 // #endregion 🧲Header
 
-import { DEFAULT_GUMBALL_CONFIG, bootstrapElementsSurfaceChromeDocument, type GumballConfig } from "@ui/react";
+import { DEFAULT_GUMBALL_CONFIG, bootstrapElementsSurfaceChromeDocument, formatNumber, type GumballConfig } from "@ui/react";
 import {
   AppRuntime,
   CommandBus,
@@ -114,6 +114,7 @@ import {
   resolveObjectKindMeshUrl,
   isLoadableMeshUrl,
   brushCompatibleCandidates,
+  kindsCompatible,
   publishPuzzle3dBrushCandidateAccept,
   type BrushCompatibleCandidate,
 } from "../react/index.tsx";
@@ -2426,7 +2427,7 @@ export function buildPuzzle3dPlayInspectorBody(ctx: WindowBodyViewContext): UiTr
           label: "Position",
           child: {
             type: "text",
-            value: positionUniform ? `[${positions[0]!.join(", ")}]` : "Mixed",
+            value: positionUniform ? `[${positions[0]!.map(formatNumber).join(", ")}]` : "Mixed",
           },
         },
         {
@@ -2691,7 +2692,7 @@ if (import.meta.vitest) {
       expect(third.activeFixtureId).toBe(PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID);
     });
 
-    it("parses concrete forest fixture with mutually compatible vortex kinds", () => {
+    it("parses concrete forest fixture with b and c vortex compatibility rules", () => {
       const f = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(f?.meta as Record<string, unknown> | undefined);
@@ -2700,6 +2701,11 @@ if (import.meta.vitest) {
         "Hexagonal Cut Concrete Forest Left",
         "Hexagonal Cut Concrete Forest Right",
       ]);
+      expect(kindsCompatible("b-l", "b-s-m", compat)).toBe(true);
+      expect(kindsCompatible("b-l", "c-b", compat)).toBe(false);
+      expect(kindsCompatible("c-b", "c-t", compat)).toBe(true);
+      expect(kindsCompatible("c-b", "c-b", compat)).toBe(false);
+      expect(kindsCompatible("c-t", "c-t", compat)).toBe(false);
       const target: AttractionVortexContext = {
         objectId: "seed-left-001",
         objectKind: "Hexagonal Cut Concrete Forest Left",
@@ -3296,6 +3302,30 @@ if (import.meta.vitest) {
       const objectsOnly = puzzle3dPlayAllSelectionFromFixture(fixture!, { object: true, vortex: false, attraction: false });
       expect(objectsOnly.vortexIds).toEqual([]);
       expect(objectsOnly.attractionIds).toEqual([]);
+    });
+
+    it("buildPuzzle3dPlayInspectorBody exposes editable object fields for single selection", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      wb.addApp(buildPuzzle3dPlayAppRuntime(ctrl));
+      const objectId = ctrl.getFixture()!.objects[0]!.id;
+      ctrl.run("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [] } });
+      const tree = buildPuzzle3dPlayInspectorBody({
+        runtime: wb,
+        windowKindId: PUZZLE_3D_PLAY_WINDOW_ID,
+        bodyKey: PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY,
+        activeModeId: "main",
+        generation: wb.generation,
+      });
+      const objectSection = tree.sections.find((section) => section.label?.startsWith("Objects"));
+      expect(objectSection).toBeDefined();
+      const idField = objectSection!.items.find((item) => item.id === "puzzle-3d-play-inspector.object.id");
+      const labelField = objectSection!.items.find((item) => item.id === "puzzle-3d-play-inspector.object.label");
+      expect(idField?.control?.type).toBe("input");
+      expect((idField?.control as { value?: string } | undefined)?.value).toBe(objectId);
+      expect(labelField?.control?.type).toBe("input");
+      expect((labelField?.control as { value?: string } | undefined)?.value).toBeTruthy();
     });
 
     it("buildPuzzle3dPlayInspectorBody aggregates multi vortex and attraction selection", () => {
