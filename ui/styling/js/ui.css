@@ -805,21 +805,49 @@
   --tw-divide-color: var(--border-element-color);
 }
 
+@utility divide-normal {
+  --tw-divide-color: var(--border-normal-color);
+}
+
 @utility border-emphasized {
   border-color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] {
+  border-bottom-color: var(--border-emphasized-color);
+}
+
+[data-slot="footer"] {
+  border-top-color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] :is(
+  [data-slot="breadcrumb"],
+  [data-slot="button-group"],
+  [data-slot="toggle-group"],
+  [data-slot="action-group"],
+  [data-slot="app-panel-toggle-group"],
+  [data-slot="breadcrumb-item"],
+  [data-slot="breadcrumb-separator-control"]
+) {
+  border-color: var(--border-normal-color) !important;
 }
 
 [data-slot="toolbar-zone"],
 [data-slot="toggle-group"],
 [data-slot="button-group"],
 [data-slot="action-group"],
-[data-slot="app-panel-toggle-group"] {
+[data-slot="app-panel-toggle-group"],
+[data-slot="breadcrumb"] {
   border-color: var(--border-normal-color);
 }
 
 [data-slot="toggle-group"].divide-x > :not(:last-child),
 [data-slot="button-group"].divide-x > :not(:last-child),
-[data-slot="action-group"].divide-x > :not(:last-child) {
+[data-slot="action-group"].divide-x > :not(:last-child),
+[data-slot="toggle-group"].divide-normal > :not(:last-child),
+[data-slot="button-group"].divide-normal > :not(:last-child),
+[data-slot="action-group"].divide-normal > :not(:last-child) {
   border-color: var(--border-normal-color);
 }
 

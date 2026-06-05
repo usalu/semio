@@ -151,8 +151,10 @@ type VendoredIconId = (typeof VENDORED_ICON_IDS)[number];
 export function normalizeLucideSvg(raw: string): string {
   let svg = raw.replace(/<!--[\s\S]*?-->/g, "").trim();
   svg = svg.replace(/\sclass="[^"]*"/g, "");
-  svg = svg.replace(/\swidth="[^"]*"/g, "");
-  svg = svg.replace(/\sheight="[^"]*"/g, "");
+  svg = svg.replace(/<svg\b([^>]*)>/, (_match, attrs: string) => {
+    const cleaned = attrs.replace(/\swidth="[^"]*"/g, "").replace(/\sheight="[^"]*"/g, "");
+    return `<svg${cleaned}>`;
+  });
   svg = svg.replace(/\sstroke-width="[^"]*"/g, ' stroke-width="2"');
   if (!/stroke="currentColor"/.test(svg)) {
     svg = svg.replace(/<svg\b/, '<svg stroke="currentColor"');
@@ -343,11 +345,19 @@ await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("normalizeLucideSvg", () => {
-    it("strips width/height and keeps currentColor stroke", () => {
+    it("strips root svg width/height and keeps currentColor stroke", () => {
       const raw = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" stroke="#000"><path d="M0 0"/></svg>`;
       const out = normalizeLucideSvg(raw);
-      expect(out).not.toContain('width="24"');
+      expect(out).not.toMatch(/<svg[^>]*width="/);
       expect(out).toContain('stroke="currentColor"');
+    });
+
+    it("preserves width/height on child shapes such as layout-grid rects", () => {
+      const raw = `<svg width="24" height="24"><rect width="7" height="7" x="3" y="3" rx="1" /></svg>`;
+      const out = normalizeLucideSvg(raw);
+      expect(out).not.toMatch(/<svg[^>]*width="/);
+      expect(out).toContain('width="7"');
+      expect(out).toContain('height="7"');
     });
   });
   describe("iconIdToPascal", () => {

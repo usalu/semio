@@ -1,0 +1,512 @@
+{
+  "schema": "puzzle.3d.fixture/v1",
+  "domain": "architecture",
+  "camera": {
+    "position": [
+      30,
+      -30,
+      20
+    ],
+    "target": [
+      7,
+      0,
+      3
+    ],
+    "zoom": 1
+  },
+  "meta": {
+    "kindCatalogs": {
+      "vortices": [
+        {
+          "id": "b-l",
+          "label": "b-l",
+          "name": "b-l",
+          "color": "hsl(206 52% 48%)",
+          "defaultCableKind": "cable.link"
+        },
+        {
+          "id": "b-l-m",
+          "label": "b-l-m",
+          "name": "b-l-m",
+          "color": "hsl(290 52% 48%)",
+          "defaultCableKind": "cable.link"
+        },
+        {
+          "id": "b-s",
+          "label": "b-s",
+          "name": "b-s",
+          "color": "hsl(55 52% 48%)",
+          "defaultCableKind": "cable.link"
+        },
+        {
+          "id": "b-s-m",
+          "label": "b-s-m",
+          "name": "b-s-m",
+          "color": "hsl(124 52% 48%)",
+          "defaultCableKind": "cable.link"
+        }
+      ],
+      "objects": [
+        {
+          "id": "Hexagonal Cut Concrete Forest Left",
+          "label": "Hexagonal Cut Concrete Forest Left",
+          "name": "Hexagonal Cut Concrete Forest Left",
+          "meshUrl": "/meshes/hexagonal-cut-concrete-forest-left.glb",
+          "vortices": [
+            {
+              "vortexKind": "b-l",
+              "position": [
+                1.95,
+                3.377499,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-l-m",
+              "position": [
+                3.25,
+                3.377499,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-l",
+              "position": [
+                7.15,
+                3.377499,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-s-m",
+              "position": [
+                4.55,
+                -1.125833,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-s",
+              "position": [
+                0.65,
+                -1.125833,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-s-m",
+              "position": [
+                -0.65,
+                -1.125833,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-s",
+              "position": [
+                6.4,
+                0,
+                3
+              ],
+              "direction": [
+                1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
+        },
+        {
+          "id": "Hexagonal Cut Concrete Forest Right",
+          "label": "Hexagonal Cut Concrete Forest Right",
+          "name": "Hexagonal Cut Concrete Forest Right",
+          "meshUrl": "/meshes/hexagonal-cut-concrete-forest-right.glb",
+          "vortices": [
+            {
+              "vortexKind": "b-l",
+              "position": [
+                9.55,
+                3.377499,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-l-m",
+              "position": [
+                10.85,
+                3.377499,
+                3
+              ],
+              "direction": [
+                0,
+                1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-l",
+              "position": [
+                14.75,
+                3.377499,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-s-m",
+              "position": [
+                6.95,
+                -1.125833,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-s-m",
+              "position": [
+                12.15,
+                -1.125833,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-s",
+              "position": [
+                8.25,
+                -1.125833,
+                3
+              ],
+              "direction": [
+                0,
+                -1,
+                0
+              ],
+              "radius": 0.36
+            },
+            {
+              "vortexKind": "b-s-m",
+              "position": [
+                6.4,
+                0,
+                3
+              ],
+              "direction": [
+                -1,
+                0,
+                0
+              ],
+              "radius": 0.36
+            }
+          ]
+        }
+      ],
+      "cables": [
+        {
+          "id": "cable.link",
+          "label": "Link",
+          "name": "Link",
+          "defaultAttractionKind": "puzzle3d.attraction.link"
+        }
+      ],
+      "attractions": [
+        {
+          "id": "puzzle3d.attraction.link",
+          "label": "Link",
+          "name": "Link"
+        }
+      ]
+    },
+    "kindCompatibility": [
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-l",
+        "target": "b-l"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-l",
+        "target": "b-l-m"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-l",
+        "target": "b-s"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-l",
+        "target": "b-s-m"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-l-m",
+        "target": "b-l"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-l-m",
+        "target": "b-l-m"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-l-m",
+        "target": "b-s"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-l-m",
+        "target": "b-s-m"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-s",
+        "target": "b-l"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-s",
+        "target": "b-l-m"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-s",
+        "target": "b-s"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-s",
+        "target": "b-s-m"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-s-m",
+        "target": "b-l"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-s-m",
+        "target": "b-l-m"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-s-m",
+        "target": "b-s"
+      },
+      {
+        "bidirectional": true,
+        "specificity": "vortex",
+        "source": "b-s-m",
+        "target": "b-s-m"
+      }
+    ]
+  },
+  "attractions": [],
+  "objects": [
+    {
+      "id": "seed-left-001",
+      "label": "Hexagonal Cut Concrete Forest Left",
+      "objectKind": "Hexagonal Cut Concrete Forest Left",
+      "meshUrl": "/meshes/hexagonal-cut-concrete-forest-left.glb",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "vortices": [
+        {
+          "id": "seed-left-001:v0",
+          "vortexKind": "b-l",
+          "label": "b-l",
+          "position": [
+            1.95,
+            3.377499,
+            3
+          ],
+          "direction": [
+            0,
+            1,
+            0
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v1",
+          "vortexKind": "b-l-m",
+          "label": "b-l-m",
+          "position": [
+            3.25,
+            3.377499,
+            3
+          ],
+          "direction": [
+            0,
+            1,
+            0
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v2",
+          "vortexKind": "b-l",
+          "label": "b-l",
+          "position": [
+            7.15,
+            3.377499,
+            3
+          ],
+          "direction": [
+            0,
+            1,
+            0
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v3",
+          "vortexKind": "b-s-m",
+          "label": "b-s-m",
+          "position": [
+            4.55,
+            -1.125833,
+            3
+          ],
+          "direction": [
+            0,
+            -1,
+            0
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v4",
+          "vortexKind": "b-s",
+          "label": "b-s",
+          "position": [
+            0.65,
+            -1.125833,
+            3
+          ],
+          "direction": [
+            0,
+            -1,
+            0
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v5",
+          "vortexKind": "b-s-m",
+          "label": "b-s-m",
+          "position": [
+            -0.65,
+            -1.125833,
+            3
+          ],
+          "direction": [
+            0,
+            -1,
+            0
+          ],
+          "radius": 0.36
+        },
+        {
+          "id": "seed-left-001:v6",
+          "vortexKind": "b-s",
+          "label": "b-s",
+          "position": [
+            6.4,
+            0,
+            3
+          ],
+          "direction": [
+            1,
+            0,
+            0
+          ],
+          "radius": 0.36
+        }
+      ]
+    }
+  ]
+}

@@ -105,17 +105,20 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
   };
 }
 
-/** @emoji 📂 Dev metabolism GLB roots for puzzle 3d `/meshes/*` URLs. */
-export function puzzle3dMetabolismMeshRoots(repoRoot: string): { readonly meshRoot: string; readonly placeholderMesh: string } {
+/** @emoji 📂 Kit fixture GLB roots for puzzle 3d `/meshes/*` URLs. */
+export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
   return {
-    meshRoot: resolve(repoRoot, "semio/fixtures/kit/dev/metabolism/representations"),
+    meshRoots: [
+      resolve(repoRoot, "semio/fixtures/kit/dev/metabolism/representations"),
+      resolve(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau"),
+    ],
     placeholderMesh: resolve(repoRoot, "semio/assets/mesh/placeholder.glb"),
   };
 }
 
-/** @emoji 🌐 Connect middleware: serve metabolism GLBs at `/meshes/<name>.glb`. */
-export function createPuzzle3dMeshesMiddleware(meshRoot: string, placeholderMesh: string): Connect.NextHandleFunction {
-  const meshRootResolved = resolve(meshRoot);
+/** @emoji 🌐 Connect middleware: serve kit GLBs at `/meshes/<name>.glb` (first matching root wins). */
+export function createPuzzle3dMeshesMiddleware(meshRoots: readonly string[], placeholderMesh: string): Connect.NextHandleFunction {
+  const rootsResolved = meshRoots.map((root) => resolve(root));
   const placeholderResolved = resolve(placeholderMesh);
   return (req, res, next) => {
     if (!req.url?.startsWith("/meshes/")) {
@@ -123,30 +126,36 @@ export function createPuzzle3dMeshesMiddleware(meshRoot: string, placeholderMesh
       return;
     }
     const rawName = decodeURIComponent(req.url.slice("/meshes/".length).split(/[?#]/, 1)[0] ?? "");
-    const filePath = rawName === "placeholder.glb" ? placeholderResolved : resolve(meshRootResolved, rawName);
-    if (rawName !== "placeholder.glb") {
-      const relToRoot = relative(meshRootResolved, filePath);
-      if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+    if (rawName === "placeholder.glb") {
+      if (!existsSync(placeholderResolved) || !statSync(placeholderResolved).isFile()) {
         next();
         return;
       }
-    } else if (filePath !== placeholderResolved) {
-      next();
+      res.setHeader("Content-Type", "model/gltf-binary");
+      createReadStream(placeholderResolved).pipe(res);
       return;
     }
-    if (!existsSync(filePath) || !statSync(filePath).isFile()) {
-      next();
+    for (const meshRootResolved of rootsResolved) {
+      const filePath = resolve(meshRootResolved, rawName);
+      const relToRoot = relative(meshRootResolved, filePath);
+      if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+        continue;
+      }
+      if (!existsSync(filePath) || !statSync(filePath).isFile()) {
+        continue;
+      }
+      res.setHeader("Content-Type", "model/gltf-binary");
+      createReadStream(filePath).pipe(res);
       return;
     }
-    res.setHeader("Content-Type", "model/gltf-binary");
-    createReadStream(filePath).pipe(res);
+    next();
   };
 }
 
-/** @emoji 🧊 Vite: serve and copy metabolism meshes at `/meshes/*` for puzzle 3d play and sketchpad. */
+/** @emoji 🧊 Vite: serve and copy kit meshes at `/meshes/*` for puzzle 3d play and sketchpad. */
 export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
-  const { meshRoot, placeholderMesh } = puzzle3dMetabolismMeshRoots(repoRoot);
-  const serveMeshes = createPuzzle3dMeshesMiddleware(meshRoot, placeholderMesh);
+  const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);
+  const serveMeshes = createPuzzle3dMeshesMiddleware(meshRoots, placeholderMesh);
   let viteRoot = process.cwd();
   return [
     {
@@ -167,12 +176,14 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
         viteRoot = config.root;
       },
       closeBundle() {
-        if (!existsSync(meshRoot)) {
-          return;
-        }
         const dest = resolve(viteRoot, "dist", "meshes");
         mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
-        cpSync(meshRoot, dest, { recursive: true });
+        for (const meshRoot of meshRoots) {
+          if (!existsSync(meshRoot)) {
+            continue;
+          }
+          cpSync(meshRoot, dest, { recursive: true });
+        }
         if (existsSync(placeholderMesh)) {
           cpSync(placeholderMesh, resolve(dest, "placeholder.glb"));
         }
@@ -775,10 +786,11 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("puzzle3dMetabolismMeshRoots", () => {
-    it("points at dev metabolism representations and shared placeholder", () => {
-      const { meshRoot, placeholderMesh } = puzzle3dMetabolismMeshRoots(repoRoot);
-      expect(existsSync(resolve(meshRoot, "capsule_J.glb"))).toBe(true);
+  describe("puzzle3dKitMeshRoots", () => {
+    it("points at metabolism and abbau-aufbau kit glbs plus shared placeholder", () => {
+      const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);
+      expect(existsSync(resolve(meshRoots[0]!, "capsule_J.glb"))).toBe(true);
+      expect(existsSync(resolve(meshRoots[1]!, "hexagonal-cut-concrete-forest-left.glb"))).toBe(true);
       expect(existsSync(placeholderMesh)).toBe(true);
     });
   });

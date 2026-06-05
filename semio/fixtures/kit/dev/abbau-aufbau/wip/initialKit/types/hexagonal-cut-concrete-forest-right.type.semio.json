@@ -1,0 +1,215 @@
+{
+    "id": "019eaa01-1002-7000-8000-forestright",
+    "name": "Hexagonal Cut Concrete Forest Right",
+    "representations": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "019eaa01-5003-7000-8000-rightglb",
+                "name": "hexagonal-cut-concrete-forest-right",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "019eaa01-4003-7000-8000-rightglb",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "019eaa01-5004-7000-8000-right3dm",
+                "name": "hexagonal-cut-concrete-forest-right",
+                "tags": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                        {
+                            "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        }
+                    ]
+                },
+                "file": {
+                    "id": "019eaa01-4004-7000-8000-right3dm",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "connectors": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "b-p2-t-t1-c3-l",
+                "name": "b-p2-t-t1-c3-l",
+                "t": 0,
+                "point": {
+                    "x": 9.55,
+                    "y": 3.377499,
+                    "z": 3
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "port": {
+                    "id": "b-l",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "b-p2-t-t1-c3-r",
+                "name": "b-p2-t-t1-c3-r",
+                "t": 0,
+                "point": {
+                    "x": 10.85,
+                    "y": 3.377499,
+                    "z": 3
+                },
+                "direction": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "port": {
+                    "id": "b-l-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "b-p2-t-t2-c3-l",
+                "name": "b-p2-t-t2-c3-l",
+                "t": 0,
+                "point": {
+                    "x": 14.75,
+                    "y": 3.377499,
+                    "z": 3
+                },
+                "direction": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "port": {
+                    "id": "b-l",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "b-p2-b-t1-c1-l",
+                "name": "b-p2-b-t1-c1-l",
+                "t": 0,
+                "point": {
+                    "x": 6.95,
+                    "y": -1.125833,
+                    "z": 3
+                },
+                "direction": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "port": {
+                    "id": "b-s-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "b-p2-b-t1-c2-l",
+                "name": "b-p2-b-t1-c2-l",
+                "t": 0,
+                "point": {
+                    "x": 12.15,
+                    "y": -1.125833,
+                    "z": 3
+                },
+                "direction": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "port": {
+                    "id": "b-s-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "b-p2-b-t1-c1-r",
+                "name": "b-p2-b-t1-c1-r",
+                "t": 0,
+                "point": {
+                    "x": 8.25,
+                    "y": -1.125833,
+                    "z": 3
+                },
+                "direction": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "port": {
+                    "id": "b-s",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+                "id": "b-p2-t-t1-c1-l",
+                "name": "b-p2-t-t1-c1-l",
+                "t": 0,
+                "point": {
+                    "x": 6.4,
+                    "y": 0,
+                    "z": 3
+                },
+                "direction": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "port": {
+                    "id": "b-s-m",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                "mandatory": false,
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "stock": 2147483647,
+    "virtual": false,
+    "unit": "m",
+    "createdAt": "2026-06-05T12:00:00.000Z",
+    "updatedAt": "2026-06-05T12:00:00.000Z",
+    "families": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+            {
+                "id": "019eaa01-2000-7000-8000-concrete01",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            }
+        ]
+    },
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "typology": {
+        "id": "typology-concrete-forest"
+    }
+}

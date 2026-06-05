@@ -559,7 +559,7 @@
 .reveal .presentation-interaction-reset:hover {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-emphasized-color);
+	border-color: var(--border-normal-color);
 }
 
 .reveal
@@ -607,7 +607,7 @@
 .reveal .presentation-pdf-page-nav__button:hover:not(:disabled) {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-emphasized-color);
+	border-color: var(--border-normal-color);
 }
 
 .reveal .presentation-pdf-page-nav__button:disabled {
@@ -685,7 +685,7 @@
 	.presentation-interaction-slide-reset:hover {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-emphasized-color);
+	border-color: var(--border-normal-color);
 }
 
 /* #endregion 🔖Interaction */

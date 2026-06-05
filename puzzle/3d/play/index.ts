@@ -56,6 +56,7 @@ import {
   DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
   applyBrushPlacementToFixture,
   applyBrushFillPlacementsToFixture,
+  brushMeshUrlsForFillSession,
   buildBrushFillSequence,
   brushPlacementCollisionToleranceFromSlider,
   brushPlacementCollisionToleranceToSlider,
@@ -117,10 +118,25 @@ import {
   type BrushCompatibleCandidate,
 } from "../react/index.tsx";
 import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
+import concreteForestPuzzle3dFixtureJson from "../fixture/concrete-forest.3d.json";
 
 export const PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
+export const PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID = "concrete-forest";
 
-export const PUZZLE_3D_PLAY_FIXTURE_OPTIONS = [{ id: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" }] as const;
+export const PUZZLE_3D_PLAY_FIXTURE_OPTIONS = [
+  { id: PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
+  { id: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" },
+] as const;
+
+const PUZZLE_3D_PLAY_FIXTURE_JSON_BY_ID: Record<string, unknown> = {
+  [PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID]: nakaginPuzzle3dFixtureJson,
+  [PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID]: concreteForestPuzzle3dFixtureJson,
+};
+
+/** @emoji 🧪 Resolves imported puzzle 3d fixture JSON by catalog id. */
+export function puzzle3dPlayFixtureJson(fixtureId: string = PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID): unknown {
+  return PUZZLE_3D_PLAY_FIXTURE_JSON_BY_ID[fixtureId] ?? concreteForestPuzzle3dFixtureJson;
+}
 
 //#region 🏗️NakaginCatalog
 function cadVec3FromKitPoint(row: { readonly x: number; readonly y: number; readonly z: number }): [number, number, number] {
@@ -483,6 +499,7 @@ export const PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle3d.tool.select";
 export {
   PUZZLE_3D_ENGAGEMENT_ZOOM_ID,
   applyBrushFillPlacementsToFixture,
+  brushMeshUrlsForFillSession,
   buildBrushFillSequence,
   puzzle3dBrushMeshRootForFill,
 } from "@puzzle/3d/react";
@@ -967,7 +984,7 @@ function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
 
 /** @emoji 🎬 Playground puzzle 3D play controller: fixture, LOD, selection/filter tools, and interaction counters. */
 export class Puzzle3dPlayShellController extends Controller implements PlaygroundFixtureHost {
-  private activeFixtureId = PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID;
+  private activeFixtureId = PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
   readonly mainMode = new ModeRuntime("main", "Puzzle 3D", undefined);
   readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
@@ -1008,10 +1025,11 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   private hierarchySectionsRevision = -1;
   private instanceCameras = new Map<string, CameraState>();
   private cameraSeedEpoch = 0;
+  private fixtureCatalogCache: PlaygroundFixtureCatalog | null = null;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-    this.fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+    this.fixture = parseFixtureV1(puzzle3dPlayFixtureJson(this.activeFixtureId));
     this.fixtureRevision = 0;
     this.automaticLod = true;
     this.depthVariableLod = false;
@@ -1172,12 +1190,16 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   getFixtureCatalog(): PlaygroundFixtureCatalog {
-    return { activeFixtureId: this.activeFixtureId, options: PUZZLE_3D_PLAY_FIXTURE_OPTIONS };
+    if (!this.fixtureCatalogCache || this.fixtureCatalogCache.activeFixtureId !== this.activeFixtureId) {
+      this.fixtureCatalogCache = { activeFixtureId: this.activeFixtureId, options: PUZZLE_3D_PLAY_FIXTURE_OPTIONS };
+    }
+    return this.fixtureCatalogCache;
   }
 
   private loadFixtureById(fixtureId: string): void {
-    if (fixtureId !== PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID) return;
-    const parsed = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+    const raw = PUZZLE_3D_PLAY_FIXTURE_JSON_BY_ID[fixtureId];
+    if (!raw) return;
+    const parsed = parseFixtureV1(raw);
     if (!parsed) return;
     this.fixture = parsed;
     this.fixtureRevision += 1;
@@ -2657,6 +2679,54 @@ if (import.meta.vitest) {
       expect(f?.objects.length).toBeGreaterThan(0);
     });
 
+    it("getFixtureCatalog returns a stable snapshot reference for useSyncExternalStore", () => {
+      const bus = new CommandBus();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => {});
+      const first = ctrl.getFixtureCatalog();
+      const second = ctrl.getFixtureCatalog();
+      expect(second).toBe(first);
+      ctrl.run("setActiveFixture", { fixtureId: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID });
+      const third = ctrl.getFixtureCatalog();
+      expect(third).not.toBe(first);
+      expect(third.activeFixtureId).toBe(PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID);
+    });
+
+    it("parses concrete forest fixture with mutually compatible vortex kinds", () => {
+      const f = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
+      const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
+      const compat = parseKindCompatibility(f?.meta as Record<string, unknown> | undefined);
+      expect(f?.objects).toHaveLength(1);
+      expect(catalogs?.objects?.map((row) => row.id)).toEqual([
+        "Hexagonal Cut Concrete Forest Left",
+        "Hexagonal Cut Concrete Forest Right",
+      ]);
+      const target: AttractionVortexContext = {
+        objectId: "seed-left-001",
+        objectKind: "Hexagonal Cut Concrete Forest Left",
+        vortexKind: "b-l",
+      };
+      const candidates = brushCompatibleCandidates(target, catalogs, compat);
+      expect(candidates.some((entry) => entry.objectKindId === "Hexagonal Cut Concrete Forest Right")).toBe(true);
+    });
+
+    it("concrete forest object kinds resolve abbau-aufbau mesh urls for fill preload", () => {
+      const f = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
+      const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
+      expect(resolveObjectKindMeshUrl("Hexagonal Cut Concrete Forest Left", catalogs, f ?? undefined)).toBe(
+        "/meshes/hexagonal-cut-concrete-forest-left.glb",
+      );
+      expect(resolveObjectKindMeshUrl("Hexagonal Cut Concrete Forest Right", catalogs, f ?? undefined)).toBe(
+        "/meshes/hexagonal-cut-concrete-forest-right.glb",
+      );
+      const urls = brushMeshUrlsForFillSession(f!, catalogs, parseKindCompatibility(f?.meta as Record<string, unknown> | undefined));
+      expect(urls).toEqual(
+        expect.arrayContaining([
+          "/meshes/hexagonal-cut-concrete-forest-left.glb",
+          "/meshes/hexagonal-cut-concrete-forest-right.glb",
+        ]),
+      );
+    });
+
     it("nakagin scene object meshUrl matches kind catalog for every placed object", () => {
       const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta);
@@ -3204,7 +3274,7 @@ if (import.meta.vitest) {
       const targetFullId = puzzle3dVortexFullId(host.id, host.vortices[0]!.id);
       ctrl.run("addBrushObject", {
         targetVortexFullId: targetFullId,
-        objectKindId: "Capsule J",
+        objectKindId: "Hexagonal Cut Concrete Forest Right",
         sourceVortexIndex: 0,
         origin: [0, 0, 0],
         orientation: [0, 0, 0, 1],
@@ -3497,7 +3567,8 @@ if (import.meta.vitest) {
 
     it("nakagin fixture seeds default object and vortex suggestion ratios", () => {
       const bus = new CommandBus();
-      new Puzzle3dPlayShellController(bus, () => {});
+      const ctrl = new Puzzle3dPlayShellController(bus, () => {});
+      ctrl.run("setActiveFixture", { fixtureId: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID });
       const { objectWeights, vortexWeights } = puzzle3dBrushKindWeightsRef.current;
       expect(objectWeights.Tambour / objectWeights.Base).toBeCloseTo(15, 4);
       expect(objectWeights.Tambour / objectWeights.Capital).toBeCloseTo(10, 4);

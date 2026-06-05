@@ -20572,6 +20572,7 @@ if (treeVitest) {
       );
       expect(markup).toContain('id="ui.panelToggle.display"');
       expect(markup).toContain('data-icon="layout-grid"');
+      expect(markup).toContain('width="7"');
       expect(markup).not.toContain("data-missing-icon");
     });
 
@@ -20701,15 +20702,16 @@ if (treeVitest) {
       expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
     });
 
-    it("uses foreground emphasized panel frame and normal tab separator; shell bars keep implicit stroke", () => {
+    it("uses emphasized shell edges only on panel frame, navbar bottom, and footer top", () => {
       expect(panelChromeBorderClass).toContain("border-emphasized");
       const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
-      expect(navbarMarkup).toContain("border-b");
-      expect(navbarMarkup).not.toContain("border-emphasized");
+      expect(navbarMarkup).toContain(borderEmphasizedBottomClass);
       expect(navbarMarkup).not.toContain("border-border");
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ id: "ui.footer.minimize", icon: "minus" }]} />);
-      expect(footerMarkup).toContain("border-t");
-      expect(footerMarkup).not.toContain("border-emphasized");
+      expect(footerMarkup).toContain(borderEmphasizedTopClass);
+      const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
+      expect(breadcrumbMarkup).toContain(borderNormalClass);
+      expect(breadcrumbMarkup).not.toContain("border-emphasized");
       const toolbarMarkup = renderToStaticMarkup(
         <ToolbarZone>
           <ToolbarItem>Tool</ToolbarItem>
