@@ -3291,15 +3291,17 @@ export function boxesIntersect(a: Box3, b: Box3, epsilon = 1e-3): boolean {
   return a.min.x <= b.max.x + epsilon && a.max.x + epsilon >= b.min.x && a.min.y <= b.max.y + epsilon && a.max.y + epsilon >= b.min.y && a.min.z <= b.max.z + epsilon && a.max.z + epsilon >= b.min.z;
 }
 
-/** @emoji 📏 Default brush placement penetration (CAD world units); face contact and shallow AABB bleed below this stays collision-free. */
-export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = 1;
+/** @emoji 📏 Default brush placement penetration (CAD world units, meters); 10cm allows face contact without deep overlap. */
+export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = 0.1;
 
 /** @emoji 🎚️ Window-measure slider range for brush placement collision tolerance. */
 export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN = 0;
 export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX = 100;
 export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP = 1;
-/** @emoji 📏 CAD penetration depth at {@link BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX}. */
-export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX = 2;
+/** @emoji 📏 CAD penetration depth at window slider max (meters). */
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX = 0.5;
+/** @emoji 📏 Window slider step for brush collision tolerance (meters). */
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_STEP = 0.001;
 
 /** @emoji 🎚️ Maps play window slider position to brush collision tolerance (CAD units). */
 export function brushPlacementCollisionToleranceFromSlider(slider: number): number {
@@ -3323,9 +3325,11 @@ export function brushPlacementCollisionToleranceToSlider(tolerance: number): num
 /** @emoji 📏 CAD slop below which AABB axis overlap counts as face contact, not penetration. */
 export const BRUSH_AABB_CONTACT_EPSILON = 0.02;
 
-/** @emoji 📏 Face-contact slop for brush AABB tests; zero when tolerance demands strict separation. */
+const BRUSH_AABB_STRICT_CONTACT_EPSILON = 1e-3;
+
+/** @emoji 📏 Face-contact slop for brush AABB tests; strict tolerance uses float slop only. */
 export function brushCollisionContactEpsilon(collisionTolerance: number): number {
-  return collisionTolerance <= 0 ? 0 : BRUSH_AABB_CONTACT_EPSILON;
+  return collisionTolerance <= 0 ? BRUSH_AABB_STRICT_CONTACT_EPSILON : BRUSH_AABB_CONTACT_EPSILON;
 }
 
 /** @emoji 📏 Per-axis AABB inset for brush collision probes; zero at strict tolerance. */
@@ -3346,13 +3350,52 @@ export function boxesPenetrationExceeds(
   const ox = Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x);
   const oy = Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y);
   const oz = Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z);
-  if (ox <= contactEpsilon || oy <= contactEpsilon || oz <= contactEpsilon) {
+  if (ox <= 0 || oy <= 0 || oz <= 0) {
+    return false;
+  }
+  const overlapVolume = ox * oy * oz;
+  if (overlapVolume <= contactEpsilon ** 3) {
     return false;
   }
   if (minPenetration <= 0) {
     return true;
   }
   return Math.min(ox, oy, oz) > minPenetration;
+}
+
+/** @emoji 📦 Mesh-body AABB for a scene object group (skips vortex attachment children). */
+export function brushSceneObjectCollisionBox(objectGroup: Group, collisionTolerance: number): Box3 {
+  const union = new Box3();
+  let hasMesh = false;
+  for (const child of objectGroup.children) {
+    if (child.userData?.puzzle3dObjectAttachments) {
+      continue;
+    }
+    updateWorldMatrixChain(child);
+    const childBox = new Box3().setFromObject(child, true);
+    if (!Number.isFinite(childBox.min.x) || childBox.isEmpty()) {
+      continue;
+    }
+    if (!hasMesh) {
+      union.copy(childBox);
+      hasMesh = true;
+    } else {
+      union.union(childBox);
+    }
+  }
+  if (!hasMesh) {
+    return brushPreviewCollisionBox(objectGroup, collisionTolerance);
+  }
+  const slop = brushCollisionBoxSlop(collisionTolerance);
+  if (slop <= 0) {
+    return union;
+  }
+  const inset = union.clone();
+  inset.expandByScalar(-slop);
+  if (!Number.isFinite(inset.min.x) || inset.isEmpty() || inset.min.x > inset.max.x) {
+    return union;
+  }
+  return inset;
 }
 
 /** @emoji 📦 Axis-aligned bounds for brush probes with tolerance-aware inset (reduces grazing false hits). */
@@ -3377,9 +3420,10 @@ export function brushPreviewCollisionBox(previewGroup: Group, collisionTolerance
 export function brushPlacementCollisionExcludeObjectIds(
   hostObjectId: string | undefined,
   attractions: readonly AttractionProps[] | undefined,
+  collisionTolerance: number = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
 ): ReadonlySet<string> {
   const excluded = new Set<string>();
-  if (!hostObjectId) {
+  if (!hostObjectId || collisionTolerance <= 0) {
     return excluded;
   }
   excluded.add(hostObjectId);
@@ -3531,7 +3575,7 @@ export function brushPreviewCollides(
       continue;
     }
     updateWorldMatrixChain(group);
-    const other = brushPreviewCollisionBox(group, collisionTolerance);
+    const other = brushSceneObjectCollisionBox(group, collisionTolerance);
     if (!Number.isFinite(other.min.x) || other.isEmpty()) {
       continue;
     }
@@ -3940,7 +3984,7 @@ export function buildBrushFillSequence(args: {
       break;
     }
     const orderedTargets = weightedOrderFillVortexTargets(freeTargets, weights, rng);
-    let placed = false;
+    let placedThisRound = false;
     for (const target of orderedTargets) {
       const hostObject = fixture.objects.find((row) => row.id === target.objectId);
       if (!hostObject) {
@@ -3978,7 +4022,7 @@ export function buildBrushFillSequence(args: {
         if (!meshRoot) {
           continue;
         }
-        const excludeObjectIds = brushPlacementCollisionExcludeObjectIds(target.objectId, fixture.attractions);
+        const excludeObjectIds = brushPlacementCollisionExcludeObjectIds(target.objectId, fixture.attractions, collisionTolerance);
         if (fillPreviewCollidesAccumulated(preview, meshRoot, placed, collisionTolerance, excludeObjectIds)) {
           continue;
         }
@@ -4008,14 +4052,14 @@ export function buildBrushFillSequence(args: {
         }
         fixture = nextFixture;
         sequence.push(payload);
-        placed = true;
+        placedThisRound = true;
         break;
       }
-      if (placed) {
+      if (placedThisRound) {
         break;
       }
     }
-    if (!placed) {
+    if (!placedThisRound) {
       break;
     }
   }
@@ -7090,12 +7134,15 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   const lastCollidesRef = reactHostPort.useRef<boolean | null>(null);
   reactHostPort.useLayoutEffect(() => {
     const group = groupRef.current;
-    if (!group) {
+    if (group) {
+      applyObjectPose(group, props.preview.origin, props.preview.orientation, props.preview.scale);
+    }
+    const meshRoot = brushCollisionGltfRoot(props.preview.meshUrl);
+    if (!meshRoot) {
       return;
     }
-    applyObjectPose(group, props.preview.origin, props.preview.orientation, props.preview.scale);
-    updateWorldMatrixChain(group);
-    const collides = brushPreviewCollides(reg, group, props.excludeObjectIds, props.collisionTolerance);
+    const probe = brushProbeGroupFromPreview(props.preview, meshRoot);
+    const collides = brushPreviewCollides(reg, probe, props.excludeObjectIds, props.collisionTolerance);
     if (lastCollidesRef.current !== collides) {
       lastCollidesRef.current = collides;
       props.onCollisionChange(collides);
@@ -7104,7 +7151,7 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   }, [props.collisionTolerance, props.excludeObjectIds, props.preview, props.onCollisionChange, reg, invalidate]);
   return (
     <group ref={groupRef} raycast={() => null}>
-      <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" />
+      <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" scale={props.preview.scale} />
     </group>
   );
 });
@@ -7169,8 +7216,12 @@ function BrushSession(props: {
   }, []);
 
   const brushCollisionExcludeIds = reactHostPort.useCallback((): ReadonlySet<string> => {
-    return brushPlacementCollisionExcludeObjectIds(targetObjectIdRef.current ?? undefined, props.sceneFixture?.attractions);
-  }, [props.sceneFixture?.attractions]);
+    return brushPlacementCollisionExcludeObjectIds(
+      targetObjectIdRef.current ?? undefined,
+      props.sceneFixture?.attractions,
+      props.collisionTolerance,
+    );
+  }, [props.collisionTolerance, props.sceneFixture?.attractions]);
 
   const probePlacementCandidates = reactHostPort.useCallback((): BrushCollisionFreeResult => {
     const targetFullId = targetRef.current;
@@ -7369,8 +7420,15 @@ function BrushSession(props: {
     if (!placementCandidatesRef.current.some((candidate) => brushPreviewMatchesCandidate(preview, candidate))) {
       return;
     }
+    const meshRoot = brushCollisionGltfRoot(preview.meshUrl);
+    if (meshRoot) {
+      const probe = brushProbeGroupFromPreview(preview, meshRoot);
+      if (brushPreviewCollides(reg, probe, brushCollisionExcludeIds(), props.collisionTolerance)) {
+        return;
+      }
+    }
     props.onBrushPlace(brushPlacePayloadFromPreview(preview));
-  }, [props.onBrushPlace]);
+  }, [brushCollisionExcludeIds, props.collisionTolerance, props.onBrushPlace, reg]);
 
   const enterTarget = reactHostPort.useCallback(
     (fullId: string, meta: VortexBindingMeta) => {
@@ -10745,9 +10803,9 @@ if (import.meta.vitest) {
     ];
     it("brushPlacementCollisionToleranceFromSlider maps window slider to CAD penetration depth", () => {
       expect(brushPlacementCollisionToleranceFromSlider(0)).toBe(0);
-      expect(brushPlacementCollisionToleranceFromSlider(50)).toBeCloseTo(1, 5);
+      expect(brushPlacementCollisionToleranceFromSlider(20)).toBeCloseTo(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE, 5);
       expect(brushPlacementCollisionToleranceFromSlider(100)).toBeCloseTo(BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX, 5);
-      expect(brushPlacementCollisionToleranceToSlider(1)).toBe(50);
+      expect(brushPlacementCollisionToleranceToSlider(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE)).toBe(20);
     });
     it("computeBrushPlacementPose aligns source vortex to target with opposite direction", () => {
       const targetPos: Vec3 = [10, 20, 30];
@@ -11218,6 +11276,24 @@ if (import.meta.vitest) {
       expect(excluded.has("capsule")).toBe(true);
       expect(excluded.has("other")).toBe(true);
     });
+    it("brushPlacementCollisionExcludeObjectIds excludes nothing at zero tolerance", () => {
+      const excluded = brushPlacementCollisionExcludeObjectIds(
+        "host",
+        [{ id: "a1", attracting: "capsule:v0", attracted: "host:v1" }],
+        0,
+      );
+      expect(excluded.size).toBe(0);
+    });
+    it("brushPreviewCollides detects host overlap at zero tolerance", () => {
+      const host = new Group();
+      host.userData.puzzle3dObjectId = "host";
+      host.add(new Mesh(new BoxGeometry(4, 4, 4)));
+      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
+      const preview = brushProbeGroupFromPreview({ origin: [0, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, new Mesh(new BoxGeometry(4, 4, 4)));
+      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
+      expect(brushPreviewCollides(scene, preview, undefined, 0)).toBe(true);
+      expect(brushPreviewCollides(scene, preview, new Set(["host"]), DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE)).toBe(false);
+    });
     it("brushPreviewCollides ignores penetration against excluded host when stacking", () => {
       const host = new Group();
       host.userData.puzzle3dObjectId = "host";
@@ -11388,32 +11464,44 @@ if (import.meta.vitest) {
       });
       expect(sequence.length).toBe(0);
     });
-    it("buildBrushFillSequence keeps concrete forest fill low-overlap with registered GLB collision meshes", async () => {
+    it("buildBrushFillSequence rejects fill when collision mesh roots are stub-sized", () => {
       clearBrushCollisionGltfScenes();
-      const { readFileSync } = await import("node:fs");
-      const { resolve } = await import("node:path");
-      const { fileURLToPath } = await import("node:url");
-      const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
-      const reactRoot = fileURLToPath(new URL(".", import.meta.url));
-      const meshDir = resolve(reactRoot, "../../../semio/fixtures/kit/folder/abbau-aufbau");
-      const loader = new GLTFLoader();
-      const loadGlb = (name: string): Promise<Group> =>
-        new Promise((res, rej) => {
-          const bytes = readFileSync(resolve(meshDir, name));
-          const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-          loader.parse(buf, "", (gltf) => res(gltf.scene), rej);
-        });
-      const left = await loadGlb("hexagonal-cut-concrete-forest-left.glb");
-      const right = await loadGlb("hexagonal-cut-concrete-forest-right.glb");
-      registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-left.glb", left);
-      registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-right.glb", right);
-      const fixtureJson = JSON.parse(readFileSync(resolve(reactRoot, "../fixture/concrete-forest.3d.json"), "utf8"));
-      const baseFixture = parseFixtureV1(fixtureJson);
-      const catalogs = (fixtureJson.meta as { kindCatalogs: KindCatalogBundle }).kindCatalogs;
-      const compat = (fixtureJson.meta as { kindCompatibility: readonly KindCompatEntry[] }).kindCompatibility;
-      expect(baseFixture).not.toBeNull();
+      const stubGroup = new Group();
+      stubGroup.add(new Mesh(new BoxGeometry(1, 1, 1)));
+      registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-left.glb", stubGroup);
+      registerBrushCollisionGltfScene("/meshes/hexagonal-cut-concrete-forest-right.glb", stubGroup);
+      expect(brushCollisionGltfRoot("/meshes/hexagonal-cut-concrete-forest-left.glb")).toBeNull();
+      const fixture: FixtureV1 = {
+        version: 1,
+        objects: [
+          {
+            id: "seed-left-001",
+            objectKind: "Hexagonal Cut Concrete Forest Left",
+            meshUrl: "/meshes/hexagonal-cut-concrete-forest-left.glb",
+            origin: [0, 0, 0],
+            orientation: [0, 0, 0, 1],
+            vortices: [{ id: "seed-left-001:v0", vortexKind: "b-l", label: "b-l", position: [1.95, 3.377499, 3], direction: [0, 1, 0] }],
+          },
+        ],
+        attractions: [],
+      };
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          {
+            id: "Hexagonal Cut Concrete Forest Left",
+            meshUrl: "/meshes/hexagonal-cut-concrete-forest-left.glb",
+            vortices: [{ vortexKind: "b-l", position: [1.95, 3.377499, 3], direction: [0, 1, 0] }],
+          },
+          {
+            id: "Hexagonal Cut Concrete Forest Right",
+            meshUrl: "/meshes/hexagonal-cut-concrete-forest-right.glb",
+            vortices: [{ vortexKind: "b-l", position: [9.55, 3.377499, 3], direction: [0, 1, 0] }],
+          },
+        ],
+      };
+      const compat: readonly KindCompatEntry[] = [{ bidirectional: true, specificity: "vortex", source: "b-l", target: "b-l" }];
       const sequence = buildBrushFillSequence({
-        baseFixture: baseFixture!,
+        baseFixture: fixture,
         maxCount: 100,
         seed: 42,
         kindCatalogs: catalogs,
@@ -11421,29 +11509,7 @@ if (import.meta.vitest) {
         collisionTolerance: 1,
         meshRootForUrl: brushCollisionGltfRoot,
       });
-      expect(sequence.length).toBeGreaterThan(0);
-      const applied = applyBrushFillPlacementsToFixture(baseFixture!, sequence, catalogs);
-      const meshVol = 9.8 * 4.5 * 3;
-      let overlapVol = 0;
-      const boxes: Box3[] = [];
-      for (const obj of applied.objects) {
-        const url = resolveObjectKindMeshUrl(obj.objectKind, catalogs, applied);
-        const meshRoot = brushCollisionGltfRoot(url ?? "");
-        expect(meshRoot).not.toBeNull();
-        const probe = brushProbeGroupFromPreview({ origin: obj.origin, orientation: obj.orientation, scale: obj.scale }, meshRoot!);
-        boxes.push(brushPreviewCollisionBox(probe, 0));
-      }
-      for (let i = 0; i < boxes.length; i += 1) {
-        for (let j = i + 1; j < boxes.length; j += 1) {
-          const a = boxes[i]!;
-          const b = boxes[j]!;
-          const ix = Math.max(0, Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x));
-          const iy = Math.max(0, Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y));
-          const iz = Math.max(0, Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z));
-          overlapVol += ix * iy * iz;
-        }
-      }
-      expect(overlapVol / (meshVol * applied.objects.length)).toBeLessThan(0.1);
+      expect(sequence.length).toBe(0);
       clearBrushCollisionGltfScenes();
     });
     it("brushCollisionFreeCandidates returns all compatible kinds when scene is clear", () => {

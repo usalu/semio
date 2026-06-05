@@ -49,10 +49,11 @@ import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
   PUZZLE_3D_LOD_SLIDER_MIN,
+  BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX,
+  BRUSH_PLACEMENT_COLLISION_TOLERANCE_STEP,
   BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX,
   BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
   BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
-  BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX,
   DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
   applyBrushPlacementToFixture,
   applyBrushFillPlacementsToFixture,
@@ -1268,6 +1269,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       return;
     }
     this.hoverFocus = next;
+    this.rebuildSnapshotCache();
     for (const listener of this.snapshotListeners) {
       listener();
     }
@@ -1576,7 +1578,6 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   private brushMeasuresGroup(): WindowMeasure {
-    const toleranceLabel = this.brushPlacementCollisionTolerance.toFixed(2);
     return {
       kind: "group",
       id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush`,
@@ -1585,12 +1586,12 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         {
           kind: "slider",
           id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-collision-tolerance`,
-          label: `Tolerance ${toleranceLabel}`,
-          value: this.brushPlacementCollisionToleranceSlider,
-          min: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
-          max: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX,
-          step: BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
-          onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setBrushPlacementCollisionTolerance" },
+          label: "Tolerance (m)",
+          value: this.brushPlacementCollisionTolerance,
+          min: 0,
+          max: BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX,
+          step: BRUSH_PLACEMENT_COLLISION_TOLERANCE_STEP,
+          onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setBrushPlacementCollisionTolerance", args: { cad: true } },
         },
         {
           kind: "group",
@@ -2748,7 +2749,7 @@ export function buildPuzzle3dPlaySettingsBody(ctx: WindowBodyViewContext): UiTre
               type: "input",
               id: "puzzle-3d-play-settings.brushCollisionTolerance.input",
               inputKind: "number",
-              value: String(snap.brushPlacementCollisionTolerance),
+              value: formatNumber(snap.brushPlacementCollisionTolerance),
               onChange: puzzle3dPlayCmd("setBrushPlacementCollisionTolerance", { cad: true }),
             },
           },
@@ -3433,7 +3434,8 @@ if (import.meta.vitest) {
       const measures = flattenWindowMeasures(ctrl.mainMode.windowKinds[0]?.measures ?? []);
       const brushTol = measures.find((measure) => measure.id.endsWith("-brush-collision-tolerance"));
       expect(brushTol?.kind).toBe("slider");
-      expect(brushTol?.max).toBe(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX);
+      expect(brushTol?.max).toBe(BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX);
+      expect(brushTol?.value).toBeCloseTo(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE, 5);
     });
 
     it("setBrushPlacementCollisionTolerance updates snapshot and slider mapping", () => {
@@ -3442,10 +3444,16 @@ if (import.meta.vitest) {
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       ctrl.run("setBrushPlacementCollisionTolerance", { value: 75 });
       expect(ctrl.getSnapshot().brushPlacementCollisionToleranceSlider).toBe(75);
-      expect(ctrl.getSnapshot().brushPlacementCollisionTolerance).toBeCloseTo(1.5, 5);
+      expect(ctrl.getSnapshot().brushPlacementCollisionTolerance).toBeCloseTo(0.375, 5);
       ctrl.run("setBrushPlacementCollisionTolerance", { value: 0.4, cad: true });
       expect(ctrl.getSnapshot().brushPlacementCollisionTolerance).toBeCloseTo(0.4, 5);
-      expect(ctrl.getSnapshot().brushPlacementCollisionToleranceSlider).toBe(20);
+      expect(ctrl.getSnapshot().brushPlacementCollisionToleranceSlider).toBe(80);
+      const measures = flattenWindowMeasures(ctrl.mainMode.windowKinds[0]?.measures ?? []);
+      const brushTol = measures.find((measure) => measure.id.endsWith("-brush-collision-tolerance"));
+      expect(brushTol?.kind).toBe("slider");
+      if (brushTol?.kind === "slider") {
+        expect(brushTol.value).toBeCloseTo(0.4, 5);
+      }
     });
 
     it("setSelectionMethod and toggleSelectableKind update snapshot", () => {
@@ -3709,6 +3717,44 @@ if (import.meta.vitest) {
           attractionIds: ["t1"],
         }),
       ).toEqual(["puzzle-3d-play-hierarchy.object.a", "puzzle-3d-play-hierarchy.vortex.a:v1", "puzzle-3d-play-hierarchy.attraction.t1"]);
+    });
+
+    it("puzzle3dPlayHierarchyTreeHighlightedIds expands transitive vortex kind hover", () => {
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [
+          {
+            id: "a",
+            meshUrl: "/m.glb",
+            origin: [0, 0, 0],
+            vortices: [
+              { id: "v1", vortexKind: "b-l", position: [0, 0, 0] },
+              { id: "v2", vortexKind: "c-t", position: [1, 0, 0] },
+            ],
+          },
+          {
+            id: "b",
+            meshUrl: "/m.glb",
+            origin: [2, 0, 0],
+            vortices: [{ id: "v3", vortexKind: "b-l", position: [0, 0, 0] }],
+          },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      expect(puzzle3dPlayHierarchyTreeHighlightedIds(fixture!, { domain: "vortex", kindId: "b-l" })).toEqual([
+        "puzzle-3d-play-hierarchy.vortex.a:v1",
+        "puzzle-3d-play-hierarchy.vortex.b:v3",
+      ]);
+    });
+
+    it("setHoverFocus stores direct kind row hover", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      ctrl.setHoverFocus({ hoverTarget: null, kindHover: { domain: "vortex", kindId: "b-l" } });
+      expect(ctrl.getSnapshot().hoverFocus).toEqual({ hoverTarget: null, kindHover: { domain: "vortex", kindId: "b-l" } });
     });
 
     it("noteSelection does not bump platform generation", () => {

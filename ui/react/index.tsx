@@ -2914,8 +2914,26 @@ export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-
 /** @emoji 📏 Maximize cap in multi-tab grid when the stack is globally active. */
 export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
+/** @emoji 📐 Default unfolded width of the right-edge window options rail in pixels. */
+export const windowMeasuresDefaultWidthPx = 14 * 16;
+
+/** @emoji 📐 Minimum unfolded width of the window options rail in pixels. */
+export const windowMeasuresMinWidthPx = 150;
+
+/** @emoji 📐 Maximum unfolded width of the window options rail in pixels. */
+export const windowMeasuresMaxWidthPx = 480;
+
+/** @emoji 📐 Minimum unfolded height of the window options rail in pixels. */
+export const windowMeasuresMinHeightPx = 120;
+
 /** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
 export const windowMeasuresRailWidthClass = "w-[min(14rem,calc(100%-0.5rem))]";
+
+/** @emoji ↔️ Left-edge resize handle for the unfolded window options rail. */
+export const windowMeasuresResizeHandleLeftClass = "absolute top-0 bottom-0 left-0 z-20 w-single cursor-ew-resize";
+
+/** @emoji ↕️ Bottom-edge resize handle for the unfolded window options rail. */
+export const windowMeasuresResizeHandleBottomClass = "absolute right-0 bottom-0 left-0 z-20 h-single cursor-ns-resize";
 
 /** @emoji 📐 Max width cap for window engagement (matches {@link Engagement} design target). */
 export const windowEngagementMaxWidthPx = 28 * 16;
@@ -10226,6 +10244,9 @@ export const Tree = (({
               finishPalettePointerGesture();
               return;
             }
+            if (palettePointerGestureRef.current.dragging) {
+              dragAndDropController?.onDragEnd?.({ items: [item], sourceItem: item, section });
+            }
             finishPalettePointerGesture();
           };
           const onWindowPointerCancel = (): void => {
@@ -10237,12 +10258,12 @@ export const Tree = (({
             finishPalettePointerGesture();
           };
           window.addEventListener("pointermove", onWindowPointerMove);
-          window.addEventListener("pointerup", onWindowPointerUp);
-          window.addEventListener("pointercancel", onWindowPointerCancel);
+          window.addEventListener("pointerup", onWindowPointerUp, true);
+          window.addEventListener("pointercancel", onWindowPointerCancel, true);
           palettePointerWindowCleanupRef.current = () => {
             window.removeEventListener("pointermove", onWindowPointerMove);
-            window.removeEventListener("pointerup", onWindowPointerUp);
-            window.removeEventListener("pointercancel", onWindowPointerCancel);
+            window.removeEventListener("pointerup", onWindowPointerUp, true);
+            window.removeEventListener("pointercancel", onWindowPointerCancel, true);
           };
         },
       };
@@ -11095,6 +11116,72 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
 );
 
 // #endregion 🪟WindowMeasuresChrome
+
+// #region ↔️WindowMeasuresResize
+
+/** @emoji ↔️ Mouse resize handle for the unfolded window options rail (left width / bottom height). */
+function WindowMeasuresResizeHandle({
+  resizeSide,
+  size,
+  minSize,
+  maxSize,
+  onSizeChange,
+  onActiveChange,
+  onStartSize,
+  resizeHandleClass,
+}: {
+  resizeSide: "left" | "bottom";
+  size: number;
+  minSize: number;
+  maxSize: number;
+  onSizeChange: (size: number) => void;
+  onActiveChange: (active: boolean) => void;
+  onStartSize?: () => number;
+  resizeHandleClass: string;
+}) {
+  const [isResizing, setIsResizing] = reactHostPort.useState(false);
+  const isVertical = resizeSide === "bottom";
+  const resolveMaxSizeRef = reactHostPort.useRef(maxSize);
+  resolveMaxSizeRef.current = maxSize;
+  const handleMouseDown = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const startPos = isVertical ? event.clientY : event.clientX;
+    const startSize = onStartSize?.() ?? size;
+    setIsResizing(true);
+    onActiveChange(true);
+    const bindings = createDOMEventBinding();
+    const handleMouseMove = (moveEvent: Event) => {
+      const mouseEvent = moveEvent as MouseEvent;
+      const currentPos = isVertical ? mouseEvent.clientY : mouseEvent.clientX;
+      const delta = currentPos - startPos;
+      const nextSize = resizeSide === "bottom" ? startSize + delta : startSize - delta;
+      const limit = resolveMaxSizeRef.current;
+      if (nextSize >= minSize && nextSize <= limit) {
+        onSizeChange(nextSize);
+      }
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      onActiveChange(false);
+      bindings.dispose();
+    };
+    bindings.listen(document, "mousemove", handleMouseMove);
+    bindings.listen(document, "mouseup", handleMouseUp);
+  };
+  return (
+    <div
+      data-slot={`window-measures-resize-${resizeSide}`}
+      data-resizing={isResizing ? "true" : undefined}
+      className={resizeHandleClass}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={() => onActiveChange(true)}
+      onMouseLeave={() => !isResizing && onActiveChange(false)}
+    />
+  );
+}
+
+// #endregion ↔️WindowMeasuresResize
 
 // #endregion 📜Tree
 
@@ -13048,9 +13135,40 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const measuresStackRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(false);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
+  const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
+  const [measuresHeightPx, setMeasuresHeightPx] = reactHostPort.useState<number | null>(null);
+  const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
+  const [measuresResizeBottomActive, setMeasuresResizeBottomActive] = reactHostPort.useState(false);
   const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
+  const measuresUnfolded = !!measures && !measuresFolded && !measuresExpanded;
+  const readMeasuresResizeLimits = reactHostPort.useCallback(() => {
+    const body = windowBodyRef.current;
+    const bodyRect = body?.getBoundingClientRect();
+    const bodyWidth = Math.max(body?.clientWidth ?? 0, bodyRect?.width ?? 0, windowMeasuresMaxWidthPx);
+    const bodyHeight = Math.max(body?.clientHeight ?? 0, bodyRect?.height ?? 0, windowMeasuresMinHeightPx * 4);
+    return {
+      maxWidth: Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8)),
+      maxHeight: Math.max(windowMeasuresMinHeightPx, Math.round(bodyHeight) - 8),
+    };
+  }, []);
+  const { maxWidth: measuresMaxWidthPx, maxHeight: measuresMaxHeightPx } = readMeasuresResizeLimits();
+  const resolveMeasuresHeightStart = reactHostPort.useCallback(() => {
+    if (measuresHeightPx != null) return measuresHeightPx;
+    const measuredHeight = measuresStackRef.current ? Math.round(measuresStackRef.current.getBoundingClientRect().height) : windowMeasuresMinHeightPx;
+    const nextHeight = Math.max(measuredHeight, windowMeasuresMinHeightPx);
+    setMeasuresHeightPx(nextHeight);
+    return nextHeight;
+  }, [measuresHeightPx]);
+  const measuresOverlaySizeStyle = measuresUnfolded
+    ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)" } satisfies React.CSSProperties)
+    : undefined;
+  const measuresStackSizeStyle =
+    measuresUnfolded && measuresHeightPx != null
+      ? ({ height: measuresHeightPx, maxHeight: "100%" } satisfies React.CSSProperties)
+      : undefined;
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementDraftRef = reactHostPort.useRef("");
@@ -13166,23 +13284,29 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 ref={measuresOverlayRef}
                 data-slot="window-measures-overlay"
                 data-expanded={measuresExpanded ? "true" : undefined}
+                style={measuresOverlaySizeStyle}
                 className={cn(
                   windowMeasuresOverlayClass,
                   measuresExpanded
                     ? windowMeasuresOverlayExpandedClass
                     : measuresFolded
                       ? windowMeasuresOverlayFoldedClass
-                      : windowMeasuresRailWidthClass,
+                      : !measuresOverlaySizeStyle && windowMeasuresRailWidthClass,
                 )}
               >
                 <div
+                  ref={measuresStackRef}
                   data-dim
                   data-slot="window-measures-stack"
                   data-folded={measuresFolded ? "true" : undefined}
+                  style={measuresStackSizeStyle}
                   className={cn(
                     windowMeasuresStackClass,
+                    measuresUnfolded && "relative",
                     measuresExpanded && windowMeasuresStackExpandedClass,
                     measuresFolded && windowMeasuresStackFoldedClass,
+                    panelResizeEdgeAccentClass("left", measuresResizeLeftActive),
+                    panelResizeEdgeAccentClass("bottom", measuresResizeBottomActive),
                   )}
                 >
                   <WindowMeasuresChrome
@@ -13198,6 +13322,29 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                     <div data-slot="window-measures-body" className={windowMeasuresBodyClass}>
                       {measures}
                     </div>
+                  ) : null}
+                  {measuresUnfolded ? (
+                    <>
+                      <WindowMeasuresResizeHandle
+                        maxSize={measuresMaxWidthPx}
+                        minSize={windowMeasuresMinWidthPx}
+                        onActiveChange={setMeasuresResizeLeftActive}
+                        onSizeChange={setMeasuresWidthPx}
+                        resizeHandleClass={windowMeasuresResizeHandleLeftClass}
+                        resizeSide="left"
+                        size={measuresWidthPx}
+                      />
+                      <WindowMeasuresResizeHandle
+                        maxSize={measuresMaxHeightPx}
+                        minSize={windowMeasuresMinHeightPx}
+                        onActiveChange={setMeasuresResizeBottomActive}
+                        onSizeChange={setMeasuresHeightPx}
+                        onStartSize={resolveMeasuresHeightStart}
+                        resizeHandleClass={windowMeasuresResizeHandleBottomClass}
+                        resizeSide="bottom"
+                        size={measuresHeightPx ?? windowMeasuresMinHeightPx}
+                      />
+                    </>
                   ) : null}
                 </div>
               </div>
@@ -17823,13 +17970,13 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         clearTemplateDragPreview();
       }
     };
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-    window.addEventListener("pointercancel", handlePointerUp);
+    window.addEventListener("pointermove", handlePointerMove, true);
+    window.addEventListener("pointerup", handlePointerUp, true);
+    window.addEventListener("pointercancel", handlePointerUp, true);
     return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener("pointercancel", handlePointerUp);
+      window.removeEventListener("pointermove", handlePointerMove, true);
+      window.removeEventListener("pointerup", handlePointerUp, true);
+      window.removeEventListener("pointercancel", handlePointerUp, true);
     };
   }, [clearTemplateDragPreview, completeExternalTemplateDrop, onTemplateDrop, refreshDropZone]);
 
@@ -18753,6 +18900,14 @@ if (import.meta.vitest) {
       expect(readActiveWindowTemplateDragSession()).toBeNull();
     });
 
+    it("cancelWindowTemplatePointerDrag clears an active template drag session", () => {
+      beginWindowTemplatePointerDrag(JSON.stringify({ windowKindId: "gis-map-main" }));
+      beginWindowTemplateDrag({ payload: { windowKindId: "gis-map-main" }, label: "Map" });
+      cancelWindowTemplatePointerDrag();
+      expect(windowTemplatePointerDragRef.active).toBe(false);
+      expect(readActiveWindowTemplateDragSession()).toBeNull();
+    });
+
     it("reconcileWindows drops closed windows instead of re-adding them", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
@@ -19554,12 +19709,14 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      const overlay = container.querySelector('[data-slot="window-measures-overlay"]');
-      expect(overlay?.className).toContain("min(14rem");
-      expect(overlay?.className).toContain("top-0");
-      expect(overlay?.className).not.toContain("inset-y-0");
+      const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
+      expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
+      expect(overlay.className).toContain("top-0");
+      expect(overlay.className).not.toContain("inset-y-0");
       expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-chrome"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-resize-bottom"]')).toBeTruthy();
       expect(screen.getByText("Window Options")).toBeTruthy();
     });
 
@@ -19581,7 +19738,9 @@ if (import.meta.vitest) {
       fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-unfold`)!);
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBeNull();
-      expect(overlay.className).toContain("min(14rem");
+      expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
+      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-resize-bottom"]')).toBeTruthy();
     });
 
     it("Window measures chrome span expands the overlay across the window body", () => {
@@ -19592,12 +19751,36 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       expect(overlay.getAttribute("data-expanded")).toBeNull();
+      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
       fireEvent.click(container.querySelector(`#measures-span-window-window-measures-span`)!);
       expect(overlay.getAttribute("data-expanded")).toBe("true");
       expect(overlay.className).toContain("inset-0");
+      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeNull();
       fireEvent.click(container.querySelector(`#measures-span-window-window-measures-span`)!);
       expect(overlay.getAttribute("data-expanded")).toBeNull();
       expect(overlay.className).toContain("top-0");
+      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
+    });
+
+    it("Window measures rail resizes from the left and bottom edges when unfolded", () => {
+      const { container } = render(
+        <Window id="measures-resize-window" measures={<div data-testid="measure-slot">LOD</div>}>
+          <div className="h-64 w-96">Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
+      const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
+      const leftHandle = container.querySelector('[data-slot="window-measures-resize-left"]') as HTMLElement;
+      const bottomHandle = container.querySelector('[data-slot="window-measures-resize-bottom"]') as HTMLElement;
+      expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
+      fireEvent.mouseDown(leftHandle, { clientX: 300 });
+      fireEvent.mouseMove(document, { clientX: 260 });
+      fireEvent.mouseUp(document);
+      expect(Number.parseInt(overlay.style.width, 10)).toBeGreaterThan(windowMeasuresDefaultWidthPx);
+      fireEvent.mouseDown(bottomHandle, { clientY: 120 });
+      fireEvent.mouseMove(document, { clientY: 180 });
+      fireEvent.mouseUp(document);
+      expect(Number.parseInt(stack.style.height, 10)).toBeGreaterThan(windowMeasuresMinHeightPx);
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {

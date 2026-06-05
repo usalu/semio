@@ -1760,6 +1760,43 @@ if (import.meta.vitest) {
 			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, null)).toEqual([]);
 		});
 
+		it("puzzle2dPlayHierarchyTreeHighlightedIdsForKind expands transitive handle kind hover", () => {
+			const fixture = parsePuzzle2dFixtureV1({
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [
+					{
+						id: "a",
+						root: true,
+						shape: "circle",
+						text: "A",
+						x: 0,
+						y: 0,
+						radius: 10,
+						handles: [
+							{ id: "h-a", angle: 0, handleKind: "port" },
+							{ id: "h-b", angle: 90, handleKind: "other" },
+						],
+					},
+					{
+						id: "b",
+						shape: "circle",
+						text: "B",
+						x: 10,
+						y: 0,
+						radius: 10,
+						handles: [{ id: "h-c", angle: 0, handleKind: "port" }],
+					},
+				],
+				edges: [],
+			});
+			expect(fixture).not.toBeNull();
+			expect(puzzle2dPlayHierarchyTreeHighlightedIdsForKind(fixture!, { domain: "handle", kindId: "port" })).toEqual([
+				"puzzle-2d-play-hierarchy.handle.h-a",
+				"puzzle-2d-play-hierarchy.handle.h-c",
+			]);
+		});
+
 		it("puzzle2dPlayHierarchyTreeSelectedIds maps graph ids to tree row ids", () => {
 			const fixture = parsePuzzle2dFixtureV1({
 				schema: "puzzle.2d.fixture/v1",

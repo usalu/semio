@@ -643,6 +643,8 @@ export interface FiveDProps {
   readonly gumballConfig?: GumballConfig;
   /** @emoji 🕸️ When true, runs a continuous WASM force-graph layout on the flat surface (e.g. kit WIRES). */
   readonly liveForceGraph?: boolean;
+  /** @emoji 🔗 Flat graph port model; WIRES surfaces use `normal` (node-id edges, no handles). */
+  readonly graphPortMode?: Puzzle2dCanvasProps["graphPortMode"];
   /** 2d surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
   readonly puzzle2d?: Omit<Puzzle2dCanvasProps, "children">;
   /** 3d surface overrides; LOD is continuous/camera-driven — not the flat six-tier scale. */
@@ -774,7 +776,17 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const markers = reactHostPort.useMemo(() => markers2dFromFixture({ fixture: fixture2d, lockedIds: locked, selectedIds }), [fixture2d, locked, selectedIds]);
   const camera = store.get2dCamera(props.instanceId);
   const extra2d = props.puzzle2d ?? {};
-  const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, onDragEnd: onDragEndHost, ...rest2d } = extra2d;
+  const {
+    onSelect: onSelectHost,
+    onConnect: onConnectHost,
+    onIndirectConnect: onIndirectConnectHost,
+    onProximityConnect: onProximityConnectHost,
+    onDrag: onDragHost,
+    onDragEnd: onDragEndHost,
+    graphPortMode: puzzle2dGraphPortMode,
+    ...rest2d
+  } = extra2d;
+  const graphPortMode = props.graphPortMode ?? puzzle2dGraphPortMode;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   const liveForceGraph = props.liveForceGraph === true;
   const draggingNodeIdRef = reactHostPort.useRef<string | null>(null);
@@ -799,6 +811,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         camera={rest2d.camera ?? camera}
         className={["min-h-0 flex-1", props.className, rest2d.className].filter(Boolean).join(" ") || undefined}
         {...FIVE_D_FLAT_LOD_DEFAULTS}
+        {...(graphPortMode !== undefined ? { graphPortMode } : {})}
         kindCatalogs={project2dKindCatalogs(snap.model.kindCatalogs)}
         kindCompatibility={snap.model.kindCompatibility}
         linkSession={linkSession}

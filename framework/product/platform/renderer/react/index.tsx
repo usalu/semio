@@ -2755,6 +2755,7 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			<StoreProvider store={topologyStore}>
 				<FiveD
 					instanceId={instanceId}
+					graphPortMode={instanceId.endsWith(":kit:wires") ? "normal" : undefined}
 					liveForceGraph={instanceId.endsWith(":kit:wires")}
 					mode={fiveDMode}
 					puzzle2d={puzzle2dSelect}

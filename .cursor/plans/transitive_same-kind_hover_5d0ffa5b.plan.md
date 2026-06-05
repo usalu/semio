@@ -13,19 +13,19 @@ todos:
     status: completed
   - id: 3d-shell
     content: Puzzle 3D play shell + PlayCanvas controlled hover props; wire hierarchy + kinds-tab row onPointerEnter/Leave; transitive tree highlightedIds.
-    status: in_progress
+    status: completed
   - id: 2d-rust
     content: "Puzzle 2D Rust engine: add hovered_kind, resolve element kind on hover, transitive hovered_style_kind, set_hovered_kind setter, emit kind in hover event."
-    status: pending
+    status: completed
   - id: 2d-shell
     content: "Puzzle 2D: wire Puzzle2dPlayPaneCanvas controlled hover, kind-aware shell hover, transitive hierarchy highlightedIds, kinds-tab row hover handlers."
-    status: pending
+    status: completed
   - id: framework-hover
     content: Upgrade shell hover model to kind-aware { id, kind } as single source for tree + canvas transitive derivation.
-    status: pending
+    status: completed
   - id: verify
     content: "Runtime-verify in both playgrounds with [DEBUG] logs: hovering an instance and a kind row highlights all same-kind instances in canvas and tree."
-    status: pending
+    status: completed
 isProject: false
 ---
 
