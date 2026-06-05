@@ -163,7 +163,7 @@
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
     --border-normal-color: var(--color-gray);
-    --border-emphasized-color: var(--color-gray);
+    --border-emphasized-color: var(--foreground);
     --border-element-color: var(--border-normal-color);
     --border-color: var(--border-normal-color);
     --plaster: var(--color-gray);
@@ -793,6 +793,14 @@
   --color-emphasized: var(--border-emphasized-color);
 }
 
+@utility border-normal {
+  border-color: var(--border-normal-color);
+}
+
+@utility border-emphasized {
+  border-color: var(--border-emphasized-color);
+}
+
 @utility gap-single {
   gap: var(--spacing-single);
 }
@@ -1132,7 +1140,16 @@
 }
 
 [data-slot="panel-chrome-frame"] {
-  border-color: var(--border-emphasized-color);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--border-emphasized-color) !important;
+}
+
+[data-slot="side-panel-tabs"],
+[data-slot="mobile-panel-tabs"] {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-normal-color) !important;
 }
 
 @utility ui-glass-toolbar {

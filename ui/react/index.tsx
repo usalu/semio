@@ -2744,11 +2744,17 @@ export function getLevelZClass(level: Level): string {
 	}
 }
 
-/** @emoji 📏 Emphasized border stroke — use only on large chrome (e.g. mode dock panel body). */
-export const borderEmphasizedClass = "border-emphasized";
+/** @emoji 📏 Foreground chrome stroke (navbar, footer, panel frame, toolbar outline, windows). */
+export const borderEmphasizedClass = "!border-emphasized";
 
 /** @emoji 📏 Emphasized chrome frame (`border` + {@link borderEmphasizedClass}). */
-export const borderEmphasizedFrameClass = `border ${borderEmphasizedClass}`;
+export const borderEmphasizedFrameClass = `box-border border border-solid ${borderEmphasizedClass}`;
+
+/** @emoji 📏 Subtle normal separator (`border-b` + {@link borderNormalClass}). */
+export const borderNormalClass = "!border-normal";
+
+/** @emoji 📏 Normal bottom edge under panel tabs — not {@link borderEmphasizedClass}. */
+export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
 
 /** @emoji 📏 Implicit element border color (controls, dropdowns, dividers). */
 export const borderElementClass = "border-element";
@@ -2769,17 +2775,17 @@ export const panelGlassFillClass = glassPanelClass;
 /** @emoji 🪟 Frosted fill layer (ghost-dimmed; sits under the stroke so the border stays visible). */
 export const panelChromeFillLayerClass = cn("pointer-events-none absolute inset-0 z-0", panelGlassFillClass);
 
-/** @emoji 🪟 Emphasized stroke on top of fill (transparent center; not ghost-dimmed). */
+/** @emoji 🪟 Emphasized stroke on top of fill and content (transparent center; not ghost-dimmed). */
 export const panelChromeFrameLayerClass = cn(
-  "pointer-events-none absolute inset-0 z-[1] box-border bg-transparent",
+  "pointer-events-none absolute inset-0 z-30 box-border bg-transparent",
   panelChromeBorderClass,
 );
 
 /** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
 export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
 
-/** @emoji 📑 Panel tab strip — no per-tab borders; {@link panelChromeBorderClass} owns the outline. */
-export const panelTabBarClass = "relative z-10 flex items-stretch shrink-0 overflow-x-auto";
+/** @emoji 📑 Panel tab strip — {@link borderNormalBottomClass} under tabs; outer outline is {@link panelChromeBorderClass}. */
+export const panelTabBarClass = cn("relative z-40 flex items-stretch shrink-0 overflow-x-auto", borderNormalBottomClass);
 
 /** @emoji 📑 Panel tab icon button (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = "flex items-center justify-center h-full cursor-pointer transition-colors hover:bg-hover-panel";
@@ -20620,7 +20626,7 @@ if (treeVitest) {
       expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
     });
 
-    it("uses normal implicit borders on navbar, footer, and toolbar; emphasized outline on floating panels", () => {
+    it("uses foreground emphasized panel frame and normal tab separator; shell bars keep implicit stroke", () => {
       expect(panelChromeBorderClass).toContain("border-emphasized");
       const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
       expect(navbarMarkup).toContain("border-b");
@@ -20642,7 +20648,9 @@ if (treeVitest) {
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
       expect(panelMarkup).toContain("border-emphasized");
       expect(panelMarkup).not.toContain("divide-x");
-      expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-b/);
+      expect(panelMarkup).toContain(borderNormalClass);
+      expect(panelMarkup).not.toContain("border-b-current");
+      expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-emphasized/);
       const measuresMarkup = renderToStaticMarkup(
         <div data-slot="window-measures-stack" className={windowMeasuresStackClass} />,
       );
