@@ -343,8 +343,11 @@ const MAX_CONCURRENT_TILE_FETCHES = 12;
 const TILE_REFRESH_DEBOUNCE_MS = 120;
 let gisMapCameraLimitsCache: { min: number; max: number } | null = null;
 
-/** @emoji 🔭 Wheel/pan zoom bounds from GIS map WASM (single source of truth). */
-export function getGisMapCameraLimits(): { min: number; max: number } {
+/** @emoji 🔭 Wheel/pan zoom bounds from GIS map WASM (cover min depends on viewport size). */
+export function getGisMapCameraLimits(session?: MapSession): { min: number; max: number } {
+  if (session) {
+    return JSON.parse(session.cameraLimitsJson()) as { min: number; max: number };
+  }
   if (!gisMapCameraLimitsCache) {
     gisMapCameraLimitsCache = JSON.parse(new MapSession().cameraLimitsJson()) as { min: number; max: number };
   }
@@ -569,6 +572,11 @@ export class MapRenderer {
     this.dpr = nextDpr;
     this.applyCanvasPixelSize(lw, lh, nextDpr);
     this.session.setSize(lw, lh, nextDpr);
+    this.session.reclampCamera();
+    const parsed = this.readCameraFromSession();
+    if (parsed) {
+      this.camera = parsed;
+    }
     return true;
   }
 
@@ -803,7 +811,7 @@ export function MapCanvas({
   const layerStrokeScaleJson = useMemo(() => mapLayerStrokeScaleToJson(layerStrokeScale), [layerStrokeScale]);
 
   const clampMapZoom = useCallback((zoom: number): number => {
-    const { min, max } = getGisMapCameraLimits();
+    const { min, max } = getGisMapCameraLimits(rendererRef.current?.session);
     return Math.min(max, Math.max(min, zoom));
   }, []);
 
@@ -819,6 +827,8 @@ export function MapCanvas({
     }
   }, [onEffectiveLodChange]);
 
+  const mirrorSessionCameraToReactRef = useRef<() => void>(() => undefined);
+
   const mirrorSessionCameraToReact = useCallback(() => {
     const parsed = rendererRef.current?.readCameraFromSession();
     if (!parsed) {
@@ -831,6 +841,8 @@ export function MapCanvas({
     onCamera?.(parsed);
     reportEffectiveLod();
   }, [camera, onCamera, reportEffectiveLod]);
+
+  mirrorSessionCameraToReactRef.current = mirrorSessionCameraToReact;
 
   const applyCameraToSession = useCallback(
     (next: MapCamera): void => {
@@ -845,17 +857,35 @@ export function MapCanvas({
     [camera, clampCamera, onCamera],
   );
 
+  const resolveMapPaneElement = useCallback((container: HTMLElement): HTMLElement => {
+    let node: HTMLElement | null = container;
+    while (node) {
+      const slot = node.dataset.slot;
+      if (slot === "window" || slot === "mode-dock-stack-body") {
+        return node;
+      }
+      node = node.parentElement;
+    }
+    return container;
+  }, []);
+
   const readContainerSize = useCallback((): { w: number; h: number } => {
     const container = containerRef.current;
     if (!container) {
       return { w: 1, h: 1 };
     }
-    const rect = container.getBoundingClientRect();
+    const pane = resolveMapPaneElement(container);
+    const rect = pane.getBoundingClientRect();
+    const style = globalThis.getComputedStyle(pane);
+    const padX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight);
+    const padY = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom);
+    const innerW = rect.width - (Number.isFinite(padX) ? padX : 0);
+    const innerH = rect.height - (Number.isFinite(padY) ? padY : 0);
     return {
-      w: Math.max(1, Math.round(rect.width || container.clientWidth)),
-      h: Math.max(1, Math.round(rect.height || container.clientHeight)),
+      w: Math.max(1, Math.round(innerW || pane.clientWidth || container.clientWidth)),
+      h: Math.max(1, Math.round(innerH || pane.clientHeight || container.clientHeight)),
     };
-  }, []);
+  }, [resolveMapPaneElement]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -885,6 +915,7 @@ export function MapCanvas({
       if (!renderer.setSize(w, h, nextDpr)) {
         return;
       }
+      mirrorSessionCameraToReactRef.current();
       renderer.scheduleRefreshTiles();
     };
 
@@ -914,11 +945,15 @@ export function MapCanvas({
               applySize();
             });
           });
-    resizeObserver?.observe(container);
+    const pane = resolveMapPaneElement(container);
+    resizeObserver?.observe(pane);
+    if (pane !== container) {
+      resizeObserver?.observe(container);
+    }
 
     const boot = async (): Promise<void> => {
       let { w, h } = readContainerSize();
-      for (let attempt = 0; attempt < 120 && (w < 8 || h < 8); attempt += 1) {
+      for (let attempt = 0; attempt < 240 && (w < 64 || h < 64); attempt += 1) {
         await new Promise<void>((resolve) => {
           if (typeof globalThis.requestAnimationFrame === "function") {
             globalThis.requestAnimationFrame(() => resolve());
@@ -967,7 +1002,7 @@ export function MapCanvas({
       renderer.dispose();
       rendererRef.current = null;
     };
-  }, [tileUrlTemplate, vectorTileUrlTemplate, readContainerSize]);
+  }, [resolveMapPaneElement, tileUrlTemplate, vectorTileUrlTemplate, readContainerSize]);
 
   useEffect(() => {
     rendererRef.current?.setRenderMode(renderMode);
@@ -1041,8 +1076,8 @@ export function MapCanvas({
   return (
     <div
       ref={containerRef}
-      className={["relative box-border min-h-0 min-w-0 size-full select-none", className].filter(Boolean).join(" ") || undefined}
-      style={{ height: "100%", position: "relative", width: "100%", touchAction: "none" }}
+      className={["absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none", className].filter(Boolean).join(" ") || undefined}
+      style={{ touchAction: "none" }}
     >
       <canvas
         ref={canvasRef}
@@ -1073,6 +1108,7 @@ export function MapCanvas({
           }
           const r = rendererRef.current;
           r?.session.pointerMoveScreen(e.clientX - rect.left, e.clientY - rect.top);
+          mirrorSessionCameraToReact();
           r?.scheduleRefreshTiles();
         }}
         onPointerUp={(e) => {

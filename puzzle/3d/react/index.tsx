@@ -31,6 +31,9 @@ import {
   formatLod,
   gridPlacementAnchorCad,
   GLB_MESH_FRAME_ROTATION_X,
+  collisionBodyFromObject,
+  solidOverlapVolume,
+  type CollisionBody,
   lodFromCameraDistance,
   lodFromSliderValue,
   lodGridBandStepsWorld,
@@ -1022,8 +1025,8 @@ export interface CanvasProps {
   onFillMeshesReady?: () => void;
   /** @emoji 🖌️ Commits a brush placement (new object + attraction). */
   onBrushPlace?: (payload: BrushPlacePayload) => void;
-  /** @emoji 📏 Minimum AABB penetration depth (CAD units) before brush placement counts as collision; defaults to {@link DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE}. */
-  brushPlacementCollisionTolerance?: number;
+  /** @emoji 📏 Solid overlap volume budget (m3) before brush placement counts as collision; defaults to {@link DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}. */
+  brushPlacementOverlapBudget?: number;
   /** @emoji 📥 When true, accepts in-app fixture drags using {@link FIXTURE_DRAG_V1_MIME} (not OS file drops). */
   fixtureDragDrop?: boolean;
   /** @emoji 📥 Palette / shelf fixture dropped on the canvas at the grid-plane intersection. */
@@ -3291,152 +3294,23 @@ export function boxesIntersect(a: Box3, b: Box3, epsilon = 1e-3): boolean {
   return a.min.x <= b.max.x + epsilon && a.max.x + epsilon >= b.min.x && a.min.y <= b.max.y + epsilon && a.max.y + epsilon >= b.min.y && a.min.z <= b.max.z + epsilon && a.max.z + epsilon >= b.min.z;
 }
 
-/** @emoji 📏 Default brush placement penetration (CAD world units, meters); 10cm allows face contact without deep overlap. */
-export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = 0.1;
+/** @emoji 📏 Default solid overlap budget (m3) before brush placement counts as collision. */
+export const DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET = 0.02;
 
-/** @emoji 🎚️ Window-measure slider range for brush placement collision tolerance. */
-export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN = 0;
-export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX = 100;
-export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP = 1;
-/** @emoji 📏 CAD penetration depth at window slider max (meters). */
-export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX = 0.5;
-/** @emoji 📏 Window slider step for brush collision tolerance (meters). */
-export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_STEP = 0.001;
+/** @emoji 📏 Maximum solid overlap budget (m3) on the play window slider. */
+export const BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX = 1;
 
-/** @emoji 🎚️ Maps play window slider position to brush collision tolerance (CAD units). */
-export function brushPlacementCollisionToleranceFromSlider(slider: number): number {
-  const span = BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN;
-  if (span <= 0) {
-    return DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
-  }
-  const t = Math.max(0, Math.min(1, (slider - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN) / span));
-  return t * BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX;
-}
+/** @emoji 📏 Window slider step for brush overlap budget (m3). */
+export const BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP = 0.01;
 
-/** @emoji 🎚️ Maps brush collision tolerance to play window slider position. */
-export function brushPlacementCollisionToleranceToSlider(tolerance: number): number {
-  if (BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX <= 0) {
-    return BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN;
-  }
-  const t = Math.max(0, Math.min(1, tolerance / BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX));
-  return Math.round(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN + t * (BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX - BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN));
-}
+/** @deprecated Use {@link DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}. */
+export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
 
-/** @emoji 📏 CAD slop below which AABB axis overlap counts as face contact, not penetration. */
-export const BRUSH_AABB_CONTACT_EPSILON = 0.02;
+/** @deprecated Use {@link BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX}. */
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX = BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX;
 
-const BRUSH_AABB_STRICT_CONTACT_EPSILON = 1e-3;
-
-/** @emoji 📏 Face-contact slop for brush AABB tests; strict tolerance uses float slop only. */
-export function brushCollisionContactEpsilon(collisionTolerance: number): number {
-  return collisionTolerance <= 0 ? BRUSH_AABB_STRICT_CONTACT_EPSILON : BRUSH_AABB_CONTACT_EPSILON;
-}
-
-/** @emoji 📏 Per-axis AABB inset for brush collision probes; zero at strict tolerance. */
-export function brushCollisionBoxSlop(collisionTolerance: number): number {
-  if (collisionTolerance <= 0) {
-    return 0;
-  }
-  return Math.min(0.4, Math.max(BRUSH_AABB_CONTACT_EPSILON, collisionTolerance * 0.12));
-}
-
-/** @emoji 📦 True when AABB overlap depth along every axis exceeds {@link minPenetration} (touching faces do not count). */
-export function boxesPenetrationExceeds(
-  a: Box3,
-  b: Box3,
-  minPenetration: number,
-  contactEpsilon: number = BRUSH_AABB_CONTACT_EPSILON,
-): boolean {
-  const ox = Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x);
-  const oy = Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y);
-  const oz = Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z);
-  if (ox <= 0 || oy <= 0 || oz <= 0) {
-    return false;
-  }
-  const overlapVolume = ox * oy * oz;
-  if (overlapVolume <= contactEpsilon ** 3) {
-    return false;
-  }
-  if (minPenetration <= 0) {
-    return true;
-  }
-  return Math.min(ox, oy, oz) > minPenetration;
-}
-
-/** @emoji 📦 Mesh-body AABB for a scene object group (skips vortex attachment children). */
-export function brushSceneObjectCollisionBox(objectGroup: Group, collisionTolerance: number): Box3 {
-  const union = new Box3();
-  let hasMesh = false;
-  for (const child of objectGroup.children) {
-    if (child.userData?.puzzle3dObjectAttachments) {
-      continue;
-    }
-    updateWorldMatrixChain(child);
-    const childBox = new Box3().setFromObject(child, true);
-    if (!Number.isFinite(childBox.min.x) || childBox.isEmpty()) {
-      continue;
-    }
-    if (!hasMesh) {
-      union.copy(childBox);
-      hasMesh = true;
-    } else {
-      union.union(childBox);
-    }
-  }
-  if (!hasMesh) {
-    return brushPreviewCollisionBox(objectGroup, collisionTolerance);
-  }
-  const slop = brushCollisionBoxSlop(collisionTolerance);
-  if (slop <= 0) {
-    return union;
-  }
-  const inset = union.clone();
-  inset.expandByScalar(-slop);
-  if (!Number.isFinite(inset.min.x) || inset.isEmpty() || inset.min.x > inset.max.x) {
-    return union;
-  }
-  return inset;
-}
-
-/** @emoji 📦 Axis-aligned bounds for brush probes with tolerance-aware inset (reduces grazing false hits). */
-export function brushPreviewCollisionBox(previewGroup: Group, collisionTolerance: number): Box3 {
-  const raw = new Box3().setFromObject(previewGroup, true);
-  if (!Number.isFinite(raw.min.x) || raw.isEmpty()) {
-    return raw;
-  }
-  const slop = brushCollisionBoxSlop(collisionTolerance);
-  if (slop <= 0) {
-    return raw;
-  }
-  const inset = raw.clone();
-  inset.expandByScalar(-slop);
-  if (!Number.isFinite(inset.min.x) || inset.isEmpty() || inset.min.x > inset.max.x) {
-    return raw;
-  }
-  return inset;
-}
-
-/** @emoji 🚫 Object ids skipped in brush placement collision (host plus direct attraction partners). */
-export function brushPlacementCollisionExcludeObjectIds(
-  hostObjectId: string | undefined,
-  attractions: readonly AttractionProps[] | undefined,
-  collisionTolerance: number = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
-): ReadonlySet<string> {
-  const excluded = new Set<string>();
-  if (!hostObjectId || collisionTolerance <= 0) {
-    return excluded;
-  }
-  excluded.add(hostObjectId);
-  for (const row of objectAttractionsFromAttractions(attractions ?? [])) {
-    if (row.attractedObjectId === hostObjectId) {
-      excluded.add(row.attractingObjectId);
-    }
-    if (row.attractingObjectId === hostObjectId) {
-      excluded.add(row.attractedObjectId);
-    }
-  }
-  return excluded;
-}
+/** @deprecated Use {@link BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP}. */
+export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_STEP = BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP;
 
 export function brushPreviewFromCandidate(args: {
   readonly targetVortexFullId: string;
@@ -3554,32 +3428,29 @@ export interface BrushSceneCollisionSource {
   collectObjectGroups(): readonly Group[];
 }
 
-/** @emoji 💥 True when a brush preview penetrates another object AABB beyond {@link collisionTolerance} (host/partners may be excluded). */
+/** @emoji 💥 True when a brush preview solid overlap exceeds {@link overlapBudget}; `null` when mesh BVHs are not ready. */
 export function brushPreviewCollides(
   scene: BrushSceneCollisionSource,
-  previewGroup: Group,
-  excludeObjectIds?: ReadonlySet<string> | string,
-  collisionTolerance: number = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
-): boolean {
-  updateWorldMatrixChain(previewGroup);
-  const previewBox = brushPreviewCollisionBox(previewGroup, collisionTolerance);
-  if (!Number.isFinite(previewBox.min.x) || previewBox.isEmpty()) {
-    return false;
+  preview: BrushPreviewState,
+  overlapBudget: number = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+): boolean | null {
+  const previewBody = brushCollisionBody(preview.meshUrl);
+  if (!previewBody) {
+    return null;
   }
-  const excluded =
-    typeof excludeObjectIds === "string" ? new Set<string>([excludeObjectIds]) : (excludeObjectIds ?? new Set<string>());
-  const contactEpsilon = brushCollisionContactEpsilon(collisionTolerance);
+  const previewWorld = brushPreviewWorldMatrix(preview);
   for (const group of scene.collectObjectGroups()) {
-    const objectId = group.userData?.puzzle3dObjectId;
-    if (typeof objectId === "string" && objectId.length > 0 && excluded.has(objectId)) {
+    const meshUrl = brushSceneObjectMeshUrl(group);
+    if (!meshUrl) {
       continue;
     }
-    updateWorldMatrixChain(group);
-    const other = brushSceneObjectCollisionBox(group, collisionTolerance);
-    if (!Number.isFinite(other.min.x) || other.isEmpty()) {
-      continue;
+    const otherBody = brushCollisionBody(meshUrl);
+    if (!otherBody) {
+      return null;
     }
-    if (boxesPenetrationExceeds(previewBox, other, collisionTolerance, contactEpsilon)) {
+    const otherWorld = brushSceneObjectWorldMatrix(group);
+    const volume = solidOverlapVolume(previewBody, previewWorld, otherBody, otherWorld, { sampleCount: 1024 });
+    if (volume > overlapBudget) {
       return true;
     }
   }
@@ -3607,6 +3478,7 @@ export function brushProbeGroupFromPreview(preview: Pick<BrushPreviewState, "ori
 export const BRUSH_COLLISION_MESH_MIN_EXTENT = 2;
 
 const brushCollisionGltfScenes = new Map<string, Object3D>();
+const brushCollisionBodies = new Map<string, CollisionBody>();
 
 /** @emoji 📦 Registers a loaded GLTF scene for mesh-backed brush/fill collision probes. */
 export function registerBrushCollisionGltfScene(meshUrl: string, scene: Object3D): void {
@@ -3614,11 +3486,57 @@ export function registerBrushCollisionGltfScene(meshUrl: string, scene: Object3D
     return;
   }
   brushCollisionGltfScenes.set(meshUrl, scene);
+  if (!brushCollisionMeshExtentOk(scene)) {
+    brushCollisionBodies.delete(meshUrl);
+    return;
+  }
+  const body = collisionBodyFromObject(scene);
+  if (body) {
+    brushCollisionBodies.set(meshUrl, body);
+  } else {
+    brushCollisionBodies.delete(meshUrl);
+  }
 }
 
 /** @emoji 📦 Clears registered GLTF collision scenes (tests). */
 export function clearBrushCollisionGltfScenes(): void {
   brushCollisionGltfScenes.clear();
+  brushCollisionBodies.clear();
+}
+
+/** @emoji 🧊 Cached BVH collision body for a mesh URL. */
+export function brushCollisionBody(meshUrl: string): CollisionBody | null {
+  const cached = brushCollisionBodies.get(meshUrl);
+  if (cached) {
+    return cached;
+  }
+  const root = brushCollisionGltfRoot(meshUrl);
+  if (!root) {
+    return null;
+  }
+  const body = collisionBodyFromObject(root);
+  if (body) {
+    brushCollisionBodies.set(meshUrl, body);
+  }
+  return body;
+}
+
+/** @emoji 🧭 World matrix for a brush preview pose (pose group, GLB frame baked in body). */
+export function brushPreviewWorldMatrix(preview: Pick<BrushPreviewState, "origin" | "orientation" | "scale">): Matrix4 {
+  const group = new Group();
+  applyObjectPose(group, preview.origin, preview.orientation, preview.scale);
+  updateWorldMatrixChain(group);
+  return group.matrixWorld.clone();
+}
+
+function brushSceneObjectMeshUrl(group: Group): string | null {
+  const url = group.userData?.puzzle3dMeshUrl;
+  return typeof url === "string" && url.length > 0 ? url : null;
+}
+
+function brushSceneObjectWorldMatrix(group: Group): Matrix4 {
+  updateWorldMatrixChain(group);
+  return group.matrixWorld.clone();
 }
 
 /** @emoji 📦 True when a mesh root yields a non-degenerate posed collision extent. */
@@ -3654,14 +3572,19 @@ export function brushCandidateCollidesAtPose(
   scene: BrushSceneCollisionSource,
   preview: BrushPreviewState,
   meshRoot: Object3D | null | undefined,
-  excludeObjectIds?: ReadonlySet<string> | string,
-  collisionTolerance: number = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
+  overlapBudget: number = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
 ): boolean | null {
   if (!meshRoot || !brushCollisionMeshExtentOk(meshRoot)) {
     return null;
   }
-  const probe = brushProbeGroupFromPreview(preview, meshRoot);
-  return brushPreviewCollides(scene, probe, excludeObjectIds, collisionTolerance);
+  if (!brushCollisionBody(preview.meshUrl)) {
+    const body = collisionBodyFromObject(meshRoot);
+    if (!body) {
+      return null;
+    }
+    brushCollisionBodies.set(preview.meshUrl, body);
+  }
+  return brushPreviewCollides(scene, preview, overlapBudget);
 }
 
 /** @emoji ✅ Collision-filtered brush candidates after mesh-backed AABB probes. */
@@ -3681,11 +3604,10 @@ export function brushCollisionFreeCandidates(args: {
   readonly referenceOrientationCad?: Quat;
   readonly kindCatalogs: KindCatalogBundle | undefined;
   readonly sceneFixture?: FixtureV1;
-  readonly excludeObjectIds?: ReadonlySet<string> | string;
   readonly meshRootForUrl?: (meshUrl: string) => Object3D | null | undefined;
-  readonly collisionTolerance?: number;
+  readonly overlapBudget?: number;
 }): BrushCollisionFreeResult {
-  const collisionTolerance = args.collisionTolerance ?? DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
+  const overlapBudget = args.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
   const free: BrushCompatibleCandidate[] = [];
   let unknownPending = false;
   for (const candidate of args.candidates) {
@@ -3703,7 +3625,7 @@ export function brushCollisionFreeCandidates(args: {
       continue;
     }
     const meshRoot = args.meshRootForUrl?.(preview.meshUrl);
-    const collides = brushCandidateCollidesAtPose(args.scene, preview, meshRoot, args.excludeObjectIds, collisionTolerance);
+    const collides = brushCandidateCollidesAtPose(args.scene, preview, meshRoot, overlapBudget);
     if (collides === null) {
       unknownPending = true;
       continue;
@@ -3832,7 +3754,7 @@ export interface BrushFillVortexTarget {
 /** @emoji 🪣 Window engagement possible id for the fill tool. */
 export const PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID = "puzzle3d.tool.fill";
 
-const PUZZLE_3D_FILL_COUNT_MAX = 1000;
+export const PUZZLE_3D_FILL_COUNT_MAX = 1000;
 
 function fillVortexTargetWeight(target: BrushFillVortexTarget, weights: Puzzle3dBrushKindWeights): number {
   const vortexW = weights.vortexWeights[target.vortexKind ?? ""];
@@ -3893,84 +3815,114 @@ export function enumerateBrushFillVortexTargets(fixture: FixtureV1): readonly Br
   return out;
 }
 
-/** @emoji 📦 Object id plus world AABB tracked during {@link buildBrushFillSequence}. */
+/** @emoji 📦 Object id plus posed BVH body tracked during {@link buildBrushFillSequence}. */
 export interface BrushPlacedCollisionEntry {
   readonly objectId: string;
-  readonly box: Box3;
+  readonly meshUrl: string;
+  readonly worldMatrix: Matrix4;
 }
 
-function fixtureObjectCollisionBox(
+function fixtureObjectCollisionEntry(
   objectId: string,
   obj: Pick<FixtureObjectV1, "objectKind" | "origin" | "orientation" | "scale">,
   kindCatalogs: KindCatalogBundle | undefined,
   sceneFixture: FixtureV1 | undefined,
   meshRootForUrl: (meshUrl: string) => Object3D | null | undefined,
-  collisionTolerance: number,
 ): BrushPlacedCollisionEntry | null {
   const meshUrl = resolveObjectKindMeshUrl(obj.objectKind, kindCatalogs, sceneFixture);
   if (!meshUrl) {
     return null;
   }
   const meshRoot = meshRootForUrl(meshUrl);
-  if (!meshRoot || !brushCollisionMeshExtentOk(meshRoot)) {
+  if (!meshRoot || !brushCollisionBody(meshUrl)) {
     return null;
   }
-  const probe = brushProbeGroupFromPreview({ origin: obj.origin, orientation: obj.orientation, scale: obj.scale }, meshRoot);
-  const box = brushPreviewCollisionBox(probe, collisionTolerance);
-  if (!Number.isFinite(box.min.x) || box.isEmpty()) {
-    return null;
-  }
-  return { objectId, box };
+  return {
+    objectId,
+    meshUrl,
+    worldMatrix: brushPreviewWorldMatrix({ origin: obj.origin, orientation: obj.orientation, scale: obj.scale }),
+  };
 }
 
 function fillPreviewCollidesAccumulated(
   preview: BrushPreviewState,
-  meshRoot: Object3D,
   placed: readonly BrushPlacedCollisionEntry[],
-  collisionTolerance: number,
-  excludeObjectIds?: ReadonlySet<string>,
-): boolean {
-  if (!brushCollisionMeshExtentOk(meshRoot)) {
-    return true;
+  overlapBudget: number,
+): boolean | null {
+  const previewBody = brushCollisionBody(preview.meshUrl);
+  if (!previewBody) {
+    return null;
   }
-  const probe = brushProbeGroupFromPreview(preview, meshRoot);
-  const previewBox = brushPreviewCollisionBox(probe, collisionTolerance);
-  if (!Number.isFinite(previewBox.min.x) || previewBox.isEmpty()) {
-    return false;
-  }
-  const contactEpsilon = brushCollisionContactEpsilon(collisionTolerance);
+  const previewWorld = brushPreviewWorldMatrix(preview);
   for (const entry of placed) {
-    if (excludeObjectIds?.has(entry.objectId)) {
-      continue;
+    const otherBody = brushCollisionBody(entry.meshUrl);
+    if (!otherBody) {
+      return null;
     }
-    if (boxesPenetrationExceeds(previewBox, entry.box, collisionTolerance, contactEpsilon)) {
+    const volume = solidOverlapVolume(previewBody, previewWorld, otherBody, entry.worldMatrix, { sampleCount: 512 });
+    if (volume > overlapBudget) {
       return true;
     }
   }
   return false;
 }
 
-/** @emoji 🪣 Deterministic frontier fill sequence with weighted distribution and mesh AABB collision. */
-export function buildBrushFillSequence(args: {
+function brushCompatibleCandidatesForFillTarget(
+  target: AttractionVortexContext,
+  kindCatalogs: KindCatalogBundle | undefined,
+  kindCompatibility: readonly KindCompatEntry[] | undefined,
+  cache: Map<string, readonly BrushCompatibleCandidate[]>,
+): readonly BrushCompatibleCandidate[] {
+  const key = `${target.objectKind ?? ""}\u0001${target.vortexKind ?? ""}`;
+  const hit = cache.get(key);
+  if (hit) {
+    return hit;
+  }
+  const result = brushCompatibleCandidates(target, kindCatalogs, kindCompatibility);
+  cache.set(key, result);
+  return result;
+}
+
+/** @emoji 🪣 Args shared by {@link buildBrushFillSequence} and {@link createBrushFillSequenceStepper}. */
+export interface BrushFillSequenceArgs {
   readonly baseFixture: FixtureV1;
   readonly maxCount?: number;
   readonly seed: number;
   readonly kindCatalogs: KindCatalogBundle | undefined;
   readonly kindCompatibility: readonly KindCompatEntry[] | undefined;
-  readonly collisionTolerance?: number;
+  readonly overlapBudget?: number;
   readonly meshRootForUrl: (meshUrl: string) => Object3D | null | undefined;
   readonly weights?: Puzzle3dBrushKindWeights;
-}): readonly BrushPlacePayload[] {
+}
+
+/** @emoji 🪣 Incremental fill build snapshot for chunked session prep. */
+export interface BrushFillSequenceBuildResult {
+  readonly sequence: readonly BrushPlacePayload[];
+  readonly appendedObjects: readonly FixtureObjectV1[];
+  readonly appendedAttractions: readonly AttractionProps[];
+  readonly done: boolean;
+}
+
+/** @emoji 🪣 Resumable greedy fill builder (yields placements across frames). */
+export interface BrushFillSequenceStepper {
+  step(budget: number): BrushFillSequenceBuildResult;
+}
+
+/** @emoji 🪣 Creates a resumable fill stepper with mesh AABB collision and weighted distribution. */
+export function createBrushFillSequenceStepper(args: BrushFillSequenceArgs): BrushFillSequenceStepper {
   const maxCount = Math.max(0, Math.min(PUZZLE_3D_FILL_COUNT_MAX, Math.round(args.maxCount ?? PUZZLE_3D_FILL_COUNT_MAX)));
-  const collisionTolerance = args.collisionTolerance ?? DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
+  const overlapBudget = args.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
   const weights = args.weights ?? puzzle3dBrushKindWeightsRef.current;
   let fixture = args.baseFixture;
   const sequence: BrushPlacePayload[] = [];
+  const appendedObjects: FixtureObjectV1[] = [];
+  const appendedAttractions: AttractionProps[] = [];
   const placed: BrushPlacedCollisionEntry[] = [];
+  const candidateCache = new Map<string, readonly BrushCompatibleCandidate[]>();
   for (const obj of fixture.objects) {
-    const entry = fixtureObjectCollisionBox(obj.id, obj, args.kindCatalogs, fixture, args.meshRootForUrl, collisionTolerance);
+    const entry = fixtureObjectCollisionEntry(obj.id, obj, args.kindCatalogs, fixture, args.meshRootForUrl);
     if (entry) {
-      placed.push({ objectId: entry.objectId, box: entry.box.clone() });
+      placed.push({ objectId: entry.objectId, meshUrl: entry.meshUrl, worldMatrix: entry.worldMatrix.clone() });
     }
   }
   let state = args.seed >>> 0;
@@ -3978,13 +3930,13 @@ export function buildBrushFillSequence(args: {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
     return state / 0x100000000;
   };
-  while (sequence.length < maxCount) {
+  let stalled = false;
+  const tryPlaceOne = (): boolean => {
     const freeTargets = enumerateBrushFillVortexTargets(fixture);
     if (freeTargets.length === 0) {
-      break;
+      return false;
     }
     const orderedTargets = weightedOrderFillVortexTargets(freeTargets, weights, rng);
-    let placedThisRound = false;
     for (const target of orderedTargets) {
       const hostObject = fixture.objects.find((row) => row.id === target.objectId);
       if (!hostObject) {
@@ -3999,7 +3951,7 @@ export function buildBrushFillSequence(args: {
         objectKind: target.objectKind,
         vortexKind: target.vortexKind,
       };
-      const compatible = brushCompatibleCandidates(targetCtx, args.kindCatalogs, args.kindCompatibility);
+      const compatible = brushCompatibleCandidatesForFillTarget(targetCtx, args.kindCatalogs, args.kindCompatibility, candidateCache);
       if (compatible.length === 0) {
         continue;
       }
@@ -4022,8 +3974,8 @@ export function buildBrushFillSequence(args: {
         if (!meshRoot) {
           continue;
         }
-        const excludeObjectIds = brushPlacementCollisionExcludeObjectIds(target.objectId, fixture.attractions, collisionTolerance);
-        if (fillPreviewCollidesAccumulated(preview, meshRoot, placed, collisionTolerance, excludeObjectIds)) {
+        const collides = fillPreviewCollidesAccumulated(preview, placed, overlapBudget);
+        if (collides === null || collides) {
           continue;
         }
         const payload: BrushPlacePayload = {
@@ -4039,31 +3991,59 @@ export function buildBrushFillSequence(args: {
           continue;
         }
         const placedObject = nextFixture.objects[nextFixture.objects.length - 1]!;
-        const placedEntry = fixtureObjectCollisionBox(
+        const placedEntry = fixtureObjectCollisionEntry(
           placedObject.id,
           placedObject,
           args.kindCatalogs,
           nextFixture,
           args.meshRootForUrl,
-          collisionTolerance,
         );
         if (placedEntry) {
-          placed.push({ objectId: placedEntry.objectId, box: placedEntry.box.clone() });
+          placed.push({ objectId: placedEntry.objectId, meshUrl: placedEntry.meshUrl, worldMatrix: placedEntry.worldMatrix.clone() });
+        }
+        const newAttraction = nextFixture.attractions[nextFixture.attractions.length - 1];
+        if (!newAttraction) {
+          continue;
         }
         fixture = nextFixture;
         sequence.push(payload);
-        placedThisRound = true;
-        break;
-      }
-      if (placedThisRound) {
-        break;
+        appendedObjects.push(placedObject);
+        appendedAttractions.push(newAttraction);
+        return true;
       }
     }
-    if (!placedThisRound) {
-      break;
-    }
+    return false;
+  };
+  return {
+    step(budget: number): BrushFillSequenceBuildResult {
+      const limit = Math.max(0, Math.round(budget));
+      let placedThisChunk = 0;
+      while (!stalled && sequence.length < maxCount && placedThisChunk < limit) {
+        if (!tryPlaceOne()) {
+          stalled = true;
+          break;
+        }
+        placedThisChunk += 1;
+      }
+      const done = stalled || sequence.length >= maxCount;
+      return {
+        sequence: [...sequence],
+        appendedObjects: [...appendedObjects],
+        appendedAttractions: [...appendedAttractions],
+        done,
+      };
+    },
+  };
+}
+
+/** @emoji 🪣 Deterministic frontier fill sequence with weighted distribution and mesh AABB collision. */
+export function buildBrushFillSequence(args: BrushFillSequenceArgs): readonly BrushPlacePayload[] {
+  const stepper = createBrushFillSequenceStepper(args);
+  let result = stepper.step(Number.MAX_SAFE_INTEGER);
+  while (!result.done) {
+    result = stepper.step(Number.MAX_SAFE_INTEGER);
   }
-  return sequence;
+  return result.sequence;
 }
 
 /** @emoji 🪣 Appends a deterministic fill prefix to a base fixture. */
@@ -5374,6 +5354,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
         visible={props.visible !== false}
         userData={{
           puzzle3dObjectId: props.id,
+          puzzle3dMeshUrl: resolvedMeshUrl,
           puzzle3dMeshStyle: meshStyle,
           ...(props.attracting?.length ? { puzzle3dAttracting: props.attracting } : {}),
           ...(props.wormhole ? { puzzle3dWormhole: true } : {}),
@@ -6538,11 +6519,19 @@ export function routePuzzle3dBrushTabKeydown(
   return true;
 }
 
+/** @emoji 🪣 Live fill build progress for engagement UI while the sequence is computed. */
+export interface Puzzle3dFillBuildProgress {
+  readonly count: number;
+  readonly maxCount: number;
+  readonly done: boolean;
+}
+
 /** @emoji 💬 Inputs for {@link buildPuzzle3dPlayEngagement} (CAD play interaction panel shape). */
 export interface Puzzle3dPlayEngagementInputs {
   readonly activeTool: "select" | "brush" | "fill";
   readonly cmdLine: string;
   readonly fillCount: number;
+  readonly fillBuildProgress?: Puzzle3dFillBuildProgress;
   readonly selectionCount: number;
   readonly onCmdLineChange: (value: string) => void;
   readonly onCmdLineSubmit: (value: string) => void;
@@ -6609,15 +6598,21 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
 
   const possibleEngagements = inputs.activeTool === "brush" && brushPossibles.length > 0 ? brushPossibles : toolPossibles;
 
+  const fillSliderMax =
+    inputs.fillBuildProgress && !inputs.fillBuildProgress.done ? inputs.fillBuildProgress.count : PUZZLE_3D_FILL_COUNT_MAX;
+  const fillSliderLabel =
+    inputs.fillBuildProgress && !inputs.fillBuildProgress.done
+      ? `Fill ${inputs.fillCount} (building ${inputs.fillBuildProgress.count}/${inputs.fillBuildProgress.maxCount})`
+      : `Fill ${inputs.fillCount}`;
   const control =
     inputs.activeTool === "fill"
       ? {
           kind: "slider" as const,
           id: "puzzle3d-fill-count",
-          label: `Fill ${inputs.fillCount}`,
-          value: inputs.fillCount,
+          label: fillSliderLabel,
+          value: Math.min(inputs.fillCount, fillSliderMax),
           min: 0,
-          max: 1000,
+          max: fillSliderMax,
           step: 1,
           onChange: inputs.onFillCount,
         }
@@ -7124,8 +7119,7 @@ function Puzzle3dFillMeshBridge(props: {
 
 const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   readonly preview: BrushPreviewState;
-  readonly excludeObjectIds: ReadonlySet<string>;
-  readonly collisionTolerance: number;
+  readonly overlapBudget: number;
   readonly onCollisionChange: (collides: boolean) => void;
 }) {
   const reg = useRegistryCore();
@@ -7137,18 +7131,14 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
     if (group) {
       applyObjectPose(group, props.preview.origin, props.preview.orientation, props.preview.scale);
     }
-    const meshRoot = brushCollisionGltfRoot(props.preview.meshUrl);
-    if (!meshRoot) {
-      return;
-    }
-    const probe = brushProbeGroupFromPreview(props.preview, meshRoot);
-    const collides = brushPreviewCollides(reg, probe, props.excludeObjectIds, props.collisionTolerance);
-    if (lastCollidesRef.current !== collides) {
-      lastCollidesRef.current = collides;
-      props.onCollisionChange(collides);
+    const collides = brushPreviewCollides(reg, props.preview, props.overlapBudget);
+    const blocked = collides === true;
+    if (lastCollidesRef.current !== blocked) {
+      lastCollidesRef.current = blocked;
+      props.onCollisionChange(blocked);
     }
     invalidate();
-  }, [props.collisionTolerance, props.excludeObjectIds, props.preview, props.onCollisionChange, reg, invalidate]);
+  }, [props.overlapBudget, props.preview, props.onCollisionChange, reg, invalidate]);
   return (
     <group ref={groupRef} raycast={() => null}>
       <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" scale={props.preview.scale} />
@@ -7161,7 +7151,7 @@ function BrushSession(props: {
   readonly onBrushPlace?: (payload: BrushPlacePayload) => void;
   readonly kindCatalogs: KindCatalogBundle | undefined;
   readonly kindCompatibility: readonly KindCompatEntry[] | undefined;
-  readonly collisionTolerance: number;
+  readonly overlapBudget: number;
   readonly sceneFixture?: FixtureV1;
 }) {
   const reg = useRegistryCore();
@@ -7215,14 +7205,6 @@ function BrushSession(props: {
     notifyPuzzle3dBrushEngagementSource();
   }, []);
 
-  const brushCollisionExcludeIds = reactHostPort.useCallback((): ReadonlySet<string> => {
-    return brushPlacementCollisionExcludeObjectIds(
-      targetObjectIdRef.current ?? undefined,
-      props.sceneFixture?.attractions,
-      props.collisionTolerance,
-    );
-  }, [props.collisionTolerance, props.sceneFixture?.attractions]);
-
   const probePlacementCandidates = reactHostPort.useCallback((): BrushCollisionFreeResult => {
     const targetFullId = targetRef.current;
     const targetCtx = targetCtxRef.current;
@@ -7240,11 +7222,10 @@ function BrushSession(props: {
       referenceOrientationCad: targetOrientationRef.current,
       kindCatalogs: props.kindCatalogs,
       sceneFixture: props.sceneFixture,
-      excludeObjectIds: brushCollisionExcludeIds(),
       meshRootForUrl: brushMeshRootFromPool,
-      collisionTolerance: props.collisionTolerance,
+      overlapBudget: props.overlapBudget,
     });
-  }, [brushCollisionExcludeIds, props.collisionTolerance, props.kindCatalogs, props.sceneFixture, reg]);
+  }, [props.overlapBudget, props.kindCatalogs, props.sceneFixture, reg]);
 
   const applyCandidateIndex = reactHostPort.useCallback(
     (targetFullId: string, index: number) => {
@@ -7420,15 +7401,12 @@ function BrushSession(props: {
     if (!placementCandidatesRef.current.some((candidate) => brushPreviewMatchesCandidate(preview, candidate))) {
       return;
     }
-    const meshRoot = brushCollisionGltfRoot(preview.meshUrl);
-    if (meshRoot) {
-      const probe = brushProbeGroupFromPreview(preview, meshRoot);
-      if (brushPreviewCollides(reg, probe, brushCollisionExcludeIds(), props.collisionTolerance)) {
-        return;
-      }
+    const collides = brushPreviewCollides(reg, preview, props.overlapBudget);
+    if (collides === true) {
+      return;
     }
     props.onBrushPlace(brushPlacePayloadFromPreview(preview));
-  }, [brushCollisionExcludeIds, props.collisionTolerance, props.onBrushPlace, reg]);
+  }, [props.onBrushPlace, props.overlapBudget, reg]);
 
   const enterTarget = reactHostPort.useCallback(
     (fullId: string, meta: VortexBindingMeta) => {
@@ -7504,7 +7482,7 @@ function BrushSession(props: {
       return;
     }
     reconcilePlacementCandidates();
-  }, [props.brushActive, props.collisionTolerance, reconcilePlacementCandidates]);
+  }, [props.brushActive, props.overlapBudget, reconcilePlacementCandidates]);
 
   return (
     <>
@@ -7523,12 +7501,7 @@ function BrushSession(props: {
       />
       <BrushCatalogMeshPreload urls={catalogPreloadUrls} onReady={scheduleReconcileAfterCatalogPreload} />
       {ui.preview ? (
-        <BrushPreviewGhost
-          preview={ui.preview}
-          excludeObjectIds={brushCollisionExcludeIds()}
-          collisionTolerance={props.collisionTolerance}
-          onCollisionChange={onPreviewCollisionChange}
-        />
+        <BrushPreviewGhost preview={ui.preview} overlapBudget={props.overlapBudget} onCollisionChange={onPreviewCollisionChange} />
       ) : null}
     </>
   );
@@ -9136,7 +9109,7 @@ function Inner(props: CanvasProps & {
     fillActive = false,
     onFillMeshesReady,
     onBrushPlace,
-    brushPlacementCollisionTolerance = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
+    brushPlacementOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
     kindCatalogs,
     kindCompatibility,
     fixtureDragDrop,
@@ -9309,7 +9282,7 @@ function Inner(props: CanvasProps & {
               onBrushPlace={(payload) => canvasHostRef.current.onBrushPlace?.(payload)}
               kindCatalogs={kindCatalogs}
               kindCompatibility={kindCompatibility}
-              collisionTolerance={brushPlacementCollisionTolerance}
+              overlapBudget={brushPlacementOverlapBudget}
               sceneFixture={sceneFixture}
             />
           ) : null}
@@ -9360,7 +9333,7 @@ export interface PlayCanvasProps {
   readonly fillActive?: boolean;
   readonly onFillMeshesReady?: () => void;
   readonly onBrushPlace?: (payload: BrushPlacePayload) => void;
-  readonly brushPlacementCollisionTolerance?: number;
+  readonly brushPlacementOverlapBudget?: number;
   readonly fixtureDragDrop?: boolean;
   readonly onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
   readonly hoverTarget?: HoverTarget | null;
@@ -9444,7 +9417,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       fillActive={props.fillActive}
       onFillMeshesReady={props.onFillMeshesReady}
       onBrushPlace={props.onBrushPlace}
-      brushPlacementCollisionTolerance={props.brushPlacementCollisionTolerance}
+      brushPlacementOverlapBudget={props.brushPlacementOverlapBudget}
       fixtureDragDrop={props.fixtureDragDrop}
       onFixtureDrop={props.onFixtureDrop}
       hoverTarget={props.hoverTarget}
@@ -9547,7 +9520,7 @@ export function PlayTestBridge(props: { readonly setSelectedId: (id: string | nu
 //#endregion 🎬Viewport
 
 if (import.meta.vitest) {
-  const { describe, expect, it, vi } = import.meta.vitest;
+  const { beforeEach, describe, expect, it, vi } = import.meta.vitest;
   describe("lodFromCameraDistance", () => {
     it("maps orbit distance to scale ratio", () => {
       expect(lodFromCameraDistance(100, 100)).toBe(1);
@@ -10768,6 +10741,9 @@ if (import.meta.vitest) {
     });
   });
   describe("brush", () => {
+    beforeEach(() => {
+      clearBrushCollisionGltfScenes();
+    });
     const brushCatalogs: KindCatalogBundle = {
       objects: [
         {
@@ -10801,11 +10777,31 @@ if (import.meta.vitest) {
       { bidirectional: true, specificity: "vortex", source: "door capsule right", target: "door tambour right" },
       { bidirectional: true, specificity: "vortex", source: "door capsule left", target: "door tambour left" },
     ];
-    it("brushPlacementCollisionToleranceFromSlider maps window slider to CAD penetration depth", () => {
-      expect(brushPlacementCollisionToleranceFromSlider(0)).toBe(0);
-      expect(brushPlacementCollisionToleranceFromSlider(20)).toBeCloseTo(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE, 5);
-      expect(brushPlacementCollisionToleranceFromSlider(100)).toBeCloseTo(BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX, 5);
-      expect(brushPlacementCollisionToleranceToSlider(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE)).toBe(20);
+    const registerBrushTestMesh = (meshUrl: string, size: [number, number, number]): Mesh => {
+      const mesh = new Mesh(new BoxGeometry(size[0], size[1], size[2]));
+      registerBrushCollisionGltfScene(meshUrl, mesh);
+      return mesh;
+    };
+    const brushSceneGroup = (id: string, meshUrl: string, origin: Vec3): Group => {
+      const group = new Group();
+      group.userData.puzzle3dObjectId = id;
+      group.userData.puzzle3dMeshUrl = meshUrl;
+      applyObjectPose(group, origin, [0, 0, 0, 1], 1);
+      return group;
+    };
+    it("solidOverlapVolume detects overlapping unit cubes", () => {
+      clearBrushCollisionGltfScenes();
+      const urlA = "/test/a.glb";
+      const urlB = "/test/b.glb";
+      registerBrushTestMesh(urlA, [2, 2, 2]);
+      registerBrushTestMesh(urlB, [2, 2, 2]);
+      const bodyA = brushCollisionBody(urlA)!;
+      const bodyB = brushCollisionBody(urlB)!;
+      const worldA = brushPreviewWorldMatrix({ origin: [0, 0, 0], orientation: [0, 0, 0, 1], scale: 1 });
+      const worldB = brushPreviewWorldMatrix({ origin: [1, 0, 0], orientation: [0, 0, 0, 1], scale: 1 });
+      const volume = solidOverlapVolume(bodyA, worldA, bodyB, worldB, { sampleCount: 4096 });
+      expect(volume).toBeGreaterThan(0.5);
+      clearBrushCollisionGltfScenes();
     });
     it("computeBrushPlacementPose aligns source vortex to target with opposite direction", () => {
       const targetPos: Vec3 = [10, 20, 30];
@@ -11216,21 +11212,6 @@ if (import.meta.vitest) {
       expect(boxesIntersect(a, b)).toBe(true);
       expect(boxesIntersect(a, c)).toBe(false);
     });
-    it("boxesPenetrationExceeds treats axis overlap within contact epsilon as non-penetrating", () => {
-      const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
-      const grazing = new Box3(new Vector3(2, 0, 0), new Vector3(4, 2, 2));
-      expect(boxesPenetrationExceeds(a, grazing, 0.5, 0.02)).toBe(false);
-    });
-    it("boxesPenetrationExceeds ignores face contact and shallow overlap below tolerance", () => {
-      const a = new Box3(new Vector3(0, 0, 0), new Vector3(2, 2, 2));
-      const touching = new Box3(new Vector3(2, 0, 0), new Vector3(4, 2, 2));
-      const shallow = new Box3(new Vector3(1.98, 0, 0), new Vector3(3.98, 2, 2));
-      const deep = new Box3(new Vector3(0.5, 0.5, 0.5), new Vector3(3.5, 3.5, 3.5));
-      const tol = 0.25;
-      expect(boxesPenetrationExceeds(a, touching, tol)).toBe(false);
-      expect(boxesPenetrationExceeds(a, shallow, tol)).toBe(false);
-      expect(boxesPenetrationExceeds(a, deep, tol)).toBe(true);
-    });
     it("shuffleBrushCompatibleCandidates permutes with injectable rng", () => {
       const input: readonly BrushCompatibleCandidate[] = [
         { objectKindId: "A", sourceVortexIndex: 0 },
@@ -11267,81 +11248,53 @@ if (import.meta.vitest) {
       expect(frame.rotation.x).toBeCloseTo(GLB_MESH_FRAME_ROTATION_X, 5);
       expect(frame.children.length).toBe(1);
     });
-    it("brushPlacementCollisionExcludeObjectIds includes host and direct attraction partners", () => {
-      const excluded = brushPlacementCollisionExcludeObjectIds("host", [
-        { id: "a1", attracting: "capsule:v0", attracted: "host:v1" },
-        { id: "a2", attracting: "host:v0", attracted: "other:v0" },
-      ]);
-      expect(excluded.has("host")).toBe(true);
-      expect(excluded.has("capsule")).toBe(true);
-      expect(excluded.has("other")).toBe(true);
+    it("brushPreviewCollides detects solid overlap above budget", () => {
+      clearBrushCollisionGltfScenes();
+      const obstacleUrl = "/test/obstacle.glb";
+      const previewUrl = "/test/preview.glb";
+      registerBrushTestMesh(obstacleUrl, [4, 4, 4]);
+      registerBrushTestMesh(previewUrl, [4, 4, 4]);
+      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [brushSceneGroup("obstacle", obstacleUrl, [0, 0, 0])] };
+      const preview: BrushPreviewState = {
+        targetVortexFullId: "host:v0",
+        objectKindId: "Kind",
+        sourceVortexIndex: 0,
+        meshUrl: previewUrl,
+        origin: [0, 0, 0],
+        orientation: [0, 0, 0, 1],
+      };
+      expect(brushPreviewCollides(scene, preview, 0.02)).toBe(true);
+      clearBrushCollisionGltfScenes();
     });
-    it("brushPlacementCollisionExcludeObjectIds excludes nothing at zero tolerance", () => {
-      const excluded = brushPlacementCollisionExcludeObjectIds(
-        "host",
-        [{ id: "a1", attracting: "capsule:v0", attracted: "host:v1" }],
-        0,
-      );
-      expect(excluded.size).toBe(0);
-    });
-    it("brushPreviewCollides detects host overlap at zero tolerance", () => {
-      const host = new Group();
-      host.userData.puzzle3dObjectId = "host";
-      host.add(new Mesh(new BoxGeometry(4, 4, 4)));
-      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
-      const preview = brushProbeGroupFromPreview({ origin: [0, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, new Mesh(new BoxGeometry(4, 4, 4)));
-      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
-      expect(brushPreviewCollides(scene, preview, undefined, 0)).toBe(true);
-      expect(brushPreviewCollides(scene, preview, new Set(["host"]), DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE)).toBe(false);
-    });
-    it("brushPreviewCollides ignores penetration against excluded host when stacking", () => {
-      const host = new Group();
-      host.userData.puzzle3dObjectId = "host";
-      host.add(brushPreviewMeshFrameGroup(new Mesh(new BoxGeometry(4, 4, 10))));
-      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
-      const preview = brushProbeGroupFromPreview({ origin: [0, 0, 10], orientation: [0, 0, 0, 1], scale: 1 }, new Mesh(new BoxGeometry(4, 4, 2)));
-      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
-      expect(brushPreviewCollides(scene, preview, "host")).toBe(false);
-      expect(brushPreviewCollides(scene, preview)).toBe(false);
-    });
-    it("brushPreviewCollides detects penetration beyond default tolerance", () => {
-      const obstacle = new Group();
-      obstacle.userData.puzzle3dObjectId = "obstacle";
-      obstacle.add(new Mesh(new BoxGeometry(4, 4, 4)));
-      applyObjectPose(obstacle, [0, 0, 0], [0, 0, 0, 1], 1);
-      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [obstacle] };
-      const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
-      const overlapping = brushProbeGroupFromPreview({ origin: [0, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, meshRoot);
-      expect(brushPreviewCollides(scene, overlapping)).toBe(true);
-      const touching = brushProbeGroupFromPreview({ origin: [4, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, meshRoot);
-      expect(brushPreviewCollides(scene, touching)).toBe(false);
-      const clear = brushProbeGroupFromPreview({ origin: [12, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, meshRoot);
-      expect(brushPreviewCollides(scene, clear)).toBe(false);
-    });
-    it("brushPreviewCollides rejects shallow overlap at zero tolerance", () => {
-      const obstacle = new Group();
-      obstacle.userData.puzzle3dObjectId = "obstacle";
-      obstacle.add(brushPreviewMeshFrameGroup(new Mesh(new BoxGeometry(4, 4, 4))));
-      applyObjectPose(obstacle, [0, 0, 0], [0, 0, 0, 1], 1);
-      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [obstacle] };
-      const meshRoot = new Mesh(new BoxGeometry(4, 4, 4));
-      const shallowOverlap = brushProbeGroupFromPreview({ origin: [3.99, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, meshRoot);
-      expect(brushPreviewCollides(scene, shallowOverlap, undefined, 0)).toBe(true);
-      expect(brushPreviewCollides(scene, shallowOverlap, undefined, DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE)).toBe(false);
-      const touching = brushProbeGroupFromPreview({ origin: [4, 0, 0], orientation: [0, 0, 0, 1], scale: 1 }, meshRoot);
-      expect(brushPreviewCollides(scene, touching, undefined, 0)).toBe(false);
+    it("brushPreviewCollides allows separated placements", () => {
+      clearBrushCollisionGltfScenes();
+      const obstacleUrl = "/test/obstacle.glb";
+      const previewUrl = "/test/preview.glb";
+      registerBrushTestMesh(obstacleUrl, [4, 4, 4]);
+      registerBrushTestMesh(previewUrl, [2, 2, 2]);
+      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [brushSceneGroup("obstacle", obstacleUrl, [0, 0, 0])] };
+      const preview: BrushPreviewState = {
+        targetVortexFullId: "host:v0",
+        objectKindId: "Kind",
+        sourceVortexIndex: 0,
+        meshUrl: previewUrl,
+        origin: [12, 0, 0],
+        orientation: [0, 0, 0, 1],
+      };
+      expect(brushPreviewCollides(scene, preview, DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET)).toBe(false);
+      clearBrushCollisionGltfScenes();
     });
     it("brushCollisionFreeCandidates excludes placements that overlap scene meshes", () => {
-      const obstacle = new Group();
-      obstacle.userData.puzzle3dObjectId = "obstacle";
-      obstacle.add(new Mesh(new BoxGeometry(30, 30, 30)));
-      applyObjectPose(obstacle, [0, 0, 0], [0, 0, 0, 1], 1);
-      const host = new Group();
-      host.userData.puzzle3dObjectId = "host";
-      host.add(new Mesh(new BoxGeometry(1, 1, 1)));
-      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
-      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [host, obstacle] };
-      const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
+      clearBrushCollisionGltfScenes();
+      const obstacleUrl = "/test/obstacle.glb";
+      const hostUrl = "/meshes/tambour.glb";
+      const previewUrl = "/meshes/capsule_L.glb";
+      registerBrushTestMesh(obstacleUrl, [30, 30, 30]);
+      registerBrushTestMesh(hostUrl, [4, 4, 4]);
+      registerBrushTestMesh(previewUrl, [4, 4, 4]);
+      const scene: BrushSceneCollisionSource = {
+        collectObjectGroups: () => [brushSceneGroup("host", hostUrl, [0, 0, 0]), brushSceneGroup("obstacle", obstacleUrl, [0, 0, 0])],
+      };
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       const blocked = brushCollisionFreeCandidates({
@@ -11352,11 +11305,12 @@ if (import.meta.vitest) {
         targetWorldPositionCad: [0.9, 2.75, 0.2],
         targetWorldDirectionCad: [0, 1, 0],
         kindCatalogs: brushCatalogs,
-        excludeObjectId: "host",
-        meshRootForUrl: () => meshRoot,
+        meshRootForUrl: brushCollisionGltfRoot,
+        overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
       });
       expect(blocked.unknownPending).toBe(false);
       expect(blocked.free).toHaveLength(0);
+      clearBrushCollisionGltfScenes();
     });
     it("brushCollisionFreeCandidates sets unknownPending when catalog meshes are not pooled yet", () => {
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
@@ -11369,7 +11323,6 @@ if (import.meta.vitest) {
         targetWorldPositionCad: [0.9, 2.75, 0.2],
         targetWorldDirectionCad: [0, 1, 0],
         kindCatalogs: brushCatalogs,
-        excludeObjectId: "host",
         meshRootForUrl: () => undefined,
       });
       expect(pending.unknownPending).toBe(true);
@@ -11406,7 +11359,10 @@ if (import.meta.vitest) {
       expect(new Set(urls).size).toBe(urls.length);
     });
     it("buildBrushFillSequence places objects when mesh roots are pooled", () => {
-      const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
+      clearBrushCollisionGltfScenes();
+      const meshRoot = registerBrushTestMesh("/meshes/tambour.glb", [4, 4, 4]);
+      registerBrushTestMesh("/meshes/capsule_L.glb", [4, 4, 4]);
+      registerBrushTestMesh("/meshes/capsule_R.glb", [4, 4, 4]);
       const fixture: FixtureV1 = {
         version: 1,
         objects: [
@@ -11429,11 +11385,59 @@ if (import.meta.vitest) {
         seed: 42,
         kindCatalogs: brushCatalogs,
         kindCompatibility: brushCompat,
-        meshRootForUrl: () => meshRoot,
+        meshRootForUrl: brushCollisionGltfRoot,
       });
       expect(sequence.length).toBeGreaterThan(0);
       const applied = applyBrushFillPlacementsToFixture(fixture, sequence, brushCatalogs);
       expect(applied.objects.length).toBeGreaterThan(fixture.objects.length);
+      clearBrushCollisionGltfScenes();
+    });
+    it("createBrushFillSequenceStepper matches buildBrushFillSequence and appended prefix composes the same fixture", () => {
+      clearBrushCollisionGltfScenes();
+      registerBrushTestMesh("/meshes/tambour.glb", [4, 4, 4]);
+      registerBrushTestMesh("/meshes/capsule_L.glb", [4, 4, 4]);
+      registerBrushTestMesh("/meshes/capsule_R.glb", [4, 4, 4]);
+      const fixture: FixtureV1 = {
+        version: 1,
+        objects: [
+          {
+            id: "host",
+            objectKind: "Tambour",
+            meshUrl: "/meshes/tambour.glb",
+            origin: [0, 0, 0],
+            orientation: [0, 0, 0, 1],
+            vortices: [
+              { id: "host:v0", vortexKind: "door tambour left", label: "door tambour left", position: [0.9, 2.75, 0.2], direction: [0, 1, 0] },
+            ],
+          },
+        ],
+        attractions: [],
+      };
+      const args = {
+        baseFixture: fixture,
+        maxCount: 4,
+        seed: 42,
+        kindCatalogs: brushCatalogs,
+        kindCompatibility: brushCompat,
+        meshRootForUrl: brushCollisionGltfRoot,
+      };
+      const syncSequence = buildBrushFillSequence(args);
+      const stepper = createBrushFillSequenceStepper(args);
+      let stepped = stepper.step(1);
+      while (!stepped.done) {
+        stepped = stepper.step(1);
+      }
+      expect(stepped.sequence).toEqual(syncSequence);
+      expect(stepped.appendedObjects.length).toBe(stepped.sequence.length);
+      expect(stepped.appendedAttractions.length).toBe(stepped.sequence.length);
+      const composed = {
+        ...fixture,
+        objects: [...fixture.objects, ...stepped.appendedObjects],
+        attractions: [...fixture.attractions, ...stepped.appendedAttractions],
+      };
+      expect(composed.objects.length).toBe(fixture.objects.length + stepped.sequence.length);
+      expect(composed.attractions.length).toBe(fixture.attractions.length + stepped.sequence.length);
+      clearBrushCollisionGltfScenes();
     });
     it("buildBrushFillSequence rejects undersized collision mesh roots", () => {
       const stub = new Mesh(new BoxGeometry(1, 1, 1));
@@ -11506,19 +11510,19 @@ if (import.meta.vitest) {
         seed: 42,
         kindCatalogs: catalogs,
         kindCompatibility: compat,
-        collisionTolerance: 1,
+        overlapBudget: 1,
         meshRootForUrl: brushCollisionGltfRoot,
       });
       expect(sequence.length).toBe(0);
       clearBrushCollisionGltfScenes();
     });
     it("brushCollisionFreeCandidates returns all compatible kinds when scene is clear", () => {
-      const host = new Group();
-      host.userData.puzzle3dObjectId = "host";
-      host.add(new Mesh(new BoxGeometry(1, 1, 1)));
-      applyObjectPose(host, [0, 0, 0], [0, 0, 0, 1], 1);
-      const meshRoot = new Mesh(new BoxGeometry(2, 2, 2));
-      const clearScene: BrushSceneCollisionSource = { collectObjectGroups: () => [host] };
+      clearBrushCollisionGltfScenes();
+      const hostUrl = "/meshes/tambour.glb";
+      registerBrushTestMesh(hostUrl, [4, 4, 4]);
+      registerBrushTestMesh("/meshes/capsule_L.glb", [4, 4, 4]);
+      registerBrushTestMesh("/meshes/capsule_R.glb", [4, 4, 4]);
+      const clearScene: BrushSceneCollisionSource = { collectObjectGroups: () => [brushSceneGroup("host", hostUrl, [0, 0, 0])] };
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
       const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
       const clear = brushCollisionFreeCandidates({
@@ -11529,10 +11533,11 @@ if (import.meta.vitest) {
         targetWorldPositionCad: [0.9, 2.75, 0.2],
         targetWorldDirectionCad: [0, 1, 0],
         kindCatalogs: brushCatalogs,
-        excludeObjectId: "host",
-        meshRootForUrl: () => meshRoot,
+        meshRootForUrl: brushCollisionGltfRoot,
+        overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
       });
       expect(clear.free.length).toBe(compatible.length);
+      clearBrushCollisionGltfScenes();
     });
     it("buildPuzzle3dPlayEngagement exposes Zoom option when selection is non-empty", () => {
       const spec = buildPuzzle3dPlayEngagement({
@@ -11628,6 +11633,32 @@ if (import.meta.vitest) {
         spec.control.onChange?.(7);
       }
       expect(counts).toEqual([7]);
+    });
+    it("buildPuzzle3dPlayEngagement shows fill build progress on the slider label and caps max", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "fill",
+        cmdLine: "",
+        fillCount: 3,
+        fillBuildProgress: { count: 12, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: false },
+        selectionCount: 0,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onFillTool: () => {},
+        onFillCount: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [],
+        brushTargetActive: false,
+      });
+      expect(spec.control?.kind).toBe("slider");
+      if (spec.control?.kind === "slider") {
+        expect(spec.control.label).toBe(`Fill 3 (building 12/${PUZZLE_3D_FILL_COUNT_MAX})`);
+        expect(spec.control.max).toBe(12);
+        expect(spec.control.value).toBe(3);
+      }
     });
     it("applyBrushPlacementToFixture appends object and attraction", () => {
       const fixture: FixtureV1 = {

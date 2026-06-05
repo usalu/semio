@@ -195,20 +195,27 @@ fn forced_lod_tile_z(id: &str) -> Option<u32> {
     GIS_MAP_LOD_TILE_Z.get(idx).copied()
 }
 
-/// @emoji 🧷 Pinned LOD is a minimum tile-detail floor; viewport scale may request finer tiles when zooming in.
+/// @emoji 🧷 Pinned LOD is a minimum tile-detail floor; world/continent automatic bands use fixed coarse tile z.
 fn pick_tile_z_target(
     camera: &cavas::camera::Camera,
     viewport: &cavas::camera::Viewport,
     forced_lod_id: Option<&str>,
 ) -> u32 {
     let ideal = ideal_tile_z_for_viewport(camera, viewport);
-    let Some(id) = forced_lod_id else {
-        return ideal;
-    };
-    let Some(floor) = forced_lod_tile_z(id) else {
-        return ideal;
-    };
-    floor.max(ideal)
+    let span = viewport_lon_span_degrees(camera, viewport);
+    let lod_idx = resolve_map_lod_index_from_span(span);
+    if let Some(id) = forced_lod_id {
+        let Some(pin_floor) = forced_lod_tile_z(id) else {
+            return ideal;
+        };
+        let coarse_floor = GIS_MAP_LOD_TILE_Z.get(lod_idx).copied().unwrap_or(0);
+        let floor = if lod_idx <= 1 { coarse_floor } else { pin_floor };
+        return floor.max(ideal);
+    }
+    if lod_idx <= 1 {
+        return GIS_MAP_LOD_TILE_Z.get(lod_idx).copied().unwrap_or(0);
+    }
+    ideal.min(vector_tiles::max_tile_z_for_span(span))
 }
 
 fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
@@ -226,8 +233,12 @@ pub const MAP_CAMERA_ZOOM_MIN: f64 = 8.0;
 pub const MAP_CAMERA_ZOOM_MAX: f64 = 100_000_000.0;
 
 pub fn gis_map_camera_limits_json() -> String {
+    gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+}
+
+pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
     serde_json::json!({
-        "min": MAP_CAMERA_ZOOM_MIN,
+        "min": projection::cover_zoom_for_viewport(viewport).max(MAP_CAMERA_ZOOM_MIN),
         "max": MAP_CAMERA_ZOOM_MAX,
     })
     .to_string()
@@ -235,6 +246,22 @@ pub fn gis_map_camera_limits_json() -> String {
 
 fn clamp_map_zoom(zoom: f64) -> f64 {
     zoom.clamp(MAP_CAMERA_ZOOM_MIN, MAP_CAMERA_ZOOM_MAX)
+}
+
+fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+    zoom.max(projection::cover_zoom_for_viewport(viewport))
+        .min(MAP_CAMERA_ZOOM_MAX)
+}
+
+/// @emoji 🧷 Keeps the viewport filled by the world map with no empty margins or outscroll.
+fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    camera.zoom = clamp_map_zoom_for_viewport(camera.zoom, viewport);
+    let half_w = viewport.width as f64 / (2.0 * camera.zoom);
+    let half_h = viewport.height as f64 / (2.0 * camera.zoom);
+    let lim_x = projection::WORLD_HALF - half_w;
+    let lim_y = projection::WORLD_HALF - half_h;
+    camera.x = if lim_x <= 0.0 { 0.0 } else { camera.x.clamp(-lim_x, lim_x) };
+    camera.y = if lim_y <= 0.0 { 0.0 } else { camera.y.clamp(-lim_y, lim_y) };
 }
 
 mod map_viewport {
@@ -294,9 +321,18 @@ pub mod projection {
         (lon, lat)
     }
 
+    /// @emoji 📐 Mercator world span in map units (`[-WORLD_HALF, WORLD_HALF]` on each axis).
+    pub const WORLD_VISIBLE_SPAN: f64 = WORLD_HALF * 2.0;
+
+    /// @emoji 📐 Minimum zoom so every viewport pixel maps inside the world (cover, no outscroll).
+    pub fn cover_zoom_for_viewport(viewport: &crate::cavas::camera::Viewport) -> f64 {
+        let vw = viewport.width.max(1) as f64;
+        let vh = viewport.height.max(1) as f64;
+        vw.max(vh) / WORLD_VISIBLE_SPAN
+    }
+
     pub fn default_world_camera(viewport: &crate::cavas::camera::Viewport) -> crate::cavas::camera::Camera {
-        let fit = viewport.width.min(viewport.height) as f64;
-        let zoom = (fit / (WORLD_HALF * 2.05)).max(crate::cavas::camera::CANVAS_CAMERA_ZOOM_MIN);
+        let zoom = cover_zoom_for_viewport(viewport).max(super::MAP_CAMERA_ZOOM_MIN);
         crate::cavas::camera::Camera { x: 0.0, y: 0.0, zoom }
     }
 
@@ -942,17 +978,16 @@ pub mod vector_tiles {
     }
 
     pub fn place_label_visible(class: &str, span_deg: f64) -> bool {
+        let caps = super::GIS_MAP_LOD_MAX_SPAN_DEG;
         match class {
-            "continent" => span_deg > super::GIS_MAP_LOD_MAX_SPAN_DEG[1],
-            "country" => {
-                span_deg > super::GIS_MAP_LOD_MAX_SPAN_DEG[2] && span_deg <= super::GIS_MAP_LOD_MAX_SPAN_DEG[1]
-            }
-            "state" | "province" => span_deg < 40.0 && span_deg > 0.8,
-            "city" => span_deg < 14.0,
-            "town" => span_deg < 5.0,
-            "village" | "hamlet" | "suburb" => span_deg < 2.0,
-            "neighbourhood" | "quarter" | "isolated_dwelling" => span_deg < 0.7,
-            _ => span_deg < 8.0,
+            "continent" => span_deg > caps[1],
+            "country" => span_deg <= caps[1] && span_deg > caps[2],
+            "state" | "province" => span_deg <= caps[2] && span_deg > caps[3],
+            "city" => span_deg <= caps[3] && span_deg > caps[4],
+            "town" => span_deg <= caps[4] && span_deg > caps[5],
+            "village" | "hamlet" | "suburb" => span_deg <= caps[5] && span_deg > caps[6],
+            "neighbourhood" | "quarter" | "isolated_dwelling" => span_deg <= caps[6],
+            _ => span_deg <= caps[3],
         }
     }
 
@@ -1353,10 +1388,15 @@ impl MapHost {
 
     pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         self.viewport.set_size(width, height, dpr);
+        self.clamp_camera_to_world();
     }
 
     pub fn fit_world_camera(&mut self) {
         self.camera = projection::default_world_camera(&self.viewport);
+    }
+
+    pub fn clamp_camera_to_world(&mut self) {
+        clamp_camera_to_world_bounds(&mut self.camera, &self.viewport);
     }
 
     pub fn camera_json(&self) -> String {
@@ -1487,12 +1527,14 @@ impl MapHost {
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.camera.x = x;
         self.camera.y = y;
-        self.camera.zoom = clamp_map_zoom(zoom);
+        self.camera.zoom = zoom;
+        self.clamp_camera_to_world();
         self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
     }
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         map_wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+        self.clamp_camera_to_world();
         self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
     }
 
@@ -1558,6 +1600,7 @@ impl MapHost {
         let dy = (sy - start_screen.y) / self.camera.zoom;
         self.camera.x = origin.x - dx;
         self.camera.y = origin.y - dy;
+        self.clamp_camera_to_world();
     }
 
     pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64) {
@@ -2571,7 +2614,12 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = cameraLimitsJson)]
     pub fn camera_limits_json_wasm(&self) -> String {
-        gis_map_camera_limits_json()
+        gis_map_camera_limits_json_for_viewport(&self.state.borrow().host.viewport)
+    }
+
+    #[wasm_bindgen(js_name = reclampCamera)]
+    pub fn reclamp_camera(&mut self) {
+        self.state.borrow_mut().host.clamp_camera_to_world();
     }
 
     #[wasm_bindgen(js_name = renderFrame)]
@@ -2626,13 +2674,47 @@ mod tests {
     }
 
     #[test]
-    fn map_set_size_preserves_camera() {
+    fn map_set_size_reclamps_cover_zoom_when_viewport_grows() {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
         let zoom = host.camera.zoom;
         host.set_size(1024, 768, 1.0);
-        assert!((host.camera.zoom - zoom).abs() < 1e-6);
+        assert!(host.camera.zoom >= zoom - 1e-6);
+        assert_viewport_corners_inside_world(&host);
+    }
+
+    #[test]
+    fn map_pan_and_zoom_stay_inside_world() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.fit_world_camera();
+        host.set_camera(4.0, 4.0, super::MAP_CAMERA_ZOOM_MIN);
+        assert_viewport_corners_inside_world(&host);
+        host.wheel_screen(400.0, 300.0, -5000.0);
+        assert_viewport_corners_inside_world(&host);
+        host.pointer_down_screen(400.0, 300.0, 0);
+        host.pointer_move_screen(40.0, 30.0);
+        host.pointer_up_screen(40.0, 30.0);
+        assert_viewport_corners_inside_world(&host);
+    }
+
+    fn assert_viewport_corners_inside_world(host: &super::MapHost) {
+        let w = host.viewport.width as f64;
+        let h = host.viewport.height as f64;
+        for (sx, sy) in [(0.0, 0.0), (w, 0.0), (w, h), (0.0, h)] {
+            let p = super::map_viewport::screen_to_world(&host.camera, &host.viewport, super::Point::new(sx, sy));
+            assert!(
+                p.x >= -super::projection::WORLD_HALF - 1e-8 && p.x <= super::projection::WORLD_HALF + 1e-8,
+                "x out of world at ({sx},{sy}): {}",
+                p.x
+            );
+            assert!(
+                p.y >= -super::projection::WORLD_HALF - 1e-8 && p.y <= super::projection::WORLD_HALF + 1e-8,
+                "y out of world at ({sx},{sy}): {}",
+                p.y
+            );
+        }
     }
 
     #[test]
@@ -2670,7 +2752,7 @@ mod tests {
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let camera = default_world_camera(&viewport);
         let z = tiles::pick_zoom(&camera, &viewport, None);
-        assert!(z <= 2, "world-fit camera must not select extreme tile zoom (got {z})");
+        assert_eq!(z, 0, "world-fit automatic LOD must use world-band raster tiles (got {z})");
         let tiles = visible_tiles(&camera, &viewport, z);
         assert!(tiles.len() < MAX_VISIBLE_TILE_REQUESTS);
     }

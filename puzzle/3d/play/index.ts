@@ -49,18 +49,15 @@ import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
   PUZZLE_3D_LOD_SLIDER_MIN,
-  BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX,
-  BRUSH_PLACEMENT_COLLISION_TOLERANCE_STEP,
-  BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX,
-  BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
-  BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_STEP,
-  DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
+  BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
+  BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP,
+  DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
   applyBrushPlacementToFixture,
   applyBrushFillPlacementsToFixture,
   brushMeshUrlsForFillSession,
   buildBrushFillSequence,
-  brushPlacementCollisionToleranceFromSlider,
-  brushPlacementCollisionToleranceToSlider,
+  createBrushFillSequenceStepper,
+  PUZZLE_3D_FILL_COUNT_MAX,
   puzzle3dBrushKindWeightsRef,
   puzzle3dBrushMeshRootForFill,
   applyRelocateToFixture,
@@ -356,12 +353,38 @@ export function installPuzzle3dPlayBrushHost(_meta: Record<string, unknown> | un
 export interface Puzzle3dFillSessionState {
   baseFixture: FixtureV1 | null;
   sequence: readonly BrushPlacePayload[];
+  appendedObjects: readonly FixtureObjectV1[];
+  appendedAttractions: readonly AttractionProps[];
   seed: number;
 }
 
+/** @emoji 🪣 Live fill build progress while {@link preparePuzzle3dFillSession} runs chunked. */
+export interface Puzzle3dFillBuildProgress {
+  readonly count: number;
+  readonly maxCount: number;
+  readonly done: boolean;
+}
+
 export const puzzle3dFillSessionRef: { current: Puzzle3dFillSessionState } = {
-  current: { baseFixture: null, sequence: [], seed: 0 },
+  current: { baseFixture: null, sequence: [], appendedObjects: [], appendedAttractions: [], seed: 0 },
 };
+
+/** @emoji 🪣 Latest fill build progress (updated each chunked step). */
+export const puzzle3dFillBuildProgressRef: { current: Puzzle3dFillBuildProgress } = {
+  current: { count: 0, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: false },
+};
+
+const PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET = 8;
+let puzzle3dFillBuildTimer: ReturnType<typeof setTimeout> | null = null;
+let puzzle3dFillBuildStepper: ReturnType<typeof createBrushFillSequenceStepper> | null = null;
+
+function cancelPuzzle3dFillBuild(): void {
+  if (puzzle3dFillBuildTimer !== null) {
+    clearTimeout(puzzle3dFillBuildTimer);
+    puzzle3dFillBuildTimer = null;
+  }
+  puzzle3dFillBuildStepper = null;
+}
 
 /** @emoji 🪣 Latest fill slider count from the playground host (re-applied after mesh preload). */
 export const puzzle3dFillPendingCountRef = { current: 0 };
@@ -394,41 +417,86 @@ export function preparePuzzle3dFillSession(
   baseFixture: FixtureV1,
   kindCatalogs: KindCatalogBundle | undefined,
   kindCompatibility: readonly KindCompatEntry[] | undefined,
-  collisionTolerance: number,
+  overlapBudget: number,
 ): void {
+  cancelPuzzle3dFillBuild();
   const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
-  const sequence = buildBrushFillSequence({
-    baseFixture,
-    maxCount: 1000,
+  const clonedBase = structuredClone(baseFixture);
+  puzzle3dFillSessionRef.current = {
+    baseFixture: clonedBase,
+    sequence: [],
+    appendedObjects: [],
+    appendedAttractions: [],
+    seed,
+  };
+  puzzle3dFillBuildProgressRef.current = { count: 0, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: false };
+  puzzle3dFillBuildStepper = createBrushFillSequenceStepper({
+    baseFixture: clonedBase,
+    maxCount: PUZZLE_3D_FILL_COUNT_MAX,
     seed,
     kindCatalogs,
     kindCompatibility,
-    collisionTolerance,
+    overlapBudget,
     meshRootForUrl: puzzle3dBrushMeshRootForFill,
     weights: puzzle3dBrushKindWeightsRef.current,
   });
-  puzzle3dFillSessionRef.current = {
-    baseFixture: structuredClone(baseFixture),
-    sequence,
-    seed,
-  };
   notifyPuzzle3dFillSessionReady();
+  const tick = (): void => {
+    const stepper = puzzle3dFillBuildStepper;
+    if (!stepper) {
+      return;
+    }
+    const started = performance.now();
+    const result = stepper.step(PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET);
+    puzzle3dFillSessionRef.current = {
+      ...puzzle3dFillSessionRef.current,
+      sequence: result.sequence,
+      appendedObjects: result.appendedObjects,
+      appendedAttractions: result.appendedAttractions,
+    };
+    puzzle3dFillBuildProgressRef.current = {
+      count: result.sequence.length,
+      maxCount: PUZZLE_3D_FILL_COUNT_MAX,
+      done: result.done,
+    };
+    console.log(
+      `[DEBUG] puzzle3d fill build chunk count=${result.sequence.length}/${PUZZLE_3D_FILL_COUNT_MAX} done=${result.done} ms=${(performance.now() - started).toFixed(1)}`,
+    );
+    notifyPuzzle3dFillSessionReady();
+    if (!result.done) {
+      puzzle3dFillBuildTimer = setTimeout(tick, 0);
+      return;
+    }
+    puzzle3dFillBuildStepper = null;
+    puzzle3dFillBuildTimer = null;
+  };
+  puzzle3dFillBuildTimer = setTimeout(tick, 0);
 }
 
 /** @emoji 🪣 Applies a fill prefix count onto the cached base fixture. */
-export function applyPuzzle3dFillCount(count: number, kindCatalogs: KindCatalogBundle | undefined): FixtureV1 | null {
+export function applyPuzzle3dFillCount(count: number, _kindCatalogs?: KindCatalogBundle | undefined): FixtureV1 | null {
   const session = puzzle3dFillSessionRef.current;
   if (!session.baseFixture) {
     return null;
   }
-  const n = Math.max(0, Math.min(1000, Math.round(count)));
-  return applyBrushFillPlacementsToFixture(session.baseFixture, session.sequence.slice(0, n), kindCatalogs);
+  const available = session.appendedObjects.length;
+  const n = Math.max(0, Math.min(PUZZLE_3D_FILL_COUNT_MAX, Math.round(count), available));
+  if (n === 0) {
+    return session.baseFixture;
+  }
+  return {
+    ...session.baseFixture,
+    objects: [...session.baseFixture.objects, ...session.appendedObjects.slice(0, n)],
+    attractions: [...session.baseFixture.attractions, ...session.appendedAttractions.slice(0, n)],
+  };
 }
 
 /** @emoji 🪣 Clears the cached fill session and returns the base fixture when present. */
 export function clearPuzzle3dFillSession(): FixtureV1 | null {
+  cancelPuzzle3dFillBuild();
   const base = puzzle3dFillSessionRef.current.baseFixture;
-  puzzle3dFillSessionRef.current = { baseFixture: null, sequence: [], seed: 0 };
+  puzzle3dFillSessionRef.current = { baseFixture: null, sequence: [], appendedObjects: [], appendedAttractions: [], seed: 0 };
+  puzzle3dFillBuildProgressRef.current = { count: 0, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: false };
   return base;
 }
 
@@ -597,8 +665,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   compatibleObjectsCount: 0,
   targetRingCount: 0,
   activeTool: "select",
-  brushPlacementCollisionTolerance: DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
-  brushPlacementCollisionToleranceSlider: brushPlacementCollisionToleranceToSlider(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE),
+  brushPlacementOverlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
   cameraSeedEpoch: 0,
   hoverFocus: { hoverTarget: null, kindHover: null },
 };
@@ -1163,8 +1230,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   private indirectCount: number;
   private compatibleObjectsCount: number;
   private targetRingCount: number;
-  private brushPlacementCollisionTolerance: number;
-  private brushPlacementCollisionToleranceSlider: number;
+  private brushPlacementOverlapBudget: number;
   private objectKindIds: string[] = [];
   private vortexKindIds: string[] = [];
   private objectKindWeights: KindWeightMap = {};
@@ -1205,8 +1271,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.indirectCount = 0;
     this.compatibleObjectsCount = 0;
     this.targetRingCount = 0;
-    this.brushPlacementCollisionTolerance = DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE;
-    this.brushPlacementCollisionToleranceSlider = brushPlacementCollisionToleranceToSlider(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE);
+    this.brushPlacementOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
     this.windowEngagement = this.placeholderWindowEngagement();
     this.syncBrushKindWeightsFromFixture();
     this.rebuildShellMode();
@@ -1335,8 +1400,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       indirectCount: this.indirectCount,
       compatibleObjectsCount: this.compatibleObjectsCount,
       targetRingCount: this.targetRingCount,
-      brushPlacementCollisionTolerance: this.brushPlacementCollisionTolerance,
-      brushPlacementCollisionToleranceSlider: this.brushPlacementCollisionToleranceSlider,
+      brushPlacementOverlapBudget: this.brushPlacementOverlapBudget,
       cameraSeedEpoch: this.cameraSeedEpoch,
       hoverFocus: this.hoverFocus,
     };
@@ -1585,13 +1649,13 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       children: [
         {
           kind: "slider",
-          id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-collision-tolerance`,
-          label: "Tolerance (m)",
-          value: this.brushPlacementCollisionTolerance,
+          id: `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-overlap-budget`,
+          label: "Overlap budget (m³)",
+          value: this.brushPlacementOverlapBudget,
           min: 0,
-          max: BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX,
-          step: BRUSH_PLACEMENT_COLLISION_TOLERANCE_STEP,
-          onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setBrushPlacementCollisionTolerance", args: { cad: true } },
+          max: BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
+          step: BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP,
+          onChange: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setBrushPlacementOverlapBudget", args: { cad: true } },
         },
         {
           kind: "group",
@@ -1840,22 +1904,14 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         this.notifySnapshot();
         return;
       }
+      case "setBrushPlacementOverlapBudget":
       case "setBrushPlacementCollisionTolerance": {
         const payload = args as { value?: number; cad?: boolean };
         const value = payload.value;
         if (typeof value !== "number" || !Number.isFinite(value)) {
           return;
         }
-        if (payload.cad) {
-          this.brushPlacementCollisionTolerance = Math.max(0, Math.min(BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX, value));
-          this.brushPlacementCollisionToleranceSlider = brushPlacementCollisionToleranceToSlider(this.brushPlacementCollisionTolerance);
-        } else {
-          this.brushPlacementCollisionToleranceSlider = Math.max(
-            BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MIN,
-            Math.min(BRUSH_PLACEMENT_COLLISION_TOLERANCE_SLIDER_MAX, Math.round(value)),
-          );
-          this.brushPlacementCollisionTolerance = brushPlacementCollisionToleranceFromSlider(this.brushPlacementCollisionToleranceSlider);
-        }
+        this.brushPlacementOverlapBudget = Math.max(0, Math.min(BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX, value));
         this.notifySnapshot();
         this.syncShell();
         return;
@@ -2272,8 +2328,7 @@ export interface Puzzle3dPlaySnapshot {
   readonly indirectCount: number;
   readonly compatibleObjectsCount: number;
   readonly targetRingCount: number;
-  readonly brushPlacementCollisionTolerance: number;
-  readonly brushPlacementCollisionToleranceSlider: number;
+  readonly brushPlacementOverlapBudget: number;
   readonly cameraSeedEpoch: number;
   readonly hoverFocus: Puzzle3dHoverPayload;
 }
@@ -2743,14 +2798,14 @@ export function buildPuzzle3dPlaySettingsBody(ctx: WindowBodyViewContext): UiTre
           },
           {
             type: "field",
-            id: "puzzle-3d-play-settings.brushCollisionTolerance",
-            label: "Brush collision tolerance",
+            id: "puzzle-3d-play-settings.brushOverlapBudget",
+            label: "Brush overlap budget (m³)",
             child: {
               type: "input",
-              id: "puzzle-3d-play-settings.brushCollisionTolerance.input",
+              id: "puzzle-3d-play-settings.brushOverlapBudget.input",
               inputKind: "number",
-              value: formatNumber(snap.brushPlacementCollisionTolerance),
-              onChange: puzzle3dPlayCmd("setBrushPlacementCollisionTolerance", { cad: true }),
+              value: formatNumber(snap.brushPlacementOverlapBudget),
+              onChange: puzzle3dPlayCmd("setBrushPlacementOverlapBudget", { cad: true }),
             },
           },
           {
@@ -3427,32 +3482,28 @@ if (import.meta.vitest) {
       expect(texts).toContain("Lasso");
     });
 
-    it("window measures include brush collision tolerance slider", () => {
+    it("window measures include brush overlap budget slider", () => {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       const measures = flattenWindowMeasures(ctrl.mainMode.windowKinds[0]?.measures ?? []);
-      const brushTol = measures.find((measure) => measure.id.endsWith("-brush-collision-tolerance"));
-      expect(brushTol?.kind).toBe("slider");
-      expect(brushTol?.max).toBe(BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX);
-      expect(brushTol?.value).toBeCloseTo(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE, 5);
+      const brushBudget = measures.find((measure) => measure.id.endsWith("-brush-overlap-budget"));
+      expect(brushBudget?.kind).toBe("slider");
+      expect(brushBudget?.max).toBe(BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX);
+      expect(brushBudget?.value).toBeCloseTo(DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET, 5);
     });
 
-    it("setBrushPlacementCollisionTolerance updates snapshot and slider mapping", () => {
+    it("setBrushPlacementOverlapBudget updates snapshot", () => {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      ctrl.run("setBrushPlacementCollisionTolerance", { value: 75 });
-      expect(ctrl.getSnapshot().brushPlacementCollisionToleranceSlider).toBe(75);
-      expect(ctrl.getSnapshot().brushPlacementCollisionTolerance).toBeCloseTo(0.375, 5);
-      ctrl.run("setBrushPlacementCollisionTolerance", { value: 0.4, cad: true });
-      expect(ctrl.getSnapshot().brushPlacementCollisionTolerance).toBeCloseTo(0.4, 5);
-      expect(ctrl.getSnapshot().brushPlacementCollisionToleranceSlider).toBe(80);
+      ctrl.run("setBrushPlacementOverlapBudget", { value: 0.15, cad: true });
+      expect(ctrl.getSnapshot().brushPlacementOverlapBudget).toBeCloseTo(0.15, 5);
       const measures = flattenWindowMeasures(ctrl.mainMode.windowKinds[0]?.measures ?? []);
-      const brushTol = measures.find((measure) => measure.id.endsWith("-brush-collision-tolerance"));
-      expect(brushTol?.kind).toBe("slider");
-      if (brushTol?.kind === "slider") {
-        expect(brushTol.value).toBeCloseTo(0.4, 5);
+      const brushBudget = measures.find((measure) => measure.id.endsWith("-brush-overlap-budget"));
+      expect(brushBudget?.kind).toBe("slider");
+      if (brushBudget?.kind === "slider") {
+        expect(brushBudget.value).toBeCloseTo(0.15, 5);
       }
     });
 

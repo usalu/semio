@@ -19,6 +19,13 @@ pub struct Edge {
     pub target_handle: HandleId,
 }
 
+// #region 🔖EdgeEndpointResolution
+/// 🔗 Resolves an edge endpoint to a node id: handle lookup first, then direct node id (normal graph port).
+fn resolve_endpoint_node_id<'a>(endpoint_id: &'a str, handle_to_node: &std::collections::HashMap<String, String>) -> &'a str {
+    handle_to_node.get(endpoint_id).map(String::as_str).unwrap_or(endpoint_id)
+}
+// #endregion 🔖EdgeEndpointResolution
+
 // #region 🕸️ForceGraphLayout
 pub mod force_graph {
     use serde::{Deserialize, Serialize};
@@ -1121,17 +1128,16 @@ pub mod hierarchical_tree {
             let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
                 continue;
             };
-            let Some(source_node_id) = handle_to_node.get(src_h) else {
-                continue;
-            };
-            let Some(target_node_id) = handle_to_node.get(tgt_h) else {
-                continue;
-            };
+            let source_node_id = crate::resolve_endpoint_node_id(src_h, &handle_to_node);
+            let target_node_id = crate::resolve_endpoint_node_id(tgt_h, &handle_to_node);
             if source_node_id == target_node_id {
                 continue;
             }
-            if seen_dir.insert((source_node_id.clone(), target_node_id.clone())) {
-                directed.push((source_node_id.clone(), target_node_id.clone()));
+            if !id_to_node.contains_key(source_node_id) || !id_to_node.contains_key(target_node_id) {
+                continue;
+            }
+            if seen_dir.insert((source_node_id.to_string(), target_node_id.to_string())) {
+                directed.push((source_node_id.to_string(), target_node_id.to_string()));
             }
         }
         let mut incoming_edge_count_by_node: HashMap<String, u32> = HashMap::new();

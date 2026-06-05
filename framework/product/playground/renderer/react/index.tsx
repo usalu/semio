@@ -369,7 +369,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     const Host = gisMapSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
-        <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
+        <div className="absolute inset-0 min-h-0 min-w-0">
           <Host node={node} />
         </div>
       );
@@ -705,7 +705,11 @@ function getDeclarativeWindowBodyComponent(windowKindId: string, bodyKey: string
       };
       const factory = getWindowBodyFactory(bodyKey);
       const node = factory?.(ctx) ?? { type: "text", value: `Missing declarative body "${bodyKey}"` };
-      return <UiRenderer node={node} commandBus={runtime.commandBus} />;
+      return (
+        <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <UiRenderer node={node} commandBus={runtime.commandBus} />
+        </div>
+      );
     };
     declarativeWindowBodyComponents.set(cacheKey, component);
   }
@@ -1502,8 +1506,10 @@ import {
   installPuzzle3dPlayBrushHost,
   clearPuzzle3dFillSession,
   preparePuzzle3dFillSession,
+  puzzle3dFillBuildProgressRef,
   puzzle3dFillPendingCountRef,
   puzzle3dFillSessionRef,
+  PUZZLE_3D_FILL_COUNT_MAX,
   subscribePuzzle3dFillSessionReady,
   getPuzzle3dFillSessionReadyEpoch,
   parseKindCatalogs,
@@ -1639,7 +1645,9 @@ function Puzzle3dPlayEngagementPublisher(props: {
   }, [bus]);
   const onFillCount = reactHostPort.useCallback(
     (count: number) => {
-      const n = Math.max(0, Math.min(1000, Math.round(count)));
+      const progress = puzzle3dFillBuildProgressRef.current;
+      const maxAvailable = progress.done ? PUZZLE_3D_FILL_COUNT_MAX : progress.count;
+      const n = Math.max(0, Math.min(PUZZLE_3D_FILL_COUNT_MAX, Math.round(count), maxAvailable));
       puzzle3dFillPendingCountRef.current = n;
       setFillCount(n);
       bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillCount", { count: n });
@@ -1666,6 +1674,24 @@ function Puzzle3dPlayEngagementPublisher(props: {
     setFillCount(nextCount);
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillCount", { count: nextCount });
   }, [bus, fillSessionReadyEpoch, snap.activeTool]);
+  reactHostPort.useEffect(() => {
+    if (snap.activeTool !== "fill") {
+      return;
+    }
+    const progress = puzzle3dFillBuildProgressRef.current;
+    if (progress.done) {
+      return;
+    }
+    const maxAvailable = progress.count;
+    if (fillCount <= maxAvailable) {
+      return;
+    }
+    const capped = maxAvailable;
+    puzzle3dFillPendingCountRef.current = capped;
+    setFillCount(capped);
+    bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillCount", { count: capped });
+  }, [bus, fillCount, fillSessionReadyEpoch, snap.activeTool]);
+  const fillBuildProgress = puzzle3dFillBuildProgressRef.current;
   const onRepeatLastEngagement = reactHostPort.useCallback(() => {
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "engagementRepeatLast", {});
   }, [bus]);
@@ -1723,6 +1749,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         activeTool: snap.activeTool,
         cmdLine,
         fillCount,
+        fillBuildProgress,
         selectionCount,
         onCmdLineChange: setCmdLine,
         onCmdLineSubmit,
@@ -1745,7 +1772,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushTargetActive: brushSource.targetActive,
         brushPlacementProbePending: brushSource.placementProbePending,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, fillCount, onBrushTool, onCmdLineSubmit, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool],
+    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -1913,17 +1940,17 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
       fillSessionPreparedRef.current = false;
     }
   }, [snap.activeTool]);
-  const fillToleranceRef = reactHostPort.useRef(snap.brushPlacementCollisionTolerance);
+  const fillToleranceRef = reactHostPort.useRef(snap.brushPlacementOverlapBudget);
   reactHostPort.useEffect(() => {
-    if (fillToleranceRef.current === snap.brushPlacementCollisionTolerance) {
+    if (fillToleranceRef.current === snap.brushPlacementOverlapBudget) {
       return;
     }
-    fillToleranceRef.current = snap.brushPlacementCollisionTolerance;
+    fillToleranceRef.current = snap.brushPlacementOverlapBudget;
     if (snap.activeTool !== "fill") {
       return;
     }
     fillSessionPreparedRef.current = false;
-  }, [snap.activeTool, snap.brushPlacementCollisionTolerance]);
+  }, [snap.activeTool, snap.brushPlacementOverlapBudget]);
   const onFillMeshesReady = reactHostPort.useCallback(() => {
     if (fillPrepareTimerRef.current !== null) {
       clearTimeout(fillPrepareTimerRef.current);
@@ -1935,13 +1962,11 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
         return;
       }
       if (!fillSessionPreparedRef.current) {
-        preparePuzzle3dFillSession(base, kindCatalogs, kindCompatibility, snap.brushPlacementCollisionTolerance);
-        if (puzzle3dFillSessionRef.current.sequence.length > 0) {
-          fillSessionPreparedRef.current = true;
-        }
+        preparePuzzle3dFillSession(base, kindCatalogs, kindCompatibility, snap.brushPlacementOverlapBudget);
+        fillSessionPreparedRef.current = true;
       }
     }, 0);
-  }, [bus, kindCatalogs, kindCompatibility, snap.brushPlacementCollisionTolerance]);
+  }, [bus, kindCatalogs, kindCompatibility, snap.brushPlacementOverlapBudget]);
   reactHostPort.useEffect(() => {
     if (snap.activeTool !== "fill" || !fillBaseCaptureRef.current) {
       return;
@@ -1950,7 +1975,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
       return;
     }
     onFillMeshesReady();
-  }, [onFillMeshesReady, snap.activeTool, snap.brushPlacementCollisionTolerance]);
+  }, [onFillMeshesReady, snap.activeTool, snap.brushPlacementOverlapBudget]);
   reactHostPort.useEffect(
     () => () => {
       if (fillPrepareTimerRef.current !== null) {
@@ -2009,7 +2034,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
           fillActive={snap.activeTool === "fill"}
           onFillMeshesReady={onFillMeshesReady}
           onBrushPlace={(payload) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "addBrushObject", payload)}
-          brushPlacementCollisionTolerance={snap.brushPlacementCollisionTolerance}
+          brushPlacementOverlapBudget={snap.brushPlacementOverlapBudget}
           fixtureDragDrop
           onFixtureDrop={handleFixtureDrop}
         />
@@ -5264,7 +5289,6 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
   );
   return (
     <MapCanvas
-      className="min-h-0 flex-1"
       renderMode={renderMode}
       vectorStyle={vectorStyle}
       lodMode={lodMode}
