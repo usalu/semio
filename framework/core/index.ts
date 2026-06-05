@@ -772,6 +772,48 @@ export class AppPointerFocusStore<TKey> extends Store<AppPointerFocusSnapshot<TK
 }
 //#endregion 🔖AppPointerFocus
 
+//#region 🔖PuzzlePlayHover
+/** @emoji 🧩 Puzzle 2D catalog-kind hover domain (instance → kind "is a"). */
+export type Puzzle2dKindHoverDomain = "node" | "handle" | "edge" | "wire";
+
+/** @emoji 📷 Puzzle 3D catalog-kind hover domain (instance → kind "is a"). */
+export type Puzzle3dKindHoverDomain = "object" | "vortex" | "attraction";
+
+/** @emoji 🖱️ Active transitive hover kind for puzzle 2D instances. */
+export interface Puzzle2dKindHover {
+	readonly domain: Puzzle2dKindHoverDomain;
+	readonly kindId: string;
+}
+
+/** @emoji 🖱️ Active transitive hover kind for puzzle 3D instances. */
+export interface Puzzle3dKindHover {
+	readonly domain: Puzzle3dKindHoverDomain;
+	readonly kindId: string;
+}
+
+/** @emoji 🖱️ Compares two puzzle 2D kind hovers for equality. */
+export function puzzle2dKindHoversEqual(a: Puzzle2dKindHover | null, b: Puzzle2dKindHover | null): boolean {
+	if (a === b) {
+		return true;
+	}
+	if (!a || !b) {
+		return false;
+	}
+	return a.domain === b.domain && a.kindId === b.kindId;
+}
+
+/** @emoji 🖱️ Compares two puzzle 3D kind hovers for equality. */
+export function puzzle3dKindHoversEqual(a: Puzzle3dKindHover | null, b: Puzzle3dKindHover | null): boolean {
+	if (a === b) {
+		return true;
+	}
+	if (!a || !b) {
+		return false;
+	}
+	return a.domain === b.domain && a.kindId === b.kindId;
+}
+//#endregion 🔖PuzzlePlayHover
+
 //#region 🔖CommandBus
 /** @emoji 🚦 Routes toolbar/footer commands to {@link Controller} instances by id. */
 export class CommandBus {

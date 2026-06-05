@@ -70,6 +70,9 @@ import {
 	type Puzzle2dSelectionMethod,
 	type Puzzle2dSelectionMode,
 	type Puzzle2dSelectionTargets,
+	type Puzzle2dKindHover,
+	type Puzzle2dKindHoverDomain,
+	type Puzzle2dHoverPayload,
 } from "../react/index.tsx";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
@@ -195,6 +198,102 @@ export const PUZZLE_2D_PLAY_LAYOUT: WindowLayout = {
 };
 //#endregion 🔖Ids
 
+//#region 🔖Puzzle2dPlayHover
+function puzzle2dPlayHoverPayloadFromGraphId(fixture: Puzzle2dFixtureV1, graphId: string | null): Puzzle2dHoverPayload {
+	if (!graphId) {
+		return { clientX: 0, clientY: 0, id: null, kind: null, screenX: 0, screenY: 0, worldX: 0, worldY: 0 };
+	}
+	const node = fixture.nodes.find((row) => row.id === graphId);
+	if (node) {
+		return { clientX: 0, clientY: 0, id: graphId, kind: { domain: "node", kindId: node.nodeKind ?? graphId }, screenX: 0, screenY: 0, worldX: 0, worldY: 0 };
+	}
+	const edge = fixture.edges.find((row) => row.id === graphId);
+	if (edge) {
+		return { clientX: 0, clientY: 0, id: graphId, kind: { domain: "edge", kindId: edge.edgeKind ?? graphId }, screenX: 0, screenY: 0, worldX: 0, worldY: 0 };
+	}
+	for (const fixtureNode of fixture.nodes) {
+		const handle = fixtureNode.handles.find((row) => row.id === graphId);
+		if (handle) {
+			return { clientX: 0, clientY: 0, id: graphId, kind: { domain: "handle", kindId: handle.handleKind }, screenX: 0, screenY: 0, worldX: 0, worldY: 0 };
+		}
+	}
+	return { clientX: 0, clientY: 0, id: graphId, kind: null, screenX: 0, screenY: 0, worldX: 0, worldY: 0 };
+}
+
+function puzzle2dPlayKindRowHoverHandlers(
+	onHover: ((payload: Puzzle2dHoverPayload) => void) | undefined,
+	kind: Puzzle2dKindHover,
+): Pick<UiTreeItemNode, "onPointerEnter" | "onPointerLeave"> {
+	if (!onHover) {
+		return {};
+	}
+	const payload: Puzzle2dHoverPayload = { clientX: 0, clientY: 0, id: null, kind, screenX: 0, screenY: 0, worldX: 0, worldY: 0 };
+	return {
+		onPointerEnter: () => onHover(payload),
+		onPointerLeave: () => onHover({ ...payload, kind: null }),
+	};
+}
+
+/** @emoji 🌳 Maps transitive kind hover to workbench hierarchy tree item ids. */
+export function puzzle2dPlayHierarchyTreeHighlightedIdsForKind(
+	fixture: Puzzle2dFixtureV1,
+	kindHover: Puzzle2dKindHover | null,
+): readonly string[] {
+	if (!kindHover?.kindId) {
+		return [];
+	}
+	const ids: string[] = [];
+	if (kindHover.domain === "node") {
+		for (const node of fixture.nodes) {
+			if ((node.nodeKind ?? node.id) === kindHover.kindId) {
+				ids.push(`puzzle-2d-play-hierarchy.node.${node.id}`);
+			}
+		}
+		return ids;
+	}
+	if (kindHover.domain === "handle") {
+		for (const node of fixture.nodes) {
+			for (const handle of node.handles) {
+				if (handle.handleKind === kindHover.kindId) {
+					ids.push(`puzzle-2d-play-hierarchy.handle.${handle.id}`);
+				}
+			}
+		}
+		return ids;
+	}
+	if (kindHover.domain === "edge") {
+		for (const edge of fixture.edges) {
+			if ((edge.edgeKind ?? edge.id) === kindHover.kindId) {
+				ids.push(`puzzle-2d-play-hierarchy.edge.${edge.id}`);
+			}
+		}
+		return ids;
+	}
+	for (const wire of fixture.wires ?? []) {
+		if (wire.wireKind === kindHover.kindId) {
+			ids.push(`puzzle-2d-play-hierarchy.wire.${wire.id}`);
+		}
+	}
+	return ids;
+}
+
+function puzzle2dPlayKindsSectionDomain(sectionId: string): Puzzle2dKindHoverDomain | null {
+	if (sectionId === "puzzle-2d-play-kinds.nodes") {
+		return "node";
+	}
+	if (sectionId === "puzzle-2d-play-kinds.handles") {
+		return "handle";
+	}
+	if (sectionId === "puzzle-2d-play-kinds.edges") {
+		return "edge";
+	}
+	if (sectionId === "puzzle-2d-play-kinds.wires") {
+		return "wire";
+	}
+	return null;
+}
+//#endregion 🔖Puzzle2dPlayHover
+
 //#region 🔖Puzzle2dPlayHierarchy
 function puzzle2dFixtureHandleToNodeId(fixture: Puzzle2dFixtureV1): ReadonlyMap<string, string> {
 	const out = new Map<string, string>();
@@ -317,20 +416,21 @@ export function puzzle2dPlayHierarchyGraphIdFromTreeItemId(treeItemId: string): 
 export type Puzzle2dPlayHierarchyBuildOptions = {
 	/** @emoji 🌳 When true, omit per-item `isSelected`; drive highlight via Tree `selectedIds` instead. */
 	readonly omitItemSelection?: boolean;
-	/** @emoji 🖱️ Optional graph-id hover sink for hierarchy row pointer enter/leave. */
-	readonly onHover?: (id: string | null) => void;
+	/** @emoji 🖱️ Optional hover sink for hierarchy row pointer enter/leave. */
+	readonly onHover?: (payload: Puzzle2dHoverPayload) => void;
 };
 
 function puzzle2dPlayHierarchyHoverHandlers(
-	onHover: ((id: string | null) => void) | undefined,
+	onHover: ((payload: Puzzle2dHoverPayload) => void) | undefined,
+	fixture: Puzzle2dFixtureV1,
 	graphId: string,
 ): Pick<UiTreeItemNode, "onPointerEnter" | "onPointerLeave"> {
 	if (!onHover) {
 		return {};
 	}
 	return {
-		onPointerEnter: () => onHover(graphId),
-		onPointerLeave: () => onHover(null),
+		onPointerEnter: () => onHover(puzzle2dPlayHoverPayloadFromGraphId(fixture, graphId)),
+		onPointerLeave: () => onHover(puzzle2dPlayHoverPayloadFromGraphId(fixture, null)),
 	};
 }
 
@@ -343,7 +443,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
 	onSelect: (id: string) => void,
 	visiting: Set<string>,
 	omitItemSelection: boolean,
-	onHover?: (id: string | null) => void,
+	onHover?: (payload: Puzzle2dHoverPayload) => void,
 ): UiTreeItemNode | null {
 	if (visiting.has(nodeId)) {
 		return null;
@@ -368,7 +468,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
       label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
       ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
       onClick: () => onSelect(handle.id),
-      ...puzzle2dPlayHierarchyHoverHandlers(onHover, handle.id),
+      ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, handle.id),
     }));
     nodeItems.push({
       id: `puzzle-2d-play-hierarchy.node.${nodeId}.handles`,
@@ -384,13 +484,20 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
     ...(omitItemSelection ? {} : { isSelected: selectedIds.has(nodeId) }),
     defaultOpen: true,
     onClick: () => onSelect(nodeId),
-    ...puzzle2dPlayHierarchyHoverHandlers(onHover, nodeId),
+    ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, nodeId),
     items: [...nodeItems, ...childItems],
   };
 }
 
 /** @emoji 🌳 Maps committed graph hover ids to workbench hierarchy tree item ids. */
-export function puzzle2dPlayHierarchyTreeHighlightedIds(fixture: Puzzle2dFixtureV1, graphHoverId: string | null): readonly string[] {
+export function puzzle2dPlayHierarchyTreeHighlightedIds(
+	fixture: Puzzle2dFixtureV1,
+	graphHoverId: string | null,
+	kindHover: Puzzle2dKindHover | null = null,
+): readonly string[] {
+	if (kindHover) {
+		return puzzle2dPlayHierarchyTreeHighlightedIdsForKind(fixture, kindHover);
+	}
 	if (!graphHoverId) {
 		return [];
 	}
@@ -429,7 +536,7 @@ export function buildPuzzle2dPlayHierarchySections(
 		label: puzzle2dFixtureEdgeDisplayLabel(edge, fixture, kindCatalogs),
 		...(omitItemSelection ? {} : { isSelected: selectedIds.has(edge.id) }),
 		onClick: () => onSelect(edge.id),
-		...puzzle2dPlayHierarchyHoverHandlers(onHover, edge.id),
+		...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, edge.id),
 	}));
 	const edgesGroup: UiTreeItemNode = {
 		id: "puzzle-2d-play-hierarchy.edges",
@@ -486,11 +593,13 @@ function puzzle2dPlayKindCatalogSection(
 	handleKinds?: readonly HandleKind[],
 	sectionDefaultOpen = true,
 	kindCatalogs?: KindCatalogBundle,
+	onHover?: (payload: Puzzle2dHoverPayload) => void,
 ): UiTreeSectionNode | null {
 	if (!entries?.length) {
 		return null;
 	}
 	const isNodePalette = sectionId === "puzzle-2d-play-kinds.nodes";
+	const sectionDomain = puzzle2dPlayKindsSectionDomain(sectionId);
 	const items: UiTreeItemNode[] = [...entries]
 		.sort((a, b) => puzzle2dCatalogKindLabel(a).localeCompare(puzzle2dCatalogKindLabel(b)))
 		.map((entry, index) => {
@@ -498,12 +607,14 @@ function puzzle2dPlayKindCatalogSection(
 			const handleItems = nodeKind?.handles?.length
 				? puzzle2dPlayNodeKindHandleCatalogItems(sectionId, index, entry.id, nodeKind.handles, handleKinds)
 				: [];
+			const kindHover = sectionDomain ? { domain: sectionDomain, kindId: entry.id } satisfies Puzzle2dKindHover : null;
 			return {
 				id: `${sectionId}.${index}.${entry.id}`,
 				label: puzzle2dCatalogKindLabel(entry),
 				description: entry.id,
 				defaultOpen: handleItems.length === 0,
 				...(handleItems.length ? { items: handleItems } : {}),
+				...(kindHover ? puzzle2dPlayKindRowHoverHandlers(onHover, kindHover) : {}),
 				...(isNodePalette && nodeKind?.handles?.length
 					? {
 							draggable: true,
@@ -516,12 +627,16 @@ function puzzle2dPlayKindCatalogSection(
 }
 
 /** @emoji 🏷️ Workbench kinds tab: Nodes, Handles, Wires, Edges. */
-export function buildPuzzle2dPlayKindsTree(catalogs: KindCatalogBundle | undefined): UiNode {
+export function buildPuzzle2dPlayKindsTree(
+	catalogs: KindCatalogBundle | undefined,
+	options?: { readonly onHover?: (payload: Puzzle2dHoverPayload) => void; readonly highlightedIds?: readonly string[] },
+): UiNode {
+	const onHover = options?.onHover;
 	const sections = [
-		puzzle2dPlayKindCatalogSection("puzzle-2d-play-kinds.nodes", "Nodes", catalogs?.nodes, catalogs?.handles, true, catalogs),
-		puzzle2dPlayKindCatalogSection("puzzle-2d-play-kinds.handles", "Handles", catalogs?.handles, undefined, false),
-		puzzle2dPlayKindCatalogSection("puzzle-2d-play-kinds.wires", "Wires", catalogs?.wires),
-		puzzle2dPlayKindCatalogSection("puzzle-2d-play-kinds.edges", "Edges", catalogs?.edges),
+		puzzle2dPlayKindCatalogSection("puzzle-2d-play-kinds.nodes", "Nodes", catalogs?.nodes, catalogs?.handles, true, catalogs, onHover),
+		puzzle2dPlayKindCatalogSection("puzzle-2d-play-kinds.handles", "Handles", catalogs?.handles, undefined, false, undefined, onHover),
+		puzzle2dPlayKindCatalogSection("puzzle-2d-play-kinds.wires", "Wires", catalogs?.wires, undefined, true, undefined, onHover),
+		puzzle2dPlayKindCatalogSection("puzzle-2d-play-kinds.edges", "Edges", catalogs?.edges, undefined, true, undefined, onHover),
 	].filter((section): section is UiTreeSectionNode => section !== null);
 	if (!sections.length) {
 		return {
@@ -536,7 +651,11 @@ export function buildPuzzle2dPlayKindsTree(catalogs: KindCatalogBundle | undefin
 			],
 		};
 	}
-	return { type: "tree", sections };
+	return {
+		type: "tree",
+		sections,
+		...(options?.highlightedIds?.length ? { highlightedIds: options.highlightedIds } : {}),
+	};
 }
 //#endregion 🔖Puzzle2dPlayKinds
 

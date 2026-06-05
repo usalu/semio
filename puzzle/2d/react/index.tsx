@@ -1032,11 +1032,32 @@ export function layoutPuzzle2dFixtureRedrawHandles(fixture: Puzzle2dFixtureV1): 
   return JSON.parse(out) as Puzzle2dFixtureV1;
 }
 
+/** @emoji 🧩 Catalog-kind hover domain for transitive same-kind highlight. */
+export type Puzzle2dKindHoverDomain = "node" | "handle" | "edge" | "wire";
+
+/** @emoji 🖱️ Active transitive hover kind derived from a hovered instance or kind row. */
+export interface Puzzle2dKindHover {
+  readonly domain: Puzzle2dKindHoverDomain;
+  readonly kindId: string;
+}
+
+/** @emoji 🖱️ Compares two puzzle 2D kind hovers for equality. */
+export function puzzle2dKindHoversEqual(a: Puzzle2dKindHover | null, b: Puzzle2dKindHover | null): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  return a.domain === b.domain && a.kindId === b.kindId;
+}
+
 /** @emoji 🖱️ Hit-under-pointer payload for {@link Puzzle2dEventMap.hover} (tooltips, status, …). */
 export interface Puzzle2dHoverPayload {
   clientX: number;
   clientY: number;
   id: string | null;
+  readonly kind: Puzzle2dKindHover | null;
   /** @emoji 📐 Canvas-local CSS pixels passed to {@link Puzzle2dRenderer.screenToWorld}. */
   screenX: number;
   screenY: number;
@@ -4292,6 +4313,7 @@ export class Puzzle2dRenderer {
   private emitter = new TypedEmitter<Puzzle2dEventMap>();
   private frameListeners = new Set<FrameListener>();
   private hoveredId: string | null = null;
+  private hoveredKind: Puzzle2dKindHover | null = null;
   private lastPointerClientX = 0;
   private lastPointerClientY = 0;
   private lastPointerScreenX = 0;
@@ -4367,6 +4389,7 @@ export class Puzzle2dRenderer {
   private lastPushedCameraY = Number.NaN;
   private lastPushedCameraZoom = Number.NaN;
   private lastEmittedHoverId: string | null | undefined;
+  private lastEmittedHoverKind: Puzzle2dKindHover | null | undefined;
   private lastPushedWidth = -1;
   private lastPushedHeight = -1;
   private lastPushedDpr = -1;
@@ -4553,16 +4576,20 @@ export class Puzzle2dRenderer {
   }
 
   /** @emoji 🖱️ Controlled sync: mirrors hover chrome without emitting `hover`. */
-  syncHoveredIdSilent(id: string | null): void {
-    if (this.hoveredId === id) {
+  syncHoveredIdSilent(id: string | null, kind: Puzzle2dKindHover | null = null): void {
+    if (this.hoveredId === id && puzzle2dKindHoversEqual(this.hoveredKind, kind)) {
       return;
     }
     if (this.wasmSessionCallBlockedForReentry()) {
-      this.updateHover(id);
+      this.updateHover(id, kind);
       return;
     }
-    this.session.setHoveredIdSilent(id);
-    this.updateHover(id);
+    if (kind && !id) {
+      this.session.setHoveredKindSilent(kind.domain, kind.kindId);
+    } else {
+      this.session.setHoveredIdSilent(id);
+    }
+    this.updateHover(id, kind);
     this.invalidate();
   }
 
@@ -6128,7 +6155,12 @@ export class Puzzle2dRenderer {
           case "hover": {
             const hid = row.payload.id;
             const next = hid === null || hid === undefined ? null : String(hid);
-            this.updateHover(next);
+            const kindPayload = row.payload.kind as { domain?: string; kindId?: string } | null | undefined;
+            const nextKind =
+              kindPayload?.domain && kindPayload.kindId
+                ? { domain: kindPayload.domain as Puzzle2dKindHoverDomain, kindId: String(kindPayload.kindId) }
+                : null;
+            this.updateHover(next, nextKind);
             this.publishHover();
             break;
           }
@@ -6853,24 +6885,27 @@ export class Puzzle2dRenderer {
     this.scheduleInputInvalidate();
   }
 
-  private updateHover(id: string | null): void {
-    if (this.hoveredId === id) {
+  private updateHover(id: string | null, kind: Puzzle2dKindHover | null = null): void {
+    if (this.hoveredId === id && puzzle2dKindHoversEqual(this.hoveredKind, kind)) {
       return;
     }
     this.hoveredId = id;
+    this.hoveredKind = kind;
   }
 
   /** @emoji 📡 Emits {@link Puzzle2dEventMap.hover} when {@link Puzzle2dRenderer.hoveredId} changes (not every pointermove). */
   private publishHover(): void {
-    if (this.lastEmittedHoverId === this.hoveredId) {
+    if (this.lastEmittedHoverId === this.hoveredId && puzzle2dKindHoversEqual(this.lastEmittedHoverKind, this.hoveredKind)) {
       return;
     }
     this.lastEmittedHoverId = this.hoveredId;
+    this.lastEmittedHoverKind = this.hoveredKind;
     const world = this.screenToWorld({ x: this.lastPointerScreenX, y: this.lastPointerScreenY });
     this.emit("hover", {
       clientX: this.lastPointerClientX,
       clientY: this.lastPointerClientY,
       id: this.hoveredId,
+      kind: this.hoveredKind,
       screenX: this.lastPointerScreenX,
       screenY: this.lastPointerScreenY,
       worldX: world.x,
@@ -10938,6 +10973,8 @@ export interface Puzzle2dCanvasProps {
   sceneAuthoringEpoch?: number;
   /** @emoji 🖱️ Controlled hover target id (`onHover` should update this). */
   hoveredId?: string | null;
+  /** @emoji 🖱️ Controlled transitive kind hover (`onHover` should update this). */
+  kindHover?: Puzzle2dKindHover | null;
   /** @emoji 🖱️ Uncontrolled initial hover target id. */
   defaultHoveredId?: string | null;
   onWireChange?: (payload: Puzzle2dGraphWireIdPayload) => void;
@@ -12170,6 +12207,7 @@ export function Puzzle2dCanvas({
   onPreselect,
   sceneAuthoringEpoch,
   hoveredId: hoveredIdProp,
+  kindHover: kindHoverProp,
   defaultHoveredId,
   onViewportChange,
   onWireChange,
@@ -12195,10 +12233,11 @@ export function Puzzle2dCanvas({
   const [uncontrolledHoveredId, setUncontrolledHoveredId] = reactHostPort.useState<string | null>(defaultHoveredId ?? null);
   const selectionControlled = selection !== undefined;
   const preselectionControlled = preselection !== undefined;
-  const hoveredControlled = hoveredIdProp !== undefined;
+  const hoveredControlled = hoveredIdProp !== undefined || kindHoverProp !== undefined;
   const resolvedSelection = selectionControlled ? normalizePuzzle2dSelectionProp(selection) : uncontrolledSelection;
   const resolvedPreselection = preselectionControlled ? normalizePuzzle2dPreselectProp(preselection) : uncontrolledPreselection;
   const resolvedHoveredId = hoveredControlled ? (hoveredIdProp ?? null) : uncontrolledHoveredId;
+  const resolvedKindHover = hoveredControlled ? (kindHoverProp ?? null) : null;
   const puzzle2dTargetMenusRef = reactHostPort.useRef(new Map<string, ContextMenuItem[]>());
   const [surfaceContextMenu, setSurfaceContextMenu] = reactHostPort.useState<{ clientX: number; clientY: number; items: ContextMenuItem[] } | null>(null);
   const [fixtureDragActive, setFixtureDragActive] = reactHostPort.useState(false);
@@ -12404,6 +12443,7 @@ export function Puzzle2dCanvas({
       if (!hoveredControlled) {
         setUncontrolledHoveredId(payload.id);
       }
+      console.log("[DEBUG] puzzle2d hover", payload.kind?.domain, payload.kind?.kindId, payload.id);
       onHover?.(payload);
     });
   }, [contextRenderer, hoveredControlled, onHover]);
@@ -12843,8 +12883,8 @@ export function Puzzle2dCanvas({
     if (!renderer) {
       return;
     }
-    renderer.syncHoveredIdSilent(resolvedHoveredId);
-  }, [resolvedHoveredId]);
+    renderer.syncHoveredIdSilent(resolvedHoveredId, resolvedKindHover);
+  }, [resolvedHoveredId, resolvedKindHover]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;

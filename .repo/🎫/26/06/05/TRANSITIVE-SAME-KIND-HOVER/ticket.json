@@ -1,0 +1,7 @@
+{
+  "id": "26/06/05/TRANSITIVE-SAME-KIND-HOVER",
+  "title": "Transitive Same-Kind Hover",
+  "goal": "R26-03/RUNNING-NET",
+  "client": "cursor-chat",
+  "llm": "gpt-5-5"
+}

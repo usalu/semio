@@ -1,0 +1,7 @@
+{
+  "id": "26/06/05/FIX-ENGAGEMENT-SUGGESTION-CLICK",
+  "title": "Fix Engagement Suggestion Click",
+  "goal": "R26-03/RUNNING-NET",
+  "client": "cursor-chat",
+  "llm": "gpt-5-5"
+}

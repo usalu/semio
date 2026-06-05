@@ -855,6 +855,8 @@ mod board_host {
         pub selection_exit_highlight: BTreeSet<String>,
         pub selection_options: SelectionOptions,
         pub hovered_id: Option<String>,
+        /// @emoji 🖱️ Transitive same-kind hover `(domain, kind_id)` when hovering a kind row or derived from `hovered_id`.
+        pub hovered_kind: Option<(String, String)>,
         pub interaction: Interaction,
         pub width: u32,
         pub height: u32,
@@ -930,6 +932,7 @@ mod board_host {
                 selection_exit_highlight: BTreeSet::new(),
                 selection_options: SelectionOptions { method: "rectangle".into(), mode: "replace".into(), select_nodes: true, select_edges: true, select_handles: true },
                 hovered_id: None,
+                hovered_kind: None,
                 interaction: Interaction::None,
                 width: 1,
                 height: 1,
@@ -1608,14 +1611,77 @@ mod board_host {
             }
         }
 
-        fn hovered_style_kind(&self, id: &str) -> Option<BoardElementStyleKind> {
+        fn hovered_style_kind(&self, id: &str, domain: &str, element_kind: &str) -> Option<BoardElementStyleKind> {
             if self.is_preselect_active() {
                 return None;
             }
             if self.selection.contains(id) {
                 return None;
             }
-            (self.hovered_id.as_deref() == Some(id)).then_some(BoardElementStyleKind::Hovered)
+            if self.hovered_id.as_deref() == Some(id) {
+                return Some(BoardElementStyleKind::Hovered);
+            }
+            if let Some((hover_domain, hover_kind)) = self.hovered_kind.as_ref() {
+                if hover_domain == domain && hover_kind == element_kind {
+                    return Some(BoardElementStyleKind::Hovered);
+                }
+            }
+            None
+        }
+
+        fn resolve_element_kind_hover(&self, id: &str) -> Option<(String, String)> {
+            if let Some(node) = self.nodes.get(id) {
+                return Some(("node".to_string(), node.node_kind.clone()));
+            }
+            if let Some(handle) = self.handles.get(id) {
+                return Some(("handle".to_string(), handle.handle_kind.clone()));
+            }
+            if let Some(edge) = self.edges.get(id) {
+                return Some(("edge".to_string(), edge.edge_kind.clone()));
+            }
+            if let Some(wire) = self.wires.get(id) {
+                return Some(("wire".to_string(), wire.wire_kind.clone()));
+            }
+            None
+        }
+
+        fn ids_matching_kind_hover(&self) -> Vec<String> {
+            let Some((domain, kind_id)) = self.hovered_kind.as_ref() else {
+                return Vec::new();
+            };
+            let mut ids = Vec::new();
+            match domain.as_str() {
+                "node" => {
+                    for node in self.nodes.values() {
+                        if &node.node_kind == kind_id && !self.selection.contains(&node.id) {
+                            ids.push(node.id.clone());
+                        }
+                    }
+                }
+                "handle" => {
+                    for handle in self.handles.values() {
+                        if &handle.handle_kind == kind_id && !self.selection.contains(&handle.id) {
+                            ids.push(handle.id.clone());
+                        }
+                    }
+                }
+                "edge" => {
+                    for edge in self.edges.values() {
+                        if &edge.edge_kind == kind_id && !self.selection.contains(&edge.id) {
+                            ids.push(edge.id.clone());
+                        }
+                    }
+                }
+                "wire" => {
+                    for wire in self.wires.values() {
+                        if &wire.wire_kind == kind_id && !self.selection.contains(&wire.id) {
+                            ids.push(wire.id.clone());
+                        }
+                    }
+                }
+                _ => {}
+            }
+            ids
         }
 
         fn is_preselect_active(&self) -> bool {
@@ -1652,7 +1718,7 @@ mod board_host {
                     }
                 }
                 StyleChromePass::InteractionOverlay => {
-                    if let Some(kind) = self.hovered_style_kind(n.id.as_str()) {
+                    if let Some(kind) = self.hovered_style_kind(n.id.as_str(), "node", n.node_kind.as_str()) {
                         return kind;
                     }
                     self.resolve_interaction_style_kind(n.id.as_str())
@@ -1673,7 +1739,7 @@ mod board_host {
                     }
                 }
                 StyleChromePass::InteractionOverlay => {
-                    if let Some(kind) = self.hovered_style_kind(h.id.as_str()) {
+                    if let Some(kind) = self.hovered_style_kind(h.id.as_str(), "handle", h.handle_kind.as_str()) {
                         return kind;
                     }
                     self.resolve_interaction_style_kind(h.id.as_str())
@@ -1688,7 +1754,7 @@ mod board_host {
             match pass {
                 StyleChromePass::CachedBase => BoardElementStyleKind::Neutral,
                 StyleChromePass::InteractionOverlay => {
-                    if let Some(kind) = self.hovered_style_kind(e.id.as_str()) {
+                    if let Some(kind) = self.hovered_style_kind(e.id.as_str(), "edge", e.edge_kind.as_str()) {
                         return kind;
                     }
                     self.resolve_interaction_style_kind(e.id.as_str())
@@ -1703,7 +1769,7 @@ mod board_host {
             match pass {
                 StyleChromePass::CachedBase => BoardElementStyleKind::Neutral,
                 StyleChromePass::InteractionOverlay => {
-                    if let Some(kind) = self.hovered_style_kind(w.id.as_str()) {
+                    if let Some(kind) = self.hovered_style_kind(w.id.as_str(), "wire", w.wire_kind.as_str()) {
                         return kind;
                     }
                     self.resolve_interaction_style_kind(w.id.as_str())
@@ -1725,6 +1791,11 @@ mod board_host {
             if let Some(ref hover_id) = self.hovered_id {
                 if !self.is_preselect_active() && !self.selection.contains(hover_id) {
                     ids.insert(hover_id.clone());
+                }
+            }
+            if !self.is_preselect_active() {
+                for id in self.ids_matching_kind_hover() {
+                    ids.insert(id);
                 }
             }
             ids
@@ -5317,20 +5388,58 @@ mod board_host {
         }
 
         pub fn set_hovered_id(&mut self, id: Option<String>) {
-            if self.hovered_id == id {
+            let next_kind = id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            if self.hovered_id == id && self.hovered_kind == next_kind {
                 return;
             }
             self.bump_content_scene_generation();
             self.hovered_id = id.clone();
-            self.push_event("hover", json!({ "id": id }));
+            self.hovered_kind = next_kind.clone();
+            self.push_event(
+                "hover",
+                json!({
+                    "id": id,
+                    "kind": next_kind.as_ref().map(|(domain, kind_id)| json!({ "domain": domain, "kindId": kind_id })),
+                }),
+            );
+        }
+
+        /// @emoji 🖱️ Sets transitive kind hover from a catalog row (clears direct `hovered_id`).
+        pub fn set_hovered_kind(&mut self, domain: Option<String>, kind_id: Option<String>) {
+            let next_kind = domain.zip(kind_id);
+            if self.hovered_id.is_none() && self.hovered_kind == next_kind {
+                return;
+            }
+            self.bump_content_scene_generation();
+            self.hovered_id = None;
+            self.hovered_kind = next_kind.clone();
+            self.push_event(
+                "hover",
+                json!({
+                    "id": null,
+                    "kind": next_kind.as_ref().map(|(domain, kind_id)| json!({ "domain": domain, "kindId": kind_id })),
+                }),
+            );
         }
 
         /// @emoji 🔇 Updates hover chrome without emitting `hover` (controlled React sync).
         pub fn set_hovered_id_silent(&mut self, id: Option<String>) {
-            if self.hovered_id == id {
+            let next_kind = id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            if self.hovered_id == id && self.hovered_kind == next_kind {
                 return;
             }
             self.hovered_id = id;
+            self.hovered_kind = next_kind;
+        }
+
+        /// @emoji 🔇 Mirrors controlled kind hover without emitting `hover`.
+        pub fn set_hovered_kind_silent(&mut self, domain: Option<String>, kind_id: Option<String>) {
+            let next_kind = domain.zip(kind_id);
+            if self.hovered_id.is_none() && self.hovered_kind == next_kind {
+                return;
+            }
+            self.hovered_id = None;
+            self.hovered_kind = next_kind;
         }
 
         pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
@@ -6667,6 +6776,11 @@ impl BoardSession {
     #[wasm_bindgen(js_name = setHoveredIdSilent)]
     pub fn set_hovered_id_silent_wasm(&mut self, id: Option<String>) {
         self.state.borrow_mut().host.set_hovered_id_silent(id);
+    }
+
+    #[wasm_bindgen(js_name = setHoveredKindSilent)]
+    pub fn set_hovered_kind_silent_wasm(&mut self, domain: Option<String>, kind_id: Option<String>) {
+        self.state.borrow_mut().host.set_hovered_kind_silent(domain, kind_id);
     }
 
     #[wasm_bindgen(js_name = encodedSceneHint)]

@@ -12721,12 +12721,18 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
     [input, isControlledInput],
   );
 
+  const pickingPossibleIdRef = reactHostPort.useRef<string | null>(null);
   const selectPossible = reactHostPort.useCallback(
     (item: EngagementPossible) => {
+      if (pickingPossibleIdRef.current === item.id) return;
+      pickingPossibleIdRef.current = item.id;
       item.onSelect?.();
       applyDraft("");
       setPossiblesExpanded(false);
       setActivePossibleIndex(0);
+      queueMicrotask(() => {
+        if (pickingPossibleIdRef.current === item.id) pickingPossibleIdRef.current = null;
+      });
     },
     [applyDraft],
   );
@@ -12874,10 +12880,6 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
               className="w-[min(100vw-1rem,28rem)] p-0"
               align="end"
               onOpenAutoFocus={(event) => event.preventDefault()}
-              onPointerDown={(event) => {
-                if (event.target instanceof HTMLElement && event.target.closest('[cmdk-item], [data-slot="command-item"]')) return;
-                event.preventDefault();
-              }}
             >
               <Command shouldFilter={false}>
                 <CommandList>
@@ -12889,7 +12891,12 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                           value={item.id}
                           data-active={index === activePossibleIndex ? "true" : undefined}
                           className={cn(index === activePossibleIndex && "bg-active-base")}
-                          onPointerDown={(event) => event.stopPropagation()}
+                          onPointerDown={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            selectPossible(item);
+                          }}
+                          onMouseEnter={() => setActivePossibleIndex(index)}
                           onSelect={() => selectPossible(item)}
                         >
                           <span className="truncate">{engagementHighlightedLabel(item.label, draft, item.detail)}</span>
@@ -16495,6 +16502,62 @@ export function readActiveWindowTemplateDragSession(): WindowTemplateDragSession
   return activeWindowTemplateDragSession;
 }
 
+/** @emoji 🖱️ Active pointer-driven window-template drag from the Display tree. */
+export const windowTemplatePointerDragRef = { active: false };
+
+/** @emoji 🖱️ Marks a pointer-driven window-template drag as active. */
+export function beginWindowTemplatePointerDrag(_encoded: string): void {
+  windowTemplatePointerDragRef.active = true;
+}
+
+/** @emoji 🖱️ Cancels a pointer-driven window-template drag. */
+export function cancelWindowTemplatePointerDrag(): void {
+  windowTemplatePointerDragRef.active = false;
+  endWindowTemplateDrag();
+}
+
+/** @emoji 🖱️ {@link TreeDragAndDropController} for Display rows that carry window-template `dragData`. */
+export function windowTemplatePaletteTreeDragController(): TreeDragAndDropController {
+  const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
+    const payload = dragData?.[SEMIO_WINDOW_TEMPLATE_MIME];
+    return payload?.trim() ? payload : undefined;
+  };
+  return {
+    pointerPaletteDrag: {
+      readEncodedDragPayload: readEncoded,
+      begin: beginWindowTemplatePointerDrag,
+      cancel: cancelWindowTemplatePointerDrag,
+    },
+    onDragStart: ({ sourceItem }) => {
+      const encoded = readEncoded(sourceItem.dragData);
+      if (!encoded) {
+        return;
+      }
+      try {
+        const payload = JSON.parse(encoded) as WindowTemplateDropPayload;
+        if (typeof payload.windowKindId !== "string") {
+          return;
+        }
+        const label =
+          typeof sourceItem.label === "string"
+            ? sourceItem.label
+            : typeof sourceItem.label === "number"
+              ? String(sourceItem.label)
+              : "Window";
+        beginWindowTemplateDrag({ payload, label });
+      } catch {
+        /* ignore */
+      }
+    },
+    onDragEnd: () => {
+      if (windowTemplatePointerDragRef.active) {
+        return;
+      }
+      endWindowTemplateDrag();
+    },
+  };
+}
+
 export type ModeCanvasDropTarget =
   | { kind: "tab"; stackPath: string; index: number }
   | { kind: "split"; stackPath: string; side: "left" | "right" | "top" | "bottom" }
@@ -17671,6 +17734,37 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     return () => document.removeEventListener("dragend", onDragEnd);
   }, [templateDrag, clearTemplateDragPreview]);
 
+  const resolveTemplateDropZone = reactHostPort.useCallback((clientX: number, clientY: number): ModeDropZone | null => {
+    const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
+    stackDropElementsRef.current.forEach((elements, path) => {
+      targets.set(path, {
+        tabBar: elements.tabBar?.getBoundingClientRect() ?? null,
+        body: elements.body?.getBoundingClientRect() ?? null,
+        tabBarElement: elements.tabBar,
+      });
+    });
+    const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
+    return computeModeDropZone(clientX, clientY, targets, modeRect);
+  }, []);
+
+  const completeExternalTemplateDrop = reactHostPort.useCallback(
+    (clientX: number, clientY: number, payload: WindowTemplateDropPayload): boolean => {
+      if (!onTemplateDrop || typeof payload.windowKindId !== "string") {
+        return false;
+      }
+      const zone = resolveTemplateDropZone(clientX, clientY);
+      if (!zone) {
+        return false;
+      }
+      endWindowTemplateDrag();
+      windowTemplatePointerDragRef.active = false;
+      clearTemplateDragPreview();
+      onTemplateDrop(payload, zone);
+      return true;
+    },
+    [clearTemplateDragPreview, onTemplateDrop, resolveTemplateDropZone],
+  );
+
   const handleExternalTemplateDragOver = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       if (!onTemplateDrop || !event.dataTransfer.types.includes(SEMIO_WINDOW_TEMPLATE_MIME)) return;
@@ -17696,24 +17790,48 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       } catch {
         return;
       }
-      if (typeof payload.windowKindId !== "string") return;
-      const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
-      stackDropElementsRef.current.forEach((elements, path) => {
-        targets.set(path, {
-          tabBar: elements.tabBar?.getBoundingClientRect() ?? null,
-          body: elements.body?.getBoundingClientRect() ?? null,
-          tabBarElement: elements.tabBar,
-        });
-      });
-      const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
-      const zone = computeModeDropZone(event.clientX, event.clientY, targets, modeRect);
-      if (!zone) return;
-      endWindowTemplateDrag();
-      clearTemplateDragPreview();
-      onTemplateDrop(payload, zone);
+      completeExternalTemplateDrop(event.clientX, event.clientY, payload);
     },
-    [clearTemplateDragPreview, onTemplateDrop],
+    [completeExternalTemplateDrop, onTemplateDrop],
   );
+
+  reactHostPort.useEffect(() => {
+    if (!onTemplateDrop) return;
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!windowTemplatePointerDragRef.active) return;
+      const session = readActiveWindowTemplateDragSession();
+      if (!session) return;
+      setTemplateDrag({ label: session.label, x: event.clientX, y: event.clientY });
+      refreshDropZone(event.clientX, event.clientY);
+    };
+    const handlePointerUp = (event: PointerEvent) => {
+      if (!windowTemplatePointerDragRef.active) return;
+      const session = readActiveWindowTemplateDragSession();
+      if (!session) {
+        windowTemplatePointerDragRef.active = false;
+        clearTemplateDragPreview();
+        return;
+      }
+      const modeRect = modeBodyRef.current?.getBoundingClientRect();
+      if (!modeRect || event.clientX < modeRect.left || event.clientX > modeRect.right || event.clientY < modeRect.top || event.clientY > modeRect.bottom) {
+        cancelWindowTemplatePointerDrag();
+        clearTemplateDragPreview();
+        return;
+      }
+      if (!completeExternalTemplateDrop(event.clientX, event.clientY, session.payload)) {
+        cancelWindowTemplatePointerDrag();
+        clearTemplateDragPreview();
+      }
+    };
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    };
+  }, [clearTemplateDragPreview, completeExternalTemplateDrop, onTemplateDrop, refreshDropZone]);
 
   const templatePreviewDrag = reactHostPort.useMemo((): ModeDragState | null => {
     if (!templateDrag) return null;
@@ -18612,6 +18730,26 @@ if (import.meta.vitest) {
       beginWindowTemplateDrag({ payload: { windowKindId: "main", templateId: "top" }, label: "Top" });
       expect(readActiveWindowTemplateDragSession()?.label).toBe("Top");
       endWindowTemplateDrag();
+      expect(readActiveWindowTemplateDragSession()).toBeNull();
+    });
+
+    it("windowTemplatePaletteTreeDragController starts pointer and native template drags", () => {
+      const controller = windowTemplatePaletteTreeDragController();
+      const encoded = JSON.stringify({ windowKindId: "puzzle-3d-main", templateId: "perspective" });
+      controller.pointerPaletteDrag?.begin(encoded);
+      expect(windowTemplatePointerDragRef.active).toBe(true);
+      controller.onDragStart?.({
+        items: [],
+        sourceItem: {
+          id: "framework.display.windows.puzzle-3d-main.perspective",
+          label: "Perspective",
+          dragData: { [SEMIO_WINDOW_TEMPLATE_MIME]: encoded },
+        },
+        section: { id: "framework.display.windows.puzzle-3d-main", items: [] },
+      });
+      expect(readActiveWindowTemplateDragSession()?.label).toBe("Perspective");
+      cancelWindowTemplatePointerDrag();
+      expect(windowTemplatePointerDragRef.active).toBe(false);
       expect(readActiveWindowTemplateDragSession()).toBeNull();
     });
 

@@ -117,6 +117,12 @@ import {
   kindsCompatible,
   publishPuzzle3dBrushCandidateAccept,
   type BrushCompatibleCandidate,
+  type HoverTarget,
+  type Puzzle3dHoverPayload,
+  type Puzzle3dKindHover,
+  type Puzzle3dKindHoverDomain,
+  puzzle3dHoverTargetsEqual,
+  puzzle3dKindHoversEqual,
 } from "../react/index.tsx";
 import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
 import concreteForestPuzzle3dFixtureJson from "../fixture/concrete-forest.3d.json";
@@ -484,6 +490,7 @@ export const PUZZLE_3D_PLAY_SETTINGS_BODY_KEY = "puzzle.3d.play.settings";
 /** @emoji 🎯 Side-panel body keys that refresh from controller snapshot on selection (not shell generation). */
 export const PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS: ReadonlySet<string> = new Set([
   PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY,
+  PUZZLE_3D_PLAY_KINDS_BODY_KEY,
   PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY,
 ]);
 export const PUZZLE_3D_PLAY_ICON_HIERARCHY = "puzzle.3d-play.icon.hierarchy";
@@ -592,6 +599,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   brushPlacementCollisionTolerance: DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE,
   brushPlacementCollisionToleranceSlider: brushPlacementCollisionToleranceToSlider(DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE),
   cameraSeedEpoch: 0,
+  hoverFocus: { hoverTarget: null, kindHover: null },
 };
 
 /** @emoji 🖌️ Puzzle 3D play active viewport tool. */
@@ -787,6 +795,124 @@ export function puzzle3dPlaySelectionEqual(a: Puzzle3dPlaySelection, b: Puzzle3d
   return true;
 }
 
+//#region 🔖Puzzle3dPlayHover
+/** @emoji 🖱️ Imperative hover sink wired by the play renderer (stable ref for cached hierarchy trees). */
+export const puzzle3dPlayHoverBridgeRef: { current: ((payload: Puzzle3dHoverPayload) => void) | null } = { current: null };
+
+export type Puzzle3dPlayHierarchyHoverBuildOptions = {
+  readonly onHover?: (payload: Puzzle3dHoverPayload) => void;
+};
+
+function puzzle3dPlayHoverSink(onHover?: (payload: Puzzle3dHoverPayload) => void): ((payload: Puzzle3dHoverPayload) => void) | undefined {
+  if (onHover) {
+    return onHover;
+  }
+  const bridge = puzzle3dPlayHoverBridgeRef.current;
+  return bridge ?? undefined;
+}
+
+function puzzle3dPlayHierarchyInstanceHoverHandlers(
+  onHover: ((payload: Puzzle3dHoverPayload) => void) | undefined,
+  target: HoverTarget,
+): Pick<UiTreeItemNode, "onPointerEnter" | "onPointerLeave"> {
+  const sink = puzzle3dPlayHoverSink(onHover);
+  if (!sink) {
+    return {};
+  }
+  return {
+    onPointerEnter: () => sink({ hoverTarget: target, kindHover: null }),
+    onPointerLeave: () => sink({ hoverTarget: null, kindHover: null }),
+  };
+}
+
+function puzzle3dPlayKindRowHoverHandlers(
+  onHover: ((payload: Puzzle3dHoverPayload) => void) | undefined,
+  kind: Puzzle3dKindHover,
+): Pick<UiTreeItemNode, "onPointerEnter" | "onPointerLeave"> {
+  const sink = puzzle3dPlayHoverSink(onHover);
+  if (!sink) {
+    return {};
+  }
+  return {
+    onPointerEnter: () => sink({ hoverTarget: null, kindHover: kind }),
+    onPointerLeave: () => sink({ hoverTarget: null, kindHover: null }),
+  };
+}
+
+/** @emoji 🌳 Maps transitive kind hover to hierarchy tree row ids. */
+export function puzzle3dPlayHierarchyTreeHighlightedIds(fixture: FixtureV1, kindHover: Puzzle3dKindHover | null): readonly string[] {
+  if (!kindHover?.kindId) {
+    return [];
+  }
+  const ids: string[] = [];
+  if (kindHover.domain === "object") {
+    for (const object of fixture.objects) {
+      if (object.objectKind === kindHover.kindId) {
+        ids.push(`puzzle-3d-play-hierarchy.object.${object.id}`);
+      }
+    }
+    return ids;
+  }
+  if (kindHover.domain === "vortex") {
+    for (const object of fixture.objects) {
+      for (const vortex of object.vortices) {
+        if (vortex.vortexKind === kindHover.kindId) {
+          ids.push(`puzzle-3d-play-hierarchy.vortex.${puzzle3dVortexFullId(object.id, vortex.id)}`);
+        }
+      }
+    }
+    return ids;
+  }
+  for (const attraction of fixture.attractions) {
+    if (attraction.attractionKind === kindHover.kindId) {
+      ids.push(`puzzle-3d-play-hierarchy.attraction.${attraction.id}`);
+    }
+  }
+  return ids;
+}
+
+/** @emoji 🖱️ Resolves catalog kind hover from a play fixture instance target. */
+export function puzzle3dKindHoverFromPlayTarget(fixture: FixtureV1 | null, target: HoverTarget): Puzzle3dKindHover | null {
+  if (!fixture) {
+    return null;
+  }
+  switch (target.kind) {
+    case "object": {
+      const object = fixture.objects.find((row) => row.id === target.id);
+      const kindId = object?.objectKind?.trim();
+      return kindId ? { domain: "object", kindId } : null;
+    }
+    case "vortex": {
+      const { objectId, vortexId } = parseVortexFullId(target.fullId);
+      const object = fixture.objects.find((row) => row.id === objectId);
+      const vortex = object?.vortices.find((row) => row.id === vortexId);
+      const kindId = vortex?.vortexKind?.trim();
+      return kindId ? { domain: "vortex", kindId } : null;
+    }
+    case "attraction": {
+      const attraction = fixture.attractions.find((row) => row.id === target.id);
+      const kindId = attraction?.attractionKind?.trim();
+      return kindId ? { domain: "attraction", kindId } : null;
+    }
+    default:
+      return null;
+  }
+}
+
+function puzzle3dPlayKindsSectionDomain(sectionId: string): Puzzle3dKindHoverDomain | null {
+  if (sectionId === "puzzle-3d-play-kinds.objects") {
+    return "object";
+  }
+  if (sectionId === "puzzle-3d-play-kinds.vortices") {
+    return "vortex";
+  }
+  if (sectionId === "puzzle-3d-play-kinds.attractions") {
+    return "attraction";
+  }
+  return null;
+}
+//#endregion 🔖Puzzle3dPlayHover
+
 //#region 🔖Puzzle3dPlayHierarchy
 /** @emoji 🎯 Maps play selection to declarative hierarchy row ids for {@link UiTreeNode.selectedIds}. */
 export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelection): readonly string[] {
@@ -804,7 +930,11 @@ export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelectio
 }
 
 /** @emoji 🌳 Structural hierarchy sections (no per-row selected flags; selection via {@link puzzle3dPlayHierarchySelectedIds}). */
-export function buildPuzzle3dPlayHierarchySections(fixture: FixtureV1): readonly UiTreeSectionNode[] {
+export function buildPuzzle3dPlayHierarchySections(
+  fixture: FixtureV1,
+  options?: Puzzle3dPlayHierarchyHoverBuildOptions,
+): readonly UiTreeSectionNode[] {
+  const onHover = options?.onHover;
   const objectItems: UiTreeItemNode[] = fixture.objects.map((object) => {
     const vortexItems: UiTreeItemNode[] = object.vortices.map((vortex) => {
       const fullId = puzzle3dVortexFullId(object.id, vortex.id);
@@ -812,6 +942,7 @@ export function buildPuzzle3dPlayHierarchySections(fixture: FixtureV1): readonly
         id: `puzzle-3d-play-hierarchy.vortex.${fullId}`,
         ...puzzle3dPlayFixtureTreeRowFields(vortex.label, fullId),
         command: puzzle3dPlaySelectVortexCommand(fullId),
+        ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "vortex", fullId }),
       };
     });
     const vorticesGroup: UiTreeItemNode = {
@@ -825,6 +956,7 @@ export function buildPuzzle3dPlayHierarchySections(fixture: FixtureV1): readonly
       ...puzzle3dPlayFixtureTreeRowFields(object.label, object.id),
       defaultOpen: true,
       command: puzzle3dPlaySelectObjectCommand(object.id),
+      ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
       items: [vorticesGroup],
     };
   });
@@ -839,6 +971,7 @@ export function buildPuzzle3dPlayHierarchySections(fixture: FixtureV1): readonly
     label: attraction.id,
     description: `${attraction.attracting} → ${attraction.attracted}`,
     command: puzzle3dPlaySelectAttractionCommand(attraction.id),
+    ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
   }));
   const attractionsGroup: UiTreeItemNode = {
     id: "puzzle-3d-play-hierarchy.attractions",
@@ -856,14 +989,19 @@ export function buildPuzzle3dPlayHierarchySections(fixture: FixtureV1): readonly
 }
 
 /** @emoji 🌳 Nested workbench tree: Puzzle 3D → Objects → Vortices; Attractions sibling group. */
-export function buildPuzzle3dPlayHierarchyTree(fixture: FixtureV1 | null, selection: Puzzle3dPlaySelection): UiNode {
+export function buildPuzzle3dPlayHierarchyTree(
+  fixture: FixtureV1 | null,
+  selection: Puzzle3dPlaySelection,
+  options?: Puzzle3dPlayHierarchyHoverBuildOptions & { readonly highlightedIds?: readonly string[] },
+): UiNode {
   if (!fixture) {
     return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [{ id: "puzzle-3d-play-hierarchy.invalid", label: "Invalid puzzle 3D fixture" }]);
   }
   return {
     type: "tree",
-    sections: buildPuzzle3dPlayHierarchySections(fixture),
+    sections: buildPuzzle3dPlayHierarchySections(fixture, options),
     selectedIds: puzzle3dPlayHierarchySelectedIds(selection),
+    ...(options?.highlightedIds?.length ? { highlightedIds: options.highlightedIds } : {}),
   };
 }
 //#endregion 🔖Puzzle3dPlayHierarchy
@@ -907,11 +1045,13 @@ function puzzle3dPlayKindCatalogSection(
   sectionDefaultOpen = true,
   kindCatalogs?: KindCatalogBundle,
   sceneFixture?: FixtureV1,
+  onHover?: (payload: Puzzle3dHoverPayload) => void,
 ): UiTreeSectionNode | null {
   if (!entries?.length) {
     return null;
   }
   const isObjectPalette = sectionId === "puzzle-3d-play-kinds.objects";
+  const sectionDomain = puzzle3dPlayKindsSectionDomain(sectionId);
   const items: UiTreeItemNode[] = [...entries]
     .sort((a, b) => puzzle3dCatalogKindLabel(a).localeCompare(puzzle3dCatalogKindLabel(b)))
     .map((entry, index) => {
@@ -919,12 +1059,14 @@ function puzzle3dPlayKindCatalogSection(
       const vortexItems = objectKind?.vortices?.length
         ? puzzle3dPlayObjectKindVortexCatalogItems(sectionId, index, entry.id, objectKind.vortices, vortexKinds)
         : [];
+      const kindHover = sectionDomain ? { domain: sectionDomain, kindId: entry.id } satisfies Puzzle3dKindHover : null;
       return {
         id: `${sectionId}.${index}.${entry.id}`,
         label: puzzle3dCatalogKindLabel(entry),
         description: entry.id,
         defaultOpen: vortexItems.length === 0,
         ...(vortexItems.length ? { items: vortexItems } : {}),
+        ...(kindHover ? puzzle3dPlayKindRowHoverHandlers(onHover, kindHover) : {}),
         ...(isObjectPalette && isLoadableMeshUrl(resolveObjectKindMeshUrl(entry.id, kindCatalogs, sceneFixture))
           ? {
               draggable: true,
@@ -937,12 +1079,17 @@ function puzzle3dPlayKindCatalogSection(
 }
 
 /** @emoji 🏷️ Workbench kinds tab: Objects, Vortices, Cables, Attractions. */
-export function buildPuzzle3dPlayKindsTree(catalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): UiNode {
+export function buildPuzzle3dPlayKindsTree(
+  catalogs: KindCatalogBundle | undefined,
+  sceneFixture?: FixtureV1,
+  options?: Puzzle3dPlayHierarchyHoverBuildOptions & { readonly highlightedIds?: readonly string[] },
+): UiNode {
+  const onHover = options?.onHover;
   const sections = [
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.objects, catalogs?.vortices, true, catalogs, sceneFixture),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.vortices, undefined, false),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.cables", "Cables", catalogs?.cables),
-    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.attractions),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.objects", "Objects", catalogs?.objects, catalogs?.vortices, true, catalogs, sceneFixture, onHover),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.vortices", "Vortices", catalogs?.vortices, undefined, false, undefined, undefined, onHover),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.cables", "Cables", catalogs?.cables, undefined, true, undefined, undefined, onHover),
+    puzzle3dPlayKindCatalogSection("puzzle-3d-play-kinds.attractions", "Attractions", catalogs?.attractions, undefined, true, undefined, undefined, onHover),
   ].filter((section): section is UiTreeSectionNode => section !== null);
   if (!sections.length) {
     return {
@@ -957,7 +1104,11 @@ export function buildPuzzle3dPlayKindsTree(catalogs: KindCatalogBundle | undefin
       ],
     };
   }
-  return { type: "tree", sections };
+  return {
+    type: "tree",
+    sections,
+    ...(options?.highlightedIds?.length ? { highlightedIds: options.highlightedIds } : {}),
+  };
 }
 //#endregion 🔖Puzzle3dPlayKinds
 
@@ -1024,6 +1175,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   private hostBridge: Puzzle3dPlayHostBridge | null = null;
   private hierarchySectionsCache: readonly UiTreeSectionNode[] | null = null;
   private hierarchySectionsRevision = -1;
+  private hoverFocus: Puzzle3dHoverPayload = { hoverTarget: null, kindHover: null };
   private instanceCameras = new Map<string, CameraState>();
   private cameraSeedEpoch = 0;
   private fixtureCatalogCache: PlaygroundFixtureCatalog | null = null;
@@ -1100,20 +1252,54 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     return () => this.snapshotListeners.delete(listener);
   }
 
+  /** @emoji 🖱️ Updates shared hover focus for canvas + hierarchy transitive highlight. */
+  setHoverFocus(payload: Puzzle3dHoverPayload): void {
+    const nextKind =
+      payload.kindHover ??
+      (payload.hoverTarget
+        ? puzzle3dKindHoverFromPlayTarget(this.fixture, payload.hoverTarget)
+        : null);
+    const next: Puzzle3dHoverPayload = { hoverTarget: payload.hoverTarget, kindHover: nextKind };
+    const prev = this.hoverFocus;
+    if (
+      puzzle3dHoverTargetsEqual(prev.hoverTarget, next.hoverTarget) &&
+      puzzle3dKindHoversEqual(prev.kindHover, next.kindHover)
+    ) {
+      return;
+    }
+    this.hoverFocus = next;
+    for (const listener of this.snapshotListeners) {
+      listener();
+    }
+  }
+
   /** @emoji 🌳 Hierarchy panel tree with stable {@link UiTreeNode.sections} across selection-only updates. */
   getHierarchyPanelTree(selection: Puzzle3dPlaySelection): UiNode {
     if (!this.fixture) {
       return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [{ id: "puzzle-3d-play-hierarchy.invalid", label: "Invalid puzzle 3D fixture" }]);
     }
     if (this.hierarchySectionsRevision !== this.fixtureRevision || !this.hierarchySectionsCache) {
-      this.hierarchySectionsCache = buildPuzzle3dPlayHierarchySections(this.fixture);
+      this.hierarchySectionsCache = buildPuzzle3dPlayHierarchySections(this.fixture, {
+        onHover: (payload) => this.setHoverFocus(payload),
+      });
       this.hierarchySectionsRevision = this.fixtureRevision;
     }
+    const highlightedIds = puzzle3dPlayHierarchyTreeHighlightedIds(this.fixture, this.hoverFocus.kindHover);
     return {
       type: "tree",
       sections: this.hierarchySectionsCache,
       selectedIds: puzzle3dPlayHierarchySelectedIds(selection),
+      ...(highlightedIds.length ? { highlightedIds } : {}),
     };
+  }
+
+  getKindsPanelTree(): UiNode {
+    const catalogs = this.fixture ? parseKindCatalogs(this.fixture.meta) : undefined;
+    const highlightedIds = this.fixture ? puzzle3dPlayHierarchyTreeHighlightedIds(this.fixture, this.hoverFocus.kindHover) : [];
+    return buildPuzzle3dPlayKindsTree(catalogs, this.fixture ?? undefined, {
+      onHover: (payload) => this.setHoverFocus(payload),
+      ...(highlightedIds.length ? { highlightedIds } : {}),
+    });
   }
 
   private rebuildSnapshotCache(): void {
@@ -1150,6 +1336,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       brushPlacementCollisionTolerance: this.brushPlacementCollisionTolerance,
       brushPlacementCollisionToleranceSlider: this.brushPlacementCollisionToleranceSlider,
       cameraSeedEpoch: this.cameraSeedEpoch,
+      hoverFocus: this.hoverFocus,
     };
   }
 
@@ -2087,6 +2274,7 @@ export interface Puzzle3dPlaySnapshot {
   readonly brushPlacementCollisionTolerance: number;
   readonly brushPlacementCollisionToleranceSlider: number;
   readonly cameraSeedEpoch: number;
+  readonly hoverFocus: Puzzle3dHoverPayload;
 }
 
 export const PUZZLE_3D_PLAY_STORE_ID = "play";
@@ -2626,6 +2814,9 @@ export function buildPuzzle3dPlayHierarchyPanelBody(ctx: WindowBodyViewContext):
 
 export function buildPuzzle3dPlayKindsPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
   const ctrl = puzzle3dPlayControllerFromContext(ctx);
+  if (ctrl) {
+    return ctrl.getKindsPanelTree();
+  }
   const snap = ctrl?.getSnapshot();
   const catalogs = snap?.fixture ? parseKindCatalogs(snap.fixture.meta) : undefined;
   return buildPuzzle3dPlayKindsTree(catalogs, snap?.fixture ?? undefined);

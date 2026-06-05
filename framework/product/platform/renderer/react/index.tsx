@@ -187,8 +187,7 @@ import {
 	insertWindowAtDropZone,
 	removeWindowFromLayout,
 	SEMIO_WINDOW_TEMPLATE_MIME,
-	beginWindowTemplateDrag,
-	endWindowTemplateDrag,
+	windowTemplatePaletteTreeDragController,
 	type TreeDragAndDropController,
 	Ui,
 	type EngagementSpec,
@@ -1171,28 +1170,7 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
 			})),
 		],
 	}));
-	const dragAndDropController: TreeDragAndDropController = {
-		onDragStart: ({ sourceItem }) => {
-			const encoded = sourceItem.dragData?.[SEMIO_WINDOW_TEMPLATE_MIME];
-			if (!encoded) return;
-			try {
-				const payload = JSON.parse(encoded) as WindowTemplateDropPayload;
-				if (typeof payload.windowKindId !== "string") return;
-				const label =
-					typeof sourceItem.label === "string"
-						? sourceItem.label
-						: typeof sourceItem.label === "number"
-							? String(sourceItem.label)
-							: "Window";
-				beginWindowTemplateDrag({ payload, label });
-			} catch {
-				/* ignore */
-			}
-		},
-		onDragEnd: () => {
-			endWindowTemplateDrag();
-		},
-	};
+	const dragAndDropController = windowTemplatePaletteTreeDragController();
 	return {
 		sections: sections.length ? sections : [{ id: "framework.display.windows.empty", items: [{ id: "empty", label: "—" }] }],
 		dragAndDropController,
@@ -3221,6 +3199,19 @@ if (import.meta.vitest) {
 	});
 
 	describe("display windows tree", () => {
+		it("uses pointer palette drag for window-template rows", () => {
+			const host: DisplayHostApi = {
+				windowKinds: [{ id: "puzzle-3d-main", label: "Puzzle 3D", bodyKey: "puzzle.3d.play.main", templates: [] } as WindowKindRuntime],
+				namedLayouts: [],
+				userLayouts: [],
+				saveCurrentLayout: () => {},
+				applyNamedLayout: () => {},
+				deleteUserLayout: () => {},
+			};
+			const tree = new DisplayWindowsTreeDefinition(() => host).resolveTree();
+			expect(tree.dragAndDropController?.pointerPaletteDrag).toBeTruthy();
+		});
+
 		it("lists a draggable kind row and optional template children", () => {
 			const host: DisplayHostApi = {
 				windowKinds: [
