@@ -9576,6 +9576,33 @@ mod force_graph_tests {
     }
 
     #[test]
+    fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
+        let fixture = json!({
+            "schema": "puzzle.2d.fixture/v1",
+            "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+            "nodes": [
+                { "id": "a", "x": 0.0, "y": 0.0, "radius": 40.0, "handles": [] },
+                { "id": "b", "x": 1.0, "y": 0.0, "radius": 40.0, "handles": [] }
+            ],
+            "edges": [{ "id": "e1", "source": "a", "target": "b" }]
+        });
+        let opts = json!({
+            "iterations": 200,
+            "idealEdgeLength": 180.0,
+            "repulsionStrength": 0.0,
+            "springStrength": 0.04,
+            "gravity": 0.0,
+            "randomSeed": 7
+        });
+        let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+        let nodes = parsed["nodes"].as_array().unwrap();
+        let ax = nodes[0]["x"].as_f64().unwrap();
+        let bx = nodes[1]["x"].as_f64().unwrap();
+        assert!((bx - ax).abs() > 80.0, "expected node-id edge springs to spread nodes, got a={ax} b={bx}");
+    }
+
+    #[test]
     fn force_graph_rejects_bad_schema() {
         let err = apply_force_graph_layout_to_fixture_v1_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
         assert!(err.contains("schema"));
@@ -9905,6 +9932,42 @@ mod force_graph_tests {
             assert!(n["x"].as_f64().unwrap().is_finite());
             assert!(n["y"].as_f64().unwrap().is_finite());
         }
+    }
+
+    #[test]
+    fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
+        let fixture = json!({
+            "schema": "puzzle.2d.fixture/v1",
+            "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+            "nodes": [
+                { "id": "r", "root": true, "radius": 18.0, "handles": [] },
+                { "id": "c1", "radius": 18.0, "handles": [] },
+                { "id": "c2", "radius": 18.0, "handles": [] }
+            ],
+            "edges": [
+                { "id": "e1", "source": "r", "target": "c1" },
+                { "id": "e2", "source": "r", "target": "c2" }
+            ]
+        });
+        let opts = json!({
+            "mode": "hierarchical-tree",
+            "centerX": 0.0,
+            "centerY": 0.0,
+            "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
+        });
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+        let mut ys: HashMap<String, f64> = HashMap::new();
+        for n in parsed["nodes"].as_array().unwrap() {
+            let id = n["id"].as_str().unwrap().to_string();
+            ys.insert(id, n["y"].as_f64().unwrap());
+        }
+        let ry = *ys.get("r").unwrap();
+        let c1y = *ys.get("c1").unwrap();
+        let c2y = *ys.get("c2").unwrap();
+        assert!((c1y - ry).abs() > 40.0, "expected child below root");
+        assert!((c2y - ry).abs() > 40.0);
+        assert!((c1y - c2y).abs() < 1e-3, "siblings share row");
     }
 
     #[test]

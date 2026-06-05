@@ -182,6 +182,11 @@ const _collisionAtoB = new Matrix4();
 const _collisionInvA = new Matrix4();
 const _collisionInvB = new Matrix4();
 const _collisionRay = new Ray();
+const _collisionVa = new Vector3();
+const _collisionVb = new Vector3();
+const _collisionVc = new Vector3();
+const _collisionNormal = new Vector3();
+const _collisionToPoint = new Vector3();
 
 /** @emoji 🧊 Builds a {@link CollisionBody} from a GLB root in pose-local space (includes {@link GLB_MESH_FRAME_ROTATION_X}). */
 export function collisionBodyFromObject(root: Object3D): CollisionBody | null {
@@ -242,13 +247,28 @@ export function collisionBodyWorldBounds(body: CollisionBody, worldMatrix: Matri
 function collisionPointInsidePart(part: CollisionMeshPart, pointPoseLocal: Vector3): boolean {
   _collisionPartLocal.copy(pointPoseLocal).applyMatrix4(part.localMatrix.clone().invert());
   const hit = part.bvh.closestPointToPoint(_collisionPartLocal, _collisionHit, 0, Infinity);
-  if (hit && hit.distance < 1e-4) {
+  if (!hit) {
+    return false;
+  }
+  if (hit.distance < 1e-4) {
     return true;
   }
-  _collisionRay.origin.copy(_collisionPartLocal);
-  _collisionRay.direction.set(1, 0, 0);
-  const hits = part.bvh.raycast(_collisionRay);
-  return hits.length % 2 === 1;
+  const geometry = part.geometry;
+  const index = geometry.index;
+  const position = geometry.getAttribute("position");
+  if (!index || !position) {
+    return false;
+  }
+  const faceVertex = hit.faceIndex * 3;
+  const ia = index.getX(faceVertex);
+  const ib = index.getX(faceVertex + 1);
+  const ic = index.getX(faceVertex + 2);
+  _collisionVa.fromBufferAttribute(position, ia);
+  _collisionVb.fromBufferAttribute(position, ib);
+  _collisionVc.fromBufferAttribute(position, ic);
+  _collisionNormal.subVectors(_collisionVb, _collisionVa).cross(_collisionToPoint.subVectors(_collisionVc, _collisionVa)).normalize();
+  _collisionToPoint.subVectors(_collisionPartLocal, hit.point);
+  return _collisionToPoint.dot(_collisionNormal) < 0;
 }
 
 function collisionPointInsideBody(body: CollisionBody, worldToPose: Matrix4, worldPoint: Vector3): boolean {
@@ -259,6 +279,19 @@ function collisionPointInsideBody(body: CollisionBody, worldToPose: Matrix4, wor
     }
   }
   return false;
+}
+
+function collisionBodiesContainmentOverlap(a: CollisionBody, worldA: Matrix4, b: CollisionBody, worldB: Matrix4): boolean {
+  collisionBodyWorldBounds(a, worldA, _collisionBoxA);
+  collisionBodyWorldBounds(b, worldB, _collisionBoxB);
+  _collisionInterBox.copy(_collisionBoxA).intersect(_collisionBoxB);
+  if (_collisionInterBox.isEmpty() || !Number.isFinite(_collisionInterBox.min.x)) {
+    return false;
+  }
+  _collisionInterBox.getCenter(_collisionPoint);
+  _collisionInvA.copy(worldA).invert();
+  _collisionInvB.copy(worldB).invert();
+  return collisionPointInsideBody(a, _collisionInvA, _collisionPoint) && collisionPointInsideBody(b, _collisionInvB, _collisionPoint);
 }
 
 /** @emoji 💥 True when two posed {@link CollisionBody} instances have intersecting mesh geometry. */
@@ -278,7 +311,7 @@ export function bodiesIntersect(a: CollisionBody, worldA: Matrix4, b: CollisionB
       }
     }
   }
-  return false;
+  return collisionBodiesContainmentOverlap(a, worldA, b, worldB);
 }
 
 export interface SolidOverlapVolumeOptions {
@@ -299,7 +332,7 @@ export function solidOverlapVolume(
   if (_collisionInterBox.isEmpty() || !Number.isFinite(_collisionInterBox.min.x)) {
     return 0;
   }
-  if (!bodiesIntersect(a, worldA, b, worldB)) {
+  if (!bodiesIntersect(a, worldA, b, worldB) && !collisionBodiesContainmentOverlap(a, worldA, b, worldB)) {
     return 0;
   }
   _collisionInterBox.getSize(_collisionSize);

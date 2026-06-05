@@ -21,8 +21,8 @@ pub struct Edge {
 
 // #region 🔖EdgeEndpointResolution
 /// 🔗 Resolves an edge endpoint to a node id: handle lookup first, then direct node id (normal graph port).
-fn resolve_endpoint_node_id<'a>(endpoint_id: &'a str, handle_to_node: &std::collections::HashMap<String, String>) -> &'a str {
-    handle_to_node.get(endpoint_id).map(String::as_str).unwrap_or(endpoint_id)
+fn resolve_endpoint_node_id(endpoint_id: &str, handle_to_node: &std::collections::HashMap<String, String>) -> String {
+    handle_to_node.get(endpoint_id).cloned().unwrap_or_else(|| endpoint_id.to_string())
 }
 // #endregion 🔖EdgeEndpointResolution
 
@@ -640,19 +640,15 @@ pub mod force_graph {
             let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
                 continue;
             };
-            let Some(a) = handle_to_node.get(src_h) else {
-                continue;
-            };
-            let Some(b) = handle_to_node.get(tgt_h) else {
-                continue;
-            };
+            let a = crate::resolve_endpoint_node_id(src_h, &handle_to_node);
+            let b = crate::resolve_endpoint_node_id(tgt_h, &handle_to_node);
             if a == b {
                 continue;
             }
-            let Some(&ia) = id_to_index.get(a) else {
+            let Some(&ia) = id_to_index.get(&a) else {
                 continue;
             };
-            let Some(&ib) = id_to_index.get(b) else {
+            let Some(&ib) = id_to_index.get(&b) else {
                 continue;
             };
             let lo = ia.min(ib);
@@ -1133,11 +1129,11 @@ pub mod hierarchical_tree {
             if source_node_id == target_node_id {
                 continue;
             }
-            if !id_to_node.contains_key(source_node_id) || !id_to_node.contains_key(target_node_id) {
+            if !id_to_node.contains_key(&source_node_id) || !id_to_node.contains_key(&target_node_id) {
                 continue;
             }
-            if seen_dir.insert((source_node_id.to_string(), target_node_id.to_string())) {
-                directed.push((source_node_id.to_string(), target_node_id.to_string()));
+            if seen_dir.insert((source_node_id.clone(), target_node_id.clone())) {
+                directed.push((source_node_id, target_node_id));
             }
         }
         let mut incoming_edge_count_by_node: HashMap<String, u32> = HashMap::new();

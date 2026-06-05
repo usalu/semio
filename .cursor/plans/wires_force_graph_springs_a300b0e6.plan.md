@@ -4,19 +4,19 @@ overview: Fix the WIRES force-directed graph so edges (relationships) actually b
 todos:
   - id: force-edge-fallback
     content: Add node-id fallback to force_graph edge resolution in mathematical/graph/port/directed/lib.rs (~636-641), resolving via handle_to_node then id_to_index.
-    status: in_progress
+    status: completed
   - id: tree-edge-fallback
     content: Add the same node-id fallback to hierarchical_tree edge resolution (~1121-1135), validating against id_to_node.
-    status: pending
+    status: completed
   - id: shared-helper
     content: Optionally extract a shared resolve_endpoint_node_id helper in a region to avoid duplication.
-    status: pending
+    status: completed
   - id: tests
     content: Extend puzzle/2d/rs/lib.rs test module with normal-mode (no-handle, node-id edge) force-graph and hierarchical-tree regression tests.
-    status: pending
+    status: completed
   - id: validate
     content: Run the puzzle 2d Rust tests and confirm WIRES springs now apply and the graph settles instead of flying out.
-    status: pending
+    status: completed
 isProject: false
 ---
 

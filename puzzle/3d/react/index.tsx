@@ -10789,6 +10789,16 @@ if (import.meta.vitest) {
       applyObjectPose(group, origin, [0, 0, 0, 1], 1);
       return group;
     };
+    const registerSparseLatticeMesh = (meshUrl: string): Group => {
+      const lattice = new Group();
+      const vertical = new Mesh(new BoxGeometry(0.4, 10, 0.4));
+      vertical.position.set(-2, 0, 0);
+      const horizontal = new Mesh(new BoxGeometry(10, 0.4, 0.4));
+      horizontal.position.set(0, -2, 0);
+      lattice.add(vertical, horizontal);
+      registerBrushCollisionGltfScene(meshUrl, lattice);
+      return lattice;
+    };
     it("solidOverlapVolume detects overlapping unit cubes", () => {
       clearBrushCollisionGltfScenes();
       const urlA = "/test/a.glb";
@@ -10801,6 +10811,22 @@ if (import.meta.vitest) {
       const worldB = brushPreviewWorldMatrix({ origin: [1, 0, 0], orientation: [0, 0, 0, 1], scale: 1 });
       const volume = solidOverlapVolume(bodyA, worldA, bodyB, worldB, { sampleCount: 4096 });
       expect(volume).toBeGreaterThan(0.5);
+      clearBrushCollisionGltfScenes();
+    });
+    it("solidOverlapVolume distinguishes sparse-lattice overlap from AABB-touching interleave", () => {
+      clearBrushCollisionGltfScenes();
+      const urlA = "/test/lattice-a.glb";
+      const urlB = "/test/lattice-b.glb";
+      registerSparseLatticeMesh(urlA);
+      registerSparseLatticeMesh(urlB);
+      const bodyA = brushCollisionBody(urlA)!;
+      const bodyB = brushCollisionBody(urlB)!;
+      const worldA = brushPreviewWorldMatrix({ origin: [0, 0, 0], orientation: [0, 0, 0, 1], scale: 1 });
+      const coincident = solidOverlapVolume(bodyA, worldA, bodyB, worldA, { sampleCount: 4096 });
+      expect(coincident).toBeGreaterThan(DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET);
+      const worldB = brushPreviewWorldMatrix({ origin: [4, 4, 0], orientation: [0, 0, 0, 1], scale: 1 });
+      const interleaved = solidOverlapVolume(bodyA, worldA, bodyB, worldB, { sampleCount: 4096 });
+      expect(interleaved).toBeLessThanOrEqual(DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET);
       clearBrushCollisionGltfScenes();
     });
     it("computeBrushPlacementPose aligns source vortex to target with opposite direction", () => {
@@ -11287,29 +11313,20 @@ if (import.meta.vitest) {
     it("brushCollisionFreeCandidates excludes placements that overlap scene meshes", () => {
       clearBrushCollisionGltfScenes();
       const obstacleUrl = "/test/obstacle.glb";
-      const hostUrl = "/meshes/tambour.glb";
-      const previewUrl = "/meshes/capsule_L.glb";
-      registerBrushTestMesh(obstacleUrl, [30, 30, 30]);
-      registerBrushTestMesh(hostUrl, [4, 4, 4]);
+      const previewUrl = "/test/preview.glb";
+      registerBrushTestMesh(obstacleUrl, [8, 8, 8]);
       registerBrushTestMesh(previewUrl, [4, 4, 4]);
-      const scene: BrushSceneCollisionSource = {
-        collectObjectGroups: () => [brushSceneGroup("host", hostUrl, [0, 0, 0]), brushSceneGroup("obstacle", obstacleUrl, [0, 0, 0])],
-      };
+      const scene: BrushSceneCollisionSource = { collectObjectGroups: () => [brushSceneGroup("obstacle", obstacleUrl, [0, 0, 0])] };
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Tambour", vortexKind: "door tambour left" };
-      const compatible = brushCompatibleCandidates(target, brushCatalogs, brushCompat);
-      const blocked = brushCollisionFreeCandidates({
-        scene,
+      const preview: BrushPreviewState = {
         targetVortexFullId: "host:v0",
-        candidates: compatible,
-        target,
-        targetWorldPositionCad: [0.9, 2.75, 0.2],
-        targetWorldDirectionCad: [0, 1, 0],
-        kindCatalogs: brushCatalogs,
-        meshRootForUrl: brushCollisionGltfRoot,
-        overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
-      });
-      expect(blocked.unknownPending).toBe(false);
-      expect(blocked.free).toHaveLength(0);
+        objectKindId: "Capsule L",
+        sourceVortexIndex: 0,
+        meshUrl: previewUrl,
+        origin: [0, 0, 0],
+        orientation: [0, 0, 0, 1],
+      };
+      expect(brushCandidateCollidesAtPose(scene, preview, brushCollisionGltfRoot(previewUrl), DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET)).toBe(true);
       clearBrushCollisionGltfScenes();
     });
     it("brushCollisionFreeCandidates sets unknownPending when catalog meshes are not pooled yet", () => {

@@ -3244,7 +3244,7 @@ if (import.meta.vitest) {
       expect(ctrl.getSnapshot().cameraSeedEpoch).toBeGreaterThan(0);
     });
 
-    it("windowMeasures groups brush tolerance and kind distribution", () => {
+    it("windowMeasures groups brush overlap budget and kind distribution", () => {
       const bus = new CommandBus();
       const ctrl = new Puzzle3dPlayShellController(bus, () => {});
       const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
@@ -3253,7 +3253,7 @@ if (import.meta.vitest) {
       if (brush?.kind !== "group") {
         return;
       }
-      expect(brush.children.some((row) => row.kind === "slider" && row.id === `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-collision-tolerance`)).toBe(true);
+      expect(brush.children.some((row) => row.kind === "slider" && row.id === `${PUZZLE_3D_PLAY_WINDOW_ID}-brush-overlap-budget`)).toBe(true);
       const distribution = brush.children.find((row) => row.kind === "group" && row.label === "Distribution");
       expect(distribution?.kind).toBe("group");
       if (distribution?.kind !== "group") {

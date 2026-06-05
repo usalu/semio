@@ -2370,11 +2370,23 @@ impl MapHost {
         self.append_positions(&mut scene);
         scene
     }
+
+    /// @emoji 📐 Scales the logical viewport scene to the physical GPU surface (matches puzzle2d dpr handling).
+    pub fn build_render_scene(&self) -> Scene {
+        let inner = self.build_vector_scene();
+        let scale = self.viewport.dpr.max(1.0);
+        if (scale - 1.0).abs() < f64::EPSILON {
+            return inner;
+        }
+        let mut scene = Scene::new();
+        scene.append(&inner, Some(Affine::scale(scale)));
+        scene
+    }
 }
 
 impl cavas::canvas_content::CanvasContent for MapHost {
     fn build_scene(&self) -> Scene {
-        self.build_vector_scene()
+        self.build_render_scene()
     }
 
     fn clear_color(&self) -> Color {
@@ -2410,7 +2422,7 @@ impl MapSessionInner {
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         self.host.prepare_visible_tiles();
-        let scene = self.host.build_vector_scene();
+        let scene = self.host.build_render_scene();
         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
     }
 }
@@ -3105,6 +3117,16 @@ mod tests {
         let json = r#"{"surfaceClear":[1,2,3,255]}"#;
         host.set_map_theme_from_json(json).expect("theme json");
         assert_eq!(host.theme.surface_clear.to_rgba8(), super::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
+    }
+
+    #[test]
+    fn build_render_scene_scales_for_device_pixel_ratio() {
+        let mut host = super::MapHost::new();
+        host.set_size(400, 300, 2.0);
+        host.fit_world_camera();
+        let logical = host.build_vector_scene();
+        let scaled = host.build_render_scene();
+        assert!(scaled.encoding().path_tags.len() >= logical.encoding().path_tags.len());
     }
 
     #[test]

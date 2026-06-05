@@ -7,19 +7,19 @@ todos:
     status: completed
   - id: interface
     content: "Add Collision region in infinite/world/r3f/index.tsx wrapping MeshBVH: collisionBodyFromObject, bodiesIntersect, solidOverlapVolume"
-    status: in_progress
+    status: completed
   - id: cache
     content: Replace brushCollisionGltfScenes with CollisionBody cache keyed by meshUrl in puzzle/3d/react
-    status: pending
+    status: completed
   - id: probes
     content: Rewrite brushPreviewCollides, fillPreviewCollidesAccumulated, brushCandidateCollidesAtPose, ghost and commit to use solidOverlapVolume > budget; include host
-    status: pending
+    status: completed
   - id: budget
     content: Repurpose tolerance constants/props to solid-overlap volume budget (m3) in react + play UI
-    status: pending
+    status: completed
   - id: tests
     content: Update react/play unit tests to volume semantics and add sparse-lattice regression; add ticket verification script and run test targets
-    status: pending
+    status: completed
 isProject: false
 ---
 

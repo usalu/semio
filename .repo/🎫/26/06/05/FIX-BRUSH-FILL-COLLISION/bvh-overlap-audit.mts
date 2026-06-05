@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Group } from "three";
+import { solidOverlapVolume } from "/Users/ueli/Documents/semio/infinite/world/r3f/index.tsx";
 import {
   applyBrushFillPlacementsToFixture,
   brushCollisionGltfRoot,
@@ -13,7 +14,6 @@ import {
   parseFixtureV1,
   registerBrushCollisionGltfScene,
   resolveObjectKindMeshUrl,
-  solidOverlapVolume,
 } from "/Users/ueli/Documents/semio/puzzle/3d/react/index.tsx";
 
 const repo = "/Users/ueli/Documents/semio";
