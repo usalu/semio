@@ -11,6 +11,8 @@ import {
   Expertise,
   ModeRuntime,
   Playground,
+  type PlaygroundFixtureCatalog,
+  type PlaygroundFixtureHost,
   Platform,
   WindowKindRuntime,
   buildPlaygroundBrowseFilterTools,
@@ -115,6 +117,10 @@ import {
   type BrushCompatibleCandidate,
 } from "../react/index.tsx";
 import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
+
+export const PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
+
+export const PUZZLE_3D_PLAY_FIXTURE_OPTIONS = [{ id: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" }] as const;
 
 //#region 🏗️NakaginCatalog
 function cadVec3FromKitPoint(row: { readonly x: number; readonly y: number; readonly z: number }): [number, number, number] {
@@ -960,7 +966,8 @@ function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
 }
 
 /** @emoji 🎬 Playground puzzle 3D play controller: fixture, LOD, selection/filter tools, and interaction counters. */
-export class Puzzle3dPlayShellController extends Controller {
+export class Puzzle3dPlayShellController extends Controller implements PlaygroundFixtureHost {
+  private activeFixtureId = PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID;
   readonly mainMode = new ModeRuntime("main", "Puzzle 3D", undefined);
   readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
@@ -1162,6 +1169,21 @@ export class Puzzle3dPlayShellController extends Controller {
 
   getFixture(): FixtureV1 | null {
     return this.fixture;
+  }
+
+  getFixtureCatalog(): PlaygroundFixtureCatalog {
+    return { activeFixtureId: this.activeFixtureId, options: PUZZLE_3D_PLAY_FIXTURE_OPTIONS };
+  }
+
+  private loadFixtureById(fixtureId: string): void {
+    if (fixtureId !== PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID) return;
+    const parsed = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+    if (!parsed) return;
+    this.fixture = parsed;
+    this.fixtureRevision += 1;
+    this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
+    this.syncBrushKindWeightsFromFixture();
+    this.syncShell();
   }
 
   getFixtureRevision(): number {
@@ -1526,6 +1548,13 @@ export class Puzzle3dPlayShellController extends Controller {
 
   override run(command: string, args?: unknown): void {
     switch (command) {
+      case "setActiveFixture": {
+        const fixtureId = (args as { fixtureId?: string }).fixtureId;
+        if (!fixtureId || fixtureId === this.activeFixtureId) return;
+        this.activeFixtureId = fixtureId;
+        this.loadFixtureById(fixtureId);
+        return;
+      }
       case ORBIT_CAMERA_VIEW_COMMAND: {
         const view = (args as { view?: OrbitCameraViewId }).view;
         const instanceId = (args as { instanceId?: string }).instanceId;

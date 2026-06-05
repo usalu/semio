@@ -496,6 +496,35 @@ export interface PlaygroundKindSpec<K extends string> {
 export type PlaygroundFocusFilter<K extends string> = "all" | K;
 //#endregion 🔖Ids
 
+//#region 🔖Fixture
+/** @emoji 🧪 One selectable playground fixture (kit, graph, shape source, …). */
+export interface PlaygroundFixtureOption {
+  readonly id: string;
+  readonly label: string;
+}
+
+/** @emoji 📋 Active fixture plus choices for the navbar center dropdown. */
+export interface PlaygroundFixtureCatalog {
+  readonly activeFixtureId: string;
+  readonly options: readonly PlaygroundFixtureOption[];
+}
+
+/** @emoji 🎛 Optional controller surface for {@link PlaygroundView} navbar fixture selection. */
+export interface PlaygroundFixtureHost {
+  getFixtureCatalog(): PlaygroundFixtureCatalog | null;
+}
+
+/** @emoji 🔎 Reads a fixture catalog from a controller when it implements {@link PlaygroundFixtureHost}. */
+export function resolvePlaygroundFixtureCatalog(controller: Controller | undefined): PlaygroundFixtureCatalog | null {
+  if (!controller) return null;
+  const host = controller as Controller & PlaygroundFixtureHost;
+  if (typeof host.getFixtureCatalog !== "function") return null;
+  const catalog = host.getFixtureCatalog();
+  if (!catalog?.options.length) return null;
+  return catalog;
+}
+//#endregion 🔖Fixture
+
 //#region 🔖Toolbar
 function createAllKindsEnabled<K extends string>(kinds: readonly K[]): Record<K, boolean> {
   return Object.fromEntries(kinds.map((kind) => [kind, true])) as Record<K, boolean>;
@@ -926,6 +955,40 @@ if (import.meta.vitest) {
       expect(map.get("objects.0.Base")).toEqual({ "application/x-test": "payload" });
       expect(map.get("group.child")).toEqual({ "application/x-child": "c" });
       expect(map.size).toBe(2);
+    });
+  });
+
+  describe("resolvePlaygroundFixtureCatalog", () => {
+    it("returns null when the controller does not host fixtures", () => {
+      const bus = new CommandBus();
+      const ctrl = new DemoPlaygroundController(bus, () => undefined);
+      expect(resolvePlaygroundFixtureCatalog(ctrl)).toBeNull();
+    });
+
+    it("returns catalog when the controller implements PlaygroundFixtureHost", () => {
+      class FixtureDemoController extends Controller implements PlaygroundFixtureHost {
+        activeFixtureId = "a";
+
+        constructor(bus: CommandBus) {
+          super("fixture-demo", bus, () => undefined);
+        }
+
+        getFixtureCatalog(): PlaygroundFixtureCatalog {
+          return {
+            activeFixtureId: this.activeFixtureId,
+            options: [
+              { id: "a", label: "Alpha" },
+              { id: "b", label: "Beta" },
+            ],
+          };
+        }
+
+        run(): void {}
+      }
+      const bus = new CommandBus();
+      const ctrl = new FixtureDemoController(bus);
+      expect(resolvePlaygroundFixtureCatalog(ctrl)?.activeFixtureId).toBe("a");
+      expect(resolvePlaygroundFixtureCatalog(ctrl)?.options).toHaveLength(2);
     });
   });
 

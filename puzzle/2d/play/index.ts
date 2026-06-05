@@ -169,6 +169,10 @@ export const PUZZLE_2D_PLAY_PACKAGE_ROOT = import.meta.url;
 export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 =
 	parsePuzzle2dFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as Puzzle2dFixtureV1);
 
+export const PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
+
+export const PUZZLE_2D_PLAY_FIXTURE_OPTIONS = [{ id: PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" }] as const;
+
 export const PUZZLE_2D_PLAY_LAYOUT: WindowLayout = {
 	root: {
 		kind: "row",

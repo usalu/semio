@@ -49,6 +49,10 @@ export type WiresPlayHierarchyBuildOptions = Puzzle2dPlayHierarchyBuildOptions;
 export const WIRES_PLAY_FIXTURE: WiresFixtureV1 = METABOLISM_WIRES_FIXTURE;
 export const WIRES_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 = wiresFixtureBoard(METABOLISM_WIRES_FIXTURE);
 
+export const WIRES_PLAY_FIXTURE_METABOLISM_ID = "metabolism";
+
+export const WIRES_PLAY_FIXTURE_OPTIONS = [{ id: WIRES_PLAY_FIXTURE_METABOLISM_ID, label: "Metabolism" }] as const;
+
 /** @emoji 🕸️ WIRES play defaults: continuous force-graph redraw (no auto-stop). */
 export const WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS = {
   puzzle2dRedrawPlaying: true,

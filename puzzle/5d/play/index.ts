@@ -20,6 +20,8 @@ import {
   type WindowMeasure,
   type UiNode,
   Playground,
+  type PlaygroundFixtureCatalog,
+  type PlaygroundFixtureHost,
   playgroundTreePanelRootItems,
   platformFromViewContext,
   type UiTreeItemNode,
@@ -59,6 +61,10 @@ export const PUZZLE_5D_PLAY_3D_BODY_KEY = "puzzle.5d.play.3d";
 export const PUZZLE_5D_PLAY_2D_SURFACE_ID = "puzzle.5d.play.2d/v1";
 export const PUZZLE_5D_PLAY_3D_SURFACE_ID = "puzzle.5d.play.3d/v1";
 export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
+
+export const PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
+
+export const PUZZLE_5D_PLAY_FIXTURE_OPTIONS = [{ id: PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID, label: "Nakagin capsule tower" }] as const;
 
 const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
@@ -173,8 +179,9 @@ export class Puzzle5dStoreBridge extends Store<Puzzle5dStoreSnapshot> {
 }
 
 /** @emoji 🎛 Puzzle 5d play shell controller shared by declarative 2d and 3d windows. */
-export class Puzzle5dPlayShellController extends Controller {
+export class Puzzle5dPlayShellController extends Controller implements PlaygroundFixtureHost {
   readonly mainMode = new ModeRuntime("main", "Puzzle 5d", undefined);
+  private activeFixtureId = PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID;
   readonly puzzle5dStore: Puzzle5dStore = createStore(loadNakagin5dModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
   private gumballConfig: GumballConfig = { ...DEFAULT_GUMBALL_CONFIG };
@@ -287,9 +294,36 @@ export class Puzzle5dPlayShellController extends Controller {
     return windowKinds;
   }
 
+  getFixtureCatalog(): PlaygroundFixtureCatalog {
+    return { activeFixtureId: this.activeFixtureId, options: PUZZLE_5D_PLAY_FIXTURE_OPTIONS };
+  }
+
+  private loadFixtureById(fixtureId: string): void {
+    if (fixtureId !== PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID) return;
+    this.puzzle5dStore.replaceModel(loadNakagin5dModel());
+    this.selected2d = new Set();
+    this.selected3d = null;
+    const snap = this.puzzle5dStore.read();
+    this.camera2d = { ...snap.camera2d };
+    this.camera3d = { ...snap.camera3d };
+    this.rebuildShellMode();
+    this.emit();
+  }
+
   override run(command: string, args?: unknown): void {
     let changed = true;
     switch (command) {
+      case "setActiveFixture": {
+        const fixtureId = (args as { fixtureId?: string }).fixtureId;
+        if (!fixtureId || fixtureId === this.activeFixtureId) {
+          changed = false;
+          break;
+        }
+        this.activeFixtureId = fixtureId;
+        this.loadFixtureById(fixtureId);
+        changed = false;
+        break;
+      }
       case "set2dLodMode": {
         const value = (args as { value?: string }).value;
         if ((value === PUZZLE_2D_LOD_MODE_AUTOMATIC || (typeof value === "string" && isPuzzle2dDrawLodKind(value))) && this.lod2dMode !== value) this.lod2dMode = value as Puzzle2dLodModeKind;

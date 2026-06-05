@@ -44,6 +44,7 @@ import {
   Ring,
   type ContextMenuItem,
   type UiTranslationKey,
+  NavbarFixtureSelect,
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
   writeStoredUiChromeCompact,
@@ -99,6 +100,8 @@ import {
   type UiTableHostSurfaceNode,
   enforcePlaygroundWindowEngagementInput,
   enforceWindowKindsEngagementInput,
+  resolvePlaygroundFixtureCatalog,
+  type PlaygroundFixtureCatalog,
   type WindowBodyViewContext,
   type WindowEngagement,
   type WindowEngagementControl,
@@ -980,9 +983,32 @@ export interface PlaygroundViewProps {
   readonly mobileQuery?: string;
   readonly initialPanelVisibility?: PlaygroundPanelVisibility;
   readonly slotToolbar?: React.ReactNode;
+  /** @emoji 🧪 Overrides controller-backed navbar fixture dropdown (React-held fixture state). */
+  readonly slotNavbarCenter?: React.ReactNode;
   readonly extraFooterItems?: readonly FooterItem[];
   readonly augmentPanelTabs?: Partial<Record<"workbench" | "details", readonly (SidePanelTabConfig | SidePanelTabDefinition)[]>>;
   readonly onActiveWindowChange?: (windowKindId: string) => void;
+}
+
+/** @emoji 🔔 Subscribes to controller snapshot or platform generation for navbar fixture catalog. */
+function usePlaygroundFixtureCatalog(runtime: Platform, controllerId: string | undefined): PlaygroundFixtureCatalog | null {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const app = runtime.getActiveApp();
+      const controller = app?.controller.id === controllerId ? app.controller : undefined;
+      const unsubscribeSnapshot =
+        controller && "subscribeSnapshot" in controller && typeof controller.subscribeSnapshot === "function"
+          ? (controller as import("@framework/playground/core").Controller & { subscribeSnapshot: (l: () => void) => () => void }).subscribeSnapshot(listener)
+          : undefined;
+      const unsubscribeRuntime = runtime.subscribe(listener);
+      return () => {
+        unsubscribeSnapshot?.();
+        unsubscribeRuntime();
+      };
+    },
+    () => resolvePlaygroundFixtureCatalog(runtime.getActiveApp()?.controller),
+    () => null,
+  );
 }
 
 function mergePanelTabs(base: SidePanelTabConfig[] | undefined, extension: readonly (SidePanelTabConfig | SidePanelTabDefinition)[] | undefined): SidePanelTabConfig[] {
@@ -1124,7 +1150,7 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
 }
 
 /** @emoji 🛝 Playground application shell: tree-only side panels, no JSON fallback details tab. */
-export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgroundKeybindings, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
+export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgroundKeybindings, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, slotNavbarCenter, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
   reactHostPort.useSyncExternalStore((listener) => runtime.subscribeChrome(listener), () => runtime.chromeGeneration, () => 0);
 
   reactHostPort.useEffect(() => {
@@ -1217,17 +1243,42 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     setPanelVisibility((prev) => ({ ...prev, rightSidePanel: !prev.rightSidePanel }));
   }, [rightSidePanelTabs.length, setPanelVisibility]);
 
+  const controllerId = shell.activeAppBase?.controller.id;
+  const fixtureCatalog = usePlaygroundFixtureCatalog(runtime, controllerId);
+  const navbarFixtureSelect = reactHostPort.useMemo(() => {
+    if (slotNavbarCenter !== undefined) return slotNavbarCenter;
+    if (!fixtureCatalog || !controllerId) return null;
+    return (
+      <NavbarFixtureSelect
+        id="playground.navbar.fixture"
+        value={fixtureCatalog.activeFixtureId}
+        options={fixtureCatalog.options}
+        onValueChange={(fixtureId) => {
+          shell.bus.dispatch(controllerId, "setActiveFixture", { fixtureId });
+        }}
+      />
+    );
+  }, [controllerId, fixtureCatalog, shell.bus, slotNavbarCenter]);
+
   const navbarItems = reactHostPort.useMemo<NavbarItem[]>(() => {
     if (!shell.activeApp) {
       return [];
     }
-    return [
+    const items: NavbarItem[] = [
       {
         key: "title",
-        className: "flex-1 min-w-0",
+        className: "min-w-0 shrink-0 max-w-[40%]",
         content: <span className="truncate px-single text-sm font-medium">{shell.activeApp.label}</span>,
       },
-      {
+    ];
+    if (navbarFixtureSelect) {
+      items.push({
+        key: "fixture",
+        className: "flex-1 min-w-0 flex justify-center",
+        content: navbarFixtureSelect,
+      });
+    }
+    items.push({
         key: "panelToggles",
         content: (
           <div className="flex min-w-0 items-stretch border border-emphasized h-medium">
@@ -1275,13 +1326,14 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
             />
           </div>
         ),
-      },
-    ];
+      });
+    return items;
   }, [
     activeLeftPanelKind,
     activeRightPanelKind,
     displayIcon,
     displayTabs.length,
+    navbarFixtureSelect,
     panelVisibility.leftSidePanel,
     panelVisibility.rightSidePanel,
     setPanelVisibility,
@@ -2206,12 +2258,16 @@ import {
   PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
   PUZZLE_2D_PLAY_CONTROLLER_ID,
   PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
+  PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
+  PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
 } from "@puzzle/2d/play";
 import {
   buildWiresPlayHierarchySections,
   buildWiresPlayKindsTree,
   WIRES_PLAY_DEFAULT_FIXTURE,
   WIRES_PLAY_FIXTURE,
+  WIRES_PLAY_FIXTURE_METABOLISM_ID,
+  WIRES_PLAY_FIXTURE_OPTIONS,
   WIRES_PLAY_HIERARCHY_TAB_ID,
   WIRES_PLAY_KINDS_TAB_ID,
   WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS,
@@ -3867,6 +3923,19 @@ interface Puzzle2dPlayRedrawLoopSnapshot {
 // #region 🔖Entrypoint
 const initialFixture = clonePuzzle2dFixtureV1(puzzle2dPlayResolvedDefaultFixture());
 
+const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_OPTIONS = PUZZLE_2D_PLAY_IS_WIRES
+  ? WIRES_PLAY_FIXTURE_OPTIONS
+  : [...PUZZLE_2D_PLAY_FIXTURE_OPTIONS, { id: WIRES_PLAY_FIXTURE_METABOLISM_ID, label: "Metabolism (WIRES)" }];
+
+const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID = PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_FIXTURE_METABOLISM_ID : PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID;
+
+function puzzle2dPlayFixtureForNavbarId(fixtureId: string): Puzzle2dFixtureV1 {
+  if (fixtureId === WIRES_PLAY_FIXTURE_METABOLISM_ID) {
+    return clonePuzzle2dFixtureV1(WIRES_PLAY_DEFAULT_FIXTURE);
+  }
+  return clonePuzzle2dFixtureV1(PUZZLE_2D_PLAY_DEFAULT_FIXTURE);
+}
+
 function Puzzle2dPlayInner({
   puzzle2dRuntime,
   playgroundKeybindings,
@@ -3874,6 +3943,7 @@ function Puzzle2dPlayInner({
   readonly puzzle2dRuntime: Platform;
   readonly playgroundKeybindings?: readonly import("@framework/playground/core").PlaygroundKeybinding[];
 }): ReactElement {
+  const [activeFixtureId, setActiveFixtureId] = reactHostPort.useState(PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID);
   const [fixture, setFixtureState] = reactHostPort.useState<Puzzle2dFixtureV1>(() => clonePuzzle2dFixtureV1(initialFixture));
   const fixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1>(fixture);
   fixtureRef.current = fixture;
@@ -4973,6 +5043,32 @@ function Puzzle2dPlayInner({
     [puzzle2dPlayHierarchyPanel, puzzle2dPlayKindsPanel, puzzle2dPlayInspectorPanel, puzzle2dPlaySettingsPanel],
   );
 
+  const applyNavbarFixtureId = reactHostPort.useCallback(
+    (fixtureId: string) => {
+      if (fixtureId === activeFixtureId) return;
+      setActiveFixtureId(fixtureId);
+      const next = puzzle2dPlayFixtureForNavbarId(fixtureId);
+      setFixtureState(next);
+      setSelectionIdsState(selectionSeedForFixture(next));
+      setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasFromFixture(next));
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
+      bumpSceneAuthoringEpoch();
+    },
+    [activeFixtureId, bumpSceneAuthoringEpoch],
+  );
+
+  const slotNavbarCenter = reactHostPort.useMemo(
+    () => (
+      <NavbarFixtureSelect
+        id="puzzle2d.play.fixture"
+        value={activeFixtureId}
+        options={PUZZLE_2D_PLAY_NAVBAR_FIXTURE_OPTIONS}
+        onValueChange={applyNavbarFixtureId}
+      />
+    ),
+    [activeFixtureId, applyNavbarFixtureId],
+  );
+
   puzzle2dPlayRuntimeRef.current = puzzle2dRuntime;
   puzzle2dPlayShellRef.current = shellValue;
   puzzle2dPlaySelectionRef.current = selectionValue;
@@ -4991,7 +5087,7 @@ function Puzzle2dPlayInner({
         <Puzzle2dPlayCanvasSelectionContext.Provider value={canvasSelectionValue}>
           <Puzzle2dPlayCamerasContext.Provider value={camerasValue}>
             <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
-              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} playgroundKeybindings={playgroundKeybindings} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
+              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} playgroundKeybindings={playgroundKeybindings} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} slotNavbarCenter={slotNavbarCenter} />
             </Puzzle2dPlayLodRuntimeContext.Provider>
           </Puzzle2dPlayCamerasContext.Provider>
         </Puzzle2dPlayCanvasSelectionContext.Provider>

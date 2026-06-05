@@ -7297,6 +7297,46 @@ function Navbar({ items, className }: NavbarProps) {
 
 export { Navbar };
 
+/** @emoji 🧪 One selectable fixture row for {@link NavbarFixtureSelect}. */
+export interface NavbarFixtureOption {
+  readonly id: string;
+  readonly label: string;
+}
+
+/** @emoji 🧪 Props for {@link NavbarFixtureSelect}. */
+export interface NavbarFixtureSelectProps {
+  readonly id: string;
+  readonly label?: string;
+  readonly value: string;
+  readonly options: readonly NavbarFixtureOption[];
+  readonly onValueChange: (fixtureId: string) => void;
+  readonly className?: string;
+}
+
+/** @emoji 🧪 Center-navbar dropdown for switching playground fixtures (kits, graphs, shape sources). */
+function NavbarFixtureSelect({ id, label = "Fixture", value, options, onValueChange, className }: NavbarFixtureSelectProps) {
+  if (options.length === 0) return null;
+  return (
+    <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
+      <Label id={`${id}.label`} label={label} className="sr-only" />
+      <Select value={value} onValueChange={onValueChange}>
+        <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
+          <SelectValue placeholder={label} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((row) => (
+            <SelectItem key={row.id} value={row.id}>
+              {row.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+export { NavbarFixtureSelect };
+
 // #endregion 🩺Navbar
 
 // #region 🏷️Tabs
