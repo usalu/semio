@@ -542,7 +542,7 @@
 	width: 1.5rem;
 	height: 1.5rem;
 	padding: 0;
-	border: 1px solid var(--border-window-color);
+	border: 1px solid var(--border-normal-color);
 	border-radius: 4px;
 	background: var(--panel);
 	color: var(--foreground);
@@ -559,7 +559,7 @@
 .reveal .presentation-interaction-reset:hover {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-element-color);
+	border-color: var(--border-emphasized-color);
 }
 
 .reveal
@@ -590,7 +590,7 @@
 	width: 2rem;
 	height: 2rem;
 	padding: 0;
-	border: 1px solid var(--border-window-color);
+	border: 1px solid var(--border-normal-color);
 	border-radius: 4px;
 	background: color-mix(in oklab, var(--panel) 92%, transparent);
 	color: var(--foreground);
@@ -607,7 +607,7 @@
 .reveal .presentation-pdf-page-nav__button:hover:not(:disabled) {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-element-color);
+	border-color: var(--border-emphasized-color);
 }
 
 .reveal .presentation-pdf-page-nav__button:disabled {
@@ -633,7 +633,7 @@
 	width: 1.5rem;
 	height: 1.5rem;
 	padding: 0;
-	border: 1px solid var(--border-window-color);
+	border: 1px solid var(--border-normal-color);
 	border-radius: 4px;
 	background: var(--panel);
 	color: var(--foreground);
@@ -685,7 +685,7 @@
 	.presentation-interaction-slide-reset:hover {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-element-color);
+	border-color: var(--border-emphasized-color);
 }
 
 /* #endregion 🔖Interaction */

@@ -613,7 +613,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "section": {
       const section = node as UiSectionNode;
       return (
-        <div className="border-element/60 flex flex-col gap-single rounded-md border p-single" data-ui-section={section.id}>
+        <div className="border-emphasized/60 flex flex-col gap-single rounded-md border p-single" data-ui-section={section.id}>
           {section.label ? <div className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{section.label}</div> : null}
           <div className="flex flex-col gap-single">
             {section.children.map((child, index) => (
@@ -1230,7 +1230,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
       {
         key: "panelToggles",
         content: (
-          <div className="flex min-w-0 items-stretch border border-element h-medium">
+          <div className="flex min-w-0 items-stretch border border-emphasized h-medium">
             {displayTabs.length > 0 ? (
               <Toggle
                 id="ui.panelToggle.display"
@@ -2869,7 +2869,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
-      <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element pb-2">
+      <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-emphasized pb-2">
         <Icon icon="settings" size={16} className="shrink-0" />
         <div>
           <div className="font-semibold uppercase tracking-wide">Settings</div>
@@ -2955,7 +2955,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
         <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-nodes" type="button" variant="secondary" onClick={applyPuzzle2dRedrawOnce}>
           Redraw nodes
         </Button>
-        <div className="text-muted-foreground border-t border-element pt-2 text-[11px] font-medium uppercase tracking-wide">Redraw handles</div>
+        <div className="text-muted-foreground border-t border-emphasized pt-2 text-[11px] font-medium uppercase tracking-wide">Redraw handles</div>
         <p className="text-muted-foreground text-[11px] leading-snug">Each edge uses the straight segment between node centers; handle anchors move to where that segment meets each shape (shortest chord through the bodies).</p>
         <Button className="h-8 w-full text-xs" id="puzzle-2d-play-redraw-handles" type="button" variant="secondary" onClick={applyPuzzle2dRedrawHandlesOnce}>
           Redraw handles
@@ -3412,7 +3412,7 @@ function InspectorNodeBatch({
   );
 
   return (
-    <div className="border-element/60 space-y-3 border-l pl-2">
+    <div className="border-emphasized/60 space-y-3 border-l pl-2">
       <Label id="puzzle-2d-play.inspector.node.name" label={PUZZLE_2D_PLAY_IS_WIRES ? "Label" : "Name"}>
         <Input className="h-7 font-mono text-xs" onChange={(e: ChangeEvent<HTMLInputElement>) => onText(e.target.value)} placeholder={textUniform ? undefined : "Mixed"} value={textValue} />
       </Label>
@@ -3575,7 +3575,7 @@ function InspectorHandleBatch({
   );
 
   return (
-    <div className="border-element/60 space-y-3 border-l pl-2">
+    <div className="border-emphasized/60 space-y-3 border-l pl-2">
       <InspectorKindSelect
         id="puzzle-2d-play.inspector.handle.kind"
         items={handleKindItems}
@@ -3682,7 +3682,7 @@ function InspectorEdgeBatch({
   );
 
   return (
-    <div className="border-element/60 space-y-3 border-l pl-2">
+    <div className="border-emphasized/60 space-y-3 border-l pl-2">
       {PUZZLE_2D_PLAY_IS_WIRES ? (
         <Label id="puzzle-2d-play.inspector.edge.relationship-kind" label="Relationship kind">
           <Input className="h-7 font-mono text-xs" readOnly value={wiresRelationshipKindUniform ? wiresRelationshipKindValue : "Mixed"} />

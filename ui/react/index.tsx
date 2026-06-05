@@ -2744,32 +2744,42 @@ export function getLevelZClass(level: Level): string {
 	}
 }
 
-/** @emoji 📏 Shell chrome edge (`border-border`) — navbar, footer, floating panels, toolbar. */
-export const chromeShellEdgeClass = "border-border";
+/** @emoji 📏 Emphasized border stroke — use only on large chrome (e.g. mode dock panel body). */
+export const borderEmphasizedClass = "border-emphasized";
 
-/** @emoji 📏 Full shell chrome frame for floating panels and toolbar. */
-export const chromeShellBorderClass = `border ${chromeShellEdgeClass}`;
+/** @emoji 📏 Emphasized chrome frame (`border` + {@link borderEmphasizedClass}). */
+export const borderEmphasizedFrameClass = `border ${borderEmphasizedClass}`;
 
-/** @emoji 📏 Secondary chrome line (`border-element`) for window frames and in-window controls. */
-export const secondaryLineClass = "border-element";
+/** @emoji 📏 Implicit element border color (controls, dropdowns, dividers). */
+export const borderElementClass = "border-element";
 
-/** @emoji 📏 Primary chrome line (`border-active-base`) recolors the window U-frame when that stack is globally active. */
+/** @emoji 🎯 Focus/open on form controls: accent border color only, never extra ring width. */
+export const formControlFocusBorderClass =
+  "outline-none transition-[color,border-color] focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none";
+
+/** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
 
-/** @emoji 📏 Secondary chrome frame (`border border-element`) wrapping window body or caps. */
-export const windowFrameClass = `border ${secondaryLineClass}`;
+/** @emoji 🪟 Panel outline — emphasized rectangle on the frame layer (`box-border`). */
+export const panelChromeBorderClass = borderEmphasizedFrameClass;
 
-/** @emoji 🪟 Panel chrome stroke only; mount on the panel root (`box-border`) so scrollbars stay inside the frame. */
-export const panelChromeBorderClass = chromeShellBorderClass;
-
-/** @emoji 🪟 Frosted fill layer behind panel content (no stroke — border lives on the root). */
+/** @emoji 🪟 Frosted fill layer behind panel content (no stroke — border lives on the frame). */
 export const panelGlassFillClass = glassPanelClass;
+
+/** @emoji 🪟 Frosted fill layer (ghost-dimmed; sits under the stroke so the border stays visible). */
+export const panelChromeFillLayerClass = cn("pointer-events-none absolute inset-0 z-0", panelGlassFillClass);
+
+/** @emoji 🪟 Emphasized stroke on top of fill (transparent center; not ghost-dimmed). */
+export const panelChromeFrameLayerClass = cn(
+  "pointer-events-none absolute inset-0 z-[1] box-border bg-transparent",
+  panelChromeBorderClass,
+);
 
 /** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
 export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
 
-/** @emoji 📑 Panel tab strip; outer edge uses {@link chromeShellEdgeClass}; tab dividers use {@link secondaryLineClass}. */
-export const panelTabBarClass = cn("relative z-10 flex items-stretch shrink-0 overflow-x-auto border-b divide-x divide-element", chromeShellEdgeClass);
+/** @emoji 📑 Panel tab strip — no per-tab borders; {@link panelChromeBorderClass} owns the outline. */
+export const panelTabBarClass = "relative z-10 flex items-stretch shrink-0 overflow-x-auto";
 
 /** @emoji 📑 Panel tab icon button (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = "flex items-center justify-center h-full cursor-pointer transition-colors hover:bg-hover-panel";
@@ -2802,19 +2812,19 @@ export function panelResizeEdgeAccentClass(resizeSide: ResizeSide, active: boole
 }
 
 /** @emoji 📏 Top cap sides only — no bottom edge; z-index covers the body top stroke under the cap. */
-export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
+export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${borderEmphasizedClass} bg-window`;
 
 /** @emoji 📏 Top cap with primary chrome line when the stack owns the globally active window. */
 export const windowCapFrameActiveClass = `relative z-[2] border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
 /** @emoji 📏 Canvas gap stroke — horizontal segment of the U between tab and fullscreen caps. */
-export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${secondaryLineClass}`;
+export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${borderEmphasizedClass}`;
 
 /** @emoji 📏 Canvas gap stroke with primary chrome line when the stack is globally active. */
 export const windowGapFrameActiveClass = `border-x-0 border-t-0 border-b ${activeLineClass}`;
 
 /** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap sides). */
-export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${secondaryLineClass} bg-canvas`;
+export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${borderEmphasizedClass} bg-canvas`;
 
 /** @emoji 📏 U-shaped body frame with primary chrome line when the stack owns the globally active window. */
 export const windowBodyFrameActiveClass = `relative z-0 -mt-px border-b border-l border-r border-t-0 ${activeLineClass} bg-canvas`;
@@ -2851,29 +2861,29 @@ export function modeDockChromeGridPlacement(
   };
 }
 
-/** @emoji 📏 Inactive sibling tab — gray pill resting on the U-frame baseline; its bottom stroke color is applied per-stack (active vs secondary) so the chrome reads as one continuous outline. */
+/** @emoji 📏 Inactive sibling tab — emphasized pill resting on the U-frame baseline. */
 export const modeDockInactiveTabClass =
-  "relative z-30 box-border min-h-medium shrink-0 border border-element bg-window";
+  `relative z-30 box-border min-h-medium shrink-0 border ${borderEmphasizedClass} bg-window`;
 
-/** @emoji 📏 Inactive sibling tab resting on baseline with no bottom stroke — gap owns the horizontal segment before controls. */
+/** @emoji 📏 Inactive tab before gap — no bottom stroke; gap owns the horizontal segment before controls. */
 export const modeDockInactiveTabBeforeGapClass =
-  "relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 border-element bg-window";
+  `relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderEmphasizedClass} bg-window`;
 
 /** @emoji 📏 Filled primary for the globally active dock tab (matches single-tab selection). */
 export const modeDockActiveTabFillClass =
   "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground";
 
-/** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body (no bottom stroke). */
+/** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body. */
 export const modeDockActiveTabClass =
-  `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 border-active-base ${modeDockActiveTabFillClass}`;
+  `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 ${activeLineClass} ${modeDockActiveTabFillClass}`;
 
-/** @emoji 📏 Maximize cap on the right of the gap (secondary chrome line). */
-export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
+/** @emoji 📏 Maximize cap on the right of the gap (emphasized chrome line). */
+export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${borderEmphasizedClass} bg-window`;
 
-/** @emoji 📏 Maximize cap on the right when the stack owns the globally active window. */
+/** @emoji 📏 Maximize cap when the stack owns the globally active window. */
 export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
-/** @emoji 📏 Maximize cap on the right of the gap when multi-tab chrome uses a split column layout. */
+/** @emoji 📏 Maximize cap in multi-tab grid when the stack is globally active. */
 export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
 /** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
@@ -2889,7 +2899,7 @@ export const windowMeasuresOverlayClass =
 /** @emoji 📐 Scrollable frosted rail for window measures (height follows content, capped by the window body). */
 export const windowMeasuresStackClass = cn(
   glassWindowOptionsClass,
-  "pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden rounded-md border border-element/40 p-0 shadow-sm",
+  `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden rounded-md border ${borderElementClass}/40 p-0 shadow-sm`,
 );
 
 /** @emoji 📐 Window measures rail spanning the full window body. */
@@ -2906,7 +2916,7 @@ export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
 
 /** @emoji 📐 Compact title bar on top of the window options stack. */
 export const windowMeasuresChromeClass =
-  "pointer-events-auto flex h-small shrink-0 items-center justify-between gap-tiny border-b border-element/40 px-tiny py-0";
+  `pointer-events-auto flex h-small shrink-0 items-center justify-between gap-tiny border-b ${borderElementClass}/40 px-tiny py-0`;
 
 /** @emoji 📐 Square icon action in the window options chrome bar. */
 export const windowMeasuresChromeActionClass = "size-small min-h-small min-w-small max-h-small max-w-small shrink-0 p-0";
@@ -2919,7 +2929,7 @@ export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-t
 
 /** @emoji 📐 Single measure tile in the window rail. */
 export const windowMeasureTileClass =
-  `pointer-events-auto select-none border-element/40 ${glassWindowOptionsClass} w-full min-w-0 shrink-0 rounded-sm border px-tiny py-tiny`;
+  `pointer-events-auto select-none ${glassWindowOptionsClass} w-full min-w-0 shrink-0 rounded-sm border ${borderElementClass}/40 px-tiny py-tiny`;
 
 /** @emoji 📐 Optional measure caption above a control. */
 export const windowMeasureLabelClass =
@@ -2938,7 +2948,7 @@ export const windowMeasureGroupHeaderClass =
 
 /** @emoji 🌳 Indented children under a measure group (minimal chrome). */
 export const windowMeasureGroupChildrenClass =
-  "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-l border-element/30 pl-tiny ml-tiny pb-0 pt-0";
+  "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-l pl-tiny ml-tiny pb-0 pt-0";
 
 /** @emoji 🌳 Nested measure leaf without an outer tile border (indent only). */
 export const windowMeasureTileNestedClass =
@@ -2959,39 +2969,13 @@ export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold upperca
 export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-foreground";
 
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
-export function getLevelBorderElementClass(level: Level): string {
-	switch (level) {
-		case "canvas":
-			return "border-hover-canvas";
-		case "window":
-			return "border-hover-window";
-		case "panel":
-			return "border-hover-panel";
-		case "overlay":
-			return "border-hover-overlay";
-		case "temporary":
-			return "border-hover-temporary";
-		default:
-			return "border-hover-base";
-	}
+export function getLevelBorderElementClass(_level: Level): string {
+	return borderElementClass;
 }
 
 /** @emoji 🎨 Tailwind divide token class for a {@link Level}. */
-export function getLevelDivideElementClass(level: Level): string {
-	switch (level) {
-		case "canvas":
-			return "divide-hover-canvas";
-		case "window":
-			return "divide-hover-window";
-		case "panel":
-			return "divide-hover-panel";
-		case "overlay":
-			return "divide-hover-overlay";
-		case "temporary":
-			return "divide-hover-temporary";
-		default:
-			return "divide-hover-base";
-	}
+export function getLevelDivideElementClass(_level: Level): string {
+	return "divide-element";
 }
 // #endregion 🎈Level Context
 
@@ -3092,7 +3076,7 @@ function CommandDialog({
  **/
 function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
-    <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b border-element px-tiny">
+    <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b px-tiny">
       <SearchIcon className="size-small shrink-0 opacity-50" />
       <CommandPrimitive.Input data-slot="command-input" className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)} {...uiFormControlBrowserDefaultProps} {...props} />
     </div>
@@ -3194,7 +3178,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
   return (
-    <footer id="ui.footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", chromeShellEdgeClass, bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
+    <footer id="ui.footer" data-slot="footer" className={cn("border-t flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup className="border">
           {sortedItems.map((item) => (
@@ -3862,7 +3846,7 @@ const Avatar = reactHostPort.forwardRef<React.ElementRef<typeof AvatarPrimitive.
       ref={ref}
       data-slot="avatar"
       style={style}
-      className={cn("relative flex overflow-hidden rounded-full", !hasExplicitSize && "shrink-0", !isFullSize && "border border-element", !isSizeClass && !hasExplicitSize && "size-small", className)}
+      className={cn("relative flex overflow-hidden rounded-full", !hasExplicitSize && "shrink-0", !isFullSize && "border", !isSizeClass && !hasExplicitSize && "size-small", className)}
       {...props}
     />
   );
@@ -4362,7 +4346,7 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
  * actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
 const actionGroupItemVariants = cva(
-  "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single",
+  `text-foreground inline-flex items-center justify-center shrink-0 transition-[color,border-color] cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single ${formControlFocusBorderClass}`,
   {
     variants: {
       level: {
@@ -4565,7 +4549,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       aria-label={ariaLabel}
       title={accessibleLabel}
       className={cn(
-        "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single h-medium border",
+        `text-foreground inline-flex items-center justify-center shrink-0 transition-[color,border-color] cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
         hasText && "aspect-auto gap-single",
         level === "base" && "hover:bg-hover-base",
         level === "window" && "hover:bg-hover-window",
@@ -4594,7 +4578,7 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
  * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
  **/
 const buttonGroupItemVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap h-medium aspect-square p-single overflow-hidden",
+  `text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} transition-[color,border-color] whitespace-nowrap h-medium aspect-square p-single overflow-hidden`,
   {
     variants: {
       level: {
@@ -4608,7 +4592,7 @@ const buttonGroupItemVariants = cva(
       variant: {
         default: "",
         ghost: "border-transparent bg-transparent",
-        outline: "border border-element",
+        outline: `border ${borderElementClass}`,
       },
     },
     defaultVariants: {
@@ -5342,8 +5326,8 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
           data-mixed={mixed ? "true" : undefined}
           id={id}
           className={cn(
-            "file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent p-single text-base transition-[color,border-color] outline-none file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            "focus-visible:border-accent",
+            `file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent p-single text-base ${borderElementClass} file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
+            formControlFocusBorderClass,
             "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
             mixed && "placeholder:italic placeholder:text-muted-foreground/70",
             type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
@@ -5477,7 +5461,7 @@ function SelectTrigger({
       id={id}
       data-size={size}
       className={cn(
-        "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive flex w-fit items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable",
+        `data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
         hoverClass,
         className,
       )}
@@ -6170,9 +6154,9 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
           data-mixed={mixed ? "true" : undefined}
           id={id}
           className={cn(
-            "placeholder:text-muted-foreground text-foreground flex w-full border bg-transparent text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-            "focus-visible:border-accent",
-            "aria-invalid:border-destructive flex-1",
+            `placeholder:text-muted-foreground text-foreground flex w-full border bg-transparent text-base ${borderElementClass} disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
+            formControlFocusBorderClass,
+            "flex-1",
             useSingleRowPropertyEditor ? "h-medium min-h-[22px] max-h-[22px] resize-none overflow-y-auto px-single py-single leading-normal" : "field-sizing-content min-h-huge px-tiny py-single",
             className,
           )}
@@ -6225,7 +6209,7 @@ export { Textarea };
  * toggleVariants holds the data fields for a toggleVariants record.
  **/
 const toggleVariants = cva(
-  "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden",
+  `text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} transition-[color,border-color] whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden`,
   {
     variants: {
       level: {
@@ -6857,7 +6841,7 @@ function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.
  * AccordionItem holds the data fields for a AccordionItem record.
  **/
 function AccordionItem({ className, ...props }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
-  return <AccordionPrimitive.Item data-slot="accordion-item" className={cn("border-b border-element last:border-b-0", className)} {...props} />;
+  return <AccordionPrimitive.Item data-slot="accordion-item" className={cn("border-b last:border-b-0", className)} {...props} />;
 }
 
 /**
@@ -7291,7 +7275,7 @@ function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   return (
-    <nav id="ui.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", chromeShellEdgeClass, bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0">
           {items.map((item, index) => (
@@ -7652,7 +7636,7 @@ export function IconSelector({
 	})();
 
 	return (
-		<div className={cn("border-element/50 flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
+		<div className={cn("flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
 			<Select disabled={locked} onValueChange={onModeSelect} value={activeMode}>
 				<SelectTrigger className="h-8 w-full min-w-0 px-2 text-xs whitespace-normal" id={`${id}.mode`} title={modeSelectTitle}>
 					<SelectValue />
@@ -7829,6 +7813,10 @@ const PropertyValueColumnContext = reactHostPort.createContext(false);
 const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 10 * multiplier;
 const treeRowHeightPx = 24;
 const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
+const treeRowShellClassName = "relative h-[24px] min-h-[24px] max-h-[24px] select-none overflow-hidden min-w-0";
+const treeRowInteractiveClassName = "hover:bg-hover-panel group";
+const treeRowLayoutClassName = "grid min-w-0 h-full w-full";
+const treeRowContentClassName = "min-w-0 h-full flex items-center";
 const detailPanelPropertyLabelColumnWidthPx = 96;
 const detailPanelPropertyInlineGapPx = 8;
 const detailPanelPropertyStackedRowGapPx = 4;
@@ -7837,8 +7825,8 @@ const detailPanelPropertyRowClassName = "group grid min-w-0 items-start gap-x-[8
 const detailPanelPropertyControlClassName =
   "min-w-0 w-full self-start flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ml-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 const treeInspectorInnerRowClassName = "min-w-0 w-full";
-const treeHeaderRowClassName = "flex min-w-0 w-full items-center gap-[6px]";
-const treeHeaderMainClassName = "flex min-w-0 flex-1 items-center gap-[6px]";
+const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-[6px]";
+const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-[6px]";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
 const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + 7;
 const treeRowInlineGapPx = 6;
@@ -7852,8 +7840,9 @@ const treeSubtreeGapPx = 0;
 const treeSectionBoundaryGapPx = 10;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
-const treeItemLabelSlotClassName = "flex min-w-0 flex-1 items-center overflow-hidden text-xs font-normal text-foreground select-text";
+const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none text-foreground select-text";
 const treeItemSecondaryTextClassName = "text-[10px] leading-none text-muted-foreground";
+const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-muted-foreground select-text";
 const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-muted-foreground";
 
 /** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
@@ -7984,9 +7973,13 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
 }) => {
   const { indentMultiplier } = reactHostPort.useContext(TreeContext);
   return (
-    <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
+    <div
+      data-slot="tree-row-layout"
+      className={cn(treeRowLayoutClassName, align === "start" ? "items-start" : "items-center", className)}
+      style={treeAlignedRowStyle(level, indentMultiplier)}
+    >
       <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
-      <div data-slot="tree-row-content" className={cn("min-w-0", contentClassName)}>
+      <div data-slot="tree-row-content" className={cn(align === "start" ? "min-w-0 h-full" : treeRowContentClassName, contentClassName)}>
         {children}
       </div>
     </div>
@@ -8688,7 +8681,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     !onDragOver &&
     !onDragLeave &&
     !onDrop;
-  const rowClassName = cn("relative h-[24px] min-h-[24px] hover:bg-hover-panel select-none overflow-hidden group min-w-0", isExpandable ? "cursor-foldable" : "cursor-selectable", className);
+  const rowClassName = cn(treeRowShellClassName, treeRowInteractiveClassName, isExpandable ? "cursor-foldable" : "cursor-selectable", className);
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier }}>{children}</TreeContext.Provider>;
@@ -8725,7 +8718,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "folder")}
-              <span data-slot="tree-label" title={controlHint} className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate select-text" style={treeItemLabelStyle}>
+              <span data-slot="tree-label" title={controlHint} className={treeSectionLabelSlotClassName} style={treeItemLabelStyle}>
                 {displayLabel}
               </span>
             </div>
@@ -8777,7 +8770,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
                 {renderTreeRowIcon(icon, "folder")}
-                <span data-slot="tree-label" title={controlHint} className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate select-text" style={treeItemLabelStyle}>
+                <span data-slot="tree-label" title={controlHint} className={treeSectionLabelSlotClassName} style={treeItemLabelStyle}>
                   {displayLabel}
                 </span>
               </div>
@@ -8833,9 +8826,14 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const baseClasses = `relative w-full h-[24px] min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
-  const stateClasses = treeRowStateClasses(isSelected, isHighlighted);
-  const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
+  const itemClasses = cn(
+    treeRowShellClassName,
+    treeRowInteractiveClassName,
+    "w-full",
+    hasChildren ? "cursor-foldable" : "cursor-selectable",
+    treeRowStateClasses(isSelected, isHighlighted),
+    className,
+  );
 
   if (hasChildren && displayLabel) {
     if (layoutKind === "property") {
@@ -9180,9 +9178,15 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const baseClasses = `relative w-full h-[24px] min-h-[24px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`;
-  const stateClasses = treeRowStateClasses(isSelected, isHighlighted);
-  const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
+  const itemClasses = cn(
+    treeRowShellClassName,
+    treeRowInteractiveClassName,
+    "w-full",
+    isExpandable ? "cursor-foldable" : "cursor-selectable",
+    draggable ? "cursor-grab active:cursor-grabbing" : "",
+    treeRowStateClasses(isSelected, isHighlighted),
+    className,
+  );
   const treeLabelSelectClass = draggable ? "select-none" : "select-text";
 
   if (layoutKind === "property" && resolvedLabel) {
@@ -9237,13 +9241,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           }
           contentClassName="min-w-0"
         >
-          <div className={cn(treeHeaderRowClassName, "h-[22px]", treeInspectorInnerRowClassName)}>
-            <div className={cn(treeHeaderMainClassName, "h-[22px]")}>
+          <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
+            <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text")}
               <span
                 data-slot="tree-label"
                 title={controlHint}
-                className={cn("flex min-w-0 flex-1 items-center text-xs font-medium text-left truncate text-foreground transition-colors hover:bg-hover-panel h-[22px] select-text", isExpandable ? "cursor-foldable" : "cursor-selectable")}
+                className={cn(treeItemLabelSlotClassName, "font-medium transition-colors hover:bg-hover-panel", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
                 style={treeItemLabelStyle}
                 onClick={(event) => {
                   if (event.detail > 1) return;
@@ -9518,7 +9522,7 @@ export const TreeRow: React.FC<{
   if (!isTree) {
     return (
       <TreeRowAlignmentContext.Provider value={true}>
-        <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn("min-w-0 w-full min-h-[24px]", className)}>
+        <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn(treeRowShellClassName, "w-full", className)}>
           {children}
         </div>
       </TreeRowAlignmentContext.Provider>
@@ -9527,8 +9531,8 @@ export const TreeRow: React.FC<{
 
   return (
     <TreeRowAlignmentContext.Provider value={true}>
-      <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn("relative min-w-0 w-full", className)}>
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" anchorOffsetPx={rowKind === "property" ? detailPanelHeaderLineCenterPx : undefined}>
+      <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn(treeRowShellClassName, "w-full", className)}>
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} className="h-full" contentClassName="min-w-0" anchorOffsetPx={rowKind === "property" ? detailPanelHeaderLineCenterPx : undefined}>
           {children}
         </TreeAlignedRow>
       </div>
@@ -9579,7 +9583,7 @@ const getTreeItemLabel = (item: TreeDataItem): React.ReactNode => {
   }
 
   return (
-    <span className="min-w-0 truncate">
+    <span className="min-w-0 truncate leading-none">
       <span className="text-foreground">{item.label}</span> <span className={treeItemSecondaryTextClassName}>{item.description}</span>
     </span>
   );
@@ -10492,7 +10496,7 @@ interface TreeFilesProps {
 const TreeFiles: React.FC<TreeFilesProps> = ({ title, nodes, currentPath, onNavigate, as = "a", className = "" }) => {
   return (
     <TreeStateProvider>
-      <div className={`not-prose my-medium p-medium rounded-lg border border-element bg-card ${className}`}>
+      <div className={`not-prose my-medium p-medium rounded-lg border bg-card ${className}`}>
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false, isTree: true, indentMultiplier: 1 }}>
           <div className="flex flex-col gap-single">
@@ -11220,7 +11224,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
   if (!prev && !next) return null;
 
   return (
-    <div className="flex items-center justify-between border-t border-element pt-4 mt-8">
+    <div className="flex items-center justify-between border-t pt-4 mt-8">
       {prev ? (
         <Button id="ui.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single" icon="chevron-left">
           <div className="text-left">
@@ -11377,7 +11381,6 @@ const Panel: React.FC<PanelProps> = ({
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
   if (!visible) return null;
   const sortedSections = [...sections].sort((a, b) => (a.order || 0) - (b.order || 0));
-  const frameClass = cn(panelChromeBorderClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered));
   const containerClass = `absolute text-foreground min-w-0 overflow-hidden box-border ${className}`;
   const hasContent = sortedSections.length > 0 || additionalContent;
   const isHorizontal = resizeSide === "left" || resizeSide === "right";
@@ -11417,7 +11420,16 @@ const Panel: React.FC<PanelProps> = ({
   return (
     <LevelProvider level="panel">
       <PanelGhostRoot data-panel={panelKey} className={containerClass} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
-        {showBackground ? <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", frameClass, panelGlassFillClass)} /> : null}
+        {showBackground ? (
+          <>
+            <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+            <div
+              data-slot="panel-chrome-frame"
+              aria-hidden
+              className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))}
+            />
+          </>
+        ) : null}
         <Scrollable className="relative z-10 h-full">
           <div className={`${className || "p-single"} overflow-hidden min-w-0`}>
             <TreeStateProvider>
@@ -11795,8 +11807,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
   };
   const resizeSide = position === "left" ? "right" : "left";
 
-  const frameClass = cn(panelChromeBorderClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered));
-
   const positionStyle =
     position === "left"
       ? { left: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex }
@@ -11813,7 +11823,16 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
         style={positionStyle}
         aria-hidden={visible ? undefined : true}
       >
-        {visible ? <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", frameClass, panelGlassFillClass)} /> : null}
+        {visible ? (
+          <>
+            <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+            <div
+              data-slot="panel-chrome-frame"
+              aria-hidden
+              className={cn(panelChromeFrameLayerClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))}
+            />
+          </>
+        ) : null}
         {showTabBar && (
           <div data-dim data-slot="side-panel-tabs" className={sidePanelTabBarClass}>
             {sortedTabs.map((tab) => {
@@ -11902,7 +11921,8 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   return (
     <LevelProvider level="panel">
       <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", className)} style={{ height: `${height}px` }}>
-        <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", panelChromeBorderClass, panelGlassFillClass)} />
+        <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+        <div data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
         {showTabBar && (
           <div data-dim data-slot="mobile-panel-tabs" className={mobilePanelTabBarClass}>
             {sortedTabs.map((tab) => {
@@ -11964,7 +11984,7 @@ function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
     <div
       data-slot="toolbar-zone"
       className={cn(
-        cn(glassToolbarClass, "flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden", chromeShellBorderClass),
+        cn(glassToolbarClass, "flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border"),
         className,
       )}
       {...props}
@@ -13807,7 +13827,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         proOptions={proOptions}
         className="bg-background"
       >
-        {showMinimap && <MiniMap className="border border-element" maskColor="var(--accent)" bgColor="var(--background)" nodeStrokeWidth={3} zoomable pannable nodeComponent={miniMapNodeComponent} />}
+        {showMinimap && <MiniMap className="border" maskColor="var(--accent)" bgColor="var(--background)" nodeStrokeWidth={3} zoomable pannable nodeComponent={miniMapNodeComponent} />}
         {panels}
       </HostReactFlow>
     </div>
@@ -15454,7 +15474,7 @@ function TableDraggableRow<T>({
     setDraggableRef(node);
     setDroppableRef(node);
   };
-  const baseRowClassName = `border-b border-element ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
+  const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
   const isDragging = activeId === rowId || isDraggingHook;
   return (
     <tr
@@ -15623,7 +15643,7 @@ const Table = <T,>({
     return (
       <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
         <table className="w-full border-collapse">
-          <thead className={`${headerBgClass} border-b border-element ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
+          <thead className={`${headerBgClass} border-b ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
                 <th key={column.id} className={`text-left p-single font-medium h-large ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
@@ -15667,7 +15687,7 @@ const Table = <T,>({
                   );
                 }
 
-                const baseRowClassName = `border-b border-element ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
+                const baseRowClassName = `border-b ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
                 const isDragging = activeId === rowId;
 
                 return (
@@ -15732,7 +15752,7 @@ export interface TableSkeletonProps {
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">
-      <thead className="bg-window border-b border-element sticky top-0 z-panel">
+      <thead className="bg-window border-b sticky top-0 z-panel">
         <tr className="h-large">
           {columns.map((column) => (
             <th key={column.id} className={`text-left p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
@@ -15743,7 +15763,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
       </thead>
       <tbody>
         {Array.from({ length: rowCount }).map((_, index) => (
-          <tr key={index} className="border-b border-element h-medium">
+          <tr key={index} className="border-b h-medium">
             {columns.map((column) => (
               <td key={column.id} className={`h-medium px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
                 <div className="flex items-center h-full min-w-0">
@@ -16988,8 +17008,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const perTabActiveChrome = Boolean(chromeGrid);
   const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
   const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
-  const frameLineClass = stackGloballyActive ? activeLineClass : secondaryLineClass;
-  const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-element";
+  const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-emphasized";
   const displayTabs = reactHostPort.useMemo(
     () =>
       modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []),
@@ -17813,7 +17832,7 @@ const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, chil
   return (
     <div data-slot="app" className={cn("flex h-full min-h-0 w-full flex-col", className)}>
       {showModeNav ? (
-        <div data-slot="app-mode-nav" className="flex shrink-0 items-center gap-single border-b border-element p-single">
+        <div data-slot="app-mode-nav" className="flex shrink-0 items-center gap-single border-b p-single">
           <Select id="app.mode.select" value={activeModeId} onValueChange={onActiveModeChange}>
             <SelectTrigger className="w-[min(100%,16rem)]">
               <SelectValue placeholder="Mode" />
@@ -18098,7 +18117,7 @@ if (import.meta.vitest) {
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-b-0");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-l-0");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-emphasized");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-active-base");
       expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("-mt-px");
@@ -18106,10 +18125,10 @@ if (import.meta.vitest) {
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-b");
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-element");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-element");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-element");
-      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-emphasized");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-emphasized");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-emphasized");
+      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-emphasized");
     });
 
     it("Mode clears multi-tab active chrome on inactive stacks", () => {
@@ -18146,14 +18165,14 @@ if (import.meta.vitest) {
       const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
       const inactiveStackTab = inactiveStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
       const activeStackTab = activeStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
-      expect(inactiveStackTab?.className).toContain("border-element");
+      expect(inactiveStackTab?.className).toContain("border-emphasized");
       expect(inactiveStackTab?.className).not.toContain("border-active-base");
       expect(inactiveStackTab?.className).not.toContain("border-b-0");
       expect(activeStackTab?.className).toContain("border-active-base");
       expect(activeStackTab?.className).toContain("border-b-0");
       expect(activeStackTab?.className).toContain("bg-active-base");
       expect(activeStackTab?.className).toContain("text-active-foreground");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-element");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-emphasized");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-active-base");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
@@ -18257,7 +18276,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).not.toContain("border-r-0");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-element");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-b-0");
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-stack-body"]')).toBeTruthy();
@@ -18315,13 +18334,15 @@ if (import.meta.vitest) {
       expect(gapCell?.className).toContain("flex");
       expect(gapCell?.className).toContain("items-stretch");
       const inactiveTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="shape"]');
-      expect(inactiveTab?.className).toContain("border-b-active-base");
-      expect(inactiveTab?.className).not.toContain("border-b-0");
+      expect(inactiveTab?.className).toContain("border-emphasized");
+      expect(inactiveTab?.className).not.toContain("border-active-base");
       const activeTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="energy"]');
       expect(activeTab?.className).toContain("border-active-base");
       expect(activeTab?.className).toContain("border-b-0");
       expect(activeTab?.className).toContain("bg-active-base");
       expect(activeTab?.className).toContain("text-active-foreground");
+      expect(stackBody?.className).toContain("border-active-base");
+      expect(stackBody?.className).not.toContain("border-emphasized");
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {
@@ -19686,6 +19707,9 @@ if (treeVitest) {
       expect(markup).toContain("capsule-j");
       expect(markup).toContain('data-slot="tree-item-row"');
       expect(markup).toContain("h-[24px]");
+      expect(markup).toContain('data-slot="tree-row-layout"');
+      expect(markup).toMatch(/data-slot="tree-row-layout"[^>]*class="[^"]*\bh-full\b[^"]*\bw-full\b/);
+      expect(markup).toMatch(/data-slot="tree-row-content"[^>]*class="[^"]*\bh-full\b[^"]*\bflex\b[^"]*\bitems-center\b/);
     });
 
     it("renders steppers at full control width with the current numeric value visible", () => {
@@ -20435,6 +20459,8 @@ if (treeVitest) {
       );
       expect(markup).toContain("LOD");
       expect(markup).toContain('data-slot="select-trigger"');
+      expect(markup).not.toContain("ring-[3px]");
+      expect(markup).not.toContain("border-emphasized");
       expect(markup).not.toContain('data-slot="tree-section-row"');
     });
   });
@@ -20594,25 +20620,55 @@ if (treeVitest) {
       expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
     });
 
-    it("uses border-border on navbar, footer, panel chrome, and toolbar outlines", () => {
-      expect(panelChromeBorderClass).toContain("border-border");
-      expect(panelChromeBorderClass).not.toContain("border-element");
+    it("uses normal implicit borders on navbar, footer, and toolbar; emphasized outline on floating panels", () => {
+      expect(panelChromeBorderClass).toContain("border-emphasized");
       const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
       expect(navbarMarkup).toContain("border-b");
-      expect(navbarMarkup).toContain("border-border");
+      expect(navbarMarkup).not.toContain("border-emphasized");
+      expect(navbarMarkup).not.toContain("border-border");
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ id: "ui.footer.minimize", icon: "minus" }]} />);
       expect(footerMarkup).toContain("border-t");
-      expect(footerMarkup).toContain("border-border");
+      expect(footerMarkup).not.toContain("border-emphasized");
       const toolbarMarkup = renderToStaticMarkup(
         <ToolbarZone>
           <ToolbarItem>Tool</ToolbarItem>
         </ToolbarZone>,
       );
-      expect(toolbarMarkup).toContain("border-border");
+      expect(toolbarMarkup).toMatch(/\bborder\b/);
+      expect(toolbarMarkup).not.toContain("border-emphasized");
       const panelMarkup = renderToStaticMarkup(
         <SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, tree: { sections: [] } }]} />,
       );
-      expect(panelMarkup).toContain("border-border");
+      expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
+      expect(panelMarkup).toContain("border-emphasized");
+      expect(panelMarkup).not.toContain("divide-x");
+      expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-b/);
+      const measuresMarkup = renderToStaticMarkup(
+        <div data-slot="window-measures-stack" className={windowMeasuresStackClass} />,
+      );
+      expect(measuresMarkup).toContain("border-element/40");
+      expect(measuresMarkup).not.toContain("border-emphasized");
+    });
+
+    it("renders adjacent toolbar toggle group items for segmented focus borders", () => {
+      const markup = renderToStaticMarkup(
+        <ToolbarZone>
+          <ToolbarItem>
+            <ToggleGroup
+              kind="single"
+              value="save"
+              items={[
+                { value: "transform", id: "ui.toolbar.group.transform", icon: "move-3d", text: "Transform" },
+                { value: "save", id: "ui.toolbar.group.save", icon: "save", text: "Save" },
+                { value: "transfer", id: "ui.toolbar.group.transfer", icon: "arrow-right-left", text: "Transfer" },
+              ]}
+            />
+          </ToolbarItem>
+        </ToolbarZone>,
+      );
+      expect(markup).toContain('data-slot="toggle-group-item"');
+      expect(markup.match(/data-slot="toggle-group-item"/g)?.length).toBe(3);
+      expect(markup).toContain('data-state="on"');
     });
 
     it("navbar keeps inline labels when compact chrome is enabled", () => {
@@ -20665,7 +20721,7 @@ if (treeVitest) {
               {
                 key: "panels",
                 content: (
-                  <div className="flex min-w-0 items-stretch border border-element h-medium">
+                  <div className="flex min-w-0 items-stretch border h-medium">
                     <Toggle id="ui.panelToggle.workbench" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 shrink-0" />
                     <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 border-l shrink-0" />
                     <Toggle id="ui.panelToggle.settings" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 border-l shrink-0" />

@@ -162,9 +162,10 @@
     --hover-temporary: var(--color-light-gray-gray);
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
-    --border-window-color: var(--color-gray);
-    --border-element-color: var(--color-gray);
-    --border-color: var(--border-window-color);
+    --border-normal-color: var(--color-gray);
+    --border-emphasized-color: var(--color-gray);
+    --border-element-color: var(--border-normal-color);
+    --border-color: var(--border-normal-color);
     --plaster: var(--color-gray);
     --plaster-edge: var(--color-foreground);
     --info-bg: var(--color-light-8-9);
@@ -536,9 +537,17 @@
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) > :not(:first-child) {
   border-inline-start-width: 0;
+  margin-inline-start: -1px;
+}
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group"].divide-x, [data-slot="button-group"].divide-x) > :not(:last-child) {
+  border-inline-end-width: 0;
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]) {
+  position: relative;
+  box-sizing: border-box;
+  border: 1px solid transparent;
   height: 100%;
   line-height: 1;
   padding-block: var(--spacing-single);
@@ -547,6 +556,16 @@
   aspect-ratio: auto;
   font-size: var(--text-sm);
   font-weight: 500;
+}
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]):is(:focus-visible, [data-state="on"]) {
+  z-index: 1;
+}
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]):focus-visible {
+  border-color: var(--accent);
+  box-shadow: none;
+  outline: none;
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]) > span {
@@ -769,9 +788,9 @@
   --color-plaster-edge: var(--plaster-edge);
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--foreground);
-  --color-border: var(--border-window-color);
+  --color-border: var(--border-normal-color);
   --color-element: var(--border-element-color);
-  --color-border-window: var(--border-window-color);
+  --color-emphasized: var(--border-emphasized-color);
 }
 
 @utility gap-single {
@@ -1106,10 +1125,14 @@
   background-color: color-mix(in srgb, var(--panel) calc(var(--glass-panel-alpha) * 100%), transparent);
 }
 
-/* Panel frame stroke is on [data-panel]; inset scroll hosts so native/overlay scrollbars do not cover it. */
+/* Panel frame stroke is on [data-slot="panel-chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
 [data-panel] [data-slot="scroll-area"] {
   box-sizing: border-box;
   padding: 1px;
+}
+
+[data-slot="panel-chrome-frame"] {
+  border-color: var(--border-emphasized-color);
 }
 
 @utility ui-glass-toolbar {
@@ -1159,6 +1182,17 @@
 [data-slot="window-measures-tree"] [data-slot="slider-value"] {
   font-size: var(--text-2xs) !important;
   line-height: var(--text-2xs--line-height) !important;
+}
+
+[data-slot="window-measures-tree"] [data-slot="select-trigger"][data-state="open"],
+[data-slot="window-measures-tree"] [data-slot="select-trigger"]:focus-visible {
+  border-color: var(--accent);
+  box-shadow: none;
+  outline: none;
+}
+
+[data-slot="window-measures-tree"] [data-slot="toggle-group-item"][data-state="on"] {
+  box-shadow: none;
 }
 
 /* Puzzle 2d (and other full-bleed canvases) fill the window body; stack padding is for panel chrome only. */

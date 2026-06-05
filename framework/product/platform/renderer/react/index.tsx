@@ -672,7 +672,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
             <input
               id={measure.id}
               type="checkbox"
-              className="border-element accent-foreground size-small shrink-0 rounded border"
+              className="border-emphasized accent-foreground size-small shrink-0 rounded border"
               {...(measure.checked !== undefined ? { checked: measure.checked } : { defaultChecked: measure.defaultChecked })}
               onChange={(event) => measure.onCheckedChange?.(event.target.checked)}
             />
@@ -689,7 +689,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
                 type="button"
                 data-slot="window-measure-radio-item"
                 className={cn(
-                  "border-element/80 hover:bg-hover-window w-full rounded border px-tiny py-tiny text-left text-xs transition-colors",
+                  "border-emphasized/80 hover:bg-hover-window w-full rounded border px-tiny py-tiny text-left text-xs transition-colors",
                   measure.value === item.value && "bg-active-base text-active-foreground",
                 )}
                 onClick={() => measure.onChange?.(item.value)}
@@ -3809,7 +3809,7 @@ function readBrowserUri(): string {
 /**
  * Left panel toggle for the navbar.
  * Uses the first tab icon as the toggle icon.
- * Panel toggle strip: border border-element, h-medium.
+ * Panel toggle strip: border border-emphasized, h-medium.
  **/
 const UIPanelToggleGroup: React.FC<{
   items: Array<{
@@ -3820,7 +3820,7 @@ const UIPanelToggleGroup: React.FC<{
     pressed: boolean;
   }>;
 }> = ({ items }) => (
-  <div data-slot="app-panel-toggle-group" className="flex min-w-0 items-stretch border border-element h-medium">
+  <div data-slot="app-panel-toggle-group" className="flex min-w-0 items-stretch border border-emphasized h-medium">
     {items.map((item, index) => (
       <Toggle
         key={item.id}
@@ -4178,7 +4178,7 @@ const PlatformViewWithHistory: React.FC<Omit<PlatformViewProps, "uri" | "onNavig
  * Every UI has: toolbar, search (Ctrl+P), panel toggles, back/forward/up navigation.
  * Every app has: find (Ctrl+F).
  * Every panel has: tree.
- * Fixed navbar layout: [mode (if >1 mode)] [back] [forward] [up] [breadcrumb (flex-1)] [search] [find] [panel toggles].
+ * Fixed navbar layout: [mode (if >1 mode)] [nav history group] [breadcrumb (flex-1)] [search] [find] [panel toggles].
  **/
 export const PlatformView: React.FC<PlatformViewProps> = ({
 	platform,
@@ -4454,25 +4454,11 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const navbarItems: NavbarItem[] = [];
 
 	navbarItems.push({
-		key: "navBack",
+		key: "navHistory",
 		content: (
-			<ButtonGroup id="ui.nav.back">
+			<ButtonGroup id="ui.nav">
 				<ButtonGroupItem id="ui.nav.back" onClick={onGoBack} className={cn(!canGoBackProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-left" size="small" />} />
-			</ButtonGroup>
-		),
-	});
-	navbarItems.push({
-		key: "navForward",
-		content: (
-			<ButtonGroup id="ui.nav.forward">
 				<ButtonGroupItem id="ui.nav.forward" onClick={onGoForward} className={cn(!canGoForwardProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-right" size="small" />} />
-			</ButtonGroup>
-		),
-	});
-	navbarItems.push({
-		key: "navUp",
-		content: (
-			<ButtonGroup id="ui.nav.up">
 				<ButtonGroupItem id="ui.nav.up" onClick={onGoUp} className={cn(!canGoUpProp && "opacity-30 pointer-events-none")} icon={<Icon icon="arrow-up" size="small" />} />
 			</ButtonGroup>
 		),
@@ -4866,6 +4852,29 @@ if (import.meta.vitest) {
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} uri="/apps/demo" />);
 			expect(markup).toContain('aria-label="breadcrumb"');
 			expect(markup).toContain("apps");
+		});
+
+		it("groups back, forward, and up in one nav button group", () => {
+			const wb = new Platform();
+			class TCtrl extends Controller {
+				constructor() {
+					super("tctrl", wb.commandBus, () => wb.notify());
+				}
+				run(): void {}
+			}
+			const app = new AppRuntime("test", "Test", undefined, new TCtrl(), createTabStackLayout(["main"], ["Main"]), [
+				new WindowKindRuntime("main", "Main", "test.workbench-view.nav-group"),
+			]);
+			registerWindowBody("test.workbench-view.nav-group", () => <div>Main</div>);
+			wb.addApp(app);
+			const markup = renderToStaticMarkup(<PlatformView platform={wb} uri="/apps/demo" />);
+			expect(markup).toContain('id="ui.nav"');
+			expect(markup).toContain('id="ui.nav.back"');
+			expect(markup).toContain('id="ui.nav.forward"');
+			expect(markup).toContain('id="ui.nav.up"');
+			const navGroupCount = (markup.match(/data-slot="button-group"[^>]*id="ui\.nav"/g) ?? []).length;
+			expect(navGroupCount).toBe(1);
+			expect(markup).not.toMatch(/id="ui\.nav\.back"[^>]*>[\s\S]*data-slot="button-group"[^>]*id="ui\.nav\.back"/);
 		});
 
 		it("does not render app switcher tabs when multiple apps are registered", () => {

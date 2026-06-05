@@ -1575,8 +1575,8 @@ const PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA = {
   wireStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
   wireStrokeHighlighted: [52, 209, 191, 255] as [number, number, number, number],
   wireStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
-  selectionPreviewFill: [255, 52, 79, 36] as [number, number, number, number],
-  selectionPreviewStroke: [255, 52, 79, 191] as [number, number, number, number],
+  selectionPreviewFill: [255, 52, 79, 31] as [number, number, number, number],
+  selectionPreviewStroke: [255, 52, 79, 255] as [number, number, number, number],
 };
 
 function puzzle2dParseCssColorToRgba8888(css: string, fallback: [number, number, number, number]): [number, number, number, number] {
@@ -1634,7 +1634,7 @@ function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dSty
     "edge.selected": { stroke: c("color", PUZZLE_2D_CSS_COLOR_PRIMARY, f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
     handle: {
       fill: c("backgroundColor", "var(--color-base)", f.handle.fill ?? "#f7f3e3"),
-      stroke: c("color", "var(--color-element)", f.handle.stroke ?? "#001117"),
+      stroke: c("color", "var(--color-emphasized)", f.handle.stroke ?? "#001117"),
       strokeWidth: 2,
     },
     "handle.highlighted": {
@@ -1649,7 +1649,7 @@ function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dSty
     },
     node: {
       fill: c("backgroundColor", "var(--color-panel)", f.node.fill ?? "#eeeadb"),
-      stroke: c("color", "var(--color-element)", f.node.stroke ?? "#001117"),
+      stroke: c("color", "var(--color-emphasized)", f.node.stroke ?? "#001117"),
       strokeWidth: 2,
     },
     "node.highlighted": {
@@ -1683,7 +1683,7 @@ function serializePuzzle2dVelloThemeJson(): string {
     edgeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.edgeStrokeSelectionExit),
     edgeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.edgeStrokeDisabled),
     nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
-    nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
+    nodeStroke: pc("color", "var(--color-emphasized)", fb.nodeStroke),
     nodeFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.nodeFillHovered),
     nodeStrokeHovered: pc("color", "var(--color-hover-base)", fb.nodeStrokeHovered),
     nodeFillSelected: pc("backgroundColor", PUZZLE_2D_CSS_SELECTED_FILL, fb.nodeFillSelected),
@@ -1695,7 +1695,7 @@ function serializePuzzle2dVelloThemeJson(): string {
     indirectHandleFill: pc("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, fb.indirectHandleFill),
     indirectHandleStroke: pc("color", "var(--color-secondary)", fb.indirectHandleStroke),
     handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
-    handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
+    handleStroke: pc("color", "var(--color-emphasized)", fb.handleStroke),
     handleFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.handleFillHovered),
     handleStrokeHovered: pc("color", "var(--color-hover-base)", fb.handleStrokeHovered),
     handleFillSelected: pc("backgroundColor", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.handleFillSelected),
@@ -1709,8 +1709,8 @@ function serializePuzzle2dVelloThemeJson(): string {
     wireStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.wireStrokeSelected),
     wireStrokeHighlighted: pc("color", "var(--color-secondary)", fb.wireStrokeHighlighted),
     wireStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.wireStrokeDisabled),
-    selectionPreviewFill: pc("backgroundColor", "color-mix(in oklab, var(--color-accent) 14%, transparent)", fb.selectionPreviewFill),
-    selectionPreviewStroke: pc("backgroundColor", "color-mix(in oklab, var(--color-accent) 75%, transparent)", fb.selectionPreviewStroke),
+    selectionPreviewFill: pc("backgroundColor", "color-mix(in oklab, var(--color-primary) 12%, transparent)", fb.selectionPreviewFill),
+    selectionPreviewStroke: pc("color", "var(--color-primary)", fb.selectionPreviewStroke),
   };
   return JSON.stringify(payload);
 }

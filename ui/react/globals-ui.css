@@ -145,5 +145,9 @@
 [data-ghost="true"][data-ghost-region] {
   border-color: transparent !important;
 }
+
+[data-ghost="true"] [data-slot="panel-chrome-frame"] {
+  opacity: 1;
+}
 /* #endregion 👻PanelGhost */
 

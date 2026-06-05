@@ -6625,7 +6625,7 @@ if (import.meta.vitest) {
 			expect(marqueeSelects(crossingMarquee, inside, "crossing")).toBe(true);
 			expect(marqueeSelects(windowMarquee, inside, "window")).toBe(true);
 			expect(marqueeSelects(windowMarquee, partial, "window")).toBe(false);
-			expect(marqueeSelects(windowMarquee, partial, "crossing")).toBe(true);
+			expect(marqueeSelects(crossingMarquee, partial, "crossing")).toBe(true);
 		});
 
 		it("detects reveal overview from an element inside the deck", () => {

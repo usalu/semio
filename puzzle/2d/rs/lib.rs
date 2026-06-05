@@ -3192,10 +3192,10 @@ mod board_host {
         }
 
         pub fn set_selection_screen_preview(&mut self, points: Option<Vec<Point>>) {
-            self.selection_screen_preview = points;
             if points.is_none() {
                 self.selection_preview_crossing = false;
             }
+            self.selection_screen_preview = points;
         }
 
         pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {

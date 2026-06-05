@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: verify
     content: Open repo ticket; verify runtime in each play app and run presentation tests; close ticket
-    status: in_progress
+    status: completed
 isProject: false
 ---
 
