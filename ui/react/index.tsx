@@ -142,6 +142,8 @@ export interface SceneHostPort {
   };
   readonly drei: {
     readonly Clone: typeof Clone;
+    readonly GizmoHelper: typeof GizmoHelper;
+    readonly GizmoViewport: typeof GizmoViewport;
     readonly Line: typeof DreiLine;
     readonly OrbitControls: typeof OrbitControls;
     readonly OrthographicCamera: typeof OrthographicCamera;
@@ -200,6 +202,8 @@ export let sceneHostPort: SceneHostPort = {
   },
   drei: {
     Clone,
+    GizmoHelper,
+    GizmoViewport,
     Line: DreiLine,
     OrbitControls,
     OrthographicCamera,
@@ -14770,6 +14774,31 @@ export function gumballRayAxisParameter(rayOrigin: GumballVec3, rayDir: GumballV
   return (b * d - a * e) / denom;
 }
 
+/** @emoji 👁 Unit vector from a pivot toward the active camera (TransformControls-style eye). */
+export function gumballEyeFromPivot(camera: THREE.Camera, pivot: GumballVec3): GumballVec3 {
+  const cam = new THREE.Vector3();
+  camera.getWorldPosition(cam);
+  return gumballNorm(gumballSub([cam.x, cam.y, cam.z], pivot));
+}
+
+/** @emoji 🎛 Drag plane normal for constrained axis move/scale (matches three.js TransformControls). */
+export function gumballAxisDragPlaneNormal(axisDir: GumballVec3, eye: GumballVec3): GumballVec3 {
+  const axis = gumballNorm(axisDir);
+  const align = gumballCross(eye, axis);
+  if (gumballLen(align) > 1e-6) {
+    return gumballNorm(gumballCross(axis, align));
+  }
+  return eye;
+}
+
+/** @emoji 🎛 Projects a screen ray onto an axis using a camera-aligned plane through the pivot. */
+export function gumballProjectRayOntoAxis(rayOrigin: GumballVec3, rayDir: GumballVec3, pivot: GumballVec3, axisDir: GumballVec3, eye: GumballVec3): number | null {
+  const planeNormal = gumballAxisDragPlaneNormal(axisDir, eye);
+  const hit = gumballRayPlanePoint(rayOrigin, rayDir, pivot, planeNormal);
+  if (!hit) return null;
+  return gumballDot(gumballSub(hit, pivot), gumballNorm(axisDir));
+}
+
 /** @emoji 🎛 Ray-plane intersection for plane translate drags. */
 export function gumballRayPlanePoint(rayOrigin: GumballVec3, rayDir: GumballVec3, planePoint: GumballVec3, planeNormal: GumballVec3): GumballVec3 | null {
   const denom = gumballDot(planeNormal, rayDir);
@@ -14831,6 +14860,177 @@ const GUMBALL_AXIS_BY_KIND: Readonly<Record<GumballHandleKind, GumballVec3 | nul
   scaleUniform: null,
 };
 
+const GUMBALL_PREVIEW_AXIS_LENGTH = 3.6;
+const GUMBALL_PREVIEW_PLANE_SIZE = 1.85;
+const GUMBALL_PREVIEW_RING_RADIUS = 1.18;
+const GUMBALL_PREVIEW_RING_TUBE = 0.028;
+
+/** @emoji 🎨 Resolved gumball chrome aligned with spatial selection / hover tokens. */
+export interface GumballVisualPalette {
+  readonly axisX: string;
+  readonly axisY: string;
+  readonly axisZ: string;
+  readonly plane: string;
+  readonly uniform: string;
+  readonly hover: string;
+  readonly active: string;
+  readonly idleOpacity: number;
+  readonly dimmedOpacity: number;
+  readonly hoverOpacity: number;
+  readonly activeOpacity: number;
+  readonly previewHoverOpacity: number;
+  readonly previewActiveOpacity: number;
+}
+
+/** @emoji 🎨 Reads gumball palette from design tokens (matches CAD spatial pick chrome). */
+export function resolveGumballVisualPalette(): GumballVisualPalette {
+  return {
+    axisX: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.x, "danger"),
+    axisY: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.y, "success"),
+    axisZ: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.z, "secondary"),
+    plane: resolveColorHex(GUMBALL_PLANE_COLOR_REF, "gray"),
+    uniform: resolveColorHex(GUMBALL_UNIFORM_COLOR_REF, "light"),
+    hover: getComputedColor("--color-changed-hovered"),
+    active: getComputedColor("--color-changed-selected"),
+    idleOpacity: 0.62,
+    dimmedOpacity: 0.28,
+    hoverOpacity: 0.96,
+    activeOpacity: 1,
+    previewHoverOpacity: 0.24,
+    previewActiveOpacity: 0.38,
+  };
+}
+
+/** @emoji 🎛 Per-handle visual state for gumball hover / drag feedback. */
+export type GumballHandleVisualState = "idle" | "hover" | "active" | "dimmed";
+
+/** @emoji 🎛 Resolves handle chrome from hover and active drag kind. */
+export function gumballHandleVisualState(kind: GumballHandleKind, hovered: GumballHandleKind | null, active: GumballHandleKind | null): GumballHandleVisualState {
+  if (active === kind) return "active";
+  if (active !== null) return "dimmed";
+  if (hovered === kind) return "hover";
+  if (hovered !== null) return "dimmed";
+  return "idle";
+}
+
+/** @emoji 🎨 Handle tint + opacity for a resolved visual state. */
+export function gumballResolveHandleVisual(baseColor: string, state: GumballHandleVisualState, palette: GumballVisualPalette): { readonly color: string; readonly opacity: number; readonly scale: number } {
+  if (state === "active") return { color: palette.active, opacity: palette.activeOpacity, scale: 1.14 };
+  if (state === "hover") return { color: palette.hover, opacity: palette.hoverOpacity, scale: 1.08 };
+  if (state === "dimmed") return { color: baseColor, opacity: palette.dimmedOpacity, scale: 1 };
+  return { color: baseColor, opacity: palette.idleOpacity, scale: 1 };
+}
+
+type GumballPreviewAxis = "x" | "y" | "z";
+
+function gumballPreviewAxisForKind(kind: GumballHandleKind): GumballPreviewAxis | null {
+  if (kind === "moveX" || kind === "rotateX" || kind === "scaleX") return "x";
+  if (kind === "moveY" || kind === "rotateY" || kind === "scaleY") return "y";
+  if (kind === "moveZ" || kind === "rotateZ" || kind === "scaleZ") return "z";
+  return null;
+}
+
+function gumballBaseColorForKind(kind: GumballHandleKind, palette: GumballVisualPalette): string {
+  const axis = gumballPreviewAxisForKind(kind);
+  if (axis === "x") return palette.axisX;
+  if (axis === "y") return palette.axisY;
+  if (axis === "z") return palette.axisZ;
+  if (kind === "moveXY" || kind === "moveYZ" || kind === "moveXZ") return palette.plane;
+  return palette.uniform;
+}
+
+function useGumballVisualPalette(): GumballVisualPalette {
+  const [palette, setPalette] = reactHostPort.useState(() => resolveGumballVisualPalette());
+  reactHostPort.useEffect(() => {
+    const update = () => setPalette(resolveGumballVisualPalette());
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return palette;
+}
+
+const GumballLine = sceneHostPort.drei.Line;
+
+function GumballAxisPreviewLine(props: { readonly axis: GumballPreviewAxis; readonly color: string; readonly opacity: number; readonly lineWidth: number }): React.ReactElement {
+  const half = GUMBALL_PREVIEW_AXIS_LENGTH / 2;
+  const points = reactHostPort.useMemo((): [number, number, number][] => {
+    if (props.axis === "x") return [[-half, 0, 0], [half, 0, 0]];
+    if (props.axis === "y") return [[0, -half, 0], [0, half, 0]];
+    return [[0, 0, -half], [0, 0, half]];
+  }, [half, props.axis]);
+  return <GumballLine points={points} color={props.color} lineWidth={props.lineWidth} transparent opacity={props.opacity} depthTest={false} renderOrder={997} />;
+}
+
+function GumballInteractionPreview(props: { readonly kind: GumballHandleKind; readonly palette: GumballVisualPalette; readonly phase: "hover" | "active" }): React.ReactElement | null {
+  const color = props.phase === "active" ? props.palette.active : props.palette.hover;
+  const fillOpacity = props.phase === "active" ? props.palette.previewActiveOpacity : props.palette.previewHoverOpacity;
+  const lineWidth = props.phase === "active" ? 4.5 : 3.5;
+  const lineOpacity = props.phase === "active" ? 0.92 : 0.72;
+  const axis = gumballPreviewAxisForKind(props.kind);
+  if (axis) {
+    return <GumballAxisPreviewLine axis={axis} color={color} opacity={lineOpacity} lineWidth={lineWidth} />;
+  }
+  if (props.kind === "moveXY") {
+    return (
+      <mesh renderOrder={997}>
+        <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
+        <meshBasicMaterial color={color} transparent opacity={fillOpacity} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+    );
+  }
+  if (props.kind === "moveYZ") {
+    return (
+      <mesh rotation={[0, Math.PI / 2, 0]} renderOrder={997}>
+        <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
+        <meshBasicMaterial color={color} transparent opacity={fillOpacity} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+    );
+  }
+  if (props.kind === "moveXZ") {
+    return (
+      <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={997}>
+        <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
+        <meshBasicMaterial color={color} transparent opacity={fillOpacity} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+    );
+  }
+  if (props.kind === "rotateX") {
+    return (
+      <mesh rotation={[0, Math.PI / 2, 0]} renderOrder={997}>
+        <torusGeometry args={[GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_PREVIEW_RING_TUBE, 8, 64]} />
+        <meshBasicMaterial color={color} transparent opacity={lineOpacity} depthTest={false} depthWrite={false} />
+      </mesh>
+    );
+  }
+  if (props.kind === "rotateY") {
+    return (
+      <mesh rotation={[Math.PI / 2, 0, 0]} renderOrder={997}>
+        <torusGeometry args={[GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_PREVIEW_RING_TUBE, 8, 64]} />
+        <meshBasicMaterial color={color} transparent opacity={lineOpacity} depthTest={false} depthWrite={false} />
+      </mesh>
+    );
+  }
+  if (props.kind === "rotateZ") {
+    return (
+      <mesh renderOrder={997}>
+        <torusGeometry args={[GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_PREVIEW_RING_TUBE, 8, 64]} />
+        <meshBasicMaterial color={color} transparent opacity={lineOpacity} depthTest={false} depthWrite={false} />
+      </mesh>
+    );
+  }
+  if (props.kind === "scaleUniform") {
+    return (
+      <mesh renderOrder={997}>
+        <sphereGeometry args={[0.22, 20, 20]} />
+        <meshBasicMaterial color={color} transparent opacity={fillOpacity} depthTest={false} depthWrite={false} wireframe={false} />
+      </mesh>
+    );
+  }
+  return null;
+}
+
 function gumballWorldAxis(localAxis: GumballVec3, quat: THREE.Quaternion): GumballVec3 {
   const v = new THREE.Vector3(localAxis[0], localAxis[1], localAxis[2]);
   v.applyQuaternion(quat);
@@ -14880,66 +15080,71 @@ export interface UnifiedGumballProps {
 
 function GumballHandleMesh(props: {
   readonly kind: GumballHandleKind;
-  readonly color: string;
-  readonly hovered: boolean;
+  readonly baseColor: string;
+  readonly visualState: GumballHandleVisualState;
+  readonly palette: GumballVisualPalette;
   readonly onPointerDown: (kind: GumballHandleKind, event: ThreeEvent<PointerEvent>) => void;
   readonly onPointerOver: (kind: GumballHandleKind) => void;
   readonly onPointerOut: () => void;
   readonly children: React.ReactNode;
 }): React.ReactElement {
   const doubleSided = props.kind === "moveXY" || props.kind === "moveYZ" || props.kind === "moveXZ";
+  const visual = gumballResolveHandleVisual(props.baseColor, props.visualState, props.palette);
   return (
-    <mesh
-      frustumCulled={false}
-      userData={{ gumballHandleKind: props.kind }}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-        props.onPointerDown(props.kind, event);
-      }}
-      onPointerOver={(event) => {
-        event.stopPropagation();
-        props.onPointerOver(props.kind);
-      }}
-      onPointerOut={(event) => {
-        event.stopPropagation();
-        props.onPointerOut();
-      }}
-    >
-      {props.children}
-      <meshBasicMaterial color={props.color} transparent opacity={props.hovered ? 1 : 0.85} depthTest={false} depthWrite={false} side={doubleSided ? THREE.DoubleSide : THREE.FrontSide} />
-    </mesh>
+    <group scale={[visual.scale, visual.scale, visual.scale]}>
+      <mesh
+        frustumCulled={false}
+        userData={{ gumballHandleKind: props.kind }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          props.onPointerDown(props.kind, event);
+        }}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          props.onPointerOver(props.kind);
+        }}
+        onPointerOut={(event) => {
+          event.stopPropagation();
+          props.onPointerOut();
+        }}
+      >
+        {props.children}
+        <meshBasicMaterial color={visual.color} transparent opacity={visual.opacity} depthTest={false} depthWrite={false} side={doubleSided ? THREE.DoubleSide : THREE.FrontSide} />
+      </mesh>
+    </group>
   );
 }
 
 function GumballHandles(props: {
   readonly config: ReturnType<typeof resolveGumballConfig>;
+  readonly palette: GumballVisualPalette;
   readonly hovered: GumballHandleKind | null;
+  readonly active: GumballHandleKind | null;
   readonly onPointerDown: (kind: GumballHandleKind, event: ThreeEvent<PointerEvent>) => void;
   readonly onPointerOver: (kind: GumballHandleKind) => void;
   readonly onPointerOut: () => void;
 }): React.ReactElement {
-  const axisColors = reactHostPort.useMemo(
-    () => ({
-      x: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.x, "danger"),
-      y: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.y, "success"),
-      z: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.z, "secondary"),
-    }),
-    [],
-  );
-  const planeColor = reactHostPort.useMemo(() => resolveColorHex(GUMBALL_PLANE_COLOR_REF, "gray"), []);
-  const uniformColor = reactHostPort.useMemo(() => resolveColorHex(GUMBALL_UNIFORM_COLOR_REF, "light"), []);
-  const handleProps = (kind: GumballHandleKind, color: string, children: React.ReactNode) => (
-    <GumballHandleMesh kind={kind} color={color} hovered={props.hovered === kind} onPointerDown={props.onPointerDown} onPointerOver={props.onPointerOver} onPointerOut={props.onPointerOut}>
+  const highlightKind = props.active ?? props.hovered;
+  const handleProps = (kind: GumballHandleKind, children: React.ReactNode) => (
+    <GumballHandleMesh
+      kind={kind}
+      baseColor={gumballBaseColorForKind(kind, props.palette)}
+      visualState={gumballHandleVisualState(kind, props.hovered, props.active)}
+      palette={props.palette}
+      onPointerDown={props.onPointerDown}
+      onPointerOver={props.onPointerOver}
+      onPointerOut={props.onPointerOut}
+    >
       {children}
     </GumballHandleMesh>
   );
   return (
     <group renderOrder={999}>
+      {highlightKind ? <GumballInteractionPreview kind={highlightKind} palette={props.palette} phase={props.active === highlightKind ? "active" : "hover"} /> : null}
       {props.config.moveAxes ? (
         <>
           {handleProps(
             "moveX",
-            axisColors.x,
             <>
               <mesh rotation={[0, 0, -Math.PI / 2]}>
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
@@ -14951,7 +15156,6 @@ function GumballHandles(props: {
           )}
           {handleProps(
             "moveY",
-            axisColors.y,
             <>
               <mesh>
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
@@ -14963,7 +15167,6 @@ function GumballHandles(props: {
           )}
           {handleProps(
             "moveZ",
-            axisColors.z,
             <>
               <mesh rotation={[Math.PI / 2, 0, 0]}>
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
@@ -14979,21 +15182,18 @@ function GumballHandles(props: {
         <>
           {handleProps(
             "moveXY",
-            planeColor,
             <mesh position={[GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET, 0]}>
               <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
             </mesh>,
           )}
           {handleProps(
             "moveYZ",
-            planeColor,
             <mesh position={[0, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET]} rotation={[0, Math.PI / 2, 0]}>
               <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
             </mesh>,
           )}
           {handleProps(
             "moveXZ",
-            planeColor,
             <mesh position={[GUMBALL_PLANE_OFFSET, 0, GUMBALL_PLANE_OFFSET]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
             </mesh>,
@@ -15004,22 +15204,21 @@ function GumballHandles(props: {
         <>
           {handleProps(
             "rotateX",
-            axisColors.x,
             <mesh rotation={[0, Math.PI / 2, 0]}>
               <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
             </mesh>,
           )}
           {handleProps(
             "rotateY",
-            axisColors.y,
             <mesh rotation={[Math.PI / 2, 0, 0]}>
               <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
             </mesh>,
           )}
           {handleProps(
             "rotateZ",
-            axisColors.z,
-            <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />,
+            <mesh>
+              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+            </mesh>,
           )}
         </>
       ) : null}
@@ -15027,21 +15226,18 @@ function GumballHandles(props: {
         <>
           {handleProps(
             "scaleX",
-            axisColors.x,
             <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]}>
               <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
             </mesh>,
           )}
           {handleProps(
             "scaleY",
-            axisColors.y,
             <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]}>
               <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
             </mesh>,
           )}
           {handleProps(
             "scaleZ",
-            axisColors.z,
             <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]}>
               <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
             </mesh>,
@@ -15051,7 +15247,6 @@ function GumballHandles(props: {
       {props.config.scaleUniform
         ? handleProps(
             "scaleUniform",
-            uniformColor,
             <mesh>
               <boxGeometry args={[GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX]} />
             </mesh>,
@@ -15064,14 +15259,20 @@ function GumballHandles(props: {
 /** @emoji 🎛 Rhino-style unified move / rotate / scale gumball for R3F scenes. */
 export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement | null {
   const config = reactHostPort.useMemo(() => resolveGumballConfig(props.config), [props.config]);
+  const palette = useGumballVisualPalette();
   const groupRef = reactHostPort.useRef<THREE.Group>(null);
   const dragRef = reactHostPort.useRef<GumballDragState | null>(null);
   const [hovered, setHovered] = reactHostPort.useState<GumballHandleKind | null>(null);
+  const [activeKind, setActiveKind] = reactHostPort.useState<GumballHandleKind | null>(null);
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
   const gl = useThree((state) => state.gl);
   const invalidate = useThree((state) => state.invalidate);
   const controls = useThree((state) => state.controls as { enabled?: boolean } | null);
+
+  reactHostPort.useEffect(() => {
+    invalidate();
+  }, [hovered, activeKind, palette, invalidate]);
 
   useFrame(() => {
     const group = groupRef.current;
@@ -15095,7 +15296,9 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
       if (kind === "moveX" || kind === "moveY" || kind === "moveZ") {
         const localAxis = GUMBALL_AXIS_BY_KIND[kind]!;
         const axisDir = gumballWorldAxis(localAxis, quat);
-        const param = gumballRayAxisParameter(ray.origin, ray.dir, pivot, axisDir);
+        const eye = gumballEyeFromPivot(camera, pivot);
+        const param = gumballProjectRayOntoAxis(ray.origin, ray.dir, pivot, axisDir, eye);
+        if (param === null) return;
         const delta = gumballSnapScalar(param - state.startAxisParam, config.translationSnap);
         target.position.set(state.before.position[0] + axisDir[0] * delta, state.before.position[1] + axisDir[1] * delta, state.before.position[2] + axisDir[2] * delta);
       } else if (kind === "moveXY" || kind === "moveYZ" || kind === "moveXZ") {
@@ -15119,7 +15322,9 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
       } else if (kind === "scaleX" || kind === "scaleY" || kind === "scaleZ") {
         const localAxis = GUMBALL_AXIS_BY_KIND[kind]!;
         const axisDir = gumballWorldAxis(localAxis, quat);
-        const param = gumballRayAxisParameter(ray.origin, ray.dir, pivot, axisDir);
+        const eye = gumballEyeFromPivot(camera, pivot);
+        const param = gumballProjectRayOntoAxis(ray.origin, ray.dir, pivot, axisDir, eye);
+        if (param === null) return;
         let factor = gumballAxisScaleFactor(state.startScaleProj, param);
         if (config.scaleSnap && config.scaleSnap > 0) factor = gumballSnapScalar(factor, config.scaleSnap);
         const axisIndex = kind === "scaleX" ? 0 : kind === "scaleY" ? 1 : 2;
@@ -15149,13 +15354,15 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   const endDrag = reactHostPort.useCallback(() => {
     const state = dragRef.current;
     dragRef.current = null;
+    setActiveKind(null);
     window.removeEventListener("pointermove", onWindowMoveRef.current);
     window.removeEventListener("pointerup", onWindowUpRef.current);
     if (controls) controls.enabled = true;
     props.onDraggingChanged?.(false);
     if (!state) return;
     props.onDragEnd?.(state.kind, state.before, gumballPoseFromObject3D(props.target));
-  }, [controls, props]);
+    invalidate();
+  }, [controls, invalidate, props]);
 
   const onWindowMove = reactHostPort.useCallback(
     (event: PointerEvent) => {
@@ -15200,7 +15407,8 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
       let startUniformScale: GumballVec3 = gumballV3(1, 0, 0);
       if (kind === "moveX" || kind === "moveY" || kind === "moveZ" || kind === "scaleX" || kind === "scaleY" || kind === "scaleZ") {
         const axisDir = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
-        startAxisParam = gumballRayAxisParameter(ray.origin, ray.dir, pivot, axisDir);
+        const eye = gumballEyeFromPivot(camera, pivot);
+        startAxisParam = gumballProjectRayOntoAxis(ray.origin, ray.dir, pivot, axisDir, eye) ?? 0;
         if (kind.startsWith("scale")) startScaleProj = startAxisParam;
       } else if (kind.startsWith("move")) {
         const planeNormal = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
@@ -15214,6 +15422,8 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         startUniformScale = gumballSub(hit, pivot);
       }
       dragRef.current = { kind, before, startAxisParam, startPlanePoint, startRotateVec, startScaleProj, startUniformScale };
+      setActiveKind(kind);
+      setHovered(kind);
       if (controls) controls.enabled = false;
       props.onDraggingChanged?.(true);
       props.onDragStart?.(kind, before);
@@ -15223,11 +15433,32 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
     [camera, controls, gl.domElement, onWindowMove, onWindowUp, props],
   );
 
+  const handlePointerOver = reactHostPort.useCallback(
+    (kind: GumballHandleKind) => {
+      setHovered(kind);
+      invalidate();
+    },
+    [invalidate],
+  );
+
+  const handlePointerOut = reactHostPort.useCallback(() => {
+    if (!dragRef.current) setHovered(null);
+    invalidate();
+  }, [invalidate]);
+
   if (!gumballConfigVisible(config)) return null;
 
   return sceneHostPort.fiber.createPortal(
     <group ref={groupRef} frustumCulled={false}>
-      <GumballHandles config={config} hovered={hovered} onPointerDown={beginDrag} onPointerOver={setHovered} onPointerOut={() => setHovered(null)} />
+      <GumballHandles
+        config={config}
+        palette={palette}
+        hovered={hovered}
+        active={activeKind}
+        onPointerDown={beginDrag}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+      />
     </group>,
     scene,
   );
@@ -18448,9 +18679,30 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("referenceMediaKindFromUrl", () => {
+    it("infers image, svg, and pdf kinds from paths", () => {
+      expect(referenceMediaKindFromUrl("/infinite-fixture/sketch.png")).toBe("image");
+      expect(referenceMediaKindFromUrl("/infinite-fixture/icon.svg")).toBe("svg");
+      expect(referenceMediaKindFromUrl("/infinite-fixture/site.pdf")).toBe("pdf");
+      expect(referenceMediaKindFromUrl("/unknown.bin")).toBeNull();
+    });
+  });
+
   describe("UnifiedGumball math", () => {
     it("computes axis translate, plane hit, rotate angle, scale factor, and snapping", () => {
       expect(gumballRayAxisParameter([0, 0, 0], [0, 0, 1], [1, 2, 3], [1, 0, 0])).toBeCloseTo(1, 5);
+      const eye: readonly [number, number, number] = [0, 0, 1];
+      const axis: readonly [number, number, number] = [1, 0, 0];
+      const pivot: readonly [number, number, number] = [0, 0, 0];
+      const norm = (v: readonly [number, number, number]): readonly [number, number, number] => {
+        const l = Math.hypot(v[0], v[1], v[2]);
+        return [v[0] / l, v[1] / l, v[2] / l];
+      };
+      const leftParam = gumballProjectRayOntoAxis([0, 0, 10], norm([-0.2, 0, -1]), pivot, axis, eye);
+      const rightParam = gumballProjectRayOntoAxis([0, 0, 10], norm([0.2, 0, -1]), pivot, axis, eye);
+      expect(leftParam).not.toBeNull();
+      expect(rightParam).not.toBeNull();
+      expect(rightParam! > leftParam!).toBe(true);
       expect(gumballRayPlanePoint([0, 0, 0], [0, 0, 1], [0, 0, 0], [0, 0, 1])).toEqual([0, 0, 0]);
       expect(gumballAxisRotateAngle([1, 0, 0], [0, 1, 0], [0, 0, 1])).toBeCloseTo(Math.PI / 2, 5);
       expect(gumballAxisScaleFactor(2, 4)).toBe(2);
@@ -18460,6 +18712,13 @@ if (import.meta.vitest) {
       expect(gumballHandleKindToTransformMode("scaleUniform")).toBe("scale");
       expect(gumballConfigVisible(DEFAULT_GUMBALL_CONFIG)).toBe(true);
       expect(gumballConfigVisible({ moveAxes: false, movePlanes: false, rotate: false, scaleAxes: false, scaleUniform: false })).toBe(false);
+      expect(gumballHandleVisualState("moveX", "moveY", null)).toBe("dimmed");
+      expect(gumballHandleVisualState("moveX", "moveX", null)).toBe("hover");
+      expect(gumballHandleVisualState("moveX", null, "moveX")).toBe("active");
+      expect(gumballHandleVisualState("moveY", "moveX", "moveX")).toBe("dimmed");
+      const palette = resolveGumballVisualPalette();
+      expect(gumballResolveHandleVisual("#ff0000", "hover", palette).color).toBe(palette.hover);
+      expect(gumballResolveHandleVisual("#ff0000", "active", palette).color).toBe(palette.active);
     });
   });
 

@@ -148,11 +148,24 @@ struct AttractionProps {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorldVolumeProps {
+    id: String,
+    origin: Vec3,
+    #[serde(default)]
+    orientation: Option<Quat>,
+    #[serde(default)]
+    scale: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct FixtureV1 {
     #[serde(default)]
     attractions: Vec<AttractionProps>,
     #[serde(default)]
     objects: Vec<FixtureObject>,
+    #[serde(default, rename = "targetVolumes")]
+    target_volumes: Vec<WorldVolumeProps>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -442,6 +455,60 @@ fn world_bounds(body: &CollisionBody, world: &Isometry3<f32>) -> (Point3<f32>, P
         max = max.sup(&w);
     }
     (min, max)
+}
+
+fn volume_scale_vec(scale: &Option<serde_json::Value>) -> [f32; 3] {
+    match scale {
+        Some(serde_json::Value::Number(n)) => {
+            let s = n.as_f64().unwrap_or(1.0) as f32;
+            [s, s, s]
+        }
+        Some(serde_json::Value::Array(values)) if values.len() == 3 => {
+            let read = |index: usize| values.get(index).and_then(|v| v.as_f64()).unwrap_or(1.0) as f32;
+            [read(0), read(1), read(2)]
+        }
+        _ => [1.0, 1.0, 1.0],
+    }
+}
+
+fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3<f32>, max: Point3<f32>) -> bool {
+    if volumes.is_empty() {
+        return true;
+    }
+    let corners = [
+        min,
+        Point3::new(max.x, min.y, min.z),
+        Point3::new(min.x, max.y, min.z),
+        Point3::new(max.x, max.y, min.z),
+        Point3::new(min.x, min.y, max.z),
+        Point3::new(max.x, min.y, max.z),
+        Point3::new(min.x, max.y, max.z),
+        max,
+    ];
+    for volume in volumes {
+        let scale = volume_scale_vec(&volume.scale);
+        let hx = scale[0] * 0.5 + 1e-3;
+        let hy = scale[1] * 0.5 + 1e-3;
+        let hz = scale[2] * 0.5 + 1e-3;
+        let world = pose_isometry(
+            volume.origin,
+            volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+            &None,
+        );
+        let inv = world.inverse();
+        let mut inside = true;
+        for corner in corners {
+            let local = inv * corner;
+            if local.x.abs() > hx || local.y.abs() > hy || local.z.abs() > hz {
+                inside = false;
+                break;
+            }
+        }
+        if inside {
+            return true;
+        }
+    }
+    false
 }
 
 fn point_inside_body(body: &CollisionBody, world: &Isometry3<f32>, point: Point3<f32>) -> bool {
@@ -1460,6 +1527,13 @@ impl Puzzle3dEngine {
                 };
                 if !self.meshes.contains_key(&preview.mesh_url) {
                     continue;
+                }
+                let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
+                if let Some(body) = self.meshes.get(&preview.mesh_url) {
+                    let (min, max) = world_bounds(body, &preview_world);
+                    if !world_volumes_contain_aabb(&scene.fixture.target_volumes, min, max) {
+                        continue;
+                    }
                 }
                 let placed_snapshot: Vec<PlacedCollisionEntry> = fill
                     .placed

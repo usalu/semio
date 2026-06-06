@@ -72,7 +72,11 @@ import {
   puzzle3dBrushMeshRootForFill,
   applyRelocateToFixture,
   applyReferenceRelocateToFixture,
+  applyTargetVolumeRelocateToFixture,
   addReferenceToFixture,
+  addTargetVolumeToFixture,
+  removeTargetVolumeFromFixture,
+  updatePuzzle3dTargetVolumeInFixture,
   applyObjectKindToFixtureObject,
   fixtureAppearanceFingerprint,
   fixturePoseFingerprint,
@@ -111,6 +115,8 @@ import {
   type RelocatePayload,
   type WorldReferenceRelocatePayload,
   type WorldReferenceProps,
+  type WorldVolumeRelocatePayload,
+  type WorldVolumeProps,
   type SelectionMethod,
   type SelectionMode,
   PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID,
@@ -121,6 +127,8 @@ import {
   puzzle3dBrushEngagementSourceRef,
   publishPuzzle3dBrushKindWeights,
   PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID,
+  PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID,
+  PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID,
   PUZZLE_3D_ENGAGEMENT_ZOOM_ID,
   getPuzzle3dZoomToSelectionEpoch,
   getPuzzle3dZoomToSelectionTarget,
@@ -458,6 +466,31 @@ export function getPuzzle3dFillDistributionInvalidatedEpoch(): number {
   return puzzle3dFillDistributionInvalidatedEpoch;
 }
 
+let puzzle3dFillTargetVolumesInvalidatedEpoch = 0;
+const puzzle3dFillTargetVolumesInvalidatedListeners = new Set<() => void>();
+
+/** @emoji 🧊 Subscribes when target volumes invalidate the cached fill sequence. */
+export function subscribePuzzle3dFillTargetVolumesInvalidated(listener: () => void): () => void {
+  puzzle3dFillTargetVolumesInvalidatedListeners.add(listener);
+  return () => {
+    puzzle3dFillTargetVolumesInvalidatedListeners.delete(listener);
+  };
+}
+
+/** @emoji 🧊 Clears cached fill placements so the next fill prep uses current target volumes. */
+export function invalidatePuzzle3dFillForTargetVolumesChange(): void {
+  invalidatePuzzle3dFillForDistributionChange();
+  puzzle3dFillTargetVolumesInvalidatedEpoch += 1;
+  for (const listener of puzzle3dFillTargetVolumesInvalidatedListeners) {
+    listener();
+  }
+}
+
+/** @emoji 🧊 Epoch bumped when target volumes invalidate fill. */
+export function getPuzzle3dFillTargetVolumesInvalidatedEpoch(): number {
+  return puzzle3dFillTargetVolumesInvalidatedEpoch;
+}
+
 function nextPuzzle3dFillSeed(): number {
   return (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
 }
@@ -505,6 +538,7 @@ function startPuzzle3dFillBuild(
   kindCatalogs: KindCatalogBundle | undefined,
   kindCompatibility: readonly KindCompatEntry[] | undefined,
   overlapBudget: number,
+  targetVolumes: readonly WorldVolumeProps[] = core.targetVolumes ?? [],
 ): void {
   cancelPuzzle3dFillBuild();
   const committedCount = committedSequence.length;
@@ -590,6 +624,7 @@ function startPuzzle3dFillBuild(
     overlapBudget,
     meshRootForUrl: puzzle3dBrushMeshRootForFill,
     weights: puzzle3dBrushKindWeightsRef.current,
+    targetVolumes,
   });
   const tick = (): void => {
     const stepper = puzzle3dFillBuildStepper;
@@ -631,6 +666,7 @@ export function preparePuzzle3dFillSession(
   kindCatalogs: KindCatalogBundle | undefined,
   kindCompatibility: readonly KindCompatEntry[] | undefined,
   overlapBudget: number,
+  targetVolumes: readonly WorldVolumeProps[] = baseFixture.targetVolumes ?? [],
 ): void {
   startPuzzle3dFillBuild(
     structuredClone(baseFixture),
@@ -639,6 +675,7 @@ export function preparePuzzle3dFillSession(
     kindCatalogs,
     kindCompatibility,
     overlapBudget,
+    targetVolumes,
   );
 }
 
@@ -661,6 +698,7 @@ export function rerollPuzzle3dFillTail(
     kindCatalogs,
     kindCompatibility,
     overlapBudget,
+    session.baseFixture.targetVolumes ?? [],
   );
 }
 
@@ -829,6 +867,7 @@ export const PUZZLE_3D_PLAY_EMPTY_SELECTION: Puzzle3dPlaySelection = {
   vortexIds: [],
   attractionIds: [],
   referenceIds: [],
+  targetVolumeIds: [],
 };
 
 /** @emoji 📸 Stable idle snapshot for {@link useSyncExternalStore} when no controller is mounted. */
@@ -858,6 +897,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   compatibleObjectsCount: 0,
   targetRingCount: 0,
   activeTool: "select",
+  fillEditTargetVolumes: false,
   brushPlacementOverlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
   cameraSeedEpoch: 0,
   hoverFocus: { hoverTarget: null, kindHover: null },
@@ -1586,6 +1626,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   private compatibleObjectsCount: number;
   private targetRingCount: number;
   private brushPlacementOverlapBudget: number;
+  private fillEditTargetVolumes: boolean;
   private objectKindIds: string[] = [];
   private vortexKindIds: string[] = [];
   private objectKindWeights: KindWeightMap = {};
@@ -1627,6 +1668,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.compatibleObjectsCount = 0;
     this.targetRingCount = 0;
     this.brushPlacementOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
+    this.fillEditTargetVolumes = false;
     this.windowEngagement = this.placeholderWindowEngagement();
     this.syncBrushKindWeightsFromFixture();
     this.rebuildShellMode();
@@ -1698,6 +1740,13 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           return fixture;
         }
         return updatePuzzle3dReferenceInFixture(fixture, target.id, { [flag]: !(reference[flag] === true) });
+      }
+      if (target.kind === "targetVolume") {
+        const volume = (fixture.targetVolumes ?? []).find((row) => row.id === target.id);
+        if (!volume) {
+          return fixture;
+        }
+        return updatePuzzle3dTargetVolumeInFixture(fixture, target.id, { [flag]: !(volume[flag] === true) });
       }
       if (target.kind === "object") {
         const object = fixture.objects.find((row) => row.id === target.id);
@@ -1789,6 +1838,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       compatibleObjectsCount: this.compatibleObjectsCount,
       targetRingCount: this.targetRingCount,
       brushPlacementOverlapBudget: this.brushPlacementOverlapBudget,
+      fillEditTargetVolumes: this.fillEditTargetVolumes,
       cameraSeedEpoch: this.cameraSeedEpoch,
       hoverFocus: this.hoverFocus,
     };
@@ -1903,6 +1953,34 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.fixture = next;
   }
 
+  /** @emoji 🧊 Persists a target-volume gumball relocate on the fixture. */
+  patchTargetVolumeRelocate(payload: WorldVolumeRelocatePayload): void {
+    if (!this.fixture) {
+      return;
+    }
+    const next = applyTargetVolumeRelocateToFixture(this.fixture, payload);
+    if (next === this.fixture) {
+      return;
+    }
+    this.fixture = next;
+    this.fixtureRevision += 1;
+    invalidatePuzzle3dFillForTargetVolumesChange();
+    this.notifySnapshot();
+    console.log("[DEBUG] puzzle3d patchTargetVolumeRelocate", payload.volumeId);
+  }
+
+  /** @emoji 🧊 Adds a drawn target volume and selects it for immediate edit. */
+  addTargetVolume(volume: WorldVolumeProps): void {
+    if (!this.fixture) {
+      return;
+    }
+    this.patchFixture((fixture) => addTargetVolumeToFixture(fixture, volume));
+    this.selection = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [volume.id] };
+    invalidatePuzzle3dFillForTargetVolumesChange();
+    this.notifySelection();
+    console.log("[DEBUG] puzzle3d addTargetVolume", volume.id);
+  }
+
   /** @emoji 🖼️ Persists a reference-plane gumball relocate on the fixture. */
   patchReferenceRelocate(payload: WorldReferenceRelocatePayload): void {
     if (!this.fixture) {
@@ -1935,7 +2013,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       widthWorld: 20,
     };
     this.patchFixture((fixture) => addReferenceToFixture(fixture, reference));
-    this.selection = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [id] };
+    this.selection = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [id], targetVolumeIds: [] };
     this.notifySelection();
     console.log("[DEBUG] puzzle3d importReference", id, args.url);
   }
@@ -2266,10 +2344,32 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       command: "setGumballConfigToggle",
       args: { key },
     }));
+    const referenceTools: ToolItem[] = [
+      {
+        id: "puzzle3d.importReference.sketch",
+        kind: "button",
+        iconId: "image",
+        text: "Import Sketch",
+        order: 100,
+        controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
+        command: "importReference",
+        args: { url: "/infinite-fixture/sketch.png" },
+      },
+      {
+        id: "puzzle3d.importReference.sitePdf",
+        kind: "button",
+        iconId: "file-text",
+        text: "Import Site Pdf",
+        order: 101,
+        controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
+        command: "importReference",
+        args: { url: "/infinite-fixture/site.pdf", page: 1 },
+      },
+    ];
     this.mainMode.tools = {
       selection: buildPlaygroundBrowseSelectionTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.selectableKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
       filter: buildPlaygroundBrowseFilterTools(PUZZLE_3D_PLAY_KINDS, puzzle3dPlayPickKindLabel, this.visibleKinds, PUZZLE_3D_PLAY_CONTROLLER_ID),
-      actions: relocateTools,
+      actions: [...relocateTools, ...referenceTools],
     };
   }
 
@@ -2299,6 +2399,10 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       referenceIds: selection.referenceIds.filter((referenceId) => {
         const reference = (this.fixture.references ?? []).find((row) => row.id === referenceId);
         return reference ? entitySelectable(reference) : false;
+      }),
+      targetVolumeIds: selection.targetVolumeIds.filter((volumeId) => {
+        const volume = (this.fixture.targetVolumes ?? []).find((row) => row.id === volumeId);
+        return volume ? entitySelectable(volume) : false;
       }),
     };
   }
@@ -2370,8 +2474,49 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         const tool = (args as { tool?: Puzzle3dActiveTool }).tool;
         if (tool === "select" || tool === "brush" || tool === "fill") {
           this.activeTool = tool;
+          if (tool !== "fill") {
+            this.fillEditTargetVolumes = false;
+          }
         }
         this.notifySnapshot();
+        return;
+      }
+      case "setFillEditTargetVolumes": {
+        const value = (args as { value?: boolean }).value;
+        if (typeof value === "boolean") {
+          this.fillEditTargetVolumes = value;
+        } else {
+          this.fillEditTargetVolumes = !this.fillEditTargetVolumes;
+        }
+        if (this.activeTool !== "fill") {
+          this.fillEditTargetVolumes = false;
+        }
+        this.notifySnapshot();
+        return;
+      }
+      case "deleteSelectedTargetVolume": {
+        if (!this.fixture) {
+          return;
+        }
+        const ids = this.selection.targetVolumeIds;
+        if (!ids.length) {
+          return;
+        }
+        this.patchFixture((fixture) => ids.reduce((next, id) => removeTargetVolumeFromFixture(next, id), fixture));
+        this.selection = {
+          ...this.selection,
+          targetVolumeIds: this.selection.targetVolumeIds.filter((id) => !ids.includes(id)),
+        };
+        invalidatePuzzle3dFillForTargetVolumesChange();
+        this.notifySelection();
+        return;
+      }
+      case "addTargetVolume": {
+        const volume = (args as { volume?: WorldVolumeProps }).volume;
+        if (!volume?.id) {
+          return;
+        }
+        this.addTargetVolume(volume);
         return;
       }
       case "setFillCount": {
@@ -2477,6 +2622,15 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           requestPuzzle3dZoomToSelection(this.selection);
           return;
         }
+        if (optionId === PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID) {
+          this.fillEditTargetVolumes = !this.fillEditTargetVolumes;
+          this.notifySnapshot();
+          return;
+        }
+        if (optionId === PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID) {
+          this.run("deleteSelectedTargetVolume", {});
+          return;
+        }
         this.hostBridge?.runHostCommand(command, args);
         return;
       }
@@ -2542,6 +2696,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
             vortexIds: [...(next.vortexIds ?? [])],
             attractionIds: [...(next.attractionIds ?? [])],
             referenceIds: [...(next.referenceIds ?? [])],
+            targetVolumeIds: [...(next.targetVolumeIds ?? [])],
           });
           if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
             return;
@@ -2553,7 +2708,9 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       }
       case "setSelectedId": {
         const id = (args as { id: string | null }).id;
-        const resolved: Puzzle3dPlaySelection = id ? { objectIds: [id], vortexIds: [], attractionIds: [], referenceIds: [] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
+        const resolved: Puzzle3dPlaySelection = id
+          ? { objectIds: [id], vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] }
+          : PUZZLE_3D_PLAY_EMPTY_SELECTION;
         if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
           return;
         }
@@ -2567,6 +2724,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           objectIds: [...(snap.objectIds ?? [])],
           vortexIds: [...(snap.vortexIds ?? [])],
           attractionIds: [...(snap.attractionIds ?? [])],
+          referenceIds: [...(snap.referenceIds ?? [])],
+          targetVolumeIds: [...(snap.targetVolumeIds ?? [])],
         });
         if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
           return;
@@ -2871,7 +3030,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (newIds.length === 0) {
       return;
     }
-    this.selection = this.filterSelectionByPlaygroundKinds({ objectIds: newIds, vortexIds: [], attractionIds: [], referenceIds: [] });
+    this.selection = this.filterSelectionByPlaygroundKinds({ objectIds: newIds, vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] });
     this.notifySelection();
     console.log("[DEBUG] puzzle3d duplicateSelection", newIds);
   }
@@ -2885,7 +3044,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       return;
     }
     const objectIds = this.fixture.objects.filter((row) => row.objectKind === primary.objectKind).map((row) => row.id);
-    const resolved = this.filterSelectionByPlaygroundKinds({ objectIds, vortexIds: [], attractionIds: [], referenceIds: [] });
+    const resolved = this.filterSelectionByPlaygroundKinds({ objectIds, vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] });
     if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
       return;
     }
@@ -2913,6 +3072,7 @@ export interface Puzzle3dPlaySnapshot {
   readonly depthVariableLod: boolean;
   readonly gumballConfig: GumballConfig;
   readonly activeTool: Puzzle3dActiveTool;
+  readonly fillEditTargetVolumes: boolean;
   readonly selection: Puzzle3dPlaySelection;
   readonly selectedId: string | null;
   readonly selectedLabel: string | null;

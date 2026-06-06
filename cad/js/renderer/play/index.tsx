@@ -31,7 +31,9 @@ import {
   applyWorldReferenceTransform,
   createOrbitCameraViewLayoutDescriptors,
   createOrbitCameraViewTemplates,
+  orbitCameraProjectionForView,
   type OrbitCameraViewId,
+  type OrbitCameraProjection,
   type WorldReferenceProps,
   type WorldReferenceRelocatePayload,
 } from "@infinite/world/r3f";
@@ -641,6 +643,7 @@ export class CadPlayShellController extends Controller {
   private gumballConfigByPane: Record<CadPlayPaneId, CadGumballConfig>;
   private engagementByPane: Record<CadPlayPaneId, WindowEngagement | undefined>;
   private viewSeedByInstance = new Map<string, { readonly view: OrbitCameraViewId; readonly nonce: number }>();
+  private projectionByInstance = new Map<string, OrbitCameraProjection>();
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(CAD_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -707,10 +710,20 @@ export class CadPlayShellController extends Controller {
     return { view: entry.view, seedKey: `${key}:${entry.nonce}` };
   }
 
+  /** @emoji 📐 Returns the active orthographic/perspective mode for one shell instance. */
+  getOrbitProjectionForInstance(instanceId?: string | null): OrbitCameraProjection {
+    return this.projectionByInstance.get(instanceId ?? "") ?? "perspective";
+  }
+
+  private setOrbitProjection(projection: OrbitCameraProjection, instanceId?: string): void {
+    this.projectionByInstance.set(instanceId ?? "", projection);
+  }
+
   private applyOrbitCameraView(view: OrbitCameraViewId, instanceId?: string): void {
     const key = instanceId ?? "";
     const prev = this.viewSeedByInstance.get(key);
     this.viewSeedByInstance.set(key, { view, nonce: (prev?.nonce ?? 0) + 1 });
+    this.projectionByInstance.set(key, orbitCameraProjectionForView(view));
   }
 
   /** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures and live interaction engagement per pane. */
@@ -813,6 +826,13 @@ export class CadPlayShellController extends Controller {
         const instanceId = (args as { instanceId?: string }).instanceId;
         if (!view) break;
         this.applyOrbitCameraView(view, instanceId);
+        break;
+      }
+      case "setOrbitProjection": {
+        const projection = (args as { projection?: OrbitCameraProjection }).projection;
+        const instanceId = (args as { instanceId?: string }).instanceId;
+        if (projection !== "orthographic" && projection !== "perspective") break;
+        this.setOrbitProjection(projection, instanceId);
         break;
       }
       case "focusModelDefinition":
@@ -1418,6 +1438,9 @@ interface PlaySessionProps {
   readonly onDeleteSelection: () => boolean;
   readonly cameraView?: OrbitCameraViewId;
   readonly cameraViewSeedKey?: string | number;
+  readonly orbitProjection?: OrbitCameraProjection;
+  readonly onOrbitViewSelect?: (view: OrbitCameraViewId) => void;
+  readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;
   readonly hoveredReferenceId?: string | null;
@@ -1462,6 +1485,9 @@ function PlaySession({
   onDeleteSelection,
   cameraView,
   cameraViewSeedKey,
+  orbitProjection,
+  onOrbitViewSelect,
+  onOrbitProjectionChange,
   worldReferences = [],
   selectedReferenceIds,
   hoveredReferenceId = null,
@@ -1532,7 +1558,12 @@ function PlaySession({
       transformGumballConfig={transformGumballConfig}
       onTransformGumballCommit={onTransformGumballCommit}
       onDeleteSelection={onDeleteSelection}
-      spatialView={cameraView !== undefined && cameraViewSeedKey !== undefined ? { cameraView, cameraViewSeedKey } : undefined}
+      spatialView={{
+        ...(cameraView !== undefined && cameraViewSeedKey !== undefined ? { cameraView, cameraViewSeedKey } : {}),
+        orbitProjection,
+        onOrbitViewSelect,
+        onOrbitProjectionChange,
+      }}
       worldReferences={worldReferences}
       selectedReferenceIds={selectedReferenceIds}
       hoveredReferenceId={hoveredReferenceId}
@@ -1593,6 +1624,9 @@ interface CadPlayModelSpaceValue {
   readonly handleTransformGumballCommit: (modelDefinitionId: string, diff: ModelDiff) => void;
   readonly handleDeleteSelection: () => boolean;
   readonly cameraViewSeedForInstance: (instanceId?: string | null) => { readonly view: OrbitCameraViewId; readonly seedKey: string } | null;
+  readonly orbitProjectionForInstance: (instanceId?: string | null) => OrbitCameraProjection;
+  readonly applyOrbitViewForInstance: (view: OrbitCameraViewId, instanceId?: string | null) => void;
+  readonly setOrbitProjectionForInstance: (projection: OrbitCameraProjection, instanceId?: string | null) => void;
 }
 
 const CadPlayModelSpaceContext = reactHostPort.createContext<CadPlayModelSpaceValue | null>(null);
@@ -1617,6 +1651,22 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const cameraViewSeedForInstance = reactHostPort.useCallback(
     (instanceId?: string | null) => shellController.getCameraViewSeedForInstance(instanceId),
     [shellController, shellGeneration],
+  );
+  const orbitProjectionForInstance = reactHostPort.useCallback(
+    (instanceId?: string | null) => shellController.getOrbitProjectionForInstance(instanceId),
+    [shellController, shellGeneration],
+  );
+  const applyOrbitViewForInstance = reactHostPort.useCallback(
+    (view: OrbitCameraViewId, instanceId?: string | null) => {
+      shellController.run(ORBIT_CAMERA_VIEW_COMMAND, { view, instanceId: instanceId ?? undefined });
+    },
+    [shellController],
+  );
+  const setOrbitProjectionForInstance = reactHostPort.useCallback(
+    (projection: OrbitCameraProjection, instanceId?: string | null) => {
+      shellController.run("setOrbitProjection", { projection, instanceId: instanceId ?? undefined });
+    },
+    [shellController],
   );
   const publishCadPlayChrome = useCadPlayChromePublish();
   const pointerFocusRef = reactHostPort.useRef<AppPointerFocusStore<string> | null>(null);
@@ -2175,9 +2225,13 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       handleTransformGumballCommit,
       handleDeleteSelection,
       cameraViewSeedForInstance,
+      orbitProjectionForInstance,
+      applyOrbitViewForInstance,
+      setOrbitProjectionForInstance,
     }),
     [
       activeModelDefinitionId,
+      applyOrbitViewForInstance,
       cameraViewSeedForInstance,
       documentModel,
       exportBaseName,
@@ -2218,6 +2272,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       brepjsKernel,
       handleTransformGumballCommit,
       handleDeleteSelection,
+      orbitProjectionForInstance,
+      setOrbitProjectionForInstance,
     ],
   );
 
@@ -2310,8 +2366,17 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
     handleTransformGumballCommit,
     handleDeleteSelection,
     cameraViewSeedForInstance,
+    orbitProjectionForInstance,
+    applyOrbitViewForInstance,
+    setOrbitProjectionForInstance,
   } = useCadPlayModelSpace();
   const cameraSeed = cameraViewSeedForInstance(instanceId);
+  const orbitProjection = orbitProjectionForInstance(instanceId);
+  const onOrbitViewSelect = reactHostPort.useCallback((view: OrbitCameraViewId) => applyOrbitViewForInstance(view, instanceId), [applyOrbitViewForInstance, instanceId]);
+  const onOrbitProjectionChange = reactHostPort.useCallback(
+    (projection: OrbitCameraProjection) => setOrbitProjectionForInstance(projection, instanceId),
+    [instanceId, setOrbitProjectionForInstance],
+  );
   const modelDefinitionId = cadPlayModelDefinitionIdForPane(pane);
   const captureGlobalKeys = activeModelDefinitionId === modelDefinitionId;
   const interactionId = interactionIdForPane(pane);
@@ -2398,6 +2463,9 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         onDeleteSelection={handleDeleteSelection}
         cameraView={cameraSeed?.view}
         cameraViewSeedKey={cameraSeed?.seedKey}
+        orbitProjection={orbitProjection}
+        onOrbitViewSelect={onOrbitViewSelect}
+        onOrbitProjectionChange={onOrbitProjectionChange}
         worldReferences={shapeReferences}
         selectedReferenceIds={pane === "shape" ? selectedReferenceIds : undefined}
         hoveredReferenceId={pane === "shape" ? hoveredReferenceId : null}

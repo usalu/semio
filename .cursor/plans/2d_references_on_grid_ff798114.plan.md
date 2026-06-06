@@ -7,31 +7,31 @@ todos:
     status: completed
   - id: media-port
     content: Add ReferenceMediaPort + default wiring (TextureLoader for image, canvas rasterize for svg, pdfjs-dist for pdf) in ui/react, behind interface
-    status: in_progress
+    status: completed
   - id: world-primitive
     content: "Add #region Reference to infinite/world/r3f: WorldReferenceProps, WorldReferencePlane, WorldReferenceGumball, WorldReferenceLayer, applyWorldReferenceTransform; reuse WorldEntityFlags + UnifiedGumball"
-    status: pending
+    status: completed
   - id: puzzle-schema
     content: Extend puzzle 3d FixtureV1 with references[] + parse/encode + pure ops (add/update/relocate)
-    status: pending
+    status: completed
   - id: puzzle-scene
     content: Render WorldReferenceLayer in puzzle 3d scene with registry selection/hover and relocate wiring
-    status: pending
+    status: completed
   - id: puzzle-play
     content: "Puzzle 3d play: import-reference command, file drop placement, hierarchy References group with hide/lock toggles, toolbar/launch.json entries"
-    status: pending
+    status: completed
   - id: cad-scene
     content: "CAD: add cad.references WorldLayer in InteractionSpatialView + references store + selection/gumball commit + flags filtering"
-    status: pending
+    status: completed
   - id: cad-play
     content: "CAD play: import-reference command, hierarchy References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
-    status: pending
+    status: completed
   - id: assets-fixtures
     content: Add Vite static alias for infinite/fixture and seed puzzle + CAD fixtures referencing sketch.png and site.pdf
-    status: pending
+    status: completed
   - id: verify
     content: Extend existing tests; run play apps and confirm runtime move/resize/rotate/lock/hide for png + pdf with [DEBUG] logs; close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

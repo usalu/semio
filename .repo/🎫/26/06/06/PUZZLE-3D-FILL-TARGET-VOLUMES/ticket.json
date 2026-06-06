@@ -1,0 +1,9 @@
+{
+  "title": "Fill Target Volumes",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Extend puzzle 3d fill tool with persisted target volumes: oriented boxes drawn via 3-point + height, selectable/movable/scalable, constraining fill suggestions to AABB containment.",
+  "goal": "🎯puzzle3d🎯puzzle3dplay",
+  "summary": "",
+  "sessions": []
+}

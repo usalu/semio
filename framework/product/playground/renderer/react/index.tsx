@@ -1562,6 +1562,7 @@ import {
   PUZZLE_3D_FILL_COUNT_MAX,
   subscribePuzzle3dFillSessionReady,
   subscribePuzzle3dFillDistributionInvalidated,
+  subscribePuzzle3dFillTargetVolumesInvalidated,
   getPuzzle3dFillSessionReadyEpoch,
   parseKindCatalogs,
   parseKindCompatibility,
@@ -1662,7 +1663,11 @@ function Puzzle3dPlayEngagementPublisher(props: {
   const engagementSpecRef = reactHostPort.useRef<EngagementSpec | null>(null);
   const brushEngagementEpoch = reactHostPort.useSyncExternalStore(subscribePuzzle3dBrushEngagementSource, getPuzzle3dBrushEngagementEpoch, getPuzzle3dBrushEngagementEpoch);
   const brushSource = puzzle3dBrushEngagementSourceRef.current;
-  const selectionCount = snap.selection.objectIds.length + snap.selection.vortexIds.length + snap.selection.attractionIds.length;
+  const selectionCount =
+    snap.selection.objectIds.length +
+    snap.selection.vortexIds.length +
+    snap.selection.attractionIds.length +
+    snap.selection.targetVolumeIds.length;
   const rememberEngagementRepeat = reactHostPort.useCallback(
     (key: string) => {
       bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "rememberEngagementRepeat", { key });
@@ -1758,6 +1763,12 @@ function Puzzle3dPlayEngagementPublisher(props: {
       onSelectTool();
     }
   }, [onSelectTool, snap.activeTool]);
+  const onDeleteSelectedTargetVolume = reactHostPort.useCallback(() => {
+    bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "deleteSelectedTargetVolume", {});
+  }, [bus]);
+  const onToggleFillEditTargetVolumes = reactHostPort.useCallback(() => {
+    bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillEditTargetVolumes", {});
+  }, [bus]);
   const onZoomToSelection = reactHostPort.useCallback(() => {
     requestPuzzle3dZoomToSelection(snap.selection);
   }, [snap.selection]);
@@ -1807,6 +1818,8 @@ function Puzzle3dPlayEngagementPublisher(props: {
         cmdLine,
         fillCount,
         fillBuildProgress,
+        fillEditTargetVolumes: snap.fillEditTargetVolumes,
+        selectedTargetVolumeCount: snap.selection.targetVolumeIds.length,
         selectionCount,
         onCmdLineChange: setCmdLine,
         onCmdLineSubmit,
@@ -1816,6 +1829,8 @@ function Puzzle3dPlayEngagementPublisher(props: {
         onBrushTool,
         onFillTool,
         onFillCount,
+        onToggleFillEditTargetVolumes,
+        onDeleteSelectedTargetVolume,
         onCycleBrushCandidate: () => brushSource.cycleCandidate(),
         onPickBrushCandidate: (index) => {
           const candidate = brushSource.candidates[index];
@@ -1829,7 +1844,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushTargetActive: brushSource.targetActive,
         brushPlacementProbePending: brushSource.placementProbePending,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool],
+    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -1960,6 +1975,18 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
     },
     [ctrl],
   );
+  const onTargetVolumeRelocatePersist = reactHostPort.useCallback(
+    (payload: import("@infinite/world/r3f").WorldVolumeRelocatePayload) => {
+      ctrl?.patchTargetVolumeRelocate(payload);
+    },
+    [ctrl],
+  );
+  const onTargetVolumeDrawPersist = reactHostPort.useCallback(
+    (volume: import("@infinite/world/r3f").WorldVolumeProps) => {
+      ctrl?.addTargetVolume(volume);
+    },
+    [ctrl],
+  );
   const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
   const onCanvasHover = reactHostPort.useCallback(
     (payload: Puzzle3dHoverPayload) => {
@@ -1999,6 +2026,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
   const fillPrepareTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
   const fillSessionPreparedRef = reactHostPort.useRef(false);
   const [fillDistributionEpoch, setFillDistributionEpoch] = reactHostPort.useState(0);
+  const [fillTargetVolumesEpoch, setFillTargetVolumesEpoch] = reactHostPort.useState(0);
   reactHostPort.useEffect(() => {
     if (snap.activeTool !== "fill") {
       fillSessionPreparedRef.current = false;
@@ -2009,6 +2037,14 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
       subscribePuzzle3dFillDistributionInvalidated(() => {
         fillSessionPreparedRef.current = false;
         setFillDistributionEpoch((epoch) => epoch + 1);
+      }),
+    [],
+  );
+  reactHostPort.useEffect(
+    () =>
+      subscribePuzzle3dFillTargetVolumesInvalidated(() => {
+        fillSessionPreparedRef.current = false;
+        setFillTargetVolumesEpoch((epoch) => epoch + 1);
       }),
     [],
   );
@@ -2034,7 +2070,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
         return;
       }
       if (!fillSessionPreparedRef.current) {
-        preparePuzzle3dFillSession(base, kindCatalogs, kindCompatibility, snap.brushPlacementOverlapBudget);
+        preparePuzzle3dFillSession(base, kindCatalogs, kindCompatibility, snap.brushPlacementOverlapBudget, base.targetVolumes ?? []);
         fillSessionPreparedRef.current = true;
       }
     }, 0);
@@ -2047,7 +2083,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
       return;
     }
     onFillMeshesReady();
-  }, [fillDistributionEpoch, onFillMeshesReady, snap.activeTool, snap.brushPlacementOverlapBudget]);
+  }, [fillDistributionEpoch, fillTargetVolumesEpoch, onFillMeshesReady, snap.activeTool, snap.brushPlacementOverlapBudget]);
   reactHostPort.useEffect(
     () => () => {
       if (fillPrepareTimerRef.current !== null) {
@@ -2097,6 +2133,9 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
           setSelectedId={(id) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectedId", { id })}
           onSelect={(selection) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteSelection", selection)}
           onReferenceRelocate={onReferenceRelocatePersist}
+          onTargetVolumeRelocate={onTargetVolumeRelocatePersist}
+          onTargetVolumeDraw={onTargetVolumeDrawPersist}
+          fillEditTargetVolumes={snap.fillEditTargetVolumes}
           onToggleSelectionHidden={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "hidden", value })}
           onToggleSelectionLocked={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "locked", value })}
           onDeleteSelection={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "deleteSelection")}
@@ -2444,7 +2483,7 @@ class Puzzle5dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
       id: PUZZLE_5D_PLAY_KINDS_TAB_ID,
       icon: createIconComponent("tags"),
       order: 1,
-      tree: new StaticTreePanelDefinition({ sections: uiTreeNodeToTreePanelConfig(this.buildTree(), this.commandBus) }),
+      tree: new StaticTreePanelDefinition(uiTreeNodeToTreePanelConfig(this.buildTree(), this.commandBus)),
     };
   }
 }

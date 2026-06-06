@@ -30,6 +30,11 @@ import {
   WorldLodGridHelper,
   WorldOrbitCameraViewApplier,
   WorldOrbitGated,
+  WorldOrbitProjectionSwitch,
+  WorldOrbitViewControls,
+  WorldOrbitViewSnapGateProvider,
+  applyOrbitProjectionToCameraState,
+  type OrbitCameraProjection,
   WorldReferenceLayer,
   applyWorldReferenceTransform,
   type WorldReferenceProps,
@@ -3058,6 +3063,7 @@ export interface InteractionCanvasProps {
   readonly onContextMenu?: (event: MouseEvent) => void;
   readonly onDoubleClick?: (event: MouseEvent) => void;
   readonly onLostPointerCapture?: (event: PointerEvent) => void;
+  readonly overlay?: ReactNode;
 }
 
 /** @emoji 📡 Host event callbacks accepted by {@link InteractionCanvas}. */
@@ -3162,6 +3168,7 @@ export function InteractionCanvas({
   onContextMenu,
   onDoubleClick,
   onLostPointerCapture,
+  overlay,
 }: InteractionCanvasProps): ReactNode {
   return (
     <WorldCanvas
@@ -3187,6 +3194,7 @@ export function InteractionCanvas({
       onContextMenu={onContextMenu}
       onDoubleClick={onDoubleClick}
       onLostPointerCapture={onLostPointerCapture}
+      overlay={overlay}
     >
       {children}
     </WorldCanvas>
@@ -3245,6 +3253,11 @@ export interface InteractionSpatialViewProps {
   readonly transformGumballModel?: Model | null;
   readonly cameraView?: OrbitCameraViewId;
   readonly cameraViewSeedKey?: string | number;
+  readonly orbitProjection?: OrbitCameraProjection;
+  readonly showOrbitViewGizmo?: boolean;
+  readonly onOrbitViewSelect?: (view: OrbitCameraViewId) => void;
+  readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
+  readonly onOrbitCameraChange?: (state: import("@infinite/world/r3f").WorldCameraState) => void;
   /** @emoji 🖼️ Grid reference planes persisted beside the CAD model. */
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;
@@ -3312,6 +3325,11 @@ export function InteractionSpatialView({
   transformGumballModel = null,
   cameraView,
   cameraViewSeedKey,
+  orbitProjection,
+  showOrbitViewGizmo = true,
+  onOrbitViewSelect,
+  onOrbitProjectionChange,
+  onOrbitCameraChange,
   worldReferences = [],
   selectedReferenceIds,
   hoveredReferenceId = null,
@@ -3393,15 +3411,25 @@ export function InteractionSpatialView({
         manualLod={DEFAULT_MANUAL_LOD}
         gridDatum={[0, 0, 0]}
       >
-        {slots?.environment}
-        {slots?.lights ?? (
-          <>
-            <ambientLight intensity={resolvedTheme.ambientIntensity ?? 0.45} />
-            <directionalLight position={dirPos} intensity={resolvedTheme.directionalIntensity ?? 1.1} />
-          </>
-        )}
-        {cameraView !== undefined && cameraViewSeedKey !== undefined ? <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} /> : null}
-        <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} />
+        <WorldOrbitViewSnapGateProvider>
+          {slots?.environment}
+          {slots?.lights ?? (
+            <>
+              <ambientLight intensity={resolvedTheme.ambientIntensity ?? 0.45} />
+              <directionalLight position={dirPos} intensity={resolvedTheme.directionalIntensity ?? 1.1} />
+            </>
+          )}
+          {cameraView !== undefined && cameraViewSeedKey !== undefined ? (
+            <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} projectionOverride={orbitProjection} />
+          ) : null}
+          <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} />
+          {showOrbitViewGizmo ? (
+            <WorldOrbitViewControls
+              onCameraChange={onOrbitCameraChange}
+              onProjectionChange={onOrbitProjectionChange}
+              onViewSnap={(view) => onOrbitViewSelect?.(view)}
+            />
+          ) : null}
         <WorldLayer order={0} name="cad.grid">
           <WorldLodGridHelper gridDatum={[0, 0, 0]} />
         </WorldLayer>
@@ -3500,6 +3528,7 @@ export function InteractionSpatialView({
             />
           ) : null}
         </WorldLayer>
+        </WorldOrbitViewSnapGateProvider>
       </WorldLodBridge>
     </>
   );
@@ -5378,6 +5407,14 @@ export function InteractionRepl({
           frameloop={frameloop}
           className={cn("bg-canvas", canvasOverrides?.className)}
           onCanvasReady={handleCanvasReady}
+          overlay={
+            spatialViewOverrides?.onOrbitProjectionChange ? (
+              <WorldOrbitProjectionSwitch
+                projection={spatialViewOverrides.orbitProjection ?? "perspective"}
+                onProjectionChange={spatialViewOverrides.onOrbitProjectionChange}
+              />
+            ) : null
+          }
         >
           <InteractionSelectionInvalidateBridge selectionKey={selectionInvalidateKey} />
           <InteractionSpatialView

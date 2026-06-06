@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode } from "@ui/react";
+import { reactHostPort, resolveSceneGizmoViewportPlacement, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode, type ThreeEvent } from "@ui/react";
 import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar } from "@ui/styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
@@ -12,10 +12,13 @@ const Canvas = sceneHostPort.fiber.canvas;
 const useFrame = sceneHostPort.fiber.useFrame;
 const useThree = sceneHostPort.fiber.useThree;
 const OrbitControls = sceneHostPort.drei.OrbitControls;
+const GizmoHelper = sceneHostPort.drei.GizmoHelper;
+const GizmoViewport = sceneHostPort.drei.GizmoViewport;
 const OrthographicCamera = sceneHostPort.drei.OrthographicCamera;
 const PerspectiveCamera = sceneHostPort.drei.PerspectiveCamera;
 const {
   Box3,
+  BoxGeometry,
   BufferGeometry,
   Color,
   DoubleSide,
@@ -1192,6 +1195,228 @@ function applyWorldCameraState(camera: Camera, state: WorldCameraState, controls
   }
 }
 
+/** @emoji 🧭 Maps a CAD viewport gizmo axis click to a named orbit view (Z-up). */
+export function resolveOrbitGizmoViewFromDirection(direction: { readonly x: number; readonly y: number; readonly z: number }): OrbitCameraViewId {
+  const dominant =
+    [
+      { axis: "x" as const, magnitude: Math.abs(direction.x), sign: direction.x >= 0 ? 1 : -1 },
+      { axis: "y" as const, magnitude: Math.abs(direction.y), sign: direction.y >= 0 ? 1 : -1 },
+      { axis: "z" as const, magnitude: Math.abs(direction.z), sign: direction.z >= 0 ? 1 : -1 },
+    ].sort((a, b) => b.magnitude - a.magnitude)[0] ?? { axis: "z" as const, magnitude: 1, sign: 1 };
+  if (dominant.axis === "x") {
+    return dominant.sign > 0 ? "right" : "left";
+  }
+  if (dominant.axis === "y") {
+    return dominant.sign > 0 ? "back" : "front";
+  }
+  return dominant.sign > 0 ? "top" : "bottom";
+}
+
+const WORLD_ORBIT_VIEW_SNAP_DURATION_MS = 280;
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function lerpVec3(a: Vec3, b: Vec3, t: number): Vec3 {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+/** @emoji 📐 Keeps orbit pose while swapping orthographic vs perspective zoom defaults. */
+export function applyOrbitProjectionToCameraState(state: WorldCameraState, projection: OrbitCameraProjection): WorldCameraState {
+  return { ...state, projection, zoom: orbitCameraZoomForProjection(projection, state.zoom) };
+}
+
+export interface WorldOrbitViewSnapGateContextValue {
+  readonly snapGate: boolean;
+  readonly setSnapGate: (active: boolean) => void;
+}
+
+const WorldOrbitViewSnapGateContext = reactHostPort.createContext<WorldOrbitViewSnapGateContextValue | null>(null);
+
+/** @emoji 🧭 Enables {@link useWorldOrbitViewSnapGate} for orbit controls during gizmo view snaps. */
+export function WorldOrbitViewSnapGateProvider(props: { readonly children?: ReactNode }): ReactElement {
+  const [snapGate, setSnapGate] = reactHostPort.useState(false);
+  const value = reactHostPort.useMemo(() => ({ snapGate, setSnapGate }), [snapGate]);
+  return <WorldOrbitViewSnapGateContext.Provider value={value}>{props.children}</WorldOrbitViewSnapGateContext.Provider>;
+}
+
+/** @emoji 🧭 Reads the active gizmo view-snap gate for {@link WorldOrbitGated}. */
+export function useWorldOrbitViewSnapGate(): WorldOrbitViewSnapGateContextValue {
+  return reactHostPort.useContext(WorldOrbitViewSnapGateContext) ?? { snapGate: false, setSnapGate: () => {} };
+}
+
+export interface WorldOrbitViewGizmoProps {
+  readonly show?: boolean;
+  readonly onViewSelect: (view: OrbitCameraViewId) => void;
+}
+
+/** @emoji 🧭 CAD Z-up viewport gizmo (X / Z / −Y) anchored bottom-right. */
+export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactElement | null {
+  const { size } = useThree();
+  const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => [
+    resolveColorHex(semanticVar("accent"), "gray"),
+    resolveColorHex(semanticVar("accent-tertiary"), "gray"),
+    resolveColorHex(semanticVar("accent-secondary"), "gray"),
+  ]);
+  const labels = reactHostPort.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
+  const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
+  const axisScale = reactHostPort.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
+  const labelColor = reactHostPort.useMemo(() => resolveColorHex(semanticVar("foreground"), "gray"), []);
+
+  reactHostPort.useEffect(() => {
+    const updateColors = () =>
+      setColors([
+        resolveColorHex(semanticVar("accent"), "gray"),
+        resolveColorHex(semanticVar("accent-tertiary"), "gray"),
+        resolveColorHex(semanticVar("accent-secondary"), "gray"),
+      ]);
+    updateColors();
+    const observer = new MutationObserver(updateColors);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  if (props.show === false) {
+    return null;
+  }
+  return (
+    <GizmoHelper alignment={placement.alignment} margin={placement.margin}>
+      <GizmoViewport
+        labels={labels}
+        axisColors={colors}
+        axisScale={axisScale}
+        axisHeadScale={0.92}
+        hideNegativeAxes
+        labelColor={labelColor}
+        font="16px Inter var, Arial, sans-serif"
+        onClick={(event: ThreeEvent<MouseEvent>) => {
+          props.onViewSelect(resolveOrbitGizmoViewFromDirection(event.object.position));
+          return null;
+        }}
+      />
+    </GizmoHelper>
+  );
+}
+
+export interface WorldOrbitViewSnapDriverProps {
+  readonly pendingView: OrbitCameraViewId | null;
+  readonly onPendingViewClear: () => void;
+  readonly onCameraChange?: (state: WorldCameraState) => void;
+  readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
+  readonly onViewSnap?: (view: OrbitCameraViewId, state: WorldCameraState) => void;
+}
+
+/** @emoji 🎞️ Interpolates the orbit camera to a named view when `pendingView` is set. */
+export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): null {
+  const { camera } = useThree();
+  const controls = useThree((state) => state.controls as OrbitControlsTarget | null);
+  const invalidate = useThree((state) => state.invalidate);
+  const { setSnapGate } = useWorldOrbitViewSnapGate();
+  const animRef = reactHostPort.useRef<{ readonly view: OrbitCameraViewId; readonly fromPos: Vector3; readonly fromUp: Vector3; readonly to: WorldCameraState; readonly start: number } | null>(null);
+
+  reactHostPort.useEffect(() => {
+    if (!props.pendingView || !camera || !controls?.target) {
+      return;
+    }
+    const pendingView = props.pendingView;
+    const targetCad = threeVec3ToCad(controls.target);
+    const distance = orbitCameraDistance({
+      position: threeVec3ToCad(camera.position),
+      target: targetCad,
+      zoom: "zoom" in camera ? (camera as ThreePerspectiveCamera).zoom : 1,
+    });
+    const zoom = camera instanceof ThreeOrthographicCamera || camera instanceof ThreePerspectiveCamera ? camera.zoom : 1;
+    const to = computeOrbitCameraViewState(pendingView, { target: targetCad, distance, zoom });
+    animRef.current = { view: pendingView, fromPos: camera.position.clone(), fromUp: camera.up.clone(), to, start: performance.now() };
+    setSnapGate(true);
+    props.onPendingViewClear();
+    invalidate();
+  }, [camera, controls, invalidate, props.pendingView, props.onPendingViewClear, setSnapGate]);
+
+  useFrame(() => {
+    const anim = animRef.current;
+    if (!anim || !camera || !controls) {
+      return;
+    }
+    const progress = Math.min(1, (performance.now() - anim.start) / WORLD_ORBIT_VIEW_SNAP_DURATION_MS);
+    const eased = easeInOutCubic(progress);
+    const nextPos = cadVec3ToThree(lerpVec3(threeVec3ToCad(anim.fromPos), anim.to.position, eased));
+    const nextUp = cadVec3ToThree(lerpVec3(threeVec3ToCad(anim.fromUp), anim.to.up ?? ORBIT_CAMERA_Z_UP, eased));
+    camera.position.set(nextPos[0], nextPos[1], nextPos[2]);
+    camera.up.set(nextUp[0], nextUp[1], nextUp[2]);
+    const target = cadVec3ToThree(anim.to.target);
+    camera.lookAt(target[0], target[1], target[2]);
+    controls.target.set(target[0], target[1], target[2]);
+    controls.update();
+    if (camera instanceof ThreePerspectiveCamera || camera instanceof ThreeOrthographicCamera) {
+      camera.zoom = anim.to.zoom;
+      camera.updateProjectionMatrix();
+    }
+    if (progress < 1) {
+      invalidate();
+      return;
+    }
+    animRef.current = null;
+    setSnapGate(false);
+    applyWorldCameraState(camera, anim.to, controls);
+    props.onCameraChange?.(anim.to);
+    props.onViewSnap?.(anim.view, anim.to);
+    if (anim.to.projection) {
+      props.onProjectionChange?.(anim.to.projection);
+    }
+    invalidate();
+  });
+  return null;
+}
+
+export interface WorldOrbitViewControlsProps {
+  readonly show?: boolean;
+  readonly onCameraChange?: (state: WorldCameraState) => void;
+  readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
+  readonly onViewSnap?: (view: OrbitCameraViewId, state: WorldCameraState) => void;
+}
+
+/** @emoji 🧭 Bundles {@link WorldOrbitViewGizmo} and {@link WorldOrbitViewSnapDriver}. */
+export function WorldOrbitViewControls(props: WorldOrbitViewControlsProps): ReactElement {
+  const [pendingView, setPendingView] = reactHostPort.useState<OrbitCameraViewId | null>(null);
+  return (
+    <>
+      <WorldOrbitViewSnapDriver
+        pendingView={pendingView}
+        onPendingViewClear={() => setPendingView(null)}
+        onCameraChange={props.onCameraChange}
+        onProjectionChange={props.onProjectionChange}
+        onViewSnap={props.onViewSnap}
+      />
+      <WorldOrbitViewGizmo show={props.show} onViewSelect={setPendingView} />
+    </>
+  );
+}
+
+export interface WorldOrbitProjectionSwitchProps {
+  readonly projection: OrbitCameraProjection;
+  readonly onProjectionChange: (projection: OrbitCameraProjection) => void;
+  readonly className?: string;
+}
+
+/** @emoji 🔀 Small orthographic / perspective toggle for infinite-world viewports. */
+export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
+  const shellClass = props.className ?? "pointer-events-auto absolute bottom-[4.75rem] right-3 z-10 flex overflow-hidden rounded-md border border-border text-[10px] font-medium shadow-sm";
+  const buttonClass = (active: boolean) =>
+    `${active ? "bg-accent text-accent-foreground" : "bg-background/90 text-muted-foreground hover:text-foreground"} px-2 py-1 transition-colors`;
+  return (
+    <div className={shellClass} data-world-projection-switch>
+      <button type="button" className={buttonClass(props.projection === "orthographic")} aria-pressed={props.projection === "orthographic"} onClick={() => props.onProjectionChange("orthographic")}>
+        Ortho
+      </button>
+      <button type="button" className={buttonClass(props.projection === "perspective")} aria-pressed={props.projection === "perspective"} onClick={() => props.onProjectionChange("perspective")}>
+        Persp
+      </button>
+    </div>
+  );
+}
+
 export interface OrbitCameraViewTemplateDescriptor {
   readonly id: string;
   readonly label: string;
@@ -1380,7 +1605,11 @@ export function createOrbitCameraViewLayoutDescriptors(): readonly OrbitCameraVi
 }
 
 /** @emoji 📷 Applies an orbit view preset when `seedKey` changes (owned-camera canvases). */
-export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraViewId; readonly seedKey: string | number }): ReactElement {
+export function WorldOrbitCameraViewApplier(props: {
+  readonly view: OrbitCameraViewId;
+  readonly seedKey: string | number;
+  readonly projectionOverride?: OrbitCameraProjection;
+}): ReactElement {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
@@ -1388,8 +1617,9 @@ export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraV
     const target = controls?.target ?? targetScratch.set(0, 0, 0);
     const targetCad = threeVec3ToCad(target);
     const distance = camera ? Math.hypot(camera.position.x - target.x, camera.position.y - target.y, camera.position.z - target.z) || 600 : 600;
-    return computeOrbitCameraViewState(props.view, { target: targetCad, distance });
-  }, [camera, controls, props.seedKey, props.view, targetScratch]);
+    const base = computeOrbitCameraViewState(props.view, { target: targetCad, distance });
+    return props.projectionOverride ? applyOrbitProjectionToCameraState(base, props.projectionOverride) : base;
+  }, [camera, controls, props.projectionOverride, props.seedKey, props.view, targetScratch]);
   return <WorldOrbitCameraViewRig state={state} seedKey={props.seedKey} />;
 }
 
@@ -1462,12 +1692,120 @@ function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; 
 }
 // #endregion 📷OrbitCameraView
 
-// #region 🎬WorldCanvas
-type OrbitControlsBinding = {
-  readonly mouseButtons: { LEFT: number | null; MIDDLE: number; RIGHT: number };
-  readonly enabled: boolean;
+// #region 🖱️OrbitMouseBindings
+/** @emoji 🖱️ Orbit-controls instance with mutable mouse button map. */
+export type WorldOrbitControlsBinding = {
+  readonly mouseButtons: { LEFT: number | null; MIDDLE: number; RIGHT: number | null };
+  readonly enabled?: boolean;
   readonly update?: () => void;
 };
+
+/** @emoji 🖱️ Default orbit mouse map: middle dolly, right reserved for context menu. */
+export const WORLD_ORBIT_MOUSE_BUTTONS_IDLE = {
+  LEFT: null as unknown as number,
+  MIDDLE: MOUSE.DOLLY,
+  RIGHT: null as unknown as number,
+} as const;
+
+/** @emoji 🖱️ Resets orbit mouse buttons to {@link WORLD_ORBIT_MOUSE_BUTTONS_IDLE}. */
+export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBinding): void {
+  controls.mouseButtons.LEFT = WORLD_ORBIT_MOUSE_BUTTONS_IDLE.LEFT;
+  controls.mouseButtons.MIDDLE = WORLD_ORBIT_MOUSE_BUTTONS_IDLE.MIDDLE;
+  controls.mouseButtons.RIGHT = WORLD_ORBIT_MOUSE_BUTTONS_IDLE.RIGHT;
+  controls.update?.();
+}
+
+/** @emoji 🖱️ Maps right-button modifiers: plain right → context menu, Alt+right → orbit, Shift+right → pan. */
+export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">): number | null {
+  if (event.button !== 2) {
+    return null;
+  }
+  if (event.shiftKey) {
+    return MOUSE.PAN;
+  }
+  if (event.altKey) {
+    return MOUSE.ROTATE;
+  }
+  return null;
+}
+
+export interface WorldOrbitRightMouseBindingsOptions {
+  readonly onRightPointerDown?: (event: PointerEvent) => boolean;
+  readonly onRightPointerDrag?: (event: PointerEvent, distancePx: number) => void;
+  readonly onRightPointerUp?: (event: PointerEvent) => void;
+  readonly dragThresholdPx?: number;
+}
+
+/** @emoji 🖱️ Binds Alt+right orbit and Shift+right pan while leaving plain right click for context menus. */
+export function useWorldOrbitRightMouseBindings(
+  controls: WorldOrbitControlsBinding | null,
+  domElement: HTMLElement | undefined,
+  options?: WorldOrbitRightMouseBindingsOptions,
+): void {
+  const optionsRef = reactHostPort.useRef(options);
+  optionsRef.current = options;
+  reactHostPort.useLayoutEffect(() => {
+    if (controls) {
+      applyWorldOrbitMouseButtonsIdle(controls);
+    }
+  }, [controls]);
+  reactHostPort.useEffect(() => {
+    if (!controls || !domElement) {
+      return;
+    }
+    const dragThresholdPx = options?.dragThresholdPx ?? 0;
+    let rightPointer: { readonly pointerId: number; readonly x: number; readonly y: number } | null = null;
+    const assignRightMouse = (event: PointerEvent) => {
+      if (event.button !== 2) {
+        return;
+      }
+      controls.mouseButtons.RIGHT = resolveWorldOrbitRightMouseAction(event);
+      controls.update?.();
+    };
+    const resetRightMouse = () => {
+      controls.mouseButtons.RIGHT = WORLD_ORBIT_MOUSE_BUTTONS_IDLE.RIGHT;
+      controls.update?.();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 2) {
+        return;
+      }
+      if (optionsRef.current?.onRightPointerDown?.(event) === false) {
+        return;
+      }
+      rightPointer = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+      assignRightMouse(event);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      const start = rightPointer;
+      if (!start || start.pointerId !== event.pointerId) {
+        return;
+      }
+      const distancePx = Math.hypot(event.clientX - start.x, event.clientY - start.y);
+      if (distancePx >= dragThresholdPx) {
+        optionsRef.current?.onRightPointerDrag?.(event, distancePx);
+      }
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      const start = rightPointer;
+      if (!start || start.pointerId !== event.pointerId) {
+        return;
+      }
+      rightPointer = null;
+      optionsRef.current?.onRightPointerUp?.(event);
+      resetRightMouse();
+    };
+    const bindings = new WorldEventBindingController();
+    bindings.listen(domElement, "pointerdown", onPointerDown as EventListener, true);
+    bindings.listen(window, "pointermove", onPointerMove as EventListener);
+    bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
+    return () => bindings.dispose();
+  }, [controls, domElement, options?.dragThresholdPx]);
+}
+// #endregion 🖱️OrbitMouseBindings
+
+// #region 🎬WorldCanvas
+type OrbitControlsBinding = WorldOrbitControlsBinding;
 
 /** @emoji 🎞️ Kicks one R3F frame when `frameloop="demand"`. */
 export function DemandFrameloopKick(): null {
@@ -1489,22 +1827,17 @@ export interface WorldOrbitGatedProps {
 
 /** @emoji 🛰️ Orbit controls with injectable gate (specializations disable during drag/tools). */
 export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | null {
-  const { camera: sceneCamera } = useThree();
+  const { camera: sceneCamera, gl } = useThree();
   const camera = props.camera === undefined ? sceneCamera : props.camera;
   const controls = useThree((s) => s.controls as OrbitControlsBinding | null);
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
   const gate = props.controlsGate ?? false;
+  const { snapGate } = useWorldOrbitViewSnapGate();
   const invalidate = useThree((s) => s.invalidate);
+  useWorldOrbitRightMouseBindings(controls, gl.domElement);
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
-  reactHostPort.useLayoutEffect(() => {
-    if (!controls) return;
-    controls.mouseButtons.LEFT = null;
-    controls.mouseButtons.MIDDLE = MOUSE.DOLLY;
-    controls.mouseButtons.RIGHT = MOUSE.ROTATE;
-    controls.update?.();
-  }, [controls]);
   if (props.camera === null) return null;
   const reportCamera = () => {
     if (!props.onCamera || !camera) return;
@@ -1520,7 +1853,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
       key={props.controlsKey}
       {...(props.camera ? { camera: props.camera } : {})}
       makeDefault
-      enabled={!gate}
+      enabled={!gate && !snapGate}
       enableDamping={false}
       enablePan
       enableZoom
@@ -1534,7 +1867,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
         props.onCameraNavigate?.(false);
         reportCamera();
       }}
-      mouseButtons={{ LEFT: null as unknown as number, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.ROTATE }}
+      mouseButtons={WORLD_ORBIT_MOUSE_BUTTONS_IDLE}
     />
   );
 }
@@ -1865,6 +2198,249 @@ export function WorldReferenceLayer(props: {
 }
 // #endregion 🖼️Reference
 
+// #region 🧊Volume
+/** @emoji 🧊 Serializable oriented target volume box for fill constraints. */
+export interface WorldVolumeProps extends WorldEntityFlags {
+  readonly id: string;
+  readonly origin: Vec3;
+  readonly orientation?: Quat;
+  readonly scale?: number | Vec3;
+  readonly color?: string;
+  readonly opacity?: number;
+  readonly relocate?: GumballConfig | false;
+  readonly relocateActive?: boolean;
+}
+
+/** @emoji 🧊 Gumball relocate commit for a world target volume. */
+export interface WorldVolumeRelocatePayload {
+  readonly volumeId: string;
+  readonly mode: "translate" | "rotate" | "scale";
+  readonly before: GumballPose;
+  readonly after: GumballPose;
+}
+
+export const WORLD_VOLUME_DEFAULT_COLOR = "#22c55e";
+export const WORLD_VOLUME_DEFAULT_OPACITY = 0.22;
+
+function worldVolumeScaleVec(scale: number | Vec3 | undefined): Vec3 {
+  if (typeof scale === "number") {
+    return [scale, scale, scale];
+  }
+  if (scale) {
+    return [scale[0], scale[1], scale[2]];
+  }
+  return [1, 1, 1];
+}
+
+/** @emoji 🧊 Applies CAD pose fields onto a volume group node. */
+export function applyWorldVolumePose(group: Group, volume: Pick<WorldVolumeProps, "origin" | "orientation" | "scale">): void {
+  const position = cadVec3ToThree(volume.origin);
+  group.position.set(position[0], position[1], position[2]);
+  const quat = volume.orientation ?? ([0, 0, 0, 1] as Quat);
+  group.quaternion.set(quat[0], quat[1], quat[2], quat[3]);
+  const scale = worldVolumeScaleVec(volume.scale);
+  group.scale.set(scale[0], scale[1], scale[2]);
+}
+
+/** @emoji 🧊 Writes a gumball pose back onto persisted volume props. */
+export function applyWorldVolumeTransform(volume: WorldVolumeProps, after: GumballPose): WorldVolumeProps {
+  return {
+    ...volume,
+    origin: [after.position[0], after.position[1], after.position[2]],
+    orientation: [after.quaternion[0], after.quaternion[1], after.quaternion[2], after.quaternion[3]],
+    scale: [after.scale[0], after.scale[1], after.scale[2]],
+  };
+}
+
+const _worldVolumeMatrix = new Matrix4();
+const _worldVolumeInverse = new Matrix4();
+const _worldVolumeCorner = new Vector3();
+const _worldVolumeLocal = new Vector3();
+
+/** @emoji 🧊 True when every corner of a world AABB lies inside any oriented volume (union). */
+export function worldVolumesContainAabb(
+  volumes: readonly WorldVolumeProps[],
+  aabbMin: Vec3,
+  aabbMax: Vec3,
+  epsilon = 1e-3,
+): boolean {
+  if (!volumes.length) {
+    return true;
+  }
+  const corners: Vec3[] = [
+    [aabbMin[0], aabbMin[1], aabbMin[2]],
+    [aabbMax[0], aabbMin[1], aabbMin[2]],
+    [aabbMin[0], aabbMax[1], aabbMin[2]],
+    [aabbMax[0], aabbMax[1], aabbMin[2]],
+    [aabbMin[0], aabbMin[1], aabbMax[2]],
+    [aabbMax[0], aabbMin[1], aabbMax[2]],
+    [aabbMin[0], aabbMax[1], aabbMax[2]],
+    [aabbMax[0], aabbMax[1], aabbMax[2]],
+  ];
+  for (const volume of volumes) {
+    const group = new Group();
+    applyWorldVolumePose(group, volume);
+    group.updateMatrixWorld(true);
+    _worldVolumeInverse.copy(group.matrixWorld).invert();
+    const half = worldVolumeScaleVec(volume.scale);
+    const hx = half[0] / 2 + epsilon;
+    const hy = half[1] / 2 + epsilon;
+    const hz = half[2] / 2 + epsilon;
+    let inside = true;
+    for (const corner of corners) {
+      _worldVolumeCorner.set(corner[0], corner[1], corner[2]);
+      _worldVolumeLocal.copy(_worldVolumeCorner).applyMatrix4(_worldVolumeInverse);
+      if (Math.abs(_worldVolumeLocal.x) > hx || Math.abs(_worldVolumeLocal.y) > hy || Math.abs(_worldVolumeLocal.z) > hz) {
+        inside = false;
+        break;
+      }
+    }
+    if (inside) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const WorldVolumeGumball = reactHostPort.memo(function WorldVolumeGumball(props: {
+  readonly volumeId: string;
+  readonly target: Group;
+  readonly config: GumballConfig;
+  readonly onRelocate?: (payload: WorldVolumeRelocatePayload) => void;
+}) {
+  const beforeRef = reactHostPort.useRef<GumballPose | null>(null);
+  return (
+    <UnifiedGumball
+      target={props.target}
+      config={props.config}
+      onDragStart={(_kind, before) => {
+        beforeRef.current = before;
+      }}
+      onDragEnd={(kind, before, after) => {
+        props.onRelocate?.({
+          volumeId: props.volumeId,
+          mode: gumballHandleKindToTransformMode(kind),
+          before: beforeRef.current ?? before,
+          after,
+        });
+        beforeRef.current = null;
+      }}
+    />
+  );
+});
+
+const _worldVolumeEdgeGeo = new EdgesGeometry(new BoxGeometry(1, 1, 1));
+
+const WorldVolumeBoxItem = reactHostPort.memo(function WorldVolumeBoxItem(props: {
+  readonly volume: WorldVolumeProps;
+  readonly selected: boolean;
+  readonly hovered: boolean;
+  readonly revealed: boolean;
+  readonly interactive?: boolean;
+  readonly gumballConfig?: GumballConfig;
+  readonly relocateActive?: boolean;
+  readonly translationSnap?: number;
+  readonly onSelect?: (id: string, modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }) => void;
+  readonly onHover?: (id: string | null) => void;
+  readonly onRelocate?: (payload: WorldVolumeRelocatePayload) => void;
+}) {
+  const groupRef = reactHostPort.useRef<Group>(null);
+  const renderMode = worldEntityRenderMode(props.volume, { hovered: props.hovered, selected: props.selected, revealed: props.revealed });
+  const selectable = props.interactive !== false && worldEntitySelectable(props.volume);
+  reactHostPort.useLayoutEffect(() => {
+    if (groupRef.current) {
+      applyWorldVolumePose(groupRef.current, props.volume);
+    }
+  }, [props.volume.origin, props.volume.orientation, props.volume.scale]);
+  if (!renderMode.visible) {
+    return null;
+  }
+  const opacityBase = props.volume.opacity ?? WORLD_VOLUME_DEFAULT_OPACITY;
+  const opacity = renderMode.dim ? opacityBase * WORLD_LOCKED_OPACITY_SCALE : opacityBase;
+  const color = props.volume.color ?? WORLD_VOLUME_DEFAULT_COLOR;
+  const config = props.volume.relocate === false ? null : { ...(props.volume.relocate ?? {}), translationSnap: props.translationSnap };
+  const showGumball = props.interactive !== false && props.selected && selectable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
+  return (
+    <>
+      <group
+        ref={groupRef}
+        visible={renderMode.visible}
+        userData={{ worldVolumeId: props.volume.id }}
+        onPointerDown={(event) => {
+          if (!selectable) {
+            return;
+          }
+          event.stopPropagation();
+          props.onSelect?.(props.volume.id, { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
+        }}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          if (selectable) {
+            props.onHover?.(props.volume.id);
+          }
+        }}
+        onPointerOut={(event) => {
+          event.stopPropagation();
+          props.onHover?.(null);
+        }}
+      >
+        <mesh raycast={props.interactive === false ? worldRaycastNone : undefined}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color={color} transparent opacity={opacity} depthWrite={false} side={DoubleSide} />
+        </mesh>
+        <lineSegments raycast={worldRaycastNone} geometry={_worldVolumeEdgeGeo}>
+          <lineBasicMaterial color={color} transparent opacity={Math.min(1, opacity + 0.35)} depthWrite={false} />
+        </lineSegments>
+      </group>
+      {showGumball && groupRef.current ? (
+        <WorldVolumeGumball volumeId={props.volume.id} target={groupRef.current} config={config} onRelocate={props.onRelocate} />
+      ) : null}
+    </>
+  );
+});
+
+/** @emoji 🧊 Renders persisted target volume boxes for puzzle 3d fill constraints. */
+export function WorldVolumeLayer(props: {
+  readonly volumes: readonly WorldVolumeProps[];
+  readonly selectedIds?: ReadonlySet<string>;
+  readonly hoveredId?: string | null;
+  readonly revealedIds?: ReadonlySet<string>;
+  readonly interactive?: boolean;
+  readonly gumballConfig?: GumballConfig;
+  readonly relocateActive?: boolean;
+  readonly translationSnap?: number;
+  readonly onSelect?: (id: string, modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }) => void;
+  readonly onHover?: (id: string | null) => void;
+  readonly onRelocate?: (payload: WorldVolumeRelocatePayload) => void;
+}): ReactElement | null {
+  if (!props.volumes.length) {
+    return null;
+  }
+  const selected = props.selectedIds ?? new Set<string>();
+  const revealed = props.revealedIds ?? new Set<string>();
+  return (
+    <>
+      {props.volumes.map((volume) => (
+        <WorldVolumeBoxItem
+          key={volume.id}
+          volume={volume}
+          selected={selected.has(volume.id)}
+          hovered={props.hoveredId === volume.id}
+          revealed={revealed.has(volume.id)}
+          interactive={props.interactive}
+          gumballConfig={props.gumballConfig}
+          relocateActive={props.relocateActive}
+          translationSnap={props.translationSnap}
+          onSelect={props.onSelect}
+          onHover={props.onHover}
+          onRelocate={props.onRelocate}
+        />
+      ))}
+    </>
+  );
+}
+// #endregion 🧊Volume
+
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -1885,6 +2461,16 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("resolveWorldOrbitRightMouseAction", () => {
+    it("reserves plain right click for context menu and maps modifiers to orbit and pan", () => {
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: false })).toBeNull();
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false })).toBe(MOUSE.ROTATE);
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: true })).toBe(MOUSE.PAN);
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: true })).toBe(MOUSE.PAN);
+      expect(resolveWorldOrbitRightMouseAction({ button: 0, altKey: true, shiftKey: false })).toBeNull();
+    });
+  });
+
   describe("computeOrbitCameraViewState", () => {
     it("places top view directly above the target with orthographic projection", () => {
       const state = computeOrbitCameraViewState("top", { target: [0, 0, 40], distance: 800 });
@@ -1898,6 +2484,29 @@ if (import.meta.vitest) {
       const perspective = computeOrbitCameraViewState("perspective", { target: [0, 0, 0], distance: 100 });
       expect(perspective.projection).toBe("perspective");
       expect(Math.hypot(...perspective.position)).toBeGreaterThan(90);
+    });
+  });
+
+  describe("resolveOrbitGizmoViewFromDirection", () => {
+    it("maps dominant axis clicks to orthographic orbit views", () => {
+      expect(resolveOrbitGizmoViewFromDirection({ x: 1, y: 0.1, z: 0.05 })).toBe("right");
+      expect(resolveOrbitGizmoViewFromDirection({ x: -1, y: 0, z: 0 })).toBe("left");
+      expect(resolveOrbitGizmoViewFromDirection({ x: 0.1, y: 0.2, z: 1 })).toBe("top");
+      expect(resolveOrbitGizmoViewFromDirection({ x: 0, y: 0, z: -1 })).toBe("bottom");
+      expect(resolveOrbitGizmoViewFromDirection({ x: 0, y: -1, z: 0.1 })).toBe("front");
+      expect(resolveOrbitGizmoViewFromDirection({ x: 0.05, y: 1, z: 0.1 })).toBe("back");
+    });
+  });
+
+  describe("applyOrbitProjectionToCameraState", () => {
+    it("applies orthographic zoom defaults while preserving pose", () => {
+      const state = applyOrbitProjectionToCameraState(
+        { position: [100, 0, 50], target: [0, 0, 0], zoom: 1, projection: "perspective" },
+        "orthographic",
+      );
+      expect(state.projection).toBe("orthographic");
+      expect(state.zoom).toBe(50);
+      expect(state.position).toEqual([100, 0, 50]);
     });
   });
 
@@ -2007,6 +2616,35 @@ if (import.meta.vitest) {
       });
       expect(next.origin).toEqual([1, 2, 3]);
       expect(next.scale).toEqual([2, 2, 2]);
+    });
+  });
+
+  describe("applyWorldVolumeTransform", () => {
+    it("writes gumball pose onto volume props", () => {
+      const base: WorldVolumeProps = { id: "vol-a", origin: [0, 0, 0] };
+      const next = applyWorldVolumeTransform(base, {
+        position: [1, 2, 3],
+        quaternion: [0, 0, 0, 1],
+        scale: [4, 6, 8],
+      });
+      expect(next.origin).toEqual([1, 2, 3]);
+      expect(next.scale).toEqual([4, 6, 8]);
+    });
+  });
+
+  describe("worldVolumesContainAabb", () => {
+    it("returns true when no volumes are defined", () => {
+      expect(worldVolumesContainAabb([], [0, 0, 0], [1, 1, 1])).toBe(true);
+    });
+
+    it("accepts an AABB fully inside a unit volume at the origin", () => {
+      const volumes: WorldVolumeProps[] = [{ id: "v1", origin: [0, 0, 0], scale: [10, 10, 10] }];
+      expect(worldVolumesContainAabb(volumes, [-2, -2, -2], [2, 2, 2])).toBe(true);
+    });
+
+    it("rejects an AABB that extends outside the volume", () => {
+      const volumes: WorldVolumeProps[] = [{ id: "v1", origin: [0, 0, 0], scale: [4, 4, 4] }];
+      expect(worldVolumesContainAabb(volumes, [-3, -3, -3], [3, 3, 3])).toBe(false);
     });
   });
 
