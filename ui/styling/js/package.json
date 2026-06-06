@@ -9,7 +9,9 @@
     ".": "./index.ts",
     "./ui.css": "./ui.css",
     "./palette.css": "./palette.css",
-    "./tailwind.config": "./tailwind.config.ts"
+    "./tailwind.config": "./tailwind.config.ts",
+    "./resolve": "./resolve.ts",
+    "./tokens.generated": "./tokens.generated.ts"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

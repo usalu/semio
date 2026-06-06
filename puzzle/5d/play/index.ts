@@ -515,10 +515,9 @@ export function buildPuzzle5dPlayRuntime(initialPanelVisibility?: { leftSidePane
 /** @emoji 🛝 Puzzle 5d play harness as a single {@link Playground} instance. */
 export class Playground5d extends Playground {
   readonly id = PUZZLE_5D_PLAY_APP_ID;
-  readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 
   createRuntime(): Platform {
-    return buildPuzzle5dPlayRuntime(this.initialPanelVisibility);
+    return buildPuzzle5dPlayRuntime();
   }
 
   registerBodies(): void {

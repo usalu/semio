@@ -66,38 +66,38 @@
     "meta": {
       "kindCatalogs": {
         "relationshipKinds": [
-          { "color": "#64748b", "directed": false, "id": "wires.owns", "name": "Owns", "pattern": "solid", "stroke": "2.5", "targetTip": "filled-diamond" },
-          { "color": "#0ea5e9", "directed": false, "id": "wires.is", "name": "Is", "pattern": "solid", "stroke": "2.5", "targetTip": "filled-arrow" },
-          { "color": "#a855f7", "directed": false, "id": "wires.references", "name": "References", "pattern": "dashed", "stroke": "1.5", "targetTip": "fine-arrow" },
-          { "color": "#22c55e", "directed": false, "id": "wires.has", "name": "Has", "pattern": "solid", "stroke": "2", "targetTip": "open-diamond" }
+          { "color": "var(--color-muted-foreground)", "directed": false, "id": "wires.owns", "name": "Owns", "pattern": "solid", "stroke": "2.5", "targetTip": "filled-diamond" },
+          { "color": "var(--color-secondary)", "directed": false, "id": "wires.is", "name": "Is", "pattern": "solid", "stroke": "2.5", "targetTip": "filled-arrow" },
+          { "color": "var(--color-tertiary)", "directed": false, "id": "wires.references", "name": "References", "pattern": "dashed", "stroke": "1.5", "targetTip": "fine-arrow" },
+          { "color": "var(--color-success)", "directed": false, "id": "wires.has", "name": "Has", "pattern": "solid", "stroke": "2", "targetTip": "open-diamond" }
         ],
         "identityKinds": [
           {
-            "color": "#f8fafc",
+            "color": "var(--color-light)",
             "id": "semio.metabolism.light.node.71749140-9db9-43f6-bd81-d89011667b80",
             "name": "Capsule",
             "shape": "circle"
           },
           {
-            "color": "#e2e8f0",
+            "color": "var(--color-light-8-9)",
             "id": "semio.metabolism.light.node.3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
             "name": "Base",
             "shape": "rectangle"
           },
           {
-            "color": "#cbd5e1",
+            "color": "var(--color-light-6-7)",
             "id": "semio.metabolism.light.node.0e240cd2-7f98-42b6-af39-34e7ee4fad35",
             "name": "Bridge",
             "shape": "rectangle"
           },
           {
-            "color": "#94a3b8",
+            "color": "var(--color-gray-700)",
             "id": "semio.metabolism.light.node.49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
             "name": "Capital",
             "shape": "rectangle"
           },
           {
-            "color": "#64748b",
+            "color": "var(--color-gray)",
             "id": "semio.metabolism.light.node.1b1fcf80-0acc-4456-bc16-71f69c5df571",
             "name": "Tambour",
             "shape": "circle"

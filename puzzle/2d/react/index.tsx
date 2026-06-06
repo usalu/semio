@@ -18,6 +18,16 @@ import {
   type RenderMode,
 } from "@infinite/cavas/react-renderer";
 import { type TreeDragAndDropController } from "@ui/react";
+import {
+  blendTokenHex,
+  resolveBackgroundColorHex,
+  resolveColorHex,
+  resolveColorRgba,
+  semanticVar,
+  themeColorVar,
+  tokenHex,
+  tokenVar,
+} from "@ui/styling";
 
 /** @emoji 🧩 Puzzle 2d alias for the generic canvas event binding controller. */
 type Puzzle2dEventBindingController = CavasEventBindingController;
@@ -160,7 +170,7 @@ export const BUILTIN_LINK_EDGE_KIND = "edge.link";
 /** @emoji 🎨 Default WASM handle catalog so `port` resolves a fill color and gesture wire kind without host configuration. */
 export const DEFAULT_HANDLE_KIND_CATALOG: readonly HandleKind[] = [
   {
-    color: "#94a3b8",
+    color: themeColorVar("muted-foreground"),
     defaultWireKind: BUILTIN_LINK_WIRE_KIND,
     id: BUILTIN_PORT_HANDLE_KIND,
     name: "Port",
@@ -597,11 +607,15 @@ export function puzzle2dFixtureMetaKindCompatibility(raw: unknown): readonly Kin
   return entries as readonly KindCompatEntry[];
 }
 
-function serializeKindCatalogBundle(bundle: KindCatalogBundle): string {
+function resolveKindCatalogColor(color: string, fallbackKey = "gray"): string {
+  return resolveColorHex(String(color ?? "").trim(), fallbackKey);
+}
+
+export function serializeKindCatalogBundle(bundle: KindCatalogBundle): string {
   const handles = (bundle.handles ?? [])
     .map((e) => {
       const id = String(e.id ?? "").trim();
-      const color = String(e.color ?? "").trim();
+      const color = resolveKindCatalogColor(String(e.color ?? "").trim());
       const name = String(e.name ?? "").trim() || id;
       const dw = e.defaultWireKind != null ? String(e.defaultWireKind).trim() : "";
       if (id === "" || color === "") {
@@ -638,7 +652,7 @@ function serializeKindCatalogBundle(bundle: KindCatalogBundle): string {
         row.shape = e.shape;
       }
       if (e.color != null && String(e.color).trim() !== "") {
-        row.color = String(e.color).trim();
+        row.color = resolveKindCatalogColor(String(e.color).trim());
       }
       if (e.stroke != null && String(e.stroke).trim() !== "") {
         row.stroke = String(e.stroke).trim();
@@ -677,7 +691,7 @@ function serializeKindCatalogBundle(bundle: KindCatalogBundle): string {
         row.shape = e.shape;
       }
       if (e.color != null && String(e.color).trim() !== "") {
-        row.color = String(e.color).trim();
+        row.color = resolveKindCatalogColor(String(e.color).trim());
       }
       if (e.stroke != null && String(e.stroke).trim() !== "") {
         row.stroke = String(e.stroke).trim();
@@ -1538,149 +1552,107 @@ export function puzzle2dLodAutomaticSelectLabel(effectiveTier: Puzzle2dDrawLodKi
   return `Automatic · ${effectiveTier.charAt(0).toUpperCase()}${effectiveTier.slice(1)}`;
 }
 
-/** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
+/** @emoji 🎨 Offline / headless paint defaults derived from `@ui/styling` palette tokens. */
 const PUZZLE_2D_STYLES_HEADLESS_FALLBACK: Record<string, Puzzle2dStyle> = {
-  edge: { stroke: "#7b827d", strokeWidth: 2 },
-  "edge.highlighted": { stroke: "#34d1bf", strokeWidth: 2 },
-  "edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
-  handle: { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
-  "handle.highlighted": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 1.5 },
-  "handle.selected": { fill: "#ff344f", stroke: "#ff344f", strokeWidth: 2 },
-  node: { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
-  "node.highlighted": { fill: "#c4e4d5", stroke: "#34d1bf", strokeWidth: 2 },
-  "node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
+  edge: { stroke: tokenHex("gray"), strokeWidth: 2 },
+  "edge.highlighted": { stroke: tokenHex("secondary"), strokeWidth: 2 },
+  "edge.selected": { stroke: tokenHex("primary"), strokeWidth: 3 },
+  handle: { fill: tokenHex("light"), stroke: tokenHex("dark"), strokeWidth: 2 },
+  "handle.highlighted": { fill: blendTokenHex("secondary", "light-5-7", 0.24), stroke: tokenHex("secondary"), strokeWidth: 1.5 },
+  "handle.selected": { fill: blendTokenHex("primary", "light-5-7", 0.28), stroke: tokenHex("primary"), strokeWidth: 2 },
+  node: { fill: tokenHex("l-l-l-g"), stroke: tokenHex("dark"), strokeWidth: 2 },
+  "node.highlighted": { fill: blendTokenHex("secondary", "light-5-7", 0.24), stroke: tokenHex("secondary"), strokeWidth: 2 },
+  "node.selected": { fill: blendTokenHex("primary", "light-5-7", 0.28), stroke: tokenHex("primary"), strokeWidth: 3 },
 };
 
 const DEFAULT_STYLES: Record<string, Puzzle2dStyle> = PUZZLE_2D_STYLES_HEADLESS_FALLBACK;
 
 //#region 🎨ElementsUiPuzzle2dPaint
 /** @emoji 🎨 Elements semantic tokens for committed selection chrome (primary, not secondary). */
-const PUZZLE_2D_CSS_COLOR_PRIMARY = "var(--color-primary)";
+const PUZZLE_2D_CSS_COLOR_PRIMARY = tokenVar("primary");
 const PUZZLE_2D_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
 /** @emoji 🎨 Secondary-tinted fill for preselect exit / highlight chrome only. */
 const PUZZLE_2D_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
 
 /** @emoji 🎨 Resolves UI semantic CSS (`@ui/styling/ui.css` / `@theme`) for 2d canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
 const PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA = {
-  rasterClear: [247, 243, 227, 255] as [number, number, number, number],
-  gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
-  edgeStroke: [123, 130, 125, 255] as [number, number, number, number],
-  edgeStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-  edgeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-  edgeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
-  edgeStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
-  nodeFill: [238, 234, 219, 255] as [number, number, number, number],
-  nodeStroke: [0, 17, 23, 255] as [number, number, number, number],
-  nodeFillHovered: [192, 205, 197, 255] as [number, number, number, number],
-  nodeStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-  nodeFillSelected: [240, 200, 204, 255] as [number, number, number, number],
-  nodeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-  nodeFillSelectionExit: [196, 228, 213, 255] as [number, number, number, number],
-  nodeStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
-  nodeFillDisabled: [238, 234, 219, 128] as [number, number, number, number],
-  nodeStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
-  indirectHandleFill: [196, 228, 213, 255] as [number, number, number, number],
-  indirectHandleStroke: [52, 209, 191, 255] as [number, number, number, number],
-  handleFill: [247, 243, 227, 255] as [number, number, number, number],
-  handleStroke: [0, 17, 23, 255] as [number, number, number, number],
-  handleFillHovered: [192, 205, 197, 255] as [number, number, number, number],
-  handleStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-  handleFillSelected: [255, 52, 79, 255] as [number, number, number, number],
-  handleStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-  handleFillSelectionExit: [196, 228, 213, 255] as [number, number, number, number],
-  handleStrokeSelectionExit: [52, 209, 191, 255] as [number, number, number, number],
-  handleFillDisabled: [238, 234, 219, 128] as [number, number, number, number],
-  handleStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
-  wireStroke: [123, 130, 125, 255] as [number, number, number, number],
-  wireStrokeHovered: [123, 130, 125, 255] as [number, number, number, number],
-  wireStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
-  wireStrokeHighlighted: [52, 209, 191, 255] as [number, number, number, number],
-  wireStrokeDisabled: [123, 130, 125, 96] as [number, number, number, number],
-  selectionPreviewFill: [255, 52, 79, 31] as [number, number, number, number],
-  selectionPreviewStroke: [255, 52, 79, 255] as [number, number, number, number],
+  rasterClear: resolveColorRgba(semanticVar("base"), "light"),
+  gridMinorStroke: [...resolveColorRgba(themeColorVar("border"), "gray").slice(0, 3), 56] as [number, number, number, number],
+  edgeStroke: resolveColorRgba(themeColorVar("muted-foreground"), "gray"),
+  edgeStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
+  edgeStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+  edgeStrokeSelectionExit: resolveColorRgba(tokenVar("secondary"), "secondary"),
+  edgeStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
+  nodeFill: resolveColorRgba(themeColorVar("panel"), "l-l-l-g"),
+  nodeStroke: resolveColorRgba(themeColorVar("emphasized"), "dark"),
+  nodeFillHovered: resolveColorRgba(themeColorVar("hover-panel"), "light-5-7"),
+  nodeStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
+  nodeFillSelected: resolveColorRgba(PUZZLE_2D_CSS_SELECTED_FILL, "primary"),
+  nodeStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+  nodeFillSelectionExit: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
+  nodeStrokeSelectionExit: resolveColorRgba(tokenVar("secondary"), "secondary"),
+  nodeFillDisabled: resolveColorRgba("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
+  nodeStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
+  indirectHandleFill: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
+  indirectHandleStroke: resolveColorRgba(tokenVar("secondary"), "secondary"),
+  handleFill: resolveColorRgba(themeColorVar("base"), "light"),
+  handleStroke: resolveColorRgba(themeColorVar("emphasized"), "dark"),
+  handleFillHovered: resolveColorRgba(themeColorVar("hover-panel"), "light-5-7"),
+  handleStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
+  handleFillSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+  handleStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+  handleFillSelectionExit: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
+  handleStrokeSelectionExit: resolveColorRgba(tokenVar("secondary"), "secondary"),
+  handleFillDisabled: resolveColorRgba("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
+  handleStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
+  wireStroke: resolveColorRgba(themeColorVar("muted-foreground"), "gray"),
+  wireStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
+  wireStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+  wireStrokeHighlighted: resolveColorRgba(tokenVar("secondary"), "secondary"),
+  wireStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
+  selectionPreviewFill: resolveColorRgba("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", 31),
+  selectionPreviewStroke: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
 };
-
-function puzzle2dParseCssColorToRgba8888(css: string, fallback: [number, number, number, number]): [number, number, number, number] {
-  const m = css.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+%?)\s*)?\)/u);
-  if (!m) {
-    return fallback;
-  }
-  const r = Math.min(255, Math.max(0, Math.round(Number(m[1]))));
-  const g = Math.min(255, Math.max(0, Math.round(Number(m[2]))));
-  const b = Math.min(255, Math.max(0, Math.round(Number(m[3]))));
-  let a = 255;
-  if (m[4] !== undefined && m[4] !== "") {
-    const raw = m[4];
-    if (raw.endsWith("%")) {
-      a = Math.min(255, Math.max(0, Math.round((Number(raw.slice(0, -1)) / 100) * 255)));
-    } else {
-      const n = Number(raw);
-      a = Math.min(255, Math.max(0, Math.round(n <= 1 ? n * 255 : n)));
-    }
-  }
-  return [r, g, b, a];
-}
-
-function puzzle2dProbeCssComputed(property: "color" | "backgroundColor", value: string): string {
-  if (typeof document === "undefined") {
-    return "";
-  }
-  const el = document.createElement("span");
-  const key = property === "color" ? "color" : "background-color";
-  el.setAttribute("style", `${key}:${value};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
-  if (document.documentElement.classList.contains("dark")) {
-    el.classList.add("dark");
-  }
-  document.documentElement.appendChild(el);
-  const out = getComputedStyle(el)[property];
-  el.remove();
-  return out;
-}
 
 function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dStyle> {
   const f = PUZZLE_2D_STYLES_HEADLESS_FALLBACK;
-  const c = (prop: "color" | "backgroundColor", expr: string, fb: string): string => {
-    const raw = puzzle2dProbeCssComputed(prop, expr);
-    if (!raw || raw === "rgba(0, 0, 0, 0)") {
-      return fb;
-    }
-    return raw;
-  };
+  const stroke = (expr: string, fbKey: string, fb = tokenHex(fbKey)): string => resolveColorHex(expr, fbKey) || fb;
+  const fill = (expr: string, fbKey: string, fb = tokenHex(fbKey)): string => resolveBackgroundColorHex(expr, fbKey) || fb;
   return {
-    edge: { stroke: c("color", "var(--color-muted-foreground)", f.edge.stroke ?? "#7b827d"), strokeWidth: 2 },
+    edge: { stroke: stroke(themeColorVar("muted-foreground"), "gray", f.edge.stroke ?? tokenHex("gray")), strokeWidth: 2 },
     "edge.highlighted": {
-      stroke: c("color", "var(--color-secondary)", f["edge.highlighted"]?.stroke ?? "#34d1bf"),
+      stroke: stroke(tokenVar("secondary"), "secondary", f["edge.highlighted"]?.stroke ?? tokenHex("secondary")),
       strokeWidth: 2,
     },
-    "edge.selected": { stroke: c("color", PUZZLE_2D_CSS_COLOR_PRIMARY, f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
+    "edge.selected": { stroke: stroke(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary", f["edge.selected"].stroke ?? tokenHex("primary")), strokeWidth: 3 },
     handle: {
-      fill: c("backgroundColor", "var(--color-base)", f.handle.fill ?? "#f7f3e3"),
-      stroke: c("color", "var(--color-emphasized)", f.handle.stroke ?? "#001117"),
+      fill: fill(themeColorVar("base"), "light", f.handle.fill ?? tokenHex("light")),
+      stroke: stroke(themeColorVar("emphasized"), "dark", f.handle.stroke ?? tokenHex("dark")),
       strokeWidth: 2,
     },
     "handle.highlighted": {
-      fill: c("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, f["handle.highlighted"]?.fill ?? "#c4e4d5"),
-      stroke: c("color", "var(--color-secondary)", f["handle.highlighted"]?.stroke ?? "#34d1bf"),
+      fill: fill(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary", f["handle.highlighted"]?.fill ?? blendTokenHex("secondary", "light-5-7", 0.24)),
+      stroke: stroke(tokenVar("secondary"), "secondary", f["handle.highlighted"]?.stroke ?? tokenHex("secondary")),
       strokeWidth: 1.5,
     },
     "handle.selected": {
-      fill: c("backgroundColor", PUZZLE_2D_CSS_SELECTED_FILL, f["handle.selected"].fill ?? "#ff344f"),
-      stroke: c("color", PUZZLE_2D_CSS_COLOR_PRIMARY, f["handle.selected"].stroke ?? "#ff344f"),
+      fill: fill(PUZZLE_2D_CSS_SELECTED_FILL, "primary", f["handle.selected"].fill ?? blendTokenHex("primary", "light-5-7", 0.28)),
+      stroke: stroke(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary", f["handle.selected"].stroke ?? tokenHex("primary")),
       strokeWidth: 2,
     },
     node: {
-      fill: c("backgroundColor", "var(--color-panel)", f.node.fill ?? "#eeeadb"),
-      stroke: c("color", "var(--color-emphasized)", f.node.stroke ?? "#001117"),
+      fill: fill(themeColorVar("panel"), "l-l-l-g", f.node.fill ?? tokenHex("l-l-l-g")),
+      stroke: stroke(themeColorVar("emphasized"), "dark", f.node.stroke ?? tokenHex("dark")),
       strokeWidth: 2,
     },
     "node.highlighted": {
-      fill: c("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, f["node.highlighted"]?.fill ?? "#c4e4d5"),
-      stroke: c("color", "var(--color-secondary)", f["node.highlighted"]?.stroke ?? "#34d1bf"),
+      fill: fill(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary", f["node.highlighted"]?.fill ?? blendTokenHex("secondary", "light-5-7", 0.24)),
+      stroke: stroke(tokenVar("secondary"), "secondary", f["node.highlighted"]?.stroke ?? tokenHex("secondary")),
       strokeWidth: 2,
     },
     "node.selected": {
-      fill: c("backgroundColor", PUZZLE_2D_CSS_SELECTED_FILL, f["node.selected"].fill ?? "#f0c8cc"),
-      stroke: c("color", PUZZLE_2D_CSS_COLOR_PRIMARY, f["node.selected"].stroke ?? "#ff344f"),
+      fill: fill(PUZZLE_2D_CSS_SELECTED_FILL, "primary", f["node.selected"].fill ?? blendTokenHex("primary", "light-5-7", 0.28)),
+      stroke: stroke(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary", f["node.selected"].stroke ?? tokenHex("primary")),
       strokeWidth: 3,
     },
   };
@@ -1688,50 +1660,51 @@ function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dSty
 
 function serializePuzzle2dVelloThemeJson(): string {
   const fb = PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA;
-  const pc = (prop: "color" | "backgroundColor", expr: string, fall: [number, number, number, number]): number[] => {
-    const raw = puzzle2dProbeCssComputed(prop, expr);
-    return [...puzzle2dParseCssColorToRgba8888(raw, fall)];
+  const pc = (expr: string, fallKey: string, alpha?: number): number[] => [...resolveColorRgba(expr, fallKey, alpha ?? 255)];
+  const pbg = (expr: string, fallKey: string, alpha?: number): number[] => {
+    const hex = resolveBackgroundColorHex(expr, fallKey);
+    return [...resolveColorRgba(hex, fallKey, alpha ?? 255)];
   };
   const payload = {
-    rasterClear: pc("backgroundColor", "var(--base)", fb.rasterClear),
+    rasterClear: pbg(semanticVar("base"), "light"),
     gridMinorStroke: (() => {
-      const border = puzzle2dParseCssColorToRgba8888(puzzle2dProbeCssComputed("color", "var(--color-border)"), [fb.gridMinorStroke[0], fb.gridMinorStroke[1], fb.gridMinorStroke[2], 255]);
+      const border = resolveColorRgba(themeColorVar("border"), "gray");
       return [border[0], border[1], border[2], fb.gridMinorStroke[3]];
     })(),
-    edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
-    edgeStrokeHovered: pc("color", "var(--color-hover-base)", fb.edgeStrokeHovered),
-    edgeStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.edgeStrokeSelected),
-    edgeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.edgeStrokeSelectionExit),
-    edgeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.edgeStrokeDisabled),
-    nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
-    nodeStroke: pc("color", "var(--color-emphasized)", fb.nodeStroke),
-    nodeFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.nodeFillHovered),
-    nodeStrokeHovered: pc("color", "var(--color-hover-base)", fb.nodeStrokeHovered),
-    nodeFillSelected: pc("backgroundColor", PUZZLE_2D_CSS_SELECTED_FILL, fb.nodeFillSelected),
-    nodeStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.nodeStrokeSelected),
-    nodeFillSelectionExit: pc("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, fb.nodeFillSelectionExit),
-    nodeStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.nodeStrokeSelectionExit),
-    nodeFillDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-panel) 50%, transparent)", fb.nodeFillDisabled),
-    nodeStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.nodeStrokeDisabled),
-    indirectHandleFill: pc("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, fb.indirectHandleFill),
-    indirectHandleStroke: pc("color", "var(--color-secondary)", fb.indirectHandleStroke),
-    handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
-    handleStroke: pc("color", "var(--color-emphasized)", fb.handleStroke),
-    handleFillHovered: pc("backgroundColor", "var(--color-hover-panel)", fb.handleFillHovered),
-    handleStrokeHovered: pc("color", "var(--color-hover-base)", fb.handleStrokeHovered),
-    handleFillSelected: pc("backgroundColor", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.handleFillSelected),
-    handleStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.handleStrokeSelected),
-    handleFillSelectionExit: pc("backgroundColor", PUZZLE_2D_CSS_HIGHLIGHTED_FILL, fb.handleFillSelectionExit),
-    handleStrokeSelectionExit: pc("color", "var(--color-secondary)", fb.handleStrokeSelectionExit),
-    handleFillDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-panel) 50%, transparent)", fb.handleFillDisabled),
-    handleStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.handleStrokeDisabled),
-    wireStroke: pc("color", "var(--color-muted-foreground)", fb.wireStroke),
-    wireStrokeHovered: pc("color", "var(--color-hover-base)", fb.wireStrokeHovered),
-    wireStrokeSelected: pc("color", PUZZLE_2D_CSS_COLOR_PRIMARY, fb.wireStrokeSelected),
-    wireStrokeHighlighted: pc("color", "var(--color-secondary)", fb.wireStrokeHighlighted),
-    wireStrokeDisabled: pc("backgroundColor", "color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", fb.wireStrokeDisabled),
-    selectionPreviewFill: pc("backgroundColor", "color-mix(in oklab, var(--color-primary) 12%, transparent)", fb.selectionPreviewFill),
-    selectionPreviewStroke: pc("color", "var(--color-primary)", fb.selectionPreviewStroke),
+    edgeStroke: pc(themeColorVar("muted-foreground"), "gray"),
+    edgeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+    edgeStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+    edgeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
+    edgeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.edgeStrokeDisabled[3]),
+    nodeFill: pbg(themeColorVar("panel"), "l-l-l-g"),
+    nodeStroke: pc(themeColorVar("emphasized"), "dark"),
+    nodeFillHovered: pbg(themeColorVar("hover-panel"), "light-5-7"),
+    nodeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+    nodeFillSelected: pbg(PUZZLE_2D_CSS_SELECTED_FILL, "primary"),
+    nodeStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+    nodeFillSelectionExit: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
+    nodeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
+    nodeFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", fb.nodeFillDisabled[3]),
+    nodeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.nodeStrokeDisabled[3]),
+    indirectHandleFill: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
+    indirectHandleStroke: pc(tokenVar("secondary"), "secondary"),
+    handleFill: pbg(themeColorVar("base"), "light"),
+    handleStroke: pc(themeColorVar("emphasized"), "dark"),
+    handleFillHovered: pbg(themeColorVar("hover-panel"), "light-5-7"),
+    handleStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+    handleFillSelected: pbg(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+    handleStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+    handleFillSelectionExit: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
+    handleStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
+    handleFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", fb.handleFillDisabled[3]),
+    handleStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.handleStrokeDisabled[3]),
+    wireStroke: pc(themeColorVar("muted-foreground"), "gray"),
+    wireStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+    wireStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
+    wireStrokeHighlighted: pc(tokenVar("secondary"), "secondary"),
+    wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.wireStrokeDisabled[3]),
+    selectionPreviewFill: pbg("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", fb.selectionPreviewFill[3]),
+    selectionPreviewStroke: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
   };
   return JSON.stringify(payload);
 }
@@ -4232,11 +4205,16 @@ export class Puzzle2dRenderer {
   }
 
   /** @emoji 🔇 Applies live layout coordinates to the imperative scene and WASM while descriptor sync is deferred (node drag / pan). */
-  applyLayoutNodePositionsSilent(moves: ReadonlyArray<{ readonly id: string; readonly x: number; readonly y: number }>): void {
+  applyLayoutNodePositionsSilent(
+    moves: ReadonlyArray<{ readonly id: string; readonly x: number; readonly y: number }>,
+    options?: { readonly forceWasm?: boolean },
+  ): void {
     if (this.isDisposed || moves.length === 0) {
       return;
     }
-    let changed = false;
+    const forceWasm = options?.forceWasm === true;
+    let sceneChanged = false;
+    const wasmMoves: Array<{ id: string; x: number; y: number }> = [];
     this.suppressSceneToWasmPush = true;
     try {
       for (const move of moves) {
@@ -4244,22 +4222,51 @@ export class Puzzle2dRenderer {
         if (!node) {
           continue;
         }
-        if (nearlyEqual(node.x, move.x) && nearlyEqual(node.y, move.y)) {
-          continue;
+        const sceneMatches = nearlyEqual(node.x, move.x) && nearlyEqual(node.y, move.y);
+        if (!sceneMatches) {
+          node.setPosition(move.x, move.y);
+          this.lastNodeAuthoringPositionById.set(move.id, { x: move.x, y: move.y });
+          sceneChanged = true;
         }
-        node.setPosition(move.x, move.y);
-        this.lastNodeAuthoringPositionById.set(move.id, { x: move.x, y: move.y });
-        this.pendingIncrementalNodeMoves.set(move.id, { x: move.x, y: move.y });
-        changed = true;
+        if (!sceneMatches || forceWasm) {
+          wasmMoves.push({ id: move.id, x: move.x, y: move.y });
+        }
       }
     } finally {
       this.suppressSceneToWasmPush = false;
     }
-    if (!changed) {
+    const wasmPushed = wasmMoves.length > 0 && this.pushLayoutNodePositionsToWasmNow(wasmMoves);
+    if (!sceneChanged && !wasmPushed) {
       return;
     }
     this.bumpTextOverlayGeometryEpoch();
     this.invalidate();
+  }
+
+  /** @emoji 📍 Flushes layout node centers to WASM immediately (source pane during drag cannot wait for deferred descriptor sync). */
+  private pushLayoutNodePositionsToWasmNow(moves: ReadonlyArray<{ readonly id: string; readonly x: number; readonly y: number }>): boolean {
+    if (moves.length === 0) {
+      return false;
+    }
+    if (this.wasmSessionCallBlockedForReentry()) {
+      for (const move of moves) {
+        this.pendingIncrementalNodeMoves.set(move.id, { x: move.x, y: move.y });
+      }
+      return true;
+    }
+    try {
+      this.session.setNodePositionsJson(JSON.stringify(moves));
+    } catch (err) {
+      console.error("[DEBUG] setNodePositionsJson failed", err);
+      for (const move of moves) {
+        this.pendingIncrementalNodeMoves.set(move.id, { x: move.x, y: move.y });
+      }
+      return true;
+    }
+    for (const move of moves) {
+      this.pendingIncrementalNodeMoves.delete(move.id);
+    }
+    return true;
   }
 
   /** @emoji 🔇 Applies a peer pane structural removal without emitting delete events. */
@@ -6582,7 +6589,7 @@ export class Puzzle2dRenderer {
       const boxCenter = this.worldToScreenWithCamera(center, overlayCamera);
       const style = this.getStyle(node.style, puzzle2dInteractionChromeStyleKey("node", node.id, chrome));
       const family = node.textFontFamily;
-      ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
+      ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.node.stroke ?? tokenHex("dark");
       if (node.textAutofit) {
         const layoutKey = `${node.id}\0${lod}\0${Math.round(maxW)}\0${Math.round(maxH)}\0${caption}\0${family ?? ""}`;
         let layout = this.textOverlayLayoutCache.get(layoutKey);
@@ -6651,7 +6658,7 @@ export class Puzzle2dRenderer {
         const labelX = handleScreen.x + dx * outward;
         const labelY = handleScreen.y + dy * outward;
         const style = this.getStyle(handle.style, puzzle2dInteractionChromeStyleKey("handle", handle.id, chrome));
-        ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.handle.stroke ?? "#001117";
+        ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.handle.stroke ?? tokenHex("dark");
         ctx.fillText(caption, labelX, labelY);
       }
     }
@@ -7219,6 +7226,25 @@ if (puzzle2dVitest) {
 
   beforeAll(async () => {
     await ensurePuzzle2dWasmLoaded();
+  });
+
+  describe("puzzle2d kind catalog token colors", () => {
+    it("serializeKindCatalogBundle resolves palette token refs to hex for WASM", () => {
+      const json = JSON.parse(
+        serializeKindCatalogBundle({
+          handles: [{ id: "port", name: "Port", color: "var(--color-primary)" }],
+          edges: [{ id: "e", name: "E", color: "var(--color-secondary)" }],
+          nodes: [{ id: "n", name: "N", color: "var(--color-gray)" }],
+        }),
+      ) as { handleKinds: { color: string }[]; edgeKinds: { color: string }[]; nodeKinds: { color: string }[] };
+      expect(json.handleKinds[0]?.color).toBe(tokenHex("primary"));
+      expect(json.edgeKinds[0]?.color).toBe(tokenHex("secondary"));
+      expect(json.nodeKinds[0]?.color).toBe(tokenHex("gray"));
+    });
+
+    it("DEFAULT_HANDLE_KIND_CATALOG stores a theme token reference", () => {
+      expect(DEFAULT_HANDLE_KIND_CATALOG[0]?.color).toBe("var(--color-muted-foreground)");
+    });
   });
 
   describe("puzzle2dFitTextFontPx", () => {
@@ -8233,6 +8259,37 @@ if (puzzle2dVitest) {
       expect(syncDescriptorJson).not.toHaveBeenCalled();
       rendererA.dispose();
       rendererB.dispose();
+    });
+
+    it("puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers forces wasm push when js scene already matches", () => {
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test", graphPortMode: "normal" });
+      const descriptor = {
+        nodes: [
+          { id: "a", x: 0, y: 0, radius: 24, draggable: true, handles: [] },
+          { id: "b", x: 200, y: 40, radius: 24, draggable: true, handles: [] },
+        ],
+        handles: [],
+        edges: [{ id: "e1", source: "a", target: "b" }],
+        wires: [],
+      };
+      syncPuzzle2dScene(renderer, descriptor);
+      renderer["pushSceneToWasmDriver"]();
+      vi.spyOn(renderer.session, "defersDescriptorSyncFromJs").mockReturnValue(true);
+      const setNodePositionsJson = vi.spyOn(renderer.session, "setNodePositionsJson");
+      setNodePositionsJson.mockClear();
+      puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers({
+        schema: "reasoning.mindmap.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [
+          { id: "a", x: 0, y: 0, radius: 24, handles: [] },
+          { id: "b", x: 200, y: 40, radius: 24, handles: [] },
+        ],
+        edges: [{ id: "e1", source: "a", target: "b" }],
+      });
+      expect(setNodePositionsJson).toHaveBeenCalledTimes(1);
+      expect(setNodePositionsJson.mock.calls[0]?.[0]).toContain('"id":"b"');
+      renderer.dispose();
     });
 
     it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers syncs normal graph across panes", () => {
@@ -9467,8 +9524,8 @@ if (puzzle2dVitest) {
         meta: {
           kindCatalogs: {
             edges: [
-              { id: "wires.owns", name: "Owns", color: "#64748b", pattern: "solid", targetTip: "filled-diamond", directed: false, stroke: "2" },
-              { id: "wires.references", name: "References", color: "#a855f7", pattern: "dashed", targetTip: "fine-arrow", directed: false, stroke: "1.5" },
+              { id: "wires.owns", name: "Owns", color: "var(--color-muted-foreground)", pattern: "solid", targetTip: "filled-diamond", directed: false, stroke: "2" },
+              { id: "wires.references", name: "References", color: "var(--color-tertiary)", pattern: "dashed", targetTip: "fine-arrow", directed: false, stroke: "1.5" },
             ],
           },
         },
@@ -11769,7 +11826,7 @@ export function puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(fixture: Puzz
     if (!peer.authoringPeerActive()) {
       continue;
     }
-    peer.applyLayoutNodePositionsSilent(moves);
+    peer.applyLayoutNodePositionsSilent(moves, { forceWasm: true });
   }
 }
 

@@ -1557,13 +1557,12 @@ export function buildPuzzle2dPlayRuntime(): Platform {
 /** @emoji 🛝 Puzzle 2d play harness as a single {@link Playground} instance. */
 export class Playground2d extends Playground {
 	readonly id = PUZZLE_2D_PLAY_APP_ID;
-	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 	readonly keybindings = [
 		{ key: "ctrl+a,meta+a", controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command: "selectAllSelection" },
 	];
 
 	createRuntime(): Platform {
-		const runtime = new Platform({ id: this.id, initialPanelVisibility: this.initialPanelVisibility });
+		const runtime = new Platform({ id: this.id });
 		const ctrl = new Puzzle2dPlayShellController(runtime.commandBus, () => runtime.notify(), () => runtime.notifyChrome());
 		runtime.addApp(buildPuzzle2dPlayAppRuntime(ctrl));
 		return runtime;

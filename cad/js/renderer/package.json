@@ -17,6 +17,7 @@
     "@framework/playground/core": "workspace:*",
     "@framework/playground/renderer/react": "workspace:*",
     "@ui/react": "workspace:*",
+    "@ui/styling": "workspace:*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "@cad/js/core": "workspace:*",

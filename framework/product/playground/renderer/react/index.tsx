@@ -2108,7 +2108,7 @@ export function registerPuzzle3dPlaySurfaceHosts(): void {
 /** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
 export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
   mountPlaygroundApp(
-    <PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} initialPanelVisibility={playground.initialPanelVisibility} playgroundKeybindings={playground.keybindings} />,
+    <PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} playgroundKeybindings={playground.keybindings} />,
     rootId,
   );
 }
@@ -2318,7 +2318,7 @@ function Puzzle5dPlayChrome({ runtime }: { readonly runtime: Platform }): React.
     [snapshot, snapshotKey, controller, bus],
   );
   const detailTabs = reactHostPort.useMemo(() => [new Puzzle5dPlayStatusPanelDefinition().resolveTab()], []);
-  const shell = <PlaygroundView runtime={runtime} defaultAppId={PUZZLE_5D_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />;
+  const shell = <PlaygroundView runtime={runtime} defaultAppId={PUZZLE_5D_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }} />;
   if (!controller) {
     return shell;
   }
@@ -2983,7 +2983,7 @@ function puzzle2dPlayProgressiveForceIters(elapsedMs: number, autoStopMs: number
   return Math.max(2, Math.round(2 + t * (cap - 2)));
 }
 
-/** @emoji 📐 Builds {@link Puzzle2dRedrawLayoutOptions} for the active pane camera center and redraw mode. */
+/** @emoji 📐 Builds {@link Puzzle2dRedrawLayoutOptions}; force-graph uses relative springs/repulsion only (no viewport gravity anchor). */
 function puzzle2dPlayRedrawLayoutOpts(
   pane: Puzzle2dPlayPaneId,
   camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>,
@@ -3017,16 +3017,12 @@ function puzzle2dPlayRedrawLayoutOpts(
     };
   }
   const fg: Puzzle2dForceGraphLayoutOptions = {
-    centerX: cx,
-    centerY: cy,
     gravity: Math.max(0, forceGravity),
     idealEdgeLength: Math.max(8, forceIdealEdge),
     iterations: Math.max(1, Math.min(5000, Math.round(forceIters))),
     repulsionStrength: Math.max(40, Math.min(120, Math.round(forceRepulsion))),
   };
   return {
-    centerX: cx,
-    centerY: cy,
     forceGraph: fg,
     mode: "force-graph",
     redrawHandlesAfter,
@@ -4224,7 +4220,7 @@ function Puzzle2dPlayInner({
   );
   const [forceLayoutFullIterations, setForceLayoutFullIterations] = reactHostPort.useState(200);
   const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = reactHostPort.useState(64);
-  const [forceLayoutGravity, setForceLayoutGravity] = reactHostPort.useState(0.012);
+  const [forceLayoutGravity, setForceLayoutGravity] = reactHostPort.useState(PUZZLE_2D_PLAY_IS_WIRES ? 0 : 0.012);
   const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = reactHostPort.useState(80);
   const [puzzle2dRedrawPlayMaxItersPerFrame, setPuzzle2dRedrawPlayMaxItersPerFrame] = reactHostPort.useState(96);
   const [puzzle2dRedrawProgressiveEnabled, setPuzzle2dRedrawProgressiveEnabled] = reactHostPort.useState(true);
@@ -4774,7 +4770,7 @@ function Puzzle2dPlayInner({
     puzzle2dRedrawProgressiveEnabled: true,
     puzzle2dRedrawPlayMaxItersPerFrame: 96,
     camerasByPane: puzzle2dPlayInitialCameras(),
-    forceLayoutGravity: 0.012,
+    forceLayoutGravity: PUZZLE_2D_PLAY_IS_WIRES ? 0 : 0.012,
     forceLayoutIdealEdgeLength: 64,
     forceLayoutRepulsionStrength: 80,
     mode: "force-graph",
@@ -5330,7 +5326,7 @@ function Puzzle2dPlayInner({
         <Puzzle2dPlayCanvasSelectionContext.Provider value={canvasSelectionValue}>
           <Puzzle2dPlayCamerasContext.Provider value={camerasValue}>
             <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
-              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} playgroundKeybindings={playgroundKeybindings} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} slotNavbarCenter={slotNavbarCenter} />
+              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playgroundKeybindings} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} slotNavbarCenter={slotNavbarCenter} />
             </Puzzle2dPlayLodRuntimeContext.Provider>
           </Puzzle2dPlayCamerasContext.Provider>
         </Puzzle2dPlayCanvasSelectionContext.Provider>
@@ -5457,7 +5453,7 @@ export function registerMapPlaySurfaceHosts(): void {
 }
 
 function MapPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <PlaygroundView runtime={runtime} defaultAppId={GIS_MAP_PLAY_APP_ID} initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: false }} />;
+  return <PlaygroundView runtime={runtime} defaultAppId={GIS_MAP_PLAY_APP_ID} />;
 }
 
 export function mountMapPlayChrome(playground: Playground, rootId = "root"): void {
@@ -6118,7 +6114,6 @@ function PresentationPlayChrome({ playground }: { readonly playground: Playgroun
 		<PlaygroundView
 			runtime={playground.runtime}
 			defaultAppId={PRESENTATION_PLAY_CONTROLLER_ID}
-			initialPanelVisibility={playground.initialPanelVisibility}
 			playgroundKeybindings={playground.keybindings}
 		/>
 	);

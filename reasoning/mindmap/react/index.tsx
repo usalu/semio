@@ -32,7 +32,7 @@ if (import.meta.vitest) {
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [],
         edges: [],
-        meta: { kindCatalogs: { nodes: [{ id: "n1", name: "Node", color: "#fff" }] } },
+        meta: { kindCatalogs: { nodes: [{ id: "n1", name: "Node", color: "var(--color-light)" }] } },
       });
       expect(json).toContain("n1");
     });

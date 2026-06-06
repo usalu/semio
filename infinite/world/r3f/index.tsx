@@ -4,6 +4,7 @@
 
 // #region 🔌Adapters
 import { reactHostPort, sceneHostPort, type ReactNode } from "@ui/react";
+import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar } from "@ui/styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 
@@ -367,81 +368,32 @@ export function solidOverlapVolume(
 
 // #region 🎨MeshBorder
 /** @emoji 📏 UI normal border token for infinite-world mesh edge strokes ({@link borderNormalClass}). */
-export const WORLD_MESH_BORDER_CSS = "var(--border-normal-color)";
+export const WORLD_MESH_BORDER_CSS = semanticVar("border-normal-color");
 
 /** @emoji 📏 Marks {@link LineSegments} added by {@link applyWorldMeshEdgeBorders}. */
 export const WORLD_MESH_OUTLINE_USER_DATA_KEY = "__worldMeshBorderOutline";
 
-const WORLD_MESH_BORDER_HEADLESS = "#808080";
-
 let worldMeshBorderColorCache: string | null = null;
-
-function probeWorldCssColor(property: "color" | "backgroundColor", expr: string): string {
-  if (typeof document === "undefined") {
-    return "";
-  }
-  const el = document.createElement("span");
-  const key = property === "color" ? "color" : "background-color";
-  el.setAttribute("style", `${key}:${expr};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
-  if (document.documentElement.classList.contains("dark")) {
-    el.classList.add("dark");
-  }
-  document.documentElement.appendChild(el);
-  const out = getComputedStyle(el)[property];
-  el.remove();
-  return out;
-}
-
-function cssColorForThree(css: string): string {
-  if (!css) {
-    return css;
-  }
-  if (!/^(oklab|oklch|lab|lch|color)\(/iu.test(css)) {
-    return css;
-  }
-  if (typeof document === "undefined") {
-    return WORLD_MESH_BORDER_HEADLESS;
-  }
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return WORLD_MESH_BORDER_HEADLESS;
-  }
-  ctx.fillStyle = "#000000";
-  ctx.fillStyle = css;
-  const converted = ctx.fillStyle;
-  if (/^(oklab|oklch|lab|lch|color)\(/iu.test(converted)) {
-    return WORLD_MESH_BORDER_HEADLESS;
-  }
-  return converted;
-}
-
-function resolveWorldMeshBorderCssColor(): string {
-  const raw = probeWorldCssColor("color", WORLD_MESH_BORDER_CSS);
-  if (!raw || raw === "rgba(0, 0, 0, 0)") {
-    return WORLD_MESH_BORDER_HEADLESS;
-  }
-  return cssColorForThree(raw);
-}
 
 /** @emoji 📏 Resolves {@link WORLD_MESH_BORDER_CSS} to an sRGB color string for Three.js materials. */
 export function worldMeshBorderColor(): string {
   if (worldMeshBorderColorCache) {
     return worldMeshBorderColorCache;
   }
-  worldMeshBorderColorCache = resolveWorldMeshBorderCssColor();
+  worldMeshBorderColorCache = resolveColorHex(WORLD_MESH_BORDER_CSS, "gray");
   return worldMeshBorderColorCache;
 }
 
 /** @emoji 🔄 Clears cached mesh border color (tests or theme switches). */
 export function resetWorldMeshBorderColorCache(): void {
   worldMeshBorderColorCache = null;
+  clearColorResolveCache();
 }
 
 /** @emoji 📏 Edge-segment outline for one mesh geometry using the UI normal border color. */
 export function createWorldMeshEdgeOutline(geometry: BufferGeometry, borderColor?: string): LineSegments {
   const color = borderColor ?? worldMeshBorderColor();
-  const outline = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: new Color(cssColorForThree(color)) }));
+  const outline = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: new Color(resolveColorHex(color, "gray")) }));
   outline.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY] = true;
   outline.scale.setScalar(1.001);
   return outline;
@@ -845,7 +797,7 @@ export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactE
     const size = 12_000;
     return layers.map(({ stepWorld, opacity }) => {
       const divs = Math.min(512, Math.max(2, Math.round(size / stepWorld)));
-      const grid = new GridHelper(size, divs, 0xb8c4d0, 0x6a7a8a);
+      const grid = new GridHelper(size, divs, resolveThreeColor(themeColorVar("border"), "gray"), resolveThreeColor(themeColorVar("muted-foreground"), "gray"));
       grid.rotation.x = Math.PI / 2;
       applyLodGridLayerStyle(grid, opacity);
       return grid;

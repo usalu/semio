@@ -36,6 +36,7 @@ class TestScript extends BundleScript {
     runBun([join(this.repoRoot, "puzzle/2d/rs/script.ts"), "wasm"], this.root, playPollingEnv());
     runBun([join(this.repoRoot, "reasoning/mindmap/wires/react/script.ts"), "test"], this.root, playPollingEnv());
     runVitest(join(this.repoRoot, "reasoning/mindmap/wires/react"), segments);
+    runVitest(this.root, segments);
   }
 }
 

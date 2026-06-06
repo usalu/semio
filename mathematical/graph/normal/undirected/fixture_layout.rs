@@ -55,7 +55,7 @@ fn default_spring_strength() -> f64 {
     0.028
 }
 fn default_gravity() -> f64 {
-    0.018
+    0.0
 }
 fn default_time_step() -> f64 {
     0.85

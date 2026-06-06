@@ -3045,7 +3045,6 @@ export function buildPuzzle3dPlayKindsPanelBody(ctx: WindowBodyViewContext): UiT
 /** @emoji 🛝 Puzzle 3D play harness as a single {@link Playground} instance. */
 export class Playground3d extends Playground {
   readonly id = PUZZLE_3D_PLAY_APP_ID;
-  readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
   readonly keybindings = [
     { key: "ctrl+a,meta+a", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "selectAllSelection" },
     { key: "Delete", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
@@ -3053,7 +3052,7 @@ export class Playground3d extends Playground {
   ];
 
   createRuntime(): Platform {
-    return buildPuzzle3dPlayRuntime(this.initialPanelVisibility);
+    return buildPuzzle3dPlayRuntime();
   }
 
   registerBodies(): void {

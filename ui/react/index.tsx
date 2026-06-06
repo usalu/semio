@@ -28,6 +28,7 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { resolveColorHex, resolveSemanticColorHex, themeColorVar, tokenVar } from "@ui/styling";
 import * as dagre from "dagre";
 import { format, formatDistanceToNow } from "date-fns";
 import Fuse, { type FuseResult } from "fuse.js";
@@ -14138,14 +14139,7 @@ const SceneFrameControl: React.FC = () => {
   return null;
 };
 
-const _elementsComputedColorCache = new Map<string, string>();
-const getComputedColor = (variable: string): string => {
-  const cached = _elementsComputedColorCache.get(variable);
-  if (cached !== undefined) return cached;
-  const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-  _elementsComputedColorCache.set(variable, value);
-  return value;
-};
+const getComputedColor = (variable: string): string => resolveSemanticColorHex(variable, "gray");
 
 /**
  * selectableCursorUsageCount holds the data fields for a selectableCursorUsageCount record.
@@ -14335,16 +14329,7 @@ interface GltfProps {
   metalness?: number;
 }
 
-/**
- * getComputedColorForGltf holds the data fields for a getComputedColorForGltf record.
- **/
-const getComputedColorForGltf = (variable: string): string => {
-  const cached = _elementsComputedColorCache.get(variable);
-  if (cached !== undefined) return cached;
-  const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-  _elementsComputedColorCache.set(variable, value);
-  return value;
-};
+const getComputedColorForGltf = (variable: string): string => resolveSemanticColorHex(variable, "gray");
 
 /**
  * Gltf holds the data fields for a Gltf record.
@@ -14638,7 +14623,9 @@ export function gumballSnapScalar(value: number, snap: number | undefined): numb
   return Math.round(value / snap) * snap;
 }
 
-const GUMBALL_AXIS_COLORS = { x: "#ef4444", y: "#22c55e", z: "#3b82f6" } as const;
+const GUMBALL_AXIS_COLOR_REFS = { x: tokenVar("danger"), y: tokenVar("success"), z: tokenVar("secondary") } as const;
+const GUMBALL_PLANE_COLOR_REF = themeColorVar("muted-foreground");
+const GUMBALL_UNIFORM_COLOR_REF = tokenVar("light");
 const GUMBALL_HANDLE_LENGTH = 0.85;
 const GUMBALL_ARROW_RADIUS = 0.035;
 const GUMBALL_ARROW_HEAD = 0.14;
@@ -14751,6 +14738,16 @@ function GumballHandles(props: {
   readonly onPointerOver: (kind: GumballHandleKind) => void;
   readonly onPointerOut: () => void;
 }): React.ReactElement {
+  const axisColors = reactHostPort.useMemo(
+    () => ({
+      x: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.x, "danger"),
+      y: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.y, "success"),
+      z: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.z, "secondary"),
+    }),
+    [],
+  );
+  const planeColor = reactHostPort.useMemo(() => resolveColorHex(GUMBALL_PLANE_COLOR_REF, "gray"), []);
+  const uniformColor = reactHostPort.useMemo(() => resolveColorHex(GUMBALL_UNIFORM_COLOR_REF, "light"), []);
   const handleProps = (kind: GumballHandleKind, color: string, children: React.ReactNode) => (
     <GumballHandleMesh kind={kind} color={color} hovered={props.hovered === kind} onPointerDown={props.onPointerDown} onPointerOver={props.onPointerOver} onPointerOut={props.onPointerOut}>
       {children}
@@ -14762,7 +14759,7 @@ function GumballHandles(props: {
         <>
           {handleProps(
             "moveX",
-            GUMBALL_AXIS_COLORS.x,
+            axisColors.x,
             <>
               <mesh rotation={[0, 0, -Math.PI / 2]}>
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
@@ -14774,7 +14771,7 @@ function GumballHandles(props: {
           )}
           {handleProps(
             "moveY",
-            GUMBALL_AXIS_COLORS.y,
+            axisColors.y,
             <>
               <mesh>
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
@@ -14786,7 +14783,7 @@ function GumballHandles(props: {
           )}
           {handleProps(
             "moveZ",
-            GUMBALL_AXIS_COLORS.z,
+            axisColors.z,
             <>
               <mesh rotation={[Math.PI / 2, 0, 0]}>
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
@@ -14802,21 +14799,21 @@ function GumballHandles(props: {
         <>
           {handleProps(
             "moveXY",
-            "#94a3b8",
+            planeColor,
             <mesh position={[GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET, 0]}>
               <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
             </mesh>,
           )}
           {handleProps(
             "moveYZ",
-            "#94a3b8",
+            planeColor,
             <mesh position={[0, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET]} rotation={[0, Math.PI / 2, 0]}>
               <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
             </mesh>,
           )}
           {handleProps(
             "moveXZ",
-            "#94a3b8",
+            planeColor,
             <mesh position={[GUMBALL_PLANE_OFFSET, 0, GUMBALL_PLANE_OFFSET]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
             </mesh>,
@@ -14827,21 +14824,21 @@ function GumballHandles(props: {
         <>
           {handleProps(
             "rotateX",
-            GUMBALL_AXIS_COLORS.x,
+            axisColors.x,
             <mesh rotation={[0, Math.PI / 2, 0]}>
               <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
             </mesh>,
           )}
           {handleProps(
             "rotateY",
-            GUMBALL_AXIS_COLORS.y,
+            axisColors.y,
             <mesh rotation={[Math.PI / 2, 0, 0]}>
               <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
             </mesh>,
           )}
           {handleProps(
             "rotateZ",
-            GUMBALL_AXIS_COLORS.z,
+            axisColors.z,
             <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />,
           )}
         </>
@@ -14850,21 +14847,21 @@ function GumballHandles(props: {
         <>
           {handleProps(
             "scaleX",
-            GUMBALL_AXIS_COLORS.x,
+            axisColors.x,
             <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]}>
               <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
             </mesh>,
           )}
           {handleProps(
             "scaleY",
-            GUMBALL_AXIS_COLORS.y,
+            axisColors.y,
             <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]}>
               <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
             </mesh>,
           )}
           {handleProps(
             "scaleZ",
-            GUMBALL_AXIS_COLORS.z,
+            axisColors.z,
             <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]}>
               <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
             </mesh>,
@@ -14874,7 +14871,7 @@ function GumballHandles(props: {
       {props.config.scaleUniform
         ? handleProps(
             "scaleUniform",
-            "#f8fafc",
+            uniformColor,
             <mesh>
               <boxGeometry args={[GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX]} />
             </mesh>,

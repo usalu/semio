@@ -6,6 +6,7 @@
 
 // #region 🔌Adapters
 import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, type EngagementControl, type EngagementSpec, type GumballConfig, type ThreeEvent } from "@ui/react";
+import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@ui/styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -1758,45 +1759,43 @@ export interface SpatialSceneColorPalette {
 }
 
 const SPATIAL_SCENE_COLOR_FALLBACK: SpatialSceneColorPalette = {
-  canvas: "#e8e8e8",
-  accent: "#c9a227",
-  accentEmissive: "#3d3010",
-  accentSecondary: "#8a8a8a",
-  accentSecondaryEmissive: "#2a2a2a",
-  foreground: "#1a1a1a",
-  muted: "#6b6b6b",
-  mutedEmissive: "#2a2a2a",
-  selected: "#c9a227",
-  selectedEmissive: "#3d3010",
-  hovered: "#a08020",
-  hoveredEmissive: "#302808",
-  vertex: "#1a1a1a",
-  vertexEmissive: "#404040",
-  edge: "#4a4a4a",
-  edgeEmissive: "#2a2a2a",
-  object: "#6b6b6b",
-  objectEmissive: "#2a2a2a",
-  face: "#8a8a8a",
-  faceEmissive: "#333333",
-  gridMajor: "#b0b0b0",
-  gridMinor: "#d8d8d8",
-  groundPlane: "#b0b0b0",
-  archived: "#6b8a72",
-  archivedEmissive: "#1a2820",
-  ghost: "#8a8a8a",
-  committed: "#8a8a8a",
-  committedEmissive: "#2a2a2a",
-  committedWire: "#d0d0d0",
-  dimension: "#1a1a1a",
-  guide: "#6b6b6b",
-  construction: "#c9a227",
-  constructionEmissive: "#3d3010",
+  canvas: tokenHex("light-6-7"),
+  accent: tokenHex("tertiary"),
+  accentEmissive: tokenHex("dark-5-7"),
+  accentSecondary: tokenHex("gray"),
+  accentSecondaryEmissive: tokenHex("dark"),
+  foreground: tokenHex("dark"),
+  muted: tokenHex("gray"),
+  mutedEmissive: tokenHex("dark-6-7"),
+  selected: tokenHex("primary"),
+  selectedEmissive: tokenHex("dark-5-7"),
+  hovered: tokenHex("secondary"),
+  hoveredEmissive: tokenHex("dark-5-7"),
+  vertex: tokenHex("dark"),
+  vertexEmissive: tokenHex("gray-400"),
+  edge: tokenHex("gray-400"),
+  edgeEmissive: tokenHex("dark-6-7"),
+  object: tokenHex("gray"),
+  objectEmissive: tokenHex("dark-6-7"),
+  face: tokenHex("gray-600"),
+  faceEmissive: tokenHex("gray-300"),
+  gridMajor: tokenHex("gray-700"),
+  gridMinor: tokenHex("light-gray"),
+  groundPlane: tokenHex("gray-700"),
+  archived: tokenHex("success"),
+  archivedEmissive: tokenHex("dark-8-9"),
+  ghost: tokenHex("gray"),
+  committed: tokenHex("gray"),
+  committedEmissive: tokenHex("dark-6-7"),
+  committedWire: tokenHex("light-gray"),
+  dimension: tokenHex("dark"),
+  guide: tokenHex("gray"),
+  construction: tokenHex("tertiary"),
+  constructionEmissive: tokenHex("dark-5-7"),
 };
 
-function readSpatialCssColor(variable: string, fallback: string): string {
-  if (typeof document === "undefined") return fallback;
-  const resolved = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-  return resolved || fallback;
+function readSpatialCssColor(variable: string, fallbackKey: string): string {
+  return resolveSemanticColorHex(variable, fallbackKey);
 }
 
 let spatialSceneColorCache: SpatialSceneColorPalette | null = null;
@@ -1804,46 +1803,46 @@ let spatialSceneColorCache: SpatialSceneColorPalette | null = null;
 /** @emoji 🎨 Reads `--canvas`, `--accent`, and selection tokens for Three.js materials. */
 export function spatialSceneColors(): SpatialSceneColorPalette {
   if (spatialSceneColorCache) return spatialSceneColorCache;
-  const accent = readSpatialCssColor("--accent", SPATIAL_SCENE_COLOR_FALLBACK.accent);
-  const accentSecondary = readSpatialCssColor("--accent-secondary", SPATIAL_SCENE_COLOR_FALLBACK.accentSecondary);
-  const foreground = readSpatialCssColor("--foreground", SPATIAL_SCENE_COLOR_FALLBACK.foreground);
-  const muted = readSpatialCssColor("--muted-foreground", SPATIAL_SCENE_COLOR_FALLBACK.muted);
-  const selected = readSpatialCssColor("--color-changed-selected", accent);
-  const hovered = readSpatialCssColor("--color-changed-hovered", accentSecondary);
+  const accent = readSpatialCssColor("--accent", "tertiary");
+  const accentSecondary = readSpatialCssColor("--accent-secondary", "gray");
+  const foreground = readSpatialCssColor("--foreground", "dark");
+  const muted = readSpatialCssColor("--muted-foreground", "gray");
+  const selected = readSpatialCssColor("--color-changed-selected", "primary");
+  const hovered = readSpatialCssColor("--color-changed-hovered", "secondary");
   spatialSceneColorCache = {
-    canvas: readSpatialCssColor("--canvas", SPATIAL_SCENE_COLOR_FALLBACK.canvas),
+    canvas: readSpatialCssColor("--canvas", "light-6-7"),
     accent,
-    accentEmissive: readSpatialCssColor("--active-base", SPATIAL_SCENE_COLOR_FALLBACK.accentEmissive),
+    accentEmissive: readSpatialCssColor("--active-base", "dark-5-7"),
     accentSecondary,
-    accentSecondaryEmissive: readSpatialCssColor("--hover-panel", SPATIAL_SCENE_COLOR_FALLBACK.accentSecondaryEmissive),
+    accentSecondaryEmissive: readSpatialCssColor("--hover-panel", "dark"),
     foreground,
     muted,
-    mutedEmissive: readSpatialCssColor("--hover-base", SPATIAL_SCENE_COLOR_FALLBACK.mutedEmissive),
+    mutedEmissive: readSpatialCssColor("--hover-base", "dark-6-7"),
     selected,
-    selectedEmissive: readSpatialCssColor("--active-base", SPATIAL_SCENE_COLOR_FALLBACK.selectedEmissive),
+    selectedEmissive: readSpatialCssColor("--active-base", "dark-5-7"),
     hovered,
-    hoveredEmissive: readSpatialCssColor("--hover-panel", SPATIAL_SCENE_COLOR_FALLBACK.hoveredEmissive),
+    hoveredEmissive: readSpatialCssColor("--hover-panel", "dark-5-7"),
     vertex: foreground,
-    vertexEmissive: readSpatialCssColor("--hover-base", SPATIAL_SCENE_COLOR_FALLBACK.vertexEmissive),
-    edge: readSpatialCssColor("--border-normal-color", SPATIAL_SCENE_COLOR_FALLBACK.edge),
-    edgeEmissive: readSpatialCssColor("--hover-base", SPATIAL_SCENE_COLOR_FALLBACK.edgeEmissive),
+    vertexEmissive: readSpatialCssColor("--hover-base", "gray-400"),
+    edge: readSpatialCssColor("--border-normal-color", "gray-400"),
+    edgeEmissive: readSpatialCssColor("--hover-base", "dark-6-7"),
     object: muted,
-    objectEmissive: readSpatialCssColor("--hover-panel", SPATIAL_SCENE_COLOR_FALLBACK.objectEmissive),
+    objectEmissive: readSpatialCssColor("--hover-panel", "dark-6-7"),
     face: accentSecondary,
-    faceEmissive: readSpatialCssColor("--hover-window", SPATIAL_SCENE_COLOR_FALLBACK.faceEmissive),
-    gridMajor: readSpatialCssColor("--border-normal-color", SPATIAL_SCENE_COLOR_FALLBACK.gridMajor),
-    gridMinor: readSpatialCssColor("--muted-foreground", SPATIAL_SCENE_COLOR_FALLBACK.gridMinor),
-    groundPlane: readSpatialCssColor("--border-normal-color", SPATIAL_SCENE_COLOR_FALLBACK.groundPlane),
-    archived: readSpatialCssColor("--success-border", SPATIAL_SCENE_COLOR_FALLBACK.archived),
-    archivedEmissive: readSpatialCssColor("--success-foreground", SPATIAL_SCENE_COLOR_FALLBACK.archivedEmissive),
+    faceEmissive: readSpatialCssColor("--hover-window", "gray-300"),
+    gridMajor: readSpatialCssColor("--border-normal-color", "gray-700"),
+    gridMinor: readSpatialCssColor("--muted-foreground", "light-gray"),
+    groundPlane: readSpatialCssColor("--border-normal-color", "gray-700"),
+    archived: readSpatialCssColor("--success-border", "success"),
+    archivedEmissive: readSpatialCssColor("--success-foreground", "dark-8-9"),
     ghost: muted,
     committed: accentSecondary,
-    committedEmissive: readSpatialCssColor("--hover-panel", SPATIAL_SCENE_COLOR_FALLBACK.committedEmissive),
-    committedWire: readSpatialCssColor("--foreground", SPATIAL_SCENE_COLOR_FALLBACK.committedWire),
+    committedEmissive: readSpatialCssColor("--hover-panel", "dark-6-7"),
+    committedWire: readSpatialCssColor("--foreground", "light-gray"),
     dimension: foreground,
     guide: muted,
     construction: accent,
-    constructionEmissive: readSpatialCssColor("--active-base", SPATIAL_SCENE_COLOR_FALLBACK.constructionEmissive),
+    constructionEmissive: readSpatialCssColor("--active-base", "dark-5-7"),
   };
   return spatialSceneColorCache;
 }
@@ -1851,6 +1850,7 @@ export function spatialSceneColors(): SpatialSceneColorPalette {
 /** @emoji 🔄 Clears cached CSS palette (tests or theme switches). */
 export function resetSpatialSceneColorCache(): void {
   spatialSceneColorCache = null;
+  clearColorResolveCache();
 }
 
 function spatialSceneColorToHex(color: string): number {

@@ -55,6 +55,7 @@ export const WIRES_PLAY_FIXTURE_OPTIONS = [{ id: WIRES_PLAY_FIXTURE_METABOLISM_I
 
 /** @emoji 🕸️ WIRES play defaults: continuous force-graph redraw (no auto-stop). */
 export const WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS = {
+  forceLayoutGravity: 0,
   puzzle2dRedrawPlaying: true,
   puzzle2dRedrawProgressiveAutoStopMs: 0,
 } as const;
@@ -292,6 +293,16 @@ if (import.meta.vitest) {
     it("WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS enables continuous force-graph redraw", () => {
       expect(WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS.puzzle2dRedrawPlaying).toBe(true);
       expect(WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS.puzzle2dRedrawProgressiveAutoStopMs).toBe(0);
+      expect(WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS.forceLayoutGravity).toBe(0);
+    });
+
+    it("metabolism kind catalogs use design-token color references", () => {
+      const catalogs = WIRES_PLAY_FIXTURE.board.meta?.kindCatalogs;
+      const owns = catalogs?.relationshipKinds?.find((row) => row.id === "wires.owns");
+      const isKind = catalogs?.relationshipKinds?.find((row) => row.id === "wires.is");
+      expect(owns?.color).toBe("var(--color-muted-foreground)");
+      expect(isKind?.color).toBe("var(--color-secondary)");
+      expect(catalogs?.identityKinds?.[0]?.color).toMatch(/^var\(--color-/u);
     });
   });
 }

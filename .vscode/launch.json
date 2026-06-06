@@ -898,6 +898,17 @@
       }
     },
     {
+      "name": "📦build🖱️ui🎨styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts generate",
+      "cwd": "${workspaceFolder}/ui/styling",
+      "presentation": {
+        "group": "4_build",
+        "order": 28
+      }
+    },
+    {
       "name": "📦build🖱️ui🏪assets",
       "type": "node-terminal",
       "request": "launch",

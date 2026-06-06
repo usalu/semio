@@ -631,14 +631,13 @@ export function buildPresentationPlayRuntime(): Platform {
 /** @emoji 🛝 Presentation tile play harness as a single {@link Playground}. */
 export class PresentationPlay extends Playground {
 	readonly id = PRESENTATION_PLAY_APP_ID;
-	readonly initialPanelVisibility = { leftSidePanel: true, rightSidePanel: true };
 	readonly keybindings = [
 		{ key: "Delete", controllerId: PRESENTATION_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 		{ key: "Backspace", controllerId: PRESENTATION_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 	];
 
 	createRuntime(): Platform {
-		const runtime = new Platform({ id: this.id, initialPanelVisibility: this.initialPanelVisibility });
+		const runtime = new Platform({ id: this.id });
 		const ctrl = new PresentationPlayController(runtime.commandBus, () => runtime.notify());
 		runtime.addApp(buildPresentationPlayAppRuntime(ctrl));
 		return runtime;

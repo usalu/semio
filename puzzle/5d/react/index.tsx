@@ -664,10 +664,8 @@ export function fiveDApplyLiveForceGraphStep(
   const camera = store.get2dCamera(instanceId);
   const locked = lockedNodeIds.length ? [...lockedNodeIds] : undefined;
   const laid = layoutPuzzle2dFixtureRedrawNodes(fixture, {
-    centerX: camera.x,
-    centerY: camera.y,
     forceGraph: {
-      gravity: 0.012,
+      gravity: 0,
       idealEdgeLength: 64,
       iterations: FIVE_D_LIVE_FORCE_ITERS_PER_FRAME,
       repulsionStrength: 80,
@@ -1148,7 +1146,7 @@ function gripKindFrom3dVortex(row: Puzzle3dGripKind): GripKind {
   return {
     id: row.id,
     name: row.name ?? row.id,
-    color: row.color ?? "#94a3b8",
+    color: row.color ?? "var(--color-muted-foreground)",
     ...(row.label !== undefined ? { label: row.label } : {}),
     ...(row.defaultCableKind !== undefined ? { defaultRopeKind: row.defaultCableKind } : {}),
   };

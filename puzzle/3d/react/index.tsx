@@ -16,6 +16,15 @@ import {
   type TreeDragAndDropController,
   SelectionMarquee,
 } from "@ui/react";
+import {
+  blendTokenHex,
+  resolveBackgroundColorHex,
+  resolveColorHex,
+  resolveThreeColor,
+  themeColorVar,
+  tokenHex,
+  tokenVar,
+} from "@ui/styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactNode } from "react";
 import {
   cadObjectLocalDirectionToThreeGroupLocal,
@@ -4559,17 +4568,17 @@ export function readPuzzle3dFillWorkerSnapshot(): Promise<Puzzle3dFillWorkerSnap
 
 //#region ­ƒÄ¿MeshPaint
 const CSS_SELECTED_MESH = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
-const CSS_SELECTED_LINE = "var(--color-primary)";
+const CSS_SELECTED_LINE = tokenVar("primary");
 const CSS_HIGHLIGHTED_MESH = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
-const CSS_HIGHLIGHTED_LINE = "var(--color-secondary)";
-const CSS_HOVERED_MESH = "var(--color-hover-panel)";
-const CSS_HOVERED_LINE = "var(--color-hover-base)";
-const CSS_NEUTRAL_MESH = "var(--color-panel)";
+const CSS_HIGHLIGHTED_LINE = tokenVar("secondary");
+const CSS_HOVERED_MESH = themeColorVar("hover-panel");
+const CSS_HOVERED_LINE = themeColorVar("hover-base");
+const CSS_NEUTRAL_MESH = themeColorVar("panel");
 const CSS_NEUTRAL_LINE = WORLD_MESH_BORDER_CSS;
 const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
-const CSS_DISABLED_LINE = "var(--color-muted-foreground)";
-const CSS_ATTRACTION_ENDPOINT_LINE = "var(--color-muted-foreground)";
-const CSS_ATTRACTION_LINE = "var(--color-accent)";
+const CSS_DISABLED_LINE = themeColorVar("muted-foreground");
+const CSS_ATTRACTION_ENDPOINT_LINE = themeColorVar("muted-foreground");
+const CSS_ATTRACTION_LINE = themeColorVar("accent");
 
 interface MeshStyleColors {
   readonly meshColor: string;
@@ -4583,88 +4592,44 @@ const meshStyleColorCache = new Map<Exclude<MeshStyleKind, "original">, MeshStyl
 
 const MESH_STYLE_HEADLESS: Record<Exclude<MeshStyleKind, "original">, MeshStyleColors> = {
   neutral: {
-    meshColor: "#eeeadb",
-    lineColor: "#808080",
-    emissiveColor: "#000000",
+    meshColor: tokenHex("l-l-l-g"),
+    lineColor: tokenHex("gray"),
+    emissiveColor: tokenHex("dark"),
     emissiveIntensity: 0,
     opacity: 1,
   },
   hovered: {
-    meshColor: "#c0cdc5",
-    lineColor: "#7b827d",
-    emissiveColor: "#7b827d",
+    meshColor: tokenHex("light-5-7"),
+    lineColor: tokenHex("gray"),
+    emissiveColor: tokenHex("gray"),
     emissiveIntensity: 0.08,
     opacity: 1,
   },
   selected: {
-    meshColor: "#f0c8cc",
-    lineColor: "#ff344f",
-    emissiveColor: "#ff344f",
+    meshColor: blendTokenHex("primary", "light-5-7", 0.28),
+    lineColor: tokenHex("primary"),
+    emissiveColor: tokenHex("primary"),
     emissiveIntensity: 0.35,
     opacity: 1,
   },
   highlighted: {
-    meshColor: "#c4e4d5",
-    lineColor: "#34d1bf",
-    emissiveColor: "#34d1bf",
+    meshColor: blendTokenHex("secondary", "light-5-7", 0.24),
+    lineColor: tokenHex("secondary"),
+    emissiveColor: tokenHex("secondary"),
     emissiveIntensity: 0.2,
     opacity: 1,
   },
   disabled: {
-    meshColor: "#c8ccc6",
-    lineColor: "#7b827d",
-    emissiveColor: "#000000",
+    meshColor: tokenHex("light-gray"),
+    lineColor: tokenHex("gray"),
+    emissiveColor: tokenHex("dark"),
     emissiveIntensity: 0,
     opacity: 0.45,
   },
 };
 
-function probeCssComputed(property: "color" | "backgroundColor", value: string): string {
-  if (typeof document === "undefined") {
-    return "";
-  }
-  const el = document.createElement("span");
-  const key = property === "color" ? "color" : "background-color";
-  el.setAttribute("style", `${key}:${value};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
-  if (document.documentElement.classList.contains("dark")) {
-    el.classList.add("dark");
-  }
-  document.documentElement.appendChild(el);
-  const out = getComputedStyle(el)[property];
-  el.remove();
-  return out;
-}
-
-function cssColorForThree(css: string): string {
-  if (!css) {
-    return css;
-  }
-  if (!/^(oklab|oklch|lab|lch|color)\(/iu.test(css)) {
-    return css;
-  }
-  if (typeof document === "undefined") {
-    return "#808080";
-  }
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return "#808080";
-  }
-  ctx.fillStyle = "#000000";
-  ctx.fillStyle = css;
-  const converted = ctx.fillStyle;
-  if (/^(oklab|oklch|lab|lch|color)\(/iu.test(converted)) {
-    return "#808080";
-  }
-  return converted;
-}
-
-function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallback: string): string {
-  const raw = probeCssComputed(property, expr);
-  if (!raw || raw === "rgba(0, 0, 0, 0)") {
-    return fallback;
-  }
-  return cssColorForThree(raw);
+function resolveCssColor(property: "color" | "backgroundColor", expr: string, fallbackKey: string): string {
+  return property === "backgroundColor" ? resolveBackgroundColorHex(expr, fallbackKey) : resolveColorHex(expr, fallbackKey);
 }
 
 /** @emoji ­ƒÄ¿ Resolves mesh and edge colors for a {@link MeshStyleKind} from Elements tokens. */
@@ -4691,10 +4656,12 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
     highlighted: CSS_HIGHLIGHTED_LINE,
     disabled: CSS_DISABLED_LINE,
   };
+  const meshFallbackKey = style === "neutral" ? "l-l-l-g" : style === "selected" ? "primary" : style === "highlighted" ? "secondary" : style === "hovered" ? "light-5-7" : "light-gray";
+  const lineFallbackKey = style === "selected" ? "primary" : style === "highlighted" ? "secondary" : "gray";
   const resolved = {
-    meshColor: resolveCssColor("backgroundColor", meshExprs[style], fb.meshColor),
-    lineColor: resolveCssColor("color", lineExprs[style], fb.lineColor),
-    emissiveColor: resolveCssColor("color", lineExprs[style], fb.emissiveColor),
+    meshColor: resolveCssColor("backgroundColor", meshExprs[style], meshFallbackKey),
+    lineColor: resolveCssColor("color", lineExprs[style], lineFallbackKey),
+    emissiveColor: resolveCssColor("color", lineExprs[style], lineFallbackKey),
     emissiveIntensity: fb.emissiveIntensity,
     opacity: fb.opacity,
   };
@@ -4704,7 +4671,7 @@ export function meshStyleColors(style: MeshStyleKind): MeshStyleColors | null {
 
 function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshStandardMaterial {
   const mat = new MeshStandardMaterial({
-    color: new Color(cssColorForThree(color)),
+    color: new Color(resolveColorHex(color, "gray")),
     metalness: 0,
     roughness: 1,
   });
@@ -4716,7 +4683,7 @@ function createStyledMeshMaterial(color: string, state: MeshStyleColors): MeshSt
 }
 
 function createStyledLineMaterial(color: string, state: MeshStyleColors): LineBasicMaterial {
-  const mat = new LineBasicMaterial({ color: new Color(cssColorForThree(color)) });
+  const mat = new LineBasicMaterial({ color: new Color(resolveColorHex(color, "gray")) });
   mat.transparent = state.opacity < 1;
   mat.opacity = state.opacity;
   return mat;
@@ -4746,7 +4713,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind, edgeOutl
     }
     if (object instanceof Points) {
       object.material = new PointsMaterial({
-        color: new Color(cssColorForThree(colors.lineColor)),
+        color: new Color(resolveColorHex(colors.lineColor, "gray")),
         size: 1,
         transparent: colors.opacity < 1,
         opacity: colors.opacity,
@@ -4779,8 +4746,8 @@ export function resolveMeshStyle(args: { readonly style?: MeshStyleKind; readonl
 }
 
 /** @emoji ­ƒÄ¿ Resolves a CSS color for scene lines (endpoint attractions, attraction guides). */
-export function lineCssColor(expr: string, fallback: string): string {
-  return resolveCssColor("color", expr, fallback);
+export function lineCssColor(expr: string, fallbackKey: string): string {
+  return resolveColorHex(expr, fallbackKey);
 }
 //#endregion ­ƒÄ¿MeshPaint
 
@@ -5121,7 +5088,7 @@ function applyBulkSelectionTintToGroup(group: Group, active: boolean): void {
   if (!selectedColors) {
     return;
   }
-  bulkSelectionEmissiveColor.set(cssColorForThree(selectedColors.emissiveColor));
+  bulkSelectionEmissiveColor.set(resolveColorHex(selectedColors.emissiveColor, "primary"));
   group.traverse((node) => {
     if (!(node instanceof Mesh)) {
       return;
@@ -5659,9 +5626,9 @@ export const MeshBody = reactHostPort.memo(function MeshBody(props: MeshProps) {
 
 const PlaceholderMesh = reactHostPort.memo(function PlaceholderMesh(props: MeshPointerHandlers & { readonly style: MeshStyleKind; readonly showOutline?: boolean }) {
   const colors = meshStyleColors(props.style);
-  const meshColor = colors?.meshColor ?? "#cbd5e1";
+  const meshColor = colors?.meshColor ?? tokenHex("light-5-7");
   const opacity = colors?.opacity ?? 1;
-  const outlineColor = meshStyleColors("selected")?.lineColor ?? "#ff344f";
+  const outlineColor = meshStyleColors("selected")?.lineColor ?? tokenHex("primary");
   return (
     <GlbMeshFrame>
       <mesh onClick={props.onClick} onPointerDown={props.onPointerDown} onPointerOut={props.onPointerOut} onPointerOver={props.onPointerOver}>
@@ -5929,7 +5896,7 @@ function VortexDirectionArrow(props: {
     return [[0, 0, 0] as Vec3, tip];
   }, [dirThree, props.radius]);
   const color = reactHostPort.useMemo(
-    () => lineCssColor(props.selected ? CSS_HOVERED_LINE : CSS_ATTRACTION_ENDPOINT_LINE, props.selected ? "#38bdf8" : "#94a3b8"),
+    () => lineCssColor(props.selected ? CSS_HOVERED_LINE : CSS_ATTRACTION_ENDPOINT_LINE, props.selected ? "secondary" : "gray"),
     [props.selected],
   );
   return (
@@ -6204,13 +6171,13 @@ const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attr
     }
   }, [props.attractions, reg]);
   const mat = reactHostPort.useMemo(() => {
-    const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b");
+    const color = lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "gray");
     return new LineBasicMaterial({ color, transparent: true, opacity: 0.85, depthTest: true, vertexColors: true });
   }, []);
   const geo = reactHostPort.useMemo(() => new BufferGeometry(), []);
-  const normalColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "#64748b")), []);
-  const hoveredColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "#7b827d")), []);
-  const selectedColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_SELECTED_LINE, "#38bdf8")), []);
+  const normalColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_ATTRACTION_ENDPOINT_LINE, "gray")), []);
+  const hoveredColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_HOVERED_LINE, "gray")), []);
+  const selectedColor = reactHostPort.useMemo(() => new Color(lineCssColor(CSS_SELECTED_LINE, "primary")), []);
   reactHostPort.useLayoutEffect(() => {
     const vertexCount = Math.max(props.attractions.length * 2, 2);
     geo.setAttribute("position", new Float32BufferAttribute(new Float32Array(vertexCount * 3), 3));
@@ -8419,7 +8386,7 @@ function AttractionRubberBand() {
     g.setAttribute("position", new Float32BufferAttribute(new Float32Array(6), 3));
     return g;
   }, []);
-  const mat = reactHostPort.useMemo(() => new LineBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.92, depthTest: false }), []);
+  const mat = reactHostPort.useMemo(() => new LineBasicMaterial({ color: resolveThreeColor(tokenVar("primary"), "primary"), transparent: true, opacity: 0.92, depthTest: false }), []);
   useFrame(() => {
     const pos = geo.attributes.position as Float32BufferAttribute;
     const cable = (reg.attractionDragActive || reg.attractionIndirectPickAwait !== null) && reg.attractionDragAttractingFullId ? true : false;
@@ -10471,9 +10438,9 @@ if (import.meta.vitest) {
       const selected = meshStyleColors("selected");
       const hovered = meshStyleColors("hovered");
       const highlighted = meshStyleColors("highlighted");
-      expect(selected?.lineColor).toMatch(/primary|#ff344f/i);
-      expect(hovered?.lineColor).toMatch(/hover-base|#7b827d/i);
-      expect(highlighted?.lineColor).toMatch(/secondary|#34d1bf/i);
+      expect(selected?.lineColor).toBe(tokenHex("primary"));
+      expect(hovered?.lineColor).toBe(tokenHex("gray"));
+      expect(highlighted?.lineColor).toBe(tokenHex("secondary"));
       expect(hovered?.lineColor).not.toMatch(/primary/i);
       expect(highlighted?.lineColor).not.toMatch(/primary/i);
     });
