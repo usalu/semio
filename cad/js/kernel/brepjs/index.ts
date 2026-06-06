@@ -36,6 +36,10 @@ import {
 	isSolid,
 	isValidSolid,
 	iterTopo,
+	outerWire,
+	verticesOfEdge,
+	faceCenter,
+	faceGeomType,
 	line,
 	measureArea,
 	measureDistance,
@@ -96,6 +100,7 @@ import {
 	derivePropertyValue,
 	defaultModelDefinitionId,
 	solidRef,
+	type ModelSpaceJson,
 	type ObjectRef,
 	type TypologyRef,
 } from "@cad/js/core";
@@ -1995,6 +2000,219 @@ function deriveValidSolidFromRecordOrPrimitive(model: Model, cell: SolidRecord, 
 }
 // #endregion 🔌BrepModelBridge
 
+// #region 🪜StepBrepImport
+const STEP_VERTEX_QUANT_INV = 1e6;
+
+function stepVertexQuantKey(pos: Vec3): string {
+	return `${Math.round(pos[0] * STEP_VERTEX_QUANT_INV)},${Math.round(pos[1] * STEP_VERTEX_QUANT_INV)},${Math.round(pos[2] * STEP_VERTEX_QUANT_INV)}`;
+}
+
+function orderWireEdgeIds(edges: readonly Edge[], edgeIdByHash: ReadonlyMap<number, EdgeRef>): EdgeRef[] {
+	if (edges.length === 0) return [];
+	const remaining = new Map<number, Edge>();
+	for (const edge of edges) remaining.set(getHashCode(edge), edge);
+	const ordered: EdgeRef[] = [];
+	let current = edges[0]!;
+	remaining.delete(getHashCode(current));
+	const firstId = edgeIdByHash.get(getHashCode(current));
+	if (!firstId) return [];
+	ordered.push(firstId);
+	let tailHash = getHashCode(verticesOfEdge(current)[1] ?? verticesOfEdge(current)[0]!);
+	while (remaining.size > 0) {
+		let nextEdge: Edge | null = null;
+		let nextTailHash = tailHash;
+		for (const edge of remaining.values()) {
+			const verts = verticesOfEdge(edge);
+			const headHash = getHashCode(verts[0]!);
+			const endHash = getHashCode(verts[1] ?? verts[0]!);
+			if (headHash === tailHash) {
+				nextEdge = edge;
+				nextTailHash = endHash;
+				break;
+			}
+			if (endHash === tailHash) {
+				nextEdge = edge;
+				nextTailHash = headHash;
+				break;
+			}
+		}
+		if (!nextEdge) break;
+		remaining.delete(getHashCode(nextEdge));
+		const nextId = edgeIdByHash.get(getHashCode(nextEdge));
+		if (!nextId) break;
+		ordered.push(nextId);
+		tailHash = nextTailHash;
+	}
+	if (ordered.length === edges.length) return ordered;
+	const fallback: EdgeRef[] = [];
+	for (const edge of edges) {
+		const id = edgeIdByHash.get(getHashCode(edge));
+		if (id) fallback.push(id);
+	}
+	return fallback;
+}
+
+function validSolidsFromImportedShape(shape: Shape3D): ValidSolid[] {
+	const trySolid = (candidate: unknown): ValidSolid | null => {
+		if (isValidSolid(candidate)) return candidate as ValidSolid;
+		if (isSolid(candidate)) {
+			const healed = healSolid(candidate as Solid);
+			if (isOk(healed) && isValidSolid(healed.value)) return healed.value as ValidSolid;
+		}
+		return null;
+	};
+	const direct = trySolid(shape);
+	if (direct) return [direct];
+	const out: ValidSolid[] = [];
+	for (const sub of iterTopo(shape, "solid")) {
+		const solid = trySolid(sub);
+		if (solid) out.push(solid);
+	}
+	return out;
+}
+
+function modelFromImportedBrepSolid(
+	brepSolid: ValidSolid,
+	options: { readonly prefix: string; readonly objectId: string },
+): Model {
+	const prefix = options.prefix;
+	const objectId = options.objectId;
+	let seq = 0;
+	const next = (kind: string) => `${prefix}-${kind}-${++seq}`;
+	const vertexIdByQuant = new Map<string, VertexRef>();
+	const vertexIdByBrepHash = new Map<number, VertexRef>();
+	const edgeIdByHash = new Map<number, EdgeRef>();
+	const vertices: VertexRecord[] = [];
+	const edges: EdgeRecord[] = [];
+	const wires: WireRecord[] = [];
+	const faces: FaceRecord[] = [];
+	const registerVertex = (brepVertex: Parameters<typeof vertexPosition>[0]): VertexRef => {
+		const hash = getHashCode(brepVertex);
+		const cached = vertexIdByBrepHash.get(hash);
+		if (cached) return cached;
+		const pos = vertexPosition(brepVertex) as Vec3;
+		const quantKey = stepVertexQuantKey(pos);
+		const existing = vertexIdByQuant.get(quantKey);
+		if (existing) {
+			vertexIdByBrepHash.set(hash, existing);
+			return existing;
+		}
+		const id = next("vertex") as VertexRef;
+		vertexIdByQuant.set(quantKey, id);
+		vertexIdByBrepHash.set(hash, id);
+		vertices.push({ id, position: pos });
+		return id;
+	};
+	const registerEdge = (brepEdge: Edge): EdgeRef => {
+		const hash = getHashCode(brepEdge);
+		const cached = edgeIdByHash.get(hash);
+		if (cached) return cached;
+		const endpointVerts = verticesOfEdge(brepEdge);
+		const v0 = registerVertex(endpointVerts[0]!);
+		const v1 = registerVertex(endpointVerts[1] ?? endpointVerts[0]!);
+		const id = next("edge") as EdgeRef;
+		edgeIdByHash.set(hash, id);
+		edges.push({ id, vertexIds: [v0, v1], curve: { kind: "line" } });
+		return id;
+	};
+	const brepFaces = getFaces(brepSolid);
+	const faceIds: FaceRef[] = [];
+	for (const brepFace of brepFaces) {
+		const wire = outerWire(brepFace);
+		const wireEdges = getEdges(wire);
+		for (const brepEdge of wireEdges) registerEdge(brepEdge);
+		const wireId = next("wire") as WireRef;
+		wires.push({ id: wireId, edgeIds: orderWireEdgeIds(wireEdges, edgeIdByHash) });
+		let surface: FaceRecord["surface"];
+		try {
+			if (faceGeomType(brepFace) === "PLANE") {
+				surface = { kind: "plane", origin: faceCenter(brepFace), normal: vec3Normalize(normalAt(brepFace)) };
+			}
+		} catch {
+			surface = undefined;
+		}
+		const faceId = next("face") as FaceRef;
+		faces.push({ id: faceId, wireIds: [wireId], ...(surface ? { surface } : {}) });
+		faceIds.push(faceId);
+	}
+	const shellId = next("shell") as ShellRef;
+	const solidId = next("solid") as SolidRef;
+	const model = new Model();
+	for (const vertex of vertices) model.vertices[vertex.id] = vertex;
+	for (const edge of edges) model.edges[edge.id] = edge;
+	for (const wire of wires) model.wires[wire.id] = wire;
+	for (const face of faces) model.faces[face.id] = face;
+	model.shells[shellId] = { id: shellId, faceIds };
+	model.solids[solidId] = { id: solidId, shellIds: [shellId] };
+	model.objects[objectId] = {
+		id: objectId as ObjectRef,
+		typology: "spatial.shape.kernel.solid" as TypologyRef,
+		primitives: { solid: solidId },
+	};
+	model.bump();
+	return model;
+}
+
+/** @emoji 🧾 Serializes one object and its solid closure as inline `spatial.modelspace/v1` fixture JSON. */
+export function inlineModelSpaceFixtureJson(model: Model, modelId: string, objectId: string): ModelSpaceJson {
+	const object = model.objects[objectId];
+	if (!object) throw new Error(`missing object ${objectId}`);
+	const solidId = object.primitives.solid;
+	if (!solidId) throw new Error(`object ${objectId} has no solid primitive`);
+	const solid = model.solids[solidId];
+	const shellIds = solid?.shellIds ?? [];
+	const faceIds = shellIds.flatMap((shellRef) => model.shells[shellRef]?.faceIds ?? []);
+	const wireIds = faceIds.flatMap((faceRef) => model.faces[faceRef]?.wireIds ?? []);
+	const edgeIds = wireIds.flatMap((wireRef) => model.wires[wireRef]?.edgeIds ?? []);
+	const vertexIds = new Set<VertexRef>();
+	for (const edgeRef of edgeIds) {
+		const edge = model.edges[edgeRef];
+		if (!edge) continue;
+		for (const vertexRef of edge.vertexIds) vertexIds.add(vertexRef as VertexRef);
+	}
+	const primitives: unknown[] = [];
+	for (const vertexRef of [...vertexIds].sort()) {
+		const vertex = model.vertices[vertexRef]!;
+		primitives.push({ kind: "vertex", id: vertexRef, position: vertex.position });
+	}
+	for (const edgeRef of [...edgeIds].sort()) {
+		const edge = model.edges[edgeRef]!;
+		const row: Record<string, unknown> = { kind: "edge", id: edgeRef, vertexIds: [...edge.vertexIds] };
+		if (edge.curve) row.curve = edge.curve;
+		primitives.push(row);
+	}
+	for (const wireRef of [...wireIds].sort()) {
+		const wire = model.wires[wireRef]!;
+		primitives.push({ kind: "wire", id: wireRef, edgeIds: [...wire.edgeIds] });
+	}
+	for (const faceRef of [...faceIds].sort()) {
+		const faceRec = model.faces[faceRef]!;
+		const row: Record<string, unknown> = { kind: "face", id: faceRef, wireIds: [...faceRec.wireIds] };
+		if (faceRec.surface) row.surface = faceRec.surface;
+		primitives.push(row);
+	}
+	for (const shellRef of shellIds) {
+		const shell = model.shells[shellRef]!;
+		primitives.push({ kind: "shell", id: shellRef, faceIds: [...shell.faceIds] });
+	}
+	primitives.push({ kind: "solid", slot: "solid", id: solidId, shellIds: [...shellIds] });
+	return {
+		schema: "spatial.modelspace/v1",
+		revision: 1,
+		models: [
+			{
+				id: modelId,
+				model: {
+					schema: "spatial.model/v1",
+					revision: model.revision,
+					objects: [{ id: objectId, typology: object.typology, primitives }],
+				},
+			},
+		],
+	};
+}
+// #endregion 🪜StepBrepImport
+
 // #region 🔌BrepjsWasmEngine
 /** @emoji 🔌 WASM-side engine: exact solids keyed by `SolidRef` (runs in worker or local fallback). */
 class BrepjsWasmEngine {
@@ -2592,11 +2810,42 @@ class BrepjsWasmEngine {
 		return this.exportModelSpaceToStep(space, modelId);
 	}
 
+	/** @emoji 🪜 Imports raw AP242 BREP STEP (no spatial UDA) into a `ModelSpace`. */
+	async importStepBrepToModelSpace(stepText: string, options?: { readonly prefix?: string }): Promise<ModelSpace> {
+		await this.ensureInit();
+		const blob = new Blob([stepText], { type: "application/step" });
+		const imported = await importSTEP(blob);
+		if (!isOk(imported)) throw new Error(`STEP BREP import failed: ${String(imported.error)}`);
+		const basePrefix = options?.prefix ?? "step-import";
+		const brepSolids = validSolidsFromImportedShape(imported.value as Shape3D);
+		if (brepSolids.length === 0) throw new Error("STEP BREP import yielded no valid solids");
+		const modelId = defaultModelDefinitionId();
+		const model = new Model();
+		for (let i = 0; i < brepSolids.length; i++) {
+			const suffix = brepSolids.length === 1 ? "" : `-${i + 1}`;
+			const prefix = `${basePrefix}${suffix}`;
+			const objectId = `object-${prefix}`;
+			const part = modelFromImportedBrepSolid(brepSolids[i]!, { prefix, objectId });
+			Object.assign(model.objects, part.objects);
+			Object.assign(model.vertices, part.vertices);
+			Object.assign(model.edges, part.edges);
+			Object.assign(model.wires, part.wires);
+			Object.assign(model.faces, part.faces);
+			Object.assign(model.shells, part.shells);
+			Object.assign(model.solids, part.solids);
+		}
+		const space = new ModelSpace();
+		space.link(modelId, model);
+		await this.syncSolidsFromModel(model);
+		return space;
+	}
+
 	/** @emoji 🪜 Imports AP242 STEP produced by `exportModelSpaceToStep` into a `ModelSpace`. */
 	async importStepToModelSpace(stepText: string): Promise<ModelSpace> {
 		await this.ensureInit();
 		const entities = parseStepEntityMap(stepText);
 		const uda = parseSpatialUdaPayloads(entities);
+		if (!uda["spatial.modelspace"]) return this.importStepBrepToModelSpace(stepText);
 		const ms = JSON.parse(uda["spatial.modelspace"] ?? "{}") as { modelIds?: string[] };
 		const modelIds = ms.modelIds ?? [];
 		const space = modelSpaceFromSpatialUda(uda, modelIds);
@@ -2878,6 +3127,11 @@ export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKer
 	async importStepToModelSpace(stepText: string): Promise<ModelSpace> {
 		return this.wasm.rpc("importStepToModelSpace", [stepText]);
 	}
+
+	/** @emoji 🪜 Imports raw AP242 BREP STEP (no spatial UDA) into a `ModelSpace`. */
+	async importStepBrepToModelSpace(stepText: string, options?: { readonly prefix?: string }): Promise<ModelSpace> {
+		return this.wasm.rpc("importStepBrepToModelSpace", [stepText, options]);
+	}
 }
 
 /** @emoji 🪜 Exports `space` via a fresh `BrepjsKernel` (convenience). */
@@ -2896,6 +3150,12 @@ export async function exportModelToStep(model: Model, modelId = "model"): Promis
 export async function importStepToModelSpace(stepText: string): Promise<ModelSpace> {
 	const kernel = new BrepjsKernel();
 	return kernel.importStepToModelSpace(stepText);
+}
+
+/** @emoji 🪜 Imports raw BREP STEP text via a fresh `BrepjsKernel` (convenience). */
+export async function importStepBrepToModelSpace(stepText: string, options?: { readonly prefix?: string }): Promise<ModelSpace> {
+	const kernel = new BrepjsKernel();
+	return kernel.importStepBrepToModelSpace(stepText, options);
 }
 // #endregion 🔌BrepjsKernel
 
@@ -3469,6 +3729,60 @@ if (import.meta.vitest) {
 			expect(volumeDefn).toBeDefined();
 			const derived = await derivePropertyValue(volumeDefn!, { model: restored, kernel, object: obj });
 			expect((derived.volume as number) ?? 0).toBeGreaterThan(0);
+		});
+
+		const semioStepFixtures = [
+			{
+				name: "hexagonal-cut-concrete-forest-left",
+				file: "hexagonal-cut-concrete-forest-left.stp",
+			},
+			{
+				name: "hexagonal-cut-concrete-forest-right",
+				file: "hexagonal-cut-concrete-forest-right.stp",
+			},
+		] as const;
+
+		for (const fixture of semioStepFixtures) {
+			it(`imports raw Rhino STEP BREP for ${fixture.name}`, async () => {
+				const { readFile } = await import("node:fs/promises");
+				const { resolve } = await import("node:path");
+				const stepPath = resolve(import.meta.dirname, "../../../../semio/fixtures/kit/folder/abbau-aufbau", fixture.file);
+				const stepText = await readFile(stepPath, "utf8");
+				const space = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });
+				const modelId = defaultModelDefinitionId();
+				const model = space.models[modelId]!;
+				expect(Object.keys(geom(model).solids)).toHaveLength(1);
+				expect(Object.keys(geom(model).faces)).toHaveLength(57);
+				await kernel.syncSolidsFromModel(model);
+				const solidId = Object.keys(geom(model).solids)[0]! as SolidRef;
+				expect(await kernel.volume(solidId)).toBeGreaterThan(0);
+				const mesh = await kernel.tessellate(solidId, 0.02, model);
+				expect(mesh.index.length).toBeGreaterThan(0);
+				const objectId = Object.keys(model.objects)[0]!;
+				const fixtureJson = inlineModelSpaceFixtureJson(model, modelId, objectId);
+				const reloaded = ModelSpace.fromJSON(fixtureJson);
+				const restored = reloaded.models[modelId]!;
+				await kernel.syncSolidsFromModel(restored);
+				const restoredSolidId = Object.keys(geom(restored).solids)[0]! as SolidRef;
+				expect(await kernel.volume(restoredSolidId)).toBeGreaterThan(0);
+			});
+		}
+
+		it("generates play fixtures from semio STEP sources", async () => {
+			if (process.env.CAD_GENERATE_STEP_FIXTURES !== "1") return;
+			const { readFile, writeFile } = await import("node:fs/promises");
+			const { resolve } = await import("node:path");
+			for (const fixture of semioStepFixtures) {
+				const stepPath = resolve(import.meta.dirname, "../../../../semio/fixtures/kit/folder/abbau-aufbau", fixture.file);
+				const stepText = await readFile(stepPath, "utf8");
+				const space = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });
+				const modelId = defaultModelDefinitionId();
+				const model = space.models[modelId]!;
+				const objectId = Object.keys(model.objects)[0]!;
+				const fixtureJson = inlineModelSpaceFixtureJson(model, modelId, objectId);
+				const outPath = resolve(import.meta.dirname, "../../../assets/play", `${fixture.name}.model.json`);
+				await writeFile(outPath, `${JSON.stringify(fixtureJson, null, 2)}\n`, "utf8");
+			}
 		});
 
 	});

@@ -882,6 +882,8 @@ import geometryRoutes from "../../../assets/play/geometry-routes.json";
 import geometrySmallBuilding from "../../../assets/play/small-building.model.json";
 import geometryTallBuilding from "../../../assets/play/tall-building.model.json";
 import geometryLargeBuilding from "../../../assets/play/large-building.model.json";
+import geometryConcreteForestLeft from "../../../assets/play/hexagonal-cut-concrete-forest-left.model.json";
+import geometryConcreteForestRight from "../../../assets/play/hexagonal-cut-concrete-forest-right.model.json";
 import { BrepjsKernel, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
 import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {
@@ -923,6 +925,8 @@ const SHAPE_ASSETS = [
   { id: "small-building", key: "s", label: "Small building", json: geometrySmallBuilding as Record<string, unknown> },
   { id: "tall-building", key: "t", label: "Tall building", json: geometryTallBuilding as Record<string, unknown> },
   { id: "large-building", key: "b", label: "Large building", json: geometryLargeBuilding as Record<string, unknown> },
+  { id: "concrete-forest-left", key: "c", label: "Concrete forest (left)", json: geometryConcreteForestLeft as Record<string, unknown> },
+  { id: "concrete-forest-right", key: "d", label: "Concrete forest (right)", json: geometryConcreteForestRight as Record<string, unknown> },
 ] as const;
 
 const PLAY_REPL_SPEC: InteractionSpec = {

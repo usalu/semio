@@ -1,0 +1,5237 @@
+{
+  "schema": "spatial.modelspace/v1",
+  "revision": 1,
+  "models": [
+    {
+      "id": "spatial.shape",
+      "model": {
+        "schema": "spatial.model/v1",
+        "revision": 0,
+        "objects": [
+          {
+            "id": "object-hexagonal-cut-concrete-forest-left",
+            "typology": "spatial.shape.kernel.solid",
+            "primitives": [
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-1",
+                "position": [
+                  2700,
+                  4676.53718043597,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-107",
+                "position": [
+                  2959.81790361778,
+                  2188.26859021799,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-108",
+                "position": [
+                  4223.215363239339,
+                  4.44089209850063e-13,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-11",
+                "position": [
+                  1176.80520172556,
+                  8.88178419700125e-13,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-110",
+                "position": [
+                  2959.81790361778,
+                  2188.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-117",
+                "position": [
+                  3876.80520172556,
+                  8.88178419700125e-13,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-128",
+                "position": [
+                  8100.010282482449,
+                  2038.2685902179799,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-129",
+                "position": [
+                  6923.21536323934,
+                  1.33226762955019e-12,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-13",
+                "position": [
+                  1523.21536323934,
+                  1.33226762955019e-12,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-131",
+                "position": [
+                  8100.010282482449,
+                  2038.26859021799,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-137",
+                "position": [
+                  7840.20266134712,
+                  2188.26859021799,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-139",
+                "position": [
+                  7840.20266134712,
+                  2188.26859021799,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-141",
+                "position": [
+                  6576.80520172556,
+                  8.88178419700125e-13,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-15",
+                "position": [
+                  3876.80520172556,
+                  8.88178419700125e-13,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-152",
+                "position": [
+                  9276.80520172556,
+                  4676.53718043597,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-158",
+                "position": [
+                  8359.817903617779,
+                  2488.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-160",
+                "position": [
+                  8359.817903617779,
+                  2488.26859021798,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-162",
+                "position": [
+                  9623.215363239338,
+                  4676.53718043597,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-17",
+                "position": [
+                  4223.215363239339,
+                  8.88178419700125e-13,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-173",
+                "position": [
+                  2700.0102824824503,
+                  2638.26859021798,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-174",
+                "position": [
+                  3876.80520172556,
+                  4676.53718043597,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-176",
+                "position": [
+                  2700.0102824824503,
+                  2638.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-182",
+                "position": [
+                  2959.81790361778,
+                  2488.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-184",
+                "position": [
+                  2959.81790361778,
+                  2488.26859021798,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-186",
+                "position": [
+                  4223.215363239339,
+                  4676.53718043597,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-19",
+                "position": [
+                  6576.80520172556,
+                  4.44089209850063e-13,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-197",
+                "position": [
+                  9536.61282286089,
+                  2488.26859021798,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-2",
+                "position": [
+                  0,
+                  8.88178419700125e-13,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-203",
+                "position": [
+                  8359.817903617779,
+                  2188.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-205",
+                "position": [
+                  8359.817903617779,
+                  2188.26859021799,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-207",
+                "position": [
+                  9363.407742104011,
+                  2188.26859021798,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-21",
+                "position": [
+                  6923.21536323933,
+                  4.44089209850063e-13,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-23",
+                "position": [
+                  8100.010282482449,
+                  4.44089209850063e-13,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-230",
+                "position": [
+                  2959.81790361778,
+                  2188.26859021798,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-231",
+                "position": [
+                  2959.81790361778,
+                  2488.26859021798,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-233",
+                "position": [
+                  2700.0102824824503,
+                  2038.26859021799,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-235",
+                "position": [
+                  2440.20266134712,
+                  2188.26859021799,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-237",
+                "position": [
+                  2440.20266134712,
+                  2488.26859021798,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-239",
+                "position": [
+                  2700.0102824824503,
+                  2638.26859021798,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-248",
+                "position": [
+                  2440.20266134712,
+                  2488.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-25",
+                "position": [
+                  8100.010282482449,
+                  4.44089209850063e-13,
+                  3000
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-265",
+                "position": [
+                  8359.817903617779,
+                  2188.26859021798,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-266",
+                "position": [
+                  8359.817903617779,
+                  2488.26859021798,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-268",
+                "position": [
+                  8100.010282482449,
+                  2038.26859021799,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-270",
+                "position": [
+                  7840.20266134712,
+                  2188.26859021799,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-272",
+                "position": [
+                  7840.20266134712,
+                  2488.26859021798,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-274",
+                "position": [
+                  8100.010282482449,
+                  2638.26859021799,
+                  0
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-30",
+                "position": [
+                  9363.407742104011,
+                  2188.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-32",
+                "position": [
+                  9536.61282286089,
+                  2488.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-34",
+                "position": [
+                  10800.0102824825,
+                  4676.53718043597,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-36",
+                "position": [
+                  10800.0102824825,
+                  4676.53718043597,
+                  3000
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-4",
+                "position": [
+                  0,
+                  8.88178419700125e-13,
+                  3000
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-41",
+                "position": [
+                  9623.215363239338,
+                  4676.53718043597,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-43",
+                "position": [
+                  9276.80520172556,
+                  4676.53718043597,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-45",
+                "position": [
+                  6923.21536323934,
+                  4676.53718043597,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-47",
+                "position": [
+                  6576.80520172556,
+                  4676.53718043597,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-49",
+                "position": [
+                  4223.215363239339,
+                  4676.53718043597,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-51",
+                "position": [
+                  3876.80520172556,
+                  4676.53718043597,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-59",
+                "position": [
+                  7840.20266134712,
+                  2488.26859021799,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-6",
+                "position": [
+                  2700,
+                  4676.53718043597,
+                  3000
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-60",
+                "position": [
+                  6576.80520172556,
+                  4676.53718043597,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-62",
+                "position": [
+                  7840.20266134712,
+                  2488.26859021798,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-68",
+                "position": [
+                  8100.010282482449,
+                  2638.26859021799,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-70",
+                "position": [
+                  8100.010282482449,
+                  2638.26859021798,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-72",
+                "position": [
+                  6923.21536323934,
+                  4676.53718043597,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-83",
+                "position": [
+                  2700.0102824824503,
+                  2038.26859021799,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-84",
+                "position": [
+                  1523.21536323934,
+                  4.44089209850063e-13,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-86",
+                "position": [
+                  2700.0102824824503,
+                  2038.26859021799,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-92",
+                "position": [
+                  2440.20266134712,
+                  2188.26859021799,
+                  2735
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-94",
+                "position": [
+                  2440.20266134712,
+                  2188.26859021799,
+                  2285
+                ]
+              },
+              {
+                "kind": "vertex",
+                "id": "hexagonal-cut-concrete-forest-left-vertex-96",
+                "position": [
+                  1176.80520172556,
+                  8.88178419700125e-13,
+                  2285
+                ]
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-101",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-84",
+                  "hexagonal-cut-concrete-forest-left-vertex-96"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-101",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-84",
+                  "hexagonal-cut-concrete-forest-left-vertex-96"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-102",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-94",
+                  "hexagonal-cut-concrete-forest-left-vertex-83"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-102",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-94",
+                  "hexagonal-cut-concrete-forest-left-vertex-83"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-109",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-107",
+                  "hexagonal-cut-concrete-forest-left-vertex-108"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-109",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-107",
+                  "hexagonal-cut-concrete-forest-left-vertex-108"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-111",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-110",
+                  "hexagonal-cut-concrete-forest-left-vertex-107"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-111",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-110",
+                  "hexagonal-cut-concrete-forest-left-vertex-107"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-112",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-110",
+                  "hexagonal-cut-concrete-forest-left-vertex-17"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-112",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-110",
+                  "hexagonal-cut-concrete-forest-left-vertex-17"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-113",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-108",
+                  "hexagonal-cut-concrete-forest-left-vertex-17"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-113",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-108",
+                  "hexagonal-cut-concrete-forest-left-vertex-17"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-116",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-86",
+                  "hexagonal-cut-concrete-forest-left-vertex-15"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-116",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-86",
+                  "hexagonal-cut-concrete-forest-left-vertex-15"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-118",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-83",
+                  "hexagonal-cut-concrete-forest-left-vertex-117"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-118",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-83",
+                  "hexagonal-cut-concrete-forest-left-vertex-117"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-119",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-15",
+                  "hexagonal-cut-concrete-forest-left-vertex-117"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-119",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-15",
+                  "hexagonal-cut-concrete-forest-left-vertex-117"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-12",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-2",
+                  "hexagonal-cut-concrete-forest-left-vertex-11"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-12",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-2",
+                  "hexagonal-cut-concrete-forest-left-vertex-11"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-122",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-108",
+                  "hexagonal-cut-concrete-forest-left-vertex-117"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-122",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-108",
+                  "hexagonal-cut-concrete-forest-left-vertex-117"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-123",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-83",
+                  "hexagonal-cut-concrete-forest-left-vertex-107"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-123",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-83",
+                  "hexagonal-cut-concrete-forest-left-vertex-107"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-130",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-128",
+                  "hexagonal-cut-concrete-forest-left-vertex-129"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-130",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-128",
+                  "hexagonal-cut-concrete-forest-left-vertex-129"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-132",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-131",
+                  "hexagonal-cut-concrete-forest-left-vertex-128"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-132",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-131",
+                  "hexagonal-cut-concrete-forest-left-vertex-128"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-133",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-131",
+                  "hexagonal-cut-concrete-forest-left-vertex-21"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-133",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-131",
+                  "hexagonal-cut-concrete-forest-left-vertex-21"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-134",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-129",
+                  "hexagonal-cut-concrete-forest-left-vertex-21"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-134",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-129",
+                  "hexagonal-cut-concrete-forest-left-vertex-21"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-138",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-137",
+                  "hexagonal-cut-concrete-forest-left-vertex-19"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-138",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-137",
+                  "hexagonal-cut-concrete-forest-left-vertex-19"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-14",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-13",
+                  "hexagonal-cut-concrete-forest-left-vertex-11"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-14",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-13",
+                  "hexagonal-cut-concrete-forest-left-vertex-11"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-140",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-137",
+                  "hexagonal-cut-concrete-forest-left-vertex-139"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-140",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-137",
+                  "hexagonal-cut-concrete-forest-left-vertex-139"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-142",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-139",
+                  "hexagonal-cut-concrete-forest-left-vertex-141"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-142",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-139",
+                  "hexagonal-cut-concrete-forest-left-vertex-141"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-143",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-19",
+                  "hexagonal-cut-concrete-forest-left-vertex-141"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-143",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-19",
+                  "hexagonal-cut-concrete-forest-left-vertex-141"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-146",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-129",
+                  "hexagonal-cut-concrete-forest-left-vertex-141"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-146",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-129",
+                  "hexagonal-cut-concrete-forest-left-vertex-141"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-147",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-139",
+                  "hexagonal-cut-concrete-forest-left-vertex-128"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-147",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-139",
+                  "hexagonal-cut-concrete-forest-left-vertex-128"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-153",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-70",
+                  "hexagonal-cut-concrete-forest-left-vertex-152"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-153",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-70",
+                  "hexagonal-cut-concrete-forest-left-vertex-152"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-154",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-68",
+                  "hexagonal-cut-concrete-forest-left-vertex-43"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-154",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-68",
+                  "hexagonal-cut-concrete-forest-left-vertex-43"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-155",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-152",
+                  "hexagonal-cut-concrete-forest-left-vertex-43"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-155",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-152",
+                  "hexagonal-cut-concrete-forest-left-vertex-43"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-159",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-158",
+                  "hexagonal-cut-concrete-forest-left-vertex-41"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-159",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-158",
+                  "hexagonal-cut-concrete-forest-left-vertex-41"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-16",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-13",
+                  "hexagonal-cut-concrete-forest-left-vertex-15"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-16",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-13",
+                  "hexagonal-cut-concrete-forest-left-vertex-15"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-161",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-160",
+                  "hexagonal-cut-concrete-forest-left-vertex-158"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-161",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-160",
+                  "hexagonal-cut-concrete-forest-left-vertex-158"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-163",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-160",
+                  "hexagonal-cut-concrete-forest-left-vertex-162"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-163",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-160",
+                  "hexagonal-cut-concrete-forest-left-vertex-162"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-164",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-41",
+                  "hexagonal-cut-concrete-forest-left-vertex-162"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-164",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-41",
+                  "hexagonal-cut-concrete-forest-left-vertex-162"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-167",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-152",
+                  "hexagonal-cut-concrete-forest-left-vertex-162"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-167",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-152",
+                  "hexagonal-cut-concrete-forest-left-vertex-162"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-168",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-160",
+                  "hexagonal-cut-concrete-forest-left-vertex-70"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-168",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-160",
+                  "hexagonal-cut-concrete-forest-left-vertex-70"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-175",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-173",
+                  "hexagonal-cut-concrete-forest-left-vertex-174"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-175",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-173",
+                  "hexagonal-cut-concrete-forest-left-vertex-174"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-177",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-176",
+                  "hexagonal-cut-concrete-forest-left-vertex-173"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-177",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-176",
+                  "hexagonal-cut-concrete-forest-left-vertex-173"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-178",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-176",
+                  "hexagonal-cut-concrete-forest-left-vertex-51"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-178",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-176",
+                  "hexagonal-cut-concrete-forest-left-vertex-51"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-179",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-174",
+                  "hexagonal-cut-concrete-forest-left-vertex-51"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-179",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-174",
+                  "hexagonal-cut-concrete-forest-left-vertex-51"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-18",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-17",
+                  "hexagonal-cut-concrete-forest-left-vertex-15"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-18",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-17",
+                  "hexagonal-cut-concrete-forest-left-vertex-15"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-183",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-182",
+                  "hexagonal-cut-concrete-forest-left-vertex-49"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-183",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-182",
+                  "hexagonal-cut-concrete-forest-left-vertex-49"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-185",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-184",
+                  "hexagonal-cut-concrete-forest-left-vertex-182"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-185",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-184",
+                  "hexagonal-cut-concrete-forest-left-vertex-182"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-187",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-184",
+                  "hexagonal-cut-concrete-forest-left-vertex-186"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-187",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-184",
+                  "hexagonal-cut-concrete-forest-left-vertex-186"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-188",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-49",
+                  "hexagonal-cut-concrete-forest-left-vertex-186"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-188",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-49",
+                  "hexagonal-cut-concrete-forest-left-vertex-186"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-191",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-174",
+                  "hexagonal-cut-concrete-forest-left-vertex-186"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-191",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-174",
+                  "hexagonal-cut-concrete-forest-left-vertex-186"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-192",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-184",
+                  "hexagonal-cut-concrete-forest-left-vertex-173"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-192",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-184",
+                  "hexagonal-cut-concrete-forest-left-vertex-173"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-198",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-160",
+                  "hexagonal-cut-concrete-forest-left-vertex-197"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-198",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-160",
+                  "hexagonal-cut-concrete-forest-left-vertex-197"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-199",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-158",
+                  "hexagonal-cut-concrete-forest-left-vertex-32"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-199",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-158",
+                  "hexagonal-cut-concrete-forest-left-vertex-32"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-20",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-17",
+                  "hexagonal-cut-concrete-forest-left-vertex-19"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-20",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-17",
+                  "hexagonal-cut-concrete-forest-left-vertex-19"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-200",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-197",
+                  "hexagonal-cut-concrete-forest-left-vertex-32"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-200",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-197",
+                  "hexagonal-cut-concrete-forest-left-vertex-32"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-204",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-203",
+                  "hexagonal-cut-concrete-forest-left-vertex-30"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-204",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-203",
+                  "hexagonal-cut-concrete-forest-left-vertex-30"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-206",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-203",
+                  "hexagonal-cut-concrete-forest-left-vertex-205"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-206",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-203",
+                  "hexagonal-cut-concrete-forest-left-vertex-205"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-208",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-205",
+                  "hexagonal-cut-concrete-forest-left-vertex-207"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-208",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-205",
+                  "hexagonal-cut-concrete-forest-left-vertex-207"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-209",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-30",
+                  "hexagonal-cut-concrete-forest-left-vertex-207"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-209",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-30",
+                  "hexagonal-cut-concrete-forest-left-vertex-207"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-212",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-197",
+                  "hexagonal-cut-concrete-forest-left-vertex-207"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-212",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-197",
+                  "hexagonal-cut-concrete-forest-left-vertex-207"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-213",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-205",
+                  "hexagonal-cut-concrete-forest-left-vertex-160"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-213",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-205",
+                  "hexagonal-cut-concrete-forest-left-vertex-160"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-218",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-137",
+                  "hexagonal-cut-concrete-forest-left-vertex-110"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-218",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-137",
+                  "hexagonal-cut-concrete-forest-left-vertex-110"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-219",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-139",
+                  "hexagonal-cut-concrete-forest-left-vertex-107"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-219",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-139",
+                  "hexagonal-cut-concrete-forest-left-vertex-107"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-22",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-21",
+                  "hexagonal-cut-concrete-forest-left-vertex-19"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-22",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-21",
+                  "hexagonal-cut-concrete-forest-left-vertex-19"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-222",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-59",
+                  "hexagonal-cut-concrete-forest-left-vertex-184"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-222",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-59",
+                  "hexagonal-cut-concrete-forest-left-vertex-184"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-223",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-62",
+                  "hexagonal-cut-concrete-forest-left-vertex-182"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-223",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-62",
+                  "hexagonal-cut-concrete-forest-left-vertex-182"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-226",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-59",
+                  "hexagonal-cut-concrete-forest-left-vertex-139"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-226",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-59",
+                  "hexagonal-cut-concrete-forest-left-vertex-139"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-227",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-107",
+                  "hexagonal-cut-concrete-forest-left-vertex-184"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-227",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-107",
+                  "hexagonal-cut-concrete-forest-left-vertex-184"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-232",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-230",
+                  "hexagonal-cut-concrete-forest-left-vertex-231"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-232",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-230",
+                  "hexagonal-cut-concrete-forest-left-vertex-231"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-234",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-233",
+                  "hexagonal-cut-concrete-forest-left-vertex-230"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-234",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-233",
+                  "hexagonal-cut-concrete-forest-left-vertex-230"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-236",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-235",
+                  "hexagonal-cut-concrete-forest-left-vertex-233"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-236",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-235",
+                  "hexagonal-cut-concrete-forest-left-vertex-233"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-238",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-237",
+                  "hexagonal-cut-concrete-forest-left-vertex-235"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-238",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-237",
+                  "hexagonal-cut-concrete-forest-left-vertex-235"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-24",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-21",
+                  "hexagonal-cut-concrete-forest-left-vertex-23"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-24",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-21",
+                  "hexagonal-cut-concrete-forest-left-vertex-23"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-240",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-239",
+                  "hexagonal-cut-concrete-forest-left-vertex-237"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-240",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-239",
+                  "hexagonal-cut-concrete-forest-left-vertex-237"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-241",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-231",
+                  "hexagonal-cut-concrete-forest-left-vertex-239"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-241",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-231",
+                  "hexagonal-cut-concrete-forest-left-vertex-239"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-244",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-231",
+                  "hexagonal-cut-concrete-forest-left-vertex-184"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-244",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-231",
+                  "hexagonal-cut-concrete-forest-left-vertex-184"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-245",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-173",
+                  "hexagonal-cut-concrete-forest-left-vertex-239"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-245",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-173",
+                  "hexagonal-cut-concrete-forest-left-vertex-239"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-249",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-248",
+                  "hexagonal-cut-concrete-forest-left-vertex-237"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-249",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-248",
+                  "hexagonal-cut-concrete-forest-left-vertex-237"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-250",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-176",
+                  "hexagonal-cut-concrete-forest-left-vertex-248"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-250",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-176",
+                  "hexagonal-cut-concrete-forest-left-vertex-248"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-253",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-94",
+                  "hexagonal-cut-concrete-forest-left-vertex-235"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-253",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-94",
+                  "hexagonal-cut-concrete-forest-left-vertex-235"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-254",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-248",
+                  "hexagonal-cut-concrete-forest-left-vertex-92"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-254",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-248",
+                  "hexagonal-cut-concrete-forest-left-vertex-92"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-257",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-83",
+                  "hexagonal-cut-concrete-forest-left-vertex-233"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-257",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-83",
+                  "hexagonal-cut-concrete-forest-left-vertex-233"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-26",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-25",
+                  "hexagonal-cut-concrete-forest-left-vertex-23"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-26",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-25",
+                  "hexagonal-cut-concrete-forest-left-vertex-23"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-260",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-107",
+                  "hexagonal-cut-concrete-forest-left-vertex-230"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-260",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-107",
+                  "hexagonal-cut-concrete-forest-left-vertex-230"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-267",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-265",
+                  "hexagonal-cut-concrete-forest-left-vertex-266"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-267",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-265",
+                  "hexagonal-cut-concrete-forest-left-vertex-266"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-269",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-268",
+                  "hexagonal-cut-concrete-forest-left-vertex-265"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-269",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-268",
+                  "hexagonal-cut-concrete-forest-left-vertex-265"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-27",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-4",
+                  "hexagonal-cut-concrete-forest-left-vertex-25"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-27",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-4",
+                  "hexagonal-cut-concrete-forest-left-vertex-25"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-271",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-270",
+                  "hexagonal-cut-concrete-forest-left-vertex-268"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-271",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-270",
+                  "hexagonal-cut-concrete-forest-left-vertex-268"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-273",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-272",
+                  "hexagonal-cut-concrete-forest-left-vertex-270"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-273",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-272",
+                  "hexagonal-cut-concrete-forest-left-vertex-270"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-275",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-274",
+                  "hexagonal-cut-concrete-forest-left-vertex-272"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-275",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-274",
+                  "hexagonal-cut-concrete-forest-left-vertex-272"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-276",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-266",
+                  "hexagonal-cut-concrete-forest-left-vertex-274"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-276",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-266",
+                  "hexagonal-cut-concrete-forest-left-vertex-274"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-279",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-266",
+                  "hexagonal-cut-concrete-forest-left-vertex-160"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-279",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-266",
+                  "hexagonal-cut-concrete-forest-left-vertex-160"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-280",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-70",
+                  "hexagonal-cut-concrete-forest-left-vertex-274"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-280",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-70",
+                  "hexagonal-cut-concrete-forest-left-vertex-274"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-283",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-59",
+                  "hexagonal-cut-concrete-forest-left-vertex-272"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-283",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-59",
+                  "hexagonal-cut-concrete-forest-left-vertex-272"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-286",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-139",
+                  "hexagonal-cut-concrete-forest-left-vertex-270"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-286",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-139",
+                  "hexagonal-cut-concrete-forest-left-vertex-270"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-289",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-128",
+                  "hexagonal-cut-concrete-forest-left-vertex-268"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-289",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-128",
+                  "hexagonal-cut-concrete-forest-left-vertex-268"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-292",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-205",
+                  "hexagonal-cut-concrete-forest-left-vertex-265"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-292",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-205",
+                  "hexagonal-cut-concrete-forest-left-vertex-265"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-293",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-131",
+                  "hexagonal-cut-concrete-forest-left-vertex-203"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-293",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-131",
+                  "hexagonal-cut-concrete-forest-left-vertex-203"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-3",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-1",
+                  "hexagonal-cut-concrete-forest-left-vertex-2"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-3",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-1",
+                  "hexagonal-cut-concrete-forest-left-vertex-2"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-31",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-23",
+                  "hexagonal-cut-concrete-forest-left-vertex-30"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-31",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-23",
+                  "hexagonal-cut-concrete-forest-left-vertex-30"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-33",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-32",
+                  "hexagonal-cut-concrete-forest-left-vertex-30"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-33",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-32",
+                  "hexagonal-cut-concrete-forest-left-vertex-30"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-35",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-32",
+                  "hexagonal-cut-concrete-forest-left-vertex-34"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-35",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-32",
+                  "hexagonal-cut-concrete-forest-left-vertex-34"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-37",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-36",
+                  "hexagonal-cut-concrete-forest-left-vertex-34"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-37",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-36",
+                  "hexagonal-cut-concrete-forest-left-vertex-34"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-38",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-25",
+                  "hexagonal-cut-concrete-forest-left-vertex-36"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-38",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-25",
+                  "hexagonal-cut-concrete-forest-left-vertex-36"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-42",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-34",
+                  "hexagonal-cut-concrete-forest-left-vertex-41"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-42",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-34",
+                  "hexagonal-cut-concrete-forest-left-vertex-41"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-44",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-43",
+                  "hexagonal-cut-concrete-forest-left-vertex-41"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-44",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-43",
+                  "hexagonal-cut-concrete-forest-left-vertex-41"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-46",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-43",
+                  "hexagonal-cut-concrete-forest-left-vertex-45"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-46",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-43",
+                  "hexagonal-cut-concrete-forest-left-vertex-45"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-48",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-47",
+                  "hexagonal-cut-concrete-forest-left-vertex-45"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-48",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-47",
+                  "hexagonal-cut-concrete-forest-left-vertex-45"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-5",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-4",
+                  "hexagonal-cut-concrete-forest-left-vertex-2"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-5",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-4",
+                  "hexagonal-cut-concrete-forest-left-vertex-2"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-50",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-47",
+                  "hexagonal-cut-concrete-forest-left-vertex-49"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-50",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-47",
+                  "hexagonal-cut-concrete-forest-left-vertex-49"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-52",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-51",
+                  "hexagonal-cut-concrete-forest-left-vertex-49"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-52",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-51",
+                  "hexagonal-cut-concrete-forest-left-vertex-49"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-53",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-51",
+                  "hexagonal-cut-concrete-forest-left-vertex-1"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-53",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-51",
+                  "hexagonal-cut-concrete-forest-left-vertex-1"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-54",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-36",
+                  "hexagonal-cut-concrete-forest-left-vertex-6"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-54",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-36",
+                  "hexagonal-cut-concrete-forest-left-vertex-6"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-61",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-59",
+                  "hexagonal-cut-concrete-forest-left-vertex-60"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-61",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-59",
+                  "hexagonal-cut-concrete-forest-left-vertex-60"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-63",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-62",
+                  "hexagonal-cut-concrete-forest-left-vertex-59"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-63",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-62",
+                  "hexagonal-cut-concrete-forest-left-vertex-59"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-64",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-62",
+                  "hexagonal-cut-concrete-forest-left-vertex-47"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-64",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-62",
+                  "hexagonal-cut-concrete-forest-left-vertex-47"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-65",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-60",
+                  "hexagonal-cut-concrete-forest-left-vertex-47"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-65",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-60",
+                  "hexagonal-cut-concrete-forest-left-vertex-47"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-69",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-68",
+                  "hexagonal-cut-concrete-forest-left-vertex-45"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-69",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-68",
+                  "hexagonal-cut-concrete-forest-left-vertex-45"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-7",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-6",
+                  "hexagonal-cut-concrete-forest-left-vertex-4"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-7",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-6",
+                  "hexagonal-cut-concrete-forest-left-vertex-4"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-71",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-68",
+                  "hexagonal-cut-concrete-forest-left-vertex-70"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-71",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-68",
+                  "hexagonal-cut-concrete-forest-left-vertex-70"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-73",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-70",
+                  "hexagonal-cut-concrete-forest-left-vertex-72"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-73",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-70",
+                  "hexagonal-cut-concrete-forest-left-vertex-72"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-74",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-45",
+                  "hexagonal-cut-concrete-forest-left-vertex-72"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-74",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-45",
+                  "hexagonal-cut-concrete-forest-left-vertex-72"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-77",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-60",
+                  "hexagonal-cut-concrete-forest-left-vertex-72"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-77",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-60",
+                  "hexagonal-cut-concrete-forest-left-vertex-72"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-78",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-70",
+                  "hexagonal-cut-concrete-forest-left-vertex-59"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-78",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-70",
+                  "hexagonal-cut-concrete-forest-left-vertex-59"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-8",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-1",
+                  "hexagonal-cut-concrete-forest-left-vertex-6"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-8",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-1",
+                  "hexagonal-cut-concrete-forest-left-vertex-6"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-85",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-83",
+                  "hexagonal-cut-concrete-forest-left-vertex-84"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-85",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-83",
+                  "hexagonal-cut-concrete-forest-left-vertex-84"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-87",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-86",
+                  "hexagonal-cut-concrete-forest-left-vertex-83"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-87",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-86",
+                  "hexagonal-cut-concrete-forest-left-vertex-83"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-88",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-86",
+                  "hexagonal-cut-concrete-forest-left-vertex-13"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-88",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-86",
+                  "hexagonal-cut-concrete-forest-left-vertex-13"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-89",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-84",
+                  "hexagonal-cut-concrete-forest-left-vertex-13"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-89",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-84",
+                  "hexagonal-cut-concrete-forest-left-vertex-13"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-93",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-92",
+                  "hexagonal-cut-concrete-forest-left-vertex-11"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-93",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-92",
+                  "hexagonal-cut-concrete-forest-left-vertex-11"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-95",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-92",
+                  "hexagonal-cut-concrete-forest-left-vertex-94"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-95",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-92",
+                  "hexagonal-cut-concrete-forest-left-vertex-94"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-97",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-94",
+                  "hexagonal-cut-concrete-forest-left-vertex-96"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-97",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-94",
+                  "hexagonal-cut-concrete-forest-left-vertex-96"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-98",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-11",
+                  "hexagonal-cut-concrete-forest-left-vertex-96"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "edge",
+                "id": "hexagonal-cut-concrete-forest-left-edge-98",
+                "vertexIds": [
+                  "hexagonal-cut-concrete-forest-left-vertex-11",
+                  "hexagonal-cut-concrete-forest-left-vertex-96"
+                ],
+                "curve": {
+                  "kind": "line"
+                }
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-103",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-101",
+                  "hexagonal-cut-concrete-forest-left-edge-97",
+                  "hexagonal-cut-concrete-forest-left-edge-102",
+                  "hexagonal-cut-concrete-forest-left-edge-85"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-105",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-101",
+                  "hexagonal-cut-concrete-forest-left-edge-98",
+                  "hexagonal-cut-concrete-forest-left-edge-14",
+                  "hexagonal-cut-concrete-forest-left-edge-89"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-114",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-109",
+                  "hexagonal-cut-concrete-forest-left-edge-113",
+                  "hexagonal-cut-concrete-forest-left-edge-112",
+                  "hexagonal-cut-concrete-forest-left-edge-111"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-120",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-116",
+                  "hexagonal-cut-concrete-forest-left-edge-119",
+                  "hexagonal-cut-concrete-forest-left-edge-118",
+                  "hexagonal-cut-concrete-forest-left-edge-87"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-124",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-122",
+                  "hexagonal-cut-concrete-forest-left-edge-118",
+                  "hexagonal-cut-concrete-forest-left-edge-123",
+                  "hexagonal-cut-concrete-forest-left-edge-109"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-126",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-122",
+                  "hexagonal-cut-concrete-forest-left-edge-119",
+                  "hexagonal-cut-concrete-forest-left-edge-18",
+                  "hexagonal-cut-concrete-forest-left-edge-113"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-135",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-130",
+                  "hexagonal-cut-concrete-forest-left-edge-134",
+                  "hexagonal-cut-concrete-forest-left-edge-133",
+                  "hexagonal-cut-concrete-forest-left-edge-132"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-144",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-138",
+                  "hexagonal-cut-concrete-forest-left-edge-143",
+                  "hexagonal-cut-concrete-forest-left-edge-142",
+                  "hexagonal-cut-concrete-forest-left-edge-140"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-148",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-146",
+                  "hexagonal-cut-concrete-forest-left-edge-142",
+                  "hexagonal-cut-concrete-forest-left-edge-147",
+                  "hexagonal-cut-concrete-forest-left-edge-130"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-150",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-146",
+                  "hexagonal-cut-concrete-forest-left-edge-143",
+                  "hexagonal-cut-concrete-forest-left-edge-22",
+                  "hexagonal-cut-concrete-forest-left-edge-134"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-156",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-153",
+                  "hexagonal-cut-concrete-forest-left-edge-155",
+                  "hexagonal-cut-concrete-forest-left-edge-154",
+                  "hexagonal-cut-concrete-forest-left-edge-71"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-165",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-159",
+                  "hexagonal-cut-concrete-forest-left-edge-164",
+                  "hexagonal-cut-concrete-forest-left-edge-163",
+                  "hexagonal-cut-concrete-forest-left-edge-161"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-169",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-167",
+                  "hexagonal-cut-concrete-forest-left-edge-163",
+                  "hexagonal-cut-concrete-forest-left-edge-168",
+                  "hexagonal-cut-concrete-forest-left-edge-153"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-171",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-167",
+                  "hexagonal-cut-concrete-forest-left-edge-164",
+                  "hexagonal-cut-concrete-forest-left-edge-44",
+                  "hexagonal-cut-concrete-forest-left-edge-155"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-180",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-175",
+                  "hexagonal-cut-concrete-forest-left-edge-179",
+                  "hexagonal-cut-concrete-forest-left-edge-178",
+                  "hexagonal-cut-concrete-forest-left-edge-177"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-189",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-183",
+                  "hexagonal-cut-concrete-forest-left-edge-188",
+                  "hexagonal-cut-concrete-forest-left-edge-187",
+                  "hexagonal-cut-concrete-forest-left-edge-185"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-193",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-191",
+                  "hexagonal-cut-concrete-forest-left-edge-187",
+                  "hexagonal-cut-concrete-forest-left-edge-192",
+                  "hexagonal-cut-concrete-forest-left-edge-175"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-195",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-191",
+                  "hexagonal-cut-concrete-forest-left-edge-188",
+                  "hexagonal-cut-concrete-forest-left-edge-52",
+                  "hexagonal-cut-concrete-forest-left-edge-179"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-201",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-198",
+                  "hexagonal-cut-concrete-forest-left-edge-200",
+                  "hexagonal-cut-concrete-forest-left-edge-199",
+                  "hexagonal-cut-concrete-forest-left-edge-161"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-210",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-204",
+                  "hexagonal-cut-concrete-forest-left-edge-209",
+                  "hexagonal-cut-concrete-forest-left-edge-208",
+                  "hexagonal-cut-concrete-forest-left-edge-206"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-214",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-212",
+                  "hexagonal-cut-concrete-forest-left-edge-208",
+                  "hexagonal-cut-concrete-forest-left-edge-213",
+                  "hexagonal-cut-concrete-forest-left-edge-198"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-216",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-212",
+                  "hexagonal-cut-concrete-forest-left-edge-209",
+                  "hexagonal-cut-concrete-forest-left-edge-33",
+                  "hexagonal-cut-concrete-forest-left-edge-200"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-220",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-218",
+                  "hexagonal-cut-concrete-forest-left-edge-111",
+                  "hexagonal-cut-concrete-forest-left-edge-219",
+                  "hexagonal-cut-concrete-forest-left-edge-140"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-224",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-63",
+                  "hexagonal-cut-concrete-forest-left-edge-222",
+                  "hexagonal-cut-concrete-forest-left-edge-185",
+                  "hexagonal-cut-concrete-forest-left-edge-223"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-228",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-226",
+                  "hexagonal-cut-concrete-forest-left-edge-219",
+                  "hexagonal-cut-concrete-forest-left-edge-227",
+                  "hexagonal-cut-concrete-forest-left-edge-222"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-242",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-232",
+                  "hexagonal-cut-concrete-forest-left-edge-241",
+                  "hexagonal-cut-concrete-forest-left-edge-240",
+                  "hexagonal-cut-concrete-forest-left-edge-238",
+                  "hexagonal-cut-concrete-forest-left-edge-236",
+                  "hexagonal-cut-concrete-forest-left-edge-234"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-246",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-244",
+                  "hexagonal-cut-concrete-forest-left-edge-192",
+                  "hexagonal-cut-concrete-forest-left-edge-245",
+                  "hexagonal-cut-concrete-forest-left-edge-241"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-251",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-240",
+                  "hexagonal-cut-concrete-forest-left-edge-249",
+                  "hexagonal-cut-concrete-forest-left-edge-250",
+                  "hexagonal-cut-concrete-forest-left-edge-177",
+                  "hexagonal-cut-concrete-forest-left-edge-245"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-255",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-238",
+                  "hexagonal-cut-concrete-forest-left-edge-253",
+                  "hexagonal-cut-concrete-forest-left-edge-95",
+                  "hexagonal-cut-concrete-forest-left-edge-254",
+                  "hexagonal-cut-concrete-forest-left-edge-249"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-258",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-253",
+                  "hexagonal-cut-concrete-forest-left-edge-236",
+                  "hexagonal-cut-concrete-forest-left-edge-257",
+                  "hexagonal-cut-concrete-forest-left-edge-102"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-261",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-257",
+                  "hexagonal-cut-concrete-forest-left-edge-234",
+                  "hexagonal-cut-concrete-forest-left-edge-260",
+                  "hexagonal-cut-concrete-forest-left-edge-123"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-263",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-260",
+                  "hexagonal-cut-concrete-forest-left-edge-232",
+                  "hexagonal-cut-concrete-forest-left-edge-244",
+                  "hexagonal-cut-concrete-forest-left-edge-227"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-277",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-267",
+                  "hexagonal-cut-concrete-forest-left-edge-276",
+                  "hexagonal-cut-concrete-forest-left-edge-275",
+                  "hexagonal-cut-concrete-forest-left-edge-273",
+                  "hexagonal-cut-concrete-forest-left-edge-271",
+                  "hexagonal-cut-concrete-forest-left-edge-269"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-28",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-12",
+                  "hexagonal-cut-concrete-forest-left-edge-14",
+                  "hexagonal-cut-concrete-forest-left-edge-16",
+                  "hexagonal-cut-concrete-forest-left-edge-18",
+                  "hexagonal-cut-concrete-forest-left-edge-20",
+                  "hexagonal-cut-concrete-forest-left-edge-22",
+                  "hexagonal-cut-concrete-forest-left-edge-24",
+                  "hexagonal-cut-concrete-forest-left-edge-26",
+                  "hexagonal-cut-concrete-forest-left-edge-27",
+                  "hexagonal-cut-concrete-forest-left-edge-5"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-281",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-279",
+                  "hexagonal-cut-concrete-forest-left-edge-168",
+                  "hexagonal-cut-concrete-forest-left-edge-280",
+                  "hexagonal-cut-concrete-forest-left-edge-276"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-284",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-280",
+                  "hexagonal-cut-concrete-forest-left-edge-275",
+                  "hexagonal-cut-concrete-forest-left-edge-283",
+                  "hexagonal-cut-concrete-forest-left-edge-78"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-287",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-283",
+                  "hexagonal-cut-concrete-forest-left-edge-273",
+                  "hexagonal-cut-concrete-forest-left-edge-286",
+                  "hexagonal-cut-concrete-forest-left-edge-226"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-290",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-286",
+                  "hexagonal-cut-concrete-forest-left-edge-271",
+                  "hexagonal-cut-concrete-forest-left-edge-289",
+                  "hexagonal-cut-concrete-forest-left-edge-147"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-294",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-269",
+                  "hexagonal-cut-concrete-forest-left-edge-292",
+                  "hexagonal-cut-concrete-forest-left-edge-206",
+                  "hexagonal-cut-concrete-forest-left-edge-293",
+                  "hexagonal-cut-concrete-forest-left-edge-132",
+                  "hexagonal-cut-concrete-forest-left-edge-289"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-296",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-292",
+                  "hexagonal-cut-concrete-forest-left-edge-267",
+                  "hexagonal-cut-concrete-forest-left-edge-279",
+                  "hexagonal-cut-concrete-forest-left-edge-213"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-298",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-116",
+                  "hexagonal-cut-concrete-forest-left-edge-16",
+                  "hexagonal-cut-concrete-forest-left-edge-88"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-300",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-69",
+                  "hexagonal-cut-concrete-forest-left-edge-46",
+                  "hexagonal-cut-concrete-forest-left-edge-154"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-302",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-159",
+                  "hexagonal-cut-concrete-forest-left-edge-42",
+                  "hexagonal-cut-concrete-forest-left-edge-35",
+                  "hexagonal-cut-concrete-forest-left-edge-199"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-304",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-138",
+                  "hexagonal-cut-concrete-forest-left-edge-20",
+                  "hexagonal-cut-concrete-forest-left-edge-112",
+                  "hexagonal-cut-concrete-forest-left-edge-218"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-306",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-223",
+                  "hexagonal-cut-concrete-forest-left-edge-183",
+                  "hexagonal-cut-concrete-forest-left-edge-50",
+                  "hexagonal-cut-concrete-forest-left-edge-64"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-308",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-254",
+                  "hexagonal-cut-concrete-forest-left-edge-93",
+                  "hexagonal-cut-concrete-forest-left-edge-12",
+                  "hexagonal-cut-concrete-forest-left-edge-3",
+                  "hexagonal-cut-concrete-forest-left-edge-53",
+                  "hexagonal-cut-concrete-forest-left-edge-178",
+                  "hexagonal-cut-concrete-forest-left-edge-250"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-310",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-293",
+                  "hexagonal-cut-concrete-forest-left-edge-204",
+                  "hexagonal-cut-concrete-forest-left-edge-31",
+                  "hexagonal-cut-concrete-forest-left-edge-24",
+                  "hexagonal-cut-concrete-forest-left-edge-133"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-39",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-31",
+                  "hexagonal-cut-concrete-forest-left-edge-33",
+                  "hexagonal-cut-concrete-forest-left-edge-35",
+                  "hexagonal-cut-concrete-forest-left-edge-37",
+                  "hexagonal-cut-concrete-forest-left-edge-38",
+                  "hexagonal-cut-concrete-forest-left-edge-26"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-55",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-42",
+                  "hexagonal-cut-concrete-forest-left-edge-44",
+                  "hexagonal-cut-concrete-forest-left-edge-46",
+                  "hexagonal-cut-concrete-forest-left-edge-48",
+                  "hexagonal-cut-concrete-forest-left-edge-50",
+                  "hexagonal-cut-concrete-forest-left-edge-52",
+                  "hexagonal-cut-concrete-forest-left-edge-53",
+                  "hexagonal-cut-concrete-forest-left-edge-8",
+                  "hexagonal-cut-concrete-forest-left-edge-54",
+                  "hexagonal-cut-concrete-forest-left-edge-37"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-57",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-38",
+                  "hexagonal-cut-concrete-forest-left-edge-54",
+                  "hexagonal-cut-concrete-forest-left-edge-7",
+                  "hexagonal-cut-concrete-forest-left-edge-27"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-66",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-61",
+                  "hexagonal-cut-concrete-forest-left-edge-65",
+                  "hexagonal-cut-concrete-forest-left-edge-64",
+                  "hexagonal-cut-concrete-forest-left-edge-63"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-75",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-69",
+                  "hexagonal-cut-concrete-forest-left-edge-74",
+                  "hexagonal-cut-concrete-forest-left-edge-73",
+                  "hexagonal-cut-concrete-forest-left-edge-71"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-79",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-77",
+                  "hexagonal-cut-concrete-forest-left-edge-73",
+                  "hexagonal-cut-concrete-forest-left-edge-78",
+                  "hexagonal-cut-concrete-forest-left-edge-61"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-81",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-77",
+                  "hexagonal-cut-concrete-forest-left-edge-74",
+                  "hexagonal-cut-concrete-forest-left-edge-48",
+                  "hexagonal-cut-concrete-forest-left-edge-65"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-9",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-3",
+                  "hexagonal-cut-concrete-forest-left-edge-5",
+                  "hexagonal-cut-concrete-forest-left-edge-7",
+                  "hexagonal-cut-concrete-forest-left-edge-8"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-90",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-85",
+                  "hexagonal-cut-concrete-forest-left-edge-89",
+                  "hexagonal-cut-concrete-forest-left-edge-88",
+                  "hexagonal-cut-concrete-forest-left-edge-87"
+                ]
+              },
+              {
+                "kind": "wire",
+                "id": "hexagonal-cut-concrete-forest-left-wire-99",
+                "edgeIds": [
+                  "hexagonal-cut-concrete-forest-left-edge-93",
+                  "hexagonal-cut-concrete-forest-left-edge-98",
+                  "hexagonal-cut-concrete-forest-left-edge-97",
+                  "hexagonal-cut-concrete-forest-left-edge-95"
+                ]
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-10",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-9"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    1350,
+                    2338.268590217985,
+                    2867.5
+                  ],
+                  "normal": [
+                    -0.8660254037844386,
+                    0.4999999999999998,
+                    3.9601692504972475e-16
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-100",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-99"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    1808.5039315363363,
+                    1094.1342951089973,
+                    2510
+                  ],
+                  "normal": [
+                    -0.8660254037844386,
+                    0.4999999999999998,
+                    5.198436268039998e-16
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-104",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-103"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    1958.2654857700984,
+                    1057.0779206870875,
+                    2285
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-106",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-105"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    1350.0102824824492,
+                    8.881784197001249e-13,
+                    2510
+                  ],
+                  "normal": [
+                    0,
+                    -1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-115",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-114"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    3591.5166334285655,
+                    1094.1342951089957,
+                    2510
+                  ],
+                  "normal": [
+                    0.8660254037844386,
+                    0.4999999999999998,
+                    -9.471686682225696e-16
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-121",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-120"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    3288.4077421039997,
+                    1019.1342951089922,
+                    2510
+                  ],
+                  "normal": [
+                    -0.8660254037844386,
+                    -0.4999999999999998,
+                    6.167905692361977e-17
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-125",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-124"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    3441.755079194801,
+                    1057.077920687084,
+                    2285
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-127",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-126"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    4050.0102824824494,
+                    8.88178419700125e-13,
+                    2510
+                  ],
+                  "normal": [
+                    0,
+                    -1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-136",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-135"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7511.612822860896,
+                    1019.1342951089904,
+                    2510.0000000000005
+                  ],
+                  "normal": [
+                    0.8660254037844377,
+                    -0.5000000000000018,
+                    -1.1277774819466598e-15
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-145",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-144"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7208.503931536334,
+                    1094.134295108999,
+                    2510
+                  ],
+                  "normal": [
+                    -0.866025403784438,
+                    0.500000000000001,
+                    1.2841893027790897e-15
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-149",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-148"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7358.265485770099,
+                    1057.077920687088,
+                    2285
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-151",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-150"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    6750.01028248245,
+                    8.88178419700125e-13,
+                    2509.999999999999
+                  ],
+                  "normal": [
+                    0,
+                    -1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-157",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-156"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8688.407742104,
+                    3657.40288532698,
+                    2510
+                  ],
+                  "normal": [
+                    -0.8660254037844386,
+                    0.4999999999999998,
+                    -1.806088137240909e-16
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-166",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-165"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8991.516633428566,
+                    3582.4028853269706,
+                    2510
+                  ],
+                  "normal": [
+                    0.866025403784438,
+                    -0.500000000000001,
+                    2.079374507216e-15
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-170",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-169"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8841.7550791948,
+                    3619.459259748888,
+                    2285
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-172",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-171"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    9450.010282482448,
+                    4676.53718043597,
+                    2510
+                  ],
+                  "normal": [
+                    0,
+                    1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-181",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-180"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    3288.4077421039997,
+                    3657.4028853269783,
+                    2510
+                  ],
+                  "normal": [
+                    -0.8660254037844386,
+                    0.4999999999999998,
+                    1.806088137240909e-16
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-190",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-189"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    3591.5166334285564,
+                    3582.4028853269774,
+                    2510
+                  ],
+                  "normal": [
+                    0.8660254037844386,
+                    -0.4999999999999998,
+                    2.797699346796739e-16
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-194",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-193"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    3441.7550791948,
+                    3619.459259748887,
+                    2285
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-196",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-195"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    4050.0102824824485,
+                    4676.53718043597,
+                    2510
+                  ],
+                  "normal": [
+                    0,
+                    1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-202",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-201"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8948.215363239335,
+                    2488.26859021798,
+                    2510
+                  ],
+                  "normal": [
+                    0,
+                    1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-211",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-210"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8861.612822860894,
+                    2188.26859021799,
+                    2509.9999999999995
+                  ],
+                  "normal": [
+                    0,
+                    -1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-215",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-214"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8906.060679674856,
+                    2342.2404827966393,
+                    2285
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-217",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-216"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    9450.010282482446,
+                    2338.268590217983,
+                    2510
+                  ],
+                  "normal": [
+                    0.8660254037844334,
+                    -0.5000000000000092,
+                    -9.411600658740106e-16
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-221",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-220"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    5400.01028248245,
+                    2188.26859021799,
+                    2510
+                  ],
+                  "normal": [
+                    0,
+                    -1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-225",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-224"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    5400.01028248245,
+                    2488.26859021798,
+                    2510
+                  ],
+                  "normal": [
+                    0,
+                    1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-229",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-228"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    5400.01028248245,
+                    2338.268590217985,
+                    2285
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-243",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-242"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2700.0102824824507,
+                    2338.268590217984,
+                    0
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-247",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-246"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2829.914093050115,
+                    2563.2685902179796,
+                    1142.5
+                  ],
+                  "normal": [
+                    0.4999999999999998,
+                    0.8660254037844386,
+                    3.394854661814049e-17
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-252",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-251"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2570.106471914785,
+                    2563.26859021798,
+                    1367.5
+                  ],
+                  "normal": [
+                    -0.4999999999999998,
+                    0.8660254037844386,
+                    -1.3283902924697094e-17
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-256",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-255"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2440.20266134712,
+                    2338.268590217985,
+                    1367.5
+                  ],
+                  "normal": [
+                    -1,
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-259",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-258"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2570.1064719147853,
+                    2113.26859021799,
+                    1142.5
+                  ],
+                  "normal": [
+                    -0.5000000000000003,
+                    -0.8660254037844385,
+                    7.876770678474605e-18
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-262",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-261"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2829.9140930501144,
+                    2113.268590217989,
+                    1142.5000000000034
+                  ],
+                  "normal": [
+                    0.4999999999999991,
+                    -0.8660254037844393,
+                    3.540800982564101e-17
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-264",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-263"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2959.81790361778,
+                    2338.2685902179837,
+                    1142.4999999999964
+                  ],
+                  "normal": [
+                    1,
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-278",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-277"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8100.01028248245,
+                    2338.268590217987,
+                    0
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-282",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-281"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8229.914093050113,
+                    2563.268590217981,
+                    1142.4999999999964
+                  ],
+                  "normal": [
+                    0.5000000000000029,
+                    0.8660254037844368,
+                    -8.273866958408498e-18
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-285",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-284"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7970.106471914781,
+                    2563.2685902179896,
+                    1142.499999999993
+                  ],
+                  "normal": [
+                    -0.49999999999999795,
+                    0.8660254037844399,
+                    -2.9729208330593397e-17
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-288",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-287"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7840.20266134712,
+                    2338.2685902179865,
+                    1142.5000000000036
+                  ],
+                  "normal": [
+                    -1,
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-29",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-28"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    4050.005141241226,
+                    8.88178419700125e-13,
+                    2867.5
+                  ],
+                  "normal": [
+                    0,
+                    -1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-291",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-290"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7970.106471914785,
+                    2113.2685902179896,
+                    1142.500000000003
+                  ],
+                  "normal": [
+                    -0.500000000000001,
+                    -0.866025403784438,
+                    8.75357801098747e-17
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-295",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-294"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8229.914093050113,
+                    2113.2685902179883,
+                    1367.5000000000052
+                  ],
+                  "normal": [
+                    0.49999999999999795,
+                    -0.8660254037844399,
+                    8.16892904819756e-17
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-297",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-296"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8359.817903617779,
+                    2338.2685902179837,
+                    1142.4999999999964
+                  ],
+                  "normal": [
+                    1,
+                    0,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-299",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-298"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2700.0102824824494,
+                    679.4228634059964,
+                    2735
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-301",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-300"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8100.01028248245,
+                    3997.1143170299765,
+                    2735
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-303",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-302"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    9579.914093050133,
+                    3582.402885326983,
+                    2735
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-305",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-304"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    5400.010282482447,
+                    1221.526364345607,
+                    2735
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-307",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-306"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    5400.01028248245,
+                    3455.0108160903587,
+                    2735
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-309",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-308"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    1934.2062182712716,
+                    2337.5554080217557,
+                    2735
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-311",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-310"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    8142.945649461322,
+                    1088.8404260523196,
+                    2735
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-40",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-39"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    9450.010282482455,
+                    2338.2685902179974,
+                    2867.5
+                  ],
+                  "normal": [
+                    0.8660254037844386,
+                    -0.4999999999999998,
+                    -1.363299931736199e-15
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-56",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-55"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    6750.00514124125,
+                    4676.53718043597,
+                    2867.5
+                  ],
+                  "normal": [
+                    0,
+                    1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-58",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-57"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    5400.005141241233,
+                    2338.268590217988,
+                    3000
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-67",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-66"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7208.503931536335,
+                    3582.402885326975,
+                    2510
+                  ],
+                  "normal": [
+                    -0.8660254037844386,
+                    -0.4999999999999998,
+                    2.136625207092849e-16
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-76",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-75"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7511.612822860899,
+                    3657.4028853269806,
+                    2510
+                  ],
+                  "normal": [
+                    0.8660254037844386,
+                    0.4999999999999998,
+                    -1.7093001656742792e-15
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-80",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-79"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    7358.265485770097,
+                    3619.4592597488927,
+                    2285
+                  ],
+                  "normal": [
+                    0,
+                    0,
+                    -1
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-82",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-81"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    6750.010282482451,
+                    4676.53718043597,
+                    2510
+                  ],
+                  "normal": [
+                    0,
+                    1,
+                    0
+                  ]
+                }
+              },
+              {
+                "kind": "face",
+                "id": "hexagonal-cut-concrete-forest-left-face-91",
+                "wireIds": [
+                  "hexagonal-cut-concrete-forest-left-wire-90"
+                ],
+                "surface": {
+                  "kind": "plane",
+                  "origin": [
+                    2111.612822860893,
+                    1019.1342951089964,
+                    2510
+                  ],
+                  "normal": [
+                    0.8660254037844386,
+                    -0.4999999999999998,
+                    -2.670781508866059e-16
+                  ]
+                }
+              },
+              {
+                "kind": "shell",
+                "id": "hexagonal-cut-concrete-forest-left-shell-312",
+                "faceIds": [
+                  "hexagonal-cut-concrete-forest-left-face-10",
+                  "hexagonal-cut-concrete-forest-left-face-29",
+                  "hexagonal-cut-concrete-forest-left-face-40",
+                  "hexagonal-cut-concrete-forest-left-face-56",
+                  "hexagonal-cut-concrete-forest-left-face-58",
+                  "hexagonal-cut-concrete-forest-left-face-67",
+                  "hexagonal-cut-concrete-forest-left-face-76",
+                  "hexagonal-cut-concrete-forest-left-face-80",
+                  "hexagonal-cut-concrete-forest-left-face-82",
+                  "hexagonal-cut-concrete-forest-left-face-91",
+                  "hexagonal-cut-concrete-forest-left-face-100",
+                  "hexagonal-cut-concrete-forest-left-face-104",
+                  "hexagonal-cut-concrete-forest-left-face-106",
+                  "hexagonal-cut-concrete-forest-left-face-115",
+                  "hexagonal-cut-concrete-forest-left-face-121",
+                  "hexagonal-cut-concrete-forest-left-face-125",
+                  "hexagonal-cut-concrete-forest-left-face-127",
+                  "hexagonal-cut-concrete-forest-left-face-136",
+                  "hexagonal-cut-concrete-forest-left-face-145",
+                  "hexagonal-cut-concrete-forest-left-face-149",
+                  "hexagonal-cut-concrete-forest-left-face-151",
+                  "hexagonal-cut-concrete-forest-left-face-157",
+                  "hexagonal-cut-concrete-forest-left-face-166",
+                  "hexagonal-cut-concrete-forest-left-face-170",
+                  "hexagonal-cut-concrete-forest-left-face-172",
+                  "hexagonal-cut-concrete-forest-left-face-181",
+                  "hexagonal-cut-concrete-forest-left-face-190",
+                  "hexagonal-cut-concrete-forest-left-face-194",
+                  "hexagonal-cut-concrete-forest-left-face-196",
+                  "hexagonal-cut-concrete-forest-left-face-202",
+                  "hexagonal-cut-concrete-forest-left-face-211",
+                  "hexagonal-cut-concrete-forest-left-face-215",
+                  "hexagonal-cut-concrete-forest-left-face-217",
+                  "hexagonal-cut-concrete-forest-left-face-221",
+                  "hexagonal-cut-concrete-forest-left-face-225",
+                  "hexagonal-cut-concrete-forest-left-face-229",
+                  "hexagonal-cut-concrete-forest-left-face-243",
+                  "hexagonal-cut-concrete-forest-left-face-247",
+                  "hexagonal-cut-concrete-forest-left-face-252",
+                  "hexagonal-cut-concrete-forest-left-face-256",
+                  "hexagonal-cut-concrete-forest-left-face-259",
+                  "hexagonal-cut-concrete-forest-left-face-262",
+                  "hexagonal-cut-concrete-forest-left-face-264",
+                  "hexagonal-cut-concrete-forest-left-face-278",
+                  "hexagonal-cut-concrete-forest-left-face-282",
+                  "hexagonal-cut-concrete-forest-left-face-285",
+                  "hexagonal-cut-concrete-forest-left-face-288",
+                  "hexagonal-cut-concrete-forest-left-face-291",
+                  "hexagonal-cut-concrete-forest-left-face-295",
+                  "hexagonal-cut-concrete-forest-left-face-297",
+                  "hexagonal-cut-concrete-forest-left-face-299",
+                  "hexagonal-cut-concrete-forest-left-face-301",
+                  "hexagonal-cut-concrete-forest-left-face-303",
+                  "hexagonal-cut-concrete-forest-left-face-305",
+                  "hexagonal-cut-concrete-forest-left-face-307",
+                  "hexagonal-cut-concrete-forest-left-face-309",
+                  "hexagonal-cut-concrete-forest-left-face-311"
+                ]
+              },
+              {
+                "kind": "solid",
+                "slot": "solid",
+                "id": "hexagonal-cut-concrete-forest-left-solid-313",
+                "shellIds": [
+                  "hexagonal-cut-concrete-forest-left-shell-312"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

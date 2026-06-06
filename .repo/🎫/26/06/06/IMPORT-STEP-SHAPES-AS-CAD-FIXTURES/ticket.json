@@ -1,0 +1,9 @@
+{
+  "title": "Import STEP Shapes as CAD Fixtures",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Import hexagonal-cut-concrete-forest left/right STEP files into spatial.shape CAD play fixtures with raw BREP topology importer.",
+  "summary": "Added raw Rhino STEP BREP import to the brepjs kernel and generated two CAD play fixtures from semio kit STEP sources.\n\n- importStepBrepToModelSpace walks imported brep topology into spatial.shape kernel graph (vertices through solids)\n- importStepToModelSpace falls back to raw BREP import when spatial UDA metadata is absent\n- inlineModelSpaceFixtureJson serializes inline spatial.modelspace/v1 play fixtures\n- Vitest validates both STEP files (57 faces, positive volume, tessellation, JSON round-trip) and generates fixtures via CAD_GENERATE_STEP_FIXTURES\n- script.ts fixture command + launch.json entry; play navbar wired for Concrete forest (left/right)\n\nTests: @cad/js/kernel/brepjs 35 passed. @cad/js/renderer build succeeded.",
+  "goal": "🎯framework",
+  "sessions": []
+}

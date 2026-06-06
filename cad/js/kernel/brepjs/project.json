@@ -10,6 +10,15 @@
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "fixture": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "cad/js/kernel/brepjs",
+        "command": "bun ./script.ts fixture",
+        "forwardAllArgs": true
+      }
     }
   }
 }
