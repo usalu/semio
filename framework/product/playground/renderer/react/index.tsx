@@ -2090,6 +2090,11 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
           onHover={onCanvasHover}
           setSelectedId={(id) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectedId", { id })}
           onSelect={(selection) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteSelection", selection)}
+          onToggleSelectionHidden={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "hidden", value })}
+          onToggleSelectionLocked={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "locked", value })}
+          onDeleteSelection={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "deleteSelection")}
+          onDuplicateSelection={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "duplicateSelection")}
+          onSelectSameKind={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "selectSameKind")}
           onIndirectConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteIndirect")}
           onProximityConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteProximity")}
           onLodChange={(lod) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setEffectiveLod", { lod })}
@@ -2461,6 +2466,13 @@ function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceN
     }
     controllerRef.current?.setBrushEngagementPossibles(puzzle5dBrushCandidateRows(payload, flatCatalogs));
   }, [flatCatalogs]);
+  const onDelete = reactHostPort.useCallback(() => {
+    const selection = storeRef.current.getSnapshot().selection;
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [...selection.partIds] });
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", {
+      objectIds: selection.partIds.length > 0 ? [selection.partIds[0]!] : [],
+    });
+  }, []);
   if (!bindingValid || !controller || !snapshot) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 2d binding</div>;
   }
@@ -2477,6 +2489,7 @@ function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceN
         onProximityConnect,
         onBrushPlace,
         onBrushCandidates,
+        onDelete,
         ...snapshot.lod2dProps,
       }}
     />
@@ -2574,7 +2587,13 @@ export function registerPuzzle5dPlaySurfaceHosts(): void {
   registerWindowBody(PUZZLE_5D_PLAY_3D_BODY_KEY, buildPuzzle5d3dDeclarativeBody);
 }
 
-function Puzzle5dPlayChrome({ runtime }: { readonly runtime: Platform }): React.ReactElement {
+function Puzzle5dPlayChrome({
+  runtime,
+  playgroundKeybindings,
+}: {
+  readonly runtime: Platform;
+  readonly playgroundKeybindings?: readonly { readonly key: string; readonly controllerId: string; readonly command: string }[];
+}): React.ReactElement {
   const generation = reactHostPort.useSyncExternalStore(
     (listener) => runtime.subscribe(listener),
     () => runtime.generation,
@@ -2602,7 +2621,14 @@ function Puzzle5dPlayChrome({ runtime }: { readonly runtime: Platform }): React.
     [snapshot, snapshotKey, controller, bus],
   );
   const detailTabs = reactHostPort.useMemo(() => [new Puzzle5dPlayStatusPanelDefinition().resolveTab()], []);
-  const shell = <PlaygroundView runtime={runtime} defaultAppId={PUZZLE_5D_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }} />;
+  const shell = (
+    <PlaygroundView
+      runtime={runtime}
+      defaultAppId={PUZZLE_5D_PLAY_APP_ID}
+      playgroundKeybindings={playgroundKeybindings}
+      augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }}
+    />
+  );
   if (!controller) {
     return shell;
   }
@@ -2618,7 +2644,7 @@ function Puzzle5dPlayChrome({ runtime }: { readonly runtime: Platform }): React.
 
 /** @emoji 🚀 Mounts puzzle 5d play chrome for a {@link Playground}. */
 export function mountPuzzle5dPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<Puzzle5dPlayChrome runtime={playground.runtime} />, rootId);
+  mountPlaygroundApp(<Puzzle5dPlayChrome runtime={playground.runtime} playgroundKeybindings={playground.keybindings} />, rootId);
 }
 
 const topologyPlayChromeBoot: PlaygroundChromeBoot = {

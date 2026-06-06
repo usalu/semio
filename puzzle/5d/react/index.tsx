@@ -22,6 +22,7 @@ import {
   type Puzzle2dForceGraphLayoutOptions,
   type Puzzle2dRedrawLayoutOptions,
   layoutPuzzle2dFixtureRedrawNodes,
+  buildPuzzle2dSceneDescriptorFromFixture,
   type KindCatalogBundle as Puzzle2dKindCatalogBundle,
   type KindCompatEntry as Puzzle2dKindCompatEntry,
   type Puzzle2dLinkSessionSnapshot,
@@ -31,6 +32,7 @@ import {
   type WireKind as Puzzle2dWireKind,
   type Puzzle2dActiveTool,
   type Puzzle2dBrushPlacePayload,
+  type Puzzle2dStructureDeletePayload,
   DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
   puzzle2dFixtureHandlesFromNodeKind,
@@ -881,6 +883,80 @@ export function buildPuzzle5dFillSequence(args: {
 }
 //#endregion 🔖Brush
 
+//#region 🔖StructuralDelete
+function anchorFullIdsForPart(part: PartV1): readonly string[] {
+  return part.anchors.map((anchor) => anchorFullId(part.id, anchor.id));
+}
+
+function tieTouchesPartOrAnchors(tie: TieV1, partId: string, anchorIds: ReadonlySet<string>): boolean {
+  if (tie.source === partId || tie.target === partId) {
+    return true;
+  }
+  return anchorIds.has(tie.source) || anchorIds.has(tie.target);
+}
+
+/** @emoji 🗑️ Removes one unified part and every tie touching it or its anchors. */
+export function removePartFromModel(model: V1, partId: string): V1 | null {
+  const part = model.parts.find((row) => row.id === partId);
+  if (!part) {
+    return null;
+  }
+  const anchorIds = new Set(anchorFullIdsForPart(part));
+  return {
+    ...model,
+    parts: model.parts.filter((row) => row.id !== partId),
+    ties: model.ties.filter((tie) => !tieTouchesPartOrAnchors(tie, partId, anchorIds)),
+  };
+}
+
+/** @emoji 🗑️ Removes one anchor and ties that referenced it. */
+export function removeAnchorFromModel(model: V1, fullAnchorId: string): V1 | null {
+  const parsed = parseAnchorFullId(fullAnchorId);
+  if (!parsed) {
+    return null;
+  }
+  const part = model.parts.find((row) => row.id === parsed.partId);
+  if (!part || !part.anchors.some((anchor) => anchor.id === parsed.anchorId)) {
+    return null;
+  }
+  return {
+    ...model,
+    parts: model.parts.map((row) =>
+      row.id !== parsed.partId ? row : { ...row, anchors: row.anchors.filter((anchor) => anchor.id !== parsed.anchorId) },
+    ),
+    ties: model.ties.filter((tie) => tie.source !== fullAnchorId && tie.target !== fullAnchorId),
+  };
+}
+
+/** @emoji 🗑️ Removes one tie row by id. */
+export function removeTieFromModel(model: V1, tieId: string): V1 | null {
+  if (!model.ties.some((tie) => tie.id === tieId)) {
+    return null;
+  }
+  return { ...model, ties: model.ties.filter((tie) => tie.id !== tieId) };
+}
+
+/** @emoji 🗑️ Applies a flat canvas structural delete onto the unified {@link V1} model. */
+export function applyStructuralDelete2dToModel(model: V1, payload: Puzzle2dStructureDeletePayload): V1 | null {
+  if (payload.kind === "wire") {
+    return null;
+  }
+  if (payload.kind === "edge") {
+    return removeTieFromModel(model, payload.id);
+  }
+  return removePartFromModel(model, payload.id);
+}
+
+function pruneSelectionAfterModelEdit(selection: SelectionSnapshot, _prevModel: V1, nextModel: V1): SelectionSnapshot {
+  const remainingPartIds = new Set(nextModel.parts.map((part) => part.id));
+  const remainingAnchorIds = new Set(nextModel.parts.flatMap((part) => anchorFullIdsForPart(part)));
+  return {
+    partIds: selection.partIds.filter((id) => remainingPartIds.has(id)),
+    anchorIds: selection.anchorIds.filter((id) => remainingAnchorIds.has(id)),
+  };
+}
+//#endregion 🔖StructuralDelete
+
 //#region 🔖Store
 export interface StoreSnapshot {
   readonly model: V1;
@@ -942,13 +1018,13 @@ export class Store {
       return;
     }
     const prevEntry = this.snapshot.cameras[instanceId];
-    this.setSnapshot({
+    this.snapshot = {
       ...this.snapshot,
       cameras: {
         ...this.snapshot.cameras,
         [instanceId]: { "2d": camera, "3d": prevEntry?.["3d"] ?? this.snapshot.model.camera3d },
       },
-    });
+    };
   }
 
   set3dCamera(instanceId: string, camera: Puzzle3dFixtureV1["camera"]): void {
@@ -966,13 +1042,13 @@ export class Store {
       return;
     }
     const prevEntry = this.snapshot.cameras[instanceId];
-    this.setSnapshot({
+    this.snapshot = {
       ...this.snapshot,
       cameras: {
         ...this.snapshot.cameras,
         [instanceId]: { "2d": prevEntry?.["2d"] ?? this.snapshot.model.camera2d, "3d": camera },
       },
-    });
+    };
   }
 
   setSelection(selection: SelectionSnapshot): void {
@@ -994,9 +1070,20 @@ export class Store {
   }
 
   applyNodeMove(partId: string, x: number, y: number): void {
+    this.applyNodeMoves([{ id: partId, x, y }]);
+  }
+
+  applyNodeMoves(moves: ReadonlyArray<{ readonly id: string; readonly x: number; readonly y: number }>): void {
+    if (moves.length === 0) {
+      return;
+    }
+    const byId = new Map(moves.map((move) => [move.id, move]));
     const parts = this.snapshot.model.parts.map((p) => {
-      if (p.id !== partId || !p.puzzle2d) return p;
-      return { ...p, puzzle2d: { ...p.puzzle2d, x, y } };
+      const move = byId.get(p.id);
+      if (!move || !p.puzzle2d) {
+        return p;
+      }
+      return { ...p, puzzle2d: { ...p.puzzle2d, x: move.x, y: move.y } };
     });
     this.setSnapshot({ ...this.snapshot, model: { ...this.snapshot.model, parts } });
   }
@@ -1064,9 +1151,64 @@ export class Store {
   applyBrushPlacement(placement: Puzzle5dBrushPlacement): boolean {
     const result = applyBrushPlacementToModel(this.snapshot.model, placement);
     if (result.kind !== "placed") return false;
-    console.log("[DEBUG] puzzle5d unified brush placement", result.partId, "parts", result.model.parts.length);
     this.fillSession = null;
     this.setSnapshot({ ...this.snapshot, model: result.model, connectSession: null, fillCount: 0, fillBuildDone: true });
+    return true;
+  }
+
+  /** @emoji 🗑️ Applies a flat structural delete (node → part, edge → tie) onto the unified model. */
+  applyStructuralDelete2d(payload: Puzzle2dStructureDeletePayload): boolean {
+    const prevModel = this.snapshot.model;
+    const nextModel = applyStructuralDelete2dToModel(prevModel, payload);
+    if (!nextModel) {
+      return false;
+    }
+    this.fillSession = null;
+    this.setSnapshot({
+      ...this.snapshot,
+      model: nextModel,
+      selection: pruneSelectionAfterModelEdit(this.snapshot.selection, prevModel, nextModel),
+      connectSession: null,
+      fillCount: 0,
+      fillBuildDone: true,
+    });
+    return true;
+  }
+
+  /** @emoji 🗑️ Deletes the current unified selection (parts, anchors, ties). */
+  applySelectionDelete(): boolean {
+    const selection = this.snapshot.selection;
+    if (selection.partIds.length === 0 && selection.anchorIds.length === 0) {
+      return false;
+    }
+    let model = this.snapshot.model;
+    let changed = false;
+    for (const partId of selection.partIds) {
+      const next = removePartFromModel(model, partId);
+      if (next) {
+        model = next;
+        changed = true;
+      }
+    }
+    for (const anchorId of selection.anchorIds) {
+      const next = removeAnchorFromModel(model, anchorId);
+      if (next) {
+        model = next;
+        changed = true;
+      }
+    }
+    if (!changed) {
+      return false;
+    }
+    this.fillSession = null;
+    this.setSnapshot({
+      ...this.snapshot,
+      model,
+      selection: { partIds: [], anchorIds: [] },
+      connectSession: null,
+      fillCount: 0,
+      fillBuildDone: true,
+    });
     return true;
   }
 
@@ -1282,13 +1424,28 @@ function markers2dFromFixture(props: { readonly fixture: Puzzle2dFixtureV1; read
   );
 }
 
+function puzzle5dModelStructureEpoch(model: V1): number {
+  let hash = model.parts.length * 4099 + model.ties.length * 97;
+  for (const part of model.parts) {
+    hash = (hash * 31 + part.id.charCodeAt(0)) | 0;
+  }
+  for (const tie of model.ties) {
+    hash = (hash * 31 + tie.id.charCodeAt(0)) | 0;
+  }
+  return hash;
+}
+
 const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const store = useStore();
   const snap = useSnapshot();
   const fixture2d = reactHostPort.useMemo(() => project2d(snap.model), [snap.model]);
-  const locked = props.lockedPartIds ?? new Set<string>();
-  const selectedIds = reactHostPort.useMemo(() => new Set([...snap.selection.partIds, ...snap.selection.anchorIds]), [snap.selection]);
-  const markers = reactHostPort.useMemo(() => markers2dFromFixture({ fixture: fixture2d, lockedIds: locked, selectedIds }), [fixture2d, locked, selectedIds]);
+  const declarativeSceneDescriptor = reactHostPort.useMemo(() => buildPuzzle2dSceneDescriptorFromFixture(fixture2d), [fixture2d]);
+  const sceneAuthoringEpoch = reactHostPort.useMemo(() => puzzle5dModelStructureEpoch(snap.model), [snap.model]);
+  const flatKindCatalogs = reactHostPort.useMemo(() => project2dKindCatalogs(snap.model.kindCatalogs), [snap.model.kindCatalogs]);
+  const canvasSelection = reactHostPort.useMemo(
+    () => ({ ids: [...snap.selection.partIds, ...snap.selection.anchorIds] }),
+    [snap.selection.partIds, snap.selection.anchorIds],
+  );
   const camera = store.get2dCamera(props.instanceId);
   const extra2d = props.puzzle2d ?? {};
   const {
@@ -1300,6 +1457,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     onDragEnd: onDragEndHost,
     onBrushPlace: onBrushPlaceHost,
     onBrushCandidates: onBrushCandidatesHost,
+    onDelete: onDeleteHost,
     activeTool: activeToolHost,
     brushFlushDistance: brushFlushDistanceHost,
     graphPortMode: puzzle2dGraphPortMode,
@@ -1312,10 +1470,100 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const liveForceGraph = props.liveForceGraph === true;
   const draggingNodeIdRef = reactHostPort.useRef<string | null>(null);
   const storeRef = reactHostPort.useRef(store);
+  const onSelectHostRef = reactHostPort.useRef(onSelectHost);
+  const onConnectHostRef = reactHostPort.useRef(onConnectHost);
+  const onIndirectConnectHostRef = reactHostPort.useRef(onIndirectConnectHost);
+  const onProximityConnectHostRef = reactHostPort.useRef(onProximityConnectHost);
+  const onDragHostRef = reactHostPort.useRef(onDragHost);
+  const onDragEndHostRef = reactHostPort.useRef(onDragEndHost);
+  const onBrushPlaceHostRef = reactHostPort.useRef(onBrushPlaceHost);
+  const onBrushCandidatesHostRef = reactHostPort.useRef(onBrushCandidatesHost);
+  const onDeleteHostRef = reactHostPort.useRef(onDeleteHost);
   storeRef.current = store;
+  onSelectHostRef.current = onSelectHost;
+  onConnectHostRef.current = onConnectHost;
+  onIndirectConnectHostRef.current = onIndirectConnectHost;
+  onProximityConnectHostRef.current = onProximityConnectHost;
+  onDragHostRef.current = onDragHost;
+  onDragEndHostRef.current = onDragEndHost;
+  onBrushPlaceHostRef.current = onBrushPlaceHost;
+  onBrushCandidatesHostRef.current = onBrushCandidatesHost;
+  onDeleteHostRef.current = onDeleteHost;
   const onCamera = reactHostPort.useCallback((c: Puzzle2dCameraState) => {
     storeRef.current.set2dCamera(props.instanceId, c);
   }, [props.instanceId]);
+  const onConnect = reactHostPort.useCallback((p: { source: string; target: string }) => {
+    storeRef.current.applyTie(p.source, p.target);
+    onConnectHostRef.current?.(p);
+  }, []);
+  const onIndirectConnect = reactHostPort.useCallback((p: { source: string; target: string }) => {
+    storeRef.current.applyTie(p.source, p.target);
+    onIndirectConnectHostRef.current?.(p);
+  }, []);
+  const onProximityConnect = reactHostPort.useCallback((p: { source: string; target: string }) => {
+    storeRef.current.applyTie(p.source, p.target);
+    onProximityConnectHostRef.current?.(p);
+  }, []);
+  const onDrag = reactHostPort.useCallback((p: { id: string; x: number; y: number }) => {
+    draggingNodeIdRef.current = p.id;
+    onDragHostRef.current?.(p);
+  }, []);
+  const onDragEnd = reactHostPort.useCallback((p: { moves: Array<{ id: string; x: number; y: number }> }) => {
+    draggingNodeIdRef.current = null;
+    storeRef.current.applyNodeMoves(p.moves);
+    onDragEndHostRef.current?.(p);
+  }, []);
+  const onSelect = reactHostPort.useCallback((s: { ids: readonly string[] }) => {
+    storeRef.current.setSelection({ partIds: s.ids, anchorIds: [] });
+    onSelectHostRef.current?.(s);
+  }, []);
+  const onDelete = reactHostPort.useCallback((payload: Puzzle2dStructureDeletePayload) => {
+    if (payload.kind === "wire") {
+      return;
+    }
+    storeRef.current.applyStructuralDelete2d(payload);
+    onDeleteHostRef.current?.(payload);
+  }, []);
+  const onLinkCompatibleNodes = reactHostPort.useCallback((p: { source: string | null; nodeIds: readonly string[] }) => {
+    if (!p.source) {
+      storeRef.current.setConnectSession(null);
+      return;
+    }
+    const prev = storeRef.current.getSnapshot().connectSession;
+    storeRef.current.setConnectSession({
+      origin: "2d",
+      sourceAnchor: p.source,
+      endX: prev?.endX ?? 0,
+      endY: prev?.endY ?? 0,
+      end3d: prev?.end3d ?? [0, 0, 0],
+      compatiblePartIds: [...p.nodeIds],
+      ringPartId: prev?.ringPartId ?? null,
+      ringAnchorIds: prev?.ringAnchorIds ?? [],
+    });
+  }, []);
+  const onLinkTargetRing = reactHostPort.useCallback((p: { source: string | null; nodeId: string | null; handleIds: readonly string[] }) => {
+    const prev = storeRef.current.getSnapshot().connectSession;
+    if (!p.source) {
+      storeRef.current.setConnectSession(null);
+      return;
+    }
+    storeRef.current.setConnectSession({
+      origin: prev?.origin ?? "2d",
+      sourceAnchor: p.source,
+      endX: prev?.endX ?? 0,
+      endY: prev?.endY ?? 0,
+      end3d: prev?.end3d ?? [0, 0, 0],
+      compatiblePartIds: prev?.compatiblePartIds ?? [],
+      ringPartId: p.nodeId,
+      ringAnchorIds: [...p.handleIds],
+    });
+  }, []);
+  const onBrushPlace = reactHostPort.useCallback((payload: Puzzle2dBrushPlacePayload) => {
+    onBrushPlaceHostRef.current?.(payload);
+  }, []);
+  const onBrushCandidates = reactHostPort.useCallback((payload: Parameters<NonNullable<Puzzle2dCanvasProps["onBrushCandidates"]>>[0]) => {
+    onBrushCandidatesHostRef.current?.(payload);
+  }, []);
 
   reactHostPort.useEffect(() => {
     if (!liveForceGraph || fixture2d.nodes.length === 0) return;
@@ -1336,79 +1584,28 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         className={["min-h-0 flex-1", props.className, rest2d.className].filter(Boolean).join(" ") || undefined}
         {...FIVE_D_FLAT_LOD_DEFAULTS}
         {...(graphPortMode !== undefined ? { graphPortMode } : {})}
-        kindCatalogs={project2dKindCatalogs(snap.model.kindCatalogs)}
+        declarativeSceneDescriptor={declarativeSceneDescriptor}
+        sceneAuthoringEpoch={sceneAuthoringEpoch}
+        selection={canvasSelection}
+        kindCatalogs={flatKindCatalogs}
         kindCompatibility={snap.model.kindCompatibility}
         linkSession={linkSession}
         onCamera={onCamera}
-        onConnect={(p) => {
-          store.applyTie(p.source, p.target);
-          onConnectHost?.(p);
-        }}
-        onDrag={(p) => {
-          draggingNodeIdRef.current = p.id;
-          store.applyNodeMove(p.id, p.x, p.y);
-          onDragHost?.(p);
-        }}
-        onDragEnd={(p) => {
-          if (draggingNodeIdRef.current === p.id) {
-            draggingNodeIdRef.current = null;
-          }
-          onDragEndHost?.(p);
-        }}
-        onIndirectConnect={(p) => {
-          store.applyTie(p.source, p.target);
-          onIndirectConnectHost?.(p);
-        }}
-        onLinkCompatibleNodes={(p) => {
-          if (!p.source) {
-            store.setConnectSession(null);
-            return;
-          }
-          const prev = store.getSnapshot().connectSession;
-          store.setConnectSession({
-            origin: "2d",
-            sourceAnchor: p.source,
-            endX: prev?.endX ?? 0,
-            endY: prev?.endY ?? 0,
-            end3d: prev?.end3d ?? [0, 0, 0],
-            compatiblePartIds: [...p.nodeIds],
-            ringPartId: prev?.ringPartId ?? null,
-            ringAnchorIds: prev?.ringAnchorIds ?? [],
-          });
-        }}
-        onLinkTargetRing={(p) => {
-          const prev = store.getSnapshot().connectSession;
-          if (!p.source) {
-            store.setConnectSession(null);
-            return;
-          }
-          store.setConnectSession({
-            origin: prev?.origin ?? "2d",
-            sourceAnchor: p.source,
-            endX: prev?.endX ?? 0,
-            endY: prev?.endY ?? 0,
-            end3d: prev?.end3d ?? [0, 0, 0],
-            compatiblePartIds: prev?.compatiblePartIds ?? [],
-            ringPartId: p.nodeId,
-            ringAnchorIds: [...p.handleIds],
-          });
-        }}
-        onProximityConnect={(p) => {
-          store.applyTie(p.source, p.target);
-          onProximityConnectHost?.(p);
-        }}
-        onSelect={(s) => {
-          store.setSelection({ partIds: s.ids, anchorIds: [] });
-          onSelectHost?.(s);
-        }}
+        onConnect={onConnect}
+        onDrag={onDrag}
+        onDragEnd={onDragEnd}
+        onIndirectConnect={onIndirectConnect}
+        onLinkCompatibleNodes={onLinkCompatibleNodes}
+        onLinkTargetRing={onLinkTargetRing}
+        onProximityConnect={onProximityConnect}
+        onSelect={onSelect}
+        onDelete={onDelete}
         activeTool={activeTool}
         {...(brushFlushDistance !== undefined ? { brushFlushDistance } : {})}
-        {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
-        {...(onBrushCandidatesHost ? { onBrushCandidates: onBrushCandidatesHost } : {})}
+        {...(onBrushPlaceHost ? { onBrushPlace } : {})}
+        {...(onBrushCandidatesHost ? { onBrushCandidates } : {})}
         {...rest2d}
-      >
-        {markers}
-      </Puzzle2dCanvas>
+      />
     </div>
   );
 });
@@ -1535,10 +1732,16 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
 const FiveD3d = reactHostPort.memo(function FiveD3d(props: FiveDProps) {
   const snap = useSnapshot();
   const fixture3d = reactHostPort.useMemo(() => project3d(snap.model), [snap.model]);
+  const fixtureRevision = snap.model.parts.length + snap.model.ties.length * 4099;
   return (
     <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="3d" data-five-d-instance={props.instanceId}>
       <reactHostPort.Suspense fallback={<div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-muted-foreground">Loading meshes…</div>}>
-        <Puzzle3dPartStateProvider fixture={fixture3d} onConnect={props.puzzle3d?.onConnect} onRelocate={props.puzzle3d?.onRelocate}>
+        <Puzzle3dPartStateProvider
+          fixture={fixture3d}
+          fixtureRevision={fixtureRevision}
+          onConnect={props.puzzle3d?.onConnect}
+          onRelocate={props.puzzle3d?.onRelocate}
+        >
           <FiveD3dInner {...props} />
         </Puzzle3dPartStateProvider>
       </reactHostPort.Suspense>
@@ -2265,6 +2468,38 @@ if (import.meta.vitest) {
       const o = puzzle2dForceGraphOptions({ centerStrength: 0.1, linkDistance: 120, chargeStrength: -400 });
       expect(o.repulsionStrength).toBe(400);
       expect(o.idealEdgeLength).toBe(120);
+    });
+  });
+
+  describe("structural delete", () => {
+    it("removes a unified part from both projections when a flat node is deleted", () => {
+      const model = compose5d(
+        {
+          schema: "puzzle.2d.fixture/v1",
+          camera: { x: 0, y: 0, zoom: 1 },
+          nodes: [
+            { id: "p1", shape: "circle", x: 0, y: 0, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "port" }] },
+            { id: "p2", shape: "circle", x: 10, y: 0, radius: 10, handles: [] },
+          ],
+          edges: [{ id: "e1", source: "p1:h", target: "p2" }],
+        },
+        {
+          schema: "puzzle.3d.fixture/v1",
+          domain: "architecture",
+          camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+          objects: [
+            { id: "p1", meshUrl: "a.glb", origin: [0, 0, 0], vortices: [{ id: "p1:h", position: [0, 0, 0] }] },
+            { id: "p2", meshUrl: "b.glb", origin: [1, 0, 0], vortices: [] },
+          ],
+          attractions: [{ id: "e1", attracting: "p1:p1:h", attracted: "p2" }],
+        },
+      );
+      const store = createStore(model);
+      expect(store.applyStructuralDelete2d({ kind: "node", id: "p1" })).toBe(true);
+      expect(store.read().parts.map((part) => part.id)).toEqual(["p2"]);
+      expect(project3d(store.read()).objects.map((object) => object.id)).toEqual(["p2"]);
+      expect(project2d(store.read()).nodes.map((node) => node.id)).toEqual(["p2"]);
+      expect(store.read().ties).toHaveLength(0);
     });
   });
 

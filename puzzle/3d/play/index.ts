@@ -2300,11 +2300,13 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           return;
         }
         const catalogs = parseKindCatalogs(this.fixture.meta);
-        const next = applyPuzzle3dFillCount(count, catalogs);
-        if (!next) {
-          return;
-        }
-        this.patchFixture(() => next);
+        this.patchFixture((prev) => {
+          const applied = applyPuzzle3dFillCount(count, catalogs);
+          if (!applied) {
+            return prev;
+          }
+          return { ...applied, camera: prev.camera };
+        });
         this.notifySnapshot();
         return;
       }
@@ -2487,6 +2489,21 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       }
       case "deleteSelection": {
         this.applyDeleteSelection();
+        return;
+      }
+      case "setSelectionFlag": {
+        const { flag, value } = args as { flag: "hidden" | "locked"; value: boolean };
+        if (flag === "hidden" || flag === "locked") {
+          this.applySelectionFlag(flag, value === true);
+        }
+        return;
+      }
+      case "duplicateSelection": {
+        this.applyDuplicateSelection();
+        return;
+      }
+      case "selectSameKind": {
+        this.applySelectSameKind();
         return;
       }
       case "selectAllSelection": {
@@ -2697,6 +2714,92 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     });
     this.selection = PUZZLE_3D_PLAY_EMPTY_SELECTION;
     this.notifySelection();
+  }
+
+  private applySelectionFlag(flag: "hidden" | "locked", value: boolean): void {
+    if (!this.fixture) {
+      return;
+    }
+    const objectIds = [...this.selection.objectIds];
+    const vortexIds = [...this.selection.vortexIds];
+    const attractionIds = [...this.selection.attractionIds];
+    if (objectIds.length === 0 && vortexIds.length === 0 && attractionIds.length === 0) {
+      return;
+    }
+    this.patchFixture((fixture) => {
+      let next = fixture;
+      for (const objectId of objectIds) {
+        next = updatePuzzle3dObjectInFixture(next, objectId, { [flag]: value });
+      }
+      for (const vortexFullId of vortexIds) {
+        next = updatePuzzle3dVortexInFixture(next, vortexFullId, { [flag]: value });
+      }
+      for (const attractionId of attractionIds) {
+        next = updatePuzzle3dAttractionInFixture(next, attractionId, { [flag]: value });
+      }
+      return next;
+    });
+    this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
+    this.notifySelection();
+    console.log("[DEBUG] puzzle3d setSelectionFlag", flag, value, this.selection);
+  }
+
+  private applyDuplicateSelection(): void {
+    if (!this.fixture || this.selection.objectIds.length === 0) {
+      return;
+    }
+    const newIds: string[] = [];
+    this.patchFixture((fixture) => {
+      let next = fixture;
+      const existingIds = new Set(next.objects.map((row) => row.id));
+      for (const objectId of this.selection.objectIds) {
+        const object = next.objects.find((row) => row.id === objectId);
+        if (!object) {
+          continue;
+        }
+        let newId = `${objectId}-copy`;
+        let suffix = 2;
+        while (existingIds.has(newId)) {
+          newId = `${objectId}-copy-${suffix}`;
+          suffix += 1;
+        }
+        existingIds.add(newId);
+        const clone: FixtureObjectV1 = {
+          ...object,
+          id: newId,
+          ...(object.label ? { label: `${object.label} copy` } : {}),
+          origin: [object.origin[0] + 0.5, object.origin[1], object.origin[2]],
+          vortices: object.vortices.map((vortex) => ({ ...vortex })),
+        };
+        next = { ...next, objects: [...next.objects, clone] };
+        newIds.push(newId);
+      }
+      return next;
+    });
+    if (newIds.length === 0) {
+      return;
+    }
+    this.selection = this.filterSelectionByPlaygroundKinds({ objectIds: newIds, vortexIds: [], attractionIds: [] });
+    this.notifySelection();
+    console.log("[DEBUG] puzzle3d duplicateSelection", newIds);
+  }
+
+  private applySelectSameKind(): void {
+    if (!this.fixture || !this.selection.objectIds[0]) {
+      return;
+    }
+    const primary = this.fixture.objects.find((row) => row.id === this.selection.objectIds[0]);
+    if (!primary?.objectKind) {
+      return;
+    }
+    const objectIds = this.fixture.objects.filter((row) => row.objectKind === primary.objectKind).map((row) => row.id);
+    const resolved = this.filterSelectionByPlaygroundKinds({ objectIds, vortexIds: [], attractionIds: [] });
+    if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
+      return;
+    }
+    this.selection = resolved;
+    this.notifySelection();
+    console.log("[DEBUG] puzzle3d selectSameKind", primary.objectKind, objectIds.length);
   }
 
   getSnapshot(): Puzzle3dPlaySnapshot {
@@ -3852,6 +3955,30 @@ if (import.meta.vitest) {
       expect(distribution.children.some((row) => row.kind === "group" && row.label === "Vortices")).toBe(true);
     });
 
+    it("setFillCount preserves live fixture camera", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = ctrl.getFixture();
+      expect(fixture).not.toBeNull();
+      const liveCamera = { position: [111, 222, 333] as const, target: [11, 22, 33] as const, zoom: 2.25 };
+      ctrl.setCamera(liveCamera);
+      puzzle3dFillSessionRef.current = {
+        baseFixture: {
+          ...fixture!,
+          camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        },
+        sequence: [],
+        appendedObjects: [],
+        appendedAttractions: [],
+        seed: 0,
+      };
+      ctrl.run("setFillCount", { count: 0 });
+      expect(ctrl.getFixture()?.camera?.position).toEqual(liveCamera.position);
+      expect(ctrl.getFixture()?.camera?.target).toEqual(liveCamera.target);
+      expect(ctrl.getFixture()?.camera?.zoom).toBe(liveCamera.zoom);
+    });
+
     it("patchFixture bumps revision only when structure changes", () => {
       const bus = new CommandBus();
       const wb = new Platform();
@@ -3938,6 +4065,74 @@ if (import.meta.vitest) {
       await flushDeferredShell();
       expect(shellNotifyCount).toBe(0);
       unsubscribe();
+    });
+
+    it("setSelectionFlag applies hidden across mixed selection kinds", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [{ id: "att-1", attracting: "obj-a:v1", attracted: "obj-b:v1" }],
+        objects: [
+          { id: "obj-a", objectKind: "kind-a", meshUrl: "/a.glb", origin: [0, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] },
+          { id: "obj-b", objectKind: "kind-b", meshUrl: "/b.glb", origin: [1, 0, 0], vortices: [{ id: "v1", position: [0, 0, 0] }] },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      ctrl.patchFixture(() => fixture!);
+      ctrl.run("setSelection", {
+        selection: { objectIds: ["obj-a"], vortexIds: [puzzle3dVortexFullId("obj-b", "v1")], attractionIds: ["att-1"] },
+      });
+      ctrl.run("setSelectionFlag", { flag: "hidden", value: true });
+      const next = ctrl.getFixture()!;
+      expect(next.objects.find((row) => row.id === "obj-a")?.hidden).toBe(true);
+      expect(next.objects.find((row) => row.id === "obj-b")?.vortices[0]?.hidden).toBe(true);
+      expect(next.attractions[0]?.hidden).toBe(true);
+    });
+
+    it("duplicateSelection clones selected objects with new ids", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [{ id: "tower-a", objectKind: "Capsule", meshUrl: "/a.glb", origin: [0, 0, 0], vortices: [] }],
+      });
+      expect(fixture).not.toBeNull();
+      ctrl.patchFixture(() => fixture!);
+      ctrl.run("setSelection", { selection: { objectIds: ["tower-a"], vortexIds: [], attractionIds: [] } });
+      ctrl.run("duplicateSelection");
+      const next = ctrl.getFixture()!;
+      expect(next.objects.length).toBe(2);
+      const clone = next.objects.find((row) => row.id !== "tower-a");
+      expect(clone?.objectKind).toBe("Capsule");
+      expect(clone?.origin[0]).toBeCloseTo(0.5, 5);
+      expect(ctrl.getSnapshot().selection.objectIds).toEqual([clone!.id]);
+    });
+
+    it("selectSameKind selects every object with the primary kind", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [
+          { id: "a1", objectKind: "Capsule", meshUrl: "/a.glb", origin: [0, 0, 0], vortices: [] },
+          { id: "a2", objectKind: "Capsule", meshUrl: "/a.glb", origin: [1, 0, 0], vortices: [] },
+          { id: "b1", objectKind: "Bridge", meshUrl: "/b.glb", origin: [2, 0, 0], vortices: [] },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      ctrl.patchFixture(() => fixture!);
+      ctrl.run("setSelection", { selection: { objectIds: ["a1"], vortexIds: [], attractionIds: [] } });
+      ctrl.run("selectSameKind");
+      expect(ctrl.getSnapshot().selection.objectIds.sort()).toEqual(["a1", "a2"]);
     });
 
     it("setAutoLod still bumps shell generation", () => {

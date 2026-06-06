@@ -15,8 +15,10 @@ import {
   type ThreeEvent,
   type TreeDragAndDropController,
   SelectionMarquee,
+  ContextMenuController,
   cn,
   glassMenuClass,
+  type ContextMenuItem,
 } from "@ui/react";
 import {
   blendTokenHex,
@@ -7233,6 +7235,198 @@ export function getPuzzle3dZoomToSelectionTarget(): SelectionSnapshot {
   return puzzle3dZoomToSelectionTarget;
 }
 
+//#region 🖱️SelectionContextMenu
+
+/** @emoji 🎯 Per-entity hidden/locked flags for selection context menu labels. */
+export interface Puzzle3dSelectionEntityFlags {
+  readonly hidden: boolean;
+  readonly locked: boolean;
+}
+
+/** @emoji 🖱️ Live selection context menu anchor and right-click target. */
+export interface Puzzle3dSelectionMenuSnapshot {
+  readonly open: boolean;
+  readonly anchor: ScreenPoint | null;
+  readonly target: HoverTarget | null;
+  readonly selection: SelectionSnapshot;
+  readonly entityFlags: readonly Puzzle3dSelectionEntityFlags[];
+  readonly vortexMeta: VortexBindingMeta | null;
+}
+
+const SELECTION_MENU_IDLE: Puzzle3dSelectionMenuSnapshot = {
+  open: false,
+  anchor: null,
+  target: null,
+  selection: EMPTY_SELECTION_SNAPSHOT,
+  entityFlags: [],
+  vortexMeta: null,
+};
+
+/** @emoji 🖱️ External store for viewport selection context menu (DOM overlay subscribes without scene re-renders). */
+export function createSelectionMenuStore(initial: Puzzle3dSelectionMenuSnapshot = SELECTION_MENU_IDLE) {
+  let snapshot = initial;
+  const listeners = new Set<() => void>();
+  return {
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot(): Puzzle3dSelectionMenuSnapshot {
+      return snapshot;
+    },
+    setSnapshot(next: Puzzle3dSelectionMenuSnapshot): void {
+      snapshot = next;
+      for (const listener of listeners) {
+        listener();
+      }
+    },
+  };
+}
+
+export type SelectionMenuStore = ReturnType<typeof createSelectionMenuStore>;
+
+export const puzzle3dSelectionMenuStore = createSelectionMenuStore();
+
+/** @emoji 🖱️ Host callbacks for selection context menu actions (published by {@link PlayCanvas}). */
+export interface Puzzle3dSelectionMenuActions {
+  readonly toggleHidden: (value: boolean) => void;
+  readonly toggleLocked: (value: boolean) => void;
+  readonly deleteSelection: () => void;
+  readonly duplicateSelection: () => void;
+  readonly selectSameKind: () => void;
+}
+
+export const puzzle3dSelectionActionsRef: { current: Puzzle3dSelectionMenuActions } = {
+  current: {
+    toggleHidden: () => {},
+    toggleLocked: () => {},
+    deleteSelection: () => {},
+    duplicateSelection: () => {},
+    selectSameKind: () => {},
+  },
+};
+
+/** @emoji 🌪️ Opens brush-compatible object suggestions for a vortex (published by {@link BrushSession}). */
+export interface Puzzle3dOpenVortexSuggestions {
+  readonly openFor: (fullId: string, meta: VortexBindingMeta, anchor: ScreenPoint) => void;
+  readonly close: () => void;
+}
+
+export const puzzle3dOpenVortexSuggestionsRef: { current: Puzzle3dOpenVortexSuggestions } = {
+  current: { openFor: () => {}, close: () => {} },
+};
+
+/** @emoji 🎯 Maps exclusive hover target to a canvas selection pick. */
+export function hoverTargetToSelectionPick(target: HoverTarget): SelectionPick {
+  switch (target.kind) {
+    case "object":
+      return { kind: "object", id: target.id };
+    case "vortex":
+      return { kind: "vortex", fullId: target.fullId };
+    case "attraction":
+      return { kind: "attraction", id: target.id };
+  }
+}
+
+/** @emoji 🎯 Resolves hidden/locked flags for every row in a selection snapshot. */
+export function puzzle3dSelectionEntityFlagsFromStore(
+  store: { readonly getRecord: (objectId: string) => ObjectRecord | undefined; readonly getAttractions: () => readonly AttractionProps[] },
+  selection: SelectionSnapshot,
+): readonly Puzzle3dSelectionEntityFlags[] {
+  const flags: Puzzle3dSelectionEntityFlags[] = [];
+  const attractionById = new Map(store.getAttractions().map((row) => [row.id, row]));
+  for (const objectId of selection.objectIds) {
+    const record = store.getRecord(objectId);
+    flags.push({ hidden: record?.hidden === true, locked: record?.locked === true });
+  }
+  for (const fullId of selection.vortexIds) {
+    const { objectId, vortexId } = parseVortexFullId(fullId);
+    const record = store.getRecord(objectId);
+    const vortex = record?.vortices.find((row) => row.id === vortexId || puzzle3dVortexFullId(objectId, row.id) === fullId);
+    flags.push({ hidden: vortex?.hidden === true, locked: vortex?.locked === true });
+  }
+  for (const attractionId of selection.attractionIds) {
+    const attraction = attractionById.get(attractionId);
+    flags.push({ hidden: attraction?.hidden === true, locked: attraction?.locked === true });
+  }
+  return flags;
+}
+
+/** @emoji 🖱️ Builds Radix context menu rows for the current puzzle3d selection. */
+export function buildPuzzle3dSelectionMenuItems(
+  selection: SelectionSnapshot,
+  entityFlags: readonly Puzzle3dSelectionEntityFlags[],
+  target: HoverTarget | null,
+  actions: Puzzle3dSelectionMenuActions,
+  onSuggest?: () => void,
+): ContextMenuItem[] {
+  if (selection.objectIds.length === 0 && selection.vortexIds.length === 0 && selection.attractionIds.length === 0) {
+    return [];
+  }
+  const items: ContextMenuItem[] = [];
+  const anyNotHidden = entityFlags.some((row) => !row.hidden);
+  const anyNotLocked = entityFlags.some((row) => !row.locked);
+  const singleVortex =
+    selection.vortexIds.length === 1 && selection.objectIds.length === 0 && selection.attractionIds.length === 0;
+  if (onSuggest && target?.kind === "vortex" && singleVortex) {
+    items.push({
+      id: "suggest",
+      label: "Suggest objects",
+      icon: "sparkles",
+      onSelect: () => onSuggest(),
+    });
+    items.push({ id: "suggest-sep", separator: true });
+  }
+  items.push({
+    id: "hidden",
+    label: anyNotHidden ? "Hide" : "Show",
+    icon: anyNotHidden ? "eye-off" : "eye",
+    onSelect: () => actions.toggleHidden(anyNotHidden),
+  });
+  items.push({
+    id: "locked",
+    label: anyNotLocked ? "Lock" : "Unlock",
+    icon: anyNotLocked ? "lock" : "lock-open",
+    onSelect: () => actions.toggleLocked(anyNotLocked),
+  });
+  if (selection.objectIds.length > 0) {
+    items.push({
+      id: "duplicate",
+      label: "Duplicate",
+      icon: "copy",
+      onSelect: () => actions.duplicateSelection(),
+    });
+    items.push({
+      id: "select-same-kind",
+      label: "Select all of same kind",
+      icon: "layers",
+      onSelect: () => actions.selectSameKind(),
+    });
+  }
+  items.push({ id: "zoom-sep", separator: true });
+  items.push({
+    id: "zoom",
+    label: "Zoom to selection",
+    icon: "crosshair",
+    onSelect: () => requestPuzzle3dZoomToSelection(selection),
+  });
+  items.push({ id: "delete-sep", separator: true });
+  items.push({
+    id: "delete",
+    label: "Delete",
+    icon: "trash",
+    destructive: true,
+    onSelect: () => actions.deleteSelection(),
+  });
+  return items;
+}
+
+function closePuzzle3dSelectionMenu(): void {
+  puzzle3dSelectionMenuStore.setSnapshot(SELECTION_MENU_IDLE);
+}
+
+//#endregion 🖱️SelectionContextMenu
+
 /** @emoji ⌨️ True when Tab should cycle brush candidates instead of moving browser focus. */
 export function routePuzzle3dBrushTabKeydown(
   brushActive: boolean,
@@ -8261,6 +8455,25 @@ function BrushSession(props: {
   }, [dismissMenu, hoverMenuCandidate, selectMenuCandidate]);
 
   reactHostPort.useEffect(() => {
+    puzzle3dOpenVortexSuggestionsRef.current = {
+      openFor: (fullId, meta, anchor) => {
+        if (targetRef.current && targetRef.current !== fullId) {
+          commitCurrentPreview();
+          clearBrush();
+        }
+        enterTarget(fullId, meta);
+        openMenu(anchor);
+        invalidate();
+        console.log("[DEBUG] puzzle3dOpenVortexSuggestions", fullId);
+      },
+      close: dismissMenu,
+    };
+    return () => {
+      puzzle3dOpenVortexSuggestionsRef.current = { openFor: () => {}, close: () => {} };
+    };
+  }, [clearBrush, commitCurrentPreview, dismissMenu, enterTarget, invalidate, openMenu]);
+
+  reactHostPort.useEffect(() => {
     if (!props.brushActive) {
       clearBrush();
     }
@@ -8749,6 +8962,72 @@ const brushMenuContentClassName = cn(
 );
 const brushMenuItemClassName =
   "text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex w-full items-center gap-single p-single text-left text-sm outline-none whitespace-nowrap cursor-default select-none disabled:pointer-events-none disabled:opacity-50";
+
+function Puzzle3dSelectionContextMenu() {
+  const menu = reactHostPort.useSyncExternalStore(puzzle3dSelectionMenuStore.subscribe, puzzle3dSelectionMenuStore.getSnapshot, puzzle3dSelectionMenuStore.getSnapshot);
+  const onSuggest = reactHostPort.useMemo(() => {
+    if (!menu.target || menu.target.kind !== "vortex" || !menu.anchor || !menu.vortexMeta) {
+      return undefined;
+    }
+    const fullId = menu.target.fullId;
+    const anchor = menu.anchor;
+    const meta = menu.vortexMeta;
+    return () => {
+      closePuzzle3dSelectionMenu();
+      puzzle3dBrushMenuSourceRef.current.closeMenu();
+      puzzle3dOpenVortexSuggestionsRef.current.openFor(fullId, meta, anchor);
+    };
+  }, [menu.anchor, menu.target, menu.vortexMeta]);
+  const items = reactHostPort.useMemo(
+    () => buildPuzzle3dSelectionMenuItems(menu.selection, menu.entityFlags, menu.target, puzzle3dSelectionActionsRef.current, onSuggest),
+    [menu.entityFlags, menu.selection, menu.target, onSuggest],
+  );
+  const handleOpenChange = reactHostPort.useCallback((open: boolean) => {
+    if (!open) {
+      closePuzzle3dSelectionMenu();
+    }
+  }, []);
+  return <ContextMenuController items={items} onOpenChange={handleOpenChange} open={menu.open} position={menu.anchor} />;
+}
+
+/** @emoji 🖱️ Right-click on hovered entity replaces selection and opens {@link Puzzle3dSelectionContextMenu}. */
+function SelectionContextMenuBinder(): null {
+  const { hoverTarget } = useRegistryHover();
+  const { commitSelection } = useRegistryInteraction();
+  const { store } = useObjectState();
+  const reg = useRegistryCore();
+  const { gl } = useThree();
+  const hoverTargetRef = reactHostPort.useRef(hoverTarget);
+  hoverTargetRef.current = hoverTarget;
+  reactHostPort.useEffect(() => {
+    const onContextMenu = (event: MouseEvent) => {
+      const target = hoverTargetRef.current;
+      if (puzzle3dRightDragActiveRef.current || !target) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      puzzle3dBrushMenuSourceRef.current.closeMenu();
+      const pick = hoverTargetToSelectionPick(target);
+      commitSelection(pick);
+      const selection = puzzle3dSelectionFromPick(pick);
+      const entityFlags = puzzle3dSelectionEntityFlagsFromStore(store, selection);
+      const vortexMeta = target.kind === "vortex" ? (reg.listVortexBindings().find((entry) => entry.fullId === target.fullId) ?? null) : null;
+      puzzle3dSelectionMenuStore.setSnapshot({
+        open: true,
+        anchor: { x: event.clientX, y: event.clientY },
+        target,
+        selection,
+        entityFlags,
+        vortexMeta,
+      });
+    };
+    const el = gl.domElement;
+    el.addEventListener("contextmenu", onContextMenu);
+    return () => el.removeEventListener("contextmenu", onContextMenu);
+  }, [commitSelection, gl, reg, store]);
+  return null;
+}
 
 function Puzzle3dBrushCandidateMenu() {
   const ui = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
@@ -10099,19 +10378,10 @@ function Inner(props: CanvasProps & {
     onBrushPlace,
     onFixtureDrop,
   };
-  const registryLodScene = reactHostPort.useMemo(
+  const fixtureDropEnabled = fixtureDragDrop ?? Boolean(onFixtureDrop);
+  const registryLodSceneCore = reactHostPort.useMemo(
     () => (
-      <LodBridge
-        lodRef={lodRef}
-        distanceReference={distanceReference}
-        gridFactor={gridFactor}
-        gridSnapEnabled={gridSnapEnabled}
-        showLodGrid={showLodGrid}
-        automaticLod={automaticLod}
-        depthVariableLod={depthVariableLod}
-        manualLod={manualLod}
-        onLodChange={(lod) => canvasHostRef.current.onLodChange?.(lod)}
-      >
+      <>
         <WorldOrbitCameraViewRig
           state={cameraRigState}
           seedKey={props.cameraSeedKey ?? `${pos.join(",")}|${tgt.join(",")}|${projection}|${up.join(",")}`}
@@ -10128,17 +10398,15 @@ function Inner(props: CanvasProps & {
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <MarqueeBridge />
-        {fixtureDragDrop ?? Boolean(onFixtureDrop) ? (
-          <>
-            <FixtureDropPointerBridge
-              enabled
-              onFixtureDrop={(detail) => canvasHostRef.current.onFixtureDrop?.(detail)}
-              rootRef={puzzle3dRootRef}
-              setFixtureDragActive={setFixtureDragActive}
-              fixtureDragDepthRef={fixtureDragDepthRef}
-            />
-            <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} />
-          </>
+        <SelectionContextMenuBinder />
+        {fixtureDropEnabled ? (
+          <FixtureDropPointerBridge
+            enabled
+            onFixtureDrop={(detail) => canvasHostRef.current.onFixtureDrop?.(detail)}
+            rootRef={puzzle3dRootRef}
+            setFixtureDragActive={setFixtureDragActive}
+            fixtureDragDepthRef={fixtureDragDepthRef}
+          />
         ) : null}
         <AttractionRubberBand />
         <ambientLight intensity={1.15} />
@@ -10149,36 +10417,49 @@ function Inner(props: CanvasProps & {
         <WorldLayer order={10} name="puzzle3d.view-radius">
           <InnerSceneChildren chunkSize={chunkSize} maxDistance={maxDist} />
         </WorldLayer>
-      </LodBridge>
+      </>
     ),
     [
       attractionSession,
       automaticLod,
       autoFitBehavior,
       autoFitCamera,
+      cameraRigState,
       chunkSize,
       depthVariableLod,
       distanceReference,
-      fixtureDragDrop,
+      fixtureDropEnabled,
       gridFactor,
       gridSnapEnabled,
-      kindCatalogs,
       manualLod,
       maxDist,
-      onFixtureDrop,
       pos,
-      sceneFixture,
-      cameraRigState,
+      projection,
       props.cameraSeedKey,
       props.onCamera,
-      projection,
       puzzle3dRootRef,
-      up,
       setFixtureDragActive,
       showLodGrid,
       tgt,
+      up,
       zoom,
     ],
+  );
+  const registryLodScene = (
+    <LodBridge
+      lodRef={lodRef}
+      distanceReference={distanceReference}
+      gridFactor={gridFactor}
+      gridSnapEnabled={gridSnapEnabled}
+      showLodGrid={showLodGrid}
+      automaticLod={automaticLod}
+      depthVariableLod={depthVariableLod}
+      manualLod={manualLod}
+      onLodChange={(lod) => canvasHostRef.current.onLodChange?.(lod)}
+    >
+      {registryLodSceneCore}
+      {fixtureDropEnabled ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
+    </LodBridge>
   );
   const onFillMeshesReadyRef = reactHostPort.useRef(onFillMeshesReady);
   onFillMeshesReadyRef.current = onFillMeshesReady;
@@ -10209,16 +10490,14 @@ function Inner(props: CanvasProps & {
         >
           {registryLodScene}
           <SelectionZoom attractions={sceneFixture?.attractions ?? []} zoom={zoom} onCamera={props.onCamera} />
-          {brushActive ? (
-            <BrushSession
-              brushActive={brushActive}
-              onBrushPlace={(payload) => canvasHostRef.current.onBrushPlace?.(payload)}
-              kindCatalogs={kindCatalogs}
-              kindCompatibility={kindCompatibility}
-              overlapBudget={brushPlacementOverlapBudget}
-              sceneFixture={sceneFixture}
-            />
-          ) : null}
+          <BrushSession
+            brushActive={brushActive}
+            onBrushPlace={(payload) => canvasHostRef.current.onBrushPlace?.(payload)}
+            kindCatalogs={kindCatalogs}
+            kindCompatibility={kindCompatibility}
+            overlapBudget={brushPlacementOverlapBudget}
+            sceneFixture={sceneFixture}
+          />
           <Puzzle3dFillMeshBridge
             fillActive={fillActive}
             sceneFixture={sceneFixture}
@@ -10272,12 +10551,41 @@ export interface PlayCanvasProps {
   readonly hoverTarget?: HoverTarget | null;
   readonly kindHover?: Puzzle3dKindHover | null;
   readonly onHover?: (payload: Puzzle3dHoverPayload) => void;
+  readonly onToggleSelectionHidden?: (value: boolean) => void;
+  readonly onToggleSelectionLocked?: (value: boolean) => void;
+  readonly onDeleteSelection?: () => void;
+  readonly onDuplicateSelection?: () => void;
+  readonly onSelectSameKind?: () => void;
 }
 
 /** @emoji 🎬 Puzzle 3D play canvas: {@link Canvas3D} cabled to {@link ObjectStateProvider} and {@link Objects}. */
 export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
   const setSelectedIdRef = reactHostPort.useRef(props.setSelectedId);
   setSelectedIdRef.current = props.setSelectedId;
+  reactHostPort.useEffect(() => {
+    puzzle3dSelectionActionsRef.current = {
+      toggleHidden: (value) => props.onToggleSelectionHidden?.(value),
+      toggleLocked: (value) => props.onToggleSelectionLocked?.(value),
+      deleteSelection: () => props.onDeleteSelection?.(),
+      duplicateSelection: () => props.onDuplicateSelection?.(),
+      selectSameKind: () => props.onSelectSameKind?.(),
+    };
+    return () => {
+      puzzle3dSelectionActionsRef.current = {
+        toggleHidden: () => {},
+        toggleLocked: () => {},
+        deleteSelection: () => {},
+        duplicateSelection: () => {},
+        selectSameKind: () => {},
+      };
+    };
+  }, [
+    props.onDeleteSelection,
+    props.onDuplicateSelection,
+    props.onSelectSameKind,
+    props.onToggleSelectionHidden,
+    props.onToggleSelectionLocked,
+  ]);
   const sceneChildren = reactHostPort.useMemo(
     () => (
       <>
@@ -10400,6 +10708,7 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
         <>
           <Puzzle3dMarqueeOverlay />
           <Puzzle3dBrushCandidateMenu />
+          <Puzzle3dSelectionContextMenu />
         </>
       }
     >
@@ -12635,6 +12944,66 @@ if (import.meta.vitest) {
       requestPuzzle3dZoomToSelection({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
       expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before + 1);
       expect(getPuzzle3dZoomToSelectionTarget().objectIds).toEqual(["a"]);
+    });
+    it("buildPuzzle3dSelectionMenuItems labels Hide and Delete for visible selection", () => {
+      const actions = {
+        toggleHidden: vi.fn(),
+        toggleLocked: vi.fn(),
+        deleteSelection: vi.fn(),
+        duplicateSelection: vi.fn(),
+        selectSameKind: vi.fn(),
+      };
+      const items = buildPuzzle3dSelectionMenuItems(
+        { objectIds: ["a"], vortexIds: [], attractionIds: [] },
+        [{ hidden: false, locked: false }],
+        { kind: "object", id: "a" },
+        actions,
+      );
+      expect(items.find((row) => row.id === "hidden")?.label).toBe("Hide");
+      expect(items.find((row) => row.id === "delete")?.destructive).toBe(true);
+      expect(items.some((row) => row.id === "duplicate")).toBe(true);
+    });
+    it("buildPuzzle3dSelectionMenuItems labels Show when all selected entities are hidden", () => {
+      const items = buildPuzzle3dSelectionMenuItems(
+        { objectIds: ["a"], vortexIds: [], attractionIds: [] },
+        [{ hidden: true, locked: true }],
+        { kind: "object", id: "a" },
+        {
+          toggleHidden: () => {},
+          toggleLocked: () => {},
+          deleteSelection: () => {},
+          duplicateSelection: () => {},
+          selectSameKind: () => {},
+        },
+      );
+      expect(items.find((row) => row.id === "hidden")?.label).toBe("Show");
+      expect(items.find((row) => row.id === "locked")?.label).toBe("Unlock");
+    });
+    it("buildPuzzle3dSelectionMenuItems prepends Suggest objects for a single vortex", () => {
+      let suggested = false;
+      const items = buildPuzzle3dSelectionMenuItems(
+        { objectIds: [], vortexIds: ["obj:v1"], attractionIds: [] },
+        [{ hidden: false, locked: false }],
+        { kind: "vortex", fullId: "obj:v1" },
+        {
+          toggleHidden: () => {},
+          toggleLocked: () => {},
+          deleteSelection: () => {},
+          duplicateSelection: () => {},
+          selectSameKind: () => {},
+        },
+        () => {
+          suggested = true;
+        },
+      );
+      expect(items[0]?.id).toBe("suggest");
+      items[0]?.onSelect?.(new Event("click"));
+      expect(suggested).toBe(true);
+    });
+    it("hoverTargetToSelectionPick maps hover targets to selection picks", () => {
+      expect(hoverTargetToSelectionPick({ kind: "object", id: "obj" })).toEqual({ kind: "object", id: "obj" });
+      expect(hoverTargetToSelectionPick({ kind: "vortex", fullId: "obj:v1" })).toEqual({ kind: "vortex", fullId: "obj:v1" });
+      expect(hoverTargetToSelectionPick({ kind: "attraction", id: "att" })).toEqual({ kind: "attraction", id: "att" });
     });
     it("boundsFromPuzzle3dSelection unions object meshes and vortex points", () => {
       const root = new Group();

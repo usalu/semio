@@ -23,6 +23,7 @@ import {
   PLAYGROUND_NO_FIXTURE_ID,
   type PlaygroundFixtureCatalog,
   type PlaygroundFixtureHost,
+  type PlaygroundKeybinding,
   isPlaygroundNoFixtureId,
   playgroundTreePanelRootItems,
   platformFromViewContext,
@@ -674,6 +675,15 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
         changed = false;
         break;
       }
+      case "deleteSelection": {
+        if (this.puzzle5dStore.applySelectionDelete()) {
+          this.selected2d = new Set();
+          this.selected3d = null;
+          this.emit();
+        }
+        changed = false;
+        break;
+      }
       case "setFillCount": {
         const count = Number((args as { count?: number }).count);
         if (!Number.isFinite(count)) {
@@ -887,6 +897,10 @@ export function buildPuzzle5dPlayRuntime(initialPanelVisibility?: { leftSidePane
 /** @emoji 🛝 Puzzle 5d play harness as a single {@link Playground} instance. */
 export class Playground5d extends Playground {
   readonly id = PUZZLE_5D_PLAY_APP_ID;
+  readonly keybindings: readonly PlaygroundKeybinding[] = [
+    { key: "Delete", controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+    { key: "Backspace", controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+  ];
 
   createRuntime(): Platform {
     return buildPuzzle5dPlayRuntime();

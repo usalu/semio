@@ -967,7 +967,7 @@ export abstract class VirtualFileSystemController extends Controller {
 		const key = virtualFileSystemScopeKey(scope);
 		const existing = this.expandedByScope.get(key);
 		if (existing) return existing;
-		const store = new VirtualFileSystemExpandedStore(initial.length ? initial : [this.getRoot(scope).id]);
+		const store = new VirtualFileSystemExpandedStore(initial);
 		this.expandedByScope.set(key, store);
 		this.provideStore(virtualFileSystemExpandedStoreId(scope), store);
 		return store;
@@ -1051,8 +1051,9 @@ export abstract class VirtualFileSystemController extends Controller {
 	}
 
 	protected syncOpenBranches(scope: VirtualFileSystemScope): void {
-		const expanded = this.expandedStore(scope).getSnapshot();
-		for (const nodeId of expanded) {
+		const rootId = this.getRoot(scope).id;
+		this.ensureChildrenLoaded(rootId, scope);
+		for (const nodeId of this.expandedStore(scope).getSnapshot()) {
 			this.ensureChildrenLoaded(nodeId, scope);
 		}
 	}
@@ -1348,7 +1349,7 @@ export function registerAppVirtualFileSystem(
 	registerPlatformComponent(platform, surface);
 	const refresh = () => surface.refresh();
 	platform.subscribe(refresh);
-	controller.expandedStore(scope, options.initialExpanded ?? [controller.virtualFileSystemRootId(scope)]);
+	controller.expandedStore(scope, options.initialExpanded ?? []);
 	surface.refresh();
 	registerWindowBody(options.bodyKey, () => buildVirtualFileSystemWindowBody(surfaceId, controller.id, options.paneId));
 	return surface;
@@ -2236,6 +2237,7 @@ if (import.meta.vitest) {
 			};
 			let model = ctrl.buildVirtualFileSystemModel(scopeA);
 			expect(model.rows.map((row) => row.id)).toEqual(["folder-models", "branch-alpha"]);
+			expect(model.rows.every((row) => !row.expanded)).toBe(true);
 			expect(ctrl.visibleVirtualFileSystemNodes(scopeA).map((node) => node.id)).toEqual(["folder-models", "branch-alpha"]);
 			ctrl.run("toggleVirtualFileSystemExpand", { ...scopeA, nodeId: "folder-models" });
 			model = ctrl.buildVirtualFileSystemModel(scopeA);

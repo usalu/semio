@@ -167,7 +167,7 @@ const VirtualFileSystemDemo = ({ initialExpanded }: { readonly initialExpanded: 
 
 export const Collapsed: Story = {
   args: { schema: semioKitSchema, rows: [] },
-  render: () => <VirtualFileSystemDemo initialExpanded={["root-demo"]} />,
+  render: () => <VirtualFileSystemDemo initialExpanded={[]} />,
 };
 
 export const Expanded: Story = {

@@ -13732,8 +13732,7 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 		}
 		if (this.vfsAppId === SKETCHPAD_HOME_APP_ID) {
 			const shell = ctrl.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
-			const expanded = shell?.home.expandedRowIds.length ? shell.home.expandedRowIds : ["sketchpad-home"];
-			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_HOME_APP_ID)).setAll(expanded);
+			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_HOME_APP_ID)).setAll(shell?.home.expandedRowIds ?? []);
 		}
 		if (this.vfsAppId === SKETCHPAD_KIT_APP_ID && this.route.kitId) {
 			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), this.route.kitId);
@@ -14693,7 +14692,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		const scopeKey = virtualFileSystemScopeKey(scope);
 		if (this.vfsRouteRootByScope.get(scopeKey) === rootNodeId) return;
 		this.vfsRouteRootByScope.set(scopeKey, rootNodeId);
-		this.expandedStore(scope).setAll([rootNodeId]);
+		this.expandedStore(scope).setAll([]);
 		this.vfsNodeMetaByScope.delete(scopeKey);
 		this.childrenByScope.delete(scopeKey);
 		this.pendingChildrenLoadsByScope.delete(scopeKey);
@@ -14779,7 +14778,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				this.updateHome({ ...shell.home, expandedRowIds });
 				const homeScope = sketchpadVfsScope(SKETCHPAD_HOME_APP_ID);
 				const expandedStore = this.expandedStore(homeScope);
-				expandedStore.setAll(expandedRowIds.length ? expandedRowIds : [this.getRoot(homeScope).id]);
+				expandedStore.setAll(expandedRowIds);
 				if (expanded.has(payload.nodeId)) {
 					this.ensureChildrenLoaded(payload.nodeId, homeScope);
 				}
@@ -16375,7 +16374,7 @@ if (import.meta.vitest) {
 			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "Selected Kit" } as Kit), { kind: "fixture" });
 			ctrl.navigateTo("/");
 			platform.uri = "/";
-			ctrl.updateHome({ ...sketchpadEmptyHomeUiState(), selectedKitIds: [kitId], expandedRowIds: ["sketchpad-home"] });
+			ctrl.updateHome({ ...sketchpadEmptyHomeUiState(), selectedKitIds: [kitId] });
 			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS);
 			details?.refresh();
 			const body = (details?.getSnapshot() as PanelModel).body;
@@ -16434,7 +16433,6 @@ if (import.meta.vitest) {
 			ctrl.navigateTo("/");
 			platform.uri = "/";
 			const scope = sketchpadVfsScope(SKETCHPAD_HOME_APP_ID);
-			ctrl.expandedStore(scope, ["sketchpad-home"]);
 			const snap = ctrl.buildVirtualFileSystemModel(scope);
 			expect(snap.rows.map((row) => row.id)).toContain("kit:k-home");
 			expect(snap.rows.find((row) => row.id === "kit:k-home")?.name).toBe("Demo Kit");
