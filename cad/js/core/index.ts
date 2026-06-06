@@ -3750,6 +3750,43 @@ function runDeriveTransformation(spec: TransformationSpec, source: Model, previe
   return target;
 }
 
+const BUILDING_TO_STRUCTURE_TYPOLOGY: Readonly<Record<string, TypologyRef>> = {
+  "building.building.column": "structure.structure.reinforcedconcretecolumn",
+  "building.building.slab": "structure.structure.onewayreinforcedconcreteslab",
+  "building.building.beam": "structure.structure.onewayreinforcedconcreteslab",
+  "building.building.wall": "structure.structure.reinforcedconcreteinternalwall",
+  "building.building.foundation": "structure.structure.onewayreinforcedconcreteslab",
+  "building.building.roof": "structure.structure.onewayreinforcedconcreteslab",
+  "building.building.stair": "structure.structure.onewayreinforcedconcreteslab",
+  "building.building.ceiling": "structure.structure.onewayreinforcedconcreteslab",
+  "building.building.railing": "structure.structure.reinforcedconcreteinternalwall",
+  "building.building.door": "structure.structure.reinforcedconcreteexternalwall",
+  "building.building.window": "structure.structure.reinforcedconcreteexternalwall",
+};
+
+function applyBuildingToStructureTransformation(_spec: TransformationSpec, source: Model): Model {
+  const target = cloneModelGeometryShell(source);
+  const counts = new Map<string, number>();
+  target.objects = {};
+  for (const row of Object.values(source.objects)) {
+    const mapped = BUILDING_TO_STRUCTURE_TYPOLOGY[row.typology];
+    if (!mapped) continue;
+    const index = counts.get(mapped) ?? 0;
+    counts.set(mapped, index + 1);
+    const objectId = transformationObjectId(mapped, index);
+    target.objects[objectId] = {
+      id: objectId,
+      typology: mapped,
+      primitives: { ...row.primitives },
+      ...(row.attributes ? { attributes: { ...row.attributes } } : {}),
+    };
+  }
+  target.bump();
+  return target;
+}
+
+registerTransformationApplier(qualifiedTransformationId("aec.building.structure", "from_building"), applyBuildingToStructureTransformation);
+
 // #endregion 🔄TransformationGeometry
 
 /** @emoji 🔄 Derives a target-definition model from a source model (shared geometry, new object rows). */
@@ -7384,6 +7421,23 @@ if (import.meta.vitest) {
       space.link("geometry", source);
       space.transfer("geometry", "energy", spec!, M);
       expect(space.get("energy")?.objects["energy.energy.windows"]).toBeTruthy();
+    });
+    it("loads and applies from_building transformation with shared solid geometry", () => {
+      const spec = loadTransformation("aec.building.structure.from_building");
+      expect(spec?.source.modelDefinition).toBe("aec.building");
+      expect(spec?.target.modelDefinition).toBe("aec.building.structure");
+      const source = new Model();
+      applyModelDiff(source, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [0.4, 0.4, 3], height: 3 }, solidRef("column-solid")));
+      source.objects["col"] = {
+        id: "col" as ObjectRef,
+        typology: "building.building.column" as TypologyRef,
+        primitives: { solid: "column-solid" },
+      };
+      const target = applyTransformation(spec!, source, M);
+      expect(listModelObjectsForModelDefinition(target, "aec.building.structure.classic")).toHaveLength(1);
+      expect(target.objects["structure.structure.reinforcedconcretecolumn"]?.typology).toBe("structure.structure.reinforcedconcretecolumn");
+      expect(target.objects["structure.structure.reinforcedconcretecolumn"]?.primitives.solid).toBe("column-solid");
+      expect(target.solids["column-solid"]).toBe(source.solids["column-solid"]);
     });
     it("from_geometry fuses touching shape solids and drops internal faces", () => {
       const spec = loadTransformation("aec.building.energy.from_geometry")!;

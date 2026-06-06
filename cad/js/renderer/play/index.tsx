@@ -410,13 +410,12 @@ export function buildCadPlayHierarchySections(
   const registerHighlight = (target: SelectionTarget, itemId: string): void => {
     registerCadPlayHierarchyHighlight(highlightKeyToItemIds, target, itemId);
   };
-  const modelDefinitionIds = Object.keys(modelsByDefinitionId).sort((a, b) => a.localeCompare(b));
+  const modelDefinitionIds = [
+    ...new Set([...CAD_PLAY_PANE_SPECS.map((row) => row.modelDefinitionId), ...Object.keys(modelsByDefinitionId)]),
+  ].sort((a, b) => a.localeCompare(b));
   const modelBranches: TreeDataItem[] = [];
   for (const modelDefinitionId of modelDefinitionIds) {
-    const model = modelsByDefinitionId[modelDefinitionId];
-    if (!model) {
-      continue;
-    }
+    const model = modelsByDefinitionId[modelDefinitionId] ?? new Model();
     const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, model, isSelected, onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
     const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
       const objectId = String(object.id);
@@ -952,7 +951,8 @@ import {
 
 //#region 🔖GeometryCatalog
 function modelVertexCount(json: Record<string, unknown>): number {
-  const modelSpace = parseModelSpaceJson(json);
+  const bundle = json.modelSpace ? (json as SpatialExchangeBundle) : null;
+  const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
   if (modelSpace) return Object.values(modelSpace.models).reduce((count, model) => count + Object.keys(model.vertices).length, 0);
   const model = parseModelJson(json);
   if (model) return Object.keys(model.vertices).length;
@@ -972,7 +972,7 @@ const SHAPE_ASSETS = [
   { id: "small-building", key: "s", label: "Small building", json: geometrySmallBuilding as Record<string, unknown> },
   { id: "tall-building", key: "t", label: "Tall building", json: geometryTallBuilding as Record<string, unknown> },
   { id: "large-building", key: "b", label: "Large building", json: geometryLargeBuilding as Record<string, unknown> },
-  { id: "concrete-forest-left", key: "c", label: "Concrete forest (left)", json: geometryConcreteForestLeft as Record<string, unknown> },
+  { id: "concrete-forest-left", key: "c", label: "Concrete forest (left)", json: { modelSpace: geometryConcreteForestLeft, activeModelDefinitionId: defaultModelDefinitionId() } as Record<string, unknown> },
   { id: "concrete-forest-right", key: "d", label: "Concrete forest (right)", json: geometryConcreteForestRight as Record<string, unknown> },
 ] as const;
 
@@ -1226,8 +1226,8 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
 function modelsFromCadJson(json: unknown): Record<string, Model> {
   const bundle = json && typeof json === "object" ? (json as SpatialExchangeBundle) : null;
   const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
-  if (modelSpace) return ensurePlayQuadModelSlots(recordFromModelSpace(modelSpace));
-  return ensurePlayQuadModelSlots({
+  if (modelSpace) return ensureCadPlayQuadModels(recordFromModelSpace(modelSpace));
+  return ensureCadPlayQuadModels({
     [defaultModelDefinitionId()]: parseModelJson(bundle?.model ?? json) ?? new Model(),
   });
 }
@@ -1258,23 +1258,33 @@ function recordFromModelSpace(space: ModelSpace): Record<string, Model> {
   return out;
 }
 
+function transformationSourceScore(models: Readonly<Record<string, Model>>, spec: TransformationSpec): number {
+  const source = models[spec.source.modelDefinition];
+  if (!source) return 0;
+  const scopedObjects = listModelObjectsForModelDefinition(source, spec.source.modelDefinition).length;
+  if (scopedObjects === 0) return 0;
+  if (spec.source.modelDefinition === CAD_PLAY_BUILDING_MODEL_DEFINITION_ID && spec.target.modelDefinition.startsWith("aec.building.structure")) {
+    return 100 + scopedObjects;
+  }
+  if (isShapeModelDefinition(spec.source.modelDefinition)) return 50 + scopedObjects;
+  return 10 + scopedObjects;
+}
+
 function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, definitionId: string): Record<string, Model> {
   const withShape = ensurePlayShapeModel(models);
   if (withShape[definitionId]) return withShape;
   if (isShapeModelDefinition(definitionId)) return withShape;
-  const candidates = listTransformationsIntoModelDefinition(definitionId);
-  const fromShape = candidates.find((row) => isShapeModelDefinition(row.source.modelDefinition));
-  const shape = withShape[defaultModelDefinitionId()];
-  try {
-    if (fromShape && shape) {
-      return { ...withShape, [definitionId]: applyTransformation(fromShape, shape, preciseSpatialKernelMath) };
+  const candidates = [...listTransformationsIntoModelDefinition(definitionId)].sort(
+    (a, b) => transformationSourceScore(withShape, b) - transformationSourceScore(withShape, a),
+  );
+  for (const spec of candidates) {
+    const source = withShape[spec.source.modelDefinition];
+    if (!source || listModelObjectsForModelDefinition(source, spec.source.modelDefinition).length === 0) continue;
+    try {
+      return { ...withShape, [definitionId]: applyTransformation(spec, source, preciseSpatialKernelMath) };
+    } catch {
+      continue;
     }
-    const fromLinked = candidates.find((row) => withShape[row.source.modelDefinition]);
-    if (fromLinked) {
-      return { ...withShape, [definitionId]: applyTransformation(fromLinked, withShape[fromLinked.source.modelDefinition]!, preciseSpatialKernelMath) };
-    }
-  } catch {
-    return withShape;
   }
   return withShape;
 }
@@ -1676,7 +1686,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
 
   const flushedModelsByDefinitionId = reactHostPort.useMemo(() => {
     const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
-    return ensurePlayQuadModelSlots(flushed);
+    return ensureCadPlayQuadModels(flushed);
   }, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId]);
 
   const playModelSpace = reactHostPort.useMemo(() => modelSpaceFromRecord(flushedModelsByDefinitionId), [flushedModelsByDefinitionId]);
@@ -2967,6 +2977,27 @@ if (import.meta.vitest) {
       expect(models[defaultModelDefinitionId()]?.objects).not.toEqual({});
     });
 
+    it("modelsFromCadJson loads concrete forest left building BIM model", () => {
+      const models = modelsFromCadJson({
+        modelSpace: geometryConcreteForestLeft,
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      const building = models[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID];
+      expect(building).toBeInstanceOf(Model);
+      expect(Object.keys(building!.objects).length).toBeGreaterThan(0);
+      const listed = listModelObjectsForModelDefinition(building!, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID);
+      expect(listed.length).toBe(12);
+      const typologies = new Set(listed.map((row) => row.typology));
+      expect(typologies.has("building.building.slab")).toBe(true);
+      expect(typologies.has("building.building.beam")).toBe(true);
+      expect(typologies.has("building.building.column")).toBe(true);
+      expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(
+        listModelObjectsForModelDefinition(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!, CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID).length,
+      ).toBeGreaterThan(0);
+    });
+
     it("ensureDerivedModelInSpace keeps spatial.shape for shape definition", () => {
       const models = ensureDerivedModelInSpace({}, defaultModelDefinitionId());
       expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
@@ -2985,6 +3016,26 @@ if (import.meta.vitest) {
       expect(models[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
       expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
       expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+    });
+
+    it("buildCadPlayHierarchySections lists concrete forest BIM objects across play definitions", () => {
+      const models = ensureCadPlayQuadModels(
+        modelsFromCadJson({
+          modelSpace: geometryConcreteForestLeft,
+          activeModelDefinitionId: defaultModelDefinitionId(),
+        }),
+      );
+      const build = buildCadPlayHierarchySections(models, defaultModelDefinitionId(), [], () => {});
+      const modelSpaceRoot = build.sections[0]?.items[0];
+      const buildingBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
+      expect(buildingBranch?.items?.length).toBe(12);
+      const energyBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
+      expect((energyBranch?.items?.length ?? 0) > 0).toBe(true);
+      const structureBranch = modelSpaceRoot?.items?.find(
+        (row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
+      );
+      expect((structureBranch?.items?.length ?? 0) > 0).toBe(true);
+      expect(modelSpaceRoot?.items?.some((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`)).toBe(true);
     });
   });
 }

@@ -1009,7 +1009,79 @@ pub mod vector_tiles {
             "town" => span_deg <= caps[4] && span_deg > caps[5],
             "village" | "hamlet" | "suburb" => span_deg <= caps[5] && span_deg > caps[6],
             "neighbourhood" | "quarter" | "isolated_dwelling" => span_deg <= caps[6],
-            _ => span_deg <= caps[3],
+            _ => false,
+        }
+    }
+
+    /// @emoji 🛣️ Street-name labels use a stricter span gate than road geometry to avoid city-band overload.
+    pub fn transportation_name_visible(class: &str, span_deg: f64) -> bool {
+        let caps = super::GIS_MAP_LOD_MAX_SPAN_DEG;
+        match class {
+            "motorway" | "trunk" => span_deg < caps[1],
+            "primary" => span_deg < caps[3],
+            "secondary" | "tertiary" => span_deg < caps[4],
+            "minor" | "street" | "bus_guideway" => span_deg < caps[5],
+            "residential" | "service" | "living_street" | "unclassified" | "pedestrian" => span_deg < caps[6],
+            "path" | "track" | "footway" | "cycleway" | "steps" => span_deg < caps[6] * 0.85,
+            _ => span_deg < caps[4],
+        }
+    }
+
+    /// @emoji 📍 POI captions only appear from district zoom inward.
+    pub fn poi_label_visible(span_deg: f64) -> bool {
+        span_deg <= super::GIS_MAP_LOD_MAX_SPAN_DEG[5]
+    }
+
+    /// @emoji 🔤 Screen label size from viewport span; capped tighter in city/district/street bands.
+    pub fn vector_label_px(span_deg: f64, weight: f64) -> f64 {
+        let caps = super::GIS_MAP_LOD_MAX_SPAN_DEG;
+        let raw = 280.0 / span_deg.max(0.25);
+        let cap = if span_deg <= caps[6] {
+            10.5
+        } else if span_deg <= caps[5] {
+            12.0
+        } else if span_deg <= caps[4] {
+            12.5
+        } else if span_deg <= caps[3] {
+            14.0
+        } else if span_deg <= caps[2] {
+            20.0
+        } else {
+            26.0
+        };
+        raw.clamp(8.0, cap) * weight
+    }
+
+    pub fn place_label_rank(class: &str, layer: &str) -> u16 {
+        if layer == "poi" {
+            return 48;
+        }
+        if layer == "water_name" {
+            return 40;
+        }
+        if layer == "centroids" {
+            return 8;
+        }
+        match class {
+            "continent" => 0,
+            "country" | "" => 4,
+            "state" | "province" => 8,
+            "city" => 12,
+            "town" => 16,
+            "village" | "hamlet" | "suburb" => 20,
+            "neighbourhood" | "quarter" | "isolated_dwelling" => 24,
+            _ => 28,
+        }
+    }
+
+    pub fn transportation_name_rank(class: &str) -> u16 {
+        match class {
+            "motorway" => 30,
+            "trunk" => 31,
+            "primary" => 32,
+            "secondary" => 34,
+            "tertiary" => 36,
+            _ => 44,
         }
     }
 
@@ -1377,6 +1449,78 @@ impl Default for MapHost {
         }
     }
 }
+
+// #region 🔖LabelDeclutter
+struct LabelDeclutter {
+    cell: f64,
+    cols: usize,
+    rows: usize,
+    mask: Vec<bool>,
+    count: usize,
+    max_count: usize,
+    width: f64,
+    height: f64,
+}
+
+impl LabelDeclutter {
+    fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+        let width = viewport.width.max(1) as f64;
+        let height = viewport.height.max(1) as f64;
+        let cell = cell_px.max(12.0);
+        let cols = ((width / cell).ceil() as usize).max(1) + 1;
+        let rows = ((height / cell).ceil() as usize).max(1) + 1;
+        Self {
+            cell,
+            cols,
+            rows,
+            mask: vec![false; cols * rows],
+            count: 0,
+            max_count: max_count.max(1),
+            width,
+            height,
+        }
+    }
+
+    fn estimate_box(label: &str, px: f64, origin: Point) -> (f64, f64, f64, f64) {
+        let pad = px * 0.35;
+        let w = (label.len() as f64 * px * 0.62 + pad * 2.0).clamp(24.0, 420.0);
+        let h = (px * 1.6 + pad * 2.0).clamp(14.0, 96.0);
+        let x = origin.x;
+        let y = origin.y - px * 0.85;
+        (x, y, w, h)
+    }
+
+    fn try_place(&mut self, label: &str, origin: Point, px: f64) -> bool {
+        if self.count >= self.max_count {
+            return false;
+        }
+        let (x, y, w, h) = Self::estimate_box(label, px, origin);
+        if x + w < 0.0 || y + h < 0.0 || x > self.width || y > self.height {
+            return false;
+        }
+        let cx0 = (x / self.cell).floor().max(0.0) as usize;
+        let cy0 = (y / self.cell).floor().max(0.0) as usize;
+        let cx1 = ((x + w) / self.cell).ceil().min(self.width) as usize;
+        let cy1 = ((y + h) / self.cell).ceil().min(self.height) as usize;
+        let cx1 = cx1.min(self.cols.saturating_sub(1));
+        let cy1 = cy1.min(self.rows.saturating_sub(1));
+        for cy in cy0..=cy1 {
+            for cx in cx0..=cx1 {
+                if self.mask[cy * self.cols + cx] {
+                    return false;
+                }
+            }
+        }
+        for cy in cy0..=cy1 {
+            for cx in cx0..=cx1 {
+                self.mask[cy * self.cols + cx] = true;
+            }
+        }
+        self.count += 1;
+        true
+    }
+}
+// #endregion 🔖LabelDeclutter
 
 impl MapHost {
     pub fn new() -> Self {
@@ -1973,11 +2117,18 @@ impl MapHost {
         scene: &mut Scene,
         draw: &[(u32, u32, u32, &vector_tiles::VectorTile)],
         span: f64,
-        forced_lod: Option<&str>,
+        _forced_lod: Option<&str>,
         label_fill: Color,
         label_halo: Color,
     ) {
-        let zoom_px = (280.0 / span.max(0.25)).clamp(9.0, 26.0) * self.layer_stroke_scale.labels;
+        struct LabelCandidate {
+            label: String,
+            screen: Point,
+            rank: u16,
+        }
+
+        let px = vector_tiles::vector_label_px(span, self.layer_stroke_scale.labels);
+        let mut candidates: Vec<LabelCandidate> = Vec::new();
         for (tz, tx, ty, tile) in draw {
             let mut layers: Vec<_> = tile.layers.iter().collect();
             layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
@@ -1985,44 +2136,53 @@ impl MapHost {
                 let extent = layer.extent.max(1);
                 let lname = layer.name.as_str();
                 for feat in &layer.features {
-                    match lname {
+                    let (rank, visible) = match lname {
                         "transportation_name" => {
                             let class = vector_tiles::property_class(&feat.properties);
-                            if !vector_tiles::transportation_visible(class, span, *tz, forced_lod) {
-                                continue;
-                            }
-                            let Some(label) = vector_tiles::feature_label(&feat.properties) else {
-                                continue;
-                            };
-                            let anchor = feat
-                                .points
-                                .first()
-                                .or_else(|| feat.rings.first().and_then(|r| r.first()))
-                                .copied()
-                                .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
-                            let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
-                            cavas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
+                            (
+                                vector_tiles::transportation_name_rank(class),
+                                vector_tiles::transportation_name_visible(class, span),
+                            )
                         }
-                        "place" | "centroids" | "poi" | "water_name" => {
+                        "poi" => (vector_tiles::place_label_rank("", lname), vector_tiles::poi_label_visible(span)),
+                        "place" | "centroids" | "water_name" => {
                             let class = vector_tiles::property_class(&feat.properties);
-                            if !vector_tiles::place_label_visible(class, span) {
-                                continue;
-                            }
-                            let Some(label) = vector_tiles::feature_label(&feat.properties) else {
-                                continue;
-                            };
-                            let anchor = feat
-                                .points
-                                .first()
-                                .or_else(|| feat.rings.first().and_then(|r| r.first()))
-                                .copied()
-                                .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
-                            let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
-                            cavas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
+                            (
+                                vector_tiles::place_label_rank(class, lname),
+                                vector_tiles::place_label_visible(class, span),
+                            )
                         }
-                        _ => {}
+                        _ => continue,
+                    };
+                    if !visible {
+                        continue;
                     }
+                    let Some(label) = vector_tiles::feature_label(&feat.properties) else {
+                        continue;
+                    };
+                    let anchor = feat
+                        .points
+                        .first()
+                        .or_else(|| feat.rings.first().and_then(|r| r.first()))
+                        .copied()
+                        .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
+                    let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
+                    candidates.push(LabelCandidate { label, screen: s, rank });
                 }
+            }
+        }
+        if candidates.is_empty() {
+            return;
+        }
+        candidates.sort_by(|a, b| a.rank.cmp(&b.rank).then_with(|| a.label.cmp(&b.label)));
+        let cell = (px * 1.75).clamp(18.0, 44.0);
+        let viewport_area = self.viewport.width.max(1) as f64 * self.viewport.height.max(1) as f64;
+        let max_labels = (viewport_area / (cell * cell * 2.6)).round() as usize;
+        let max_labels = max_labels.clamp(48, 140);
+        let mut declutter = LabelDeclutter::for_viewport(&self.viewport, cell, max_labels);
+        for candidate in candidates {
+            if declutter.try_place(&candidate.label, candidate.screen, px) {
+                cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
             }
         }
     }
@@ -3509,6 +3669,29 @@ mod tests {
         let cx = (rect.x0 + rect.x1) * 0.5;
         let cy = (rect.y0 + rect.y1) * 0.5;
         host.set_camera(cx, -cy, host.camera.zoom);
+    }
+
+    #[test]
+    fn transportation_name_visible_is_stricter_than_road_geometry_at_city_span() {
+        let v = super::vector_tiles::transportation_name_visible;
+        assert!(v("primary", 2.0));
+        assert!(!v("secondary", 2.0));
+        assert!(!v("street", 2.0));
+        assert!(v("secondary", 0.8));
+    }
+
+    #[test]
+    fn vector_label_px_caps_city_band_size() {
+        let px = super::vector_tiles::vector_label_px(2.0, 1.0);
+        assert!(px <= 14.0, "city-band labels should stay small (px={px})");
+        assert!(px >= 8.0);
+    }
+
+    #[test]
+    fn poi_labels_hidden_until_district_span() {
+        let v = super::vector_tiles::poi_label_visible;
+        assert!(!v(2.0));
+        assert!(v(0.3));
     }
 
     #[test]

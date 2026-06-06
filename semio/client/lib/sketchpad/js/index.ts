@@ -14287,23 +14287,13 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		return out;
 	}
 
-	/** @emoji 📁 Expands kit VFS through first-level branches so wires identities match visible table rows. */
+	/** @emoji 📁 Ensures kit VFS root children are loaded for wires topology without changing UI expansion. */
 	async prepareKitWiresVfsForTopology(kitId: string): Promise<void> {
 		const cached = this.kitWiresVfsPreparePromises.get(kitId);
 		if (cached) return cached;
 		const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
 		const prepare = (async () => {
-			const expanded = this.expandedStore(scope);
 			await this.ensureChildrenLoadedAsync(kitId, scope);
-			const childrenSnapshot = this.childrenStore(scope).getSnapshot();
-			const rootChildren = childrenSnapshot[kitId] ?? childrenSnapshot["__root__"] ?? [];
-			const expandedIds = new Set(expanded.getSnapshot());
-			expandedIds.add(kitId);
-			for (const child of rootChildren) {
-				expandedIds.add(child.id);
-			}
-			expanded.setAll([...expandedIds]);
-			await Promise.all([...expandedIds].filter((id) => id !== kitId).map((id) => this.ensureChildrenLoadedAsync(id, scope)));
 		})();
 		this.kitWiresVfsPreparePromises.set(kitId, prepare);
 		try {
@@ -16492,6 +16482,31 @@ if (import.meta.vitest) {
 			snap = vfs.buildSnapshot();
 			expect(snap.rows.some((row) => row.id === typeB)).toBe(true);
 			expect(snap.rows.some((row) => row.id === typeA)).toBe(false);
+			ctrl.dispose();
+		});
+
+		it("keeps kit vfs collapsed when opening a kit and through kit wires prepare", async () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-444444444444";
+			const folderId = "cccccccc-dddd-eeee-ffff-111111111111";
+			const typeId = "dddddddd-eeee-ffff-1111-222222222222";
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({
+					id: kitId,
+					name: "Collapsed Kit",
+					types: [{ id: typeId, name: "Base" }],
+					folders: [{ id: folderId, path: "/inbox" }],
+				} as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}`);
+			const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
+			ctrl.syncVirtualFileSystemRoute(scope, kitId);
+			await ctrl.prepareKitWiresVfsForTopology(kitId);
+			let snap = ctrl.buildVirtualFileSystemModel(scope);
+			expect(snap.rows.every((row) => !row.expanded)).toBe(true);
+			expect(ctrl.expandedStore(scope).getSnapshot()).toEqual([]);
 			ctrl.dispose();
 		});
 

@@ -5493,14 +5493,20 @@ export function applyObjectPose(group: Group, origin: Vec3, orientation: Quat | 
   group.scale.copy(scaleToThree(scale));
 }
 
-/** @emoji ­ƒî│ Updates world matrices from root to leaf so {@link Object3D.getWorldPosition} matches the current graph. */
+/** @emoji ­ƒî│ Composes world matrices along the ancestor chain only so {@link Object3D.getWorldPosition} matches without re-walking scene descendants. */
 export function updateWorldMatrixChain(leaf: Object3D): void {
   const chain: Object3D[] = [];
   for (let cur: Object3D | null = leaf; cur; cur = cur.parent) {
     chain.push(cur);
   }
   for (let i = chain.length - 1; i >= 0; i--) {
-    chain[i]!.updateMatrixWorld(false);
+    const node = chain[i]!;
+    node.updateMatrix();
+    if (node.parent) {
+      node.matrixWorld.multiplyMatrices(node.parent.matrixWorld, node.matrix);
+    } else {
+      node.matrixWorld.copy(node.matrix);
+    }
   }
 }
 
@@ -13004,6 +13010,21 @@ if (import.meta.vitest) {
       expect(hoverTargetToSelectionPick({ kind: "object", id: "obj" })).toEqual({ kind: "object", id: "obj" });
       expect(hoverTargetToSelectionPick({ kind: "vortex", fullId: "obj:v1" })).toEqual({ kind: "vortex", fullId: "obj:v1" });
       expect(hoverTargetToSelectionPick({ kind: "attraction", id: "att" })).toEqual({ kind: "attraction", id: "att" });
+    });
+    it("updateWorldMatrixChain composes world position along the ancestor chain", () => {
+      const scene = new Group();
+      const parent = new Group();
+      const child = new Group();
+      scene.add(parent);
+      parent.add(child);
+      applyObjectPose(parent, [10, 0, 0], [0, 0, 0, 1], 1);
+      applyObjectPose(child, [0, 5, 0], [0, 0, 0, 1], 1);
+      updateWorldMatrixChain(child);
+      const world = new Vector3();
+      child.getWorldPosition(world);
+      expect(world.x).toBeCloseTo(10, 4);
+      expect(world.y).toBeCloseTo(5, 4);
+      expect(world.z).toBeCloseTo(0, 4);
     });
     it("boundsFromPuzzle3dSelection unions object meshes and vortex points", () => {
       const root = new Group();

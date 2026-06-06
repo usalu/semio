@@ -2438,6 +2438,7 @@ function SpatialPickTargetNode({
   hoveredTargetKey,
   selectedTargetKey,
   selectedTargetKeys,
+  entityFlagsForId,
 }: {
   readonly target: SpatialPickTarget;
   readonly geometry?: SpatialPickGeometry | null;

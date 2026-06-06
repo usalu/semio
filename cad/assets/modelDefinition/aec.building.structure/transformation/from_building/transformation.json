@@ -1,0 +1,19 @@
+{
+  "schema": "spatial.transformation/v1",
+  "id": "from_building",
+  "version": "1.0.0",
+  "label": "From Building",
+  "description": "Derives structural objects from aec.building BIM objects with shared solid geometry.",
+  "source": {
+    "modelDefinition": "aec.building"
+  },
+  "target": {
+    "modelDefinition": "aec.building.structure"
+  },
+  "typologies": [
+    "structure.structure.reinforcedconcretecolumn",
+    "structure.structure.onewayreinforcedconcreteslab",
+    "structure.structure.reinforcedconcreteinternalwall",
+    "structure.structure.reinforcedconcreteexternalwall"
+  ]
+}

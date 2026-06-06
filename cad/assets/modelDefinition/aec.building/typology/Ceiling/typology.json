@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "building.building.ceiling",
+  "version": "1.0.0",
+  "label": "Ceiling",
+  "description": "Interior overhead planar element.",
+  "primitiveKinds": [
+    "solid"
+  ],
+  "style": {
+    "color": "#E8E4DC",
+    "edgeColor": "#A8A49C",
+    "opacity": 0.72
+  }
+}

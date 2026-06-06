@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "building.building.slab",
+  "version": "1.0.0",
+  "label": "Slab",
+  "description": "Horizontal planar floor or deck element.",
+  "primitiveKinds": [
+    "solid"
+  ],
+  "style": {
+    "color": "#BDBDBD",
+    "edgeColor": "#757575",
+    "opacity": 0.78
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "building.building.stair",
+  "version": "1.0.0",
+  "label": "Stair",
+  "description": "Stepped circulation element.",
+  "primitiveKinds": [
+    "solid"
+  ],
+  "style": {
+    "color": "#E8913A",
+    "edgeColor": "#A86428",
+    "opacity": 0.8
+  }
+}

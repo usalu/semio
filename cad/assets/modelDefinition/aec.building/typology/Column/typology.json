@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "building.building.column",
+  "version": "1.0.0",
+  "label": "Column",
+  "description": "Vertical load-bearing member.",
+  "primitiveKinds": [
+    "solid"
+  ],
+  "style": {
+    "color": "#9E9E9E",
+    "edgeColor": "#616161",
+    "opacity": 0.85
+  }
+}

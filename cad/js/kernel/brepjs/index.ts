@@ -94,6 +94,7 @@ import {
 	modelSpaceFromSpatialUda,
 	parseSpatialUdaPayloads,
 	parseStepEntityMap,
+	stepParseFirstString,
 	stepEscape,
 	stepSpatialFileHeader,
 	StepEntityWriter,
@@ -2061,14 +2062,155 @@ function validSolidsFromImportedShape(shape: Shape3D): ValidSolid[] {
 		}
 		return null;
 	};
+	const collectSubSolids = (): ValidSolid[] => {
+		const out: ValidSolid[] = [];
+		const roots: Shape3D[] = [];
+		const wrapped = (shape as { wrapped?: Shape3D }).wrapped;
+		if (wrapped) roots.push(wrapped);
+		roots.push(shape);
+		for (const root of roots) {
+			try {
+				const batch: ValidSolid[] = [];
+				for (const sub of iterTopo(root, "solid")) {
+					let candidate: unknown = sub;
+					try {
+						candidate = unwrap(cast(sub as never));
+					} catch {
+						candidate = sub;
+					}
+					const solid = trySolid(candidate);
+					if (solid) batch.push(solid);
+				}
+				if (batch.length > out.length) {
+					out.length = 0;
+					out.push(...batch);
+				}
+			} catch {
+				continue;
+			}
+		}
+		return out;
+	};
+	const subs = collectSubSolids();
+	if (subs.length > 1) return subs;
 	const direct = trySolid(shape);
 	if (direct) return [direct];
-	const out: ValidSolid[] = [];
-	for (const sub of iterTopo(shape, "solid")) {
-		const solid = trySolid(sub);
-		if (solid) out.push(solid);
+	return subs.length === 1 ? subs : [];
+}
+
+/** @emoji 🏗️ Model definition id for imported BIM building representations. */
+export const BUILDING_BIM_MODEL_DEFINITION_ID = "aec.building";
+
+const BIM_LAYER_TYPOLOGY = new Map<string, TypologyRef>([
+	["slab", "building.building.slab"],
+	["slabs", "building.building.slab"],
+	["beam", "building.building.beam"],
+	["beams", "building.building.beam"],
+	["column", "building.building.column"],
+	["columns", "building.building.column"],
+	["wall", "building.building.wall"],
+	["walls", "building.building.wall"],
+	["roof", "building.building.roof"],
+	["roofs", "building.building.roof"],
+	["foundation", "building.building.foundation"],
+	["foundations", "building.building.foundation"],
+	["stair", "building.building.stair"],
+	["stairs", "building.building.stair"],
+	["ceiling", "building.building.ceiling"],
+	["ceilings", "building.building.ceiling"],
+	["railing", "building.building.railing"],
+	["railings", "building.building.railing"],
+	["door", "building.building.door"],
+	["doors", "building.building.door"],
+	["window", "building.building.window"],
+	["windows", "building.building.window"],
+]);
+
+function normalizeStepDataLines(stepText: string): string {
+	const data = stepText.match(/DATA;\s*([\s\S]*?)ENDSEC;/i)?.[1] ?? stepText;
+	const lines = data.split(/\r?\n/);
+	const merged: string[] = [];
+	for (const line of lines) {
+		const trimmed = line.trim();
+		if (!trimmed) continue;
+		const incomplete = merged.length > 0 && !merged[merged.length - 1]!.endsWith(";");
+		if (incomplete) {
+			merged[merged.length - 1] = `${merged[merged.length - 1]!}${trimmed}`;
+			continue;
+		}
+		merged.push(trimmed);
 	}
-	return out;
+	return merged.join("\n");
+}
+
+function parsePresentationLayerAssignments(normalizedData: string): Map<number, string> {
+	const layerBySolidEntity = new Map<number, string>();
+	for (const record of normalizedData.split("\n")) {
+		const trimmed = record.trim();
+		if (!trimmed.includes("PRESENTATION_LAYER_ASSIGNMENT(")) continue;
+		const body = trimmed.replace(/^#\d+\s*=\s*/, "");
+		if (!body.startsWith("PRESENTATION_LAYER_ASSIGNMENT(")) continue;
+		const layerName = stepParseFirstString(body);
+		if (!layerName) continue;
+		const refs = stepParseHashRefGroup(body);
+		if (refs.length === 0) continue;
+		for (const ref of refs) {
+			layerBySolidEntity.set(ref, layerName);
+		}
+	}
+	return layerBySolidEntity;
+}
+
+function stepParseHashRefList(text: string): number[] {
+	return [...text.matchAll(/#(\d+)/g)].map((match) => Number(match[1]));
+}
+
+function stepParseHashRefGroup(text: string): number[] {
+	const groups = [...text.matchAll(/\((#[\d,#\s]+)\)/g)];
+	if (groups.length === 0) return [];
+	return stepParseHashRefList(groups[groups.length - 1]![1]!);
+}
+
+/** @emoji 🏷️ Maps STEP presentation-layer names to building typology ids. */
+export function typologyFromStepLayer(layerName: string): TypologyRef {
+	const key = layerName.trim().toLowerCase();
+	const direct = BIM_LAYER_TYPOLOGY.get(key);
+	if (direct) return direct;
+	if (key.endsWith("s")) {
+		const singular = BIM_LAYER_TYPOLOGY.get(key.slice(0, -1));
+		if (singular) return singular;
+	}
+	return "building.building.slab";
+}
+
+/** @emoji 🪜 Parses AP242 presentation layers and declared solid order from raw STEP text. */
+export function stepPresentationLayers(stepText: string): {
+	readonly solidOrder: readonly number[];
+	readonly layerBySolidEntity: ReadonlyMap<number, string>;
+} {
+	const normalized = normalizeStepDataLines(stepText);
+	const entities = parseStepEntityMap(normalized);
+	const layerBySolidEntity = parsePresentationLayerAssignments(normalized);
+	let solidOrder: number[] = [];
+	for (const [, body] of entities) {
+		if (!body.startsWith("ADVANCED_BREP_SHAPE_REPRESENTATION(")) continue;
+		const itemsMatch = body.match(/,\s*\((#[\d,#\s]+)\)\s*,/);
+		if (!itemsMatch) continue;
+		const solids = stepParseHashRefList(itemsMatch[1]!).filter((ref) =>
+			entities.get(ref)?.startsWith("MANIFOLD_SOLID_BREP("),
+		);
+		if (solids.length > 0) {
+			solidOrder = solids;
+			break;
+		}
+	}
+	if (solidOrder.length === 0) {
+		solidOrder = [...entities.entries()]
+			.filter(([, body]) => body.startsWith("MANIFOLD_SOLID_BREP("))
+			.map(([id]) => id)
+			.sort((a, b) => a - b);
+	}
+	return { solidOrder, layerBySolidEntity };
 }
 
 /** @emoji 📏 Raw Rhino/AP242 BREP STEP fixtures are authored in millimeters; CAD model space uses meters. */
@@ -2121,7 +2263,7 @@ export function scaleModelPositions(model: Model, factor: number): void {
 
 function modelFromImportedBrepSolid(
 	brepSolid: ValidSolid,
-	options: { readonly prefix: string; readonly objectId: string },
+	options: { readonly prefix: string; readonly objectId: string; readonly typology?: TypologyRef },
 ): Model {
 	const prefix = options.prefix;
 	const objectId = options.objectId;
@@ -2194,11 +2336,21 @@ function modelFromImportedBrepSolid(
 	model.solids[solidId] = { id: solidId, shellIds: [shellId] };
 	model.objects[objectId] = {
 		id: objectId as ObjectRef,
-		typology: "spatial.shape.kernel.solid" as TypologyRef,
+		typology: options.typology ?? ("spatial.shape.kernel.solid" as TypologyRef),
 		primitives: { solid: solidId },
 	};
 	model.bump();
 	return model;
+}
+
+function mergeImportedBrepPart(target: Model, part: Model): void {
+	Object.assign(target.objects, part.objects);
+	Object.assign(target.vertices, part.vertices);
+	Object.assign(target.edges, part.edges);
+	Object.assign(target.wires, part.wires);
+	Object.assign(target.faces, part.faces);
+	Object.assign(target.shells, part.shells);
+	Object.assign(target.solids, part.solids);
 }
 
 /** @emoji 🧾 Serializes one object and its solid closure as inline `spatial.modelspace/v1` fixture JSON. */
@@ -2877,18 +3029,46 @@ class BrepjsWasmEngine {
 			const suffix = brepSolids.length === 1 ? "" : `-${i + 1}`;
 			const prefix = `${basePrefix}${suffix}`;
 			const objectId = `object-${prefix}`;
-			const part = modelFromImportedBrepSolid(brepSolids[i]!, { prefix, objectId });
-			Object.assign(model.objects, part.objects);
-			Object.assign(model.vertices, part.vertices);
-			Object.assign(model.edges, part.edges);
-			Object.assign(model.wires, part.wires);
-			Object.assign(model.faces, part.faces);
-			Object.assign(model.shells, part.shells);
-			Object.assign(model.solids, part.solids);
+			mergeImportedBrepPart(model, modelFromImportedBrepSolid(brepSolids[i]!, { prefix, objectId }));
 		}
 		scaleModelPositions(model, lengthScale);
 		const space = new ModelSpace();
 		space.link(modelId, model);
+		await this.syncSolidsFromModel(model);
+		return space;
+	}
+
+	/** @emoji 🏗️ Imports AP242 BREP STEP with presentation layers into a building `ModelSpace`. */
+	async importStepBimToModelSpace(
+		stepText: string,
+		options?: { readonly prefix?: string; readonly lengthScale?: number; readonly modelDefinitionId?: string },
+	): Promise<ModelSpace> {
+		await this.ensureInit();
+		const blob = new Blob([stepText], { type: "application/step" });
+		const imported = await importSTEP(blob);
+		if (!isOk(imported)) throw new Error(`STEP BIM import failed: ${String(imported.error)}`);
+		const basePrefix = options?.prefix ?? "step-bim-import";
+		const lengthScale = options?.lengthScale ?? STEP_BREP_IMPORT_MM_TO_M;
+		const modelDefinitionId = options?.modelDefinitionId ?? BUILDING_BIM_MODEL_DEFINITION_ID;
+		const brepSolids = validSolidsFromImportedShape(imported.value as Shape3D);
+		if (brepSolids.length === 0) throw new Error("STEP BIM import yielded no valid solids");
+		const { solidOrder, layerBySolidEntity } = stepPresentationLayers(stepText);
+		const model = new Model();
+		for (let i = 0; i < brepSolids.length; i++) {
+			const solidEntityId = solidOrder[i];
+			const layerName = solidEntityId !== undefined ? layerBySolidEntity.get(solidEntityId) : undefined;
+			const typology = layerName ? typologyFromStepLayer(layerName) : ("building.building.slab" as TypologyRef);
+			const suffix = brepSolids.length === 1 ? "" : `-${i + 1}`;
+			const prefix = `${basePrefix}${suffix}`;
+			const objectId = `object-${prefix}`;
+			mergeImportedBrepPart(
+				model,
+				modelFromImportedBrepSolid(brepSolids[i]!, { prefix, objectId, typology }),
+			);
+		}
+		scaleModelPositions(model, lengthScale);
+		const space = new ModelSpace();
+		space.link(modelDefinitionId, model);
 		await this.syncSolidsFromModel(model);
 		return space;
 	}
@@ -3188,6 +3368,14 @@ export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKer
 	): Promise<ModelSpace> {
 		return this.wasm.rpc("importStepBrepToModelSpace", [stepText, options]);
 	}
+
+	/** @emoji 🏗️ Imports AP242 BREP STEP with presentation layers into a building `ModelSpace`. */
+	async importStepBimToModelSpace(
+		stepText: string,
+		options?: { readonly prefix?: string; readonly lengthScale?: number; readonly modelDefinitionId?: string },
+	): Promise<ModelSpace> {
+		return this.wasm.rpc("importStepBimToModelSpace", [stepText, options]);
+	}
 }
 
 /** @emoji 🪜 Exports `space` via a fresh `BrepjsKernel` (convenience). */
@@ -3215,6 +3403,15 @@ export async function importStepBrepToModelSpace(
 ): Promise<ModelSpace> {
 	const kernel = new BrepjsKernel();
 	return kernel.importStepBrepToModelSpace(stepText, options);
+}
+
+/** @emoji 🏗️ Imports presentation-layer BIM STEP text via a fresh `BrepjsKernel` (convenience). */
+export async function importStepBimToModelSpace(
+	stepText: string,
+	options?: { readonly prefix?: string; readonly lengthScale?: number; readonly modelDefinitionId?: string },
+): Promise<ModelSpace> {
+	const kernel = new BrepjsKernel();
+	return kernel.importStepBimToModelSpace(stepText, options);
 }
 // #endregion 🔌BrepjsKernel
 
@@ -3839,19 +4036,96 @@ if (import.meta.vitest) {
 			});
 		}
 
+		it("stepPresentationLayers reads BIM layer assignments from concrete forest left", async () => {
+			const { readFile } = await import("node:fs/promises");
+			const { resolve } = await import("node:path");
+			const stepPath = resolve(
+				import.meta.dirname,
+				"../../../../semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
+			);
+			const stepText = await readFile(stepPath, "utf8");
+			const { solidOrder, layerBySolidEntity } = stepPresentationLayers(stepText);
+			expect(solidOrder).toHaveLength(12);
+			expect(layerBySolidEntity.get(solidOrder[0]!)).toBe("Slab");
+			expect(layerBySolidEntity.get(solidOrder[1]!)).toBe("Beams");
+			expect(layerBySolidEntity.get(solidOrder[11]!)).toBe("Column");
+			expect(typologyFromStepLayer("Beams")).toBe("building.building.beam");
+			expect(typologyFromStepLayer("Column")).toBe("building.building.column");
+		});
+
+		it("imports BIM STEP with presentation-layer typologies for concrete forest left", async () => {
+			const { readFile } = await import("node:fs/promises");
+			const { resolve } = await import("node:path");
+			const stepPath = resolve(
+				import.meta.dirname,
+				"../../../../semio/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp",
+			);
+			const stepText = await readFile(stepPath, "utf8");
+			const space = await kernel.importStepBimToModelSpace(stepText, {
+				prefix: "hexagonal-cut-concrete-forest-left-bim",
+			});
+			const model = space.models[BUILDING_BIM_MODEL_DEFINITION_ID]!;
+			expect(Object.keys(geom(model).solids)).toHaveLength(12);
+			expect(Object.keys(model.objects)).toHaveLength(12);
+			const typologyCounts = new Map<string, number>();
+			for (const object of Object.values(model.objects)) {
+				typologyCounts.set(object.typology, (typologyCounts.get(object.typology) ?? 0) + 1);
+			}
+			expect(typologyCounts.get("building.building.slab")).toBe(1);
+			expect(typologyCounts.get("building.building.beam")).toBe(8);
+			expect(typologyCounts.get("building.building.column")).toBe(3);
+			const maxAbsVertex = Math.max(...Object.values(geom(model).vertices).flatMap((v) => v.position.map(Math.abs)));
+			expect(maxAbsVertex).toBeLessThan(100);
+			await kernel.syncSolidsFromModel(model);
+			for (const solidId of Object.keys(geom(model).solids) as SolidRef[]) {
+				expect(await kernel.volume(solidId)).toBeGreaterThan(0);
+			}
+		});
+
+		it("concrete forest left play fixture roundtrips shape and building models", async () => {
+			const { readFile } = await import("node:fs/promises");
+			const { resolve } = await import("node:path");
+			const fixturePath = resolve(import.meta.dirname, "../../../assets/play/hexagonal-cut-concrete-forest-left.model.json");
+			const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
+			const space = ModelSpace.fromJSON(fixtureJson);
+			const shape = space.models[defaultModelDefinitionId()]!;
+			const building = space.models[BUILDING_BIM_MODEL_DEFINITION_ID]!;
+			expect(Object.keys(shape.objects)).toHaveLength(1);
+			expect(Object.keys(building.objects)).toHaveLength(12);
+			expect(Object.keys(geom(shape).vertices).length).toBeGreaterThan(0);
+			expect(Object.keys(geom(building).vertices).length).toBeGreaterThan(0);
+		});
+
 		it("generates play fixtures from semio STEP sources", async () => {
 			if (process.env.CAD_GENERATE_STEP_FIXTURES !== "1") return;
 			const { readFile, writeFile } = await import("node:fs/promises");
 			const { resolve } = await import("node:path");
+			const fixtureRoot = resolve(import.meta.dirname, "../../../../semio/fixtures/kit/folder/abbau-aufbau");
+			const playRoot = resolve(import.meta.dirname, "../../../assets/play");
 			for (const fixture of semioStepFixtures) {
-				const stepPath = resolve(import.meta.dirname, "../../../../semio/fixtures/kit/folder/abbau-aufbau", fixture.file);
+				const stepPath = resolve(fixtureRoot, fixture.file);
 				const stepText = await readFile(stepPath, "utf8");
-				const space = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });
+				const shapeSpace = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });
+				if (fixture.name === "hexagonal-cut-concrete-forest-left") {
+					const bimPath = resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-bim.stp");
+					const bimText = await readFile(bimPath, "utf8");
+					const bimSpace = await kernel.importStepBimToModelSpace(bimText, {
+						prefix: "hexagonal-cut-concrete-forest-left-bim",
+					});
+					const combined = new ModelSpace();
+					const shapeModel = shapeSpace.models[defaultModelDefinitionId()]!;
+					combined.link(defaultModelDefinitionId(), shapeModel);
+					const buildingModel = bimSpace.models[BUILDING_BIM_MODEL_DEFINITION_ID]!;
+					combined.link(BUILDING_BIM_MODEL_DEFINITION_ID, buildingModel);
+					const outPath = resolve(playRoot, `${fixture.name}.model.json`);
+					await writeFile(outPath, `${JSON.stringify(combined.toJSON(), null, 2)}\n`, "utf8");
+					continue;
+				}
 				const modelId = defaultModelDefinitionId();
-				const model = space.models[modelId]!;
+				const model = shapeSpace.models[modelId]!;
 				const objectId = Object.keys(model.objects)[0]!;
 				const fixtureJson = inlineModelSpaceFixtureJson(model, modelId, objectId);
-				const outPath = resolve(import.meta.dirname, "../../../assets/play", `${fixture.name}.model.json`);
+				const outPath = resolve(playRoot, `${fixture.name}.model.json`);
 				await writeFile(outPath, `${JSON.stringify(fixtureJson, null, 2)}\n`, "utf8");
 			}
 		});

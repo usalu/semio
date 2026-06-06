@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "building.building.wall",
+  "version": "1.0.0",
+  "label": "Wall",
+  "description": "Vertical planar enclosure element.",
+  "primitiveKinds": [
+    "solid"
+  ],
+  "style": {
+    "color": "#C4785A",
+    "edgeColor": "#8B4F38",
+    "opacity": 0.74
+  }
+}

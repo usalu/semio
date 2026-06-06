@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "building.building.beam",
+  "version": "1.0.0",
+  "label": "Beam",
+  "description": "Horizontal spanning member.",
+  "primitiveKinds": [
+    "solid"
+  ],
+  "style": {
+    "color": "#5B7FA5",
+    "edgeColor": "#3D5670",
+    "opacity": 0.82
+  }
+}

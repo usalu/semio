@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "building.building.roof",
+  "version": "1.0.0",
+  "label": "Roof",
+  "description": "Top enclosure or covering element.",
+  "primitiveKinds": [
+    "solid"
+  ],
+  "style": {
+    "color": "#7A9E6E",
+    "edgeColor": "#4A6342",
+    "opacity": 0.7
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "spatial.typology/v1",
+  "id": "building.building.railing",
+  "version": "1.0.0",
+  "label": "Railing",
+  "description": "Guard or handrail element.",
+  "primitiveKinds": [
+    "solid"
+  ],
+  "style": {
+    "color": "#616161",
+    "edgeColor": "#424242",
+    "opacity": 0.75
+  }
+}
