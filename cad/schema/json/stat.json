@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spatial://schema/json/stat",
+  "title": "SpatialStatDefinition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "label", "outputs"],
+  "properties": {
+    "schema": { "const": "spatial.stat/v1" },
+    "id": { "type": "string" },
+    "version": { "type": "string" },
+    "label": { "type": "string" },
+    "description": { "type": "string" },
+    "scopes": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["model", "selection"] },
+      "minItems": 1
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "typologies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "label"],
+        "properties": {
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "unit": { "type": "string" },
+          "format": { "type": "string", "enum": ["integer", "decimal", "percent"] }
+        }
+      }
+    }
+  }
+}

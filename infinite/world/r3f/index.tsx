@@ -11,6 +11,7 @@ const Canvas = sceneHostPort.fiber.canvas;
 const useFrame = sceneHostPort.fiber.useFrame;
 const useThree = sceneHostPort.fiber.useThree;
 const OrbitControls = sceneHostPort.drei.OrbitControls;
+const OrthographicCamera = sceneHostPort.drei.OrthographicCamera;
 const PerspectiveCamera = sceneHostPort.drei.PerspectiveCamera;
 const {
   Box3,
@@ -25,6 +26,7 @@ const {
   Mesh,
   MOUSE,
   Object3D,
+  OrthographicCamera: ThreeOrthographicCamera,
   PerspectiveCamera: ThreePerspectiveCamera,
   Quaternion,
   Ray,
@@ -47,10 +49,15 @@ export interface LodGridLayer {
   readonly opacity: number;
 }
 
+/** @emoji 📐 Orbit view projection mode for display templates. */
+export type OrbitCameraProjection = "orthographic" | "perspective";
+
 export interface WorldCameraState {
   readonly position: Vec3;
   readonly target: Vec3;
   readonly zoom: number;
+  readonly up?: Vec3;
+  readonly projection?: OrbitCameraProjection;
 }
 
 export type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
@@ -1112,17 +1119,72 @@ export interface ComputeOrbitCameraViewOptions {
   readonly zoom?: number;
 }
 
+const ORBIT_CAMERA_Z_UP: Vec3 = [0, 0, 1];
+
+/** @emoji 📐 Maps a view id to orthographic vs perspective projection. */
+export function orbitCameraProjectionForView(view: OrbitCameraViewId): OrbitCameraProjection {
+  return view === "perspective" || view === "twoPointPerspective" ? "perspective" : "orthographic";
+}
+
+function orbitCameraZoomForProjection(projection: OrbitCameraProjection, zoom?: number): number {
+  if (projection === "orthographic") {
+    return zoom !== undefined && zoom !== 1 ? zoom : 50;
+  }
+  return zoom ?? 1;
+}
+
 /** @emoji 📷 Computes a Z-up orbit camera state for a named view around `target`. */
 export function computeOrbitCameraViewState(view: OrbitCameraViewId, options: ComputeOrbitCameraViewOptions): WorldCameraState {
-  const up = options.up ?? ([0, 0, 1] as Vec3);
   const distance = options.distance ?? 600;
-  const direction = stabilizeOrbitViewDirection(ORBIT_CAMERA_VIEW_DIRECTION[view], up);
   const target = options.target;
-  return {
-    position: [target[0] + direction[0] * distance, target[1] + direction[1] * distance, target[2] + direction[2] * distance],
-    target,
-    zoom: options.zoom ?? 1,
-  };
+  const projection = orbitCameraProjectionForView(view);
+  const zoom = orbitCameraZoomForProjection(projection, options.zoom);
+  switch (view) {
+    case "top":
+      return { position: [target[0], target[1], target[2] + distance], target, up: [0, 1, 0], zoom, projection };
+    case "bottom":
+      return { position: [target[0], target[1], target[2] - distance], target, up: [0, -1, 0], zoom, projection };
+    case "front":
+    case "south":
+      return { position: [target[0], target[1] - distance, target[2]], target, up: ORBIT_CAMERA_Z_UP, zoom, projection };
+    case "back":
+    case "north":
+      return { position: [target[0], target[1] + distance, target[2]], target, up: ORBIT_CAMERA_Z_UP, zoom, projection };
+    case "right":
+    case "east":
+      return { position: [target[0] + distance, target[1], target[2]], target, up: ORBIT_CAMERA_Z_UP, zoom, projection };
+    case "left":
+    case "west":
+      return { position: [target[0] - distance, target[1], target[2]], target, up: ORBIT_CAMERA_Z_UP, zoom, projection };
+    default: {
+      const direction = vec3Normalize(ORBIT_CAMERA_VIEW_DIRECTION[view]);
+      return {
+        position: [target[0] + direction[0] * distance, target[1] + direction[1] * distance, target[2] + direction[2] * distance],
+        target,
+        up: ORBIT_CAMERA_Z_UP,
+        zoom,
+        projection,
+      };
+    }
+  }
+}
+
+type OrbitControlsTarget = { readonly target: Vector3; update: () => void };
+
+function applyWorldCameraState(camera: Camera, state: WorldCameraState, controls: OrbitControlsTarget | null): void {
+  const position = cadVec3ToThree(state.position);
+  camera.position.set(position[0], position[1], position[2]);
+  const up = cadVec3ToThree(state.up ?? ORBIT_CAMERA_Z_UP);
+  camera.up.set(up[0], up[1], up[2]);
+  if (controls?.target) {
+    const target = cadVec3ToThree(state.target);
+    controls.target.set(target[0], target[1], target[2]);
+    controls.update();
+  }
+  if (camera instanceof ThreePerspectiveCamera || camera instanceof ThreeOrthographicCamera) {
+    camera.zoom = state.zoom;
+    camera.updateProjectionMatrix();
+  }
 }
 
 export interface OrbitCameraViewTemplateDescriptor {
@@ -1313,38 +1375,26 @@ export function createOrbitCameraViewLayoutDescriptors(): readonly OrbitCameraVi
 }
 
 /** @emoji 📷 Applies an orbit view preset when `seedKey` changes (owned-camera canvases). */
-export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraViewId; readonly seedKey: string | number }): null {
+export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraViewId; readonly seedKey: string | number }): ReactElement {
   const { camera } = useThree();
-  const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
-  const lastSeedKey = reactHostPort.useRef<string | number | null>(null);
-  reactHostPort.useLayoutEffect(() => {
-    if (!(camera instanceof ThreePerspectiveCamera) || lastSeedKey.current === props.seedKey) {
-      return;
-    }
-    lastSeedKey.current = props.seedKey;
-    const target = controls?.target ?? new Vector3(0, 0, 0);
+  const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
+  const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
+  const state = reactHostPort.useMemo(() => {
+    const target = controls?.target ?? targetScratch.set(0, 0, 0);
     const targetCad = threeVec3ToCad(target);
-    const distance = Math.hypot(camera.position.x - target.x, camera.position.y - target.y, camera.position.z - target.z) || 600;
-    const state = computeOrbitCameraViewState(props.view, { target: targetCad, distance });
-    const position = cadVec3ToThree(state.position);
-    camera.position.set(position[0], position[1], position[2]);
-    camera.updateProjectionMatrix();
-    if (controls?.target) {
-      const nextTarget = cadVec3ToThree(state.target);
-      controls.target.set(nextTarget[0], nextTarget[1], nextTarget[2]);
-      controls.update();
-    }
-  }, [camera, controls, props.seedKey, props.view]);
-  return null;
+    const distance = camera ? Math.hypot(camera.position.x - target.x, camera.position.y - target.y, camera.position.z - target.z) || 600 : 600;
+    return computeOrbitCameraViewState(props.view, { target: targetCad, distance });
+  }, [camera, controls, props.seedKey, props.view, targetScratch]);
+  return <WorldOrbitCameraViewRig state={state} seedKey={props.seedKey} />;
 }
 
 /** @emoji 📷 Seeds orbit camera + target when `seedKey` changes (fixture presets, display templates). */
 export function OrbitCameraViewSeed(props: {
-  readonly camera: ThreePerspectiveCamera | null;
+  readonly camera: Camera | null;
   readonly state: WorldCameraState;
   readonly seedKey: string | number;
 }): null {
-  const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
+  const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
   const lastSeedKey = reactHostPort.useRef<string | number | null>(null);
   reactHostPort.useLayoutEffect(() => {
     const camera = props.camera;
@@ -1352,15 +1402,53 @@ export function OrbitCameraViewSeed(props: {
       return;
     }
     lastSeedKey.current = props.seedKey;
-    const position = cadVec3ToThree(props.state.position);
-    camera.position.set(position[0], position[1], position[2]);
-    camera.updateProjectionMatrix();
-    if (controls?.target) {
-      const target = cadVec3ToThree(props.state.target);
-      controls.target.set(target[0], target[1], target[2]);
-      controls.update();
+    applyWorldCameraState(camera, props.state, controls);
+  }, [controls, props.camera, props.seedKey, props.state.position, props.state.target, props.state.up, props.state.zoom, props.state.projection]);
+  return null;
+}
+
+/** @emoji 📷 Mounts perspective/orthographic camera + seeds orbit state for display templates. */
+export function WorldOrbitCameraViewRig(props: {
+  readonly state: WorldCameraState;
+  readonly seedKey: string | number;
+  readonly onCamera?: (camera: Camera | null) => void;
+  readonly perspectiveFov?: number;
+}): ReactElement {
+  const projection = props.state.projection ?? "perspective";
+  const up = cadVec3ToThree(props.state.up ?? ORBIT_CAMERA_Z_UP);
+  const cameraKey = `${projection}:${props.seedKey}`;
+  return (
+    <>
+      {projection === "orthographic" ? (
+        <OrthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up as [number, number, number]} near={0.2} far={500_000} zoom={props.state.zoom} />
+      ) : (
+        <PerspectiveCamera
+          key={cameraKey}
+          ref={props.onCamera}
+          makeDefault
+          up={up as [number, number, number]}
+          near={0.2}
+          far={500_000}
+          fov={props.perspectiveFov ?? 50}
+          zoom={props.state.zoom}
+        />
+      )}
+      <WorldOrbitCameraViewRigSeed state={props.state} seedKey={props.seedKey} />
+    </>
+  );
+}
+
+function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; readonly seedKey: string | number }): null {
+  const { camera } = useThree();
+  const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
+  const lastSeedKey = reactHostPort.useRef<string | number | null>(null);
+  reactHostPort.useLayoutEffect(() => {
+    if (!camera || lastSeedKey.current === props.seedKey) {
+      return;
     }
-  }, [controls, props.camera, props.seedKey, props.state.position, props.state.target]);
+    lastSeedKey.current = props.seedKey;
+    applyWorldCameraState(camera, props.state, controls);
+  }, [camera, controls, props.seedKey, props.state]);
   return null;
 }
 // #endregion 📷OrbitCameraView
@@ -1567,17 +1655,17 @@ if (import.meta.vitest) {
   });
 
   describe("computeOrbitCameraViewState", () => {
-    it("places top view above the target on +Z with a stable offset", () => {
+    it("places top view directly above the target with orthographic projection", () => {
       const state = computeOrbitCameraViewState("top", { target: [0, 0, 40], distance: 800 });
-      expect(state.target).toEqual([0, 0, 40]);
-      expect(state.position[2]).toBeGreaterThan(state.target[2]);
-      expect(Math.abs(state.position[0] - state.target[0])).toBeGreaterThan(0);
+      expect(state).toMatchObject({ position: [0, 0, 840], target: [0, 0, 40], up: [0, 1, 0], projection: "orthographic", zoom: 50 });
     });
 
     it("maps north to +Y and perspective to an oblique direction", () => {
       const north = computeOrbitCameraViewState("north", { target: [0, 0, 0], distance: 100 });
-      expect(north.position[1]).toBeGreaterThan(0);
+      expect(north.position).toEqual([0, 100, 0]);
+      expect(north.projection).toBe("orthographic");
       const perspective = computeOrbitCameraViewState("perspective", { target: [0, 0, 0], distance: 100 });
+      expect(perspective.projection).toBe("perspective");
       expect(Math.hypot(...perspective.position)).toBeGreaterThan(90);
     });
   });

@@ -49,6 +49,7 @@ import {
   Grid,
   Line as DreiLine,
   OrbitControls,
+  OrthographicCamera,
   Outlines,
   PerspectiveCamera,
   Text as DreiText,
@@ -142,6 +143,7 @@ export interface SceneHostPort {
     readonly Clone: typeof Clone;
     readonly Line: typeof DreiLine;
     readonly OrbitControls: typeof OrbitControls;
+    readonly OrthographicCamera: typeof OrthographicCamera;
     readonly Outlines: typeof Outlines;
     readonly PerspectiveCamera: typeof PerspectiveCamera;
     readonly Text: typeof DreiText;
@@ -199,6 +201,7 @@ export let sceneHostPort: SceneHostPort = {
     Clone,
     Line: DreiLine,
     OrbitControls,
+    OrthographicCamera,
     Outlines,
     PerspectiveCamera,
     Text: DreiText,

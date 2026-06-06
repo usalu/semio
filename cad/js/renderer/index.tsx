@@ -6,7 +6,7 @@
 
 // #region 🔌Adapters
 import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, type EngagementControl, type EngagementSpec, type GumballConfig, type ThreeEvent } from "@ui/react";
-import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
 // #region 🔌PortWiring
@@ -64,6 +64,11 @@ import {
   attributeDefinitionValueOptions,
   derivePropertyValue,
   listApplicablePropertyDefinitionsForModelDefinition,
+  computeStat,
+  formatStatOutputValue,
+  listStatDefinitionsForModelDefinition,
+  objectsForStatCompute,
+  statDefinitionAppliesToScope,
   listTypologiesForModelDefinition,
   typologyObjectPascalFromLabel,
   objectPrimitiveEntries,
@@ -5226,6 +5231,8 @@ export function InteractionRepl({
                   {modelDefinitionScope.attributeDefinitions.length} attribute{modelDefinitionScope.attributeDefinitions.length === 1 ? "" : "s"}
                   {" · "}
                   {modelDefinitionScope.propertyDefinitions.length} propert{modelDefinitionScope.propertyDefinitions.length === 1 ? "y" : "ies"}
+                  {" · "}
+                  {modelDefinitionScope.statDefinitions.length} stat{modelDefinitionScope.statDefinitions.length === 1 ? "" : "s"}
                 </span>
                 {transfersFrom.length ? (
                   <label className="flex flex-col gap-half">
@@ -5574,6 +5581,94 @@ export interface SelectionPropertiesPanelProps {
 }
 
 /** @emoji 📐 Displays derived property values for the primary object selection using scoped property definitions. */
+export interface ModelStatsPanelProps {
+  readonly model: Model;
+  readonly kernel: SpatialKernel;
+  readonly activeModelDefinitionId: string;
+  readonly selection: readonly SelectionTarget[];
+  readonly selectionCount?: number;
+}
+
+/** @emoji 📊 Displays live model-definition stats for whole-model and selection scopes. */
+export function ModelStatsPanel({ model, kernel, activeModelDefinitionId, selection, selectionCount }: ModelStatsPanelProps): ReactNode {
+  const definitions = reactHostPort.useMemo(() => listStatDefinitionsForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
+  const selectionObjects = reactHostPort.useMemo(() => {
+    const objectTargets = selection.filter((row) => row.kind === "object");
+    return objectTargets.map((row) => model.objects[row.id]).filter((row): row is SpatialObjectRecord => row !== undefined);
+  }, [model, selection]);
+  const [values, setValues] = reactHostPort.useState<Readonly<Record<string, Readonly<Record<string, Record<string, number>>>>>>({});
+  reactHostPort.useEffect(() => {
+    if (!definitions.length) {
+      setValues({});
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const next: Record<string, Record<string, Record<string, number>>> = {};
+      for (const defn of definitions) {
+        const scoped: Record<string, Record<string, number>> = {};
+        for (const scope of ["model", "selection"] as const) {
+          if (!statDefinitionAppliesToScope(defn, scope)) continue;
+          if (scope === "selection" && selectionObjects.length === 0) continue;
+          const objects = objectsForStatCompute(model, activeModelDefinitionId, defn, scope, selectionObjects);
+          scoped[scope] = await computeStat(defn, { model, kernel, modelDefinitionId: activeModelDefinitionId, scope, objects });
+        }
+        next[defn.id] = scoped;
+      }
+      if (!cancelled) setValues(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeModelDefinitionId, definitions, kernel, model, selectionObjects]);
+  if (!definitions.length) return null;
+  const count = selectionCount ?? selection.length;
+  return (
+    <div className="flex flex-col gap-single text-xs">
+      <span className="text-foreground text-sm font-semibold">Stats</span>
+      {definitions.map((defn) => (
+        <div key={defn.id} className="flex flex-col gap-half">
+          <span className="font-medium">{defn.label}</span>
+          {statDefinitionAppliesToScope(defn, "model") ? (
+            <div className="flex flex-col gap-half">
+              <span className="text-muted-foreground text-2xs">Model</span>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-single gap-y-half">
+                {defn.outputs.map((output) => (
+                  <Fragment key={`${defn.id}:model:${output.key}`}>
+                    <span>{output.label}</span>
+                    <span className="text-foreground text-right tabular-nums">
+                      {formatStatOutputValue(values[defn.id]?.model?.[output.key] ?? 0, output.format)}
+                      {output.unit ? ` ${output.unit}` : ""}
+                    </span>
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {statDefinitionAppliesToScope(defn, "selection") && selectionObjects.length > 0 ? (
+            <div className="flex flex-col gap-half">
+              <span className="text-muted-foreground text-2xs">
+                Selection{count > 1 ? ` · ${count} selected` : ""}
+              </span>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-single gap-y-half">
+                {defn.outputs.map((output) => (
+                  <Fragment key={`${defn.id}:selection:${output.key}`}>
+                    <span>{output.label}</span>
+                    <span className="text-foreground text-right tabular-nums">
+                      {formatStatOutputValue(values[defn.id]?.selection?.[output.key] ?? 0, output.format)}
+                      {output.unit ? ` ${output.unit}` : ""}
+                    </span>
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SelectionPropertiesPanel({ model, kernel, activeModelDefinitionId, selection, selectionCount }: SelectionPropertiesPanelProps): ReactNode {
   const objectRow = reactHostPort.useMemo(() => {
     const objectTarget = selection.find((row) => row.kind === "object");
@@ -6272,6 +6367,16 @@ if (import.meta.vitest) {
 
     it("defaultInteractionSpatialViewTheme hides the factory ground plane tint", () => {
       expect(defaultInteractionSpatialViewTheme.groundPlaneOpacity).toBe(0);
+    });
+  });
+
+  describe("ModelStatsPanel", () => {
+    it("resolves shape stat labels for the active model definition", () => {
+      const definitions = listStatDefinitionsForModelDefinition(defaultModelDefinitionId());
+      const geometry = definitions.find((row) => row.id === "spatial.shape.geometry");
+      expect(geometry?.label).toBe("Geometry KPIs");
+      expect(geometry?.outputs.map((row) => row.label)).toContain("Total volume");
+      expect(statDefinitionAppliesToScope(geometry!, "model")).toBe(true);
     });
   });
 }

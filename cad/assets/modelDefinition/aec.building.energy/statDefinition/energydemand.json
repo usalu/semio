@@ -1,0 +1,46 @@
+{
+	"schema": "spatial.stat/v1",
+	"id": "energy.demand",
+	"version": "1.0.0",
+	"label": "Energy Demand",
+	"description": "Live heating demand estimate from envelope and heated volume.",
+	"scopes": [
+		"model",
+		"selection"
+	],
+	"sources": {
+		"typologies": [
+			"energy.energy.hull",
+			"energy.energy.baseplate",
+			"energy.energy.roof",
+			"energy.energy.externalwall",
+			"energy.energy.windows"
+		]
+	},
+	"outputs": [
+		{
+			"key": "heatedVolume",
+			"label": "Heated volume",
+			"unit": "m³",
+			"format": "decimal"
+		},
+		{
+			"key": "envelopeArea",
+			"label": "Envelope area",
+			"unit": "m²",
+			"format": "decimal"
+		},
+		{
+			"key": "annualHeatingDemand",
+			"label": "Annual heating demand",
+			"unit": "kWh/a",
+			"format": "decimal"
+		},
+		{
+			"key": "specificDemand",
+			"label": "Specific demand",
+			"unit": "kWh/m³a",
+			"format": "decimal"
+		}
+	]
+}

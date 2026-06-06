@@ -50,7 +50,7 @@ import {
   WorldLayer,
   WorldLayerStack,
   WorldLodBridge,
-  OrbitCameraViewSeed,
+  WorldOrbitCameraViewRig,
   WORLD_LOD_EPSILON,
   WORLD_LOD_GRID_MAX_LOD,
   WORLD_LOD_GRID_MEDIUM_MAX_LOD,
@@ -73,7 +73,11 @@ export {
   createOrbitCameraViewLayoutDescriptors,
   createOrbitCameraViewTemplates,
   orbitCameraDistance,
+  orbitCameraProjectionForView,
+  WorldOrbitCameraViewRig,
+  type OrbitCameraProjection,
   type OrbitCameraViewId,
+  type WorldCameraState,
 } from "@infinite/world/r3f";
 // #endregion 🔌Adapters
 
@@ -196,6 +200,8 @@ export interface CameraState {
   position: Vec3;
   target: Vec3;
   zoom: number;
+  up?: Vec3;
+  projection?: import("@infinite/world/r3f").OrbitCameraProjection;
 }
 
 /** @emoji 📶 Scene LOD as scale denominator/numerator (e.g. 50000 = 1:50000, 0.5 = 2:1); higher = coarser. */
@@ -1217,7 +1223,11 @@ export function cameraStateNearEqual(a: CameraState, b: CameraState, epsilon = 1
   for (let i = 0; i < 3; i += 1) {
     if (Math.abs(a.position[i]! - b.position[i]!) > epsilon) return false;
     if (Math.abs(a.target[i]! - b.target[i]!) > epsilon) return false;
+    const aUp = a.up ?? [0, 0, 1];
+    const bUp = b.up ?? [0, 0, 1];
+    if (Math.abs(aUp[i]! - bUp[i]!) > epsilon) return false;
   }
+  if ((a.projection ?? "perspective") !== (b.projection ?? "perspective")) return false;
   return Math.abs(a.zoom - b.zoom) <= epsilon;
 }
 
@@ -3897,12 +3907,23 @@ function brushCompatibleCandidatesForFillTarget(
   return result;
 }
 
-/** @emoji 🪣 Fill prefers cross-port mates (e.g. b-s → b-l) and rotates source indices fairly. */
+function fillCandidateDiversityScore(
+  candidate: BrushCompatibleCandidate,
+  targetVortexIndex: number,
+  targetObjectKind: string | undefined,
+): number {
+  if (candidate.objectKindId !== targetObjectKind) {
+    return 0;
+  }
+  return 1_000 + Math.abs(candidate.sourceVortexIndex - targetVortexIndex) * 100;
+}
+
+/** @emoji 🪣 Fill prefers cross-port mates (e.g. b-s → b-l) and distant connector indices on the same kind. */
 function orderBrushFillCompatibleCandidates(
   candidates: readonly BrushCompatibleCandidate[],
   targetVortexKind: string | undefined,
   targetVortexIndex: number,
-  fillStep: number,
+  targetObjectKind: string | undefined,
   kindCatalogs: KindCatalogBundle | undefined,
   weights: Puzzle3dBrushKindWeights,
   rng: BrushShuffleRng,
@@ -3924,15 +3945,17 @@ function orderBrushFillCompatibleCandidates(
         left.objectKindId.localeCompare(right.objectKindId) ||
         left.sourceVortexIndex - right.sourceVortexIndex,
     );
-  const ordered = [
-    ...weightedOrderBrushCompatibleCandidates(sortFillCandidates(cross), weights, kindCatalogs, rng),
+  const crossOrdered = sortFillCandidates(cross).sort(
+    (left, right) =>
+      fillCandidateDiversityScore(right, targetVortexIndex, targetObjectKind) -
+        fillCandidateDiversityScore(left, targetVortexIndex, targetObjectKind) ||
+      left.objectKindId.localeCompare(right.objectKindId) ||
+      left.sourceVortexIndex - right.sourceVortexIndex,
+  );
+  return [
+    ...crossOrdered,
     ...weightedOrderBrushCompatibleCandidates(sortFillCandidates(same), weights, kindCatalogs, rng),
   ];
-  if (ordered.length < 2) {
-    return ordered;
-  }
-  const start = (fillStep + targetVortexIndex) % ordered.length;
-  return [...ordered.slice(start), ...ordered.slice(0, start)];
 }
 
 /** @emoji 🪣 Args shared by {@link buildBrushFillSequence} and {@link createBrushFillSequenceStepper}. */
@@ -3983,12 +4006,18 @@ export function createBrushFillSequenceStepper(args: BrushFillSequenceArgs): Bru
     return state / 0x100000000;
   };
   let stalled = false;
+  const seedObjectIds = new Set(args.baseFixture.objects.map((row) => row.id));
   const tryPlaceOne = (): boolean => {
     const freeTargets = enumerateBrushFillVortexTargets(fixture);
     if (freeTargets.length === 0) {
       return false;
     }
-    const orderedTargets = weightedOrderFillVortexTargets(freeTargets, weights, rng);
+    const seedTargets = freeTargets.filter((row) => seedObjectIds.has(row.objectId));
+    const frontierTargets = freeTargets.filter((row) => !seedObjectIds.has(row.objectId));
+    const orderedTargets = [
+      ...weightedOrderFillVortexTargets(seedTargets, weights, rng),
+      ...weightedOrderFillVortexTargets(frontierTargets, weights, rng),
+    ];
     const targetStart = sequence.length % Math.max(1, orderedTargets.length);
     for (let targetOffset = 0; targetOffset < orderedTargets.length; targetOffset += 1) {
       const target = orderedTargets[(targetStart + targetOffset) % orderedTargets.length]!;
@@ -4013,7 +4042,7 @@ export function createBrushFillSequenceStepper(args: BrushFillSequenceArgs): Bru
         compatible,
         target.vortexKind,
         target.vortexIndex,
-        sequence.length,
+        target.objectKind,
         args.kindCatalogs,
         weights,
         rng,
@@ -6767,7 +6796,7 @@ type OrbitControlsBinding = {
   readonly update?: () => void;
 };
 
-function OrbitGated(props: { readonly camera: ThreePerspectiveCamera | null; readonly zoom: number; readonly onCamera?: (state: CameraState) => void }) {
+function OrbitGated(props: { readonly camera: Camera | null; readonly zoom: number; readonly onCamera?: (state: CameraState) => void }) {
   const reg = useRegistry();
   const { camera, gl } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsBinding | null);
@@ -9191,7 +9220,7 @@ function Inner(props: CanvasProps & {
     };
   }, [brushActive]);
   const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
-  const [puzzle3dCamera, setCamera] = reactHostPort.useState<ThreePerspectiveCamera | null>(null);
+  const [puzzle3dCamera, setCamera] = reactHostPort.useState<Camera | null>(null);
   const domain = props.domain ?? DEFAULT_DOMAIN;
   const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
   const gridFactor = props.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
@@ -9204,6 +9233,12 @@ function Inner(props: CanvasProps & {
   const pos = (camProp?.position ?? [420, -420, 320]) as [number, number, number];
   const tgt = (camProp?.target ?? [0, 0, 40]) as Vec3;
   const zoom = camProp?.zoom ?? 1;
+  const up = (camProp?.up ?? [0, 0, 1]) as Vec3;
+  const projection = camProp?.projection ?? "perspective";
+  const cameraRigState = reactHostPort.useMemo(
+    () => ({ position: pos, target: tgt, zoom, up, projection }),
+    [pos, tgt, zoom, up, projection],
+  );
   const autoFitCamera = props.autoFitCamera !== false;
   const autoFitBehavior = props.autoFitBehavior ?? "initial";
   const blockedFallback = props.blockedVortexFullIds ?? EMPTY_BLOCKED_VORTICES;
@@ -9248,11 +9283,11 @@ function Inner(props: CanvasProps & {
         manualLod={manualLod}
         onLodChange={(lod) => canvasHostRef.current.onLodChange?.(lod)}
       >
-        <PerspectiveCamera ref={setCamera} makeDefault up={[0, 0, 1]} near={0.2} far={500_000} fov={50} />
-        <OrbitCameraViewSeed
-          camera={puzzle3dCamera}
-          seedKey={props.cameraSeedKey ?? `${pos.join(",")}|${tgt.join(",")}`}
-          state={{ position: pos, target: tgt, zoom }}
+        <WorldOrbitCameraViewRig
+          state={cameraRigState}
+          seedKey={props.cameraSeedKey ?? `${pos.join(",")}|${tgt.join(",")}|${projection}|${up.join(",")}`}
+          onCamera={setCamera}
+          perspectiveFov={50}
         />
         <OrbitGated camera={puzzle3dCamera} onCamera={(camera) => canvasHostRef.current.onCamera?.(camera)} zoom={zoom} />
         {autoFitCamera ? <AutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}

@@ -1,0 +1,43 @@
+{
+	"schema": "spatial.stat/v1",
+	"id": "structure.stability",
+	"version": "1.0.0",
+	"label": "Structural Stability",
+	"description": "Live structural stability indicators from structural elements.",
+	"scopes": [
+		"model",
+		"selection"
+	],
+	"sources": {
+		"typologies": [
+			"structure.structure.reinforcedconcretecolumn",
+			"structure.structure.reinforcedconcreteexternalwall",
+			"structure.structure.reinforcedconcreteinternalwall",
+			"structure.structure.onewayreinforcedconcreteslab"
+		]
+	},
+	"outputs": [
+		{
+			"key": "elementCount",
+			"label": "Elements",
+			"format": "integer"
+		},
+		{
+			"key": "structuralVolume",
+			"label": "Structural volume",
+			"unit": "m³",
+			"format": "decimal"
+		},
+		{
+			"key": "estimatedMass",
+			"label": "Estimated mass",
+			"unit": "t",
+			"format": "decimal"
+		},
+		{
+			"key": "stabilityIndex",
+			"label": "Stability index",
+			"format": "percent"
+		}
+	]
+}

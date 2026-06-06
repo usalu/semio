@@ -887,6 +887,7 @@ import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {
   InteractionRepl,
   SelectionAttributesPanel,
+  ModelStatsPanel,
   SelectionPropertiesPanel,
   replDisplayedSelectionTargets,
   replWithRendererSelectionTargets,
@@ -2093,13 +2094,17 @@ function CadPlayLoadInput(): ReactNode {
 /** @emoji 🎯 Details panel: attribute and property editors for the current selection only. */
 function CadPlayDetailsAside(): ReactNode {
   const { activeModelDefinitionId, liveModel, selectionInScope, handleModelAttributesChange, brepjsKernel } = useCadPlayModelSpace();
-  if (selectionInScope.length === 0) {
-    return <p className="text-muted-foreground leading-snug">Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties.</p>;
-  }
   return (
     <>
-      <SelectionAttributesPanel model={liveModel} activeModelDefinitionId={activeModelDefinitionId} selection={selectionInScope} selectionCount={selectionInScope.length} onModelChange={handleModelAttributesChange} />
-      <SelectionPropertiesPanel model={liveModel} kernel={brepjsKernel} activeModelDefinitionId={activeModelDefinitionId} selection={selectionInScope} selectionCount={selectionInScope.length} />
+      <ModelStatsPanel model={liveModel} kernel={brepjsKernel} activeModelDefinitionId={activeModelDefinitionId} selection={selectionInScope} selectionCount={selectionInScope.length} />
+      {selectionInScope.length === 0 ? (
+        <p className="text-muted-foreground leading-snug">Select a primitive or object in the canvas or workbench hierarchy to edit attributes and properties.</p>
+      ) : (
+        <>
+          <SelectionAttributesPanel model={liveModel} activeModelDefinitionId={activeModelDefinitionId} selection={selectionInScope} selectionCount={selectionInScope.length} onModelChange={handleModelAttributesChange} />
+          <SelectionPropertiesPanel model={liveModel} kernel={brepjsKernel} activeModelDefinitionId={activeModelDefinitionId} selection={selectionInScope} selectionCount={selectionInScope.length} />
+        </>
+      )}
     </>
   );
 }

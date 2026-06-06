@@ -13,6 +13,7 @@ export interface ModelDefinitionAssetModules {
   readonly attributes: Readonly<Record<string, unknown>>;
   readonly propertyDefinitions: Readonly<Record<string, unknown>>;
   readonly properties: Readonly<Record<string, unknown>>;
+  readonly statDefinitions: Readonly<Record<string, unknown>>;
   readonly transformations: Readonly<Record<string, unknown>>;
 }
 
@@ -25,6 +26,7 @@ const emptyModelDefinitionAssetModules = (): ModelDefinitionAssetModules => ({
   attributes: {},
   propertyDefinitions: {},
   properties: {},
+  statDefinitions: {},
   transformations: {},
 });
 
@@ -36,6 +38,7 @@ let actionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
 let interactionOwnerByIdCache: ReadonlyMap<string, string> | null = null;
 let attributeOwnerByIdCache: ReadonlyMap<string, string> | null = null;
 let propertyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
+let statOwnerByIdCache: ReadonlyMap<string, string> | null = null;
 let defaultModelDefinitionIdCache: string | null = null;
 
 function resetModelDefinitionCaches(): void {
@@ -45,6 +48,7 @@ function resetModelDefinitionCaches(): void {
   interactionOwnerByIdCache = null;
   attributeOwnerByIdCache = null;
   propertyOwnerByIdCache = null;
+  statOwnerByIdCache = null;
   defaultModelDefinitionIdCache = null;
 }
 
@@ -76,6 +80,10 @@ function modelDefinitionAttributeCatalog(): readonly unknown[] {
 
 function modelDefinitionPropertyCatalog(): readonly unknown[] {
   return [...Object.values(modelDefinitionAssetModules.propertyDefinitions), ...Object.values(modelDefinitionAssetModules.properties)];
+}
+
+function modelDefinitionStatCatalog(): readonly unknown[] {
+  return Object.values(modelDefinitionAssetModules.statDefinitions);
 }
 
 function modelDefinitionTransformationModules(): Readonly<Record<string, unknown>> {
@@ -119,6 +127,11 @@ const __modelDefinitionPropertyModules = import.meta.glob("../../assets/modelDef
   import: "default",
 }) as Record<string, unknown>;
 
+const __modelDefinitionStatDefinitionModules = import.meta.glob("../../assets/modelDefinition/**/statDefinition/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
 const __modelDefinitionTransformationModules = import.meta.glob("../../assets/modelDefinition/**/transformation/**/*.json", {
   eager: true,
   import: "default",
@@ -138,6 +151,7 @@ registerModelDefinitionAssets({
   attributes: __modelDefinitionAttributeModules,
   propertyDefinitions: __modelDefinitionPropertyDefinitionModules,
   properties: __modelDefinitionPropertyModules,
+  statDefinitions: __modelDefinitionStatDefinitionModules,
   transformations: __modelDefinitionTransformationModules,
 });
 // #endregion 📥ModelDefinitionAssets
@@ -2319,6 +2333,348 @@ export function listApplicablePropertyDefinitionsForModelDefinition(
   return shippedPropertyDefinitionCatalog().filter((defn) => scoped.has(defn.id) && propertyDefinitionAppliesToObject(defn, object));
 }
 
+// #region 📊StatDefinitions
+/** @emoji 📊 Live stat output descriptor shipped with a model definition. */
+export interface StatOutputSpec {
+  readonly key: string;
+  readonly label: string;
+  readonly unit?: string;
+  readonly format?: "integer" | "decimal" | "percent";
+}
+
+/** @emoji 📊 Model-definition live stat declaration (`spatial.stat/v1`). */
+export interface StatDefinitionSpec {
+  readonly schema: "spatial.stat/v1";
+  readonly id: string;
+  readonly version: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly scopes: readonly ("model" | "selection")[];
+  readonly sources?: Readonly<{ readonly typologies?: readonly string[] }>;
+  readonly outputs: readonly StatOutputSpec[];
+}
+
+/** @emoji 🧾 Parses `spatial.stat/v1` JSON or returns `null`. */
+export function parseStatDefinitionSpec(raw: unknown): StatDefinitionSpec | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (r.schema !== "spatial.stat/v1") return null;
+  if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
+  if (!Array.isArray(r.outputs) || r.outputs.length === 0) return null;
+  const outputs: StatOutputSpec[] = [];
+  for (const row of r.outputs) {
+    if (!row || typeof row !== "object") return null;
+    const o = row as Record<string, unknown>;
+    if (typeof o.key !== "string" || typeof o.label !== "string") return null;
+    outputs.push({
+      key: o.key,
+      label: o.label,
+      unit: typeof o.unit === "string" ? o.unit : undefined,
+      format: o.format === "integer" || o.format === "decimal" || o.format === "percent" ? o.format : undefined,
+    });
+  }
+  const scopesRaw = r.scopes;
+  const scopes: ("model" | "selection")[] =
+    Array.isArray(scopesRaw) && scopesRaw.length > 0
+      ? scopesRaw.filter((scope): scope is "model" | "selection" => scope === "model" || scope === "selection")
+      : ["model", "selection"];
+  if (scopes.length === 0) return null;
+  const sourcesRaw = r.sources;
+  const sources =
+    sourcesRaw && typeof sourcesRaw === "object"
+      ? {
+          typologies: Array.isArray((sourcesRaw as { typologies?: unknown }).typologies)
+            ? (sourcesRaw as { typologies: string[] }).typologies.filter((id): id is string => typeof id === "string")
+            : undefined,
+        }
+      : undefined;
+  return {
+    schema: "spatial.stat/v1",
+    id: r.id,
+    version: r.version,
+    label: r.label,
+    description: typeof r.description === "string" ? r.description : undefined,
+    scopes,
+    sources: sources?.typologies?.length ? sources : undefined,
+    outputs,
+  };
+}
+
+function shippedStatDefinitionCatalog(): readonly StatDefinitionSpec[] {
+  return dedupeDefinitionCatalog(
+    modelDefinitionStatCatalog()
+      .map((raw) => parseStatDefinitionSpec(raw))
+      .filter((spec): spec is StatDefinitionSpec => spec !== null),
+  );
+}
+
+/** @emoji 📚 Lists stat definitions from model-definition assets. */
+export function listModelDefinitionStatDefinitions(): readonly StatDefinitionSpec[] {
+  return shippedStatDefinitionCatalog();
+}
+
+/** @emoji 📚 Loads a stat definition by stable `id`. */
+export function loadStatDefinition(statId: string): StatDefinitionSpec | null {
+  return shippedStatDefinitionCatalog().find((row) => row.id === statId) ?? null;
+}
+
+function statOwnerById(): ReadonlyMap<string, string> {
+  if (statOwnerByIdCache) return statOwnerByIdCache;
+  const map = new Map<string, string>();
+  for (const [path, raw] of Object.entries(modelDefinitionAssetModules.statDefinitions)) {
+    const owner = modelDefinitionIdFromAssetPath(path);
+    const spec = parseStatDefinitionSpec(raw);
+    if (!owner || !spec) continue;
+    map.set(spec.id, owner);
+  }
+  statOwnerByIdCache = map;
+  return map;
+}
+
+/** @emoji 🧭 Stat definitions owned by a model definition. */
+export function listStatDefinitionsForModelDefinition(modelDefinitionId: string): readonly StatDefinitionSpec[] {
+  return shippedStatDefinitionCatalog().filter((row) => statOwnerById().get(row.id) === modelDefinitionId);
+}
+
+/** @emoji ✅ Whether a stat definition supports one compute scope. */
+export function statDefinitionAppliesToScope(defn: StatDefinitionSpec, scope: "model" | "selection"): boolean {
+  return defn.scopes.includes(scope);
+}
+
+/** @emoji 🧾 Formats one stat output value for display. */
+export function formatStatOutputValue(value: number, format?: StatOutputSpec["format"]): string {
+  if (!Number.isFinite(value)) return "—";
+  if (format === "integer") return String(Math.round(value));
+  if (format === "percent") return `${(value * 100).toFixed(1)}%`;
+  if (format === "decimal") return value.toLocaleString(undefined, { maximumFractionDigits: 3 });
+  return String(value);
+}
+
+/** @emoji ✅ Whether `object` is included in stat sources for one definition. */
+export function statDefinitionAppliesToObject(defn: StatDefinitionSpec, object: SpatialObjectRecord): boolean {
+  const typologies = defn.sources?.typologies;
+  if (Array.isArray(typologies) && typologies.length > 0) return typologies.includes(object.typology);
+  return true;
+}
+
+/** @emoji 📊 Context passed to registered stat computers. */
+export interface StatComputeContext {
+  readonly model: Model;
+  readonly kernel: SpatialKernel;
+  readonly modelDefinitionId: string;
+  readonly scope: "model" | "selection";
+  readonly objects: readonly SpatialObjectRecord[];
+}
+
+/** @emoji 📊 Registered stat computer for one stat definition id. */
+export type StatComputer = (ctx: StatComputeContext) => Promise<Record<string, number>>;
+
+const statComputers = new Map<string, StatComputer>();
+
+/** @emoji 📊 Registers a TypeScript computer for one stat definition id. */
+export function registerStatComputer(statId: string, computer: StatComputer): void {
+  statComputers.set(statId, computer);
+}
+
+function zeroStatOutputs(defn: StatDefinitionSpec): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const row of defn.outputs) out[row.key] = 0;
+  return out;
+}
+
+function collectSolidRefsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): string[] {
+  const ids = new Set<string>();
+  for (const object of objects) {
+    for (const primitiveRef of objectPrimitiveRefs(object)) {
+      if (resolvePrimitiveRefKind(model, primitiveRef) === "solid") ids.add(primitiveRef);
+    }
+  }
+  return [...ids];
+}
+
+function collectFaceRefsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): string[] {
+  const ids = new Set<string>();
+  for (const object of objects) {
+    for (const primitiveRef of objectPrimitiveRefs(object)) {
+      const kind = resolvePrimitiveRefKind(model, primitiveRef);
+      if (kind === "face") {
+        ids.add(primitiveRef);
+        continue;
+      }
+      if (kind === "solid") {
+        const solid = model.solids[primitiveRef];
+        if (!solid) continue;
+        for (const shellId of solid.shellIds) {
+          const shell = model.shells[shellId];
+          if (!shell) continue;
+          for (const faceId of shell.faceIds) ids.add(faceId);
+        }
+      }
+    }
+  }
+  return [...ids];
+}
+
+function collectVertexPositionsForObjects(model: Model, objects: readonly SpatialObjectRecord[]): Vec3[] {
+  const positions: Vec3[] = [];
+  const seen = new Set<string>();
+  const visitPrimitive = (primitiveRef: string): void => {
+    if (seen.has(primitiveRef)) return;
+    seen.add(primitiveRef);
+    const kind = resolvePrimitiveRefKind(model, primitiveRef);
+    if (kind === "vertex") {
+      const vertex = model.vertices[primitiveRef];
+      if (vertex) positions.push(vertex.position);
+      return;
+    }
+    if (kind === "anchor") {
+      const anchor = model.anchors[primitiveRef];
+      if (anchor) positions.push(anchor.position);
+      return;
+    }
+    const tree = buildModelPrimitiveHierarchy(model, primitiveRef);
+    if (!tree) return;
+    const walk = (node: ModelPrimitiveHierarchyNode): void => {
+      if (node.kind === "vertex") {
+        const vertex = model.vertices[node.id];
+        if (vertex) positions.push(vertex.position);
+        return;
+      }
+      if (node.kind === "anchor") {
+        const anchor = model.anchors[node.id];
+        if (anchor) positions.push(anchor.position);
+        return;
+      }
+      for (const child of node.children) walk(child);
+    };
+    walk(tree);
+  };
+  for (const object of objects) {
+    for (const primitiveRef of objectPrimitiveRefs(object)) visitPrimitive(primitiveRef);
+  }
+  return positions;
+}
+
+function bboxSizesFromPositions(positions: readonly Vec3[]): { readonly sizeX: number; readonly sizeY: number; readonly sizeZ: number } {
+  if (positions.length === 0) return { sizeX: 0, sizeY: 0, sizeZ: 0 };
+  let minX = positions[0]![0];
+  let minY = positions[0]![1];
+  let minZ = positions[0]![2];
+  let maxX = minX;
+  let maxY = minY;
+  let maxZ = minZ;
+  for (const [x, y, z] of positions) {
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    minZ = Math.min(minZ, z);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+    maxZ = Math.max(maxZ, z);
+  }
+  return { sizeX: maxX - minX, sizeY: maxY - minY, sizeZ: maxZ - minZ };
+}
+
+/** @emoji 📊 Derives live stat output for one definition and scope. */
+export async function computeStat(defn: StatDefinitionSpec, ctx: StatComputeContext): Promise<Record<string, number>> {
+  if (!statDefinitionAppliesToScope(defn, ctx.scope)) return zeroStatOutputs(defn);
+  const objects = ctx.objects.filter((object) => statDefinitionAppliesToObject(defn, object));
+  if (objects.length === 0) return zeroStatOutputs(defn);
+  const computer = statComputers.get(defn.id);
+  if (!computer) return zeroStatOutputs(defn);
+  const values = await computer({ ...ctx, objects });
+  const out = zeroStatOutputs(defn);
+  for (const row of defn.outputs) {
+    const value = values[row.key];
+    out[row.key] = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  }
+  return out;
+}
+
+/** @emoji 📊 Objects included when computing stats for one model definition scope. */
+export function objectsForStatCompute(
+  model: Model,
+  modelDefinitionId: string,
+  defn: StatDefinitionSpec,
+  scope: "model" | "selection",
+  selectionObjects: readonly SpatialObjectRecord[],
+): readonly SpatialObjectRecord[] {
+  const typologyFilter = defn.sources?.typologies;
+  let base: readonly SpatialObjectRecord[];
+  if (scope === "selection") {
+    base = selectionObjects.filter((object) => model.objects[object.id]);
+  } else if (typologyFilter && typologyFilter.length > 0) {
+    base = Object.values(model.objects).filter((object) => typologyFilter.includes(object.typology));
+  } else {
+    base = listModelObjectsForModelDefinition(model, modelDefinitionId);
+  }
+  return base.filter((object) => statDefinitionAppliesToObject(defn, object));
+}
+
+async function computeShapeGeometryStat(ctx: StatComputeContext): Promise<Record<string, number>> {
+  const solidIds = collectSolidRefsForObjects(ctx.model, ctx.objects);
+  const faceIds = collectFaceRefsForObjects(ctx.model, ctx.objects);
+  await ctx.kernel.syncSolidsFromModel(ctx.model);
+  let totalVolume = 0;
+  for (const solidId of solidIds) totalVolume += await ctx.kernel.solidVolume(solidRef(solidId));
+  let totalSurfaceArea = 0;
+  for (const faceId of faceIds) totalSurfaceArea += await ctx.kernel.faceArea(faceId as FaceRef, ctx.model);
+  const bbox = bboxSizesFromPositions(collectVertexPositionsForObjects(ctx.model, ctx.objects));
+  return {
+    objectCount: ctx.objects.length,
+    solidCount: solidIds.length,
+    totalVolume,
+    totalSurfaceArea,
+    sizeX: bbox.sizeX,
+    sizeY: bbox.sizeY,
+    sizeZ: bbox.sizeZ,
+  };
+}
+
+const ENERGY_DEFAULT_U_VALUE = 0.3;
+const ENERGY_HEATING_DEGREE_HOURS = 3000;
+const ENERGY_VENTILATION_FACTOR = 12;
+
+async function computeEnergyDemandStat(ctx: StatComputeContext): Promise<Record<string, number>> {
+  const solidIds = collectSolidRefsForObjects(ctx.model, ctx.objects);
+  const faceIds = collectFaceRefsForObjects(ctx.model, ctx.objects);
+  await ctx.kernel.syncSolidsFromModel(ctx.model);
+  let heatedVolume = 0;
+  for (const solidId of solidIds) heatedVolume += await ctx.kernel.solidVolume(solidRef(solidId));
+  let envelopeArea = 0;
+  for (const faceId of faceIds) envelopeArea += await ctx.kernel.faceArea(faceId as FaceRef, ctx.model);
+  const transmissionLoss = envelopeArea * ENERGY_DEFAULT_U_VALUE * ENERGY_HEATING_DEGREE_HOURS;
+  const ventilationLoss = heatedVolume * ENERGY_VENTILATION_FACTOR;
+  const annualHeatingDemand = transmissionLoss + ventilationLoss;
+  const specificDemand = heatedVolume > 0 ? annualHeatingDemand / heatedVolume : 0;
+  return { heatedVolume, envelopeArea, annualHeatingDemand, specificDemand };
+}
+
+const STRUCTURE_CONCRETE_DENSITY_KG_M3 = 2500;
+
+async function computeStructureStabilityStat(ctx: StatComputeContext): Promise<Record<string, number>> {
+  const solidIds = collectSolidRefsForObjects(ctx.model, ctx.objects);
+  await ctx.kernel.syncSolidsFromModel(ctx.model);
+  let structuralVolume = 0;
+  for (const solidId of solidIds) structuralVolume += await ctx.kernel.solidVolume(solidRef(solidId));
+  const bbox = bboxSizesFromPositions(collectVertexPositionsForObjects(ctx.model, ctx.objects));
+  const footprint = Math.max(bbox.sizeX * bbox.sizeY, bbox.sizeX * bbox.sizeZ, bbox.sizeY * bbox.sizeZ, 1e-6);
+  const height = Math.max(bbox.sizeX, bbox.sizeY, bbox.sizeZ, 1e-6);
+  const slenderness = height / Math.sqrt(footprint);
+  const stabilityIndex = Math.max(0, Math.min(1, 1 / (1 + slenderness)));
+  const estimatedMass = (structuralVolume * STRUCTURE_CONCRETE_DENSITY_KG_M3) / 1000;
+  return {
+    elementCount: ctx.objects.length,
+    structuralVolume,
+    estimatedMass,
+    stabilityIndex,
+  };
+}
+
+registerStatComputer("spatial.shape.geometry", computeShapeGeometryStat);
+registerStatComputer("energy.demand", computeEnergyDemandStat);
+registerStatComputer("structure.stability", computeStructureStabilityStat);
+// #endregion 📊StatDefinitions
+
 /** @emoji 🧭 Throws when `actionId` is outside the active model definition catalog. */
 export function assertActionAvailableInModelDefinition(actionId: string, activeModelDefinitionId?: string | null): void {
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
@@ -2954,6 +3310,7 @@ export interface ModelDefinitionScope {
   readonly selectionOperations: readonly SelectionOperationInteractionDef[];
   readonly attributeDefinitions: readonly AttributeDefinitionSpec[];
   readonly propertyDefinitions: readonly PropertyDefinitionSpec[];
+  readonly statDefinitions: readonly StatDefinitionSpec[];
   readonly actions: readonly string[];
   readonly selectionEntityKinds: readonly ModelEntityKind[];
 }
@@ -2967,6 +3324,7 @@ export function resolveModelDefinitionScope(modelDefinitionId: string): ModelDef
     selectionOperations: listSelectionOperationsForModelDefinition(modelDefinitionId),
     attributeDefinitions: listAttributeDefinitionsForModelDefinition(modelDefinitionId),
     propertyDefinitions: listPropertyDefinitionsForModelDefinition(modelDefinitionId),
+    statDefinitions: listStatDefinitionsForModelDefinition(modelDefinitionId),
     actions: listActionsForModelDefinition(modelDefinitionId),
     selectionEntityKinds: modelDefinitionSelectionEntityKinds(modelDefinitionId),
   };
@@ -6504,6 +6862,82 @@ if (import.meta.vitest) {
       expect(properties.some((row) => row.id === "spatial.shape.volume")).toBe(true);
       expect(loadAttributeDefinition("spatial.shape.material")?.field).toBe("material");
       expect(loadPropertyDefinition("spatial.shape.volume")?.unit).toBe("volume");
+    });
+    it("loads stat definition assets", () => {
+      const stats = listModelDefinitionStatDefinitions();
+      expect(stats.some((row) => row.id === "spatial.shape.geometry")).toBe(true);
+      expect(stats.some((row) => row.id === "energy.demand")).toBe(true);
+      expect(stats.some((row) => row.id === "structure.stability")).toBe(true);
+      expect(loadStatDefinition("spatial.shape.geometry")?.outputs.some((row) => row.key === "totalVolume")).toBe(true);
+      expect(listStatDefinitionsForModelDefinition("aec.building.energy").map((row) => row.id)).toContain("energy.demand");
+      expect(resolveModelDefinitionScope(defaultModelDefinitionId()).statDefinitions.map((row) => row.id)).toContain("spatial.shape.geometry");
+      expect(formatStatOutputValue(0.456, "percent")).toBe("45.6%");
+    });
+    it("computes spatial.shape.geometry stats for solid-backed objects", async () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-a")));
+      const solidId = Object.keys(model.solids)[0]!;
+      model.objects["obj-a"] = {
+        id: "obj-a" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as TypologyRef,
+        primitives: { solid: solidId },
+      };
+      const defn = loadStatDefinition("spatial.shape.geometry")!;
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const out = await computeStat(defn, {
+        model,
+        kernel,
+        modelDefinitionId: defaultModelDefinitionId(),
+        scope: "model",
+        objects: objectsForStatCompute(model, defaultModelDefinitionId(), defn, "model", []),
+      });
+      expect(out.objectCount).toBe(1);
+      expect(out.solidCount).toBe(1);
+      expect(out.totalVolume).toBeCloseTo(1, 3);
+      expect(out.sizeX).toBeCloseTo(1, 3);
+      expect(out.sizeY).toBeCloseTo(1, 3);
+      expect(out.sizeZ).toBeCloseTo(1, 3);
+    });
+    it("computes energy and structure stats with finite outputs", async () => {
+      const energyModel = new Model();
+      applyModelDiff(energyModel, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("hull-solid")));
+      energyModel.objects["hull"] = {
+        id: "hull" as ObjectRef,
+        typology: "energy.energy.hull" as TypologyRef,
+        primitives: { solid: "hull-solid" },
+      };
+      const energyDefn = loadStatDefinition("energy.demand")!;
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const energyOut = await computeStat(energyDefn, {
+        model: energyModel,
+        kernel,
+        modelDefinitionId: "aec.building.energy",
+        scope: "model",
+        objects: objectsForStatCompute(energyModel, "aec.building.energy", energyDefn, "model", []),
+      });
+      expect(Number.isFinite(energyOut.heatedVolume)).toBe(true);
+      expect(Number.isFinite(energyOut.annualHeatingDemand)).toBe(true);
+      expect(energyOut.heatedVolume).toBeGreaterThan(0);
+
+      const structureModel = new Model();
+      applyModelDiff(structureModel, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [0.4, 0.4, 0], height: 3 }, solidRef("column-solid")));
+      structureModel.objects["column"] = {
+        id: "column" as ObjectRef,
+        typology: "structure.structure.reinforcedconcretecolumn" as TypologyRef,
+        primitives: { solid: "column-solid" },
+      };
+      const structureDefn = loadStatDefinition("structure.stability")!;
+      const structureOut = await computeStat(structureDefn, {
+        model: structureModel,
+        kernel,
+        modelDefinitionId: "aec.building.structure",
+        scope: "model",
+        objects: objectsForStatCompute(structureModel, "aec.building.structure", structureDefn, "model", []),
+      });
+      expect(structureOut.elementCount).toBe(1);
+      expect(Number.isFinite(structureOut.estimatedMass)).toBe(true);
+      expect(structureOut.stabilityIndex).toBeGreaterThan(0);
+      expect(structureOut.stabilityIndex).toBeLessThanOrEqual(1);
     });
     it("loads geometry and AEC typology assets", () => {
       const typologies = listModelDefinitionTypologies();

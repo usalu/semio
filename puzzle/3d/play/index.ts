@@ -57,7 +57,10 @@ import {
   applyBrushFillPlacementsToFixture,
   brushMeshUrlsForFillSession,
   buildBrushFillSequence,
+  brushCollisionGltfRoot,
+  clearBrushCollisionGltfScenes,
   createBrushFillSequenceStepper,
+  registerBrushCollisionGltfScene,
   PUZZLE_3D_FILL_COUNT_MAX,
   puzzle3dBrushKindWeightsRef,
   puzzle3dBrushMeshRootForFill,
@@ -3080,6 +3083,47 @@ if (import.meta.vitest) {
       );
     });
 
+    it("concrete forest fill attaches cross-port b-s sources to seed b-l targets", async () => {
+      const { Mesh, BoxGeometry } = await import("three");
+      clearBrushCollisionGltfScenes();
+      const registerBox = (meshUrl: string): void => {
+        registerBrushCollisionGltfScene(meshUrl, new Mesh(new BoxGeometry(13, 5, 3)));
+      };
+      registerBox("/meshes/hexagonal-cut-concrete-forest-left.glb");
+      registerBox("/meshes/hexagonal-cut-concrete-forest-right.glb");
+      const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
+      const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
+      const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
+      const sequence = buildBrushFillSequence({
+        baseFixture: fixture!,
+        maxCount: 24,
+        seed: 42,
+        kindCatalogs: catalogs,
+        kindCompatibility: compat,
+        meshRootForUrl: brushCollisionGltfRoot,
+      });
+      const leftBsOnSeedBl = sequence.some(
+        (payload) =>
+          payload.targetVortexFullId === "seed-left-001:v0" &&
+          payload.objectKindId === "Hexagonal Cut Concrete Forest Left" &&
+          payload.sourceVortexIndex === 6,
+      );
+      expect(leftBsOnSeedBl).toBe(true);
+      const seedPortPairs = new Set(
+        sequence
+          .filter((payload) => payload.targetVortexFullId.startsWith("seed-left-001:"))
+          .map((payload) => {
+            const sourceVk = catalogs?.objects
+              ?.find((row) => row.id === payload.objectKindId)
+              ?.vortices?.[payload.sourceVortexIndex]?.vortexKind;
+            const targetVk = fixture?.objects[0]?.vortices?.[Number(payload.targetVortexFullId.split(":v")[1])]?.vortexKind;
+            return `${sourceVk ?? "?"}->${targetVk ?? "?"}`;
+          }),
+      );
+      expect(seedPortPairs.has("b-s->b-l")).toBe(true);
+      clearBrushCollisionGltfScenes();
+    });
+
     it("nakagin scene object meshUrl matches kind catalog for every placed object", () => {
       const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta);
@@ -3342,10 +3386,16 @@ if (import.meta.vitest) {
       const front = ctrl.cameraForInstance("win-b");
       const iso = ctrl.cameraForInstance("win-c");
       const twoPoint = ctrl.cameraForInstance("win-d");
+      expect(top.projection).toBe("orthographic");
+      expect(top.position[0]).toBeCloseTo(top.target[0], 3);
+      expect(top.position[1]).toBeCloseTo(top.target[1], 3);
       expect(top.position[2]).toBeGreaterThan(top.target[2]);
+      expect(front.projection).toBe("orthographic");
       expect(front.position[1]).toBeLessThan(front.target[1]);
+      expect(iso.projection).toBe("orthographic");
       expect(iso.position[0]).toBeGreaterThan(iso.target[0]);
       expect(iso.position[1]).toBeGreaterThan(iso.target[1]);
+      expect(twoPoint.projection).toBe("perspective");
       expect(twoPoint.position[2]).toBeCloseTo(twoPoint.target[2], 5);
       expect(ctrl.cameraForInstance()).toEqual(sharedBefore);
       expect(ctrl.getSnapshot().cameraSeedEpoch).toBeGreaterThan(0);

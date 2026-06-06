@@ -10,6 +10,18 @@ Added puzzle 3d fixture `concrete-forest.3d.json`, wired it as the default play 
 
 `getFixtureCatalog()` returned a new object on every call. The navbar fixture `useSyncExternalStore` hook treated each call as a state change, causing "getSnapshot should be cached" and maximum update depth exceeded. Fixed by caching the catalog on the controller and stabilizing the hook snapshot via `WeakMap`.
 
+## Fix (concrete forest fill missing b-* pairings)
+
+Fill never attached `b-p1-t-t2-c1-l` (b-s, index 6) to `b-p1-t-t1-c3-l` (b-l, index 0) because seed vortices were starved: other targets always won first, and by the time v0 was tried only Right-side candidates were collision-free.
+
+Changes in `puzzle/3d/react/index.tsx`:
+- Seed/base fixture vortices are filled before frontier vortices on placed pieces
+- Target order rotates each fill step so every free vortex gets a turn
+- Cross-port candidates (e.g. b-s → b-l) rank before same-port retries
+- Same-kind fill prefers distant connector indices (Left@6 on seed v0)
+- `brushPlacementUsesHostOrientation` only when source and target vortex kinds match
+- `brushCandidateRank` deprioritizes same vortex kind for non-stack ports
+
 ## Files
 
 - `semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/kit.semio.json`

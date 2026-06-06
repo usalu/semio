@@ -1,0 +1,53 @@
+{
+	"schema": "spatial.stat/v1",
+	"id": "spatial.shape.geometry",
+	"version": "1.0.0",
+	"label": "Geometry KPIs",
+	"description": "Live geometry key performance indicators for shape model objects.",
+	"scopes": [
+		"model",
+		"selection"
+	],
+	"outputs": [
+		{
+			"key": "objectCount",
+			"label": "Objects",
+			"format": "integer"
+		},
+		{
+			"key": "solidCount",
+			"label": "Solids",
+			"format": "integer"
+		},
+		{
+			"key": "totalVolume",
+			"label": "Total volume",
+			"unit": "m³",
+			"format": "decimal"
+		},
+		{
+			"key": "totalSurfaceArea",
+			"label": "Total surface area",
+			"unit": "m²",
+			"format": "decimal"
+		},
+		{
+			"key": "sizeX",
+			"label": "BBox width",
+			"unit": "m",
+			"format": "decimal"
+		},
+		{
+			"key": "sizeY",
+			"label": "BBox depth",
+			"unit": "m",
+			"format": "decimal"
+		},
+		{
+			"key": "sizeZ",
+			"label": "BBox height",
+			"unit": "m",
+			"format": "decimal"
+		}
+	]
+}

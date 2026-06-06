@@ -852,6 +852,7 @@ function groupNamedLayoutsToTreeItems(
 				folder = {
 					id: `framework.display.layout.group.${pathKey}`,
 					label: segment,
+					defaultOpen: true,
 					items: [],
 				};
 				folderByKey.set(pathKey, folder);
@@ -1267,6 +1268,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePane
 				{
 					id: "framework.display.layout.group.saved",
 					label: "Saved",
+					defaultOpen: true,
 					items: groupNamedLayoutsToTreeItems(userLayouts, (layoutId) => host.applyNamedLayout(layoutId), (layoutId) => host.deleteUserLayout(layoutId)),
 				},
 			]
@@ -3337,7 +3339,9 @@ if (import.meta.vitest) {
 			const tree = new DisplayLayoutTreeDefinition(() => host, new CommandBus()).resolveTree();
 			const listItems = tree.sections[1]?.items ?? [];
 			expect(listItems[0]?.label).toBe("Quad");
+			expect(listItems[0]?.defaultOpen).toBe(true);
 			expect(listItems[0]?.items?.[0]?.label).toBe("Mixed");
+			expect(listItems[0]?.items?.[0]?.defaultOpen).toBe(true);
 			expect(listItems[0]?.items?.[0]?.items?.[0]?.label).toBe("Standard");
 		});
 	});
