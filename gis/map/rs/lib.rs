@@ -1001,6 +1001,7 @@ pub mod vector_tiles {
     pub fn place_label_visible(class: &str, span_deg: f64) -> bool {
         let caps = super::GIS_MAP_LOD_MAX_SPAN_DEG;
         match class {
+            "" => span_deg <= caps[1] && span_deg > caps[2],
             "continent" => span_deg > caps[1],
             "country" => span_deg <= caps[1] && span_deg > caps[2],
             "state" | "province" => span_deg <= caps[2] && span_deg > caps[3],
@@ -1957,6 +1958,73 @@ impl MapHost {
                 self.append_vector_tiles_figure(scene, &draw, span, forced_lod, ink, paper);
             }
         }
+        if self.layer_visibility.labels {
+            let (label_fill, label_halo) = match self.vector_style {
+                MapVectorStyle::Colored => (self.theme.label_fill, self.theme.label_halo),
+                MapVectorStyle::FigureGround => (self.theme.label_fill, self.theme.surface_clear),
+                MapVectorStyle::InvertedFigure => (self.theme.surface_clear, self.theme.label_fill),
+            };
+            self.append_vector_tile_labels(scene, &draw, span, forced_lod, label_fill, label_halo);
+        }
+    }
+
+    fn append_vector_tile_labels(
+        &self,
+        scene: &mut Scene,
+        draw: &[(u32, u32, u32, &vector_tiles::VectorTile)],
+        span: f64,
+        forced_lod: Option<&str>,
+        label_fill: Color,
+        label_halo: Color,
+    ) {
+        let zoom_px = (280.0 / span.max(0.25)).clamp(9.0, 26.0) * self.layer_stroke_scale.labels;
+        for (tz, tx, ty, tile) in draw {
+            let mut layers: Vec<_> = tile.layers.iter().collect();
+            layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
+            for layer in layers {
+                let extent = layer.extent.max(1);
+                let lname = layer.name.as_str();
+                for feat in &layer.features {
+                    match lname {
+                        "transportation_name" => {
+                            let class = vector_tiles::property_class(&feat.properties);
+                            if !vector_tiles::transportation_visible(class, span, *tz, forced_lod) {
+                                continue;
+                            }
+                            let Some(label) = vector_tiles::feature_label(&feat.properties) else {
+                                continue;
+                            };
+                            let anchor = feat
+                                .points
+                                .first()
+                                .or_else(|| feat.rings.first().and_then(|r| r.first()))
+                                .copied()
+                                .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
+                            let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
+                            cavas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
+                        }
+                        "place" | "centroids" | "poi" | "water_name" => {
+                            let class = vector_tiles::property_class(&feat.properties);
+                            if !vector_tiles::place_label_visible(class, span) {
+                                continue;
+                            }
+                            let Some(label) = vector_tiles::feature_label(&feat.properties) else {
+                                continue;
+                            };
+                            let anchor = feat
+                                .points
+                                .first()
+                                .or_else(|| feat.rings.first().and_then(|r| r.first()))
+                                .copied()
+                                .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
+                            let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
+                            cavas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
     }
 
     fn append_vector_tiles_colored(
@@ -1974,8 +2042,6 @@ impl MapHost {
         let border_stroke = self.theme.land_stroke;
         let road_stroke = self.theme.route_stroke;
         let region_stroke = self.theme.region_stroke;
-        let label_fill = self.theme.label_fill;
-        let label_halo = self.theme.label_halo;
         let water_fill = vector_tiles::color_with_alpha(
             self.theme.region_fill,
             (200.0 * weights.water).clamp(32.0, 255.0) as u8,
@@ -1985,7 +2051,6 @@ impl MapHost {
             self.theme.region_fill,
             (90.0 * weights.land).clamp(16.0, 255.0) as u8,
         );
-        let zoom_px = (280.0 / span.max(0.25)).clamp(9.0, 26.0) * weights.labels;
         let line_scale = vector_tiles::vector_line_scale(span);
         let road_lod_scale = vector_tiles::transportation_stroke_lod_scale(span, forced_lod);
 
@@ -1999,7 +2064,6 @@ impl MapHost {
             let draw_roads = profile.draw_transportation && vis.roads;
             let draw_borders = profile.draw_boundary && vis.borders;
             let draw_coastline = profile.draw_coastline && vis.water;
-            let draw_labels = vis.labels;
             if draw_coastline && !draw_land_backdrop {
                 self.append_vector_tile_ocean_backdrop(scene, *tz, *tx, *ty, water_fill);
             } else if draw_land_backdrop {
@@ -2165,40 +2229,6 @@ impl MapHost {
                                     0.0,
                                 );
                             }
-                        }
-                        "transportation_name" if draw_roads && draw_labels => {
-                            let class = vector_tiles::property_class(&feat.properties);
-                            if !vector_tiles::transportation_visible(class, span, *tz, forced_lod) {
-                                continue;
-                            }
-                            let Some(label) = vector_tiles::feature_label(&feat.properties) else {
-                                continue;
-                            };
-                            let anchor = feat
-                                .points
-                                .first()
-                                .or_else(|| feat.rings.first().and_then(|r| r.first()))
-                                .copied()
-                                .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
-                            let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
-                            cavas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
-                        }
-                        "place" | "centroids" | "poi" | "water_name" if draw_labels => {
-                            let class = vector_tiles::property_class(&feat.properties);
-                            if !vector_tiles::place_label_visible(class, span) {
-                                continue;
-                            }
-                            let Some(label) = vector_tiles::feature_label(&feat.properties) else {
-                                continue;
-                            };
-                            let anchor = feat
-                                .points
-                                .first()
-                                .or_else(|| feat.rings.first().and_then(|r| r.first()))
-                                .copied()
-                                .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
-                            let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
-                            cavas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
                         }
                         _ => {}
                     }
@@ -3452,6 +3482,92 @@ mod tests {
         host.upload_vector_tile(3, 4, 2, &bytes).expect("vector tile");
         let scene = host.build_vector_scene();
         assert!(!scene.encoding().is_empty());
+    }
+
+    fn zoom_host_to_representative_lod(host: &mut super::MapHost, lod_id: &str) {
+        let idx = super::GIS_MAP_LOD_SCALE.index_of(lod_id).expect("lod id");
+        let target = super::representative_viewport_span_for_lod(idx);
+        host.fit_world_camera();
+        let mut lo = host.camera.zoom;
+        let mut hi = super::MAP_CAMERA_ZOOM_MAX;
+        for _ in 0..48 {
+            let mid = (lo + hi) * 0.5;
+            host.set_camera(0.0, 0.0, mid);
+            let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
+            if span > target {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        host.set_camera(0.0, 0.0, hi);
+    }
+
+    #[test]
+    fn place_label_visible_covers_admin_hierarchy() {
+        let v = super::vector_tiles::place_label_visible;
+        assert!(v("", 20.0));
+        assert!(!v("", 8.0));
+        assert!(v("continent", 50.0));
+        assert!(!v("continent", 20.0));
+        assert!(v("country", 20.0));
+        assert!(!v("country", 8.0));
+        assert!(v("state", 8.0));
+        assert!(v("province", 8.0));
+        assert!(v("city", 2.0));
+        assert!(v("town", 0.8));
+        assert!(v("village", 0.2));
+        assert!(v("suburb", 0.2));
+        assert!(v("quarter", 0.05));
+        assert!(v("neighbourhood", 0.05));
+    }
+
+    #[test]
+    fn figure_ground_labels_increase_scene_when_enabled() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let bytes = std::fs::read(path).expect("fixture pbf");
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_render_mode("vector");
+        host.set_vector_style("figureGround");
+        host.set_lod_mode("country");
+        zoom_host_to_representative_lod(&mut host, "country");
+        host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
+        host.set_layer_visibility_from_json(r#"{"labels":false}"#)
+            .expect("labels off");
+        let without = host.build_vector_scene().encoding().path_tags.len();
+        host.set_layer_visibility_from_json(r#"{"labels":true}"#)
+            .expect("labels on");
+        let with_labels = host.build_vector_scene().encoding().path_tags.len();
+        assert!(
+            with_labels > without,
+            "figure-ground labels should add glyph paths (with={with_labels}, without={without})"
+        );
+    }
+
+    #[test]
+    fn colored_vector_labels_increase_scene_when_enabled() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let bytes = std::fs::read(path).expect("fixture pbf");
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_render_mode("vector");
+        host.set_vector_style("colored");
+        host.set_lod_mode("country");
+        zoom_host_to_representative_lod(&mut host, "country");
+        host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
+        host.set_layer_visibility_from_json(r#"{"labels":false}"#)
+            .expect("labels off");
+        let without = host.build_vector_scene().encoding().path_tags.len();
+        host.set_layer_visibility_from_json(r#"{"labels":true}"#)
+            .expect("labels on");
+        let with_labels = host.build_vector_scene().encoding().path_tags.len();
+        assert!(
+            with_labels > without,
+            "colored vector labels should add glyph paths (with={with_labels}, without={without})"
+        );
     }
 }
 // #endregion 🔖Tests

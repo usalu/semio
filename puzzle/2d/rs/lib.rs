@@ -444,6 +444,15 @@ mod board_host {
         InteractionOverlay,
     }
 
+    /// @emoji 🎨 Which node/handle primitives to paint in a layered draw pass (fills behind icons/text).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum NodeHandlePaintLayer {
+        Full,
+        Fill,
+        Stroke,
+        Icons,
+    }
+
     #[derive(Clone, Debug)]
     pub struct NodeData {
         pub id: String,
@@ -1802,7 +1811,7 @@ mod board_host {
             }
         }
 
-        /// @emoji 💠 Entity ids that need selection/preselect/hover chrome painted above {@link BoardHost.world_content_cache}.
+        /// @emoji 💠 Entity ids whose selection/preselect/hover chrome tints fills and strokes without rebuilding {@link BoardHost.world_content_cache}.
         fn interaction_overlay_entity_ids(&self) -> BTreeSet<String> {
             let mut ids = BTreeSet::new();
             if self.is_preselect_active() {
@@ -1824,6 +1833,14 @@ mod board_host {
                 }
             }
             ids
+        }
+
+        fn chrome_pass_for_entity(&self, entity_id: &str, overlay_ids: &BTreeSet<String>) -> StyleChromePass {
+            if overlay_ids.contains(entity_id) {
+                StyleChromePass::InteractionOverlay
+            } else {
+                StyleChromePass::CachedBase
+            }
         }
 
         fn node_fill_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
@@ -4996,15 +5013,33 @@ mod board_host {
             }
         }
 
-        fn append_handle_marker(&self, scene: &mut Scene, h: &HandleData, center: Point, radius_world: f64, draw_icon: bool, style_kind: BoardElementStyleKind, paint_override: Option<(Color, Color, f64)>, world_space: bool) {
+        fn append_handle_marker(
+            &self,
+            scene: &mut Scene,
+            h: &HandleData,
+            center: Point,
+            radius_world: f64,
+            draw_icon: bool,
+            style_kind: BoardElementStyleKind,
+            paint_override: Option<(Color, Color, f64)>,
+            world_space: bool,
+            layer: NodeHandlePaintLayer,
+        ) {
             let c = self.draw_space_point(center, world_space);
             let r = self.draw_space_len(radius_world, world_space);
             let circle = Circle::new(c, r);
             let (fill, stroke_c, stroke_px) =
                 if let Some((f, s, sw)) = paint_override { (f, s, sw) } else { (self.resolve_handle_fill_color(h, &self.vello_theme, style_kind), self.resolve_handle_stroke_color(h, &self.vello_theme, style_kind), 2.0_f64) };
-            scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-            scene.stroke(&Stroke::new(stroke_px), Affine::IDENTITY, stroke_c, None, &circle);
-            if draw_icon {
+            let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill);
+            let paint_stroke = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
+            let paint_icons = draw_icon && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
+            if paint_fill {
+                scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+            }
+            if paint_stroke {
+                scene.stroke(&Stroke::new(stroke_px), Affine::IDENTITY, stroke_c, None, &circle);
+            }
+            if paint_icons {
                 if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
                     let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
                     if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill, preserve_original_style) {
@@ -5050,7 +5085,7 @@ mod board_host {
                 let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
                 let stroke_px = 2.0_f64;
                 let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { Some((self.vello_theme.indirect_handle_fill, self.vello_theme.indirect_handle_stroke, stroke_px)) } else { None };
-                self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, world_space);
+                self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, world_space, NodeHandlePaintLayer::Full);
             }
         }
 
@@ -5071,24 +5106,156 @@ mod board_host {
         }
 
         fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
-            self.append_nodes_and_handles(scene, tile_filter, lod, world_space, None, StyleChromePass::CachedBase);
+            self.append_nodes_and_handles(scene, tile_filter, lod, world_space, None, StyleChromePass::CachedBase, NodeHandlePaintLayer::Full);
             if !world_space {
-                self.append_edges_wires_and_link(scene, tile_filter, lod, world_space, None, StyleChromePass::CachedBase);
+                self.append_edges_wires_and_link(scene, tile_filter, lod, world_space, None, None);
             }
         }
 
-        fn append_nodes_and_handles(
+        fn paint_node_geometry(
+            &self,
+            scene: &mut Scene,
+            n: &NodeData,
+            lod: BoardDrawLod,
+            world_space: bool,
+            layer: NodeHandlePaintLayer,
+            chrome_pass: StyleChromePass,
+            link_compat: bool,
+        ) {
+            let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
+            let resolved_style_kind = self.resolve_node_style_kind(n, chrome_pass);
+            let style_kind = if link_compat && matches!(resolved_style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) {
+                BoardElementStyleKind::Highlighted
+            } else {
+                resolved_style_kind
+            };
+            let draw_node_stroke = lod != BoardDrawLod::Minimap || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
+            let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
+            let fill = if lod == BoardDrawLod::Minimap && matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) {
+                stroke_c
+            } else {
+                self.resolve_node_fill_color(n, &self.vello_theme, style_kind)
+            };
+            let sw = 2.0_f64;
+            let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill);
+            let paint_stroke = draw_node_stroke && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
+            let paint_icons = draw_node_icons && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
+            match n.shape {
+                NodeShape::Circle => {
+                    let c = self.draw_space_point(Point::new(n.x, n.y), world_space);
+                    let r = self.draw_space_len(self.scaled_node_radius(n), world_space);
+                    let circle = Circle::new(c, r);
+                    if paint_fill {
+                        scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+                    }
+                    if paint_stroke {
+                        scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &circle);
+                    }
+                    if paint_icons {
+                        self.paint_node_icon(scene, n, world_space, style_kind, stroke_c, fill, Some(&circle), None);
+                    }
+                }
+                NodeShape::Rectangle => {
+                    let hw = self.scaled_node_width(n) / 2.0;
+                    let hh = self.scaled_node_height(n) / 2.0;
+                    let p0 = self.draw_space_point(Point::new(n.x - hw, n.y - hh), world_space);
+                    let p1 = self.draw_space_point(Point::new(n.x + hw, n.y + hh), world_space);
+                    let rect = Rect::from_points(p0, p1);
+                    if paint_fill {
+                        scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
+                    }
+                    if paint_stroke {
+                        scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &rect);
+                    }
+                    if paint_icons {
+                        self.paint_node_icon(scene, n, world_space, style_kind, stroke_c, fill, None, Some(rect));
+                    }
+                }
+            }
+        }
+
+        fn paint_node_icon(
+            &self,
+            scene: &mut Scene,
+            n: &NodeData,
+            world_space: bool,
+            style_kind: BoardElementStyleKind,
+            stroke_c: Color,
+            fill: Color,
+            circle_clip: Option<&Circle>,
+            rect_clip: Option<Rect>,
+        ) {
+            if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+                let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
+                if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill, preserve_original_style) {
+                    let clip_inset = 0.88;
+                    let fit_inset = 0.76;
+                    let (sx_half, sy_half) = match n.shape {
+                        NodeShape::Circle => {
+                            let s = self.draw_space_len(self.scaled_node_radius(n), world_space) * fit_inset;
+                            (s, s)
+                        }
+                        NodeShape::Rectangle => (
+                            self.draw_space_len(self.scaled_node_width(n), world_space) * fit_inset * 0.5,
+                            self.draw_space_len(self.scaled_node_height(n), world_space) * fit_inset * 0.5,
+                        ),
+                    };
+                    let center = self.draw_space_point(Point::new(n.x, n.y), world_space);
+                    let cx = bx + bw * 0.5;
+                    let cy = by + bh * 0.5;
+                    let avail_w = 2.0 * sx_half;
+                    let avail_h = 2.0 * sy_half;
+                    let scale = (avail_w / bw).min(avail_h / bh);
+                    let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
+                    match n.shape {
+                        NodeShape::Circle => {
+                            let r_clip = self.draw_space_len(self.scaled_node_radius(n), world_space) * clip_inset;
+                            let disc = circle_clip.copied().unwrap_or_else(|| Circle::new(center, r_clip));
+                            scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
+                            match &body {
+                                CachedIconBody::Vector(icon_scene) => {
+                                    scene.append(icon_scene, Some(aff));
+                                }
+                                CachedIconBody::Raster(img) => {
+                                    scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                                }
+                            }
+                            scene.pop_layer();
+                        }
+                        NodeShape::Rectangle => {
+                            let hw = self.draw_space_len(self.scaled_node_width(n), world_space) * clip_inset * 0.5;
+                            let hh = self.draw_space_len(self.scaled_node_height(n), world_space) * clip_inset * 0.5;
+                            let clip_r = rect_clip.unwrap_or_else(|| {
+                                Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh))
+                            });
+                            scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+                            match &body {
+                                CachedIconBody::Vector(icon_scene) => {
+                                    scene.append(icon_scene, Some(aff));
+                                }
+                                CachedIconBody::Raster(img) => {
+                                    scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                                }
+                            }
+                            scene.pop_layer();
+                        }
+                    }
+                }
+            }
+        }
+
+        fn append_nodes_and_handles_with_overlay_chrome(
             &self,
             scene: &mut Scene,
             tile_filter: Option<&WorldBox>,
             lod: BoardDrawLod,
             world_space: bool,
             only_ids: Option<&BTreeSet<String>>,
-            chrome_pass: StyleChromePass,
+            overlay_ids: &BTreeSet<String>,
+            layer: NodeHandlePaintLayer,
         ) {
             let pad = self.drawable_cull_pad_world();
             let draw_handles = self.has_ports() && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
-            let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_handle_icons = lod == BoardDrawLod::Micro;
             let link_source = self.active_link_source_handle_id().map(str::to_string);
             let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
@@ -5106,96 +5273,60 @@ mod board_host {
                         continue;
                     }
                 }
-                let link_compat = link_compat_nodes.contains(&n.id);
-                let resolved_style_kind = self.resolve_node_style_kind(n, chrome_pass);
-                let style_kind = if link_compat && matches!(resolved_style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { BoardElementStyleKind::Highlighted } else { resolved_style_kind };
-                let draw_node_stroke = lod != BoardDrawLod::Minimap || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
-                let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
-                let fill = if lod == BoardDrawLod::Minimap && matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) {
-                    stroke_c
-                } else {
-                    self.resolve_node_fill_color(n, &self.vello_theme, style_kind)
-                };
-                let sw = 2.0_f64;
-                match n.shape {
-                    NodeShape::Circle => {
-                        let c = self.draw_space_point(Point::new(n.x, n.y), world_space);
-                        let r = self.draw_space_len(self.scaled_node_radius(n), world_space);
-                        let circle = Circle::new(c, r);
-                        scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-                        if draw_node_stroke {
-                            scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &circle);
-                        }
-                    }
-                    NodeShape::Rectangle => {
-                        let hw = self.scaled_node_width(n) / 2.0;
-                        let hh = self.scaled_node_height(n) / 2.0;
-                        let p0 = self.draw_space_point(Point::new(n.x - hw, n.y - hh), world_space);
-                        let p1 = self.draw_space_point(Point::new(n.x + hw, n.y + hh), world_space);
-                        let r = Rect::from_points(p0, p1);
-                        scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &r);
-                        if draw_node_stroke {
-                            scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &r);
-                        }
+                let chrome_pass = self.chrome_pass_for_entity(&n.id, overlay_ids);
+                self.paint_node_geometry(scene, n, lod, world_space, layer, chrome_pass, link_compat_nodes.contains(&n.id));
+            }
+            for h in self.handles.values() {
+                if !draw_handles || !self.handle_effectively_visible(h.id.as_str()) {
+                    continue;
+                }
+                if let Some(ids) = only_ids {
+                    if !ids.contains(&h.id) {
+                        continue;
                     }
                 }
-                if draw_node_icons {
-                    if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
-                        let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
-                        if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill, preserve_original_style) {
-                            let clip_inset = 0.88;
-                            let fit_inset = 0.76;
-                            let (sx_half, sy_half) = match n.shape {
-                                NodeShape::Circle => {
-                                    let s = self.draw_space_len(self.scaled_node_radius(n), world_space) * fit_inset;
-                                    (s, s)
-                                }
-                                NodeShape::Rectangle => (
-                                    self.draw_space_len(self.scaled_node_width(n), world_space) * fit_inset * 0.5,
-                                    self.draw_space_len(self.scaled_node_height(n), world_space) * fit_inset * 0.5,
-                                ),
-                            };
-                            let center = self.draw_space_point(Point::new(n.x, n.y), world_space);
-                            let cx = bx + bw * 0.5;
-                            let cy = by + bh * 0.5;
-                            let avail_w = 2.0 * sx_half;
-                            let avail_h = 2.0 * sy_half;
-                            let scale = (avail_w / bw).min(avail_h / bh);
-                            let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
-                            match n.shape {
-                                NodeShape::Circle => {
-                                    let r_clip = self.draw_space_len(self.scaled_node_radius(n), world_space) * clip_inset;
-                                    let disc = Circle::new(center, r_clip);
-                                    scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
-                                    match &body {
-                                        CachedIconBody::Vector(icon_scene) => {
-                                            scene.append(icon_scene, Some(aff));
-                                        }
-                                        CachedIconBody::Raster(img) => {
-                                            scene.draw_image(&ImageBrush::new((**img).clone()), aff);
-                                        }
-                                    }
-                                    scene.pop_layer();
-                                }
-                                NodeShape::Rectangle => {
-                                    let hw = self.draw_space_len(self.scaled_node_width(n), world_space) * clip_inset * 0.5;
-                                    let hh = self.draw_space_len(self.scaled_node_height(n), world_space) * clip_inset * 0.5;
-                                    let clip_r = Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh));
-                                    scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
-                                    match &body {
-                                        CachedIconBody::Vector(icon_scene) => {
-                                            scene.append(icon_scene, Some(aff));
-                                        }
-                                        CachedIconBody::Raster(img) => {
-                                            scene.draw_image(&ImageBrush::new((**img).clone()), aff);
-                                        }
-                                    }
-                                    scene.pop_layer();
-                                }
-                            }
-                        }
+                if let Some(tb) = tile_filter {
+                    let Some(hb) = self.handle_world_bounds_cull(h) else { continue };
+                    if !world_boxes_overlap(*tb, hb) {
+                        continue;
                     }
                 }
+                let Some(wp) = self.handle_world_pos(h) else { continue };
+                let style_kind = self.resolve_handle_style_kind(h, self.chrome_pass_for_entity(&h.id, overlay_ids));
+                self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space, layer);
+            }
+        }
+
+        fn append_nodes_and_handles(
+            &self,
+            scene: &mut Scene,
+            tile_filter: Option<&WorldBox>,
+            lod: BoardDrawLod,
+            world_space: bool,
+            only_ids: Option<&BTreeSet<String>>,
+            chrome_pass: StyleChromePass,
+            layer: NodeHandlePaintLayer,
+        ) {
+            let pad = self.drawable_cull_pad_world();
+            let draw_handles = self.has_ports() && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
+            let draw_handle_icons = lod == BoardDrawLod::Micro;
+            let link_source = self.active_link_source_handle_id().map(str::to_string);
+            let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+            for n in self.nodes.values() {
+                if !n.visible {
+                    continue;
+                }
+                if let Some(ids) = only_ids {
+                    if !ids.contains(&n.id) {
+                        continue;
+                    }
+                }
+                if let Some(tb) = tile_filter {
+                    if !world_boxes_overlap(*tb, self.node_world_bounds(n, pad)) {
+                        continue;
+                    }
+                }
+                self.paint_node_geometry(scene, n, lod, world_space, layer, chrome_pass, link_compat_nodes.contains(&n.id));
             }
             for h in self.handles.values() {
                 if !draw_handles || !self.handle_effectively_visible(h.id.as_str()) {
@@ -5214,7 +5345,7 @@ mod board_host {
                 }
                 let Some(wp) = self.handle_world_pos(h) else { continue };
                 let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
-                self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space);
+                self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space, layer);
             }
         }
 
@@ -5225,7 +5356,7 @@ mod board_host {
             lod: BoardDrawLod,
             world_space: bool,
             only_ids: Option<&BTreeSet<String>>,
-            chrome_pass: StyleChromePass,
+            overlay_ids: Option<&BTreeSet<String>>,
         ) {
             let edge_sw = if world_space {
                 self.edge_world_stroke_width(lod)
@@ -5253,6 +5384,9 @@ mod board_host {
                     let p2 = self.draw_space_point(c.p2, world_space);
                     let p3 = self.draw_space_point(c.p3, world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
+                    let chrome_pass = overlay_ids
+                        .map(|ids| self.chrome_pass_for_entity(&e.id, ids))
+                        .unwrap_or(StyleChromePass::CachedBase);
                     let (stroke_color, edge_stroke, stroke_w) = self.resolve_edge_stroke_paint(e, chrome_pass, edge_sw);
                     scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
                     let (source_tip, target_tip) = self.resolve_edge_tips(e);
@@ -5276,6 +5410,9 @@ mod board_host {
                     let p2 = self.draw_space_point(c.p2, world_space);
                     let p3 = self.draw_space_point(c.p3, world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
+                    let chrome_pass = overlay_ids
+                        .map(|ids| self.chrome_pass_for_entity(&w.id, ids))
+                        .unwrap_or(StyleChromePass::CachedBase);
                     let wc = Self::wire_stroke_for_style(&self.vello_theme, self.resolve_wire_style_kind(w, chrome_pass));
                     scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
                 }
@@ -5296,11 +5433,15 @@ mod board_host {
         fn append_cached_world_content(&self, scene: &mut Scene, lod: BoardDrawLod) {
             let gen = self.content_scene_generation;
             let cam_aff = self.camera_content_affine();
+            let overlay_ids = self.interaction_overlay_entity_ids();
+            let mut fill_layer = Scene::new();
+            self.append_nodes_and_handles_with_overlay_chrome(&mut fill_layer, None, lod, true, None, &overlay_ids, NodeHandlePaintLayer::Fill);
+            scene.append(&fill_layer, Some(cam_aff));
             let mut cache = self.world_content_cache.borrow_mut();
             let needs_rebuild = cache.as_ref().map(|c| c.0 != gen || c.1 != lod).unwrap_or(true);
             if needs_rebuild {
                 let mut content = Scene::new();
-                self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase);
+                self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase, NodeHandlePaintLayer::Icons);
                 *cache = Some((gen, lod, content));
             }
             if let Some(cached) = cache.as_ref() {
@@ -5309,18 +5450,14 @@ mod board_host {
             let edges_in_world_space = matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Minimap);
             if edges_in_world_space {
                 let mut edge_layer = Scene::new();
-                self.append_edges_wires_and_link(&mut edge_layer, None, lod, true, None, StyleChromePass::CachedBase);
+                self.append_edges_wires_and_link(&mut edge_layer, None, lod, true, None, Some(&overlay_ids));
                 scene.append(&edge_layer, Some(cam_aff));
             } else {
-                self.append_edges_wires_and_link(scene, None, lod, false, None, StyleChromePass::CachedBase);
+                self.append_edges_wires_and_link(scene, None, lod, false, None, Some(&overlay_ids));
             }
-            let overlay_ids = self.interaction_overlay_entity_ids();
-            if !overlay_ids.is_empty() {
-                let mut overlay = Scene::new();
-                self.append_nodes_and_handles(&mut overlay, None, lod, false, Some(&overlay_ids), StyleChromePass::InteractionOverlay);
-                self.append_edges_wires_and_link(&mut overlay, None, lod, false, Some(&overlay_ids), StyleChromePass::InteractionOverlay);
-                scene.append(&overlay, None);
-            }
+            let mut stroke_layer = Scene::new();
+            self.append_nodes_and_handles_with_overlay_chrome(&mut stroke_layer, None, lod, false, None, &overlay_ids, NodeHandlePaintLayer::Stroke);
+            scene.append(&stroke_layer, None);
             if let Some(c) = self.active_link_wire_curve() {
                 let link_wire_stroke = Stroke::new(2.85_f64);
                 let link_wire_color = self.vello_theme.node_stroke;
@@ -7255,8 +7392,8 @@ mod host_tests {
         let gen_before = h.test_content_scene_generation();
         let neutral_hint = h.encoded_scene_hint();
         h.set_selection_ids_silent(&["a".into()]);
-        assert_eq!(h.test_content_scene_generation(), gen_before, "selection chrome must paint via overlay without rebuilding cached geometry");
-        assert!(h.encoded_scene_hint() > neutral_hint, "overlay must still encode selected chrome");
+        assert_eq!(h.test_content_scene_generation(), gen_before, "selection chrome must paint via dynamic fill/stroke layers without rebuilding cached icons");
+        assert_eq!(h.encoded_scene_hint(), neutral_hint, "selection chrome swaps fill/stroke tints without adding cached icon paths");
         assert_eq!(h.test_resolve_node_style_kind("a"), Some(BoardElementStyleKind::Selected));
     }
 
@@ -7604,7 +7741,7 @@ mod host_tests {
         let neutral_hint = h.encoded_scene_hint();
         h.set_selection_ids_silent(&["a".into()]);
         assert_eq!(h.test_content_scene_generation(), gen);
-        assert!(h.encoded_scene_hint() > neutral_hint);
+        assert_eq!(h.encoded_scene_hint(), neutral_hint);
         h.set_selection_ids_silent(&[]);
         assert_eq!(h.test_content_scene_generation(), gen);
         assert_eq!(h.encoded_scene_hint(), neutral_hint);

@@ -582,37 +582,53 @@ pub mod svg_icon_vello09 {
         Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8()))
     }
 
-    fn render_group(scene: &mut Scene, group: &usvg::Group, fg: Color, bg: Color) {
+    fn stroke_path(scene: &mut Scene, path: &usvg::Path, transform: Affine, local_path: &BezPath, fg: Color, bg: Color) {
+        if let Some(stroke) = path.stroke() {
+            if let Some(color) = map_solid_icon_paint(stroke.paint(), stroke.opacity(), fg, bg) {
+                let conv = Stroke::new(f64::from(stroke.width().get()));
+                scene.stroke(&conv, transform, color, None, local_path);
+            }
+        }
+    }
+
+    fn fill_path(scene: &mut Scene, path: &usvg::Path, transform: Affine, local_path: &BezPath, fg: Color, bg: Color) {
+        if let Some(fill) = path.fill() {
+            if let Some(color) = map_solid_icon_paint(fill.paint(), fill.opacity(), fg, bg) {
+                scene.fill(
+                    match fill.rule() {
+                        usvg::FillRule::NonZero => Fill::NonZero,
+                        usvg::FillRule::EvenOdd => Fill::EvenOdd,
+                    },
+                    transform,
+                    color,
+                    None,
+                    local_path,
+                );
+            }
+        }
+    }
+
+    fn render_path(scene: &mut Scene, path: &usvg::Path, fg: Color, bg: Color, stroke_first: bool) {
+        if !path.is_visible() {
+            return;
+        }
+        let transform = to_affine(&path.abs_transform());
+        let local_path = to_bez_path(path);
+        if stroke_first {
+            stroke_path(scene, path, transform, &local_path, fg, bg);
+            fill_path(scene, path, transform, &local_path, fg, bg);
+        } else {
+            fill_path(scene, path, transform, &local_path, fg, bg);
+            stroke_path(scene, path, transform, &local_path, fg, bg);
+        }
+    }
+
+    fn render_group(scene: &mut Scene, group: &usvg::Group, fg: Color, bg: Color, stroke_first: bool) {
         for node in group.children() {
             match node {
-                usvg::Node::Group(g) => render_group(scene, g, fg, bg),
-                usvg::Node::Path(path) => {
-                    if !path.is_visible() {
-                        continue;
-                    }
-                    let transform = to_affine(&path.abs_transform());
-                    let local_path = to_bez_path(path);
-                    if let Some(fill) = path.fill() {
-                        if let Some(color) = map_solid_icon_paint(fill.paint(), fill.opacity(), fg, bg) {
-                            scene.fill(
-                                match fill.rule() {
-                                    usvg::FillRule::NonZero => Fill::NonZero,
-                                    usvg::FillRule::EvenOdd => Fill::EvenOdd,
-                                },
-                                transform,
-                                color,
-                                None,
-                                &local_path,
-                            );
-                        }
-                    }
-                    if let Some(stroke) = path.stroke() {
-                        if let Some(color) = map_solid_icon_paint(stroke.paint(), stroke.opacity(), fg, bg) {
-                            let conv = Stroke::new(f64::from(stroke.width().get()));
-                            scene.stroke(&conv, transform, color, None, &local_path);
-                        }
-                    }
-                }
+                usvg::Node::Group(g) => render_group(scene, g, fg, bg, stroke_first),
+                usvg::Node::Path(path) => render_path(scene, path, fg, bg, stroke_first),
+                usvg::Node::Text(t) => render_group(scene, t.flattened(), fg, bg, true),
                 _ => {}
             }
         }
@@ -709,7 +725,7 @@ pub mod svg_icon_vello09 {
     }
 
     pub fn render_svg_tree_themed(scene: &mut Scene, tree: &usvg::Tree, fg: Color, bg: Color) {
-        render_group(scene, tree.root(), fg, bg);
+        render_group(scene, tree.root(), fg, bg, false);
     }
 
     #[allow(dead_code)]
@@ -737,14 +753,19 @@ pub mod text {
 
     static MAP_LABEL_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
 
-    /// @emoji 🔤 `usvg` options with bundled MapLabelSans for map place-name labels.
+    /// @emoji 🔤 `usvg` options with bundled map label sans for place-name labels.
     pub fn usvg_options_map_labels() -> &'static usvg::Options<'static> {
         MAP_LABEL_USVG_OPTIONS.get_or_init(|| {
             let mut db = fontdb::Database::new();
             db.load_font_data(super::board_icon_assets::MAP_LABEL_SANS_TTF.to_vec());
+            let family = db
+                .faces()
+                .next()
+                .and_then(|face| face.families.first().map(|(name, _)| name.clone()))
+                .unwrap_or_else(|| "sans-serif".into());
             let mut o = usvg::Options::default();
             o.fontdb = Arc::new(db);
-            o.font_family = "MapLabelSans".into();
+            o.font_family = family;
             o
         })
     }
@@ -776,13 +797,15 @@ pub mod text {
         let w = (trimmed.len() as f64 * px * 0.62 + pad * 2.0).clamp(32.0, 2048.0);
         let h = (px * 1.6 + pad * 2.0).clamp(16.0, 256.0);
         let text_y = pad + px;
+        let family = usvg_options_map_labels().font_family.clone();
         let svg = format!(
-            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="MapLabelSans" fill="{fill}" stroke="{halo}" stroke-width="{stroke}" paint-order="stroke">{text}</text></svg>"##,
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><text x="{pad}" y="{text_y}" font-size="{px}" font-family="{family}" fill="{fill}" stroke="{halo}" stroke-width="{stroke}" paint-order="stroke">{text}</text></svg>"##,
             w = w,
             h = h,
             pad = pad,
             text_y = text_y,
             px = px,
+            family = escape_xml_attr(&family),
             fill = color_to_svg(fill),
             halo = color_to_svg(halo),
             stroke = (px * 0.12).max(1.0),
@@ -1109,7 +1132,20 @@ impl<E: CanvasExtension> CanvasEngine<E> {
 mod tests {
     use super::camera::{screen_to_world, world_to_screen, Camera, Viewport};
     use super::lod::{Lod, LodScale};
+    use super::text;
     use crate::vello::kurbo::Point;
+    use crate::vello::peniko::Color;
+    use crate::vello::Scene;
+
+    #[test]
+    fn append_label_renders_glyphs() {
+        let mut scene = Scene::new();
+        text::append_label(&mut scene, "Zürich", Point::new(40.0, 40.0), 14.0, Color::BLACK, Color::WHITE);
+        assert!(!scene.encoding().path_tags.is_empty());
+        let mut empty = Scene::new();
+        text::append_label(&mut empty, "  ", Point::new(0.0, 0.0), 14.0, Color::BLACK, Color::WHITE);
+        assert!(empty.encoding().path_tags.is_empty());
+    }
 
     #[test]
     fn camera_round_trip() {

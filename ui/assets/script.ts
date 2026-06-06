@@ -136,6 +136,7 @@ const VENDORED_ICON_IDS = [
   "library",
   "list",
   "lock",
+  "lock-open",
   "move",
   "rotate-cw",
   "trash-2",

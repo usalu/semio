@@ -109,7 +109,7 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
 export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
   return {
     meshRoots: [
-      resolve(repoRoot, "semio/fixtures/kit/dev/metabolism/representations"),
+      resolve(repoRoot, "semio/fixtures/kit/folder/metabolism/representations"),
       resolve(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau"),
     ],
     placeholderMesh: resolve(repoRoot, "semio/assets/mesh/placeholder.glb"),
@@ -790,6 +790,7 @@ if (import.meta.vitest) {
     it("points at metabolism and abbau-aufbau kit glbs plus shared placeholder", () => {
       const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);
       expect(existsSync(resolve(meshRoots[0]!, "capsule_J.glb"))).toBe(true);
+      expect(existsSync(resolve(meshRoots[0]!, "capsule-with-balcony_slash.glb"))).toBe(true);
       expect(existsSync(resolve(meshRoots[1]!, "hexagonal-cut-concrete-forest-left.glb"))).toBe(true);
       expect(existsSync(placeholderMesh)).toBe(true);
     });

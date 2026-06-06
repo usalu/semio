@@ -1159,6 +1159,20 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 	}
 }
 
+function uiTreeContextMenuToTreeData(items: readonly UiTreeItemNode["contextMenu"]): TreeDataItem["contextMenu"] {
+	if (!items?.length) {
+		return undefined;
+	}
+	return items.map((item) => ({
+		id: item.id,
+		label: item.label,
+		icon: item.icon,
+		disabled: item.disabled,
+		onSelect: item.onSelect ? () => item.onSelect!() : undefined,
+		children: item.children ? uiTreeContextMenuToTreeData(item.children) : undefined,
+	}));
+}
+
 function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: CommandBus, platform: Platform | undefined): TreeDataItem[] {
 	return items.map((item) => {
 		const legacyActivate = (item as UiTreeItemNode & { readonly onClick?: () => void }).onClick;
@@ -1169,10 +1183,20 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
 			control: item.control ? renderUiControl(item.control, commandBus, platform) : undefined,
 			defaultOpen: item.defaultOpen,
 			isSelected: item.selected,
+			isHidden: item.isHidden,
 			draggable: item.draggable,
 			dragData: item.dragData,
 			className: item.draggable || item.dragData ? "cursor-grab active:cursor-grabbing" : undefined,
 			items: item.items?.length ? uiTreeItemsToTreeData(item.items, commandBus, platform) : undefined,
+			actions: item.actions?.map((action) => ({
+				kind: "button" as const,
+				id: action.id,
+				icon: action.icon,
+				title: action.title,
+				onClick: action.onClick,
+				revealOnHover: action.revealOnHover,
+			})),
+			contextMenu: uiTreeContextMenuToTreeData(item.contextMenu),
 			onClick: legacyActivate ?? (item.command ? () => dispatchUiCommand(commandBus, item.command!, {}) : undefined),
 			onPointerEnter: item.onPointerEnter,
 			onPointerLeave: item.onPointerLeave,

@@ -86,6 +86,7 @@ Do not edit files under `icons/*.svg` by hand — run **build ui assets** (`bun 
 - `list-tree` (from Lucide `list-tree`)
 - `loader-2` (from Lucide `loader-2`)
 - `lock` (from Lucide `lock`)
+- `lock-open` (from Lucide `lock-open`)
 - `maximize-2` (from Lucide `maximize-2`)
 - `message-circle` (from Lucide `message-circle`)
 - `message-square` (from Lucide `message-square`)

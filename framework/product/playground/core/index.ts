@@ -100,6 +100,8 @@ export type {
   UiSelectNode,
   UiToggleNode,
   UiTreeItemNode,
+  UiTreeItemAction,
+  UiTreeContextMenuItem,
   UiTreeNode,
   UiTreeSectionNode,
   UiVec3Node,

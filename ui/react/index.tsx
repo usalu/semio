@@ -2960,10 +2960,16 @@ export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
 
 /** @emoji 📐 Compact title bar on top of the window options stack. */
 export const windowMeasuresChromeClass =
-  `pointer-events-auto flex h-small shrink-0 items-center justify-between gap-tiny border-b ${borderElementClass}/40 px-tiny py-0`;
+  `pointer-events-auto flex h-small shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
 
 /** @emoji 📐 Square icon action in the window options chrome bar. */
-export const windowMeasuresChromeActionClass = "size-small min-h-small min-w-small max-h-small max-w-small shrink-0 p-0";
+export const windowMeasuresChromeActionClass = "size-small min-h-small min-w-small max-h-small max-w-small shrink-0 rounded-none border-0 p-0";
+
+/** @emoji 📐 Span toggle hugging the stack top-left corner. */
+export const windowMeasuresChromeCornerLeftClass = "border-r border-element/40";
+
+/** @emoji 📐 Fold toggle hugging the stack top-right corner. */
+export const windowMeasuresChromeCornerRightClass = "border-l border-element/40";
 
 /** @emoji 📐 Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
 export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col overflow-y-auto overscroll-contain p-tiny";
@@ -8181,6 +8187,8 @@ export interface TreeSectionAction {
   title?: string;
   text?: string;
   id?: string;
+  /** @emoji 👁️ When true, the action stays hidden until the tree row is hovered. */
+  revealOnHover?: boolean;
 }
 
 /**
@@ -8227,17 +8235,18 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
           />
         </label>
       ) : (
-        <Action
-          key={action.id ?? index}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            action.onClick();
-          }}
-          id={action.id}
-          icon={action.icon}
-          text={action.text ?? action.title}
-        />
+        <span key={action.id ?? index} className={cn(action.revealOnHover ? "opacity-0 transition-opacity group-hover:opacity-100" : undefined)}>
+          <Action
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              action.onClick();
+            }}
+            id={action.id}
+            icon={action.icon}
+            text={action.text ?? action.title}
+          />
+        </span>
       ),
     )}
   </div>
@@ -8300,6 +8309,10 @@ export interface TreeDataItem {
   onDoubleClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
+  /** @emoji 👁️ Muted row styling for hidden entities in scene outliners. */
+  isHidden?: boolean;
+  /** @emoji 🖱️ Right-click menu for the row (selection-aware actions are built by the host). */
+  contextMenu?: ContextMenuItem[];
 }
 
 export interface TreeDataSection {
@@ -8484,6 +8497,8 @@ interface TreeItemProps {
   onPointerUp?: React.PointerEventHandler<HTMLDivElement>;
   onPointerCancel?: React.PointerEventHandler<HTMLDivElement>;
   layoutKind?: "default" | "property";
+  isHidden?: boolean;
+  contextMenu?: ContextMenuItem[];
 }
 
 /**
@@ -8703,15 +8718,23 @@ const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="t
 const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]`;
 
 /** @emoji 🎨 Tree row background from committed selection vs pointer-driven {@link TreeRootProps.highlightedIds}. */
-function treeRowStateClasses(isSelected: boolean, isHighlighted: boolean): string {
+function treeRowStateClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
+  const hiddenClass = isHidden ? "opacity-50 text-muted-foreground" : "";
   if (isSelected) {
-    return "bg-active-base text-active-foreground";
+    return cn("bg-active-base text-active-foreground", hiddenClass);
   }
   if (isHighlighted) {
-    return "bg-hover-base text-foreground";
+    return cn("bg-hover-base text-foreground", hiddenClass);
   }
-  return "";
+  return hiddenClass;
 }
+
+const TreeItemRowContextMenu: React.FC<{ readonly items?: readonly ContextMenuItem[]; readonly children: React.ReactNode }> = ({ items, children }) => {
+  if (!items?.length) {
+    return <>{children}</>;
+  }
+  return <ContextMenu items={items}>{children}</ContextMenu>;
+};
 
 /** @emoji 🖱️ Skip row leave when pointer moves to another tree row or nested branch (avoids stale leave clearing fast-hover highlight). */
 function shouldDispatchTreeRowPointerLeave(relatedTarget: EventTarget | null): boolean {
@@ -9222,6 +9245,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   onPointerUp,
   onPointerCancel,
   layoutKind = "default",
+  isHidden = false,
+  contextMenu,
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
   const resolvedLabel = label !== undefined ? label : localizedLabel;
@@ -9281,13 +9306,14 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     "w-full",
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     draggable ? "cursor-grab active:cursor-grabbing" : "",
-    treeRowStateClasses(isSelected, isHighlighted),
+    treeRowStateClasses(isSelected, isHighlighted, isHidden),
     className,
   );
   const treeLabelSelectClass = draggable ? "select-none" : "select-text";
 
   if (layoutKind === "property" && resolvedLabel) {
     return (
+      <TreeItemRowContextMenu items={contextMenu}>
       <div
         data-dim
         data-slot="tree-property-item"
@@ -9373,11 +9399,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           <div data-slot="tree-property-content" className="min-w-0" />
         )}
       </div>
+      </TreeItemRowContextMenu>
     );
   }
 
   if (isExpandable && resolvedLabel) {
     return (
+      <TreeItemRowContextMenu items={contextMenu}>
       <>
         <div
           data-dim
@@ -9486,6 +9514,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           </TreeContext.Provider>
         )}
       </>
+      </TreeItemRowContextMenu>
     );
   }
 
@@ -9494,6 +9523,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   return (
+    <TreeItemRowContextMenu items={contextMenu}>
     <div
       data-dim
       data-slot="tree-item-row"
@@ -9563,6 +9593,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         </div>
       </TreeAlignedRow>
     </div>
+    </TreeItemRowContextMenu>
   );
 };
 
@@ -9863,6 +9894,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       className={cn(item.className, palettePointerClassName)}
       isSelected={isRowSelected}
       isHighlighted={isRowHighlighted}
+      isHidden={item.isHidden}
       isDragHandle={item.isDragHandle}
       defaultOpen={defaultOpen}
       open={treeOpenState.open}
@@ -9871,6 +9903,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       loading={isLoading}
       isLastItem={isLastItem}
       actions={item.actions}
+      contextMenu={item.contextMenu}
       draggable={Boolean(item.draggable) || Boolean(item.dragData) || Boolean(dragAndDropController)}
       layoutKind={propertyLayout ? "property" : undefined}
       onClick={(event) => handleSelectItem(event, item, section, [...path])}
@@ -11074,45 +11107,45 @@ interface WindowMeasuresChromeProps {
   onCollapseExpand: () => void;
 }
 
-/** @emoji 🪟 Title bar for the window options rail (label left, fold / span right). */
-const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, folded, expanded, onFold, onUnfold, onExpand, onCollapseExpand }) => (
-  <div
-    data-slot="window-measures-chrome"
-    data-folded={folded ? "true" : undefined}
-    data-expanded={expanded ? "true" : undefined}
-    className={cn(windowMeasuresChromeClass, folded && "border-b-0")}
-  >
-    <div data-slot="window-measures-title" className="flex min-w-0 items-center gap-tiny">
-      <PanelRightIcon className="text-muted-foreground size-tiny shrink-0" />
-      <span className="text-tiny text-foreground truncate font-medium">Window Options</span>
-    </div>
-    <ActionGroup id={`${windowId}-window-measures-actions`} className="h-small shrink-0">
-      {folded ? (
+/** @emoji 🪟 Title bar for the window options rail (span left corner, label center, fold right corner). */
+const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, folded, expanded, onFold, onUnfold, onExpand, onCollapseExpand }) => {
+  if (folded) {
+    return (
+      <div data-slot="window-measures-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
         <ActionGroupItem
           id={`${windowId}-window-measures-unfold`}
           icon="chevron-left"
-          className={windowMeasuresChromeActionClass}
+          className={cn(windowMeasuresChromeActionClass, windowMeasuresChromeCornerRightClass)}
           onClick={onUnfold}
         />
-      ) : (
-        <>
-          <ActionGroupItem
-            id={`${windowId}-window-measures-span`}
-            icon={expanded ? "minimize-2" : "maximize-2"}
-            className={windowMeasuresChromeActionClass}
-            onClick={expanded ? onCollapseExpand : onExpand}
-          />
-          <ActionGroupItem
-            id={`${windowId}-window-measures-fold`}
-            icon="chevron-right"
-            className={windowMeasuresChromeActionClass}
-            onClick={onFold}
-          />
-        </>
-      )}
-    </ActionGroup>
-  </div>
-);
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-slot="window-measures-chrome"
+      data-expanded={expanded ? "true" : undefined}
+      className={windowMeasuresChromeClass}
+    >
+      <ActionGroupItem
+        id={`${windowId}-window-measures-span`}
+        icon={expanded ? "minimize-2" : "maximize-2"}
+        className={cn(windowMeasuresChromeActionClass, windowMeasuresChromeCornerLeftClass)}
+        onClick={expanded ? onCollapseExpand : onExpand}
+      />
+      <span data-slot="window-measures-title" className="text-tiny text-foreground flex min-w-0 flex-1 items-center truncate px-tiny font-medium">
+        Window Options
+      </span>
+      <ActionGroupItem
+        id={`${windowId}-window-measures-fold`}
+        icon="chevron-right"
+        className={cn(windowMeasuresChromeActionClass, windowMeasuresChromeCornerRightClass)}
+        onClick={onFold}
+      />
+    </div>
+  );
+};
 
 // #endregion 🪟WindowMeasuresChrome
 
@@ -13152,7 +13185,14 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const [engagementZoneFocused, setEngagementZoneFocused] = reactHostPort.useState(false);
   const engagementCommandActive = engagementActivated || engagementZoneFocused;
   const showEngagementChrome =
-    active && windowEngagementChromeVisible(engagement, { hovered: engagementZoneHovered, activated: engagementActivated, focused: engagementZoneFocused });
+    active && !measuresExpanded && windowEngagementChromeVisible(engagement, { hovered: engagementZoneHovered, activated: engagementActivated, focused: engagementZoneFocused });
+
+  reactHostPort.useEffect(() => {
+    if (!measuresExpanded) return;
+    setEngagementZoneHovered(false);
+    setEngagementActivated(false);
+    setEngagementZoneFocused(false);
+  }, [measuresExpanded]);
 
   reactHostPort.useEffect(() => {
     const draft = engagement?.input?.value ?? "";
@@ -13262,10 +13302,10 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 style={measuresOverlaySizeStyle}
                 className={cn(
                   windowMeasuresOverlayClass,
-                  measuresExpanded
-                    ? windowMeasuresOverlayExpandedClass
-                    : measuresFolded
-                      ? windowMeasuresOverlayFoldedClass
+                  measuresFolded
+                    ? windowMeasuresOverlayFoldedClass
+                    : measuresExpanded
+                      ? windowMeasuresOverlayExpandedClass
                       : !measuresOverlaySizeStyle && windowMeasuresRailWidthClass,
                 )}
               >
@@ -13285,7 +13325,10 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                     windowId={id}
                     folded={measuresFolded}
                     expanded={measuresExpanded}
-                    onFold={() => setMeasuresFolded(true)}
+                    onFold={() => {
+                      setMeasuresExpanded(false);
+                      setMeasuresFolded(true);
+                    }}
                     onUnfold={() => setMeasuresFolded(false)}
                     onExpand={() => setMeasuresExpanded(true)}
                     onCollapseExpand={() => setMeasuresExpanded(false)}
@@ -13309,7 +13352,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
               </div>
             </GlassTierProvider>
           ) : null}
-          {engagement && active ? (
+          {engagement && active && !measuresExpanded ? (
             <div
               data-slot="window-engagement-overlay"
               data-expanded={showEngagementChrome ? "true" : undefined}
@@ -14709,8 +14752,10 @@ function GumballHandleMesh(props: {
   readonly onPointerOut: () => void;
   readonly children: React.ReactNode;
 }): React.ReactElement {
+  const doubleSided = props.kind === "moveXY" || props.kind === "moveYZ" || props.kind === "moveXZ";
   return (
     <mesh
+      frustumCulled={false}
       userData={{ gumballHandleKind: props.kind }}
       onPointerDown={(event) => {
         event.stopPropagation();
@@ -14726,7 +14771,7 @@ function GumballHandleMesh(props: {
       }}
     >
       {props.children}
-      <meshBasicMaterial color={props.color} transparent opacity={props.hovered ? 1 : 0.85} depthTest={false} depthWrite={false} />
+      <meshBasicMaterial color={props.color} transparent opacity={props.hovered ? 1 : 0.85} depthTest={false} depthWrite={false} side={doubleSided ? THREE.DoubleSide : THREE.FrontSide} />
     </mesh>
   );
 }
@@ -14890,6 +14935,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
   const gl = useThree((state) => state.gl);
+  const invalidate = useThree((state) => state.invalidate);
   const controls = useThree((state) => state.controls as { enabled?: boolean } | null);
 
   useFrame(() => {
@@ -14921,7 +14967,10 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         const planeNormal = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
         const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, planeNormal);
         if (!hit) return;
-        const delta = gumballSub(hit, state.startPlanePoint);
+        let delta = gumballSub(hit, state.startPlanePoint);
+        if (config.translationSnap && config.translationSnap > 0) {
+          delta = [gumballSnapScalar(delta[0], config.translationSnap), gumballSnapScalar(delta[1], config.translationSnap), gumballSnapScalar(delta[2], config.translationSnap)];
+        }
         target.position.set(state.before.position[0] + delta[0], state.before.position[1] + delta[1], state.before.position[2] + delta[2]);
       } else if (kind === "rotateX" || kind === "rotateY" || kind === "rotateZ") {
         const axisDir = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
@@ -14954,8 +15003,9 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
       }
       target.updateMatrixWorld(true);
       props.onDrag?.(kind, gumballPoseFromObject3D(target));
+      invalidate();
     },
-    [camera, config.rotationSnap, config.scaleSnap, config.translationSnap, props],
+    [camera, config.rotationSnap, config.scaleSnap, config.translationSnap, invalidate, props],
   );
 
   const onWindowMoveRef = reactHostPort.useRef<(event: PointerEvent) => void>(() => {});
@@ -15041,7 +15091,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   if (!gumballConfigVisible(config)) return null;
 
   return sceneHostPort.fiber.createPortal(
-    <group ref={groupRef}>
+    <group ref={groupRef} frustumCulled={false}>
       <GumballHandles config={config} hovered={hovered} onPointerDown={beginDrag} onPointerOver={setHovered} onPointerOut={() => setHovered(null)} />
     </group>,
     scene,
@@ -19648,6 +19698,28 @@ if (import.meta.vitest) {
       expect(bodyDown).toHaveBeenCalledTimes(2);
     });
 
+    it("Window hides engagement overlay when measures are fullscreen", () => {
+      const { container } = render(
+        <Window
+          id="measures-engagement-window"
+          active
+          engagement={{ input: { placeholder: "Command" } }}
+          measures={<div data-testid="measure-slot">LOD</div>}
+        >
+          <div>Body</div>
+        </Window>,
+      );
+      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
+      fireEvent.pointerEnter(zone);
+      expect(screen.getByPlaceholderText("Command")).toBeTruthy();
+      fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
+      expect(container.querySelector('[data-slot="window-measures-overlay"]')?.getAttribute("data-expanded")).toBe("true");
+      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
+      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
+      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeTruthy();
+    });
+
     it("Window hides engagement overlay when inactive", () => {
       const { container } = render(
         <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }}>
@@ -19683,11 +19755,15 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       const title = container.querySelector('[data-slot="window-measures-title"]') as HTMLElement;
-      const actions = container.querySelector('[data-slot="action-group"]') as HTMLElement;
-      expect(title.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      const span = container.querySelector(`#measures-fold-window-window-measures-span`) as HTMLElement;
+      const fold = container.querySelector(`#measures-fold-window-window-measures-fold`) as HTMLElement;
+      expect(span.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(title.compareDocumentPosition(fold) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
       fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-fold`)!);
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeNull();
+      expect(container.querySelector(`#measures-fold-window-window-measures-span`)).toBeNull();
+      expect(container.querySelector('[data-slot="window-measures-title"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBe("true");
       expect(overlay.className).toContain("w-fit");
       fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-unfold`)!);
@@ -19715,6 +19791,22 @@ if (import.meta.vitest) {
       expect(overlay.getAttribute("data-expanded")).toBeNull();
       expect(overlay.className).toContain("top-0");
       expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
+    });
+
+    it("Window measures chrome fold collapses span and expanded overlay", () => {
+      const { container } = render(
+        <Window id="measures-fold-expanded-window" measures={<div data-testid="measure-slot">LOD</div>}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
+      fireEvent.click(container.querySelector(`#measures-fold-expanded-window-window-measures-span`)!);
+      expect(overlay.getAttribute("data-expanded")).toBe("true");
+      fireEvent.click(container.querySelector(`#measures-fold-expanded-window-window-measures-fold`)!);
+      expect(container.querySelector(`#measures-fold-expanded-window-window-measures-span`)).toBeNull();
+      expect(overlay.getAttribute("data-expanded")).toBeNull();
+      expect(overlay.className).toContain("w-fit");
+      expect(overlay.className).not.toContain("inset-0");
     });
 
     it("Window measures rail resizes from the left edge when unfolded", () => {
@@ -19933,6 +20025,8 @@ if (treeVitest) {
       expect(treeRowStateClasses(false, true)).toContain("bg-hover-base");
       expect(treeRowStateClasses(true, true)).toContain("bg-active-base");
       expect(treeRowStateClasses(true, false)).toContain("bg-active-base");
+      expect(treeRowStateClasses(false, false, true)).toContain("opacity-50");
+      expect(treeRowStateClasses(true, false, true)).toContain("opacity-50");
     });
 
     it("tree selection store notifies subscribers only when selection changes", () => {

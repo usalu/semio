@@ -136,6 +136,25 @@ export interface UiSectionNode {
 	readonly children: readonly UiNode[];
 }
 
+/** @emoji 👁️ Inline tree-row action (hide/lock toggles, …). */
+export interface UiTreeItemAction {
+	readonly id?: string;
+	readonly icon: string;
+	readonly title?: string;
+	readonly onClick: () => void;
+	readonly revealOnHover?: boolean;
+}
+
+/** @emoji 🖱️ Serializable tree-row context menu entry. */
+export interface UiTreeContextMenuItem {
+	readonly id: string;
+	readonly label?: string;
+	readonly icon?: string;
+	readonly disabled?: boolean;
+	readonly onSelect?: () => void;
+	readonly children?: readonly UiTreeContextMenuItem[];
+}
+
 /** @emoji 🌿 One tree row; optional nested items, selection command, and inline control. */
 export interface UiTreeItemNode {
 	readonly id: string;
@@ -150,6 +169,9 @@ export interface UiTreeItemNode {
 	readonly onPointerLeave?: () => void;
 	readonly items?: readonly UiTreeItemNode[];
 	readonly control?: UiControlNode;
+	readonly isHidden?: boolean;
+	readonly actions?: readonly UiTreeItemAction[];
+	readonly contextMenu?: readonly UiTreeContextMenuItem[];
 }
 
 /** @emoji 🌲 Tree section for {@link UiTreeNode}. */

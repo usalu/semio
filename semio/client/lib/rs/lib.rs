@@ -6244,6 +6244,54 @@ pub mod kit {
             out
         }
 
+        /// @emoji 📄 File ids used as representation backing blobs on kit kinds.
+        pub async fn file_ids_referenced_by_representations(&self) -> std::collections::HashSet<Id> {
+            use std::collections::HashSet;
+            let mut ids = HashSet::new();
+            for ty in self.has_types().await.iter() {
+                for rep in ty.representations.read().await.iter() {
+                    if let Some(f) = rep.file.read().await.as_ref() {
+                        ids.insert(f.id.clone());
+                    }
+                }
+            }
+            ids
+        }
+
+        /// @emoji 📄 Speckle-style representation blob basename (`e5267da44d`).
+        fn looks_like_speckle_representation_blob_name(name: &str) -> bool {
+            name.len() == 10 && name.bytes().all(|b| b.is_ascii_hexdigit())
+        }
+
+        /// @emoji 📄 True when a loose kit file is a representation backing blob, not a browsable VFS asset.
+        fn file_is_hidden_representation_blob(file: &crate::meta::File, rep_file_ids: &std::collections::HashSet<Id>) -> bool {
+            if rep_file_ids.contains(&file.id) {
+                return true;
+            }
+            if file.folder_id.is_some() {
+                return false;
+            }
+            if Self::looks_like_speckle_representation_blob_name(&file.name) {
+                return true;
+            }
+            if !file.url.is_empty() && file.url.contains("/representations/") {
+                return true;
+            }
+            false
+        }
+
+        /// @emoji 📁 Kit-root files for VFS (no folder; excludes representation-only backing blobs).
+        pub async fn vfs_kit_root_files(&self) -> Vec<crate::meta::File> {
+            let rep_file_ids = self.file_ids_referenced_by_representations().await;
+            self.files
+                .read()
+                .await
+                .iter()
+                .filter(|f| f.folder_id.is_none() && !Self::file_is_hidden_representation_blob(f, &rep_file_ids))
+                .cloned()
+                .collect()
+        }
+
         /// @emoji 🧰 Kinds that own a representation referencing the given file.
         pub async fn types_for_file(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<r#type::Type>> {
             use std::collections::HashSet;
@@ -6759,18 +6807,10 @@ pub mod kit {
         pub async fn has_types_field(&self) -> crate::gql_relay::TypeConnection {
             crate::gql_relay::TypeConnection::from_types(self.has_types().await).await
         }
-        /// @emoji 📄 Kit-root files only (matches {@link file_system_vfs::children_nodes} for {@link FileSystemNodeInterface::Kit}).
+        /// @emoji 📄 Kit-root VFS files only (excludes folder-placed and representation backing blobs).
         #[graphql(name = "hasFiles")]
         pub async fn has_files(&self) -> crate::gql_relay::FileConnection {
-            let rows = self
-                .files
-                .read()
-                .await
-                .iter()
-                .filter(|f| f.folder_id.is_none())
-                .cloned()
-                .collect();
-            crate::gql_relay::FileConnection::from_entities(rows)
+            crate::gql_relay::FileConnection::from_entities(self.vfs_kit_root_files().await)
         }
         /// @emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
         #[graphql(name = "hasFolders")]
@@ -12383,6 +12423,7 @@ pub mod kit_backbone {
                 .and_then(|v| v.as_str())
                 .or_else(|| f_json.get("url").and_then(|v| v.as_str()))
                 .or_else(|| f_json.get("uri").and_then(|v| v.as_str()))
+                .or_else(|| f_json.get("remote").and_then(|v| v.as_str()))
                 .unwrap_or("")
                 .to_string();
             let hash = f_json
@@ -14583,8 +14624,8 @@ pub mod gql {
                         for folder in k.folders.read().await.iter().filter(|f| f.parent_folder_id.is_none()) {
                             out.push(FileSystemNodeInterface::Folder(folder.clone()));
                         }
-                        for file in k.files.read().await.iter().filter(|f| f.folder_id.is_none()) {
-                            out.push(FileSystemNodeInterface::File(file.clone()));
+                        for file in k.vfs_kit_root_files().await {
+                            out.push(FileSystemNodeInterface::File(file));
                         }
                         for topo in k.typologies.read().await.iter() {
                             if topo.folder_id.read().await.is_none() {
@@ -19755,7 +19796,7 @@ mod tests {
                                                 edges {
                                                     node {
                                                         id
-                                                        hasRepresentations { edges { node { id name file { id } } } }
+                                                        hasRepresentations { edges { node { id name file { id url } } } }
                                                     }
                                                 }
                                             }
@@ -19771,9 +19812,7 @@ mod tests {
             assert!(read.errors.is_empty(), "read kit: {:?}", read.errors);
             let kit_json = read.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
             let file_edges = kit_json["hasFiles"]["edges"].as_array().expect("file edges");
-            assert_eq!(file_edges.len(), 1);
-            assert_eq!(file_edges[0]["node"]["id"], "f1");
-            assert!(file_edges[0]["node"]["url"].as_str().unwrap_or("").starts_with("data:"));
+            assert!(file_edges.is_empty(), "representation backing blobs stay off kit-root VFS");
             let rep_edges = kit_json["hasTypes"]["edges"][0]["node"]["hasRepresentations"]["edges"]
                 .as_array()
                 .expect("representation edges");
@@ -19781,6 +19820,78 @@ mod tests {
             assert_eq!(rep_edges[0]["node"]["id"], "r1");
             assert_eq!(rep_edges[0]["node"]["name"], "chair");
             assert_eq!(rep_edges[0]["node"]["file"]["id"], "f1");
+            assert!(rep_edges[0]["node"]["file"]["url"]
+                .as_str()
+                .unwrap_or("")
+                .starts_with("data:"));
+        });
+    }
+
+    #[test]
+    fn install_projection_hides_speckle_representation_blobs_from_kit_root_vfs() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let projection = crate::external_adapters::serde_json::json!({
+                "id": "kit-speckle",
+                "name": "Speckle Kit",
+                "files": {
+                    "items": [
+                        {
+                            "id": "f-hash",
+                            "name": "e5267da44d",
+                            "remote": "https://app.speckle.systems/projects/demo/representations/e5267da44d"
+                        },
+                        {
+                            "id": "f-loose",
+                            "name": "notes.md",
+                            "blob": "data:text/plain;base64,aGk="
+                        }
+                    ]
+                },
+                "types": { "items": [] },
+                "designs": { "items": [] }
+            });
+            let projection_str = crate::external_adapters::serde_json::to_string(&projection).expect("projection json");
+            const INSTALL_M: &str = r#"
+                mutation($json: String!) {
+                    session {
+                        store(id: "test-store") {
+                            installProjection(json: $json) {
+                                ok
+                                errors { message }
+                            }
+                        }
+                    }
+                }"#;
+            let vars = crate::external_adapters::async_graphql::value!({ "json": projection_str });
+            let res = schema
+                .execute(Request::new(INSTALL_M).variables(crate::external_adapters::async_graphql::Variables::from_value(vars)))
+                .await;
+            assert!(res.errors.is_empty(), "installProjection: {:?}", res.errors);
+            let q = r#"query {
+                session {
+                    stores {
+                        edges {
+                            node {
+                                wip {
+                                    theKit {
+                                        kit {
+                                            hasFiles { edges { node { id name } } }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }"#;
+            let read = schema.execute(Request::new(q)).await;
+            assert!(read.errors.is_empty(), "read kit: {:?}", read.errors);
+            let kit_json = read.data.into_json().unwrap()["session"]["stores"]["edges"][0]["node"]["wip"]["theKit"]["kit"].clone();
+            let file_edges = kit_json["hasFiles"]["edges"].as_array().expect("file edges");
+            assert_eq!(file_edges.len(), 1);
+            assert_eq!(file_edges[0]["node"]["id"], "f-loose");
+            assert_eq!(file_edges[0]["node"]["name"], "notes.md");
         });
     }
 
@@ -19849,8 +19960,7 @@ mod tests {
             assert_eq!(folder_edges.len(), 1);
             assert_eq!(folder_edges[0]["node"]["name"], "assets");
             let file_edges = kit_json["hasFiles"]["edges"].as_array().expect("file edges");
-            assert_eq!(file_edges.len(), 1);
-            assert_eq!(file_edges[0]["node"]["name"], "chair.glb");
+            assert!(file_edges.is_empty(), "folder-placed files are not kit-root VFS rows");
         });
     }
 

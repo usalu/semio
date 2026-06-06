@@ -62,6 +62,55 @@ export interface WorldCameraState {
 }
 
 export type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+
+/** @emoji 👁️ Persisted per-entity hide/lock flags shared by CAD and puzzle 3d. */
+export interface WorldEntityFlags {
+  readonly hidden?: boolean;
+  readonly locked?: boolean;
+}
+
+/** @emoji 🔒 Opacity scale applied when an entity is locked but still rendered. */
+export const WORLD_LOCKED_OPACITY_SCALE = 0.35;
+
+/** @emoji 🔒 Desaturation factor applied when an entity is locked but still rendered. */
+export const WORLD_LOCKED_DESATURATION = 0.55;
+
+export interface WorldEntityRenderModeInput {
+  readonly hovered?: boolean;
+  readonly selected?: boolean;
+  readonly revealed?: boolean;
+}
+
+export interface WorldEntityRenderMode {
+  readonly visible: boolean;
+  readonly asHover: boolean;
+  readonly dim: boolean;
+  readonly showSelectedOutline: boolean;
+}
+
+/** @emoji 👁️ Whether an entity participates in canvas pick, hover, and edit interactions. */
+export function worldEntitySelectable(flags: WorldEntityFlags | undefined): boolean {
+  return flags?.hidden !== true && flags?.locked !== true;
+}
+
+/** @emoji 👁️ Whether an entity should be drawn in the 3d scene. */
+export function worldEntityRendered(flags: WorldEntityFlags | undefined, revealed = false): boolean {
+  return flags?.hidden !== true || revealed;
+}
+
+/** @emoji 👁️ Resolves hover/dim/outline behavior for hidden-reveal and locked entities. */
+export function worldEntityRenderMode(flags: WorldEntityFlags | undefined, input: WorldEntityRenderModeInput = {}): WorldEntityRenderMode {
+  const revealed = input.revealed === true;
+  const hovered = input.hovered === true;
+  const selected = input.selected === true;
+  const hidden = flags?.hidden === true;
+  const locked = flags?.locked === true;
+  const visible = worldEntityRendered(flags, revealed);
+  const asHover = (hidden && revealed) || (hovered && !locked);
+  const dim = locked && !hidden;
+  const showSelectedOutline = selected && !locked && !hidden;
+  return { visible, asHover, dim, showSelectedOutline };
+}
 // #endregion 🔖Types
 
 // #region 🔖EventBinding
@@ -1718,6 +1767,35 @@ if (import.meta.vitest) {
       expect(mesh.children[0]?.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY]).toBe(true);
       applyWorldMeshEdgeBorders(root, "#336699");
       expect(mesh.children).toHaveLength(1);
+    });
+  });
+
+  describe("worldEntityFlags", () => {
+    it("treats hidden and locked entities as non-selectable", () => {
+      expect(worldEntitySelectable(undefined)).toBe(true);
+      expect(worldEntitySelectable({ hidden: true })).toBe(false);
+      expect(worldEntitySelectable({ locked: true })).toBe(false);
+    });
+
+    it("reveals hidden entities on demand", () => {
+      expect(worldEntityRendered({ hidden: true }, false)).toBe(false);
+      expect(worldEntityRendered({ hidden: true }, true)).toBe(true);
+      expect(worldEntityRendered({ locked: true }, false)).toBe(true);
+    });
+
+    it("resolves render mode for hidden reveal and locked dim", () => {
+      expect(worldEntityRenderMode({ hidden: true }, { revealed: true, hovered: false })).toMatchObject({
+        visible: true,
+        asHover: true,
+        dim: false,
+        showSelectedOutline: false,
+      });
+      expect(worldEntityRenderMode({ locked: true }, { hovered: true, selected: true })).toMatchObject({
+        visible: true,
+        asHover: false,
+        dim: true,
+        showSelectedOutline: false,
+      });
     });
   });
 }

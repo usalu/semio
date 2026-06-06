@@ -41,6 +41,8 @@ let propertyOwnerByIdCache: ReadonlyMap<string, string> | null = null;
 let statOwnerByIdCache: ReadonlyMap<string, string> | null = null;
 let defaultModelDefinitionIdCache: string | null = null;
 
+let typologyStyleCache: ReadonlyMap<string, ResolvedTypologyStyle> | null = null;
+
 function resetModelDefinitionCaches(): void {
   modelDefinitionFolderIdMapCache = null;
   typologyOwnerByIdCache = null;
@@ -50,6 +52,7 @@ function resetModelDefinitionCaches(): void {
   propertyOwnerByIdCache = null;
   statOwnerByIdCache = null;
   defaultModelDefinitionIdCache = null;
+  typologyStyleCache = null;
 }
 
 /** @emoji 📥 Replaces shipped model-definition catalogs (tests or host injection). */
@@ -465,6 +468,40 @@ export class AttributeStore {
     for (const row of rows ?? []) this.byId.set(row.id, { ...row.fields });
     if (bumpRevision && rows.length > 0) this.bumpRevision();
   }
+
+  /** @emoji 👁️ Reads persisted hide/lock flags for any geometry or object entity id. */
+  getEntityFlags(id: string): SpatialEntityFlags {
+    return spatialEntityFlagsFromFields(this.get(id));
+  }
+
+  /** @emoji 👁️ Sets one persisted hide/lock flag; clears the field when set to false. */
+  setEntityFlag(id: string, flag: SpatialEntityFlagKey, value: boolean): void {
+    if (value) {
+      this.setField(id, flag, true);
+      return;
+    }
+    this.deleteField(id, flag);
+  }
+}
+
+/** @emoji 👁️ Persisted per-entity hide/lock keys stored in `Model.metadata`. */
+export type SpatialEntityFlagKey = "hidden" | "locked";
+
+/** @emoji 👁️ Persisted per-entity hide/lock flags for CAD spatial entities. */
+export interface SpatialEntityFlags {
+  readonly hidden?: boolean;
+  readonly locked?: boolean;
+}
+
+/** @emoji 👁️ Parses hide/lock flags from a metadata field row. */
+export function spatialEntityFlagsFromFields(fields: Readonly<Record<string, unknown>> | undefined): SpatialEntityFlags {
+  if (!fields) {
+    return {};
+  }
+  return {
+    ...(fields.hidden === true ? { hidden: true } : {}),
+    ...(fields.locked === true ? { locked: true } : {}),
+  };
 }
 
 /** @emoji 🪪 `evalExpr` `field` target: a bound geometry row entity (`kind` + `id`). */
@@ -1447,6 +1484,16 @@ export class Model {
   bump(): void {
     this.revision += 1;
   }
+
+  /** @emoji 👁️ Reads persisted hide/lock flags for an entity id from metadata. */
+  getEntityFlags(id: string): SpatialEntityFlags {
+    return this.metadata.getEntityFlags(id);
+  }
+
+  /** @emoji 👁️ Sets one persisted hide/lock flag on an entity id. */
+  setEntityFlag(id: string, flag: SpatialEntityFlagKey, value: boolean): void {
+    this.metadata.setEntityFlag(id, flag, value);
+  }
 }
 
 /** @emoji 🗑️ Removes object rows by id; geometry primitives stay intact so linked topology remains valid. */
@@ -1973,6 +2020,34 @@ export function listModelDefinitionManifests(): readonly ModelDefinitionManifest
     .filter((m): m is ModelDefinitionManifest => m !== null);
 }
 
+/** @emoji 🎨 Surface pattern kind for typology display styling. */
+export type TypologyStylePatternKind = "none" | "hatch" | "crosshatch" | "dots";
+
+/** @emoji 🎨 Authored surface pattern on a typology (`cad/schema/json/typology.json`). */
+export interface TypologyStylePatternSpec {
+  readonly kind: TypologyStylePatternKind;
+  readonly direction?: number;
+  readonly spacing?: number;
+  readonly lineWidth?: number;
+  readonly color?: string;
+}
+
+/** @emoji 🎨 Optional authored display style on a typology asset. */
+export interface TypologyStyleSpec {
+  readonly color?: string;
+  readonly edgeColor?: string;
+  readonly opacity?: number;
+  readonly pattern?: TypologyStylePatternSpec;
+}
+
+/** @emoji 🎨 Fully resolved display style for one typology (auto fallback + authored overrides). */
+export interface ResolvedTypologyStyle {
+  readonly color: string;
+  readonly edgeColor: string;
+  readonly opacity: number;
+  readonly pattern: Required<Pick<TypologyStylePatternSpec, "kind" | "direction" | "spacing" | "lineWidth" | "color">>;
+}
+
 /** @emoji 🏷️ Parsed typology asset (`spatial.typology/v1`). */
 export interface TypologySpec {
   readonly schema: "spatial.typology/v1";
@@ -1985,6 +2060,7 @@ export interface TypologySpec {
   readonly interactions: readonly string[];
   readonly properties?: readonly string[];
   readonly attributes?: readonly string[];
+  readonly style?: TypologyStyleSpec;
 }
 
 /** @emoji 🧭 Infers default `primitiveKinds` from a shipped typology id when the asset omits the field. */
@@ -2015,6 +2091,35 @@ function parseTypologyPrimitiveKinds(raw: unknown, typology: string): readonly T
   return kinds.length ? kinds : inferTypologyPrimitiveKinds(typology);
 }
 
+const TYPOLOGY_STYLE_PATTERN_KINDS = new Set<TypologyStylePatternKind>(["none", "hatch", "crosshatch", "dots"]);
+
+function parseTypologyStylePatternSpec(raw: unknown): TypologyStylePatternSpec | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const kind = r.kind;
+  if (typeof kind !== "string" || !TYPOLOGY_STYLE_PATTERN_KINDS.has(kind as TypologyStylePatternKind)) return null;
+  return {
+    kind: kind as TypologyStylePatternKind,
+    direction: typeof r.direction === "number" ? r.direction : undefined,
+    spacing: typeof r.spacing === "number" ? r.spacing : undefined,
+    lineWidth: typeof r.lineWidth === "number" ? r.lineWidth : undefined,
+    color: typeof r.color === "string" ? r.color : undefined,
+  };
+}
+
+function parseTypologyStyleSpec(raw: unknown): TypologyStyleSpec | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const r = raw as Record<string, unknown>;
+  const pattern = r.pattern !== undefined ? parseTypologyStylePatternSpec(r.pattern) : undefined;
+  if (r.pattern !== undefined && !pattern) return undefined;
+  return {
+    color: typeof r.color === "string" ? r.color : undefined,
+    edgeColor: typeof r.edgeColor === "string" ? r.edgeColor : undefined,
+    opacity: typeof r.opacity === "number" ? r.opacity : undefined,
+    pattern: pattern ?? undefined,
+  };
+}
+
 /** @emoji 🧾 Parses `spatial.typology/v1` JSON or returns `null`. */
 export function parseTypologySpec(raw: unknown): TypologySpec | null {
   if (!raw || typeof raw !== "object") return null;
@@ -2033,8 +2138,115 @@ export function parseTypologySpec(raw: unknown): TypologySpec | null {
     interactions: r.interactions as string[],
     properties: Array.isArray(r.properties) ? (r.properties as string[]) : undefined,
     attributes: Array.isArray(r.attributes) ? (r.attributes as string[]) : undefined,
+    style: parseTypologyStyleSpec(r.style),
   };
 }
+
+// #region 🎨TypologyStyle
+function hashTypologyId(typology: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < typology.length; i++) {
+    h ^= typology.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function hslToHex(h: number, s: number, l: number): string {
+  const hue = ((h % 360) + 360) % 360;
+  const sat = Math.min(1, Math.max(0, s));
+  const lit = Math.min(1, Math.max(0, l));
+  const c = (1 - Math.abs(2 * lit - 1)) * sat;
+  const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const m = lit - c / 2;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (hue < 60) {
+    r = c;
+    g = x;
+  } else if (hue < 120) {
+    r = x;
+    g = c;
+  } else if (hue < 180) {
+    g = c;
+    b = x;
+  } else if (hue < 240) {
+    g = x;
+    b = c;
+  } else if (hue < 300) {
+    r = x;
+    b = c;
+  } else {
+    r = c;
+    b = x;
+  }
+  const toByte = (v: number) => Math.round((v + m) * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `#${toByte(r)}${toByte(g)}${toByte(b)}`;
+}
+
+function darkenHexColor(hex: string, amount = 0.28): string {
+  const raw = hex.replace("#", "");
+  if (raw.length !== 6) return hex;
+  const r = Number.parseInt(raw.slice(0, 2), 16);
+  const g = Number.parseInt(raw.slice(2, 4), 16);
+  const b = Number.parseInt(raw.slice(4, 6), 16);
+  const scale = 1 - amount;
+  const toByte = (v: number) =>
+    Math.round(v * scale)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${toByte(r)}${toByte(g)}${toByte(b)}`;
+}
+
+function autoTypologyStyle(typology: string): ResolvedTypologyStyle {
+  const hash = hashTypologyId(typology);
+  const hue = (hash * 137.508) % 360;
+  const color = hslToHex(hue, 0.58, 0.52);
+  return {
+    color,
+    edgeColor: darkenHexColor(color, 0.32),
+    opacity: 0.72,
+    pattern: { kind: "none", direction: 0, spacing: 0.35, lineWidth: 0.03, color: darkenHexColor(color, 0.18) },
+  };
+}
+
+function mergeTypologyStyle(typology: string, authored?: TypologyStyleSpec): ResolvedTypologyStyle {
+  const base = autoTypologyStyle(typology);
+  const pattern = authored?.pattern;
+  const fill = authored?.color ?? base.color;
+  return {
+    color: fill,
+    edgeColor: authored?.edgeColor ?? darkenHexColor(fill, 0.32),
+    opacity: authored?.opacity ?? base.opacity,
+    pattern: {
+      kind: pattern?.kind ?? base.pattern.kind,
+      direction: pattern?.direction ?? base.pattern.direction,
+      spacing: pattern?.spacing ?? base.pattern.spacing,
+      lineWidth: pattern?.lineWidth ?? base.pattern.lineWidth,
+      color: pattern?.color ?? darkenHexColor(fill, 0.18),
+    },
+  };
+}
+
+/** @emoji 🎨 Stable cache key for renderer material/pattern reuse. */
+export function typologyStyleCacheKey(style: ResolvedTypologyStyle): string {
+  const p = style.pattern;
+  return `${style.color}|${style.edgeColor}|${style.opacity}|${p.kind}|${p.direction}|${p.spacing}|${p.lineWidth}|${p.color}`;
+}
+
+/** @emoji 🎨 Resolves display style for a typology (deterministic auto fallback + optional asset override). */
+export function resolveTypologyStyle(typology: string): ResolvedTypologyStyle {
+  if (typologyStyleCache?.has(typology)) return typologyStyleCache.get(typology)!;
+  const authored = loadTypology(typology)?.style;
+  const resolved = mergeTypologyStyle(typology, authored);
+  if (!typologyStyleCache) typologyStyleCache = new Map();
+  typologyStyleCache.set(typology, resolved);
+  return resolved;
+}
+// #endregion 🎨TypologyStyle
 
 function shippedTypologyCatalog(): readonly TypologySpec[] {
   return dedupeDefinitionCatalog(
@@ -3294,6 +3506,12 @@ export function modelDefinitionSelectionEntityKinds(modelDefinitionId: string): 
 /** @emoji 🧭 Object rows owned by typologies declared under a model definition. */
 export function listModelObjectsForModelDefinition(model: Model, modelDefinitionId: string): readonly SpatialObjectRecord[] {
   const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
+  const kernelTypologyMap = kernelTypologyIds(modelDefinitionId);
+  if (kernelTypologyMap) {
+    for (const typologyId of Object.values(kernelTypologyMap)) {
+      if (typeof typologyId === "string" && typologyId.length > 0) typologyIds.add(typologyId);
+    }
+  }
   return Object.values(model.objects).filter((row) => typologyIds.has(row.typology));
 }
 
@@ -6951,6 +7169,27 @@ if (import.meta.vitest) {
       expect(box?.primitiveKinds).toEqual(["solid"]);
       expect(line?.primitiveKinds).toEqual(["edge", "wire"]);
     });
+    it("resolveTypologyStyle is deterministic and distinct per typology id", () => {
+      const a = resolveTypologyStyle("spatial.shape.primitive.box");
+      const b = resolveTypologyStyle("spatial.shape.primitive.box");
+      const c = resolveTypologyStyle("spatial.shape.curve.line");
+      expect(a).toEqual(b);
+      expect(a.color).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(c.color).not.toBe(a.color);
+      expect(a.pattern.kind).toBe("none");
+    });
+    it("resolveTypologyStyle merges authored typology style overrides", () => {
+      const slab = resolveTypologyStyle("structure.structure.onewayreinforcedconcreteslab");
+      expect(slab.color).toBe("#8B7355");
+      expect(slab.pattern.kind).toBe("hatch");
+      expect(slab.pattern.direction).toBe(0);
+      const wall = resolveTypologyStyle("structure.structure.reinforcedconcreteexternalwall");
+      expect(wall.pattern.kind).toBe("crosshatch");
+      expect(wall.edgeColor).toBe("#3D5560");
+      const roof = resolveTypologyStyle("energy.energy.roof");
+      expect(roof.pattern.kind).toBe("hatch");
+      expect(roof.pattern.direction).toBe(90);
+    });
     it("derives spatial.shape.volume for solid-backed objects", async () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box-a")));
@@ -7087,6 +7326,18 @@ if (import.meta.vitest) {
       model.objects["other"] = { id: "other" as ObjectRef, typology: "spatial.shape.primitive.box", primitives: { solid: String(cell) } };
       expect(listModelObjectsForModelDefinition(model, "aec.building.energy").map((row) => String(row.id))).toEqual(["hull"]);
       expect(countViewObjectsForModelDefinition(model, "aec.building.energy")).toBe(1);
+    });
+
+    it("listModelObjectsForModelDefinition includes kernel typology objects on shape model definition", () => {
+      const model = new Model();
+      const cell = solidRef("imported");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+      model.objects["imported"] = {
+        id: "imported" as ObjectRef,
+        typology: "spatial.shape.kernel.solid",
+        primitives: { solid: String(cell) },
+      };
+      expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId()).map((row) => String(row.id))).toEqual(["imported"]);
     });
     it("collectGeometrySelectionTargets scopes object rows to model definition typologies", () => {
       const model = new Model();
@@ -7341,6 +7592,19 @@ if (import.meta.vitest) {
       g.metadata.setField("solid-a", "tag", "roof");
       const back = Model.fromJSON(g.toJSON());
       expect(back.metadata.get("solid-a")?.tag).toBe("roof");
+    });
+
+    it("AttributeStore getEntityFlags and setEntityFlag roundtrip", () => {
+      const g = new Model();
+      expect(g.getEntityFlags("obj-1")).toEqual({});
+      g.setEntityFlag("obj-1", "hidden", true);
+      g.setEntityFlag("face-2", "locked", true);
+      expect(g.getEntityFlags("obj-1")).toEqual({ hidden: true });
+      expect(g.getEntityFlags("face-2")).toEqual({ locked: true });
+      g.setEntityFlag("obj-1", "hidden", false);
+      expect(g.getEntityFlags("obj-1")).toEqual({});
+      const back = Model.fromJSON(g.toJSON());
+      expect(back.getEntityFlags("face-2")).toEqual({ locked: true });
     });
   });
 

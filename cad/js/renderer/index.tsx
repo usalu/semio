@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, type EngagementControl, type EngagementSpec, type GumballConfig, type ThreeEvent } from "@ui/react";
+import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@ui/styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
@@ -32,6 +32,9 @@ import {
   WorldOrbitGated,
   type OrbitCameraViewId,
   type WorldCanvasProps,
+  WORLD_LOCKED_OPACITY_SCALE,
+  worldEntityRendered,
+  worldEntitySelectable,
 } from "@infinite/world/r3f";
 
 import {
@@ -129,6 +132,10 @@ import {
   type CadGumballConfig,
   type ModelDiff,
   ensureTypologyObjectFromCreateDiff,
+  resolveTypologyStyle,
+  typologyStyleCacheKey,
+  type ResolvedTypologyStyle,
+  type SpatialEntityFlags,
 } from "@cad/js/core";
 
 type AnchorRecord = kernelGeometry.AnchorRecord;
@@ -246,7 +253,12 @@ export function isRenderableMeshTransfer(mesh: MeshTransfer): boolean {
 }
 
 /** @emoji 🎞️ Tessellates every model solid through `SpatialKernel.tessellate` (worker-backed). */
-export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, tolerance: number): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
+export function useDocumentMeshes(
+  kernel: SpatialKernel | null,
+  model: Model,
+  tolerance: number,
+  keepPreviousWhileLoading = false,
+): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
   const [meshes, setMeshes] = reactHostPort.useState<readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[]>([]);
   const revision = model.revision;
   const revisionRef = reactHostPort.useRef(revision);
@@ -263,7 +275,7 @@ export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, to
       setMeshes([]);
       return;
     }
-    setMeshes([]);
+    if (!keepPreviousWhileLoading) setMeshes([]);
     let cancelled = false;
     void (async () => {
       const rows = await Promise.all(
@@ -282,7 +294,7 @@ export function useDocumentMeshes(kernel: SpatialKernel | null, model: Model, to
     return () => {
       cancelled = true;
     };
-  }, [kernel, model, revision, tolerance]);
+  }, [kernel, model, revision, tolerance, keepPreviousWhileLoading]);
   return meshes;
 }
 
@@ -660,6 +672,21 @@ export function filterSpatialPickTargetsForVisibility(targets: readonly SpatialP
   return targets.filter((target) => filterKindToggles[target.kind] !== false);
 }
 
+/** @emoji 👁️ Reads persisted hide/lock flags from a model document for a pick-target entity id. */
+export function spatialEntityFlagsForModelEntity(model: Model | null | undefined, entityId: string): SpatialEntityFlags {
+  return model?.metadata.getEntityFlags(entityId) ?? {};
+}
+
+/** @emoji 👁️ Excludes hidden/locked entities from canvas pick and selection. */
+export function filterSpatialPickTargetsForEntityFlags(targets: readonly SpatialPickTarget[], flagsForId: (entityId: string) => SpatialEntityFlags): SpatialPickTarget[] {
+  return targets.filter((target) => worldEntitySelectable(flagsForId(target.id)));
+}
+
+/** @emoji 👁️ Drops locked/hidden entities from committed selection targets. */
+export function pruneSelectionTargetsForEntityFlags(targets: readonly SelectionTarget[], flagsForId: (entityId: string) => SpatialEntityFlags): SelectionTarget[] {
+  return targets.filter((target) => worldEntitySelectable(flagsForId(target.id)));
+}
+
 /** @emoji 👁️ Effective pick kinds must be both visible and enabled for selection/hover. */
 export function intersectSpatialPickKindToggles(visibleKindToggles: SpatialPickKindToggles = {}, selectionKindToggles: SpatialPickKindToggles = {}): SpatialPickKindToggles {
   const merged: SpatialPickKindToggles = {};
@@ -726,6 +753,16 @@ export function spatialPickKindTogglesFromTypologyFilteredTargets(modelDefinitio
     merged[kind] = allowed.has(kind) && visibleTargets.some((target) => target.kind === kind);
   }
   return merged;
+}
+
+/** @emoji 👁️ Scene-layer pick-kind toggles from model definition + primitive show toggles (not typology pick targets). */
+export function spatialSceneKindTogglesForModelDefinition(modelDefinitionId: string | null, primitiveToggles: SpatialPrimitiveToggles = defaultSpatialPrimitiveToggles()): SpatialPickKindToggles {
+  const toggles = defaultSpatialPickKindTogglesForModelDefinition(modelDefinitionId);
+  if (primitiveToggles.vertex === false && primitiveToggles.anchor === false) toggles.vertex = false;
+  if (primitiveToggles.edge === false && primitiveToggles.wire === false) toggles.edge = false;
+  if (primitiveToggles.face === false && primitiveToggles.shell === false) toggles.face = false;
+  if (primitiveToggles.solid === false) toggles.object = false;
+  return toggles;
 }
 
 /** @emoji 👁️ Per-primitive on/off map for play chrome (`false` disables show or filter). */
@@ -1043,7 +1080,7 @@ function collectSolidPrimitiveMemberIds(buckets: ReturnType<typeof geometryBucke
   return out;
 }
 
-function buildGeometryTypologyIndex(model: Model, modelDefinitionId: string): ReadonlyMap<string, string> {
+export function buildGeometryTypologyIndex(model: Model, modelDefinitionId: string): ReadonlyMap<string, string> {
   const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
   const buckets = geometryBuckets(model);
   const out = new Map<string, string>();
@@ -1608,10 +1645,26 @@ function gumballSnapshotFromObject3D(object: THREE.Object3D): GumballMatrixSnaps
   };
 }
 
+function gumballPoseToMatrixSnapshot(pose: GumballPose | GumballMatrixSnapshot): GumballMatrixSnapshot {
+  return {
+    position: [pose.position[0], pose.position[1], pose.position[2]],
+    quaternion: [pose.quaternion[0], pose.quaternion[1], pose.quaternion[2], pose.quaternion[3]],
+    scale: [pose.scale[0], pose.scale[1], pose.scale[2]],
+  };
+}
+
 /** @emoji 🎛 Applies a gumball world-matrix delta to vertices and nurbs poles on topology-selected targets. */
-export function transformGumballMatrixDiff(model: Model, targets: readonly SelectionTarget[], before: GumballMatrixSnapshot, after: GumballMatrixSnapshot): ModelDiff {
+export function transformGumballMatrixDiff(
+  model: Model,
+  targets: readonly SelectionTarget[],
+  before: GumballMatrixSnapshot,
+  after: GumballMatrixSnapshot,
+  pivot?: Vec3,
+): ModelDiff {
+  const pivotPoint = pivot ?? before.position;
+  const pivotV = new THREE.Vector3(pivotPoint[0], pivotPoint[1], pivotPoint[2]);
   const mBefore = new THREE.Matrix4().compose(
-    new THREE.Vector3(before.position[0], before.position[1], before.position[2]),
+    pivotV,
     new THREE.Quaternion(before.quaternion[0], before.quaternion[1], before.quaternion[2], before.quaternion[3]),
     new THREE.Vector3(before.scale[0], before.scale[1], before.scale[2]),
   );
@@ -1635,6 +1688,8 @@ export function SpatialTransformGumball(props: {
   readonly model: Model;
   readonly targets: readonly SelectionTarget[];
   readonly previewKernel?: SpatialPreviewKernel;
+  readonly onPreview?: (diff: ModelDiff) => void;
+  readonly onPreviewEnd?: () => void;
   readonly onCommit: (diff: ModelDiff) => void;
 }): ReactNode {
   const previewKernel = props.previewKernel ?? r3fPreviewKernel;
@@ -1642,7 +1697,19 @@ export function SpatialTransformGumball(props: {
   const groupRef = reactHostPort.useRef<THREE.Group>(null);
   const [tcTarget, setTcTarget] = reactHostPort.useState<THREE.Object3D | null>(null);
   const beforeRef = reactHostPort.useRef<GumballMatrixSnapshot | null>(null);
+  const pivotRef = reactHostPort.useRef<Vec3 | null>(null);
   const canTransform = selectionTargetsHaveTransformableVertices(props.model, props.targets);
+
+  const previewFromPose = reactHostPort.useCallback(
+    (after: GumballPose) => {
+      const before = beforeRef.current;
+      const pivotPoint = pivotRef.current;
+      if (!before || !pivotPoint || !props.onPreview) return;
+      const diff = transformGumballMatrixDiff(props.model, props.targets, before, gumballPoseToMatrixSnapshot(after), pivotPoint);
+      props.onPreview(diff);
+    },
+    [props],
+  );
 
   reactHostPort.useLayoutEffect(() => {
     const group = groupRef.current;
@@ -1668,16 +1735,24 @@ export function SpatialTransformGumball(props: {
           target={tcTarget}
           config={props.config as GumballConfig}
           onDragStart={() => {
-            if (groupRef.current) beforeRef.current = gumballSnapshotFromObject3D(groupRef.current);
+            if (!groupRef.current || !pivot) return;
+            beforeRef.current = gumballSnapshotFromObject3D(groupRef.current);
+            pivotRef.current = pivot;
           }}
-          onDragEnd={(_kind, before, after) => {
-            const snapshot = beforeRef.current;
+          onDrag={(_kind, after) => {
+            previewFromPose(after);
+          }}
+          onDragEnd={(_kind, _before, after) => {
+            const before = beforeRef.current;
+            const pivotPoint = pivotRef.current;
             beforeRef.current = null;
+            pivotRef.current = null;
+            props.onPreviewEnd?.();
             const group = groupRef.current;
-            if (!snapshot || !group || !pivot) return;
-            const diff = transformGumballMatrixDiff(props.model, props.targets, snapshot, after);
+            if (!before || !group || !pivotPoint) return;
+            const diff = transformGumballMatrixDiff(props.model, props.targets, before, gumballPoseToMatrixSnapshot(after), pivotPoint);
             if (!isEmptyModelDiff(diff)) props.onCommit(diff);
-            group.position.set(pivot[0], pivot[1], pivot[2]);
+            group.position.set(pivotPoint[0], pivotPoint[1], pivotPoint[2]);
             group.quaternion.set(0, 0, 0, 1);
             group.scale.set(1, 1, 1);
             group.updateMatrixWorld(true);
@@ -2235,10 +2310,46 @@ function spatialPickTargetsFromRay(ray: THREE.Ray, targets: readonly SpatialPick
     .map((hit) => hit.target);
 }
 
-function targetStyle(target: SpatialPickTarget, hovered: boolean, selected: boolean): { color: string; emissive: string; opacity: number; lineWidth: number } {
+/** @emoji 🎨 Maps a resolved typology style to committed-mesh material props. */
+export function typologyStyleToMaterialProps(style: ResolvedTypologyStyle): { readonly color: string; readonly emissive: string; readonly opacity: number } {
+  return { color: style.color, emissive: style.color, opacity: style.opacity };
+}
+
+/** @emoji 🎨 Resolves per-solid typology display style from model geometry membership. */
+export function createSolidTypologyStyleResolver(model: Model, modelDefinitionId: string): (solid: SolidRef) => ResolvedTypologyStyle | undefined {
+  const index = buildGeometryTypologyIndex(model, modelDefinitionId);
+  return (solid) => {
+    const typology = index.get(`solid:${solid}`);
+    return typology ? resolveTypologyStyle(typology) : undefined;
+  };
+}
+
+function targetStyle(
+  target: SpatialPickTarget,
+  hovered: boolean,
+  selected: boolean,
+  typologyStyle?: ResolvedTypologyStyle,
+  locked = false,
+): { color: string; emissive: string; opacity: number; lineWidth: number } {
   const palette = spatialSceneColors();
   if (selected) return { color: palette.selected, emissive: palette.selectedEmissive, opacity: target.kind === "vertex" ? 1 : 0.34, lineWidth: 9 };
   if (hovered) return { color: palette.hovered, emissive: palette.hoveredEmissive, opacity: target.kind === "vertex" ? 1 : 0.28, lineWidth: 8 };
+  if (locked) {
+    const dimOpacity = (target.kind === "vertex" ? 0.55 : 0.12) * WORLD_LOCKED_OPACITY_SCALE;
+    if (typologyStyle) {
+      return { color: typologyStyle.color, emissive: typologyStyle.color, opacity: dimOpacity, lineWidth: 4 };
+    }
+    if (target.kind === "vertex") return { color: palette.vertex, emissive: palette.vertexEmissive, opacity: dimOpacity, lineWidth: 4 };
+    if (target.kind === "edge") return { color: palette.edge, emissive: palette.edgeEmissive, opacity: dimOpacity, lineWidth: 4 };
+    if (target.kind === "object" && !target.geometryKind) return { color: palette.object, emissive: palette.objectEmissive, opacity: dimOpacity, lineWidth: 5 };
+    return { color: palette.face, emissive: palette.faceEmissive, opacity: dimOpacity, lineWidth: 4 };
+  }
+  if (typologyStyle) {
+    if (target.kind === "vertex") return { color: typologyStyle.color, emissive: typologyStyle.color, opacity: 1, lineWidth: 5 };
+    if (target.kind === "edge") return { color: typologyStyle.edgeColor, emissive: typologyStyle.edgeColor, opacity: 0.85, lineWidth: 5 };
+    if (target.kind === "object" && !target.geometryKind) return { color: typologyStyle.color, emissive: typologyStyle.color, opacity: typologyStyle.opacity, lineWidth: 7 };
+    return { color: typologyStyle.color, emissive: typologyStyle.color, opacity: Math.min(0.42, typologyStyle.opacity), lineWidth: 5 };
+  }
   if (target.kind === "vertex") return { color: palette.vertex, emissive: palette.vertexEmissive, opacity: 1, lineWidth: 5 };
   if (target.kind === "edge") return { color: palette.edge, emissive: palette.edgeEmissive, opacity: 0.8, lineWidth: 5 };
   if (target.kind === "object" && !target.geometryKind) return { color: palette.object, emissive: palette.objectEmissive, opacity: 0.28, lineWidth: 7 };
@@ -2290,13 +2401,22 @@ export function pickHoverTargetFromRay(ray: THREE.Ray, targets: readonly Spatial
 }
 
 /** @emoji 📌 Renders visibility-enabled pick highlights plus pinned hover/selection targets. */
-export function resolveSpatialPickTargetsToRender(viewTargets: readonly SpatialPickTarget[], filterKindToggles: SpatialPickKindToggles = {}, pinnedTargetKeys: ReadonlySet<string> = new Set()): SpatialPickTarget[] {
+export function resolveSpatialPickTargetsToRender(
+  viewTargets: readonly SpatialPickTarget[],
+  filterKindToggles: SpatialPickKindToggles = {},
+  pinnedTargetKeys: ReadonlySet<string> = new Set(),
+  flagsForId: (entityId: string) => SpatialEntityFlags = () => ({}),
+): SpatialPickTarget[] {
   const pinnedKeys = pinnedPickTargetKeys(pinnedTargetKeys);
   const enabledTargets = filterSpatialPickTargetsForVisibility(viewTargets, filterKindToggles);
   const seen = new Set<string>();
   const out: SpatialPickTarget[] = [];
   for (const target of enabledTargets) {
     const key = spatialPickTargetKey(target);
+    const flags = flagsForId(target.id);
+    if (flags.hidden === true && !pinnedKeys.has(key)) {
+      continue;
+    }
     if (seen.has(key)) continue;
     out.push(target);
     seen.add(key);
@@ -2325,6 +2445,7 @@ function SpatialPickTargetNode({
   readonly hoveredTargetKey?: string | null;
   readonly selectedTargetKey?: string | null;
   readonly selectedTargetKeys?: ReadonlySet<string> | null;
+  readonly entityFlagsForId?: (entityId: string) => SpatialEntityFlags;
 }): ReactNode {
   const mapPt = geometryPreviewTransform ?? ((p: Vec3) => p);
   const displayPoint = mapPt(target.point);
@@ -2332,7 +2453,9 @@ function SpatialPickTargetNode({
   const targetKey = spatialPickTargetKey(target);
   const hovered = hoveredTargetKey === targetKey;
   const selected = selectedTargetKeys?.has(targetKey) ?? selectedTargetKey === targetKey;
-  const style = targetStyle(target, hovered, selected);
+  const entityFlags = entityFlagsForId?.(target.id) ?? {};
+  const typologyStyle = target.typologyId ? resolveTypologyStyle(target.typologyId) : undefined;
+  const style = targetStyle(target, hovered, selected, typologyStyle, entityFlags.locked === true);
   const userData = { spatialPickKey: targetKey };
   if (target.kind === "vertex") {
     return (
@@ -2447,6 +2570,7 @@ export function SpatialPickGeometryLayer({
   selectedTargetKeys,
   hostSelectionEnabled = false,
   onSelectionRequest,
+  entityFlagsForId,
 }: {
   readonly geometry?: SpatialPickGeometry | null;
   readonly activeModelDefinitionId?: string | null;
@@ -2461,8 +2585,13 @@ export function SpatialPickGeometryLayer({
   readonly selectedTargetKeys?: ReadonlySet<string> | null;
   readonly hostSelectionEnabled?: boolean;
   readonly onSelectionRequest?: (request: SpatialSelectionRequest) => void;
+  readonly entityFlagsForId?: (entityId: string) => SpatialEntityFlags;
 }): ReactNode {
   const modelRevision = geometry && typeof geometry === "object" && "revision" in geometry ? Number((geometry as { revision?: unknown }).revision) : 0;
+  const resolvedEntityFlagsForId = reactHostPort.useCallback(
+    (entityId: string) => entityFlagsForId?.(entityId) ?? (geometry && typeof geometry === "object" && "metadata" in geometry ? spatialEntityFlagsForModelEntity(geometry as Model, entityId) : {}),
+    [entityFlagsForId, geometry, modelRevision],
+  );
   const targets = reactHostPort.useMemo(() => createSpatialPickTargets(geometry, activeModelDefinitionId), [geometry, modelRevision, modelDefinitionRevision, activeModelDefinitionId]);
   const viewTargets = reactHostPort.useMemo(() => filterSpatialPickTargetsForActiveView(targets, activeModelDefinitionId ?? null), [targets, activeModelDefinitionId]);
   const pinnedTargetKeys = reactHostPort.useMemo(() => {
@@ -2473,9 +2602,12 @@ export function SpatialPickGeometryLayer({
     return keys;
   }, [hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
   const renderedTargets = reactHostPort.useMemo(() => {
-    return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys);
-  }, [viewTargets, filterKindToggles, pinnedTargetKeys]);
-  const selectableTargets = reactHostPort.useMemo(() => filterSpatialPickTargets(viewTargets, selectionAccept, selectionKindToggles), [viewTargets, selectionAccept, selectionKindToggles]);
+    return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId);
+  }, [viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId]);
+  const selectableTargets = reactHostPort.useMemo(
+    () => filterSpatialPickTargetsForEntityFlags(filterSpatialPickTargets(viewTargets, selectionAccept, selectionKindToggles), resolvedEntityFlagsForId),
+    [viewTargets, selectionAccept, selectionKindToggles, resolvedEntityFlagsForId],
+  );
   const requestSelection = reactHostPort.useCallback(
     (target: SpatialPickTarget, event: ThreeEvent<PointerEvent>) => {
       if (!hostSelectionEnabled || !onSelectionRequest || selectionAccept.length === 0) return;
@@ -2500,6 +2632,7 @@ export function SpatialPickGeometryLayer({
           hoveredTargetKey={hoveredTargetKey}
           selectedTargetKey={selectedTargetKey}
           selectedTargetKeys={selectedTargetKeys}
+          entityFlagsForId={resolvedEntityFlagsForId}
         />
       ))}
       {hostSelectionEnabled && onSelectionRequest
@@ -2571,6 +2704,92 @@ function SpatialPickHitTarget({
 }
 // #endregion 🧲GeometryInteraction
 
+// #region 🎨TypologyPatternMaterial
+const typologyPatternMaterialCache = new Map<string, THREE.MeshStandardMaterial>();
+
+function typologyPatternKindUniform(kind: ResolvedTypologyStyle["pattern"]["kind"]): number {
+  if (kind === "hatch") return 1;
+  if (kind === "crosshatch") return 2;
+  if (kind === "dots") return 3;
+  return 0;
+}
+
+const TYPOLOGY_PATTERN_VERTEX_PREFIX = "varying vec3 vTypologyWorldPos;\n";
+const TYPOLOGY_PATTERN_VERTEX_INJECT = "#include <worldpos_vertex>\nvTypologyWorldPos = worldPosition.xyz;\n";
+const TYPOLOGY_PATTERN_FRAGMENT_PREFIX = "varying vec3 vTypologyWorldPos;\nuniform float uPatternKind;\nuniform float uPatternDirection;\nuniform float uPatternSpacing;\nuniform float uPatternLineWidth;\nuniform vec3 uPatternColor;\n";
+const TYPOLOGY_PATTERN_FRAGMENT_BLEND = `
+vec3 applyTypologyPattern(vec3 baseColor, vec3 worldPos, vec3 surfaceNormal) {
+  if (uPatternKind < 0.5) return baseColor;
+  vec3 n = normalize(surfaceNormal);
+  vec3 ref = abs(n.z) < 0.9 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+  vec3 tangent = normalize(cross(n, ref));
+  vec3 bitangent = cross(n, tangent);
+  float angle = uPatternDirection;
+  vec2 planeCoord = vec2(dot(worldPos, tangent), dot(worldPos, bitangent));
+  mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+  planeCoord = rot * planeCoord;
+  float hatch = 0.0;
+  if (uPatternKind < 1.5) {
+    float stripe = abs(fract(planeCoord.x / uPatternSpacing) - 0.5) * uPatternSpacing;
+    hatch = 1.0 - smoothstep(0.0, uPatternLineWidth, stripe);
+  } else if (uPatternKind < 2.5) {
+    float stripeA = abs(fract(planeCoord.x / uPatternSpacing) - 0.5) * uPatternSpacing;
+    float stripeB = abs(fract(planeCoord.y / uPatternSpacing) - 0.5) * uPatternSpacing;
+    float hatchA = 1.0 - smoothstep(0.0, uPatternLineWidth, stripeA);
+    float hatchB = 1.0 - smoothstep(0.0, uPatternLineWidth, stripeB);
+    hatch = max(hatchA, hatchB);
+  } else {
+    vec2 cell = planeCoord / uPatternSpacing;
+    vec2 grid = fract(cell) - 0.5;
+    hatch = 1.0 - smoothstep(uPatternLineWidth * 0.5, uPatternLineWidth, length(grid));
+  }
+  return mix(baseColor, uPatternColor, hatch * 0.88);
+}
+`;
+
+/** @emoji 🎨 Builds or reuses a shaded material with optional procedural typology pattern. */
+export function createTypologyStyledMaterial(style: ResolvedTypologyStyle): THREE.MeshStandardMaterial {
+  const key = typologyStyleCacheKey(style);
+  const cached = typologyPatternMaterialCache.get(key);
+  if (cached) return cached;
+  const props = typologyStyleToMaterialProps(style);
+  const material = new THREE.MeshStandardMaterial({
+    color: props.color,
+    emissive: props.emissive,
+    emissiveIntensity: 0.08,
+    metalness: 0,
+    roughness: 0.45,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: props.opacity,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
+  });
+  if (style.pattern.kind !== "none") {
+    const pattern = style.pattern;
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.uPatternKind = { value: typologyPatternKindUniform(pattern.kind) };
+      shader.uniforms.uPatternDirection = { value: (pattern.direction * Math.PI) / 180 };
+      shader.uniforms.uPatternSpacing = { value: pattern.spacing };
+      shader.uniforms.uPatternLineWidth = { value: pattern.lineWidth };
+      shader.uniforms.uPatternColor = { value: new THREE.Color(pattern.color) };
+      shader.vertexShader = shader.vertexShader.replace("#include <common>", `#include <common>\n${TYPOLOGY_PATTERN_VERTEX_PREFIX}`);
+      shader.vertexShader = shader.vertexShader.replace("#include <worldpos_vertex>", TYPOLOGY_PATTERN_VERTEX_INJECT);
+      shader.fragmentShader = shader.fragmentShader.replace("#include <common>", `#include <common>\n${TYPOLOGY_PATTERN_FRAGMENT_PREFIX}`);
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <output_fragment>",
+        `${TYPOLOGY_PATTERN_FRAGMENT_BLEND}outgoingLight = applyTypologyPattern(outgoingLight, vTypologyWorldPos, normal);\n#include <output_fragment>`,
+      );
+    };
+    material.customProgramCacheKey = () => key;
+  }
+  typologyPatternMaterialCache.set(key, material);
+  return material;
+}
+// #endregion 🎨TypologyPatternMaterial
+
 // #region 🧊CommittedMesh
 const CAD_WORLD_CHUNK_SIZE = 256;
 const CAD_WORLD_MAX_DISTANCE = 8000;
@@ -2601,7 +2820,7 @@ export function resolveFaceInfoFromTriangleIndex(mesh: MeshTransfer, triangleInd
 }
 
 /** @emoji ➖ B-Rep edge overlay from `MeshTransfer.edges` (kernel `meshEdges`, not triangle edges). */
-function CommittedEdgeOverlay({ data, visible = true }: { readonly data: MeshTransfer; readonly visible?: boolean }): ReactNode {
+function CommittedEdgeOverlay({ data, visible = true, edgeColor }: { readonly data: MeshTransfer; readonly visible?: boolean; readonly edgeColor?: string }): ReactNode {
   const geometry = reactHostPort.useMemo(() => {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(data.edges, 3));
@@ -2611,13 +2830,14 @@ function CommittedEdgeOverlay({ data, visible = true }: { readonly data: MeshTra
   if (!visible) return null;
   return (
     <lineSegments geometry={geometry} raycast={raycastNone}>
-      <lineBasicMaterial color={spatialSceneColors().foreground} depthTest />
+      <lineBasicMaterial color={edgeColor ?? spatialSceneColors().foreground} depthTest />
     </lineSegments>
   );
 }
 
 export interface TessellatedCommitMeshProps {
   readonly mesh: MeshTransfer;
+  readonly style?: ResolvedTypologyStyle;
   readonly pickable?: boolean;
   readonly showFaces?: boolean;
   readonly showEdges?: boolean;
@@ -2628,7 +2848,7 @@ export interface TessellatedCommitMeshProps {
 export const COMMITTED_MESH_FACE_OPACITY = 0.72;
 
 /** @emoji 🧊 Shaded B-Rep mesh + edge overlay; optional face picking via `faceIndex`. */
-export function TessellatedCommitMesh({ mesh: data, pickable = false, showFaces = true, showEdges = true, onFacePointerMove, onFacePointerDown }: TessellatedCommitMeshProps): ReactNode {
+export function TessellatedCommitMesh({ mesh: data, style, pickable = false, showFaces = true, showEdges = true, onFacePointerMove, onFacePointerDown }: TessellatedCommitMeshProps): ReactNode {
   const geometryKey = meshTransferContentKey(data);
   const geometry = reactHostPort.useMemo(() => {
     cadMeshGeometryPool.acquire(geometryKey);
@@ -2642,6 +2862,25 @@ export function TessellatedCommitMesh({ mesh: data, pickable = false, showFaces 
     },
     [geometry, geometryKey],
   );
+  const faceMaterial = reactHostPort.useMemo(() => {
+    if (style) return createTypologyStyledMaterial(style);
+    const palette = spatialSceneColors();
+    return new THREE.MeshStandardMaterial({
+      color: data.color ?? palette.committed,
+      metalness: 0,
+      roughness: 0.45,
+      emissive: data.color ?? palette.committedEmissive,
+      emissiveIntensity: 0.08,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+      transparent: true,
+      opacity: COMMITTED_MESH_FACE_OPACITY,
+      depthWrite: false,
+    });
+  }, [style, data.color]);
+  const edgeColor = style?.edgeColor ?? data.color ?? spatialSceneColors().foreground;
   if (!showFaces && !showEdges) return null;
   const faceInfoById = reactHostPort.useMemo(() => {
     const map = new Map<string, FaceInfo>();
@@ -2681,24 +2920,10 @@ export function TessellatedCommitMesh({ mesh: data, pickable = false, showFaces 
                 }
               : undefined
           }
-        >
-          <meshStandardMaterial
-            color={data.color ?? spatialSceneColors().committed}
-            metalness={0}
-            roughness={0.45}
-            emissive={data.color ?? spatialSceneColors().committedEmissive}
-            emissiveIntensity={0.08}
-            side={THREE.DoubleSide}
-            polygonOffset
-            polygonOffsetFactor={1}
-            polygonOffsetUnits={1}
-            transparent
-            opacity={COMMITTED_MESH_FACE_OPACITY}
-            depthWrite={false}
-          />
-        </mesh>
+          material={faceMaterial}
+        />
       ) : null}
-      {data.edges.length > 0 ? <CommittedEdgeOverlay data={data} visible={showEdges} /> : null}
+      {data.edges.length > 0 ? <CommittedEdgeOverlay data={data} visible={showEdges} edgeColor={edgeColor} /> : null}
     </group>
   );
 }
@@ -2717,6 +2942,7 @@ function ChunkedCommitMeshRow(
 export function CommittedMeshLayer({
   meshes,
   modelRevision,
+  styleForSolid,
   pickable = false,
   showFaces = true,
   showEdges = true,
@@ -2725,6 +2951,7 @@ export function CommittedMeshLayer({
 }: {
   readonly meshes: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
   readonly modelRevision?: number;
+  readonly styleForSolid?: (solid: SolidRef) => ResolvedTypologyStyle | undefined;
   readonly pickable?: boolean;
   readonly showFaces?: boolean;
   readonly showEdges?: boolean;
@@ -2741,6 +2968,7 @@ export function CommittedMeshLayer({
           rowKey={`${row.solid}:r${rev}:${meshTransferContentKey(row.mesh, i)}`}
           origin={meshTransferOrigin(row.mesh)}
           mesh={row.mesh}
+          style={styleForSolid?.(row.solid)}
           pickable={pickable}
           showFaces={showFaces}
           showEdges={showEdges}
@@ -2980,6 +3208,8 @@ export interface InteractionSpatialViewProps {
   readonly renderDisplayItem?: SpatialDisplayItemRenderer;
   readonly selectionAccept?: readonly ModelEntityKind[];
   readonly filterKindToggles?: SpatialPickKindToggles;
+  /** @emoji 👁️ Committed mesh / factory wireframe visibility; defaults to {@link spatialSceneKindTogglesForModelDefinition}. */
+  readonly sceneKindToggles?: SpatialPickKindToggles;
   readonly selectionKindToggles?: SpatialPickKindToggles;
   /** @emoji 🖱️ Hover raycast kind filter; defaults to `selectionKindToggles` when omitted. */
   readonly hoverKindToggles?: SpatialPickKindToggles;
@@ -3005,6 +3235,9 @@ export interface InteractionSpatialViewProps {
   readonly transformGumballConfig?: CadGumballConfig | null;
   readonly transformGumballTargets?: readonly SelectionTarget[];
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
+  readonly onTransformGumballPreview?: (diff: ModelDiff) => void;
+  readonly onTransformGumballPreviewEnd?: () => void;
+  readonly transformGumballModel?: Model | null;
   readonly cameraView?: OrbitCameraViewId;
   readonly cameraViewSeedKey?: string | number;
 }
@@ -3039,6 +3272,7 @@ export function InteractionSpatialView({
   renderDisplayItem,
   selectionAccept = [],
   filterKindToggles = {},
+  sceneKindToggles,
   hoveredTargetKey,
   selectedTargetKey,
   selectedTargetKeys,
@@ -3060,6 +3294,9 @@ export function InteractionSpatialView({
   transformGumballConfig = null,
   transformGumballTargets = [],
   onTransformGumballCommit,
+  onTransformGumballPreview,
+  onTransformGumballPreviewEnd,
+  transformGumballModel = null,
   cameraView,
   cameraViewSeedKey,
 }: InteractionSpatialViewProps): ReactNode {
@@ -3107,15 +3344,24 @@ export function InteractionSpatialView({
   };
   const dirPos = resolvedTheme.directionalPosition ?? [12, 18, 10];
   const geometryRevision = geometry && typeof geometry === "object" && "revision" in geometry ? Number((geometry as { revision?: unknown }).revision) : 0;
-  const sceneVisibility = reactHostPort.useMemo(() => resolveSpatialSceneVisibility(activeModelDefinitionId, filterKindToggles), [activeModelDefinitionId, filterKindToggles]);
+  const sceneVisibility = reactHostPort.useMemo(
+    () => resolveSpatialSceneVisibility(activeModelDefinitionId, sceneKindToggles ?? filterKindToggles),
+    [activeModelDefinitionId, sceneKindToggles, filterKindToggles],
+  );
   const scenePickGeometry = geometry ?? pickGeometryProp;
   const pickGeometryRevision = scenePickGeometry && typeof scenePickGeometry === "object" && "revision" in scenePickGeometry ? Number((scenePickGeometry as { revision?: unknown }).revision) : 0;
+  const styleForSolid = reactHostPort.useMemo(() => {
+    if (!geometry || typeof geometry !== "object" || !("objects" in geometry)) return undefined;
+    return createSolidTypologyStyleResolver(geometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId());
+  }, [geometry, geometryRevision, modelDefinitionRevision, activeModelDefinitionId]);
   return (
     <>
       {slots?.beforeScene}
-      <InvalidateOnRevision revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${pickGeometryRevision}:${hoveredTargetKey ?? ""}:${selectedTargetKey ?? ""}:${selectedTargetKeys?.size ?? 0}`} />
+      <InvalidateOnRevision
+        revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${pickGeometryRevision}:${layerMeshes.map((row, i) => `${row.solid}:${meshTransferContentKey(row.mesh, i)}`).join("|")}:${hoveredTargetKey ?? ""}:${selectedTargetKey ?? ""}:${selectedTargetKeys?.size ?? 0}`}
+      />
       <WorldCameraInvalidator />
-      {autoFitMeshes && cameraView === undefined ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
+      {autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
       <WorldLodBridge
         lodRef={cadLodRef}
         distanceReference={100}
@@ -3196,6 +3442,7 @@ export function InteractionSpatialView({
           <CommittedMeshLayer
             meshes={layerMeshes}
             modelRevision={geometry?.revision ?? 0}
+            styleForSolid={styleForSolid}
             pickable={committedMeshPickable}
             showFaces={sceneVisibility.showCommittedFaces}
             showEdges={sceneVisibility.showCommittedEdges}
@@ -3210,7 +3457,15 @@ export function InteractionSpatialView({
         <WorldLayer order={60} name="cad.gumball">
           {slots?.afterCommitted}
           {cadGumballConfigVisible(transformGumballConfig) && geometry && onTransformGumballCommit ? (
-            <SpatialTransformGumball config={transformGumballConfig!} model={geometry} targets={transformGumballTargets} previewKernel={previewKernel} onCommit={onTransformGumballCommit} />
+            <SpatialTransformGumball
+              config={transformGumballConfig!}
+              model={transformGumballModel ?? geometry!}
+              targets={transformGumballTargets}
+              previewKernel={previewKernel}
+              onPreview={onTransformGumballPreview}
+              onPreviewEnd={onTransformGumballPreviewEnd}
+              onCommit={onTransformGumballCommit}
+            />
           ) : null}
         </WorldLayer>
       </WorldLodBridge>
@@ -4021,8 +4276,30 @@ export function InteractionRepl({
   const snapshot = useInteractionSnapshot(rt);
   const rtRef = reactHostPort.useRef(rt);
   rtRef.current = rt;
+  const [gumballPreviewDiff, setGumballPreviewDiff] = reactHostPort.useState<ModelDiff | null>(null);
   const tessTolerance = tessellationTolerance ?? (rt.computeMode() === "fast" ? 0.02 : 0.0008);
-  const committedMeshes = useDocumentMeshes(rt.kernel(), documentModel.model, tessTolerance);
+  const gumballPreviewActive = gumballPreviewDiff !== null && !isEmptyModelDiff(gumballPreviewDiff);
+  const gumballPreviewModel = reactHostPort.useMemo(() => {
+    if (!gumballPreviewActive) return documentModel.model;
+    const copy = Model.fromJSON(documentModel.model.toJSON());
+    applyModelDiff(copy, gumballPreviewDiff!);
+    return copy;
+  }, [documentModel.model, gumballPreviewActive, gumballPreviewDiff]);
+  const viewGeometry = gumballPreviewActive ? gumballPreviewModel : geometry;
+  const committedMeshes = useDocumentMeshes(rt.kernel(), gumballPreviewModel, tessTolerance, gumballPreviewActive);
+  const handleTransformGumballPreview = reactHostPort.useCallback((diff: ModelDiff) => {
+    setGumballPreviewDiff(isEmptyModelDiff(diff) ? null : diff);
+  }, []);
+  const handleTransformGumballPreviewEnd = reactHostPort.useCallback(() => {
+    setGumballPreviewDiff(null);
+  }, []);
+  const handleTransformGumballCommit = reactHostPort.useCallback(
+    (diff: ModelDiff) => {
+      setGumballPreviewDiff(null);
+      onTransformGumballCommit?.(diff);
+    },
+    [onTransformGumballCommit],
+  );
   const documentArchivedBoxLayouts = reactHostPort.useMemo(() => archivedBoxesFromHistory(history), [history, snapshot.revision]);
   const allArchivedBoxLayouts = reactHostPort.useMemo(() => [...documentArchivedBoxLayouts, ...archivedBoxLayouts], [documentArchivedBoxLayouts, archivedBoxLayouts]);
   const baseDisplay = reactHostPort.useMemo(
@@ -4106,10 +4383,19 @@ export function InteractionRepl({
     return filterSpatialPickTargetsForTypologyToggles(showPrimitives, filterTypologyToggles, activeTypologyIds);
   }, [scopedPickTargets, filterPrimitiveToggles, filterTypologyToggles, activeTypologyIds]);
   const viewFilterKindToggles = reactHostPort.useMemo(() => spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, visiblePickTargets), [activeModelDefinitionId, visiblePickTargets]);
+  const sceneKindToggles = reactHostPort.useMemo(
+    () => spatialSceneKindTogglesForModelDefinition(activeModelDefinitionId, filterPrimitiveToggles),
+    [activeModelDefinitionId, filterPrimitiveToggles],
+  );
+  const entityFlagsForId = reactHostPort.useCallback(
+    (entityId: string) => (pickSourceGeometry && typeof pickSourceGeometry === "object" && "metadata" in pickSourceGeometry ? spatialEntityFlagsForModelEntity(pickSourceGeometry as Model, entityId) : {}),
+    [pickSourceGeometry, pickSourceRevision],
+  );
   const selectablePickTargets = reactHostPort.useMemo(() => {
     const filterPrimitives = filterSpatialPickTargetsForPrimitiveToggles(visiblePickTargets, selectionPrimitiveToggles);
-    return filterSpatialPickTargetsForTypologyToggles(filterPrimitives, selectionTypologyToggles, activeTypologyIds);
-  }, [visiblePickTargets, selectionPrimitiveToggles, selectionTypologyToggles, activeTypologyIds]);
+    const typologyFiltered = filterSpatialPickTargetsForTypologyToggles(filterPrimitives, selectionTypologyToggles, activeTypologyIds);
+    return filterSpatialPickTargetsForEntityFlags(typologyFiltered, entityFlagsForId);
+  }, [visiblePickTargets, selectionPrimitiveToggles, selectionTypologyToggles, activeTypologyIds, entityFlagsForId]);
   const effectiveSelectionKindToggles = reactHostPort.useMemo(
     () => intersectSpatialPickKindToggles(viewFilterKindToggles, spatialPickKindTogglesFromTypologyFilteredTargets(activeModelDefinitionId, selectablePickTargets)),
     [activeModelDefinitionId, selectablePickTargets, viewFilterKindToggles],
@@ -4323,12 +4609,13 @@ export function InteractionRepl({
 
   const dispatchSelectionTargets = reactHostPort.useCallback(
     (targets: readonly SpatialPickTarget[], modifiers: InteractionEvent["modifiers"] = {}, point?: Vec3) => {
-      const picked = uniqueSelectionTargets(targets.map(spatialSelectionTarget));
+      const eligibleTargets = filterSpatialPickTargetsForEntityFlags(targets, entityFlagsForId);
+      const picked = uniqueSelectionTargets(pruneSelectionTargetsForEntityFlags(eligibleTargets.map(spatialSelectionTarget), entityFlagsForId));
       const nextSelection = replMergeSelectionPickInView(boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState, picked, modifiers);
       commitSelection(nextSelection);
       if (boundInteractionSession && picked.length > 0) void rt.send({ ...replSelectionEvent(picked, point), modifiers });
     },
-    [commitSelection, boundInteractionSession, interactionSelectionByState, activeModelDefinitionId, snapshot.state, rt, rendererSelectionByModel],
+    [commitSelection, boundInteractionSession, entityFlagsForId, interactionSelectionByState, activeModelDefinitionId, snapshot.state, rt, rendererSelectionByModel],
   );
 
   const onSelectionRequest = reactHostPort.useCallback(
@@ -5054,15 +5341,20 @@ export function InteractionRepl({
             onGroundPick={onGroundPickProp}
             onScenePointerMove={pointerMoveActive ? onScenePointerMove : undefined}
             pickEnabled={pickPlaneOn}
-            geometry={geometry}
+            geometry={viewGeometry}
             pickGeometry={pickSourceGeometry}
             committedMeshes={committedMeshesForView}
+            transformGumballModel={documentModel.model}
+            onTransformGumballPreview={handleTransformGumballPreview}
+            onTransformGumballPreviewEnd={handleTransformGumballPreviewEnd}
+            onTransformGumballCommit={handleTransformGumballCommit}
             activeModelDefinitionId={activeModelDefinitionId}
             modelDefinitionRevision={modelDefinitionRevision}
             displayModel={mergedDisplay}
             renderDisplayItem={renderDisplayItem}
             selectionAccept={hostPickingEnabled ? activeSelectionAccept : []}
             filterKindToggles={viewFilterKindToggles}
+            sceneKindToggles={sceneKindToggles}
             selectionKindToggles={effectiveSelectionKindToggles}
             hoveredTargetKey={hoveredPickKey}
             selectedTargetKey={selectedPickKey}
@@ -5077,7 +5369,6 @@ export function InteractionRepl({
             slots={viewSlots}
             transformGumballConfig={activeTransformGumballConfig}
             transformGumballTargets={displayedSelectionTargets}
-            onTransformGumballCommit={onTransformGumballCommit}
             {...spatialViewOverrides}
           />
         </InteractionCanvas>
@@ -6152,6 +6443,32 @@ if (import.meta.vitest) {
       });
     });
 
+    it("spatialSceneKindTogglesForModelDefinition keeps committed faces on when typology picks are empty", () => {
+      const toggles = spatialSceneKindTogglesForModelDefinition("aec.building.energy", defaultSpatialPrimitiveToggles());
+      expect(resolveSpatialSceneVisibility("aec.building.energy", toggles).showCommittedFaces).toBe(true);
+    });
+
+    it("small building fixture keeps committed face visibility toggles", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { resolve } = await import("node:path");
+      const { ModelSpace } = await import("@cad/js/core");
+      const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../assets/play/small-building.model.json"), "utf8"));
+      const model = ModelSpace.fromJSON(json).models[defaultModelDefinitionId()]!;
+      const mdId = defaultModelDefinitionId();
+      expect(Object.keys(model.solids).length).toBeGreaterThan(0);
+      let targets = createSpatialPickTargets(model, mdId);
+      targets = filterSpatialPickTargetsForActiveView(targets, mdId);
+      targets = filterSpatialPickTargetsForPrimitiveToggles(targets, defaultSpatialPrimitiveToggles());
+      targets = filterSpatialPickTargetsForTypologyToggles(targets, defaultSpatialTypologyTogglesForModelDefinition(mdId), modelDefinitionTypologyIds(mdId));
+      const toggles = spatialPickKindTogglesFromTypologyFilteredTargets(mdId, targets);
+      expect(resolveSpatialSceneVisibility(mdId, toggles).showCommittedFaces).toBe(true);
+      const kernel = new BrepjsKernel();
+      await kernel.resetDerivedPipelineForTest();
+      const solid = Object.keys(model.solids)[0]! as SolidRef;
+      const mesh = await kernel.tessellate(solid, 0.02, model);
+      expect(isRenderableMeshTransfer(mesh)).toBe(true);
+    });
+
     it("transformGumballMatrixDiff translates solid selection vertices", () => {
       const model = new Model();
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
@@ -6346,6 +6663,27 @@ if (import.meta.vitest) {
       expect(filterSpatialPickTargets(targets, ["anchor"], {}).map(spatialPickTargetKey)).toEqual(["vertex:a0"]);
     });
 
+    it("filterSpatialPickTargetsForEntityFlags excludes hidden and locked targets", () => {
+      const targets: SpatialPickTarget[] = [
+        { kind: "object", id: "visible", point: [0, 0, 0] },
+        { kind: "object", id: "hidden", point: [0, 0, 0] },
+        { kind: "face", geometryKind: "face", id: "locked", point: [0, 0, 0] },
+      ];
+      const flagsForId = (id: string) => ({ ...(id === "hidden" ? { hidden: true } : {}), ...(id === "locked" ? { locked: true } : {}) });
+      expect(filterSpatialPickTargetsForEntityFlags(targets, flagsForId).map((row) => row.id)).toEqual(["visible"]);
+      expect(pruneSelectionTargetsForEntityFlags(targets.map(spatialSelectionTarget), flagsForId).map((row) => row.id)).toEqual(["visible"]);
+    });
+
+    it("resolveSpatialPickTargetsToRender skips hidden unless pinned", () => {
+      const targets: SpatialPickTarget[] = [
+        { kind: "object", id: "hidden", point: [0, 0, 0] },
+        { kind: "object", id: "visible", point: [1, 0, 0] },
+      ];
+      const flagsForId = (id: string) => ({ ...(id === "hidden" ? { hidden: true } : {}) });
+      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), flagsForId).map((row) => row.id)).toEqual(["visible"]);
+      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(["object:hidden"]), flagsForId).map((row) => row.id).sort()).toEqual(["hidden", "visible"]);
+    });
+
     it("resolveSpatialPickTargetsToRender draws all enabled kinds", () => {
       const targets: SpatialPickTarget[] = [
         { kind: "vertex", geometryKind: "vertex", id: "v0", point: [0, 0, 0] },
@@ -6372,6 +6710,29 @@ if (import.meta.vitest) {
       expect(palette.selected).toBeTruthy();
       expect(palette.groundPlane).not.toBe(palette.accent);
       resetSpatialSceneColorCache();
+    });
+
+    it("typologyStyleToMaterialProps and typologyStyleCacheKey reflect resolved style", () => {
+      const style = resolveTypologyStyle("structure.structure.onewayreinforcedconcreteslab");
+      const props = typologyStyleToMaterialProps(style);
+      expect(props.color).toBe("#8B7355");
+      expect(props.opacity).toBe(0.78);
+      expect(typologyStyleCacheKey(style)).toContain("hatch");
+    });
+
+    it("createSolidTypologyStyleResolver maps solids to their object typology style", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("slab-solid")));
+      const solidId = Object.keys(model.solids)[0]!;
+      model.objects["slab-obj"] = {
+        id: "slab-obj" as ObjectRef,
+        typology: "structure.structure.onewayreinforcedconcreteslab" as const,
+        primitives: { solid: solidId },
+      };
+      const resolveStyle = createSolidTypologyStyleResolver(model, "aec.building.structure.classic");
+      const style = resolveStyle(solidId as SolidRef);
+      expect(style?.pattern.kind).toBe("hatch");
+      expect(style?.color).toBe("#8B7355");
     });
 
     it("defaultInteractionSpatialViewTheme hides the factory ground plane tint", () => {

@@ -538,6 +538,27 @@ fn puzzle3d_vortex_port_shapes_compatible(source: &str, target: &str) -> bool {
     }
 }
 
+fn puzzle3d_single_letter_port_family(vortex_kind: &str) -> Option<char> {
+    let head = vortex_kind.split('-').next()?;
+    if head.len() == 1 {
+        let ch = head.chars().next()?;
+        if ch.is_ascii_lowercase() {
+            return Some(ch);
+        }
+    }
+    None
+}
+
+fn puzzle3d_single_letter_port_families_compatible(source: &str, target: &str) -> bool {
+    match (
+        puzzle3d_single_letter_port_family(source),
+        puzzle3d_single_letter_port_family(target),
+    ) {
+        (None, _) | (_, None) => true,
+        (Some(a), Some(b)) => a == b,
+    }
+}
+
 fn catalog_vortex_by_id<'a>(catalogs: &'a KindCatalogBundle, vortex_kind: &str) -> Option<&'a VortexKindCatalog> {
     catalogs.vortices.iter().find(|v| v.id == vortex_kind)
 }
@@ -610,6 +631,9 @@ fn vortices_attraction_compatible_for_drag(
     let sv = attracting.vortex_kind.as_deref().unwrap_or("");
     let tv = attracted.vortex_kind.as_deref().unwrap_or("");
     if !puzzle3d_vortex_port_shapes_compatible(sv, tv) {
+        return false;
+    }
+    if !puzzle3d_single_letter_port_families_compatible(sv, tv) {
         return false;
     }
     if rules.is_empty() {

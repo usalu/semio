@@ -12579,7 +12579,6 @@ export function Puzzle2dCanvas({
       if (!hoveredControlled) {
         setUncontrolledHoveredId(payload.id);
       }
-      console.log("[DEBUG] puzzle2d hover", payload.kind?.domain, payload.kind?.kindId, payload.id);
       onHover?.(payload);
     });
   }, [contextRenderer, hoveredControlled, onHover]);

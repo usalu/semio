@@ -14,5 +14,16 @@
   ],
   "primitiveKinds": [
     "solid"
-  ]
+  ],
+  "style": {
+    "color": "#C4785A",
+    "edgeColor": "#8B4F38",
+    "opacity": 0.74,
+    "pattern": {
+      "kind": "dots",
+      "spacing": 0.4,
+      "lineWidth": 0.06,
+      "color": "#6B3828"
+    }
+  }
 }

@@ -33,6 +33,7 @@ import {
   type UiNode,
   type UiSectionNode,
   type UiTreeItemNode,
+  type UiTreeContextMenuItem,
   type UiTreeNode,
   type UiTreeSectionNode,
   uiDeclarativeSectionsToTree,
@@ -122,6 +123,14 @@ import {
   resolveObjectKindMeshUrl,
   isLoadableMeshUrl,
   brushCompatibleCandidates,
+  kindCompatibilityFromFixtureMeta,
+  brushCollisionFreeCandidates,
+  brushCollisionGltfRoot,
+  clearBrushCollisionGltfScenes,
+  registerBrushCollisionGltfScene,
+  vortexWorldCadFromObject,
+  applyObjectPose,
+  DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
   kindsCompatible,
   publishPuzzle3dBrushCandidateAccept,
   type BrushCompatibleCandidate,
@@ -325,27 +334,7 @@ function enrichKindCatalogBundleDoorCapsules(bundle: KindCatalogBundle | undefin
 
 //#region 🧾Meta
 function parseKindCompatibility(meta: Record<string, unknown> | undefined): readonly KindCompatEntry[] {
-  if (!meta || typeof meta !== "object") return [];
-  const arr = (meta as { kindCompatibility?: unknown }).kindCompatibility;
-  if (!Array.isArray(arr)) return [];
-  const out: KindCompatEntry[] = [];
-  for (const entry of arr) {
-    if (!entry || typeof entry !== "object") continue;
-    const e = entry as Record<string, unknown>;
-    const source = typeof e.source === "string" ? e.source.trim() : "";
-    const target = typeof e.target === "string" ? e.target.trim() : "";
-    if (!source || !target) continue;
-    const specificity =
-      e.specificity === "general" || e.specificity === "object" || e.specificity === "vortex" || e.specificity === "cable" || e.specificity === "attraction" ? e.specificity : undefined;
-    out.push({
-      source,
-      target,
-      ...(e.bidirectional === true ? { bidirectional: true } : {}),
-      ...(e.important === true ? { important: true } : {}),
-      ...(specificity ? { specificity } : {}),
-    });
-  }
-  return out;
+  return kindCompatibilityFromFixtureMeta(meta);
 }
 
 function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatalogBundle | undefined {
@@ -435,40 +424,43 @@ function nextPuzzle3dFillSeed(): number {
 
 function mergePuzzle3dFillBuildChunk(
   committedSequence: readonly BrushPlacePayload[],
-  committedObjects: readonly FixtureObjectV1[],
-  committedAttractions: readonly AttractionProps[],
   tailMaxCount: number,
   tail: {
     readonly sequence: readonly BrushPlacePayload[];
-    readonly appendedObjects: readonly FixtureObjectV1[];
-    readonly appendedAttractions: readonly AttractionProps[];
     readonly done: boolean;
   },
 ): {
   readonly sequence: readonly BrushPlacePayload[];
-  readonly appendedObjects: readonly FixtureObjectV1[];
-  readonly appendedAttractions: readonly AttractionProps[];
   readonly count: number;
   readonly done: boolean;
 } {
   const tailSequence = tail.sequence.slice(0, tailMaxCount);
-  const tailObjects = tail.appendedObjects.slice(0, tailMaxCount);
-  const tailAttractions = tail.appendedAttractions.slice(0, tailMaxCount);
   const count = committedSequence.length + tailSequence.length;
   return {
     sequence: [...committedSequence, ...tailSequence],
-    appendedObjects: [...committedObjects, ...tailObjects],
-    appendedAttractions: [...committedAttractions, ...tailAttractions],
     count,
     done: tail.done || count >= PUZZLE_3D_FILL_COUNT_MAX,
+  };
+}
+
+function puzzle3dFillAppendedSlice(
+  core: FixtureV1,
+  sequence: readonly BrushPlacePayload[],
+  kindCatalogs: KindCatalogBundle | undefined,
+): { readonly appendedObjects: readonly FixtureObjectV1[]; readonly appendedAttractions: readonly AttractionProps[] } {
+  if (sequence.length === 0) {
+    return { appendedObjects: [], appendedAttractions: [] };
+  }
+  const applied = applyBrushFillPlacementsToFixture(core, sequence, kindCatalogs);
+  return {
+    appendedObjects: applied.objects.slice(core.objects.length),
+    appendedAttractions: applied.attractions.slice(core.attractions.length),
   };
 }
 
 function startPuzzle3dFillBuild(
   core: FixtureV1,
   committedSequence: readonly BrushPlacePayload[],
-  committedObjects: readonly FixtureObjectV1[],
-  committedAttractions: readonly AttractionProps[],
   seed: number,
   kindCatalogs: KindCatalogBundle | undefined,
   kindCompatibility: readonly KindCompatEntry[] | undefined,
@@ -479,11 +471,12 @@ function startPuzzle3dFillBuild(
   const tailMaxCount = Math.max(0, PUZZLE_3D_FILL_COUNT_MAX - committedCount);
   const buildBase =
     committedCount > 0 ? applyBrushFillPlacementsToFixture(core, committedSequence, kindCatalogs) : core;
+  const committedAppended = puzzle3dFillAppendedSlice(core, committedSequence, kindCatalogs);
   puzzle3dFillSessionRef.current = {
     baseFixture: core,
     sequence: [...committedSequence],
-    appendedObjects: [...committedObjects],
-    appendedAttractions: [...committedAttractions],
+    appendedObjects: [...committedAppended.appendedObjects],
+    appendedAttractions: [...committedAppended.appendedAttractions],
     seed,
   };
   puzzle3dFillBuildProgressRef.current = {
@@ -511,18 +504,13 @@ function startPuzzle3dFillBuild(
             const started = performance.now();
             await puzzle3dCollisionEngineRef.current.precomputeStep(PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET);
             const snapshot = await readPuzzle3dFillWorkerSnapshot();
-            const merged = mergePuzzle3dFillBuildChunk(
-              committedSequence,
-              committedObjects,
-              committedAttractions,
-              tailMaxCount,
-              snapshot,
-            );
+            const merged = mergePuzzle3dFillBuildChunk(committedSequence, tailMaxCount, snapshot);
+            const appended = puzzle3dFillAppendedSlice(core, merged.sequence, kindCatalogs);
             puzzle3dFillSessionRef.current = {
               baseFixture: core,
               sequence: merged.sequence,
-              appendedObjects: merged.appendedObjects,
-              appendedAttractions: merged.appendedAttractions,
+              appendedObjects: appended.appendedObjects,
+              appendedAttractions: appended.appendedAttractions,
               seed,
             };
             puzzle3dFillBuildProgressRef.current = {
@@ -570,18 +558,13 @@ function startPuzzle3dFillBuild(
     }
     const started = performance.now();
     const result = stepper.step(PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET);
-    const merged = mergePuzzle3dFillBuildChunk(
-      committedSequence,
-      committedObjects,
-      committedAttractions,
-      tailMaxCount,
-      result,
-    );
+    const merged = mergePuzzle3dFillBuildChunk(committedSequence, tailMaxCount, result);
+    const appended = puzzle3dFillAppendedSlice(core, merged.sequence, kindCatalogs);
     puzzle3dFillSessionRef.current = {
       ...puzzle3dFillSessionRef.current,
       sequence: merged.sequence,
-      appendedObjects: merged.appendedObjects,
-      appendedAttractions: merged.appendedAttractions,
+      appendedObjects: appended.appendedObjects,
+      appendedAttractions: appended.appendedAttractions,
     };
     puzzle3dFillBuildProgressRef.current = {
       count: merged.count,
@@ -612,8 +595,6 @@ export function preparePuzzle3dFillSession(
   startPuzzle3dFillBuild(
     structuredClone(baseFixture),
     [],
-    [],
-    [],
     nextPuzzle3dFillSeed(),
     kindCatalogs,
     kindCompatibility,
@@ -636,8 +617,6 @@ export function rerollPuzzle3dFillTail(
   startPuzzle3dFillBuild(
     session.baseFixture,
     session.sequence.slice(0, n),
-    session.appendedObjects.slice(0, n),
-    session.appendedAttractions.slice(0, n),
     nextPuzzle3dFillSeed(),
     kindCatalogs,
     kindCompatibility,
@@ -646,21 +625,17 @@ export function rerollPuzzle3dFillTail(
 }
 
 /** @emoji 🪣 Applies a fill prefix count onto the cached base fixture. */
-export function applyPuzzle3dFillCount(count: number, _kindCatalogs?: KindCatalogBundle | undefined): FixtureV1 | null {
+export function applyPuzzle3dFillCount(count: number, kindCatalogs?: KindCatalogBundle | undefined): FixtureV1 | null {
   const session = puzzle3dFillSessionRef.current;
   if (!session.baseFixture) {
     return null;
   }
-  const available = session.appendedObjects.length;
+  const available = session.sequence.length;
   const n = Math.max(0, Math.min(PUZZLE_3D_FILL_COUNT_MAX, Math.round(count), available));
   if (n === 0) {
     return session.baseFixture;
   }
-  return {
-    ...session.baseFixture,
-    objects: [...session.baseFixture.objects, ...session.appendedObjects.slice(0, n)],
-    attractions: [...session.baseFixture.attractions, ...session.appendedAttractions.slice(0, n)],
-  };
+  return applyBrushFillPlacementsToFixture(session.baseFixture, session.sequence.slice(0, n), kindCatalogs);
 }
 
 /** @emoji 🪣 Clears the cached fill session and returns the base fixture when present. */
@@ -1042,7 +1017,64 @@ export const puzzle3dPlayHoverBridgeRef: { current: ((payload: Puzzle3dHoverPayl
 
 export type Puzzle3dPlayHierarchyHoverBuildOptions = {
   readonly onHover?: (payload: Puzzle3dHoverPayload) => void;
+  readonly onToggleHidden?: (target: HoverTarget) => void;
+  readonly onToggleLocked?: (target: HoverTarget) => void;
 };
+
+function puzzle3dPlayHierarchyEntityChrome(
+  flags: { readonly hidden?: boolean; readonly locked?: boolean },
+  target: HoverTarget,
+  options: Puzzle3dPlayHierarchyHoverBuildOptions | undefined,
+): Pick<UiTreeItemNode, "isHidden" | "actions" | "contextMenu"> {
+  if (!options?.onToggleHidden && !options?.onToggleLocked) {
+    return { isHidden: flags.hidden === true };
+  }
+  const contextMenu: UiTreeContextMenuItem[] = [];
+  if (options.onToggleHidden) {
+    contextMenu.push({
+      id: `${target.kind}.hidden`,
+      label: flags.hidden ? "Show" : "Hide",
+      icon: flags.hidden ? "eye" : "eye-off",
+      onSelect: () => options.onToggleHidden!(target),
+    });
+  }
+  if (options.onToggleLocked) {
+    contextMenu.push({
+      id: `${target.kind}.locked`,
+      label: flags.locked ? "Unlock" : "Lock",
+      icon: flags.locked ? "lock-open" : "lock",
+      onSelect: () => options.onToggleLocked!(target),
+    });
+  }
+  return {
+    isHidden: flags.hidden === true,
+    actions: [
+      ...(options.onToggleHidden
+        ? [
+            {
+              id: `${target.kind}.hidden`,
+              icon: flags.hidden ? "eye-off" : "eye",
+              title: flags.hidden ? "Show" : "Hide",
+              onClick: () => options.onToggleHidden!(target),
+              revealOnHover: flags.hidden !== true,
+            },
+          ]
+        : []),
+      ...(options.onToggleLocked
+        ? [
+            {
+              id: `${target.kind}.locked`,
+              icon: flags.locked ? "lock-open" : "lock",
+              title: flags.locked ? "Unlock" : "Lock",
+              onClick: () => options.onToggleLocked!(target),
+              revealOnHover: flags.locked !== true,
+            },
+          ]
+        : []),
+    ],
+    contextMenu,
+  };
+}
 
 function puzzle3dPlayHoverSink(onHover?: (payload: Puzzle3dHoverPayload) => void): ((payload: Puzzle3dHoverPayload) => void) | undefined {
   if (onHover) {
@@ -1264,6 +1296,7 @@ export function buildPuzzle3dPlayHierarchySections(
         ...puzzle3dPlayFixtureTreeRowFields(vortex.label, fullId),
         command: puzzle3dPlaySelectVortexCommand(fullId),
         ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "vortex", fullId }),
+        ...puzzle3dPlayHierarchyEntityChrome(vortex, { kind: "vortex", fullId }, options),
       };
     });
     const vorticesGroup: UiTreeItemNode = {
@@ -1278,6 +1311,7 @@ export function buildPuzzle3dPlayHierarchySections(
       defaultOpen: true,
       command: puzzle3dPlaySelectObjectCommand(object.id),
       ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
+      ...puzzle3dPlayHierarchyEntityChrome(object, { kind: "object", id: object.id }, options),
       items: [vorticesGroup],
     };
   });
@@ -1293,6 +1327,7 @@ export function buildPuzzle3dPlayHierarchySections(
     description: `${attraction.attracting} → ${attraction.attracted}`,
     command: puzzle3dPlaySelectAttractionCommand(attraction.id),
     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
+    ...puzzle3dPlayHierarchyEntityChrome(attraction, { kind: "attraction", id: attraction.id }, options),
   }));
   const attractionsGroup: UiTreeItemNode = {
     id: "puzzle-3d-play-hierarchy.attractions",
@@ -1588,6 +1623,35 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     }
   }
 
+  private toggleEntityFlag(target: HoverTarget, flag: "hidden" | "locked"): void {
+    this.patchFixture((fixture) => {
+      if (target.kind === "object") {
+        const object = fixture.objects.find((row) => row.id === target.id);
+        if (!object) {
+          return fixture;
+        }
+        return updatePuzzle3dObjectInFixture(fixture, target.id, { [flag]: !(object[flag] === true) });
+      }
+      if (target.kind === "vortex") {
+        const { objectId, vortexId } = parseVortexFullId(target.fullId);
+        const object = fixture.objects.find((row) => row.id === objectId);
+        const vortex = object?.vortices.find((row) => row.id === vortexId || puzzle3dVortexFullId(objectId, row.id) === target.fullId);
+        if (!object || !vortex) {
+          return fixture;
+        }
+        return updatePuzzle3dVortexInFixture(fixture, target.fullId, { [flag]: !(vortex[flag] === true) });
+      }
+      const attraction = fixture.attractions.find((row) => row.id === target.id);
+      if (!attraction) {
+        return fixture;
+      }
+      return updatePuzzle3dAttractionInFixture(fixture, target.id, { [flag]: !(attraction[flag] === true) });
+    });
+    this.selection = this.filterSelectionByPlaygroundKinds(this.selection);
+    this.notifySelection();
+    console.log("[DEBUG] puzzle3d toggleEntityFlag", flag, target);
+  }
+
   /** @emoji 🌳 Hierarchy panel tree with stable {@link UiTreeNode.sections} across selection-only updates. */
   getHierarchyPanelTree(selection: Puzzle3dPlaySelection): UiNode {
     if (!this.fixture) {
@@ -1596,6 +1660,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (this.hierarchySectionsRevision !== this.fixtureRevision || !this.hierarchySectionsCache) {
       this.hierarchySectionsCache = buildPuzzle3dPlayHierarchySections(this.fixture, {
         onHover: (payload) => this.setHoverFocus(payload),
+        onToggleHidden: (target) => this.toggleEntityFlag(target, "hidden"),
+        onToggleLocked: (target) => this.toggleEntityFlag(target, "locked"),
       });
       this.hierarchySectionsRevision = this.fixtureRevision;
     }
@@ -2097,10 +2163,28 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   private filterSelectionByPlaygroundKinds(selection: Puzzle3dPlaySelection): Puzzle3dPlaySelection {
+    const objectById = new Map(this.fixture.objects.map((object) => [object.id, object]));
+    const attractionById = new Map(this.fixture.attractions.map((attraction) => [attraction.id, attraction]));
+    const vortexFlagsByFullId = new Map<string, { hidden?: boolean; locked?: boolean }>();
+    for (const object of this.fixture.objects) {
+      for (const vortex of object.vortices) {
+        vortexFlagsByFullId.set(puzzle3dVortexFullId(object.id, vortex.id), { hidden: vortex.hidden, locked: vortex.locked });
+      }
+    }
+    const entitySelectable = (flags: { hidden?: boolean; locked?: boolean } | undefined) => flags?.hidden !== true && flags?.locked !== true;
     return {
-      objectIds: this.selectableKinds.object && this.visibleKinds.object ? [...selection.objectIds] : [],
-      vortexIds: this.selectableKinds.vortex && this.visibleKinds.vortex ? [...selection.vortexIds] : [],
-      attractionIds: this.selectableKinds.attraction && this.visibleKinds.attraction ? [...selection.attractionIds] : [],
+      objectIds:
+        this.selectableKinds.object && this.visibleKinds.object
+          ? selection.objectIds.filter((objectId) => entitySelectable(objectById.get(objectId)))
+          : [],
+      vortexIds:
+        this.selectableKinds.vortex && this.visibleKinds.vortex
+          ? selection.vortexIds.filter((fullId) => entitySelectable(vortexFlagsByFullId.get(fullId)))
+          : [],
+      attractionIds:
+        this.selectableKinds.attraction && this.visibleKinds.attraction
+          ? selection.attractionIds.filter((attractionId) => entitySelectable(attractionById.get(attractionId)))
+          : [],
     };
   }
 
@@ -3227,6 +3311,69 @@ if (import.meta.vitest) {
       };
       const candidates = brushCompatibleCandidates(target, catalogs, compat);
       expect(candidates.some((entry) => entry.objectKindId === "Hexagonal Cut Concrete Forest Right")).toBe(true);
+      const columnCandidates = candidates.filter((entry) => {
+        const vk = catalogs?.objects?.find((row) => row.id === entry.objectKindId)?.vortices?.[entry.sourceVortexIndex]?.vortexKind ?? "";
+        return vk.startsWith("c-");
+      });
+      expect(columnCandidates).toHaveLength(0);
+    });
+
+    it("concrete forest brush first probe on every seed b-* vortex is collision-free for all beam mates", async () => {
+      const { Group, Mesh, BoxGeometry } = await import("three");
+      clearBrushCollisionGltfScenes();
+      const registerBox = (meshUrl: string): void => {
+        registerBrushCollisionGltfScene(meshUrl, new Mesh(new BoxGeometry(13, 5, 3)));
+      };
+      registerBox("/meshes/hexagonal-cut-concrete-forest-left.glb");
+      registerBox("/meshes/hexagonal-cut-concrete-forest-right.glb");
+      const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown)!;
+      const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
+      const compat = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
+      const host = fixture.objects[0]!;
+      const leftUrl = "/meshes/hexagonal-cut-concrete-forest-left.glb";
+      const hostGroup = new Group();
+      hostGroup.userData.puzzle3dMeshUrl = leftUrl;
+      hostGroup.userData.puzzle3dObjectId = host.id;
+      applyObjectPose(hostGroup, host.origin, host.orientation ?? [0, 0, 0, 1]);
+      const beamVortexIndexes = (host.vortices ?? [])
+        .map((vortex, index) => ({ index, kind: vortex.vortexKind ?? "" }))
+        .filter((row) => row.kind.startsWith("b-"))
+        .map((row) => row.index);
+      for (const vortexIndex of beamVortexIndexes) {
+        const vortex = host.vortices![vortexIndex]!;
+        const target: AttractionVortexContext = {
+          objectId: host.id,
+          objectKind: host.objectKind,
+          vortexKind: vortex.vortexKind,
+        };
+        const world = vortexWorldCadFromObject(host, vortexIndex)!;
+        const compatible = brushCompatibleCandidates(target, catalogs, compat);
+        const beamCompatible = compatible.filter((candidate) => {
+          const vk = catalogs?.objects?.find((row) => row.id === candidate.objectKindId)?.vortices?.[candidate.sourceVortexIndex]?.vortexKind ?? "";
+          return vk.startsWith("b-");
+        });
+        expect(beamCompatible.length).toBeGreaterThan(0);
+        const targetFullId = vortex.id ?? `${host.id}:v${vortexIndex}`;
+        const result = brushCollisionFreeCandidates({
+          scene: { collectObjectGroups: () => [hostGroup] },
+          targetVortexFullId: targetFullId,
+          candidates: compatible,
+          target,
+          targetWorldPositionCad: world.position,
+          targetWorldDirectionCad: world.direction,
+          referenceOrientationCad: host.orientation,
+          kindCatalogs: catalogs,
+          sceneFixture: fixture,
+          meshRootForUrl: brushCollisionGltfRoot,
+          overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+        });
+        expect(result.unknownPending, targetFullId).toBe(false);
+        const freeKeys = new Set(result.free.map((row) => `${row.objectKindId}\u0001${row.sourceVortexIndex}`));
+        for (const candidate of beamCompatible) {
+          expect(freeKeys.has(`${candidate.objectKindId}\u0001${candidate.sourceVortexIndex}`), targetFullId).toBe(true);
+        }
+      }
+      clearBrushCollisionGltfScenes();
     });
 
     it("concrete forest object kinds resolve abbau-aufbau mesh urls for fill preload", () => {
@@ -3324,8 +3471,21 @@ if (import.meta.vitest) {
       };
       rerollPuzzle3dFillTail(committedCount, catalogs, compat, DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET);
       expect(puzzle3dFillBuildProgressRef.current.count).toBe(committedCount);
-      expect(puzzle3dFillSessionRef.current.sequence).toHaveLength(committedCount);
-      expect(puzzle3dFillSessionRef.current.appendedObjects.slice(0, committedCount)).toEqual(committedObjects);
+      expect(puzzle3dFillSessionRef.current.sequence).toEqual(committedSequence);
+      expect(puzzle3dFillSessionRef.current.appendedObjects).toHaveLength(committedCount);
+      const appliedCommitted = applyPuzzle3dFillCount(committedCount, catalogs)!;
+      expect(appliedCommitted.objects.length).toBe(fixture.objects.length + committedCount);
+      for (const object of appliedCommitted.objects) {
+        expect(object.origin?.join(",")).toBeTruthy();
+      }
+      const committedPose = committedObjects
+        .map((object) => `${object.origin.join(",")}|${object.orientation?.join(",") ?? ""}`)
+        .join("\0");
+      const reappliedPose = appliedCommitted.objects
+        .slice(fixture.objects.length)
+        .map((object) => `${object.origin.join(",")}|${object.orientation?.join(",") ?? ""}`)
+        .join("\0");
+      expect(reappliedPose).toBe(committedPose);
       const buildBase = applyBrushFillPlacementsToFixture(fixture, committedSequence, catalogs);
       const tailStepper = createBrushFillSequenceStepper({
         baseFixture: buildBase,
@@ -3353,7 +3513,7 @@ if (import.meta.vitest) {
       };
       const atCommitted = applyPuzzle3dFillCount(committedCount, catalogs);
       expect(atCommitted?.objects.length).toBe(fixture.objects.length + committedCount);
-      expect(atCommitted?.objects.slice(fixture.objects.length)).toEqual(committedObjects);
+      expect(reappliedPose).toBe(committedPose);
       clearPuzzle3dFillSession();
       clearBrushCollisionGltfScenes();
     });

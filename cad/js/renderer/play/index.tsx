@@ -287,11 +287,51 @@ export function cadPlayModelsDigest(modelsByDefinitionId: Record<string, Model>)
 
 type CadPlayHierarchyPickContext = {
   readonly modelDefinitionId: string;
+  readonly model: Model;
   readonly isSelected: (kind: SelectionTarget["kind"], id: string) => boolean;
   readonly onSelect: (modelDefinitionId: string, target: SelectionTarget) => void;
   readonly onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void;
+  readonly onToggleHidden: (modelDefinitionId: string, target: SelectionTarget) => void;
+  readonly onToggleLocked: (modelDefinitionId: string, target: SelectionTarget) => void;
   readonly registerHighlight: (target: SelectionTarget, itemId: string) => void;
 };
+
+function cadPlayHierarchyEntityChrome(model: Model, target: SelectionTarget, ctx: CadPlayHierarchyPickContext): Pick<TreeDataItem, "isHidden" | "actions" | "contextMenu"> {
+  const flags = model.getEntityFlags(target.id);
+  return {
+    isHidden: flags.hidden === true,
+    actions: [
+      {
+        id: `${target.kind}.hidden`,
+        icon: flags.hidden ? "eye-off" : "eye",
+        title: flags.hidden ? "Show" : "Hide",
+        onClick: () => ctx.onToggleHidden(ctx.modelDefinitionId, target),
+        revealOnHover: flags.hidden !== true,
+      },
+      {
+        id: `${target.kind}.locked`,
+        icon: flags.locked ? "lock-open" : "lock",
+        title: flags.locked ? "Unlock" : "Lock",
+        onClick: () => ctx.onToggleLocked(ctx.modelDefinitionId, target),
+        revealOnHover: flags.locked !== true,
+      },
+    ],
+    contextMenu: [
+      {
+        id: `${target.kind}.hidden`,
+        label: flags.hidden ? "Show" : "Hide",
+        icon: flags.hidden ? "eye" : "eye-off",
+        onSelect: () => ctx.onToggleHidden(ctx.modelDefinitionId, target),
+      },
+      {
+        id: `${target.kind}.locked`,
+        label: flags.locked ? "Unlock" : "Lock",
+        icon: flags.locked ? "lock-open" : "lock",
+        onSelect: () => ctx.onToggleLocked(ctx.modelDefinitionId, target),
+      },
+    ],
+  };
+}
 
 function cadPlayHierarchyHoverHandlers(ctx: CadPlayHierarchyPickContext, target: SelectionTarget): Pick<TreeDataItem, "onPointerEnter" | "onPointerLeave"> {
   return {
@@ -312,6 +352,7 @@ function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveHierarchyNode, path: 
     defaultOpen: node.kind === "solid" || node.kind === "shell" || node.kind === "face",
     onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
     ...cadPlayHierarchyHoverHandlers(ctx, target),
+    ...cadPlayHierarchyEntityChrome(ctx.model, target, ctx),
     ...(childItems.length > 0 ? { items: childItems } : {}),
   };
 }
@@ -331,6 +372,7 @@ function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string, 
     defaultOpen: true,
     onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
     ...cadPlayHierarchyHoverHandlers(ctx, target),
+    ...cadPlayHierarchyEntityChrome(ctx.model, target, ctx),
     items: childItems.length ? childItems : [{ id: `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}.child.empty`, label: "(empty)" }],
   };
 }
@@ -359,6 +401,8 @@ export function buildCadPlayHierarchySections(
   selection: readonly SelectionTarget[],
   onSelect: (modelDefinitionId: string, target: SelectionTarget) => void,
   onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void = () => {},
+  onToggleHidden: (modelDefinitionId: string, target: SelectionTarget) => void = () => {},
+  onToggleLocked: (modelDefinitionId: string, target: SelectionTarget) => void = () => {},
 ): CadPlayHierarchyBuildResult {
   const selectedKeys = new Set(selection.map(cadPlaySelectionKey));
   const isSelected = (kind: SelectionTarget["kind"], id: string): boolean => selectedKeys.has(`${kind}:${id}`);
@@ -373,7 +417,7 @@ export function buildCadPlayHierarchySections(
     if (!model) {
       continue;
     }
-    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, isSelected, onSelect, onHover, registerHighlight };
+    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, model, isSelected, onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
     const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
       const objectId = String(object.id);
       const typologyTail = object.typology.split(".").pop() ?? object.typology;
@@ -389,6 +433,7 @@ export function buildCadPlayHierarchySections(
         defaultOpen: true,
         onClick: () => onSelect(modelDefinitionId, objectTarget),
         ...cadPlayHierarchyHoverHandlers(pickCtx, objectTarget),
+        ...cadPlayHierarchyEntityChrome(model, objectTarget, pickCtx),
         items: primitiveItems.length ? primitiveItems : [{ id: `cad-play-hierarchy.object.${modelDefinitionId}.${objectId}.primitives.empty`, label: "(none)" }],
       };
     });
@@ -888,11 +933,13 @@ import { BrepjsKernel, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
 import { statelyStateEngineProvider } from "@cad/js/machine/stately";
 import {
   InteractionRepl,
+  modelHasCommittedSolidsForDisplay,
   SelectionAttributesPanel,
   ModelStatsPanel,
   SelectionPropertiesPanel,
   replDisplayedSelectionTargets,
   replWithRendererSelectionTargets,
+  pruneSelectionTargetsForEntityFlags,
   r3fPreviewKernel,
   selectionTargetHoverKey,
   spatialPickTargetKey,
@@ -1179,8 +1226,8 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
 function modelsFromCadJson(json: unknown): Record<string, Model> {
   const bundle = json && typeof json === "object" ? (json as SpatialExchangeBundle) : null;
   const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
-  if (modelSpace) return ensurePlayShapeModel(recordFromModelSpace(modelSpace));
-  return ensurePlayShapeModel({
+  if (modelSpace) return ensurePlayQuadModelSlots(recordFromModelSpace(modelSpace));
+  return ensurePlayQuadModelSlots({
     [defaultModelDefinitionId()]: parseModelJson(bundle?.model ?? json) ?? new Model(),
   });
 }
@@ -1218,22 +1265,30 @@ function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, defi
   const candidates = listTransformationsIntoModelDefinition(definitionId);
   const fromShape = candidates.find((row) => isShapeModelDefinition(row.source.modelDefinition));
   const shape = withShape[defaultModelDefinitionId()];
-  if (fromShape && shape) {
-    return { ...withShape, [definitionId]: applyTransformation(fromShape, shape, preciseSpatialKernelMath) };
-  }
-  const fromLinked = candidates.find((row) => withShape[row.source.modelDefinition]);
-  if (fromLinked) {
-    return { ...withShape, [definitionId]: applyTransformation(fromLinked, withShape[fromLinked.source.modelDefinition]!, preciseSpatialKernelMath) };
+  try {
+    if (fromShape && shape) {
+      return { ...withShape, [definitionId]: applyTransformation(fromShape, shape, preciseSpatialKernelMath) };
+    }
+    const fromLinked = candidates.find((row) => withShape[row.source.modelDefinition]);
+    if (fromLinked) {
+      return { ...withShape, [definitionId]: applyTransformation(fromLinked, withShape[fromLinked.source.modelDefinition]!, preciseSpatialKernelMath) };
+    }
+  } catch {
+    return withShape;
   }
   return withShape;
 }
 
+/** @emoji 🌌 Ensures play quad model slots exist without running heavy derive transforms. */
+export function ensurePlayQuadModelSlots(models: Readonly<Record<string, Model>>): Record<string, Model> {
+  const withShape = ensurePlayShapeModel(models);
+  if (withShape[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]) return withShape;
+  return { ...withShape, [CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]: new Model() };
+}
+
 /** @emoji 🌌 Ensures all four CAD play quad models exist and stay derived from shape. */
 export function ensureCadPlayQuadModels(models: Readonly<Record<string, Model>>): Record<string, Model> {
-  let next = ensurePlayShapeModel(models);
-  if (!next[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]) {
-    next = { ...next, [CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]: new Model() };
-  }
+  let next = ensurePlayQuadModelSlots(models);
   next = ensureDerivedModelInSpace(next, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID);
   next = ensureDerivedModelInSpace(next, "aec.building.structure");
   next = ensureDerivedModelInSpace(next, CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID);
@@ -1241,7 +1296,7 @@ export function ensureCadPlayQuadModels(models: Readonly<Record<string, Model>>)
 }
 
 function emptyPlayModels(): Record<string, Model> {
-  return ensureCadPlayQuadModels({});
+  return ensurePlayQuadModelSlots({});
 }
 
 function pickShapeForModelDefinition(models: Readonly<Record<string, Model>>, activeModelDefinitionId: string, liveModel: Model): Model {
@@ -1249,7 +1304,9 @@ function pickShapeForModelDefinition(models: Readonly<Record<string, Model>>, ac
     return models[defaultModelDefinitionId()] ?? liveModel;
   }
   if (modelDefinitionUsesGeometryPicking(activeModelDefinitionId)) {
-    return models[activeModelDefinitionId] ?? models[defaultModelDefinitionId()] ?? liveModel;
+    const scoped = models[activeModelDefinitionId];
+    if (scoped && modelHasCommittedSolidsForDisplay(scoped)) return scoped;
+    return models[defaultModelDefinitionId()] ?? liveModel;
   }
   return liveModel;
 }
@@ -1262,6 +1319,8 @@ export interface CadPlayChromeSnapshot {
   readonly hoveredKey: string | null;
   readonly selectTarget: (modelDefinitionId: string, target: SelectionTarget) => void;
   readonly hoverTarget: (modelDefinitionId: string, target: SelectionTarget | null) => void;
+  readonly toggleHidden: (modelDefinitionId: string, target: SelectionTarget) => void;
+  readonly toggleLocked: (modelDefinitionId: string, target: SelectionTarget) => void;
 }
 
 interface CadPlayChromeContextValue {
@@ -1437,7 +1496,7 @@ function PlaySession({
       onHoveredPickKeyChange={onHoveredPickKeyChange}
       onHoverTarget={onCanvasHoverTarget}
       autoFitMeshes={autoFitMeshes}
-      autoFitBehavior={autoFitBehavior}
+      autoFitBehavior="changes"
       transformGumballConfig={transformGumballConfig}
       onTransformGumballCommit={onTransformGumballCommit}
       onDeleteSelection={onDeleteSelection}
@@ -1567,7 +1626,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   }, [interactionIdByPane]);
 
   reactHostPort.useEffect(() => {
-    setModelsByDefinitionId((prev) => ensureCadPlayQuadModels(prev));
+    setModelsByDefinitionId((prev) => ensurePlayQuadModelSlots(prev));
   }, [activeModelDefinitionId]);
 
   const handleInteractionPickForPane = reactHostPort.useCallback((pane: CadPlayPaneId, id: string) => {
@@ -1598,7 +1657,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     setModelDefinitionRevision((r) => r + 1);
   }, []);
 
-  const modelsForActiveDefinition = reactHostPort.useMemo(() => ensureCadPlayQuadModels(modelsByDefinitionId), [activeModelDefinitionId, modelsByDefinitionId]);
+  const modelsForActiveDefinition = reactHostPort.useMemo(() => ensurePlayQuadModelSlots(modelsByDefinitionId), [activeModelDefinitionId, modelsByDefinitionId]);
 
   const activeModel = reactHostPort.useMemo(() => {
     const resolved = modelsForActiveDefinition[activeModelDefinitionId];
@@ -1617,7 +1676,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
 
   const flushedModelsByDefinitionId = reactHostPort.useMemo(() => {
     const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
-    return ensureCadPlayQuadModels(flushed);
+    return ensurePlayQuadModelSlots(flushed);
   }, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId]);
 
   const playModelSpace = reactHostPort.useMemo(() => modelSpaceFromRecord(flushedModelsByDefinitionId), [flushedModelsByDefinitionId]);
@@ -1627,7 +1686,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const pickGeometry = reactHostPort.useMemo(() => pickShapeForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel), [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
 
   const commitModelForDefinition = reactHostPort.useCallback((modelDefinitionId: string, model: Model) => {
-    setModelsByDefinitionId((prev) => ensureCadPlayQuadModels({ ...prev, [modelDefinitionId]: Model.fromJSON(model.toJSON()) }));
+    setModelsByDefinitionId((prev) => ensurePlayQuadModelSlots({ ...prev, [modelDefinitionId]: Model.fromJSON(model.toJSON()) }));
     setModelDefinitionRevision((r) => r + 1);
   }, []);
 
@@ -1635,7 +1694,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     (nextId: string) => {
       setModelsByDefinitionId((prev) => {
         const flushed = flushModelsRecord(prev, activeModelDefinitionId, liveModel);
-        return ensureCadPlayQuadModels(flushed);
+        return ensurePlayQuadModelSlots(flushed);
       });
       setActiveModelDefinitionId(nextId);
       setModelDefinitionRevision((r) => r + 1);
@@ -1646,8 +1705,13 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const focusModelDefinition = reactHostPort.useCallback(
     (modelDefinitionId: string) => {
       if (modelDefinitionId === activeModelDefinitionId) return;
-      setModelsByDefinitionId((prev) => ensureCadPlayQuadModels(flushModelsRecord(prev, activeModelDefinitionId, liveModel)));
+      setModelsByDefinitionId((prev) => {
+        const flushed = ensurePlayQuadModelSlots(flushModelsRecord(prev, activeModelDefinitionId, liveModel));
+        if (isShapeModelDefinition(modelDefinitionId)) return flushed;
+        return ensureDerivedModelInSpace(flushed, modelDefinitionId);
+      });
       setActiveModelDefinitionId(modelDefinitionId);
+      setModelDefinitionRevision((r) => r + 1);
     },
     [activeModelDefinitionId, liveModel],
   );
@@ -1732,6 +1796,34 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     [activeModelDefinitionId, handleActiveModelDefinitionChange],
   );
 
+  const toggleHierarchyEntityFlag = reactHostPort.useCallback(
+    (modelDefinitionId: string, target: SelectionTarget, flag: "hidden" | "locked") => {
+      const model = modelDefinitionId === activeModelDefinitionId ? liveModel : flushedModelsByDefinitionId[modelDefinitionId];
+      if (!model) {
+        return;
+      }
+      const next = Model.fromJSON(model.toJSON());
+      const current = next.getEntityFlags(target.id);
+      next.setEntityFlag(target.id, flag, !(current[flag] === true));
+      commitModelForDefinition(modelDefinitionId, next);
+      setRendererSelectionByModel((prev) =>
+        replWithRendererSelectionTargets(prev, modelDefinitionId, pruneSelectionTargetsForEntityFlags(prev[modelDefinitionId] ?? [], (id) => next.getEntityFlags(id))),
+      );
+      console.log("[DEBUG] cad toggleEntityFlag", flag, target);
+    },
+    [activeModelDefinitionId, commitModelForDefinition, flushedModelsByDefinitionId, liveModel],
+  );
+
+  const toggleHierarchyHidden = reactHostPort.useCallback(
+    (modelDefinitionId: string, target: SelectionTarget) => toggleHierarchyEntityFlag(modelDefinitionId, target, "hidden"),
+    [toggleHierarchyEntityFlag],
+  );
+
+  const toggleHierarchyLocked = reactHostPort.useCallback(
+    (modelDefinitionId: string, target: SelectionTarget) => toggleHierarchyEntityFlag(modelDefinitionId, target, "locked"),
+    [toggleHierarchyEntityFlag],
+  );
+
   const onCanvasHoverTarget = reactHostPort.useCallback((target: SpatialPickTarget | null) => {
     pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_CANVAS, target ? spatialPickTargetKey(target) : null);
   }, []);
@@ -1750,6 +1842,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       hoveredKey: pointerFocus.hover,
       selectTarget: selectHierarchyTarget,
       hoverTarget: hoverHierarchyTarget,
+      toggleHidden: toggleHierarchyHidden,
+      toggleLocked: toggleHierarchyLocked,
     });
     return () => publishCadPlayChrome(null);
   }, [
@@ -1762,6 +1856,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
     publishCadPlayChrome,
     selectHierarchyTarget,
     selectionInScope,
+    toggleHierarchyHidden,
+    toggleHierarchyLocked,
   ]);
 
   const exportBaseName = reactHostPort.useMemo(() => {
@@ -2185,11 +2281,12 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
     [interactionId],
   );
   const paneModel = cadPlayPaneModel(flushedModelsByDefinitionId, pane);
-  const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(paneModel.toJSON()), nodes: [] }), [paneModel, modelDefinitionRevision]);
   const pickGeometry = reactHostPort.useMemo(
     () => pickShapeForModelDefinition(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
     [flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision],
   );
+  const viewModel = reactHostPort.useMemo(() => (modelHasCommittedSolidsForDisplay(paneModel) ? paneModel : pickGeometry), [paneModel, pickGeometry]);
+  const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(viewModel.toJSON()), nodes: [] }), [viewModel, modelDefinitionRevision]);
   const commitPaneModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(modelDefinitionId, model), [commitModelForDefinition, modelDefinitionId]);
   const onTransformGumballCommit = reactHostPort.useCallback((diff: ModelDiff) => handleTransformGumballCommit(modelDefinitionId, diff), [handleTransformGumballCommit, modelDefinitionId]);
   const onSnapshot = reactHostPort.useCallback((snapshot: InteractionSnapshot) => handleSnapshotChangeForPane(pane, snapshot), [handleSnapshotChangeForPane, pane]);
@@ -2211,7 +2308,7 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
 
   const mode = computeModeForPane(pane);
   const transformGumballConfig = transformGumballConfigForPane(pane);
-  const autoFitMeshes = pane !== "shape";
+  const autoFitMeshes = modelHasCommittedSolidsForDisplay(viewModel);
 
   return (
     <div className="absolute inset-0 min-h-0 min-w-0" onPointerDown={() => focusModelDefinition(modelDefinitionId)}>
@@ -2332,7 +2429,15 @@ function CadPlayRoot(): ReactNode {
     if (!chromeSnapshot) {
       return { sections: [] as TreeDataSection[], highlightKeyToItemIds: {} as Readonly<Record<string, readonly string[]>> };
     }
-    return buildCadPlayHierarchySections(chromeSnapshot.modelsByDefinitionId, chromeSnapshot.activeModelDefinitionId, chromeSnapshot.selection, chromeSnapshot.selectTarget, chromeSnapshot.hoverTarget);
+    return buildCadPlayHierarchySections(
+      chromeSnapshot.modelsByDefinitionId,
+      chromeSnapshot.activeModelDefinitionId,
+      chromeSnapshot.selection,
+      chromeSnapshot.selectTarget,
+      chromeSnapshot.hoverTarget,
+      chromeSnapshot.toggleHidden,
+      chromeSnapshot.toggleLocked,
+    );
   }, [chromeKey, chromeSnapshot]);
   const hierarchyHighlightedIds = reactHostPort.useMemo(() => {
     const hoveredKey = chromeSnapshot?.hoveredKey;
@@ -2804,6 +2909,24 @@ if (import.meta.vitest) {
       expect(edgeNode?.label).toContain("edge");
       expect(edgeNode?.items?.some((row) => row.label.includes("vertex"))).toBe(true);
     });
+
+    it("buildCadPlayHierarchySections lists kernel-imported STEP objects", async () => {
+      const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
+      const { applyModelDiff, defaultModelDefinitionId, solidRef } = await import("@cad/js/core");
+      const model = new Model();
+      const solid = solidRef("imported-solid");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
+      model.objects["object-imported"] = {
+        id: "object-imported",
+        typology: "spatial.shape.kernel.solid",
+        primitives: { solid: String(solid) },
+      };
+      const mdId = defaultModelDefinitionId();
+      const build = buildCadPlayHierarchySections({ [mdId]: model }, mdId, [], () => {});
+      const objectNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
+      expect(objectNode?.label).toContain("object-imported");
+      expect(objectNode?.description).toBe("spatial.shape.kernel.solid");
+    });
   });
 
   describe("CAD play typology chrome", () => {
@@ -2847,6 +2970,13 @@ if (import.meta.vitest) {
     it("ensureDerivedModelInSpace keeps spatial.shape for shape definition", () => {
       const models = ensureDerivedModelInSpace({}, defaultModelDefinitionId());
       expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
+    });
+
+    it("ensurePlayQuadModelSlots seeds shape and building without derive transforms", () => {
+      const models = ensurePlayQuadModelSlots({});
+      expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
+      expect(models[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeUndefined();
     });
 
     it("ensureCadPlayQuadModels seeds all four play panes", () => {

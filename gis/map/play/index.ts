@@ -188,6 +188,12 @@ const GIS_MAP_VECTOR_STYLE_LABEL: Record<MapVectorStyle, string> = {
   invertedFigure: "Inverted-Figure",
 };
 
+const MAP_VECTOR_STYLE_DEFAULT_LABELS: Record<MapVectorStyle, boolean> = {
+  colored: true,
+  figureGround: false,
+  invertedFigure: false,
+};
+
 export const GIS_MAP_PLAY_LOD_TIERS: readonly GisMapLodId[] = getGisMapLodScale().map((lod) => lod.id);
 
 const GIS_MAP_LOD_MENU_LABEL: Record<GisMapLodId, string> = Object.fromEntries(
@@ -539,6 +545,12 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
       this.vectorStyleByInstance = { ...this.vectorStyleByInstance, [scopeId]: resolved };
       if (scopeId === GIS_MAP_PLAY_WINDOW_KIND_ID) {
         this.vectorStyle = resolved;
+      }
+      const prevVisibility = this.getLayerVisibilityForScope(scopeId);
+      const nextVisibility = { ...prevVisibility, labels: MAP_VECTOR_STYLE_DEFAULT_LABELS[resolved] };
+      this.layerVisibilityByInstance = { ...this.layerVisibilityByInstance, [scopeId]: nextVisibility };
+      if (scopeId === GIS_MAP_PLAY_WINDOW_KIND_ID) {
+        this.layerVisibility = nextVisibility;
       }
       this.rebuildShellMode();
       this.bumpSnapshot();

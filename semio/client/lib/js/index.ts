@@ -1582,7 +1582,21 @@ type SemioRelayVfsBranchSpec = {
   readonly nameFrom: (node: JsonObject) => string;
   readonly hasChildren?: (node: JsonObject) => boolean;
   readonly mapChild?: (child: SemioFileSystemChildRef, node: JsonObject) => SemioFileSystemChildRef;
+  readonly skipNode?: (node: JsonObject) => boolean;
 };
+
+/** @emoji 📄 Speckle-style representation blob basename (`e5267da44d`). */
+function semioLooksLikeSpeckleRepresentationBlobName(name: string): boolean {
+  return name.length === 10 && /^[0-9a-f]+$/i.test(name);
+}
+
+/** @emoji 📄 True when a loose kit-root file is a representation backing blob, not a browsable VFS asset. */
+function semioKitRootFileHiddenFromVfs(node: JsonObject): boolean {
+  const name = String(node["name"] ?? "");
+  if (semioLooksLikeSpeckleRepresentationBlobName(name)) return true;
+  const url = String(node["url"] ?? node["remote"] ?? "");
+  return url.includes("/representations/");
+}
 
 function semioRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, branches: readonly SemioRelayVfsBranchSpec[]): readonly SemioFileSystemChildRef[] {
   const out: SemioFileSystemChildRef[] = [];
@@ -1592,6 +1606,7 @@ function semioRelayVfsChildrenFromFrag(frag: JsonObject | null | undefined, bran
     for (const edge of edges) {
       const node = (edge as JsonObject)?.["node"] as JsonObject | undefined;
       if (!node) continue;
+      if (branch.skipNode?.(node)) continue;
       const id = String(node["id"] ?? "");
       if (!id) continue;
       const name = branch.nameFrom(node);
@@ -1695,6 +1710,7 @@ function semioParseRelayVfsChildren(parent: SemioFileSystemParentRef, frag: Json
           kind: "FILE",
           nameFrom: (node) => String(node["name"] ?? node["description"] ?? node["id"] ?? ""),
           hasChildren: () => false,
+          skipNode: semioKitRootFileHiddenFromVfs,
         },
       ]);
     case "TYPOLOGY": {
@@ -5373,6 +5389,8 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
           30_000,
         );
         expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "base.glb")).toBe(false);
+        expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "e5267da44d")).toBe(false);
+        expect(kitRoot.filter((row) => row.kind === "FILE")).toHaveLength(0);
         expect(kitRoot.some((row) => row.kind === "FOLDER" && row.name === "representations")).toBe(true);
         const repFolder = kitRoot.find((row) => row.kind === "FOLDER" && row.id === representationsFolderId);
         expect(repFolder).toBeDefined();

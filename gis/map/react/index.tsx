@@ -116,7 +116,7 @@ export const GIS_MAP_LAYER_LABEL: Record<GisMapLayerId, string> = {
   roads: "Roads",
   buildings: "Buildings",
   borders: "Borders",
-  labels: "Place labels",
+  labels: "Labels",
   positions: "Positions",
   positionLabels: "Position labels",
   routes: "Routes",

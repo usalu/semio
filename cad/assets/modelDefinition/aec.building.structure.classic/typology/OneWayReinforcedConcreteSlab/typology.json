@@ -13,5 +13,17 @@
   ],
   "primitiveKinds": [
     "solid"
-  ]
+  ],
+  "style": {
+    "color": "#8B7355",
+    "edgeColor": "#5C4A33",
+    "opacity": 0.78,
+    "pattern": {
+      "kind": "hatch",
+      "direction": 0,
+      "spacing": 0.28,
+      "lineWidth": 0.035,
+      "color": "#3D3226"
+    }
+  }
 }

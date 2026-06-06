@@ -2071,6 +2071,54 @@ function validSolidsFromImportedShape(shape: Shape3D): ValidSolid[] {
 	return out;
 }
 
+/** @emoji 📏 Raw Rhino/AP242 BREP STEP fixtures are authored in millimeters; CAD model space uses meters. */
+export const STEP_BREP_IMPORT_MM_TO_M = 0.001;
+
+/** @emoji 📐 Uniformly scales vertex positions and length-bearing surface data on a model graph. */
+export function scaleModelPositions(model: Model, factor: number): void {
+	if (!Number.isFinite(factor) || factor === 1) return;
+	for (const vertex of Object.values(model.vertices)) {
+		vertex.position = vec3Scale(vertex.position, factor);
+	}
+	for (const face of Object.values(model.faces)) {
+		const surface = face.surface;
+		if (!surface) continue;
+		if (surface.kind === "plane") {
+			face.surface = { kind: "plane", origin: vec3Scale(surface.origin, factor), normal: surface.normal };
+		} else if (surface.kind === "sphere") {
+			face.surface = { kind: "sphere", origin: vec3Scale(surface.origin, factor), radius: surface.radius * factor };
+		} else if (surface.kind === "cylinder") {
+			face.surface = {
+				kind: "cylinder",
+				origin: vec3Scale(surface.origin, factor),
+				axis: surface.axis,
+				radius: surface.radius * factor,
+			};
+		} else if (surface.kind === "cone") {
+			face.surface = {
+				kind: "cone",
+				apex: vec3Scale(surface.apex, factor),
+				axis: surface.axis,
+				radius: surface.radius * factor,
+			};
+		}
+	}
+	for (const edge of Object.values(model.edges)) {
+		const curve = edge.curve;
+		if (!curve) continue;
+		if (curve.kind === "nurbs") {
+			edge.curve = { ...curve, poles: curve.poles.map((pole) => vec3Scale(pole, factor)) };
+		} else if (curve.kind === "arc") {
+			edge.curve = {
+				...curve,
+				center: vec3Scale(curve.center, factor),
+				radius: curve.radius * factor,
+			};
+		}
+	}
+	model.bump();
+}
+
 function modelFromImportedBrepSolid(
 	brepSolid: ValidSolid,
 	options: { readonly prefix: string; readonly objectId: string },
@@ -2811,12 +2859,16 @@ class BrepjsWasmEngine {
 	}
 
 	/** @emoji 🪜 Imports raw AP242 BREP STEP (no spatial UDA) into a `ModelSpace`. */
-	async importStepBrepToModelSpace(stepText: string, options?: { readonly prefix?: string }): Promise<ModelSpace> {
+	async importStepBrepToModelSpace(
+		stepText: string,
+		options?: { readonly prefix?: string; readonly lengthScale?: number },
+	): Promise<ModelSpace> {
 		await this.ensureInit();
 		const blob = new Blob([stepText], { type: "application/step" });
 		const imported = await importSTEP(blob);
 		if (!isOk(imported)) throw new Error(`STEP BREP import failed: ${String(imported.error)}`);
 		const basePrefix = options?.prefix ?? "step-import";
+		const lengthScale = options?.lengthScale ?? STEP_BREP_IMPORT_MM_TO_M;
 		const brepSolids = validSolidsFromImportedShape(imported.value as Shape3D);
 		if (brepSolids.length === 0) throw new Error("STEP BREP import yielded no valid solids");
 		const modelId = defaultModelDefinitionId();
@@ -2834,6 +2886,7 @@ class BrepjsWasmEngine {
 			Object.assign(model.shells, part.shells);
 			Object.assign(model.solids, part.solids);
 		}
+		scaleModelPositions(model, lengthScale);
 		const space = new ModelSpace();
 		space.link(modelId, model);
 		await this.syncSolidsFromModel(model);
@@ -3129,7 +3182,10 @@ export class BrepjsKernel extends PreciseSpatialKernelMath implements SpatialKer
 	}
 
 	/** @emoji 🪜 Imports raw AP242 BREP STEP (no spatial UDA) into a `ModelSpace`. */
-	async importStepBrepToModelSpace(stepText: string, options?: { readonly prefix?: string }): Promise<ModelSpace> {
+	async importStepBrepToModelSpace(
+		stepText: string,
+		options?: { readonly prefix?: string; readonly lengthScale?: number },
+	): Promise<ModelSpace> {
 		return this.wasm.rpc("importStepBrepToModelSpace", [stepText, options]);
 	}
 }
@@ -3153,7 +3209,10 @@ export async function importStepToModelSpace(stepText: string): Promise<ModelSpa
 }
 
 /** @emoji 🪜 Imports raw BREP STEP text via a fresh `BrepjsKernel` (convenience). */
-export async function importStepBrepToModelSpace(stepText: string, options?: { readonly prefix?: string }): Promise<ModelSpace> {
+export async function importStepBrepToModelSpace(
+	stepText: string,
+	options?: { readonly prefix?: string; readonly lengthScale?: number },
+): Promise<ModelSpace> {
 	const kernel = new BrepjsKernel();
 	return kernel.importStepBrepToModelSpace(stepText, options);
 }
@@ -3731,6 +3790,16 @@ if (import.meta.vitest) {
 			expect((derived.volume as number) ?? 0).toBeGreaterThan(0);
 		});
 
+		it("scaleModelPositions converts millimeter vertex coordinates to meters", () => {
+			const model = new Model();
+			const v0 = "v0" as VertexRef;
+			const v1 = "v1" as VertexRef;
+			model.vertices[v0] = { id: v0, position: [2000, 3000, 4000] };
+			model.vertices[v1] = { id: v1, position: [0, 0, 0] };
+			scaleModelPositions(model, STEP_BREP_IMPORT_MM_TO_M);
+			expect(model.vertices[v0]!.position).toEqual([2, 3, 4]);
+		});
+
 		const semioStepFixtures = [
 			{
 				name: "hexagonal-cut-concrete-forest-left",
@@ -3753,6 +3822,8 @@ if (import.meta.vitest) {
 				const model = space.models[modelId]!;
 				expect(Object.keys(geom(model).solids)).toHaveLength(1);
 				expect(Object.keys(geom(model).faces)).toHaveLength(57);
+				const maxAbsVertex = Math.max(...Object.values(geom(model).vertices).flatMap((v) => v.position.map(Math.abs)));
+				expect(maxAbsVertex).toBeLessThan(100);
 				await kernel.syncSolidsFromModel(model);
 				const solidId = Object.keys(geom(model).solids)[0]! as SolidRef;
 				expect(await kernel.volume(solidId)).toBeGreaterThan(0);

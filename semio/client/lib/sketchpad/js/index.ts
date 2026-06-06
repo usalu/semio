@@ -11113,6 +11113,7 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 	};
 	const filesById = new Map<string, Record<string, unknown>>();
 	for (const file of nodes("hasFiles")) {
+		if (sketchpadKitFileHiddenRepresentationBlob(file, new Set())) continue;
 		const normalized = sketchpadFileDtoFromGraphqlNode(file);
 		const id = String(normalized["id"] ?? "");
 		if (id) filesById.set(id, normalized);
@@ -11401,8 +11402,41 @@ function sketchpadKitFileFolderId(file: Record<string, unknown>): string | null 
 	);
 }
 
-/** @emoji 📄 True when a kit file row belongs at kit VFS root (not under a folder). */
-function sketchpadKitFileAtKitRoot(file: Record<string, unknown>): boolean {
+/** @emoji 📄 File ids used as representation backing blobs on kit kinds. */
+function sketchpadKitRepresentationFileIds(kit: Kit): ReadonlySet<string> {
+	const ids = new Set<string>();
+	for (const type of sketchpadKitTypeRows(kit)) {
+		for (const rep of sketchpadKitItemsOf<unknown>((type as { representations?: unknown }).representations)) {
+			const fileId = sketchpadReadEntityId((rep as Record<string, unknown>)["file"]);
+			if (fileId) ids.add(fileId);
+		}
+	}
+	return ids;
+}
+
+/** @emoji 📄 Speckle-style representation blob basename (`e5267da44d`). */
+function sketchpadKitFileLooksLikeRepresentationBlobName(name: string): boolean {
+	return name.length === 10 && /^[0-9a-f]+$/i.test(name);
+}
+
+/** @emoji 📄 True when a loose kit file is a representation backing blob, not a browsable VFS asset. */
+function sketchpadKitFileHiddenRepresentationBlob(
+	file: Record<string, unknown>,
+	representationFileIds: ReadonlySet<string>,
+): boolean {
+	const id = String(file["id"] ?? "");
+	if (id && representationFileIds.has(id)) return true;
+	if (sketchpadKitFileFolderId(file) != null) return false;
+	const name = String(file["name"] ?? "");
+	if (sketchpadKitFileLooksLikeRepresentationBlobName(name)) return true;
+	const url = String(file["url"] ?? file["uri"] ?? file["remote"] ?? "");
+	if (url.includes("/representations/")) return true;
+	return false;
+}
+
+/** @emoji 📄 True when a kit file row belongs at kit VFS root (not under a folder or representation). */
+function sketchpadKitFileAtKitRoot(file: Record<string, unknown>, representationFileIds: ReadonlySet<string> = new Set()): boolean {
+	if (sketchpadKitFileHiddenRepresentationBlob(file, representationFileIds)) return false;
 	return sketchpadKitFileFolderId(file) == null;
 }
 
@@ -13230,6 +13264,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 	const typologies = sketchpadKitTypologyRows(kit);
 	const kitFolders = sketchpadKitItemsOf<unknown>(kit.folders);
 	const kitFiles = sketchpadKitItemsOf<unknown>(kit.files);
+	const representationFileIds = sketchpadKitRepresentationFileIds(kit);
 	if (parentId === kitId) {
 		const rows: VirtualFileSystemNodeRecord[] = [];
 		for (const topo of typologies) {
@@ -13252,7 +13287,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			}
 			for (const file of kitFiles) {
 				const row = file as Record<string, unknown>;
-				if (!sketchpadKitFileAtKitRoot(row)) continue;
+				if (!sketchpadKitFileAtKitRoot(row, representationFileIds)) continue;
 				sketchpadKitVfsPushFileRow(rows, kitId, kitId, row);
 			}
 			return rows;
@@ -13296,7 +13331,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 		}
 		for (const file of kitFiles) {
 			const row = file as Record<string, unknown>;
-			if (!sketchpadKitFileAtKitRoot(row)) continue;
+			if (!sketchpadKitFileAtKitRoot(row, representationFileIds)) continue;
 			sketchpadKitVfsPushFileRow(rows, kitId, kitId, row);
 		}
 		return rows;
@@ -16104,6 +16139,14 @@ if (import.meta.vitest) {
 			} as Kit;
 			expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/meshes/bridge.glb");
 		});
+
+		it("resolves capsule-with-balcony representation glbs for puzzle 3d via /meshes", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "f-slash", path: "representations/capsule-with-balcony_slash.glb", name: "capsule-with-balcony_slash.glb" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("f-slash")).toBe("/meshes/capsule-with-balcony_slash.glb");
+		});
 	});
 
 	describe("sketchpadMergeKitDtoFromBundleProjection", () => {
@@ -16716,6 +16759,34 @@ if (import.meta.vitest) {
 			const rootRows = sketchpadKitVfsChildren(kit, kitId);
 			expect(rootRows.some((row) => row.id === fileId)).toBe(false);
 			expect(sketchpadKitVfsChildren(kit, folderId)).toHaveLength(1);
+		});
+
+		it("hides representation backing blobs from kit root", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const folderId = "22222222-3333-4444-5555-666666666666";
+			const repFileId = "33333333-4444-5555-6666-777777777777";
+			const hashBlobId = "44444444-5555-6666-7777-888888888888";
+			const looseFileId = "55555555-6666-7777-8888-999999999999";
+			const kit = {
+				id: kitId,
+				folders: [{ id: folderId, path: "/assets" }],
+				files: [
+					{ id: repFileId, name: "chair.glb" },
+					{ id: hashBlobId, name: "e5267da44d" },
+					{ id: looseFileId, name: "notes.md" },
+				],
+				types: [
+					{
+						id: "type-1",
+						name: "Base",
+						representations: [{ id: "rep-1", name: "Mesh", file: { id: repFileId } }],
+					},
+				],
+			} as Kit;
+			const rootRows = sketchpadKitVfsChildren(kit, kitId);
+			expect(rootRows.some((row) => row.id === repFileId)).toBe(false);
+			expect(rootRows.some((row) => row.id === hashBlobId)).toBe(false);
+			expect(rootRows.some((row) => row.id === looseFileId)).toBe(true);
 		});
 
 		it("lists only kit-root folders when nested folders exist", () => {
