@@ -1173,11 +1173,12 @@ type OrbitControlsTarget = { readonly target: Vector3; update: () => void };
 
 function applyWorldCameraState(camera: Camera, state: WorldCameraState, controls: OrbitControlsTarget | null): void {
   const position = cadVec3ToThree(state.position);
+  const target = cadVec3ToThree(state.target);
   camera.position.set(position[0], position[1], position[2]);
   const up = cadVec3ToThree(state.up ?? ORBIT_CAMERA_Z_UP);
   camera.up.set(up[0], up[1], up[2]);
+  camera.lookAt(target[0], target[1], target[2]);
   if (controls?.target) {
-    const target = cadVec3ToThree(state.target);
     controls.target.set(target[0], target[1], target[2]);
     controls.update();
   }
@@ -1441,12 +1442,16 @@ export function WorldOrbitCameraViewRig(props: {
 function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; readonly seedKey: string | number }): null {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
-  const lastSeedKey = reactHostPort.useRef<string | number | null>(null);
+  const lastApplyToken = reactHostPort.useRef<string | null>(null);
   reactHostPort.useLayoutEffect(() => {
-    if (!camera || lastSeedKey.current === props.seedKey) {
+    if (!camera) {
       return;
     }
-    lastSeedKey.current = props.seedKey;
+    const token = `${props.seedKey}:${camera.uuid}`;
+    if (lastApplyToken.current === token) {
+      return;
+    }
+    lastApplyToken.current = token;
     applyWorldCameraState(camera, props.state, controls);
   }, [camera, controls, props.seedKey, props.state]);
   return null;
@@ -1475,6 +1480,7 @@ export interface WorldOrbitGatedProps {
   readonly onCamera?: (state: WorldCameraState) => void;
   readonly controlsGate?: boolean;
   readonly onCameraNavigate?: (active: boolean) => void;
+  readonly controlsKey?: string | number;
 }
 
 /** @emoji 🛰️ Orbit controls with injectable gate (specializations disable during drag/tools). */
@@ -1507,6 +1513,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   };
   return (
     <OrbitControls
+      key={props.controlsKey}
       {...(props.camera ? { camera: props.camera } : {})}
       makeDefault
       enabled={!gate}

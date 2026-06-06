@@ -4228,24 +4228,36 @@ export class Puzzle2dRenderer {
 
   /** @emoji 🔇 Applies a peer pane node drag without emitting {@link Puzzle2dEventMap.nodeMove}. */
   applyNodePositionSilent(nodeId: string, x: number, y: number): void {
-    if (this.isDisposed) {
+    this.applyLayoutNodePositionsSilent([{ id: nodeId, x, y }]);
+  }
+
+  /** @emoji 🔇 Applies live layout coordinates to the imperative scene and WASM while descriptor sync is deferred (node drag / pan). */
+  applyLayoutNodePositionsSilent(moves: ReadonlyArray<{ readonly id: string; readonly x: number; readonly y: number }>): void {
+    if (this.isDisposed || moves.length === 0) {
       return;
     }
-    const node = this.scene.nodes.get(nodeId);
-    if (!node) {
-      return;
-    }
-    if (nearlyEqual(node.x, x) && nearlyEqual(node.y, y)) {
-      return;
-    }
+    let changed = false;
     this.suppressSceneToWasmPush = true;
     try {
-      node.setPosition(x, y);
-      this.lastNodeAuthoringPositionById.set(nodeId, { x, y });
+      for (const move of moves) {
+        const node = this.scene.nodes.get(move.id);
+        if (!node) {
+          continue;
+        }
+        if (nearlyEqual(node.x, move.x) && nearlyEqual(node.y, move.y)) {
+          continue;
+        }
+        node.setPosition(move.x, move.y);
+        this.lastNodeAuthoringPositionById.set(move.id, { x: move.x, y: move.y });
+        this.pendingIncrementalNodeMoves.set(move.id, { x: move.x, y: move.y });
+        changed = true;
+      }
     } finally {
       this.suppressSceneToWasmPush = false;
     }
-    this.pendingIncrementalNodeMoves.set(nodeId, { x, y });
+    if (!changed) {
+      return;
+    }
     this.bumpTextOverlayGeometryEpoch();
     this.invalidate();
   }
@@ -8180,6 +8192,49 @@ if (puzzle2dVitest) {
       rendererB.dispose();
     });
 
+    it("puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers updates every peer while descriptor sync is deferred", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test", graphPortMode: "normal" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test", graphPortMode: "normal" });
+      const descriptor = {
+        nodes: [
+          { id: "a", x: 0, y: 0, radius: 24, draggable: true, handles: [] },
+          { id: "b", x: 80, y: 0, radius: 24, draggable: true, handles: [] },
+        ],
+        handles: [],
+        edges: [{ id: "e1", source: "a", target: "b" }],
+        wires: [],
+      };
+      syncPuzzle2dScene(rendererA, descriptor);
+      syncPuzzle2dScene(rendererB, descriptor);
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      vi.spyOn(rendererA.session, "defersDescriptorSyncFromJs").mockReturnValue(true);
+      vi.spyOn(rendererB.session, "defersDescriptorSyncFromJs").mockReturnValue(true);
+      const syncDescriptorJson = vi.spyOn(rendererB.session, "syncDescriptorJson");
+      const setNodePositionsJson = vi.spyOn(rendererB.session, "setNodePositionsJson");
+      puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers({
+        schema: "reasoning.mindmap.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [
+          { id: "a", x: 0, y: 0, radius: 24, handles: [] },
+          { id: "b", x: 200, y: 40, radius: 24, handles: [] },
+        ],
+        edges: [{ id: "e1", source: "a", target: "b" }],
+      });
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      expect(rendererA.scene.nodes.get("b")?.x).toBe(200);
+      expect(rendererA.scene.nodes.get("b")?.y).toBe(40);
+      expect(rendererB.scene.nodes.get("b")?.x).toBe(200);
+      expect(rendererB.scene.nodes.get("b")?.y).toBe(40);
+      expect(setNodePositionsJson).toHaveBeenCalled();
+      expect(syncDescriptorJson).not.toHaveBeenCalled();
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
     it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers syncs normal graph across panes", () => {
       const fixture = {
         schema: "puzzle.2d.fixture/v1" as const,
@@ -11692,6 +11747,30 @@ export function puzzle2dGuardBrushPlacementStructuralDeletes(nodeId: string, edg
 /** @emoji 🛡️ True when play must ignore a structural delete for a just-placed brush instance. */
 export function puzzle2dIsBrushPlacementStructuralDeleteGuarded(id: string): boolean {
   return puzzle2dBrushStructuralDeleteGuardIds.has(id);
+}
+
+/** @emoji 📍 Pushes live force-layout node centers to every authoring pane without a full descriptor round-trip. */
+export function puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(fixture: Puzzle2dFixtureV1): void {
+  const moves: Array<{ id: string; x: number; y: number }> = [];
+  for (const node of fixture.nodes) {
+    if (node.visible === false) {
+      continue;
+    }
+    const { x, y } = node;
+    if (typeof x !== "number" || !Number.isFinite(x) || typeof y !== "number" || !Number.isFinite(y)) {
+      continue;
+    }
+    moves.push({ id: node.id, x, y });
+  }
+  if (moves.length === 0) {
+    return;
+  }
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.applyLayoutNodePositionsSilent(moves);
+  }
 }
 
 /** @emoji 🔄 Syncs a committed fixture graph into every authoring pane (same descriptor on every peer). */

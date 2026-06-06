@@ -807,7 +807,7 @@ function mapWindowTemplatesToTreeItems(windowKindId: string, templates: readonly
 		dragData: {
 			[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: template.id } satisfies WindowTemplateDropPayload),
 		},
-		...(template.children?.length ? { items: mapWindowTemplatesToTreeItems(windowKindId, template.children) } : {}),
+		...(template.children?.length ? { defaultOpen: true, items: mapWindowTemplatesToTreeItems(windowKindId, template.children) } : {}),
 	}));
 }
 
@@ -3324,6 +3324,7 @@ if (import.meta.vitest) {
 			expect(kindRow.templateId).toBeUndefined();
 			const templateRow = JSON.parse(items[1]!.dragData![SEMIO_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
 			expect(templateRow.templateId).toBe("orthographic");
+			expect(items[1]?.defaultOpen).toBe(true);
 			expect(items[1]?.items?.[0]?.label).toBe("Top");
 		});
 

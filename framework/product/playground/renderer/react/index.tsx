@@ -2429,6 +2429,7 @@ import {
   Puzzle2dCanvas,
   puzzle2dIsBrushPlacementStructuralDeleteGuarded,
   puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
+  puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers,
   puzzle2dSyncBrushSessionToAllAuthoringPeers,
   puzzle2dCommitBrushPlacementToPlay,
   puzzle2dSetBrushPlaceCommitHandler,
@@ -4841,6 +4842,7 @@ function Puzzle2dPlayInner({
         ),
         dragAnchors,
       );
+      puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(laidOut);
       return { ...laidOut, camera: { ...prev.camera } };
     });
     setNodesRedrawCameraEaseTick((n) => n + 1);
@@ -4937,7 +4939,9 @@ function Puzzle2dPlayInner({
             ),
           );
         }
-        return puzzle2dPlayFixtureWithDragAnchors(cur, dragAnchors);
+        const laidOut = puzzle2dPlayFixtureWithDragAnchors(cur, dragAnchors);
+        puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(laidOut);
+        return laidOut;
       });
       raf = requestAnimationFrame(step);
     };

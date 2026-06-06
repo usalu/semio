@@ -91,8 +91,8 @@
 
 [data-slot="tree-section-wrapper"] + [data-slot="tree-section-wrapper"] {
   border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  padding-top: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
 }
 /* #endregion ❄️*/
 

@@ -2926,17 +2926,11 @@ export const windowMeasuresMinWidthPx = 150;
 /** @emoji 📐 Maximum unfolded width of the window options rail in pixels. */
 export const windowMeasuresMaxWidthPx = 480;
 
-/** @emoji 📐 Minimum unfolded height of the window options rail in pixels. */
-export const windowMeasuresMinHeightPx = 120;
-
 /** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
 export const windowMeasuresRailWidthClass = "w-[min(14rem,calc(100%-0.5rem))]";
 
 /** @emoji ↔️ Left-edge resize handle for the unfolded window options rail. */
 export const windowMeasuresResizeHandleLeftClass = "absolute top-0 bottom-0 left-0 z-20 w-single cursor-ew-resize";
-
-/** @emoji ↕️ Bottom-edge resize handle for the unfolded window options rail. */
-export const windowMeasuresResizeHandleBottomClass = "absolute right-0 bottom-0 left-0 z-20 h-single cursor-ns-resize";
 
 /** @emoji 📐 Max width cap for window engagement (matches {@link Engagement} design target). */
 export const windowEngagementMaxWidthPx = 28 * 16;
@@ -2970,8 +2964,8 @@ export const windowMeasuresChromeClass =
 /** @emoji 📐 Square icon action in the window options chrome bar. */
 export const windowMeasuresChromeActionClass = "size-small min-h-small min-w-small max-h-small max-w-small shrink-0 p-0";
 
-/** @emoji 📐 Scrollable measure tree body below the options chrome bar. */
-export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain p-tiny";
+/** @emoji 📐 Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
+export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col overflow-y-auto overscroll-contain p-tiny";
 
 /** @emoji 📐 Vertical rhythm between top-level measure groups in the rail. */
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
@@ -7948,7 +7942,6 @@ const treeSectionContentPaddingTopPx = 0;
 const treeItemContentPaddingTopPx = 0;
 const treeCompactSiblingGapPx = 0;
 const treeSubtreeGapPx = 0;
-const treeSectionBoundaryGapPx = 10;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
 const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none text-foreground select-text";
@@ -8018,19 +8011,11 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
   const elbowEndPx = hasSlot ? slotLeftPx : currentGuidePx;
   const elbowWidthPx = Math.max(elbowEndPx - parentGuidePx, 0);
   const gutterWidthPx = treeGutterWidthPx(level, indentMultiplier);
-  const positionedSlot =
-    hasSlot && React.isValidElement(slot) ? (
-      React.cloneElement(slot as React.ReactElement<any>, {
-        ...(slot as React.ReactElement<any>).props,
-        "data-slot": (slot as React.ReactElement<any>).props["data-slot"] ?? "tree-gutter-slot",
-        className: cn("absolute -translate-y-1/2", (slot as React.ReactElement<any>).props.className),
-        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier, anchorOffsetPx), ...(slot as React.ReactElement<any>).props.style },
-      })
-    ) : hasSlot ? (
-      <span data-slot="tree-gutter-slot" className="pointer-events-none absolute -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier, anchorOffsetPx)}>
-        {slot}
-      </span>
-    ) : null;
+  const positionedSlot = hasSlot ? (
+    <span data-slot="tree-gutter-slot" className="absolute flex -translate-y-1/2 items-center justify-center" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier, anchorOffsetPx)}>
+      {slot}
+    </span>
+  ) : null;
 
   return (
     <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: `${gutterWidthPx}px`, minWidth: `${gutterWidthPx}px` }}>
@@ -10393,8 +10378,8 @@ export const Tree = (({
           <TreeSelectionContext.Provider value={selectionStore}>
             <TreeHighlightContext.Provider value={highlightStore}>
               <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
-                {resolvedSections.map((section, index) => (
-                  <div key={section.id} data-slot="tree-section-wrapper" style={{ marginTop: index === 0 ? "0px" : `${treeSectionBoundaryGapPx}px` }}>
+                {resolvedSections.map((section) => (
+                  <div key={section.id} data-slot="tree-section-wrapper">
                     <TreeDataSectionView section={section} />
                   </div>
                 ))}
@@ -11132,43 +11117,37 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
 
 // #region ↔️WindowMeasuresResize
 
-/** @emoji ↔️ Mouse resize handle for the unfolded window options rail (left width / bottom height). */
+/** @emoji ↔️ Mouse resize handle for the unfolded window options rail width (left edge). */
 function WindowMeasuresResizeHandle({
-  resizeSide,
   size,
   minSize,
   maxSize,
   onSizeChange,
   onActiveChange,
-  onStartSize,
   resizeHandleClass,
 }: {
-  resizeSide: "left" | "bottom";
   size: number;
   minSize: number;
   maxSize: number;
   onSizeChange: (size: number) => void;
   onActiveChange: (active: boolean) => void;
-  onStartSize?: () => number;
   resizeHandleClass: string;
 }) {
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
-  const isVertical = resizeSide === "bottom";
   const resolveMaxSizeRef = reactHostPort.useRef(maxSize);
   resolveMaxSizeRef.current = maxSize;
   const handleMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    const startPos = isVertical ? event.clientY : event.clientX;
-    const startSize = onStartSize?.() ?? size;
+    const startPos = event.clientX;
+    const startSize = size;
     setIsResizing(true);
     onActiveChange(true);
     const bindings = createDOMEventBinding();
     const handleMouseMove = (moveEvent: Event) => {
       const mouseEvent = moveEvent as MouseEvent;
-      const currentPos = isVertical ? mouseEvent.clientY : mouseEvent.clientX;
-      const delta = currentPos - startPos;
-      const nextSize = resizeSide === "bottom" ? startSize + delta : startSize - delta;
+      const delta = mouseEvent.clientX - startPos;
+      const nextSize = startSize - delta;
       const limit = resolveMaxSizeRef.current;
       if (nextSize >= minSize && nextSize <= limit) {
         onSizeChange(nextSize);
@@ -11184,7 +11163,7 @@ function WindowMeasuresResizeHandle({
   };
   return (
     <div
-      data-slot={`window-measures-resize-${resizeSide}`}
+      data-slot="window-measures-resize-left"
       data-resizing={isResizing ? "true" : undefined}
       className={resizeHandleClass}
       onMouseDown={handleMouseDown}
@@ -13148,40 +13127,22 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const measuresStackRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(false);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
-  const [measuresHeightPx, setMeasuresHeightPx] = reactHostPort.useState<number | null>(null);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
-  const [measuresResizeBottomActive, setMeasuresResizeBottomActive] = reactHostPort.useState(false);
   const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
   const measuresUnfolded = !!measures && !measuresFolded && !measuresExpanded;
-  const readMeasuresResizeLimits = reactHostPort.useCallback(() => {
+  const readMeasuresMaxWidthPx = reactHostPort.useCallback(() => {
     const body = windowBodyRef.current;
     const bodyRect = body?.getBoundingClientRect();
     const bodyWidth = Math.max(body?.clientWidth ?? 0, bodyRect?.width ?? 0, windowMeasuresMaxWidthPx);
-    const bodyHeight = Math.max(body?.clientHeight ?? 0, bodyRect?.height ?? 0, windowMeasuresMinHeightPx * 4);
-    return {
-      maxWidth: Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8)),
-      maxHeight: Math.max(windowMeasuresMinHeightPx, Math.round(bodyHeight) - 8),
-    };
+    return Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8));
   }, []);
-  const { maxWidth: measuresMaxWidthPx, maxHeight: measuresMaxHeightPx } = readMeasuresResizeLimits();
-  const resolveMeasuresHeightStart = reactHostPort.useCallback(() => {
-    if (measuresHeightPx != null) return measuresHeightPx;
-    const measuredHeight = measuresStackRef.current ? Math.round(measuresStackRef.current.getBoundingClientRect().height) : windowMeasuresMinHeightPx;
-    const nextHeight = Math.max(measuredHeight, windowMeasuresMinHeightPx);
-    setMeasuresHeightPx(nextHeight);
-    return nextHeight;
-  }, [measuresHeightPx]);
+  const measuresMaxWidthPx = readMeasuresMaxWidthPx();
   const measuresOverlaySizeStyle = measuresUnfolded
-    ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)" } satisfies React.CSSProperties)
+    ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)", maxHeight: "100%" } satisfies React.CSSProperties)
     : undefined;
-  const measuresStackSizeStyle =
-    measuresUnfolded && measuresHeightPx != null
-      ? ({ height: measuresHeightPx, maxHeight: "100%" } satisfies React.CSSProperties)
-      : undefined;
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementDraftRef = reactHostPort.useRef("");
@@ -13308,18 +13269,15 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                 )}
               >
                 <div
-                  ref={measuresStackRef}
                   data-dim
                   data-slot="window-measures-stack"
                   data-folded={measuresFolded ? "true" : undefined}
-                  style={measuresStackSizeStyle}
                   className={cn(
                     windowMeasuresStackClass,
                     measuresUnfolded && "relative",
                     measuresExpanded && windowMeasuresStackExpandedClass,
                     measuresFolded && windowMeasuresStackFoldedClass,
                     panelResizeEdgeAccentClass("left", measuresResizeLeftActive),
-                    panelResizeEdgeAccentClass("bottom", measuresResizeBottomActive),
                   )}
                 >
                   <WindowMeasuresChrome
@@ -13337,27 +13295,14 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
                     </div>
                   ) : null}
                   {measuresUnfolded ? (
-                    <>
-                      <WindowMeasuresResizeHandle
-                        maxSize={measuresMaxWidthPx}
-                        minSize={windowMeasuresMinWidthPx}
-                        onActiveChange={setMeasuresResizeLeftActive}
-                        onSizeChange={setMeasuresWidthPx}
-                        resizeHandleClass={windowMeasuresResizeHandleLeftClass}
-                        resizeSide="left"
-                        size={measuresWidthPx}
-                      />
-                      <WindowMeasuresResizeHandle
-                        maxSize={measuresMaxHeightPx}
-                        minSize={windowMeasuresMinHeightPx}
-                        onActiveChange={setMeasuresResizeBottomActive}
-                        onSizeChange={setMeasuresHeightPx}
-                        onStartSize={resolveMeasuresHeightStart}
-                        resizeHandleClass={windowMeasuresResizeHandleBottomClass}
-                        resizeSide="bottom"
-                        size={measuresHeightPx ?? windowMeasuresMinHeightPx}
-                      />
-                    </>
+                    <WindowMeasuresResizeHandle
+                      maxSize={measuresMaxWidthPx}
+                      minSize={windowMeasuresMinWidthPx}
+                      onActiveChange={setMeasuresResizeLeftActive}
+                      onSizeChange={setMeasuresWidthPx}
+                      resizeHandleClass={windowMeasuresResizeHandleLeftClass}
+                      size={measuresWidthPx}
+                    />
                   ) : null}
                 </div>
               </div>
@@ -19729,7 +19674,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-chrome"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-measures-resize-bottom"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-resize-bottom"]')).toBeNull();
       expect(screen.getByText("Window Options")).toBeTruthy();
     });
 
@@ -19753,7 +19698,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBeNull();
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
       expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-measures-resize-bottom"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-resize-bottom"]')).toBeNull();
     });
 
     it("Window measures chrome span expands the overlay across the window body", () => {
@@ -19775,7 +19720,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
     });
 
-    it("Window measures rail resizes from the left and bottom edges when unfolded", () => {
+    it("Window measures rail resizes from the left edge when unfolded", () => {
       const { container } = render(
         <Window id="measures-resize-window" measures={<div data-testid="measure-slot">LOD</div>}>
           <div className="h-64 w-96">Body</div>
@@ -19784,16 +19729,42 @@ if (import.meta.vitest) {
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
       const leftHandle = container.querySelector('[data-slot="window-measures-resize-left"]') as HTMLElement;
-      const bottomHandle = container.querySelector('[data-slot="window-measures-resize-bottom"]') as HTMLElement;
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
+      expect(stack.style.height).toBe("");
       fireEvent.mouseDown(leftHandle, { clientX: 300 });
       fireEvent.mouseMove(document, { clientX: 260 });
       fireEvent.mouseUp(document);
       expect(Number.parseInt(overlay.style.width, 10)).toBeGreaterThan(windowMeasuresDefaultWidthPx);
-      fireEvent.mouseDown(bottomHandle, { clientY: 120 });
-      fireEvent.mouseMove(document, { clientY: 180 });
-      fireEvent.mouseUp(document);
-      expect(Number.parseInt(stack.style.height, 10)).toBeGreaterThan(windowMeasuresMinHeightPx);
+    });
+
+    it("Window measures rail height follows tree content and scrolls at the window bottom", () => {
+      const { container } = render(
+        <Window
+          id="measures-content-window"
+          measures={
+            <WindowMeasuresTree>
+              <WindowMeasureTreeGroup id="group-a" label="Group A" defaultOpen={false}>
+                <WindowMeasureTreeLeaf label="Alpha">
+                  <span>Alpha value</span>
+                </WindowMeasureTreeLeaf>
+              </WindowMeasureTreeGroup>
+            </WindowMeasuresTree>
+          }
+        >
+          <div className="h-32 w-96">Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
+      const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
+      const body = container.querySelector('[data-slot="window-measures-body"]') as HTMLElement;
+      expect(stack.style.height).toBe("");
+      expect(overlay.style.maxHeight).toBe("100%");
+      expect(body.className).toContain("overflow-y-auto");
+      expect(body.className).toContain("flex-auto");
+      expect(screen.queryByText("Alpha value")).toBeNull();
+      fireEvent.click(container.querySelector('[data-slot="window-measures-tree"] button')!);
+      expect(screen.getByText("Alpha value")).toBeTruthy();
+      expect(stack.style.height).toBe("");
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {
@@ -20373,7 +20344,7 @@ if (treeVitest) {
       expect(markup).not.toMatch(/data-slot="tree-gutter"[^>]*><div class="absolute left-0 top-0 bottom-0 pointer-events-none"/);
       expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
-      expect(markup).toContain('class="absolute -translate-y-1/2');
+      expect(markup).toContain('data-slot="tree-gutter-slot" class="absolute flex -translate-y-1/2 items-center justify-center"');
       expect(markup).toContain('style="top:50%;left:0px"');
       expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:50%;left:7px;width:3px"');
       expect(markup).toContain('data-slot="tree-branch-stem"');

@@ -787,6 +787,17 @@
       }
     },
     {
+      "name": "🛠️dev🧩puzzle📷3d🦀rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @puzzle/3d/rs:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 179.5
+      }
+    },
+    {
       "name": "🛠️dev🧩puzzle📷3d",
       "type": "node-terminal",
       "request": "launch",

@@ -13,7 +13,7 @@ path = "lib.rs"
 
 [dependencies]
 nalgebra = { version = "0.33", default-features = false, features = ["std"] }
-parry3d = { version = "0.17", default-features = false, features = ["std"] }
+parry3d = "0.17"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

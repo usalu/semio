@@ -61,6 +61,11 @@ import {
   clearBrushCollisionGltfScenes,
   createBrushFillSequenceStepper,
   registerBrushCollisionGltfScene,
+  puzzle3dPrecomputeUsesWorker,
+  puzzle3dCollisionEngineRef,
+  readPuzzle3dFillWorkerSnapshot,
+  schedulePuzzle3dPrecomputeSceneSync,
+  publishPuzzle3dBrushHostRules,
   PUZZLE_3D_FILL_COUNT_MAX,
   puzzle3dBrushKindWeightsRef,
   puzzle3dBrushMeshRootForFill,
@@ -352,6 +357,13 @@ function parseKindCatalogs(meta: Record<string, unknown> | undefined): KindCatal
 /** @emoji 🖌️ Publishes nakagin brush candidate filter for {@link PlayCanvas} / playground hosts (weights come from {@link Puzzle3dPlayShellController}). */
 export function installPuzzle3dPlayBrushHost(_meta: Record<string, unknown> | undefined): void {
   publishPuzzle3dBrushCandidateAccept(puzzle3dPlayBrushCandidateAccept);
+  publishPuzzle3dBrushHostRules({
+    rejectCapitalOnTambour: true,
+    rejectLastSingleStoreyOnMidTambour: true,
+    doorTambourRequiresDoorCapsule: true,
+    doorCapsuleMinAbsX: 0.9,
+    doorCapsuleMaxAbsY: 1.6,
+  });
 }
 
 /** @emoji 🪣 Cached fill session for interactive slider prefix application. */
@@ -435,6 +447,58 @@ export function preparePuzzle3dFillSession(
     seed,
   };
   puzzle3dFillBuildProgressRef.current = { count: 0, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: false };
+  notifyPuzzle3dFillSessionReady();
+  if (puzzle3dPrecomputeUsesWorker()) {
+    void puzzle3dCollisionEngineRef.current
+      .setScene({
+        fixture: clonedBase,
+        kindCatalogs,
+        kindCompatibility,
+        overlapBudget,
+        seed,
+        weights: puzzle3dBrushKindWeightsRef.current,
+      })
+      .then(() => {
+        const tick = (): void => {
+          void (async () => {
+            const started = performance.now();
+            await puzzle3dCollisionEngineRef.current.precomputeStep(PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET);
+            const snapshot = await readPuzzle3dFillWorkerSnapshot();
+            puzzle3dFillSessionRef.current = {
+              baseFixture: clonedBase,
+              sequence: snapshot.sequence,
+              appendedObjects: snapshot.appendedObjects,
+              appendedAttractions: snapshot.appendedAttractions,
+              seed,
+            };
+            puzzle3dFillBuildProgressRef.current = {
+              count: snapshot.count,
+              maxCount: snapshot.maxCount,
+              done: snapshot.done,
+            };
+            console.log(
+              `[DEBUG] puzzle3d fill worker chunk count=${snapshot.count}/${PUZZLE_3D_FILL_COUNT_MAX} done=${snapshot.done} ms=${(performance.now() - started).toFixed(1)}`,
+            );
+            notifyPuzzle3dFillSessionReady();
+            if (!snapshot.done) {
+              puzzle3dFillBuildTimer = setTimeout(tick, 0);
+              return;
+            }
+            puzzle3dFillBuildTimer = null;
+          })();
+        };
+        puzzle3dFillBuildTimer = setTimeout(tick, 0);
+      });
+    return;
+  }
+  schedulePuzzle3dPrecomputeSceneSync({
+    fixture: clonedBase,
+    kindCatalogs,
+    kindCompatibility,
+    overlapBudget,
+    seed,
+    weights: puzzle3dBrushKindWeightsRef.current,
+  });
   puzzle3dFillBuildStepper = createBrushFillSequenceStepper({
     baseFixture: clonedBase,
     maxCount: PUZZLE_3D_FILL_COUNT_MAX,
@@ -445,7 +509,6 @@ export function preparePuzzle3dFillSession(
     meshRootForUrl: puzzle3dBrushMeshRootForFill,
     weights: puzzle3dBrushKindWeightsRef.current,
   });
-  notifyPuzzle3dFillSessionReady();
   const tick = (): void => {
     const stepper = puzzle3dFillBuildStepper;
     if (!stepper) {
@@ -1608,7 +1671,6 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         return;
       }
       this.instanceCameras.set(instanceId, next);
-      this.cameraSeedEpoch += 1;
       this.notifySnapshot();
       return;
     }
@@ -1617,7 +1679,6 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       return;
     }
     this.fixture = next;
-    this.cameraSeedEpoch += 1;
     this.notifySnapshot();
   }
 

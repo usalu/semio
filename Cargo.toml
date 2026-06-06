@@ -12,6 +12,7 @@ members = [
     "gis/map/rs",
     "reasoning/mindmap",
     "puzzle/2d/rs",
+    "puzzle/3d/rs",
     "semio/client/lib/rs",
     "semio/client/lib/query",
     "semio/client/bin/store",

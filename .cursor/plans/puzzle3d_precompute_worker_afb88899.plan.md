@@ -7,25 +7,25 @@ todos:
     status: completed
   - id: rs-crate
     content: Create puzzle/3d/rs crate (Cargo.toml, lib.rs, script.ts, project.json, package.json) with parry3d collision, candidate enumeration, pose math, fill stepper, and Puzzle3dPrecomputeSession wasm-bindgen exports.
-    status: in_progress
+    status: completed
   - id: worker
     content: Add puzzle/3d/react/precompute.worker.ts (JSON-RPC, initSync WASM, idle precompute loop) mirroring kit-store.worker.ts.
-    status: pending
+    status: completed
   - id: client-interface
     content: Add Puzzle3dCollisionEngine interface with WasmCollisionEngine (worker) + MeshBvhCollisionEngine (fallback) and createPuzzle3dPrecomputeWorker factory in puzzle/3d/react/index.tsx.
-    status: pending
+    status: completed
   - id: wire-brush
     content: Wire BrushSession/BrushPointerBridge/BrushPreviewGhost to read warm cache; transfer mesh buffers from registerBrushCollisionGltfScene.
-    status: pending
+    status: completed
   - id: wire-fill
     content: Wire preparePuzzle3dFillSession to request fill_sequence() from worker; keep slider prefix slicing.
-    status: pending
+    status: completed
   - id: build-wiring
     content: Wire wasm build into project.json/package.json and launch.json; confirm vite worker + wasm asset resolution.
-    status: pending
+    status: completed
   - id: tests
     content: Extend inline vitest in puzzle/3d/react/index.tsx with WASM vs three-mesh-bvh parity and cache-read tests.
-    status: pending
+    status: completed
 isProject: false
 ---
 

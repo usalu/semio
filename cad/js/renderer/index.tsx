@@ -2805,6 +2805,8 @@ export interface InteractionCanvasProps {
   /** @emoji 🎞️ `always` while an interaction session runs; `demand` when idle for GPU savings. */
   readonly frameloop?: "always" | "demand";
   readonly background?: string;
+  /** @emoji 📷 When true, children own the default camera (display view templates); omit canvas-owned perspective. */
+  readonly managedCamera?: boolean;
   readonly cameraPosition?: Vec3;
   readonly cameraFov?: number;
   readonly cameraNear?: number;
@@ -2908,7 +2910,8 @@ export function InteractionCanvas({
   onCanvasReady,
   frameloop = "demand",
   background = defaultInteractionSpatialViewTheme.background,
-  cameraPosition = [10, 10, 8],
+  managedCamera = false,
+  cameraPosition = managedCamera ? undefined : [10, 10, 8],
   cameraFov = 45,
   cameraNear,
   cameraFar,
@@ -3112,7 +3115,7 @@ export function InteractionSpatialView({
       {slots?.beforeScene}
       <InvalidateOnRevision revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${pickGeometryRevision}:${hoveredTargetKey ?? ""}:${selectedTargetKey ?? ""}:${selectedTargetKeys?.size ?? 0}`} />
       <WorldCameraInvalidator />
-      {autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
+      {autoFitMeshes && cameraView === undefined ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
       <WorldLodBridge
         lodRef={cadLodRef}
         distanceReference={100}
@@ -3131,8 +3134,8 @@ export function InteractionSpatialView({
             <directionalLight position={dirPos} intensity={resolvedTheme.directionalIntensity ?? 1.1} />
           </>
         )}
-        <WorldOrbitGated onCameraNavigate={onCameraNavigate} />
         {cameraView !== undefined && cameraViewSeedKey !== undefined ? <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} /> : null}
+        <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} />
         <WorldLayer order={0} name="cad.grid">
           <WorldLodGridHelper gridDatum={[0, 0, 0]} />
         </WorldLayer>
@@ -5036,7 +5039,13 @@ export function InteractionRepl({
       style={rootStyle}
     >
       <div className="relative min-h-0 min-w-0 flex-1">
-        <InteractionCanvas {...canvasOverrides} frameloop={frameloop} className={cn("bg-canvas", canvasOverrides?.className)} onCanvasReady={handleCanvasReady}>
+        <InteractionCanvas
+          {...canvasOverrides}
+          managedCamera={spatialViewOverrides?.cameraView !== undefined}
+          frameloop={frameloop}
+          className={cn("bg-canvas", canvasOverrides?.className)}
+          onCanvasReady={handleCanvasReady}
+        >
           <InteractionSelectionInvalidateBridge selectionKey={selectionInvalidateKey} />
           <InteractionSpatialView
             previewKernel={rt.previewKernel()}

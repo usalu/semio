@@ -3521,6 +3521,10 @@ export function registerBrushCollisionGltfScene(meshUrl: string, scene: Object3D
   } else {
     brushCollisionBodies.delete(meshUrl);
   }
+  const buffers = extractBrushCollisionMeshBuffers(scene);
+  if (buffers) {
+    void puzzle3dCollisionEngineRef.current.registerMesh(meshUrl, buffers.positions, buffers.indices);
+  }
 }
 
 /** @emoji 📦 Clears registered GLTF collision scenes (tests). */
@@ -4150,6 +4154,408 @@ export function applyBrushFillPlacementsToFixture(
   return next;
 }
 //#endregion 🖌️Brush
+
+//#region 🧵Precompute
+/** @emoji 🖌️ Serializable host brush filter rules for the WASM precompute worker. */
+export interface Puzzle3dBrushHostRules {
+  readonly rejectCapitalOnTambour?: boolean;
+  readonly rejectLastSingleStoreyOnMidTambour?: boolean;
+  readonly doorTambourRequiresDoorCapsule?: boolean;
+  readonly doorCapsuleMinAbsX?: number;
+  readonly doorCapsuleMaxAbsY?: number;
+}
+
+export const puzzle3dBrushHostRulesRef: { current: Puzzle3dBrushHostRules } = {
+  current: {
+    rejectCapitalOnTambour: true,
+    rejectLastSingleStoreyOnMidTambour: true,
+    doorTambourRequiresDoorCapsule: true,
+    doorCapsuleMinAbsX: 0.9,
+    doorCapsuleMaxAbsY: 1.6,
+  },
+};
+
+/** @emoji 🖌️ Publishes serializable brush host rules for the precompute worker. */
+export function publishPuzzle3dBrushHostRules(rules: Puzzle3dBrushHostRules | null): void {
+  puzzle3dBrushHostRulesRef.current = rules ?? {
+    rejectCapitalOnTambour: false,
+    rejectLastSingleStoreyOnMidTambour: false,
+    doorTambourRequiresDoorCapsule: false,
+  };
+}
+
+/** @emoji 🧵 Scene snapshot pushed to the precompute worker. */
+export interface Puzzle3dPrecomputeSceneInput {
+  readonly fixture: FixtureV1;
+  readonly kindCatalogs?: KindCatalogBundle;
+  readonly kindCompatibility?: readonly KindCompatEntry[];
+  readonly overlapBudget?: number;
+  readonly seed?: number;
+  readonly hostRules?: Puzzle3dBrushHostRules;
+  readonly weights?: Puzzle3dBrushKindWeights;
+}
+
+function buildPrecomputeSceneJson(input: Puzzle3dPrecomputeSceneInput): string {
+  return JSON.stringify({
+    fixture: input.fixture,
+    kindCatalogs: input.kindCatalogs,
+    kindCompatibility: input.kindCompatibility ?? [],
+    overlapBudget: input.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+    seed: input.seed ?? 0,
+    hostRules: input.hostRules ?? puzzle3dBrushHostRulesRef.current,
+    weights: input.weights ?? puzzle3dBrushKindWeightsRef.current,
+  });
+}
+
+/** @emoji 📦 Merged pose-local mesh buffers for WASM parry3d registration. */
+export function extractBrushCollisionMeshBuffers(meshRoot: Object3D): { readonly positions: Float32Array; readonly indices: Uint32Array } | null {
+  const poseLocal = new Group();
+  const frame = new Group();
+  frame.rotation.x = GLB_MESH_FRAME_ROTATION_X;
+  frame.add(meshRoot.clone(true));
+  poseLocal.add(frame);
+  poseLocal.updateMatrixWorld(true);
+  const poseInverse = poseLocal.matrixWorld.clone().invert();
+  const positions: number[] = [];
+  const indices: number[] = [];
+  let vertexOffset = 0;
+  poseLocal.traverse((obj) => {
+    const mesh = obj as Mesh;
+    if (!mesh.isMesh || !mesh.geometry) {
+      return;
+    }
+    const position = mesh.geometry.getAttribute("position");
+    if (!position || position.count === 0) {
+      return;
+    }
+    const geometry = mesh.geometry.clone();
+    const meshToPose = new Matrix4().multiplyMatrices(poseInverse, mesh.matrixWorld);
+    geometry.applyMatrix4(meshToPose);
+    const posAttr = geometry.getAttribute("position");
+    const index = geometry.index;
+    for (let i = 0; i < posAttr.count; i += 1) {
+      positions.push(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
+    }
+    if (index) {
+      for (let i = 0; i < index.count; i += 1) {
+        indices.push(vertexOffset + index.getX(i));
+      }
+    } else {
+      for (let i = 0; i < posAttr.count; i += 3) {
+        indices.push(vertexOffset + i, vertexOffset + i + 1, vertexOffset + i + 2);
+      }
+    }
+    vertexOffset += posAttr.count;
+  });
+  if (positions.length < 9 || indices.length < 3) {
+    return null;
+  }
+  return { positions: new Float32Array(positions), indices: new Uint32Array(indices) };
+}
+
+/** @emoji 🧵 Collision + candidate engine behind worker/WASM or mesh-bvh fallback. */
+export interface Puzzle3dCollisionEngine {
+  setScene(input: Puzzle3dPrecomputeSceneInput): Promise<void>;
+  registerMesh(meshUrl: string, positions: Float32Array, indices: Uint32Array): Promise<void>;
+  precomputeStep(budget: number): Promise<boolean>;
+  getBrushCandidates(vortexFullId: string): Promise<BrushCollisionFreeResult>;
+  getFillProgress(): Promise<Puzzle3dFillBuildProgress>;
+  getFillWorkerSnapshot(): Promise<Puzzle3dFillWorkerSnapshot>;
+  brushCollisionFree(args: {
+    readonly scene: BrushSceneCollisionSource;
+    readonly targetVortexFullId: string;
+    readonly candidates: readonly BrushCompatibleCandidate[];
+    readonly target: AttractionVortexContext;
+    readonly targetWorldPositionCad: Vec3;
+    readonly targetWorldDirectionCad: Vec3;
+    readonly referenceOrientationCad?: Quat;
+    readonly kindCatalogs: KindCatalogBundle | undefined;
+    readonly sceneFixture?: FixtureV1;
+    readonly meshRootForUrl?: (meshUrl: string) => Object3D | null | undefined;
+    readonly overlapBudget?: number;
+  }): Promise<BrushCollisionFreeResult>;
+  dispose(): void;
+}
+
+/** @emoji 🧵 Spawns the puzzle 3d precompute worker (Vite-bundled WASM). */
+export function createPuzzle3dPrecomputeWorker(): Worker {
+  return new Worker(new URL("./precompute.worker", import.meta.url), { type: "module" });
+}
+
+class MeshBvhCollisionEngine implements Puzzle3dCollisionEngine {
+  async setScene(_input: Puzzle3dPrecomputeSceneInput): Promise<void> {}
+
+  async registerMesh(_meshUrl: string, _positions: Float32Array, _indices: Uint32Array): Promise<void> {}
+
+  async precomputeStep(_budget: number): Promise<boolean> {
+    return false;
+  }
+
+  async getBrushCandidates(_vortexFullId: string): Promise<BrushCollisionFreeResult> {
+    return { free: [], unknownPending: true };
+  }
+
+  async getFillProgress(): Promise<Puzzle3dFillBuildProgress> {
+    return { count: 0, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: true };
+  }
+
+  async getFillWorkerSnapshot(): Promise<Puzzle3dFillWorkerSnapshot> {
+    const progress = await this.getFillProgress();
+    return { ...progress, sequence: [], appendedObjects: [], appendedAttractions: [] };
+  }
+
+  async brushCollisionFree(args: Parameters<Puzzle3dCollisionEngine["brushCollisionFree"]>[0]): Promise<BrushCollisionFreeResult> {
+    return brushCollisionFreeCandidates(args);
+  }
+
+  dispose(): void {}
+}
+
+type PrecomputeWorkerMessage = {
+  op: string;
+  reqId?: string;
+  json?: string;
+  url?: string;
+  positions?: Float32Array;
+  indices?: Uint32Array;
+  vortexFullId?: string;
+  budget?: number;
+  message?: string;
+};
+
+class WasmCollisionEngine implements Puzzle3dCollisionEngine {
+  private nextSerial = 0;
+  private readonly ready: Promise<void>;
+
+  constructor(private readonly worker: Worker) {
+    this.ready = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error("puzzle3d precompute worker init timeout"));
+      }, 30_000);
+      const onMessage = (ev: MessageEvent<string>) => {
+        let m: PrecomputeWorkerMessage;
+        try {
+          m = JSON.parse(ev.data) as PrecomputeWorkerMessage;
+        } catch {
+          return;
+        }
+        if (m.op === "ready") {
+          cleanup();
+          resolve();
+        } else if (m.op === "error") {
+          cleanup();
+          reject(new Error(m.message ?? "puzzle3d precompute worker init error"));
+        }
+      };
+      const onError = (ev: globalThis.Event) => {
+        cleanup();
+        reject(new Error(`puzzle3d precompute worker init error: ${String(ev)}`));
+      };
+      const cleanup = () => {
+        clearTimeout(timeout);
+        this.worker.removeEventListener("message", onMessage);
+        this.worker.removeEventListener("error", onError as globalThis.EventListener);
+      };
+      this.worker.addEventListener("message", onMessage);
+      this.worker.addEventListener("error", onError as globalThis.EventListener);
+      this.worker.postMessage(JSON.stringify({ op: "init" }));
+    });
+  }
+
+  private async rpc(op: string, payload: Record<string, unknown> = {}): Promise<void> {
+    await this.ready;
+    const reqId = `p3d-${++this.nextSerial}-${Date.now().toString(36)}`;
+    await new Promise<void>((resolve, reject) => {
+      const onMessage = (ev: MessageEvent<string>) => {
+        let m: PrecomputeWorkerMessage;
+        try {
+          m = JSON.parse(ev.data) as PrecomputeWorkerMessage;
+        } catch {
+          return;
+        }
+        if (m.reqId !== reqId) {
+          return;
+        }
+        if (m.op === "done") {
+          this.worker.removeEventListener("message", onMessage);
+          resolve();
+        }
+        if (m.op === "error") {
+          this.worker.removeEventListener("message", onMessage);
+          reject(new Error(m.message ?? "puzzle3d precompute worker error"));
+        }
+      };
+      this.worker.addEventListener("message", onMessage);
+      this.worker.postMessage(JSON.stringify({ op, reqId, ...payload }));
+    });
+  }
+
+  private async rpcResult(op: string, payload: Record<string, unknown> = {}): Promise<string> {
+    await this.ready;
+    const reqId = `p3d-${++this.nextSerial}-${Date.now().toString(36)}`;
+    return await new Promise<string>((resolve, reject) => {
+      let result: string | null = null;
+      const onMessage = (ev: MessageEvent<string>) => {
+        let m: PrecomputeWorkerMessage;
+        try {
+          m = JSON.parse(ev.data) as PrecomputeWorkerMessage;
+        } catch {
+          return;
+        }
+        if (m.reqId !== reqId) {
+          return;
+        }
+        if (m.op === "result" && typeof m.json === "string") {
+          result = m.json;
+        }
+        if (m.op === "done") {
+          this.worker.removeEventListener("message", onMessage);
+          if (result == null) {
+            reject(new Error("puzzle3d precompute worker completed without result"));
+          } else {
+            resolve(result);
+          }
+        }
+        if (m.op === "error") {
+          this.worker.removeEventListener("message", onMessage);
+          reject(new Error(m.message ?? "puzzle3d precompute worker error"));
+        }
+      };
+      this.worker.addEventListener("message", onMessage);
+      this.worker.postMessage(JSON.stringify({ op, reqId, ...payload }));
+    });
+  }
+
+  async setScene(input: Puzzle3dPrecomputeSceneInput): Promise<void> {
+    await this.rpc("setScene", { json: buildPrecomputeSceneJson(input) });
+  }
+
+  async registerMesh(meshUrl: string, positions: Float32Array, indices: Uint32Array): Promise<void> {
+    await this.ready;
+    const reqId = `p3d-${++this.nextSerial}-${Date.now().toString(36)}`;
+    await new Promise<void>((resolve, reject) => {
+      const onMessage = (ev: MessageEvent<string>) => {
+        let m: PrecomputeWorkerMessage;
+        try {
+          m = JSON.parse(ev.data) as PrecomputeWorkerMessage;
+        } catch {
+          return;
+        }
+        if (m.reqId !== reqId) {
+          return;
+        }
+        if (m.op === "done") {
+          this.worker.removeEventListener("message", onMessage);
+          resolve();
+        }
+        if (m.op === "error") {
+          this.worker.removeEventListener("message", onMessage);
+          reject(new Error(m.message ?? "puzzle3d precompute worker error"));
+        }
+      };
+      this.worker.addEventListener("message", onMessage);
+      this.worker.postMessage({ op: "registerMesh", reqId, url: meshUrl, positions, indices }, [positions.buffer, indices.buffer]);
+    });
+  }
+
+  async precomputeStep(budget: number): Promise<boolean> {
+    const json = await this.rpcResult("precomputeStep", { budget });
+    const parsed = JSON.parse(json) as { more?: boolean };
+    return parsed.more === true;
+  }
+
+  async getBrushCandidates(vortexFullId: string): Promise<BrushCollisionFreeResult> {
+    const json = await this.rpcResult("brushCandidates", { vortexFullId });
+    return JSON.parse(json) as BrushCollisionFreeResult;
+  }
+
+  async getFillProgress(): Promise<Puzzle3dFillBuildProgress> {
+    const snapshot = await this.getFillWorkerSnapshot();
+    return { count: snapshot.count, maxCount: snapshot.maxCount, done: snapshot.done };
+  }
+
+  async getFillWorkerSnapshot(): Promise<Puzzle3dFillWorkerSnapshot> {
+    const json = await this.rpcResult("fillProgress");
+    const parsed = JSON.parse(json) as Puzzle3dFillWorkerSnapshot;
+    return {
+      count: parsed.count ?? 0,
+      maxCount: parsed.maxCount ?? PUZZLE_3D_FILL_COUNT_MAX,
+      done: parsed.done ?? true,
+      sequence: parsed.sequence ?? [],
+      appendedObjects: parsed.appendedObjects ?? [],
+      appendedAttractions: parsed.appendedAttractions ?? [],
+    };
+  }
+
+  async brushCollisionFree(args: Parameters<Puzzle3dCollisionEngine["brushCollisionFree"]>[0]): Promise<BrushCollisionFreeResult> {
+    const cached = await this.getBrushCandidates(args.targetVortexFullId);
+    if (cached.unknownPending && args.candidates.length > 0) {
+      return brushCollisionFreeCandidates(args);
+    }
+    const freeSet = new Set(cached.free.map((row) => `${row.objectKindId}\u0001${row.sourceVortexIndex}`));
+    const free = args.candidates.filter((row) => freeSet.has(`${row.objectKindId}\u0001${row.sourceVortexIndex}`));
+    return { free, unknownPending: cached.unknownPending && free.length === 0 };
+  }
+
+  dispose(): void {
+    this.worker.terminate();
+  }
+}
+
+let puzzle3dPrecomputeWorkerActive = false;
+
+function createDefaultPuzzle3dCollisionEngine(): Puzzle3dCollisionEngine {
+  if (typeof Worker !== "undefined" && typeof window !== "undefined") {
+    try {
+      puzzle3dPrecomputeWorkerActive = true;
+      return new WasmCollisionEngine(createPuzzle3dPrecomputeWorker());
+    } catch {
+      puzzle3dPrecomputeWorkerActive = false;
+    }
+  }
+  return new MeshBvhCollisionEngine();
+}
+
+export const puzzle3dCollisionEngineRef: { current: Puzzle3dCollisionEngine } = { current: createDefaultPuzzle3dCollisionEngine() };
+
+/** @emoji 🧵 True when the WASM worker collision engine is active. */
+export function puzzle3dPrecomputeUsesWorker(): boolean {
+  return puzzle3dPrecomputeWorkerActive;
+}
+
+let puzzle3dPrecomputeSceneSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** @emoji 🧵 Debounced scene sync to the precompute worker. */
+export function schedulePuzzle3dPrecomputeSceneSync(input: Puzzle3dPrecomputeSceneInput): void {
+  if (puzzle3dPrecomputeSceneSyncTimer !== null) {
+    clearTimeout(puzzle3dPrecomputeSceneSyncTimer);
+  }
+  puzzle3dPrecomputeSceneSyncTimer = setTimeout(() => {
+    puzzle3dPrecomputeSceneSyncTimer = null;
+    void puzzle3dCollisionEngineRef.current.setScene(input);
+  }, 0);
+}
+
+/** @emoji 🪣 Fill build progress from the precompute worker. */
+export interface Puzzle3dFillBuildProgress {
+  readonly count: number;
+  readonly maxCount: number;
+  readonly done: boolean;
+}
+
+/** @emoji 🪣 Extended fill snapshot including worker-appended fixture rows. */
+export interface Puzzle3dFillWorkerSnapshot extends Puzzle3dFillBuildProgress {
+  readonly sequence: readonly BrushPlacePayload[];
+  readonly appendedObjects: readonly FixtureObjectV1[];
+  readonly appendedAttractions: readonly AttractionProps[];
+}
+
+/** @emoji 🪣 Reads fill build progress (and appended rows when available) from the worker. */
+export function readPuzzle3dFillWorkerSnapshot(): Promise<Puzzle3dFillWorkerSnapshot> {
+  return puzzle3dCollisionEngineRef.current.getFillWorkerSnapshot();
+}
+//#endregion 🧵Precompute
 
 //#region ­ƒÄ¿MeshPaint
 const CSS_SELECTED_MESH = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
@@ -6796,7 +7202,13 @@ type OrbitControlsBinding = {
   readonly update?: () => void;
 };
 
-function OrbitGated(props: { readonly camera: Camera | null; readonly zoom: number; readonly onCamera?: (state: CameraState) => void }) {
+function OrbitGated(props: {
+  readonly controlsKey?: string | number;
+  readonly zoom: number;
+  readonly up?: Vec3;
+  readonly projection?: CameraState["projection"];
+  readonly onCamera?: (state: CameraState) => void;
+}) {
   const reg = useRegistry();
   const { camera, gl } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsBinding | null);
@@ -6813,8 +7225,10 @@ function OrbitGated(props: { readonly camera: Camera | null; readonly zoom: numb
       position: threeVec3ToCad(camera.position),
       target: threeVec3ToCad(tgt),
       zoom: props.zoom,
+      ...(props.up ? { up: props.up } : {}),
+      ...(props.projection ? { projection: props.projection } : {}),
     });
-  }, [camera, controls, props.onCamera, props.zoom, targetScratch]);
+  }, [camera, controls, props.onCamera, props.projection, props.up, props.zoom, targetScratch]);
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
@@ -6882,12 +7296,10 @@ function OrbitGated(props: { readonly camera: Camera | null; readonly zoom: numb
     bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
     return () => bindings.dispose();
   }, [controls, gl]);
-  if (!props.camera) {
-    return null;
-  }
   return (
     <OrbitControls
-      camera={props.camera}
+      key={props.controlsKey}
+      camera={camera}
       makeDefault
       enabled={!gate}
       enableDamping={false}
@@ -7213,13 +7625,9 @@ function Puzzle3dFillMeshBridge(props: {
 
 const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   readonly preview: BrushPreviewState;
-  readonly overlapBudget: number;
-  readonly onCollisionChange: (collides: boolean) => void;
 }) {
-  const reg = useRegistryCore();
   const groupRef = reactHostPort.useRef<Group>(null);
   const invalidate = useThree((state) => state.invalidate);
-  const lastCollidesRef = reactHostPort.useRef<boolean | null>(null);
   reactHostPort.useLayoutEffect(() => {
     const group = groupRef.current;
     if (group) {
@@ -7227,15 +7635,6 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
       invalidate();
     }
   }, [props.preview.meshUrl, props.preview.origin, props.preview.orientation, props.preview.scale, invalidate]);
-  reactHostPort.useLayoutEffect(() => {
-    const collides = brushPreviewCollides(reg, props.preview, props.overlapBudget);
-    const blocked = collides === true;
-    if (lastCollidesRef.current === blocked) {
-      return;
-    }
-    lastCollidesRef.current = blocked;
-    props.onCollisionChange(blocked);
-  }, [props.overlapBudget, props.preview.meshUrl, props.preview.origin, props.preview.orientation, props.preview.scale, props.onCollisionChange, reg]);
   return (
     <group ref={groupRef} raycast={() => null}>
       <MeshBody meshUrl={props.preview.meshUrl} style="highlighted" scale={props.preview.scale} />
@@ -7302,14 +7701,23 @@ function BrushSession(props: {
     notifyPuzzle3dBrushEngagementSource();
   }, []);
 
-  const probePlacementCandidates = reactHostPort.useCallback((): BrushCollisionFreeResult => {
+  const probePlacementCandidates = reactHostPort.useCallback(async (): Promise<BrushCollisionFreeResult> => {
     const targetFullId = targetRef.current;
     const targetCtx = targetCtxRef.current;
     const world = targetWorldRef.current;
     if (!targetFullId || !targetCtx || !world || probeOrderRef.current.length === 0) {
       return { free: [], unknownPending: false };
     }
-    return brushCollisionFreeCandidates({
+    if (props.sceneFixture) {
+      schedulePuzzle3dPrecomputeSceneSync({
+        fixture: props.sceneFixture,
+        kindCatalogs: props.kindCatalogs,
+        kindCompatibility: props.kindCompatibility,
+        overlapBudget: props.overlapBudget,
+        weights: puzzle3dBrushKindWeightsRef.current,
+      });
+    }
+    return puzzle3dCollisionEngineRef.current.brushCollisionFree({
       scene: reg,
       targetVortexFullId: targetFullId,
       candidates: probeOrderRef.current,
@@ -7322,7 +7730,7 @@ function BrushSession(props: {
       meshRootForUrl: brushMeshRootFromPool,
       overlapBudget: props.overlapBudget,
     });
-  }, [props.overlapBudget, props.kindCatalogs, props.sceneFixture, reg]);
+  }, [props.overlapBudget, props.kindCatalogs, props.kindCompatibility, props.sceneFixture, reg]);
 
   const applyCandidateIndex = reactHostPort.useCallback(
     (targetFullId: string, index: number) => {
@@ -7477,7 +7885,7 @@ function BrushSession(props: {
     if (!targetRef.current || probeOrderRef.current.length === 0) {
       return;
     }
-    applyPlacementProbeResult(probePlacementCandidates());
+    void probePlacementCandidates().then(applyPlacementProbeResult);
   }, [applyPlacementProbeResult, probePlacementCandidates]);
 
   const scheduleReconcileAfterCatalogPreload = reactHostPort.useCallback(() => {
@@ -7498,12 +7906,8 @@ function BrushSession(props: {
     if (!placementCandidatesRef.current.some((candidate) => brushPreviewMatchesCandidate(preview, candidate))) {
       return;
     }
-    const collides = brushPreviewCollides(reg, preview, props.overlapBudget);
-    if (collides === true) {
-      return;
-    }
     props.onBrushPlace(brushPlacePayloadFromPreview(preview));
-  }, [props.onBrushPlace, props.overlapBudget, reg]);
+  }, [props.onBrushPlace]);
 
   const enterTarget = reactHostPort.useCallback(
     (fullId: string, meta: VortexBindingMeta) => {
@@ -7553,7 +7957,7 @@ function BrushSession(props: {
       placementCandidatesRef.current = [];
       indexRef.current = 0;
       setCatalogPreloadUrls(brushMeshUrlsForCompatibleCandidates(probeOrderRef.current, props.kindCatalogs, props.sceneFixture));
-      applyPlacementProbeResult(probePlacementCandidates());
+      void probePlacementCandidates().then(applyPlacementProbeResult);
     },
     [applyPlacementProbeResult, props.kindCatalogs, props.kindCompatibility, props.sceneFixture, probePlacementCandidates, store],
   );
@@ -7565,17 +7969,6 @@ function BrushSession(props: {
     commitCurrentPreview();
     clearBrush();
   }, [clearBrush, commitCurrentPreview]);
-
-  const onPreviewCollisionChange = reactHostPort.useCallback(
-    (collides: boolean) => {
-      if (!props.brushActive) {
-        return;
-      }
-      previewCollidesRef.current = collides;
-      reconcilePlacementCandidates();
-    },
-    [props.brushActive, reconcilePlacementCandidates],
-  );
 
   reactHostPort.useEffect(() => {
     if (!props.brushActive) {
@@ -7606,9 +7999,7 @@ function BrushSession(props: {
         invalidate={invalidate}
       />
       <BrushCatalogMeshPreload urls={catalogPreloadUrls} onReady={scheduleReconcileAfterCatalogPreload} />
-      {ui.preview ? (
-        <BrushPreviewGhost preview={ui.preview} overlapBudget={props.overlapBudget} onCollisionChange={onPreviewCollisionChange} />
-      ) : null}
+      {ui.preview ? <BrushPreviewGhost preview={ui.preview} /> : null}
     </>
   );
 }
@@ -9220,7 +9611,6 @@ function Inner(props: CanvasProps & {
     };
   }, [brushActive]);
   const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
-  const [puzzle3dCamera, setCamera] = reactHostPort.useState<Camera | null>(null);
   const domain = props.domain ?? DEFAULT_DOMAIN;
   const distanceReference = props.lodDistanceReference ?? DEFAULT_SCALE_REFERENCE;
   const gridFactor = props.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
@@ -9286,11 +9676,16 @@ function Inner(props: CanvasProps & {
         <WorldOrbitCameraViewRig
           state={cameraRigState}
           seedKey={props.cameraSeedKey ?? `${pos.join(",")}|${tgt.join(",")}|${projection}|${up.join(",")}`}
-          onCamera={setCamera}
           perspectiveFov={50}
         />
-        <OrbitGated camera={puzzle3dCamera} onCamera={(camera) => canvasHostRef.current.onCamera?.(camera)} zoom={zoom} />
-        {autoFitCamera ? <AutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
+        <OrbitGated
+          controlsKey={props.cameraSeedKey ?? `${projection}:${up.join(",")}`}
+          onCamera={(camera) => canvasHostRef.current.onCamera?.(camera)}
+          zoom={zoom}
+          up={up}
+          projection={projection}
+        />
+        {autoFitCamera && projection !== "orthographic" ? <AutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <MarqueeBridge />
@@ -9331,10 +9726,12 @@ function Inner(props: CanvasProps & {
       onFixtureDrop,
       pos,
       sceneFixture,
+      cameraRigState,
       props.cameraSeedKey,
       props.onCamera,
-      puzzle3dCamera,
+      projection,
       puzzle3dRootRef,
+      up,
       setFixtureDragActive,
       showLodGrid,
       tgt,
@@ -11839,6 +12236,105 @@ if (import.meta.vitest) {
       expect(next.attractions.length).toBe(1);
       expect(next.attractions[0]?.attracted).toBe("host:v0");
       expect(next.attractions[0]?.attracting.startsWith("brush-test-1:")).toBe(true);
+    });
+  });
+  describe("Puzzle3dPrecompute", () => {
+    it("extractBrushCollisionMeshBuffers produces transferable arrays", () => {
+      const mesh = new Mesh(new BoxGeometry(8, 8, 8));
+      const buffers = extractBrushCollisionMeshBuffers(mesh);
+      expect(buffers?.positions).toBeInstanceOf(Float32Array);
+      expect(buffers?.indices).toBeInstanceOf(Uint32Array);
+      expect((buffers?.positions.length ?? 0) > 0).toBe(true);
+    });
+    it("puzzle3dPrecomputeUsesWorker is false under vitest", () => {
+      expect(puzzle3dPrecomputeUsesWorker()).toBe(false);
+    });
+    it("wasm brush collision agrees with mesh-bvh on separated boxes", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const wasmMod = await import("../rs/pkg/puzzle_3d.js");
+      const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/puzzle_3d_bg.wasm");
+      wasmMod.initSync({ module: readFileSync(wasmPath) });
+      await wasmMod.default();
+      const session = new wasmMod.Puzzle3dPrecomputeSession();
+      clearBrushCollisionGltfScenes();
+      const obstacleUrl = "/test/obstacle.glb";
+      const previewUrl = "/test/preview.glb";
+      const boxPositions = new Float32Array([
+        -4, -4, -4, 4, -4, -4, 4, 4, -4, -4, 4, -4, -4, -4, 4, 4, -4, 4, 4, 4, 4, -4, 4, 4, 4,
+      ]);
+      const boxIndices = new Uint32Array([
+        0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2,
+      ]);
+      registerBrushCollisionGltfScene(obstacleUrl, new Mesh(new BoxGeometry(8, 8, 8)));
+      registerBrushCollisionGltfScene(previewUrl, new Mesh(new BoxGeometry(8, 8, 8)));
+      session.register_mesh(obstacleUrl, boxPositions, boxIndices);
+      session.register_mesh(previewUrl, boxPositions, boxIndices);
+      const fixture: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [
+          {
+            id: "obstacle",
+            objectKind: "Kind",
+            meshUrl: obstacleUrl,
+            origin: [0, 0, 0],
+            orientation: [0, 0, 0, 1],
+            vortices: [{ id: "v0", vortexKind: "port-a", position: [0, 0, 0], direction: [0, 0, -1] }],
+          },
+          {
+            id: "host",
+            objectKind: "Host",
+            meshUrl: "/test/unregistered-host.glb",
+            origin: [12, 0, 0],
+            orientation: [0, 0, 0, 1],
+            vortices: [{ id: "v0", vortexKind: "port-a", position: [0, 0, 0], direction: [0, 0, -1] }],
+          },
+        ],
+      };
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          { id: "Kind", meshUrl: previewUrl, vortices: [{ vortexKind: "port-b", position: [0, 0, 0], direction: [0, 0, -1] }] },
+        ],
+        vortices: [{ id: "port-a" }, { id: "port-b" }],
+        cables: [{ id: "cable.link" }],
+      };
+      session.set_scene(
+        JSON.stringify({
+          fixture,
+          kindCatalogs: catalogs,
+          kindCompatibility: [{ bidirectional: true, specificity: "vortex", source: "port-b", target: "port-a" }],
+          overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+          seed: 1,
+        }),
+      );
+      const wasmResult = JSON.parse(session.brush_candidates("host:v0")) as BrushCollisionFreeResult;
+      const obstacleGroup = new Group();
+      obstacleGroup.userData.puzzle3dMeshUrl = obstacleUrl;
+      obstacleGroup.userData.puzzle3dObjectId = "obstacle";
+      applyObjectPose(obstacleGroup, [0, 0, 0], [0, 0, 0, 1]);
+      const bvhResult = brushCollisionFreeCandidates({
+        scene: { collectObjectGroups: () => [obstacleGroup] },
+        targetVortexFullId: "host:v0",
+        candidates: brushCompatibleCandidates(
+          { objectId: "host", objectKind: "Host", vortexKind: "port-a" },
+          catalogs,
+          [{ bidirectional: true, specificity: "vortex", source: "port-b", target: "port-a" }],
+        ),
+        target: { objectId: "host", objectKind: "Host", vortexKind: "port-a" },
+        targetWorldPositionCad: [12, 0, 0],
+        targetWorldDirectionCad: [0, 0, -1],
+        kindCatalogs: catalogs,
+        meshRootForUrl: brushCollisionGltfRoot,
+        overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+      });
+      expect(wasmResult.unknownPending).toBe(false);
+      expect(bvhResult.unknownPending).toBe(false);
+      expect(wasmResult.free.length).toBe(bvhResult.free.length);
+      clearBrushCollisionGltfScenes();
     });
   });
 }
