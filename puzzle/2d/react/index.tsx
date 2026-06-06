@@ -20,6 +20,7 @@ import {
 import { type TreeDragAndDropController } from "@ui/react";
 import {
   blendTokenHex,
+  readableForegroundHex,
   resolveBackgroundColorHex,
   resolveColorHex,
   resolveColorRgba,
@@ -1038,6 +1039,53 @@ export function layoutPuzzle2dFixtureForceGraph(fixture: Puzzle2dFixtureV1, opti
 export function layoutPuzzle2dFixtureRedrawNodes(fixture: Puzzle2dFixtureV1, options: Puzzle2dRedrawLayoutOptions): Puzzle2dFixtureV1 {
   const out = boardRedrawLayoutFixtureJson(JSON.stringify(fixture), JSON.stringify(options));
   return JSON.parse(out) as Puzzle2dFixtureV1;
+}
+
+/** @emoji 🖱️ In-flight pointer drag state for live force-graph layout (shared by play shell and FiveD kit surfaces). */
+export type Puzzle2dLiveForceGraphDragState = {
+  readonly dragAnchors: ReadonlyMap<string, { readonly x: number; readonly y: number }>;
+  readonly lockedNodeIds: readonly string[];
+};
+
+/** @emoji 🖱️ Re-applies authoritative drag centers after a layout pass so RAF cannot stomp an in-flight pointer drag. */
+export function puzzle2dFixtureWithDragAnchors(
+  fixture: Puzzle2dFixtureV1,
+  dragAnchors: ReadonlyMap<string, { readonly x: number; readonly y: number }>,
+): Puzzle2dFixtureV1 {
+  if (dragAnchors.size === 0) {
+    return fixture;
+  }
+  return {
+    ...fixture,
+    nodes: fixture.nodes.map((node) => {
+      const anchor = dragAnchors.get(node.id);
+      return anchor ? { ...node, x: anchor.x, y: anchor.y } : node;
+    }),
+  };
+}
+
+/** @emoji 🕸️ Applies drag anchors and pushes layout positions to every authoring pane WASM host. */
+export function puzzle2dFinalizeLiveForceGraphLayoutTick(fixture: Puzzle2dFixtureV1, drag?: Puzzle2dLiveForceGraphDragState): Puzzle2dFixtureV1 {
+  const laid = drag && drag.dragAnchors.size > 0 ? puzzle2dFixtureWithDragAnchors(fixture, drag.dragAnchors) : fixture;
+  puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(laid);
+  return laid;
+}
+
+/** @emoji 🕸️ One live force-graph tick: WASM layout, drag anchors, then immediate peer WASM position sync. */
+export function puzzle2dApplyLiveForceGraphLayoutTick(
+  fixture: Puzzle2dFixtureV1,
+  layoutOptions: Puzzle2dRedrawLayoutOptions,
+  drag?: Puzzle2dLiveForceGraphDragState,
+): Puzzle2dFixtureV1 {
+  const locked = new Set(layoutOptions.lockedNodeIds ?? []);
+  if (drag) {
+    for (const id of drag.lockedNodeIds) {
+      locked.add(id);
+    }
+  }
+  const opts: Puzzle2dRedrawLayoutOptions = locked.size > 0 ? { ...layoutOptions, lockedNodeIds: [...locked] } : layoutOptions;
+  const laid = layoutPuzzle2dFixtureRedrawNodes(fixture, opts);
+  return puzzle2dFinalizeLiveForceGraphLayoutTick(laid, drag);
 }
 
 /** @emoji 🔗 Snaps fixture handle angles to straight chords between linked node centers (WASM). */
@@ -6534,6 +6582,40 @@ export class Puzzle2dRenderer {
     this.lastOverlayVelloThemeJson = this.lastVelloThemeJson;
   }
 
+  /** @emoji 🎨 Effective node fill ref for label contrast (catalog color in base chrome, else themed chrome fill). */
+  private nodeLabelFillForOverlay(node: Puzzle2dSceneNode, style: Puzzle2dStyle, chromeKey: string): string {
+    if (chromeKey !== "node") {
+      return style.fill ?? themeColorVar("panel");
+    }
+    const kindId = node.nodeKind.trim();
+    if (kindId !== "") {
+      const catalogColor = this.kindCatalogsBundle.nodes?.find((row) => row.id === kindId)?.color;
+      if (catalogColor != null && String(catalogColor).trim() !== "") {
+        return String(catalogColor).trim();
+      }
+    }
+    return style.fill ?? themeColorVar("panel");
+  }
+
+  /** @emoji 🎨 Effective handle fill ref for label contrast (instance override, catalog color, or themed chrome fill). */
+  private handleLabelFillForOverlay(handle: Puzzle2dSceneHandle, style: Puzzle2dStyle, chromeKey: string): string {
+    const instanceColor = handle.color?.trim() ?? "";
+    if (instanceColor !== "") {
+      return instanceColor;
+    }
+    if (chromeKey !== "handle") {
+      return style.fill ?? themeColorVar("base");
+    }
+    const kindId = handle.handleKind.trim();
+    if (kindId !== "") {
+      const catalogColor = this.kindCatalogsBundle.handles?.find((row) => row.id === kindId)?.color;
+      if (catalogColor != null && String(catalogColor).trim() !== "") {
+        return String(catalogColor).trim();
+      }
+    }
+    return style.fill ?? themeColorVar("base");
+  }
+
   /** @emoji 🏷️ Draws node captions on {@link Puzzle2dRenderer.attachTextOverlayCanvas} (GPU path has no text primitives). */
   private paintTextOverlays(syncedGpuThisFrame = false): void {
     if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
@@ -6587,9 +6669,10 @@ export class Puzzle2dRenderer {
       }
       const center = wasmOverlay?.centersById.get(node.id) ?? { x: node.x, y: node.y };
       const boxCenter = this.worldToScreenWithCamera(center, overlayCamera);
-      const style = this.getStyle(node.style, puzzle2dInteractionChromeStyleKey("node", node.id, chrome));
+      const chromeKey = puzzle2dInteractionChromeStyleKey("node", node.id, chrome);
+      const style = this.getStyle(node.style, chromeKey);
       const family = node.textFontFamily;
-      ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.node.stroke ?? tokenHex("dark");
+      ctx.fillStyle = readableForegroundHex(this.nodeLabelFillForOverlay(node, style, chromeKey));
       if (node.textAutofit) {
         const layoutKey = `${node.id}\0${lod}\0${Math.round(maxW)}\0${Math.round(maxH)}\0${caption}\0${family ?? ""}`;
         let layout = this.textOverlayLayoutCache.get(layoutKey);
@@ -6657,8 +6740,9 @@ export class Puzzle2dRenderer {
         const outward = len > 1e-6 ? 10 / len : 0;
         const labelX = handleScreen.x + dx * outward;
         const labelY = handleScreen.y + dy * outward;
-        const style = this.getStyle(handle.style, puzzle2dInteractionChromeStyleKey("handle", handle.id, chrome));
-        ctx.fillStyle = style.stroke ?? PUZZLE_2D_STYLES_HEADLESS_FALLBACK.handle.stroke ?? tokenHex("dark");
+        const chromeKey = puzzle2dInteractionChromeStyleKey("handle", handle.id, chrome);
+        const style = this.getStyle(handle.style, chromeKey);
+        ctx.fillStyle = readableForegroundHex(this.handleLabelFillForOverlay(handle, style, chromeKey));
         ctx.fillText(caption, labelX, labelY);
       }
     }
@@ -8026,6 +8110,66 @@ if (puzzle2dVitest) {
       renderer.setSelectionIdsSilent(["n"]);
       renderer["paintTextOverlays"]();
       expect(fillText).toHaveBeenCalled();
+      renderer.dispose();
+    });
+
+    it("paintTextOverlays picks readable label color from node kind catalog fill", () => {
+      const { canvas } = createMockCanvas();
+      const overlay = document.createElement("canvas");
+      const fillText = vi.fn();
+      let labelFill = "";
+      const overlayCtx: Puzzle2dCanvasContext = {
+        arc: vi.fn(),
+        beginPath: vi.fn(),
+        bezierCurveTo: vi.fn(),
+        clearRect: vi.fn(),
+        clip: vi.fn(),
+        closePath: vi.fn(),
+        fill: vi.fn(),
+        fillRect: vi.fn(),
+        get fillStyle() {
+          return labelFill;
+        },
+        set fillStyle(value: string | CanvasGradient | CanvasPattern) {
+          labelFill = typeof value === "string" ? value : "";
+        },
+        fillText,
+        font: "",
+        lineCap: "round",
+        lineJoin: "round",
+        lineTo: vi.fn(),
+        lineWidth: 1,
+        measureText: vi.fn((s: string) => ({ width: s.length * 6 })),
+        moveTo: vi.fn(),
+        rect: vi.fn(),
+        restore: vi.fn(),
+        save: vi.fn(),
+        setLineDash: vi.fn(),
+        setTransform: vi.fn(),
+        stroke: vi.fn(),
+        strokeRect: vi.fn(),
+        strokeStyle: "#000000",
+        textAlign: "start",
+        textBaseline: "alphabetic",
+      };
+      Object.defineProperty(overlay, "getContext", { configurable: true, value: () => overlayCtx });
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "main-thread" });
+      renderer.attachTextOverlayCanvas(overlay);
+      renderer.setKindCatalogs({
+        nodes: [{ id: "dark-kind", name: "Dark", color: "var(--color-dark)" }],
+      });
+      const darkNode = new Puzzle2dSceneNode({ id: "n-dark", nodeKind: "dark-kind", radius: 24, text: "Dark", x: 0, y: 0 });
+      renderer.scene.add(darkNode);
+      renderer.setCamera(0, 0, 1);
+      renderer["paintTextOverlays"]();
+      expect(labelFill).toBe(tokenHex("light"));
+      renderer.setKindCatalogs({
+        nodes: [{ id: "light-kind", name: "Light", color: "var(--color-light)" }],
+      });
+      darkNode.nodeKind = "light-kind";
+      renderer.markDirty();
+      renderer["paintTextOverlays"]();
+      expect(labelFill).toBe(tokenHex("dark"));
       renderer.dispose();
     });
 

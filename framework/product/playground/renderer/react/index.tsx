@@ -1954,6 +1954,12 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
     },
     [ctrl],
   );
+  const onReferenceRelocatePersist = reactHostPort.useCallback(
+    (payload: import("@infinite/world/r3f").WorldReferenceRelocatePayload) => {
+      ctrl?.patchReferenceRelocate(payload);
+    },
+    [ctrl],
+  );
   const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
   const onCanvasHover = reactHostPort.useCallback(
     (payload: Puzzle3dHoverPayload) => {
@@ -2090,6 +2096,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
           onHover={onCanvasHover}
           setSelectedId={(id) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectedId", { id })}
           onSelect={(selection) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteSelection", selection)}
+          onReferenceRelocate={onReferenceRelocatePersist}
           onToggleSelectionHidden={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "hidden", value })}
           onToggleSelectionLocked={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "locked", value })}
           onDeleteSelection={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "deleteSelection")}
@@ -2178,6 +2185,8 @@ import {
   useStore as usePuzzle5dStore,
   buildPuzzle5dFillSequence,
   project2dKindCatalogs,
+  project3d,
+  project3dKindCatalogs,
   puzzle5dBrushPlacementFromFlat,
   puzzle5dBrushPlacementFromVolume,
   type Store as Puzzle5dStore,
@@ -2198,8 +2207,11 @@ import {
   type Puzzle5dPlayHostBridge,
   buildPuzzle5d2dDeclarativeBody,
   buildPuzzle5dPlayHierarchySections,
+  buildPuzzle5dPlayKindsTree,
   buildPuzzle5dPlayRuntime,
   buildPuzzle5d3dDeclarativeBody,
+  PUZZLE_5D_PLAY_KINDS_TAB_ID,
+  PUZZLE_5D_PLAY_ICON_KINDS,
   type Puzzle5dPlaySnapshot,
 } from "@puzzle/5d/play";
 import {
@@ -2207,12 +2219,13 @@ import {
   puzzle2dNodeKindOverlayLabel,
   type Puzzle2dBrushCandidatesPayload,
   type Puzzle2dDrawLodKind,
+  type Puzzle2dFixtureDropDetail,
   type Puzzle2dSelectionMethod,
   type Puzzle2dSelectionMode,
   type Puzzle2dSelectionTargets,
 } from "@puzzle/2d/react";
 import { installPuzzle3dPlayBrushHost, puzzle3dBrushMeshRootForFill } from "@puzzle/3d/play";
-import { puzzle3dBrushEngagementSourceRef } from "@puzzle/3d/react";
+import { puzzle3dBrushEngagementSourceRef, resolvePuzzle3dFixtureDrop, type Puzzle3dFixtureDropDetail } from "@puzzle/3d/react";
 import { sceneHostPort } from "@ui/react";
 // #endregion 🔌Adapters
 
@@ -2298,12 +2311,18 @@ function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dP
           }
           case "setSelectionMethod": {
             const method = (args as { method?: Puzzle2dSelectionMethod }).method;
-            if (method) selectionMethodRef.current = method;
+            if (method) {
+              selectionMethodRef.current = method;
+              puzzle2dActiveRenderer()?.setSelectionOptions({ method });
+            }
             break;
           }
           case "setSelectionMode": {
             const mode = (args as { mode?: Puzzle2dSelectionMode }).mode;
-            if (mode) selectionModeRef.current = mode;
+            if (mode) {
+              selectionModeRef.current = mode;
+              puzzle2dActiveRenderer()?.setSelectionOptions({ mode });
+            }
             break;
           }
           case "toggleSelectionTarget": {
@@ -2412,6 +2431,24 @@ class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
+class Puzzle5dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
+  constructor(
+    private readonly buildTree: () => import("@framework/playground/core").UiTreeNode,
+    private readonly commandBus: CommandBus,
+  ) {
+    super();
+  }
+
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: PUZZLE_5D_PLAY_KINDS_TAB_ID,
+      icon: createIconComponent("tags"),
+      order: 1,
+      tree: new StaticTreePanelDefinition({ sections: uiTreeNodeToTreePanelConfig(this.buildTree(), this.commandBus) }),
+    };
+  }
+}
+
 class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
@@ -2473,6 +2510,14 @@ function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceN
       objectIds: selection.partIds.length > 0 ? [selection.partIds[0]!] : [],
     });
   }, []);
+  const onFixtureDrop = reactHostPort.useCallback((detail: Puzzle2dFixtureDropDetail) => {
+    const partId = storeRef.current.applyPaletteNodeDrop(detail);
+    if (!partId) {
+      return;
+    }
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [partId] });
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [partId] });
+  }, []);
   if (!bindingValid || !controller || !snapshot) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 2d binding</div>;
   }
@@ -2490,6 +2535,10 @@ function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceN
         onBrushPlace,
         onBrushCandidates,
         onDelete,
+        fixtureDragDrop: true,
+        onFixtureDrop,
+        selectionMethod: snapshot.selectionMethod,
+        selectionMode: snapshot.selectionMode,
         ...snapshot.lod2dProps,
       }}
     />
@@ -2551,6 +2600,26 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
       activeController?.run("setFillCount", { count: 1 });
     }
   }, []);
+  const volumeKindCatalogs = reactHostPort.useMemo(
+    () => project3dKindCatalogs(snapshot?.kindCatalogs ?? snapshot?.sharedKinds.kindCatalogs),
+    [snapshot?.kindCatalogs, snapshot?.sharedKinds.kindCatalogs],
+  );
+  const onFixtureDrop = reactHostPort.useCallback(
+    (detail: Puzzle3dFixtureDropDetail) => {
+      const sceneFixture = project3d(storeRef.current.read());
+      const result = resolvePuzzle3dFixtureDrop(detail, volumeKindCatalogs, sceneFixture);
+      if (result.kind !== "palette-object") {
+        return;
+      }
+      const partId = storeRef.current.applyPaletteObjectDrop(result.object);
+      if (!partId) {
+        return;
+      }
+      controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [partId] });
+      controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [partId] });
+    },
+    [volumeKindCatalogs],
+  );
   if (!bindingValid || !controller || !snapshot?.fixture3d) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 3d binding</div>;
   }
@@ -2568,6 +2637,10 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
         onProximityConnect,
         onBrushPlace,
         onFillMeshesReady,
+        fixtureDragDrop: true,
+        onFixtureDrop,
+        selectionMethod: snapshot.selectionMethod,
+        selectionMode: snapshot.selectionMode,
       }}
     />
   );
@@ -2583,6 +2656,7 @@ export function registerPuzzle5dPlaySurfaceHosts(): void {
   topologyPlayChromeRegistered = true;
   registerUiPuzzle2dSurfaceHost(PUZZLE_5D_PLAY_2D_SURFACE_ID, Puzzle5d2dSurfaceHost);
   registerUiPuzzle3dSurfaceHost(PUZZLE_5D_PLAY_3D_SURFACE_ID, Puzzle5d3dSurfaceHost);
+  registerTabIcon(PUZZLE_5D_PLAY_ICON_KINDS, "tags");
   registerWindowBody(PUZZLE_5D_PLAY_2D_BODY_KEY, buildPuzzle5d2dDeclarativeBody);
   registerWindowBody(PUZZLE_5D_PLAY_3D_BODY_KEY, buildPuzzle5d3dDeclarativeBody);
 }
@@ -2616,6 +2690,7 @@ function Puzzle5dPlayChrome({
                 onSelect3dAttraction: () => {},
               }),
             ).resolveTab(),
+            new Puzzle5dPlayKindsPanelDefinition(() => buildPuzzle5dPlayKindsTree(snapshot), bus).resolveTab(),
           ]
         : [],
     [snapshot, snapshotKey, controller, bus],
@@ -2744,7 +2819,9 @@ import {
   Puzzle2dCanvas,
   puzzle2dIsBrushPlacementStructuralDeleteGuarded,
   puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
-  puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers,
+  puzzle2dApplyLiveForceGraphLayoutTick,
+  puzzle2dFinalizeLiveForceGraphLayoutTick,
+  puzzle2dFixtureWithDragAnchors,
   puzzle2dSyncBrushSessionToAllAuthoringPeers,
   puzzle2dCommitBrushPlacementToPlay,
   puzzle2dSetBrushPlaceCommitHandler,
@@ -2756,6 +2833,7 @@ import {
   buildPuzzle2dSceneDescriptorFromFixture,
   clonePuzzle2dFixtureV1,
   puzzle2dFixtureSceneMarkers,
+  type Puzzle2dLiveForceGraphDragState,
   type Puzzle2dStructureDeletePayload,
   mergePaletteNodeFromDrop,
   puzzle2dCommitPaletteNodeDropToPlay,
@@ -3345,21 +3423,15 @@ function puzzle2dPlayRedrawLayoutOpts(
   };
 }
 
-/** @emoji 🖱️ Re-applies authoritative drag centers after a layout pass so RAF cannot stomp an in-flight pointer drag. */
-function puzzle2dPlayFixtureWithDragAnchors(
-  fixture: Puzzle2dFixtureV1,
+function puzzle2dPlayLiveForceGraphDragState(
   dragAnchors: ReadonlyMap<string, { readonly x: number; readonly y: number }>,
-): Puzzle2dFixtureV1 {
-  if (dragAnchors.size === 0) {
-    return fixture;
+  lockedNodeIds: readonly string[] | undefined,
+): Puzzle2dLiveForceGraphDragState | undefined {
+  const ids = lockedNodeIds ?? [];
+  if (ids.length === 0 && dragAnchors.size === 0) {
+    return undefined;
   }
-  return {
-    ...fixture,
-    nodes: fixture.nodes.map((node) => {
-      const anchor = dragAnchors.get(node.id);
-      return anchor ? { ...node, x: anchor.x, y: anchor.y } : node;
-    }),
-  };
+  return { dragAnchors, lockedNodeIds: ids };
 }
 // #endregion 🔖PlayRedrawHelpers
 
@@ -5132,28 +5204,26 @@ function Puzzle2dPlayInner({
     const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
     const lockedNodeIds = puzzle2dPlayLiveDragLockedNodeIds();
     const dragAnchors = puzzle2dPlayDragAnchorsRef.current;
+    const dragState = puzzle2dPlayLiveForceGraphDragState(dragAnchors, lockedNodeIds);
     patchFixture((prev) => {
-      const laidOut = puzzle2dPlayFixtureWithDragAnchors(
-        layoutPuzzle2dFixtureRedrawNodes(
-          prev,
-          puzzle2dPlayRedrawLayoutOpts(
-            activePaneId,
-            camerasByPane,
-            puzzle2dRedrawMode,
-            full,
-            forceLayoutIdealEdgeLength,
-            forceLayoutGravity,
-            forceLayoutRepulsionStrength,
-            treeLayoutLayerSpacing,
-            treeLayoutSiblingGap,
-            treeLayoutDirection,
-            puzzle2dRedrawHandlesAfterNodes,
-            lockedNodeIds,
-          ),
-        ),
-        dragAnchors,
+      const layoutOpts = puzzle2dPlayRedrawLayoutOpts(
+        activePaneId,
+        camerasByPane,
+        puzzle2dRedrawMode,
+        full,
+        forceLayoutIdealEdgeLength,
+        forceLayoutGravity,
+        forceLayoutRepulsionStrength,
+        treeLayoutLayerSpacing,
+        treeLayoutSiblingGap,
+        treeLayoutDirection,
+        puzzle2dRedrawHandlesAfterNodes,
+        lockedNodeIds,
       );
-      puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(laidOut);
+      const laidOut =
+        puzzle2dRedrawMode === "force-graph"
+          ? puzzle2dApplyLiveForceGraphLayoutTick(prev, layoutOpts, dragState)
+          : puzzle2dFinalizeLiveForceGraphLayoutTick(layoutPuzzle2dFixtureRedrawNodes(prev, layoutOpts), dragState);
       return { ...laidOut, camera: { ...prev.camera } };
     });
     setNodesRedrawCameraEaseTick((n) => n + 1);
@@ -5250,9 +5320,7 @@ function Puzzle2dPlayInner({
             ),
           );
         }
-        const laidOut = puzzle2dPlayFixtureWithDragAnchors(cur, dragAnchors);
-        puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(laidOut);
-        return laidOut;
+        return puzzle2dFinalizeLiveForceGraphLayoutTick(cur, puzzle2dPlayLiveForceGraphDragState(dragAnchors, lockedNodeIds));
       });
       raf = requestAnimationFrame(step);
     };

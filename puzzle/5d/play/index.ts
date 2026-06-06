@@ -29,10 +29,11 @@ import {
   platformFromViewContext,
   type UiTreeItemNode,
   type UiTreeNode,
+  type UiTreeSectionNode,
   enforcePlaygroundWindowEngagementInput,
 } from "@framework/playground/core";
 
-import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
+import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayKindsTree, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
 import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
 import {
   PUZZLE_2D_LOD_MODE_AUTOMATIC,
@@ -51,7 +52,7 @@ import {
 } from "../../2d/react/index.tsx";
 import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
 import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
-import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
+import { buildPuzzle3dPlayHierarchyTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
@@ -71,8 +72,11 @@ import {
   parseV1,
   project2d,
   project3d,
+  project2dKindCatalogs,
+  project3dKindCatalogs,
   compose5d,
   sharedKindsFromMetas,
+  type KindCatalogBundle as Puzzle5dKindCatalogBundle,
   PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID,
   PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID,
   PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID,
@@ -97,6 +101,8 @@ export const PUZZLE_5D_PLAY_3D_BODY_KEY = "puzzle.5d.play.3d";
 export const PUZZLE_5D_PLAY_2D_SURFACE_ID = "puzzle.5d.play.2d/v1";
 export const PUZZLE_5D_PLAY_3D_SURFACE_ID = "puzzle.5d.play.3d/v1";
 export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
+export const PUZZLE_5D_PLAY_KINDS_TAB_ID = "puzzle-5d-play-kinds";
+export const PUZZLE_5D_PLAY_ICON_KINDS = "puzzle.5d-play.icon.kinds";
 
 export const PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
 
@@ -159,6 +165,52 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
 }
 //#endregion 🔖Puzzle5dPlayHierarchy
 
+//#region 🔖Puzzle5dPlayKinds
+function puzzle5dPlayKindTreeItem(domain: "2d" | "3d", item: UiTreeItemNode): UiTreeItemNode {
+  return {
+    ...item,
+    id: item.id.replace(/^puzzle-(?:2d|3d)-play-kinds\./, `puzzle-5d-play-kinds.${domain}.`),
+    ...(item.items ? { items: item.items.map((child) => puzzle5dPlayKindTreeItem(domain, child)) } : {}),
+  };
+}
+
+function puzzle5dPlayKindTreeSections(domain: "2d" | "3d", labelPrefix: string, tree: UiTreeNode): UiTreeSectionNode[] {
+  if (tree.type !== "tree") {
+    return [];
+  }
+  return tree.sections.map((section) => ({
+    ...section,
+    id: section.id.replace(/^puzzle-(?:2d|3d)-play-kinds\./, `puzzle-5d-play-kinds.${domain}.`),
+    label: `${labelPrefix} · ${section.label}`,
+    items: section.items?.map((item) => puzzle5dPlayKindTreeItem(domain, item)),
+  }));
+}
+
+/** @emoji 🏷️ Workbench kinds tab: flat (2d) and volume (3d) palette rows with drag payloads. */
+export function buildPuzzle5dPlayKindsTree(snapshot: Puzzle5dPlaySnapshot): UiTreeNode {
+  const bundle: Puzzle5dKindCatalogBundle | undefined = snapshot.kindCatalogs ?? snapshot.sharedKinds.kindCatalogs;
+  const catalogs2d = project2dKindCatalogs(bundle);
+  const catalogs3d = project3dKindCatalogs(bundle);
+  const flat = buildPuzzle2dPlayKindsTree(catalogs2d);
+  const volume = buildPuzzle3dPlayKindsTree(catalogs3d, snapshot.fixture3d ?? undefined);
+  const sections = [...puzzle5dPlayKindTreeSections("2d", "2d", flat), ...puzzle5dPlayKindTreeSections("3d", "3d", volume)];
+  if (!sections.length) {
+    return {
+      type: "tree",
+      sections: [
+        {
+          id: "puzzle-5d-play-kinds.empty",
+          label: "Kinds",
+          defaultOpen: true,
+          items: [{ id: "puzzle-5d-play-kinds.empty.msg", label: "No kind catalogs in this fixture" }],
+        },
+      ],
+    };
+  }
+  return { type: "tree", sections };
+}
+//#endregion 🔖Puzzle5dPlayKinds
+
 //#region 🔖Helpers
 function puzzle5dPlayLodTierMenuLabel(tier: string): string {
   return tier.charAt(0).toUpperCase() + tier.slice(1);
@@ -191,6 +243,7 @@ export interface Puzzle5dPlaySnapshot {
   readonly depthVariableLod3d: boolean;
   readonly lod3dSlider: number;
   readonly sharedKinds: ReturnType<typeof sharedKindsFromMetas>;
+  readonly kindCatalogs: Puzzle5dKindCatalogBundle | undefined;
   readonly connect2d: number;
   readonly connect3d: number;
   readonly proximity2d: number;
@@ -200,6 +253,8 @@ export interface Puzzle5dPlaySnapshot {
   readonly brushOverlapBudget: number;
   readonly fillCount: number;
   readonly fillBuildDone: boolean;
+  readonly selectionMethod: Puzzle2dSelectionMethod;
+  readonly selectionMode: Puzzle2dSelectionMode;
 }
 
 function loadNakagin5dModel(): Puzzle5dV1 {
@@ -804,10 +859,11 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
         break;
       }
       default:
-        if (
-          command === "setSelectionMethod" ||
-          command === "setSelectionMode" ||
-          command === "toggleSelectionTarget" ||
+        if (command === "setSelectionMethod" || command === "setSelectionMode" || command === "toggleSelectionTarget") {
+          this.hostBridge?.runHostCommand(command, args);
+          this.rebuildShellMode();
+          this.emit();
+        } else if (
           command === "clearSelection" ||
           command === "selectAllSelection" ||
           command === "toggleGridSnap" ||
@@ -836,6 +892,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     const model = this.puzzle5dStore.read();
     const fixture2d = project2d(model);
     const fixture3d = project3d(model);
+    const toolbar = this.toolbarState();
     return {
       manifestLabel: model.label,
       fixture2d,
@@ -857,6 +914,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       depthVariableLod3d: this.depthVariableLod3d,
       lod3dSlider: this.lod3dSlider,
       sharedKinds: sharedKindsFromMetas({ meta2d: fixture2d.meta, meta3d: fixture3d.meta }),
+      kindCatalogs: model.kindCatalogs,
       connect2d: this.connect2d,
       connect3d: this.connect3d,
       proximity2d: this.proximity2d,
@@ -866,6 +924,8 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       brushOverlapBudget: this.brushOverlapBudget,
       fillCount: this.puzzle5dStore.getSnapshot().fillCount,
       fillBuildDone: this.puzzle5dStore.getSnapshot().fillBuildDone,
+      selectionMethod: toolbar.puzzle2dSelectionMethod,
+      selectionMode: toolbar.puzzle2dSelectionMode,
     };
   }
 }
@@ -932,6 +992,18 @@ export function buildPuzzle5d3dDeclarativeBody(ctx: WindowBodyViewContext): UiNo
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("puzzle 5d play hierarchy", () => {
+    it("buildPuzzle5dPlayKindsTree exposes draggable flat and volume palette rows", () => {
+      const runtime = buildPuzzle5dPlayRuntime();
+      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
+      expect(controller).toBeTruthy();
+      const tree = buildPuzzle5dPlayKindsTree(controller!.getSnapshot());
+      expect(tree.type).toBe("tree");
+      const flatNodes = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.2d.nodes");
+      const volumeObjects = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.3d.objects");
+      expect(flatNodes?.items?.some((row) => row.draggable === true && row.dragData)).toBe(true);
+      expect(volumeObjects?.items?.some((row) => row.draggable === true && row.dragData)).toBe(true);
+    });
+
     it("buildPuzzle5dPlayHierarchySections includes 2d and 3d branches", () => {
       const runtime = buildPuzzle5dPlayRuntime();
       const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;

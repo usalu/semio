@@ -704,5 +704,19 @@
         }
       ]
     }
+  ],
+  "references": [
+    {
+      "id": "ref-sketch",
+      "source": { "url": "/infinite-fixture/sketch.png", "mediaKind": "image" },
+      "origin": [-8, -6, 0.01],
+      "widthWorld": 18
+    },
+    {
+      "id": "ref-site-pdf",
+      "source": { "url": "/infinite-fixture/site.pdf", "mediaKind": "pdf", "page": 1 },
+      "origin": [14, 4, 0.01],
+      "widthWorld": 24
+    }
   ]
 }

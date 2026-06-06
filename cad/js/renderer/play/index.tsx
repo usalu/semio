@@ -28,9 +28,12 @@ import {
 } from "@framework/playground/core";
 import {
   ORBIT_CAMERA_VIEW_COMMAND,
+  applyWorldReferenceTransform,
   createOrbitCameraViewLayoutDescriptors,
   createOrbitCameraViewTemplates,
   type OrbitCameraViewId,
+  type WorldReferenceProps,
+  type WorldReferenceRelocatePayload,
 } from "@infinite/world/r3f";
 import {
   DocumentHistory,
@@ -120,6 +123,11 @@ export const CAD_PLAY_SHAPE_SCENE_SURFACE_ID = "cad.play.scene3d/shape";
 export const CAD_PLAY_BUILDING_SCENE_SURFACE_ID = "cad.play.scene3d/building";
 export const CAD_PLAY_ENERGY_SCENE_SURFACE_ID = "cad.play.scene3d/energy";
 export const CAD_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID = "cad.play.scene3d/structure-classic";
+
+const CAD_PLAY_DEFAULT_WORLD_REFERENCES: WorldReferenceProps[] = [
+  { id: "ref-sketch", source: { url: "/infinite-fixture/sketch.png", mediaKind: "image" }, origin: [-24, -18, 0.01], widthWorld: 22 },
+  { id: "ref-site-pdf", source: { url: "/infinite-fixture/site.pdf", mediaKind: "pdf", page: 1 }, origin: [12, 8, 0.01], widthWorld: 28 },
+];
 
 const CAD_PLAY_VIEW_TEMPLATES: readonly WindowTemplate[] = createOrbitCameraViewTemplates({
   controllerId: CAD_PLAY_CONTROLLER_ID,
@@ -1410,6 +1418,13 @@ interface PlaySessionProps {
   readonly onDeleteSelection: () => boolean;
   readonly cameraView?: OrbitCameraViewId;
   readonly cameraViewSeedKey?: string | number;
+  readonly worldReferences?: readonly WorldReferenceProps[];
+  readonly selectedReferenceIds?: ReadonlySet<string>;
+  readonly hoveredReferenceId?: string | null;
+  readonly referenceRelocateActive?: boolean;
+  readonly onReferenceSelect?: (id: string, modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }) => void;
+  readonly onReferenceHover?: (id: string | null) => void;
+  readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -1447,6 +1462,13 @@ function PlaySession({
   onDeleteSelection,
   cameraView,
   cameraViewSeedKey,
+  worldReferences = [],
+  selectedReferenceIds,
+  hoveredReferenceId = null,
+  referenceRelocateActive = true,
+  onReferenceSelect,
+  onReferenceHover,
+  onReferenceRelocate,
 }: PlaySessionProps) {
   const rtOpts = reactHostPort.useMemo(
     (): InteractionRuntimeOptions => ({
@@ -1511,6 +1533,13 @@ function PlaySession({
       onTransformGumballCommit={onTransformGumballCommit}
       onDeleteSelection={onDeleteSelection}
       spatialView={cameraView !== undefined && cameraViewSeedKey !== undefined ? { cameraView, cameraViewSeedKey } : undefined}
+      worldReferences={worldReferences}
+      selectedReferenceIds={selectedReferenceIds}
+      hoveredReferenceId={hoveredReferenceId}
+      referenceRelocateActive={referenceRelocateActive}
+      onReferenceSelect={onReferenceSelect}
+      onReferenceHover={onReferenceHover}
+      onReferenceRelocate={onReferenceRelocate}
     />
   );
 }
@@ -2319,6 +2348,20 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
   const mode = computeModeForPane(pane);
   const transformGumballConfig = transformGumballConfigForPane(pane);
   const autoFitMeshes = modelHasCommittedSolidsForDisplay(viewModel);
+  const [worldReferences, setWorldReferences] = reactHostPort.useState(CAD_PLAY_DEFAULT_WORLD_REFERENCES);
+  const [selectedReferenceIds, setSelectedReferenceIds] = reactHostPort.useState<ReadonlySet<string>>(() => new Set());
+  const [hoveredReferenceId, setHoveredReferenceId] = reactHostPort.useState<string | null>(null);
+  const onReferenceRelocate = reactHostPort.useCallback((payload: WorldReferenceRelocatePayload) => {
+    setWorldReferences((prev) => prev.map((row) => (row.id === payload.referenceId ? applyWorldReferenceTransform(row, payload.after) : row)));
+    console.log("[DEBUG] cad referenceRelocate", payload.referenceId);
+  }, []);
+  const onReferenceSelect = reactHostPort.useCallback((id: string) => {
+    setSelectedReferenceIds(new Set([id]));
+  }, []);
+  const onReferenceHover = reactHostPort.useCallback((id: string | null) => {
+    setHoveredReferenceId(id);
+  }, []);
+  const shapeReferences = pane === "shape" ? worldReferences : [];
 
   return (
     <div className="absolute inset-0 min-h-0 min-w-0" onPointerDown={() => focusModelDefinition(modelDefinitionId)}>
@@ -2355,6 +2398,13 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         onDeleteSelection={handleDeleteSelection}
         cameraView={cameraSeed?.view}
         cameraViewSeedKey={cameraSeed?.seedKey}
+        worldReferences={shapeReferences}
+        selectedReferenceIds={pane === "shape" ? selectedReferenceIds : undefined}
+        hoveredReferenceId={pane === "shape" ? hoveredReferenceId : null}
+        referenceRelocateActive={pane === "shape"}
+        onReferenceSelect={pane === "shape" ? onReferenceSelect : undefined}
+        onReferenceHover={pane === "shape" ? onReferenceHover : undefined}
+        onReferenceRelocate={pane === "shape" ? onReferenceRelocate : undefined}
       />
     </div>
   );

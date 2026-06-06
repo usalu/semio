@@ -3100,7 +3100,7 @@ function renderButton(node: UiButtonNode, commandBus: CommandBus): React.ReactEl
 			className={cn(
 				"rounded-md border px-2 py-1 text-sm",
 				variant === "danger" && "border-destructive text-destructive",
-				variant === "success" && "border-green-600 text-green-700",
+				variant === "success" && "border-success text-success",
 				variant === "subtle" && "border-transparent bg-muted/60",
 				variant === "default" && "border-border bg-background",
 			)}

@@ -29,10 +29,12 @@ export function tokenHex(key: StylingTokenKey | string): string {
 
 //#region 🎨Resolve
 const _resolveCache = new Map<string, string>();
+const _readableForegroundCache = new Map<string, string>();
 
 /** @emoji 🔄 Clears the color resolve cache (theme switches / tests). */
 export function clearColorResolveCache(): void {
 	_resolveCache.clear();
+	_readableForegroundCache.clear();
 }
 
 function normalizeHex(hex: string): string {
@@ -210,6 +212,37 @@ export function hexToThreeColor(hex: string): number {
 export function resolveThreeColor(ref: string, fallbackKey: StylingTokenKey | string = "gray"): number {
 	return hexToThreeColor(resolveColorHex(ref, fallbackKey));
 }
+
+function srgbChannelToLinear(channel: number): number {
+	const s = channel / 255;
+	return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+}
+
+/** @emoji 🌓 WCAG relative luminance for a resolved `#rrggbb` color (0 = black, 1 = white). */
+export function relativeLuminance(hex: string): number {
+	const norm = normalizeHex(hex);
+	const r = srgbChannelToLinear(hexChannel(norm, 1));
+	const g = srgbChannelToLinear(hexChannel(norm, 3));
+	const b = srgbChannelToLinear(hexChannel(norm, 5));
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** @emoji 🏷️ Picks a readable palette foreground hex for text on the given background color expression. */
+export function readableForegroundHex(
+	backgroundRef: string,
+	lightKey: StylingTokenKey | string = "light",
+	darkKey: StylingTokenKey | string = "dark",
+): string {
+	const cacheKey = `${backgroundRef}|${lightKey}|${darkKey}`;
+	const cached = _readableForegroundCache.get(cacheKey);
+	if (cached !== undefined) {
+		return cached;
+	}
+	const bgHex = resolveBackgroundColorHex(backgroundRef, "gray");
+	const result = relativeLuminance(bgHex) > 0.5 ? tokenHex(darkKey) : tokenHex(lightKey);
+	_readableForegroundCache.set(cacheKey, result);
+	return result;
+}
 //#endregion 🎨Resolve
 
 //#region 🧪Tests
@@ -240,6 +273,16 @@ if (import.meta.vitest) {
 		it("resolveColorRgba returns byte tuple", () => {
 			clearColorResolveCache();
 			expect(resolveColorRgba("var(--color-gray)", "gray")).toEqual([123, 130, 125, 255]);
+		});
+
+		it("relativeLuminance orders light above dark palette tokens", () => {
+			expect(relativeLuminance(tokenHex("light"))).toBeGreaterThan(relativeLuminance(tokenHex("dark")));
+		});
+
+		it("readableForegroundHex picks light text on dark fills and dark text on light fills", () => {
+			clearColorResolveCache();
+			expect(readableForegroundHex("var(--color-dark)")).toBe(tokenHex("light"));
+			expect(readableForegroundHex("var(--color-light)")).toBe(tokenHex("dark"));
 		});
 	});
 }

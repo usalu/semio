@@ -30,6 +30,10 @@ import {
   WorldLodGridHelper,
   WorldOrbitCameraViewApplier,
   WorldOrbitGated,
+  WorldReferenceLayer,
+  applyWorldReferenceTransform,
+  type WorldReferenceProps,
+  type WorldReferenceRelocatePayload,
   type OrbitCameraViewId,
   type WorldCanvasProps,
   WORLD_LOCKED_OPACITY_SCALE,
@@ -3241,6 +3245,14 @@ export interface InteractionSpatialViewProps {
   readonly transformGumballModel?: Model | null;
   readonly cameraView?: OrbitCameraViewId;
   readonly cameraViewSeedKey?: string | number;
+  /** @emoji 🖼️ Grid reference planes persisted beside the CAD model. */
+  readonly worldReferences?: readonly WorldReferenceProps[];
+  readonly selectedReferenceIds?: ReadonlySet<string>;
+  readonly hoveredReferenceId?: string | null;
+  readonly referenceRelocateActive?: boolean;
+  readonly onReferenceSelect?: (id: string, modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }) => void;
+  readonly onReferenceHover?: (id: string | null) => void;
+  readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
 }
 
 /** @emoji 📡 Host event callbacks accepted by {@link InteractionSpatialView}. */
@@ -3300,6 +3312,13 @@ export function InteractionSpatialView({
   transformGumballModel = null,
   cameraView,
   cameraViewSeedKey,
+  worldReferences = [],
+  selectedReferenceIds,
+  hoveredReferenceId = null,
+  referenceRelocateActive = true,
+  onReferenceSelect,
+  onReferenceHover,
+  onReferenceRelocate,
 }: InteractionSpatialViewProps): ReactNode {
   reactHostPort.useEffect(() => {
     bindScenePreviewKernel(previewKernel);
@@ -3385,6 +3404,18 @@ export function InteractionSpatialView({
         <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} />
         <WorldLayer order={0} name="cad.grid">
           <WorldLodGridHelper gridDatum={[0, 0, 0]} />
+        </WorldLayer>
+        <WorldLayer order={5} name="cad.references">
+          <WorldReferenceLayer
+            references={worldReferences}
+            selectedIds={selectedReferenceIds}
+            hoveredId={hoveredReferenceId}
+            gumballConfig={transformGumballConfig ?? undefined}
+            relocateActive={referenceRelocateActive && cadGumballConfigVisible(transformGumballConfig ?? {})}
+            onSelect={onReferenceSelect}
+            onHover={onReferenceHover}
+            onRelocate={onReferenceRelocate}
+          />
         </WorldLayer>
         <WorldLayer order={10} name="cad.ground-pick">
           <GroundPickPlane
@@ -4035,6 +4066,13 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   /** @emoji 🎛 Toolbar gumball mode; hidden while an interaction session is active. */
   readonly transformGumballConfig?: CadGumballConfig | null;
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
+  readonly worldReferences?: readonly WorldReferenceProps[];
+  readonly selectedReferenceIds?: ReadonlySet<string>;
+  readonly hoveredReferenceId?: string | null;
+  readonly referenceRelocateActive?: boolean;
+  readonly onReferenceSelect?: InteractionSpatialViewProps["onReferenceSelect"];
+  readonly onReferenceHover?: InteractionSpatialViewProps["onReferenceHover"];
+  readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
 }
 
 /** @emoji 💬 One interaction a window can start from the floating panel while idle. */
@@ -4272,6 +4310,13 @@ export function InteractionRepl({
   spatialView: spatialViewOverrides,
   transformGumballConfig = null,
   onTransformGumballCommit,
+  worldReferences = [],
+  selectedReferenceIds,
+  hoveredReferenceId = null,
+  referenceRelocateActive = true,
+  onReferenceSelect,
+  onReferenceHover,
+  onReferenceRelocate,
 }: InteractionReplProps): ReactNode {
   const engagementCommandMode = !showAside && showEngagement;
   const snapshot = useInteractionSnapshot(rt);
@@ -5370,6 +5415,13 @@ export function InteractionRepl({
             slots={viewSlots}
             transformGumballConfig={activeTransformGumballConfig}
             transformGumballTargets={displayedSelectionTargets}
+            worldReferences={worldReferences}
+            selectedReferenceIds={selectedReferenceIds}
+            hoveredReferenceId={hoveredReferenceId}
+            referenceRelocateActive={referenceRelocateActive}
+            onReferenceSelect={onReferenceSelect}
+            onReferenceHover={onReferenceHover}
+            onReferenceRelocate={onReferenceRelocate}
             {...spatialViewOverrides}
           />
         </InteractionCanvas>

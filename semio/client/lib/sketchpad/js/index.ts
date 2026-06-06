@@ -14199,7 +14199,6 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		Map<string, { readonly fileNodeKindId: string; readonly typeId?: string; readonly designId?: string }>
 	>();
 	private readonly kitWiresReferenceCache = new Map<string, SketchpadKitWiresReferenceData>();
-	private readonly kitWiresVfsPreparePromises = new Map<string, Promise<void>>();
 	private kitWiresSyncGeneration = 0;
 	readonly kitWiresHoverStore = new ObservableCell<string | null>(null);
 
@@ -14287,25 +14286,12 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		return out;
 	}
 
-	/** @emoji 📁 Ensures kit VFS root children are loaded for wires topology without changing UI expansion. */
+	/** @emoji 📁 Awaits kit VFS children for the kit root and every expanded branch so wires identities match visible table rows. */
 	async prepareKitWiresVfsForTopology(kitId: string): Promise<void> {
-		const cached = this.kitWiresVfsPreparePromises.get(kitId);
-		if (cached) return cached;
 		const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
-		const prepare = (async () => {
-			await this.ensureChildrenLoadedAsync(kitId, scope);
-		})();
-		this.kitWiresVfsPreparePromises.set(kitId, prepare);
-		try {
-			await prepare;
-		} catch (error) {
-			this.kitWiresVfsPreparePromises.delete(kitId);
-			throw error;
-		}
-	}
-
-	private clearKitWiresVfsPrepare(kitId: string): void {
-		this.kitWiresVfsPreparePromises.delete(kitId);
+		const expandedIds = this.expandedStore(scope).getSnapshot();
+		const branchIds = new Set<string>([kitId, ...expandedIds]);
+		await Promise.all([...branchIds].map((id) => this.ensureChildrenLoadedAsync(id, scope)));
 	}
 
 	/** @emoji 🎯 Mirrors kit wires diagram selection onto the kit VFS table. */
@@ -14687,7 +14673,6 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		this.childrenByScope.delete(scopeKey);
 		this.pendingChildrenLoadsByScope.delete(scopeKey);
 		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
-			this.clearKitWiresVfsPrepare(rootNodeId);
 			this.kitWiresHoverStore.set(null);
 			this.syncKitWiresTopology(rootNodeId);
 		}
@@ -14703,7 +14688,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		this.pendingChildrenLoadsByScope.delete(scopeKey);
 		}
 		this.kitWiresReferenceCache.delete(kitId);
-		this.clearKitWiresVfsPrepare(kitId);
+		this.syncKitWiresTopology(kitId);
 		this.emit();
 	}
 
@@ -16877,6 +16862,47 @@ if (import.meta.vitest) {
 			const topo = ctrl.getStore(platformTopologyStoreId(sketchpadKitWiresInstanceId(kitId))) as PlatformTopologyStore;
 			const flat = topo!.getSnapshot().flat as { edges?: readonly { source?: string; target?: string; edgeKind?: string }[] };
 			expect(flat.edges?.some((edge) => edge.source === kitId && edge.target === typeId)).toBe(true);
+			ctrl.dispose();
+		});
+
+		it("matches wires identities to vfs rows when a typology is expanded", async () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-555555555555";
+			const typologyId = "bbbbbbbb-cccc-dddd-eeee-111111111111";
+			const typeId = "cccccccc-dddd-eeee-ffff-222222222222";
+			const designId = "dddddddd-eeee-ffff-1111-333333333333";
+			const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({
+					id: kitId,
+					name: "Typology Kit",
+					typologies: [
+						{
+							id: typologyId,
+							name: "Core",
+							types: [{ id: typeId, name: "Window" }],
+							designs: [{ id: designId, name: "Plan" }],
+						},
+					],
+				} as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}`);
+			ctrl.syncVirtualFileSystemRoute(scope, kitId);
+			ctrl.run("toggleVirtualFileSystemExpand", { ...scope, nodeId: typologyId });
+			await ctrl.prepareKitWiresVfsForTopology(kitId);
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			const root = ctrl.getRoot(scope);
+			const visible = sketchpadKitWiresVisibleNodes(root, ctrl.visibleVirtualFileSystemNodes(scope));
+			const visibleIds = visible.map((node) => node.id).sort();
+			const topo = ctrl.getStore(platformTopologyStoreId(sketchpadKitWiresInstanceId(kitId))) as PlatformTopologyStore;
+			const flat = topo!.getSnapshot().flat as { nodes?: readonly { id?: string }[] };
+			const wireNodeIds = (flat.nodes ?? []).map((node) => String(node.id)).sort();
+			expect(visibleIds).toContain(typologyId);
+			expect(visibleIds).toContain(typeId);
+			expect(visibleIds).toContain(designId);
+			expect(wireNodeIds).toEqual(visibleIds);
 			ctrl.dispose();
 		});
 	});

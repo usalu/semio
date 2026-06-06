@@ -8,6 +8,8 @@ export {
 	blendTokenHex,
 	clearColorResolveCache,
 	hexToThreeColor,
+	readableForegroundHex,
+	relativeLuminance,
 	resolveBackgroundColorHex,
 	resolveColorHex,
 	resolveColorRgba,

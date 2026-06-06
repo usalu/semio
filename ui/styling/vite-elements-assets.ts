@@ -723,6 +723,61 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
   ];
 }
 
+/** @emoji 🌐 Vite: serve and copy `infinite/fixture` at `/infinite-fixture/*` for world reference planes. */
+export function infiniteFixtureVitePlugin(repoRoot: string): Plugin[] {
+  const fixtureRoot = resolve(repoRoot, "infinite/fixture");
+  const serveFixture: Connect.NextHandleFunction = (req, res, next) => {
+    if (!req.url?.startsWith("/infinite-fixture/")) {
+      next();
+      return;
+    }
+    const rel = decodeURIComponent(req.url.slice("/infinite-fixture/".length).split(/[?#]/, 1)[0] ?? "");
+    const filePath = resolve(fixtureRoot, rel);
+    const relToRoot = relative(fixtureRoot, filePath);
+    if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+      next();
+      return;
+    }
+    if (filePath.endsWith(".png")) {
+      res.setHeader("Content-Type", "image/png");
+    } else if (filePath.endsWith(".pdf")) {
+      res.setHeader("Content-Type", "application/pdf");
+    } else if (filePath.endsWith(".svg")) {
+      res.setHeader("Content-Type", "image/svg+xml");
+    }
+    createReadStream(filePath).pipe(res);
+  };
+  let viteRoot = process.cwd();
+  return [
+    {
+      name: "infinite-fixture-serve",
+      enforce: "pre",
+      configureServer(server) {
+        server.middlewares.use(serveFixture);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(serveFixture);
+      },
+    },
+    {
+      name: "infinite-fixture-build",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        viteRoot = config.root;
+      },
+      closeBundle() {
+        if (!existsSync(fixtureRoot)) {
+          return;
+        }
+        const dest = resolve(viteRoot, "dist", "infinite-fixture");
+        mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
+        cpSync(fixtureRoot, dest, { recursive: true });
+      },
+    },
+  ];
+}
+
 /** @emoji 🛝 `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
@@ -739,6 +794,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     define: playEntryKind ? { "import.meta.env.PUZZLE_PLAY_ENTRY": JSON.stringify(playEntryKind) } : undefined,
     plugins: [
       ...uiAssetsVitePlugin(uiAssetsRoot),
+      infiniteFixtureVitePlugin(repoRoot),
       ...(playEntryKind === "3d" || playEntryKind === "5d" ? puzzle3dMeshesVitePlugin(repoRoot) : []),
       ...(playEntryKind === "map" ? [osmTileProxyVitePlugin(repoRoot), mapLibreVectorTileProxyVitePlugin(repoRoot)] : []),
       tailwindcss(),

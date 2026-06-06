@@ -21,7 +21,8 @@ import {
   type Puzzle2dFixtureV1,
   type Puzzle2dForceGraphLayoutOptions,
   type Puzzle2dRedrawLayoutOptions,
-  layoutPuzzle2dFixtureRedrawNodes,
+  puzzle2dApplyLiveForceGraphLayoutTick,
+  type Puzzle2dLiveForceGraphDragState,
   buildPuzzle2dSceneDescriptorFromFixture,
   type KindCatalogBundle as Puzzle2dKindCatalogBundle,
   type KindCompatEntry as Puzzle2dKindCompatEntry,
@@ -36,6 +37,10 @@ import {
   DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
   puzzle2dFixtureHandlesFromNodeKind,
+  buildPaletteNodeDragFixture,
+  mergePaletteNodeFromDrop,
+  type Puzzle2dFixtureDropDetail,
+  type Puzzle2dFixtureNodeV1,
 } from "@puzzle/2d/react";
 import {
   ObjectStateProvider as Puzzle3dPartStateProvider,
@@ -60,6 +65,7 @@ import {
   type CanvasProps as Puzzle3dCanvasProps,
   type BrushPlacePayload,
   type Puzzle3dBrushKindWeights,
+  type FixtureObjectV1 as Puzzle3dFixtureObjectV1,
   buildBrushFillSequence,
   brushPlacementUsesHostOrientation,
   computeBrushPlacementPose,
@@ -176,6 +182,15 @@ export interface ConnectSession {
 export interface SelectionSnapshot {
   readonly partIds: readonly string[];
   readonly anchorIds: readonly string[];
+}
+
+/** @emoji 🎯 Maps unified store selection to puzzle 3d controlled canvas selection. */
+export function fiveD3dSelectionFromStore(selection: SelectionSnapshot): Puzzle3dSelectionSnapshot {
+  return {
+    objectIds: [...selection.partIds],
+    vortexIds: [...selection.anchorIds],
+    attractionIds: [],
+  };
 }
 
 export interface V1 {
@@ -883,6 +898,143 @@ export function buildPuzzle5dFillSequence(args: {
 }
 //#endregion 🔖Brush
 
+//#region 🔖PaletteDrop
+function nodeAspectFromPaletteNode(node: Puzzle2dFixtureNodeV1): NodeAspect {
+  if (node.shape === "rectangle") {
+    return {
+      x: node.x,
+      y: node.y,
+      shape: "rectangle",
+      width: node.width,
+      height: node.height,
+      ...(node.text !== undefined ? { text: node.text } : {}),
+      ...(node.textAlignment !== undefined ? { textAlignment: node.textAlignment } : {}),
+      ...(node.textAutofit === true ? { textAutofit: true } : {}),
+      ...(node.textFontFamily !== undefined ? { textFontFamily: node.textFontFamily } : {}),
+      ...(node.textFontSize !== undefined ? { textFontSize: node.textFontSize } : {}),
+      ...(node.iconKind !== undefined ? { iconKind: node.iconKind } : {}),
+    };
+  }
+  return {
+    x: node.x,
+    y: node.y,
+    shape: "circle",
+    radius: node.radius,
+    ...(node.text !== undefined ? { text: node.text } : {}),
+    ...(node.textAlignment !== undefined ? { textAlignment: node.textAlignment } : {}),
+    ...(node.textAutofit === true ? { textAutofit: true } : {}),
+    ...(node.textFontFamily !== undefined ? { textFontFamily: node.textFontFamily } : {}),
+    ...(node.textFontSize !== undefined ? { textFontSize: node.textFontSize } : {}),
+    ...(node.iconKind !== undefined ? { iconKind: node.iconKind } : {}),
+  };
+}
+
+function paletteVolumeOriginFromFlat(peer: PartV1, flatX: number, flatY: number): Vec3 {
+  const flat = peer.puzzle2d!;
+  const volume = peer.puzzle3d!;
+  return [volume.origin[0] + (flatX - flat.x), volume.origin[1] - (flatY - flat.y), volume.origin[2]];
+}
+
+function paletteFlatCenterFromVolume(peer: PartV1, origin: Vec3): { readonly x: number; readonly y: number } {
+  const flat = peer.puzzle2d!;
+  const volume = peer.puzzle3d!;
+  return { x: flat.x + (origin[0] - volume.origin[0]), y: flat.y - (origin[1] - volume.origin[1]) };
+}
+
+/** @emoji 📥 Builds one unified part from a flat palette node drop. */
+export function partFromPaletteNodeDrop(model: V1, node: Puzzle2dFixtureNodeV1): PartV1 | null {
+  const partKind = node.nodeKind?.trim();
+  if (!partKind) {
+    return null;
+  }
+  const catalogs = model.kindCatalogs;
+  const cat3d = project3dKindCatalogs(catalogs);
+  const kind = objectKind3d(catalogs, partKind);
+  const meshUrl = resolveObjectKindMeshUrl(partKind, cat3d, project3d(model));
+  if (!kind || !meshUrl) {
+    return null;
+  }
+  const peer = peerPartForKind(model, partKind);
+  const origin = peer?.puzzle2d && peer?.puzzle3d ? paletteVolumeOriginFromFlat(peer, node.x, node.y) : ([node.x, -node.y, 0] as Vec3);
+  const flatHandles = node.handles.map((handle) => ({
+    angle: handle.angle,
+    handleKind: handle.handleKind,
+    ...(handle.radius !== undefined ? { radius: handle.radius } : {}),
+  }));
+  const volumeTemplates = volumeTemplatesForPartKind(model, partKind, catalogs);
+  const anchors = buildAnchorsUnified(node.id, partKind, catalogs, flatHandles, volumeTemplates);
+  return {
+    id: node.id,
+    partKind,
+    puzzle2d: nodeAspectFromPaletteNode(node),
+    puzzle3d: {
+      origin,
+      meshUrl,
+      orientation: peer?.puzzle3d?.orientation ?? ([0, 0, 0, 1] as Quat),
+      ...(kind.scale !== undefined ? { scale: kind.scale } : peer?.puzzle3d?.scale !== undefined ? { scale: peer.puzzle3d.scale } : {}),
+      ...(kind.label ?? kind.name ? { label: kind.label ?? kind.name } : {}),
+    },
+    anchors,
+  };
+}
+
+/** @emoji 📥 Builds one unified part from a volume palette object drop. */
+export function partFromPaletteObjectDrop(model: V1, object: Puzzle3dFixtureObjectV1): PartV1 | null {
+  const partKind = object.objectKind?.trim();
+  if (!partKind) {
+    return null;
+  }
+  const catalogs = model.kindCatalogs;
+  const template = buildPaletteNodeDragFixture(partKind, catalogs).nodes[0];
+  if (!template) {
+    return null;
+  }
+  const peer = peerPartForKind(model, partKind);
+  const center = peer?.puzzle2d && peer?.puzzle3d ? paletteFlatCenterFromVolume(peer, object.origin) : { x: object.origin[0], y: -object.origin[1] };
+  const flatNode: Puzzle2dFixtureNodeV1 = {
+    ...template,
+    id: object.id,
+    x: center.x,
+    y: center.y,
+    handles: template.handles.map((handle, index) => ({ ...handle, id: `${object.id}.h${index}` })),
+  };
+  const volumeAnchors: AnchorV1[] = object.vortices.map((vortex, index) => {
+    const parsed = parseAnchorFullId(vortex.id.includes(":") ? vortex.id : anchorFullId(object.id, vortex.id));
+    return {
+      id: parsed?.anchorId ?? anchorLocalIdFromIndex(index),
+      anchorKind: vortex.vortexKind ?? BUILTIN_PORT_HANDLE_KIND,
+      puzzle3d: {
+        position: vortex.position,
+        ...(vortex.direction !== undefined ? { direction: vortex.direction } : {}),
+        ...(vortex.radius !== undefined ? { radius: vortex.radius } : {}),
+        ...(vortex.label !== undefined ? { label: vortex.label } : {}),
+      },
+    };
+  });
+  const flatHandles = flatNode.handles.map((handle) => ({
+    id: handle.id,
+    angle: handle.angle,
+    handleKind: handle.handleKind,
+    ...(handle.radius !== undefined ? { radius: handle.radius } : {}),
+  }));
+  const anchors = mergeAnchorsFlatAndVolume(volumeAnchors, flatHandles);
+  return {
+    id: object.id,
+    partKind,
+    puzzle2d: nodeAspectFromPaletteNode(flatNode),
+    puzzle3d: {
+      origin: object.origin,
+      meshUrl: object.meshUrl,
+      ...(object.orientation !== undefined ? { orientation: object.orientation } : {}),
+      ...(object.scale !== undefined ? { scale: object.scale } : {}),
+      ...(object.label !== undefined ? { label: object.label } : {}),
+      ...(object.wormhole === true ? { wormhole: true } : {}),
+    },
+    anchors,
+  };
+}
+//#endregion 🔖PaletteDrop
+
 //#region 🔖StructuralDelete
 function anchorFullIdsForPart(part: PartV1): readonly string[] {
   return part.anchors.map((anchor) => anchorFullId(part.id, anchor.id));
@@ -1212,6 +1364,46 @@ export class Store {
     return true;
   }
 
+  /** @emoji 📥 Appends a unified part from a flat palette fixture drop. */
+  applyPaletteNodeDrop(detail: Puzzle2dFixtureDropDetail): string | null {
+    const node = mergePaletteNodeFromDrop(detail);
+    if (!node) {
+      return null;
+    }
+    const part = partFromPaletteNodeDrop(this.snapshot.model, node);
+    if (!part) {
+      return null;
+    }
+    this.fillSession = null;
+    this.setSnapshot({
+      ...this.snapshot,
+      model: { ...this.snapshot.model, parts: [...this.snapshot.model.parts, part] },
+      selection: { partIds: [part.id], anchorIds: [] },
+      connectSession: null,
+      fillCount: 0,
+      fillBuildDone: true,
+    });
+    return part.id;
+  }
+
+  /** @emoji 📥 Appends a unified part from a volume palette object drop. */
+  applyPaletteObjectDrop(object: Puzzle3dFixtureObjectV1): string | null {
+    const part = partFromPaletteObjectDrop(this.snapshot.model, object);
+    if (!part) {
+      return null;
+    }
+    this.fillSession = null;
+    this.setSnapshot({
+      ...this.snapshot,
+      model: { ...this.snapshot.model, parts: [...this.snapshot.model.parts, part] },
+      selection: { partIds: [part.id], anchorIds: [] },
+      connectSession: null,
+      fillCount: 0,
+      fillBuildDone: true,
+    });
+    return part.id;
+  }
+
   /** @emoji 🪣 Applies a fill prefix count from the cached session onto the store model. */
   applyFillCount(count: number): void {
     if (!this.fillSession) return;
@@ -1301,39 +1493,27 @@ export interface FiveDProps {
 
 const FIVE_D_LIVE_FORCE_ITERS_PER_FRAME = 24;
 
-/** @emoji 🕸️ Applies one WASM force-graph tick to a puzzle 5d store snapshot. */
-export function fiveDApplyLiveForceGraphStep(
-  store: Store,
-  instanceId: string,
-  lockedNodeIds: readonly string[] = [],
-): void {
+/** @emoji 🕸️ Applies one WASM force-graph tick to a puzzle 5d store snapshot (same path as WIRES play). */
+export function fiveDApplyLiveForceGraphStep(store: Store, _instanceId: string, drag?: Puzzle2dLiveForceGraphDragState): void {
   const fixture = project2d(store.read());
-  if (fixture.nodes.length === 0) return;
-  const camera = store.get2dCamera(instanceId);
-  const locked = lockedNodeIds.length ? [...lockedNodeIds] : undefined;
-  const laid = layoutPuzzle2dFixtureRedrawNodes(fixture, {
-    forceGraph: {
-      gravity: 0,
-      idealEdgeLength: 64,
-      iterations: FIVE_D_LIVE_FORCE_ITERS_PER_FRAME,
-      repulsionStrength: 80,
-    },
-    lockedNodeIds: locked,
-    mode: "force-graph",
-    redrawHandlesAfter: false,
-  } satisfies Puzzle2dRedrawLayoutOptions);
-  const model = store.read();
-  const centers = new Map(laid.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
-  if (locked != null) {
-    for (const partId of locked) {
-      const part = model.parts.find((row) => row.id === partId);
-      const aspect2d = part?.puzzle2d;
-      if (aspect2d != null) {
-        centers.set(partId, { x: aspect2d.x, y: aspect2d.y });
-      }
-    }
+  if (fixture.nodes.length === 0) {
+    return;
   }
-  store.applyFlatNodeCenters(centers);
+  const laid = puzzle2dApplyLiveForceGraphLayoutTick(
+    fixture,
+    {
+      forceGraph: {
+        gravity: 0,
+        idealEdgeLength: 64,
+        iterations: FIVE_D_LIVE_FORCE_ITERS_PER_FRAME,
+        repulsionStrength: 80,
+      },
+      mode: "force-graph",
+      redrawHandlesAfter: false,
+    } satisfies Puzzle2dRedrawLayoutOptions,
+    drag,
+  );
+  store.applyFlatNodeCenters(new Map(laid.nodes.map((node) => [node.id, { x: node.x, y: node.y }])));
 }
 
 function fiveDLinkSessionFromStore(session: ConnectSession | null): Puzzle2dLinkSessionSnapshot | null {
@@ -1468,7 +1648,8 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const graphPortMode = props.graphPortMode ?? puzzle2dGraphPortMode;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   const liveForceGraph = props.liveForceGraph === true;
-  const draggingNodeIdRef = reactHostPort.useRef<string | null>(null);
+  const liveForceDragNodeIdsRef = reactHostPort.useRef<Set<string>>(new Set());
+  const liveForceDragAnchorsRef = reactHostPort.useRef<Map<string, { x: number; y: number }>>(new Map());
   const storeRef = reactHostPort.useRef(store);
   const onSelectHostRef = reactHostPort.useRef(onSelectHost);
   const onConnectHostRef = reactHostPort.useRef(onConnectHost);
@@ -1505,11 +1686,16 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     onProximityConnectHostRef.current?.(p);
   }, []);
   const onDrag = reactHostPort.useCallback((p: { id: string; x: number; y: number }) => {
-    draggingNodeIdRef.current = p.id;
+    liveForceDragNodeIdsRef.current.add(p.id);
+    liveForceDragAnchorsRef.current.set(p.id, { x: p.x, y: p.y });
+    if (liveForceGraph) {
+      storeRef.current.applyNodeMove(p.id, p.x, p.y);
+    }
     onDragHostRef.current?.(p);
-  }, []);
+  }, [liveForceGraph]);
   const onDragEnd = reactHostPort.useCallback((p: { moves: Array<{ id: string; x: number; y: number }> }) => {
-    draggingNodeIdRef.current = null;
+    liveForceDragNodeIdsRef.current.clear();
+    liveForceDragAnchorsRef.current.clear();
     storeRef.current.applyNodeMoves(p.moves);
     onDragEndHostRef.current?.(p);
   }, []);
@@ -1569,8 +1755,10 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     if (!liveForceGraph || fixture2d.nodes.length === 0) return;
     let raf = 0;
     const step = () => {
-      const lockedNodeIds = draggingNodeIdRef.current ? [draggingNodeIdRef.current] : [];
-      fiveDApplyLiveForceGraphStep(storeRef.current, props.instanceId, lockedNodeIds);
+      const lockedNodeIds = liveForceDragNodeIdsRef.current;
+      const drag: Puzzle2dLiveForceGraphDragState | undefined =
+        lockedNodeIds.size > 0 ? { dragAnchors: liveForceDragAnchorsRef.current, lockedNodeIds: [...lockedNodeIds] } : undefined;
+      fiveDApplyLiveForceGraphStep(storeRef.current, props.instanceId, drag);
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
@@ -1635,7 +1823,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
   const fillActive = fillActiveHost ?? activeTool === "fill";
   const brushPlacementOverlapBudget = brushOverlapHost ?? props.brushOverlapBudget;
   const camera = store.get3dCamera(props.instanceId);
-  const selectedObjectId = snap.selection.partIds[0] ?? null;
+  const canvasSelection = reactHostPort.useMemo(() => fiveD3dSelectionFromStore(snap.selection), [snap.selection.partIds, snap.selection.anchorIds]);
   const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
   const onRelocate = usePuzzle3dPartRelocate();
   const onConnect = usePuzzle3dPartConnect();
@@ -1722,8 +1910,9 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
       {...(onFillMeshesReadyHost ? { onFillMeshesReady: onFillMeshesReadyHost } : {})}
       {...rest3d}
+      selection={canvasSelection}
     >
-      <Puzzle3dParts selectedObjectId={selectedObjectId} relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
+      <Puzzle3dParts relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
       <Puzzle3dTies />
     </Puzzle3dCanvas>
   );
@@ -2444,6 +2633,15 @@ if (import.meta.vitest) {
     it("maps rectangle sides to axis angles", () => {
       expect(flatGripAngle("top", "rectangle")).toBe(0);
       expect(flatGripAngle("right", "rectangle")).toBeCloseTo(Math.PI / 2);
+    });
+  });
+  describe("fiveD3dSelectionFromStore", () => {
+    it("maps unified part and anchor ids to puzzle 3d selection", () => {
+      expect(fiveD3dSelectionFromStore({ partIds: ["tower-a", "tower-b"], anchorIds: ["tower-a:port"] })).toEqual({
+        objectIds: ["tower-a", "tower-b"],
+        vortexIds: ["tower-a:port"],
+        attractionIds: [],
+      });
     });
   });
   describe("nodeCenterFromTopLeft", () => {

@@ -2,7 +2,7 @@
 // 💻 puzzle/3d/play/index.ts — Puzzle 3D play on `@framework/playground/core`: Nakagin fixture, LOD measures, selection/filter tools (no React).
 // #endregion 🧲Header
 
-import { DEFAULT_GUMBALL_CONFIG, bootstrapElementsSurfaceChromeDocument, formatNumber, type GumballConfig } from "@ui/react";
+import { DEFAULT_GUMBALL_CONFIG, bootstrapElementsSurfaceChromeDocument, formatNumber, referenceMediaKindFromUrl, type GumballConfig } from "@ui/react";
 import {
   AppRuntime,
   CommandBus,
@@ -71,6 +71,8 @@ import {
   puzzle3dBrushKindWeightsRef,
   puzzle3dBrushMeshRootForFill,
   applyRelocateToFixture,
+  applyReferenceRelocateToFixture,
+  addReferenceToFixture,
   applyObjectKindToFixtureObject,
   fixtureAppearanceFingerprint,
   fixturePoseFingerprint,
@@ -91,6 +93,7 @@ import {
   puzzle3dPlayObjectKindDragData,
   sliderValueFromLod,
   updatePuzzle3dCameraInFixture,
+  updatePuzzle3dReferenceInFixture,
   type AttractionProps,
   type CameraState,
   type AttractionKind,
@@ -106,6 +109,8 @@ import {
   type ObjectKindVortexTemplate,
   type BrushPlacePayload,
   type RelocatePayload,
+  type WorldReferenceRelocatePayload,
+  type WorldReferenceProps,
   type SelectionMethod,
   type SelectionMode,
   PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID,
@@ -782,8 +787,12 @@ function puzzle3dPlayEngagementCommandToken(text: string): string {
 	return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("").toLowerCase();
 }
 
+function puzzle3dPlaySelectReferenceCommand(referenceId: string): CommandDescriptor {
+  return { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelection", args: { selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [referenceId] } } };
+}
+
 function puzzle3dPlaySelectObjectCommand(objectId: string): CommandDescriptor {
-	return puzzle3dPlayCmd("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [] } });
+	return puzzle3dPlayCmd("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [] } });
 }
 
 function puzzle3dPlaySelectVortexCommand(vortexFullId: string): CommandDescriptor {
@@ -819,6 +828,7 @@ export const PUZZLE_3D_PLAY_EMPTY_SELECTION: Puzzle3dPlaySelection = {
   objectIds: [],
   vortexIds: [],
   attractionIds: [],
+  referenceIds: [],
 };
 
 /** @emoji 📸 Stable idle snapshot for {@link useSyncExternalStore} when no controller is mounted. */
@@ -1022,7 +1032,7 @@ export function puzzle3dPlayAllSelectionFromFixture(
 }
 
 export function puzzle3dPlaySelectionEqual(a: Puzzle3dPlaySelection, b: Puzzle3dPlaySelection): boolean {
-  if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length) {
+  if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length || a.referenceIds.length !== b.referenceIds.length) {
     return false;
   }
   if (a.attractionIds.length !== b.attractionIds.length) {
@@ -1040,6 +1050,11 @@ export function puzzle3dPlaySelectionEqual(a: Puzzle3dPlaySelection, b: Puzzle3d
   }
   for (let i = 0; i < a.attractionIds.length; i += 1) {
     if (a.attractionIds[i] !== b.attractionIds[i]) {
+      return false;
+    }
+  }
+  for (let i = 0; i < a.referenceIds.length; i += 1) {
+    if (a.referenceIds[i] !== b.referenceIds[i]) {
       return false;
     }
   }
@@ -1314,6 +1329,9 @@ export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelectio
   for (const attractionId of selection.attractionIds) {
     ids.push(`puzzle-3d-play-hierarchy.attraction.${attractionId}`);
   }
+  for (const referenceId of selection.referenceIds) {
+    ids.push(`puzzle-3d-play-hierarchy.reference.${referenceId}`);
+  }
   return ids;
 }
 
@@ -1370,11 +1388,25 @@ export function buildPuzzle3dPlayHierarchySections(
     defaultOpen: true,
     items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-hierarchy.attractions.empty", label: "(none)" }],
   };
+  const referenceItems: UiTreeItemNode[] = (fixture.references ?? []).map((reference) => ({
+    id: `puzzle-3d-play-hierarchy.reference.${reference.id}`,
+    label: reference.id,
+    description: reference.source.url,
+    command: puzzle3dPlaySelectReferenceCommand(reference.id),
+    ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "reference", id: reference.id }),
+    ...puzzle3dPlayHierarchyEntityChrome(reference, { kind: "reference", id: reference.id }, options),
+  }));
+  const referencesGroup: UiTreeItemNode = {
+    id: "puzzle-3d-play-hierarchy.references",
+    label: "References",
+    defaultOpen: true,
+    items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
+  };
   const viewportRoot: UiTreeItemNode = {
     id: "puzzle-3d-play-hierarchy.viewport",
     label: "Puzzle 3D",
     defaultOpen: true,
-    items: [objectsGroup, attractionsGroup],
+    items: [objectsGroup, referencesGroup, attractionsGroup],
   };
   return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [viewportRoot]).sections;
 }
@@ -1660,6 +1692,13 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
 
   private toggleEntityFlag(target: HoverTarget, flag: "hidden" | "locked"): void {
     this.patchFixture((fixture) => {
+      if (target.kind === "reference") {
+        const reference = (fixture.references ?? []).find((row) => row.id === target.id);
+        if (!reference) {
+          return fixture;
+        }
+        return updatePuzzle3dReferenceInFixture(fixture, target.id, { [flag]: !(reference[flag] === true) });
+      }
       if (target.kind === "object") {
         const object = fixture.objects.find((row) => row.id === target.id);
         if (!object) {
@@ -1862,6 +1901,43 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       return;
     }
     this.fixture = next;
+  }
+
+  /** @emoji 🖼️ Persists a reference-plane gumball relocate on the fixture. */
+  patchReferenceRelocate(payload: WorldReferenceRelocatePayload): void {
+    if (!this.fixture) {
+      return;
+    }
+    const next = applyReferenceRelocateToFixture(this.fixture, payload);
+    if (next === this.fixture) {
+      return;
+    }
+    this.fixture = next;
+    this.fixtureRevision += 1;
+    this.notifySnapshot();
+    console.log("[DEBUG] puzzle3d patchReferenceRelocate", payload.referenceId);
+  }
+
+  /** @emoji 🖼️ Adds a grid reference plane from a served asset URL. */
+  importReference(args: { readonly url: string; readonly origin?: readonly [number, number, number]; readonly page?: number }): void {
+    if (!this.fixture) {
+      return;
+    }
+    const mediaKind = referenceMediaKindFromUrl(args.url);
+    if (!mediaKind) {
+      return;
+    }
+    const id = `reference-${Date.now()}`;
+    const reference: WorldReferenceProps = {
+      id,
+      source: { url: args.url, mediaKind, ...(typeof args.page === "number" ? { page: args.page } : {}) },
+      origin: args.origin ?? [this.fixture.camera.target[0], this.fixture.camera.target[1], 0.01],
+      widthWorld: 20,
+    };
+    this.patchFixture((fixture) => addReferenceToFixture(fixture, reference));
+    this.selection = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [id] };
+    this.notifySelection();
+    console.log("[DEBUG] puzzle3d importReference", id, args.url);
   }
 
   /** @emoji 📷 Persists orbit camera on the fixture or a shell instance without structure revision bumps. */
@@ -2220,6 +2296,10 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         this.selectableKinds.attraction && this.visibleKinds.attraction
           ? selection.attractionIds.filter((attractionId) => entitySelectable(attractionById.get(attractionId)))
           : [],
+      referenceIds: selection.referenceIds.filter((referenceId) => {
+        const reference = (this.fixture.references ?? []).find((row) => row.id === referenceId);
+        return reference ? entitySelectable(reference) : false;
+      }),
     };
   }
 
@@ -2447,6 +2527,13 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         this.notifySnapshot();
         return;
       }
+      case "importReference": {
+        const payload = args as { url?: string; origin?: readonly [number, number, number]; page?: number };
+        if (typeof payload.url === "string" && payload.url.trim()) {
+          this.importReference({ url: payload.url.trim(), origin: payload.origin, page: payload.page });
+        }
+        return;
+      }
       case "setSelection": {
         const next = (args as { selection: Puzzle3dPlaySelection }).selection;
         if (next && typeof next === "object") {
@@ -2454,6 +2541,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
             objectIds: [...(next.objectIds ?? [])],
             vortexIds: [...(next.vortexIds ?? [])],
             attractionIds: [...(next.attractionIds ?? [])],
+            referenceIds: [...(next.referenceIds ?? [])],
           });
           if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
             return;
@@ -2465,7 +2553,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       }
       case "setSelectedId": {
         const id = (args as { id: string | null }).id;
-        const resolved: Puzzle3dPlaySelection = id ? { objectIds: [id], vortexIds: [], attractionIds: [] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
+        const resolved: Puzzle3dPlaySelection = id ? { objectIds: [id], vortexIds: [], attractionIds: [], referenceIds: [] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
         if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
           return;
         }
@@ -2566,7 +2654,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           ...fixture,
           objects: fixture.objects.map((object) => (object.id === oldId ? { ...object, id: trimmed } : object)),
         }));
-        this.selection = { objectIds: [trimmed], vortexIds: [], attractionIds: [] };
+        this.selection = { objectIds: [trimmed], vortexIds: [], attractionIds: [], referenceIds: [] };
         this.notifySnapshot();
         return;
       }
@@ -2723,7 +2811,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     const objectIds = [...this.selection.objectIds];
     const vortexIds = [...this.selection.vortexIds];
     const attractionIds = [...this.selection.attractionIds];
-    if (objectIds.length === 0 && vortexIds.length === 0 && attractionIds.length === 0) {
+    const referenceIds = [...this.selection.referenceIds];
+    if (objectIds.length === 0 && vortexIds.length === 0 && attractionIds.length === 0 && referenceIds.length === 0) {
       return;
     }
     this.patchFixture((fixture) => {
@@ -2736,6 +2825,9 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       }
       for (const attractionId of attractionIds) {
         next = updatePuzzle3dAttractionInFixture(next, attractionId, { [flag]: value });
+      }
+      for (const referenceId of referenceIds) {
+        next = updatePuzzle3dReferenceInFixture(next, referenceId, { [flag]: value });
       }
       return next;
     });
@@ -2779,7 +2871,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     if (newIds.length === 0) {
       return;
     }
-    this.selection = this.filterSelectionByPlaygroundKinds({ objectIds: newIds, vortexIds: [], attractionIds: [] });
+    this.selection = this.filterSelectionByPlaygroundKinds({ objectIds: newIds, vortexIds: [], attractionIds: [], referenceIds: [] });
     this.notifySelection();
     console.log("[DEBUG] puzzle3d duplicateSelection", newIds);
   }
@@ -2793,7 +2885,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       return;
     }
     const objectIds = this.fixture.objects.filter((row) => row.objectKind === primary.objectKind).map((row) => row.id);
-    const resolved = this.filterSelectionByPlaygroundKinds({ objectIds, vortexIds: [], attractionIds: [] });
+    const resolved = this.filterSelectionByPlaygroundKinds({ objectIds, vortexIds: [], attractionIds: [], referenceIds: [] });
     if (puzzle3dPlaySelectionEqual(this.selection, resolved)) {
       return;
     }
@@ -4022,7 +4114,7 @@ if (import.meta.vitest) {
       const unsubscribe = ctrl.subscribeSnapshot(() => {
         snapshotCount += 1;
       });
-      ctrl.run("setSelection", { selection: { objectIds: ["obj"], vortexIds: [], attractionIds: [] } });
+      ctrl.run("setSelection", { selection: { objectIds: ["obj"], vortexIds: [], attractionIds: [], referenceIds: [] } });
       const snapshotsBeforeKind = snapshotCount;
       ctrl.run("patchPuzzle3dObjects", { objectIds: ["obj"], field: "objectKind", value: "kind-b" });
       expect(snapshotCount).toBeGreaterThan(snapshotsBeforeKind);
@@ -4047,12 +4139,12 @@ if (import.meta.vitest) {
       expect(fixture).not.toBeNull();
       const objectId = fixture!.objects[0]!.id;
       const vortexFullId = puzzle3dVortexFullId(objectId, fixture!.objects[0]!.vortices[0]!.id);
-      trackingCtrl.run("noteSelection", { objectIds: [objectId], vortexIds: [], attractionIds: [] });
+      trackingCtrl.run("noteSelection", { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(snapshotCount).toBe(1);
       expect(shellNotifyCount).toBe(0);
       await flushDeferredShell();
       expect(shellNotifyCount).toBe(0);
-      trackingCtrl.run("noteSelection", { objectIds: [objectId], vortexIds: [], attractionIds: [] });
+      trackingCtrl.run("noteSelection", { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(snapshotCount).toBe(1);
       expect(shellNotifyCount).toBe(0);
       trackingCtrl.run("setSelection", { selection: { objectIds: [], vortexIds: [vortexFullId], attractionIds: [] } });
@@ -4104,7 +4196,7 @@ if (import.meta.vitest) {
       });
       expect(fixture).not.toBeNull();
       ctrl.patchFixture(() => fixture!);
-      ctrl.run("setSelection", { selection: { objectIds: ["tower-a"], vortexIds: [], attractionIds: [] } });
+      ctrl.run("setSelection", { selection: { objectIds: ["tower-a"], vortexIds: [], attractionIds: [], referenceIds: [] } });
       ctrl.run("duplicateSelection");
       const next = ctrl.getFixture()!;
       expect(next.objects.length).toBe(2);
@@ -4130,7 +4222,7 @@ if (import.meta.vitest) {
       });
       expect(fixture).not.toBeNull();
       ctrl.patchFixture(() => fixture!);
-      ctrl.run("setSelection", { selection: { objectIds: ["a1"], vortexIds: [], attractionIds: [] } });
+      ctrl.run("setSelection", { selection: { objectIds: ["a1"], vortexIds: [], attractionIds: [], referenceIds: [] } });
       ctrl.run("selectSameKind");
       expect(ctrl.getSnapshot().selection.objectIds.sort()).toEqual(["a1", "a2"]);
     });
@@ -4230,7 +4322,7 @@ if (import.meta.vitest) {
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       const before = getPuzzle3dZoomToSelectionEpoch();
-      ctrl.run("setSelection", { selection: { objectIds: ["tower-a"], vortexIds: [], attractionIds: [] } });
+      ctrl.run("setSelection", { selection: { objectIds: ["tower-a"], vortexIds: [], attractionIds: [], referenceIds: [] } });
       ctrl.run("engagementOption", { optionId: PUZZLE_3D_ENGAGEMENT_ZOOM_ID });
       expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before + 1);
       expect(getPuzzle3dZoomToSelectionTarget().objectIds).toEqual(["tower-a"]);
@@ -4343,7 +4435,7 @@ if (import.meta.vitest) {
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       wb.addApp(buildPuzzle3dPlayAppRuntime(ctrl));
       const objectId = ctrl.getFixture()!.objects[0]!.id;
-      ctrl.run("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [] } });
+      ctrl.run("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [] } });
       const tree = buildPuzzle3dPlayInspectorBody({
         runtime: wb,
         windowKindId: PUZZLE_3D_PLAY_WINDOW_ID,
@@ -4443,7 +4535,7 @@ if (import.meta.vitest) {
       const target = before!.objects[0]!;
       const countBefore = before!.objects.length;
       ctrl.run("setSelection", {
-        selection: { objectIds: [target.id], vortexIds: [], attractionIds: [] },
+        selection: { objectIds: [target.id], vortexIds: [], attractionIds: [], referenceIds: [] },
       });
       ctrl.run("deleteSelection");
       const snap = ctrl.getSnapshot();
@@ -4487,7 +4579,7 @@ if (import.meta.vitest) {
           },
         ],
       });
-      expect(puzzle3dPlaySelectionLabel(fixture, { objectIds: ["a"], vortexIds: [], attractionIds: [] })).toBe("Alpha");
+      expect(puzzle3dPlaySelectionLabel(fixture, { objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] })).toBe("Alpha");
       expect(puzzle3dPlaySelectionLabel(fixture, { objectIds: [], vortexIds: ["a:v1"], attractionIds: [] })).toBe("Handle A");
     });
 
@@ -4648,7 +4740,7 @@ if (import.meta.vitest) {
       expect(fixture).not.toBeNull();
       const objectId = fixture!.objects[0]!.id;
       const generationBefore = wb.generation;
-      ctrl.run("noteSelection", { objectIds: [objectId], vortexIds: [], attractionIds: [] });
+      ctrl.run("noteSelection", { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(wb.generation).toBe(generationBefore);
       expect(ctrl.getSnapshot().selection.objectIds).toEqual([objectId]);
     });
@@ -4660,7 +4752,7 @@ if (import.meta.vitest) {
       const fixture = ctrl.getFixture();
       expect(fixture).not.toBeNull();
       const objectId = fixture!.objects[0]!.id;
-      ctrl.run("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [] } });
+      ctrl.run("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [] } });
       const treeA = ctrl.getHierarchyPanelTree(ctrl.getSnapshot().selection);
       ctrl.run("setSelection", { selection: PUZZLE_3D_PLAY_EMPTY_SELECTION });
       const treeB = ctrl.getHierarchyPanelTree(ctrl.getSnapshot().selection);

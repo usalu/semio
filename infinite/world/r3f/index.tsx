@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort, sceneHostPort, type ReactNode } from "@ui/react";
+import { reactHostPort, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode } from "@ui/react";
 import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar } from "@ui/styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
@@ -18,6 +18,7 @@ const {
   Box3,
   BufferGeometry,
   Color,
+  DoubleSide,
   EdgesGeometry,
   GridHelper,
   Group,
@@ -25,10 +26,12 @@ const {
   LineSegments,
   Matrix4,
   Mesh,
+  MeshBasicMaterial,
   MOUSE,
   Object3D,
   OrthographicCamera: ThreeOrthographicCamera,
   PerspectiveCamera: ThreePerspectiveCamera,
+  PlaneGeometry,
   Quaternion,
   Ray,
   Vector3,
@@ -1642,6 +1645,226 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
 export { Canvas, PerspectiveCamera, useFrame, useThree, Vector3 };
 // #endregion 🎬WorldCanvas
 
+// #region 🖼️Reference
+/** @emoji 🖼️ Persisted media source for a world reference plane. */
+export interface WorldReferenceSource {
+  readonly url: string;
+  readonly mediaKind: import("@ui/react").ReferenceMediaKind;
+  readonly page?: number;
+}
+
+/** @emoji 🖼️ Serializable world reference plane on the infinite grid. */
+export interface WorldReferenceProps extends WorldEntityFlags {
+  readonly id: string;
+  readonly source: WorldReferenceSource;
+  readonly origin: Vec3;
+  readonly orientation?: Quat;
+  readonly scale?: number | Vec3;
+  readonly widthWorld?: number;
+  readonly opacity?: number;
+  readonly relocate?: GumballConfig | false;
+  readonly relocateActive?: boolean;
+}
+
+/** @emoji 🖼️ Gumball relocate commit for a world reference plane. */
+export interface WorldReferenceRelocatePayload {
+  readonly referenceId: string;
+  readonly mode: "translate" | "rotate" | "scale";
+  readonly before: GumballPose;
+  readonly after: GumballPose;
+}
+
+export const WORLD_REFERENCE_DEFAULT_WIDTH = 10;
+
+function worldReferenceScaleVec(scale: number | Vec3 | undefined): Vec3 {
+  if (typeof scale === "number") {
+    return [scale, scale, scale];
+  }
+  if (scale) {
+    return [scale[0], scale[1], scale[2]];
+  }
+  return [1, 1, 1];
+}
+
+/** @emoji 🖼️ Applies CAD pose fields onto a reference group node. */
+export function applyWorldReferencePose(group: Group, reference: Pick<WorldReferenceProps, "origin" | "orientation" | "scale">): void {
+  const position = cadVec3ToThree(reference.origin);
+  group.position.set(position[0], position[1], position[2]);
+  const quat = reference.orientation ?? ([0, 0, 0, 1] as Quat);
+  group.quaternion.set(quat[0], quat[1], quat[2], quat[3]);
+  const scale = worldReferenceScaleVec(reference.scale);
+  group.scale.set(scale[0], scale[1], scale[2]);
+}
+
+/** @emoji 🖼️ Writes a gumball pose back onto persisted reference props. */
+export function applyWorldReferenceTransform(reference: WorldReferenceProps, after: GumballPose): WorldReferenceProps {
+  return {
+    ...reference,
+    origin: [after.position[0], after.position[1], after.position[2]],
+    orientation: [after.quaternion[0], after.quaternion[1], after.quaternion[2], after.quaternion[3]],
+    scale: [after.scale[0], after.scale[1], after.scale[2]],
+  };
+}
+
+function worldReferencePlaneSize(reference: WorldReferenceProps, aspect: number): readonly [number, number] {
+  const width = reference.widthWorld ?? WORLD_REFERENCE_DEFAULT_WIDTH;
+  return [width, width / Math.max(aspect, 1e-6)];
+}
+
+const WorldReferenceGumball = reactHostPort.memo(function WorldReferenceGumball(props: {
+  readonly referenceId: string;
+  readonly target: Group;
+  readonly config: GumballConfig;
+  readonly onRelocate?: (payload: WorldReferenceRelocatePayload) => void;
+}) {
+  const beforeRef = reactHostPort.useRef<GumballPose | null>(null);
+  return (
+    <UnifiedGumball
+      target={props.target}
+      config={props.config}
+      onDragStart={(_kind, before) => {
+        beforeRef.current = before;
+      }}
+      onDragEnd={(kind, before, after) => {
+        props.onRelocate?.({
+          referenceId: props.referenceId,
+          mode: gumballHandleKindToTransformMode(kind),
+          before: beforeRef.current ?? before,
+          after,
+        });
+        beforeRef.current = null;
+      }}
+    />
+  );
+});
+
+const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneItem(props: {
+  readonly reference: WorldReferenceProps;
+  readonly selected: boolean;
+  readonly hovered: boolean;
+  readonly revealed: boolean;
+  readonly gumballConfig?: GumballConfig;
+  readonly relocateActive?: boolean;
+  readonly translationSnap?: number;
+  readonly onSelect?: (id: string, modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }) => void;
+  readonly onHover?: (id: string | null) => void;
+  readonly onRelocate?: (payload: WorldReferenceRelocatePayload) => void;
+}) {
+  const groupRef = reactHostPort.useRef<Group>(null);
+  const [media, setMedia] = reactHostPort.useState<{ readonly width: number; readonly height: number; readonly texture: import("three").Texture } | null>(null);
+  const renderMode = worldEntityRenderMode(props.reference, { hovered: props.hovered, selected: props.selected, revealed: props.revealed });
+  const selectable = worldEntitySelectable(props.reference);
+  reactHostPort.useEffect(() => {
+    let cancelled = false;
+    referenceMediaPort
+      .loadReferenceTexture(props.reference.source)
+      .then((loaded) => {
+        if (cancelled) {
+          loaded.texture.dispose();
+          return;
+        }
+        setMedia((prev) => {
+          prev?.texture.dispose();
+          return loaded;
+        });
+        console.log("[DEBUG] world reference texture loaded", props.reference.id, props.reference.source.url);
+      })
+      .catch((error) => {
+        console.log("[DEBUG] world reference texture failed", props.reference.id, error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [props.reference.id, props.reference.source.url, props.reference.source.mediaKind, props.reference.source.page]);
+  reactHostPort.useLayoutEffect(() => {
+    if (groupRef.current) {
+      applyWorldReferencePose(groupRef.current, props.reference);
+    }
+  }, [props.reference.origin, props.reference.orientation, props.reference.scale]);
+  if (!renderMode.visible || !media) {
+    return null;
+  }
+  const [planeWidth, planeHeight] = worldReferencePlaneSize(props.reference, media.width / media.height);
+  const opacityBase = props.reference.opacity ?? 1;
+  const opacity = renderMode.dim ? opacityBase * WORLD_LOCKED_OPACITY_SCALE : opacityBase;
+  const config = props.reference.relocate === false ? null : { ...(props.reference.relocate ?? {}), translationSnap: props.translationSnap };
+  const showGumball = props.selected && selectable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
+  return (
+    <>
+      <group
+        ref={groupRef}
+        visible={renderMode.visible}
+        userData={{ worldReferenceId: props.reference.id }}
+        onPointerDown={(event) => {
+          if (!selectable) {
+            return;
+          }
+          event.stopPropagation();
+          props.onSelect?.(props.reference.id, { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
+        }}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          if (selectable) {
+            props.onHover?.(props.reference.id);
+          }
+        }}
+        onPointerOut={(event) => {
+          event.stopPropagation();
+          props.onHover?.(null);
+        }}
+      >
+        <mesh renderOrder={-10}>
+          <planeGeometry args={[planeWidth, planeHeight]} />
+          <meshBasicMaterial attach="material" map={media.texture} transparent opacity={opacity} depthWrite={false} side={DoubleSide} toneMapped={false} />
+        </mesh>
+      </group>
+      {showGumball && groupRef.current ? (
+        <WorldReferenceGumball referenceId={props.reference.id} target={groupRef.current} config={config} onRelocate={props.onRelocate} />
+      ) : null}
+    </>
+  );
+});
+
+/** @emoji 🖼️ Renders persisted world reference planes for CAD and puzzle 3d hosts. */
+export function WorldReferenceLayer(props: {
+  readonly references: readonly WorldReferenceProps[];
+  readonly selectedIds?: ReadonlySet<string>;
+  readonly hoveredId?: string | null;
+  readonly revealedIds?: ReadonlySet<string>;
+  readonly gumballConfig?: GumballConfig;
+  readonly relocateActive?: boolean;
+  readonly translationSnap?: number;
+  readonly onSelect?: (id: string, modifiers: { readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly metaKey: boolean }) => void;
+  readonly onHover?: (id: string | null) => void;
+  readonly onRelocate?: (payload: WorldReferenceRelocatePayload) => void;
+}): ReactElement | null {
+  if (!props.references.length) {
+    return null;
+  }
+  const selected = props.selectedIds ?? new Set<string>();
+  const revealed = props.revealedIds ?? new Set<string>();
+  return (
+    <>
+      {props.references.map((reference) => (
+        <WorldReferencePlaneItem
+          key={reference.id}
+          reference={reference}
+          selected={selected.has(reference.id)}
+          hovered={props.hoveredId === reference.id}
+          revealed={revealed.has(reference.id)}
+          gumballConfig={props.gumballConfig}
+          relocateActive={props.relocateActive}
+          translationSnap={props.translationSnap}
+          onSelect={props.onSelect}
+          onHover={props.onHover}
+          onRelocate={props.onRelocate}
+        />
+      ))}
+    </>
+  );
+}
+// #endregion 🖼️Reference
+
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -1767,6 +1990,23 @@ if (import.meta.vitest) {
       expect(mesh.children[0]?.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY]).toBe(true);
       applyWorldMeshEdgeBorders(root, "#336699");
       expect(mesh.children).toHaveLength(1);
+    });
+  });
+
+  describe("applyWorldReferenceTransform", () => {
+    it("writes gumball pose onto reference props", () => {
+      const base: WorldReferenceProps = {
+        id: "ref-a",
+        source: { url: "/infinite-fixture/sketch.png", mediaKind: "image" },
+        origin: [0, 0, 0],
+      };
+      const next = applyWorldReferenceTransform(base, {
+        position: [1, 2, 3],
+        quaternion: [0, 0, 0, 1],
+        scale: [2, 2, 2],
+      });
+      expect(next.origin).toEqual([1, 2, 3]);
+      expect(next.scale).toEqual([2, 2, 2]);
     });
   });
 

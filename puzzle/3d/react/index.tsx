@@ -14,6 +14,7 @@ import {
   type GumballHandleKind,
   type ThreeEvent,
   type TreeDragAndDropController,
+  referenceMediaKindFromUrl,
   SelectionMarquee,
   ContextMenuController,
   cn,
@@ -66,6 +67,11 @@ import {
   WorldLayerStack,
   WorldLodBridge,
   WorldOrbitCameraViewRig,
+  WorldReferenceLayer,
+  applyWorldReferenceTransform,
+  type WorldReferenceProps,
+  type WorldReferenceRelocatePayload,
+  type WorldReferenceSource,
   WORLD_LOD_EPSILON,
   WORLD_LOD_GRID_MAX_LOD,
   WORLD_LOD_GRID_MEDIUM_MAX_LOD,
@@ -440,11 +446,12 @@ export interface SelectionSnapshot {
   readonly objectIds: readonly string[];
   readonly vortexIds: readonly string[];
   readonly attractionIds: readonly string[];
+  readonly referenceIds: readonly string[];
 }
 
 /** @emoji 🎯 Compares selection snapshots (objects, vortices, attractions). */
 export function selectionSnapshotsEqual(a: SelectionSnapshot, b: SelectionSnapshot): boolean {
-  if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length || a.attractionIds.length !== b.attractionIds.length) {
+  if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length || a.attractionIds.length !== b.attractionIds.length || a.referenceIds.length !== b.referenceIds.length) {
     return false;
   }
   for (let i = 0; i < a.objectIds.length; i += 1) {
@@ -462,25 +469,36 @@ export function selectionSnapshotsEqual(a: SelectionSnapshot, b: SelectionSnapsh
       return false;
     }
   }
+  for (let i = 0; i < a.referenceIds.length; i += 1) {
+    if (a.referenceIds[i] !== b.referenceIds[i]) {
+      return false;
+    }
+  }
   return true;
 }
 
-const EMPTY_SELECTION_SNAPSHOT: SelectionSnapshot = { objectIds: [], vortexIds: [], attractionIds: [] };
+const EMPTY_SELECTION_SNAPSHOT: SelectionSnapshot = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [] };
 
 /** @emoji 🖱️ Pointer movement before a vortex press becomes an attraction drag (px). */
 export const PUZZLE_3D_VORTEX_DRAG_THRESHOLD_PX = 6;
 
-export type SelectionPick = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
+export type SelectionPick =
+  | { readonly kind: "object"; readonly id: string }
+  | { readonly kind: "vortex"; readonly fullId: string }
+  | { readonly kind: "attraction"; readonly id: string }
+  | { readonly kind: "reference"; readonly id: string };
 
 /** @emoji 🎯 Single-kind selection slice for one pick target. */
 export function puzzle3dSelectionFromPick(pick: SelectionPick): SelectionSnapshot {
   switch (pick.kind) {
     case "object":
-      return { objectIds: [pick.id], vortexIds: [], attractionIds: [] };
+      return { objectIds: [pick.id], vortexIds: [], attractionIds: [], referenceIds: [] };
     case "vortex":
-      return { objectIds: [], vortexIds: [pick.fullId], attractionIds: [] };
+      return { objectIds: [], vortexIds: [pick.fullId], attractionIds: [], referenceIds: [] };
     case "attraction":
-      return { objectIds: [], vortexIds: [], attractionIds: [pick.id] };
+      return { objectIds: [], vortexIds: [], attractionIds: [pick.id], referenceIds: [] };
+    case "reference":
+      return { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [pick.id] };
   }
 }
 
@@ -544,12 +562,14 @@ export function mergeSelectionSnapshot(mode: SelectionMode, current: SelectionSn
       objectIds: [...incoming.objectIds],
       vortexIds: [...incoming.vortexIds],
       attractionIds: [...incoming.attractionIds],
+      referenceIds: [...incoming.referenceIds],
     };
   }
   return {
     objectIds: mergeIdList(mode, current.objectIds, incoming.objectIds),
     vortexIds: mergeIdList(mode, current.vortexIds, incoming.vortexIds),
     attractionIds: mergeIdList(mode, current.attractionIds, incoming.attractionIds),
+    referenceIds: mergeIdList(mode, current.referenceIds, incoming.referenceIds),
   };
 }
 
@@ -858,7 +878,11 @@ export function useSelectionMeshOutlinesEnabled(): boolean {
 }
 
 /** @emoji 🖱️ Exclusive scene hover target (at most one active). */
-export type HoverTarget = { readonly kind: "object"; readonly id: string } | { readonly kind: "vortex"; readonly fullId: string } | { readonly kind: "attraction"; readonly id: string };
+export type HoverTarget =
+  | { readonly kind: "object"; readonly id: string }
+  | { readonly kind: "vortex"; readonly fullId: string }
+  | { readonly kind: "attraction"; readonly id: string }
+  | { readonly kind: "reference"; readonly id: string };
 
 /** @emoji 🧩 Catalog-kind hover domain for transitive same-kind highlight. */
 export type Puzzle3dKindHoverDomain = "object" | "vortex" | "attraction";
@@ -929,6 +953,8 @@ export function puzzle3dHoverTargetsEqual(a: HoverTarget | null, b: HoverTarget 
       return b.kind === "vortex" && a.fullId === b.fullId;
     case "attraction":
       return b.kind === "attraction" && a.id === b.id;
+    case "reference":
+      return b.kind === "reference" && a.id === b.id;
     default:
       return false;
   }
@@ -1036,6 +1062,8 @@ export interface CanvasProps {
   /** @emoji 🎯 When set, canvas selection is controlled by the host (e.g. puzzle 3D play inspector). */
   selection?: SelectionSnapshot;
   onRelocate?: (p: RelocatePayload) => void;
+  /** @emoji 🖼️ Commits a reference-plane gumball drag to the host fixture. */
+  onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
   onConnect?: (p: AttractionPayload) => void;
   onIndirectConnect?: (p: AttractionPayload) => void;
   onProximityConnect?: (p: AttractionPayload) => void;
@@ -1233,6 +1261,7 @@ export interface FixtureV1 {
   meta?: Record<string, unknown>;
   attractions: AttractionProps[];
   objects: FixtureObjectV1[];
+  references: WorldReferenceProps[];
 }
 
 /** @emoji 📷 True when two camera states match within epsilon (avoids redundant fixture writes). */
@@ -1419,6 +1448,87 @@ function parseWorldEntityFlags(row: Record<string, unknown>): WorldEntityFlags {
   };
 }
 
+function parseWorldReferenceSource(row: Record<string, unknown>): WorldReferenceSource | null {
+  const nested = row.source;
+  if (nested && typeof nested === "object") {
+    const sourceRow = nested as Record<string, unknown>;
+    const url = typeof sourceRow.url === "string" ? sourceRow.url : null;
+    if (!url) {
+      return null;
+    }
+    const mediaKind = typeof sourceRow.mediaKind === "string" ? sourceRow.mediaKind : referenceMediaKindFromUrl(url);
+    if (mediaKind !== "image" && mediaKind !== "svg" && mediaKind !== "pdf") {
+      return null;
+    }
+    return {
+      url,
+      mediaKind,
+      ...(typeof sourceRow.page === "number" ? { page: sourceRow.page } : {}),
+    };
+  }
+  const url = typeof row.url === "string" ? row.url : null;
+  if (!url) {
+    return null;
+  }
+  const mediaKind = typeof row.mediaKind === "string" ? row.mediaKind : referenceMediaKindFromUrl(url);
+  if (mediaKind !== "image" && mediaKind !== "svg" && mediaKind !== "pdf") {
+    return null;
+  }
+  return {
+    url,
+    mediaKind,
+    ...(typeof row.page === "number" ? { page: row.page } : {}),
+  };
+}
+
+function parseWorldReference(row: Record<string, unknown>): WorldReferenceProps | null {
+  const id = typeof row.id === "string" ? row.id : null;
+  const origin = row.origin;
+  const source = parseWorldReferenceSource(row);
+  if (!id || !isVec3(origin) || !source) {
+    return null;
+  }
+  return {
+    id,
+    source,
+    origin,
+    ...(isQuat(row.orientation) ? { orientation: row.orientation } : {}),
+    ...(typeof row.scale === "number" || isVec3(row.scale) ? { scale: row.scale as number | Vec3 } : {}),
+    ...(typeof row.widthWorld === "number" ? { widthWorld: row.widthWorld } : {}),
+    ...(typeof row.opacity === "number" ? { opacity: row.opacity } : {}),
+    ...parseWorldEntityFlags(row),
+  };
+}
+
+/** @emoji 🖼️ Adds a reference plane to a puzzle 3D fixture. */
+export function addReferenceToFixture(fixture: FixtureV1, reference: WorldReferenceProps): FixtureV1 {
+  return { ...fixture, references: [...(fixture.references ?? []), reference] };
+}
+
+/** @emoji 🖼️ Patches one reference row in a puzzle 3D fixture. */
+export function updatePuzzle3dReferenceInFixture(fixture: FixtureV1, referenceId: string, patch: Partial<Omit<WorldReferenceProps, "id">>): FixtureV1 {
+  const references = fixture.references ?? [];
+  const index = references.findIndex((row) => row.id === referenceId);
+  if (index < 0) {
+    return fixture;
+  }
+  const next = [...references];
+  next[index] = { ...references[index]!, ...patch };
+  return { ...fixture, references: next };
+}
+
+/** @emoji 🖼️ Applies a world reference gumball commit to a puzzle 3D fixture. */
+export function applyReferenceRelocateToFixture(fixture: FixtureV1, payload: WorldReferenceRelocatePayload): FixtureV1 {
+  const references = fixture.references ?? [];
+  const index = references.findIndex((row) => row.id === payload.referenceId);
+  if (index < 0) {
+    return fixture;
+  }
+  const next = [...references];
+  next[index] = applyWorldReferenceTransform(references[index]!, payload.after);
+  return { ...fixture, references: next };
+}
+
 export function parseFixtureV1(raw: unknown): FixtureV1 | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -1496,6 +1606,15 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
     ...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
     attractions,
     objects,
+    references: Array.isArray(r.references)
+      ? r.references.flatMap((entry) => {
+          if (!entry || typeof entry !== "object") {
+            return [];
+          }
+          const parsed = parseWorldReference(entry as Record<string, unknown>);
+          return parsed ? [parsed] : [];
+        })
+      : [],
   };
 }
 
@@ -2885,7 +3004,64 @@ export interface ObjectsProps {
   readonly relocate?: GumballConfig | false;
 }
 
-/** @emoji ­ƒºè Renders all scene objects from central state (id-keyed; survives ownership changes). */
+export interface PuzzleReferencesProps {
+  readonly references: readonly WorldReferenceProps[];
+  readonly relocate?: GumballConfig | false;
+}
+
+/** @emoji 🖼️ Puzzle 3D reference planes wired to registry selection and relocate callbacks. */
+export const PuzzleReferences = reactHostPort.memo(function PuzzleReferences(props: PuzzleReferencesProps) {
+  const { commitSelection } = useRegistryInteraction();
+  const { setHover, clearHover, hoverTarget, gumballConfig } = useRegistryCore();
+  const selectionStore = useSelectionSnapshotStore();
+  const selection = reactHostPort.useSyncExternalStore(selectionStore.subscribe, selectionStore.getSnapshot, selectionStore.getSnapshot);
+  const lodCtx = useLod();
+  const onReferenceRelocateRef = reactHostPort.useRef<(payload: WorldReferenceRelocatePayload) => void>(() => {});
+  reactHostPort.useEffect(() => {
+    onReferenceRelocateRef.current = puzzle3dReferenceRelocateBridgeRef.current.onRelocate ?? (() => {});
+  });
+  const selectedIds = reactHostPort.useMemo(() => new Set(selection.referenceIds), [selection.referenceIds]);
+  const hoveredId = hoverTarget?.kind === "reference" ? hoverTarget.id : null;
+  const translationSnap = lodCtx.gridSnapEnabled ? lodCtx.gridStepWorld : undefined;
+  const config = props.relocate === false ? false : (props.relocate ?? gumballConfig);
+  return (
+    <WorldReferenceLayer
+      references={props.references}
+      selectedIds={selectedIds}
+      hoveredId={hoveredId}
+      gumballConfig={config === false ? undefined : config}
+      relocateActive={config !== false}
+      translationSnap={translationSnap}
+      onSelect={(id, modifiers) => {
+        const mode = marqueeModeFromModifiers(modifiers);
+        const snap = mergeSelection(mode, selectionStore.getSnapshot(), { kind: "reference", id });
+        selectionStore.setSnapshot(snap);
+        puzzle3dReferenceRelocateBridgeRef.current.onSelect?.(snap);
+      }}
+      onHover={(id) => {
+        if (id) {
+          setHover({ kind: "reference", id });
+          return;
+        }
+        if (hoverTarget?.kind === "reference") {
+          clearHover(hoverTarget);
+        }
+      }}
+      onRelocate={(payload) => {
+        onReferenceRelocateRef.current(payload);
+      }}
+    />
+  );
+});
+
+const puzzle3dReferenceRelocateBridgeRef: {
+  current: {
+    readonly onSelect?: (snap: SelectionSnapshot) => void;
+    readonly onRelocate?: (payload: WorldReferenceRelocatePayload) => void;
+  };
+} = { current: {} };
+
+/** @emoji 🖼️ Renders all scene objects from central state (id-keyed; survives ownership changes). */
 export const Objects = reactHostPort.memo(function Objects(props: ObjectsProps) {
   const { store } = useObjectState();
   const ids = reactHostPort.useSyncExternalStore(
@@ -7331,6 +7507,8 @@ export function hoverTargetToSelectionPick(target: HoverTarget): SelectionPick {
       return { kind: "vortex", fullId: target.fullId };
     case "attraction":
       return { kind: "attraction", id: target.id };
+    case "reference":
+      return { kind: "reference", id: target.id };
   }
 }
 
@@ -9409,7 +9587,7 @@ function RegistryProvider({
       const mode = selectionModeRef.current;
       const snap: SelectionSnapshot =
         mode === "default"
-          ? { objectIds: resolvedObjectIds, vortexIds: [], attractionIds: [] }
+          ? { objectIds: resolvedObjectIds, vortexIds: [], attractionIds: [], referenceIds: [] }
           : {
               objectIds: mergeIdList(mode, current.objectIds, resolvedObjectIds),
               vortexIds: current.vortexIds,
@@ -10541,6 +10719,7 @@ export interface PlayCanvasProps {
   readonly gridSnapEnabled?: boolean;
   readonly setSelectedId: (id: string | null) => void;
   readonly onSelect?: (snap: SelectionSnapshot) => void;
+  readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
   readonly onIndirectConnect?: () => void;
   readonly onProximityConnect?: () => void;
   readonly onLodChange?: (lod: number) => void;
@@ -10595,13 +10774,14 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
   const sceneChildren = reactHostPort.useMemo(
     () => (
       <>
+        <PuzzleReferences references={props.fixture.references ?? []} relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
         <Objects relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
         <AttractionTreeRoots />
         <MarqueeAttractionSource />
         <PlayTestBridge setSelectedId={(id) => setSelectedIdRef.current(id)} />
       </>
     ),
-    [props.gumballConfig],
+    [props.fixture.references, props.gumballConfig],
   );
   const handleRelocate = useObjectRelocate();
   const handleConnect = useObjectConnect();
@@ -10631,6 +10811,15 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
     },
     [props.onAttractionTargetRing],
   );
+  reactHostPort.useEffect(() => {
+    puzzle3dReferenceRelocateBridgeRef.current = {
+      onSelect: props.onSelect,
+      onRelocate: props.onReferenceRelocate,
+    };
+    return () => {
+      puzzle3dReferenceRelocateBridgeRef.current = {};
+    };
+  }, [props.onReferenceRelocate, props.onSelect]);
   return (
     <Canvas3D
       className="absolute inset-0"
@@ -10654,6 +10843,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       onCamera={props.onCamera}
       onLodChange={props.onLodChange}
       onSelect={props.onSelect}
+      onReferenceRelocate={props.onReferenceRelocate}
       onConnect={handleConnect}
       onRelocate={handleRelocate}
       onIndirectConnect={onIndirectConnect}
@@ -10996,7 +11186,7 @@ if (import.meta.vitest) {
   });
   describe("objectMatchesSelection", () => {
     it("matches only directly selected object ids", () => {
-      expect(objectMatchesSelection("a", { objectIds: ["a"], vortexIds: [], attractionIds: [] })).toBe(true);
+      expect(objectMatchesSelection("a", { objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] })).toBe(true);
       expect(objectMatchesSelection("b", { objectIds: [], vortexIds: ["b:link"], attractionIds: [] })).toBe(false);
       expect(objectMatchesSelection("c", { objectIds: ["a"], vortexIds: ["b:link"], attractionIds: [] })).toBe(false);
     });
@@ -11008,10 +11198,10 @@ if (import.meta.vitest) {
       const unsubscribe = store.subscribe(() => {
         count += 1;
       });
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(count).toBe(1);
       expect(store.getSnapshot().objectIds).toEqual(["a"]);
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(count).toBe(1);
       unsubscribe();
     });
@@ -11025,10 +11215,10 @@ if (import.meta.vitest) {
       const unsubB = store.subscribeObject("b", () => {
         bCount += 1;
       });
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(aCount).toBe(1);
       expect(bCount).toBe(0);
-      store.setSnapshot({ objectIds: ["a", "b"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a", "b"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(aCount).toBe(1);
       expect(bCount).toBe(1);
       store.setSnapshot({ objectIds: ["a", "b"], vortexIds: ["c:v1"], attractionIds: [] });
@@ -11050,7 +11240,7 @@ if (import.meta.vitest) {
     it("reveals vortices when parent object or child vortex is selected", () => {
       const store = createSelectionSnapshotStore();
       expect(store.isObjectVortexRevealSelected("tower")).toBe(false);
-      store.setSnapshot({ objectIds: ["tower"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["tower"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(store.isObjectVortexRevealSelected("tower")).toBe(true);
       store.setSnapshot({ objectIds: [], vortexIds: ["tower:link"], attractionIds: [] });
       expect(store.isObjectVortexRevealSelected("tower")).toBe(true);
@@ -11058,7 +11248,7 @@ if (import.meta.vitest) {
       const unsub = store.subscribeObjectVortexReveal("tower", () => {
         revealCount += 1;
       });
-      store.setSnapshot({ objectIds: ["tower"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["tower"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(revealCount).toBe(1);
       unsub();
     });
@@ -11068,7 +11258,7 @@ if (import.meta.vitest) {
       const unsub = store.subscribeAttractions(() => {
         bulkCount += 1;
       });
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(bulkCount).toBe(0);
       store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: ["t1"] });
       expect(bulkCount).toBe(1);
@@ -11080,15 +11270,15 @@ if (import.meta.vitest) {
     it("disables mesh outlines when selection exceeds budget", () => {
       const store = createSelectionSnapshotStore();
       const ids = Array.from({ length: PUZZLE3D_MESH_OUTLINE_MAX_SELECTION + 1 }, (_, index) => `o${index}`);
-      store.setSnapshot({ objectIds: ids, vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ids, vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(store.getMeshOutlineEnabled()).toBe(false);
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(store.getMeshOutlineEnabled()).toBe(true);
     });
     it("increments revision on each selection change", () => {
       const store = createSelectionSnapshotStore();
       expect(store.getRevision()).toBe(1);
-      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      store.setSnapshot({ objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(store.getRevision()).toBe(2);
     });
   });
@@ -11720,8 +11910,8 @@ if (import.meta.vitest) {
   });
   describe("mergeSelectionSnapshot", () => {
     it("replaces on default and inverts membership on invertive", () => {
-      const current = { objectIds: ["a"], vortexIds: [], attractionIds: [] };
-      const incoming = { objectIds: ["b"], vortexIds: [], attractionIds: [] };
+      const current = { objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] };
+      const incoming = { objectIds: ["b"], vortexIds: [], attractionIds: [], referenceIds: [] };
       expect(mergeSelectionSnapshot("default", current, incoming).objectIds).toEqual(["b"]);
       expect(mergeSelectionSnapshot("invertive", current, incoming).objectIds.sort()).toEqual(["a", "b"]);
     });
@@ -11774,7 +11964,7 @@ if (import.meta.vitest) {
       modifiers: { shiftKey: false, ctrlKey: false, metaKey: false },
     };
     it("replaces selection on default mode from a fixed base", () => {
-      const base = { objectIds: ["keep"], vortexIds: [], attractionIds: [] };
+      const base = { objectIds: ["keep"], vortexIds: [], attractionIds: [], referenceIds: [] };
       const snap = resolveMarqueeSelectionGesture(gesture, {
         method: "rectangle",
         kinds: { object: true, vortex: true, attraction: true },
@@ -11784,7 +11974,7 @@ if (import.meta.vitest) {
       expect(snap.objectIds).toEqual(["inside"]);
     });
     it("additive mode merges against the captured base not the live preview", () => {
-      const base = { objectIds: ["keep"], vortexIds: [], attractionIds: [] };
+      const base = { objectIds: ["keep"], vortexIds: [], attractionIds: [], referenceIds: [] };
       const snap = resolveMarqueeSelectionGesture(
         { ...gesture, modifiers: { shiftKey: true, ctrlKey: false, metaKey: false } },
         {
@@ -11809,7 +11999,7 @@ if (import.meta.vitest) {
         method: "rectangle",
         kinds: { object: true, vortex: true, attraction: true },
         candidates,
-        base: { objectIds: [], vortexIds: [], attractionIds: [] },
+        base: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [] },
       });
       expect(fromGesture.objectIds).toEqual(fromCandidates.objectIds);
     });
@@ -12945,9 +13135,9 @@ if (import.meta.vitest) {
     });
     it("requestPuzzle3dZoomToSelection bumps epoch only for non-empty selection", () => {
       const before = getPuzzle3dZoomToSelectionEpoch();
-      requestPuzzle3dZoomToSelection({ objectIds: [], vortexIds: [], attractionIds: [] });
+      requestPuzzle3dZoomToSelection({ objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before);
-      requestPuzzle3dZoomToSelection({ objectIds: ["a"], vortexIds: [], attractionIds: [] });
+      requestPuzzle3dZoomToSelection({ objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] });
       expect(getPuzzle3dZoomToSelectionEpoch()).toBe(before + 1);
       expect(getPuzzle3dZoomToSelectionTarget().objectIds).toEqual(["a"]);
     });
@@ -12960,7 +13150,7 @@ if (import.meta.vitest) {
         selectSameKind: vi.fn(),
       };
       const items = buildPuzzle3dSelectionMenuItems(
-        { objectIds: ["a"], vortexIds: [], attractionIds: [] },
+        { objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] },
         [{ hidden: false, locked: false }],
         { kind: "object", id: "a" },
         actions,
@@ -12971,7 +13161,7 @@ if (import.meta.vitest) {
     });
     it("buildPuzzle3dSelectionMenuItems labels Show when all selected entities are hidden", () => {
       const items = buildPuzzle3dSelectionMenuItems(
-        { objectIds: ["a"], vortexIds: [], attractionIds: [] },
+        { objectIds: ["a"], vortexIds: [], attractionIds: [], referenceIds: [] },
         [{ hidden: true, locked: true }],
         { kind: "object", id: "a" },
         {
