@@ -275,6 +275,7 @@ export interface WindowTemplate {
 	readonly controllerId?: string;
 	readonly command?: string;
 	readonly args?: unknown;
+	readonly children?: readonly WindowTemplate[];
 }
 //#endregion 🔖WindowTemplate
 
@@ -286,6 +287,7 @@ export interface NamedLayout {
 	readonly iconId?: string;
 	readonly layout: WindowLayout;
 	readonly origin: "builtin" | "user";
+	readonly groupPath?: readonly string[];
 }
 
 /** @emoji 🧭 Factory for a catalog or saved {@link NamedLayout}. */
@@ -295,8 +297,16 @@ export function createNamedLayout(
 	layout: WindowLayout,
 	origin: NamedLayout["origin"] = "builtin",
 	iconId?: string,
+	groupPath?: readonly string[],
 ): NamedLayout {
-	return { id, label, layout, origin, ...(iconId ? { iconId } : {}) };
+	return {
+		id,
+		label,
+		layout,
+		origin,
+		...(iconId ? { iconId } : {}),
+		...(groupPath?.length ? { groupPath } : {}),
+	};
 }
 
 /** @emoji 🔀 Merges named layouts by `id`; extension entries override base. */

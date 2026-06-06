@@ -803,7 +803,7 @@ pub mod vector_tiles {
         } else if span_deg > super::GIS_MAP_LOD_MAX_SPAN_DEG[2] {
             7
         } else if span_deg > super::GIS_MAP_LOD_MAX_SPAN_DEG[3] {
-            10
+            6
         } else {
             MAP_VECTOR_TILE_MAX_Z
         };
@@ -893,9 +893,21 @@ pub mod vector_tiles {
         property_str(properties, key).is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
     }
 
-    pub fn transportation_visible(class: &str, span_deg: f64, tile_z: u32) -> bool {
-        if !vector_detail_profile(span_deg, tile_z, None).draw_transportation {
+    pub fn transportation_visible(
+        class: &str,
+        span_deg: f64,
+        tile_z: u32,
+        forced_lod_id: Option<&str>,
+    ) -> bool {
+        if !vector_detail_profile(span_deg, tile_z, forced_lod_id).draw_transportation {
             return false;
+        }
+        let lod_idx = super::resolve_detail_lod_index(span_deg, forced_lod_id);
+        if lod_idx == 3 {
+            return match class {
+                "motorway" | "trunk" | "primary" => span_deg < 12.0,
+                _ => false,
+            };
         }
         match class {
             "motorway" | "trunk" => span_deg < 22.0,
@@ -905,6 +917,15 @@ pub mod vector_tiles {
             "residential" | "service" | "living_street" | "unclassified" | "pedestrian" => span_deg < 1.2,
             "path" | "track" | "footway" | "cycleway" | "steps" => span_deg < 0.45,
             _ => span_deg < 4.0,
+        }
+    }
+
+    /// @emoji 📏 Per-LOD road stroke multiplier (city 30% of prior default).
+    pub fn transportation_stroke_lod_scale(span_deg: f64, forced_lod_id: Option<&str>) -> f64 {
+        match super::resolve_detail_lod_index(span_deg, forced_lod_id) {
+            3 => 0.4,
+            4 => 0.3,
+            _ => 1.0,
         }
     }
 
@@ -1966,6 +1987,7 @@ impl MapHost {
         );
         let zoom_px = (280.0 / span.max(0.25)).clamp(9.0, 26.0) * weights.labels;
         let line_scale = vector_tiles::vector_line_scale(span);
+        let road_lod_scale = vector_tiles::transportation_stroke_lod_scale(span, forced_lod);
 
         let vis = self.layer_visibility;
         for (tz, tx, ty, tile) in draw {
@@ -2064,8 +2086,12 @@ impl MapHost {
                         }
                         "transportation" if draw_roads => {
                             let class = vector_tiles::property_class(&feat.properties);
-                            if vector_tiles::transportation_visible(class, span, *tz) && !feat.lines.is_empty() {
-                                let w = vector_tiles::transportation_stroke_width(class, line_scale) * weights.roads;
+                            if vector_tiles::transportation_visible(class, span, *tz, forced_lod)
+                                && !feat.lines.is_empty()
+                            {
+                                let w = vector_tiles::transportation_stroke_width(class, line_scale)
+                                    * road_lod_scale
+                                    * weights.roads;
                                 self.append_vector_tile_lines(scene, *tz, *tx, *ty, extent, &feat.lines, road_stroke, w);
                             }
                         }
@@ -2142,7 +2168,7 @@ impl MapHost {
                         }
                         "transportation_name" if draw_roads && draw_labels => {
                             let class = vector_tiles::property_class(&feat.properties);
-                            if !vector_tiles::transportation_visible(class, span, *tz) {
+                            if !vector_tiles::transportation_visible(class, span, *tz, forced_lod) {
                                 continue;
                             }
                             let Some(label) = vector_tiles::feature_label(&feat.properties) else {
@@ -2906,23 +2932,26 @@ mod tests {
             city_scale <= 1.38,
             "city band line_scale should not exceed cap (got {city_scale})"
         );
-        let secondary_region =
-            super::vector_tiles::transportation_stroke_width("secondary", region_scale);
-        let tertiary_city = super::vector_tiles::transportation_stroke_width("tertiary", city_scale);
+        let region_lod = super::vector_tiles::transportation_stroke_lod_scale(8.0, None);
+        let city_lod = super::vector_tiles::transportation_stroke_lod_scale(2.5, None);
+        assert!((region_lod - 0.4).abs() < f64::EPSILON);
+        assert!((city_lod - 0.3).abs() < f64::EPSILON);
+        let primary_region = super::vector_tiles::transportation_stroke_width("primary", region_scale) * region_lod;
+        let tertiary_city = super::vector_tiles::transportation_stroke_width("tertiary", city_scale) * city_lod;
         let residential_city =
-            super::vector_tiles::transportation_stroke_width("residential", city_scale);
+            super::vector_tiles::transportation_stroke_width("residential", city_scale) * city_lod;
         let minor_district = super::vector_tiles::transportation_stroke_width("minor", district_scale);
         assert!(
-            secondary_region < 2.05,
-            "secondary roads at region zoom should stay under 2.05px (got {secondary_region})"
+            primary_region < 1.05,
+            "primary roads at region zoom should stay under 1.05px (got {primary_region})"
         );
         assert!(
-            tertiary_city < 1.75,
-            "tertiary roads at city zoom should stay under 1.75px (got {tertiary_city})"
+            tertiary_city < 0.55,
+            "tertiary roads at city zoom should stay under 0.55px (got {tertiary_city})"
         );
         assert!(
-            residential_city < 1.15,
-            "residential roads at city zoom should stay under 1.15px (got {residential_city})"
+            residential_city < 0.4,
+            "residential roads at city zoom should stay under 0.4px (got {residential_city})"
         );
         assert!(
             minor_district < 1.35,
@@ -2932,7 +2961,7 @@ mod tests {
 
     #[test]
     fn continental_span_hides_roads_and_caps_tile_z() {
-        assert!(!super::vector_tiles::transportation_visible("motorway", 42.0, 4));
+        assert!(!super::vector_tiles::transportation_visible("motorway", 42.0, 4, None));
         assert!(super::vector_tiles::vector_detail_profile(42.0, 4, None).draw_landcover);
         assert_eq!(super::vector_tiles::max_tile_z_for_span(42.0), 5);
         let profile = super::vector_tiles::vector_detail_profile(42.0, 2, None);
@@ -2975,6 +3004,10 @@ mod tests {
         assert!(super::vector_tiles::boundary_visible(2, span, 10, None));
         assert!(super::vector_tiles::boundary_visible(4, span, 10, None));
         assert!(super::vector_tiles::boundary_visible(6, span, 10, None));
+        assert_eq!(super::vector_tiles::max_tile_z_for_span(span), 6);
+        assert!(super::vector_tiles::transportation_visible("primary", span, 6, None));
+        assert!(!super::vector_tiles::transportation_visible("secondary", span, 6, None));
+        assert!(!super::vector_tiles::transportation_visible("tertiary", span, 6, None));
     }
 
     #[test]

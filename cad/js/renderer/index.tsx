@@ -27,7 +27,9 @@ import {
   WorldLayer,
   WorldLodBridge,
   WorldLodGridHelper,
+  WorldOrbitCameraViewApplier,
   WorldOrbitGated,
+  type OrbitCameraViewId,
   type WorldCanvasProps,
 } from "@infinite/world/r3f";
 
@@ -2995,6 +2997,8 @@ export interface InteractionSpatialViewProps {
   readonly transformGumballConfig?: CadGumballConfig | null;
   readonly transformGumballTargets?: readonly SelectionTarget[];
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
+  readonly cameraView?: OrbitCameraViewId;
+  readonly cameraViewSeedKey?: string | number;
 }
 
 /** @emoji 📡 Host event callbacks accepted by {@link InteractionSpatialView}. */
@@ -3048,6 +3052,8 @@ export function InteractionSpatialView({
   transformGumballConfig = null,
   transformGumballTargets = [],
   onTransformGumballCommit,
+  cameraView,
+  cameraViewSeedKey,
 }: InteractionSpatialViewProps): ReactNode {
   reactHostPort.useEffect(() => {
     bindScenePreviewKernel(previewKernel);
@@ -3121,6 +3127,7 @@ export function InteractionSpatialView({
           </>
         )}
         <WorldOrbitGated onCameraNavigate={onCameraNavigate} />
+        {cameraView !== undefined && cameraViewSeedKey !== undefined ? <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} /> : null}
         <WorldLayer order={0} name="cad.grid">
           <WorldLodGridHelper gridDatum={[0, 0, 0]} />
         </WorldLayer>

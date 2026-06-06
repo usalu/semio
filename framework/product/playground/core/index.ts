@@ -4,6 +4,7 @@
 
 export * from "@framework/core";
 
+import type { OrbitCameraViewLayoutArrangement, OrbitCameraViewLayoutDescriptor, OrbitCameraViewLayoutPane } from "@infinite/world/r3f";
 import {
   BaseAppRuntime,
   BaseModeRuntime,
@@ -13,7 +14,9 @@ import {
   CommandBus,
   Controller,
   createDefaultLayout,
+  createNamedLayout,
   createTabStackLayout,
+  createWindowLayout,
   mergeById,
   mergeNamedLayouts,
   Platform,
@@ -21,9 +24,11 @@ import {
   type AppTools,
   type CommandDescriptor,
   type FooterItem,
+  type NamedLayout,
   type SideTabSpec,
   type ToolItem,
   type WindowLayout,
+  type WindowLayoutWindowNode,
   type WindowMeasure,
 } from "@framework/core";
 
@@ -322,6 +327,57 @@ export class WindowKindRuntime extends BaseWindowKindRuntime {
   }
 }
 //#endregion 🔖WindowKindRuntime
+
+//#region 🔖OrbitViewLayouts
+function orbitViewLayoutPaneToWindow(windowKindId: string, pane: OrbitCameraViewLayoutPane): WindowLayoutWindowNode {
+	return createWindowLayout(windowKindId, pane.title ?? undefined, { templateId: pane.view });
+}
+
+function orbitViewArrangementToLayout(windowKindId: string, arrangement: OrbitCameraViewLayoutArrangement): WindowLayout {
+	switch (arrangement.kind) {
+		case "stack":
+			return {
+				root: {
+					kind: "stack",
+					children: arrangement.panes.map((pane) => orbitViewLayoutPaneToWindow(windowKindId, pane)),
+				},
+			};
+		case "row":
+		case "column":
+			return {
+				root: {
+					kind: arrangement.kind,
+					children: arrangement.panes.map((pane) => ({
+						kind: "stack" as const,
+						...(pane.size !== undefined ? { size: pane.size } : {}),
+						children: [orbitViewLayoutPaneToWindow(windowKindId, pane)],
+					})),
+				},
+			};
+		case "grid":
+			return {
+				root: {
+					kind: "column",
+					children: arrangement.rows.map((row) => ({
+						kind: "row" as const,
+						...(row.size !== undefined ? { size: row.size } : {}),
+						children: row.panes.map((pane) => ({
+							kind: "stack" as const,
+							children: [orbitViewLayoutPaneToWindow(windowKindId, pane)],
+						})),
+					})),
+				},
+			};
+	}
+}
+
+/** @emoji 🧭 Maps orbit-view layout descriptors into playground {@link NamedLayout} entries. */
+export function namedLayoutsFromOrbitViewDescriptors(windowKindId: string, descriptors: readonly OrbitCameraViewLayoutDescriptor[]): NamedLayout[] {
+	return descriptors.map((descriptor) =>
+		createNamedLayout(descriptor.id, descriptor.label, orbitViewArrangementToLayout(windowKindId, descriptor.arrangement), "builtin", undefined, descriptor.groupPath),
+	);
+}
+//#endregion 🔖OrbitViewLayouts
 
 export { ModeRuntime };
 

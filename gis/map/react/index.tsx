@@ -506,7 +506,7 @@ export class MapRenderer {
   private vectorTileMiss = new Set<string>();
   private tileUrlTemplate = DEFAULT_TILE_URL;
   private vectorTileUrlTemplate = DEFAULT_VECTOR_TILE_URL;
-  private renderMode: MapRenderMode = "combined";
+  private renderMode: MapRenderMode = "vector";
   private vectorStyle: MapVectorStyle = "colored";
   private lodMode: MapLodModeKind = GIS_MAP_LOD_MODE_AUTOMATIC;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -834,7 +834,7 @@ export function MapCanvas({
   className,
   tileUrlTemplate,
   vectorTileUrlTemplate,
-  renderMode = "combined",
+  renderMode = "vector",
   vectorStyle = "colored",
   lodMode = GIS_MAP_LOD_MODE_AUTOMATIC,
   layerVisibility = defaultMapLayerVisibility(),

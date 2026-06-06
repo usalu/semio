@@ -496,19 +496,83 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
   };
 }
 
+/** @emoji 🎯 Resolves catalog kind from a hovered graph element id. */
+export function puzzle2dKindHoverFromGraphId(fixture: Puzzle2dFixtureV1, graphId: string): Puzzle2dKindHover | null {
+	return puzzle2dPlayHoverPayloadFromGraphId(fixture, graphId).kind;
+}
+
+function puzzle2dPlayKindsSectionIdForDomain(domain: Puzzle2dKindHoverDomain): string {
+	switch (domain) {
+		case "node":
+			return "puzzle-2d-play-kinds.nodes";
+		case "handle":
+			return "puzzle-2d-play-kinds.handles";
+		case "edge":
+			return "puzzle-2d-play-kinds.edges";
+		case "wire":
+			return "puzzle-2d-play-kinds.wires";
+	}
+}
+
+function puzzle2dPlayKindsCatalogEntries(
+	catalogs: KindCatalogBundle | undefined,
+	domain: Puzzle2dKindHoverDomain,
+): readonly Puzzle2dCatalogKind[] | undefined {
+	switch (domain) {
+		case "node":
+			return catalogs?.nodes;
+		case "handle":
+			return catalogs?.handles;
+		case "edge":
+			return catalogs?.edges;
+		case "wire":
+			return catalogs?.wires;
+	}
+}
+
+/** @emoji 🏷️ Resolves a catalog kind row id in the kinds tab for object↔kind hover sync. */
+export function puzzle2dPlayKindsTreeRowId(catalogs: KindCatalogBundle | undefined, kind: Puzzle2dKindHover): string | null {
+	const entries = puzzle2dPlayKindsCatalogEntries(catalogs, kind.domain);
+	if (!entries?.length) {
+		return null;
+	}
+	const sectionId = puzzle2dPlayKindsSectionIdForDomain(kind.domain);
+	const sorted = [...entries].sort((a, b) => puzzle2dCatalogKindLabel(a).localeCompare(puzzle2dCatalogKindLabel(b)));
+	const index = sorted.findIndex((entry) => entry.id === kind.kindId);
+	if (index < 0) {
+		return null;
+	}
+	return `${sectionId}.${index}.${kind.kindId}`;
+}
+
+/** @emoji 🏷️ Maps hover focus to kinds-tab row ids (kind→object and object→kind, not instance→instance). */
+export function puzzle2dPlayKindsTreeHighlightedIds(
+	catalogs: KindCatalogBundle | undefined,
+	fixture: Puzzle2dFixtureV1,
+	graphHoverId: string | null,
+	kindHover: Puzzle2dKindHover | null,
+): readonly string[] {
+	const kind = kindHover ?? (graphHoverId ? puzzle2dKindHoverFromGraphId(fixture, graphHoverId) : null);
+	if (!kind) {
+		return [];
+	}
+	const rowId = puzzle2dPlayKindsTreeRowId(catalogs, kind);
+	return rowId ? [rowId] : [];
+}
+
 /** @emoji 🌳 Maps committed graph hover ids to workbench hierarchy tree item ids. */
 export function puzzle2dPlayHierarchyTreeHighlightedIds(
 	fixture: Puzzle2dFixtureV1,
 	graphHoverId: string | null,
 	kindHover: Puzzle2dKindHover | null = null,
 ): readonly string[] {
+	if (graphHoverId) {
+		return puzzle2dPlayHierarchyTreeSelectedIds(fixture, [graphHoverId]);
+	}
 	if (kindHover) {
 		return puzzle2dPlayHierarchyTreeHighlightedIdsForKind(fixture, kindHover);
 	}
-	if (!graphHoverId) {
-		return [];
-	}
-	return puzzle2dPlayHierarchyTreeSelectedIds(fixture, [graphHoverId]);
+	return [];
 }
 
 /** @emoji 🌳 Nested workbench tree: Puzzle 2D → nodes (graph) → handles; flat edges group. */
@@ -1765,6 +1829,39 @@ if (import.meta.vitest) {
 			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, "h-root")).toEqual(["puzzle-2d-play-hierarchy.handle.h-root"]);
 			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, "e1")).toEqual(["puzzle-2d-play-hierarchy.edge.e1"]);
 			expect(puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, null)).toEqual([]);
+		});
+
+		it("puzzle2dPlayHierarchyTreeHighlightedIds prefers direct instance hover over kind hover", () => {
+			const fixture = parsePuzzle2dFixtureV1({
+				schema: "puzzle.2d.fixture/v1",
+				camera: { x: 0, y: 0, zoom: 1 },
+				nodes: [
+					{
+						id: "a",
+						root: true,
+						shape: "circle",
+						text: "A",
+						x: 0,
+						y: 0,
+						radius: 10,
+						handles: [{ id: "h-a", angle: 0, handleKind: "port" }],
+					},
+					{
+						id: "b",
+						shape: "circle",
+						text: "B",
+						x: 10,
+						y: 0,
+						radius: 10,
+						handles: [{ id: "h-b", angle: 0, handleKind: "port" }],
+					},
+				],
+				edges: [],
+			});
+			expect(fixture).not.toBeNull();
+			expect(
+				puzzle2dPlayHierarchyTreeHighlightedIds(fixture!, "h-a", { domain: "handle", kindId: "port" }),
+			).toEqual(["puzzle-2d-play-hierarchy.handle.h-a"]);
 		});
 
 		it("puzzle2dPlayHierarchyTreeHighlightedIdsForKind expands transitive handle kind hover", () => {

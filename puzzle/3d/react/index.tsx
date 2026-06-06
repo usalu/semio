@@ -70,6 +70,7 @@ export { useLod };
 export {
   ORBIT_CAMERA_VIEW_COMMAND,
   computeOrbitCameraViewState,
+  createOrbitCameraViewLayoutDescriptors,
   createOrbitCameraViewTemplates,
   orbitCameraDistance,
   type OrbitCameraViewId,
@@ -3161,6 +3162,9 @@ export function brushCandidateRank(candidate: BrushCompatibleCandidate, template
   if (brushStackMatePair(sourceKind, targetKind)) {
     score += 5_000;
   }
+  if (sourceKind === targetKind && !brushStackMatePair(sourceKind, targetKind)) {
+    score -= 4_000;
+  }
   if (targetKind.endsWith(" top") && !brushStackMatePair(sourceKind, targetKind)) {
     score -= 2_000;
   }
@@ -3185,10 +3189,13 @@ export function brushCandidateRank(candidate: BrushCompatibleCandidate, template
   return score;
 }
 
-/** @emoji 🖌️ Whether brush placement should inherit the hovered object's orientation (same kind only; stacks use opposed directions). */
+/** @emoji 🖌️ Whether brush placement should inherit the hovered object's orientation (same kind + vortex only; stacks and cross-port mates rotate). */
 export function brushPlacementUsesHostOrientation(target: AttractionVortexContext, sourceVortexKind: string, candidateObjectKindId: string): boolean {
   const targetVk = target.vortexKind ?? "";
   if (brushStackMatePair(sourceVortexKind, targetVk)) {
+    return false;
+  }
+  if (sourceVortexKind !== targetVk) {
     return false;
   }
   return candidateObjectKindId === target.objectKind;
@@ -3381,12 +3388,20 @@ export function publishPuzzle3dBrushKindWeights(objectWeights: Readonly<Record<s
   puzzle3dBrushKindWeightsRef.current = { objectWeights, vortexWeights };
 }
 
+function brushKindWeightValue(weights: Readonly<Record<string, number>>, id: string): number {
+  const w = weights[id];
+  return w !== undefined ? w : 1;
+}
+
 function brushCandidateSuggestionWeight(candidate: BrushCompatibleCandidate, weights: Puzzle3dBrushKindWeights, kindCatalogs: KindCatalogBundle | undefined): number {
   const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
   const vortexKind = kind?.vortices?.[candidate.sourceVortexIndex]?.vortexKind ?? "";
-  const objectW = weights.objectWeights[candidate.objectKindId];
-  const vortexW = weights.vortexWeights[vortexKind];
-  return (objectW !== undefined && objectW > 0 ? objectW : 1) * (vortexW !== undefined && vortexW > 0 ? vortexW : 1);
+  return brushKindWeightValue(weights.objectWeights, candidate.objectKindId) * brushKindWeightValue(weights.vortexWeights, vortexKind);
+}
+
+/** @emoji 🚫 True when distribution allows brush suggestions on a target vortex. */
+export function brushTargetVortexAllowsSuggestion(vortexKind: string | undefined, weights: Puzzle3dBrushKindWeights): boolean {
+  return brushKindWeightValue(weights.vortexWeights, vortexKind ?? "") > 0;
 }
 
 /** @emoji 🎲 Weighted-random order for brush suggestions (higher weight → earlier in list). */
@@ -3396,26 +3411,26 @@ export function weightedOrderBrushCompatibleCandidates(
   kindCatalogs: KindCatalogBundle | undefined,
   rng: BrushShuffleRng = Math.random,
 ): readonly BrushCompatibleCandidate[] {
-  if (candidates.length < 2) {
-    return [...candidates];
+  const eligible = candidates.filter((c) => brushCandidateSuggestionWeight(c, weights, kindCatalogs) > 0);
+  if (eligible.length < 2) {
+    return eligible;
   }
-  const remaining = [...candidates];
+  const remaining = [...eligible];
   const out: BrushCompatibleCandidate[] = [];
   while (remaining.length > 0) {
-    const wList = remaining.map((c) => Math.max(0, brushCandidateSuggestionWeight(c, weights, kindCatalogs)));
+    const wList = remaining.map((c) => brushCandidateSuggestionWeight(c, weights, kindCatalogs));
     const total = wList.reduce((a, b) => a + b, 0);
-    let pick = 0;
-    if (total > 0) {
-      let r = rng() * total;
-      for (let i = 0; i < remaining.length; i += 1) {
-        r -= wList[i]!;
-        if (r <= 0) {
-          pick = i;
-          break;
-        }
+    if (total <= 0) {
+      break;
+    }
+    let r = rng() * total;
+    let pick = remaining.length - 1;
+    for (let i = 0; i < remaining.length; i += 1) {
+      r -= wList[i]!;
+      if (r <= 0) {
+        pick = i;
+        break;
       }
-    } else {
-      pick = Math.floor(rng() * remaining.length);
     }
     out.push(remaining[pick]!);
     remaining.splice(pick, 1);
@@ -3757,8 +3772,7 @@ export const PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID = "puzzle3d.tool.fill";
 export const PUZZLE_3D_FILL_COUNT_MAX = 1000;
 
 function fillVortexTargetWeight(target: BrushFillVortexTarget, weights: Puzzle3dBrushKindWeights): number {
-  const vortexW = weights.vortexWeights[target.vortexKind ?? ""];
-  return vortexW !== undefined && vortexW > 0 ? vortexW : 1;
+  return brushKindWeightValue(weights.vortexWeights, target.vortexKind ?? "");
 }
 
 function weightedOrderFillVortexTargets(
@@ -3766,26 +3780,26 @@ function weightedOrderFillVortexTargets(
   weights: Puzzle3dBrushKindWeights,
   rng: BrushShuffleRng,
 ): readonly BrushFillVortexTarget[] {
-  if (targets.length < 2) {
-    return [...targets];
+  const eligible = targets.filter((target) => fillVortexTargetWeight(target, weights) > 0);
+  if (eligible.length < 2) {
+    return eligible;
   }
-  const remaining = [...targets];
+  const remaining = [...eligible];
   const out: BrushFillVortexTarget[] = [];
   while (remaining.length > 0) {
-    const wList = remaining.map((target) => Math.max(0, fillVortexTargetWeight(target, weights)));
+    const wList = remaining.map((target) => fillVortexTargetWeight(target, weights));
     const total = wList.reduce((a, b) => a + b, 0);
-    let pick = 0;
-    if (total > 0) {
-      let r = rng() * total;
-      for (let i = 0; i < remaining.length; i += 1) {
-        r -= wList[i]!;
-        if (r <= 0) {
-          pick = i;
-          break;
-        }
+    if (total <= 0) {
+      break;
+    }
+    let r = rng() * total;
+    let pick = remaining.length - 1;
+    for (let i = 0; i < remaining.length; i += 1) {
+      r -= wList[i]!;
+      if (r <= 0) {
+        pick = i;
+        break;
       }
-    } else {
-      pick = Math.floor(rng() * remaining.length);
     }
     out.push(remaining[pick]!);
     remaining.splice(pick, 1);
@@ -3883,6 +3897,44 @@ function brushCompatibleCandidatesForFillTarget(
   return result;
 }
 
+/** @emoji 🪣 Fill prefers cross-port mates (e.g. b-s → b-l) and rotates source indices fairly. */
+function orderBrushFillCompatibleCandidates(
+  candidates: readonly BrushCompatibleCandidate[],
+  targetVortexKind: string | undefined,
+  targetVortexIndex: number,
+  fillStep: number,
+  kindCatalogs: KindCatalogBundle | undefined,
+  weights: Puzzle3dBrushKindWeights,
+  rng: BrushShuffleRng,
+): readonly BrushCompatibleCandidate[] {
+  const target = targetVortexKind ?? "";
+  const cross: BrushCompatibleCandidate[] = [];
+  const same: BrushCompatibleCandidate[] = [];
+  for (const candidate of candidates) {
+    const sourceVk = catalogObjectKindById(kindCatalogs, candidate.objectKindId)?.vortices?.[candidate.sourceVortexIndex]?.vortexKind ?? "";
+    if (sourceVk !== target || brushStackMatePair(sourceVk, target)) {
+      cross.push(candidate);
+    } else {
+      same.push(candidate);
+    }
+  }
+  const sortFillCandidates = (rows: BrushCompatibleCandidate[]): BrushCompatibleCandidate[] =>
+    [...rows].sort(
+      (left, right) =>
+        left.objectKindId.localeCompare(right.objectKindId) ||
+        left.sourceVortexIndex - right.sourceVortexIndex,
+    );
+  const ordered = [
+    ...weightedOrderBrushCompatibleCandidates(sortFillCandidates(cross), weights, kindCatalogs, rng),
+    ...weightedOrderBrushCompatibleCandidates(sortFillCandidates(same), weights, kindCatalogs, rng),
+  ];
+  if (ordered.length < 2) {
+    return ordered;
+  }
+  const start = (fillStep + targetVortexIndex) % ordered.length;
+  return [...ordered.slice(start), ...ordered.slice(0, start)];
+}
+
 /** @emoji 🪣 Args shared by {@link buildBrushFillSequence} and {@link createBrushFillSequenceStepper}. */
 export interface BrushFillSequenceArgs {
   readonly baseFixture: FixtureV1;
@@ -3937,7 +3989,9 @@ export function createBrushFillSequenceStepper(args: BrushFillSequenceArgs): Bru
       return false;
     }
     const orderedTargets = weightedOrderFillVortexTargets(freeTargets, weights, rng);
-    for (const target of orderedTargets) {
+    const targetStart = sequence.length % Math.max(1, orderedTargets.length);
+    for (let targetOffset = 0; targetOffset < orderedTargets.length; targetOffset += 1) {
+      const target = orderedTargets[(targetStart + targetOffset) % orderedTargets.length]!;
       const hostObject = fixture.objects.find((row) => row.id === target.objectId);
       if (!hostObject) {
         continue;
@@ -3955,7 +4009,15 @@ export function createBrushFillSequenceStepper(args: BrushFillSequenceArgs): Bru
       if (compatible.length === 0) {
         continue;
       }
-      const orderedCandidates = weightedOrderBrushCompatibleCandidates(compatible, weights, args.kindCatalogs, rng);
+      const orderedCandidates = orderBrushFillCompatibleCandidates(
+        compatible,
+        target.vortexKind,
+        target.vortexIndex,
+        sequence.length,
+        args.kindCatalogs,
+        weights,
+        rng,
+      );
       for (const candidate of orderedCandidates) {
         const preview = brushPreviewFromCandidate({
           targetVortexFullId: target.fullId,
@@ -7439,6 +7501,15 @@ function BrushSession(props: {
       targetObjectIdRef.current = meta.objectId;
       targetOrientationRef.current = record.orientation;
       previewCollidesRef.current = false;
+      const weights = puzzle3dBrushKindWeightsRef.current;
+      if (!brushTargetVortexAllowsSuggestion(meta.vortexKind, weights)) {
+        probeOrderRef.current = [];
+        placementCandidatesRef.current = [];
+        indexRef.current = 0;
+        setCatalogPreloadUrls([]);
+        applyPlacementProbeResult({ free: [], unknownPending: false });
+        return;
+      }
       const compatible = brushCompatibleCandidates(targetCtx, props.kindCatalogs, props.kindCompatibility);
       let seed = 0;
       for (let i = 0; i < fullId.length; i += 1) {
@@ -7449,7 +7520,7 @@ function BrushSession(props: {
         state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
         return state / 0x100000000;
       };
-      probeOrderRef.current = weightedOrderBrushCompatibleCandidates(compatible, puzzle3dBrushKindWeightsRef.current, props.kindCatalogs, rng);
+      probeOrderRef.current = weightedOrderBrushCompatibleCandidates(compatible, weights, props.kindCatalogs, rng);
       placementCandidatesRef.current = [];
       indexRef.current = 0;
       setCatalogPreloadUrls(brushMeshUrlsForCompatibleCandidates(probeOrderRef.current, props.kindCatalogs, props.sceneFixture));
@@ -8237,32 +8308,14 @@ function RegistryProvider({
   const getVortexKind = reactHostPort.useCallback((fullId: string) => vortexMetaRef.current.get(fullId)?.vortexKind, []);
   const getAttractionKind = reactHostPort.useCallback((id: string) => attractionKindsRef.current.get(id), []);
 
-  const deriveKindHover = reactHostPort.useCallback(
-    (target: HoverTarget | null): Puzzle3dKindHover | null => {
-      if (!target) {
-        return null;
-      }
-      return puzzle3dKindHoverFromTarget(target, (id) => objectKindsRef.current.get(id), getVortexKind, getAttractionKind);
-    },
-    [getAttractionKind, getVortexKind],
-  );
+  const setHover = reactHostPort.useCallback((target: HoverTarget) => {
+    setHoverTarget((prev) => (puzzle3dHoverTargetsEqual(prev, target) ? prev : target));
+    setKindHoverState((prev) => (prev === null ? prev : null));
+  }, []);
 
-  const setHover = reactHostPort.useCallback(
-    (target: HoverTarget) => {
-      const nextKind = deriveKindHover(target);
-      setHoverTarget((prev) => (puzzle3dHoverTargetsEqual(prev, target) ? prev : target));
-      setKindHoverState((prev) => (puzzle3dKindHoversEqual(prev, nextKind) ? prev : nextKind));
-    },
-    [deriveKindHover],
-  );
-
-  const clearHover = reactHostPort.useCallback(
-    (target: HoverTarget) => {
-      setHoverTarget((prev) => (puzzle3dHoverTargetsEqual(prev, target) ? null : prev));
-      setKindHoverState((prev) => (prev === null ? prev : null));
-    },
-    [],
-  );
+  const clearHover = reactHostPort.useCallback((target: HoverTarget) => {
+    setHoverTarget((prev) => (puzzle3dHoverTargetsEqual(prev, target) ? null : prev));
+  }, []);
 
   const clearHoverAll = reactHostPort.useCallback(() => {
     setHoverTarget((prev) => (prev === null ? prev : null));
@@ -11184,10 +11237,11 @@ if (import.meta.vitest) {
       expect(brushStackMatePair("tambour circular top", "tambour circular bottom")).toBe(true);
       expect(brushStackMatePair("roof circular top", "tambour circular bottom")).toBe(false);
     });
-    it("brushPlacementUsesHostOrientation is false for stack mates and true for same kind", () => {
+    it("brushPlacementUsesHostOrientation is false for stack mates and cross-port mates", () => {
       const target: AttractionVortexContext = { objectId: "host", objectKind: "WidgetHost", vortexKind: "shape circular top" };
       expect(brushPlacementUsesHostOrientation(target, "shape circular bottom", "WidgetA")).toBe(false);
       expect(brushPlacementUsesHostOrientation({ objectId: "b", objectKind: "Foundation", vortexKind: "core rectangular bottom" }, "core circular top", "UpperA")).toBe(false);
+      expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "KindA", vortexKind: "port-a" }, "port-b", "KindA")).toBe(false);
       expect(brushPlacementUsesHostOrientation({ objectId: "a", objectKind: "KindA", vortexKind: "port-a" }, "port-a", "KindA")).toBe(true);
     });
     it("vortexWorldCadFromObject matches scene graph world position", () => {
@@ -11273,6 +11327,35 @@ if (import.meta.vitest) {
         () => 0.99,
       );
       expect(ordered[0]?.objectKindId).toBe("Heavy");
+    });
+    it("weightedOrderBrushCompatibleCandidates excludes zero object or vortex weights", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [
+          { id: "Blocked", meshUrl: "/b.glb", vortices: [{ vortexKind: "c-b", position: [0, 0, 0], direction: [0, 0, 1] }] },
+          { id: "Allowed", meshUrl: "/a.glb", vortices: [{ vortexKind: "c-t", position: [0, 0, 0], direction: [0, 0, 1] }] },
+        ],
+      };
+      const input: readonly BrushCompatibleCandidate[] = [
+        { objectKindId: "Blocked", sourceVortexIndex: 0 },
+        { objectKindId: "Allowed", sourceVortexIndex: 0 },
+      ];
+      expect(
+        weightedOrderBrushCompatibleCandidates(input, { objectWeights: { Blocked: 0, Allowed: 1 }, vortexWeights: { "c-b": 1, "c-t": 1 } }, catalogs),
+      ).toEqual([{ objectKindId: "Allowed", sourceVortexIndex: 0 }]);
+      expect(
+        weightedOrderBrushCompatibleCandidates(input, { objectWeights: { Blocked: 1, Allowed: 1 }, vortexWeights: { "c-b": 0, "c-t": 1 } }, catalogs),
+      ).toEqual([{ objectKindId: "Allowed", sourceVortexIndex: 0 }]);
+      expect(
+        weightedOrderBrushCompatibleCandidates(
+          [{ objectKindId: "Blocked", sourceVortexIndex: 0 }],
+          { objectWeights: { Blocked: 0 }, vortexWeights: { "c-b": 1 } },
+          catalogs,
+        ),
+      ).toEqual([]);
+    });
+    it("brushTargetVortexAllowsSuggestion rejects zero target vortex weight", () => {
+      expect(brushTargetVortexAllowsSuggestion("c-t", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(false);
+      expect(brushTargetVortexAllowsSuggestion("c-b", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(true);
     });
     it("brushPreviewMeshFrameGroup applies GLB mesh frame rotation", () => {
       const meshRoot = new Mesh(new BoxGeometry(1, 2, 3));

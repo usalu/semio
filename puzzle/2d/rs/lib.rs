@@ -1644,9 +1644,11 @@ mod board_host {
             if self.hovered_id.as_deref() == Some(id) {
                 return Some(BoardElementStyleKind::Hovered);
             }
-            if let Some((hover_domain, hover_kind)) = self.hovered_kind.as_ref() {
-                if hover_domain == domain && hover_kind == element_kind {
-                    return Some(BoardElementStyleKind::Hovered);
+            if self.hovered_id.is_none() {
+                if let Some((hover_domain, hover_kind)) = self.hovered_kind.as_ref() {
+                    if hover_domain == domain && hover_kind == element_kind {
+                        return Some(BoardElementStyleKind::Hovered);
+                    }
                 }
             }
             None
@@ -1816,7 +1818,7 @@ mod board_host {
                     ids.insert(hover_id.clone());
                 }
             }
-            if !self.is_preselect_active() {
+            if self.hovered_id.is_none() && !self.is_preselect_active() {
                 for id in self.ids_matching_kind_hover() {
                     ids.insert(id);
                 }
@@ -5411,18 +5413,18 @@ mod board_host {
         }
 
         pub fn set_hovered_id(&mut self, id: Option<String>) {
-            let next_kind = id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
-            if self.hovered_id == id && self.hovered_kind == next_kind {
+            let event_kind = id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            if self.hovered_id == id && self.hovered_kind.is_none() {
                 return;
             }
             self.bump_content_scene_generation();
             self.hovered_id = id.clone();
-            self.hovered_kind = next_kind.clone();
+            self.hovered_kind = None;
             self.push_event(
                 "hover",
                 json!({
                     "id": id,
-                    "kind": next_kind.as_ref().map(|(domain, kind_id)| json!({ "domain": domain, "kindId": kind_id })),
+                    "kind": event_kind.as_ref().map(|(domain, kind_id)| json!({ "domain": domain, "kindId": kind_id })),
                 }),
             );
         }
@@ -5447,12 +5449,11 @@ mod board_host {
 
         /// @emoji 🔇 Updates hover chrome without emitting `hover` (controlled React sync).
         pub fn set_hovered_id_silent(&mut self, id: Option<String>) {
-            let next_kind = id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
-            if self.hovered_id == id && self.hovered_kind == next_kind {
+            if self.hovered_id == id && self.hovered_kind.is_none() {
                 return;
             }
             self.hovered_id = id;
-            self.hovered_kind = next_kind;
+            self.hovered_kind = None;
         }
 
         /// @emoji 🔇 Mirrors controlled kind hover without emitting `hover`.

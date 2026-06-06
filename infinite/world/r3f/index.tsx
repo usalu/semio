@@ -1011,25 +1011,39 @@ export type OrbitCameraViewId =
   | "bottom"
   | "front"
   | "back"
+  | "right"
+  | "left"
   | "north"
   | "south"
   | "east"
   | "west"
-  | "perspective";
+  | "isometricNe"
+  | "isometricNw"
+  | "isometricSe"
+  | "isometricSw"
+  | "perspective"
+  | "twoPointPerspective";
 
 /** @emoji 📡 Command name products should handle to apply {@link OrbitCameraViewId} presets. */
 export const ORBIT_CAMERA_VIEW_COMMAND = "setOrbitCameraView";
 
 const ORBIT_CAMERA_VIEW_LABELS: Record<OrbitCameraViewId, string> = {
   top: "Top",
-  bottom: "Bottom",
+  bottom: "Below",
   front: "Front",
   back: "Back",
+  right: "Right",
+  left: "Left",
   north: "North",
   south: "South",
   east: "East",
   west: "West",
+  isometricNe: "NE",
+  isometricNw: "NW",
+  isometricSe: "SE",
+  isometricSw: "SW",
   perspective: "Perspective",
+  twoPointPerspective: "Two Point Perspective",
 };
 
 const ORBIT_CAMERA_VIEW_DIRECTION: Record<OrbitCameraViewId, Vec3> = {
@@ -1037,11 +1051,18 @@ const ORBIT_CAMERA_VIEW_DIRECTION: Record<OrbitCameraViewId, Vec3> = {
   bottom: [0, 0, -1],
   front: [0, -1, 0],
   back: [0, 1, 0],
+  right: [1, 0, 0],
+  left: [-1, 0, 0],
   north: [0, 1, 0],
   south: [0, -1, 0],
   east: [1, 0, 0],
   west: [-1, 0, 0],
+  isometricNe: [1, 1, 1],
+  isometricNw: [-1, 1, 1],
+  isometricSe: [1, -1, 1],
+  isometricSw: [-1, -1, 1],
   perspective: [0.75, -0.75, 0.55],
+  twoPointPerspective: [1, -1, 0],
 };
 
 const ORBIT_CAMERA_VIEW_EPSILON = 1e-3;
@@ -1110,6 +1131,7 @@ export interface OrbitCameraViewTemplateDescriptor {
   readonly controllerId: string;
   readonly command: string;
   readonly args: { readonly view: OrbitCameraViewId };
+  readonly children?: readonly OrbitCameraViewTemplateDescriptor[];
 }
 
 export interface CreateOrbitCameraViewTemplatesConfig {
@@ -1118,17 +1140,202 @@ export interface CreateOrbitCameraViewTemplatesConfig {
   readonly views?: readonly OrbitCameraViewId[];
 }
 
-/** @emoji 🪟 Builds display-panel window templates for standard orbit camera views. */
+function orbitCameraViewTemplateLeaf(
+  controllerId: string,
+  command: string,
+  view: OrbitCameraViewId,
+  id = view,
+  label = ORBIT_CAMERA_VIEW_LABELS[view],
+): OrbitCameraViewTemplateDescriptor {
+  return { id, label, controllerId, command, args: { view } };
+}
+
+function orbitCameraViewTemplateBranch(
+  controllerId: string,
+  command: string,
+  id: string,
+  label: string,
+  view: OrbitCameraViewId,
+  children: readonly OrbitCameraViewTemplateDescriptor[],
+): OrbitCameraViewTemplateDescriptor {
+  return { id, label, controllerId, command, args: { view }, children };
+}
+
+/** @emoji 🪟 Builds the orthographic/perspective window-template tree for the display panel. */
 export function createOrbitCameraViewTemplates(config: CreateOrbitCameraViewTemplatesConfig): readonly OrbitCameraViewTemplateDescriptor[] {
   const command = config.command ?? ORBIT_CAMERA_VIEW_COMMAND;
-  const views = config.views ?? (["top", "front", "north", "perspective"] as const);
-  return views.map((view) => ({
-    id: view,
+  if (config.views) {
+    return config.views.map((view) => orbitCameraViewTemplateLeaf(config.controllerId, command, view));
+  }
+  const orthographic2d: OrbitCameraViewTemplateDescriptor[] = (["top", "bottom", "front", "back", "right", "left"] as const).map((view) =>
+    orbitCameraViewTemplateLeaf(config.controllerId, command, view),
+  );
+  const isometryCorners: OrbitCameraViewTemplateDescriptor[] = (["isometricNe", "isometricNw", "isometricSe", "isometricSw"] as const).map((view) =>
+    orbitCameraViewTemplateLeaf(config.controllerId, command, view),
+  );
+  return [
+    orbitCameraViewTemplateBranch(config.controllerId, command, "orthographic", "Orthographic", "top", [
+      orbitCameraViewTemplateBranch(config.controllerId, command, "orthographic-2d", "2D", "top", orthographic2d),
+      orbitCameraViewTemplateBranch(config.controllerId, command, "orthographic-3d", "3D", "isometricNe", [
+        orbitCameraViewTemplateBranch(config.controllerId, command, "isometry", "Isometry", "isometricNe", isometryCorners),
+      ]),
+    ]),
+    orbitCameraViewTemplateBranch(config.controllerId, command, "perspective", "Perspective", "perspective", [
+      orbitCameraViewTemplateLeaf(config.controllerId, command, "twoPointPerspective"),
+    ]),
+  ];
+}
+
+export interface OrbitCameraViewLayoutPane {
+  readonly view: OrbitCameraViewId;
+  readonly title?: string;
+  readonly size?: number;
+}
+
+export type OrbitCameraViewLayoutArrangement =
+  | { readonly kind: "stack"; readonly panes: readonly [OrbitCameraViewLayoutPane] }
+  | { readonly kind: "row"; readonly panes: readonly OrbitCameraViewLayoutPane[] }
+  | { readonly kind: "column"; readonly panes: readonly OrbitCameraViewLayoutPane[] }
+  | { readonly kind: "grid"; readonly rows: readonly { readonly size?: number; readonly panes: readonly OrbitCameraViewLayoutPane[] }[] };
+
+export interface OrbitCameraViewLayoutDescriptor {
+  readonly id: string;
+  readonly label: string;
+  readonly groupPath: readonly string[];
+  readonly arrangement: OrbitCameraViewLayoutArrangement;
+}
+
+function orbitLayoutPane(view: OrbitCameraViewId, title?: string, size?: number): OrbitCameraViewLayoutPane {
+  return { view, ...(title ? { title } : {}), ...(size !== undefined ? { size } : {}) };
+}
+
+function orbitLayoutSingle(view: OrbitCameraViewId, group: string): OrbitCameraViewLayoutDescriptor {
+  return {
+    id: `view-single-${view}`,
     label: ORBIT_CAMERA_VIEW_LABELS[view],
-    controllerId: config.controllerId,
-    command,
-    args: { view },
-  }));
+    groupPath: ["Single", group],
+    arrangement: { kind: "stack", panes: [orbitLayoutPane(view)] },
+  };
+}
+
+/** @emoji 🧭 Catalog of reusable orbit-view window arrangements for named layouts. */
+export function createOrbitCameraViewLayoutDescriptors(): readonly OrbitCameraViewLayoutDescriptor[] {
+  const singles2d = (["top", "bottom", "front", "back", "right", "left"] as const).map((view) => orbitLayoutSingle(view, "2D"));
+  const singles3d = (["isometricNe", "isometricNw", "isometricSe", "isometricSw", "perspective", "twoPointPerspective"] as const).map((view) =>
+    orbitLayoutSingle(view, "3D"),
+  );
+  const dualRow = (id: string, label: string, group: string, panes: readonly OrbitCameraViewLayoutPane[]): OrbitCameraViewLayoutDescriptor => ({
+    id,
+    label,
+    groupPath: ["Dual", group],
+    arrangement: { kind: "row", panes },
+  });
+  return [
+    ...singles2d,
+    ...singles3d,
+    dualRow("view-dual-top-front", "Top | Front", "Plan + Elevation", [orbitLayoutPane("top"), orbitLayoutPane("front")]),
+    dualRow("view-dual-front-right", "Front | Right", "Elevation", [orbitLayoutPane("front"), orbitLayoutPane("right")]),
+    dualRow("view-dual-top-ne", "Top | NE", "Plan + Isometry", [orbitLayoutPane("top"), orbitLayoutPane("isometricNe")]),
+    dualRow("view-dual-plan-perspective", "Top | Perspective", "Plan + Perspective", [orbitLayoutPane("top"), orbitLayoutPane("perspective")]),
+    dualRow("view-dual-front-back", "Front | Back", "Opposite Elevations", [orbitLayoutPane("front"), orbitLayoutPane("back")]),
+    dualRow("view-dual-right-left", "Right | Left", "Side Elevations", [orbitLayoutPane("right"), orbitLayoutPane("left")]),
+    {
+      id: "view-triple-top-front-right",
+      label: "Top / Front / Right",
+      groupPath: ["Triple", "Standard"],
+      arrangement: {
+        kind: "column",
+        panes: [orbitLayoutPane("top", undefined, 34), orbitLayoutPane("front", undefined, 33), orbitLayoutPane("right", undefined, 33)],
+      },
+    },
+    {
+      id: "view-quad-standard",
+      label: "Standard",
+      groupPath: ["Quad", "Mixed"],
+      arrangement: {
+        kind: "grid",
+        rows: [
+          { size: 50, panes: [orbitLayoutPane("top"), orbitLayoutPane("front")] },
+          { size: 50, panes: [orbitLayoutPane("right"), orbitLayoutPane("isometricNe")] },
+        ],
+      },
+    },
+    {
+      id: "view-quad-ortho-faces",
+      label: "Ortho Faces",
+      groupPath: ["Quad", "2D"],
+      arrangement: {
+        kind: "grid",
+        rows: [
+          { size: 50, panes: [orbitLayoutPane("top"), orbitLayoutPane("front")] },
+          { size: 50, panes: [orbitLayoutPane("right"), orbitLayoutPane("left")] },
+        ],
+      },
+    },
+    {
+      id: "view-quad-isometry",
+      label: "Isometry Corners",
+      groupPath: ["Quad", "3D"],
+      arrangement: {
+        kind: "grid",
+        rows: [
+          { size: 50, panes: [orbitLayoutPane("isometricNe"), orbitLayoutPane("isometricNw")] },
+          { size: 50, panes: [orbitLayoutPane("isometricSe"), orbitLayoutPane("isometricSw")] },
+        ],
+      },
+    },
+    {
+      id: "view-2d-six",
+      label: "Six Ortho",
+      groupPath: ["2D", "Full"],
+      arrangement: {
+        kind: "grid",
+        rows: [
+          { size: 34, panes: [orbitLayoutPane("top"), orbitLayoutPane("bottom")] },
+          { size: 33, panes: [orbitLayoutPane("front"), orbitLayoutPane("back")] },
+          { size: 33, panes: [orbitLayoutPane("right"), orbitLayoutPane("left")] },
+        ],
+      },
+    },
+    {
+      id: "view-3d-isometry",
+      label: "Four Isometry",
+      groupPath: ["3D", "Isometry"],
+      arrangement: {
+        kind: "grid",
+        rows: [
+          { size: 50, panes: [orbitLayoutPane("isometricNe"), orbitLayoutPane("isometricNw")] },
+          { size: 50, panes: [orbitLayoutPane("isometricSe"), orbitLayoutPane("isometricSw")] },
+        ],
+      },
+    },
+  ];
+}
+
+/** @emoji 📷 Applies an orbit view preset when `seedKey` changes (owned-camera canvases). */
+export function WorldOrbitCameraViewApplier(props: { readonly view: OrbitCameraViewId; readonly seedKey: string | number }): null {
+  const { camera } = useThree();
+  const controls = useThree((s) => s.controls as { target: Vector3; update: () => void } | null);
+  const lastSeedKey = reactHostPort.useRef<string | number | null>(null);
+  reactHostPort.useLayoutEffect(() => {
+    if (!(camera instanceof ThreePerspectiveCamera) || lastSeedKey.current === props.seedKey) {
+      return;
+    }
+    lastSeedKey.current = props.seedKey;
+    const target = controls?.target ?? new Vector3(0, 0, 0);
+    const targetCad = threeVec3ToCad(target);
+    const distance = Math.hypot(camera.position.x - target.x, camera.position.y - target.y, camera.position.z - target.z) || 600;
+    const state = computeOrbitCameraViewState(props.view, { target: targetCad, distance });
+    const position = cadVec3ToThree(state.position);
+    camera.position.set(position[0], position[1], position[2]);
+    camera.updateProjectionMatrix();
+    if (controls?.target) {
+      const nextTarget = cadVec3ToThree(state.target);
+      controls.target.set(nextTarget[0], nextTarget[1], nextTarget[2]);
+      controls.update();
+    }
+  }, [camera, controls, props.seedKey, props.view]);
+  return null;
 }
 
 /** @emoji 📷 Seeds orbit camera + target when `seedKey` changes (fixture presets, display templates). */
@@ -1376,10 +1583,28 @@ if (import.meta.vitest) {
   });
 
   describe("createOrbitCameraViewTemplates", () => {
-    it("emits display templates for the configured controller", () => {
+    it("emits the orthographic/perspective template tree", () => {
       const templates = createOrbitCameraViewTemplates({ controllerId: "demo" });
-      expect(templates.map((row) => row.id)).toEqual(["top", "front", "north", "perspective"]);
+      expect(templates.map((row) => row.id)).toEqual(["orthographic", "perspective"]);
+      const ortho2d = templates[0]!.children![0]!;
+      expect(ortho2d.id).toBe("orthographic-2d");
+      expect(ortho2d.children!.map((row) => row.id)).toEqual(["top", "bottom", "front", "back", "right", "left"]);
+      const isometry = templates[0]!.children![1]!.children![0]!;
+      expect(isometry.children!.map((row) => row.id)).toEqual(["isometricNe", "isometricNw", "isometricSe", "isometricSw"]);
       expect(templates[0]).toMatchObject({ controllerId: "demo", command: ORBIT_CAMERA_VIEW_COMMAND, args: { view: "top" } });
+    });
+
+    it("still supports flat custom view lists", () => {
+      const templates = createOrbitCameraViewTemplates({ controllerId: "demo", views: ["top", "front"] });
+      expect(templates.map((row) => row.id)).toEqual(["top", "front"]);
+    });
+  });
+
+  describe("createOrbitCameraViewLayoutDescriptors", () => {
+    it("includes grouped single and quad layouts", () => {
+      const layouts = createOrbitCameraViewLayoutDescriptors();
+      expect(layouts.some((row) => row.id === "view-quad-standard")).toBe(true);
+      expect(layouts.find((row) => row.id === "view-single-top")?.groupPath).toEqual(["Single", "2D"]);
     });
   });
 

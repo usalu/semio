@@ -776,8 +776,96 @@ interface ShellWindowInstance {
   readonly title: string;
 }
 
+function findWindowTemplateInList(templates: readonly WindowTemplate[], templateId: string): WindowTemplate | undefined {
+	for (const template of templates) {
+		if (template.id === templateId) {
+			return template;
+		}
+		if (template.children?.length) {
+			const nested = findWindowTemplateInList(template.children, templateId);
+			if (nested) {
+				return nested;
+			}
+		}
+	}
+	return undefined;
+}
+
 function findWindowTemplate(catalog: readonly WindowKindRuntime[], windowKindId: string, templateId: string): WindowTemplate | undefined {
-  return catalog.find((kind) => kind.id === windowKindId)?.templates.find((template) => template.id === templateId);
+	const kind = catalog.find((entry) => entry.id === windowKindId);
+	if (!kind) {
+		return undefined;
+	}
+	return findWindowTemplateInList(kind.templates, templateId);
+}
+
+function mapWindowTemplatesToTreeItems(windowKindId: string, templates: readonly WindowTemplate[]): import("@ui/react").TreeDataItem[] {
+	return templates.map((template) => ({
+		id: `framework.display.windows.${windowKindId}.${template.id}`,
+		label: template.label,
+		draggable: true,
+		dragData: {
+			[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: template.id } satisfies WindowTemplateDropPayload),
+		},
+		...(template.children?.length ? { items: mapWindowTemplatesToTreeItems(windowKindId, template.children) } : {}),
+	}));
+}
+
+function groupNamedLayoutsToTreeItems(
+	layouts: readonly NamedLayout[],
+	onApply: (layoutId: string) => void,
+	onDeleteUser?: (layoutId: string) => void,
+): import("@ui/react").TreeDataItem[] {
+	const root: import("@ui/react").TreeDataItem[] = [];
+	const folderByKey = new Map<string, import("@ui/react").TreeDataItem>();
+
+	const layoutLeaf = (entry: NamedLayout): import("@ui/react").TreeDataItem => ({
+		id: `framework.display.layout.${entry.id}`,
+		label: entry.label,
+		description: entry.origin === "user" ? resolveTranslationLabel("ui.display.deleteLayout") : undefined,
+		onClick: () => onApply(entry.id),
+		...(entry.origin === "user" && onDeleteUser
+			? {
+					actions: [
+						{
+							id: `framework.display.delete.${entry.id}`,
+							icon: <Icon icon="trash-2" size="small" />,
+							onClick: () => onDeleteUser(entry.id),
+						},
+					],
+				}
+			: {}),
+	});
+
+	for (const entry of layouts) {
+		if (!entry.groupPath?.length) {
+			root.push(layoutLeaf(entry));
+			continue;
+		}
+		let siblings = root;
+		let pathKey = "";
+		for (let index = 0; index < entry.groupPath.length; index += 1) {
+			const segment = entry.groupPath[index]!;
+			pathKey = pathKey ? `${pathKey}/${segment}` : segment;
+			let folder = folderByKey.get(pathKey);
+			if (!folder) {
+				folder = {
+					id: `framework.display.layout.group.${pathKey}`,
+					label: segment,
+					items: [],
+				};
+				folderByKey.set(pathKey, folder);
+				siblings.push(folder);
+			}
+			const folderItems = folder.items ?? (folder.items = []);
+			if (index === entry.groupPath.length - 1) {
+				folder.items = [...folderItems, layoutLeaf(entry)];
+			} else {
+				siblings = folderItems;
+			}
+		}
+	}
+	return root;
 }
 
 function dispatchWindowTemplate(
@@ -1160,14 +1248,7 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
 					[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id } satisfies WindowTemplateDropPayload),
 				},
 			},
-			...kind.templates.map((template) => ({
-				id: `framework.display.windows.${kind.id}.${template.id}`,
-				label: template.label,
-				draggable: true,
-				dragData: {
-					[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id, templateId: template.id } satisfies WindowTemplateDropPayload),
-				},
-			})),
+			...mapWindowTemplatesToTreeItems(kind.id, kind.templates),
 		],
 	}));
 	const dragAndDropController = windowTemplatePaletteTreeDragController();
@@ -1178,7 +1259,18 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
 }
 
 function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePanelConfig {
-	const layouts = [...host.namedLayouts.filter((entry) => entry.origin === "builtin"), ...host.userLayouts];
+	const builtinLayouts = host.namedLayouts.filter((entry) => entry.origin === "builtin");
+	const userLayouts = host.userLayouts;
+	const builtinItems = groupNamedLayoutsToTreeItems(builtinLayouts, (layoutId) => host.applyNamedLayout(layoutId));
+	const userItems = userLayouts.length
+		? [
+				{
+					id: "framework.display.layout.group.saved",
+					label: "Saved",
+					items: groupNamedLayoutsToTreeItems(userLayouts, (layoutId) => host.applyNamedLayout(layoutId), (layoutId) => host.deleteUserLayout(layoutId)),
+				},
+			]
+		: [];
 	return {
 		sections: [
 			{
@@ -1224,23 +1316,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePane
 				id: "framework.display.layout.list",
 				label: resolveTranslationLabel("ui.display.tab.layout"),
 				defaultOpen: true,
-				items: layouts.map((entry) => ({
-					id: `framework.display.layout.${entry.id}`,
-					label: entry.label,
-					description: entry.origin === "user" ? resolveTranslationLabel("ui.display.deleteLayout") : undefined,
-					onClick: () => host.applyNamedLayout(entry.id),
-					...(entry.origin === "user"
-						? {
-								actions: [
-									{
-										id: `framework.display.delete.${entry.id}`,
-										icon: <Icon icon="trash-2" size="small" />,
-										onClick: () => host.deleteUserLayout(entry.id),
-									},
-								],
-							}
-						: {}),
-				})),
+				items: [...builtinItems, ...userItems],
 			},
 		],
 	};
@@ -3213,14 +3289,23 @@ if (import.meta.vitest) {
 			expect(tree.dragAndDropController?.pointerPaletteDrag).toBeTruthy();
 		});
 
-		it("lists a draggable kind row and optional template children", () => {
+		it("lists a draggable kind row and nested template children", () => {
 			const host: DisplayHostApi = {
 				windowKinds: [
 					{
 						id: "cad-play-shape",
 						label: "Shape",
 						bodyKey: "cad.play.shape",
-						templates: [{ id: "top", label: "Top", controllerId: "cad", command: "setView", args: {} }],
+						templates: [
+							{
+								id: "orthographic",
+								label: "Orthographic",
+								controllerId: "cad",
+								command: "setView",
+								args: {},
+								children: [{ id: "top", label: "Top", controllerId: "cad", command: "setView", args: {} }],
+							},
+						],
 					} as WindowKindRuntime,
 				],
 				namedLayouts: [],
@@ -3236,7 +3321,24 @@ if (import.meta.vitest) {
 			expect(kindRow.windowKindId).toBe("cad-play-shape");
 			expect(kindRow.templateId).toBeUndefined();
 			const templateRow = JSON.parse(items[1]!.dragData![SEMIO_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
-			expect(templateRow.templateId).toBe("top");
+			expect(templateRow.templateId).toBe("orthographic");
+			expect(items[1]?.items?.[0]?.label).toBe("Top");
+		});
+
+		it("groups builtin layouts by groupPath", () => {
+			const host: DisplayHostApi = {
+				windowKinds: [],
+				namedLayouts: [createNamedLayout("view-quad-standard", "Standard", { root: { kind: "stack", children: [] } }, "builtin", undefined, ["Quad", "Mixed"])],
+				userLayouts: [],
+				saveCurrentLayout: () => {},
+				applyNamedLayout: () => {},
+				deleteUserLayout: () => {},
+			};
+			const tree = new DisplayLayoutTreeDefinition(() => host, new CommandBus()).resolveTree();
+			const listItems = tree.sections[1]?.items ?? [];
+			expect(listItems[0]?.label).toBe("Quad");
+			expect(listItems[0]?.items?.[0]?.label).toBe("Mixed");
+			expect(listItems[0]?.items?.[0]?.items?.[0]?.label).toBe("Standard");
 		});
 	});
 

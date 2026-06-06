@@ -11,7 +11,9 @@ import {
   ModeRuntime,
   WindowKindRuntime,
   buildCadWindowBody,
+  createNamedLayout,
   createWindowLayout,
+  namedLayoutsFromOrbitViewDescriptors,
   registerWindowBody,
   type AppTools,
   type ToolItem,
@@ -20,9 +22,16 @@ import {
   type WindowMeasure,
   type UiNode,
   type WindowLayout,
+  type WindowTemplate,
   enforcePlaygroundWindowEngagementInput,
   windowEngagementsEqual,
 } from "@framework/playground/core";
+import {
+  ORBIT_CAMERA_VIEW_COMMAND,
+  createOrbitCameraViewLayoutDescriptors,
+  createOrbitCameraViewTemplates,
+  type OrbitCameraViewId,
+} from "@infinite/world/r3f";
 import {
   DocumentHistory,
   defaultModelDefinitionId,
@@ -111,6 +120,10 @@ export const CAD_PLAY_SHAPE_SCENE_SURFACE_ID = "cad.play.scene3d/shape";
 export const CAD_PLAY_BUILDING_SCENE_SURFACE_ID = "cad.play.scene3d/building";
 export const CAD_PLAY_ENERGY_SCENE_SURFACE_ID = "cad.play.scene3d/energy";
 export const CAD_PLAY_STRUCTURE_CLASSIC_SCENE_SURFACE_ID = "cad.play.scene3d/structure-classic";
+
+const CAD_PLAY_VIEW_TEMPLATES: readonly WindowTemplate[] = createOrbitCameraViewTemplates({
+  controllerId: CAD_PLAY_CONTROLLER_ID,
+}) as readonly WindowTemplate[];
 
 /** @emoji 🪟 Quad play layout: shape/building left, energy/structure classic right. */
 export const CAD_PLAY_LAYOUT: WindowLayout = {
@@ -575,6 +588,7 @@ export class CadPlayShellController extends Controller {
   private computeModeByPane: Record<CadPlayPaneId, SpatialComputeMode>;
   private gumballConfigByPane: Record<CadPlayPaneId, CadGumballConfig>;
   private engagementByPane: Record<CadPlayPaneId, WindowEngagement | undefined>;
+  private viewSeedByInstance = new Map<string, { readonly view: OrbitCameraViewId; readonly nonce: number }>();
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(CAD_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -631,6 +645,22 @@ export class CadPlayShellController extends Controller {
     return cadPlayResolvePaneEngagement(pane, this.engagementByPane[pane]);
   }
 
+  /** @emoji 📷 Returns the latest orbit-view seed for one shell instance (display templates / layouts). */
+  getCameraViewSeedForInstance(instanceId?: string | null): { readonly view: OrbitCameraViewId; readonly seedKey: string } | null {
+    const key = instanceId ?? "";
+    const entry = this.viewSeedByInstance.get(key);
+    if (!entry) {
+      return null;
+    }
+    return { view: entry.view, seedKey: `${key}:${entry.nonce}` };
+  }
+
+  private applyOrbitCameraView(view: OrbitCameraViewId, instanceId?: string): void {
+    const key = instanceId ?? "";
+    const prev = this.viewSeedByInstance.get(key);
+    this.viewSeedByInstance.set(key, { view, nonce: (prev?.nonce ?? 0) + 1 });
+  }
+
   /** @emoji 🔄 Rebuilds quad window kinds with per-pane compute measures and live interaction engagement per pane. */
   rebuildShellMode(): void {
     this.mainMode.windowKinds = CAD_PLAY_PANE_SPECS.map((row) => {
@@ -646,8 +676,13 @@ export class CadPlayShellController extends Controller {
           { kind: "group", id: `${row.pane}-transform`, label: "Transform", children: [this.transformMeasureForPane(row.pane)] },
         ],
         engagement,
+        CAD_PLAY_VIEW_TEMPLATES,
       );
     });
+    this.mainMode.namedLayouts = [
+      createNamedLayout("cad-play-quad", "Quad", CAD_PLAY_LAYOUT, "builtin", undefined, ["Workspace", "Quad"]),
+      ...namedLayoutsFromOrbitViewDescriptors(CAD_PLAY_SHAPE_WINDOW_ID, createOrbitCameraViewLayoutDescriptors()),
+    ];
   }
 
   /** @emoji 💬 Sets one pane's interaction engagement (from the live {@link InteractionRepl} snapshot) and re-renders the shell. */
@@ -719,6 +754,13 @@ export class CadPlayShellController extends Controller {
         const current = this.gumballConfigByPane[pane];
         this.gumballConfigByPane = { ...this.gumballConfigByPane, [pane]: { ...current, [key]: current[key] === false } };
         this.rebuildShellMode();
+        break;
+      }
+      case ORBIT_CAMERA_VIEW_COMMAND: {
+        const view = (args as { view?: OrbitCameraViewId }).view;
+        const instanceId = (args as { instanceId?: string }).instanceId;
+        if (!view) break;
+        this.applyOrbitCameraView(view, instanceId);
         break;
       }
       case "focusModelDefinition":
@@ -1292,6 +1334,8 @@ interface PlaySessionProps {
   readonly transformGumballConfig: CadGumballConfig | null;
   readonly onTransformGumballCommit: (diff: ModelDiff) => void;
   readonly onDeleteSelection: () => boolean;
+  readonly cameraView?: OrbitCameraViewId;
+  readonly cameraViewSeedKey?: string | number;
 }
 
 /** @emoji 🎮 Hosts `useInteractionRuntime` + `InteractionRepl`; same-interaction restarts use `sessionRestartNonce` without remounting GL. */
@@ -1327,6 +1371,8 @@ function PlaySession({
   transformGumballConfig,
   onTransformGumballCommit,
   onDeleteSelection,
+  cameraView,
+  cameraViewSeedKey,
 }: PlaySessionProps) {
   const rtOpts = reactHostPort.useMemo(
     (): InteractionRuntimeOptions => ({
@@ -1390,6 +1436,7 @@ function PlaySession({
       transformGumballConfig={transformGumballConfig}
       onTransformGumballCommit={onTransformGumballCommit}
       onDeleteSelection={onDeleteSelection}
+      spatialView={cameraView !== undefined && cameraViewSeedKey !== undefined ? { cameraView, cameraViewSeedKey } : undefined}
     />
   );
 }
@@ -1442,6 +1489,7 @@ interface CadPlayModelSpaceValue {
   readonly brepjsKernel: BrepjsKernel;
   readonly handleTransformGumballCommit: (modelDefinitionId: string, diff: ModelDiff) => void;
   readonly handleDeleteSelection: () => boolean;
+  readonly cameraViewSeedForInstance: (instanceId?: string | null) => { readonly view: OrbitCameraViewId; readonly seedKey: string } | null;
 }
 
 const CadPlayModelSpaceContext = reactHostPort.createContext<CadPlayModelSpaceValue | null>(null);
@@ -1463,6 +1511,10 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   void shellGeneration;
   const computeModeForPane = reactHostPort.useCallback((pane: CadPlayPaneId) => shellController.getComputeModeForPane(pane), [shellController, shellGeneration]);
   const transformGumballConfigForPane = reactHostPort.useCallback((pane: CadPlayPaneId) => shellController.getTransformGumballConfigForPane(pane), [shellController, shellGeneration]);
+  const cameraViewSeedForInstance = reactHostPort.useCallback(
+    (instanceId?: string | null) => shellController.getCameraViewSeedForInstance(instanceId),
+    [shellController, shellGeneration],
+  );
   const publishCadPlayChrome = useCadPlayChromePublish();
   const pointerFocusRef = reactHostPort.useRef<AppPointerFocusStore<string> | null>(null);
   if (!pointerFocusRef.current) {
@@ -1982,9 +2034,11 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       brepjsKernel,
       handleTransformGumballCommit,
       handleDeleteSelection,
+      cameraViewSeedForInstance,
     }),
     [
       activeModelDefinitionId,
+      cameraViewSeedForInstance,
       documentModel,
       exportBaseName,
       fileStatus,
@@ -2083,7 +2137,7 @@ function CadPlayCatalogAside(): ReactNode {
 }
 
 /** @emoji 🎮 One quad pane: interaction editing for its model definition with window engagement. */
-function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): ReactNode {
+function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPaneId; readonly instanceId?: string }): ReactNode {
   const {
     interactionIdForPane,
     specForPane,
@@ -2111,7 +2165,9 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     transformGumballConfigForPane,
     handleTransformGumballCommit,
     handleDeleteSelection,
+    cameraViewSeedForInstance,
   } = useCadPlayModelSpace();
+  const cameraSeed = cameraViewSeedForInstance(instanceId);
   const modelDefinitionId = cadPlayModelDefinitionIdForPane(pane);
   const captureGlobalKeys = activeModelDefinitionId === modelDefinitionId;
   const interactionId = interactionIdForPane(pane);
@@ -2181,6 +2237,8 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
         transformGumballConfig={transformGumballConfig}
         onTransformGumballCommit={onTransformGumballCommit}
         onDeleteSelection={handleDeleteSelection}
+        cameraView={cameraSeed?.view}
+        cameraViewSeedKey={cameraSeed?.seedKey}
       />
     </div>
   );
@@ -2212,7 +2270,7 @@ function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): 
   }
   return (
     <div className="absolute inset-0 flex min-h-0 min-w-0 flex-col overflow-hidden">
-      <CadPlayInteractionPane pane={pane} />
+      <CadPlayInteractionPane pane={pane} instanceId={shellInstance?.instanceId} />
     </div>
   );
 }
@@ -2332,6 +2390,25 @@ if (import.meta.vitest) {
         CAD_PLAY_ENERGY_WINDOW_ID,
         CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_ID,
       ]);
+    });
+
+    it("attaches the orbit view template tree to each window kind", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      expect(controller.mainMode.windowKinds[0]?.templates.map((row) => row.id)).toEqual(["orthographic", "perspective"]);
+      expect(controller.mainMode.namedLayouts.some((row) => row.id === "view-quad-standard")).toBe(true);
+    });
+
+    it("applies setOrbitCameraView per shell instance", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      controller.run(ORBIT_CAMERA_VIEW_COMMAND, { view: "top", instanceId: "win-a" });
+      const first = controller.getCameraViewSeedForInstance("win-a");
+      expect(first?.view).toBe("top");
+      controller.run(ORBIT_CAMERA_VIEW_COMMAND, { view: "isometricNe", instanceId: "win-a" });
+      const second = controller.getCameraViewSeedForInstance("win-a");
+      expect(second?.view).toBe("isometricNe");
+      expect(second?.seedKey).not.toBe(first?.seedKey);
     });
   });
 

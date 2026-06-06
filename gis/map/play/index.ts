@@ -223,7 +223,7 @@ export interface MapPlaySnapshot {
 }
 
 export const GIS_MAP_PLAY_IDLE_SNAPSHOT: MapPlaySnapshot = {
-  renderMode: "image",
+  renderMode: "vector",
   renderModeByInstance: {},
   vectorStyle: "colored",
   vectorStyleByInstance: {},
@@ -379,7 +379,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   private activeFixture: GisMapFixtureV1 | null = GIS_MAP_PLAY_DEFAULT_FIXTURE;
   private readonly snapshotStore: MapPlaySnapshotStore;
   private snapshotCache: MapPlaySnapshot | null = null;
-  renderMode: MapRenderMode = "image";
+  renderMode: MapRenderMode = "vector";
   renderModeByInstance: Record<string, MapRenderMode> = {};
   vectorStyle: MapVectorStyle = "colored";
   vectorStyleByInstance: Record<string, MapVectorStyle> = {};
@@ -706,9 +706,15 @@ if (import.meta.vitest) {
       if (select?.kind !== "select") {
         return;
       }
-      expect(select.value).toBe("image");
+      expect(select.value).toBe("vector");
       expect(select.items.map((row) => row.value)).toEqual(["image", "vector", "combined"]);
-      const lodSelect = measure.children[1];
+      const styleSelect = measure.children[1];
+      expect(styleSelect?.kind).toBe("select");
+      if (styleSelect?.kind !== "select") {
+        return;
+      }
+      expect(styleSelect.value).toBe("colored");
+      const lodSelect = measure.children[2];
       expect(lodSelect?.kind).toBe("select");
       if (lodSelect?.kind !== "select") {
         return;
@@ -724,7 +730,7 @@ if (import.meta.vitest) {
       if (layers?.kind !== "group") {
         return;
       }
-      const weightAtWorld = gisMapLayerWeightSlidersAtLod("world", "image");
+      const weightAtWorld = gisMapLayerWeightSlidersAtLod("world", "vector");
       expect(layers.children).toHaveLength(GIS_MAP_LAYER_IDS.length + weightAtWorld.length);
       const positionsToggle = layers.children.find((row) => row.id === "gis-map-layer-positions");
       expect(positionsToggle?.kind).toBe("toggle");
@@ -733,8 +739,7 @@ if (import.meta.vitest) {
       }
       expect(positionsToggle.pressed).toBe(true);
       expect(layers.children.find((row) => row.id === "gis-map-layer-weight-roads")).toBeUndefined();
-      const rasterWeight = layers.children.find((row) => row.id === "gis-map-layer-weight-raster");
-      expect(rasterWeight?.kind).toBe("slider");
+      expect(layers.children.find((row) => row.id === "gis-map-layer-weight-raster")).toBeUndefined();
     });
 
     it("updates render mode from measure value and scopes by instance id", () => {
@@ -783,8 +788,8 @@ if (import.meta.vitest) {
       if (before?.kind !== "group" || after?.kind !== "group") {
         return;
       }
-      const lodBefore = before.children[1];
-      const lodAfter = after.children[1];
+      const lodBefore = before.children[2];
+      const lodAfter = after.children[2];
       if (lodBefore?.kind !== "select" || lodAfter?.kind !== "select") {
         return;
       }

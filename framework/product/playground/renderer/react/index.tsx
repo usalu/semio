@@ -2390,6 +2390,7 @@ import {
   puzzle2dPlayAllSelectionFromFixture,
   puzzle2dPlayHierarchyGraphIdFromTreeItemId,
   puzzle2dPlayHierarchyTreeHighlightedIds,
+  puzzle2dPlayKindsTreeHighlightedIds,
   puzzle2dPlayHierarchyTreeSelectedIds,
   buildPuzzle2dPlayOverviewDeclarativeBody,
   buildPuzzle2dPlayDetailDeclarativeBody,
@@ -2492,6 +2493,17 @@ function puzzle2dPlayHierarchyTreeHighlightedIdsForFixture(
   return PUZZLE_2D_PLAY_IS_WIRES
     ? wiresPlayHierarchyTreeHighlightedIds(fixture, graphHoverId)
     : puzzle2dPlayHierarchyTreeHighlightedIds(fixture, graphHoverId, kindHover);
+}
+
+function puzzle2dPlayKindsTreeHighlightedIdsForFixture(
+  fixture: Puzzle2dFixtureV1,
+  graphHoverId: string | null,
+  kindHover: Puzzle2dKindHover | null = null,
+): readonly string[] {
+  if (PUZZLE_2D_PLAY_IS_WIRES) {
+    return [];
+  }
+  return puzzle2dPlayKindsTreeHighlightedIds(puzzle2dFixtureMergedKindCatalogs(fixture), fixture, graphHoverId, kindHover);
 }
 
 function puzzle2dPlayHierarchyGraphIdFromTreeItemIdForPlay(treeItemId: string): string | null {
@@ -2835,7 +2847,7 @@ function Puzzle2dPlayKindsPanel(): ReactElement {
         ? buildWiresPlayKindsTree(WIRES_PLAY_FIXTURE.kindCatalogs)
         : buildPuzzle2dPlayKindsTree(kindCatalogs, {
             onHover: onKindsHover,
-            highlightedIds: puzzle2dPlayHierarchyTreeHighlightedIdsForFixture(fixture, hoveredId, hoveredKind),
+            highlightedIds: puzzle2dPlayKindsTreeHighlightedIdsForFixture(fixture, hoveredId, hoveredKind),
           }),
     [fixture, hoveredId, hoveredKind, kindCatalogs, onKindsHover],
   );
@@ -2860,7 +2872,7 @@ class Puzzle2dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
           ? buildWiresPlayKindsTree(WIRES_PLAY_FIXTURE.kindCatalogs)
           : buildPuzzle2dPlayKindsTree(puzzle2dFixtureMergedKindCatalogs(shell.fixture), {
               onHover: (payload) => shell.setHierarchyHover(payload),
-              highlightedIds: puzzle2dPlayHierarchyTreeHighlightedIdsForFixture(shell.fixture, shell.hoveredId, shell.hoveredKind),
+              highlightedIds: puzzle2dPlayKindsTreeHighlightedIdsForFixture(shell.fixture, shell.hoveredId, shell.hoveredKind),
             });
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),

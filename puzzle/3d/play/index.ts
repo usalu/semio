@@ -21,8 +21,7 @@ import {
   buildPlaygroundBrowseSelectionTools,
   buildPuzzle3dWindowBody,
   createStackLayout,
-  createNamedLayout,
-  createWindowLayout,
+  namedLayoutsFromOrbitViewDescriptors,
   playgroundTreePanelRootItems,
   platformFromViewContext,
   type WindowTemplate,
@@ -71,6 +70,7 @@ import {
   lodFromSliderValue,
   cameraStateNearEqual,
   computeOrbitCameraViewState,
+  createOrbitCameraViewLayoutDescriptors,
   createOrbitCameraViewTemplates,
   ORBIT_CAMERA_VIEW_COMMAND,
   orbitCameraDistance,
@@ -910,6 +910,20 @@ function puzzle3dPlayKindRowHoverHandlers(
   };
 }
 
+/** @emoji 🎯 Maps a direct instance hover target to a single hierarchy tree row id. */
+export function puzzle3dPlayHierarchyTreeHighlightedIdsForTarget(target: HoverTarget): readonly string[] {
+  switch (target.kind) {
+    case "object":
+      return [`puzzle-3d-play-hierarchy.object.${target.id}`];
+    case "vortex":
+      return [`puzzle-3d-play-hierarchy.vortex.${target.fullId}`];
+    case "attraction":
+      return [`puzzle-3d-play-hierarchy.attraction.${target.id}`];
+    default:
+      return [];
+  }
+}
+
 /** @emoji 🌳 Maps transitive kind hover to hierarchy tree row ids. */
 export function puzzle3dPlayHierarchyTreeHighlightedIds(fixture: FixtureV1, kindHover: Puzzle3dKindHover | null): readonly string[] {
   if (!kindHover?.kindId) {
@@ -981,6 +995,72 @@ function puzzle3dPlayKindsSectionDomain(sectionId: string): Puzzle3dKindHoverDom
     return "attraction";
   }
   return null;
+}
+
+function puzzle3dPlayKindsSectionIdForDomain(domain: Puzzle3dKindHoverDomain): string {
+  switch (domain) {
+    case "object":
+      return "puzzle-3d-play-kinds.objects";
+    case "vortex":
+      return "puzzle-3d-play-kinds.vortices";
+    case "attraction":
+      return "puzzle-3d-play-kinds.attractions";
+  }
+}
+
+function puzzle3dPlayKindsCatalogEntries(
+  catalogs: KindCatalogBundle | undefined,
+  domain: Puzzle3dKindHoverDomain,
+): readonly Puzzle3dCatalogKind[] | undefined {
+  switch (domain) {
+    case "object":
+      return catalogs?.objects;
+    case "vortex":
+      return catalogs?.vortices;
+    case "attraction":
+      return catalogs?.attractions;
+  }
+}
+
+/** @emoji 🏷️ Resolves a catalog kind row id in the kinds tab for object↔kind hover sync. */
+export function puzzle3dPlayKindsTreeRowId(catalogs: KindCatalogBundle | undefined, kind: Puzzle3dKindHover): string | null {
+  const entries = puzzle3dPlayKindsCatalogEntries(catalogs, kind.domain);
+  if (!entries?.length) {
+    return null;
+  }
+  const sectionId = puzzle3dPlayKindsSectionIdForDomain(kind.domain);
+  const sorted = [...entries].sort((a, b) => puzzle3dCatalogKindLabel(a).localeCompare(puzzle3dCatalogKindLabel(b)));
+  const index = sorted.findIndex((entry) => entry.id === kind.kindId);
+  if (index < 0) {
+    return null;
+  }
+  return `${sectionId}.${index}.${kind.kindId}`;
+}
+
+/** @emoji 🏷️ Maps hover focus to kinds-tab row ids (kind→object and object→kind, not instance→instance). */
+export function puzzle3dPlayKindsTreeHighlightedIds(
+  catalogs: KindCatalogBundle | undefined,
+  fixture: FixtureV1 | null,
+  focus: Puzzle3dHoverPayload,
+): readonly string[] {
+  const kind =
+    focus.kindHover ?? (focus.hoverTarget && fixture ? puzzle3dKindHoverFromPlayTarget(fixture, focus.hoverTarget) : null);
+  if (!kind) {
+    return [];
+  }
+  const rowId = puzzle3dPlayKindsTreeRowId(catalogs, kind);
+  return rowId ? [rowId] : [];
+}
+
+/** @emoji 🌳 Maps hover focus to hierarchy tree row ids (transitive only for kind-row hover). */
+export function puzzle3dPlayHierarchyTreeHighlightedIdsFromFocus(fixture: FixtureV1, focus: Puzzle3dHoverPayload): readonly string[] {
+  if (focus.hoverTarget) {
+    return puzzle3dPlayHierarchyTreeHighlightedIdsForTarget(focus.hoverTarget);
+  }
+  if (focus.kindHover) {
+    return puzzle3dPlayHierarchyTreeHighlightedIds(fixture, focus.kindHover);
+  }
+  return [];
 }
 //#endregion 🔖Puzzle3dPlayHover
 
@@ -1321,14 +1401,9 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     return () => this.snapshotListeners.delete(listener);
   }
 
-  /** @emoji 🖱️ Updates shared hover focus for canvas + hierarchy transitive highlight. */
+  /** @emoji 🖱️ Updates shared hover focus for canvas + hierarchy/kinds hover sync. */
   setHoverFocus(payload: Puzzle3dHoverPayload): void {
-    const nextKind =
-      payload.kindHover ??
-      (payload.hoverTarget
-        ? puzzle3dKindHoverFromPlayTarget(this.fixture, payload.hoverTarget)
-        : null);
-    const next: Puzzle3dHoverPayload = { hoverTarget: payload.hoverTarget, kindHover: nextKind };
+    const next: Puzzle3dHoverPayload = { hoverTarget: payload.hoverTarget, kindHover: payload.kindHover };
     const prev = this.hoverFocus;
     if (
       puzzle3dHoverTargetsEqual(prev.hoverTarget, next.hoverTarget) &&
@@ -1354,7 +1429,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       });
       this.hierarchySectionsRevision = this.fixtureRevision;
     }
-    const highlightedIds = puzzle3dPlayHierarchyTreeHighlightedIds(this.fixture, this.hoverFocus.kindHover);
+    const highlightedIds = puzzle3dPlayHierarchyTreeHighlightedIdsFromFocus(this.fixture, this.hoverFocus);
     return {
       type: "tree",
       sections: this.hierarchySectionsCache,
@@ -1365,7 +1440,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
 
   getKindsPanelTree(): UiNode {
     const catalogs = this.fixture ? parseKindCatalogs(this.fixture.meta) : undefined;
-    const highlightedIds = this.fixture ? puzzle3dPlayHierarchyTreeHighlightedIds(this.fixture, this.hoverFocus.kindHover) : [];
+    const highlightedIds = puzzle3dPlayKindsTreeHighlightedIds(catalogs, this.fixture, this.hoverFocus);
     return buildPuzzle3dPlayKindsTree(catalogs, this.fixture ?? undefined, {
       onHover: (payload) => this.setHoverFocus(payload),
       ...(highlightedIds.length ? { highlightedIds } : {}),
@@ -1567,10 +1642,34 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   private orbitCameraViewFromLegacyPreset(preset: string): OrbitCameraViewId | null {
-    if (preset === "top" || preset === "bottom" || preset === "front" || preset === "back" || preset === "north" || preset === "south" || preset === "east" || preset === "west" || preset === "perspective") {
-      return preset;
+    const views: readonly OrbitCameraViewId[] = [
+      "top",
+      "bottom",
+      "front",
+      "back",
+      "right",
+      "left",
+      "north",
+      "south",
+      "east",
+      "west",
+      "isometricNe",
+      "isometricNw",
+      "isometricSe",
+      "isometricSw",
+      "perspective",
+      "twoPointPerspective",
+    ];
+    if ((views as readonly string[]).includes(preset)) {
+      return preset as OrbitCameraViewId;
     }
-    return null;
+    const branchViews: Record<string, OrbitCameraViewId> = {
+      orthographic: "top",
+      "orthographic-2d": "top",
+      "orthographic-3d": "isometricNe",
+      isometry: "isometricNe",
+    };
+    return branchViews[preset] ?? null;
   }
 
   private lodMeasures(): readonly WindowMeasure[] {
@@ -2378,24 +2477,7 @@ export function buildPuzzle3dPlayAppRuntime(controller: Puzzle3dPlayShellControl
   ]);
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
-  controller.mainMode.namedLayouts = [
-    createNamedLayout("puzzle-3d-quad", "Quad", {
-      root: {
-        kind: "row",
-        children: [
-          {
-            kind: "column",
-            size: 50,
-            children: [
-              { kind: "stack", size: 50, children: [createWindowLayout(PUZZLE_3D_PLAY_WINDOW_ID, "Top", { templateId: "top" })] },
-              { kind: "stack", size: 50, children: [createWindowLayout(PUZZLE_3D_PLAY_WINDOW_ID, "North", { templateId: "north" })] },
-            ],
-          },
-          { kind: "stack", size: 50, children: [createWindowLayout(PUZZLE_3D_PLAY_WINDOW_ID, "Perspective", { templateId: "perspective" })] },
-        ],
-      },
-    }),
-  ];
+  controller.mainMode.namedLayouts = namedLayoutsFromOrbitViewDescriptors(PUZZLE_3D_PLAY_WINDOW_ID, createOrbitCameraViewLayoutDescriptors());
   app.panelTabs = [
     { id: PUZZLE_3D_PLAY_HIERARCHY_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_HIERARCHY, panel: "workbench", order: 0, bodyKey: PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY },
     { id: PUZZLE_3D_PLAY_KINDS_TAB_ID, iconId: PUZZLE_3D_PLAY_ICON_KINDS, panel: "workbench", order: 1, bodyKey: PUZZLE_3D_PLAY_KINDS_BODY_KEY },
@@ -3254,10 +3336,17 @@ if (import.meta.vitest) {
       const sharedBefore = ctrl.cameraForInstance();
       ctrl.run(ORBIT_CAMERA_VIEW_COMMAND, { view: "top", instanceId: "win-a" });
       ctrl.run(ORBIT_CAMERA_VIEW_COMMAND, { view: "front", instanceId: "win-b" });
+      ctrl.run(ORBIT_CAMERA_VIEW_COMMAND, { view: "isometricNe", instanceId: "win-c" });
+      ctrl.run(ORBIT_CAMERA_VIEW_COMMAND, { view: "twoPointPerspective", instanceId: "win-d" });
       const top = ctrl.cameraForInstance("win-a");
       const front = ctrl.cameraForInstance("win-b");
+      const iso = ctrl.cameraForInstance("win-c");
+      const twoPoint = ctrl.cameraForInstance("win-d");
       expect(top.position[2]).toBeGreaterThan(top.target[2]);
       expect(front.position[1]).toBeLessThan(front.target[1]);
+      expect(iso.position[0]).toBeGreaterThan(iso.target[0]);
+      expect(iso.position[1]).toBeGreaterThan(iso.target[1]);
+      expect(twoPoint.position[2]).toBeCloseTo(twoPoint.target[2], 5);
       expect(ctrl.cameraForInstance()).toEqual(sharedBefore);
       expect(ctrl.getSnapshot().cameraSeedEpoch).toBeGreaterThan(0);
     });
@@ -3824,6 +3913,54 @@ if (import.meta.vitest) {
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       ctrl.setHoverFocus({ hoverTarget: null, kindHover: { domain: "vortex", kindId: "b-l" } });
       expect(ctrl.getSnapshot().hoverFocus).toEqual({ hoverTarget: null, kindHover: { domain: "vortex", kindId: "b-l" } });
+    });
+
+    it("setHoverFocus does not derive kindHover from instance hover", () => {
+      const bus = new CommandBus();
+      const wb = new Platform();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
+      const fixture = ctrl.getFixture();
+      expect(fixture).not.toBeNull();
+      const objectId = fixture!.objects[0]!.id;
+      ctrl.setHoverFocus({ hoverTarget: { kind: "object", id: objectId }, kindHover: null });
+      expect(ctrl.getSnapshot().hoverFocus).toEqual({ hoverTarget: { kind: "object", id: objectId }, kindHover: null });
+    });
+
+    it("puzzle3dPlayHierarchyTreeHighlightedIdsFromFocus highlights one instance row for direct hover", () => {
+      const fixture = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [
+          {
+            id: "a",
+            meshUrl: "/m.glb",
+            objectKind: "kind-a",
+            origin: [0, 0, 0],
+            vortices: [{ id: "v1", vortexKind: "b-l", position: [0, 0, 0] }],
+          },
+          {
+            id: "b",
+            meshUrl: "/m.glb",
+            objectKind: "kind-a",
+            origin: [2, 0, 0],
+            vortices: [],
+          },
+        ],
+      });
+      expect(fixture).not.toBeNull();
+      expect(
+        puzzle3dPlayHierarchyTreeHighlightedIdsFromFocus(fixture!, {
+          hoverTarget: { kind: "object", id: "a" },
+          kindHover: null,
+        }),
+      ).toEqual(["puzzle-3d-play-hierarchy.object.a"]);
+      expect(
+        puzzle3dPlayHierarchyTreeHighlightedIdsFromFocus(fixture!, {
+          hoverTarget: null,
+          kindHover: { domain: "object", kindId: "kind-a" },
+        }),
+      ).toEqual(["puzzle-3d-play-hierarchy.object.a", "puzzle-3d-play-hierarchy.object.b"]);
     });
 
     it("noteSelection does not bump platform generation", () => {
