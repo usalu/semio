@@ -15,17 +15,21 @@ import {
   type ThreeEvent,
   type TreeDragAndDropController,
   SelectionMarquee,
+  cn,
+  glassMenuClass,
 } from "@ui/react";
 import {
   blendTokenHex,
   resolveBackgroundColorHex,
   resolveColorHex,
   resolveThreeColor,
+  semanticVar,
   themeColorVar,
   tokenHex,
   tokenVar,
 } from "@ui/styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   cadObjectLocalDirectionToThreeGroupLocal,
   cadObjectLocalToThreeGroupLocal,
@@ -91,7 +95,6 @@ export {
 // #endregion 🔌Adapters
 
 // #region 🔌PortWiring
-const createPortal = sceneHostPort.fiber.createPortal;
 const useFrame = sceneHostPort.fiber.useFrame;
 const useThree = sceneHostPort.fiber.useThree;
 const Clone = sceneHostPort.drei.Clone;
@@ -3467,6 +3470,7 @@ export function brushPreviewCollides(
   scene: BrushSceneCollisionSource,
   preview: BrushPreviewState,
   overlapBudget: number = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+  excludeSceneObjectIds?: ReadonlySet<string>,
 ): boolean | null {
   const previewBody = brushCollisionBody(preview.meshUrl);
   if (!previewBody) {
@@ -3474,6 +3478,10 @@ export function brushPreviewCollides(
   }
   const previewWorld = brushPreviewWorldMatrix(preview);
   for (const group of scene.collectObjectGroups()) {
+    const objectId = group.userData?.puzzle3dObjectId;
+    if (typeof objectId === "string" && excludeSceneObjectIds?.has(objectId)) {
+      continue;
+    }
     const meshUrl = brushSceneObjectMeshUrl(group);
     if (!meshUrl) {
       continue;
@@ -3611,6 +3619,7 @@ export function brushCandidateCollidesAtPose(
   preview: BrushPreviewState,
   meshRoot: Object3D | null | undefined,
   overlapBudget: number = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+  excludeSceneObjectIds?: ReadonlySet<string>,
 ): boolean | null {
   if (!meshRoot || !brushCollisionMeshExtentOk(meshRoot)) {
     return null;
@@ -3622,7 +3631,7 @@ export function brushCandidateCollidesAtPose(
     }
     brushCollisionBodies.set(preview.meshUrl, body);
   }
-  return brushPreviewCollides(scene, preview, overlapBudget);
+  return brushPreviewCollides(scene, preview, overlapBudget, excludeSceneObjectIds);
 }
 
 /** @emoji ✅ Collision-filtered brush candidates after mesh-backed AABB probes. */
@@ -3644,8 +3653,10 @@ export function brushCollisionFreeCandidates(args: {
   readonly sceneFixture?: FixtureV1;
   readonly meshRootForUrl?: (meshUrl: string) => Object3D | null | undefined;
   readonly overlapBudget?: number;
+  readonly excludeSceneObjectIds?: ReadonlySet<string>;
 }): BrushCollisionFreeResult {
   const overlapBudget = args.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
+  const excludeSceneObjectIds = args.excludeSceneObjectIds ?? new Set([args.target.objectId]);
   const free: BrushCompatibleCandidate[] = [];
   let unknownPending = false;
   for (const candidate of args.candidates) {
@@ -3663,7 +3674,7 @@ export function brushCollisionFreeCandidates(args: {
       continue;
     }
     const meshRoot = args.meshRootForUrl?.(preview.meshUrl);
-    const collides = brushCandidateCollidesAtPose(args.scene, preview, meshRoot, overlapBudget);
+    const collides = brushCandidateCollidesAtPose(args.scene, preview, meshRoot, overlapBudget, excludeSceneObjectIds);
     if (collides === null) {
       unknownPending = true;
       continue;
@@ -3885,6 +3896,7 @@ function fillPreviewCollidesAccumulated(
   preview: BrushPreviewState,
   placed: readonly BrushPlacedCollisionEntry[],
   overlapBudget: number,
+  excludeObjectId?: string,
 ): boolean | null {
   const previewBody = brushCollisionBody(preview.meshUrl);
   if (!previewBody) {
@@ -3892,6 +3904,9 @@ function fillPreviewCollidesAccumulated(
   }
   const previewWorld = brushPreviewWorldMatrix(preview);
   for (const entry of placed) {
+    if (excludeObjectId && entry.objectId === excludeObjectId) {
+      continue;
+    }
     const otherBody = brushCollisionBody(entry.meshUrl);
     if (!otherBody) {
       return null;
@@ -4078,7 +4093,7 @@ export function createBrushFillSequenceStepper(args: BrushFillSequenceArgs): Bru
         if (!meshRoot) {
           continue;
         }
-        const collides = fillPreviewCollidesAccumulated(preview, placed, overlapBudget);
+        const collides = fillPreviewCollidesAccumulated(preview, placed, overlapBudget, target.objectId);
         if (collides === null || collides) {
           continue;
         }
@@ -4216,7 +4231,7 @@ function buildPrecomputeSceneJson(input: Puzzle3dPrecomputeSceneInput): string {
   });
 }
 
-/** @emoji 📦 Merged pose-local mesh buffers for WASM parry3d registration. */
+/** @emoji 📦 Merged pose-local mesh buffers for WASM parry3d registration (GLB frame rotation already baked). */
 export function extractBrushCollisionMeshBuffers(meshRoot: Object3D): { readonly positions: Float32Array; readonly indices: Uint32Array } | null {
   const poseLocal = new Group();
   const frame = new Group();
@@ -4498,13 +4513,29 @@ class WasmCollisionEngine implements Puzzle3dCollisionEngine {
   }
 
   async brushCollisionFree(args: Parameters<Puzzle3dCollisionEngine["brushCollisionFree"]>[0]): Promise<BrushCollisionFreeResult> {
+    if (args.sceneFixture) {
+      await syncPuzzle3dPrecomputeScene({
+        fixture: args.sceneFixture,
+        kindCatalogs: args.kindCatalogs,
+        kindCompatibility: args.kindCompatibility,
+        overlapBudget: args.overlapBudget,
+        weights: puzzle3dBrushKindWeightsRef.current,
+      });
+    }
+    const live = brushCollisionFreeCandidates(args);
+    if (live.unknownPending) {
+      return live;
+    }
     const cached = await this.getBrushCandidates(args.targetVortexFullId);
-    if (cached.unknownPending && args.candidates.length > 0) {
-      return brushCollisionFreeCandidates(args);
+    if (cached.unknownPending) {
+      return live;
     }
     const freeSet = new Set(cached.free.map((row) => `${row.objectKindId}\u0001${row.sourceVortexIndex}`));
     const free = args.candidates.filter((row) => freeSet.has(`${row.objectKindId}\u0001${row.sourceVortexIndex}`));
-    return { free, unknownPending: cached.unknownPending && free.length === 0 };
+    if (free.length > 0) {
+      return { free, unknownPending: false };
+    }
+    return live;
   }
 
   dispose(): void {
@@ -4534,6 +4565,24 @@ export function puzzle3dPrecomputeUsesWorker(): boolean {
 }
 
 let puzzle3dPrecomputeSceneSyncTimer: ReturnType<typeof setTimeout> | null = null;
+let puzzle3dPrecomputeSceneSyncInFlight: Promise<void> = Promise.resolve();
+let puzzle3dPrecomputeSceneSyncKey = "";
+
+function puzzle3dPrecomputeSceneSyncKeyOf(input: Puzzle3dPrecomputeSceneInput): string {
+  return `${input.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}:${fixtureStateFingerprint(input.fixture)}`;
+}
+
+/** @emoji 🧵 Awaits worker scene sync (overlap budget + fixture fingerprint). */
+export async function syncPuzzle3dPrecomputeScene(input: Puzzle3dPrecomputeSceneInput): Promise<void> {
+  const key = puzzle3dPrecomputeSceneSyncKeyOf(input);
+  if (key === puzzle3dPrecomputeSceneSyncKey) {
+    await puzzle3dPrecomputeSceneSyncInFlight;
+    return;
+  }
+  puzzle3dPrecomputeSceneSyncKey = key;
+  puzzle3dPrecomputeSceneSyncInFlight = puzzle3dCollisionEngineRef.current.setScene(input);
+  await puzzle3dPrecomputeSceneSyncInFlight;
+}
 
 /** @emoji 🧵 Debounced scene sync to the precompute worker. */
 export function schedulePuzzle3dPrecomputeSceneSync(input: Puzzle3dPrecomputeSceneInput): void {
@@ -4542,7 +4591,7 @@ export function schedulePuzzle3dPrecomputeSceneSync(input: Puzzle3dPrecomputeSce
   }
   puzzle3dPrecomputeSceneSyncTimer = setTimeout(() => {
     puzzle3dPrecomputeSceneSyncTimer = null;
-    void puzzle3dCollisionEngineRef.current.setScene(input);
+    void syncPuzzle3dPrecomputeScene(input);
   }, 0);
 }
 
@@ -4575,6 +4624,7 @@ const CSS_HOVERED_MESH = themeColorVar("hover-panel");
 const CSS_HOVERED_LINE = themeColorVar("hover-base");
 const CSS_NEUTRAL_MESH = themeColorVar("panel");
 const CSS_NEUTRAL_LINE = WORLD_MESH_BORDER_CSS;
+const CSS_MESH_EDGE_BORDER = semanticVar("border-emphasized-color");
 const CSS_DISABLED_MESH = "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--color-panel))";
 const CSS_DISABLED_LINE = themeColorVar("muted-foreground");
 const CSS_ATTRACTION_ENDPOINT_LINE = themeColorVar("muted-foreground");
@@ -4721,7 +4771,7 @@ function applyMeshStyleToObject3D(root: Object3D, style: MeshStyleKind, edgeOutl
     }
   });
   if (edgeOutlines) {
-    applyWorldMeshEdgeBorders(root);
+    applyWorldMeshEdgeBorders(root, CSS_MESH_EDGE_BORDER);
   }
 }
 
@@ -6072,7 +6122,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
       }
       e.stopPropagation();
       vortexPointerGestureRef.current = null;
-      if (!gesture.dragStarted && !puzzle3dMarqueeSuppressClickRef.current && !puzzle3dRelocateDragActiveRef.current) {
+      if (!gesture.dragStarted && !puzzle3dMarqueeSuppressClickRef.current && !puzzle3dRelocateDragActiveRef.current && !puzzle3dBrushToolActiveRef.current) {
         selectVortex();
       }
     },
@@ -6886,9 +6936,32 @@ export interface BrushUiSnapshot {
   readonly preview: BrushPreviewState | null;
   readonly candidates: readonly BrushCompatibleCandidate[];
   readonly targetActive: boolean;
+  readonly placementProbePending: boolean;
+  readonly menuOpen: boolean;
+  readonly menuAnchor: ScreenPoint | null;
+  readonly menuHoverIndex: number | null;
 }
 
-const BRUSH_UI_IDLE: BrushUiSnapshot = { preview: null, candidates: [], targetActive: false };
+const BRUSH_UI_IDLE: BrushUiSnapshot = {
+  preview: null,
+  candidates: [],
+  targetActive: false,
+  placementProbePending: false,
+  menuOpen: false,
+  menuAnchor: null,
+  menuHoverIndex: null,
+};
+
+/** @emoji 🖌️ Brush candidate menu actions for the viewport overlay. */
+export interface Puzzle3dBrushMenuSource {
+  readonly hoverCandidate: (index: number) => void;
+  readonly selectCandidate: (index: number) => void;
+  readonly closeMenu: () => void;
+}
+
+export const puzzle3dBrushMenuSourceRef: { current: Puzzle3dBrushMenuSource } = {
+  current: { hoverCandidate: () => {}, selectCandidate: () => {}, closeMenu: () => {} },
+};
 
 /** @emoji 🖌️ Live brush gestures exposed to {@link buildPuzzle3dPlayEngagement}. */
 export interface Puzzle3dBrushEngagementSource {
@@ -7020,7 +7093,7 @@ export interface Puzzle3dPlayEngagementInputs {
 export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs): EngagementSpec {
   const status: { id: string; content: string }[] = [];
   if (inputs.activeTool === "brush") {
-    status.push({ id: "puzzle3d.brush.hint", content: "Point at an empty connector; Tab cycles collision-free placements" });
+    status.push({ id: "puzzle3d.brush.hint", content: "Left-click an empty connector; hover the list to preview, click to place" });
     if (inputs.brushTargetActive && inputs.brushCandidates.length === 0) {
       if (inputs.brushPlacementProbePending) {
         status.push({ id: "puzzle3d.brush.probe", content: "Checking collision-free placements…" });
@@ -7155,6 +7228,19 @@ export function createBrushUiStore(initial: BrushUiSnapshot = BRUSH_UI_IDLE) {
 export type BrushUiStore = ReturnType<typeof createBrushUiStore>;
 
 export const puzzle3dBrushUiStore = createBrushUiStore();
+
+function patchBrushUi(patch: Partial<BrushUiSnapshot>): void {
+  const prev = puzzle3dBrushUiStore.getSnapshot();
+  puzzle3dBrushUiStore.setSnapshot({
+    preview: patch.preview !== undefined ? patch.preview : prev.preview,
+    candidates: patch.candidates !== undefined ? patch.candidates : prev.candidates,
+    targetActive: patch.targetActive !== undefined ? patch.targetActive : prev.targetActive,
+    placementProbePending: patch.placementProbePending !== undefined ? patch.placementProbePending : prev.placementProbePending,
+    menuOpen: patch.menuOpen !== undefined ? patch.menuOpen : prev.menuOpen,
+    menuAnchor: patch.menuAnchor !== undefined ? patch.menuAnchor : prev.menuAnchor,
+    menuHoverIndex: patch.menuHoverIndex !== undefined ? patch.menuHoverIndex : prev.menuHoverIndex,
+  });
+}
 
 /** @emoji 🖌️ True while the brush tool is the active play tool. */
 export const puzzle3dBrushToolActiveRef = { current: false };
@@ -7631,8 +7717,10 @@ function BrushSession(props: {
   const targetWorldRef = reactHostPort.useRef<{ readonly position: Vec3; readonly direction: Vec3 } | null>(null);
   const preloadReconcileTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
   const placementProbePendingRef = reactHostPort.useRef(false);
+  const menuOpenRef = reactHostPort.useRef(false);
   const [catalogPreloadUrls, setCatalogPreloadUrls] = reactHostPort.useState<readonly string[]>([]);
   const ui = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
+  menuOpenRef.current = ui.menuOpen;
 
   reactHostPort.useEffect(() => {
     if (props.brushActive) {
@@ -7658,6 +7746,7 @@ function BrushSession(props: {
     placementProbePendingRef.current = false;
     puzzle3dBrushVortexHoverRef.current = false;
     puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
+    puzzle3dBrushMenuSourceRef.current = { hoverCandidate: () => {}, selectCandidate: () => {}, closeMenu: () => {} };
     puzzle3dBrushEngagementSourceRef.current = {
       candidates: [],
       targetActive: false,
@@ -7674,15 +7763,6 @@ function BrushSession(props: {
     const world = targetWorldRef.current;
     if (!targetFullId || !targetCtx || !world || probeOrderRef.current.length === 0) {
       return { free: [], unknownPending: false };
-    }
-    if (props.sceneFixture) {
-      schedulePuzzle3dPrecomputeSceneSync({
-        fixture: props.sceneFixture,
-        kindCatalogs: props.kindCatalogs,
-        kindCompatibility: props.kindCompatibility,
-        overlapBudget: props.overlapBudget,
-        weights: puzzle3dBrushKindWeightsRef.current,
-      });
     }
     return puzzle3dCollisionEngineRef.current.brushCollisionFree({
       scene: reg,
@@ -7704,8 +7784,7 @@ function BrushSession(props: {
       const world = targetWorldRef.current;
       const candidate = placementCandidatesRef.current[index];
       if (!world || !candidate) {
-        const snap = puzzle3dBrushUiStore.getSnapshot();
-        puzzle3dBrushUiStore.setSnapshot({ preview: null, candidates: snap.candidates, targetActive: snap.targetActive });
+        patchBrushUi({ preview: null });
         notifyPuzzle3dBrushEngagementSource();
         return;
       }
@@ -7724,8 +7803,7 @@ function BrushSession(props: {
         sceneFixture: props.sceneFixture,
       });
       previewCollidesRef.current = false;
-      const snap = puzzle3dBrushUiStore.getSnapshot();
-      puzzle3dBrushUiStore.setSnapshot({ preview, candidates: snap.candidates, targetActive: snap.targetActive });
+      patchBrushUi({ preview, menuHoverIndex: puzzle3dBrushUiStore.getSnapshot().menuOpen ? index : null });
       notifyPuzzle3dBrushEngagementSource();
       invalidate();
     },
@@ -7739,6 +7817,7 @@ function BrushSession(props: {
     }
     indexRef.current = (indexRef.current + 1) % list.length;
     applyCandidateIndex(targetRef.current, indexRef.current);
+    patchBrushUi({ menuHoverIndex: menuOpenRef.current ? indexRef.current : null });
   }, [applyCandidateIndex]);
 
   const retreatCandidate = reactHostPort.useCallback(() => {
@@ -7748,6 +7827,7 @@ function BrushSession(props: {
     }
     indexRef.current = (indexRef.current - 1 + list.length) % list.length;
     applyCandidateIndex(targetRef.current, indexRef.current);
+    patchBrushUi({ menuHoverIndex: menuOpenRef.current ? indexRef.current : null });
   }, [applyCandidateIndex]);
 
   const publishBrushEngagement = reactHostPort.useCallback(() => {
@@ -7764,10 +7844,10 @@ function BrushSession(props: {
         }
         indexRef.current = index;
         applyCandidateIndex(targetRef.current, index);
+        patchBrushUi({ menuHoverIndex: menuOpenRef.current ? index : null });
       },
     };
-    const snap = puzzle3dBrushUiStore.getSnapshot();
-    puzzle3dBrushUiStore.setSnapshot({ preview: snap.preview, candidates, targetActive });
+    patchBrushUi({ candidates, targetActive, placementProbePending: placementProbePendingRef.current });
     notifyPuzzle3dBrushEngagementSource();
   }, [advanceCandidate, applyCandidateIndex]);
 
@@ -7795,8 +7875,7 @@ function BrushSession(props: {
         return;
       }
       previewCollidesRef.current = false;
-      const snap = puzzle3dBrushUiStore.getSnapshot();
-      puzzle3dBrushUiStore.setSnapshot({ preview, candidates: snap.candidates, targetActive: true });
+      patchBrushUi({ preview, targetActive: true });
       notifyPuzzle3dBrushEngagementSource();
       invalidate();
     },
@@ -7822,7 +7901,7 @@ function BrushSession(props: {
               preview,
               bootstrapCandidate,
             );
-          if (needsBootstrap) {
+          if (needsBootstrap && !menuOpenRef.current) {
             applyBootstrapPreview(targetFullId);
           }
           publishBrushEngagement();
@@ -7831,7 +7910,7 @@ function BrushSession(props: {
         }
         placementProbePendingRef.current = false;
         previewCollidesRef.current = true;
-        puzzle3dBrushUiStore.setSnapshot({ preview: null, candidates: [], targetActive: true });
+        patchBrushUi({ preview: null, candidates: [], targetActive: true, menuHoverIndex: null, placementProbePending: false });
         publishBrushEngagement();
         invalidate();
         return;
@@ -7840,7 +7919,9 @@ function BrushSession(props: {
       const previewStillValid = preview !== null && result.free.some((candidate) => brushPreviewMatchesCandidate(preview, candidate));
       if (!previewStillValid) {
         indexRef.current = 0;
-        applyCandidateIndex(targetFullId, 0);
+        if (!menuOpenRef.current) {
+          applyCandidateIndex(targetFullId, 0);
+        }
       }
       publishBrushEngagement();
       invalidate();
@@ -7937,6 +8018,54 @@ function BrushSession(props: {
     clearBrush();
   }, [clearBrush, commitCurrentPreview]);
 
+  const openMenu = reactHostPort.useCallback((anchor: ScreenPoint) => {
+    patchBrushUi({ menuOpen: true, menuAnchor: anchor, menuHoverIndex: null, preview: null, targetActive: true });
+    notifyPuzzle3dBrushEngagementSource();
+  }, []);
+
+  const closeMenu = reactHostPort.useCallback(() => {
+    if (!puzzle3dBrushUiStore.getSnapshot().menuOpen) {
+      return;
+    }
+    leaveTarget();
+  }, [leaveTarget]);
+
+  const hoverMenuCandidate = reactHostPort.useCallback(
+    (index: number) => {
+      if (!targetRef.current || index < 0 || index >= placementCandidatesRef.current.length) {
+        return;
+      }
+      indexRef.current = index;
+      applyCandidateIndex(targetRef.current, index);
+      patchBrushUi({ menuHoverIndex: index });
+    },
+    [applyCandidateIndex],
+  );
+
+  const selectMenuCandidate = reactHostPort.useCallback(
+    (index: number) => {
+      if (!targetRef.current || index < 0 || index >= placementCandidatesRef.current.length) {
+        return;
+      }
+      indexRef.current = index;
+      applyCandidateIndex(targetRef.current, index);
+      commitCurrentPreview();
+      clearBrush();
+    },
+    [applyCandidateIndex, clearBrush, commitCurrentPreview],
+  );
+
+  reactHostPort.useEffect(() => {
+    puzzle3dBrushMenuSourceRef.current = {
+      hoverCandidate: hoverMenuCandidate,
+      selectCandidate: selectMenuCandidate,
+      closeMenu,
+    };
+    return () => {
+      puzzle3dBrushMenuSourceRef.current = { hoverCandidate: () => {}, selectCandidate: () => {}, closeMenu: () => {} };
+    };
+  }, [closeMenu, hoverMenuCandidate, selectMenuCandidate]);
+
   reactHostPort.useEffect(() => {
     if (!props.brushActive) {
       clearBrush();
@@ -7956,9 +8085,12 @@ function BrushSession(props: {
         brushActive={props.brushActive}
         blockedVortexFullIds={reg.blockedVortexFullIds}
         targetRef={targetRef}
+        menuOpenRef={menuOpenRef}
         candidatesRef={placementCandidatesRef}
         enterTarget={enterTarget}
         leaveTarget={leaveTarget}
+        openMenu={openMenu}
+        closeMenu={closeMenu}
         commitCurrentPreview={commitCurrentPreview}
         clearBrush={clearBrush}
         advanceCandidate={advanceCandidate}
@@ -7975,9 +8107,12 @@ function BrushPointerBridge(props: {
   readonly brushActive: boolean;
   readonly blockedVortexFullIds: ReadonlySet<string>;
   readonly targetRef: MutableRefObject<string | null>;
+  readonly menuOpenRef: MutableRefObject<boolean>;
   readonly candidatesRef: MutableRefObject<readonly BrushCompatibleCandidate[]>;
   readonly enterTarget: (fullId: string, meta: VortexBindingMeta) => void;
   readonly leaveTarget: () => void;
+  readonly openMenu: (anchor: ScreenPoint) => void;
+  readonly closeMenu: () => void;
   readonly commitCurrentPreview: () => void;
   readonly clearBrush: () => void;
   readonly advanceCandidate: () => void;
@@ -7988,6 +8123,7 @@ function BrushPointerBridge(props: {
   const { camera, gl } = useThree();
   const raycasterRef = reactHostPort.useRef(new Raycaster());
   const ndcRef = reactHostPort.useRef(new Vector2());
+  const clickGestureRef = reactHostPort.useRef<{ readonly pointerId: number; readonly x: number; readonly y: number } | null>(null);
 
   reactHostPort.useEffect(() => {
     if (!props.brushActive) {
@@ -8031,11 +8167,11 @@ function BrushPointerBridge(props: {
       }
       return out;
     };
-    const onMove = (event: PointerEvent) => {
+    const pickVortexAt = (clientX: number, clientY: number): ScreenVortexCandidate | null => {
       const canvas = gl.domElement;
       const rect = canvas.getBoundingClientRect();
-      ndcRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      ndcRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      ndcRef.current.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      ndcRef.current.y = -((clientY - rect.top) / rect.height) * 2 + 1;
       raycasterRef.current.setFromCamera(ndcRef.current, camera);
       const hits = raycasterRef.current.intersectObjects(collectPickRoots(), true);
       const surfaceDist = hits[0]?.distance ?? 80;
@@ -8062,16 +8198,46 @@ function BrushPointerBridge(props: {
           dist: camera.position.distanceTo(world),
         });
       }
-      const picked = pickNearestScreenVortex({
-        cursorX: event.clientX,
-        cursorY: event.clientY,
+      return pickNearestScreenVortex({
+        cursorX: clientX,
+        cursorY: clientY,
         surfaceDist,
         candidates: screenCandidates,
       });
+    };
+    const onMove = (event: PointerEvent) => {
+      const picked = pickVortexAt(event.clientX, event.clientY);
       puzzle3dBrushVortexHoverRef.current = picked !== null;
+      if (props.menuOpenRef.current) {
+        props.invalidate();
+        return;
+      }
+      if (!picked && props.targetRef.current) {
+        props.leaveTarget();
+      }
+      props.invalidate();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
+      clickGestureRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      const gesture = clickGestureRef.current;
+      if (!gesture || gesture.pointerId !== event.pointerId || event.button !== 0) {
+        return;
+      }
+      clickGestureRef.current = null;
+      const dx = event.clientX - gesture.x;
+      const dy = event.clientY - gesture.y;
+      if (dx * dx + dy * dy >= PUZZLE_3D_VORTEX_DRAG_THRESHOLD_PX * PUZZLE_3D_VORTEX_DRAG_THRESHOLD_PX) {
+        return;
+      }
+      const picked = pickVortexAt(event.clientX, event.clientY);
       if (!picked) {
-        if (props.targetRef.current) {
-          props.leaveTarget();
+        if (props.menuOpenRef.current) {
+          props.closeMenu();
         }
         return;
       }
@@ -8079,17 +8245,24 @@ function BrushPointerBridge(props: {
       if (!meta) {
         return;
       }
+      if (picked.fullId === props.targetRef.current && props.menuOpenRef.current) {
+        props.closeMenu();
+        return;
+      }
+      if (props.targetRef.current && picked.fullId !== props.targetRef.current) {
+        props.commitCurrentPreview();
+        props.clearBrush();
+      }
       if (picked.fullId !== props.targetRef.current) {
-        if (props.targetRef.current) {
-          props.commitCurrentPreview();
-          props.clearBrush();
-        }
         props.enterTarget(picked.fullId, meta);
       }
+      props.openMenu({ x: event.clientX, y: event.clientY });
       props.invalidate();
     };
     const bindings = new EventBindingController();
     bindings.listen(window, "pointermove", onMove);
+    bindings.listen(window, "pointerdown", onPointerDown, true);
+    bindings.listen(window, "pointerup", onPointerUp, true);
     return () => bindings.dispose();
   }, [camera, gl, props, reg]);
   return null;
@@ -8351,6 +8524,84 @@ export function MarqueeAttractionSource(): null {
     return () => setMarqueeAttractions([]);
   }, [attractions, setMarqueeAttractions]);
   return null;
+}
+
+const brushMenuContentClassName = cn(
+  glassMenuClass,
+  "w-auto min-w-[10rem] max-h-[min(24rem,70vh)] overflow-y-auto border p-single z-temporary text-foreground",
+);
+const brushMenuItemClassName =
+  "text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex w-full items-center gap-single p-single text-left text-sm outline-none whitespace-nowrap cursor-default select-none disabled:pointer-events-none disabled:opacity-50";
+
+function Puzzle3dBrushCandidateMenu() {
+  const ui = reactHostPort.useSyncExternalStore(puzzle3dBrushUiStore.subscribe, puzzle3dBrushUiStore.getSnapshot, puzzle3dBrushUiStore.getSnapshot);
+  const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const closeMenu = reactHostPort.useCallback(() => {
+    puzzle3dBrushMenuSourceRef.current.closeMenu();
+  }, []);
+  reactHostPort.useEffect(() => {
+    if (!ui.menuOpen || !ui.menuAnchor) {
+      return undefined;
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && menuRef.current?.contains(target)) {
+        return;
+      }
+      closeMenu();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    };
+    const bindings = new EventBindingController();
+    bindings.listen(window, "pointerdown", onPointerDown, false);
+    bindings.listen(window, "keydown", onKeyDown, false);
+    return () => bindings.dispose();
+  }, [closeMenu, ui.menuAnchor, ui.menuOpen]);
+  if (!ui.menuOpen || !ui.menuAnchor) {
+    return null;
+  }
+  const body =
+    ui.candidates.length > 0 ? (
+      ui.candidates.map((candidate, index) => {
+        const active = ui.menuHoverIndex === index;
+        return (
+          <button
+            key={`${candidate.objectKindId}:${candidate.sourceVortexIndex}`}
+            aria-selected={active}
+            className={cn(brushMenuItemClassName, active && "bg-hover-temporary")}
+            onClick={() => puzzle3dBrushMenuSourceRef.current.selectCandidate(index)}
+            onMouseEnter={() => puzzle3dBrushMenuSourceRef.current.hoverCandidate(index)}
+            role="menuitem"
+            type="button"
+          >
+            <span className="truncate">{normalizeEngagementCommandText(candidate.objectKindId)}</span>
+            <span className="ml-auto text-xs text-muted-foreground pl-tiny">v{candidate.sourceVortexIndex}</span>
+          </button>
+        );
+      })
+    ) : (
+      <div className="p-single text-sm text-muted-foreground" role="status">
+        {ui.placementProbePending ? "Checking collision-free placements…" : "No collision-free placement at this connector"}
+      </div>
+    );
+  if (typeof document === "undefined") {
+    return null;
+  }
+  return createPortal(
+    <div
+      className={brushMenuContentClassName}
+      onContextMenu={(event) => event.preventDefault()}
+      ref={menuRef}
+      role="menu"
+      style={{ left: ui.menuAnchor.x, position: "fixed", top: ui.menuAnchor.y }}
+    >
+      {body}
+    </div>,
+    document.body,
+  );
 }
 
 function Puzzle3dMarqueeOverlay() {
@@ -9669,8 +9920,11 @@ function Inner(props: CanvasProps & {
           </>
         ) : null}
         <AttractionRubberBand />
-        <ambientLight intensity={0.45} />
-        <directionalLight position={[12, 18, 10]} intensity={0.85} />
+        <ambientLight intensity={1.15} />
+        <hemisphereLight color="#ffffff" groundColor="#9aa0ab" intensity={1.35} position={[0, 0, 1]} />
+        <directionalLight position={[12, 18, 10]} intensity={2.4} />
+        <directionalLight position={[-14, -10, 6]} intensity={1.2} />
+        <directionalLight position={[0, 0, -16]} intensity={0.75} />
         <WorldLayer order={10} name="puzzle3d.view-radius">
           <InnerSceneChildren chunkSize={chunkSize} maxDistance={maxDist} />
         </WorldLayer>
@@ -9921,7 +10175,12 @@ export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSP
           event.preventDefault();
         }
       }}
-      overlay={<Puzzle3dMarqueeOverlay />}
+      overlay={
+        <>
+          <Puzzle3dMarqueeOverlay />
+          <Puzzle3dBrushCandidateMenu />
+        </>
+      }
     >
       <Inner
         {...rest}
@@ -11486,6 +11745,26 @@ if (import.meta.vitest) {
       expect(picked).toEqual([1]);
     });
 
+    it("buildPuzzle3dPlayEngagement brush hint describes click-to-open candidate menu", () => {
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "brush",
+        cmdLine: "",
+        fillCount: 0,
+        selectionCount: 0,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onFillTool: () => {},
+        onFillCount: () => {},
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [],
+        brushTargetActive: false,
+      });
+      expect(spec.status?.find((row) => row.id === "puzzle3d.brush.hint")?.content).toContain("Left-click");
+    });
     it("buildPuzzle3dPlayEngagement lists brush candidates when brush tool is active", () => {
       const spec = buildPuzzle3dPlayEngagement({
         activeTool: "brush",
@@ -12303,5 +12582,188 @@ if (import.meta.vitest) {
       expect(wasmResult.free.length).toBe(bvhResult.free.length);
       clearBrushCollisionGltfScenes();
     });
+    it("concrete forest brush suggestions for seed b-p1-t-t1-c3-l are all beam connectors including self", async () => {
+      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
+      const leftType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
+        connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
+      };
+      const rightType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-right.type.semio.json")).default as {
+        connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
+      };
+      const expectedBeamConnectors = [
+        "b-p1-t-t1-c3-l",
+        "b-p1-t-t1-c3-r",
+        "b-p1-t-t2-c3-l",
+        "b-p1-b-t1-c2-l",
+        "b-p1-b-t1-c1-r",
+        "b-p1-b-t1-c1-l",
+        "b-p1-t-t2-c1-l",
+        "b-p2-t-t1-c3-l",
+        "b-p2-t-t1-c3-r",
+        "b-p2-t-t2-c3-l",
+        "b-p2-b-t1-c1-l",
+        "b-p2-b-t1-c2-l",
+        "b-p2-b-t1-c1-r",
+        "b-p2-t-t1-c1-l",
+      ] as const;
+      const connectorNamesByKind: Record<string, readonly string[]> = {
+        "Hexagonal Cut Concrete Forest Left": leftType.connectors.items.map((row) => row.name),
+        "Hexagonal Cut Concrete Forest Right": rightType.connectors.items.map((row) => row.name),
+      };
+      const meta = concreteForestFixture.meta as Record<string, unknown> | undefined;
+      const catalogs = meta?.kindCatalogs as KindCatalogBundle | undefined;
+      const compat = (meta?.kindCompatibility as readonly KindCompatEntry[] | undefined) ?? [];
+      const { readFileSync } = await import("node:fs");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
+      const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
+      const meshDir = join(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau");
+      const loader = new GLTFLoader();
+      const loadGlb = (name: string): Promise<Group> =>
+        new Promise((resolveGlb, reject) => {
+          const bytes = new Uint8Array(readFileSync(join(meshDir, name)));
+          loader.parse(bytes.buffer, meshDir, (gltf) => resolveGlb(gltf.scene), reject);
+        });
+      clearBrushCollisionGltfScenes();
+      const leftUrl = "/meshes/hexagonal-cut-concrete-forest-left.glb";
+      const rightUrl = "/meshes/hexagonal-cut-concrete-forest-right.glb";
+      registerBrushCollisionGltfScene(leftUrl, await loadGlb("hexagonal-cut-concrete-forest-left.glb"));
+      registerBrushCollisionGltfScene(rightUrl, await loadGlb("hexagonal-cut-concrete-forest-right.glb"));
+      for (const kind of catalogs?.objects ?? []) {
+        const kitType = kind.id === "Hexagonal Cut Concrete Forest Left" ? leftType : rightType;
+        const kitConnectors = connectorNamesByKind[kind.id];
+        if (!kitConnectors) {
+          continue;
+        }
+        for (let index = 0; index < (kind.vortices?.length ?? 0); index += 1) {
+          const template = kind.vortices![index]!;
+          const connector = kitType.connectors.items[index];
+          if (!connector) {
+            continue;
+          }
+          expect(template.position[0]).toBeCloseTo(connector.point.x, 4);
+          expect(template.position[1]).toBeCloseTo(connector.point.y, 4);
+          expect(template.position[2]).toBeCloseTo(connector.point.z, 4);
+          expect(kitConnectors[index]).toBe(connector.name);
+        }
+      }
+      const target: AttractionVortexContext = {
+        objectId: "seed-left-001",
+        objectKind: "Hexagonal Cut Concrete Forest Left",
+        vortexKind: "b-l",
+      };
+      const host = concreteForestFixture.objects[0]!;
+      const world = vortexWorldCadFromObject(host, 0)!;
+      const compatible = brushCompatibleCandidates(target, catalogs, compat);
+      const hostGroup = new Group();
+      hostGroup.userData.puzzle3dMeshUrl = leftUrl;
+      hostGroup.userData.puzzle3dObjectId = host.id;
+      applyObjectPose(hostGroup, host.origin, host.orientation ?? [0, 0, 0, 1]);
+      const bvhResult = brushCollisionFreeCandidates({
+        scene: { collectObjectGroups: () => [hostGroup] },
+        targetVortexFullId: "seed-left-001:v0",
+        candidates: compatible,
+        target,
+        targetWorldPositionCad: world.position,
+        targetWorldDirectionCad: world.direction,
+        referenceOrientationCad: host.orientation,
+        kindCatalogs: catalogs,
+        sceneFixture: concreteForestFixture,
+        meshRootForUrl: brushCollisionGltfRoot,
+        overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+      });
+      const connectorNameForCandidate = (candidate: BrushCompatibleCandidate): string =>
+        connectorNamesByKind[candidate.objectKindId]![candidate.sourceVortexIndex]!;
+      const freeConnectorNames = bvhResult.free.map(connectorNameForCandidate).sort();
+      expect(bvhResult.unknownPending).toBe(false);
+      expect(new Set(freeConnectorNames)).toEqual(new Set(expectedBeamConnectors));
+      expect(freeConnectorNames).toHaveLength(expectedBeamConnectors.length);
+      clearBrushCollisionGltfScenes();
+    }, 60_000);
+    it("wasm concrete forest brush agrees with mesh-bvh on real geometry beam connector set", async () => {
+      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
+      const leftType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-left.type.semio.json")).default as {
+        connectors: { items: readonly { name: string }[] };
+      };
+      const rightType = (await import("../../../semio/fixtures/kit/dev/abbau-aufbau/wip/initialKit/types/hexagonal-cut-concrete-forest-right.type.semio.json")).default as {
+        connectors: { items: readonly { name: string }[] };
+      };
+      const connectorNamesByKind: Record<string, readonly string[]> = {
+        "Hexagonal Cut Concrete Forest Left": leftType.connectors.items.map((row) => row.name),
+        "Hexagonal Cut Concrete Forest Right": rightType.connectors.items.map((row) => row.name),
+      };
+      const meta = concreteForestFixture.meta as Record<string, unknown> | undefined;
+      const catalogs = meta?.kindCatalogs as KindCatalogBundle | undefined;
+      const compat = (meta?.kindCompatibility as readonly KindCompatEntry[] | undefined) ?? [];
+      const { readFileSync } = await import("node:fs");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
+      const wasmMod = await import("../rs/pkg/puzzle_3d.js");
+      const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/puzzle_3d_bg.wasm");
+      wasmMod.initSync({ module: readFileSync(wasmPath) });
+      await wasmMod.default();
+      const session = new wasmMod.Puzzle3dPrecomputeSession();
+      clearBrushCollisionGltfScenes();
+      const leftUrl = "/meshes/hexagonal-cut-concrete-forest-left.glb";
+      const rightUrl = "/meshes/hexagonal-cut-concrete-forest-right.glb";
+      const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
+      const meshDir = join(repoRoot, "semio/fixtures/kit/folder/abbau-aufbau");
+      const loader = new GLTFLoader();
+      const loadGlb = (name: string): Promise<Group> =>
+        new Promise((resolveGlb, reject) => {
+          const bytes = new Uint8Array(readFileSync(join(meshDir, name)));
+          loader.parse(bytes.buffer, meshDir, (gltf) => resolveGlb(gltf.scene), reject);
+        });
+      registerBrushCollisionGltfScene(leftUrl, await loadGlb("hexagonal-cut-concrete-forest-left.glb"));
+      registerBrushCollisionGltfScene(rightUrl, await loadGlb("hexagonal-cut-concrete-forest-right.glb"));
+      const leftBuffers = extractBrushCollisionMeshBuffers(brushCollisionGltfRoot(leftUrl)!)!;
+      const rightBuffers = extractBrushCollisionMeshBuffers(brushCollisionGltfRoot(rightUrl)!)!;
+      session.register_mesh(leftUrl, leftBuffers.positions, leftBuffers.indices);
+      session.register_mesh(rightUrl, rightBuffers.positions, rightBuffers.indices);
+      session.set_scene(
+        JSON.stringify({
+          fixture: concreteForestFixture,
+          kindCatalogs: catalogs,
+          kindCompatibility: compat,
+          overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+          hostRules: { rejectCapitalOnTambour: false, rejectLastSingleStoreyOnMidTambour: false, doorTambourRequiresDoorCapsule: false },
+          seed: 42,
+        }),
+      );
+      const target: AttractionVortexContext = {
+        objectId: "seed-left-001",
+        objectKind: "Hexagonal Cut Concrete Forest Left",
+        vortexKind: "b-l",
+      };
+      const host = concreteForestFixture.objects[0]!;
+      const world = vortexWorldCadFromObject(host, 0)!;
+      const compatible = brushCompatibleCandidates(target, catalogs, compat);
+      const hostGroup = new Group();
+      hostGroup.userData.puzzle3dMeshUrl = leftUrl;
+      hostGroup.userData.puzzle3dObjectId = host.id;
+      applyObjectPose(hostGroup, host.origin, host.orientation ?? [0, 0, 0, 1]);
+      const bvhResult = brushCollisionFreeCandidates({
+        scene: { collectObjectGroups: () => [hostGroup] },
+        targetVortexFullId: "seed-left-001:v0",
+        candidates: compatible,
+        target,
+        targetWorldPositionCad: world.position,
+        targetWorldDirectionCad: world.direction,
+        referenceOrientationCad: host.orientation,
+        kindCatalogs: catalogs,
+        sceneFixture: concreteForestFixture,
+        meshRootForUrl: brushCollisionGltfRoot,
+        overlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+      });
+      const wasmResult = JSON.parse(session.brush_candidates("seed-left-001:v0")) as BrushCollisionFreeResult;
+      const connectorKey = (candidate: BrushCompatibleCandidate): string =>
+        `${connectorNamesByKind[candidate.objectKindId]![candidate.sourceVortexIndex]}:${candidate.objectKindId}:${candidate.sourceVortexIndex}`;
+      expect(wasmResult.unknownPending).toBe(false);
+      expect(bvhResult.unknownPending).toBe(false);
+      expect(new Set(wasmResult.free.map(connectorKey))).toEqual(new Set(bvhResult.free.map(connectorKey)));
+      clearBrushCollisionGltfScenes();
+    }, 60_000);
   });
 }

@@ -11392,9 +11392,91 @@ function sketchpadReadEntityId(ref: unknown): string | null {
 	return null;
 }
 
+/** @emoji 📁 Resolves the owning folder id for a kit file row (`folder`, `folderId`, …). */
+function sketchpadKitFileFolderId(file: Record<string, unknown>): string | null {
+	return (
+		sketchpadReadEntityId(file["folder"]) ??
+		sketchpadReadEntityId(file["folderId"]) ??
+		sketchpadReadEntityId(file["folder_id"])
+	);
+}
+
 /** @emoji 📄 True when a kit file row belongs at kit VFS root (not under a folder). */
 function sketchpadKitFileAtKitRoot(file: Record<string, unknown>): boolean {
-	return sketchpadReadEntityId(file["folder"]) == null;
+	return sketchpadKitFileFolderId(file) == null;
+}
+
+/** @emoji 📁 Resolves a folder row's parent folder id (`parent`, `parentFolderId`, …). */
+function sketchpadKitFolderParentId(folder: Record<string, unknown>): string | null {
+	return (
+		sketchpadReadEntityId(folder["parent"]) ??
+		sketchpadReadEntityId(folder["parentFolder"]) ??
+		sketchpadReadEntityId(folder["parentFolderId"]) ??
+		sketchpadReadEntityId(folder["parent_folder_id"])
+	);
+}
+
+/** @emoji 📁 True when a folder row belongs at kit VFS root (no parent folder). */
+function sketchpadKitFolderAtRoot(folder: Record<string, unknown>): boolean {
+	return sketchpadKitFolderParentId(folder) == null;
+}
+
+/** @emoji 📁 VFS label and path for a kit folder row (prefers `name`, then `path`, then id). */
+function sketchpadKitFolderVfsFields(folder: Record<string, unknown>): { readonly name: string; readonly path: string } {
+	const explicitName = typeof folder["name"] === "string" ? folder["name"].trim() : "";
+	const path =
+		typeof folder["path"] === "string" && folder["path"].trim().length > 0
+			? folder["path"].trim()
+			: explicitName.length > 0
+				? `/${explicitName}`
+				: `/${String(folder["id"] ?? "")}`;
+	const slash = path.lastIndexOf("/");
+	const name = explicitName.length > 0 ? explicitName : slash >= 0 ? path.slice(slash + 1) : path;
+	return { name, path };
+}
+
+function sketchpadKitVfsPushFolderRow(
+	rows: VirtualFileSystemNodeRecord[],
+	kitId: string,
+	parentId: string,
+	folder: Record<string, unknown>,
+): void {
+	const id = String(folder["id"] ?? "");
+	if (!id) return;
+	const { name, path } = sketchpadKitFolderVfsFields(folder);
+	rows.push({
+		id,
+		fileNodeKindId: "folder",
+		name,
+		path,
+		parentId,
+		hasChildren: true,
+		navigateUri: `/kits/${kitId}?folder=${encodeURIComponent(id)}`,
+		descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("folder", { path }),
+	});
+}
+
+function sketchpadKitVfsPushFileRow(
+	rows: VirtualFileSystemNodeRecord[],
+	kitId: string,
+	parentId: string,
+	file: Record<string, unknown>,
+): void {
+	const id = String(file["id"] ?? "");
+	if (!id) return;
+	const vfsFile = sketchpadKitVfsFileRowFields(file);
+	const filePath = `/${sketchpadKitFileBasename(file)}`;
+	rows.push({
+		id,
+		fileNodeKindId: "file",
+		name: vfsFile.name,
+		icon: vfsFile.icon,
+		path: filePath,
+		parentId,
+		hasChildren: false,
+		navigateUri: `/kits/${kitId}?file=${encodeURIComponent(id)}`,
+		descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path: filePath }),
+	});
 }
 
 const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}`;
@@ -13146,6 +13228,8 @@ function sketchpadKitTypologyRows(kit: Kit): readonly { readonly id: string; rea
 function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFileSystemNodeRecord[] {
 	const kitId = String(kit.id ?? "");
 	const typologies = sketchpadKitTypologyRows(kit);
+	const kitFolders = sketchpadKitItemsOf<unknown>(kit.folders);
+	const kitFiles = sketchpadKitItemsOf<unknown>(kit.files);
 	if (parentId === kitId) {
 		const rows: VirtualFileSystemNodeRecord[] = [];
 		for (const topo of typologies) {
@@ -13161,61 +13245,22 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			});
 		}
 		if (typologies.length > 0) {
-			for (const folder of kit.folders ?? []) {
+			for (const folder of kitFolders) {
 				const row = folder as Record<string, unknown>;
-				const id = String(row["id"] ?? "");
-				if (!id) continue;
-				const path = typeof row["path"] === "string" ? row["path"] : id;
-				const slash = path.lastIndexOf("/");
-				const name = slash >= 0 ? path.slice(slash + 1) : path;
-				rows.push({
-					id,
-					fileNodeKindId: "folder",
-					name,
-					path,
-					parentId: kitId,
-					hasChildren: true,
-					navigateUri: `/kits/${kitId}?folder=${encodeURIComponent(id)}`,
-					descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("folder", { path }),
-				});
+				if (!sketchpadKitFolderAtRoot(row)) continue;
+				sketchpadKitVfsPushFolderRow(rows, kitId, kitId, row);
 			}
-			for (const file of kit.files ?? []) {
+			for (const file of kitFiles) {
 				const row = file as Record<string, unknown>;
-				const id = String(row["id"] ?? "");
-				if (!id || !sketchpadKitFileAtKitRoot(row)) continue;
-				const vfsFile = sketchpadKitVfsFileRowFields(row);
-				const filePath = `/${sketchpadKitFileBasename(row)}`;
-				rows.push({
-					id,
-					fileNodeKindId: "file",
-					name: vfsFile.name,
-					icon: vfsFile.icon,
-					path: filePath,
-					parentId: kitId,
-					hasChildren: false,
-					navigateUri: `/kits/${kitId}?file=${encodeURIComponent(id)}`,
-					descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path: filePath }),
-				});
+				if (!sketchpadKitFileAtKitRoot(row)) continue;
+				sketchpadKitVfsPushFileRow(rows, kitId, kitId, row);
 			}
 			return rows;
 		}
-		for (const folder of kit.folders ?? []) {
+		for (const folder of kitFolders) {
 			const row = folder as Record<string, unknown>;
-			const id = String(row["id"] ?? "");
-			if (!id) continue;
-			const path = typeof row["path"] === "string" ? row["path"] : id;
-			const slash = path.lastIndexOf("/");
-			const name = slash >= 0 ? path.slice(slash + 1) : path;
-			rows.push({
-				id,
-				fileNodeKindId: "folder",
-				name,
-				path,
-				parentId: kitId,
-				hasChildren: true,
-				navigateUri: `/kits/${kitId}?folder=${encodeURIComponent(id)}`,
-				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("folder", { path }),
-			});
+			if (!sketchpadKitFolderAtRoot(row)) continue;
+			sketchpadKitVfsPushFolderRow(rows, kitId, kitId, row);
 		}
 		for (const type of kit.types ?? []) {
 			if (typeof type !== "object" || type === null || !("id" in type)) continue;
@@ -13249,23 +13294,10 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("design", { path: designPath }),
 			});
 		}
-		for (const file of kit.files ?? []) {
+		for (const file of kitFiles) {
 			const row = file as Record<string, unknown>;
-			const id = String(row["id"] ?? "");
-			if (!id || !sketchpadKitFileAtKitRoot(row)) continue;
-			const vfsFile = sketchpadKitVfsFileRowFields(row);
-			const filePath = `/${sketchpadKitFileBasename(row)}`;
-			rows.push({
-				id,
-				fileNodeKindId: "file",
-				name: vfsFile.name,
-				icon: vfsFile.icon,
-				path: filePath,
-				parentId: kitId,
-				hasChildren: false,
-				navigateUri: `/kits/${kitId}?file=${encodeURIComponent(id)}`,
-				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path: filePath }),
-			});
+			if (!sketchpadKitFileAtKitRoot(row)) continue;
+			sketchpadKitVfsPushFileRow(rows, kitId, kitId, row);
 		}
 		return rows;
 	}
@@ -13339,29 +13371,20 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 		}
 		return out;
 	}
-	for (const folder of kit.folders ?? []) {
+	for (const folder of kitFolders) {
 		const row = folder as Record<string, unknown>;
 		const folderId = String(row["id"] ?? "");
 		if (folderId !== parentId) continue;
 		const out: VirtualFileSystemNodeRecord[] = [];
-		for (const file of kit.files ?? []) {
+		for (const sub of kitFolders) {
+			const subRow = sub as Record<string, unknown>;
+			if (sketchpadKitFolderParentId(subRow) !== folderId) continue;
+			sketchpadKitVfsPushFolderRow(out, kitId, folderId, subRow);
+		}
+		for (const file of kitFiles) {
 			const fileRow = file as Record<string, unknown>;
-			const fileId = String(fileRow["id"] ?? "");
-			if (!fileId) continue;
-			if (sketchpadReadEntityId(fileRow["folder"]) !== folderId) continue;
-			const vfsFile = sketchpadKitVfsFileRowFields(fileRow);
-			const filePath = `/${sketchpadKitFileBasename(fileRow)}`;
-			out.push({
-				id: fileId,
-				fileNodeKindId: "file",
-				name: vfsFile.name,
-				icon: vfsFile.icon,
-				path: filePath,
-				parentId,
-				hasChildren: false,
-				navigateUri: `/kits/${kitId}?file=${encodeURIComponent(fileId)}`,
-				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path: filePath }),
-			});
+			if (sketchpadKitFileFolderId(fileRow) !== folderId) continue;
+			sketchpadKitVfsPushFileRow(out, kitId, folderId, fileRow);
 		}
 		return out;
 	}
@@ -16648,6 +16671,68 @@ if (import.meta.vitest) {
 			expect(rows).toHaveLength(1);
 			expect(rows[0]?.id).toBe(fileId);
 			expect(rows[0]?.fileNodeKindId).toBe("file");
+		});
+
+		it("keeps folder files off kit root when typologies are present", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const folderId = "22222222-3333-4444-5555-666666666666";
+			const fileId = "33333333-4444-5555-6666-777777777777";
+			const kit = {
+				id: kitId,
+				typologies: [{ id: "topo-1", name: "Capsule", types: [], designs: [] }],
+				folders: [{ id: folderId, name: "representations" }],
+				files: [{ id: fileId, name: "tower.glb", folder: { id: folderId } }],
+			} as Kit;
+			const rootRows = sketchpadKitVfsChildren(kit, kitId);
+			expect(rootRows.some((row) => row.id === fileId)).toBe(false);
+			expect(rootRows.find((row) => row.id === folderId)?.name).toBe("representations");
+			const folderRows = sketchpadKitVfsChildren(kit, folderId);
+			expect(folderRows).toHaveLength(1);
+			expect(folderRows[0]?.id).toBe(fileId);
+		});
+
+		it("resolves folderId-only file rows under the folder, not at kit root", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const folderId = "22222222-3333-4444-5555-666666666666";
+			const fileId = "33333333-4444-5555-6666-777777777777";
+			const kit = {
+				id: kitId,
+				folders: [{ id: folderId, path: "/assets" }],
+				files: [{ id: fileId, name: "mesh.glb", folderId }],
+			} as Kit;
+			expect(sketchpadKitVfsChildren(kit, kitId).some((row) => row.id === fileId)).toBe(false);
+			expect(sketchpadKitVfsChildren(kit, folderId).map((row) => row.id)).toEqual([fileId]);
+		});
+
+		it("reads bundle-shaped files and folders blocks", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const folderId = "22222222-3333-4444-5555-666666666666";
+			const fileId = "33333333-4444-5555-6666-777777777777";
+			const kit = {
+				id: kitId,
+				folders: { items: [{ id: folderId, name: "representations" }] },
+				files: { items: [{ id: fileId, name: "mesh.glb", folder: { id: folderId } }] },
+			} as unknown as Kit;
+			const rootRows = sketchpadKitVfsChildren(kit, kitId);
+			expect(rootRows.some((row) => row.id === fileId)).toBe(false);
+			expect(sketchpadKitVfsChildren(kit, folderId)).toHaveLength(1);
+		});
+
+		it("lists only kit-root folders when nested folders exist", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const rootFolderId = "22222222-3333-4444-5555-666666666666";
+			const nestedFolderId = "33333333-4444-5555-6666-777777777777";
+			const kit = {
+				id: kitId,
+				folders: [
+					{ id: rootFolderId, path: "/docs" },
+					{ id: nestedFolderId, path: "/docs/nested", parent: { id: rootFolderId } },
+				],
+			} as Kit;
+			const rootRows = sketchpadKitVfsChildren(kit, kitId).filter((row) => row.fileNodeKindId === "folder");
+			expect(rootRows.map((row) => row.id)).toEqual([rootFolderId]);
+			const nestedRows = sketchpadKitVfsChildren(kit, rootFolderId).filter((row) => row.fileNodeKindId === "folder");
+			expect(nestedRows.map((row) => row.id)).toEqual([nestedFolderId]);
 		});
 	});
 

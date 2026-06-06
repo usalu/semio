@@ -429,29 +429,76 @@ function notifyPuzzle3dFillSessionReady(): void {
   }
 }
 
-/** @emoji 🪣 Builds a deterministic fill sequence from the current fixture snapshot. */
-export function preparePuzzle3dFillSession(
-  baseFixture: FixtureV1,
+function nextPuzzle3dFillSeed(): number {
+  return (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
+}
+
+function mergePuzzle3dFillBuildChunk(
+  committedSequence: readonly BrushPlacePayload[],
+  committedObjects: readonly FixtureObjectV1[],
+  committedAttractions: readonly AttractionProps[],
+  tailMaxCount: number,
+  tail: {
+    readonly sequence: readonly BrushPlacePayload[];
+    readonly appendedObjects: readonly FixtureObjectV1[];
+    readonly appendedAttractions: readonly AttractionProps[];
+    readonly done: boolean;
+  },
+): {
+  readonly sequence: readonly BrushPlacePayload[];
+  readonly appendedObjects: readonly FixtureObjectV1[];
+  readonly appendedAttractions: readonly AttractionProps[];
+  readonly count: number;
+  readonly done: boolean;
+} {
+  const tailSequence = tail.sequence.slice(0, tailMaxCount);
+  const tailObjects = tail.appendedObjects.slice(0, tailMaxCount);
+  const tailAttractions = tail.appendedAttractions.slice(0, tailMaxCount);
+  const count = committedSequence.length + tailSequence.length;
+  return {
+    sequence: [...committedSequence, ...tailSequence],
+    appendedObjects: [...committedObjects, ...tailObjects],
+    appendedAttractions: [...committedAttractions, ...tailAttractions],
+    count,
+    done: tail.done || count >= PUZZLE_3D_FILL_COUNT_MAX,
+  };
+}
+
+function startPuzzle3dFillBuild(
+  core: FixtureV1,
+  committedSequence: readonly BrushPlacePayload[],
+  committedObjects: readonly FixtureObjectV1[],
+  committedAttractions: readonly AttractionProps[],
+  seed: number,
   kindCatalogs: KindCatalogBundle | undefined,
   kindCompatibility: readonly KindCompatEntry[] | undefined,
   overlapBudget: number,
 ): void {
   cancelPuzzle3dFillBuild();
-  const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
-  const clonedBase = structuredClone(baseFixture);
+  const committedCount = committedSequence.length;
+  const tailMaxCount = Math.max(0, PUZZLE_3D_FILL_COUNT_MAX - committedCount);
+  const buildBase =
+    committedCount > 0 ? applyBrushFillPlacementsToFixture(core, committedSequence, kindCatalogs) : core;
   puzzle3dFillSessionRef.current = {
-    baseFixture: clonedBase,
-    sequence: [],
-    appendedObjects: [],
-    appendedAttractions: [],
+    baseFixture: core,
+    sequence: [...committedSequence],
+    appendedObjects: [...committedObjects],
+    appendedAttractions: [...committedAttractions],
     seed,
   };
-  puzzle3dFillBuildProgressRef.current = { count: 0, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: false };
+  puzzle3dFillBuildProgressRef.current = {
+    count: committedCount,
+    maxCount: PUZZLE_3D_FILL_COUNT_MAX,
+    done: tailMaxCount === 0,
+  };
   notifyPuzzle3dFillSessionReady();
+  if (tailMaxCount === 0) {
+    return;
+  }
   if (puzzle3dPrecomputeUsesWorker()) {
     void puzzle3dCollisionEngineRef.current
       .setScene({
-        fixture: clonedBase,
+        fixture: buildBase,
         kindCatalogs,
         kindCompatibility,
         overlapBudget,
@@ -464,23 +511,30 @@ export function preparePuzzle3dFillSession(
             const started = performance.now();
             await puzzle3dCollisionEngineRef.current.precomputeStep(PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET);
             const snapshot = await readPuzzle3dFillWorkerSnapshot();
+            const merged = mergePuzzle3dFillBuildChunk(
+              committedSequence,
+              committedObjects,
+              committedAttractions,
+              tailMaxCount,
+              snapshot,
+            );
             puzzle3dFillSessionRef.current = {
-              baseFixture: clonedBase,
-              sequence: snapshot.sequence,
-              appendedObjects: snapshot.appendedObjects,
-              appendedAttractions: snapshot.appendedAttractions,
+              baseFixture: core,
+              sequence: merged.sequence,
+              appendedObjects: merged.appendedObjects,
+              appendedAttractions: merged.appendedAttractions,
               seed,
             };
             puzzle3dFillBuildProgressRef.current = {
-              count: snapshot.count,
-              maxCount: snapshot.maxCount,
-              done: snapshot.done,
+              count: merged.count,
+              maxCount: PUZZLE_3D_FILL_COUNT_MAX,
+              done: merged.done,
             };
             console.log(
-              `[DEBUG] puzzle3d fill worker chunk count=${snapshot.count}/${PUZZLE_3D_FILL_COUNT_MAX} done=${snapshot.done} ms=${(performance.now() - started).toFixed(1)}`,
+              `[DEBUG] puzzle3d fill worker chunk count=${merged.count}/${PUZZLE_3D_FILL_COUNT_MAX} done=${merged.done} ms=${(performance.now() - started).toFixed(1)}`,
             );
             notifyPuzzle3dFillSessionReady();
-            if (!snapshot.done) {
+            if (!merged.done) {
               puzzle3dFillBuildTimer = setTimeout(tick, 0);
               return;
             }
@@ -492,7 +546,7 @@ export function preparePuzzle3dFillSession(
     return;
   }
   schedulePuzzle3dPrecomputeSceneSync({
-    fixture: clonedBase,
+    fixture: buildBase,
     kindCatalogs,
     kindCompatibility,
     overlapBudget,
@@ -500,8 +554,8 @@ export function preparePuzzle3dFillSession(
     weights: puzzle3dBrushKindWeightsRef.current,
   });
   puzzle3dFillBuildStepper = createBrushFillSequenceStepper({
-    baseFixture: clonedBase,
-    maxCount: PUZZLE_3D_FILL_COUNT_MAX,
+    baseFixture: buildBase,
+    maxCount: tailMaxCount,
     seed,
     kindCatalogs,
     kindCompatibility,
@@ -516,22 +570,29 @@ export function preparePuzzle3dFillSession(
     }
     const started = performance.now();
     const result = stepper.step(PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET);
+    const merged = mergePuzzle3dFillBuildChunk(
+      committedSequence,
+      committedObjects,
+      committedAttractions,
+      tailMaxCount,
+      result,
+    );
     puzzle3dFillSessionRef.current = {
       ...puzzle3dFillSessionRef.current,
-      sequence: result.sequence,
-      appendedObjects: result.appendedObjects,
-      appendedAttractions: result.appendedAttractions,
+      sequence: merged.sequence,
+      appendedObjects: merged.appendedObjects,
+      appendedAttractions: merged.appendedAttractions,
     };
     puzzle3dFillBuildProgressRef.current = {
-      count: result.sequence.length,
+      count: merged.count,
       maxCount: PUZZLE_3D_FILL_COUNT_MAX,
-      done: result.done,
+      done: merged.done,
     };
     console.log(
-      `[DEBUG] puzzle3d fill build chunk count=${result.sequence.length}/${PUZZLE_3D_FILL_COUNT_MAX} done=${result.done} ms=${(performance.now() - started).toFixed(1)}`,
+      `[DEBUG] puzzle3d fill build chunk count=${merged.count}/${PUZZLE_3D_FILL_COUNT_MAX} done=${merged.done} ms=${(performance.now() - started).toFixed(1)}`,
     );
     notifyPuzzle3dFillSessionReady();
-    if (!result.done) {
+    if (!merged.done) {
       puzzle3dFillBuildTimer = setTimeout(tick, 0);
       return;
     }
@@ -539,6 +600,49 @@ export function preparePuzzle3dFillSession(
     puzzle3dFillBuildTimer = null;
   };
   puzzle3dFillBuildTimer = setTimeout(tick, 0);
+}
+
+/** @emoji 🪣 Builds a deterministic fill sequence from the current fixture snapshot. */
+export function preparePuzzle3dFillSession(
+  baseFixture: FixtureV1,
+  kindCatalogs: KindCatalogBundle | undefined,
+  kindCompatibility: readonly KindCompatEntry[] | undefined,
+  overlapBudget: number,
+): void {
+  startPuzzle3dFillBuild(
+    structuredClone(baseFixture),
+    [],
+    [],
+    [],
+    nextPuzzle3dFillSeed(),
+    kindCatalogs,
+    kindCompatibility,
+    overlapBudget,
+  );
+}
+
+/** @emoji 🪣 Re-rolls the fill tail beyond a committed slider floor with a fresh seed. */
+export function rerollPuzzle3dFillTail(
+  committedCount: number,
+  kindCatalogs: KindCatalogBundle | undefined,
+  kindCompatibility: readonly KindCompatEntry[] | undefined,
+  overlapBudget: number,
+): void {
+  const session = puzzle3dFillSessionRef.current;
+  if (!session.baseFixture) {
+    return;
+  }
+  const n = Math.max(0, Math.min(PUZZLE_3D_FILL_COUNT_MAX, Math.round(committedCount)));
+  startPuzzle3dFillBuild(
+    session.baseFixture,
+    session.sequence.slice(0, n),
+    session.appendedObjects.slice(0, n),
+    session.appendedAttractions.slice(0, n),
+    nextPuzzle3dFillSeed(),
+    kindCatalogs,
+    kindCompatibility,
+    overlapBudget,
+  );
 }
 
 /** @emoji 🪣 Applies a fill prefix count onto the cached base fixture. */
@@ -3181,6 +3285,76 @@ if (import.meta.vitest) {
           }),
       );
       expect(seedPortPairs.has("b-s->b-l")).toBe(true);
+      clearBrushCollisionGltfScenes();
+    });
+
+    it("rerollPuzzle3dFillTail seeds committed prefix and re-rolls the tail", async () => {
+      const { Mesh, BoxGeometry } = await import("three");
+      clearBrushCollisionGltfScenes();
+      clearPuzzle3dFillSession();
+      const registerBox = (meshUrl: string): void => {
+        registerBrushCollisionGltfScene(meshUrl, new Mesh(new BoxGeometry(13, 5, 3)));
+      };
+      registerBox("/meshes/hexagonal-cut-concrete-forest-left.glb");
+      registerBox("/meshes/hexagonal-cut-concrete-forest-right.glb");
+      const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown)!;
+      const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
+      const compat = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
+      const full = buildBrushFillSequence({
+        baseFixture: fixture,
+        maxCount: 12,
+        seed: 42,
+        kindCatalogs: catalogs,
+        kindCompatibility: compat,
+        meshRootForUrl: brushCollisionGltfRoot,
+      });
+      expect(full.length).toBeGreaterThan(4);
+      const applied = applyBrushFillPlacementsToFixture(fixture, full, catalogs);
+      const committedCount = 3;
+      const committedSequence = full.slice(0, committedCount);
+      const committedObjects = applied.objects.slice(fixture.objects.length, fixture.objects.length + committedCount);
+      const committedAttractions = applied.attractions.slice(fixture.attractions.length, fixture.attractions.length + committedCount);
+      const originalTail = applied.objects.slice(fixture.objects.length + committedCount);
+      puzzle3dFillSessionRef.current = {
+        baseFixture: structuredClone(fixture),
+        sequence: [...full],
+        appendedObjects: applied.objects.slice(fixture.objects.length),
+        appendedAttractions: applied.attractions.slice(fixture.attractions.length),
+        seed: 42,
+      };
+      rerollPuzzle3dFillTail(committedCount, catalogs, compat, DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET);
+      expect(puzzle3dFillBuildProgressRef.current.count).toBe(committedCount);
+      expect(puzzle3dFillSessionRef.current.sequence).toHaveLength(committedCount);
+      expect(puzzle3dFillSessionRef.current.appendedObjects.slice(0, committedCount)).toEqual(committedObjects);
+      const buildBase = applyBrushFillPlacementsToFixture(fixture, committedSequence, catalogs);
+      const tailStepper = createBrushFillSequenceStepper({
+        baseFixture: buildBase,
+        maxCount: 12 - committedCount,
+        seed: 99,
+        kindCatalogs: catalogs,
+        kindCompatibility: compat,
+        meshRootForUrl: brushCollisionGltfRoot,
+      });
+      let tailResult = tailStepper.step(Number.MAX_SAFE_INTEGER);
+      while (!tailResult.done) {
+        tailResult = tailStepper.step(Number.MAX_SAFE_INTEGER);
+      }
+      expect(tailResult.sequence.length).toBeGreaterThan(0);
+      expect(tailResult.sequence).not.toEqual(full.slice(committedCount));
+      if (originalTail.length > 0 && tailResult.appendedObjects.length > 0) {
+        expect(tailResult.appendedObjects).not.toEqual(originalTail);
+      }
+      puzzle3dFillSessionRef.current = {
+        baseFixture: structuredClone(fixture),
+        sequence: [...committedSequence, ...tailResult.sequence],
+        appendedObjects: [...committedObjects, ...tailResult.appendedObjects],
+        appendedAttractions: [...committedAttractions, ...tailResult.appendedAttractions],
+        seed: 99,
+      };
+      const atCommitted = applyPuzzle3dFillCount(committedCount, catalogs);
+      expect(atCommitted?.objects.length).toBe(fixture.objects.length + committedCount);
+      expect(atCommitted?.objects.slice(fixture.objects.length)).toEqual(committedObjects);
+      clearPuzzle3dFillSession();
       clearBrushCollisionGltfScenes();
     });
 

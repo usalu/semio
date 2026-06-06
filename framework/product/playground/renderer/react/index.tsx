@@ -1531,6 +1531,7 @@ import {
   installPuzzle3dPlayBrushHost,
   clearPuzzle3dFillSession,
   preparePuzzle3dFillSession,
+  rerollPuzzle3dFillTail,
   puzzle3dFillBuildProgressRef,
   puzzle3dFillPendingCountRef,
   puzzle3dFillSessionRef,
@@ -1672,12 +1673,18 @@ function Puzzle3dPlayEngagementPublisher(props: {
     (count: number) => {
       const progress = puzzle3dFillBuildProgressRef.current;
       const maxAvailable = progress.done ? PUZZLE_3D_FILL_COUNT_MAX : progress.count;
+      const prev = fillCount;
       const n = Math.max(0, Math.min(PUZZLE_3D_FILL_COUNT_MAX, Math.round(count), maxAvailable));
       puzzle3dFillPendingCountRef.current = n;
       setFillCount(n);
       bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillCount", { count: n });
+      if (n < prev) {
+        const catalogs = parseKindCatalogs(snap.fixture.meta);
+        const compatibility = parseKindCompatibility(snap.fixture.meta);
+        rerollPuzzle3dFillTail(n, catalogs, compatibility, snap.brushPlacementOverlapBudget);
+      }
     },
-    [bus],
+    [bus, fillCount, snap.brushPlacementOverlapBudget, snap.fixture.meta],
   );
   const fillAutoStartedRef = reactHostPort.useRef(false);
   reactHostPort.useEffect(() => {

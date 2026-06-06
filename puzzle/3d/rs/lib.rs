@@ -10,8 +10,8 @@ use std::collections::HashMap;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-const GLB_MESH_FRAME_ROTATION_X: f64 = std::f64::consts::FRAC_PI_2;
 const DEFAULT_OVERLAP_BUDGET: f64 = 0.02;
+const SURFACE_CONTACT_MAX_AABB_VOLUME: f64 = 1e-4;
 const BRUSH_COLLISION_MESH_MIN_EXTENT: f64 = 2.0;
 const BRUSH_PLACEMENT_PARALLEL_TOLERANCE: f64 = 1e-6;
 const DEFAULT_CABLE_KIND_ID: &str = "cable.link";
@@ -245,6 +245,7 @@ struct CollisionBody {
 
 #[derive(Clone)]
 struct PlacedCollisionEntry {
+    object_id: String,
     mesh_url: String,
     world: Isometry3<f32>,
 }
@@ -262,6 +263,14 @@ struct BrushFillVortexTarget {
 enum PrecomputeTask {
     BrushTarget(String),
     FillStep,
+}
+
+fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
+    if vortex_id.contains(':') {
+        vortex_id.to_string()
+    } else {
+        format!("{object_id}:{vortex_id}")
+    }
 }
 
 fn normalize_vec3(v: Vec3) -> Vec3 {
@@ -385,14 +394,11 @@ fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<Col
     if positions.len() < 9 || indices.len() < 3 {
         return None;
     }
-    let frame_rot = UnitQuaternion::from_axis_angle(&Vector3::x_axis(), GLB_MESH_FRAME_ROTATION_X as f32);
     let mut verts: Vec<Point3<f32>> = Vec::with_capacity(positions.len() / 3);
     let mut min = Point3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
     let mut max = Point3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
     for chunk in positions.chunks_exact(3) {
-        let p = Point3::new(chunk[0], chunk[1], chunk[2]);
-        let rotated = frame_rot * p.coords;
-        let rp = Point3::from(rotated);
+        let rp = Point3::new(chunk[0], chunk[1], chunk[2]);
         verts.push(rp);
         min = min.inf(&rp);
         max = max.sup(&rp);
@@ -488,7 +494,7 @@ fn solid_overlap_volume(
     }
     let size = imax - imin;
     let box_vol = size.x as f64 * size.y as f64 * size.z as f64;
-    if box_vol <= 0.0 {
+    if box_vol <= SURFACE_CONTACT_MAX_AABB_VOLUME {
         return 0.0;
     }
     let mut inside_both = 0usize;
@@ -835,7 +841,7 @@ fn enumerate_brush_fill_vortex_targets(fixture: &FixtureV1) -> Vec<BrushFillVort
     let mut out = Vec::new();
     for obj in &fixture.objects {
         for (i, vortex) in obj.vortices.iter().enumerate() {
-            let full_id = format!("{}:{}", obj.id, vortex.id);
+            let full_id = puzzle3d_vortex_full_id(&obj.id, &vortex.id);
             if !blocked.contains(&full_id) {
                 out.push(BrushFillVortexTarget {
                     full_id,
@@ -906,6 +912,7 @@ impl FillBuilder {
             if let Some(mesh_url) = resolve_object_kind_mesh_url(obj.object_kind.as_deref().unwrap_or(""), catalogs, &base) {
                 if meshes.contains_key(&mesh_url) {
                     placed.push(PlacedCollisionEntry {
+                        object_id: obj.id.clone(),
                         mesh_url,
                         world: pose_isometry(obj.origin, obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &obj.scale),
                     });
@@ -1035,7 +1042,7 @@ impl Puzzle3dEngine {
         let catalogs = scene.kind_catalogs.as_ref().unwrap_or(&empty_catalogs);
         let target_obj = scene.fixture.objects.iter().find_map(|o| {
             o.vortices.iter().enumerate().find_map(|(i, v)| {
-                let full_id = format!("{}:{}", o.id, v.id);
+                let full_id = puzzle3d_vortex_full_id(&o.id, &v.id);
                 if full_id == target_full_id {
                     Some((o, i, v))
                 } else {
@@ -1060,16 +1067,19 @@ impl Puzzle3dEngine {
             object_kind: host.object_kind.clone(),
             vortex_kind: host.vortices[vortex_index].vortex_kind.clone(),
         };
+        let host_id = host.id.clone();
         let placed: Vec<PlacedCollisionEntry> = scene
             .fixture
             .objects
             .iter()
+            .filter(|obj| obj.id != host_id)
             .filter_map(|obj| {
                 let mesh_url = resolve_object_kind_mesh_url(obj.object_kind.as_deref().unwrap_or(""), catalogs, &scene.fixture)?;
                 if !self.meshes.contains_key(&mesh_url) {
                     return None;
                 }
                 Some(PlacedCollisionEntry {
+                    object_id: obj.id.clone(),
                     mesh_url,
                     world: pose_isometry(obj.origin, obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &obj.scale),
                 })
@@ -1117,7 +1127,7 @@ impl Puzzle3dEngine {
         });
         let target_obj = scene.fixture.objects.iter().find_map(|o| {
             o.vortices.iter().enumerate().find_map(|(i, v)| {
-                let full_id = format!("{}:{}", o.id, v.id);
+                let full_id = puzzle3d_vortex_full_id(&o.id, &v.id);
                 if full_id == target_full_id {
                     Some((o, i, v))
                 } else {
@@ -1236,7 +1246,12 @@ impl Puzzle3dEngine {
                 if !self.meshes.contains_key(&preview.mesh_url) {
                     continue;
                 }
-                let placed_snapshot = fill.placed.clone();
+                let placed_snapshot: Vec<PlacedCollisionEntry> = fill
+                    .placed
+                    .iter()
+                    .filter(|entry| entry.object_id != target.object_id)
+                    .cloned()
+                    .collect();
                 match Self::preview_collides(&self.meshes, &preview, &placed_snapshot, overlap_budget, 512) {
                     None | Some(true) => continue,
                     Some(false) => {}
@@ -1257,6 +1272,7 @@ impl Puzzle3dEngine {
                 if let Some(mesh_url) = resolve_object_kind_mesh_url(placed_object.object_kind.as_deref().unwrap_or(""), &catalogs, &next_fixture) {
                     if self.meshes.contains_key(&mesh_url) {
                         fill.placed.push(PlacedCollisionEntry {
+                            object_id: placed_object.id.clone(),
                             mesh_url,
                             world: pose_isometry(
                                 placed_object.origin,
@@ -1301,7 +1317,7 @@ fn apply_brush_placement_to_fixture(fixture: &FixtureV1, payload: &BrushPlacePay
             direction: entry.direction,
         })
         .collect();
-    let attracting = format!("{}:{}", object_id, vortices[payload.source_vortex_index].id);
+    let attracting = puzzle3d_vortex_full_id(&object_id, &vortices[payload.source_vortex_index].id);
     let _attraction_id = format!("attraction-{attracting}-{}", payload.target_vortex_full_id);
     let mut next = fixture.clone();
     if next.attractions.iter().any(|a| a.attracting == attracting || a.attracted == payload.target_vortex_full_id) {
