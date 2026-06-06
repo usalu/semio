@@ -1700,23 +1700,32 @@ export type WorldOrbitControlsBinding = {
   readonly update?: () => void;
 };
 
-/** @emoji 🖱️ Default orbit mouse map: middle dolly, right reserved for context menu. */
-export const WORLD_ORBIT_MOUSE_BUTTONS_IDLE = {
-  LEFT: null as unknown as number,
-  MIDDLE: MOUSE.DOLLY,
-  RIGHT: null as unknown as number,
-} as const;
+/** @emoji 🖱️ Default orbit mouse map: orthographic middle orbit / alt+right pan; perspective middle pan / alt+right orbit. */
+export function resolveWorldOrbitMouseButtonsIdle(projection: OrbitCameraProjection = "perspective"): {
+  readonly LEFT: number | null;
+  readonly MIDDLE: number;
+  readonly RIGHT: number | null;
+} {
+  if (projection === "orthographic") {
+    return { LEFT: null, MIDDLE: MOUSE.ROTATE, RIGHT: null };
+  }
+  return { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null };
+}
 
-/** @emoji 🖱️ Resets orbit mouse buttons to {@link WORLD_ORBIT_MOUSE_BUTTONS_IDLE}. */
-export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBinding): void {
-  controls.mouseButtons.LEFT = WORLD_ORBIT_MOUSE_BUTTONS_IDLE.LEFT;
-  controls.mouseButtons.MIDDLE = WORLD_ORBIT_MOUSE_BUTTONS_IDLE.MIDDLE;
-  controls.mouseButtons.RIGHT = WORLD_ORBIT_MOUSE_BUTTONS_IDLE.RIGHT;
+/** @emoji 🖱️ Resets orbit mouse buttons to {@link resolveWorldOrbitMouseButtonsIdle}. */
+export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBinding, projection: OrbitCameraProjection = "perspective"): void {
+  const idle = resolveWorldOrbitMouseButtonsIdle(projection);
+  controls.mouseButtons.LEFT = idle.LEFT;
+  controls.mouseButtons.MIDDLE = idle.MIDDLE;
+  controls.mouseButtons.RIGHT = idle.RIGHT;
   controls.update?.();
 }
 
-/** @emoji 🖱️ Maps right-button modifiers: plain right → context menu, Alt+right → orbit, Shift+right → pan. */
-export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">): number | null {
+/** @emoji 🖱️ Maps right-button modifiers: plain right → context menu, Shift+right → pan, Alt+right → pan (ortho) or orbit (perspective). */
+export function resolveWorldOrbitRightMouseAction(
+  event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">,
+  projection: OrbitCameraProjection = "perspective",
+): number | null {
   if (event.button !== 2) {
     return null;
   }
@@ -1724,31 +1733,33 @@ export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "but
     return MOUSE.PAN;
   }
   if (event.altKey) {
-    return MOUSE.ROTATE;
+    return projection === "orthographic" ? MOUSE.PAN : MOUSE.ROTATE;
   }
   return null;
 }
 
 export interface WorldOrbitRightMouseBindingsOptions {
+  readonly projection?: OrbitCameraProjection;
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
   readonly onRightPointerDrag?: (event: PointerEvent, distancePx: number) => void;
   readonly onRightPointerUp?: (event: PointerEvent) => void;
   readonly dragThresholdPx?: number;
 }
 
-/** @emoji 🖱️ Binds Alt+right orbit and Shift+right pan while leaving plain right click for context menus. */
+/** @emoji 🖱️ Binds projection-aware Alt+right and Shift+right actions while leaving plain right click for context menus. */
 export function useWorldOrbitRightMouseBindings(
   controls: WorldOrbitControlsBinding | null,
   domElement: HTMLElement | undefined,
   options?: WorldOrbitRightMouseBindingsOptions,
 ): void {
+  const projection = options?.projection ?? "perspective";
   const optionsRef = reactHostPort.useRef(options);
   optionsRef.current = options;
   reactHostPort.useLayoutEffect(() => {
     if (controls) {
-      applyWorldOrbitMouseButtonsIdle(controls);
+      applyWorldOrbitMouseButtonsIdle(controls, projection);
     }
-  }, [controls]);
+  }, [controls, projection]);
   reactHostPort.useEffect(() => {
     if (!controls || !domElement) {
       return;
@@ -1759,11 +1770,11 @@ export function useWorldOrbitRightMouseBindings(
       if (event.button !== 2) {
         return;
       }
-      controls.mouseButtons.RIGHT = resolveWorldOrbitRightMouseAction(event);
+      controls.mouseButtons.RIGHT = resolveWorldOrbitRightMouseAction(event, optionsRef.current?.projection ?? "perspective");
       controls.update?.();
     };
     const resetRightMouse = () => {
-      controls.mouseButtons.RIGHT = WORLD_ORBIT_MOUSE_BUTTONS_IDLE.RIGHT;
+      controls.mouseButtons.RIGHT = resolveWorldOrbitMouseButtonsIdle(optionsRef.current?.projection ?? "perspective").RIGHT;
       controls.update?.();
     };
     const onPointerDown = (event: PointerEvent) => {
@@ -1800,7 +1811,7 @@ export function useWorldOrbitRightMouseBindings(
     bindings.listen(window, "pointermove", onPointerMove as EventListener);
     bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
     return () => bindings.dispose();
-  }, [controls, domElement, options?.dragThresholdPx]);
+  }, [controls, domElement, options?.dragThresholdPx, projection]);
 }
 // #endregion 🖱️OrbitMouseBindings
 
@@ -1819,6 +1830,7 @@ export function DemandFrameloopKick(): null {
 export interface WorldOrbitGatedProps {
   readonly camera?: ThreePerspectiveCamera | null;
   readonly zoom?: number;
+  readonly projection?: OrbitCameraProjection;
   readonly onCamera?: (state: WorldCameraState) => void;
   readonly controlsGate?: boolean;
   readonly onCameraNavigate?: (active: boolean) => void;
@@ -1834,7 +1846,9 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   const gate = props.controlsGate ?? false;
   const { snapGate } = useWorldOrbitViewSnapGate();
   const invalidate = useThree((s) => s.invalidate);
-  useWorldOrbitRightMouseBindings(controls, gl.domElement);
+  const projection = props.projection ?? (camera instanceof ThreeOrthographicCamera ? "orthographic" : "perspective");
+  const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection), [projection]);
+  useWorldOrbitRightMouseBindings(controls, gl.domElement, { projection });
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
@@ -1867,7 +1881,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
         props.onCameraNavigate?.(false);
         reportCamera();
       }}
-      mouseButtons={WORLD_ORBIT_MOUSE_BUTTONS_IDLE}
+      mouseButtons={mouseButtonsIdle}
     />
   );
 }
@@ -2009,6 +2023,17 @@ export interface WorldReferenceRelocatePayload {
 
 export const WORLD_REFERENCE_DEFAULT_WIDTH = 10;
 
+/** @emoji 🖼️ Resolves accent border color for reference hover vs selection outlines. */
+export function worldReferenceOutlineColor(renderMode: Pick<WorldEntityRenderMode, "asHover" | "showSelectedOutline">): string | null {
+  if (renderMode.showSelectedOutline) {
+    return resolveColorHex(semanticVar("accent"), "gray");
+  }
+  if (renderMode.asHover) {
+    return resolveColorHex(semanticVar("accent-secondary"), "gray");
+  }
+  return null;
+}
+
 function worldReferenceScaleVec(scale: number | Vec3 | undefined): Vec3 {
   if (typeof scale === "number") {
     return [scale, scale, scale];
@@ -2114,10 +2139,19 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
       applyWorldReferencePose(groupRef.current, props.reference);
     }
   }, [props.reference.origin, props.reference.orientation, props.reference.scale]);
+  const mediaAspect = media ? media.width / media.height : 1;
+  const [planeWidth, planeHeight] = reactHostPort.useMemo(() => worldReferencePlaneSize(props.reference, mediaAspect), [props.reference, mediaAspect]);
+  const outlineColor = worldReferenceOutlineColor(renderMode);
+  const planeOutlineGeo = reactHostPort.useMemo(() => {
+    const plane = new PlaneGeometry(planeWidth, planeHeight);
+    const edges = new EdgesGeometry(plane);
+    plane.dispose();
+    return edges;
+  }, [planeWidth, planeHeight]);
+  reactHostPort.useEffect(() => () => planeOutlineGeo.dispose(), [planeOutlineGeo]);
   if (!renderMode.visible || !media) {
     return null;
   }
-  const [planeWidth, planeHeight] = worldReferencePlaneSize(props.reference, media.width / media.height);
   const opacityBase = props.reference.opacity ?? 1;
   const opacity = renderMode.dim ? opacityBase * WORLD_LOCKED_OPACITY_SCALE : opacityBase;
   const config = props.reference.relocate === false ? null : { ...(props.reference.relocate ?? {}), translationSnap: props.translationSnap };
@@ -2150,6 +2184,11 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
           <planeGeometry args={[planeWidth, planeHeight]} />
           <meshBasicMaterial attach="material" map={media.texture} transparent opacity={opacity} depthWrite={false} side={DoubleSide} toneMapped={false} />
         </mesh>
+        {outlineColor ? (
+          <lineSegments raycast={worldRaycastNone} geometry={planeOutlineGeo} renderOrder={-9} scale={[1.002, 1.002, 1.002]}>
+            <lineBasicMaterial attach="material" color={outlineColor} transparent opacity={renderMode.showSelectedOutline ? 1 : 0.85} depthWrite={false} />
+          </lineSegments>
+        ) : null}
       </group>
       {showGumball && groupRef.current ? (
         <WorldReferenceGumball referenceId={props.reference.id} target={groupRef.current} config={config} onRelocate={props.onRelocate} />
@@ -2282,10 +2321,9 @@ export function worldVolumesContainAabb(
     applyWorldVolumePose(group, volume);
     group.updateMatrixWorld(true);
     _worldVolumeInverse.copy(group.matrixWorld).invert();
-    const half = worldVolumeScaleVec(volume.scale);
-    const hx = half[0] / 2 + epsilon;
-    const hy = half[1] / 2 + epsilon;
-    const hz = half[2] / 2 + epsilon;
+    const hx = 0.5 + epsilon;
+    const hy = 0.5 + epsilon;
+    const hz = 0.5 + epsilon;
     let inside = true;
     for (const corner of corners) {
       _worldVolumeCorner.set(corner[0], corner[1], corner[2]);
@@ -2461,10 +2499,18 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("resolveWorldOrbitMouseButtonsIdle", () => {
+    it("maps middle click to orbit in orthographic and pan in perspective", () => {
+      expect(resolveWorldOrbitMouseButtonsIdle("orthographic")).toEqual({ LEFT: null, MIDDLE: MOUSE.ROTATE, RIGHT: null });
+      expect(resolveWorldOrbitMouseButtonsIdle("perspective")).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
+    });
+  });
+
   describe("resolveWorldOrbitRightMouseAction", () => {
     it("reserves plain right click for context menu and maps modifiers to orbit and pan", () => {
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: false })).toBeNull();
-      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false })).toBe(MOUSE.ROTATE);
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false }, "perspective")).toBe(MOUSE.ROTATE);
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false }, "orthographic")).toBe(MOUSE.PAN);
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: true })).toBe(MOUSE.PAN);
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: true })).toBe(MOUSE.PAN);
       expect(resolveWorldOrbitRightMouseAction({ button: 0, altKey: true, shiftKey: false })).toBeNull();
@@ -2616,6 +2662,14 @@ if (import.meta.vitest) {
       });
       expect(next.origin).toEqual([1, 2, 3]);
       expect(next.scale).toEqual([2, 2, 2]);
+    });
+  });
+
+  describe("worldReferenceOutlineColor", () => {
+    it("returns accent colors for hover and selection", () => {
+      expect(worldReferenceOutlineColor({ asHover: false, showSelectedOutline: false })).toBeNull();
+      expect(worldReferenceOutlineColor({ asHover: true, showSelectedOutline: false })).toMatch(/^#/);
+      expect(worldReferenceOutlineColor({ asHover: true, showSelectedOutline: true })).toMatch(/^#/);
     });
   });
 

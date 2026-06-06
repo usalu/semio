@@ -111,6 +111,7 @@ Do not edit files under `icons/*.svg` by hand — run **build ui assets** (`bun 
 - `rotate-ccw` (from Lucide `rotate-ccw`)
 - `rotate-cw` (from Lucide `rotate-cw`)
 - `save` (from Lucide `save`)
+- `scaling` (from Lucide `scaling`)
 - `search` (from Lucide `search`)
 - `settings` (from Lucide `settings`)
 - `settings-2` (from Lucide `settings-2`)

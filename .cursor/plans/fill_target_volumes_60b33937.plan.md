@@ -10,28 +10,28 @@ todos:
     status: completed
   - id: fixture
     content: "Extend FixtureV1 with targetVolumes[]: parse/encode, pure ops (add/update/remove/relocate), selection snapshot targetVolumeIds + pick kind"
-    status: in_progress
+    status: completed
   - id: render-layer
     content: Render WorldVolumeLayer in puzzle 3d scene wired to registry selection/hover + onTargetVolumeRelocate; canvas props fillEditTargetVolumes/onTargetVolumeRelocate/onTargetVolumeDraw
-    status: pending
+    status: completed
   - id: draw-tool
     content: Implement 3-point + height box-draw session (grid picks, vertical Z projection, CAD-box preview ghost, commit) with draw UI store + tool-active ref gating marquee
-    status: pending
+    status: completed
   - id: fill-submode
     content: Add fillEditTargetVolumes controller state + commands and engagement options/status (Edit target volumes, Delete volume)
-    status: pending
+    status: completed
   - id: fill-constraint-ts
     content: Add targetVolumes to BrushFillSequenceArgs and AABB-containment gate in createBrushFillSequenceStepper.tryPlaceOne + invalidation on volume change
-    status: pending
+    status: completed
   - id: fill-constraint-rs
     content: Pass volumes through preparePuzzle3dFillSession/startPuzzle3dFillBuild/setScene and implement containment in Rust fill_step_one
-    status: pending
+    status: completed
   - id: host-plumbing
     content: "Wire playground host: fillEditTargetVolumes prop, onTargetVolumeRelocate/Draw, volume selection, capture targetVolumes into fill session prep"
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing test files (infinite, puzzle/3d react, rs) and verify runtime with [DEBUG] logs; run nx tests; close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

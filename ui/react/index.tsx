@@ -14681,6 +14681,9 @@ export type GumballHandleKind =
   | "scaleX"
   | "scaleY"
   | "scaleZ"
+  | "scaleXY"
+  | "scaleYZ"
+  | "scaleXZ"
   | "scaleUniform";
 
 /** @emoji 🎛 Visibility and snap settings for {@link UnifiedGumball}. */
@@ -14689,6 +14692,7 @@ export interface GumballConfig {
   readonly movePlanes?: boolean;
   readonly rotate?: boolean;
   readonly scaleAxes?: boolean;
+  readonly scalePlanes?: boolean;
   readonly scaleUniform?: boolean;
   readonly translationSnap?: number;
   readonly rotationSnap?: number;
@@ -14697,11 +14701,12 @@ export interface GumballConfig {
 }
 
 /** @emoji 🎛 Default unified gumball: every handle group visible. */
-export const DEFAULT_GUMBALL_CONFIG: Readonly<Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scaleUniform">>> = {
+export const DEFAULT_GUMBALL_CONFIG: Readonly<Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">>> = {
   moveAxes: true,
   movePlanes: true,
   rotate: true,
   scaleAxes: true,
+  scalePlanes: true,
   scaleUniform: true,
 };
 
@@ -14720,7 +14725,7 @@ const gumballNorm = (a: GumballVec3): GumballVec3 => {
 };
 
 /** @emoji 🎛 Resolves partial {@link GumballConfig} with defaults. */
-export function resolveGumballConfig(config?: GumballConfig): Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scaleUniform">> & GumballConfig {
+export function resolveGumballConfig(config?: GumballConfig): Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">> & GumballConfig {
   return {
     ...DEFAULT_GUMBALL_CONFIG,
     ...config,
@@ -14728,6 +14733,7 @@ export function resolveGumballConfig(config?: GumballConfig): Required<Pick<Gumb
     movePlanes: config?.movePlanes !== false,
     rotate: config?.rotate !== false,
     scaleAxes: config?.scaleAxes !== false,
+    scalePlanes: config?.scalePlanes !== false,
     scaleUniform: config?.scaleUniform !== false,
   };
 }
@@ -14735,7 +14741,7 @@ export function resolveGumballConfig(config?: GumballConfig): Required<Pick<Gumb
 /** @emoji 🎛 True when at least one gumball handle group is enabled. */
 export function gumballConfigVisible(config?: GumballConfig): boolean {
   const resolved = resolveGumballConfig(config);
-  return resolved.moveAxes || resolved.movePlanes || resolved.rotate || resolved.scaleAxes || resolved.scaleUniform;
+  return resolved.moveAxes || resolved.movePlanes || resolved.rotate || resolved.scaleAxes || resolved.scalePlanes || resolved.scaleUniform;
 }
 
 /** @emoji 🎛 Maps a handle drag to translate / rotate / scale for host commit payloads. */
@@ -14838,11 +14844,19 @@ const GUMBALL_ARROW_RADIUS = 0.035;
 const GUMBALL_ARROW_HEAD = 0.14;
 const GUMBALL_PLANE_OFFSET = 0.28;
 const GUMBALL_PLANE_SIZE = 0.18;
-const GUMBALL_RING_RADIUS = 1.05;
+const GUMBALL_PLANE_SCALE_INSET = 0.05;
+const GUMBALL_PLANE_SCALE_ARM = 0.11;
+const GUMBALL_PLANE_SCALE_THICK = 0.022;
+const GUMBALL_PLANE_SCALE_DEPTH = 0.022;
+const GUMBALL_PLANE_SCALE_PICK = 0.14;
+const GUMBALL_RING_RADIUS = 1.02;
 const GUMBALL_RING_TUBE = 0.018;
-const GUMBALL_SCALE_OFFSET = 1.05;
-const GUMBALL_SCALE_BOX = 0.07;
-const GUMBALL_UNIFORM_BOX = 0.1;
+const GUMBALL_SCALE_OFFSET = 1.38;
+const GUMBALL_SCALE_SHAFT_RADIUS = 0.012;
+const GUMBALL_SCALE_BOX = 0.085;
+const GUMBALL_SCALE_PICK = 0.16;
+const GUMBALL_UNIFORM_BOX = 0.11;
+const GUMBALL_SCALE_RENDER_ORDER = 1001;
 
 const GUMBALL_AXIS_BY_KIND: Readonly<Record<GumballHandleKind, GumballVec3 | null>> = {
   moveX: gumballV3(1, 0, 0),
@@ -14857,9 +14871,160 @@ const GUMBALL_AXIS_BY_KIND: Readonly<Record<GumballHandleKind, GumballVec3 | nul
   scaleX: gumballV3(1, 0, 0),
   scaleY: gumballV3(0, 1, 0),
   scaleZ: gumballV3(0, 0, 1),
+  scaleXY: gumballV3(0, 0, 1),
+  scaleYZ: gumballV3(1, 0, 0),
+  scaleXZ: gumballV3(0, 1, 0),
   scaleUniform: null,
 };
 
+type GumballScalePlane = "xy" | "yz" | "xz";
+
+/** @emoji 📐 Local scale axis pair for a 2D plane scale handle. */
+export function gumballScalePlaneAxisIndices(kind: GumballHandleKind): readonly [0 | 1 | 2, 0 | 1 | 2] | null {
+  if (kind === "scaleXY") return [0, 1];
+  if (kind === "scaleYZ") return [1, 2];
+  if (kind === "scaleXZ") return [0, 2];
+  return null;
+}
+
+/** @emoji 📐 Inner corner of an L-shaped plane scale bracket (beyond the move plane square). */
+export function gumballPlaneScaleCorner(plane: GumballScalePlane): GumballVec3 {
+  const c = GUMBALL_PLANE_OFFSET + GUMBALL_PLANE_SIZE * 0.5 + GUMBALL_PLANE_SCALE_INSET;
+  if (plane === "xy") return [c, c, 0];
+  if (plane === "yz") return [0, c, c];
+  return [c, 0, c];
+}
+
+function gumballWorldPointToLocalOffset(point: GumballVec3, pivot: GumballVec3, quat: THREE.Quaternion): GumballVec3 {
+  const v = new THREE.Vector3(point[0] - pivot[0], point[1] - pivot[1], point[2] - pivot[2]);
+  v.applyQuaternion(quat.clone().invert());
+  return [v.x, v.y, v.z];
+}
+
+/** @emoji 📐 Component-wise scale factors for a 2D plane scale drag. */
+export function gumballPlaneScaleFactors(startLocal: readonly [number, number], currentLocal: readonly [number, number]): readonly [number, number] {
+  return [gumballAxisScaleFactor(startLocal[0], currentLocal[0]), gumballAxisScaleFactor(startLocal[1], currentLocal[1])];
+}
+
+function GumballPlaneScaleLHandle(props: { readonly plane: GumballScalePlane }): React.ReactElement {
+  const [cx, cy, cz] = gumballPlaneScaleCorner(props.plane);
+  const arm = GUMBALL_PLANE_SCALE_ARM;
+  const thick = GUMBALL_PLANE_SCALE_THICK;
+  const depth = GUMBALL_PLANE_SCALE_DEPTH;
+  const pick = GUMBALL_PLANE_SCALE_PICK;
+  if (props.plane === "xy") {
+    return (
+      <>
+        <mesh position={[cx + arm * 0.5, cy, cz]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+          <boxGeometry args={[arm, thick, depth]} />
+        </mesh>
+        <mesh position={[cx, cy + arm * 0.5, cz]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+          <boxGeometry args={[thick, arm, depth]} />
+        </mesh>
+        <mesh position={[cx + arm * 0.5, cy + arm * 0.5, cz]} visible={false}>
+          <boxGeometry args={[pick, pick, depth * 2]} />
+        </mesh>
+      </>
+    );
+  }
+  if (props.plane === "yz") {
+    return (
+      <>
+        <mesh position={[cx, cy + arm * 0.5, cz]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+          <boxGeometry args={[depth, arm, thick]} />
+        </mesh>
+        <mesh position={[cx, cy, cz + arm * 0.5]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+          <boxGeometry args={[depth, thick, arm]} />
+        </mesh>
+        <mesh position={[cx, cy + arm * 0.5, cz + arm * 0.5]} visible={false}>
+          <boxGeometry args={[depth * 2, pick, pick]} />
+        </mesh>
+      </>
+    );
+  }
+  return (
+    <>
+      <mesh position={[cx + arm * 0.5, cy, cz]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+        <boxGeometry args={[arm, depth, thick]} />
+      </mesh>
+      <mesh position={[cx, cy, cz + arm * 0.5]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+        <boxGeometry args={[thick, depth, arm]} />
+      </mesh>
+      <mesh position={[cx + arm * 0.5, cy, cz + arm * 0.5]} visible={false}>
+        <boxGeometry args={[pick, depth * 2, pick]} />
+      </mesh>
+    </>
+  );
+}
+
+type GumballPreviewAxis = "x" | "y" | "z";
+
+function gumballScaleShaftMidpoint(): number {
+  return (GUMBALL_RING_RADIUS + GUMBALL_SCALE_OFFSET) / 2;
+}
+
+function gumballScaleShaftLength(): number {
+  return GUMBALL_SCALE_OFFSET - GUMBALL_RING_RADIUS;
+}
+
+/** @emoji 📏 Outer scale reach along an axis (beyond move arrows and rotate rings). */
+export function gumballScaleAxisOffset(): number {
+  return GUMBALL_SCALE_OFFSET;
+}
+
+function GumballScaleAxisHandle(props: {
+  readonly axis: GumballPreviewAxis;
+  readonly color: string;
+  readonly opacity: number;
+}): React.ReactElement {
+  const shaftMid = gumballScaleShaftMidpoint();
+  const shaftLen = gumballScaleShaftLength();
+  const shaftMaterial = reactHostPort.useMemo(() => new THREE.MeshBasicMaterial({ color: props.color, transparent: true, opacity: props.opacity * 0.72, depthTest: false, depthWrite: false }), [props.color, props.opacity]);
+  reactHostPort.useEffect(() => () => shaftMaterial.dispose(), [shaftMaterial]);
+  if (props.axis === "x") {
+    return (
+      <>
+        <mesh rotation={[0, 0, -Math.PI / 2]} position={[shaftMid, 0, 0]} material={shaftMaterial} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+          <cylinderGeometry args={[GUMBALL_SCALE_SHAFT_RADIUS, GUMBALL_SCALE_SHAFT_RADIUS, shaftLen, 6]} />
+        </mesh>
+        <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+          <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
+        </mesh>
+        <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]} visible={false}>
+          <boxGeometry args={[GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK]} />
+        </mesh>
+      </>
+    );
+  }
+  if (props.axis === "y") {
+    return (
+      <>
+        <mesh position={[0, shaftMid, 0]} material={shaftMaterial} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+          <cylinderGeometry args={[GUMBALL_SCALE_SHAFT_RADIUS, GUMBALL_SCALE_SHAFT_RADIUS, shaftLen, 6]} />
+        </mesh>
+        <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+          <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
+        </mesh>
+        <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]} visible={false}>
+          <boxGeometry args={[GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK]} />
+        </mesh>
+      </>
+    );
+  }
+  return (
+    <>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, shaftMid]} material={shaftMaterial} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+        <cylinderGeometry args={[GUMBALL_SCALE_SHAFT_RADIUS, GUMBALL_SCALE_SHAFT_RADIUS, shaftLen, 6]} />
+      </mesh>
+      <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+        <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
+      </mesh>
+      <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]} visible={false}>
+        <boxGeometry args={[GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK]} />
+      </mesh>
+    </>
+  );
+}
 const GUMBALL_PREVIEW_AXIS_LENGTH = 3.6;
 const GUMBALL_PREVIEW_PLANE_SIZE = 1.85;
 const GUMBALL_PREVIEW_RING_RADIUS = 1.18;
@@ -14921,8 +15086,6 @@ export function gumballResolveHandleVisual(baseColor: string, state: GumballHand
   return { color: baseColor, opacity: palette.idleOpacity, scale: 1 };
 }
 
-type GumballPreviewAxis = "x" | "y" | "z";
-
 function gumballPreviewAxisForKind(kind: GumballHandleKind): GumballPreviewAxis | null {
   if (kind === "moveX" || kind === "rotateX" || kind === "scaleX") return "x";
   if (kind === "moveY" || kind === "rotateY" || kind === "scaleY") return "y";
@@ -14936,6 +15099,7 @@ function gumballBaseColorForKind(kind: GumballHandleKind, palette: GumballVisual
   if (axis === "y") return palette.axisY;
   if (axis === "z") return palette.axisZ;
   if (kind === "moveXY" || kind === "moveYZ" || kind === "moveXZ") return palette.plane;
+  if (kind === "scaleXY" || kind === "scaleYZ" || kind === "scaleXZ") return palette.plane;
   return palette.uniform;
 }
 
@@ -14972,7 +15136,7 @@ function GumballInteractionPreview(props: { readonly kind: GumballHandleKind; re
   if (axis) {
     return <GumballAxisPreviewLine axis={axis} color={color} opacity={lineOpacity} lineWidth={lineWidth} />;
   }
-  if (props.kind === "moveXY") {
+  if (props.kind === "moveXY" || props.kind === "scaleXY") {
     return (
       <mesh renderOrder={997}>
         <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
@@ -14980,7 +15144,7 @@ function GumballInteractionPreview(props: { readonly kind: GumballHandleKind; re
       </mesh>
     );
   }
-  if (props.kind === "moveYZ") {
+  if (props.kind === "moveYZ" || props.kind === "scaleYZ") {
     return (
       <mesh rotation={[0, Math.PI / 2, 0]} renderOrder={997}>
         <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
@@ -14988,7 +15152,7 @@ function GumballInteractionPreview(props: { readonly kind: GumballHandleKind; re
       </mesh>
     );
   }
-  if (props.kind === "moveXZ") {
+  if (props.kind === "moveXZ" || props.kind === "scaleXZ") {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={997}>
         <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
@@ -15058,6 +15222,38 @@ function gumballNdcFromPointer(clientX: number, clientY: number, rect: DOMRect):
   };
 }
 
+const _gumballPickRaycaster = new THREE.Raycaster();
+const _gumballPickNdc = new THREE.Vector2();
+
+/** @emoji 🎛 True while a gumball handle owns the active canvas pointer (blocks marquee / background pick). */
+export const gumballPointerConsumesCanvasEventRef = { current: false };
+
+/** @emoji 🎛 Reads a gumball handle kind from a raycast hit object or its parents. */
+export function gumballKindFromRaycastObject(object: THREE.Object3D | null): GumballHandleKind | null {
+  let node: THREE.Object3D | null = object;
+  while (node) {
+    const kind = node.userData?.gumballHandleKind;
+    if (typeof kind === "string") return kind as GumballHandleKind;
+    node = node.parent;
+  }
+  return null;
+}
+
+/** @emoji 🎛 Raycasts the scene for a gumball handle at a client-space pointer. */
+export function gumballRaycastKindAtClientPoint(scene: THREE.Scene, camera: THREE.Camera, canvas: HTMLElement, clientX: number, clientY: number): GumballHandleKind | null {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  const ndc = gumballNdcFromPointer(clientX, clientY, rect);
+  _gumballPickNdc.set(ndc.x, ndc.y);
+  _gumballPickRaycaster.setFromCamera(_gumballPickNdc, camera);
+  const hits = _gumballPickRaycaster.intersectObjects(scene.children, true);
+  for (const hit of hits) {
+    const kind = gumballKindFromRaycastObject(hit.object);
+    if (kind) return kind;
+  }
+  return null;
+}
+
 interface GumballDragState {
   readonly kind: GumballHandleKind;
   readonly before: GumballPose;
@@ -15066,6 +15262,8 @@ interface GumballDragState {
   readonly startRotateVec: GumballVec3;
   readonly startScaleProj: number;
   readonly startUniformScale: GumballVec3;
+  readonly startPlaneScaleLocal: readonly [number, number];
+  readonly scalePlaneAxes: readonly [0 | 1 | 2, 0 | 1 | 2] | null;
 }
 
 /** @emoji 🎛 Props for {@link UnifiedGumball}. */
@@ -15088,7 +15286,13 @@ function GumballHandleMesh(props: {
   readonly onPointerOut: () => void;
   readonly children: React.ReactNode;
 }): React.ReactElement {
-  const doubleSided = props.kind === "moveXY" || props.kind === "moveYZ" || props.kind === "moveXZ";
+  const doubleSided =
+    props.kind === "moveXY" ||
+    props.kind === "moveYZ" ||
+    props.kind === "moveXZ" ||
+    props.kind === "scaleXY" ||
+    props.kind === "scaleYZ" ||
+    props.kind === "scaleXZ";
   const visual = gumballResolveHandleVisual(props.baseColor, props.visualState, props.palette);
   return (
     <group scale={[visual.scale, visual.scale, visual.scale]}>
@@ -15096,6 +15300,7 @@ function GumballHandleMesh(props: {
         frustumCulled={false}
         userData={{ gumballHandleKind: props.kind }}
         onPointerDown={(event) => {
+          gumballPointerConsumesCanvasEventRef.current = true;
           event.stopPropagation();
           props.onPointerDown(props.kind, event);
         }}
@@ -15138,6 +15343,13 @@ function GumballHandles(props: {
       {children}
     </GumballHandleMesh>
   );
+  const scaleHandleProps = (kind: "scaleX" | "scaleY" | "scaleZ", axis: GumballPreviewAxis) => {
+    const base = gumballBaseColorForKind(kind, props.palette);
+    const state = gumballHandleVisualState(kind, props.hovered, props.active);
+    const visual = gumballResolveHandleVisual(base, state, props.palette);
+    return handleProps(kind, <GumballScaleAxisHandle axis={axis} color={visual.color} opacity={visual.opacity} />);
+  };
+  const scalePlaneHandleProps = (kind: "scaleXY" | "scaleYZ" | "scaleXZ", plane: GumballScalePlane) => handleProps(kind, <GumballPlaneScaleLHandle plane={plane} />);
   return (
     <group renderOrder={999}>
       {highlightKind ? <GumballInteractionPreview kind={highlightKind} palette={props.palette} phase={props.active === highlightKind ? "active" : "hover"} /> : null}
@@ -15224,32 +15436,29 @@ function GumballHandles(props: {
       ) : null}
       {props.config.scaleAxes ? (
         <>
-          {handleProps(
-            "scaleX",
-            <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]}>
-              <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
-            </mesh>,
-          )}
-          {handleProps(
-            "scaleY",
-            <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]}>
-              <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
-            </mesh>,
-          )}
-          {handleProps(
-            "scaleZ",
-            <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]}>
-              <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
-            </mesh>,
-          )}
+          {scaleHandleProps("scaleX", "x")}
+          {scaleHandleProps("scaleY", "y")}
+          {scaleHandleProps("scaleZ", "z")}
+        </>
+      ) : null}
+      {props.config.scalePlanes ? (
+        <>
+          {scalePlaneHandleProps("scaleXY", "xy")}
+          {scalePlaneHandleProps("scaleYZ", "yz")}
+          {scalePlaneHandleProps("scaleXZ", "xz")}
         </>
       ) : null}
       {props.config.scaleUniform
         ? handleProps(
             "scaleUniform",
-            <mesh>
-              <boxGeometry args={[GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX]} />
-            </mesh>,
+            <>
+              <mesh renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+                <boxGeometry args={[GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX]} />
+              </mesh>
+              <mesh visible={false}>
+                <boxGeometry args={[GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK]} />
+              </mesh>
+            </>,
           )
         : null}
     </group>
@@ -15269,6 +15478,30 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   const gl = useThree((state) => state.gl);
   const invalidate = useThree((state) => state.invalidate);
   const controls = useThree((state) => state.controls as { enabled?: boolean } | null);
+  const pointerGuardEnabled = gumballConfigVisible(config);
+
+  reactHostPort.useEffect(() => {
+    if (!pointerGuardEnabled) return;
+    const canvas = gl.domElement;
+    const onPointerDownCapture = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      const target = event.target;
+      if (!(target instanceof Node) || !canvas.contains(target)) return;
+      gumballPointerConsumesCanvasEventRef.current = gumballRaycastKindAtClientPoint(scene, camera, canvas, event.clientX, event.clientY) !== null;
+    };
+    const clearPointerCapture = () => {
+      gumballPointerConsumesCanvasEventRef.current = false;
+    };
+    window.addEventListener("pointerdown", onPointerDownCapture, true);
+    window.addEventListener("pointerup", clearPointerCapture, true);
+    window.addEventListener("pointercancel", clearPointerCapture, true);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDownCapture, true);
+      window.removeEventListener("pointerup", clearPointerCapture, true);
+      window.removeEventListener("pointercancel", clearPointerCapture, true);
+      clearPointerCapture();
+    };
+  }, [camera, gl.domElement, pointerGuardEnabled, scene]);
 
   reactHostPort.useEffect(() => {
     invalidate();
@@ -15331,7 +15564,24 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         const next = [...state.before.scale] as [number, number, number];
         next[axisIndex] = state.before.scale[axisIndex] * factor;
         target.scale.set(next[0], next[1], next[2]);
-      } else {
+      } else if (kind === "scaleXY" || kind === "scaleYZ" || kind === "scaleXZ") {
+        const planeNormal = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
+        const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, planeNormal);
+        if (!hit || !state.scalePlaneAxes) return;
+        const local = gumballWorldPointToLocalOffset(hit, pivot, quat);
+        const [ia, ib] = state.scalePlaneAxes;
+        const factors = gumballPlaneScaleFactors(state.startPlaneScaleLocal, [local[ia]!, local[ib]!]);
+        let fa = factors[0];
+        let fb = factors[1];
+        if (config.scaleSnap && config.scaleSnap > 0) {
+          fa = gumballSnapScalar(fa, config.scaleSnap);
+          fb = gumballSnapScalar(fb, config.scaleSnap);
+        }
+        const next = [...state.before.scale] as [number, number, number];
+        next[ia] = state.before.scale[ia] * fa;
+        next[ib] = state.before.scale[ib] * fb;
+        target.scale.set(next[0], next[1], next[2]);
+      } else if (kind === "scaleUniform") {
         const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, gumballWorldAxis(gumballV3(0, 0, 1), quat));
         if (!hit) return;
         const current = gumballSub(hit, pivot);
@@ -15405,6 +15655,8 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
       let startRotateVec: GumballVec3 = gumballV3(1, 0, 0);
       let startScaleProj = 1;
       let startUniformScale: GumballVec3 = gumballV3(1, 0, 0);
+      let startPlaneScaleLocal: readonly [number, number] = [1, 1];
+      let scalePlaneAxes: readonly [0 | 1 | 2, 0 | 1 | 2] | null = null;
       if (kind === "moveX" || kind === "moveY" || kind === "moveZ" || kind === "scaleX" || kind === "scaleY" || kind === "scaleZ") {
         const axisDir = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
         const eye = gumballEyeFromPivot(camera, pivot);
@@ -15417,11 +15669,18 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         const axisDir = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
         const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, axisDir) ?? pivot;
         startRotateVec = gumballSub(hit, pivot);
+      } else if (kind === "scaleXY" || kind === "scaleYZ" || kind === "scaleXZ") {
+        const planeNormal = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
+        const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, planeNormal) ?? pivot;
+        const local = gumballWorldPointToLocalOffset(hit, pivot, quat);
+        const axes = gumballScalePlaneAxisIndices(kind)!;
+        scalePlaneAxes = axes;
+        startPlaneScaleLocal = [local[axes[0]], local[axes[1]]];
       } else {
         const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, gumballWorldAxis(gumballV3(0, 0, 1), quat)) ?? gumballV3(1, 0, 0);
         startUniformScale = gumballSub(hit, pivot);
       }
-      dragRef.current = { kind, before, startAxisParam, startPlanePoint, startRotateVec, startScaleProj, startUniformScale };
+      dragRef.current = { kind, before, startAxisParam, startPlanePoint, startRotateVec, startScaleProj, startUniformScale, startPlaneScaleLocal, scalePlaneAxes };
       setActiveKind(kind);
       setHovered(kind);
       if (controls) controls.enabled = false;
@@ -18711,7 +18970,8 @@ if (import.meta.vitest) {
       expect(gumballHandleKindToTransformMode("rotateX")).toBe("rotate");
       expect(gumballHandleKindToTransformMode("scaleUniform")).toBe("scale");
       expect(gumballConfigVisible(DEFAULT_GUMBALL_CONFIG)).toBe(true);
-      expect(gumballConfigVisible({ moveAxes: false, movePlanes: false, rotate: false, scaleAxes: false, scaleUniform: false })).toBe(false);
+      expect(gumballConfigVisible({ moveAxes: false, movePlanes: false, rotate: false, scaleAxes: false, scalePlanes: false, scaleUniform: false })).toBe(false);
+      expect(gumballHandleKindToTransformMode("scaleXY")).toBe("scale");
       expect(gumballHandleVisualState("moveX", "moveY", null)).toBe("dimmed");
       expect(gumballHandleVisualState("moveX", "moveX", null)).toBe("hover");
       expect(gumballHandleVisualState("moveX", null, "moveX")).toBe("active");
@@ -18719,6 +18979,21 @@ if (import.meta.vitest) {
       const palette = resolveGumballVisualPalette();
       expect(gumballResolveHandleVisual("#ff0000", "hover", palette).color).toBe(palette.hover);
       expect(gumballResolveHandleVisual("#ff0000", "active", palette).color).toBe(palette.active);
+      expect(gumballScaleAxisOffset()).toBeGreaterThan(GUMBALL_RING_RADIUS);
+      expect(gumballScalePlaneAxisIndices("scaleXY")).toEqual([0, 1]);
+      expect(gumballScalePlaneAxisIndices("scaleYZ")).toEqual([1, 2]);
+      expect(gumballScalePlaneAxisIndices("scaleXZ")).toEqual([0, 2]);
+      expect(gumballPlaneScaleCorner("xy")[0]).toBeGreaterThan(GUMBALL_PLANE_OFFSET + GUMBALL_PLANE_SIZE * 0.5);
+      expect(gumballPlaneScaleFactors([1, 2], [2, 4])).toEqual([2, 2]);
+      const gumballMesh = new THREE.Mesh();
+      gumballMesh.userData = { gumballHandleKind: "moveX" };
+      const gumballChild = new THREE.Mesh();
+      gumballMesh.add(gumballChild);
+      expect(gumballKindFromRaycastObject(gumballMesh)).toBe("moveX");
+      expect(gumballKindFromRaycastObject(gumballChild)).toBe("moveX");
+      expect(gumballKindFromRaycastObject(null)).toBeNull();
+      gumballPointerConsumesCanvasEventRef.current = true;
+      gumballPointerConsumesCanvasEventRef.current = false;
     });
   });
 

@@ -121,6 +121,7 @@ import {
   type SelectionMode,
   PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID,
   type SelectionSnapshot,
+  normalizeSelectionSnapshot,
   type MarqueeSelectableKinds,
   type VortexKind,
   type VortexProps,
@@ -826,19 +827,23 @@ function puzzle3dPlayEngagementCommandToken(text: string): string {
 }
 
 function puzzle3dPlaySelectReferenceCommand(referenceId: string): CommandDescriptor {
-  return { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelection", args: { selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [referenceId] } } };
+  return { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelection", args: { selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [referenceId], targetVolumeIds: [] } } };
+}
+
+function puzzle3dPlaySelectTargetVolumeCommand(volumeId: string): CommandDescriptor {
+  return { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "setSelection", args: { selection: { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [volumeId] } } };
 }
 
 function puzzle3dPlaySelectObjectCommand(objectId: string): CommandDescriptor {
-	return puzzle3dPlayCmd("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [] } });
+	return puzzle3dPlayCmd("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] } });
 }
 
 function puzzle3dPlaySelectVortexCommand(vortexFullId: string): CommandDescriptor {
-	return puzzle3dPlayCmd("setSelection", { selection: { objectIds: [], vortexIds: [vortexFullId], attractionIds: [] } });
+	return puzzle3dPlayCmd("setSelection", { selection: { objectIds: [], vortexIds: [vortexFullId], attractionIds: [], referenceIds: [], targetVolumeIds: [] } });
 }
 
 function puzzle3dPlaySelectAttractionCommand(attractionId: string): CommandDescriptor {
-	return puzzle3dPlayCmd("setSelection", { selection: { objectIds: [], vortexIds: [], attractionIds: [attractionId] } });
+	return puzzle3dPlayCmd("setSelection", { selection: { objectIds: [], vortexIds: [], attractionIds: [attractionId], referenceIds: [], targetVolumeIds: [] } });
 }
 
 export { parseKindCatalogs, parseKindCompatibility };
@@ -852,13 +857,14 @@ export interface Puzzle3dPlayHostBridge {
 /** @emoji 🎯 Play harness selection: objects, vortex full ids, and attractions. */
 export type Puzzle3dPlaySelection = SelectionSnapshot;
 
-export type Puzzle3dGumballGroupKey = keyof Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scaleUniform">;
+export type Puzzle3dGumballGroupKey = keyof Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">;
 
 export const PUZZLE_3D_GUMBALL_GROUPS: readonly { readonly key: Puzzle3dGumballGroupKey; readonly label: string; readonly iconId: string }[] = [
   { key: "moveAxes", label: "Move Axes", iconId: "move" },
   { key: "movePlanes", label: "Move Planes", iconId: "move-3d" },
   { key: "rotate", label: "Rotate", iconId: "rotate-cw" },
   { key: "scaleAxes", label: "Scale Axes", iconId: "maximize-2" },
+  { key: "scalePlanes", label: "Scale Planes", iconId: "scaling" },
   { key: "scaleUniform", label: "Scale Uniform", iconId: "box" },
 ];
 
@@ -1068,33 +1074,42 @@ export function puzzle3dPlayAllSelectionFromFixture(
       ? fixture.objects.flatMap((object) => object.vortices.map((vortex) => puzzle3dVortexFullId(object.id, vortex.id)))
       : [],
     attractionIds: kinds.attraction ? fixture.attractions.map((attraction) => attraction.id) : [],
+    referenceIds: (fixture.references ?? []).map((reference) => reference.id),
+    targetVolumeIds: (fixture.targetVolumes ?? []).map((volume) => volume.id),
   };
 }
 
 export function puzzle3dPlaySelectionEqual(a: Puzzle3dPlaySelection, b: Puzzle3dPlaySelection): boolean {
-  if (a.objectIds.length !== b.objectIds.length || a.vortexIds.length !== b.vortexIds.length || a.referenceIds.length !== b.referenceIds.length) {
+  const left = normalizeSelectionSnapshot(a);
+  const right = normalizeSelectionSnapshot(b);
+  if (left.objectIds.length !== right.objectIds.length || left.vortexIds.length !== right.vortexIds.length || left.referenceIds.length !== right.referenceIds.length || left.targetVolumeIds.length !== right.targetVolumeIds.length) {
     return false;
   }
-  if (a.attractionIds.length !== b.attractionIds.length) {
+  if (left.attractionIds.length !== right.attractionIds.length) {
     return false;
   }
-  for (let i = 0; i < a.objectIds.length; i += 1) {
-    if (a.objectIds[i] !== b.objectIds[i]) {
+  for (let i = 0; i < left.objectIds.length; i += 1) {
+    if (left.objectIds[i] !== right.objectIds[i]) {
       return false;
     }
   }
-  for (let i = 0; i < a.vortexIds.length; i += 1) {
-    if (a.vortexIds[i] !== b.vortexIds[i]) {
+  for (let i = 0; i < left.vortexIds.length; i += 1) {
+    if (left.vortexIds[i] !== right.vortexIds[i]) {
       return false;
     }
   }
-  for (let i = 0; i < a.attractionIds.length; i += 1) {
-    if (a.attractionIds[i] !== b.attractionIds[i]) {
+  for (let i = 0; i < left.attractionIds.length; i += 1) {
+    if (left.attractionIds[i] !== right.attractionIds[i]) {
       return false;
     }
   }
-  for (let i = 0; i < a.referenceIds.length; i += 1) {
-    if (a.referenceIds[i] !== b.referenceIds[i]) {
+  for (let i = 0; i < left.referenceIds.length; i += 1) {
+    if (left.referenceIds[i] !== right.referenceIds[i]) {
+      return false;
+    }
+  }
+  for (let i = 0; i < left.targetVolumeIds.length; i += 1) {
+    if (left.targetVolumeIds[i] !== right.targetVolumeIds[i]) {
       return false;
     }
   }
@@ -1211,6 +1226,10 @@ export function puzzle3dPlayHierarchyTreeHighlightedIdsForTarget(target: HoverTa
       return [`puzzle-3d-play-hierarchy.vortex.${target.fullId}`];
     case "attraction":
       return [`puzzle-3d-play-hierarchy.attraction.${target.id}`];
+    case "reference":
+      return [`puzzle-3d-play-hierarchy.reference.${target.id}`];
+    case "targetVolume":
+      return [`puzzle-3d-play-hierarchy.target-volume.${target.id}`];
     default:
       return [];
   }
@@ -1369,8 +1388,11 @@ export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelectio
   for (const attractionId of selection.attractionIds) {
     ids.push(`puzzle-3d-play-hierarchy.attraction.${attractionId}`);
   }
-  for (const referenceId of selection.referenceIds) {
+  for (const referenceId of selection.referenceIds ?? []) {
     ids.push(`puzzle-3d-play-hierarchy.reference.${referenceId}`);
+  }
+  for (const volumeId of selection.targetVolumeIds ?? []) {
+    ids.push(`puzzle-3d-play-hierarchy.targetVolume.${volumeId}`);
   }
   return ids;
 }
@@ -1442,11 +1464,24 @@ export function buildPuzzle3dPlayHierarchySections(
     defaultOpen: true,
     items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
   };
+  const targetVolumeItems: UiTreeItemNode[] = (fixture.targetVolumes ?? []).map((volume) => ({
+    id: `puzzle-3d-play-hierarchy.target-volume.${volume.id}`,
+    label: volume.id,
+    command: puzzle3dPlaySelectTargetVolumeCommand(volume.id),
+    ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "targetVolume", id: volume.id }),
+    ...puzzle3dPlayHierarchyEntityChrome(volume, { kind: "targetVolume", id: volume.id }, options),
+  }));
+  const targetVolumesGroup: UiTreeItemNode = {
+    id: "puzzle-3d-play-hierarchy.target-volumes",
+    label: "Target Volumes",
+    defaultOpen: true,
+    items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-hierarchy.target-volumes.empty", label: "(none)" }],
+  };
   const viewportRoot: UiTreeItemNode = {
     id: "puzzle-3d-play-hierarchy.viewport",
     label: "Puzzle 3D",
     defaultOpen: true,
-    items: [objectsGroup, referencesGroup, attractionsGroup],
+    items: [objectsGroup, referencesGroup, targetVolumesGroup, attractionsGroup],
   };
   return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [viewportRoot]).sections;
 }
@@ -2396,11 +2431,11 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         this.selectableKinds.attraction && this.visibleKinds.attraction
           ? selection.attractionIds.filter((attractionId) => entitySelectable(attractionById.get(attractionId)))
           : [],
-      referenceIds: selection.referenceIds.filter((referenceId) => {
+      referenceIds: (selection.referenceIds ?? []).filter((referenceId) => {
         const reference = (this.fixture.references ?? []).find((row) => row.id === referenceId);
         return reference ? entitySelectable(reference) : false;
       }),
-      targetVolumeIds: selection.targetVolumeIds.filter((volumeId) => {
+      targetVolumeIds: (selection.targetVolumeIds ?? []).filter((volumeId) => {
         const volume = (this.fixture.targetVolumes ?? []).find((row) => row.id === volumeId);
         return volume ? entitySelectable(volume) : false;
       }),
@@ -2813,7 +2848,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           ...fixture,
           objects: fixture.objects.map((object) => (object.id === oldId ? { ...object, id: trimmed } : object)),
         }));
-        this.selection = { objectIds: [trimmed], vortexIds: [], attractionIds: [], referenceIds: [] };
+        this.selection = { objectIds: [trimmed], vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] };
         this.notifySnapshot();
         return;
       }

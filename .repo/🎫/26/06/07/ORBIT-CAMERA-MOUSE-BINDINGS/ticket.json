@@ -1,0 +1,9 @@
+{
+  "title": "Orbit Camera Mouse Bindings",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Projection-aware orbit mouse bindings: orthographic alt+right pan / middle orbit; perspective alt+right orbit / middle pan.",
+  "goal": "♾️infinite🏙️world",
+  "summary": "Added resolveWorldOrbitMouseButtonsIdle and projection-aware resolveWorldOrbitRightMouseAction; wired through WorldOrbitGated (CAD) and puzzle 3d OrbitGated.",
+  "sessions": []
+}

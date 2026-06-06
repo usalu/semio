@@ -106,6 +106,7 @@ const VENDORED_ICON_IDS = [
   "puzzle",
   "rotate-ccw",
   "save",
+  "scaling",
   "search",
   "settings",
   "settings-2",

@@ -4872,6 +4872,7 @@ export interface CadGumballConfig {
   readonly movePlanes?: boolean;
   readonly rotate?: boolean;
   readonly scaleAxes?: boolean;
+  readonly scalePlanes?: boolean;
   readonly scaleUniform?: boolean;
   readonly translationSnap?: number;
   readonly rotationSnap?: number;
@@ -4880,7 +4881,7 @@ export interface CadGumballConfig {
 }
 
 /** @emoji 🎛 Toggle keys for CAD play gumball window measures. */
-export type CadGumballGroupKey = keyof Pick<CadGumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scaleUniform">;
+export type CadGumballGroupKey = keyof Pick<CadGumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">;
 
 /** @emoji 🎛 Ordered gumball group toggles for CAD play window measures. */
 export const CAD_GUMBALL_GROUPS: readonly { readonly key: CadGumballGroupKey; readonly label: string }[] = [
@@ -4888,6 +4889,7 @@ export const CAD_GUMBALL_GROUPS: readonly { readonly key: CadGumballGroupKey; re
   { key: "movePlanes", label: "Move Planes" },
   { key: "rotate", label: "Rotate" },
   { key: "scaleAxes", label: "Scale Axes" },
+  { key: "scalePlanes", label: "Scale Planes" },
   { key: "scaleUniform", label: "Scale Uniform" },
 ];
 
@@ -4897,13 +4899,14 @@ export const CAD_GUMBALL_HIDDEN: CadGumballConfig = {
   movePlanes: false,
   rotate: false,
   scaleAxes: false,
+  scalePlanes: false,
   scaleUniform: false,
 };
 
 /** @emoji 🎛 True when at least one gumball handle group is enabled. */
 export function cadGumballConfigVisible(config: CadGumballConfig | null | undefined): boolean {
   if (!config) return false;
-  return config.moveAxes !== false || config.movePlanes !== false || config.rotate !== false || config.scaleAxes !== false || config.scaleUniform !== false;
+  return config.moveAxes !== false || config.movePlanes !== false || config.rotate !== false || config.scaleAxes !== false || config.scalePlanes !== false || config.scaleUniform !== false;
 }
 
 /** @emoji ✋ True when `targets` resolve to at least one model vertex. */

@@ -8,6 +8,8 @@ import {
   DEFAULT_GUMBALL_CONFIG,
   gumballConfigVisible,
   gumballHandleKindToTransformMode,
+  gumballKindFromRaycastObject,
+  gumballPointerConsumesCanvasEventRef,
   UnifiedGumball,
   type EngagementSpec,
   type GumballConfig,
@@ -70,7 +72,7 @@ import {
   WorldOrbitProjectionSwitch,
   WorldOrbitViewControls,
   WorldOrbitViewSnapGateProvider,
-  WORLD_ORBIT_MOUSE_BUTTONS_IDLE,
+  resolveWorldOrbitMouseButtonsIdle,
   applyOrbitProjectionToCameraState,
   useWorldOrbitRightMouseBindings,
   useWorldOrbitViewSnapGate,
@@ -508,6 +510,17 @@ export function selectionSnapshotsEqual(a: SelectionSnapshot, b: SelectionSnapsh
 
 const EMPTY_SELECTION_SNAPSHOT: SelectionSnapshot = { objectIds: [], vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] };
 
+/** @emoji 🎯 Normalizes optional selection arrays for stable comparisons. */
+export function normalizeSelectionSnapshot(snapshot: SelectionSnapshot): SelectionSnapshot {
+  return {
+    objectIds: snapshot.objectIds ?? [],
+    vortexIds: snapshot.vortexIds ?? [],
+    attractionIds: snapshot.attractionIds ?? [],
+    referenceIds: snapshot.referenceIds ?? [],
+    targetVolumeIds: snapshot.targetVolumeIds ?? [],
+  };
+}
+
 /** @emoji 🖱️ Pointer movement before a vortex press becomes an attraction drag (px). */
 export const PUZZLE_3D_VORTEX_DRAG_THRESHOLD_PX = 6;
 
@@ -589,21 +602,28 @@ export function mergeSelection(mode: SelectionMode, current: SelectionSnapshot, 
 
 /** @emoji 🎯 Applies selection mode when committing a marquee or multi-pick snapshot. */
 export function mergeSelectionSnapshot(mode: SelectionMode, current: SelectionSnapshot, incoming: SelectionSnapshot): SelectionSnapshot {
+  const nextIncoming: SelectionSnapshot = {
+    objectIds: incoming.objectIds ?? [],
+    vortexIds: incoming.vortexIds ?? [],
+    attractionIds: incoming.attractionIds ?? [],
+    referenceIds: incoming.referenceIds ?? [],
+    targetVolumeIds: incoming.targetVolumeIds ?? [],
+  };
   if (mode === "default") {
     return {
-      objectIds: [...incoming.objectIds],
-      vortexIds: [...incoming.vortexIds],
-      attractionIds: [...incoming.attractionIds],
-      referenceIds: [...incoming.referenceIds],
-      targetVolumeIds: [...incoming.targetVolumeIds],
+      objectIds: [...nextIncoming.objectIds],
+      vortexIds: [...nextIncoming.vortexIds],
+      attractionIds: [...nextIncoming.attractionIds],
+      referenceIds: [...nextIncoming.referenceIds],
+      targetVolumeIds: [...nextIncoming.targetVolumeIds],
     };
   }
   return {
-    objectIds: mergeIdList(mode, current.objectIds, incoming.objectIds),
-    vortexIds: mergeIdList(mode, current.vortexIds, incoming.vortexIds),
-    attractionIds: mergeIdList(mode, current.attractionIds, incoming.attractionIds),
-    referenceIds: mergeIdList(mode, current.referenceIds, incoming.referenceIds),
-    targetVolumeIds: mergeIdList(mode, current.targetVolumeIds, incoming.targetVolumeIds),
+    objectIds: mergeIdList(mode, current.objectIds, nextIncoming.objectIds),
+    vortexIds: mergeIdList(mode, current.vortexIds, nextIncoming.vortexIds),
+    attractionIds: mergeIdList(mode, current.attractionIds, nextIncoming.attractionIds),
+    referenceIds: mergeIdList(mode, current.referenceIds, nextIncoming.referenceIds),
+    targetVolumeIds: mergeIdList(mode, current.targetVolumeIds, nextIncoming.targetVolumeIds),
   };
 }
 
@@ -770,11 +790,12 @@ export function createSelectionSnapshotStore(initial: SelectionSnapshot = EMPTY_
       return controlledHostSnapshot;
     },
     setSnapshot(next: SelectionSnapshot, equal: (left: SelectionSnapshot, right: SelectionSnapshot) => boolean = selectionSnapshotsEqual): void {
-      if (equal(derived.snapshot, next)) {
+      const normalized = normalizeSelectionSnapshot(next);
+      if (equal(derived.snapshot, normalized)) {
         return;
       }
       const prev = derived;
-      const nextDerived = deriveSelectionSnapshot(next);
+      const nextDerived = deriveSelectionSnapshot(normalized);
       derived = selectionIdSetsEqual(prev.attractionIdSet, nextDerived.attractionIdSet)
         ? { ...nextDerived, attractionIdSet: prev.attractionIdSet }
         : nextDerived;
@@ -4535,6 +4556,7 @@ export function createBrushFillSequenceStepper(args: BrushFillSequenceArgs): Bru
         if (targetVolumes.length > 0) {
           const aabb = brushPreviewWorldAabb(preview, meshRoot);
           if (!aabb || !worldVolumesContainAabb(targetVolumes, aabb.min, aabb.max)) {
+            console.log("[DEBUG] puzzle3d fill skip outside target volume", preview.objectId, aabb);
             continue;
           }
         }
@@ -5691,6 +5713,11 @@ function raycastHitTargetsPick(hitObject: Object3D): boolean {
   return false;
 }
 
+/** @emoji 🎯 True when a raycast hit belongs to a unified gumball handle. */
+function raycastHitIsGumball(hitObject: Object3D): boolean {
+  return gumballKindFromRaycastObject(hitObject) !== null;
+}
+
 /** @emoji 🎯 Clears selection when the user clicks empty canvas (R3F pointer missed). */
 function SelectionMissBridge(): null {
   const { clearSelection } = useRegistryInteraction();
@@ -5705,12 +5732,12 @@ function SelectionMissBridge(): null {
   reactHostPort.useEffect(() => {
     const previous = getState().onPointerMissed;
     const onMiss = (event: MouseEvent) => {
-      if (event.button !== 0 || attractionBusyRef.current || puzzle3dRelocateDragActiveRef.current) {
+      if (event.button !== 0 || attractionBusyRef.current || puzzle3dRelocateDragActiveRef.current || gumballPointerConsumesCanvasEventRef.current) {
         previous?.(event);
         return;
       }
       const hits = getState().internal.initialHits;
-      if (hits.some((hit) => raycastHitTargetsPick(hit.object))) {
+      if (hits.some((hit) => raycastHitTargetsPick(hit.object) || raycastHitIsGumball(hit.object))) {
         previous?.(event);
         return;
       }
@@ -6374,7 +6401,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
     fallbackMeshUrl: isLoadableMeshUrl(props.meshUrl) ? props.meshUrl : PLACEHOLDER_MESH_URL,
   });
   const config = reactHostPort.useMemo(() => {
-    if (props.relocate === false) return { moveAxes: false, movePlanes: false, rotate: false, scaleAxes: false, scaleUniform: false };
+    if (props.relocate === false) return { moveAxes: false, movePlanes: false, rotate: false, scaleAxes: false, scalePlanes: false, scaleUniform: false };
     const base = props.relocate ?? gumballConfig;
     const transSnap = lodCtx.gridSnapEnabled && lodCtx.gridStepWorld != null && lodCtx.gridStepWorld > 0 ? lodCtx.gridStepWorld : undefined;
     return { ...base, translationSnap: transSnap ?? base.translationSnap };
@@ -8192,7 +8219,10 @@ function OrbitGated(props: {
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
+  const projection = props.projection ?? "perspective";
+  const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection), [projection]);
   useWorldOrbitRightMouseBindings(controls, gl.domElement, {
+    projection,
     dragThresholdPx: PUZZLE_3D_MARQUEE_DRAG_THRESHOLD_PX,
     onRightPointerDown: (event) => {
       if (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current) {
@@ -8225,7 +8255,7 @@ function OrbitGated(props: {
         invalidate();
         reportCamera();
       }}
-      mouseButtons={WORLD_ORBIT_MOUSE_BUTTONS_IDLE}
+      mouseButtons={mouseButtonsIdle}
     />
   );
 }
@@ -9417,7 +9447,7 @@ function MarqueeBridge() {
     };
     puzzle3dMarqueeGestureCancel = cancelGesture;
     const onPointerDown = (event: PointerEvent) => {
-      if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current || puzzle3dBrushToolActiveRef.current || puzzle3dTargetVolumeToolActiveRef.current) {
+      if (event.button !== 0 || reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || puzzle3dRelocateDragActiveRef.current || gumballPointerConsumesCanvasEventRef.current || puzzle3dBrushToolActiveRef.current || puzzle3dTargetVolumeToolActiveRef.current) {
         return;
       }
       cancelPrefetch();
@@ -9989,7 +10019,7 @@ function RegistryProvider({
       const mode = selectionModeRef.current;
       const snap: SelectionSnapshot =
         mode === "default"
-          ? { objectIds: resolvedObjectIds, vortexIds: [], attractionIds: [], referenceIds: [] }
+          ? { objectIds: resolvedObjectIds, vortexIds: [], attractionIds: [], referenceIds: [], targetVolumeIds: [] }
           : {
               objectIds: mergeIdList(mode, current.objectIds, resolvedObjectIds),
               vortexIds: current.vortexIds,
@@ -11051,6 +11081,8 @@ function Inner(props: CanvasProps & {
     >
       {registryLodSceneCore}
       {fixtureDropEnabled ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
+      <TargetVolumeDrawBridge enabled={fillEditTargetVolumes} />
+      <TargetVolumeDrawPreview />
     </LodBridge>
   );
   const onFillMeshesReadyRef = reactHostPort.useRef(onFillMeshesReady);
@@ -11097,8 +11129,6 @@ function Inner(props: CanvasProps & {
             kindCompatibility={kindCompatibility}
             onMeshesReady={handleFillMeshesReady}
           />
-          <TargetVolumeDrawBridge enabled={fillEditTargetVolumes} />
-          <TargetVolumeDrawPreview />
         </RegistryProvider>
       </InnerSceneChildrenContext.Provider>
     </SelectionStoreContext.Provider>
@@ -11737,6 +11767,25 @@ if (import.meta.vitest) {
       expect(f?.objects[0]?.id).toBe("a");
       expect(f?.domain).toBe("architecture");
       expect(f?.references).toEqual([]);
+      expect(f?.targetVolumes).toEqual([]);
+    });
+    it("parses targetVolumes array", () => {
+      const f = parseFixtureV1({
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        attractions: [],
+        objects: [],
+        targetVolumes: [
+          {
+            id: "vol-a",
+            origin: [1, 2, 3],
+            orientation: [0, 0, 0, 1],
+            scale: [4, 6, 8],
+          },
+        ],
+      });
+      expect(f?.targetVolumes).toHaveLength(1);
+      expect(f?.targetVolumes[0]?.scale).toEqual([4, 6, 8]);
     });
     it("parses references array", () => {
       const f = parseFixtureV1({
@@ -12017,6 +12066,7 @@ if (import.meta.vitest) {
       expect(gumballHandleKindToRelocateMode("moveXY")).toBe("translate");
       expect(gumballHandleKindToRelocateMode("rotateZ")).toBe("rotate");
       expect(gumballHandleKindToRelocateMode("scaleY")).toBe("scale");
+      expect(gumballHandleKindToRelocateMode("scaleXY")).toBe("scale");
       expect(gumballHandleKindToRelocateMode("scaleUniform")).toBe("scale");
     });
   });
@@ -13737,6 +13787,51 @@ if (import.meta.vitest) {
         spec.control.onChange?.(7);
       }
       expect(counts).toEqual([7]);
+    });
+    it("buildPuzzle3dPlayEngagement exposes fill target-volume edit options", () => {
+      let toggled = false;
+      let deleted = false;
+      const spec = buildPuzzle3dPlayEngagement({
+        activeTool: "fill",
+        cmdLine: "",
+        fillCount: 1,
+        fillEditTargetVolumes: true,
+        selectedTargetVolumeCount: 1,
+        selectionCount: 1,
+        onCmdLineChange: () => {},
+        onCmdLineSubmit: () => {},
+        onSelectTool: () => {},
+        onBrushTool: () => {},
+        onFillTool: () => {},
+        onFillCount: () => {},
+        onToggleFillEditTargetVolumes: () => {
+          toggled = true;
+        },
+        onDeleteSelectedTargetVolume: () => {
+          deleted = true;
+        },
+        onCycleBrushCandidate: () => {},
+        onPickBrushCandidate: () => {},
+        onZoomToSelection: () => {},
+        brushCandidates: [],
+        brushTargetActive: false,
+      });
+      expect(spec.options?.some((row) => row.id === PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID)).toBe(true);
+      expect(spec.options?.some((row) => row.id === PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID)).toBe(true);
+      spec.options?.find((row) => row.id === PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID)?.onPress?.();
+      spec.options?.find((row) => row.id === PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID)?.onPress?.();
+      expect(toggled).toBe(true);
+      expect(deleted).toBe(true);
+    });
+    it("targetVolumePoseFromThreePoints builds an oriented box pose", () => {
+      const pose = targetVolumePoseFromThreePoints({
+        p0: [0, 0, 0],
+        p1: [4, 0, 0],
+        p2: [4, 2, 0],
+        height: 3,
+      });
+      expect(pose?.scale).toEqual([4, 2, 3]);
+      expect(pose?.origin[2]).toBeCloseTo(1.5, 5);
     });
     it("buildPuzzle3dPlayEngagement shows fill build progress on the slider label and caps max", () => {
       const spec = buildPuzzle3dPlayEngagement({

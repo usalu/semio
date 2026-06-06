@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
+import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@ui/styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
@@ -3422,7 +3422,7 @@ export function InteractionSpatialView({
           {cameraView !== undefined && cameraViewSeedKey !== undefined ? (
             <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} projectionOverride={orbitProjection} />
           ) : null}
-          <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} />
+          <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} projection={orbitProjection} />
           {showOrbitViewGizmo ? (
             <WorldOrbitViewControls
               onCameraChange={onOrbitCameraChange}
@@ -4796,7 +4796,7 @@ export function InteractionRepl({
       setDragSelection(null);
     };
     const beginDragSelection = (event: PointerEvent) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 || gumballPointerConsumesCanvasEventRef.current) return;
       dragCleanupRef.current?.();
       const rect = canvas.getBoundingClientRect();
       const startClient = { x: event.clientX, y: event.clientY };

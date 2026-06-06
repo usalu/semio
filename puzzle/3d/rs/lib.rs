@@ -487,18 +487,23 @@ fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3<f32>, ma
     ];
     for volume in volumes {
         let scale = volume_scale_vec(&volume.scale);
-        let hx = scale[0] * 0.5 + 1e-3;
-        let hy = scale[1] * 0.5 + 1e-3;
-        let hz = scale[2] * 0.5 + 1e-3;
         let world = pose_isometry(
             volume.origin,
             volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
             &None,
         );
         let inv = world.inverse();
+        let hx = 0.5 + 1e-3;
+        let hy = 0.5 + 1e-3;
+        let hz = 0.5 + 1e-3;
         let mut inside = true;
         for corner in corners {
-            let local = inv * corner;
+            let relative = inv * corner;
+            let local = Point3::new(
+                relative.x / scale[0],
+                relative.y / scale[1],
+                relative.z / scale[2],
+            );
             if local.x.abs() > hx || local.y.abs() > hy || local.z.abs() > hz {
                 inside = false;
                 break;
@@ -1717,6 +1722,22 @@ mod tests {
     use super::*;
 
     #[test]
+    fn world_volumes_contain_aabb_respects_oriented_box() {
+        let volumes = vec![WorldVolumeProps {
+            id: "v1".to_string(),
+            origin: [0.0, 0.0, 0.0],
+            orientation: None,
+            scale: Some(serde_json::json!([4.0, 4.0, 4.0])),
+        }];
+        let min = Point3::new(-1.0, -1.0, -1.0);
+        let max = Point3::new(1.0, 1.0, 1.0);
+        assert!(world_volumes_contain_aabb(&volumes, min, max));
+        let outside_min = Point3::new(-3.0, -3.0, -3.0);
+        let outside_max = Point3::new(3.0, 3.0, 3.0);
+        assert!(!world_volumes_contain_aabb(&volumes, outside_min, outside_max));
+    }
+
+    #[test]
     fn brush_candidates_allow_separated_boxes() {
         let mut engine = Puzzle3dEngine::new();
         let positions: Vec<f32> = vec![
@@ -1730,6 +1751,7 @@ mod tests {
         let scene = SceneConfig {
             fixture: FixtureV1 {
                 attractions: vec![],
+                target_volumes: vec![],
                 objects: vec![
                     FixtureObject {
                         id: "obstacle".to_string(),

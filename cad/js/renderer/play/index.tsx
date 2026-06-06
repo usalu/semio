@@ -487,6 +487,7 @@ const CAD_GUMBALL_GROUP_ICON: Record<CadGumballGroupKey, string> = {
   movePlanes: "move-3d",
   rotate: "rotate-cw",
   scaleAxes: "maximize-2",
+  scalePlanes: "scaling",
   scaleUniform: "box",
 };
 
