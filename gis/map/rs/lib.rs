@@ -3503,6 +3503,14 @@ mod tests {
         host.set_camera(0.0, 0.0, hi);
     }
 
+    fn zoom_host_over_tile(host: &mut super::MapHost, lod_id: &str, tz: u32, tx: u32, ty: u32) {
+        zoom_host_to_representative_lod(host, lod_id);
+        let rect = super::projection::tile_world_rect(tz, tx, ty);
+        let cx = (rect.x0 + rect.x1) * 0.5;
+        let cy = (rect.y0 + rect.y1) * 0.5;
+        host.set_camera(cx, -cy, host.camera.zoom);
+    }
+
     #[test]
     fn place_label_visible_covers_admin_hierarchy() {
         let v = super::vector_tiles::place_label_visible;
@@ -3523,6 +3531,23 @@ mod tests {
     }
 
     #[test]
+    fn label_camera_setup_intersects_fixture_tile() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let bytes = std::fs::read(path).expect("fixture pbf");
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_lod_mode("country");
+        zoom_host_over_tile(&mut host, "country", 5, 17, 11);
+        host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
+        let rect = super::projection::tile_world_rect(5, 17, 11);
+        let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
+        assert!(host.tile_rect_intersects_viewport(rect), "tile must intersect (span={span})");
+        let scene = host.build_vector_scene();
+        assert!(!scene.encoding().is_empty(), "fixture tile should paint geometry (span={span})");
+    }
+
+    #[test]
     fn figure_ground_labels_increase_scene_when_enabled() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
@@ -3532,7 +3557,7 @@ mod tests {
         host.set_render_mode("vector");
         host.set_vector_style("figureGround");
         host.set_lod_mode("country");
-        zoom_host_to_representative_lod(&mut host, "country");
+        zoom_host_over_tile(&mut host, "country", 5, 17, 11);
         host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
         host.set_layer_visibility_from_json(r#"{"labels":false}"#)
             .expect("labels off");
@@ -3556,7 +3581,7 @@ mod tests {
         host.set_render_mode("vector");
         host.set_vector_style("colored");
         host.set_lod_mode("country");
-        zoom_host_to_representative_lod(&mut host, "country");
+        zoom_host_over_tile(&mut host, "country", 5, 17, 11);
         host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
         host.set_layer_visibility_from_json(r#"{"labels":false}"#)
             .expect("labels off");

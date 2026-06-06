@@ -1159,7 +1159,7 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 	}
 }
 
-function uiTreeContextMenuToTreeData(items: readonly UiTreeItemNode["contextMenu"]): TreeDataItem["contextMenu"] {
+function uiTreeContextMenuToTreeData(items: UiTreeItemNode["contextMenu"]): TreeDataItem["contextMenu"] {
 	if (!items?.length) {
 		return undefined;
 	}

@@ -880,6 +880,152 @@ fn enumerate_brush_fill_vortex_targets(fixture: &FixtureV1) -> Vec<BrushFillVort
     out
 }
 
+fn brush_kind_weight_value(weights: &HashMap<String, f64>, id: &str) -> f64 {
+    weights.get(id).copied().unwrap_or(1.0)
+}
+
+fn brush_candidate_suggestion_weight(
+    candidate: &BrushCompatibleCandidate,
+    weights: &BrushKindWeights,
+    catalogs: &KindCatalogBundle,
+) -> f64 {
+    let vortex_kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)
+        .and_then(|kind| kind.vortices.get(candidate.source_vortex_index))
+        .and_then(|template| template.vortex_kind.as_deref())
+        .unwrap_or("");
+    brush_kind_weight_value(&weights.object_weights, &candidate.object_kind_id)
+        * brush_kind_weight_value(&weights.vortex_weights, vortex_kind)
+}
+
+fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights: &BrushKindWeights) -> bool {
+    brush_kind_weight_value(&weights.vortex_weights, vortex_kind.unwrap_or("")) > 0.0
+}
+
+fn fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &BrushKindWeights) -> f64 {
+    brush_kind_weight_value(&weights.vortex_weights, target.vortex_kind.as_deref().unwrap_or(""))
+}
+
+fn weighted_sample_without_replacement<T, F>(items: &[T], weight_of: F, rng_state: &mut u32) -> Vec<T>
+where
+    T: Clone,
+    F: Fn(&T) -> f64,
+{
+    let eligible: Vec<T> = items.iter().filter(|item| weight_of(item) > 0.0).cloned().collect();
+    if eligible.len() < 2 {
+        return eligible;
+    }
+    let mut remaining = eligible;
+    let mut out = Vec::new();
+    while !remaining.is_empty() {
+        let w_list: Vec<f64> = remaining.iter().map(&weight_of).collect();
+        let total: f64 = w_list.iter().sum();
+        if total <= 0.0 {
+            break;
+        }
+        let mut r = fill_rng(rng_state) * total;
+        let mut pick = remaining.len() - 1;
+        for (i, weight) in w_list.iter().enumerate() {
+            r -= weight;
+            if r <= 0.0 {
+                pick = i;
+                break;
+            }
+        }
+        out.push(remaining[pick].clone());
+        remaining.remove(pick);
+    }
+    out
+}
+
+fn fill_rng(rng_state: &mut u32) -> f64 {
+    *rng_state = rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
+    *rng_state as f64 / 4_294_967_296.0
+}
+
+fn weighted_order_fill_vortex_targets(
+    targets: &[BrushFillVortexTarget],
+    weights: &BrushKindWeights,
+    rng_state: &mut u32,
+) -> Vec<BrushFillVortexTarget> {
+    weighted_sample_without_replacement(targets, |target| fill_vortex_target_weight(target, weights), rng_state)
+}
+
+fn weighted_order_brush_compatible_candidates(
+    candidates: &[BrushCompatibleCandidate],
+    weights: &BrushKindWeights,
+    catalogs: &KindCatalogBundle,
+    rng_state: &mut u32,
+) -> Vec<BrushCompatibleCandidate> {
+    weighted_sample_without_replacement(
+        candidates,
+        |candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs),
+        rng_state,
+    )
+}
+
+fn fill_candidate_diversity_score(
+    candidate: &BrushCompatibleCandidate,
+    target_vortex_index: usize,
+    target_object_kind: Option<&str>,
+) -> i64 {
+    if target_object_kind != Some(candidate.object_kind_id.as_str()) {
+        return 0;
+    }
+    1000
+        + (candidate.source_vortex_index as i64 - target_vortex_index as i64)
+            .unsigned_abs() as i64
+            * 100
+}
+
+fn order_brush_fill_compatible_candidates(
+    candidates: &[BrushCompatibleCandidate],
+    target_vortex_kind: Option<&str>,
+    target_vortex_index: usize,
+    target_object_kind: Option<&str>,
+    catalogs: &KindCatalogBundle,
+    weights: &BrushKindWeights,
+    rng_state: &mut u32,
+) -> Vec<BrushCompatibleCandidate> {
+    let allowed: Vec<BrushCompatibleCandidate> = candidates
+        .iter()
+        .filter(|candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs) > 0.0)
+        .cloned()
+        .collect();
+    let target = target_vortex_kind.unwrap_or("");
+    let mut cross = Vec::new();
+    let mut same = Vec::new();
+    for candidate in allowed {
+        let source_vk = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)
+            .and_then(|kind| kind.vortices.get(candidate.source_vortex_index))
+            .and_then(|template| template.vortex_kind.as_deref())
+            .unwrap_or("");
+        if source_vk != target || brush_stack_mate_pair(source_vk, target) {
+            cross.push(candidate);
+        } else {
+            same.push(candidate);
+        }
+    }
+    cross.sort_by(|left, right| {
+        fill_candidate_diversity_score(right, target_vortex_index, target_object_kind)
+            .cmp(&fill_candidate_diversity_score(left, target_vortex_index, target_object_kind))
+            .then_with(|| left.object_kind_id.cmp(&right.object_kind_id))
+            .then_with(|| left.source_vortex_index.cmp(&right.source_vortex_index))
+    });
+    let mut same_sorted = same;
+    same_sorted.sort_by(|left, right| {
+        left.object_kind_id
+            .cmp(&right.object_kind_id)
+            .then_with(|| left.source_vortex_index.cmp(&right.source_vortex_index))
+    });
+    cross.extend(weighted_order_brush_compatible_candidates(
+        &same_sorted,
+        weights,
+        catalogs,
+        rng_state,
+    ));
+    cross
+}
+
 fn brush_preview_from_candidate(
     target_full_id: &str,
     candidate: &BrushCompatibleCandidate,
@@ -958,8 +1104,7 @@ impl FillBuilder {
     }
 
     fn rng(&mut self) -> f64 {
-        self.rng_state = self.rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
-        self.rng_state as f64 / 4_294_967_296.0
+        fill_rng(&mut self.rng_state)
     }
 
     fn progress(&self) -> FillBuildProgress {
@@ -1170,7 +1315,17 @@ impl Puzzle3dEngine {
             object_kind: host.object_kind.clone(),
             vortex_kind: vortex.vortex_kind.clone(),
         };
+        if !brush_target_vortex_allows_suggestion(vortex.vortex_kind.as_deref(), &scene.weights) {
+            return BrushCollisionFreeResult {
+                free: vec![],
+                unknown_pending: false,
+            };
+        }
         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
+        let compatible: Vec<BrushCompatibleCandidate> = compatible
+            .into_iter()
+            .filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0)
+            .collect();
         self.brush_collision_free(target_full_id, &compatible, scene.overlap_budget)
     }
 
@@ -1219,15 +1374,37 @@ impl Puzzle3dEngine {
             cables: vec![],
         });
         let overlap_budget = scene.overlap_budget;
+        let weights = scene.weights.clone();
+        let kind_compatibility = scene.kind_compatibility.clone();
+        let host_rules = scene.host_rules.clone();
         let free_targets = enumerate_brush_fill_vortex_targets(&fill.fixture);
         if free_targets.is_empty() {
             fill.stalled = true;
             return false;
         }
-        let seed_targets: Vec<_> = free_targets.iter().filter(|t| fill.seed_object_ids.contains(&t.object_id)).cloned().collect();
-        let frontier_targets: Vec<_> = free_targets.iter().filter(|t| !fill.seed_object_ids.contains(&t.object_id)).cloned().collect();
-        let ordered_targets: Vec<_> = seed_targets.into_iter().chain(frontier_targets).collect();
-        let target_start = fill.sequence.len() % ordered_targets.len().max(1);
+        let seed_targets: Vec<_> = free_targets
+            .iter()
+            .filter(|t| fill.seed_object_ids.contains(&t.object_id))
+            .cloned()
+            .collect();
+        let frontier_targets: Vec<_> = free_targets
+            .iter()
+            .filter(|t| !fill.seed_object_ids.contains(&t.object_id))
+            .cloned()
+            .collect();
+        let ordered_targets: Vec<_> = weighted_order_fill_vortex_targets(&seed_targets, &weights, &mut fill.rng_state)
+            .into_iter()
+            .chain(weighted_order_fill_vortex_targets(
+                &frontier_targets,
+                &weights,
+                &mut fill.rng_state,
+            ))
+            .collect();
+        if ordered_targets.is_empty() {
+            fill.stalled = true;
+            return false;
+        }
+        let target_start = fill.sequence.len() % ordered_targets.len();
         for target_offset in 0..ordered_targets.len() {
             let target = &ordered_targets[(target_start + target_offset) % ordered_targets.len()];
             let Some(host) = fill.fixture.objects.iter().find(|o| o.id == target.object_id) else {
@@ -1249,12 +1426,26 @@ impl Puzzle3dEngine {
             let compatible = fill
                 .candidate_cache
                 .entry(key)
-                .or_insert_with(|| brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules))
+                .or_insert_with(|| {
+                    brush_compatible_candidates(&target_ctx, &catalogs, &kind_compatibility, &host_rules)
+                })
                 .clone();
             if compatible.is_empty() {
                 continue;
             }
-            for candidate in &compatible {
+            let ordered_candidates = order_brush_fill_compatible_candidates(
+                &compatible,
+                target.vortex_kind.as_deref(),
+                target.vortex_index,
+                target.object_kind.as_deref(),
+                &catalogs,
+                &weights,
+                &mut fill.rng_state,
+            );
+            if ordered_candidates.is_empty() {
+                continue;
+            }
+            for candidate in &ordered_candidates {
                 let Some(preview) = brush_preview_from_candidate(
                     &target.full_id,
                     candidate,
@@ -1526,6 +1717,81 @@ mod tests {
         let result = engine.compute_brush_cache_entry("host:v0");
         assert!(!result.unknown_pending, "expected mesh-ready result");
         assert_eq!(result.free.len(), 1, "expected one collision-free candidate");
+    }
+
+    #[test]
+    fn fill_distribution_excludes_zero_weight_vortices() {
+        let catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind {
+                id: "Placed".to_string(),
+                mesh_url: Some("/test/placed.glb".to_string()),
+                scale: None,
+                vortices: vec![
+                    ObjectKindVortexTemplate {
+                        vortex_kind: Some("c-b".to_string()),
+                        position: [0.0, 0.0, 0.0],
+                        direction: Some([0.0, 0.0, 1.0]),
+                    },
+                    ObjectKindVortexTemplate {
+                        vortex_kind: Some("b-s".to_string()),
+                        position: [0.0, 0.0, 0.0],
+                        direction: Some([0.0, 0.0, 1.0]),
+                    },
+                ],
+            }],
+            vortices: vec![
+                VortexKindCatalog { id: "c-b".to_string(), default_cable_kind: None },
+                VortexKindCatalog { id: "c-t".to_string(), default_cable_kind: None },
+                VortexKindCatalog { id: "b-s".to_string(), default_cable_kind: None },
+            ],
+            cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None }],
+        };
+        let candidates = vec![
+            BrushCompatibleCandidate {
+                object_kind_id: "Placed".to_string(),
+                source_vortex_index: 0,
+            },
+            BrushCompatibleCandidate {
+                object_kind_id: "Placed".to_string(),
+                source_vortex_index: 1,
+            },
+        ];
+        let mut weights = BrushKindWeights::default();
+        weights.vortex_weights.insert("c-b".to_string(), 0.0);
+        weights.vortex_weights.insert("c-t".to_string(), 0.0);
+        weights.vortex_weights.insert("b-s".to_string(), 1.0);
+        weights.object_weights.insert("Placed".to_string(), 1.0);
+        let mut rng = 7u32;
+        let ordered = order_brush_fill_compatible_candidates(
+            &candidates,
+            Some("b-s"),
+            1,
+            Some("Host"),
+            &catalogs,
+            &weights,
+            &mut rng,
+        );
+        assert_eq!(ordered.len(), 1);
+        assert_eq!(ordered[0].source_vortex_index, 1);
+        let targets = vec![
+            BrushFillVortexTarget {
+                full_id: "host:v0".to_string(),
+                object_id: "host".to_string(),
+                object_kind: Some("Host".to_string()),
+                vortex_kind: Some("c-t".to_string()),
+                vortex_index: 0,
+            },
+            BrushFillVortexTarget {
+                full_id: "host:v1".to_string(),
+                object_id: "host".to_string(),
+                object_kind: Some("Host".to_string()),
+                vortex_kind: Some("b-s".to_string()),
+                vortex_index: 1,
+            },
+        ];
+        let target_ordered = weighted_order_fill_vortex_targets(&targets, &weights, &mut rng);
+        assert_eq!(target_ordered.len(), 1);
+        assert_eq!(target_ordered[0].vortex_kind.as_deref(), Some("b-s"));
     }
 }
 

@@ -29,6 +29,11 @@ import {
   type HandleKind as Puzzle2dHandleKind,
   type NodeKind as Puzzle2dNodeKind,
   type WireKind as Puzzle2dWireKind,
+  type Puzzle2dActiveTool,
+  type Puzzle2dBrushPlacePayload,
+  DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+  DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+  puzzle2dFixtureHandlesFromNodeKind,
 } from "@puzzle/2d/react";
 import {
   ObjectStateProvider as Puzzle3dPartStateProvider,
@@ -51,7 +56,16 @@ import {
   type SelectionSnapshot as Puzzle3dSelectionSnapshot,
   type VortexKind as Puzzle3dGripKind,
   type CanvasProps as Puzzle3dCanvasProps,
+  type BrushPlacePayload,
+  type Puzzle3dBrushKindWeights,
+  buildBrushFillSequence,
+  brushPlacementUsesHostOrientation,
+  computeBrushPlacementPose,
+  resolveObjectKindMeshUrl,
+  vortexWorldCadFromObject,
+  PUZZLE_3D_FILL_COUNT_MAX,
 } from "../../3d/react/index.tsx";
+import type { Object3D } from "three";
 // #endregion 🔌Adapters
 
 //#region 🔖PairedPolicy
@@ -461,17 +475,426 @@ export function project3d(model: V1): Puzzle3dFixtureV1 {
 }
 //#endregion 🔖Model
 
+//#region 🔖Brush
+export type Puzzle5dActiveTool = Puzzle2dActiveTool;
+
+export const PUZZLE_5D_FILL_COUNT_MAX = PUZZLE_3D_FILL_COUNT_MAX;
+
+export const PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID = "puzzle5d.tool.brush";
+export const PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle5d.tool.select";
+export const PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID = "puzzle5d.tool.fill";
+
+/** @emoji 🖌️ One unified brush placement growing a {@link PartV1} with both flat and volume aspects. */
+export interface Puzzle5dBrushPlacement {
+  readonly partId?: string;
+  readonly partKind: string;
+  readonly sourceAnchorFullId: string;
+  readonly aspect2d?: Puzzle2dBrushPlacePayload;
+  readonly aspect3d?: BrushPlacePayload;
+  readonly tieId?: string;
+}
+
+/** @emoji 🪣 Cached fill prefix session at unified model level. */
+export interface Puzzle5dFillSession {
+  readonly baseModel: V1;
+  readonly sequence: readonly Puzzle5dBrushPlacement[];
+  readonly seed: number;
+}
+
+export type Puzzle5dBrushPlacementApplyResult =
+  | { readonly kind: "unchanged" }
+  | { readonly kind: "placed"; readonly model: V1; readonly partId: string; readonly tieId: string };
+
+function cloneModel(model: V1): V1 {
+  return JSON.parse(JSON.stringify(model)) as V1;
+}
+
+function partById(model: V1, partId: string): PartV1 | undefined {
+  return model.parts.find((row) => row.id === partId);
+}
+
+function peerPartForKind(model: V1, partKind: string): PartV1 | undefined {
+  return model.parts.find((row) => row.partKind === partKind && row.puzzle2d && row.puzzle3d);
+}
+
+function objectKind3d(catalogs: KindCatalogBundle | undefined, partKind: string): Puzzle3dPartKind | undefined {
+  return project3dKindCatalogs(catalogs)?.objects?.find((row) => row.id === partKind);
+}
+
+function volumeTemplatesForPartKind(model: V1, partKind: string, catalogs: KindCatalogBundle | undefined): NonNullable<Puzzle3dPartKind["vortices"]> | undefined {
+  const fromCatalog = objectKind3d(catalogs, partKind)?.vortices;
+  if (fromCatalog?.length) return fromCatalog;
+  const peer = peerPartForKind(model, partKind);
+  if (!peer) return undefined;
+  const templates = peer.anchors
+    .filter((anchor) => anchor.puzzle3d)
+    .map((anchor) => ({
+      vortexKind: anchor.anchorKind,
+      position: anchor.puzzle3d!.position,
+      ...(anchor.puzzle3d!.direction ? { direction: anchor.puzzle3d!.direction } : {}),
+      ...(anchor.puzzle3d!.radius !== undefined ? { radius: anchor.puzzle3d!.radius } : {}),
+    }));
+  return templates.length ? templates : undefined;
+}
+
+function anchorLocalIdFromIndex(index: number): string {
+  return `v${index}`;
+}
+
+function slugAnchorLocalId(kind: string): string {
+  const slug = kind.trim().replace(/\s+/g, "-").toLowerCase();
+  return slug.length > 0 ? slug.slice(0, 48) : "link";
+}
+
+function flatTemplatesFromObjectKind(kind: Puzzle3dPartKind | undefined): readonly { readonly angle: number; readonly handleKind: string; readonly radius?: number }[] {
+  const count = Math.max(kind?.vortices?.length ?? 0, 1);
+  return Array.from({ length: count }, (_, index) => ({
+    angle: flatHandleConnectorAngle(index, count),
+    handleKind: kind?.vortices?.[index]?.vortexKind ?? BUILTIN_PORT_HANDLE_KIND,
+    radius: 3,
+  }));
+}
+
+function buildAnchorsUnified(
+  partId: string,
+  partKind: string,
+  catalogs: KindCatalogBundle | undefined,
+  flatTemplates?: readonly { readonly angle: number; readonly handleKind: string; readonly radius?: number }[],
+  volumeTemplates?: Puzzle3dPartKind["vortices"],
+): AnchorV1[] {
+  const kind3d = objectKind3d(catalogs, partKind);
+  const vortices = volumeTemplates ?? kind3d?.vortices ?? [];
+  const flat = flatTemplates ?? flatTemplatesFromObjectKind(kind3d);
+  const count = Math.max(vortices.length, flat.length, 1);
+  const anchors: AnchorV1[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const vortex = vortices[index];
+    const handle = flat[index] ?? flat[0];
+    const localId = vortex?.vortexKind ? slugAnchorLocalId(vortex.vortexKind) : anchorLocalIdFromIndex(index);
+    anchors.push({
+      id: localId,
+      anchorKind: vortex?.vortexKind ?? handle?.handleKind ?? BUILTIN_PORT_HANDLE_KIND,
+      ...(handle
+        ? {
+            puzzle2d: {
+              angle: handle.angle,
+              anchorKind: handle.handleKind,
+              ...(handle.radius !== undefined ? { radius: handle.radius } : {}),
+            },
+          }
+        : {}),
+      ...(vortex
+        ? {
+            puzzle3d: {
+              position: vortex.position,
+              ...(vortex.direction ? { direction: vortex.direction } : {}),
+              ...(vortex.radius !== undefined ? { radius: vortex.radius } : {}),
+              ...(vortex.vortexKind ? { label: vortex.vortexKind } : {}),
+            },
+          }
+        : {}),
+    });
+  }
+  return anchors;
+}
+
+function mergeAnchorsFlatAndVolume(
+  volumeAnchors: readonly AnchorV1[],
+  flatHandles: readonly { readonly id: string; readonly angle: number; readonly handleKind: string; readonly radius?: number }[],
+): AnchorV1[] {
+  const count = Math.max(volumeAnchors.length, flatHandles.length);
+  const out: AnchorV1[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const volume = volumeAnchors[index];
+    const flat = flatHandles[index];
+    const localId = volume?.id ?? parseAnchorFullId(flat?.id ?? "")?.anchorId ?? anchorLocalIdFromIndex(index);
+    out.push({
+      id: localId,
+      anchorKind: volume?.anchorKind ?? flat?.handleKind ?? BUILTIN_PORT_HANDLE_KIND,
+      ...(flat
+        ? {
+            puzzle2d: {
+              angle: flat.angle,
+              anchorKind: flat.handleKind,
+              ...(flat.radius !== undefined ? { radius: flat.radius } : {}),
+            },
+          }
+        : volume?.puzzle2d
+          ? { puzzle2d: volume.puzzle2d }
+          : {}),
+      ...(volume?.puzzle3d ? { puzzle3d: volume.puzzle3d } : {}),
+    });
+  }
+  return out;
+}
+
+function volumeAnchorIndexOnPart(part: PartV1, anchorLocalId: string): number {
+  return part.anchors.filter((anchor) => anchor.puzzle3d).findIndex((anchor) => anchor.id === anchorLocalId);
+}
+
+function synthesizeVolumeAspectFromFlat(
+  model: V1,
+  payload: Puzzle2dBrushPlacePayload,
+  partKind: string,
+  catalogs: KindCatalogBundle | undefined,
+): { readonly aspect: Puzzle3dPartAspect; readonly anchors: AnchorV1[] } | null {
+  const parsed = parseAnchorFullId(payload.sourceHandleId);
+  if (!parsed) return null;
+  const sourcePart = partById(model, parsed.partId);
+  if (!sourcePart?.puzzle3d) return null;
+  const fixture3d = project3d(model);
+  const hostObject = fixture3d.objects.find((row) => row.id === parsed.partId);
+  if (!hostObject) return null;
+  const volumeIndex = volumeAnchorIndexOnPart(sourcePart, parsed.anchorId);
+  if (volumeIndex < 0) return null;
+  const world = vortexWorldCadFromObject(hostObject, volumeIndex);
+  if (!world) return null;
+  const cat3d = project3dKindCatalogs(catalogs);
+  const kind = objectKind3d(catalogs, partKind);
+  const templates = volumeTemplatesForPartKind(model, partKind, catalogs);
+  const template = templates?.[payload.targetHandleIndex];
+  const meshUrl = resolveObjectKindMeshUrl(partKind, cat3d, fixture3d) ?? peerPartForKind(model, partKind)?.puzzle3d?.meshUrl;
+  if (!meshUrl || !template) return null;
+  const targetAnchor = sourcePart.anchors.find((anchor) => anchor.id === parsed.anchorId);
+  const sourceVk = template.vortexKind ?? "";
+  const targetVk = targetAnchor?.anchorKind ?? "";
+  const useHostOrientation = brushPlacementUsesHostOrientation(
+    { objectId: parsed.partId, objectKind: sourcePart.partKind, vortexKind: targetVk },
+    sourceVk,
+    partKind,
+  );
+  const pose = computeBrushPlacementPose({
+    sourceLocalPosition: template.position,
+    sourceLocalDirection: template.direction ?? [0, 0, -1],
+    ...(kind?.scale !== undefined ? { scale: kind.scale } : {}),
+    targetWorldPositionCad: world.position,
+    targetWorldDirectionCad: world.direction,
+    ...(hostObject.orientation ? { referenceOrientationCad: hostObject.orientation } : {}),
+    useHostOrientation,
+  });
+  const anchors = buildAnchorsUnified("", partKind, catalogs, payload.handles, templates);
+  return {
+    aspect: {
+      origin: pose.origin,
+      orientation: pose.orientation,
+      meshUrl,
+      ...(kind?.scale !== undefined ? { scale: kind.scale } : {}),
+      ...(kind?.label ?? kind?.name ? { label: kind.label ?? kind.name } : {}),
+    },
+    anchors,
+  };
+}
+
+function synthesizeVolumeAspectFromBrushPayload(
+  model: V1,
+  payload: BrushPlacePayload,
+  partKind: string,
+  catalogs: KindCatalogBundle | undefined,
+): { readonly aspect: Puzzle3dPartAspect; readonly anchors: AnchorV1[] } | null {
+  const cat3d = project3dKindCatalogs(catalogs);
+  const kind = objectKind3d(catalogs, partKind);
+  const meshUrl = resolveObjectKindMeshUrl(partKind, cat3d, project3d(model));
+  if (!meshUrl) return null;
+  const templates = volumeTemplatesForPartKind(model, partKind, catalogs);
+  const anchors = buildAnchorsUnified("", partKind, catalogs, undefined, templates);
+  return {
+    aspect: {
+      origin: payload.origin,
+      orientation: payload.orientation,
+      meshUrl,
+      ...(payload.scale !== undefined ? { scale: payload.scale } : kind?.scale !== undefined ? { scale: kind.scale } : {}),
+      label: kind?.label ?? kind?.name ?? partKind,
+    },
+    anchors,
+  };
+}
+
+function synthesizeFlatAspectFromVolume(model: V1, payload: BrushPlacePayload, partKind: string): NodeAspect | null {
+  const parsed = parseAnchorFullId(payload.targetVortexFullId);
+  if (!parsed) return null;
+  const sourcePart = partById(model, parsed.partId);
+  if (!sourcePart?.puzzle2d) return null;
+  const sourceAnchor = sourcePart.anchors.find((anchor) => anchor.id === parsed.anchorId);
+  const angle = sourceAnchor?.puzzle2d?.angle ?? flatHandleConnectorAngle(0, 1);
+  const gap = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX / 2;
+  const x = sourcePart.puzzle2d.x + gap * Math.cos(angle);
+  const y = sourcePart.puzzle2d.y + gap * Math.sin(angle);
+  const peer = peerPartForKind(model, partKind);
+  const iconKind = peer?.puzzle2d?.iconKind;
+  if ((peer?.puzzle2d?.shape ?? "rectangle") === "rectangle") {
+    return {
+      x,
+      y,
+      shape: "rectangle",
+      width: peer?.puzzle2d?.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+      height: peer?.puzzle2d?.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+      ...(iconKind ? { iconKind } : {}),
+    };
+  }
+  return {
+    x,
+    y,
+    shape: "circle",
+    radius: peer?.puzzle2d?.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2,
+    ...(iconKind ? { iconKind } : {}),
+  };
+}
+
+/** @emoji 🖌️ Builds a unified placement from a flat WASM brush payload. */
+export function puzzle5dBrushPlacementFromFlat(payload: Puzzle2dBrushPlacePayload): Puzzle5dBrushPlacement {
+  return {
+    partKind: payload.nodeKind,
+    sourceAnchorFullId: payload.sourceHandleId,
+    aspect2d: payload,
+    ...(payload.nodeId ? { partId: payload.nodeId } : {}),
+  };
+}
+
+/** @emoji 🖌️ Builds a unified placement from a volume brush payload. */
+export function puzzle5dBrushPlacementFromVolume(payload: BrushPlacePayload): Puzzle5dBrushPlacement {
+  return {
+    partKind: payload.objectKindId,
+    sourceAnchorFullId: payload.targetVortexFullId,
+    aspect3d: payload,
+    ...(payload.objectId ? { partId: payload.objectId } : {}),
+  };
+}
+
+/** @emoji 🖌️ Appends one unified part and tie from a brush placement. */
+export function applyBrushPlacementToModel(model: V1, placement: Puzzle5dBrushPlacement): Puzzle5dBrushPlacementApplyResult {
+  const partId =
+    placement.partId?.trim() ||
+    placement.aspect2d?.nodeId?.trim() ||
+    placement.aspect3d?.objectId?.trim() ||
+    `puzzle5d.brush.${crypto.randomUUID()}`;
+  const partKind = placement.partKind;
+  const catalogs = model.kindCatalogs;
+  let puzzle2d: NodeAspect | undefined;
+  let puzzle3d: Puzzle3dPartAspect | undefined;
+  let anchors: AnchorV1[];
+  let tieSource = "";
+  let tieTarget = "";
+
+  if (placement.aspect2d) {
+    const payload = placement.aspect2d;
+    const flatHandles = puzzle2dFixtureHandlesFromNodeKind(partId, payload.handles);
+    const targetHandle = flatHandles[payload.targetHandleIndex];
+    if (!targetHandle) return { kind: "unchanged" };
+    tieSource = payload.sourceHandleId;
+    tieTarget = targetHandle.id;
+    const iconKind = payload.iconKind;
+    puzzle2d =
+      payload.shape === "rectangle"
+        ? {
+            x: payload.x,
+            y: payload.y,
+            shape: "rectangle",
+            width: payload.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+            height: payload.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+            ...(iconKind ? { iconKind } : {}),
+          }
+        : {
+            x: payload.x,
+            y: payload.y,
+            shape: "circle",
+            radius: payload.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2,
+            ...(iconKind ? { iconKind } : {}),
+          };
+    const volume = synthesizeVolumeAspectFromFlat(model, payload, partKind, catalogs);
+    if (!volume) return { kind: "unchanged" };
+    puzzle3d = volume.aspect;
+    anchors = mergeAnchorsFlatAndVolume(volume.anchors, flatHandles);
+  } else if (placement.aspect3d) {
+    const payload = placement.aspect3d;
+    const volume = synthesizeVolumeAspectFromBrushPayload(model, payload, partKind, catalogs);
+    if (!volume) return { kind: "unchanged" };
+    puzzle3d = volume.aspect;
+    anchors = volume.anchors;
+    const matingLocal = anchors[payload.sourceVortexIndex]?.id;
+    if (!matingLocal) return { kind: "unchanged" };
+    tieSource = anchorFullId(partId, matingLocal);
+    tieTarget = payload.targetVortexFullId;
+    const flat = synthesizeFlatAspectFromVolume(model, payload, partKind);
+    if (!flat) return { kind: "unchanged" };
+    puzzle2d = flat;
+  } else {
+    return { kind: "unchanged" };
+  }
+
+  if (model.parts.some((row) => row.id === partId)) return { kind: "unchanged" };
+  if (model.ties.some((tie) => tie.source === tieSource && tie.target === tieTarget)) return { kind: "unchanged" };
+
+  const tieId = placement.tieId?.trim() || `puzzle5d.brush.tie.${crypto.randomUUID()}`;
+  const part: PartV1 = {
+    id: partId,
+    partKind,
+    puzzle2d,
+    puzzle3d,
+    anchors,
+  };
+  return {
+    kind: "placed",
+    model: {
+      ...model,
+      parts: [...model.parts, part],
+      ties: [...model.ties, { id: tieId, source: tieSource, target: tieTarget }],
+    },
+    partId,
+    tieId,
+  };
+}
+
+/** @emoji 🪣 Applies an ordered brush prefix onto a base unified model. */
+export function applyFillPlacementsToModel(base: V1, placements: readonly Puzzle5dBrushPlacement[]): V1 {
+  let next = base;
+  for (const placement of placements) {
+    const result = applyBrushPlacementToModel(next, placement);
+    if (result.kind === "placed") {
+      next = result.model;
+    }
+  }
+  return next;
+}
+
+/** @emoji 🪣 Volume-authoritative fill sequence mapped to unified placements (2d aspects synthesized). */
+export function buildPuzzle5dFillSequence(args: {
+  readonly model: V1;
+  readonly seed: number;
+  readonly maxCount?: number;
+  readonly overlapBudget?: number;
+  readonly meshRootForUrl: (meshUrl: string) => Object3D | null | undefined;
+  readonly weights?: Puzzle3dBrushKindWeights;
+}): readonly Puzzle5dBrushPlacement[] {
+  const fixture3d = project3d(args.model);
+  const cat3d = project3dKindCatalogs(args.model.kindCatalogs);
+  const payloads = buildBrushFillSequence({
+    baseFixture: fixture3d,
+    seed: args.seed,
+    maxCount: args.maxCount,
+    overlapBudget: args.overlapBudget,
+    meshRootForUrl: args.meshRootForUrl,
+    kindCatalogs: cat3d,
+    kindCompatibility: args.model.kindCompatibility,
+    ...(args.weights ? { weights: args.weights } : {}),
+  });
+  return payloads.map((payload) => puzzle5dBrushPlacementFromVolume(payload));
+}
+//#endregion 🔖Brush
+
 //#region 🔖Store
 export interface StoreSnapshot {
   readonly model: V1;
   readonly selection: SelectionSnapshot;
   readonly connectSession: ConnectSession | null;
   readonly cameras: Readonly<Record<string, { readonly "2d": Puzzle2dCameraState; readonly "3d": Puzzle3dFixtureV1["camera"] }>>;
+  readonly fillCount: number;
+  readonly fillBuildDone: boolean;
 }
 
 export class Store {
   private listeners = new Set<() => void>();
   private snapshot: StoreSnapshot;
+  private fillSession: Puzzle5dFillSession | null = null;
 
   constructor(model: V1) {
     this.snapshot = {
@@ -479,6 +902,8 @@ export class Store {
       selection: { partIds: [], anchorIds: [] },
       connectSession: null,
       cameras: {},
+      fillCount: 0,
+      fillBuildDone: true,
     };
   }
 
@@ -512,30 +937,54 @@ export class Store {
   }
 
   set2dCamera(instanceId: string, camera: Puzzle2dCameraState): void {
-    const prev = this.snapshot.cameras[instanceId];
+    const prev = this.snapshot.cameras[instanceId]?.["2d"] ?? this.snapshot.model.camera2d;
+    if (prev.x === camera.x && prev.y === camera.y && prev.zoom === camera.zoom) {
+      return;
+    }
+    const prevEntry = this.snapshot.cameras[instanceId];
     this.setSnapshot({
       ...this.snapshot,
-      model: { ...this.snapshot.model, camera2d: camera },
       cameras: {
         ...this.snapshot.cameras,
-        [instanceId]: { "2d": camera, "3d": prev?.["3d"] ?? this.snapshot.model.camera3d },
+        [instanceId]: { "2d": camera, "3d": prevEntry?.["3d"] ?? this.snapshot.model.camera3d },
       },
     });
   }
 
   set3dCamera(instanceId: string, camera: Puzzle3dFixtureV1["camera"]): void {
-    const prev = this.snapshot.cameras[instanceId];
+    const prev = this.snapshot.cameras[instanceId]?.["3d"] ?? this.snapshot.model.camera3d;
+    if (
+      prev.position[0] === camera.position[0] &&
+      prev.position[1] === camera.position[1] &&
+      prev.position[2] === camera.position[2] &&
+      prev.target[0] === camera.target[0] &&
+      prev.target[1] === camera.target[1] &&
+      prev.target[2] === camera.target[2] &&
+      prev.zoom === camera.zoom &&
+      prev.projection === camera.projection
+    ) {
+      return;
+    }
+    const prevEntry = this.snapshot.cameras[instanceId];
     this.setSnapshot({
       ...this.snapshot,
-      model: { ...this.snapshot.model, camera3d: camera },
       cameras: {
         ...this.snapshot.cameras,
-        [instanceId]: { "2d": prev?.["2d"] ?? this.snapshot.model.camera2d, "3d": camera },
+        [instanceId]: { "2d": prevEntry?.["2d"] ?? this.snapshot.model.camera2d, "3d": camera },
       },
     });
   }
 
   setSelection(selection: SelectionSnapshot): void {
+    const prev = this.snapshot.selection;
+    if (
+      prev.partIds.length === selection.partIds.length &&
+      prev.anchorIds.length === selection.anchorIds.length &&
+      prev.partIds.every((id, index) => id === selection.partIds[index]) &&
+      prev.anchorIds.every((id, index) => id === selection.anchorIds[index])
+    ) {
+      return;
+    }
     this.setSnapshot({ ...this.snapshot, selection });
   }
 
@@ -587,11 +1036,64 @@ export class Store {
   }
 
   replaceModel(model: V1): void {
+    this.fillSession = null;
     this.setSnapshot({
       ...this.snapshot,
       model,
       connectSession: null,
+      fillCount: 0,
+      fillBuildDone: true,
     });
+  }
+
+  getFillSession(): Puzzle5dFillSession | null {
+    return this.fillSession;
+  }
+
+  /** @emoji 🪣 Captures a fill prefix session against the current or supplied base model. */
+  prepareFillSession(sequence: readonly Puzzle5dBrushPlacement[], baseModel?: V1, seed = 0): void {
+    this.fillSession = {
+      baseModel: cloneModel(baseModel ?? this.snapshot.model),
+      sequence,
+      seed,
+    };
+    this.setSnapshot({ ...this.snapshot, fillCount: 0, fillBuildDone: true });
+  }
+
+  /** @emoji 🖌️ Commits one unified brush placement and clears any active fill session. */
+  applyBrushPlacement(placement: Puzzle5dBrushPlacement): boolean {
+    const result = applyBrushPlacementToModel(this.snapshot.model, placement);
+    if (result.kind !== "placed") return false;
+    console.log("[DEBUG] puzzle5d unified brush placement", result.partId, "parts", result.model.parts.length);
+    this.fillSession = null;
+    this.setSnapshot({ ...this.snapshot, model: result.model, connectSession: null, fillCount: 0, fillBuildDone: true });
+    return true;
+  }
+
+  /** @emoji 🪣 Applies a fill prefix count from the cached session onto the store model. */
+  applyFillCount(count: number): void {
+    if (!this.fillSession) return;
+    const clamped = Math.max(0, Math.min(PUZZLE_5D_FILL_COUNT_MAX, Math.round(count)));
+    const next = applyFillPlacementsToModel(this.fillSession.baseModel, this.fillSession.sequence.slice(0, clamped));
+    this.setSnapshot({ ...this.snapshot, model: next, connectSession: null, fillCount: clamped, fillBuildDone: true });
+  }
+
+  setFillBuildDone(done: boolean): void {
+    if (this.snapshot.fillBuildDone === done) return;
+    this.setSnapshot({ ...this.snapshot, fillBuildDone: done });
+  }
+
+  /** @emoji 🪣 Restores the model captured at fill-session start and clears fill state. */
+  clearFill(): void {
+    if (!this.fillSession) return;
+    this.setSnapshot({
+      ...this.snapshot,
+      model: cloneModel(this.fillSession.baseModel),
+      connectSession: null,
+      fillCount: 0,
+      fillBuildDone: true,
+    });
+    this.fillSession = null;
   }
 }
 
@@ -645,6 +1147,10 @@ export interface FiveDProps {
   readonly liveForceGraph?: boolean;
   /** @emoji 🔗 Flat graph port model; WIRES surfaces use `normal` (node-id edges, no handles). */
   readonly graphPortMode?: Puzzle2dCanvasProps["graphPortMode"];
+  /** @emoji 🖌️ Shared authoring tool for both surfaces (`select` | `brush` | `fill`). */
+  readonly activeTool?: Puzzle5dActiveTool;
+  readonly brushFlushDistance?: number;
+  readonly brushOverlapBudget?: number;
   /** 2d surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
   readonly puzzle2d?: Omit<Puzzle2dCanvasProps, "children">;
   /** 3d surface overrides; LOD is continuous/camera-driven — not the flat six-tier scale. */
@@ -792,15 +1298,24 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
     onProximityConnect: onProximityConnectHost,
     onDrag: onDragHost,
     onDragEnd: onDragEndHost,
+    onBrushPlace: onBrushPlaceHost,
+    onBrushCandidates: onBrushCandidatesHost,
+    activeTool: activeToolHost,
+    brushFlushDistance: brushFlushDistanceHost,
     graphPortMode: puzzle2dGraphPortMode,
     ...rest2d
   } = extra2d;
+  const activeTool = props.activeTool ?? activeToolHost ?? "select";
+  const brushFlushDistance = props.brushFlushDistance ?? brushFlushDistanceHost;
   const graphPortMode = props.graphPortMode ?? puzzle2dGraphPortMode;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
   const liveForceGraph = props.liveForceGraph === true;
   const draggingNodeIdRef = reactHostPort.useRef<string | null>(null);
   const storeRef = reactHostPort.useRef(store);
   storeRef.current = store;
+  const onCamera = reactHostPort.useCallback((c: Puzzle2dCameraState) => {
+    storeRef.current.set2dCamera(props.instanceId, c);
+  }, [props.instanceId]);
 
   reactHostPort.useEffect(() => {
     if (!liveForceGraph || fixture2d.nodes.length === 0) return;
@@ -824,7 +1339,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
         kindCatalogs={project2dKindCatalogs(snap.model.kindCatalogs)}
         kindCompatibility={snap.model.kindCompatibility}
         linkSession={linkSession}
-        onCamera={(c) => store.set2dCamera(props.instanceId, c)}
+        onCamera={onCamera}
         onConnect={(p) => {
           store.applyTie(p.source, p.target);
           onConnectHost?.(p);
@@ -886,6 +1401,10 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
           store.setSelection({ partIds: s.ids, anchorIds: [] });
           onSelectHost?.(s);
         }}
+        activeTool={activeTool}
+        {...(brushFlushDistance !== undefined ? { brushFlushDistance } : {})}
+        {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
+        {...(onBrushCandidatesHost ? { onBrushCandidates: onBrushCandidatesHost } : {})}
         {...rest2d}
       >
         {markers}
@@ -907,13 +1426,27 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
     onRelocate: onRelocateHost,
     onAttractionCompatibleObjects: onAttractionCompatibleObjectsHost,
     onAttractionTargetRing: onAttractionTargetRingHost,
+    onBrushPlace: onBrushPlaceHost,
+    onFillMeshesReady: onFillMeshesReadyHost,
+    brushActive: brushActiveHost,
+    fillActive: fillActiveHost,
+    brushPlacementOverlapBudget: brushOverlapHost,
     ...rest3d
   } = extra3d;
+  const activeTool = props.activeTool ?? "select";
+  const brushActive = brushActiveHost ?? activeTool === "brush";
+  const fillActive = fillActiveHost ?? activeTool === "fill";
+  const brushPlacementOverlapBudget = brushOverlapHost ?? props.brushOverlapBudget;
   const camera = store.get3dCamera(props.instanceId);
   const selectedObjectId = snap.selection.partIds[0] ?? null;
   const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
   const onRelocate = usePuzzle3dPartRelocate();
   const onConnect = usePuzzle3dPartConnect();
+  const storeRef = reactHostPort.useRef(store);
+  storeRef.current = store;
+  const onCamera = reactHostPort.useCallback((c: Puzzle3dFixtureV1["camera"]) => {
+    storeRef.current.set3dCamera(props.instanceId, c);
+  }, [props.instanceId]);
   return (
     <Puzzle3dCanvas
       camera={rest3d.camera ?? camera}
@@ -926,7 +1459,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       kindCatalogs={project3dKindCatalogs(snap.model.kindCatalogs)}
       kindCompatibility={snap.model.kindCompatibility as Puzzle3dKindCompatEntry[] | undefined}
       gumballConfig={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG}
-      onCamera={(c) => store.set3dCamera(props.instanceId, c)}
+      onCamera={onCamera}
       onConnect={(p) => {
         onConnect?.(p);
         onConnectHost?.(p);
@@ -986,6 +1519,11 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
         store.setSelection({ partIds: [...s.objectIds], anchorIds: [...s.vortexIds] });
         onSelectHost?.(s);
       }}
+      brushActive={brushActive}
+      fillActive={fillActive}
+      {...(brushPlacementOverlapBudget !== undefined ? { brushPlacementOverlapBudget } : {})}
+      {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
+      {...(onFillMeshesReadyHost ? { onFillMeshesReady: onFillMeshesReadyHost } : {})}
       {...rest3d}
     >
       <Puzzle3dParts selectedObjectId={selectedObjectId} relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
@@ -1727,6 +2265,145 @@ if (import.meta.vitest) {
       const o = puzzle2dForceGraphOptions({ centerStrength: 0.1, linkDistance: 120, chargeStrength: -400 });
       expect(o.repulsionStrength).toBe(400);
       expect(o.idealEdgeLength).toBe(120);
+    });
+  });
+
+  describe("applyBrushPlacementToModel", () => {
+    const brushHostModel = (): V1 => ({
+      schema: "puzzle.5d/v1",
+      domain: "architecture",
+      camera2d: { x: 0, y: 0, zoom: 1 },
+      camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+      parts: [
+        {
+          id: "host",
+          partKind: "Host",
+          puzzle2d: { x: 0, y: 0, shape: "rectangle", width: 40, height: 40 },
+          puzzle3d: { origin: [0, 0, 0], meshUrl: "/meshes/host.glb", orientation: [0, 0, 0, 1] },
+          anchors: [
+            {
+              id: "port",
+              anchorKind: "port",
+              puzzle2d: { angle: 0, anchorKind: "port" },
+              puzzle3d: { position: [1, 0, 0], direction: [-1, 0, 0] },
+            },
+          ],
+        },
+        {
+          id: "peer",
+          partKind: "Capsule",
+          puzzle2d: { x: 100, y: 0, shape: "rectangle", width: 40, height: 40 },
+          puzzle3d: { origin: [10, 0, 0], meshUrl: "/meshes/capsule.glb", orientation: [0, 0, 0, 1] },
+          anchors: [
+            {
+              id: "mate",
+              anchorKind: "port",
+              puzzle2d: { angle: Math.PI, anchorKind: "port" },
+              puzzle3d: { position: [-1, 0, 0], direction: [1, 0, 0] },
+            },
+          ],
+        },
+      ],
+      ties: [],
+    });
+
+    it("appends a unified part with both aspects from a volume brush payload", () => {
+      const model = brushHostModel();
+      const result = applyBrushPlacementToModel(
+        model,
+        puzzle5dBrushPlacementFromVolume({
+          targetVortexFullId: "host:port",
+          objectKindId: "Capsule",
+          sourceVortexIndex: 0,
+          origin: [2, 0, 0],
+          orientation: [0, 0, 0, 1],
+        }),
+      );
+      expect(result.kind).toBe("placed");
+      if (result.kind !== "placed") return;
+      const placed = result.model.parts.find((part) => part.id === result.partId);
+      expect(placed?.puzzle2d).toBeTruthy();
+      expect(placed?.puzzle3d).toBeTruthy();
+      expect(result.model.ties.some((tie) => tie.source.endsWith(":mate") || tie.source.includes("Capsule"))).toBe(true);
+    });
+
+    it("appends a unified part with both aspects from a flat brush payload", () => {
+      const model = brushHostModel();
+      const result = applyBrushPlacementToModel(
+        model,
+        puzzle5dBrushPlacementFromFlat({
+          nodeKind: "Capsule",
+          shape: "rectangle",
+          sourceHandleId: "host:port",
+          targetHandleIndex: 0,
+          x: 80,
+          y: 0,
+          handles: [{ angle: Math.PI, handleKind: "port" }],
+        }),
+      );
+      expect(result.kind).toBe("placed");
+      if (result.kind !== "placed") return;
+      const placed = result.model.parts.find((part) => part.id === result.partId);
+      expect(placed?.puzzle2d?.x).toBe(80);
+      expect(placed?.puzzle3d?.meshUrl).toBe("/meshes/capsule.glb");
+    });
+  });
+
+  describe("Store fill session", () => {
+    it("applies fill prefix with unified parts", () => {
+      const store = createStore({
+        schema: "puzzle.5d/v1",
+        domain: "architecture",
+        camera2d: { x: 0, y: 0, zoom: 1 },
+        camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        parts: [
+          {
+            id: "host",
+            partKind: "Host",
+            puzzle2d: { x: 0, y: 0, shape: "rectangle", width: 40, height: 40 },
+            puzzle3d: { origin: [0, 0, 0], meshUrl: "/meshes/host.glb", orientation: [0, 0, 0, 1] },
+            anchors: [
+              {
+                id: "port",
+                anchorKind: "port",
+                puzzle2d: { angle: 0, anchorKind: "port" },
+                puzzle3d: { position: [1, 0, 0], direction: [-1, 0, 0] },
+              },
+            ],
+          },
+          {
+            id: "peer",
+            partKind: "Capsule",
+            puzzle2d: { x: 100, y: 0, shape: "rectangle", width: 40, height: 40 },
+            puzzle3d: { origin: [10, 0, 0], meshUrl: "/meshes/capsule.glb", orientation: [0, 0, 0, 1] },
+            anchors: [
+              {
+                id: "mate",
+                anchorKind: "port",
+                puzzle2d: { angle: Math.PI, anchorKind: "port" },
+                puzzle3d: { position: [-1, 0, 0], direction: [1, 0, 0] },
+              },
+            ],
+          },
+        ],
+        ties: [],
+      });
+      const sequence = [
+        puzzle5dBrushPlacementFromVolume({
+          targetVortexFullId: "host:port",
+          objectKindId: "Capsule",
+          sourceVortexIndex: 0,
+          origin: [2, 0, 0],
+          orientation: [0, 0, 0, 1],
+          objectId: "fill-1",
+        }),
+      ];
+      store.prepareFillSession(sequence);
+      store.applyFillCount(1);
+      expect(store.read().parts).toHaveLength(3);
+      const added = store.read().parts.find((part) => part.id === "fill-1");
+      expect(added?.puzzle2d).toBeTruthy();
+      expect(added?.puzzle3d).toBeTruthy();
     });
   });
 

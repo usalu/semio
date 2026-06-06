@@ -4034,6 +4034,15 @@ function fillCandidateDiversityScore(
   return 1_000 + Math.abs(candidate.sourceVortexIndex - targetVortexIndex) * 100;
 }
 
+/** @emoji 🚫 True when distribution allows a brush/fill candidate (object + source vortex weights). */
+export function brushCandidateAllowsSuggestion(
+  candidate: BrushCompatibleCandidate,
+  weights: Puzzle3dBrushKindWeights,
+  kindCatalogs: KindCatalogBundle | undefined,
+): boolean {
+  return brushCandidateSuggestionWeight(candidate, weights, kindCatalogs) > 0;
+}
+
 /** @emoji 🪣 Fill prefers cross-port mates (e.g. b-s → b-l) and distant connector indices on the same kind. */
 function orderBrushFillCompatibleCandidates(
   candidates: readonly BrushCompatibleCandidate[],
@@ -4044,10 +4053,11 @@ function orderBrushFillCompatibleCandidates(
   weights: Puzzle3dBrushKindWeights,
   rng: BrushShuffleRng,
 ): readonly BrushCompatibleCandidate[] {
+  const allowed = candidates.filter((candidate) => brushCandidateAllowsSuggestion(candidate, weights, kindCatalogs));
   const target = targetVortexKind ?? "";
   const cross: BrushCompatibleCandidate[] = [];
   const same: BrushCompatibleCandidate[] = [];
-  for (const candidate of candidates) {
+  for (const candidate of allowed) {
     const sourceVk = catalogObjectKindById(kindCatalogs, candidate.objectKindId)?.vortices?.[candidate.sourceVortexIndex]?.vortexKind ?? "";
     if (sourceVk !== target || brushStackMatePair(sourceVk, target)) {
       cross.push(candidate);
@@ -4658,11 +4668,24 @@ let puzzle3dPrecomputeSceneSyncTimer: ReturnType<typeof setTimeout> | null = nul
 let puzzle3dPrecomputeSceneSyncInFlight: Promise<void> = Promise.resolve();
 let puzzle3dPrecomputeSceneSyncKey = "";
 
+function puzzle3dBrushKindWeightsSyncKey(weights: Puzzle3dBrushKindWeights): string {
+  const objectEntries = Object.entries(weights.objectWeights)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([id, value]) => `${id}=${value.toFixed(6)}`)
+    .join(",");
+  const vortexEntries = Object.entries(weights.vortexWeights)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([id, value]) => `${id}=${value.toFixed(6)}`)
+    .join(";");
+  return `${objectEntries}|${vortexEntries}`;
+}
+
 function puzzle3dPrecomputeSceneSyncKeyOf(input: Puzzle3dPrecomputeSceneInput): string {
   const rules =
     input.kindCompatibility ??
     kindCompatibilityFromFixtureMeta(input.fixture.meta as Record<string, unknown> | undefined);
-  return `${input.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}:${kindCompatibilitySyncKey(rules)}:${fixtureStateFingerprint(input.fixture)}`;
+  const weights = input.weights ?? puzzle3dBrushKindWeightsRef.current;
+  return `${input.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}:${kindCompatibilitySyncKey(rules)}:${fixtureStateFingerprint(input.fixture)}:${puzzle3dBrushKindWeightsSyncKey(weights)}`;
 }
 
 /** @emoji 🧵 Awaits worker scene sync (overlap budget + fixture fingerprint). */
@@ -12287,6 +12310,15 @@ if (import.meta.vitest) {
     it("brushTargetVortexAllowsSuggestion rejects zero target vortex weight", () => {
       expect(brushTargetVortexAllowsSuggestion("c-t", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(false);
       expect(brushTargetVortexAllowsSuggestion("c-b", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(true);
+    });
+    it("brushCandidateAllowsSuggestion rejects zero object or source vortex weight", () => {
+      const catalogs: KindCatalogBundle = {
+        objects: [{ id: "Forest", meshUrl: "/f.glb", vortices: [{ vortexKind: "c-b", position: [0, 0, 0], direction: [0, 0, 1] }] }],
+      };
+      const candidate = { objectKindId: "Forest", sourceVortexIndex: 0 };
+      expect(brushCandidateAllowsSuggestion(candidate, { objectWeights: { Forest: 0 }, vortexWeights: { "c-b": 1 } }, catalogs)).toBe(false);
+      expect(brushCandidateAllowsSuggestion(candidate, { objectWeights: { Forest: 1 }, vortexWeights: { "c-b": 0 } }, catalogs)).toBe(false);
+      expect(brushCandidateAllowsSuggestion(candidate, { objectWeights: { Forest: 1 }, vortexWeights: { "c-b": 1 } }, catalogs)).toBe(true);
     });
     it("brushPreviewMeshFrameGroup applies GLB mesh frame rotation", () => {
       const meshRoot = new Mesh(new BoxGeometry(1, 2, 3));

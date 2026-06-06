@@ -12596,6 +12596,12 @@ export function shouldDismissEmptyWindowEngagement(
   return true;
 }
 
+/** @emoji ✅ True when Space/Enter should pick the active filtered {@link EngagementPossible} instead of submitting the raw draft. */
+export function shouldActivateEngagementPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
+  if (!filteredCount) return false;
+  return showPossiblesList || Boolean(draft.trim());
+}
+
 /** @emoji ␣ Applies Space on an engagement command line (step submit vs repeat-last when idle). */
 export function applyEngagementSpaceAction(input: EngagementInput, draft: string, sessionActive: boolean): boolean {
   if (input.disabled) return false;
@@ -12945,13 +12951,13 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                     }
                     if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
                       event.preventDefault();
-                      if (showPossiblesList && activatePossible()) return;
+                      if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
                       applyEngagementSpaceAction(input!, draft, sessionActive);
                       return;
                     }
                     if (event.key === "Enter") {
                       event.preventDefault();
-                      if (showPossiblesList && activatePossible()) return;
+                      if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
                       input!.onSubmit?.(draft);
                     }
                   }}
@@ -19151,6 +19157,40 @@ if (import.meta.vitest) {
       expect(engagementInlineCompletion("Sp", sphere)).toEqual({ prefix: "Sp", suffix: "here" });
       expect(engagementInlineCompletion("sph", sphere)).toEqual({ prefix: "Sph", suffix: "ere" });
       expect(engagementActiveInlineCompletion("Sp", [sphere], 0)).toEqual({ prefix: "Sp", suffix: "here" });
+    });
+
+    it("shouldActivateEngagementPossibleOnConfirm accepts typed draft or expanded list", () => {
+      expect(shouldActivateEngagementPossibleOnConfirm("", false, 2)).toBe(false);
+      expect(shouldActivateEngagementPossibleOnConfirm("", true, 2)).toBe(true);
+      expect(shouldActivateEngagementPossibleOnConfirm("f", false, 2)).toBe(true);
+      expect(shouldActivateEngagementPossibleOnConfirm("f", false, 0)).toBe(false);
+    });
+
+    it("Engagement Space and Enter activate inline suggestion without opening possibles list", async () => {
+      const scrollIntoView = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = () => undefined;
+      const selected: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder }}
+          possibleEngagements={[
+            { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
+            { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
+            { id: "puzzle3d.tool.fill", label: "Fill", detail: "f", onSelect: () => selected.push("puzzle3d.tool.fill") },
+          ]}
+        />,
+      );
+      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.commandPlaceholder);
+      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      fireEvent.change(field, { target: { value: "f" } });
+      await waitFor(() => expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("ill"));
+      fireEvent.keyDown(field, { key: " " });
+      await waitFor(() => expect(selected).toEqual(["puzzle3d.tool.fill"]));
+      fireEvent.change(field, { target: { value: "Sp" } });
+      fireEvent.keyDown(field, { key: "Enter" });
+      await waitFor(() => expect(selected).toEqual(["puzzle3d.tool.fill", "primitive.sphere"]));
+      Element.prototype.scrollIntoView = scrollIntoView;
     });
 
     it("Engagement shows inline completion while typing and possibles list only on chevron", async () => {

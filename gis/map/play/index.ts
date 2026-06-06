@@ -885,6 +885,19 @@ if (import.meta.vitest) {
       expect(layersWorld.children.find((row) => row.id === "gis-map-layer-weight-roads")).toBeUndefined();
       expect(layersStreet.children.find((row) => row.id === "gis-map-layer-weight-roads")?.kind).toBe("slider");
     });
+
+    it("applies per-vector-style default labels visibility", () => {
+      const runtime = new Platform({ id: "test" });
+      const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());
+      expect(ctrl.getSnapshot().vectorStyle).toBe("colored");
+      expect(ctrl.getSnapshot().layerVisibility.labels).toBe(true);
+      ctrl.run("setVectorStyle", { style: "figureGround" });
+      expect(ctrl.getSnapshot().layerVisibility.labels).toBe(false);
+      ctrl.run("setVectorStyle", { style: "invertedFigure" });
+      expect(ctrl.getSnapshot().layerVisibility.labels).toBe(false);
+      ctrl.run("setVectorStyle", { style: "colored" });
+      expect(ctrl.getSnapshot().layerVisibility.labels).toBe(true);
+    });
   });
 
   describe("MapPlayController fixtures", () => {

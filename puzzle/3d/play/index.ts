@@ -418,6 +418,41 @@ function notifyPuzzle3dFillSessionReady(): void {
   }
 }
 
+let puzzle3dFillDistributionInvalidatedEpoch = 0;
+const puzzle3dFillDistributionInvalidatedListeners = new Set<() => void>();
+
+/** @emoji 🎚️ Subscribes when brush distribution weights invalidate the cached fill sequence. */
+export function subscribePuzzle3dFillDistributionInvalidated(listener: () => void): () => void {
+  puzzle3dFillDistributionInvalidatedListeners.add(listener);
+  return () => {
+    puzzle3dFillDistributionInvalidatedListeners.delete(listener);
+  };
+}
+
+/** @emoji 🎚️ Clears cached fill placements so the next fill prep uses current distribution weights. */
+export function invalidatePuzzle3dFillForDistributionChange(): void {
+  cancelPuzzle3dFillBuild();
+  const base = puzzle3dFillSessionRef.current.baseFixture;
+  puzzle3dFillSessionRef.current = {
+    baseFixture: base,
+    sequence: [],
+    appendedObjects: [],
+    appendedAttractions: [],
+    seed: 0,
+  };
+  puzzle3dFillBuildProgressRef.current = { count: 0, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: false };
+  notifyPuzzle3dFillSessionReady();
+  puzzle3dFillDistributionInvalidatedEpoch += 1;
+  for (const listener of puzzle3dFillDistributionInvalidatedListeners) {
+    listener();
+  }
+}
+
+/** @emoji 🎚️ Epoch bumped when distribution weights invalidate fill. */
+export function getPuzzle3dFillDistributionInvalidatedEpoch(): number {
+  return puzzle3dFillDistributionInvalidatedEpoch;
+}
+
 function nextPuzzle3dFillSeed(): number {
   return (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
 }
@@ -2296,6 +2331,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         }
         this.objectKindWeights = normalizeKindWeightGroup(this.objectKindWeights, kindId, next);
         publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
+        invalidatePuzzle3dFillForDistributionChange();
         this.syncShell();
         return;
       }
@@ -2310,6 +2346,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         }
         this.vortexKindWeights = normalizeKindWeightGroup(this.vortexKindWeights, kindId, next);
         publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
+        invalidatePuzzle3dFillForDistributionChange();
         this.syncShell();
         return;
       }

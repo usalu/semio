@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: verify
     content: Run cargo tests and verify labels in map play across styles/zoom, then close ticket
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

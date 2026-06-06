@@ -31,9 +31,23 @@ import {
   enforcePlaygroundWindowEngagementInput,
 } from "@framework/playground/core";
 
-import { buildPuzzle2dPlayHierarchySections } from "../../2d/play/index.ts";
+import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
 import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
-import { PUZZLE_2D_LOD_MODE_AUTOMATIC, puzzle2dLodAutomaticSelectLabel, puzzle2dLodCanvasProps, isPuzzle2dDrawLodKind, parsePuzzle2dFixtureV1, type Puzzle2dDrawLodKind, type Puzzle2dFixtureV1, type Puzzle2dLodModeKind, type CameraState } from "../../2d/react/index.tsx";
+import {
+  PUZZLE_2D_LOD_MODE_AUTOMATIC,
+  puzzle2dLodAutomaticSelectLabel,
+  puzzle2dLodCanvasProps,
+  isPuzzle2dDrawLodKind,
+  parsePuzzle2dFixtureV1,
+  DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
+  type Puzzle2dDrawLodKind,
+  type Puzzle2dFixtureV1,
+  type Puzzle2dLodModeKind,
+  type CameraState,
+  type Puzzle2dSelectionMethod,
+  type Puzzle2dSelectionMode,
+  type Puzzle2dSelectionTargets,
+} from "../../2d/react/index.tsx";
 import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
 import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
 import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
@@ -47,8 +61,27 @@ import {
   puzzle3dLodCanvasProps,
   sliderValueFromLod,
   type FixtureV1 as Puzzle3dFixtureV1,
+  DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+  BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
+  BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP,
 } from "../../3d/react/index.tsx";
-import { createStore, parseV1, project2d, project3d, compose5d, sharedKindsFromMetas, type Store as Puzzle5dStore, type StoreSnapshot as Puzzle5dStoreSnapshot, type V1 as Puzzle5dV1 } from "../react/index.tsx";
+import {
+  createStore,
+  parseV1,
+  project2d,
+  project3d,
+  compose5d,
+  sharedKindsFromMetas,
+  PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID,
+  PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID,
+  PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID,
+  PUZZLE_5D_FILL_COUNT_MAX,
+  type Puzzle5dActiveTool,
+  type Puzzle5dBrushPlacement,
+  type Store as Puzzle5dStore,
+  type StoreSnapshot as Puzzle5dStoreSnapshot,
+  type V1 as Puzzle5dV1,
+} from "../react/index.tsx";
 import nakagin5dJson from "../fixture/nakagin-capsule-tower.5d.json";
 
 //#region 🔖Ids
@@ -72,6 +105,16 @@ const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap", 
 
 function puzzle5dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
   return { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command, args: args as never };
+}
+
+const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN = 0;
+const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX = 160;
+const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_STEP = 4;
+
+/** @emoji 🔗 React host bridge: toolbar snapshot + commands that need canvas/fixture context. */
+export interface Puzzle5dPlayHostBridge {
+  getToolbarState(): Puzzle2dPlayToolbarState;
+  runHostCommand(command: string, args?: unknown): void;
 }
 //#endregion 🔖Ids
 
@@ -151,6 +194,11 @@ export interface Puzzle5dPlaySnapshot {
   readonly connect3d: number;
   readonly proximity2d: number;
   readonly proximity3d: number;
+  readonly activeTool: Puzzle5dActiveTool;
+  readonly brushFlushDistance: number;
+  readonly brushOverlapBudget: number;
+  readonly fillCount: number;
+  readonly fillBuildDone: boolean;
 }
 
 function loadNakagin5dModel(): Puzzle5dV1 {
@@ -218,13 +266,91 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     [PUZZLE_5D_PLAY_2D_WINDOW_ID]: "",
     [PUZZLE_5D_PLAY_3D_WINDOW_ID]: "",
   };
+  private hostBridge: Puzzle5dPlayHostBridge | null = null;
+  private activeTool: Puzzle5dActiveTool = "select";
+  private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+  private brushOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
+  private brushEngagementPossibles: { readonly id: string; readonly label: string }[] = [];
+  private puzzle2dSelectionMethod: Puzzle2dSelectionMethod = "rectangle";
+  private puzzle2dSelectionMode: Puzzle2dSelectionMode = "default";
+  private puzzle2dSelectionTargets: Puzzle2dSelectionTargets = { nodes: true, edges: true, handles: true };
+  private puzzle2dGridSnapEnabled = true;
+  private puzzle2dRedrawPlaying = false;
+
+  private lastStoreShellModel: Puzzle5dV1 | null = null;
+  private lastStoreShellSelectionKey = "";
+  private lastStoreShellFillCount = 0;
+  private lastStoreShellFillBuildDone = true;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_5D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
     this.puzzle5dStoreBridge = new Puzzle5dStoreBridge(this.puzzle5dStore);
     this.provideStore(PUZZLE_5D_PLAY_STORE_ID, this.puzzle5dStoreBridge);
-    this.puzzle5dStore.subscribe(() => this.emit());
+    this.puzzle5dStore.subscribe(() => this.notifyStoreShellIfNeeded());
     this.rebuildShellMode();
+  }
+
+  private notifyStoreShellIfNeeded(): void {
+    const snap = this.puzzle5dStore.getSnapshot();
+    const selectionKey = `${snap.selection.partIds.join("\u0001")}\u0002${snap.selection.anchorIds.join("\u0001")}`;
+    if (
+      this.lastStoreShellModel === snap.model &&
+      this.lastStoreShellSelectionKey === selectionKey &&
+      this.lastStoreShellFillCount === snap.fillCount &&
+      this.lastStoreShellFillBuildDone === snap.fillBuildDone
+    ) {
+      return;
+    }
+    this.lastStoreShellModel = snap.model;
+    this.lastStoreShellSelectionKey = selectionKey;
+    this.lastStoreShellFillCount = snap.fillCount;
+    this.lastStoreShellFillBuildDone = snap.fillBuildDone;
+    this.emit();
+  }
+
+  setHostBridge(bridge: Puzzle5dPlayHostBridge | null): void {
+    this.hostBridge = bridge;
+    this.rebuildShellMode();
+  }
+
+  getActiveTool(): Puzzle5dActiveTool {
+    return this.activeTool;
+  }
+
+  setBrushEngagementPossibles(rows: readonly { readonly id: string; readonly label: string }[]): void {
+    const next = [...rows];
+    if (next.length === this.brushEngagementPossibles.length && next.every((row, index) => row.id === this.brushEngagementPossibles[index]?.id)) {
+      return;
+    }
+    this.brushEngagementPossibles = next;
+    this.rebuildShellMode();
+    this.emit();
+  }
+
+  private toolbarState(): Puzzle2dPlayToolbarState {
+    return (
+      this.hostBridge?.getToolbarState() ?? {
+        puzzle2dActiveTool: this.activeTool,
+        puzzle2dBrushFlushDistance: this.brushFlushDistance,
+        puzzle2dSelectionMethod: this.puzzle2dSelectionMethod,
+        puzzle2dSelectionMode: this.puzzle2dSelectionMode,
+        puzzle2dSelectionTargets: this.puzzle2dSelectionTargets,
+        puzzle2dGridSnapEnabled: this.puzzle2dGridSnapEnabled,
+        puzzle2dRedrawPlaying: this.puzzle2dRedrawPlaying,
+      }
+    );
+  }
+
+  private setPlayActiveTool(tool: Puzzle5dActiveTool): void {
+    const prev = this.activeTool;
+    if (prev === tool) return;
+    this.activeTool = tool;
+    if (tool !== "brush") {
+      this.brushEngagementPossibles = [];
+    }
+    this.hostBridge?.runHostCommand("setActiveTool", { tool, prevTool: prev });
+    this.rebuildShellMode();
+    this.emit();
   }
 
   private rebuildShellMode(): void {
@@ -233,14 +359,50 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       kind: "toggle" as const,
       iconId,
       text: label,
-      order,
+      order: order + 100,
       pressed: this.gumballConfig[key] !== false,
       controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID,
       command: "setGumballConfigToggle",
       args: { key },
     }));
-    this.mainMode.tools = { actions: relocateTools };
+    const flatTools = buildPuzzle2dPlayToolbarTools(this.toolbarState(), PUZZLE_5D_PLAY_CONTROLLER_ID);
+    this.mainMode.tools = {
+      selection: flatTools.selection,
+      view: flatTools.view,
+      create: flatTools.create,
+      actions: [...(flatTools.actions ?? []), ...relocateTools],
+    };
     this.mainMode.windowKinds = this.getWindowKinds();
+  }
+
+  private brushMeasuresGroup(windowId: string): WindowMeasure {
+    return {
+      kind: "group",
+      id: `${windowId}-brush`,
+      label: "Brush",
+      children: [
+        {
+          kind: "slider",
+          id: `${windowId}-brush-flush-distance`,
+          label: `Flush ${this.brushFlushDistance.toFixed(0)}`,
+          value: this.brushFlushDistance,
+          min: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN,
+          max: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX,
+          step: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_STEP,
+          onChange: puzzle5dPlayCmd("setBrushFlushDistance"),
+        },
+        {
+          kind: "slider",
+          id: `${windowId}-brush-overlap-budget`,
+          label: `Overlap ${this.brushOverlapBudget.toFixed(2)} m³`,
+          value: this.brushOverlapBudget,
+          min: 0,
+          max: BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
+          step: BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP,
+          onChange: puzzle5dPlayCmd("setBrushOverlapBudget"),
+        },
+      ],
+    };
   }
 
   private lod2dMeasure(): WindowMeasure {
@@ -285,22 +447,84 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   }
 
   private windowEngagementFor(windowId: string): WindowEngagement {
+    const toolPossibles =
+      this.activeTool === "brush" && this.brushEngagementPossibles.length > 0
+        ? this.brushEngagementPossibles.map((row) => ({
+            id: row.id,
+            label: row.label,
+            command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: row.id }),
+          }))
+        : [
+            { id: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID }) },
+            { id: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID }) },
+            { id: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID }) },
+          ];
+    const storeSnap = this.puzzle5dStore.getSnapshot();
+    const fillSliderMax = storeSnap.fillBuildDone ? PUZZLE_5D_FILL_COUNT_MAX : Math.max(storeSnap.fillCount, 1);
+    const control =
+      this.activeTool === "fill"
+        ? {
+            kind: "slider" as const,
+            id: "puzzle5d-fill-count",
+            label: `Fill ${storeSnap.fillCount}`,
+            value: Math.min(storeSnap.fillCount, fillSliderMax),
+            min: 0,
+            max: fillSliderMax,
+            step: 1,
+            onChange: puzzle5dPlayCmd("engagementControlChange", { windowId }),
+          }
+        : {
+            kind: "ring" as const,
+            id: "puzzle5d-command-ring",
+            label: "Command",
+            value:
+              this.activeTool === "brush"
+                ? PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID
+                : this.activeTool === "fill"
+                  ? PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID
+                  : PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID,
+            options: toolPossibles.map((row) => ({ id: row.id, label: row.label })),
+            onSelect: puzzle5dPlayCmd("engagementControlSelect", { windowId }),
+          };
     return {
+      sessionActive: this.activeTool === "brush" || this.activeTool === "fill",
       input: {
         id: "engagement-input",
         value: this.engagementInputByWindow[windowId] ?? "",
-        placeholder: "Command",
+        placeholder: this.activeTool === "fill" ? "Fill" : this.activeTool === "brush" ? "Brush" : "Command",
         onChange: puzzle5dPlayCmd("engagementInput", { windowId }),
         onSubmit: puzzle5dPlayCmd("engagementSubmit", { windowId }),
         onAbort: puzzle5dPlayCmd("engagementAbort", { windowId }),
       },
+      control,
+      possibleEngagements: toolPossibles,
     };
   }
 
   getWindowKinds(): readonly WindowKindRuntime[] {
     const windowKinds = [
-      new WindowKindRuntime(PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_2D_BODY_KEY, undefined, [{ kind: "group", id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`, label: "LOD", children: [this.lod2dMeasure()] }], this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID)),
-      new WindowKindRuntime(PUZZLE_5D_PLAY_3D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_BODY_KEY, undefined, [{ kind: "group", id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-lod`, label: "LOD", children: this.lod3dMeasures() }], this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID)),
+      new WindowKindRuntime(
+        PUZZLE_5D_PLAY_2D_WINDOW_ID,
+        PUZZLE_5D_PLAY_2D_WINDOW_LABEL,
+        PUZZLE_5D_PLAY_2D_BODY_KEY,
+        undefined,
+        [
+          { kind: "group", id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`, label: "LOD", children: [this.lod2dMeasure()] },
+          this.brushMeasuresGroup(PUZZLE_5D_PLAY_2D_WINDOW_ID),
+        ],
+        this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID),
+      ),
+      new WindowKindRuntime(
+        PUZZLE_5D_PLAY_3D_WINDOW_ID,
+        PUZZLE_5D_PLAY_3D_WINDOW_LABEL,
+        PUZZLE_5D_PLAY_3D_BODY_KEY,
+        undefined,
+        [
+          { kind: "group", id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-lod`, label: "LOD", children: this.lod3dMeasures() },
+          this.brushMeasuresGroup(PUZZLE_5D_PLAY_3D_WINDOW_ID),
+        ],
+        this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID),
+      ),
     ];
     for (const windowKind of windowKinds) {
       enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 5D play window "${windowKind.id}"`);
@@ -318,6 +542,9 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     this.puzzle5dStore.replaceModel(model);
     this.selected2d = new Set();
     this.selected3d = null;
+    this.activeTool = "select";
+    this.brushEngagementPossibles = [];
+    this.hostBridge?.runHostCommand("setActiveTool", { tool: "select", prevTool: "select" });
     const snap = this.puzzle5dStore.read();
     this.camera2d = { ...snap.camera2d };
     this.camera3d = { ...snap.camera3d };
@@ -426,6 +653,106 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       case "note3dProximity":
         this.proximity3d += 1;
         break;
+      case "setActiveTool": {
+        const tool = (args as { tool?: Puzzle5dActiveTool }).tool;
+        if (tool === "select" || tool === "brush" || tool === "fill") {
+          this.setPlayActiveTool(tool);
+        } else {
+          changed = false;
+        }
+        break;
+      }
+      case "addBrushPart": {
+        const placement = args as Puzzle5dBrushPlacement;
+        if (!placement?.partKind) {
+          changed = false;
+          break;
+        }
+        if (this.puzzle5dStore.applyBrushPlacement(placement)) {
+          this.emit();
+        }
+        changed = false;
+        break;
+      }
+      case "setFillCount": {
+        const count = Number((args as { count?: number }).count);
+        if (!Number.isFinite(count)) {
+          changed = false;
+          break;
+        }
+        this.puzzle5dStore.applyFillCount(count);
+        this.rebuildShellMode();
+        this.emit();
+        changed = false;
+        break;
+      }
+      case "setBrushFlushDistance": {
+        const distance = Number((args as { value?: number }).value);
+        if (Number.isFinite(distance)) {
+          this.brushFlushDistance = Math.max(PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN, Math.min(PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX, distance));
+          this.hostBridge?.runHostCommand("setBrushFlushDistance", { distance: this.brushFlushDistance });
+        } else {
+          changed = false;
+        }
+        break;
+      }
+      case "setBrushOverlapBudget": {
+        const value = Number((args as { value?: number }).value);
+        if (Number.isFinite(value)) {
+          this.brushOverlapBudget = Math.max(0, Math.min(BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX, value));
+          this.hostBridge?.runHostCommand("setBrushOverlapBudget", { value: this.brushOverlapBudget });
+        } else {
+          changed = false;
+        }
+        break;
+      }
+      case "pickBrushCandidate": {
+        this.hostBridge?.runHostCommand(command, args);
+        changed = false;
+        break;
+      }
+      case "engagementPossibleSelect": {
+        const { possibleId, windowId } = args as { possibleId?: string; windowId?: string };
+        if (!possibleId) {
+          changed = false;
+          break;
+        }
+        if (possibleId === PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID) {
+          this.setPlayActiveTool("brush");
+        } else if (possibleId === PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID) {
+          this.setPlayActiveTool("fill");
+        } else if (possibleId === PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID) {
+          this.setPlayActiveTool("select");
+        } else if (possibleId.startsWith("puzzle5d.brush.") || possibleId.startsWith("puzzle2d.brush.") || possibleId.startsWith("puzzle3d.brush.")) {
+          this.hostBridge?.runHostCommand(command, args);
+        } else {
+          this.hostBridge?.runHostCommand(command, args);
+        }
+        if (windowId && windowId in this.engagementInputByWindow) {
+          this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: "" };
+        }
+        changed = false;
+        break;
+      }
+      case "engagementControlChange": {
+        if (this.activeTool === "fill") {
+          const value = Number((args as { value?: number }).value);
+          if (Number.isFinite(value)) {
+            this.puzzle5dStore.applyFillCount(value);
+            this.rebuildShellMode();
+            this.emit();
+          }
+        } else {
+          this.hostBridge?.runHostCommand(command, args);
+        }
+        changed = false;
+        break;
+      }
+      case "engagementControlSelect":
+      case "engagementControlCommit":
+        this.hostBridge?.runHostCommand(command, args);
+        changed = false;
+        break;
       case "engagementInput": {
         const { windowId, value } = args as { windowId?: string; value?: string };
         if (!windowId || !(windowId in this.engagementInputByWindow)) {
@@ -435,17 +762,57 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
         this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: String(value ?? "") };
         break;
       }
-      case "engagementSubmit":
+      case "engagementSubmit": {
+        const { windowId, value } = args as { windowId?: string; value?: string };
+        if (!windowId || !(windowId in this.engagementInputByWindow)) {
+          changed = false;
+          break;
+        }
+        const token = String(value ?? this.engagementInputByWindow[windowId] ?? "")
+          .trim()
+          .toLowerCase();
+        if (token === "brush") this.setPlayActiveTool("brush");
+        else if (token === "fill") this.setPlayActiveTool("fill");
+        else if (token === "select") this.setPlayActiveTool("select");
+        else this.hostBridge?.runHostCommand(command, args);
+        this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: "" };
+        changed = false;
+        break;
+      }
       case "engagementAbort": {
         const { windowId } = args as { windowId?: string };
         if (!windowId || !(windowId in this.engagementInputByWindow)) {
           changed = false;
           break;
         }
+        if (this.activeTool === "brush" || this.activeTool === "fill") {
+          this.setPlayActiveTool("select");
+        }
+        this.hostBridge?.runHostCommand(command, args);
         this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: "" };
+        changed = false;
         break;
       }
       default:
+        if (
+          command === "setSelectionMethod" ||
+          command === "setSelectionMode" ||
+          command === "toggleSelectionTarget" ||
+          command === "clearSelection" ||
+          command === "selectAllSelection" ||
+          command === "toggleGridSnap" ||
+          command === "appendCircle" ||
+          command === "appendRectangle" ||
+          command === "toggleRedrawPlaying" ||
+          command === "redrawHandlesOnce" ||
+          command === "setBrushKindWeights" ||
+          command === "setNodeKindWeight" ||
+          command === "setHandleKindWeight" ||
+          command === "setObjectKindWeight" ||
+          command === "setVortexKindWeight"
+        ) {
+          this.hostBridge?.runHostCommand(command, args);
+        }
         changed = false;
         break;
     }
@@ -484,6 +851,11 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       connect3d: this.connect3d,
       proximity2d: this.proximity2d,
       proximity3d: this.proximity3d,
+      activeTool: this.activeTool,
+      brushFlushDistance: this.brushFlushDistance,
+      brushOverlapBudget: this.brushOverlapBudget,
+      fillCount: this.puzzle5dStore.getSnapshot().fillCount,
+      fillBuildDone: this.puzzle5dStore.getSnapshot().fillBuildDone,
     };
   }
 }
@@ -602,6 +974,41 @@ if (import.meta.vitest) {
       });
       expect(sk.kindCompatibility?.length).toBeGreaterThan(0);
     });
+    it("activates brush via engagement submit", () => {
+      const runtime = buildPuzzle5dPlayRuntime();
+      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
+      expect(controller).toBeTruthy();
+      controller.run("engagementSubmit", { windowId: PUZZLE_5D_PLAY_2D_WINDOW_ID, value: "Brush" });
+      expect(controller.getActiveTool()).toBe("brush");
+    });
+
+    it("addBrushPart grows unified store parts when placement is valid", () => {
+      const runtime = buildPuzzle5dPlayRuntime();
+      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
+      const host = controller.puzzle5dStore.read().parts[0];
+      const hostAnchor = host?.anchors[0]?.id;
+      if (!host?.id || !hostAnchor) return;
+      const peerKind = controller.puzzle5dStore.read().parts.find((part) => part.partKind && part.id !== host.id)?.partKind;
+      if (!peerKind) return;
+      const before = controller.puzzle5dStore.read().parts.length;
+      controller.run("addBrushPart", {
+        partKind: peerKind,
+        sourceAnchorFullId: `${host.id}:${hostAnchor}`,
+        aspect3d: {
+          targetVortexFullId: `${host.id}:${hostAnchor}`,
+          objectKindId: peerKind,
+          sourceVortexIndex: 0,
+          origin: [2, 0, 0],
+          orientation: [0, 0, 0, 1],
+          objectId: "brush-test-part",
+        },
+      });
+      expect(controller.puzzle5dStore.read().parts.length).toBeGreaterThan(before);
+      const placed = controller.puzzle5dStore.read().parts.find((part) => part.id === "brush-test-part");
+      expect(placed?.puzzle2d).toBeTruthy();
+      expect(placed?.puzzle3d).toBeTruthy();
+    });
+
     it("builds declarative 2d and 3d canvas-only bodies", () => {
       const wb = buildPuzzle5dPlayRuntime();
       const body2d = buildPuzzle5d2dDeclarativeBody({
