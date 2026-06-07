@@ -1907,6 +1907,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
     <OrbitControls
       key={props.controlsKey}
       {...(props.camera ? { camera: props.camera } : {})}
+      domElement={gl.domElement}
       makeDefault
       enabled={!gate && !snapGate}
       enableDamping={false}
@@ -1983,9 +1984,32 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
   const frameloop = props.frameloop ?? "demand";
   const cameraUp = props.cameraUp ?? ([0, 0, 1] as Vec3);
   const ownedCamera = props.cameraPosition !== undefined;
+  const rootRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const onWheelRef = reactHostPort.useRef(props.onWheel);
+  onWheelRef.current = props.onWheel;
+  const setRootRef = reactHostPort.useCallback(
+    (element: HTMLDivElement | null) => {
+      rootRef.current = element;
+      const external = props.rootRef;
+      if (!external) return;
+      if (typeof external === "function") external(element);
+      else external.current = element;
+    },
+    [props.rootRef],
+  );
+  reactHostPort.useEffect(() => {
+    const element = rootRef.current;
+    if (!element) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      onWheelRef.current?.(event);
+    };
+    element.addEventListener("wheel", onWheel, { passive: false });
+    return () => element.removeEventListener("wheel", onWheel);
+  }, []);
   return (
     <div
-      ref={props.rootRef}
+      ref={setRootRef}
       className={props.className ?? "relative h-full w-full"}
       style={{ width: "100%", height: "100%", touchAction: "none", overscrollBehavior: "contain", ...props.style }}
       onContextMenu={props.onContextMenu}

@@ -14,15 +14,14 @@ use infinite_cavas::geom_sel::{
     cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
     world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
 };
+use infinite_cavas::camera::Camera;
 use crate::{
     board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
-    handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, selection_drag_shape,
-    ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureV1Json, GraphPortMode, HandleData,
-    HandleDescJson, HandleKindDef, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, SceneDescriptorJson, SelectionOptions, VelloThemePalette,
-    WireData, WireKindDef,
+    handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero, normalize_selection_mode, pick_merge_mode_for_modifiers,
+    rectangle_handle_angle_toward, selection_drag_shape, ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry,
+    FixtureV1Json, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape,
+    SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
 };
-
-pub use infinite_cavas::camera::Camera;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -1285,10 +1284,10 @@ impl BoardHost {
         let ac = a.to_rgba8();
         let bc = b.to_rgba8();
         Color::from_rgba8(
-            ((f64::from(ac.r) * (1.0 - t) + f64::from(bc.r) * t).round() as u8),
-            ((f64::from(ac.g) * (1.0 - t) + f64::from(bc.g) * t).round() as u8),
-            ((f64::from(ac.b) * (1.0 - t) + f64::from(bc.b) * t).round() as u8),
-            ((f64::from(ac.a) * (1.0 - t) + f64::from(bc.a) * t).round() as u8),
+            (f64::from(ac.r) * (1.0 - t) + f64::from(bc.r) * t).round() as u8,
+            (f64::from(ac.g) * (1.0 - t) + f64::from(bc.g) * t).round() as u8,
+            (f64::from(ac.b) * (1.0 - t) + f64::from(bc.b) * t).round() as u8,
+            (f64::from(ac.a) * (1.0 - t) + f64::from(bc.a) * t).round() as u8,
         )
     }
 
@@ -4328,7 +4327,9 @@ impl BoardHost {
             self.resolve_node_fill_color(n, &self.vello_theme, style_kind)
         };
         let sw = 2.0_f64;
-        let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill);
+        let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill)
+            && (lod == BoardDrawLod::Minimap && matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral)
+                || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral));
         let paint_stroke = draw_node_stroke && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
         let paint_icons = draw_node_icons && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
         match n.shape {

@@ -1258,13 +1258,17 @@ export class Puzzle2dPlayShellController extends Controller {
 				const scopeId = instanceId ?? resolvedPane;
 				if (!scopeId || typeof value !== "string") break;
 				if (value !== PUZZLE_2D_LOD_MODE_AUTOMATIC && !isPuzzle2dDrawLodKind(value)) break;
-				this.lodModeByInstance = { ...this.lodModeByInstance, [scopeId]: value as Puzzle2dLodModeKind };
+				const nextMode = value as Puzzle2dLodModeKind;
+				this.lodModeByInstance = { ...this.lodModeByInstance, [scopeId]: nextMode };
 				if (resolvedPane === "2d-overview" || resolvedPane === "2d-detail" || resolvedPane === "2d-selection") {
 					if (scopeId === resolvedPane) {
-						this.lodModeByPane = { ...this.lodModeByPane, [resolvedPane]: value as Puzzle2dLodModeKind };
+						this.lodModeByPane = { ...this.lodModeByPane, [resolvedPane]: nextMode };
 					}
 				}
-				break;
+				this.rebuildShellMode();
+				this.emit();
+				this.hostChromeNotify();
+				return;
 			}
 			case "setEffectiveLodForPane": {
 				const { pane, lod } = args as { pane: Puzzle2dPlayPaneId; lod: Puzzle2dDrawLodKind };
@@ -2143,6 +2147,29 @@ if (import.meta.vitest) {
 			});
 			expect(runtime.generation).toBe(dataGen);
 			expect(runtime.chromeGeneration).toBe(chromeGen + 1);
+		});
+
+		it("setLodModeForPane bumps runtime and chrome generation", () => {
+			const runtime = buildPuzzle2dPlayRuntime();
+			const controller = runtime.getActiveApp()?.controller as Puzzle2dPlayShellController;
+			const dataGen = runtime.generation;
+			const chromeGen = runtime.chromeGeneration;
+			controller.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setLodModeForPane", {
+				pane: "2d-detail",
+				value: "minimap",
+			});
+			expect(runtime.generation).toBe(dataGen + 1);
+			expect(runtime.chromeGeneration).toBe(chromeGen + 1);
+			expect(controller.lodModeForScope("2d-detail", "2d-detail")).toBe("minimap");
+			const nextDataGen = runtime.generation;
+			const nextChromeGen = runtime.chromeGeneration;
+			controller.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setLodModeForPane", {
+				pane: "2d-detail",
+				value: "detail",
+			});
+			expect(runtime.generation).toBe(nextDataGen + 1);
+			expect(runtime.chromeGeneration).toBe(nextChromeGen + 1);
+			expect(controller.lodModeForScope("2d-detail", "2d-detail")).toBe("detail");
 		});
 	});
 

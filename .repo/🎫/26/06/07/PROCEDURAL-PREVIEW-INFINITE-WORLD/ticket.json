@@ -3,7 +3,7 @@
   "emoji": "🔧",
   "status": "closed",
   "description": "Extract brep kernel into @geometry/brep/js, setup @procedural/react flow-based brep editor with R3F viewport, and @procedural/play playground.",
-  "summary": "Fixed procedural 3D viewport zoom/pan usability. Root causes: (1) marquee handlers on the outer wrapper could leave orbit permanently disabled when pointer-up happened outside the div; (2) setOrbitEnabled(false) during marquee gated all orbit controls including wheel zoom; (3) mesh pointerDown stopped propagation for all mouse buttons, blocking middle-mouse pan over geometry. Moved marquee to canvas-level WorldEventBindingController with window pointerup/cancel (matching puzzle 3d), removed orbit gating during marquee, and only stopPropagation on left-button mesh picks.",
+  "summary": "Fixed scroll-wheel zoom in procedural 3D preview. Root cause: preview pane used panel window body (overflow-auto) so wheel scrolled the shell instead of reaching OrbitControls. Switched preview to buildPuzzle3dWindowBody + registerUiPuzzle3dSurfaceHost for canvas layout. Also pinned OrbitControls to gl.domElement and added passive:false wheel guard on WorldCanvas root so zoom is not stolen by scrollable ancestors.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1550"
   },
@@ -17,6 +17,7 @@
     "⚪8734df91b0324944b2c9e59b28bfd336",
     "⚪728f7b6d3484411686e47db9d4e37202",
     "⚪575ce1050f934da082e7cfdf07179778",
-    "⚪79c881247cb84e549523fa29a5b7d20a"
+    "⚪79c881247cb84e549523fa29a5b7d20a",
+    "⚪857fccf452db4d7793cbfebddb1c0214"
   ]
 }

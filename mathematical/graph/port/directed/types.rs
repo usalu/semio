@@ -4,8 +4,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::cavas::vello::kurbo::{Point, Vec2};
 use crate::cavas::vello::peniko::Color;
-pub use crate::cavas::camera::Camera;
-use crate::{HandleKindDef, NodeKindHandleTemplate};
+use crate::cavas::camera::Camera;
+use crate::NodeKindHandleTemplate;
 
 // #region 🔖GraphPortMode
 /// 🔌 Runtime port-model axis: ported graphs use handles; normal graphs connect node ids directly.
@@ -23,11 +23,7 @@ impl GraphPortMode {
 }
 // #endregion 🔖GraphPortMode
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum NodeShape {
-    Circle,
-    Rectangle,
-}
+pub use mathematical_graph::NodeShape;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BoardElementStyleKind {
@@ -308,6 +304,8 @@ pub struct VelloThemePalette {
     pub wire_stroke_disabled: Color,
     pub selection_preview_fill: Color,
     pub selection_preview_stroke: Color,
+    pub label_fill: Color,
+    pub label_halo: Color,
 }
 
 impl VelloThemePalette {
@@ -367,6 +365,8 @@ impl VelloThemePalette {
         Self::merge_color_field(&mut next.wire_stroke_disabled, &v, "wireStrokeDisabled");
         Self::merge_color_field(&mut next.selection_preview_fill, &v, "selectionPreviewFill");
         Self::merge_color_field(&mut next.selection_preview_stroke, &v, "selectionPreviewStroke");
+        Self::merge_color_field(&mut next.label_fill, &v, "labelFill");
+        Self::merge_color_field(&mut next.label_halo, &v, "labelHalo");
         *self = next;
         Ok(())
     }
@@ -411,6 +411,8 @@ impl Default for VelloThemePalette {
             wire_stroke_disabled: Color::from_rgba8(160, 160, 170, 56),
             selection_preview_fill: Color::from_rgba8(60, 120, 220, 40),
             selection_preview_stroke: Color::from_rgba8(60, 120, 220, 180),
+            label_fill: Color::from_rgba8(20, 20, 24, 255),
+            label_halo: Color::from_rgba8(248, 248, 250, 200),
         }
     }
 }

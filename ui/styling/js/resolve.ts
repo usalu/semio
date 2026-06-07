@@ -294,6 +294,8 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		selectionPreviewFill: pbg("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", 31),
 		selectionPreviewStroke: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		labelFill: pc(themeColorVar("foreground"), "dark"),
+		labelHalo: pbg(semanticVar("canvas"), "light-8-9", 200),
 	});
 }
 //#endregion 🎨Resolve
@@ -340,9 +342,14 @@ if (import.meta.vitest) {
 
 		it("serializeGraphVelloThemePaletteJson emits VelloThemePalette fields", () => {
 			clearColorResolveCache();
-			const parsed = JSON.parse(serializeGraphVelloThemePaletteJson()) as { rasterClear: number[]; nodeFill: number[] };
+			const parsed = JSON.parse(serializeGraphVelloThemePaletteJson()) as {
+				rasterClear: number[];
+				nodeFill: number[];
+				labelFill: number[];
+			};
 			expect(parsed.rasterClear).toHaveLength(4);
 			expect(parsed.nodeFill).toHaveLength(4);
+			expect(parsed.labelFill).toHaveLength(4);
 		});
 	});
 }

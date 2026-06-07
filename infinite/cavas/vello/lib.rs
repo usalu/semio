@@ -817,6 +817,7 @@ pub mod gpu_session {
 
 // #region 🔖IconCodec
 pub mod icon_codec;
+pub use icon_codec::{board_resolve_icon_kind, board_typst_markup_to_svg, decode_icon, encode_icon, BoardResolvedIcon, Icon, ThemedSvgLookup};
 pub mod theme;
 // #endregion 🔖IconCodec
 

@@ -1,0 +1,14 @@
+{
+  "title": "Fix Puzzle 2d Manual Lod Stuck on Minimap",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "When manually changing LOD to minimap in puzzle 2d play, subsequent LOD changes get stuck on minimap because setLodModeForPane does not notify the playground runtime and Puzzle2dPlayPaneCanvas is memoized without LOD in props.",
+  "summary": "Fixed puzzle 2d manual LOD getting stuck on minimap after the first pinned tier change. setLodModeForPane now rebuilds shell measures and notifies both runtime.generation and chromeGeneration (matching flow/procedural play). Puzzle2dPlayPaneCanvas receives lodMode as an explicit memo prop from the surface host so React.memo re-renders when the window LOD select changes. Added regression test for generation bumps on consecutive minimap→detail changes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1565"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪0f8706aecd5a47fa89fc7192574d6f5f"
+  ]
+}

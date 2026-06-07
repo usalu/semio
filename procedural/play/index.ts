@@ -11,7 +11,7 @@ import {
 	Playground,
 	WindowKindRuntime,
 	buildFlowWindowBody,
-	buildPanelWindowBody,
+	buildPuzzle3dWindowBody,
 	createDefaultLayout,
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
@@ -655,7 +655,7 @@ export function registerProceduralPlayDeclarativeBodies(): void {
 	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_MAIN, (_ctx: WindowBodyViewContext) =>
 		buildFlowWindowBody(PROCEDURAL_PLAY_SURFACE_ID, PROCEDURAL_PLAY_CONTROLLER_ID, PROCEDURAL_PLAY_WINDOW_KIND_ID));
 	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_PREVIEW, (_ctx: WindowBodyViewContext) =>
-		buildPanelWindowBody(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_PLAY_CONTROLLER_ID));
+		buildPuzzle3dWindowBody(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_PLAY_CONTROLLER_ID));
 }
 
 export function buildProceduralPlayAppRuntime(controller: ProceduralPlayController): AppRuntime {

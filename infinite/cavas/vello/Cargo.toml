@@ -3,6 +3,7 @@ name = "infinite_cavas"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
+build = "build.rs"
 
 [lib]
 crate-type = ["rlib"]
@@ -17,8 +18,11 @@ fontdb = { version = "0.23.0", default-features = false }
 typst = "0.14.2"
 typst-svg = "0.14.2"
 typst-assets = { version = "0.14.2", features = ["fonts"] }
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 base64 = "0.22.1"
+
+[build-dependencies]
+serde_json = "1.0.140"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

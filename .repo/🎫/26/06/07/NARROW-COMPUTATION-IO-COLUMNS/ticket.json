@@ -1,0 +1,16 @@
+{
+  "title": "Narrow Computation Io Columns",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Left and right IO columns on computation nodes are still too wide; tighten to fit port label text.",
+  "summary": "Balanced IO columns between too-wide (full label text) and too-narrow (4px gutters). Columns now use clamped port label width (20–28px) with labels painted inside again. brep.box lands ~81px total width.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1564"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪98596f102ee941deb924bc5e8bd5ddcf",
+    "⚪4a9be4368df346e283af2e9638a69385",
+    "⚪d428df912357433096308db2dd549748"
+  ]
+}

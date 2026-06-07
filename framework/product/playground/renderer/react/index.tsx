@@ -3765,10 +3765,12 @@ function puzzle2dPlayLodCanvasProps(mode: Puzzle2dLodModeKind): { automaticLod: 
 const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   paneId,
   scopeId,
+  lodMode,
   showBackgroundMenu,
 }: {
   paneId: Puzzle2dPlayPaneId;
   scopeId: string;
+  lodMode: Puzzle2dLodModeKind;
   showBackgroundMenu?: boolean;
 }): ReactElement {
   const {
@@ -3780,7 +3782,6 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     puzzle2dBrushFlushDistance,
     puzzle2dGridSnapEnabled,
     sceneAuthoringEpoch,
-    lodModeForScope,
     puzzle2dRedrawPlaying,
     puzzle2dSelectionMethod,
     puzzle2dSelectionMode,
@@ -3797,7 +3798,7 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   } = usePuzzle2dPlayShell();
   const { cameraForScope, syncBaselineFromViewportCamera } = usePuzzle2dPlayCameras();
   const camera = cameraForScope(scopeId, paneId);
-  const lodProps = puzzle2dPlayLodCanvasProps(lodModeForScope(scopeId, paneId));
+  const lodProps = puzzle2dPlayLodCanvasProps(lodMode);
   const reportEffectiveLod = reactHostPort.useContext(Puzzle2dPlayLodRuntimeContext);
   const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
   const { applyCanvasSelection } = usePuzzle2dPlayCanvasSelection();
@@ -3910,7 +3911,9 @@ function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSu
   const shellInstance = useShellWindowInstance();
   const paneId = (shellInstance?.windowKindId ?? node.paneId) as Puzzle2dPlayPaneId;
   const scopeId = shellWindowScopeId(shellInstance, paneId);
-  return <Puzzle2dPlayPaneCanvas paneId={paneId} scopeId={scopeId} showBackgroundMenu={paneId === "2d-overview"} />;
+  const { lodModeForScope } = usePuzzle2dPlayShell();
+  const lodMode = lodModeForScope(scopeId, paneId);
+  return <Puzzle2dPlayPaneCanvas paneId={paneId} scopeId={scopeId} lodMode={lodMode} showBackgroundMenu={paneId === "2d-overview"} />;
 }
 
 let puzzle2dPlayChromeRegistered = false;
@@ -6396,7 +6399,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
   );
 }
 
-function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPanelHostSurfaceNode }): ReactElement {
+function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
   const ctrl = useProceduralPlayController();
   const interactionRevision = useProceduralPlayInteractionRevision();
   void interactionRevision;
@@ -6485,7 +6488,7 @@ export function registerProceduralPlaySurfaceHosts(): void {
   if (proceduralPlayChromeRegistered) return;
   proceduralPlayChromeRegistered = true;
   registerUiFlowSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID, ProceduralPlayPaneSurfaceHost);
-  registerUiPanelSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, ProceduralPreviewSurfaceHost);
+  registerUiPuzzle3dSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, ProceduralPreviewSurfaceHost);
   registerProceduralPlayDeclarativeBodies();
 }
 

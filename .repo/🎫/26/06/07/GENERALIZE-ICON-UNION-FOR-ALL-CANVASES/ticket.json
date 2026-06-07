@@ -1,0 +1,18 @@
+{
+  "title": "Generalize Icon Union For All Canvases",
+  "emoji": "🖼",
+  "status": "open",
+  "description": "Introduce one canonical structured Icon discriminated union (url, shortcode, data image, emoji, typst, text, plus inline svg / catalog) shared across TS and Rust, with a bidirectional string codec for the WASM wire form, and refactor every canvas, the UI chrome, the icon editor, and the semio domain to resolve icons through it — keeping puzzle 2d behavior identical.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1566"
+  },
+  "goal": "🎯ui",
+  "plan": {
+    "client": "cursor",
+    "id": "cbd8e58c",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/generalize_icon_union_cbd8e58c.plan.md"
+  },
+  "sessions": [
+    "⚪91aa701007dc4f658c925eba410e5582"
+  ]
+}
