@@ -719,6 +719,36 @@
       }
     },
     {
+      "name": "🛠️dev🌊flow",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:flow",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "FLOW_PLAY_PORT": "6016"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6016)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌊flow🦀rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @flow/core:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.5
+      }
+    },
+    {
       "name": "🛠️dev🧩puzzle🩻2d",
       "type": "node-terminal",
       "request": "launch",

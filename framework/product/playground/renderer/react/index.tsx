@@ -328,9 +328,11 @@ const puzzle3dSurfaceHosts = new Map<string, Puzzle3dSurfaceHost>();
 const puzzle2dSurfaceHosts = new Map<string, Puzzle2dSurfaceHost>();
 type GisMapSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiGisMapHostSurfaceNode }>;
 const gisMapSurfaceHosts = new Map<string, GisMapSurfaceHost>();
+type FlowSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiFlowHostSurfaceNode }>;
+const flowSurfaceHosts = new Map<string, FlowSurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -356,6 +358,12 @@ export function registerUiGisMapSurfaceHost(surfaceId: string, Component: GisMap
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
+/** @emoji 🌊 Binds `surfaceId` from {@link UiFlowHostSurfaceNode} to a flow canvas. */
+export function registerUiFlowSurfaceHost(surfaceId: string, Component: FlowSurfaceHost): void {
+  flowSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
 /** @emoji 📊 Binds `surfaceId` from {@link UiTableHostSurfaceNode} to a host table body. */
 export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSurfaceHost): void {
   tableSurfaceHosts.set(surfaceId, Component);
@@ -375,6 +383,16 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
   }
   if (node.type === "gismap") {
     const Host = gisMapSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "flow") {
+    const Host = flowSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
         <div className="absolute inset-0 min-h-0 min-w-0">
@@ -5964,6 +5982,65 @@ export function bootMapPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, mapPlayChromeBoot, rootId);
 }
 //#endregion 🔖MapPlayHost
+
+//#region 🔖FlowPlayHost
+import {
+  FLOW_PLAY_APP_ID,
+  FLOW_PLAY_BODY_KEY_MAIN,
+  FLOW_PLAY_CONTROLLER_ID,
+  FLOW_PLAY_DEFAULT_FIXTURE_JSON,
+  FLOW_PLAY_SURFACE_ID,
+  FLOW_PLAY_WINDOW_KIND_ID,
+  FlowPlayController,
+  registerFlowPlayDeclarativeBodies,
+} from "@flow/play";
+import { FlowCanvas } from "@flow/react";
+import type { UiFlowHostSurfaceNode } from "@framework/platform/core";
+
+let flowPlayChromeRegistered = false;
+
+function useFlowPlayController(): FlowPlayController | undefined {
+  const { runtime } = useApp();
+  return runtime.getActiveApp()?.controller as FlowPlayController | undefined;
+}
+
+function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
+  const ctrl = useFlowPlayController();
+  return (
+    <FlowCanvas
+      fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
+      onPreviewText={(text) => {
+        console.log(`[DEBUG] flow play preview: ${text}`);
+        ctrl?.run("setPreviewText", { text });
+      }}
+    />
+  );
+}
+
+export function registerFlowPlaySurfaceHosts(): void {
+  if (flowPlayChromeRegistered) return;
+  flowPlayChromeRegistered = true;
+  registerUiFlowSurfaceHost(FLOW_PLAY_SURFACE_ID, FlowPlayPaneSurfaceHost);
+  registerFlowPlayDeclarativeBodies();
+}
+
+function FlowPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} />;
+}
+
+export function mountFlowPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<FlowPlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const flowPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerFlowPlaySurfaceHosts,
+  mount: mountFlowPlayChrome,
+};
+
+export function bootFlowPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, flowPlayChromeBoot, rootId);
+}
+//#endregion 🔖FlowPlayHost
 
 //#region 🔖PresentationPlayHost
 import {

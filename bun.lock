@@ -159,6 +159,38 @@
         "vite": "^6.0.0",
       },
     },
+    "flow/play": {
+      "name": "@flow/play",
+      "version": "0.1.0",
+      "dependencies": {
+        "@flow/react": "workspace:*",
+        "@framework/playground/core": "workspace:*",
+      },
+      "devDependencies": {
+        "@framework/playground/renderer/react": "workspace:*",
+        "@tailwindcss/vite": "^4.1.18",
+        "@vitejs/plugin-react": "^5.1.2",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.17",
+      },
+    },
+    "flow/react": {
+      "name": "@flow/react",
+      "version": "0.1.0",
+      "dependencies": {
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.17",
+      },
+    },
     "framework/core": {
       "name": "@framework/core",
       "version": "0.1.0",
@@ -213,6 +245,8 @@
       "name": "@framework/playground/renderer/react",
       "version": "0.1.0",
       "dependencies": {
+        "@flow/play": "workspace:*",
+        "@flow/react": "workspace:*",
         "@framework/platform/core": "workspace:*",
         "@framework/platform/renderer/react": "workspace:*",
         "@framework/playground/core": "workspace:*",
@@ -1465,6 +1499,10 @@
     "@floating-ui/react-dom": ["@floating-ui/react-dom@2.1.8", "", { "dependencies": { "@floating-ui/dom": "^1.7.6" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-cC52bHwM/n/CxS87FH0yWdngEZrjdtLW/qVruo68qg+prK7ZQ4YGdut2GyDVpoGeAYe/h899rVeOVm6Oi40k2A=="],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
+
+    "@flow/play": ["@flow/play@workspace:flow/play"],
+
+    "@flow/react": ["@flow/react@workspace:flow/react"],
 
     "@framework/core": ["@framework/core@workspace:framework/core"],
 

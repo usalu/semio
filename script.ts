@@ -245,6 +245,10 @@ export class DevScript extends Script {
       runCmd("bun", ["nx", "run", "@puzzle/5d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
+    if (segments[0] === "flow") {
+      runCmd("bun", ["nx", "run", "@flow/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+      return;
+    }
     if (segments[0] === "cad") {
       runCmd("bun", ["nx", "run", "@cad/js/renderer:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;

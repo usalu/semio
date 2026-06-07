@@ -132,6 +132,7 @@ import {
   buildPuzzle2dWindowBody,
   buildPuzzle3dWindowBody,
   buildMapWindowBody,
+  buildFlowWindowBody,
   isCanvasOnlyWindowBody,
 } from "@framework/platform/core";
 
@@ -141,6 +142,7 @@ export {
   buildPuzzle5dWindowBody,
   buildCadWindowBody,
   buildMapWindowBody,
+  buildFlowWindowBody,
   buildPanelWindowBody,
   isCanvasOnlyWindowBody,
 } from "@framework/platform/core";

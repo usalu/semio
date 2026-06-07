@@ -1367,6 +1367,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
 
 [[package]]
+name = "flow_core"
+version = "0.1.0"
+dependencies = [
+ "flow_module_math",
+ "infinite_cavas",
+ "js-sys",
+ "mathematical_graph_port_directed_dag",
+ "neural_engine",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "flow_module_math"
+version = "0.1.0"
+dependencies = [
+ "neural_engine",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3004,6 +3028,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_graph_port_directed_dag"
+version = "0.1.0"
+dependencies = [
+ "infinite_cavas",
+ "mathematical_core",
+ "mathematical_graph",
+ "mathematical_graph_port_directed",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "mathematical_graph_port_undirected"
 version = "0.1.0"
 dependencies = [
@@ -3268,6 +3304,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys 0.3.1",
+]
+
+[[package]]
+name = "neural_engine"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
