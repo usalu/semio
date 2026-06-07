@@ -673,15 +673,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.selection_preview_crossing = false;
         let point = Point::new(world_x, world_y);
         let screen = Point::new(screen_x, screen_y);
-        if button == 1 {
-            self.interaction = InteractionMode::Pan {
-                start_screen: screen,
-                cam_x: self.camera.x,
-                cam_y: self.camera.y,
-                zoom: self.camera.zoom,
-            };
-            return;
-        }
         let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
         let merge_from_modifiers = ctrl_or_meta || shift;
         match self.hit_test(point) {

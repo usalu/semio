@@ -3,13 +3,14 @@
   "emoji": "🌊",
   "status": "closed",
   "description": "Fix flow play canvas styling breaking on zoom",
-  "summary": "Fixed remaining flow/procedural zoom styling bugs: (1) slider_track_bounds returned (left, right, top, bottom) but callers destructured as (left, top, right, bottom), painting the track outside the node box; corrected tuple order and added bounds test. (2) Computation nodes lacked a title header row, so node names overlapped port labels (e.g. brep.sphere over radius); added DAG_COMPUTATION_HEADER_ROWS and paint_computation_node_name in the header band. (3) Strokes and labels used world-fixed widths and zoom-scaled font px, making lines hair-thin and text inconsistent when zooming; switched to screen-constant stroke widths (dag_world_stroke) and fixed 10–11px label size. WASM rebuilt, all 23 dag tests and flow play validate pass.",
+  "summary": "Fixed flow/procedural canvas reverting to hardcoded off-white Vello defaults after first interaction. Root cause: persistFixture updated parent fixtureJson prop which remounted the WASM session (fixtureJson was in FlowCanvas init effect deps); syncVelloTheme skipped re-apply when JSON string unchanged so new DagHost kept VelloThemePalette::default. Also rebuild_dag/reorganize/load_fixture_json replaced DagHost without preserving vello_theme. Fixes: bootstrap fixture ref only on mount (no session remount on persist), syncVelloTheme applies UI theme every frame, preserve vello_theme across rebuild_dag/reorganize/load_fixture_json, merge_from_json replaces from full UI payload not prior palette.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1551"
   },
   "goal": "🎯geometry🎯brep",
   "sessions": [
     "⚪7ebf0fc50c50434597ad2b9d27e8e72b",
-    "⚪9188b7863d27492eac30ae8f75ce3466"
+    "⚪9188b7863d27492eac30ae8f75ce3466",
+    "⚪774baab343ab4427bd9bb7c3aa8ff944"
   ]
 }

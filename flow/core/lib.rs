@@ -562,7 +562,7 @@ impl FlowHost {
         self.dag.set_camera(x, y, self.fixture.camera.zoom);
     }
 
-    pub fn wheel(&mut self, sx: f64, sy: f64, delta_y: f64) {
+    pub fn wheel_zoom_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         let before = self.screen_to_world_point(sx, sy);
         let factor = if delta_y < 0.0 { 1.1 } else { 0.9 };
         let zoom = (self.fixture.camera.zoom * factor).clamp(0.05, 8.0);
@@ -572,6 +572,21 @@ impl FlowHost {
         self.fixture.camera.x += before.x - after.x;
         self.fixture.camera.y += before.y - after.y;
         self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, zoom);
+    }
+
+    pub fn wheel_pan_screen(&mut self, delta_x: f64, delta_y: f64) {
+        let zoom = self.fixture.camera.zoom;
+        let x = self.fixture.camera.x - delta_x / zoom;
+        let y = self.fixture.camera.y - delta_y / zoom;
+        self.set_camera(x, y, zoom);
+    }
+
+    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) {
+        if zoom_gesture {
+            self.wheel_zoom_screen(sx, sy, delta_y);
+        } else {
+            self.wheel_pan_screen(delta_x, delta_y);
+        }
     }
 
     pub fn set_ghost_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<(), String> {
@@ -771,7 +786,9 @@ impl FlowHost {
         } else {
             serde_json::from_str(opts_json).map_err(|e| e.to_string())?
         };
+        let theme = self.dag.vello_theme;
         self.dag = DagHost::from_fixture_without_layout(self.build_dag_fixture_v1());
+        self.dag.vello_theme = theme;
         self.dag.reorganize(&opts)?;
         self.sync_from_dag();
         Ok(())
@@ -959,7 +976,9 @@ impl FlowHost {
 
     fn rebuild_dag(&mut self) {
         let fixture = self.build_dag_fixture_v1();
+        let theme = self.dag.vello_theme;
         self.dag = DagHost::from_fixture_without_layout(fixture);
+        self.dag.vello_theme = theme;
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.sync_preview_dimmed();
         self.sync_from_dag();
@@ -1159,6 +1178,18 @@ impl FlowHost {
             self.dag.paint_ghost_node(scene, ghost, width, height, dpr);
         }
     }
+
+    pub fn set_automatic_lod(&mut self, enabled: bool) {
+        self.dag.set_automatic_lod(enabled);
+    }
+
+    pub fn set_forced_draw_lod_label(&mut self, label: &str) {
+        self.dag.set_forced_draw_lod_label(label);
+    }
+
+    pub fn draw_lod_label(&self) -> &'static str {
+        self.dag.draw_lod_label()
+    }
 }
 
 fn widget_id_for(widget: &Widget) -> &str {
@@ -1235,7 +1266,9 @@ impl FlowSession {
         let fixture = FlowHost::parse_fixture_json(json).map_err(|e| JsValue::from_str(&e))?;
         let mut inner = self.state.borrow_mut();
         let (w, h, dpr) = (inner.width, inner.height, inner.dpr);
+        let theme = inner.host.dag.vello_theme;
         inner.host = FlowHost::from_fixture(fixture);
+        inner.host.dag.vello_theme = theme;
         inner.host.set_viewport(w.max(1), h.max(1), dpr.max(1.0));
         Ok(())
     }
@@ -1401,14 +1434,34 @@ impl FlowSession {
         self.state.borrow_mut().host.set_camera(x, y, zoom);
     }
 
-    #[wasm_bindgen(js_name = wheel)]
-    pub fn wheel(&self, sx: f64, sy: f64, delta_y: f64) {
-        self.state.borrow_mut().host.wheel(sx, sy, delta_y);
+    #[wasm_bindgen(js_name = wheelScreen)]
+    pub fn wheel_screen(&self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) {
+        self.state.borrow_mut().host.wheel_screen(sx, sy, delta_x, delta_y, zoom_gesture);
     }
 
     #[wasm_bindgen(js_name = setWheelZoomActive)]
     pub fn set_wheel_zoom_active(&self, active: bool) {
         self.state.borrow_mut().host.dag.set_wheel_zoom_active(active);
+    }
+
+    #[wasm_bindgen(js_name = lodScaleJson)]
+    pub fn lod_scale_json(&self) -> String {
+        dag::dag_lod_scale_json()
+    }
+
+    #[wasm_bindgen(js_name = setAutomaticLod)]
+    pub fn set_automatic_lod(&self, enabled: bool) {
+        self.state.borrow_mut().host.set_automatic_lod(enabled);
+    }
+
+    #[wasm_bindgen(js_name = setForcedDrawLodLabel)]
+    pub fn set_forced_draw_lod_label(&self, label: &str) {
+        self.state.borrow_mut().host.set_forced_draw_lod_label(label);
+    }
+
+    #[wasm_bindgen(js_name = drawLodLabel)]
+    pub fn draw_lod_label(&self) -> String {
+        self.state.borrow().host.draw_lod_label().to_string()
     }
 
     #[wasm_bindgen(js_name = attachCanvas)]
@@ -1742,6 +1795,15 @@ mod tests {
         let json = host.fixture_json().unwrap();
         let parsed = FlowHost::parse_fixture_json(&json).unwrap();
         assert_eq!(parsed.schema, "flow.fixture/v1");
+    }
+
+    #[test]
+    fn rebuild_dag_preserves_vello_theme() {
+        use cavas::vello::peniko::Color;
+        let mut host = FlowHost::default();
+        host.dag.vello_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
+        host.rebuild_dag();
+        assert_eq!(host.dag.vello_theme.node_fill.to_rgba8(), Color::from_rgba8(12, 34, 56, 255).to_rgba8());
     }
 
     #[test]

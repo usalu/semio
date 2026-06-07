@@ -77,6 +77,7 @@ export function register(): void {
     layerTypology: ENERGY_LAYER_TYPOLOGY,
     fallbackTypology: "energy.energy.hull" as TypologyRef,
     preferPresentationLayers: true,
+    presentationGeometry: "wireframe",
     namespacedDomain: "energy",
   });
 }

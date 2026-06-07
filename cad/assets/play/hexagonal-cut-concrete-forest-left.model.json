@@ -8003,7 +8003,7 @@
             "id": "object-hexagonal-cut-concrete-forest-left-energy-1",
             "typology": "energy.energy.baseplate",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-energy-1-solid-34"
+              "surface": "hexagonal-cut-concrete-forest-left-energy-1-face"
             }
           }
         ],
@@ -8011,31 +8011,15 @@
           "anchors": [],
           "vertices": [
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-vertex-1",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-v0",
               "position": [
-                0,
-                -8.881784197001252e-16,
+                8.10001028248245,
+                -4.44089209850063e-16,
                 3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-vertex-11",
-              "position": [
-                10.8000102824825,
-                -8.881784197001252e-16,
-                3
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-vertex-12",
-              "position": [
-                10.8000102824825,
-                -8.881784197001252e-16,
-                2.75
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-vertex-14",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-v1",
               "position": [
                 10.8000102824825,
                 4.67653718043597,
@@ -8043,154 +8027,76 @@
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-vertex-16",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-v2",
               "position": [
-                10.8000102824825,
-                4.67653718043597,
-                2.75
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-vertex-2",
-              "position": [
-                0,
-                -8.881784197001252e-16,
-                2.75
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-vertex-4",
-              "position": [
-                0,
+                2.7,
                 4.67653718043597,
                 3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-vertex-6",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-v3",
               "position": [
                 0,
-                4.67653718043597,
-                2.75
+                8.88178419700125e-16,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-v4",
+              "position": [
+                8.10001028248245,
+                -4.44089209850063e-16,
+                3
               ]
             }
           ],
           "edges": [
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-13",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-e0",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-11",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-12"
+                "hexagonal-cut-concrete-forest-left-energy-1-v0",
+                "hexagonal-cut-concrete-forest-left-energy-1-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-15",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-e1",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-14",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-11"
+                "hexagonal-cut-concrete-forest-left-energy-1-v1",
+                "hexagonal-cut-concrete-forest-left-energy-1-v2"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-17",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-e2",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-14",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-16"
+                "hexagonal-cut-concrete-forest-left-energy-1-v2",
+                "hexagonal-cut-concrete-forest-left-energy-1-v3"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-18",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-e3",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-16",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-12"
+                "hexagonal-cut-concrete-forest-left-energy-1-v3",
+                "hexagonal-cut-concrete-forest-left-energy-1-v4"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-21",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-e4",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-12",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-11",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-16",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-14",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-1",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-4",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-4",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-6",
-                "hexagonal-cut-concrete-forest-left-energy-1-vertex-2"
+                "hexagonal-cut-concrete-forest-left-energy-1-v4",
+                "hexagonal-cut-concrete-forest-left-energy-1-v0"
               ],
               "curve": {
                 "kind": "line"
@@ -8199,197 +8105,39 @@
           ],
           "wires": [
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-wire-19",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-13",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-18",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-17",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-15"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-21",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-3",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-22",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-13"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-25",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-7",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-26",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-17"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-8",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-21",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-18",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-5",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-22",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-15",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-3",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-8",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-7",
-                "hexagonal-cut-concrete-forest-left-energy-1-edge-5"
+                "hexagonal-cut-concrete-forest-left-energy-1-e0",
+                "hexagonal-cut-concrete-forest-left-energy-1-e1",
+                "hexagonal-cut-concrete-forest-left-energy-1-e2",
+                "hexagonal-cut-concrete-forest-left-energy-1-e3",
+                "hexagonal-cut-concrete-forest-left-energy-1-e4"
               ]
             }
           ],
           "faces": [
             {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-face-10",
+              "id": "hexagonal-cut-concrete-forest-left-energy-1-face",
               "wireIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-wire-9"
+                "hexagonal-cut-concrete-forest-left-energy-1-wire"
               ],
               "surface": {
                 "kind": "plane",
                 "origin": [
-                  0,
-                  2.3382685902179845,
-                  2.875
-                ],
-                "normal": [
-                  -1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-face-20",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-wire-19"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  10.8000102824825,
-                  2.3382685902179845,
-                  2.875
-                ],
-                "normal": [
-                  1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.40000514124125,
-                  -8.881784197001252e-16,
-                  2.875
-                ],
-                "normal": [
-                  0,
-                  -1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.40000514124125,
-                  4.67653718043597,
-                  2.875
-                ],
-                "normal": [
-                  0,
-                  1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.40000514124125,
-                  2.3382685902179845,
-                  2.75
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.40000514124125,
-                  2.3382685902179845,
+                  5.940006169489479,
+                  1.870614872174388,
                   3
                 ],
                 "normal": [
-                  0,
+                  1.1723580218238237e-17,
                   0,
                   1
                 ]
               }
             }
           ],
-          "shells": [
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-face-10",
-                "hexagonal-cut-concrete-forest-left-energy-1-face-20",
-                "hexagonal-cut-concrete-forest-left-energy-1-face-24",
-                "hexagonal-cut-concrete-forest-left-energy-1-face-28",
-                "hexagonal-cut-concrete-forest-left-energy-1-face-30",
-                "hexagonal-cut-concrete-forest-left-energy-1-face-32"
-              ]
-            }
-          ],
-          "solids": [
-            {
-              "id": "hexagonal-cut-concrete-forest-left-energy-1-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-energy-1-shell-33"
-              ]
-            }
-          ]
+          "shells": [],
+          "solids": []
         }
       }
     },
@@ -8403,77 +8151,77 @@
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-1",
             "typology": "structure.structure.reinforcedconcreteinternalwall",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-1-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-1-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-10",
             "typology": "structure.structure.reinforcedconcretecolumn",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-10-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-10-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-11",
             "typology": "structure.structure.onewayreinforcedconcreteslab",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-11-solid-34"
+              "surface": "hexagonal-cut-concrete-forest-left-classic-structure-11-face"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-2",
             "typology": "structure.structure.reinforcedconcreteinternalwall",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-2-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-2-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-3",
             "typology": "structure.structure.reinforcedconcreteinternalwall",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-3-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-3-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-4",
             "typology": "structure.structure.reinforcedconcreteinternalwall",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-4-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-4-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-5",
             "typology": "structure.structure.reinforcedconcreteinternalwall",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-5-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-5-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-6",
             "typology": "structure.structure.reinforcedconcreteinternalwall",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-6-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-6-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-7",
             "typology": "structure.structure.reinforcedconcreteinternalwall",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-7-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-7-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-8",
             "typology": "structure.structure.reinforcedconcreteinternalwall",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-8-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-8-wire"
             }
           },
           {
             "id": "object-hexagonal-cut-concrete-forest-left-classic-structure-9",
             "typology": "structure.structure.reinforcedconcretecolumn",
             "primitives": {
-              "solid": "hexagonal-cut-concrete-forest-left-classic-structure-9-solid-34"
+              "curve": "hexagonal-cut-concrete-forest-left-classic-structure-9-wire"
             }
           }
         ],
@@ -8481,159 +8229,47 @@
           "anchors": [],
           "vertices": [
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-1",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-v0",
               "position": [
-                8.164962187766282,
-                2.37576859021798,
-                2.925
+                8.10001028248245,
+                2.33826859021798,
+                3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-11",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-v1",
               "position": [
-                8.035058377198617,
-                2.30076859021798,
-                3.075
+                6.7500102824824495,
+                4.676537180435965,
+                3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-13",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-v0",
               "position": [
-                6.685058377198617,
-                4.639037180435965,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-18",
-              "position": [
-                8.164962187766282,
-                2.37576859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-2",
-              "position": [
-                8.035058377198617,
-                2.30076859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-20",
-              "position": [
-                6.814962187766282,
-                4.714037180435964,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-4",
-              "position": [
-                6.685058377198617,
-                4.639037180435965,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-6",
-              "position": [
-                6.814962187766282,
-                4.714037180435964,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-1",
-              "position": [
-                2.55001028248245,
-                2.48826859021798,
+                2.70001028248245,
+                2.33826859021798,
                 0
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-11",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-v1",
               "position": [
-                2.85001028248245,
-                2.18826859021798,
-                0
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-13",
-              "position": [
-                2.85001028248245,
-                2.18826859021798,
+                2.70001028248245,
+                2.33826859021798,
                 3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-18",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-v0",
               "position": [
-                2.85001028248245,
-                2.48826859021798,
-                0
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-2",
-              "position": [
-                2.55001028248245,
-                2.18826859021798,
-                0
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-20",
-              "position": [
-                2.85001028248245,
-                2.48826859021798,
+                8.10001028248245,
+                -4.44089209850063e-16,
                 3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-4",
-              "position": [
-                2.55001028248245,
-                2.18826859021798,
-                3
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-6",
-              "position": [
-                2.55001028248245,
-                2.48826859021798,
-                3
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-1",
-              "position": [
-                0,
-                -8.881784197001252e-16,
-                3
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-11",
-              "position": [
-                10.8000102824825,
-                -8.881784197001252e-16,
-                3
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-12",
-              "position": [
-                10.8000102824825,
-                -8.881784197001252e-16,
-                2.75
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-14",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-v1",
               "position": [
                 10.8000102824825,
                 4.67653718043597,
@@ -8641,1866 +8277,304 @@
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-16",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-v2",
               "position": [
-                10.8000102824825,
-                4.67653718043597,
-                2.75
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-2",
-              "position": [
-                0,
-                -8.881784197001252e-16,
-                2.75
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-4",
-              "position": [
-                0,
+                2.7,
                 4.67653718043597,
                 3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-6",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-v3",
               "position": [
                 0,
-                4.67653718043597,
-                2.75
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-1",
-              "position": [
-                8.10001028248245,
-                2.26326859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-11",
-              "position": [
-                8.10001028248245,
-                2.4132685902179802,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-13",
-              "position": [
-                9.450010282482449,
-                2.4132685902179802,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-18",
-              "position": [
-                8.10001028248245,
-                2.26326859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-2",
-              "position": [
-                8.10001028248245,
-                2.4132685902179802,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-20",
-              "position": [
-                9.450010282482449,
-                2.26326859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-4",
-              "position": [
-                9.450010282482449,
-                2.4132685902179802,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-6",
-              "position": [
-                9.450010282482449,
-                2.26326859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-1",
-              "position": [
-                2.635058377198617,
-                2.37576859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-11",
-              "position": [
-                2.764962187766283,
-                2.30076859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-13",
-              "position": [
-                1.4149621877662837,
-                -0.037500000000004426,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-18",
-              "position": [
-                2.635058377198617,
-                2.37576859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-2",
-              "position": [
-                2.764962187766283,
-                2.30076859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-20",
-              "position": [
-                1.2850583771986177,
-                0.037499999999995544,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-4",
-              "position": [
-                1.4149621877662837,
-                -0.037500000000004426,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-6",
-              "position": [
-                1.2850583771986177,
-                0.037499999999995544,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-1",
-              "position": [
-                2.635058377198617,
-                2.30076859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-11",
-              "position": [
-                2.764962187766283,
-                2.37576859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-13",
-              "position": [
-                4.114962187766282,
-                0.037499999999995544,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-18",
-              "position": [
-                2.635058377198617,
-                2.30076859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-2",
-              "position": [
-                2.764962187766283,
-                2.37576859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-20",
-              "position": [
-                3.9850583771986163,
-                -0.037500000000004426,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-4",
-              "position": [
-                4.114962187766282,
-                0.037499999999995544,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-6",
-              "position": [
-                3.9850583771986163,
-                -0.037500000000004426,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-1",
-              "position": [
-                8.035058377198617,
-                2.37576859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-11",
-              "position": [
-                8.164962187766282,
-                2.30076859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-13",
-              "position": [
-                6.81496218776628,
-                -0.03750000000000403,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-18",
-              "position": [
-                8.035058377198617,
-                2.37576859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-2",
-              "position": [
-                8.164962187766282,
-                2.30076859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-20",
-              "position": [
-                6.685058377198615,
-                0.037499999999996037,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-4",
-              "position": [
-                6.81496218776628,
-                -0.03750000000000403,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-6",
-              "position": [
-                6.685058377198615,
-                0.037499999999996037,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-1",
-              "position": [
-                2.764962187766283,
-                2.30076859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-11",
-              "position": [
-                2.635058377198617,
-                2.37576859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-13",
-              "position": [
-                3.9850583771986163,
-                4.714037180435964,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-18",
-              "position": [
-                2.764962187766283,
-                2.30076859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-2",
-              "position": [
-                2.635058377198617,
-                2.37576859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-20",
-              "position": [
-                4.114962187766282,
-                4.639037180435965,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-4",
-              "position": [
-                3.9850583771986163,
-                4.714037180435964,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-6",
-              "position": [
-                4.114962187766282,
-                4.639037180435965,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-1",
-              "position": [
-                8.164962187766282,
-                2.30076859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-11",
-              "position": [
-                8.035058377198617,
-                2.37576859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-13",
-              "position": [
-                9.385058377198616,
-                4.714037180435964,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-18",
-              "position": [
-                8.164962187766282,
-                2.30076859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-2",
-              "position": [
-                8.035058377198617,
-                2.37576859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-20",
-              "position": [
-                9.514962187766281,
-                4.639037180435965,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-4",
-              "position": [
-                9.385058377198616,
-                4.714037180435964,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-6",
-              "position": [
-                9.514962187766281,
-                4.639037180435965,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-1",
-              "position": [
-                8.10001028248245,
-                2.4132685902179802,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-11",
-              "position": [
-                8.10001028248245,
-                2.26326859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-13",
-              "position": [
-                2.700010282482449,
-                2.26326859021798,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-18",
-              "position": [
-                8.10001028248245,
-                2.4132685902179802,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-2",
-              "position": [
-                8.10001028248245,
-                2.26326859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-20",
-              "position": [
-                2.700010282482449,
-                2.4132685902179802,
-                3.075
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-4",
-              "position": [
-                2.700010282482449,
-                2.26326859021798,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-6",
-              "position": [
-                2.700010282482449,
-                2.4132685902179802,
-                2.925
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-1",
-              "position": [
-                7.950010282482449,
-                2.48826859021798,
-                0
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-11",
-              "position": [
-                8.25001028248245,
-                2.18826859021798,
-                0
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-13",
-              "position": [
-                8.25001028248245,
-                2.18826859021798,
+                8.88178419700125e-16,
                 3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-18",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-v4",
               "position": [
-                8.25001028248245,
-                2.48826859021798,
-                0
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-2",
-              "position": [
-                7.950010282482449,
-                2.18826859021798,
-                0
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-20",
-              "position": [
-                8.25001028248245,
-                2.48826859021798,
+                8.10001028248245,
+                -4.44089209850063e-16,
                 3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-4",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-v0",
               "position": [
-                7.950010282482449,
-                2.18826859021798,
+                8.10001028248245,
+                2.33826859021798,
                 3
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-6",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-v1",
               "position": [
-                7.950010282482449,
-                2.48826859021798,
+                9.450010282482449,
+                2.33826859021798,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-v0",
+              "position": [
+                2.70001028248245,
+                2.33826859021798,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-v1",
+              "position": [
+                1.3500102824824507,
+                -4.440892098500626e-15,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-v0",
+              "position": [
+                2.70001028248245,
+                2.33826859021798,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-v1",
+              "position": [
+                4.050010282482449,
+                -4.440892098500626e-15,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-v0",
+              "position": [
+                8.10001028248245,
+                2.33826859021798,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-v1",
+              "position": [
+                6.750010282482448,
+                -3.9968028886505635e-15,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-v0",
+              "position": [
+                2.70001028248245,
+                2.33826859021798,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-v1",
+              "position": [
+                4.050010282482449,
+                4.676537180435965,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-v0",
+              "position": [
+                8.10001028248245,
+                2.33826859021798,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-v1",
+              "position": [
+                9.450010282482449,
+                4.676537180435965,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-v0",
+              "position": [
+                8.10001028248245,
+                2.33826859021798,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-v1",
+              "position": [
+                2.700010282482449,
+                2.33826859021798,
+                3
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-v0",
+              "position": [
+                8.10001028248245,
+                2.33826859021798,
+                0
+              ]
+            },
+            {
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-v1",
+              "position": [
+                8.10001028248245,
+                2.33826859021798,
                 3
               ]
             }
           ],
           "edges": [
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-12",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-11"
+                "hexagonal-cut-concrete-forest-left-classic-structure-1-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-1-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-14",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-13"
+                "hexagonal-cut-concrete-forest-left-classic-structure-10-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-10-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-15",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-e0",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-13"
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-19",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-e1",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-18"
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v1",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v2"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-21",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-e2",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-20"
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v2",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v3"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-22",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-e3",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-20"
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v3",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v4"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-25",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-e4",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-1"
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v4",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-v0"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-26",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-6"
+                "hexagonal-cut-concrete-forest-left-classic-structure-2-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-2-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-3",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-2"
+                "hexagonal-cut-concrete-forest-left-classic-structure-3-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-3-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-5",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-4"
+                "hexagonal-cut-concrete-forest-left-classic-structure-4-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-4-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-7",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-4"
+                "hexagonal-cut-concrete-forest-left-classic-structure-5-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-5-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-8",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-vertex-6"
+                "hexagonal-cut-concrete-forest-left-classic-structure-6-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-6-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-12",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-11"
+                "hexagonal-cut-concrete-forest-left-classic-structure-7-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-7-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-14",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-13"
+                "hexagonal-cut-concrete-forest-left-classic-structure-8-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-8-v1"
               ],
               "curve": {
                 "kind": "line"
               }
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-15",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge",
               "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-13",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-12"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-17",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-16"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-18",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-16",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-12"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-16",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-12",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-14",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-12",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-14",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-12",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-14",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-12",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-14",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-12",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-14",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-12",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-14",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-12",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-14",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-12",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-11"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-14",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-15",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-4",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-13"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-19",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-11",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-18"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-21",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-22",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-20"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-25",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-1"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-26",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-6"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-3",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-2"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-5",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-2",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-7",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-6",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-4"
-              ],
-              "curve": {
-                "kind": "line"
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-8",
-              "vertexIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-1",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-vertex-6"
+                "hexagonal-cut-concrete-forest-left-classic-structure-9-v0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-9-v1"
               ],
               "curve": {
                 "kind": "line"
@@ -10509,2047 +8583,99 @@
           ],
           "wires": [
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-16",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-5"
+                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-23",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-14"
+                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-27",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-21"
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-e0",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-e1",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-e2",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-e3",
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-e4"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-29",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-25"
+                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-31",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-26"
+                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-9",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-edge-8"
+                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-16",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-5"
+                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-23",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-14"
+                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-27",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-21"
+                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-29",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-25"
+                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge"
               ]
             },
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-31",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-wire",
               "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-edge-8"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-19",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-13",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-15"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-13"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-17"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-18",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-16",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-14"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-21"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-edge-8"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-16",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-14"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-21"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-edge-8"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-16",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-14"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-21"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-edge-8"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-16",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-14"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-21"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-edge-8"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-16",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-14"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-21"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-edge-8"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-16",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-14"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-21"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-edge-8"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-16",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-14"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-21"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-edge-8"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-16",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-14",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-5"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-23",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-21",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-14"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-27",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-25",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-8",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-26",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-21"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-29",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-12",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-19",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-25"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-31",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-15",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-22",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-26"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-9",
-              "edgeIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-3",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-5",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-7",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge-8"
+                "hexagonal-cut-concrete-forest-left-classic-structure-9-edge"
               ]
             }
           ],
           "faces": [
             {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-face-10",
+              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-face",
               "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-9"
+                "hexagonal-cut-concrete-forest-left-classic-structure-11-wire"
               ],
               "surface": {
                 "kind": "plane",
                 "origin": [
-                  7.4250102824824475,
-                  3.507402885326978,
-                  2.925
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  7.360058377198617,
-                  3.4699028853269724,
+                  5.940006169489479,
+                  1.870614872174388,
                   3
                 ],
                 "normal": [
-                  -0.8660254037844386,
-                  -0.4999999999999997,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  7.425010282482452,
-                  3.5074028853269654,
-                  3.075
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  7.489962187766282,
-                  3.5449028853269726,
-                  3
-                ],
-                "normal": [
-                  0.8660254037844387,
-                  0.5,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  0.5000000000000029,
-                  -0.8660254037844368,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  6.75001028248245,
-                  4.676537180435965,
-                  3
-                ],
-                "normal": [
-                  -0.49999999999999856,
-                  0.8660254037844396,
-                  -2.7755575615628914e-17
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.55001028248245,
-                  2.33826859021798,
-                  1.5
-                ],
-                "normal": [
-                  -1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.70001028248245,
-                  2.18826859021798,
-                  1.5
-                ],
-                "normal": [
-                  0,
-                  -1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.85001028248245,
-                  2.33826859021798,
-                  1.5
-                ],
-                "normal": [
-                  1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.70001028248245,
-                  2.48826859021798,
-                  1.5
-                ],
-                "normal": [
-                  0,
-                  1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.70001028248245,
-                  2.33826859021798,
-                  0
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.70001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  0,
-                  2.3382685902179845,
-                  2.875
-                ],
-                "normal": [
-                  -1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-face-20",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-19"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  10.8000102824825,
-                  2.3382685902179845,
-                  2.875
-                ],
-                "normal": [
-                  1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.40000514124125,
-                  -8.881784197001252e-16,
-                  2.875
-                ],
-                "normal": [
-                  0,
-                  -1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.40000514124125,
-                  4.67653718043597,
-                  2.875
-                ],
-                "normal": [
-                  0,
-                  1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.40000514124125,
-                  2.3382685902179845,
-                  2.75
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.40000514124125,
-                  2.3382685902179845,
-                  3
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.77501028248245,
-                  2.33826859021798,
-                  2.925
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.77501028248245,
-                  2.4132685902179802,
-                  3.0000000000000004
-                ],
-                "normal": [
-                  0,
-                  1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.77501028248245,
-                  2.33826859021798,
-                  3.075
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.77501028248245,
-                  2.26326859021798,
-                  3.0000000000000004
-                ],
-                "normal": [
-                  0,
-                  -1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  -1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  9.450010282482449,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.0250102824824516,
-                  1.1691342951089903,
-                  2.925
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.0899621877662833,
-                  1.1316342951089877,
-                  3
-                ],
-                "normal": [
-                  0.8660254037844386,
-                  -0.4999999999999997,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.02501028248245,
-                  1.169134295108986,
-                  3.0750000000000006
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  1.9600583771986173,
-                  1.206634295108988,
-                  3
-                ],
-                "normal": [
-                  -0.8660254037844386,
-                  0.4999999999999997,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.70001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  0.5000000000000003,
-                  0.8660254037844386,
-                  5.551115123125783e-17
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  1.3500102824824507,
-                  -4.430580131171209e-15,
-                  2.9999999999999996
-                ],
-                "normal": [
-                  -0.49999999999999933,
-                  -0.866025403784439,
-                  5.551115123125783e-17
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  3.3750102824824464,
-                  1.1691342951089916,
-                  2.925
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  3.4399621877662825,
-                  1.2066342951089877,
-                  3.0000000000000004
-                ],
-                "normal": [
-                  0.8660254037844388,
-                  0.4999999999999996,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  3.3750102824824526,
-                  1.169134295108985,
-                  3.0749999999999997
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  3.3100583771986165,
-                  1.1316342951089877,
-                  3
-                ],
-                "normal": [
-                  -0.8660254037844386,
-                  -0.49999999999999967,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.70001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  -0.5000000000000003,
-                  0.8660254037844386,
-                  -5.551115123125783e-17
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  4.050010282482449,
-                  -4.424701346058176e-15,
-                  3
-                ],
-                "normal": [
-                  0.5000000000000006,
-                  -0.8660254037844383,
-                  8.326672684688673e-17
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  7.425010282482444,
-                  1.1691342951089811,
-                  2.925
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  7.489962187766281,
-                  1.1316342951089877,
-                  3
-                ],
-                "normal": [
-                  0.8660254037844384,
-                  -0.5000000000000004,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  7.425010282482455,
-                  1.1691342951089958,
-                  3.075
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  7.360058377198616,
-                  1.206634295108988,
-                  3
-                ],
-                "normal": [
-                  -0.8660254037844384,
-                  0.5000000000000004,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  0.5000000000000029,
-                  0.8660254037844368,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  6.750010282482448,
-                  -4.0040309031338e-15,
-                  3
-                ],
-                "normal": [
-                  -0.5000000000000024,
-                  -0.8660254037844373,
-                  1.1102230246251563e-16
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  3.375010282482445,
-                  3.507402885326961,
-                  2.925
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  3.3100583771986165,
-                  3.5449028853269717,
-                  3
-                ],
-                "normal": [
-                  -0.8660254037844386,
-                  0.4999999999999997,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  3.375010282482453,
-                  3.5074028853269823,
-                  3.075
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  3.4399621877662825,
-                  3.4699028853269724,
-                  3
-                ],
-                "normal": [
-                  0.8660254037844389,
-                  -0.4999999999999996,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.70001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  -0.5000000000000003,
-                  -0.8660254037844386,
-                  5.551115123125783e-17
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  4.050010282482449,
-                  4.676537180435965,
-                  2.9999999999999996
-                ],
-                "normal": [
-                  0.4999999999999972,
-                  0.8660254037844402,
-                  2.7755575615628914e-17
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.775010282482446,
-                  3.5074028853269654,
-                  2.925
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.710058377198616,
-                  3.5449028853269726,
-                  3
-                ],
-                "normal": [
-                  -0.8660254037844387,
-                  0.5,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.775010282482452,
-                  3.507402885326978,
-                  3.075
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.839962187766282,
-                  3.4699028853269724,
-                  3
-                ],
-                "normal": [
-                  0.8660254037844386,
-                  -0.4999999999999997,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  -0.5000000000000029,
-                  -0.8660254037844368,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  9.450010282482449,
-                  4.676537180435965,
-                  3
-                ],
-                "normal": [
-                  0.49999999999999856,
-                  0.8660254037844396,
-                  2.7755575615628914e-17
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.400010282482449,
-                  2.33826859021798,
-                  2.9250000000000003
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.400010282482449,
-                  2.26326859021798,
-                  3
-                ],
-                "normal": [
-                  0,
-                  -1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.400010282482449,
-                  2.33826859021798,
-                  3.0749999999999997
-                ],
-                "normal": [
-                  0,
-                  0,
-                  1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  5.400010282482449,
-                  2.4132685902179802,
-                  3
-                ],
-                "normal": [
-                  0,
-                  1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  2.700010282482449,
-                  2.33826859021798,
-                  3
-                ],
-                "normal": [
-                  -1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-face-10",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-9"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  7.950010282482449,
-                  2.33826859021798,
-                  1.5
-                ],
-                "normal": [
-                  -1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-face-17",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-16"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.18826859021798,
-                  1.5
-                ],
-                "normal": [
-                  0,
-                  -1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-face-24",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-23"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.25001028248245,
-                  2.33826859021798,
-                  1.5
-                ],
-                "normal": [
-                  1,
-                  0,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-face-28",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-27"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.48826859021798,
-                  1.5
-                ],
-                "normal": [
-                  0,
-                  1,
-                  0
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-face-30",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-29"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.33826859021798,
-                  0
-                ],
-                "normal": [
-                  0,
-                  0,
-                  -1
-                ]
-              }
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-face-32",
-              "wireIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-wire-31"
-              ],
-              "surface": {
-                "kind": "plane",
-                "origin": [
-                  8.10001028248245,
-                  2.33826859021798,
-                  2.9999999999999996
-                ],
-                "normal": [
-                  0,
+                  1.1723580218238237e-17,
                   0,
                   1
                 ]
               }
             }
           ],
-          "shells": [
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-face-20",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-face-32"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-shell-33",
-              "faceIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-face-10",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-face-17",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-face-24",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-face-28",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-face-30",
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-face-32"
-              ]
-            }
-          ],
-          "solids": [
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-1-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-1-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-10-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-10-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-11-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-11-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-2-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-2-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-3-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-3-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-4-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-4-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-5-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-5-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-6-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-6-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-7-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-7-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-8-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-8-shell-33"
-              ]
-            },
-            {
-              "id": "hexagonal-cut-concrete-forest-left-classic-structure-9-solid-34",
-              "shellIds": [
-                "hexagonal-cut-concrete-forest-left-classic-structure-9-shell-33"
-              ]
-            }
-          ]
+          "shells": [],
+          "solids": []
         }
       }
     },

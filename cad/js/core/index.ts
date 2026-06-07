@@ -125,6 +125,7 @@ export interface ModelImportProfile {
   readonly layerTypology: Readonly<Record<string, TypologyRef>>;
   readonly fallbackTypology: TypologyRef;
   readonly preferPresentationLayers?: boolean;
+  readonly presentationGeometry?: "wireframe" | "solid";
   readonly namespacedDomain?: string;
 }
 

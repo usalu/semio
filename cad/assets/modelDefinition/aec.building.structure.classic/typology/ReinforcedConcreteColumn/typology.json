@@ -12,6 +12,6 @@
     "structure.structure.constructReinforcedConcreteColumn"
   ],
   "primitiveKinds": [
-    "solid"
+    "curve"
   ]
 }

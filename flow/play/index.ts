@@ -24,16 +24,24 @@ import {
 
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
 import {
+  DAG_LOD_MODE_AUTOMATIC,
+  dagPlayLodTiers,
   FLOW_DEFAULT_FIXTURE,
+  dagLodAutomaticSelectLabel,
   flowExtensionHost,
   flowFixtureToJson,
   flowPlayCatalogueItemDragData,
+  isDagDrawLodKind,
+  dagPlayLodTierMenuLabel,
   type CatalogueItem,
   type CatalogueSection,
+  type DagDrawLodKind,
+  type DagLodModeKind,
   type FlowExtensionEntry,
   type FlowFixtureV1,
   type FlowReorganizeRequest,
 } from "@flow/react";
+import type { WindowMeasure } from "@framework/playground/core";
 
 export const FLOW_PLAY_APP_ID = "flow-play";
 export const FLOW_PLAY_CONTROLLER_ID = "flow-play";
@@ -88,33 +96,34 @@ export function buildFlowPlayExtensionsTree(entries: readonly FlowExtensionEntry
       ],
     };
   }
-  return {
-    type: "tree",
-    sections: [
-      {
-        id: "flow-play-extensions.installed",
-        label: "Installed",
-        defaultOpen: true,
-        items: entries.map((entry) => ({
-          id: `flow-play-extensions.${entry.id}`,
-          label: entry.manifest.name,
-          description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${entry.manifest.contributes.neuronKinds.length} kinds · ${entry.manifest.contributes.commands.length} commands`,
-          command: flowPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
-        })),
-      },
-      {
-        id: "flow-play-extensions.commands",
-        label: "Commands",
-        defaultOpen: true,
-        items: flowExtensionHost.activeCommands().map((command) => ({
-          id: `flow-play-extensions.command.${command.id}`,
-          label: command.title,
-          description: command.id,
-          command: flowPlayCmd("runExtensionCommand", { commandId: command.id }),
-        })),
-      },
-    ],
-  };
+  const commandItems = flowExtensionHost.activeCommands().map((command) => ({
+    id: `flow-play-extensions.command.${command.id}`,
+    label: command.title,
+    description: command.id,
+    command: flowPlayCmd("runExtensionCommand", { commandId: command.id }),
+  }));
+  const sections: UiTreeSectionNode[] = [
+    {
+      id: "flow-play-extensions.installed",
+      label: "Installed",
+      defaultOpen: true,
+      items: entries.map((entry) => ({
+        id: `flow-play-extensions.${entry.id}`,
+        label: entry.manifest.name,
+        description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${entry.manifest.contributes.neuronKinds.length} kinds · ${entry.manifest.contributes.commands.length} commands`,
+        command: flowPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
+      })),
+    },
+  ];
+  if (commandItems.length) {
+    sections.push({
+      id: "flow-play-extensions.commands",
+      label: "Commands",
+      defaultOpen: true,
+      items: commandItems,
+    });
+  }
+  return { type: "tree", sections };
 }
 
 function flowPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -174,6 +183,9 @@ export class FlowPlayController extends Controller {
   private reorganizeEpoch = 0;
   private reorganizeOptionsJson = buildFlowLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
   private extensionRevision = 0;
+  private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
+  private lodModeByInstance: Record<string, DagLodModeKind> = {};
+  private effectiveLod: DagDrawLodKind = "normal";
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -218,6 +230,27 @@ export class FlowPlayController extends Controller {
 
   getReorganize(): FlowReorganizeRequest {
     return { epoch: this.reorganizeEpoch, optionsJson: this.reorganizeOptionsJson };
+  }
+
+  lodModeForScope(scopeId: string): DagLodModeKind {
+    return this.lodModeByInstance[scopeId] ?? this.lodMode;
+  }
+
+  private lodMeasure(scopeId: string): WindowMeasure {
+    return {
+      kind: "select",
+      id: `${scopeId}-lod`,
+      value: this.lodModeForScope(scopeId),
+      items: [
+        { id: "automatic", value: DAG_LOD_MODE_AUTOMATIC, label: dagLodAutomaticSelectLabel(this.effectiveLod) },
+        ...dagPlayLodTiers().map((tier) => ({ id: tier, value: tier, label: dagPlayLodTierMenuLabel(tier) })),
+      ],
+      onChange: { controllerId: FLOW_PLAY_CONTROLLER_ID, command: "setLodMode", args: { instanceId: scopeId } },
+    };
+  }
+
+  private windowMeasures(): readonly WindowMeasure[] {
+    return [{ kind: "group", id: `${FLOW_PLAY_WINDOW_KIND_ID}-lod`, label: "LOD", children: [this.lodMeasure(FLOW_PLAY_WINDOW_KIND_ID)] }];
   }
 
   private syncReorganizeOptionsJson(): void {
@@ -274,7 +307,7 @@ export class FlowPlayController extends Controller {
 
   private rebuildShellMode(): void {
     this.mainMode.windowKinds = [
-      new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Flow", FLOW_PLAY_BODY_KEY_MAIN, undefined, [], this.windowEngagement()),
+      new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Flow", FLOW_PLAY_BODY_KEY_MAIN, undefined, this.windowMeasures(), this.windowEngagement()),
     ];
     for (const windowKind of this.mainMode.windowKinds) {
       enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Flow play window "${windowKind.id}"`);
@@ -345,6 +378,30 @@ export class FlowPlayController extends Controller {
         this.fixtureJson = json;
         this.emit();
       }
+      return;
+    }
+    if (command === "setLodMode") {
+      const { value, instanceId } = args as { value?: string; instanceId?: string };
+      const scopeId = instanceId ?? FLOW_PLAY_WINDOW_KIND_ID;
+      if (typeof value !== "string") return;
+      if (value !== DAG_LOD_MODE_AUTOMATIC && !isDagDrawLodKind(value)) return;
+      this.lodModeByInstance = { ...this.lodModeByInstance, [scopeId]: value as DagLodModeKind };
+      if (scopeId === FLOW_PLAY_WINDOW_KIND_ID) {
+        this.lodMode = value as DagLodModeKind;
+      }
+      this.rebuildShellMode();
+      this.emit();
+      return;
+    }
+    if (command === "setEffectiveLod") {
+      const { lod, instanceId } = args as { lod?: DagDrawLodKind; instanceId?: string };
+      const scopeId = instanceId ?? FLOW_PLAY_WINDOW_KIND_ID;
+      if (!lod || !isDagDrawLodKind(lod)) return;
+      if (scopeId !== FLOW_PLAY_WINDOW_KIND_ID) return;
+      if (this.effectiveLod === lod) return;
+      this.effectiveLod = lod;
+      this.rebuildShellMode();
+      this.emit();
       return;
     }
     if (command === "toggleExtension") {
@@ -500,7 +557,7 @@ if (import.meta.vitest) {
       ]);
       const labels = tree.sections?.flatMap((section) => section.items?.map((item) => item.label) ?? []) ?? [];
       expect(labels).toContain("Math");
-      expect(tree.sections?.some((section) => section.id === "flow-play-extensions.commands")).toBe(true);
+      expect(tree.sections?.every((section) => (section.items?.length ?? 0) > 0)).toBe(true);
     });
 
     it("active catalogue reflects enabled modules only", () => {
@@ -519,6 +576,31 @@ if (import.meta.vitest) {
       ctrl.run("reorganize");
       expect(ctrl.getReorganize().epoch).toBe(1);
       expect(ctrl.getReorganize().optionsJson).toContain("leftRight");
+    });
+
+    it("lod window measure lists automatic and tiers", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      const lodGroup = measures.find((measure) => measure.kind === "group" && measure.label === "LOD");
+      expect(lodGroup?.kind).toBe("group");
+      const lodSelect = lodGroup?.kind === "group" ? lodGroup.children.find((child) => child.kind === "select") : undefined;
+      expect(lodSelect?.kind).toBe("select");
+      if (lodSelect?.kind === "select") {
+        expect(lodSelect.items.some((item) => item.value === DAG_LOD_MODE_AUTOMATIC)).toBe(true);
+        expect(lodSelect.items.some((item) => item.value === "detail")).toBe(true);
+      }
+    });
+
+    it("setEffectiveLod refreshes automatic select label", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      ctrl.run("setEffectiveLod", { lod: "detail" });
+      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      const lodGroup = measures.find((measure) => measure.kind === "group" && measure.label === "LOD");
+      const lodSelect = lodGroup?.kind === "group" ? lodGroup.children.find((child) => child.kind === "select") : undefined;
+      const automatic = lodSelect?.kind === "select" ? lodSelect.items.find((item) => item.value === DAG_LOD_MODE_AUTOMATIC) : undefined;
+      expect(automatic?.label).toContain("Detail");
     });
   });
 }

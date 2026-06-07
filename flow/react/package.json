@@ -9,6 +9,7 @@
     "test": "bun nx run @flow/react:test"
   },
   "dependencies": {
+    "@dag/react": "workspace:*",
     "@ui/styling": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

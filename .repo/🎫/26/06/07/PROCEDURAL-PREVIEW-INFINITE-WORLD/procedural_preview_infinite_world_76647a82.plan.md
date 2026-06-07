@@ -13,7 +13,7 @@ todos:
     status: completed
   - id: tests
     content: Extend the existing import.meta.vitest block in procedural/react for the upgraded viewport; run the procedural vitest suite and validate runtime behavior with temporary [DEBUG] logs
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

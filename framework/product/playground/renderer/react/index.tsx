@@ -6023,7 +6023,7 @@ import {
   buildFlowPlayKindsTree,
   registerFlowPlayDeclarativeBodies,
 } from "@flow/play";
-import { FLOW_WIDGET_DRAG_V1_MIME, FlowCanvas, flowWidgetPaletteTreeDragController } from "@flow/react";
+import { DAG_LOD_MODE_AUTOMATIC, FLOW_WIDGET_DRAG_V1_MIME, FlowCanvas, dagLodCanvasProps, flowWidgetPaletteTreeDragController } from "@flow/react";
 import type { UiFlowHostSurfaceNode } from "@framework/platform/core";
 
 let flowPlayChromeRegistered = false;
@@ -6062,9 +6062,17 @@ function useFlowPlayController(): FlowPlayController | undefined {
   return ctrl;
 }
 
-function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
+function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
   const ctrl = useFlowPlayController();
   const extensionRevision = useFlowPlayExtensionRevision();
+  const scopeId = node.paneId ?? FLOW_PLAY_WINDOW_KIND_ID;
+  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: import("@flow/react").DagDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
   const onPreviewText = reactHostPort.useCallback(
     (text: string) => {
       console.log(`[DEBUG] flow play preview: ${text}`);
@@ -6093,6 +6101,8 @@ function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSur
       onPreviewText={onPreviewText}
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
+      {...lodProps}
+      onLodChange={onLodChange}
     />
   );
 }
@@ -6183,7 +6193,7 @@ import {
   DagPlayController,
   registerDagPlayDeclarativeBodies,
 } from "@dag/play";
-import { DagCanvas } from "@dag/react";
+import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas, dagLodCanvasProps } from "@dag/react";
 import type { UiDagHostSurfaceNode } from "@framework/platform/core";
 
 let dagPlayChromeRegistered = false;
@@ -6193,8 +6203,16 @@ function useDagPlayController(): DagPlayController | undefined {
   return runtime.getActiveApp()?.controller as DagPlayController | undefined;
 }
 
-function DagPlayPaneSurfaceHost({ node: _node }: { readonly node: UiDagHostSurfaceNode }): ReactElement {
+function DagPlayPaneSurfaceHost({ node }: { readonly node: UiDagHostSurfaceNode }): ReactElement {
   const ctrl = useDagPlayController();
+  const scopeId = node.paneId ?? DAG_PLAY_WINDOW_KIND_ID;
+  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_HOST_LOD_AUTOMATIC);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: import("@dag/react").DagDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
   const onFixtureChange = reactHostPort.useCallback(
     (json: string) => {
       ctrl?.run("setFixtureJson", { json });
@@ -6207,6 +6225,8 @@ function DagPlayPaneSurfaceHost({ node: _node }: { readonly node: UiDagHostSurfa
       fixtureJson={ctrl?.getFixtureJson() ?? DAG_PLAY_DEFAULT_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       onFixtureChange={onFixtureChange}
+      {...lodProps}
+      onLodChange={onLodChange}
     />
   );
 }
@@ -6249,7 +6269,7 @@ import {
   buildProceduralPlayKindsTree,
   registerProceduralPlayDeclarativeBodies,
 } from "@procedural/play";
-import { flowWidgetPaletteTreeDragController } from "@flow/react";
+import { DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, flowWidgetPaletteTreeDragController } from "@flow/react";
 import { ProceduralFlowEditor, ProceduralPreview, proceduralExtensionHost } from "@procedural/react";
 import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
 
@@ -6293,11 +6313,19 @@ function useProceduralPlayController(): ProceduralPlayController | undefined {
   return ctrl;
 }
 
-function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
+function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
   const ctrl = useProceduralPlayController();
   const extensionRevision = useProceduralPlayExtensionRevision();
   const interactionRevision = useProceduralPlayInteractionRevision();
   void interactionRevision;
+  const scopeId = node.paneId ?? PROCEDURAL_PLAY_WINDOW_KIND_ID;
+  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: import("@flow/react").DagDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
   const onPreviewText = reactHostPort.useCallback(
     (text: string) => {
       console.log(`[DEBUG] procedural play preview: ${text}`);
@@ -6361,6 +6389,8 @@ function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowH
       previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
       selectionMode={ctrl?.getSelectionMode()}
       selectionMethod={ctrl?.getSelectionMethod()}
+      {...lodProps}
+      onLodChange={onLodChange}
       className="h-full w-full"
     />
   );

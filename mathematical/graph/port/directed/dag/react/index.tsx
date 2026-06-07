@@ -24,6 +24,87 @@ export async function ensureDagWasmLoaded(): Promise<void> {
 export { DagSession };
 // #endregion 🔖GpuWasmBridge
 
+// #region 🔖Lod
+/** @emoji 📶 WASM draw LOD tier label (matches `drawLodLabel` / `setForcedDrawLodLabel`). */
+export type DagDrawLodKind = "compact" | "detail" | "micro" | "minimap" | "normal" | "overview";
+
+const DAG_DRAW_LOD_KINDS: readonly DagDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
+
+/** @emoji ✅ True when `label` is a pinned WASM draw LOD tier. */
+export function isDagDrawLodKind(label: string): label is DagDrawLodKind {
+  return (DAG_DRAW_LOD_KINDS as readonly string[]).includes(label);
+}
+
+/** @emoji 📶 Compile-time LOD row mirrored from {@link DagSession.lodScaleJson}. */
+export interface DagLodEntry {
+  readonly id: DagDrawLodKind;
+  readonly name: string;
+  readonly description: string;
+  readonly maxZoom: number;
+}
+
+let dagLodScaleCache: readonly DagLodEntry[] | null = null;
+
+function parseDagLodScaleJson(raw: string): readonly DagLodEntry[] {
+  const rows = JSON.parse(raw) as Array<{ id?: string; name?: string; description?: string; maxZoom?: number }>;
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+  const out: DagLodEntry[] = [];
+  for (const row of rows) {
+    if (typeof row.id !== "string" || !isDagDrawLodKind(row.id) || typeof row.maxZoom !== "number") {
+      continue;
+    }
+    out.push({
+      id: row.id,
+      name: typeof row.name === "string" ? row.name : row.id,
+      description: typeof row.description === "string" ? row.description : "",
+      maxZoom: row.maxZoom,
+    });
+  }
+  return out;
+}
+
+/** @emoji 📶 Fixed LOD table declared in DAG WASM (single source of truth). */
+export function getDagLodScale(): readonly DagLodEntry[] {
+  if (!dagLodScaleCache) {
+    dagLodScaleCache = parseDagLodScaleJson(new DagSession().lodScaleJson());
+  }
+  return dagLodScaleCache;
+}
+
+/** @emoji 📶 Ordered LOD tier ids for play window selects. */
+export function dagPlayLodTiers(): readonly DagDrawLodKind[] {
+  return getDagLodScale().map((lod) => lod.id);
+}
+
+/** @emoji 📶 Select value: camera zoom picks the draw LOD band. */
+export const DAG_LOD_MODE_AUTOMATIC = "automatic" as const;
+
+/** @emoji 📶 DAG play / window LOD select value (`automatic` or a pinned {@link DagDrawLodKind}). */
+export type DagLodModeKind = typeof DAG_LOD_MODE_AUTOMATIC | DagDrawLodKind;
+
+/** @emoji 📶 Maps a window LOD select value to canvas LOD fields. */
+export function dagLodCanvasProps(mode: DagLodModeKind): { automaticLod: boolean; lod?: DagDrawLodKind } {
+  if (mode === DAG_LOD_MODE_AUTOMATIC) {
+    return { automaticLod: true };
+  }
+  return { automaticLod: false, lod: mode };
+}
+
+/** @emoji 📶 Automatic LOD select row label showing the live zoom-derived tier. */
+export function dagLodAutomaticSelectLabel(effectiveTier: DagDrawLodKind): string {
+  const row = getDagLodScale().find((lod) => lod.id === effectiveTier);
+  const name = row?.name ?? effectiveTier;
+  return `Automatic · ${name}`;
+}
+
+export function dagPlayLodTierMenuLabel(tier: DagDrawLodKind): string {
+  const row = getDagLodScale().find((lod) => lod.id === tier);
+  return row?.name ?? tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+// #endregion 🔖Lod
+
 // #region 🔖Fixture
 export interface DagPortV1 {
   readonly id: string;
@@ -219,34 +300,68 @@ export interface DagCanvasProps {
   readonly className?: string;
   readonly reorganize?: DagReorganizeRequest;
   readonly onFixtureChange?: (fixtureJson: string) => void;
+  readonly automaticLod?: boolean;
+  readonly lod?: DagDrawLodKind;
+  readonly onLodChange?: (lod: DagDrawLodKind) => void;
 }
 
-export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange }: DagCanvasProps): React.JSX.Element {
+export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange, automaticLod = true, lod, onLodChange }: DagCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<DagSession | null>(null);
   const overlayElementsRef = useRef(new Map<string, HTMLElement>());
   const rafRef = useRef<number | null>(null);
-  const lastVelloThemeJsonRef = useRef("");
   const onFixtureChangeRef = useRef(onFixtureChange);
+  const onLodChangeRef = useRef(onLodChange);
+  const lastAutomaticLodRef = useRef<boolean | null>(null);
+  const lastForcedLodRef = useRef<string | null>(null);
+  const lastReportedLodRef = useRef<DagDrawLodKind | null>(null);
 
   const syncVelloTheme = useCallback(() => {
     if (typeof document === "undefined") return;
+    const session = sessionRef.current;
+    if (!session) return;
     try {
-      const json = serializeGraphVelloThemePaletteJson();
-      if (json !== lastVelloThemeJsonRef.current) {
-        lastVelloThemeJsonRef.current = json;
-        sessionRef.current?.setVelloThemeJson(json);
-      }
+      session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
     } catch {
-      lastVelloThemeJsonRef.current = "";
+      /* document theme tokens not ready */
+    }
+  }, []);
+
+  const syncLodMode = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    const nextAutomatic = automaticLod ?? true;
+    if (lastAutomaticLodRef.current !== nextAutomatic) {
+      session.setAutomaticLod(nextAutomatic);
+      lastAutomaticLodRef.current = nextAutomatic;
+    }
+    const forced = nextAutomatic ? "" : lod && isDagDrawLodKind(lod) ? lod : "";
+    if (lastForcedLodRef.current !== forced) {
+      session.setForcedDrawLodLabel(forced);
+      lastForcedLodRef.current = forced;
+    }
+  }, [automaticLod, lod]);
+
+  const reportDrawLod = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session || !onLodChangeRef.current) return;
+    try {
+      const label = session.drawLodLabel();
+      if (!isDagDrawLodKind(label)) return;
+      if (lastReportedLodRef.current === label) return;
+      lastReportedLodRef.current = label;
+      onLodChangeRef.current(label);
+    } catch {
+      /* session not ready */
     }
   }, []);
 
   const renderFrame = useCallback(() => {
     const session = sessionRef.current;
     const overlayRoot = overlayRef.current;
+    syncLodMode();
     if (session && overlayRoot) {
       try {
         syncDagNodeOverlays(overlayRoot, session, overlayElementsRef.current);
@@ -257,14 +372,25 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange 
     try {
       syncVelloTheme();
       session?.renderFrame();
+      reportDrawLod();
     } catch {
       /* gpu not ready */
     }
-  }, [syncVelloTheme]);
+  }, [reportDrawLod, syncLodMode, syncVelloTheme]);
 
   useEffect(() => {
     onFixtureChangeRef.current = onFixtureChange;
   }, [onFixtureChange]);
+
+  useEffect(() => {
+    onLodChangeRef.current = onLodChange;
+  }, [onLodChange]);
+
+  useEffect(() => {
+    lastAutomaticLodRef.current = null;
+    lastForcedLodRef.current = null;
+    renderFrame();
+  }, [automaticLod, lod, renderFrame]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -375,6 +501,19 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange 
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
+
+  describe("dag lod", () => {
+    it("maps automatic and pinned modes to canvas props", () => {
+      expect(dagLodCanvasProps("automatic")).toEqual({ automaticLod: true });
+      expect(dagLodCanvasProps("detail")).toEqual({ automaticLod: false, lod: "detail" });
+    });
+
+    it("exposes wasm lod tiers", () => {
+      const tiers = getDagLodScale().map((row) => row.id);
+      expect(tiers).toContain("normal");
+      expect(tiers).toContain("micro");
+    });
+  });
 
   describe("dag fixture", () => {
     it("default fixture has five nodes and four edges", () => {

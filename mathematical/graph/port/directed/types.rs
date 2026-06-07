@@ -327,10 +327,10 @@ impl VelloThemePalette {
         }
     }
 
-    /// @emoji 🎨 Merges a partial Vello theme JSON payload from the React host into this palette.
+    /// @emoji 🎨 Replaces this palette from the React host UI theme JSON payload.
     pub fn merge_from_json(&mut self, json: &str) -> Result<(), String> {
         let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        let mut next = *self;
+        let mut next = Self::default();
         Self::merge_color_field(&mut next.raster_clear, &v, "rasterClear");
         Self::merge_color_field(&mut next.grid_minor_stroke, &v, "gridMinorStroke");
         Self::merge_color_field(&mut next.edge_stroke, &v, "edgeStroke");

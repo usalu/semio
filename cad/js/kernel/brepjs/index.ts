@@ -2211,19 +2211,6 @@ function stepCollectShellBoundaryPoints(entities: ReadonlyMap<number, string>, e
 	return faceRef !== undefined ? stepCollectFaceBoundaryPoints(entities, faceRef) : [];
 }
 
-const STEP_PRESENTATION_COLUMN_SECTION_M = 0.3;
-const STEP_PRESENTATION_BEAM_SECTION_M = 0.15;
-const STEP_PRESENTATION_SLAB_THICKNESS_M = 0.25;
-
-function stepPresentationCrossSection(layerName: string): number {
-	return layerName.toLowerCase().includes("column") ? STEP_PRESENTATION_COLUMN_SECTION_M : STEP_PRESENTATION_BEAM_SECTION_M;
-}
-
-function stepPresentationSlabThickness(layerName: string): number {
-	void layerName;
-	return STEP_PRESENTATION_SLAB_THICKNESS_M;
-}
-
 function polygonNormalNewell(points: readonly Vec3[]): Vec3 {
 	let nx = 0;
 	let ny = 0;
@@ -2238,100 +2225,84 @@ function polygonNormalNewell(points: readonly Vec3[]): Vec3 {
 	return vec3Normalize([nx, ny, nz]);
 }
 
-function squareProfilePoints(origin: Vec3, u: Vec3, v: Vec3, half: number): Vec3[] {
-	const at = (au: number, av: number): Vec3 => [
-		origin[0] + u[0] * au + v[0] * av,
-		origin[1] + u[1] * au + v[1] * av,
-		origin[2] + u[2] * au + v[2] * av,
+function modelFromStepLineCurve(
+	start: Vec3,
+	end: Vec3,
+	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef },
+): Model {
+	const model = new Model();
+	const v0 = `${options.prefix}-v0` as VertexRef;
+	const v1 = `${options.prefix}-v1` as VertexRef;
+	const edgeId = `${options.prefix}-edge` as EdgeRef;
+	const wireId = `${options.prefix}-wire` as WireRef;
+	model.vertices[v0] = { id: v0, position: start };
+	model.vertices[v1] = { id: v1, position: end };
+	model.edges[edgeId] = { id: edgeId, vertexIds: [v0, v1], curve: { kind: "line" } };
+	model.wires[wireId] = { id: wireId, edgeIds: [edgeId] };
+	model.objects[options.objectId] = {
+		id: options.objectId as ObjectRef,
+		typology: options.typology,
+		primitives: { curve: wireId },
+	};
+	model.bump();
+	return model;
+}
+
+function modelFromStepShellSurface(
+	points: readonly Vec3[],
+	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef },
+): Model {
+	if (points.length < 3) return new Model();
+	const model = new Model();
+	const normal = polygonNormalNewell(points);
+	const origin: Vec3 = [
+		points.reduce((sum, point) => sum + point[0], 0) / points.length,
+		points.reduce((sum, point) => sum + point[1], 0) / points.length,
+		points.reduce((sum, point) => sum + point[2], 0) / points.length,
 	];
-	return [at(half, half), at(-half, half), at(-half, -half), at(half, -half)];
-}
-
-function validSolidFromLoftOrExtrude(shape: Shape3D): ValidSolid | null {
-	if (isSolid(shape)) {
-		if (isValidSolid(shape)) return shape as ValidSolid;
-		const healed = healSolid(shape);
-		if (isOk(healed) && isValidSolid(healed.value)) return healed.value as ValidSolid;
-		return shape as ValidSolid;
+	const vertexIds: VertexRef[] = [];
+	const edgeIds: EdgeRef[] = [];
+	for (let i = 0; i < points.length; i++) {
+		const vertexId = `${options.prefix}-v${i}` as VertexRef;
+		model.vertices[vertexId] = { id: vertexId, position: points[i]! };
+		vertexIds.push(vertexId);
 	}
-	const thickened = thicken(shape as Parameters<typeof thicken>[0], 1e-3);
-	if (isOk(thickened) && isSolid(thickened.value) && isValidSolid(thickened.value)) return thickened.value as ValidSolid;
-	return null;
-}
-
-function validSolidFromHorizontalSlabBoundary(points: readonly Vec3[], thickness: number): ValidSolid | null {
-	if (points.length < 3) return null;
-	const xs = points.map((point) => point[0]);
-	const ys = points.map((point) => point[1]);
-	const zs = points.map((point) => point[2]);
-	const z = zs.reduce((sum, value) => sum + value, 0) / zs.length;
-	const w = Math.max(...xs) - Math.min(...xs);
-	const d = Math.max(...ys) - Math.min(...ys);
-	if (w < 1e-9 || d < 1e-9) return null;
-	const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-	const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-	return box(w, d, thickness, { at: [cx, cy, z - thickness / 2], centered: true });
-}
-
-function validSolidFromStepPlanarBoundary(points: readonly Vec3[], thickness: number): ValidSolid | null {
-	if (points.length < 3) return null;
-	try {
-		const normal = polygonNormalNewell(points);
-		const edges = points.map((point, index) => line(point, points[(index + 1) % points.length]!));
-		const loop = wireLoop(edges);
-		if (!isOk(loop)) return validSolidFromHorizontalSlabBoundary(points, thickness);
-		const filled = filledFace(loop.value as Parameters<typeof filledFace>[0]);
-		const planar = isOk(filled) ? filled : face(loop.value as Parameters<typeof face>[0]);
-		if (!isOk(planar)) return validSolidFromHorizontalSlabBoundary(points, thickness);
-		const ext = extrude(planar.value as Parameters<typeof extrude>[0], vec3Scale(normal, thickness));
-		if (!isOk(ext)) return validSolidFromHorizontalSlabBoundary(points, thickness);
-		return validSolidFromLoftOrExtrude(ext.value as Shape3D) ?? validSolidFromHorizontalSlabBoundary(points, thickness);
-	} catch {
-		return validSolidFromHorizontalSlabBoundary(points, thickness);
-	}
-}
-
-function validSolidFromStepLineMember(start: Vec3, end: Vec3, crossSection: number): ValidSolid | null {
-	try {
-		const axis = vec3Sub(end, start);
-		const len = vec3Length(axis);
-		if (len < 1e-9) return null;
-		const dir = vec3Scale(axis, 1 / len);
-		const ref: Vec3 = Math.abs(dir[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
-		const u = vec3Normalize(vec3Cross(dir, ref));
-		const v = vec3Normalize(vec3Cross(dir, u));
-		const half = crossSection / 2;
-		const wireAt = (origin: Vec3): Wire<Dimension> | null => {
-			const pts = squareProfilePoints(origin, u, v, half);
-			const edges = pts.map((point, index) => line(point, pts[(index + 1) % 4]!));
-			const loop = wireLoop(edges);
-			return isOk(loop) ? loop.value : null;
+	for (let i = 0; i < points.length; i++) {
+		const edgeId = `${options.prefix}-e${i}` as EdgeRef;
+		model.edges[edgeId] = {
+			id: edgeId,
+			vertexIds: [vertexIds[i]!, vertexIds[(i + 1) % vertexIds.length]!],
+			curve: { kind: "line" },
 		};
-		const profileStart = wireAt(start);
-		const profileEnd = wireAt(end);
-		if (!profileStart || !profileEnd) return null;
-		const lofted = loft([profileStart, profileEnd], { ruled: true });
-		if (!isOk(lofted)) return null;
-		return validSolidFromLoftOrExtrude(lofted.value as Shape3D);
-	} catch {
-		return null;
+		edgeIds.push(edgeId);
 	}
+	const wireId = `${options.prefix}-wire` as WireRef;
+	const faceId = `${options.prefix}-face` as FaceRef;
+	model.wires[wireId] = { id: wireId, edgeIds };
+	model.faces[faceId] = { id: faceId, wireIds: [wireId], surface: { kind: "plane", origin, normal } };
+	model.objects[options.objectId] = {
+		id: options.objectId as ObjectRef,
+		typology: options.typology,
+		primitives: { surface: faceId },
+	};
+	model.bump();
+	return model;
 }
 
-function brepSolidFromStepPresentationEntity(
+function wireframePartFromStepPresentationEntity(
 	entities: ReadonlyMap<number, string>,
 	entityRef: number,
-	layerName: string,
-): ValidSolid | null {
+	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef },
+): Model | null {
 	const body = entities.get(entityRef);
 	if (!body) return null;
 	if (body.startsWith("LINE(")) {
 		const endpoints = stepParseLineEndpoints(entities, entityRef);
 		if (!endpoints) return null;
-		return validSolidFromStepLineMember(endpoints[0], endpoints[1], stepPresentationCrossSection(layerName));
+		return modelFromStepLineCurve(endpoints[0], endpoints[1], options);
 	}
 	const boundary = stepCollectShellBoundaryPoints(entities, entityRef);
-	if (boundary.length >= 3) return validSolidFromStepPlanarBoundary(boundary, stepPresentationSlabThickness(layerName));
+	if (boundary.length >= 3) return modelFromStepShellSurface(boundary, options);
 	return null;
 }
 
@@ -2342,18 +2313,18 @@ function importStepPresentationLayersToModel(
 	const normalized = normalizeStepDataLines(stepText);
 	const entities = parseStepEntityMap(normalized);
 	const layerByEntity = parsePresentationLayerAssignments(normalized);
+	const profile = importProfileFor(options.modelDefinitionId);
+	if (profile?.presentationGeometry !== "wireframe") {
+		throw new Error(`STEP presentation import requires wireframe profile for ${options.modelDefinitionId}`);
+	}
 	const model = new Model();
 	let partIndex = 0;
 	for (const [entityRef, layerName] of [...layerByEntity.entries()].sort(([a], [b]) => a - b)) {
 		const typology = typologyFromStepLayer(layerName, options.modelDefinitionId);
 		const prefix = `${options.basePrefix}-${++partIndex}`;
 		const objectId = `object-${prefix}`;
-		const brepSolid = brepSolidFromStepPresentationEntity(entities, entityRef, layerName);
-		if (!brepSolid) continue;
-		mergeImportedBrepPart(
-			model,
-			modelFromImportedBrepSolid(brepSolid, { prefix, objectId, typology, modelDefinitionId: options.modelDefinitionId }),
-		);
+		const part = wireframePartFromStepPresentationEntity(entities, entityRef, { prefix, objectId, typology });
+		if (part) mergeImportedBrepPart(model, part);
 	}
 	if (Object.keys(model.objects).length === 0) throw new Error("STEP presentation import yielded no objects");
 	scaleModelPositions(model, options.lengthScale);
@@ -4355,6 +4326,8 @@ if (import.meta.vitest) {
 			expect(Object.keys(geom(building).vertices).length).toBeGreaterThan(0);
 			expect(Object.keys(geom(energy).vertices).length).toBeGreaterThan(0);
 			expect(Object.keys(geom(structure).vertices).length).toBeGreaterThan(0);
+			expect(Object.keys(geom(structure).solids)).toHaveLength(0);
+			expect(Object.keys(geom(energy).solids)).toHaveLength(0);
 		});
 
 		it("imports energy and classic structure STEP presentation fixtures for concrete forest left", async () => {
@@ -4381,11 +4354,17 @@ if (import.meta.vitest) {
 			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.onewayreinforcedconcreteslab")).toHaveLength(1);
 			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.reinforcedconcreteinternalwall")).toHaveLength(8);
 			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.reinforcedconcretecolumn")).toHaveLength(2);
-			await kernel.syncSolidsFromModel(structure);
-			for (const solidId of Object.keys(geom(structure).solids) as SolidRef[]) {
-				expect(await kernel.volume(solidId)).toBeGreaterThan(0);
+			expect(Object.keys(geom(structure).solids)).toHaveLength(0);
+			expect(Object.keys(geom(structure).wires).length).toBeGreaterThan(0);
+			expect(Object.keys(geom(structure).faces).length).toBeGreaterThan(0);
+			for (const object of Object.values(structure.objects)) {
+				expect(object.primitives.solid).toBeUndefined();
+				expect(object.primitives.curve ?? object.primitives.surface).toBeDefined();
 			}
-			expect(Object.keys(geom(structure).vertices).some((id) => id.includes("box-"))).toBe(false);
+			for (const object of Object.values(energy.objects)) {
+				expect(object.primitives.solid).toBeUndefined();
+				expect(object.primitives.surface).toBeDefined();
+			}
 		});
 
 		it("generates play fixtures from semio STEP sources", async () => {

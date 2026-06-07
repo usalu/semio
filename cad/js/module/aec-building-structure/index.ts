@@ -107,6 +107,7 @@ function registerStructureImportProfile(modelDefinitionId: string): void {
     layerTypology: STRUCTURE_LAYER_TYPOLOGY,
     fallbackTypology: "structure.structure.onewayreinforcedconcreteslab" as TypologyRef,
     preferPresentationLayers: modelDefinitionId === AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
+    presentationGeometry: modelDefinitionId === AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID ? "wireframe" : undefined,
     namespacedDomain: "structure",
   });
 }

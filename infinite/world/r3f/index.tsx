@@ -1760,10 +1760,10 @@ export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBind
   controls.update?.();
 }
 
-/** @emoji 🖱️ Maps right-button modifiers: plain right → context menu, Shift+right → pan, Alt+right → pan (ortho) or orbit (perspective). */
+/** @emoji 🖱️ Maps right-button modifiers: plain right → context menu, Shift+right → pan, Alt+right → orbit. */
 export function resolveWorldOrbitRightMouseAction(
   event: Pick<PointerEvent, "button" | "altKey" | "shiftKey">,
-  projection: OrbitCameraProjection = "perspective",
+  _projection: OrbitCameraProjection = "perspective",
 ): number | null {
   if (event.button !== 2) {
     return null;
@@ -1772,7 +1772,7 @@ export function resolveWorldOrbitRightMouseAction(
     return MOUSE.PAN;
   }
   if (event.altKey) {
-    return projection === "orthographic" ? MOUSE.PAN : MOUSE.ROTATE;
+    return MOUSE.ROTATE;
   }
   return null;
 }
@@ -1852,6 +1852,7 @@ export function useWorldOrbitRightMouseBindings(
     return () => bindings.dispose();
   }, [controls, domElement, options?.dragThresholdPx, projection]);
 }
+
 // #endregion 🖱️OrbitMouseBindings
 
 // #region 🎬WorldCanvas
@@ -2590,7 +2591,7 @@ if (import.meta.vitest) {
     it("reserves plain right click for context menu and maps modifiers to orbit and pan", () => {
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: false })).toBeNull();
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false }, "perspective")).toBe(MOUSE.ROTATE);
-      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false }, "orthographic")).toBe(MOUSE.PAN);
+      expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: false }, "orthographic")).toBe(MOUSE.ROTATE);
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: false, shiftKey: true })).toBe(MOUSE.PAN);
       expect(resolveWorldOrbitRightMouseAction({ button: 2, altKey: true, shiftKey: true })).toBe(MOUSE.PAN);
       expect(resolveWorldOrbitRightMouseAction({ button: 0, altKey: true, shiftKey: false })).toBeNull();

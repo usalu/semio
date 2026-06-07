@@ -12,6 +12,6 @@
     "structure.structure.constructReinforcedConcreteInternalWall"
   ],
   "primitiveKinds": [
-    "surface"
+    "curve"
   ]
 }

@@ -261,6 +261,7 @@
       "name": "@flow/react",
       "version": "0.1.0",
       "dependencies": {
+        "@dag/react": "workspace:*",
         "@ui/styling": "workspace:*",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
@@ -544,6 +545,7 @@
       "name": "@procedural/play",
       "version": "0.1.0",
       "dependencies": {
+        "@flow/react": "workspace:*",
         "@framework/playground/core": "workspace:*",
         "@procedural/react": "workspace:*",
       },

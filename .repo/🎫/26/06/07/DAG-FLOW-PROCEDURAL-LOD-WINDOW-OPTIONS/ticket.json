@@ -1,0 +1,15 @@
+{
+  "title": "Dag Flow Procedural Lod Window Options",
+  "emoji": "📶",
+  "status": "closed",
+  "description": "Add puzzle 2d style LOD window select options to dag, flow, and procedural play shells with wasm manual/automatic LOD support.",
+  "summary": "Node label text now keeps a fixed screen size within each LOD band. Removed the compact-tier 10px label size so overview/compact/normal share DAG_LABEL_SCREEN_PX (11px). IO widget vertical names no longer use a 1.05× multiplier versus computation stacked names. Wheel zoom again pins draw LOD for the gesture (wheel_zoom_render_lod wired into draw_lod_for_frame) so automatic mode does not swap label layout/size mid-zoom; manual forced LOD still wins.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1560"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪a745a45739104e23a71b7f69124958f3",
+    "⚪96278feb693c4648a8bc170c1ac1de7a"
+  ]
+}

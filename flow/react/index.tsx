@@ -3,8 +3,9 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { SelectionMarquee, type SelectionMarqueeCoverage } from "@ui/react";
+import { ContextMenuController, SelectionMarquee, type ContextMenuItem, type SelectionMarqueeCoverage } from "@ui/react";
 import { serializeGraphVelloThemePaletteJson } from "@ui/styling";
+import { isDagDrawLodKind, type DagDrawLodKind } from "@dag/react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 
 // #region 🔖GpuWasmBridge
@@ -41,6 +42,18 @@ export async function ensureFlowWasmLoaded(): Promise<void> {
 }
 
 export { FlowSession };
+
+export {
+  DAG_LOD_MODE_AUTOMATIC,
+  dagPlayLodTiers,
+  dagLodAutomaticSelectLabel,
+  dagLodCanvasProps,
+  dagPlayLodTierMenuLabel,
+  getDagLodScale,
+  isDagDrawLodKind,
+  type DagDrawLodKind,
+  type DagLodModeKind,
+} from "@dag/react";
 // #endregion 🔖GpuWasmBridge
 
 // #region 🔖ExtensionHost
@@ -812,6 +825,11 @@ export interface FlowCanvasProps {
   readonly previewOffNodeIds?: readonly string[];
   readonly selectionMode?: FlowSelectionMode;
   readonly selectionMethod?: FlowSelectionMethod;
+  readonly contextMenu?: readonly ContextMenuItem[];
+  readonly onContextMenu?: (detail: { readonly clientX: number; readonly clientY: number; readonly hoveredNodeId: string | null }) => void;
+  readonly automaticLod?: boolean;
+  readonly lod?: DagDrawLodKind;
+  readonly onLodChange?: (lod: DagDrawLodKind) => void;
 }
 
 export function parseFlowPreselectJson(json: string): FlowPreselectSnapshot {
@@ -856,6 +874,17 @@ export function flowWidgetIdArraysEqual(left: readonly string[], right: readonly
   return left.every((value, index) => value === right[index]);
 }
 
+function flowWheelDeltaScale(deltaMode: number): number {
+  if (deltaMode === WheelEvent.DOM_DELTA_LINE) return 16;
+  if (deltaMode === WheelEvent.DOM_DELTA_PAGE) return 400;
+  return 1;
+}
+
+/** @emoji 🖱️ Scroll wheel zooms the flow canvas. */
+export function flowWheelGestureIsZoom(_event?: Pick<WheelEvent, "ctrlKey" | "metaKey">): boolean {
+  return true;
+}
+
 export function FlowCanvas({
   fixtureJson,
   className,
@@ -877,6 +906,11 @@ export function FlowCanvas({
   previewOffNodeIds,
   selectionMode = "default",
   selectionMethod = "rectangle",
+  contextMenu,
+  onContextMenu,
+  automaticLod = true,
+  lod,
+  onLodChange,
 }: FlowCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -893,9 +927,18 @@ export function FlowCanvas({
   const onHoverChangeRef = useRef(onHoverChange);
   const storeRef = useRef(store ?? createLocalFlowStore());
   const pointerRef = useRef({ active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false });
-  const spacePanRef = useRef(false);
+  const onContextMenuRef = useRef(onContextMenu);
+  const onLodChangeRef = useRef(onLodChange);
+  const lastAutomaticLodRef = useRef<boolean | null>(null);
+  const lastForcedLodRef = useRef<string | null>(null);
+  const lastReportedLodRef = useRef<DagDrawLodKind | null>(null);
+  const [surfaceContextMenu, setSurfaceContextMenu] = useState<{
+    readonly clientX: number;
+    readonly clientY: number;
+    readonly items: readonly ContextMenuItem[];
+  } | null>(null);
   const fixtureDragDepthRef = useRef(0);
-  const lastVelloThemeJsonRef = useRef("");
+  const bootstrapFixtureJsonRef = useRef(fixtureJson);
   const catalogueSectionsRef = useRef<CatalogueSection[]>([]);
   const [fixtureDragActive, setFixtureDragActive] = useState(false);
   const [spotlight, setSpotlight] = useState<FlowSpotlightAnchor | null>(null);
@@ -908,14 +951,12 @@ export function FlowCanvas({
 
   const syncVelloTheme = useCallback(() => {
     if (typeof document === "undefined") return;
+    const session = sessionRef.current;
+    if (!session) return;
     try {
-      const json = serializeGraphVelloThemePaletteJson();
-      if (json !== lastVelloThemeJsonRef.current) {
-        lastVelloThemeJsonRef.current = json;
-        sessionRef.current?.setVelloThemeJson(json);
-      }
+      session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
     } catch {
-      lastVelloThemeJsonRef.current = "";
+      /* document theme tokens not ready */
     }
   }, []);
 
@@ -952,8 +993,45 @@ export function FlowCanvas({
   }, [onHoverChange]);
 
   useEffect(() => {
+    onContextMenuRef.current = onContextMenu;
+  }, [onContextMenu]);
+
+  useEffect(() => {
+    onLodChangeRef.current = onLodChange;
+  }, [onLodChange]);
+
+  useEffect(() => {
     if (store) storeRef.current = store;
   }, [store]);
+
+  const syncLodMode = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    const nextAutomatic = automaticLod ?? true;
+    if (lastAutomaticLodRef.current !== nextAutomatic) {
+      session.setAutomaticLod(nextAutomatic);
+      lastAutomaticLodRef.current = nextAutomatic;
+    }
+    const forced = nextAutomatic ? "" : lod && isDagDrawLodKind(lod) ? lod : "";
+    if (lastForcedLodRef.current !== forced) {
+      session.setForcedDrawLodLabel(forced);
+      lastForcedLodRef.current = forced;
+    }
+  }, [automaticLod, lod]);
+
+  const reportDrawLod = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session || !onLodChangeRef.current) return;
+    try {
+      const label = session.drawLodLabel();
+      if (!isDagDrawLodKind(label)) return;
+      if (lastReportedLodRef.current === label) return;
+      lastReportedLodRef.current = label;
+      onLodChangeRef.current(label);
+    } catch {
+      /* session not ready */
+    }
+  }, []);
 
   const syncMarqueeOverlay = useCallback((session: FlowSession) => {
     const points = parseFlowSelectionPreviewPoints(session.selectionPreviewPointsJson());
@@ -1000,12 +1078,20 @@ export function FlowCanvas({
 
   const renderFrame = useCallback(() => {
     try {
+      syncLodMode();
       syncVelloTheme();
       sessionRef.current?.renderFrame();
+      reportDrawLod();
     } catch {
       /* gpu not ready */
     }
-  }, [syncVelloTheme]);
+  }, [reportDrawLod, syncLodMode, syncVelloTheme]);
+
+  useEffect(() => {
+    lastAutomaticLodRef.current = null;
+    lastForcedLodRef.current = null;
+    renderFrame();
+  }, [automaticLod, lod, renderFrame]);
 
   const evaluate = useCallback(() => {
     const session = sessionRef.current;
@@ -1119,25 +1205,6 @@ export function FlowCanvas({
   }, [renderFrame, selectionMethod, selectionMode]);
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code === "Space" && !event.repeat) {
-        spacePanRef.current = true;
-      }
-    };
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (event.code === "Space") {
-        spacePanRef.current = false;
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-    };
-  }, []);
-
-  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1192,9 +1259,10 @@ export function FlowCanvas({
       const session = new FlowSession();
       sessionRef.current = session;
       const saved = storeRef.current.load();
-      const json = saved ?? fixtureJson ?? flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
+      const json = saved ?? bootstrapFixtureJsonRef.current ?? flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
       session.loadFixtureJson(json);
       syncExtensionSurface(session);
+      syncVelloTheme();
       evaluate();
       try {
         const layout = JSON.parse(session.fixtureJson()).layout ?? {};
@@ -1251,7 +1319,7 @@ export function FlowCanvas({
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       sessionRef.current = null;
     };
-  }, [evaluate, extensionHost, fixtureJson, renderFrame, syncExtensionSurface]);
+  }, [evaluate, extensionHost, renderFrame, syncExtensionSurface]);
 
   const clientToCanvas = useCallback((clientX: number, clientY: number): { x: number; y: number } => {
     const canvas = canvasRef.current;
@@ -1264,11 +1332,11 @@ export function FlowCanvas({
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const session = sessionRef.current;
       if (!session || e.button > 2) return;
+      if (e.button === 2) return;
       e.currentTarget.setPointerCapture(e.pointerId);
-      const pan = e.button === 1 || spacePanRef.current;
-      pointerRef.current = { active: true, pan, id: e.pointerId, shift: e.shiftKey, ctrl: e.metaKey || e.ctrlKey, alt: e.altKey };
+      pointerRef.current = { active: true, pan: false, id: e.pointerId, shift: e.shiftKey, ctrl: e.metaKey || e.ctrlKey, alt: e.altKey };
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
-      session.pointerDownScreen(x, y, e.button, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey, pan);
+      session.pointerDownScreen(x, y, e.button, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey, false);
       emitInteractionState(session);
       renderFrame();
     },
@@ -1331,6 +1399,9 @@ export function FlowCanvas({
       const session = sessionRef.current;
       if (!session) return;
       e.preventDefault();
+      const scale = flowWheelDeltaScale(e.deltaMode);
+      const deltaX = e.deltaX * scale;
+      const deltaY = e.deltaY * scale;
       syncWheelZoomActive(true);
       if (wheelZoomEndRef.current != null) {
         clearTimeout(wheelZoomEndRef.current);
@@ -1340,11 +1411,29 @@ export function FlowCanvas({
         syncWheelZoomActive(false);
       }, 120);
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
-      session.wheel(x, y, e.deltaY);
+      session.wheelScreen(x, y, deltaX, deltaY, flowWheelGestureIsZoom(e));
       persistFixture();
       renderFrame();
     },
     [clientToCanvas, persistFixture, renderFrame, syncWheelZoomActive],
+  );
+
+  const onCanvasContextMenu = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (e.altKey) {
+        e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      const session = sessionRef.current;
+      const hoveredNodeId = session?.hoveredWidgetId() ?? null;
+      onContextMenuRef.current?.({ clientX: e.clientX, clientY: e.clientY, hoveredNodeId });
+      const items = contextMenu ?? [];
+      if (items.length > 0) {
+        setSurfaceContextMenu({ clientX: e.clientX, clientY: e.clientY, items });
+      }
+    },
+    [contextMenu],
   );
 
   const resetFixtureDragDepth = useCallback(() => {
@@ -1474,6 +1563,15 @@ export function FlowCanvas({
         onPointerCancel={onPointerUp}
         onDoubleClick={onCanvasDoubleClick}
         onWheel={onWheel}
+        onContextMenu={onCanvasContextMenu}
+      />
+      <ContextMenuController
+        items={surfaceContextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setSurfaceContextMenu(null);
+        }}
+        open={surfaceContextMenu !== null}
+        position={surfaceContextMenu ? { x: surfaceContextMenu.clientX, y: surfaceContextMenu.clientY } : null}
       />
       {marqueeOverlay?.shape === "rect" && marqueeOverlay.rect ? (
         <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />
@@ -1629,6 +1727,11 @@ if (import.meta.vitest) {
         { x: 0, y: 1 },
         { x: 3, y: 4 },
       ]);
+    });
+
+    it("treats scroll wheel as zoom", () => {
+      expect(flowWheelGestureIsZoom({ ctrlKey: false, metaKey: false })).toBe(true);
+      expect(flowWheelGestureIsZoom({ ctrlKey: true, metaKey: false })).toBe(true);
     });
   });
 }

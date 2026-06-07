@@ -24,12 +24,20 @@ import {
 } from "@framework/playground/core";
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMergeMode } from "@ui/react";
 import {
+	DAG_LOD_MODE_AUTOMATIC,
+	dagPlayLodTiers,
+	dagLodAutomaticSelectLabel,
+	dagPlayLodTierMenuLabel,
 	flowPlayCatalogueItemDragData,
+	isDagDrawLodKind,
 	type CatalogueItem,
 	type CatalogueSection,
+	type DagDrawLodKind,
+	type DagLodModeKind,
 	type FlowExtensionEntry,
 	type FlowReorganizeRequest,
 } from "@flow/react";
+import type { WindowMeasure } from "@framework/playground/core";
 import {
 	extractGeometryHandles,
 	PROCEDURAL_DEFAULT_FIXTURE,
@@ -90,33 +98,34 @@ export function buildProceduralPlayExtensionsTree(entries: readonly FlowExtensio
 			],
 		};
 	}
-	return {
-		type: "tree",
-		sections: [
-			{
-				id: "procedural-play-extensions.installed",
-				label: "Installed",
-				defaultOpen: true,
-				items: entries.map((entry) => ({
-					id: `procedural-play-extensions.${entry.id}`,
-					label: entry.manifest.name,
-					description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${entry.manifest.contributes.neuronKinds.length} kinds · ${entry.manifest.contributes.commands.length} commands`,
-					command: proceduralPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
-				})),
-			},
-			{
-				id: "procedural-play-extensions.commands",
-				label: "Commands",
-				defaultOpen: true,
-				items: proceduralExtensionHost.activeCommands().map((command) => ({
-					id: `procedural-play-extensions.command.${command.id}`,
-					label: command.title,
-					description: command.id,
-					command: proceduralPlayCmd("runExtensionCommand", { commandId: command.id }),
-				})),
-			},
-		],
-	};
+	const commandItems = proceduralExtensionHost.activeCommands().map((command) => ({
+		id: `procedural-play-extensions.command.${command.id}`,
+		label: command.title,
+		description: command.id,
+		command: proceduralPlayCmd("runExtensionCommand", { commandId: command.id }),
+	}));
+	const sections: UiTreeSectionNode[] = [
+		{
+			id: "procedural-play-extensions.installed",
+			label: "Installed",
+			defaultOpen: true,
+			items: entries.map((entry) => ({
+				id: `procedural-play-extensions.${entry.id}`,
+				label: entry.manifest.name,
+				description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${entry.manifest.contributes.neuronKinds.length} kinds · ${entry.manifest.contributes.commands.length} commands`,
+				command: proceduralPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
+			})),
+		},
+	];
+	if (commandItems.length) {
+		sections.push({
+			id: "procedural-play-extensions.commands",
+			label: "Commands",
+			defaultOpen: true,
+			items: commandItems,
+		});
+	}
+	return { type: "tree", sections };
 }
 
 function proceduralPlayKindsTreeItem(sectionId: string, index: number, item: CatalogueItem): UiTreeItemNode {
@@ -178,6 +187,9 @@ export class ProceduralPlayController extends Controller {
 	private selectionMode: ProceduralPlaySelectionMode = "default";
 	private selectionMethod: ProceduralPlaySelectionMethod = "rectangle";
 	private interactionRevision = 0;
+	private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
+	private lodModeByInstance: Record<string, DagLodModeKind> = {};
+	private effectiveLod: DagDrawLodKind = "normal";
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(PROCEDURAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -246,6 +258,27 @@ export class ProceduralPlayController extends Controller {
 
 	getInteractionRevision(): number {
 		return this.interactionRevision;
+	}
+
+	lodModeForScope(scopeId: string): DagLodModeKind {
+		return this.lodModeByInstance[scopeId] ?? this.lodMode;
+	}
+
+	private lodMeasure(scopeId: string): WindowMeasure {
+		return {
+			kind: "select",
+			id: `${scopeId}-lod`,
+			value: this.lodModeForScope(scopeId),
+			items: [
+				{ id: "automatic", value: DAG_LOD_MODE_AUTOMATIC, label: dagLodAutomaticSelectLabel(this.effectiveLod) },
+				...dagPlayLodTiers().map((tier) => ({ id: tier, value: tier, label: dagPlayLodTierMenuLabel(tier) })),
+			],
+			onChange: { controllerId: PROCEDURAL_PLAY_CONTROLLER_ID, command: "setLodMode", args: { instanceId: scopeId } },
+		};
+	}
+
+	private flowWindowMeasures(): readonly WindowMeasure[] {
+		return [{ kind: "group", id: `${PROCEDURAL_PLAY_WINDOW_KIND_ID}-lod`, label: "LOD", children: [this.lodMeasure(PROCEDURAL_PLAY_WINDOW_KIND_ID)] }];
 	}
 
 	/** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
@@ -366,7 +399,7 @@ export class ProceduralPlayController extends Controller {
 
 	private rebuildShellMode(): void {
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_ID, "Flow", PROCEDURAL_PLAY_BODY_KEY_MAIN, undefined, [], this.flowWindowEngagement()),
+			new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_ID, "Flow", PROCEDURAL_PLAY_BODY_KEY_MAIN, undefined, this.flowWindowMeasures(), this.flowWindowEngagement()),
 			new WindowKindRuntime(PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW, "Preview", PROCEDURAL_PLAY_BODY_KEY_PREVIEW, undefined, [], this.previewWindowEngagement()),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
@@ -420,6 +453,30 @@ export class ProceduralPlayController extends Controller {
 				this.fixtureJson = json;
 				this.emit();
 			}
+			return;
+		}
+		if (command === "setLodMode") {
+			const { value, instanceId } = args as { value?: string; instanceId?: string };
+			const scopeId = instanceId ?? PROCEDURAL_PLAY_WINDOW_KIND_ID;
+			if (typeof value !== "string") return;
+			if (value !== DAG_LOD_MODE_AUTOMATIC && !isDagDrawLodKind(value)) return;
+			this.lodModeByInstance = { ...this.lodModeByInstance, [scopeId]: value as DagLodModeKind };
+			if (scopeId === PROCEDURAL_PLAY_WINDOW_KIND_ID) {
+				this.lodMode = value as DagLodModeKind;
+			}
+			this.rebuildShellMode();
+			this.emit();
+			return;
+		}
+		if (command === "setEffectiveLod") {
+			const { lod, instanceId } = args as { lod?: DagDrawLodKind; instanceId?: string };
+			const scopeId = instanceId ?? PROCEDURAL_PLAY_WINDOW_KIND_ID;
+			if (!lod || !isDagDrawLodKind(lod)) return;
+			if (scopeId !== PROCEDURAL_PLAY_WINDOW_KIND_ID) return;
+			if (this.effectiveLod === lod) return;
+			this.effectiveLod = lod;
+			this.rebuildShellMode();
+			this.emit();
 			return;
 		}
 		if (command === "setPreviewText") {
@@ -689,6 +746,13 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			expect(ctrl.mainMode.windowKinds).toHaveLength(2);
 			expect(ctrl.mainMode.windowKinds[1]?.id).toBe(PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW);
+		});
+
+		it("flow window exposes lod measure group", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+			expect(measures.some((measure) => measure.kind === "group" && measure.label === "LOD")).toBe(true);
 		});
 
 		it("setShowMode updates preview filter", () => {

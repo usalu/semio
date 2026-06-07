@@ -35,7 +35,6 @@ const DAG_NODE_EDGE_INSET: f64 = 4.0;
 const DAG_NODE_COLUMN_GAP: f64 = 3.0;
 const DAG_IO_WIDGET_HEIGHT: f64 = 28.0;
 const DAG_LABEL_SCREEN_PX: f64 = 11.0;
-const DAG_LABEL_COMPACT_SCREEN_PX: f64 = 10.0;
 
 /// 🔢 Row count for a computation node body from its IO and variadic flags.
 pub fn computation_io_row_count(input_count: usize, output_count: usize, variadic_inputs: bool, variadic_outputs: bool) -> usize {
@@ -50,14 +49,38 @@ pub fn computation_node_height(input_count: usize, output_count: usize, variadic
         * DAG_CHANNEL_ROW_HEIGHT
 }
 
-/// 📐 Computation node width from IO labels and the centered name.
+fn dag_glyph_extent(glyph: &str, px: f64) -> (f64, f64) {
+    let trimmed = glyph.trim();
+    if trimmed.is_empty() || px < 4.0 {
+        return (0.0, 0.0);
+    }
+    let pad = px * 0.35;
+    let w = trimmed.len() as f64 * px * 0.62 + pad * 2.0;
+    let h = px * 1.6 + pad * 2.0;
+    (w, h)
+}
+
+fn stacked_vertical_name_column_width(name: &str, px: f64) -> f64 {
+    let name_px = px * 1.05;
+    let trimmed = name.trim();
+    if trimmed.is_empty() {
+        return name_px;
+    }
+    let max_glyph_w = trimmed
+        .chars()
+        .map(|ch| dag_glyph_extent(&ch.to_string(), name_px).0)
+        .fold(0.0, f64::max);
+    (max_glyph_w + 2.0).max(name_px * 0.55)
+}
+
+/// 📐 Computation node width from IO labels and the stacked vertical name column.
 pub fn computation_node_width(name: &str, inputs: &[IoPortSpec], outputs: &[IoPortSpec]) -> f64 {
     use cavas::text::label_extent;
     let px = DAG_LABEL_SCREEN_PX;
-    let (name_w, _) = label_extent(name, px);
+    let name_col_w = stacked_vertical_name_column_width(name, px);
     let left_w = inputs.iter().map(|port| label_extent(&port.label, px).0).fold(0.0, f64::max);
     let right_w = outputs.iter().map(|port| label_extent(&port.label, px).0).fold(0.0, f64::max);
-    let content = left_w + DAG_NODE_COLUMN_GAP + name_w + DAG_NODE_COLUMN_GAP + right_w;
+    let content = left_w + DAG_NODE_COLUMN_GAP + name_col_w + DAG_NODE_COLUMN_GAP + right_w;
     (content + DAG_NODE_EDGE_INSET * 2.0).max(40.0)
 }
 
@@ -369,7 +392,7 @@ fn computation_name_column_bounds(node: &DagNodeSpec, px: f64) -> (f64, f64) {
     let outputs = node.outputs();
     let left_w = inputs.iter().map(|port| label_extent(&port.label, px).0).fold(0.0, f64::max);
     let right_w = outputs.iter().map(|port| label_extent(&port.label, px).0).fold(0.0, f64::max);
-    let (name_w, _) = label_extent(&node.name, px * 1.05);
+    let name_w = stacked_vertical_name_column_width(&node.name, px);
     let name_left = if inputs.is_empty() && outputs.is_empty() {
         node.x - name_w * 0.5
     } else if inputs.is_empty() {
@@ -763,11 +786,8 @@ fn dag_world_stroke(screen_px: f64, zoom: f64) -> f64 {
     (screen_px / zoom.max(0.05)).max(1e-3)
 }
 
-fn dag_label_screen_px(lod: DagDrawLod) -> f64 {
-    match lod {
-        DagDrawLod::Compact => DAG_LABEL_COMPACT_SCREEN_PX,
-        _ => DAG_LABEL_SCREEN_PX,
-    }
+fn dag_label_screen_px(_lod: DagDrawLod) -> f64 {
+    DAG_LABEL_SCREEN_PX
 }
 
 /// 📶 Camera-zoom draw tier for DAG node chrome.
@@ -790,6 +810,18 @@ impl DagDrawLod {
             Self::Normal => "normal",
             Self::Detail => "detail",
             Self::Micro => "micro",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Option<Self> {
+        match id.trim() {
+            "minimap" => Some(Self::Minimap),
+            "overview" => Some(Self::Overview),
+            "compact" => Some(Self::Compact),
+            "normal" => Some(Self::Normal),
+            "detail" => Some(Self::Detail),
+            "micro" => Some(Self::Micro),
+            _ => None,
         }
     }
 
@@ -837,6 +869,30 @@ impl DagDrawLod {
 pub fn dag_draw_lod(zoom: f64) -> DagDrawLod {
     DagDrawLod::from_scale_index(DAG_LOD_SCALE.resolve_index(zoom))
 }
+
+fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+    if max_zoom.is_finite() {
+        serde_json::json!(max_zoom)
+    } else {
+        serde_json::json!(f64::MAX)
+    }
+}
+
+/// 📶 JSON LOD table for React window chrome (`id`, `name`, `description`, `maxZoom`).
+pub fn dag_lod_scale_json() -> String {
+    let rows: Vec<serde_json::Value> = DAG_LODS
+        .iter()
+        .map(|lod| {
+            serde_json::json!({
+                "id": lod.id,
+                "name": lod.name,
+                "description": lod.description,
+                "maxZoom": lod_max_zoom_json(lod.max_zoom),
+            })
+        })
+        .collect();
+    serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+}
 // #endregion 🔖Lod
 
 fn dag_debug_log(msg: &str) {
@@ -867,6 +923,8 @@ pub struct DagHost {
     dimmed: HashSet<NodeId>,
     wheel_zoom_active: bool,
     wheel_zoom_render_lod: Option<DagDrawLod>,
+    automatic_lod: bool,
+    forced_draw_lod: Option<DagDrawLod>,
 }
 
 fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
@@ -947,6 +1005,8 @@ impl DagHost {
             dimmed: HashSet::new(),
             wheel_zoom_active: false,
             wheel_zoom_render_lod: None,
+            automatic_lod: true,
+            forced_draw_lod: None,
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -1148,20 +1208,57 @@ impl DagHost {
     /// 🔍 Pins draw LOD while the wheel gesture is active so chrome does not flicker across bands.
     pub fn set_wheel_zoom_active(&mut self, active: bool) {
         if active && !self.wheel_zoom_active {
-            self.wheel_zoom_render_lod = Some(dag_draw_lod(self.fixture.camera.zoom));
+            self.wheel_zoom_render_lod = Some(self.resolved_draw_lod());
         } else if !active {
             self.wheel_zoom_render_lod = None;
         }
         self.wheel_zoom_active = active;
     }
 
+    fn resolved_draw_lod(&self) -> DagDrawLod {
+        if !self.automatic_lod {
+            if let Some(lod) = self.forced_draw_lod {
+                return lod;
+            }
+        }
+        dag_draw_lod(self.fixture.camera.zoom)
+    }
+
     fn draw_lod_for_frame(&self) -> DagDrawLod {
+        if !self.automatic_lod {
+            if let Some(lod) = self.forced_draw_lod {
+                return lod;
+            }
+        }
         if self.wheel_zoom_active {
             if let Some(pinned) = self.wheel_zoom_render_lod {
                 return pinned;
             }
         }
         dag_draw_lod(self.fixture.camera.zoom)
+    }
+
+    /// 📶 Active draw LOD tier label (`minimap`, `overview`, …).
+    pub fn draw_lod_label(&self) -> &'static str {
+        self.draw_lod_for_frame().label()
+    }
+
+    /// 📶 When true (default), camera zoom selects draw LOD; when false, optional `forced_draw_lod` pins the tier.
+    pub fn set_automatic_lod(&mut self, enabled: bool) {
+        self.automatic_lod = enabled;
+        if enabled {
+            self.forced_draw_lod = None;
+        }
+    }
+
+    /// 📶 Pins WASM draw LOD when {@link DagHost::set_automatic_lod} is false; pass an empty label to follow zoom bands.
+    pub fn set_forced_draw_lod_label(&mut self, label: &str) {
+        let trimmed = label.trim();
+        if trimmed.is_empty() {
+            self.forced_draw_lod = None;
+            return;
+        }
+        self.forced_draw_lod = DagDrawLod::from_id(trimmed);
     }
 
     pub fn load_fixture_json(json: &str) -> Result<Self, String> {
@@ -1578,6 +1675,39 @@ impl DagHost {
         }
     }
 
+    fn paint_stacked_vertical_name(
+        scene: &mut cavas::vello::Scene,
+        center_screen: cavas::vello::kurbo::Point,
+        name: &str,
+        px: f64,
+        label_fill: cavas::vello::peniko::Color,
+        label_halo: cavas::vello::peniko::Color,
+    ) {
+        use cavas::text::append_label;
+        use cavas::vello::kurbo::Point;
+        let trimmed = name.trim();
+        if trimmed.is_empty() {
+            return;
+        }
+        let chars: Vec<char> = trimmed.chars().collect();
+        let line_step = px * 1.1;
+        let total_h = chars.len() as f64 * line_step;
+        let mut y = center_screen.y - total_h * 0.5;
+        for ch in chars {
+            let glyph = ch.to_string();
+            let (w, _) = dag_glyph_extent(&glyph, px);
+            append_label(
+                scene,
+                &glyph,
+                Point::new(center_screen.x - w * 0.5, y),
+                px,
+                label_fill,
+                label_halo,
+            );
+            y += line_step;
+        }
+    }
+
     fn paint_node_name_vertical(
         scene: &mut cavas::vello::Scene,
         center_screen: cavas::vello::kurbo::Point,
@@ -1592,10 +1722,9 @@ impl DagHost {
         if trimmed.is_empty() {
             return;
         }
-        let name_px = px * 1.05;
-        let (w, h) = label_extent(trimmed, name_px);
+        let (w, h) = label_extent(trimmed, px);
         let mut label_scene = cavas::vello::Scene::new();
-        append_label(&mut label_scene, trimmed, Point::new(0.0, 0.0), name_px, label_fill, label_halo);
+        append_label(&mut label_scene, trimmed, Point::new(0.0, 0.0), px, label_fill, label_halo);
         let rot = Affine::translate((center_screen.x, center_screen.y))
             * Affine::rotate(-std::f64::consts::FRAC_PI_2)
             * Affine::translate((-w * 0.5, -h * 0.5));
@@ -1617,7 +1746,22 @@ impl DagHost {
         }
     }
 
-    fn paint_computation_channel_borders(
+    fn paint_computation_name_column_fill(
+        scene: &mut cavas::vello::Scene,
+        aff: cavas::vello::kurbo::Affine,
+        node: &DagNodeSpec,
+        px: f64,
+        fill: cavas::vello::peniko::Color,
+    ) {
+        use cavas::vello::kurbo::Rect;
+        use cavas::vello::peniko::Fill;
+        let hh = node.height * 0.5;
+        let (name_left, name_right) = computation_name_column_bounds(node, px);
+        let rect = Rect::new(name_left, node.y - hh, name_right, node.y + hh);
+        scene.fill(Fill::NonZero, aff, vello_color_with_alpha(fill, 255), None, &rect);
+    }
+
+    fn paint_computation_section_dividers(
         scene: &mut cavas::vello::Scene,
         aff: cavas::vello::kurbo::Affine,
         node: &DagNodeSpec,
@@ -1626,27 +1770,13 @@ impl DagHost {
         stroke: cavas::vello::peniko::Color,
     ) {
         use cavas::vello::kurbo::{Line, Point, Stroke};
-        let DagNodeKind::Computation {
-            inputs,
-            outputs,
-            variadic_inputs,
-            variadic_outputs,
-        } = &node.kind
-        else {
+        if !matches!(node.kind, DagNodeKind::Computation { .. }) {
             return;
-        };
-        let hw = node.width * 0.5;
+        }
         let hh = node.height * 0.5;
         let top = node.y - hh;
         let bottom = node.y + hh;
-        let left = node.x - hw;
-        let right = node.x + hw;
         let stroke_style = Stroke::new(chrome_stroke);
-        let row_count = computation_io_row_count(inputs.len(), outputs.len(), *variadic_inputs, *variadic_outputs) + DAG_COMPUTATION_HEADER_ROWS;
-        for boundary in 1..row_count {
-            let y = top + boundary as f64 * DAG_CHANNEL_ROW_HEIGHT;
-            scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(left, y), Point::new(right, y)));
-        }
         let (name_left, name_right) = computation_name_column_bounds(node, px);
         scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(name_left, top), Point::new(name_left, bottom)));
         scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(name_right, top), Point::new(name_right, bottom)));
@@ -1679,7 +1809,8 @@ impl DagHost {
         use cavas::camera::world_to_screen;
         use cavas::vello::kurbo::Point;
         let anchor = world_to_screen(cam, viewport, Point::new(node.x, node.y));
-        Self::paint_node_name_vertical(scene, anchor, &node.name, px, label_fill, label_halo);
+        let clear_halo = vello_color_with_alpha(label_halo, 0);
+        Self::paint_stacked_vertical_name(scene, anchor, &node.name, px, label_fill, clear_halo);
     }
 
     fn paint_io_widget_name(
@@ -1750,9 +1881,10 @@ impl DagHost {
         let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
         if matches!(node.kind, DagNodeKind::Computation { .. }) {
             let chrome_stroke = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
-            Self::paint_computation_channel_borders(scene, aff, node, px, chrome_stroke, theme.node_stroke);
-            Self::paint_computation_node_name(scene, &cam, &viewport, node, px, label_fill, label_halo);
             Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+            Self::paint_computation_name_column_fill(scene, aff, node, px, ghost_fill);
+            Self::paint_computation_section_dividers(scene, aff, node, px, chrome_stroke, theme.node_stroke);
+            Self::paint_computation_node_name(scene, &cam, &viewport, node, px, label_fill, label_halo);
         } else {
             Self::paint_node_name_horizontal(scene, center_screen, &node.name, px, label_fill, label_halo);
         }
@@ -1822,14 +1954,16 @@ impl DagHost {
             let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
             if lod.name_is_horizontal() {
                 Self::paint_node_name_horizontal(scene, center_screen, &node.name, px, label_fill, label_halo);
-                continue;
-            }
+            } else {
             match &node.kind {
                 DagNodeKind::Computation { variadic_inputs, .. } => {
                     if lod.shows_computation_layout() {
-                        Self::paint_computation_channel_borders(scene, aff, node, px, chrome_stroke, theme.node_stroke);
+                        if lod.shows_port_labels() {
+                            Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                        }
+                        Self::paint_computation_name_column_fill(scene, aff, node, px, fill);
+                        Self::paint_computation_section_dividers(scene, aff, node, px, chrome_stroke, theme.node_stroke);
                         Self::paint_computation_node_name(scene, &cam, &viewport, node, px, label_fill, label_halo);
-                        Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
                         if *variadic_inputs && cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
                             Self::paint_variadic_plus_controls(scene, &cam, &viewport, node, px, accent, label_halo);
                         }
@@ -1964,6 +2098,7 @@ impl DagHost {
                     }
                 }
             }
+            }
         }
         if lod.shows_handles() {
             let handle_world_r = DAG_HANDLE_SCREEN_RADIUS_PX / cam.zoom.max(0.05);
@@ -2075,6 +2210,26 @@ mod wasm_session {
         #[wasm_bindgen(js_name = setWheelZoomActive)]
         pub fn set_wheel_zoom_active(&self, active: bool) {
             self.state.borrow_mut().host.set_wheel_zoom_active(active);
+        }
+
+        #[wasm_bindgen(js_name = lodScaleJson)]
+        pub fn lod_scale_json(&self) -> String {
+            dag_lod_scale_json()
+        }
+
+        #[wasm_bindgen(js_name = setAutomaticLod)]
+        pub fn set_automatic_lod(&self, enabled: bool) {
+            self.state.borrow_mut().host.set_automatic_lod(enabled);
+        }
+
+        #[wasm_bindgen(js_name = setForcedDrawLodLabel)]
+        pub fn set_forced_draw_lod_label(&self, label: &str) {
+            self.state.borrow_mut().host.set_forced_draw_lod_label(label);
+        }
+
+        #[wasm_bindgen(js_name = drawLodLabel)]
+        pub fn draw_lod_label(&self) -> String {
+            self.state.borrow().host.draw_lod_label().to_string()
         }
 
         #[wasm_bindgen(js_name = pointerDown)]
@@ -2554,6 +2709,23 @@ mod tests {
     }
 
     #[test]
+    fn computation_name_column_width_fits_stacked_vertical_text() {
+        let inputs = vec![
+            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
+            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
+            IoPortSpec { id: "height".into(), label: "height".into() },
+        ];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
+        let width = computation_node_width("brep.box", &inputs, &outputs);
+        let height = computation_node_height(3, 1, false, false);
+        let node = DagNodeSpec::computation("box".into(), "brep.box".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
+        let (name_left, name_right) = computation_name_column_bounds(&node, DAG_LABEL_SCREEN_PX);
+        let col_w = name_right - name_left;
+        assert!(col_w < 22.0, "name column should be glyph-narrow, got {col_w}");
+        assert!(width < 170.0, "node should shrink versus horizontal-name layout, got {width}");
+    }
+
+    #[test]
     fn computation_name_column_bounds_leave_visible_gutter() {
         let inputs = vec![
             IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
@@ -2667,6 +2839,26 @@ mod tests {
         assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Normal);
         host.set_wheel_zoom_active(false);
         assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Overview);
+    }
+
+    #[test]
+    fn dag_label_screen_px_is_constant_per_lod() {
+        assert_eq!(dag_label_screen_px(DagDrawLod::Overview), dag_label_screen_px(DagDrawLod::Compact));
+        assert_eq!(dag_label_screen_px(DagDrawLod::Normal), DAG_LABEL_SCREEN_PX);
+    }
+
+    #[test]
+    fn manual_lod_pins_draw_tier_until_automatic_restored() {
+        let mut host = DagHost::default_demo();
+        host.fixture.camera.zoom = 1.0;
+        assert_eq!(host.draw_lod_label(), "normal");
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("minimap");
+        assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Minimap);
+        host.fixture.camera.zoom = 5.0;
+        assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Minimap);
+        host.set_automatic_lod(true);
+        assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Micro);
     }
 
     #[test]

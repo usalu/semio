@@ -18,6 +18,7 @@ import {
 } from "@geometry/brep/js";
 import {
 	FlowCanvas,
+	type DagDrawLodKind,
 	FlowExtensionHost,
 	createFlowEvalBridge,
 	type CatalogueSection,
@@ -42,6 +43,7 @@ import {
 	WorldOrbitProjectionSwitch,
 	WorldOrbitViewControls,
 	WorldOrbitViewSnapGateProvider,
+	WorldEventBindingController,
 	type OrbitCameraProjection,
 	type WorldCameraState,
 } from "@infinite/world/r3f";
@@ -859,7 +861,8 @@ function BrepGeometryLayer({
 	const pointerHandlers =
 		onHover || onPick
 			? {
-					onPointerDown: (event: { stopPropagation: () => void }) => {
+					onPointerDown: (event: { stopPropagation: () => void; nativeEvent: PointerEvent }) => {
+						if (event.nativeEvent.button !== 0) return;
 						event.stopPropagation();
 					},
 					onPointerOver: (event: { stopPropagation: () => void }) => {
@@ -909,8 +912,8 @@ export const PROCEDURAL_PREVIEW_DEFAULT_CAMERA: WorldCameraState = {
 	projection: "perspective",
 };
 
-export function proceduralPreviewCameraSeed(camera: WorldCameraState, seed: number): string {
-	return `${seed}|${camera.projection ?? "perspective"}|${camera.position.join(",")}|${camera.target.join(",")}`;
+export function proceduralPreviewCameraSeed(seed: number): string {
+	return String(seed);
 }
 
 type ScreenBounds = { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number };
@@ -959,6 +962,126 @@ function ProceduralPreviewCameraBridge({
 	return null;
 }
 
+function ProceduralPreviewMarqueeBridge({
+	containerRef,
+	selectionMethod,
+	selectedNodeIds,
+	resolveMarqueeHits,
+	commitSelection,
+	onMarqueeOverlay,
+	onLivePreselect,
+}: {
+	readonly containerRef: React.RefObject<HTMLDivElement | null>;
+	readonly selectionMethod: ProceduralSelectionMethod;
+	readonly selectedNodeIds: readonly string[];
+	readonly resolveMarqueeHits: (points: readonly { x: number; y: number }[], crossing: boolean) => string[];
+	readonly commitSelection: (ids: readonly string[], mode: ProceduralSelectionMode) => void;
+	readonly onMarqueeOverlay: (overlay: {
+		coverage: SelectionMarqueeCoverage;
+		shape: "rect" | "polygon";
+		rect?: { x: number; y: number; width: number; height: number };
+		points?: readonly { x: number; y: number }[];
+	} | null) => void;
+	readonly onLivePreselect: (snapshot: { ids: string[]; removedIds: string[] }) => void;
+}): null {
+	const gl = sceneHostPort.fiber.useThree((state) => state.gl);
+	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
+	const marqueeRef = useRef<{ tracking: boolean; active: boolean; start: { x: number; y: number }; points: { x: number; y: number }[]; initial: string[] }>({
+		tracking: false,
+		active: false,
+		start: { x: 0, y: 0 },
+		points: [],
+		initial: [],
+	});
+	const resolveMarqueeHitsRef = useRef(resolveMarqueeHits);
+	const commitSelectionRef = useRef(commitSelection);
+	const onMarqueeOverlayRef = useRef(onMarqueeOverlay);
+	const onLivePreselectRef = useRef(onLivePreselect);
+	const selectionMethodRef = useRef(selectionMethod);
+	const selectedNodeIdsRef = useRef(selectedNodeIds);
+	resolveMarqueeHitsRef.current = resolveMarqueeHits;
+	commitSelectionRef.current = commitSelection;
+	onMarqueeOverlayRef.current = onMarqueeOverlay;
+	onLivePreselectRef.current = onLivePreselect;
+	selectionMethodRef.current = selectionMethod;
+	selectedNodeIdsRef.current = selectedNodeIds;
+
+	const clientToLocal = useCallback(
+		(clientX: number, clientY: number) => {
+			const host = containerRef.current;
+			if (!host) return { x: clientX, y: clientY };
+			const rect = host.getBoundingClientRect();
+			return { x: clientX - rect.left, y: clientY - rect.top };
+		},
+		[containerRef],
+	);
+
+	useEffect(() => {
+		const canvas = gl.domElement;
+		if (!canvas) return;
+		const resetGesture = () => {
+			marqueeRef.current = { tracking: false, active: false, start: { x: 0, y: 0 }, points: [], initial: [] };
+			onMarqueeOverlayRef.current(null);
+			onLivePreselectRef.current({ ids: [], removedIds: [] });
+		};
+		const onPointerDown = (event: PointerEvent) => {
+			if (event.button !== 0) return;
+			if ((event.target as HTMLElement | null)?.closest("[data-world-projection-switch]")) return;
+			const point = clientToLocal(event.clientX, event.clientY);
+			marqueeRef.current = { tracking: true, active: false, start: point, points: [point], initial: [...selectedNodeIdsRef.current] };
+			onMarqueeOverlayRef.current(null);
+			onLivePreselectRef.current({ ids: [], removedIds: [] });
+		};
+		const onPointerMove = (event: PointerEvent) => {
+			if (!marqueeRef.current.tracking) return;
+			const point = clientToLocal(event.clientX, event.clientY);
+			const start = marqueeRef.current.start;
+			const distance = Math.hypot(point.x - start.x, point.y - start.y);
+			if (!marqueeRef.current.active && distance < PROCEDURAL_PREVIEW_MARQUEE_THRESHOLD_PX) return;
+			marqueeRef.current.active = true;
+			const points = selectionMethodRef.current === "lasso" ? [...marqueeRef.current.points, point] : [start, point];
+			marqueeRef.current.points = points;
+			const coverage = marqueeCoverageFromDrag(start.x, point.x);
+			if (selectionMethodRef.current === "lasso" && points.length >= 3) {
+				onMarqueeOverlayRef.current({ coverage, shape: "polygon", points });
+			} else {
+				const rect = screenRectFromPoints(points);
+				if (rect) onMarqueeOverlayRef.current({ coverage, shape: "rect", rect });
+			}
+			const mode = marqueeModeFromModifiers(event);
+			const hits = resolveMarqueeHitsRef.current(points, coverage === "partial");
+			const merged = selectionMergeIds(mode, marqueeRef.current.initial, hits);
+			const removed = marqueeRef.current.initial.filter((id) => !merged.includes(id));
+			onLivePreselectRef.current({ ids: merged.filter((id) => !marqueeRef.current.initial.includes(id)), removedIds: removed });
+			invalidate();
+		};
+		const onPointerUp = (event: PointerEvent) => {
+			if (!marqueeRef.current.tracking) return;
+			const point = clientToLocal(event.clientX, event.clientY);
+			const start = marqueeRef.current.start;
+			const distance = Math.hypot(point.x - start.x, point.y - start.y);
+			const mode = marqueeModeFromModifiers(event);
+			if (marqueeRef.current.active && distance >= PROCEDURAL_PREVIEW_MARQUEE_THRESHOLD_PX) {
+				const points = selectionMethodRef.current === "lasso" ? [...marqueeRef.current.points, point] : [start, point];
+				const coverage = marqueeCoverageFromDrag(start.x, point.x);
+				const hits = resolveMarqueeHitsRef.current(points, coverage === "partial");
+				const next = selectionMergeIds(mode, marqueeRef.current.initial, hits);
+				commitSelectionRef.current(next, mode);
+			}
+			resetGesture();
+			invalidate();
+		};
+		const bindings = new WorldEventBindingController();
+		bindings.listen(canvas, "pointerdown", onPointerDown as EventListener);
+		bindings.listen(window, "pointermove", onPointerMove as EventListener);
+		bindings.listen(window, "pointerup", onPointerUp as EventListener, true);
+		bindings.listen(window, "pointercancel", onPointerUp as EventListener, true);
+		return () => bindings.dispose();
+	}, [clientToLocal, gl, invalidate]);
+
+	return null;
+}
+
 export function ProceduralPreview({
 	handles,
 	selectedNodeIds = [],
@@ -982,9 +1105,8 @@ export function ProceduralPreview({
 	const lodRef = useRef(DEFAULT_MANUAL_LOD);
 	const [camera, setCamera] = useState<WorldCameraState>(PROCEDURAL_PREVIEW_DEFAULT_CAMERA);
 	const [cameraSeed, setCameraSeed] = useState(0);
-	const cameraSeedKey = useMemo(() => proceduralPreviewCameraSeed(camera, cameraSeed), [camera, cameraSeed]);
+	const cameraSeedKey = proceduralPreviewCameraSeed(cameraSeed);
 	const projection = camera.projection ?? "perspective";
-	const [orbitEnabled, setOrbitEnabled] = useState(true);
 	const [marqueeOverlay, setMarqueeOverlay] = useState<{
 		coverage: SelectionMarqueeCoverage;
 		shape: "rect" | "polygon";
@@ -992,12 +1114,6 @@ export function ProceduralPreview({
 		points?: readonly { x: number; y: number }[];
 	} | null>(null);
 	const [livePreselect, setLivePreselect] = useState<{ ids: string[]; removedIds: string[] }>({ ids: [], removedIds: [] });
-	const marqueeRef = useRef<{ active: boolean; start: { x: number; y: number }; points: { x: number; y: number }[]; initial: string[] }>({
-		active: false,
-		start: { x: 0, y: 0 },
-		points: [],
-		initial: [],
-	});
 
 	const visibleHandles =
 		showMode === "selected" ? handles.filter((entry) => selectedNodeIds.includes(entry.widgetId)) : handles;
@@ -1068,71 +1184,6 @@ export function ProceduralPreview({
 		[commitSelection, selectedNodeIds],
 	);
 
-	const clientToLocal = useCallback((clientX: number, clientY: number) => {
-		const host = containerRef.current;
-		if (!host) return { x: clientX, y: clientY };
-		const rect = host.getBoundingClientRect();
-		return { x: clientX - rect.left, y: clientY - rect.top };
-	}, []);
-
-	const onOverlayPointerDown = useCallback(
-		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (event.button !== 0) return;
-			event.currentTarget.setPointerCapture(event.pointerId);
-			const point = clientToLocal(event.clientX, event.clientY);
-			marqueeRef.current = { active: true, start: point, points: [point], initial: [...selectedNodeIds] };
-			setOrbitEnabled(false);
-			setMarqueeOverlay(null);
-			setLivePreselect({ ids: [], removedIds: [] });
-		},
-		[clientToLocal, selectedNodeIds],
-	);
-
-	const onOverlayPointerMove = useCallback(
-		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (!marqueeRef.current.active) return;
-			const point = clientToLocal(event.clientX, event.clientY);
-			const start = marqueeRef.current.start;
-			const points = selectionMethod === "lasso" ? [...marqueeRef.current.points, point] : [start, point];
-			marqueeRef.current.points = points;
-			const coverage = marqueeCoverageFromDrag(start.x, point.x);
-			if (selectionMethod === "lasso" && points.length >= 3) {
-				setMarqueeOverlay({ coverage, shape: "polygon", points });
-			} else {
-				const rect = screenRectFromPoints(points);
-				if (rect) setMarqueeOverlay({ coverage, shape: "rect", rect });
-			}
-			const mode = marqueeModeFromModifiers(event);
-			const hits = resolveMarqueeHits(points, coverage === "partial");
-			const merged = selectionMergeIds(mode, marqueeRef.current.initial, hits);
-			const removed = marqueeRef.current.initial.filter((id) => !merged.includes(id));
-			setLivePreselect({ ids: merged.filter((id) => !marqueeRef.current.initial.includes(id)), removedIds: removed });
-		},
-		[clientToLocal, resolveMarqueeHits, selectionMethod],
-	);
-
-	const onOverlayPointerUp = useCallback(
-		(event: React.PointerEvent<HTMLDivElement>) => {
-			if (!marqueeRef.current.active) return;
-			const point = clientToLocal(event.clientX, event.clientY);
-			const start = marqueeRef.current.start;
-			const distance = Math.hypot(point.x - start.x, point.y - start.y);
-			const mode = marqueeModeFromModifiers(event);
-			if (distance >= PROCEDURAL_PREVIEW_MARQUEE_THRESHOLD_PX) {
-				const points = selectionMethod === "lasso" ? [...marqueeRef.current.points, point] : [start, point];
-				const coverage = marqueeCoverageFromDrag(start.x, point.x);
-				const hits = resolveMarqueeHits(points, coverage === "partial");
-				const next = selectionMergeIds(mode, marqueeRef.current.initial, hits);
-				commitSelection(next, mode);
-			}
-			marqueeRef.current = { active: false, start: { x: 0, y: 0 }, points: [], initial: [] };
-			setOrbitEnabled(true);
-			setMarqueeOverlay(null);
-			setLivePreselect({ ids: [], removedIds: [] });
-		},
-		[clientToLocal, commitSelection, resolveMarqueeHits, selectionMethod],
-	);
-
 	const onProjectionChange = useCallback((nextProjection: OrbitCameraProjection) => {
 		setCamera((prev) => applyOrbitProjectionToCameraState(prev, nextProjection));
 		setCameraSeed((seed) => seed + 1);
@@ -1148,14 +1199,7 @@ export function ProceduralPreview({
 	}, []);
 
 	return (
-		<div
-			ref={containerRef}
-			className={className ?? "relative h-full w-full bg-zinc-900"}
-			onPointerDown={onOverlayPointerDown}
-			onPointerMove={onOverlayPointerMove}
-			onPointerUp={onOverlayPointerUp}
-			onPointerCancel={onOverlayPointerUp}
-		>
+		<div ref={containerRef} className={className ?? "relative h-full w-full bg-zinc-900"}>
 			<WorldCanvas
 				frameloop="demand"
 				background="#18181b"
@@ -1174,15 +1218,18 @@ export function ProceduralPreview({
 				>
 					<WorldOrbitViewSnapGateProvider>
 						<WorldOrbitCameraViewRig state={camera} seedKey={cameraSeedKey} perspectiveFov={45} />
-						<WorldOrbitGated
-							controlsKey={cameraSeedKey}
-							projection={projection}
-							zoom={camera.zoom}
-							controlsGate={!orbitEnabled}
-							onCamera={onOrbitCameraChange}
-						/>
+						<WorldOrbitGated controlsKey={cameraSeedKey} projection={projection} zoom={camera.zoom} onCamera={onOrbitCameraChange} />
 						<WorldOrbitViewControls onCameraChange={onViewportGizmoCameraChange} />
 						<ProceduralPreviewCameraBridge onCamera={handleCamera} />
+						<ProceduralPreviewMarqueeBridge
+							containerRef={containerRef}
+							selectionMethod={selectionMethod}
+							selectedNodeIds={selectedNodeIds}
+							resolveMarqueeHits={resolveMarqueeHits}
+							commitSelection={commitSelection}
+							onMarqueeOverlay={setMarqueeOverlay}
+							onLivePreselect={setLivePreselect}
+						/>
 						<WorldCameraInvalidator />
 						<ambientLight intensity={0.45} />
 						<directionalLight position={[12, 18, 10]} intensity={1.1} />
@@ -1269,6 +1316,9 @@ export interface ProceduralFlowEditorProps {
 	readonly previewOffNodeIds?: readonly string[];
 	readonly selectionMode?: ProceduralSelectionMode;
 	readonly selectionMethod?: ProceduralSelectionMethod;
+	readonly automaticLod?: boolean;
+	readonly lod?: DagDrawLodKind;
+	readonly onLodChange?: (lod: DagDrawLodKind) => void;
 }
 
 export function ProceduralFlowEditor({
@@ -1291,6 +1341,9 @@ export function ProceduralFlowEditor({
 	previewOffNodeIds,
 	selectionMode,
 	selectionMethod,
+	automaticLod,
+	lod,
+	onLodChange,
 }: ProceduralFlowEditorProps): ReactNode {
 	const hostRef = useRef(extensionHost);
 
@@ -1320,6 +1373,9 @@ export function ProceduralFlowEditor({
 			previewOffNodeIds={previewOffNodeIds}
 			selectionMode={selectionMode}
 			selectionMethod={selectionMethod}
+			automaticLod={automaticLod}
+			lod={lod}
+			onLodChange={onLodChange}
 			className={className ?? "h-full w-full"}
 		/>
 	);
@@ -1413,11 +1469,11 @@ if (import.meta.vitest) {
 			});
 		});
 
-		it("procedural preview camera seed changes when projection changes", () => {
+		it("procedural preview camera seed bumps only on intentional view re-seeds", () => {
+			expect(proceduralPreviewCameraSeed(0)).toBe("0");
+			expect(proceduralPreviewCameraSeed(1)).toBe("1");
 			const ortho = applyOrbitProjectionToCameraState(PROCEDURAL_PREVIEW_DEFAULT_CAMERA, "orthographic");
-			const seedA = proceduralPreviewCameraSeed(PROCEDURAL_PREVIEW_DEFAULT_CAMERA, 0);
-			const seedB = proceduralPreviewCameraSeed(ortho, 1);
-			expect(seedA).not.toBe(seedB);
+			expect(ortho.projection).toBe("orthographic");
 		});
 
 		it("procedural preview mounts the infinite-world viewport stack", async () => {

@@ -21,7 +21,20 @@ import {
 } from "@framework/playground/core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
-import { DAG_DEFAULT_FIXTURE, dagFixtureToJson, type DagFixtureV1, type DagReorganizeRequest } from "@dag/react";
+import {
+  DAG_DEFAULT_FIXTURE,
+  DAG_LOD_MODE_AUTOMATIC,
+  dagPlayLodTiers,
+  dagFixtureToJson,
+  dagLodAutomaticSelectLabel,
+  dagPlayLodTierMenuLabel,
+  isDagDrawLodKind,
+  type DagDrawLodKind,
+  type DagFixtureV1,
+  type DagLodModeKind,
+  type DagReorganizeRequest,
+} from "@dag/react";
+import type { WindowMeasure } from "@framework/playground/core";
 
 export const DAG_PLAY_APP_ID = "dag-play";
 export const DAG_PLAY_CONTROLLER_ID = "dag-play";
@@ -61,6 +74,9 @@ export class DagPlayController extends Controller {
   private orientation: DagLayoutOrientation = "leftRight";
   private reorganizeEpoch = 0;
   private reorganizeOptionsJson = buildDagLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
+  private lodMode: DagLodModeKind = DAG_LOD_MODE_AUTOMATIC;
+  private lodModeByInstance: Record<string, DagLodModeKind> = {};
+  private effectiveLod: DagDrawLodKind = "normal";
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(DAG_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -73,6 +89,27 @@ export class DagPlayController extends Controller {
 
   getReorganize(): DagReorganizeRequest {
     return { epoch: this.reorganizeEpoch, optionsJson: this.reorganizeOptionsJson };
+  }
+
+  lodModeForScope(scopeId: string): DagLodModeKind {
+    return this.lodModeByInstance[scopeId] ?? this.lodMode;
+  }
+
+  private lodMeasure(scopeId: string): WindowMeasure {
+    return {
+      kind: "select",
+      id: `${scopeId}-lod`,
+      value: this.lodModeForScope(scopeId),
+      items: [
+        { id: "automatic", value: DAG_LOD_MODE_AUTOMATIC, label: dagLodAutomaticSelectLabel(this.effectiveLod) },
+        ...dagPlayLodTiers().map((tier) => ({ id: tier, value: tier, label: dagPlayLodTierMenuLabel(tier) })),
+      ],
+      onChange: { controllerId: DAG_PLAY_CONTROLLER_ID, command: "setLodMode", args: { instanceId: scopeId } },
+    };
+  }
+
+  private windowMeasures(): readonly WindowMeasure[] {
+    return [{ kind: "group", id: `${DAG_PLAY_WINDOW_KIND_ID}-lod`, label: "LOD", children: [this.lodMeasure(DAG_PLAY_WINDOW_KIND_ID)] }];
   }
 
   private syncReorganizeOptionsJson(): void {
@@ -129,7 +166,7 @@ export class DagPlayController extends Controller {
 
   private rebuildShellMode(): void {
     this.mainMode.windowKinds = [
-      new WindowKindRuntime(DAG_PLAY_WINDOW_KIND_ID, "DAG", DAG_PLAY_BODY_KEY_MAIN, undefined, [], this.windowEngagement()),
+      new WindowKindRuntime(DAG_PLAY_WINDOW_KIND_ID, "DAG", DAG_PLAY_BODY_KEY_MAIN, undefined, this.windowMeasures(), this.windowEngagement()),
     ];
     for (const windowKind of this.mainMode.windowKinds) {
       enforcePlaygroundWindowEngagementInput(windowKind.engagement, `DAG play window "${windowKind.id}"`);
@@ -182,6 +219,31 @@ export class DagPlayController extends Controller {
         this.fixtureJson = json;
         this.emit();
       }
+      return;
+    }
+    if (command === "setLodMode") {
+      const { value, instanceId } = args as { value?: string; instanceId?: string };
+      const scopeId = instanceId ?? DAG_PLAY_WINDOW_KIND_ID;
+      if (typeof value !== "string") return;
+      if (value !== DAG_LOD_MODE_AUTOMATIC && !isDagDrawLodKind(value)) return;
+      this.lodModeByInstance = { ...this.lodModeByInstance, [scopeId]: value as DagLodModeKind };
+      if (scopeId === DAG_PLAY_WINDOW_KIND_ID) {
+        this.lodMode = value as DagLodModeKind;
+      }
+      this.rebuildShellMode();
+      this.emit();
+      return;
+    }
+    if (command === "setEffectiveLod") {
+      const { lod, instanceId } = args as { lod?: DagDrawLodKind; instanceId?: string };
+      const scopeId = instanceId ?? DAG_PLAY_WINDOW_KIND_ID;
+      if (!lod || !isDagDrawLodKind(lod)) return;
+      if (scopeId !== DAG_PLAY_WINDOW_KIND_ID) return;
+      if (this.effectiveLod === lod) return;
+      this.effectiveLod = lod;
+      this.rebuildShellMode();
+      this.emit();
+      return;
     }
   }
 
@@ -259,6 +321,13 @@ if (import.meta.vitest) {
       ctrl.run("reorganize");
       expect(ctrl.getReorganize().epoch).toBe(1);
       expect(ctrl.getReorganize().optionsJson).toContain("leftRight");
+    });
+
+    it("lod window measure lists automatic and tiers", () => {
+      const bus = new CommandBus();
+      const ctrl = new DagPlayController(bus, () => {});
+      const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
+      expect(measures.some((measure) => measure.kind === "group" && measure.label === "LOD")).toBe(true);
     });
   });
 }
