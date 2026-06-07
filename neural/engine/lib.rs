@@ -155,9 +155,26 @@ pub trait Function: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
 }
 
+/// 📇 Catalogue metadata for a neuron kind.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NeuronKindInfo {
+    pub id: String,
+    pub module: String,
+    pub name: String,
+    pub summary: String,
+    pub inputs: Vec<String>,
+    pub outputs: Vec<String>,
+}
+
+struct RegistryEntry {
+    info: NeuronKindInfo,
+    function: Box<dyn Function>,
+}
+
 /// 📋 Registry of neuron kinds by id.
 pub struct Registry {
-    kinds: HashMap<String, Box<dyn Function>>,
+    kinds: HashMap<String, RegistryEntry>,
 }
 
 impl Default for Registry {
@@ -171,12 +188,19 @@ impl Registry {
         Self::default()
     }
 
-    pub fn register(&mut self, kind_id: impl Into<String>, function: Box<dyn Function>) {
-        self.kinds.insert(kind_id.into(), function);
+    pub fn register(&mut self, info: NeuronKindInfo, function: Box<dyn Function>) {
+        let id = info.id.clone();
+        self.kinds.insert(id, RegistryEntry { info, function });
     }
 
     pub fn get(&self, kind_id: &str) -> Option<&dyn Function> {
-        self.kinds.get(kind_id).map(|b| b.as_ref())
+        self.kinds.get(kind_id).map(|entry| entry.function.as_ref())
+    }
+
+    pub fn catalogue(&self) -> Vec<NeuronKindInfo> {
+        let mut items: Vec<NeuronKindInfo> = self.kinds.values().map(|entry| entry.info.clone()).collect();
+        items.sort_by(|a, b| a.id.cmp(&b.id));
+        items
     }
 }
 // #endregion 🔖NeuronKind
@@ -290,19 +314,52 @@ mod tests {
         assert_eq!(d, back);
     }
 
+    fn echo_info() -> NeuronKindInfo {
+        NeuronKindInfo {
+            id: "echo".into(),
+            module: "test".into(),
+            name: "Echo".into(),
+            summary: "Forwards input".into(),
+            inputs: vec!["x".into()],
+            outputs: vec!["x".into()],
+        }
+    }
+
+    fn double_info() -> NeuronKindInfo {
+        NeuronKindInfo {
+            id: "double".into(),
+            module: "test".into(),
+            name: "Double".into(),
+            summary: "Doubles number".into(),
+            inputs: vec!["number".into()],
+            outputs: vec!["number".into()],
+        }
+    }
+
     #[test]
     fn registry_dispatches_kind() {
         let mut reg = Registry::new();
-        reg.register("echo", Box::new(Echo));
+        reg.register(echo_info(), Box::new(Echo));
         let out = reg.get("echo").unwrap().evaluate(&Dictionary::new().insert("x", Value::Atom(Atom::Integer(1)))).unwrap();
         assert_eq!(out.get("x").and_then(|v| v.as_atom()), Some(&Atom::Integer(1)));
     }
 
     #[test]
+    fn registry_catalogue_lists_kinds() {
+        let mut reg = Registry::new();
+        reg.register(echo_info(), Box::new(Echo));
+        reg.register(double_info(), Box::new(Double));
+        let catalogue = reg.catalogue();
+        assert_eq!(catalogue.len(), 2);
+        assert_eq!(catalogue[0].id, "double");
+        assert_eq!(catalogue[1].id, "echo");
+    }
+
+    #[test]
     fn two_neuron_pipeline() {
         let mut reg = Registry::new();
-        reg.register("echo", Box::new(Echo));
-        reg.register("double", Box::new(Double));
+        reg.register(echo_info(), Box::new(Echo));
+        reg.register(double_info(), Box::new(Double));
         let tree = Tree {
             neurons: vec![
                 Neuron { id: "a".into(), kind: "echo".into(), params: Dictionary::new() },

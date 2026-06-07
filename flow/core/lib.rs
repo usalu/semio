@@ -1,16 +1,17 @@
 //! 🌊 Flow core: widgets, neural evaluation, and DAG canvas host.
 
+pub use flow_module_logic;
 pub use flow_module_math;
+pub use flow_module_text;
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed_dag as dag;
 pub use neural_engine as neural;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
-use dag::{apply_dag_layout_to_fixture_v1_value, would_create_cycle, DagBoardEngine, DagLayoutOptions, IoNodeSpec, IoPortSpec};
+use dag::{would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, IoNodeSpec, IoPortSpec};
 use neural::{Atom, Dictionary, Evaluator, Neuron, Registry, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
 
 // #region 🔖Widget
 /// 🎛️ Flow widget discriminant.
@@ -28,6 +29,13 @@ fn default_slider_value() -> f64 {
     3.0
 }
 
+/// 📍 Persisted widget position on the canvas.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct WidgetLayout {
+    pub x: f64,
+    pub y: f64,
+}
+
 /// 🧩 Serializable flow document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -36,6 +44,8 @@ pub struct FlowFixtureV1 {
     pub camera: CameraJson,
     pub widgets: Vec<Widget>,
     pub synapses: Vec<SynapseSpec>,
+    #[serde(default)]
+    pub layout: BTreeMap<String, WidgetLayout>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -67,6 +77,7 @@ impl Default for FlowFixtureV1 {
                 SynapseSpec { id: "s1".into(), from: "slider".into(), to: "add".into() },
                 SynapseSpec { id: "s2".into(), from: "add".into(), to: "preview".into() },
             ],
+            layout: BTreeMap::new(),
         }
     }
 }
@@ -92,34 +103,114 @@ fn widget_io_ports(widget: &Widget) -> (Vec<IoPortSpec>, Vec<IoPortSpec>) {
     }
 }
 
-fn widget_to_io_node(widget: &Widget, index: usize) -> IoNodeSpec {
+fn widget_to_io_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>) -> IoNodeSpec {
     let (inputs, outputs) = widget_io_ports(widget);
     let id = match widget {
         Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id.clone(),
     };
-    IoNodeSpec {
-        id: id.clone(),
-        name: widget_label(widget),
-        inputs,
-        outputs,
-        x: (index as f64) * 200.0,
-        y: 0.0,
-        width: 160.0,
-        height: 56.0,
-    }
+    let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
+    IoNodeSpec { id, name: widget_label(widget), inputs, outputs, x, y, width: 160.0, height: 56.0 }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum WidgetDescriptor {
+    Neuron { neuronKind: String },
+    InputSlider,
+    InputNote,
+    OutputPreview,
+    OutputAction { #[serde(default)] action: String },
 }
 // #endregion 🔖Widget
 
+// #region 🔖Catalogue
+/// 📚 Catalogue section for drag-and-drop palette.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogueSection {
+    pub id: String,
+    pub title: String,
+    pub items: Vec<CatalogueItem>,
+}
+
+/// 🧷 Draggable catalogue entry.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogueItem {
+    pub kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub neuronKind: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action: Option<String>,
+    pub name: String,
+    pub summary: String,
+}
+
+fn build_registry() -> Registry {
+    let mut registry = Registry::new();
+    flow_module_math::register(&mut registry);
+    flow_module_text::register(&mut registry);
+    flow_module_logic::register(&mut registry);
+    registry
+}
+
+fn build_catalogue() -> Vec<CatalogueSection> {
+    let registry = build_registry();
+    let mut by_module: BTreeMap<String, Vec<CatalogueItem>> = BTreeMap::new();
+    for info in registry.catalogue() {
+        by_module.entry(info.module.clone()).or_default().push(CatalogueItem {
+            kind: "neuron".into(),
+            neuronKind: Some(info.id),
+            action: None,
+            name: info.name,
+            summary: info.summary,
+        });
+    }
+    let mut sections: Vec<CatalogueSection> = by_module
+        .into_iter()
+        .map(|(module, items)| CatalogueSection { id: module.clone(), title: titleize_module(&module), items })
+        .collect();
+    sections.push(CatalogueSection {
+        id: "inputs".into(),
+        title: "Inputs".into(),
+        items: vec![
+            CatalogueItem { kind: "inputSlider".into(), neuronKind: None, action: None, name: "Slider".into(), summary: "Number input".into() },
+            CatalogueItem { kind: "inputNote".into(), neuronKind: None, action: None, name: "Note".into(), summary: "Text input".into() },
+        ],
+    });
+    sections.push(CatalogueSection {
+        id: "outputs".into(),
+        title: "Outputs".into(),
+        items: vec![
+            CatalogueItem { kind: "outputPreview".into(), neuronKind: None, action: None, name: "Preview".into(), summary: "Preview dictionary".into() },
+            CatalogueItem { kind: "outputAction".into(), neuronKind: None, action: Some("log".into()), name: "Action".into(), summary: "Side-effect action".into() },
+        ],
+    });
+    sections
+}
+
+fn titleize_module(module: &str) -> String {
+    let mut chars = module.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    }
+}
+// #endregion 🔖Catalogue
+
 // #region 🔖FlowHost
-/// 🏠 Retained flow host: fixture, engine, evaluation cache.
+/// 🏠 Retained flow host: fixture, dag scene, evaluation cache.
 pub struct FlowHost {
     pub fixture: FlowFixtureV1,
-    pub engine: DagBoardEngine,
+    pub dag: DagHost,
     pub outputs: HashMap<String, Dictionary>,
     pub last_eval_json: String,
-    next_node_id: u64,
-    next_handle_id: u64,
-    next_edge_id: u64,
+    next_widget_serial: u64,
+    next_synapse_serial: u64,
+    viewport_w: u32,
+    viewport_h: u32,
+    viewport_dpr: f64,
+    pan_anchor: Option<(f64, f64, f64, f64)>,
 }
 
 impl Default for FlowHost {
@@ -132,14 +223,17 @@ impl FlowHost {
     pub fn from_fixture(fixture: FlowFixtureV1) -> Self {
         let mut host = Self {
             fixture,
-            engine: DagBoardEngine::new(),
+            dag: DagHost::from_fixture(DagFixtureV1 { schema: "dag.fixture/v1".into(), camera: dag::DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             outputs: HashMap::new(),
             last_eval_json: String::new(),
-            next_node_id: 1,
-            next_handle_id: 10,
-            next_edge_id: 100,
+            next_widget_serial: 1,
+            next_synapse_serial: 100,
+            viewport_w: 1,
+            viewport_h: 1,
+            viewport_dpr: 1.0,
+            pan_anchor: None,
         };
-        host.rebuild_engine_from_fixture();
+        host.rebuild_dag();
         host.evaluate_internal();
         host
     }
@@ -152,8 +246,8 @@ impl FlowHost {
         serde_json::to_string(&self.fixture).map_err(|e| e.to_string())
     }
 
-    pub fn dag_fixture_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.build_dag_fixture_value()).map_err(|e| e.to_string())
+    pub fn catalogue_json(&self) -> Result<String, String> {
+        serde_json::to_string(&build_catalogue()).map_err(|e| e.to_string())
     }
 
     pub fn evaluate(&mut self) -> Result<String, String> {
@@ -161,9 +255,147 @@ impl FlowHost {
         Ok(self.last_eval_json.clone())
     }
 
+    pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
+        self.viewport_w = width.max(1);
+        self.viewport_h = height.max(1);
+        self.viewport_dpr = dpr.max(1.0);
+        self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
+    }
+
+    pub fn world_from_screen(&self, sx: f64, sy: f64) -> (f64, f64) {
+        let p = self.screen_to_world_point(sx, sy);
+        (p.x, p.y)
+    }
+
+    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+        self.fixture.camera = CameraJson { x, y, zoom: zoom.clamp(0.05, 8.0) };
+        self.dag.set_camera(x, y, self.fixture.camera.zoom);
+    }
+
+    pub fn wheel(&mut self, sx: f64, sy: f64, delta_y: f64) {
+        let before = self.screen_to_world_point(sx, sy);
+        let factor = if delta_y < 0.0 { 1.1 } else { 0.9 };
+        let zoom = (self.fixture.camera.zoom * factor).clamp(0.05, 8.0);
+        self.fixture.camera.zoom = zoom;
+        self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, zoom);
+        let after = self.screen_to_world_point(sx, sy);
+        self.fixture.camera.x += before.x - after.x;
+        self.fixture.camera.y += before.y - after.y;
+        self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, zoom);
+    }
+
+    pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, String> {
+        let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
+        let id = self.next_widget_id(&descriptor);
+        let widget = match descriptor {
+            WidgetDescriptor::Neuron { neuronKind } => Widget::Neuron { id: id.clone(), neuronKind, params: Dictionary::new() },
+            WidgetDescriptor::InputSlider => Widget::InputSlider { id: id.clone(), value: 3.0 },
+            WidgetDescriptor::InputNote => Widget::InputNote { id: id.clone(), text: String::new() },
+            WidgetDescriptor::OutputPreview => Widget::OutputPreview { id: id.clone(), preview: Dictionary::new() },
+            WidgetDescriptor::OutputAction { action } => Widget::OutputAction { id: id.clone(), action: if action.is_empty() { "log".into() } else { action } },
+        };
+        self.fixture.widgets.push(widget);
+        self.fixture.layout.insert(id.clone(), WidgetLayout { x: world_x, y: world_y });
+        self.rebuild_dag();
+        self.evaluate_internal();
+        Ok(id)
+    }
+
+    pub fn remove_widget(&mut self, widget_id: &str) -> Result<(), String> {
+        let before = self.fixture.widgets.len();
+        self.fixture.widgets.retain(|w| widget_id_for(w) != widget_id);
+        if self.fixture.widgets.len() == before {
+            return Err(format!("unknown widget: {widget_id}"));
+        }
+        self.fixture.layout.remove(widget_id);
+        self.fixture.synapses.retain(|s| s.from != widget_id && s.to != widget_id);
+        self.rebuild_dag();
+        self.evaluate_internal();
+        Ok(())
+    }
+
+    pub fn move_widget(&mut self, widget_id: &str, x: f64, y: f64) -> Result<(), String> {
+        if !self.fixture.widgets.iter().any(|w| widget_id_for(w) == widget_id) {
+            return Err(format!("unknown widget: {widget_id}"));
+        }
+        self.fixture.layout.insert(widget_id.to_string(), WidgetLayout { x, y });
+        if let Some(node) = self.dag.fixture.nodes.iter_mut().find(|n| n.id == widget_id) {
+            node.x = x;
+            node.y = y;
+        }
+        self.rebuild_dag();
+        Ok(())
+    }
+
+    pub fn connect(&mut self, from_id: &str, to_id: &str) -> Result<String, String> {
+        if from_id == to_id {
+            return Err("cannot connect widget to itself".into());
+        }
+        if !widget_has_output(from_id, &self.fixture.widgets) {
+            return Err(format!("{from_id} has no output port"));
+        }
+        if !widget_has_input(to_id, &self.fixture.widgets) {
+            return Err(format!("{to_id} has no input port"));
+        }
+        let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
+        if would_create_cycle(&existing, from_id, to_id) {
+            return Err("connection would create cycle".into());
+        }
+        if self.fixture.synapses.iter().any(|s| s.from == from_id && s.to == to_id) {
+            return Err("connection already exists".into());
+        }
+        self.next_synapse_serial += 1;
+        let synapse_id = format!("s{}", self.next_synapse_serial);
+        self.fixture.synapses.push(SynapseSpec { id: synapse_id.clone(), from: from_id.to_string(), to: to_id.to_string() });
+        self.rebuild_dag();
+        self.evaluate_internal();
+        Ok(synapse_id)
+    }
+
+    pub fn disconnect(&mut self, synapse_id: &str) -> Result<(), String> {
+        let before = self.fixture.synapses.len();
+        self.fixture.synapses.retain(|s| s.id != synapse_id);
+        if self.fixture.synapses.len() == before {
+            return Err(format!("unknown synapse: {synapse_id}"));
+        }
+        self.rebuild_dag();
+        self.evaluate_internal();
+        Ok(())
+    }
+
+    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, extend: bool, pan: bool) {
+        if pan {
+            self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
+            return;
+        }
+        self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
+        self.dag.pointer_down(sx, sy, extend);
+        self.sync_from_dag();
+    }
+
+    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
+        if let Some((start_sx, start_sy, cam_x, cam_y)) = self.pan_anchor {
+            let zoom = self.fixture.camera.zoom;
+            let dx = (sx - start_sx) / zoom;
+            let dy = (sy - start_sy) / zoom;
+            self.set_camera(cam_x - dx, cam_y - dy, zoom);
+            return;
+        }
+        self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
+        self.dag.pointer_move(sx, sy);
+        self.sync_from_dag();
+    }
+
+    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
+        self.pan_anchor = None;
+        self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
+        self.dag.pointer_up(sx, sy);
+        self.sync_from_dag();
+        self.evaluate_internal();
+    }
+
     fn evaluate_internal(&mut self) {
-        let mut registry = Registry::new();
-        flow_module_math::register(&mut registry);
+        let registry = build_registry();
         let tree = self.build_tree();
         let seeds = self.build_seeds();
         match Evaluator::new(&registry).evaluate(&tree, &seeds) {
@@ -188,12 +420,7 @@ impl FlowHost {
                 _ => None,
             })
             .collect();
-        let synapses = self
-            .fixture
-            .synapses
-            .iter()
-            .map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone() })
-            .collect();
+        let synapses = self.fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone() }).collect();
         Tree { neurons, synapses }
     }
 
@@ -227,98 +454,71 @@ impl FlowHost {
         }
     }
 
-    fn rebuild_engine_from_fixture(&mut self) {
-        self.engine = DagBoardEngine::new();
-        self.engine.set_camera(self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom);
-        let mut dag_fixture = self.build_dag_fixture_value();
-        let _ = apply_dag_layout_to_fixture_v1_value(&mut dag_fixture, &DagLayoutOptions::default());
-        self.sync_engine_from_dag_fixture(&dag_fixture);
+    fn rebuild_dag(&mut self) {
+        let fixture = self.build_dag_fixture_v1();
+        let apply_layout = self.fixture.layout.len() < self.fixture.widgets.len();
+        self.dag = if apply_layout {
+            DagHost::from_fixture(fixture)
+        } else {
+            DagHost::from_fixture_without_layout(fixture)
+        };
+        self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
+        self.sync_from_dag();
     }
 
-    fn build_dag_fixture_value(&self) -> JsonValue {
-        let mut nodes = Vec::new();
-        let mut edges = Vec::new();
-        for (i, widget) in self.fixture.widgets.iter().enumerate() {
-            let io = widget_to_io_node(widget, i);
-            let mut handles = Vec::new();
-            for (idx, port) in io.inputs.iter().enumerate() {
-                let (_in_a, _out_a) = dag::io_node_handle_angles(idx, io.inputs.len(), 0, io.outputs.len().max(1));
-                handles.push(serde_json::json!({
-                    "id": format!("{}:{}", io.id, port.id),
-                    "angle": _in_a,
-                    "handleKind": port.label
-                }));
-            }
-            for (idx, port) in io.outputs.iter().enumerate() {
-                let (_in_a, out_a) = dag::io_node_handle_angles(0, io.inputs.len().max(1), idx, io.outputs.len());
-                handles.push(serde_json::json!({
-                    "id": format!("{}:{}", io.id, port.id),
-                    "angle": out_a,
-                    "handleKind": port.label
-                }));
-            }
-            nodes.push(serde_json::json!({
-                "id": io.id,
-                "x": io.x,
-                "y": io.y,
-                "width": io.width,
-                "height": io.height,
-                "shape": "rectangle",
-                "text": io.name,
-                "handles": handles
-            }));
+    fn sync_from_dag(&mut self) {
+        for node in &self.dag.fixture.nodes {
+            self.fixture.layout.insert(node.id.clone(), WidgetLayout { x: node.x, y: node.y });
         }
+        self.fixture.synapses = self
+            .dag
+            .fixture
+            .edges
+            .iter()
+            .filter_map(|edge| {
+                let from = edge.source.split(':').next()?.to_string();
+                let to = edge.target.split(':').next()?.to_string();
+                Some(SynapseSpec { id: edge.id.clone(), from, to })
+            })
+            .collect();
+        self.fixture.camera = CameraJson {
+            x: self.dag.fixture.camera.x,
+            y: self.dag.fixture.camera.y,
+            zoom: self.dag.fixture.camera.zoom,
+        };
+    }
+
+    fn build_dag_fixture_v1(&self) -> DagFixtureV1 {
+        let nodes: Vec<IoNodeSpec> = self.fixture.widgets.iter().enumerate().map(|(i, w)| widget_to_io_node(w, i, &self.fixture.layout)).collect();
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
-        for syn in &self.fixture.synapses {
-            if would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to) {
-                continue;
-            }
-            edges.push(serde_json::json!({
-                "id": syn.id,
-                "source": format!("{}:out", syn.from),
-                "target": format!("{}:in", syn.to)
-            }));
-        }
-        serde_json::json!({
-            "schema": "dag.fixture/v1",
-            "camera": self.fixture.camera,
-            "nodes": nodes,
-            "edges": edges
-        })
+        let edges: Vec<DagFixtureEdgeV1> = self
+            .fixture
+            .synapses
+            .iter()
+            .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
+            .map(|syn| DagFixtureEdgeV1 { id: syn.id.clone(), source: format!("{}:out", syn.from), target: format!("{}:in", syn.to) })
+            .collect();
+        DagFixtureV1 { schema: "dag.fixture/v1".into(), camera: dag::DagCameraV1 { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
 
-    fn sync_engine_from_dag_fixture(&mut self, fixture: &JsonValue) {
-        let nodes = fixture.get("nodes").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-        for node in nodes {
-            let Some(obj) = node.as_object() else { continue };
-            let id = self.next_node_id;
-            self.next_node_id += 1;
-            let x = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
-            let y = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
-            let w = obj.get("width").and_then(|v| v.as_f64()).unwrap_or(80.0);
-            self.engine.create_node(id, x, y, (w * 0.5).max(28.0), true);
-            if let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) {
-                for h in handles {
-                    let Some(ho) = h.as_object() else { continue };
-                    let hid = self.next_handle_id;
-                    self.next_handle_id += 1;
-                    let ang = ho.get("angle").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                    self.engine.create_handle(hid, id, ang);
-                }
-            }
-        }
-        let edges = fixture.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-        let mut handle_ids: Vec<u64> = self.engine.handles.keys().copied().collect();
-        handle_ids.sort();
-        for (i, edge) in edges.iter().enumerate() {
-            let Some(_eo) = edge.as_object() else { continue };
-            let eid = self.next_edge_id + i as u64;
-            let src = handle_ids.get(i * 2).copied().or_else(|| handle_ids.first().copied());
-            let tgt = handle_ids.get(i * 2 + 1).copied().or_else(|| handle_ids.get(1).copied());
-            if let (Some(s), Some(t)) = (src, tgt) {
-                self.engine.create_edge(eid, s, t);
-            }
-        }
+    fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::vello::kurbo::Point {
+        use cavas::camera::{screen_to_world, Camera, Viewport};
+        use cavas::vello::kurbo::Point;
+        let cam = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let viewport = Viewport { width: self.viewport_w, height: self.viewport_h, dpr: self.viewport_dpr };
+        screen_to_world(&cam, &viewport, Point::new(sx, sy))
+    }
+
+    fn next_widget_id(&mut self, descriptor: &WidgetDescriptor) -> String {
+        self.next_widget_serial += 1;
+        let prefix = match descriptor {
+            WidgetDescriptor::Neuron { neuronKind } => neuronKind.replace('.', "_"),
+            WidgetDescriptor::InputSlider => "slider".into(),
+            WidgetDescriptor::InputNote => "note".into(),
+            WidgetDescriptor::OutputPreview => "preview".into(),
+            WidgetDescriptor::OutputAction { .. } => "action".into(),
+        };
+        format!("{prefix}_{}", self.next_widget_serial)
     }
 
     pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {
@@ -337,13 +537,35 @@ impl FlowHost {
             .widgets
             .iter()
             .find_map(|w| match w {
-                Widget::OutputPreview { preview, .. } => preview.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).map(|n| format!("{n}")),
+                Widget::OutputPreview { preview, .. } => preview
+                    .get("number")
+                    .and_then(|v| v.as_atom())
+                    .and_then(|a| a.as_f64())
+                    .map(|n| format!("{n}"))
+                    .or_else(|| preview.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string)),
                 _ => None,
             })
             .unwrap_or_else(|| "—".into())
     }
+
+    pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, width: u32, height: u32, dpr: f64) {
+        self.dag.paint_scene(scene, width, height, dpr);
+    }
 }
 
+fn widget_id_for(widget: &Widget) -> &str {
+    match widget {
+        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id,
+    }
+}
+
+fn widget_has_output(widget_id: &str, widgets: &[Widget]) -> bool {
+    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w).1.is_empty())
+}
+
+fn widget_has_input(widget_id: &str, widgets: &[Widget]) -> bool {
+    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w).0.is_empty())
+}
 // #endregion 🔖FlowHost
 
 // #region 🔖WasmSession
@@ -362,35 +584,25 @@ use web_sys::HtmlCanvasElement;
 struct FlowSessionInner {
     host: FlowHost,
     gpu: cavas::gpu_session::CanvasGpuSession,
+    width: u32,
+    height: u32,
+    dpr: f64,
 }
 
 #[cfg(target_arch = "wasm32")]
 impl FlowSessionInner {
     fn set_logical_size_and_maybe_resize_surface(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
-        let (cx, cy, zoom) = {
-            let cam = &self.host.fixture.camera;
-            (cam.x, cam.y, cam.zoom)
-        };
-        self.host.engine.set_camera(cx, cy, zoom);
+        self.width = lw;
+        self.height = lh;
+        self.dpr = dpr;
+        self.host.set_viewport(lw, lh, dpr);
         self.gpu.resize_surface(pw, ph);
-        let _ = (lw, lh, dpr);
     }
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
-        let snap = self.host.engine.render_snapshot();
         let mut scene = cavas::vello::Scene::new();
-        use cavas::vello::kurbo::{Circle, Point};
-        use cavas::vello::peniko::{Color, Fill};
-        for (_nid, center, radius) in &snap.nodes {
-            scene.fill(Fill::NonZero, cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(90, 110, 140), None, &Circle::new(Point::new(center.x, center.y), *radius));
-        }
-        for (_hid, center, radius) in &snap.handles {
-            scene.fill(Fill::NonZero, cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(180, 200, 230), None, &Circle::new(Point::new(center.x, center.y), *radius));
-        }
-        for curve in &snap.edges {
-            scene.stroke(&cavas::vello::kurbo::Stroke::new(2.0), cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(200, 210, 230), None, curve);
-        }
-        self.gpu.render_frame(&scene, Color::from_rgba8(20, 22, 28, 255))
+        self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
+        self.gpu.render_frame(&scene, cavas::vello::peniko::Color::from_rgba8(20, 22, 28, 255))
     }
 }
 
@@ -405,7 +617,7 @@ pub struct FlowSession {
 impl FlowSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(FlowSessionInner { host: FlowHost::default(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+        Self { state: Rc::new(RefCell::new(FlowSessionInner { host: FlowHost::default(), gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
     }
 
     #[wasm_bindgen(js_name = loadFixtureJson)]
@@ -418,6 +630,11 @@ impl FlowSession {
     #[wasm_bindgen(js_name = fixtureJson)]
     pub fn fixture_json(&self) -> Result<String, JsValue> {
         self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = catalogueJson)]
+    pub fn catalogue_json(&self) -> Result<String, JsValue> {
+        self.state.borrow().host.catalogue_json().map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = evaluate)]
@@ -433,6 +650,47 @@ impl FlowSession {
     #[wasm_bindgen(js_name = setSliderValue)]
     pub fn set_slider_value(&self, widget_id: &str, value: f64) {
         self.state.borrow_mut().host.set_slider_value(widget_id, value);
+    }
+
+    #[wasm_bindgen(js_name = addWidget)]
+    pub fn add_widget(&self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, JsValue> {
+        self.state.borrow_mut().host.add_widget(descriptor_json, world_x, world_y).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = removeWidget)]
+    pub fn remove_widget(&self, widget_id: &str) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.remove_widget(widget_id).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = moveWidget)]
+    pub fn move_widget(&self, widget_id: &str, x: f64, y: f64) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.move_widget(widget_id, x, y).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = connect)]
+    pub fn connect(&self, from_id: &str, to_id: &str) -> Result<String, JsValue> {
+        self.state.borrow_mut().host.connect(from_id, to_id).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = disconnect)]
+    pub fn disconnect(&self, synapse_id: &str) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.disconnect(synapse_id).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = worldFromScreen)]
+    pub fn world_from_screen(&self, sx: f64, sy: f64) -> String {
+        let (x, y) = self.state.borrow().host.world_from_screen(sx, sy);
+        serde_json::json!({ "x": x, "y": y }).to_string()
+    }
+
+    #[wasm_bindgen(js_name = setCamera)]
+    pub fn set_camera(&self, x: f64, y: f64, zoom: f64) {
+        self.state.borrow_mut().host.set_camera(x, y, zoom);
+    }
+
+    #[wasm_bindgen(js_name = wheel)]
+    pub fn wheel(&self, sx: f64, sy: f64, delta_y: f64) {
+        self.state.borrow_mut().host.wheel(sx, sy, delta_y);
     }
 
     #[wasm_bindgen(js_name = attachCanvas)]
@@ -455,11 +713,7 @@ impl FlowSession {
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
             }
-            let (cx, cy, zoom) = {
-                let cam = &g.host.fixture.camera;
-                (cam.x, cam.y, cam.zoom)
-            };
-            g.host.engine.set_camera(cx, cy, zoom);
+            g.set_logical_size_and_maybe_resize_surface(lw, lh, dpr, pw, ph);
             g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
             Ok(JsValue::UNDEFINED)
         })
@@ -486,19 +740,19 @@ impl FlowSession {
         self.state.borrow_mut().render_frame_gpu()
     }
 
-    #[wasm_bindgen(js_name = pointerDown)]
-    pub fn pointer_down(&self, x: f64, y: f64, extend: bool) {
-        self.state.borrow_mut().host.engine.pointer_down(x, y, extend);
+    #[wasm_bindgen(js_name = pointerDownScreen)]
+    pub fn pointer_down_screen(&self, sx: f64, sy: f64, extend: bool, pan: bool) {
+        self.state.borrow_mut().host.pointer_down_screen(sx, sy, extend, pan);
     }
 
-    #[wasm_bindgen(js_name = pointerMove)]
-    pub fn pointer_move(&self, x: f64, y: f64) {
-        self.state.borrow_mut().host.engine.pointer_move(x, y);
+    #[wasm_bindgen(js_name = pointerMoveScreen)]
+    pub fn pointer_move_screen(&self, sx: f64, sy: f64) {
+        self.state.borrow_mut().host.pointer_move_screen(sx, sy);
     }
 
-    #[wasm_bindgen(js_name = pointerUp)]
-    pub fn pointer_up(&self) {
-        self.state.borrow_mut().host.engine.pointer_up();
+    #[wasm_bindgen(js_name = pointerUpScreen)]
+    pub fn pointer_up_screen(&self, sx: f64, sy: f64) {
+        self.state.borrow_mut().host.pointer_up_screen(sx, sy);
     }
 }
 // #endregion 🔖WasmSession
@@ -528,6 +782,27 @@ mod tests {
         let json = host.fixture_json().unwrap();
         let parsed = FlowHost::parse_fixture_json(&json).unwrap();
         assert_eq!(parsed.schema, "flow.fixture/v1");
+    }
+
+    #[test]
+    fn catalogue_has_module_sections() {
+        let host = FlowHost::default();
+        let json = host.catalogue_json().unwrap();
+        assert!(json.contains("math"));
+        assert!(json.contains("text"));
+        assert!(json.contains("logic"));
+        assert!(json.contains("Inputs"));
+        assert!(json.contains("Outputs"));
+    }
+
+    #[test]
+    fn add_widget_and_connect() {
+        let mut host = FlowHost::default();
+        let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.passThrough"}"#, 100.0, 50.0).unwrap();
+        host.connect("slider", &id).unwrap();
+        host.connect(&id, "preview").unwrap();
+        host.set_slider_value("slider", 4.0);
+        assert_eq!(host.preview_text(), "4");
     }
 }
 // #endregion 🔖Tests

@@ -12,6 +12,8 @@ members = [
     "mathematical/graph/port/undirected",
     "neural/engine",
     "flow/modules/math",
+    "flow/modules/text",
+    "flow/modules/logic",
     "flow/core",
     "reasoning/mindmap/wires",
     "reasoning/mindmap/rs",

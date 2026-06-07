@@ -1,6 +1,6 @@
 //! ➕ Flow math module: neuron kinds for arithmetic.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, Registry, Value};
+use neural_engine::{Atom, Dictionary, EvalError, Function, NeuronKindInfo, Registry, Value};
 
 // #region 🔖Add
 /// ➕ Sums two number inputs into one number output.
@@ -50,9 +50,39 @@ fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
 
 /// 📦 Registers all math neuron kinds on the registry.
 pub fn register(registry: &mut Registry) {
-    registry.register("math.add", Box::new(Add));
-    registry.register("math.multiply", Box::new(Multiply));
-    registry.register("math.passThrough", Box::new(PassThrough));
+    registry.register(
+        NeuronKindInfo {
+            id: "math.add".into(),
+            module: "math".into(),
+            name: "Add".into(),
+            summary: "Sums two numbers".into(),
+            inputs: vec!["a".into(), "b".into()],
+            outputs: vec!["number".into()],
+        },
+        Box::new(Add),
+    );
+    registry.register(
+        NeuronKindInfo {
+            id: "math.multiply".into(),
+            module: "math".into(),
+            name: "Multiply".into(),
+            summary: "Multiplies two numbers".into(),
+            inputs: vec!["a".into(), "b".into()],
+            outputs: vec!["number".into()],
+        },
+        Box::new(Multiply),
+    );
+    registry.register(
+        NeuronKindInfo {
+            id: "math.passThrough".into(),
+            module: "math".into(),
+            name: "Pass Through".into(),
+            summary: "Forwards a number".into(),
+            inputs: vec!["number".into()],
+            outputs: vec!["number".into()],
+        },
+        Box::new(PassThrough),
+    );
 }
 
 // #region 🔖Tests

@@ -38,12 +38,32 @@ impl Default for Camera {
     }
 }
 
-/// 🟠 Retained node state with world-space center and circular radius.
+/// 🔵 Circle or axis-aligned rectangle node body.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum NodeShape {
+    #[default]
+    Circle,
+    Rectangle,
+}
+
+/// 🪝 Port direction for directed edge wiring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum HandleRole {
+  Source,
+  Target,
+  #[default]
+  Any,
+}
+
+/// 🟠 Retained node state with world-space center and shape extents.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Node {
     pub id: NodeId,
     pub center: Point,
     pub radius: f64,
+    pub width: f64,
+    pub height: f64,
+    pub shape: NodeShape,
     pub draggable: bool,
 }
 
@@ -54,6 +74,7 @@ pub struct Handle {
     pub id: HandleId,
     pub node_id: NodeId,
     pub radius: f64,
+    pub role: HandleRole,
 }
 
 /// 🪢 Retained edge with typed endpoints.
@@ -64,6 +85,8 @@ pub type GraphEdge<E> = CoreEdge<E>;
 pub enum BoardEvent {
     HoverChanged { id: Option<u64> },
     NodeMoved { id: NodeId, x: f64, y: f64 },
+    EdgeConnected { id: EdgeId, source: HandleId, target: HandleId },
+    EdgeRemoved { id: EdgeId },
     SelectionChanged { edge_ids: Vec<EdgeId>, handle_ids: Vec<HandleId>, node_ids: Vec<NodeId> },
 }
 
@@ -81,6 +104,7 @@ pub struct RenderSnapshot {
     pub edges: Vec<CubicBez>,
     pub handles: Vec<(HandleId, Point, f64)>,
     pub nodes: Vec<(NodeId, Point, f64)>,
+    pub pending_edge: Option<(Point, Point)>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -93,6 +117,7 @@ enum HitObject<E> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum InteractionMode {
     DragNode { node_id: NodeId, offset: Vec2 },
+    DrawEdge { anchor_handle: HandleId, anchor_is_source: bool, cursor: Point, reconnecting: Option<EdgeId> },
     Idle,
 }
 
@@ -103,11 +128,28 @@ impl Default for InteractionMode {
 }
 
 pub fn handle_position(node: &Node, handle: &Handle) -> Point {
-    geometry::handle_position_on_circle(node.center, node.radius, handle.angle)
+    match node.shape {
+        NodeShape::Circle => geometry::handle_position_on_circle(node.center, node.radius, handle.angle),
+        NodeShape::Rectangle => geometry::handle_position_on_rectangle(node.center, node.width, node.height, handle.angle),
+    }
 }
 
 fn distance(left: Point, right: Point) -> f64 {
     geometry::distance_between(left, right)
+}
+
+fn node_contains_point(node: &Node, point: Point) -> bool {
+    match node.shape {
+        NodeShape::Circle => distance(point, node.center) <= node.radius,
+        NodeShape::Rectangle => {
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            point.x >= node.center.x - hw
+                && point.x <= node.center.x + hw
+                && point.y >= node.center.y - hh
+                && point.y <= node.center.y + hh
+        }
+    }
 }
 
 // #region 🔖GraphPortModel
@@ -137,12 +179,14 @@ impl GraphPortModel for Ported {
 pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub camera: Camera,
     pub edges: BTreeMap<EdgeId, GraphEdge<P::Endpoint>>,
+    pub enforce_acyclic: bool,
     pub events: Vec<BoardEvent>,
     pub handles: BTreeMap<HandleId, Handle>,
     pub hover: Option<u64>,
     pub interaction: InteractionMode,
     pub nodes: BTreeMap<NodeId, Node>,
     pub selection: Selection,
+    next_edge_id: u64,
     _directedness: std::marker::PhantomData<D>,
     _port: std::marker::PhantomData<P>,
 }
@@ -152,12 +196,14 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
         Self {
             camera: Camera::default(),
             edges: BTreeMap::new(),
+            enforce_acyclic: false,
             events: Vec::new(),
             handles: BTreeMap::new(),
             hover: None,
             interaction: InteractionMode::default(),
             nodes: BTreeMap::new(),
             selection: Selection::default(),
+            next_edge_id: 1000,
             _directedness: std::marker::PhantomData,
             _port: std::marker::PhantomData,
         }
@@ -174,14 +220,50 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     pub fn create_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64, draggable: bool) {
-        self.nodes.insert(id, Node { center: Point::new(x, y), draggable, id, radius });
+        self.nodes.insert(
+            id,
+            Node {
+                center: Point::new(x, y),
+                draggable,
+                height: radius * 2.0,
+                id,
+                radius,
+                shape: NodeShape::Circle,
+                width: radius * 2.0,
+            },
+        );
+    }
+
+    pub fn create_rect_node(&mut self, id: NodeId, x: f64, y: f64, width: f64, height: f64, draggable: bool) {
+        let hw = width * 0.5;
+        let hh = height * 0.5;
+        self.nodes.insert(
+            id,
+            Node {
+                center: Point::new(x, y),
+                draggable,
+                height,
+                id,
+                radius: hw.max(hh).max(28.0),
+                shape: NodeShape::Rectangle,
+                width,
+            },
+        );
     }
 
     pub fn update_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64) {
         if let Some(node) = self.nodes.get_mut(&id) {
             node.center = Point::new(x, y);
             node.radius = radius;
+            if node.shape == NodeShape::Circle {
+                node.width = radius * 2.0;
+                node.height = radius * 2.0;
+            }
         }
+    }
+
+    pub fn set_next_edge_id(&mut self, id: u64) {
+        self.next_edge_id = id;
     }
 
     pub fn remove_node(&mut self, id: NodeId) {
@@ -209,13 +291,29 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f64) {
         if P::HAS_PORTS {
-            self.handles.insert(id, Handle { angle, id, node_id, radius: 8.0 });
+            self.handles.insert(id, Handle { angle, id, node_id, radius: 8.0, role: HandleRole::Any });
+        }
+    }
+
+    pub fn set_handle_role(&mut self, id: HandleId, role: HandleRole) {
+        if let Some(handle) = self.handles.get_mut(&id) {
+            handle.role = role;
         }
     }
 
     pub fn create_edge(&mut self, id: EdgeId, source: P::Endpoint, target: P::Endpoint) {
         let (source, target) = orient_endpoints::<P::Endpoint, D>(source, target);
         self.edges.insert(id, GraphEdge { id, source, target });
+        if id >= self.next_edge_id {
+            self.next_edge_id = id + 1;
+        }
+    }
+
+    pub fn remove_edge(&mut self, id: EdgeId) {
+        if self.edges.remove(&id).is_some() {
+            self.selection.edge_ids.remove(&id);
+            self.events.push(BoardEvent::EdgeRemoved { id });
+        }
     }
 
     pub fn pointer_down(&mut self, x: f64, y: f64, extend_selection: bool) {
@@ -232,8 +330,13 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
             Some(HitObject::Endpoint(ep)) => {
                 self.apply_pick_selection(HitObject::Endpoint(ep), extend_selection);
-                self.update_hover(Some(P::endpoint_as_u64(ep)));
-                self.interaction = InteractionMode::Idle;
+                let hid = P::endpoint_as_u64(ep);
+                self.update_hover(Some(hid));
+                if P::HAS_PORTS {
+                    self.begin_draw_edge_from_handle(hid, point);
+                } else {
+                    self.interaction = InteractionMode::Idle;
+                }
             }
             Some(HitObject::Edge(edge_id)) => {
                 self.apply_pick_selection(HitObject::Edge(edge_id), extend_selection);
@@ -258,6 +361,14 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     self.events.push(BoardEvent::NodeMoved { id: node_id, x: node.center.x, y: node.center.y });
                 }
             }
+            InteractionMode::DrawEdge { anchor_handle, anchor_is_source, reconnecting, .. } => {
+                self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, cursor: point, reconnecting };
+                self.update_hover(self.hit_test(point).map(|hit| match hit {
+                    HitObject::Edge(id) => id,
+                    HitObject::Endpoint(ep) => P::endpoint_as_u64(ep),
+                    HitObject::Node(id) => id,
+                }));
+            }
             InteractionMode::Idle => {
                 self.update_hover(self.hit_test(point).map(|hit| match hit {
                     HitObject::Edge(id) => id,
@@ -268,7 +379,29 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }
     }
 
-    pub fn pointer_up(&mut self) {
+    pub fn pointer_up(&mut self, x: f64, y: f64) {
+        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, reconnecting, .. } = self.interaction {
+            let point = Point::new(x, y);
+            if let Some(HitObject::Endpoint(ep)) = self.hit_test(point) {
+                let target_hid = P::endpoint_as_u64(ep);
+                let (source_hid, target_handle) = if anchor_is_source {
+                    (anchor_handle, target_hid)
+                } else {
+                    (target_hid, anchor_handle)
+                };
+                if self.is_valid_connection(source_hid, target_handle, reconnecting) {
+                    if let Some(old_id) = reconnecting {
+                        self.remove_edge(old_id);
+                    }
+                    let new_id = self.next_edge_id;
+                    self.next_edge_id += 1;
+                    if let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid), P::try_handle_endpoint(target_handle)) {
+                        self.create_edge(new_id, src_ep, tgt_ep);
+                        self.events.push(BoardEvent::EdgeConnected { id: new_id, source: source_hid, target: target_handle });
+                    }
+                }
+            }
+        }
         self.interaction = InteractionMode::Idle;
     }
 
@@ -287,6 +420,12 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         for edge in self.edges.values() {
             if let Some(curve) = self.edge_curve(edge.id) {
                 snapshot.edges.push(curve);
+            }
+        }
+        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, cursor, .. } = self.interaction {
+            if let Some(anchor) = self.handles.get(&anchor_handle).and_then(|h| self.nodes.get(&h.node_id).map(|n| (n, h))) {
+                let anchor_point = handle_position(anchor.0, anchor.1);
+                snapshot.pending_edge = Some(if anchor_is_source { (anchor_point, cursor) } else { (cursor, anchor_point) });
             }
         }
         let _stroke_scene = encode_board_stroke_scene(&snapshot.edges, 2.0);
@@ -368,6 +507,114 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         });
     }
 
+    fn begin_draw_edge_from_handle(&mut self, handle_id: HandleId, cursor: Point) {
+        let Some(handle) = self.handles.get(&handle_id).cloned() else {
+            self.interaction = InteractionMode::Idle;
+            return;
+        };
+        let incoming = self.incoming_edge_for_handle(handle_id);
+        let reconnect_anchor = |edge_id: EdgeId| -> Option<(HandleId, bool, Option<EdgeId>)> {
+            let src = P::endpoint_as_u64(self.edges.get(&edge_id)?.source);
+            Some((src, true, Some(edge_id)))
+        };
+        let (anchor_handle, anchor_is_source, reconnecting) = match handle.role {
+            HandleRole::Target => incoming.and_then(reconnect_anchor).unwrap_or((handle_id, false, None)),
+            HandleRole::Source => (handle_id, true, None),
+            HandleRole::Any => incoming.and_then(reconnect_anchor).unwrap_or((handle_id, true, None)),
+        };
+        self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, cursor, reconnecting };
+    }
+
+    fn incoming_edge_for_handle(&self, handle_id: HandleId) -> Option<EdgeId> {
+        self.edges
+            .values()
+            .find(|edge| P::endpoint_as_u64(edge.target) == handle_id)
+            .map(|edge| edge.id)
+    }
+
+    fn is_valid_connection(&self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>) -> bool {
+        if source_hid == target_hid {
+            return false;
+        }
+        let Some(source_handle) = self.handles.get(&source_hid) else {
+            return false;
+        };
+        let Some(target_handle) = self.handles.get(&target_hid) else {
+            return false;
+        };
+        if source_handle.node_id == target_handle.node_id {
+            return false;
+        }
+        if !matches!(source_handle.role, HandleRole::Source | HandleRole::Any) {
+            return false;
+        }
+        if !matches!(target_handle.role, HandleRole::Target | HandleRole::Any) {
+            return false;
+        }
+        if self.edges.values().any(|e| {
+            e.id != reconnecting.unwrap_or(0)
+                && P::endpoint_as_u64(e.source) == source_hid
+                && P::endpoint_as_u64(e.target) == target_hid
+        }) {
+            return false;
+        }
+        if self
+            .edges
+            .values()
+            .any(|e| e.id != reconnecting.unwrap_or(0) && P::endpoint_as_u64(e.target) == target_hid)
+        {
+            return false;
+        }
+        if self.enforce_acyclic {
+            let src_node = source_handle.node_id;
+            let tgt_node = target_handle.node_id;
+            if self.would_create_cycle_between_nodes(src_node, tgt_node, reconnecting) {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn would_create_cycle_between_nodes(&self, source: NodeId, target: NodeId, excluding: Option<EdgeId>) -> bool {
+        if source == target {
+            return true;
+        }
+        let mut adj: std::collections::HashMap<NodeId, Vec<NodeId>> = std::collections::HashMap::new();
+        for edge in self.edges.values() {
+            if excluding == Some(edge.id) {
+                continue;
+            }
+            let Some(src_h) = self.handles.get(&P::endpoint_as_u64(edge.source)) else {
+                continue;
+            };
+            let Some(tgt_h) = self.handles.get(&P::endpoint_as_u64(edge.target)) else {
+                continue;
+            };
+            adj.entry(src_h.node_id).or_default().push(tgt_h.node_id);
+        }
+        adj.entry(source).or_default().push(target);
+        Self::has_path_nodes(&adj, target, source)
+    }
+
+    fn has_path_nodes(adj: &std::collections::HashMap<NodeId, Vec<NodeId>>, from: NodeId, to: NodeId) -> bool {
+        let mut seen = std::collections::HashSet::new();
+        let mut stack = vec![from];
+        while let Some(n) = stack.pop() {
+            if n == to {
+                return true;
+            }
+            if !seen.insert(n) {
+                continue;
+            }
+            if let Some(next) = adj.get(&n) {
+                for m in next {
+                    stack.push(*m);
+                }
+            }
+        }
+        false
+    }
+
     fn hit_test(&self, point: Point) -> Option<HitObject<P::Endpoint>> {
         if P::HAS_PORTS {
             for handle in self.handles.values().rev() {
@@ -380,7 +627,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
         }
         for node in self.nodes.values().rev() {
-            if distance(point, node.center) <= node.radius {
+            if node_contains_point(node, point) {
                 return Some(HitObject::Node(node.id));
             }
         }
@@ -434,6 +681,38 @@ mod tests {
         let edge = engine.edges.get(&100).unwrap();
         assert_eq!(edge.source, 1);
         assert_eq!(edge.target, 2);
+    }
+
+    #[test]
+    fn rect_node_hit_and_wire_connect() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+        engine.create_rect_node(2, 220.0, 0.0, 160.0, 72.0, true);
+        engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.pointer_down(80.0, 0.0, false);
+        engine.pointer_up(140.0, 0.0);
+        assert_eq!(engine.edges.len(), 1);
+        assert!(engine.render_snapshot().pending_edge.is_none());
+    }
+
+    #[test]
+    fn acyclic_rejects_back_edge() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.enforce_acyclic = true;
+        engine.create_rect_node(1, 0.0, 0.0, 80.0, 56.0, true);
+        engine.create_rect_node(2, 160.0, 0.0, 80.0, 56.0, true);
+        engine.create_handle(10, 1, std::f64::consts::FRAC_PI_2);
+        engine.create_handle(11, 2, 3.0 * std::f64::consts::FRAC_PI_2);
+        engine.set_handle_role(10, HandleRole::Source);
+        engine.set_handle_role(11, HandleRole::Target);
+        engine.create_edge(100, 10, 11);
+        engine.pointer_down(160.0, 0.0, false);
+        engine.pointer_up(0.0, 0.0);
+        assert_eq!(engine.edges.len(), 1);
     }
 }
 // #endregion 🔖Tests

@@ -5,44 +5,76 @@
     {
       "id": "source",
       "name": "Source",
-      "x": -220,
+      "x": -360,
       "y": 0,
       "width": 160,
       "height": 72,
       "inputs": [],
-      "outputs": [
-        { "id": "out", "label": "value" }
-      ]
+      "outputs": [{ "id": "out", "label": "value" }]
     },
     {
-      "id": "transform",
-      "name": "Transform",
-      "x": 0,
+      "id": "scale",
+      "name": "Scale",
+      "x": -120,
+      "y": -80,
+      "width": 160,
+      "height": 72,
+      "inputs": [{ "id": "in", "label": "value" }],
+      "outputs": [{ "id": "out", "label": "scaled" }]
+    },
+    {
+      "id": "offset",
+      "name": "Offset",
+      "x": -120,
+      "y": 80,
+      "width": 160,
+      "height": 72,
+      "inputs": [{ "id": "in", "label": "value" }],
+      "outputs": [{ "id": "out", "label": "shifted" }]
+    },
+    {
+      "id": "combine",
+      "name": "Combine",
+      "x": 120,
       "y": 0,
       "width": 160,
-      "height": 88,
+      "height": 96,
       "inputs": [
-        { "id": "in", "label": "value" }
+        { "id": "a", "label": "a" },
+        { "id": "b", "label": "b" }
       ],
+      "outputs": [{ "id": "out", "label": "merged" }]
+    },
+    {
+      "id": "split",
+      "name": "Split",
+      "x": 360,
+      "y": 0,
+      "width": 160,
+      "height": 96,
+      "inputs": [{ "id": "in", "label": "merged" }],
       "outputs": [
-        { "id": "out", "label": "result" }
+        { "id": "lo", "label": "lo" },
+        { "id": "hi", "label": "hi" }
       ]
     },
     {
       "id": "sink",
       "name": "Sink",
-      "x": 220,
-      "y": 0,
+      "x": 600,
+      "y": -48,
       "width": 160,
       "height": 72,
-      "inputs": [
-        { "id": "in", "label": "result" }
-      ],
+      "inputs": [{ "id": "in", "label": "result" }],
       "outputs": []
     }
   ],
   "edges": [
-    { "id": "e1", "source": "source:out", "target": "transform:in" },
-    { "id": "e2", "source": "transform:out", "target": "sink:in" }
+    { "id": "e1", "source": "source:out", "target": "scale:in" },
+    { "id": "e2", "source": "source:out", "target": "offset:in" },
+    { "id": "e3", "source": "scale:out", "target": "combine:a" },
+    { "id": "e4", "source": "offset:out", "target": "combine:b" },
+    { "id": "e5", "source": "combine:out", "target": "split:in" },
+    { "id": "e6", "source": "split:lo", "target": "sink:in" }
   ]
 }

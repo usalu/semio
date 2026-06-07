@@ -3161,10 +3161,10 @@ if (import.meta.vitest) {
       expect(typologies.has("building.building.column")).toBe(true);
       expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
       expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
-      expect(listModelObjectsForModelDefinition(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length).toBe(0);
+      expect(listModelObjectsForModelDefinition(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length).toBe(1);
       expect(
         listModelObjectsForModelDefinition(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!, CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID).length,
-      ).toBe(0);
+      ).toBe(11);
     });
 
     it("ensureDerivedModelInSpace keeps spatial.shape for shape definition", () => {
@@ -3194,11 +3194,11 @@ if (import.meta.vitest) {
         modelSpace: geometryConcreteForestLeft,
         activeModelDefinitionId: defaultModelDefinitionId(),
       });
-      expect(listModelObjectsForModelDefinition(loaded[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length).toBe(0);
+      expect(listModelObjectsForModelDefinition(loaded[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length).toBe(1);
       const derived = ensureCadPlayQuadModels(loaded);
       expect(
         listModelObjectsForModelDefinition(derived[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length,
-      ).toBeGreaterThan(0);
+      ).toBe(1);
     });
 
     it("buildCadPlayHierarchySections lists concrete forest BIM objects across play definitions", () => {
@@ -3210,11 +3210,11 @@ if (import.meta.vitest) {
       const buildingBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
       expect(buildingBranch?.items?.length).toBe(12);
       const energyBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
-      expect(energyBranch?.items?.[0]?.label).toBe("(no objects)");
+      expect(energyBranch?.items?.length).toBe(1);
       const structureBranch = build.sections.find(
         (row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
       );
-      expect(structureBranch?.items?.[0]?.label).toBe("(no objects)");
+      expect(structureBranch?.items?.length).toBe(11);
       expect(build.sections.some((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`)).toBe(true);
     });
   });

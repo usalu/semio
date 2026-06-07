@@ -81,9 +81,9 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   describe("dag play shell", () => {
-    it("default fixture has three nodes", () => {
-      expect(DAG_PLAY_DEFAULT_FIXTURE.nodes.length).toBe(3);
-      expect(DAG_PLAY_DEFAULT_FIXTURE.edges.length).toBe(2);
+    it("default fixture has six nodes", () => {
+      expect(DAG_PLAY_DEFAULT_FIXTURE.nodes.length).toBe(6);
+      expect(DAG_PLAY_DEFAULT_FIXTURE.edges.length).toBe(6);
     });
   });
 }

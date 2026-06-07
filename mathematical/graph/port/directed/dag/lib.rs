@@ -3,7 +3,10 @@
 use serde::{Deserialize, Serialize};
 
 pub use infinite_cavas as cavas;
-pub use mathematical_graph_port_directed::{self as graph, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection};
+pub use mathematical_graph_port_directed::{
+    self as graph, compute_edge_bezier_points, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
+};
+use graph::BoardEvent;
 
 /// 🌳 DAG board engine alias.
 pub type DagBoardEngine = DirectedPortGraphEngine;
@@ -58,6 +61,18 @@ fn port_angle_on_side(index: usize, count: usize, left: bool) -> f64 {
     } else {
         y * std::f64::consts::FRAC_PI_2 * 0.9
     }
+}
+
+/// 📐 Rectangle-layout port angle (north-zero CCW) aligned with painted IO labels.
+pub fn io_node_rect_port_angle(x: f64, y: f64, width: f64, height: f64, index: usize, count: usize, left: bool) -> f64 {
+    use cavas::vello::kurbo::Point;
+    use graph::rectangle_handle_angle_toward;
+    let hw = width * 0.5;
+    let hh = height * 0.5;
+    let t = (index as f64 + 0.5) / count.max(1) as f64;
+    let port_y = y - hh + t * height;
+    let port_x = if left { x - hw } else { x + hw };
+    rectangle_handle_angle_toward(Point::new(x, y), width, height, Point::new(port_x, port_y))
 }
 // #endregion 🔖IoNode
 
@@ -254,12 +269,27 @@ impl cavas::CanvasExtension for DagExtension {
 impl GraphExtension for DagExtension {}
 // #endregion 🔖GraphExtension
 
+fn dag_debug_log(msg: &str) {
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::log_1(&msg.into());
+    #[cfg(not(target_arch = "wasm32"))]
+    eprintln!("{msg}");
+}
+
 // #region 🔖DagHost
 
 /// 🌳 Retained DAG host: IO nodes, edges, engine, camera.
 pub struct DagHost {
     pub fixture: DagFixtureV1,
     pub engine: DagBoardEngine,
+    width: u32,
+    height: u32,
+    dpr: f64,
+    last_screen_x: f64,
+    last_screen_y: f64,
+    node_id_map: HashMap<NodeId, usize>,
+    handle_key_map: HashMap<HandleId, String>,
+    edge_id_map: HashMap<EdgeId, String>,
 }
 
 /// 📦 `dag.fixture/v1` document.
@@ -307,9 +337,35 @@ impl DagHost {
     }
 
     pub fn from_fixture(fixture: DagFixtureV1) -> Self {
-        let mut host = Self { fixture, engine: DagBoardEngine::new() };
-        host.rebuild_engine();
+        Self::from_fixture_with_layout(fixture, true)
+    }
+
+    /// 🌳 Builds a host without running auto-layout (preserves node positions).
+    pub fn from_fixture_without_layout(fixture: DagFixtureV1) -> Self {
+        Self::from_fixture_with_layout(fixture, false)
+    }
+
+    fn from_fixture_with_layout(fixture: DagFixtureV1, apply_layout: bool) -> Self {
+        let mut host = Self {
+            fixture,
+            engine: DagBoardEngine::new(),
+            width: 1,
+            height: 1,
+            dpr: 1.0,
+            last_screen_x: 0.0,
+            last_screen_y: 0.0,
+            node_id_map: HashMap::new(),
+            handle_key_map: HashMap::new(),
+            edge_id_map: HashMap::new(),
+        };
+        host.rebuild_engine_with_layout(apply_layout);
         host
+    }
+
+    pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
+        self.width = width.max(1);
+        self.height = height.max(1);
+        self.dpr = dpr.max(1.0);
     }
 
     pub fn load_fixture_json(json: &str) -> Result<Self, String> {
@@ -325,36 +381,51 @@ impl DagHost {
     }
 
     fn rebuild_engine(&mut self) {
+        self.rebuild_engine_with_layout(true);
+    }
+
+    fn rebuild_engine_with_layout(&mut self, apply_layout: bool) {
         self.engine = DagBoardEngine::new();
+        self.engine.enforce_acyclic = true;
+        self.node_id_map.clear();
+        self.handle_key_map.clear();
+        self.edge_id_map.clear();
         let (cx, cy, zoom) = (self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom);
         self.engine.set_camera(cx, cy, zoom);
-        let mut fixture_value = serde_json::to_value(&self.fixture).unwrap_or_else(|_| serde_json::json!({}));
-        let _ = apply_dag_layout_to_fixture_v1_value(&mut fixture_value, &DagLayoutOptions::default());
-        if let Ok(updated) = serde_json::from_value::<DagFixtureV1>(fixture_value.clone()) {
-            self.fixture = updated;
+        if apply_layout {
+            let mut fixture_value = serde_json::to_value(&self.fixture).unwrap_or_else(|_| serde_json::json!({}));
+            let _ = apply_dag_layout_to_fixture_v1_value(&mut fixture_value, &DagLayoutOptions::default());
+            if let Ok(updated) = serde_json::from_value::<DagFixtureV1>(fixture_value.clone()) {
+                self.fixture = updated;
+            }
         }
         let mut next_node: u64 = 1;
         let mut next_handle: u64 = 10;
         let mut handle_map: HashMap<String, u64> = HashMap::new();
-        for node in &self.fixture.nodes {
+        for (idx, node) in self.fixture.nodes.iter().enumerate() {
             let nid = next_node;
             next_node += 1;
-            let hw = node.width * 0.5;
-            let hh = node.height * 0.5;
-            self.engine.create_node(nid, node.x, node.y, hw.max(hh).max(28.0), true);
-            for (idx, port) in node.inputs.iter().enumerate() {
-                let (in_a, _) = io_node_handle_angles(idx, node.inputs.len().max(1), 0, node.outputs.len().max(1));
+            self.node_id_map.insert(nid, idx);
+            self.engine.create_rect_node(nid, node.x, node.y, node.width, node.height, true);
+            for (port_idx, port) in node.inputs.iter().enumerate() {
+                let in_a = io_node_rect_port_angle(node.x, node.y, node.width, node.height, port_idx, node.inputs.len().max(1), true);
                 let hid = next_handle;
                 next_handle += 1;
-                handle_map.insert(format!("{}:{}", node.id, port.id), hid);
+                let key = format!("{}:{}", node.id, port.id);
+                handle_map.insert(key.clone(), hid);
+                self.handle_key_map.insert(hid, key);
                 self.engine.create_handle(hid, nid, in_a);
+                self.engine.set_handle_role(hid, HandleRole::Target);
             }
-            for (idx, port) in node.outputs.iter().enumerate() {
-                let (_, out_a) = io_node_handle_angles(0, node.inputs.len().max(1), idx, node.outputs.len().max(1));
+            for (port_idx, port) in node.outputs.iter().enumerate() {
+                let out_a = io_node_rect_port_angle(node.x, node.y, node.width, node.height, port_idx, node.outputs.len().max(1), false);
                 let hid = next_handle;
                 next_handle += 1;
-                handle_map.insert(format!("{}:{}", node.id, port.id), hid);
+                let key = format!("{}:{}", node.id, port.id);
+                handle_map.insert(key.clone(), hid);
+                self.handle_key_map.insert(hid, key);
                 self.engine.create_handle(hid, nid, out_a);
+                self.engine.set_handle_role(hid, HandleRole::Source);
             }
         }
         let existing: Vec<(String, String)> = self
@@ -375,9 +446,78 @@ impl DagHost {
             let src = handle_map.get(&edge.source).copied();
             let tgt = handle_map.get(&edge.target).copied();
             if let (Some(s), Some(t)) = (src, tgt) {
-                self.engine.create_edge(eid, s, t);
-                eid += 1;
+                let id = Self::parse_fixture_edge_numeric_id(&edge.id).unwrap_or(eid);
+                eid = eid.max(id).saturating_add(1);
+                self.engine.create_edge(id, s, t);
+                self.edge_id_map.insert(id, edge.id.clone());
             }
+        }
+        self.engine.set_next_edge_id(eid);
+    }
+
+    fn parse_fixture_edge_numeric_id(id: &str) -> Option<u64> {
+        id.strip_prefix('e').and_then(|s| s.parse().ok())
+    }
+
+    fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::vello::kurbo::Point {
+        use cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
+        use cavas::vello::kurbo::Point;
+        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
+        screen_to_world(&cam, &viewport, Point::new(sx, sy))
+    }
+
+    fn sync_node_positions_from_engine(&mut self) {
+        for (&nid, &idx) in &self.node_id_map {
+            if let Some(node) = self.engine.nodes.get(&nid) {
+                self.fixture.nodes[idx].x = node.center.x;
+                self.fixture.nodes[idx].y = node.center.y;
+            }
+        }
+    }
+
+    fn sync_edges_from_engine(&mut self) {
+        let mut edges = Vec::with_capacity(self.engine.edges.len());
+        for (eid, edge) in &self.engine.edges {
+            let Some(source) = self.handle_key_map.get(&edge.source).cloned() else {
+                continue;
+            };
+            let Some(target) = self.handle_key_map.get(&edge.target).cloned() else {
+                continue;
+            };
+            let id = self.edge_id_map.get(eid).cloned().unwrap_or_else(|| format!("e{eid}"));
+            self.edge_id_map.insert(*eid, id.clone());
+            edges.push(DagFixtureEdgeV1 { id, source, target });
+        }
+        self.fixture.edges = edges;
+    }
+
+    fn process_engine_events(&mut self) {
+        let events = self.engine.drain_events();
+        let mut moved = false;
+        let mut wired = false;
+        for event in events {
+            match event {
+                BoardEvent::NodeMoved { id, x, y } => {
+                    moved = true;
+                    dag_debug_log(&format!("[DEBUG] dag node moved id={id} x={x:.1} y={y:.1}"));
+                }
+                BoardEvent::EdgeConnected { id, source, target } => {
+                    wired = true;
+                    dag_debug_log(&format!("[DEBUG] dag edge connected id={id} source={source} target={target}"));
+                }
+                BoardEvent::EdgeRemoved { id } => {
+                    wired = true;
+                    dag_debug_log(&format!("[DEBUG] dag edge removed id={id}"));
+                }
+                _ => {}
+            }
+        }
+        if moved {
+            self.sync_node_positions_from_engine();
+        }
+        if wired {
+            self.sync_edges_from_engine();
         }
     }
 
@@ -387,15 +527,27 @@ impl DagHost {
     }
 
     pub fn pointer_down(&mut self, x: f64, y: f64, extend: bool) {
-        self.engine.pointer_down(x, y, extend);
+        self.last_screen_x = x;
+        self.last_screen_y = y;
+        let world = self.screen_to_world_point(x, y);
+        self.engine.pointer_down(world.x, world.y, extend);
+        self.process_engine_events();
     }
 
     pub fn pointer_move(&mut self, x: f64, y: f64) {
-        self.engine.pointer_move(x, y);
+        self.last_screen_x = x;
+        self.last_screen_y = y;
+        let world = self.screen_to_world_point(x, y);
+        self.engine.pointer_move(world.x, world.y);
+        self.process_engine_events();
     }
 
-    pub fn pointer_up(&mut self) {
-        self.engine.pointer_up();
+    pub fn pointer_up(&mut self, x: f64, y: f64) {
+        self.last_screen_x = x;
+        self.last_screen_y = y;
+        let world = self.screen_to_world_point(x, y);
+        self.engine.pointer_up(world.x, world.y);
+        self.process_engine_events();
     }
 
     pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
@@ -410,6 +562,10 @@ impl DagHost {
         let snap = self.engine.render_snapshot();
         for curve in &snap.edges {
             scene.stroke(&Stroke::new(2.0), aff, Color::from_rgb8(180, 200, 230), None, curve);
+        }
+        if let Some((a, b)) = snap.pending_edge {
+            let preview = compute_edge_bezier_points(a, b, a, b);
+            scene.stroke(&Stroke::new(2.0), aff, Color::from_rgb8(120, 180, 255), None, &preview);
         }
         let node_stroke = Color::from_rgb8(90, 110, 140);
         let node_fill = Color::from_rgba8(40, 48, 62, 230);
@@ -441,8 +597,13 @@ impl DagHost {
                 scene.append(&label_scene, Some(rot));
             }
         }
-        for (_hid, center, radius) in &snap.handles {
-            scene.fill(Fill::NonZero, aff, Color::from_rgb8(180, 200, 230), None, &Circle::new(*center, *radius));
+        for (hid, center, radius) in &snap.handles {
+            let fill = match self.engine.handles.get(hid).map(|h| h.role) {
+                Some(HandleRole::Source) => Color::from_rgb8(100, 200, 140),
+                Some(HandleRole::Target) => Color::from_rgb8(200, 140, 100),
+                _ => Color::from_rgb8(180, 200, 230),
+            };
+            scene.fill(Fill::NonZero, aff, fill, None, &Circle::new(*center, *radius));
         }
     }
 }
@@ -506,6 +667,7 @@ mod wasm_session {
                 g.width = lw;
                 g.height = lh;
                 g.dpr = dpr;
+                g.host.set_viewport(lw, lh, dpr);
                 g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
                 Ok(JsValue::UNDEFINED)
             })
@@ -522,8 +684,10 @@ mod wasm_session {
             inner.width = width.max(1);
             inner.height = height.max(1);
             inner.dpr = dpr.max(1.0);
-            let pw = ((inner.width as f64 * inner.dpr).round() as u32).max(1);
-            let ph = ((inner.height as f64 * inner.dpr).round() as u32).max(1);
+            let (w, h, d) = (inner.width, inner.height, inner.dpr);
+            inner.host.set_viewport(w, h, d);
+            let pw = ((w as f64 * d).round() as u32).max(1);
+            let ph = ((h as f64 * d).round() as u32).max(1);
             inner.gpu.resize_surface(pw, ph);
         }
 
@@ -543,8 +707,8 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = pointerUp)]
-        pub fn pointer_up(&self) {
-            self.state.borrow_mut().host.pointer_up();
+        pub fn pointer_up(&self, x: f64, y: f64) {
+            self.state.borrow_mut().host.pointer_up(x, y);
         }
 
         #[wasm_bindgen(js_name = renderFrame)]
@@ -600,9 +764,54 @@ mod tests {
     fn dag_host_loads_demo_fixture() {
         let host = DagHost::default_demo();
         assert_eq!(host.fixture.schema, "dag.fixture/v1");
-        assert_eq!(host.fixture.nodes.len(), 3);
-        assert_eq!(host.fixture.edges.len(), 2);
+        assert_eq!(host.fixture.nodes.len(), 6);
+        assert_eq!(host.fixture.edges.len(), 6);
         assert!(!host.engine.render_snapshot().edges.is_empty());
+    }
+
+    #[test]
+    fn dag_host_drags_node_in_world_space() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        let before_x = host.fixture.nodes[0].x;
+        let before_y = host.fixture.nodes[0].y;
+        let sx = before_x + 640.0;
+        let sy = before_y + 400.0;
+        host.pointer_down(sx, sy, false);
+        host.pointer_move(sx + 40.0, sy + 30.0);
+        host.pointer_up(sx + 40.0, sy + 30.0);
+        assert!((host.fixture.nodes[0].x - before_x).abs() > 1.0);
+        assert!((host.fixture.nodes[0].y - before_y).abs() > 1.0);
+    }
+
+    #[test]
+    fn dag_host_reconnects_edge_endpoint() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        let combine_b = host.fixture.nodes.iter().position(|n| n.id == "combine").expect("combine");
+        let scale = &host.fixture.nodes[host.fixture.nodes.iter().position(|n| n.id == "scale").expect("scale")];
+        let combine = &host.fixture.nodes[combine_b];
+        let target_sx = combine.x - combine.width * 0.5 + 640.0;
+        let target_sy = combine.y + 400.0;
+        let source_sx = scale.x + scale.width * 0.5 + 640.0;
+        let source_sy = scale.y + 400.0;
+        host.pointer_down(target_sx, target_sy, false);
+        host.pointer_move(source_sx, source_sy);
+        host.pointer_up(source_sx, source_sy);
+        let e4 = host.fixture.edges.iter().find(|e| e.id == "e4").expect("e4");
+        assert_eq!(e4.source, "scale:out");
+    }
+
+    #[test]
+    fn io_node_rect_port_angles_on_edges() {
+        use cavas::vello::kurbo::Point;
+        use graph::handle_position_on_rectangle;
+        let left = io_node_rect_port_angle(0.0, 0.0, 160.0, 72.0, 0, 2, true);
+        let right = io_node_rect_port_angle(0.0, 0.0, 160.0, 72.0, 0, 1, false);
+        let left_pos = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, left);
+        let right_pos = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, right);
+        assert!(left_pos.x < -70.0);
+        assert!(right_pos.x > 70.0);
     }
 }
 // #endregion 🔖Tests

@@ -1,4 +1,4 @@
-/** @emoji 🧪 Flow play end-to-end runtime probe — slider, evaluate, preview. */
+/** @emoji 🧪 Flow play end-to-end runtime probe — catalogue, drag-drop, evaluate, persistence. */
 import { chromium } from "@playwright/test";
 import { createConnection } from "node:net";
 
@@ -50,7 +50,16 @@ page.on("console", (msg) => {
 });
 
 await page.goto(baseUrl, { waitUntil: "networkidle", timeout: 120_000 });
+await page.waitForSelector('[data-testid="flow-catalogue"]', { timeout: 60_000 });
 await page.waitForSelector('input[type="range"]', { timeout: 60_000 });
+
+const sectionTitles = await page.locator('[data-testid="flow-catalogue"] summary').allTextContents();
+const hasMath = sectionTitles.some((t) => /math/i.test(t));
+const hasText = sectionTitles.some((t) => /text/i.test(t));
+const hasLogic = sectionTitles.some((t) => /logic/i.test(t));
+const hasInputs = sectionTitles.some((t) => /inputs/i.test(t));
+const hasOutputs = sectionTitles.some((t) => /outputs/i.test(t));
+
 await page.waitForFunction(() => {
   const strong = document.querySelector("strong.tabular-nums");
   return strong != null && strong.textContent !== "—" && strong.textContent.trim().length > 0;
@@ -74,17 +83,51 @@ await page.waitForFunction(
 );
 
 const previewAfter = (await page.locator("strong.tabular-nums").first().textContent())?.trim() ?? "";
+
+const addItem = page.locator('[data-testid="flow-catalogue-item-math.add"]');
+await addItem.dragTo(page.locator("canvas"), { targetPosition: { x: 200, y: 200 } });
+await page.waitForTimeout(500);
+
+await page.evaluate(() => {
+  localStorage.setItem("flow.fixture/v1", JSON.stringify({
+    schema: "flow.fixture/v1",
+    camera: { x: 0, y: 0, zoom: 1 },
+    widgets: [
+      { kind: "inputSlider", id: "slider", value: 7 },
+      { kind: "neuron", id: "add", neuronKind: "math.add", params: {} },
+      { kind: "outputPreview", id: "preview", preview: {} },
+    ],
+    synapses: [
+      { id: "s1", from: "slider", to: "add" },
+      { id: "s2", from: "add", to: "preview" },
+    ],
+    layout: { slider: { x: -200, y: 0 }, add: { x: 0, y: 0 }, preview: { x: 200, y: 0 } },
+  }));
+});
+await page.reload({ waitUntil: "networkidle" });
+await page.waitForFunction(() => {
+  const strong = document.querySelector("strong.tabular-nums");
+  return strong?.textContent?.trim() === "7";
+}, { timeout: 60_000 });
+const previewPersisted = (await page.locator("strong.tabular-nums").first().textContent())?.trim() ?? "";
+
 const unsupported = await page.getByText("Unsupported UiNode").count();
 await browser.close();
 
 console.log("[validate-flow] url:", baseUrl);
+console.log("[validate-flow] sections:", sectionTitles);
 console.log("[validate-flow] debug logs:", debugLogs);
 console.log("[validate-flow] preview before:", previewBefore);
 console.log("[validate-flow] preview after slider:", previewAfter);
+console.log("[validate-flow] preview persisted:", previewPersisted);
 console.log("[validate-flow] unsupported nodes:", unsupported);
 
 if (unsupported > 0) {
   console.error("[validate-flow] Unsupported UiNode rendered");
+  process.exit(1);
+}
+if (!hasMath || !hasText || !hasLogic || !hasInputs || !hasOutputs) {
+  console.error("[validate-flow] catalogue sections incomplete", { hasMath, hasText, hasLogic, hasInputs, hasOutputs });
   process.exit(1);
 }
 if (!debugLogs.some((l) => l.includes("flow evaluate preview"))) {
@@ -97,6 +140,14 @@ if (previewBefore !== "3") {
 }
 if (previewAfter !== "5") {
   console.error(`[validate-flow] expected preview 5 after slider, got ${previewAfter}`);
+  process.exit(1);
+}
+if (previewPersisted !== "7") {
+  console.error(`[validate-flow] expected persisted preview 7, got ${previewPersisted}`);
+  process.exit(1);
+}
+if (!debugLogs.some((l) => l.includes("flow add widget"))) {
+  console.error("[validate-flow] missing drag-drop add widget debug log");
   process.exit(1);
 }
 console.log("[validate-flow] ok");

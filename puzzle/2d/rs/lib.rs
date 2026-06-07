@@ -581,7 +581,7 @@ mod tests {
 
         engine.pointer_down(0.0, 0.0, false);
         engine.pointer_move(60.0, 25.0);
-        engine.pointer_up();
+        engine.pointer_up(60.0, 25.0);
 
         let node = engine.nodes.get(&1).expect("node should remain in the engine");
         assert_eq!(node.center, Point::new(60.0, 25.0));

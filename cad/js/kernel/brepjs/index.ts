@@ -2101,6 +2101,12 @@ function validSolidsFromImportedShape(shape: Shape3D): ValidSolid[] {
 /** @emoji 🏗️ Model definition id for imported BIM building representations. */
 export const BUILDING_BIM_MODEL_DEFINITION_ID = "aec.building";
 
+/** @emoji ⚡ Model definition id for imported energy presentation fixtures. */
+export const ENERGY_MODEL_DEFINITION_ID = "aec.building.energy";
+
+/** @emoji 🏛️ Model definition id for imported classic structure presentation fixtures. */
+export const STRUCTURE_CLASSIC_MODEL_DEFINITION_ID = "aec.building.structure.classic";
+
 const BIM_LAYER_TYPOLOGY = new Map<string, TypologyRef>([
 	["slab", "building.building.slab"],
 	["slabs", "building.building.slab"],
@@ -2126,6 +2132,224 @@ const BIM_LAYER_TYPOLOGY = new Map<string, TypologyRef>([
 	["windows", "building.building.window"],
 ]);
 
+const ENERGY_LAYER_TYPOLOGY = new Map<string, TypologyRef>([
+	["slab", "energy.energy.baseplate"],
+	["baseplate", "energy.energy.baseplate"],
+	["roof", "energy.energy.roof"],
+	["wall", "energy.energy.externalwall"],
+	["walls", "energy.energy.externalwall"],
+	["hull", "energy.energy.hull"],
+	["window", "energy.energy.windows"],
+	["windows", "energy.energy.windows"],
+]);
+
+const STRUCTURE_LAYER_TYPOLOGY = new Map<string, TypologyRef>([
+	["slab", "structure.structure.onewayreinforcedconcreteslab"],
+	["column", "structure.structure.reinforcedconcretecolumn"],
+	["columns", "structure.structure.reinforcedconcretecolumn"],
+	["beam", "structure.structure.reinforcedconcreteinternalwall"],
+	["beams", "structure.structure.reinforcedconcreteinternalwall"],
+	["wall", "structure.structure.reinforcedconcreteexternalwall"],
+	["walls", "structure.structure.reinforcedconcreteexternalwall"],
+]);
+
+function typologyFromNamespacedStepLayer(domain: string, part: string): TypologyRef | null {
+	const table =
+		domain === "energy" ? ENERGY_LAYER_TYPOLOGY : domain === "structure" ? STRUCTURE_LAYER_TYPOLOGY : null;
+	if (!table) return null;
+	return table.get(part) ?? (part.endsWith("s") ? table.get(part.slice(0, -1)) : table.get(`${part}s`)) ?? null;
+}
+
+function stepParseCartesianPointBody(body: string): Vec3 | null {
+	const match = body.match(/CARTESIAN_POINT\s*\([^,]*,\s*\(([^)]+)\)/);
+	if (!match) return null;
+	const nums = match[1]!.split(",").map((value) => Number(value.trim().replace(/E\+/i, "e+")));
+	if (nums.length < 3 || nums.some((value) => !Number.isFinite(value))) return null;
+	return [nums[0]!, nums[1]!, nums[2]!];
+}
+
+function stepResolveCartesianPoint(entities: ReadonlyMap<number, string>, ref: number): Vec3 | null {
+	const body = entities.get(ref);
+	if (!body) return null;
+	if (body.includes("CARTESIAN_POINT(")) return stepParseCartesianPointBody(body);
+	if (body.startsWith("VERTEX_POINT(")) {
+		const refs = stepParseHashRefList(body);
+		return refs[0] !== undefined ? stepResolveCartesianPoint(entities, refs[0]) : null;
+	}
+	return null;
+}
+
+function stepParseLineEndpoints(entities: ReadonlyMap<number, string>, lineRef: number): readonly [Vec3, Vec3] | null {
+	const body = entities.get(lineRef);
+	if (!body?.startsWith("LINE(")) return null;
+	const refs = stepParseHashRefList(body);
+	const pointRef = refs[0];
+	const vectorRef = refs[1];
+	if (pointRef === undefined || vectorRef === undefined) return null;
+	const start = stepResolveCartesianPoint(entities, pointRef);
+	const vectorBody = entities.get(vectorRef);
+	if (!start || !vectorBody?.startsWith("VECTOR(")) return null;
+	const vectorRefs = stepParseHashRefList(vectorBody);
+	const dirRef = vectorRefs[0];
+	const magMatch = vectorBody.match(/,\s*([0-9.Ee+-]+)\s*\)\s*;?\s*$/);
+	const mag = magMatch ? Number(magMatch[1]) : Number.NaN;
+	if (dirRef === undefined || !Number.isFinite(mag)) return null;
+	const dirBody = entities.get(dirRef);
+	if (!dirBody?.startsWith("DIRECTION(")) return null;
+	const inlineDir = dirBody.match(/DIRECTION\([^,]*,\s*\(([^)]+)\)/);
+	const dirParts = inlineDir
+		? inlineDir[1]!.split(",").map((value) => Number(value.trim().replace(/E\+/i, "e+")))
+		: (() => {
+				const nestedRef = stepParseHashRefList(dirBody)[0];
+				const nestedBody = nestedRef !== undefined ? entities.get(nestedRef) : undefined;
+				const nestedMatch = nestedBody?.match(/DIRECTION\([^,]*,\s*\(([^)]+)\)/);
+				return nestedMatch
+					? nestedMatch[1]!.split(",").map((value) => Number(value.trim().replace(/E\+/i, "e+")))
+					: [];
+			})();
+	if (dirParts.length < 3 || dirParts.some((value) => !Number.isFinite(value))) return null;
+	const dir: Vec3 = [dirParts[0]!, dirParts[1]!, dirParts[2]!];
+	const len = Math.hypot(dir[0], dir[1], dir[2]) || 1;
+	const unit: Vec3 = [dir[0] / len, dir[1] / len, dir[2] / len];
+	return [start, [start[0] + unit[0] * mag, start[1] + unit[1] * mag, start[2] + unit[2] * mag]];
+}
+
+function stepCollectFaceBoundaryPoints(entities: ReadonlyMap<number, string>, faceRef: number): Vec3[] {
+	const faceBody = entities.get(faceRef);
+	if (!faceBody?.startsWith("ADVANCED_FACE(")) return [];
+	const boundRef = stepParseHashRefList(faceBody).find((ref) => entities.get(ref)?.startsWith("FACE_OUTER_BOUND("));
+	if (boundRef === undefined) return [];
+	const loopRef = stepParseHashRefList(entities.get(boundRef)!).find((ref) => entities.get(ref)?.startsWith("EDGE_LOOP("));
+	if (loopRef === undefined) return [];
+	const points: Vec3[] = [];
+	for (const orientedRef of stepParseHashRefList(entities.get(loopRef)!)) {
+		const orientedBody = entities.get(orientedRef);
+		if (!orientedBody?.startsWith("ORIENTED_EDGE(")) continue;
+		const edgeCurveRef = stepParseHashRefList(orientedBody).find((ref) => entities.get(ref)?.startsWith("EDGE_CURVE("));
+		if (edgeCurveRef === undefined) continue;
+		for (const vertexRef of stepParseHashRefList(entities.get(edgeCurveRef)!)) {
+			const point = stepResolveCartesianPoint(entities, vertexRef);
+			if (point) points.push(point);
+		}
+	}
+	const deduped: Vec3[] = [];
+	for (const point of points) {
+		const prev = deduped[deduped.length - 1];
+		if (prev && Math.hypot(prev[0] - point[0], prev[1] - point[1], prev[2] - point[2]) < 1e-9) continue;
+		deduped.push(point);
+	}
+	return deduped;
+}
+
+function stepCollectShellBoundaryPoints(entities: ReadonlyMap<number, string>, entityRef: number): Vec3[] {
+	const body = entities.get(entityRef);
+	if (!body) return [];
+	let openShellRef = entityRef;
+	if (body.startsWith("SHELL_BASED_SURFACE_MODEL(")) {
+		const shellRef = stepParseHashRefList(body).find((ref) => entities.get(ref)?.startsWith("OPEN_SHELL("));
+		if (shellRef === undefined) return [];
+		openShellRef = shellRef;
+	} else if (!body.startsWith("OPEN_SHELL(")) {
+		return [];
+	}
+	const faceRef = stepParseHashRefList(entities.get(openShellRef)!).find((ref) => entities.get(ref)?.startsWith("ADVANCED_FACE("));
+	return faceRef !== undefined ? stepCollectFaceBoundaryPoints(entities, faceRef) : [];
+}
+
+function modelFromStepLineMember(
+	start: Vec3,
+	end: Vec3,
+	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef },
+	crossSection: number,
+): Model {
+	const half = crossSection / 2;
+	const min: Vec3 = [
+		Math.min(start[0], end[0]) - half,
+		Math.min(start[1], end[1]) - half,
+		Math.min(start[2], end[2]) - half,
+	];
+	const max: Vec3 = [
+		Math.max(start[0], end[0]) + half,
+		Math.max(start[1], end[1]) + half,
+		Math.max(start[2], end[2]) + half,
+	];
+	const model = new Model();
+	const solidId = `${options.prefix}-solid` as SolidRef;
+	applyModelDiff(model, boxModelDiff({ cornerA: min, cornerB: [max[0], max[1], min[2]], height: Math.max(max[2] - min[2], crossSection) }, solidId));
+	model.objects[options.objectId] = {
+		id: options.objectId as ObjectRef,
+		typology: options.typology,
+		primitives: { solid: String(solidId) },
+	};
+	model.bump();
+	return model;
+}
+
+function modelFromPlanarBoundary(
+	points: readonly Vec3[],
+	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef },
+	thickness = 0.05,
+): Model {
+	if (points.length < 3) return new Model();
+	const xs = points.map((point) => point[0]);
+	const ys = points.map((point) => point[1]);
+	const zs = points.map((point) => point[2]);
+	const zTop = Math.max(...zs);
+	const min: Vec3 = [Math.min(...xs), Math.min(...ys), zTop - thickness];
+	const max: Vec3 = [Math.max(...xs), Math.max(...ys), zTop];
+	const model = new Model();
+	const solidId = `${options.prefix}-solid` as SolidRef;
+	applyModelDiff(model, boxModelDiff({ cornerA: min, cornerB: [max[0], max[1], min[2]], height: thickness }, solidId));
+	model.objects[options.objectId] = {
+		id: options.objectId as ObjectRef,
+		typology: options.typology,
+		primitives: { solid: String(solidId) },
+	};
+	model.bump();
+	return model;
+}
+
+function modelPartFromStepPresentationEntity(
+	entities: ReadonlyMap<number, string>,
+	entityRef: number,
+	options: { readonly prefix: string; readonly objectId: string; readonly typology: TypologyRef; readonly layerName: string },
+): Model | null {
+	const body = entities.get(entityRef);
+	if (!body) return null;
+	if (body.startsWith("LINE(")) {
+		const endpoints = stepParseLineEndpoints(entities, entityRef);
+		if (!endpoints) return null;
+		const layer = options.layerName.toLowerCase();
+		const crossSection = layer.includes("column") ? 0.3 : 0.15;
+		return modelFromStepLineMember(endpoints[0], endpoints[1], options, crossSection);
+	}
+	const boundary = stepCollectShellBoundaryPoints(entities, entityRef);
+	if (boundary.length >= 3) return modelFromPlanarBoundary(boundary, options);
+	return null;
+}
+
+function importStepPresentationLayersToModel(
+	stepText: string,
+	options: { readonly basePrefix: string; readonly lengthScale: number },
+): Model {
+	const normalized = normalizeStepDataLines(stepText);
+	const entities = parseStepEntityMap(normalized);
+	const layerByEntity = parsePresentationLayerAssignments(normalized);
+	const model = new Model();
+	let partIndex = 0;
+	for (const [entityRef, layerName] of [...layerByEntity.entries()].sort(([a], [b]) => a - b)) {
+		const typology = typologyFromStepLayer(layerName);
+		const prefix = `${options.basePrefix}-${++partIndex}`;
+		const objectId = `object-${prefix}`;
+		const part = modelPartFromStepPresentationEntity(entities, entityRef, { prefix, objectId, typology, layerName });
+		if (part) mergeImportedBrepPart(model, part);
+	}
+	if (Object.keys(model.objects).length === 0) throw new Error("STEP presentation import yielded no objects");
+	scaleModelPositions(model, options.lengthScale);
+	model.bump();
+	return model;
+}
+
 function normalizeStepDataLines(stepText: string): string {
 	const data = stepText.match(/DATA;\s*([\s\S]*?)ENDSEC;/i)?.[1] ?? stepText;
 	const lines = data.split(/\r?\n/);
@@ -2141,6 +2365,17 @@ function normalizeStepDataLines(stepText: string): string {
 		merged.push(trimmed);
 	}
 	return merged.join("\n");
+}
+
+function stepUsesManifoldSolidBreps(stepText: string): boolean {
+	return normalizeStepDataLines(stepText).includes("MANIFOLD_SOLID_BREP(");
+}
+
+function shouldImportStepPresentationLayers(stepText: string, modelDefinitionId: string): boolean {
+	if (modelDefinitionId === ENERGY_MODEL_DEFINITION_ID || modelDefinitionId === STRUCTURE_CLASSIC_MODEL_DEFINITION_ID) {
+		return true;
+	}
+	return !stepUsesManifoldSolidBreps(stepText);
 }
 
 function parsePresentationLayerAssignments(normalizedData: string): Map<number, string> {
@@ -2171,9 +2406,15 @@ function stepParseHashRefGroup(text: string): number[] {
 	return stepParseHashRefList(groups[groups.length - 1]![1]!);
 }
 
-/** @emoji 🏷️ Maps STEP presentation-layer names to building typology ids. */
+/** @emoji 🏷️ Maps STEP presentation-layer names to typology ids. */
 export function typologyFromStepLayer(layerName: string): TypologyRef {
-	const key = layerName.trim().toLowerCase();
+	const trimmed = layerName.trim();
+	const namespaced = trimmed.match(/^([^:]+)::(.+)$/i);
+	if (namespaced) {
+		const mapped = typologyFromNamespacedStepLayer(namespaced[1]!.trim().toLowerCase(), namespaced[2]!.trim().toLowerCase());
+		if (mapped) return mapped;
+	}
+	const key = trimmed.toLowerCase();
 	const direct = BIM_LAYER_TYPOLOGY.get(key);
 	if (direct) return direct;
 	if (key.endsWith("s")) {
@@ -3051,7 +3292,13 @@ class BrepjsWasmEngine {
 		const lengthScale = options?.lengthScale ?? STEP_BREP_IMPORT_MM_TO_M;
 		const modelDefinitionId = options?.modelDefinitionId ?? BUILDING_BIM_MODEL_DEFINITION_ID;
 		const brepSolids = validSolidsFromImportedShape(imported.value as Shape3D);
-		if (brepSolids.length === 0) throw new Error("STEP BIM import yielded no valid solids");
+		if (shouldImportStepPresentationLayers(stepText, modelDefinitionId) || brepSolids.length === 0) {
+			const model = importStepPresentationLayersToModel(stepText, { basePrefix, lengthScale });
+			const space = new ModelSpace();
+			space.link(modelDefinitionId, model);
+			await this.syncSolidsFromModel(model);
+			return space;
+		}
 		const { solidOrder, layerBySolidEntity } = stepPresentationLayers(stepText);
 		const model = new Model();
 		for (let i = 0; i < brepSolids.length; i++) {
@@ -4082,7 +4329,7 @@ if (import.meta.vitest) {
 			}
 		});
 
-		it("concrete forest left play fixture roundtrips shape and building models", async () => {
+		it("concrete forest left play fixture roundtrips shape, building, energy, and structure models", async () => {
 			const { readFile } = await import("node:fs/promises");
 			const { resolve } = await import("node:path");
 			const fixturePath = resolve(import.meta.dirname, "../../../assets/play/hexagonal-cut-concrete-forest-left.model.json");
@@ -4090,10 +4337,42 @@ if (import.meta.vitest) {
 			const space = ModelSpace.fromJSON(fixtureJson);
 			const shape = space.models[defaultModelDefinitionId()]!;
 			const building = space.models[BUILDING_BIM_MODEL_DEFINITION_ID]!;
+			const energy = space.models[ENERGY_MODEL_DEFINITION_ID]!;
+			const structure = space.models[STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
 			expect(Object.keys(shape.objects)).toHaveLength(1);
 			expect(Object.keys(building.objects)).toHaveLength(12);
+			expect(Object.keys(energy.objects)).toHaveLength(1);
+			expect(Object.keys(structure.objects)).toHaveLength(11);
 			expect(Object.keys(geom(shape).vertices).length).toBeGreaterThan(0);
 			expect(Object.keys(geom(building).vertices).length).toBeGreaterThan(0);
+			expect(Object.keys(geom(energy).vertices).length).toBeGreaterThan(0);
+			expect(Object.keys(geom(structure).vertices).length).toBeGreaterThan(0);
+		});
+
+		it("imports energy and classic structure STEP presentation fixtures for concrete forest left", async () => {
+			const { readFile } = await import("node:fs/promises");
+			const { resolve } = await import("node:path");
+			const fixtureRoot = resolve(import.meta.dirname, "../../../../semio/fixtures/kit/folder/abbau-aufbau");
+			const energyText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-energy.stp"), "utf8");
+			const structureText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-classic-structure.stp"), "utf8");
+			const energySpace = await kernel.importStepBimToModelSpace(energyText, {
+				prefix: "hexagonal-cut-concrete-forest-left-energy",
+				modelDefinitionId: ENERGY_MODEL_DEFINITION_ID,
+				lengthScale: 1,
+			});
+			const structureSpace = await kernel.importStepBimToModelSpace(structureText, {
+				prefix: "hexagonal-cut-concrete-forest-left-classic-structure",
+				modelDefinitionId: STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
+				lengthScale: 1,
+			});
+			const energy = energySpace.models[ENERGY_MODEL_DEFINITION_ID]!;
+			const structure = structureSpace.models[STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
+			expect(Object.keys(energy.objects)).toHaveLength(1);
+			expect(Object.values(energy.objects)[0]?.typology).toBe("energy.energy.baseplate");
+			expect(Object.keys(structure.objects)).toHaveLength(11);
+			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.onewayreinforcedconcreteslab")).toHaveLength(1);
+			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.reinforcedconcreteinternalwall")).toHaveLength(8);
+			expect(Object.values(structure.objects).filter((row) => row.typology === "structure.structure.reinforcedconcretecolumn")).toHaveLength(2);
 		});
 
 		it("generates play fixtures from semio STEP sources", async () => {
@@ -4112,11 +4391,29 @@ if (import.meta.vitest) {
 					const bimSpace = await kernel.importStepBimToModelSpace(bimText, {
 						prefix: "hexagonal-cut-concrete-forest-left-bim",
 					});
+					const energyPath = resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-energy.stp");
+					const energyText = await readFile(energyPath, "utf8");
+					const energySpace = await kernel.importStepBimToModelSpace(energyText, {
+						prefix: "hexagonal-cut-concrete-forest-left-energy",
+						modelDefinitionId: ENERGY_MODEL_DEFINITION_ID,
+						lengthScale: 1,
+					});
+					const structurePath = resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-classic-structure.stp");
+					const structureText = await readFile(structurePath, "utf8");
+					const structureSpace = await kernel.importStepBimToModelSpace(structureText, {
+						prefix: "hexagonal-cut-concrete-forest-left-classic-structure",
+						modelDefinitionId: STRUCTURE_CLASSIC_MODEL_DEFINITION_ID,
+						lengthScale: 1,
+					});
 					const combined = new ModelSpace();
 					const shapeModel = shapeSpace.models[defaultModelDefinitionId()]!;
 					combined.link(defaultModelDefinitionId(), shapeModel);
 					const buildingModel = bimSpace.models[BUILDING_BIM_MODEL_DEFINITION_ID]!;
 					combined.link(BUILDING_BIM_MODEL_DEFINITION_ID, buildingModel);
+					const energyModel = energySpace.models[ENERGY_MODEL_DEFINITION_ID]!;
+					combined.link(ENERGY_MODEL_DEFINITION_ID, energyModel);
+					const structureModel = structureSpace.models[STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
+					combined.link(STRUCTURE_CLASSIC_MODEL_DEFINITION_ID, structureModel);
 					const outPath = resolve(playRoot, `${fixture.name}.model.json`);
 					await writeFile(outPath, `${JSON.stringify(combined.toJSON(), null, 2)}\n`, "utf8");
 					continue;

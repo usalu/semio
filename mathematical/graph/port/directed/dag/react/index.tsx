@@ -46,13 +46,44 @@ export const DAG_DEFAULT_FIXTURE: DagFixtureV1 = {
   schema: "dag.fixture/v1",
   camera: { x: 0, y: 0, zoom: 1 },
   nodes: [
-    { id: "source", name: "Source", x: -220, y: 0, width: 160, height: 72, inputs: [], outputs: [{ id: "out", label: "value" }] },
-    { id: "transform", name: "Transform", x: 0, y: 0, width: 160, height: 88, inputs: [{ id: "in", label: "value" }], outputs: [{ id: "out", label: "result" }] },
-    { id: "sink", name: "Sink", x: 220, y: 0, width: 160, height: 72, inputs: [{ id: "in", label: "result" }], outputs: [] },
+    { id: "source", name: "Source", x: -360, y: 0, width: 160, height: 72, inputs: [], outputs: [{ id: "out", label: "value" }] },
+    { id: "scale", name: "Scale", x: -120, y: -80, width: 160, height: 72, inputs: [{ id: "in", label: "value" }], outputs: [{ id: "out", label: "scaled" }] },
+    { id: "offset", name: "Offset", x: -120, y: 80, width: 160, height: 72, inputs: [{ id: "in", label: "value" }], outputs: [{ id: "out", label: "shifted" }] },
+    {
+      id: "combine",
+      name: "Combine",
+      x: 120,
+      y: 0,
+      width: 160,
+      height: 96,
+      inputs: [
+        { id: "a", label: "a" },
+        { id: "b", label: "b" },
+      ],
+      outputs: [{ id: "out", label: "merged" }],
+    },
+    {
+      id: "split",
+      name: "Split",
+      x: 360,
+      y: 0,
+      width: 160,
+      height: 96,
+      inputs: [{ id: "in", label: "merged" }],
+      outputs: [
+        { id: "lo", label: "lo" },
+        { id: "hi", label: "hi" },
+      ],
+    },
+    { id: "sink", name: "Sink", x: 600, y: -48, width: 160, height: 72, inputs: [{ id: "in", label: "result" }], outputs: [] },
   ],
   edges: [
-    { id: "e1", source: "source:out", target: "transform:in" },
-    { id: "e2", source: "transform:out", target: "sink:in" },
+    { id: "e1", source: "source:out", target: "scale:in" },
+    { id: "e2", source: "source:out", target: "offset:in" },
+    { id: "e3", source: "scale:out", target: "combine:a" },
+    { id: "e4", source: "offset:out", target: "combine:b" },
+    { id: "e5", source: "combine:out", target: "split:in" },
+    { id: "e6", source: "split:lo", target: "sink:in" },
   ],
 };
 
@@ -129,8 +160,16 @@ export function DagCanvas({ fixtureJson, className }: DagCanvasProps): React.JSX
         session.pointerMove(ev.clientX - r.left, ev.clientY - r.top);
         renderFrame();
       };
-      const onPointerUp = () => {
-        session.pointerUp();
+      const onPointerUp = (ev: PointerEvent) => {
+        const r = canvas.getBoundingClientRect();
+        const sx = ev.clientX - r.left;
+        const sy = ev.clientY - r.top;
+        session.pointerUp(sx, sy);
+        try {
+          console.log("[DEBUG] dag fixture after pointer:", session.fixtureJson());
+        } catch {
+          /* fixture not ready */
+        }
         renderFrame();
       };
       canvas.addEventListener("pointerdown", onPointerDown);
@@ -165,9 +204,9 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   describe("dag fixture", () => {
-    it("default fixture has three nodes", () => {
-      expect(DAG_DEFAULT_FIXTURE.nodes.length).toBe(3);
-      expect(DAG_DEFAULT_FIXTURE.edges.length).toBe(2);
+    it("default fixture has six nodes", () => {
+      expect(DAG_DEFAULT_FIXTURE.nodes.length).toBe(6);
+      expect(DAG_DEFAULT_FIXTURE.edges.length).toBe(6);
     });
   });
 }
