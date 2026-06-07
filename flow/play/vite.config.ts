@@ -19,5 +19,15 @@ export default createPlaygroundPlayViteConfig({
     include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@flow/react"],
     esbuildOptions: { target: "esnext" },
   },
-  watchIgnored: ["../core/lib.rs", "../core/target/**", "../core/Cargo.toml", "../core/Cargo.lock", "../core/script.ts"],
+  watchIgnored: [
+    "../core/lib.rs",
+    "../core/target/**",
+    "../core/Cargo.toml",
+    "../core/Cargo.lock",
+    "../core/script.ts",
+    "../modules/**/lib.rs",
+    "../modules/**/target/**",
+    "../modules/**/Cargo.toml",
+    "../modules/**/script.ts",
+  ],
 });

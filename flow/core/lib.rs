@@ -1,9 +1,5 @@
 //! 🌊 Flow core: widgets, neural evaluation, and DAG canvas host.
 
-pub use flow_module_dictionary;
-pub use flow_module_logic;
-pub use flow_module_math;
-pub use flow_module_text;
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed_dag as dag;
 pub use neural_engine as neural;
@@ -11,7 +7,7 @@ pub use neural_engine as neural;
 use std::collections::{BTreeMap, HashMap};
 
 use dag::{would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeSpec, IoPortSpec};
-use neural::{Atom, Dictionary, Evaluator, Neuron, Registry, Synapse, Tree, Value as NeuralValue};
+use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Widget
@@ -139,7 +135,7 @@ enum WidgetDescriptor {
 
 // #region 🔖Catalogue
 /// 📚 Catalogue section for drag-and-drop palette.
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogueSection {
     pub id: String,
@@ -148,7 +144,7 @@ pub struct CatalogueSection {
 }
 
 /// 🧷 Draggable catalogue entry.
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogueItem {
     pub kind: String,
@@ -160,48 +156,35 @@ pub struct CatalogueItem {
     pub summary: String,
 }
 
-fn build_registry() -> Registry {
-    let mut registry = Registry::new();
-    flow_module_math::register(&mut registry);
-    flow_module_text::register(&mut registry);
-    flow_module_logic::register(&mut registry);
-    flow_module_dictionary::register(&mut registry);
-    registry
+fn static_catalogue_sections() -> Vec<CatalogueSection> {
+    vec![
+        CatalogueSection {
+            id: "inputs".into(),
+            title: "Inputs".into(),
+            items: vec![
+                CatalogueItem { kind: "inputSlider".into(), neuronKind: None, action: None, name: "Slider".into(), summary: "Number input".into() },
+                CatalogueItem { kind: "inputNote".into(), neuronKind: None, action: None, name: "Note".into(), summary: "Text input".into() },
+            ],
+        },
+        CatalogueSection {
+            id: "outputs".into(),
+            title: "Outputs".into(),
+            items: vec![
+                CatalogueItem { kind: "outputPreview".into(), neuronKind: None, action: None, name: "Preview".into(), summary: "Preview dictionary".into() },
+                CatalogueItem { kind: "outputAction".into(), neuronKind: None, action: Some("log".into()), name: "Action".into(), summary: "Side-effect action".into() },
+            ],
+        },
+    ]
 }
 
-fn build_catalogue() -> Vec<CatalogueSection> {
-    let registry = build_registry();
-    let mut by_module: BTreeMap<String, Vec<CatalogueItem>> = BTreeMap::new();
-    for info in registry.catalogue() {
-        by_module.entry(info.module.clone()).or_default().push(CatalogueItem {
-            kind: "neuron".into(),
-            neuronKind: Some(info.id),
-            action: None,
-            name: info.name,
-            summary: info.summary,
-        });
-    }
-    let mut sections: Vec<CatalogueSection> = by_module
-        .into_iter()
-        .map(|(module, items)| CatalogueSection { id: module.clone(), title: titleize_module(&module), items })
-        .collect();
-    sections.push(CatalogueSection {
-        id: "inputs".into(),
-        title: "Inputs".into(),
-        items: vec![
-            CatalogueItem { kind: "inputSlider".into(), neuronKind: None, action: None, name: "Slider".into(), summary: "Number input".into() },
-            CatalogueItem { kind: "inputNote".into(), neuronKind: None, action: None, name: "Note".into(), summary: "Text input".into() },
-        ],
-    });
-    sections.push(CatalogueSection {
-        id: "outputs".into(),
-        title: "Outputs".into(),
-        items: vec![
-            CatalogueItem { kind: "outputPreview".into(), neuronKind: None, action: None, name: "Preview".into(), summary: "Preview dictionary".into() },
-            CatalogueItem { kind: "outputAction".into(), neuronKind: None, action: Some("log".into()), name: "Action".into(), summary: "Side-effect action".into() },
-        ],
-    });
-    sections
+fn merge_catalogue_sections(host_json: &str) -> Result<Vec<CatalogueSection>, String> {
+    let mut sections: Vec<CatalogueSection> = if host_json.trim().is_empty() {
+        vec![]
+    } else {
+        serde_json::from_str(host_json).map_err(|e| e.to_string())?
+    };
+    sections.extend(static_catalogue_sections());
+    Ok(sections)
 }
 
 fn titleize_module(module: &str) -> String {
@@ -213,6 +196,51 @@ fn titleize_module(module: &str) -> String {
 }
 // #endregion 🔖Catalogue
 
+// #region 🔖EvalBridge
+fn parse_bridge_dictionary_json(result_json: &str) -> Result<Dictionary, EvalError> {
+    if let Ok(dict) = serde_json::from_str::<Dictionary>(result_json) {
+        return Ok(dict);
+    }
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(result_json) {
+        if let Some(err) = value.get("error").and_then(|v| v.as_str()) {
+            return Err(EvalError::InvalidInput(err.into()));
+        }
+    }
+    Err(EvalError::InvalidInput("invalid bridge response".into()))
+}
+
+#[cfg(target_arch = "wasm32")]
+struct EvalBridge {
+    cb: js_sys::Function,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl EvalBridge {
+    fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        use wasm_bindgen::JsValue;
+        let input_json = serde_json::to_string(input).map_err(|e| EvalError::InvalidInput(e.to_string()))?;
+        let result = self
+            .cb
+            .call2(&JsValue::NULL, &JsValue::from_str(kind_id), &JsValue::from_str(&input_json))
+            .map_err(|_| EvalError::InvalidInput("bridge call failed".into()))?;
+        let result_json = result.as_string().ok_or_else(|| EvalError::InvalidInput("bridge did not return string".into()))?;
+        parse_bridge_dictionary_json(&result_json)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct EvalBridge {
+    cb: Box<dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl EvalBridge {
+    fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        (self.cb)(kind_id, input)
+    }
+}
+// #endregion 🔖EvalBridge
+
 // #region 🔖FlowHost
 /// 🏠 Retained flow host: fixture, dag scene, evaluation cache.
 pub struct FlowHost {
@@ -220,6 +248,8 @@ pub struct FlowHost {
     pub dag: DagHost,
     pub outputs: HashMap<String, Dictionary>,
     pub last_eval_json: String,
+    eval_bridge: Option<EvalBridge>,
+    host_catalogue_json: String,
     next_widget_serial: u64,
     next_synapse_serial: u64,
     viewport_w: u32,
@@ -242,6 +272,8 @@ impl FlowHost {
             dag: DagHost::from_fixture(DagFixtureV1 { schema: "dag.fixture/v1".into(), camera: dag::DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             outputs: HashMap::new(),
             last_eval_json: String::new(),
+            eval_bridge: None,
+            host_catalogue_json: String::new(),
             next_widget_serial: 1,
             next_synapse_serial: 100,
             viewport_w: 1,
@@ -264,7 +296,22 @@ impl FlowHost {
     }
 
     pub fn catalogue_json(&self) -> Result<String, String> {
-        serde_json::to_string(&build_catalogue()).map_err(|e| e.to_string())
+        let sections = merge_catalogue_sections(&self.host_catalogue_json)?;
+        serde_json::to_string(&sections).map_err(|e| e.to_string())
+    }
+
+    pub fn set_host_catalogue_json(&mut self, json: &str) {
+        self.host_catalogue_json = json.to_string();
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn set_eval_bridge_fn(&mut self, cb: Box<dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError>>) {
+        self.eval_bridge = Some(EvalBridge { cb });
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn set_eval_bridge_js(&mut self, cb: js_sys::Function) {
+        self.eval_bridge = Some(EvalBridge { cb });
     }
 
     pub fn evaluate(&mut self) -> Result<String, String> {
@@ -441,10 +488,16 @@ impl FlowHost {
     }
 
     fn evaluate_internal(&mut self) {
-        let registry = build_registry();
         let tree = self.build_tree();
         let seeds = self.build_seeds();
-        match Evaluator::new(&registry).evaluate(&tree, &seeds) {
+        let Some(bridge) = self.eval_bridge.as_ref() else {
+            self.last_eval_json = serde_json::json!({ "error": "evaluation bridge not configured" }).to_string();
+            return;
+        };
+        let registry = neural::Registry::new();
+        let evaluator = Evaluator::new(&registry);
+        let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
+        match evaluator.evaluate_with(&tree, &seeds, &mut dispatch) {
             Ok(outputs) => {
                 self.outputs = outputs.clone();
                 self.apply_preview_outputs(&outputs);
@@ -811,6 +864,16 @@ impl FlowSession {
         self.state.borrow().host.catalogue_json().map_err(|e| JsValue::from_str(&e))
     }
 
+    #[wasm_bindgen(js_name = setEvalBridge)]
+    pub fn set_eval_bridge(&self, cb: js_sys::Function) {
+        self.state.borrow_mut().host.set_eval_bridge_js(cb);
+    }
+
+    #[wasm_bindgen(js_name = setCatalogueJson)]
+    pub fn set_catalogue_json(&self, json: &str) {
+        self.state.borrow_mut().host.set_host_catalogue_json(json);
+    }
+
     #[wasm_bindgen(js_name = evaluate)]
     pub fn evaluate(&self) -> Result<String, JsValue> {
         self.state.borrow_mut().host.evaluate().map_err(|e| JsValue::from_str(&e))
@@ -957,6 +1020,55 @@ mod tests {
     use cavas::camera::{world_to_screen, Camera, Viewport};
     use cavas::vello::kurbo::Point;
 
+    fn test_math_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        if kind == "math.add" {
+            let a = input
+                .get("a")
+                .or_else(|| input.get("number"))
+                .and_then(|v| v.as_atom())
+                .and_then(|a| a.as_f64())
+                .ok_or_else(|| EvalError::MissingInput("a".into()))?;
+            let b = input.get("b").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
+            return Ok(Dictionary::new().insert("number", NeuralValue::Atom(Atom::Decimal(a + b))));
+        }
+        if kind == "math.passThrough" {
+            let n = input
+                .get("number")
+                .and_then(|v| v.as_atom())
+                .and_then(|a| a.as_f64())
+                .ok_or_else(|| EvalError::MissingInput("number".into()))?;
+            return Ok(Dictionary::new().insert("number", NeuralValue::Atom(Atom::Decimal(n))));
+        }
+        Err(EvalError::UnknownKind(kind.into()))
+    }
+
+    fn host_with_test_bridge() -> FlowHost {
+        let mut host = FlowHost::default();
+        host.set_eval_bridge_fn(Box::new(test_math_bridge));
+        host.set_host_catalogue_json(&serde_json::to_string(&[CatalogueSection {
+            id: "math".into(),
+            title: "Math".into(),
+            items: vec![
+                CatalogueItem {
+                    kind: "neuron".into(),
+                    neuronKind: Some("math.add".into()),
+                    action: None,
+                    name: "Add".into(),
+                    summary: "Sums two numbers".into(),
+                },
+                CatalogueItem {
+                    kind: "neuron".into(),
+                    neuronKind: Some("math.passThrough".into()),
+                    action: None,
+                    name: "Pass Through".into(),
+                    summary: "Forwards a number".into(),
+                },
+            ],
+        }]).unwrap());
+        host.evaluate_internal();
+        host
+    }
+
     fn widget_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f64) {
         let node = host.dag.fixture.nodes.iter().find(|n| n.id == widget_id).expect("node");
         let cam = Camera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
@@ -967,21 +1079,20 @@ mod tests {
 
     #[test]
     fn default_fixture_evaluates_add_preview() {
-        let mut host = FlowHost::default();
-        host.evaluate_internal();
+        let host = host_with_test_bridge();
         assert_eq!(host.preview_text(), "3");
     }
 
     #[test]
     fn slider_updates_preview() {
-        let mut host = FlowHost::default();
+        let mut host = host_with_test_bridge();
         host.set_slider_value("slider", 5.0);
         assert_eq!(host.preview_text(), "5");
     }
 
     #[test]
     fn default_auto_layout_orders_slider_add_preview_left_to_right() {
-        let host = FlowHost::default();
+        let host = host_with_test_bridge();
         let slider = host.fixture.layout.get("slider").expect("slider");
         let add = host.fixture.layout.get("add").expect("add");
         let preview = host.fixture.layout.get("preview").expect("preview");
@@ -991,7 +1102,7 @@ mod tests {
 
     #[test]
     fn canvas_slider_hit_adjusts_value_playground_viewport() {
-        let mut host = FlowHost::default();
+        let mut host = host_with_test_bridge();
         host.set_viewport(1259, 706, 1.0);
         let (sx, sy) = widget_screen_point(&host, "slider");
         host.pointer_down_screen(sx, sy, false, false);
@@ -1011,7 +1122,7 @@ mod tests {
 
     #[test]
     fn canvas_slider_hit_adjusts_value() {
-        let mut host = FlowHost::default();
+        let mut host = host_with_test_bridge();
         host.set_viewport(800, 600, 1.0);
         let (sx, sy) = widget_screen_point(&host, "slider");
         host.pointer_down_screen(sx, sy, false, false);
@@ -1031,7 +1142,7 @@ mod tests {
 
     #[test]
     fn reorganize_overwrites_saved_layout_left_to_right() {
-        let mut host = FlowHost::default();
+        let mut host = host_with_test_bridge();
         host.fixture.layout.insert("slider".into(), WidgetLayout { x: -900.0, y: -900.0 });
         host.fixture.layout.insert("add".into(), WidgetLayout { x: -900.0, y: -900.0 });
         host.fixture.layout.insert("preview".into(), WidgetLayout { x: -900.0, y: -900.0 });
@@ -1054,19 +1165,17 @@ mod tests {
 
     #[test]
     fn catalogue_has_module_sections() {
-        let host = FlowHost::default();
+        let host = host_with_test_bridge();
         let json = host.catalogue_json().unwrap();
         assert!(json.contains("math"));
-        assert!(json.contains("text"));
-        assert!(json.contains("logic"));
-        assert!(json.contains("dictionary"));
+        assert!(json.contains("math.add"));
         assert!(json.contains("Inputs"));
         assert!(json.contains("Outputs"));
     }
 
     #[test]
     fn add_widget_and_connect() {
-        let mut host = FlowHost::default();
+        let mut host = host_with_test_bridge();
         let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.passThrough"}"#, 100.0, 50.0).unwrap();
         host.connect("slider", &id).unwrap();
         host.connect(&id, "preview").unwrap();

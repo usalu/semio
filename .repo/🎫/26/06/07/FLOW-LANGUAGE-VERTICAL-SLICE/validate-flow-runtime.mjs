@@ -130,6 +130,7 @@ await page.waitForFunction(() => {
   const labels = [...document.querySelectorAll("[data-tree-item-label], .tree-item-label, button, span")].map((el) => el.textContent?.trim() ?? "");
   return (
     labels.some((t) => /dictionary/i.test(t)) &&
+    labels.some((t) => /list/i.test(t)) &&
     labels.some((t) => /math/i.test(t)) &&
     labels.some((t) => /text/i.test(t)) &&
     labels.some((t) => /logic/i.test(t)) &&
@@ -140,6 +141,7 @@ await page.waitForFunction(() => {
 
 const sectionLabels = await page.locator("body").innerText();
 const hasDictionary = /dictionary/i.test(sectionLabels);
+const hasList = /list/i.test(sectionLabels);
 const hasMath = /math/i.test(sectionLabels);
 const hasText = /text/i.test(sectionLabels);
 const hasLogic = /logic/i.test(sectionLabels);
@@ -229,7 +231,7 @@ const unsupported = await page.getByText("Unsupported UiNode").count();
 await browser.close();
 
 console.log("[validate-flow] url:", baseUrl);
-console.log("[validate-flow] sections:", { hasDictionary, hasMath, hasText, hasLogic, hasInputs, hasOutputs });
+console.log("[validate-flow] sections:", { hasDictionary, hasList, hasMath, hasText, hasLogic, hasInputs, hasOutputs });
 console.log("[validate-flow] debug logs:", debugLogs);
 console.log("[validate-flow] preview before:", previewBefore);
 console.log("[validate-flow] preview after slider:", previewAfter);
@@ -241,8 +243,8 @@ if (unsupported > 0) {
   console.error("[validate-flow] Unsupported UiNode rendered");
   process.exit(1);
 }
-if (!hasDictionary || !hasMath || !hasText || !hasLogic || !hasInputs || !hasOutputs) {
-  console.error("[validate-flow] catalogue sections incomplete", { hasDictionary, hasMath, hasText, hasLogic, hasInputs, hasOutputs });
+if (!hasDictionary || !hasList || !hasMath || !hasText || !hasLogic || !hasInputs || !hasOutputs) {
+  console.error("[validate-flow] catalogue sections incomplete", { hasDictionary, hasList, hasMath, hasText, hasLogic, hasInputs, hasOutputs });
   process.exit(1);
 }
 if (!debugLogs.some((l) => l.includes("flow evaluate preview"))) {

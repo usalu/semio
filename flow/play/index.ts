@@ -25,10 +25,12 @@ import {
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
 import {
   FLOW_DEFAULT_FIXTURE,
+  flowExtensionHost,
   flowFixtureToJson,
   flowPlayCatalogueItemDragData,
   type CatalogueItem,
   type CatalogueSection,
+  type FlowExtensionEntry,
   type FlowFixtureV1,
   type FlowReorganizeRequest,
 } from "@flow/react";
@@ -54,6 +56,7 @@ export const FLOW_PLAY_DEFAULT_FIXTURE_JSON = flowFixtureToJson(FLOW_PLAY_DEFAUL
 export const FLOW_PLAY_LAYOUT = createStackLayout([FLOW_PLAY_WINDOW_KIND_ID], ["Flow"]);
 export const FLOW_PLAY_KINDS_BODY_KEY = "flow.play.kinds";
 export const FLOW_PLAY_KINDS_TAB_ID = "flow-play-kinds";
+export const FLOW_PLAY_EXTENSIONS_TAB_ID = "flow-play-extensions";
 
 /** @emoji 📚 Neuron module section ids expected in the flow play workbench catalogue. */
 export const FLOW_NEURON_MODULE_IDS = ["dictionary", "logic", "math", "text"] as const;
@@ -62,6 +65,56 @@ export const FLOW_NEURON_MODULE_IDS = ["dictionary", "logic", "math", "text"] as
 export function flowPlayCatalogueIncludesAllNeuronModules(sections: readonly CatalogueSection[]): boolean {
   const ids = new Set(sections.map((section) => section.id));
   return FLOW_NEURON_MODULE_IDS.every((id) => ids.has(id));
+}
+
+/** @emoji ✅ True when every active neuron module section is present. */
+export function flowPlayCatalogueIncludesActiveNeuronModules(sections: readonly CatalogueSection[], activeModuleIds: readonly string[]): boolean {
+  const ids = new Set(sections.map((section) => section.id));
+  return activeModuleIds.every((id) => ids.has(id));
+}
+
+/** @emoji 🧩 Workbench extensions tab: installed modules with enable/disable toggles. */
+export function buildFlowPlayExtensionsTree(entries: readonly FlowExtensionEntry[]): UiNode {
+  if (!entries.length) {
+    return {
+      type: "tree",
+      sections: [
+        {
+          id: "flow-play-extensions.empty",
+          label: "Extensions",
+          defaultOpen: true,
+          items: [{ id: "flow-play-extensions.empty.msg", label: "Loading extensions…" }],
+        },
+      ],
+    };
+  }
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "flow-play-extensions.installed",
+        label: "Installed",
+        defaultOpen: true,
+        items: entries.map((entry) => ({
+          id: `flow-play-extensions.${entry.id}`,
+          label: entry.manifest.name,
+          description: `${entry.manifest.version} · ${entry.active ? "enabled" : "disabled"} · ${entry.manifest.contributes.neuronKinds.length} kinds · ${entry.manifest.contributes.commands.length} commands`,
+          command: flowPlayCmd("toggleExtension", { id: entry.id, enabled: !entry.active }),
+        })),
+      },
+      {
+        id: "flow-play-extensions.commands",
+        label: "Commands",
+        defaultOpen: true,
+        items: flowExtensionHost.activeCommands().map((command) => ({
+          id: `flow-play-extensions.command.${command.id}`,
+          label: command.title,
+          description: command.id,
+          command: flowPlayCmd("runExtensionCommand", { commandId: command.id }),
+        })),
+      },
+    ],
+  };
 }
 
 function flowPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -120,6 +173,7 @@ export class FlowPlayController extends Controller {
   private orientation: FlowLayoutOrientation = "leftRight";
   private reorganizeEpoch = 0;
   private reorganizeOptionsJson = buildFlowLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
+  private extensionRevision = 0;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
@@ -140,6 +194,14 @@ export class FlowPlayController extends Controller {
 
   getCatalogueRevision(): number {
     return this.catalogueRevision;
+  }
+
+  getExtensionRevision(): number {
+    return this.extensionRevision;
+  }
+
+  getExtensionEntries(): readonly FlowExtensionEntry[] {
+    return flowExtensionHost.listEntries();
   }
 
   /** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
@@ -283,6 +345,25 @@ export class FlowPlayController extends Controller {
         this.fixtureJson = json;
         this.emit();
       }
+      return;
+    }
+    if (command === "toggleExtension") {
+      const id = (args as { id?: string }).id;
+      const enabled = (args as { enabled?: boolean }).enabled;
+      if (typeof id !== "string" || typeof enabled !== "boolean") return;
+      void flowExtensionHost.setActive(id, enabled).then(() => {
+        this.extensionRevision += 1;
+        this.notifySnapshot();
+        this.emit();
+      });
+      return;
+    }
+    if (command === "runExtensionCommand") {
+      const commandId = (args as { commandId?: string }).commandId;
+      if (typeof commandId !== "string") return;
+      const result = flowExtensionHost.executeCommand(commandId);
+      console.log(`[DEBUG] flow extension command ${commandId}: ${result}`);
+      this.emit();
     }
   }
 
@@ -394,6 +475,40 @@ if (import.meta.vitest) {
         sections: [{ id: "math", title: "Math", items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }] }],
       });
       expect(ctrl.getCatalogueRevision()).toBe(1);
+    });
+
+    it("extensions tree lists installed modules", () => {
+      const tree = buildFlowPlayExtensionsTree([
+        {
+          id: "math",
+          active: true,
+          manifest: {
+            schema: "flow.module/v1",
+            id: "math",
+            name: "Math",
+            version: "0.1.0",
+            activationEvents: ["onStartup"],
+            contributes: {
+              neuronKinds: [{ id: "math.add", module: "math", name: "Add", summary: "Sum", inputs: ["a"], outputs: ["number"] }],
+              widgets: [],
+              commands: [{ id: "math.showHelp", title: "Math: Show Help" }],
+              settings: [],
+            },
+          },
+        },
+      ]);
+      const labels = tree.sections?.flatMap((section) => section.items?.map((item) => item.label) ?? []) ?? [];
+      expect(labels).toContain("Math");
+      expect(tree.sections?.some((section) => section.id === "flow-play-extensions.commands")).toBe(true);
+    });
+
+    it("active catalogue reflects enabled modules only", () => {
+      const allSections: CatalogueSection[] = [
+        { id: "math", title: "Math", items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }] },
+        { id: "text", title: "Text", items: [{ kind: "neuron", neuronKind: "text.upper", name: "Upper", summary: "Uppercase" }] },
+      ];
+      expect(flowPlayCatalogueIncludesActiveNeuronModules(allSections, ["math", "text"])).toBe(true);
+      expect(flowPlayCatalogueIncludesActiveNeuronModules(allSections, ["math", "logic"])).toBe(false);
     });
 
     it("reorganize engagement bumps epoch", () => {

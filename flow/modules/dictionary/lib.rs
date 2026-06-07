@@ -160,6 +160,12 @@ fn remove_key(dict: &Dictionary, key: &str) -> Dictionary {
     out
 }
 
+fn module_registry() -> Registry {
+    let mut registry = Registry::new();
+    register(&mut registry);
+    registry
+}
+
 /// 📦 Registers all dictionary neuron kinds on the registry.
 pub fn register(registry: &mut Registry) {
     registry.register(
@@ -375,5 +381,71 @@ mod tests {
         assert_eq!(dict.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
         assert_eq!(dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("x"));
     }
+
+    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
+
+    #[test]
+    fn manifest_lists_dictionary_kinds() {
+        let json = build_manifest_json(
+            "dictionary",
+            "Dictionary",
+            "0.1.0",
+            &module_registry(),
+            vec!["onStartup".into()],
+            vec![],
+            vec![FlowModuleCommandV1 { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }],
+            vec![],
+        );
+        assert!(json.contains("dictionary.get"));
+    }
+
+    #[test]
+    fn evaluate_json_pack() {
+        let reg = module_registry();
+        let input = sample_dict();
+        let out_json = evaluate_json(&reg, "dictionary.pack", &serde_json::to_string(&input).unwrap());
+        let out: Dictionary = serde_json::from_str(&out_json).unwrap();
+        let nested = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("nested");
+        assert_eq!(nested.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+    }
 }
 // #endregion 🔖Tests
+
+// #region 🔖WasmExt
+#[cfg(target_arch = "wasm32")]
+mod wasm_ext {
+    use super::module_registry;
+    use flow_module_wasm::{build_manifest_json, command_json, evaluate_json, FlowModuleCommandV1};
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub fn manifest() -> String {
+        build_manifest_json(
+            "dictionary",
+            "Dictionary",
+            "0.1.0",
+            &module_registry(),
+            vec!["onStartup".into()],
+            vec![],
+            vec![FlowModuleCommandV1 { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }],
+            vec![],
+        )
+    }
+
+    #[wasm_bindgen]
+    pub fn evaluate(kind_id: &str, input_json: &str) -> String {
+        evaluate_json(&module_registry(), kind_id, input_json)
+    }
+
+    #[wasm_bindgen]
+    pub fn command(command_id: &str, args_json: &str) -> String {
+        command_json(command_id, args_json)
+    }
+
+    #[wasm_bindgen]
+    pub fn activate() {}
+
+    #[wasm_bindgen]
+    pub fn deactivate() {}
+}
+// #endregion 🔖WasmExt

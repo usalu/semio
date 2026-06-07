@@ -6014,10 +6014,12 @@ import {
   FLOW_PLAY_BODY_KEY_MAIN,
   FLOW_PLAY_CONTROLLER_ID,
   FLOW_PLAY_DEFAULT_FIXTURE_JSON,
+  FLOW_PLAY_EXTENSIONS_TAB_ID,
   FLOW_PLAY_KINDS_TAB_ID,
   FLOW_PLAY_SURFACE_ID,
   FLOW_PLAY_WINDOW_KIND_ID,
   FlowPlayController,
+  buildFlowPlayExtensionsTree,
   buildFlowPlayKindsTree,
   registerFlowPlayDeclarativeBodies,
 } from "@flow/play";
@@ -6028,7 +6030,7 @@ let flowPlayChromeRegistered = false;
 const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
 
 /** @emoji 🔔 Re-renders flow play workbench kinds when WASM catalogue sections arrive. */
-function useFlowPlayCatalogueRevision(): number {
+function useFlowPlaySnapshotRevision(selector: (ctrl: FlowPlayController) => number): number {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
       const ctrl = flowPlayControllerRef.current;
@@ -6037,9 +6039,20 @@ function useFlowPlayCatalogueRevision(): number {
       }
       return ctrl.subscribeSnapshot(listener);
     },
-    () => flowPlayControllerRef.current?.getCatalogueRevision() ?? 0,
+    () => {
+      const ctrl = flowPlayControllerRef.current;
+      return ctrl ? selector(ctrl) : 0;
+    },
     () => 0,
   );
+}
+
+function useFlowPlayCatalogueRevision(): number {
+  return useFlowPlaySnapshotRevision((ctrl) => ctrl.getCatalogueRevision());
+}
+
+function useFlowPlayExtensionRevision(): number {
+  return useFlowPlaySnapshotRevision((ctrl) => ctrl.getExtensionRevision());
 }
 
 function useFlowPlayController(): FlowPlayController | undefined {
@@ -6051,6 +6064,7 @@ function useFlowPlayController(): FlowPlayController | undefined {
 
 function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
   const ctrl = useFlowPlayController();
+  const extensionRevision = useFlowPlayExtensionRevision();
   const onPreviewText = reactHostPort.useCallback(
     (text: string) => {
       console.log(`[DEBUG] flow play preview: ${text}`);
@@ -6075,6 +6089,7 @@ function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSur
       fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
       fixtureDragDrop
       reorganize={ctrl?.getReorganize()}
+      extensionRevision={extensionRevision}
       onPreviewText={onPreviewText}
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
@@ -6102,14 +6117,32 @@ class FlowPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
+class FlowPlayExtensionsPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: FLOW_PLAY_EXTENSIONS_TAB_ID,
+      icon: createIconComponent("puzzle"),
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = flowPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildFlowPlayExtensionsTree(ctrl?.getExtensionEntries() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
 function FlowPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
   const catalogueRevision = useFlowPlayCatalogueRevision();
+  const extensionRevision = useFlowPlayExtensionRevision();
   const flowPlayKindsPanel = reactHostPort.useMemo(() => new FlowPlayKindsPanelDefinition(), []);
+  const flowPlayExtensionsPanel = reactHostPort.useMemo(() => new FlowPlayExtensionsPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
-      workbench: [flowPlayKindsPanel],
+      workbench: [flowPlayKindsPanel, flowPlayExtensionsPanel],
     }),
-    [flowPlayKindsPanel, catalogueRevision],
+    [flowPlayKindsPanel, flowPlayExtensionsPanel, catalogueRevision, extensionRevision],
   );
   return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
 }

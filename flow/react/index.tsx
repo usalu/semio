@@ -11,8 +11,23 @@ if (import.meta.env.VITEST) {
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
-  const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../core/pkg/flow_core_bg.wasm");
-  initSync({ module: readFileSync(wasmPath) });
+  const reactDir = dirname(fileURLToPath(import.meta.url));
+  initSync({ module: readFileSync(join(reactDir, "../core/pkg/flow_core_bg.wasm")) });
+  const [
+    { initSync: initMathSync },
+    { initSync: initTextSync },
+    { initSync: initLogicSync },
+    { initSync: initDictionarySync },
+  ] = await Promise.all([
+    import("../modules/math/pkg/flow_module_math.js"),
+    import("../modules/text/pkg/flow_module_text.js"),
+    import("../modules/logic/pkg/flow_module_logic.js"),
+    import("../modules/dictionary/pkg/flow_module_dictionary.js"),
+  ]);
+  initMathSync({ module: readFileSync(join(reactDir, "../modules/math/pkg/flow_module_math_bg.wasm")) });
+  initTextSync({ module: readFileSync(join(reactDir, "../modules/text/pkg/flow_module_text_bg.wasm")) });
+  initLogicSync({ module: readFileSync(join(reactDir, "../modules/logic/pkg/flow_module_logic_bg.wasm")) });
+  initDictionarySync({ module: readFileSync(join(reactDir, "../modules/dictionary/pkg/flow_module_dictionary_bg.wasm")) });
 } else {
   await initFlowWasm();
 }
@@ -23,6 +38,273 @@ export async function ensureFlowWasmLoaded(): Promise<void> {
 
 export { FlowSession };
 // #endregion 🔖GpuWasmBridge
+
+// #region 🔖ExtensionHost
+export interface FlowModuleNeuronKindV1 {
+  readonly id: string;
+  readonly module: string;
+  readonly name: string;
+  readonly summary: string;
+  readonly inputs: readonly string[];
+  readonly outputs: readonly string[];
+}
+
+export interface FlowModuleCommandV1 {
+  readonly id: string;
+  readonly title: string;
+}
+
+export interface FlowModuleSettingV1 {
+  readonly id: string;
+  readonly type: string;
+  readonly default: unknown;
+  readonly description: string;
+}
+
+export interface FlowModuleWidgetV1 {
+  readonly kind: string;
+  readonly name: string;
+  readonly summary: string;
+}
+
+export interface FlowModuleManifestV1 {
+  readonly schema: "flow.module/v1";
+  readonly id: string;
+  readonly name: string;
+  readonly version: string;
+  readonly activationEvents: readonly string[];
+  readonly contributes: {
+    readonly neuronKinds: readonly FlowModuleNeuronKindV1[];
+    readonly widgets: readonly FlowModuleWidgetV1[];
+    readonly commands: readonly FlowModuleCommandV1[];
+    readonly settings: readonly FlowModuleSettingV1[];
+  };
+}
+
+export interface FlowExtensionEntry {
+  readonly id: string;
+  readonly manifest: FlowModuleManifestV1;
+  readonly active: boolean;
+}
+
+interface FlowModuleGlue {
+  readonly manifest: () => string;
+  readonly evaluate: (kindId: string, inputJson: string) => string;
+  readonly command: (commandId: string, argsJson: string) => string;
+  readonly activate: () => void;
+  readonly deactivate: () => void;
+}
+
+type FlowModulePackage = {
+  readonly default?: () => Promise<unknown>;
+  readonly manifest: () => string;
+  readonly evaluate: (kindId: string, inputJson: string) => string;
+  readonly command: (commandId: string, argsJson: string) => string;
+  readonly activate: () => void;
+  readonly deactivate: () => void;
+};
+
+type FlowModuleLoader = () => Promise<FlowModulePackage>;
+
+const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
+  math: () => import("@flow/module-math"),
+  text: () => import("@flow/module-text"),
+  logic: () => import("@flow/module-logic"),
+  dictionary: () => import("@flow/module-dictionary"),
+};
+
+export const FLOW_DEFAULT_MODULE_IDS = ["math", "text", "logic", "dictionary"] as const;
+export type FlowModuleId = (typeof FLOW_DEFAULT_MODULE_IDS)[number];
+
+export const FLOW_INSTALLED_MODULE_IDS = Object.keys(FLOW_MODULE_LOADERS);
+
+interface ActiveFlowModule {
+  readonly glue: FlowModuleGlue;
+  readonly manifest: FlowModuleManifestV1;
+}
+
+export class FlowExtensionHost {
+  private readonly kindToModule = new Map<string, string>();
+  private readonly active = new Map<string, ActiveFlowModule>();
+  private revision = 0;
+  private readonly listeners = new Set<() => void>();
+
+  getRevision(): number {
+    return this.revision;
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notify(): void {
+    this.revision += 1;
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+
+  listInstalled(): readonly string[] {
+    return FLOW_INSTALLED_MODULE_IDS;
+  }
+
+  listEntries(): readonly FlowExtensionEntry[] {
+    return FLOW_INSTALLED_MODULE_IDS.map((id) => ({
+      id,
+      manifest: this.active.get(id)?.manifest ?? this.placeholderManifest(id),
+      active: this.active.has(id),
+    }));
+  }
+
+  isActive(id: string): boolean {
+    return this.active.has(id);
+  }
+
+  activeCommands(): readonly FlowModuleCommandV1[] {
+    const commands: FlowModuleCommandV1[] = [];
+    for (const entry of this.active.values()) {
+      commands.push(...entry.manifest.contributes.commands);
+    }
+    return commands;
+  }
+
+  async activateDefaults(): Promise<void> {
+    for (const id of FLOW_DEFAULT_MODULE_IDS) {
+      if (!this.active.has(id)) {
+        await this.activate(id);
+      }
+    }
+  }
+
+  async activate(id: string): Promise<void> {
+    if (this.active.has(id)) return;
+    const loader = FLOW_MODULE_LOADERS[id];
+    if (!loader) {
+      throw new Error(`unknown flow module: ${id}`);
+    }
+    const mod = await loader();
+    if (typeof mod.default === "function") {
+      await mod.default();
+    }
+    const glue: FlowModuleGlue = {
+      manifest: () => mod.manifest(),
+      evaluate: (kindId, inputJson) => mod.evaluate(kindId, inputJson),
+      command: (commandId, argsJson) => mod.command(commandId, argsJson),
+      activate: () => mod.activate(),
+      deactivate: () => mod.deactivate(),
+    };
+    glue.activate();
+    const manifest = parseFlowModuleManifest(glue.manifest());
+    this.active.set(id, { glue, manifest });
+    for (const kind of manifest.contributes.neuronKinds) {
+      this.kindToModule.set(kind.id, id);
+    }
+    console.log(`[DEBUG] flow extension activated: ${id}`);
+    this.notify();
+  }
+
+  async deactivate(id: string): Promise<void> {
+    const entry = this.active.get(id);
+    if (!entry) return;
+    entry.glue.deactivate();
+    for (const kind of entry.manifest.contributes.neuronKinds) {
+      this.kindToModule.delete(kind.id);
+    }
+    this.active.delete(id);
+    console.log(`[DEBUG] flow extension deactivated: ${id}`);
+    this.notify();
+  }
+
+  async setActive(id: string, enabled: boolean): Promise<void> {
+    if (enabled) {
+      await this.activate(id);
+    } else {
+      await this.deactivate(id);
+    }
+  }
+
+  evaluate(kindId: string, inputJson: string): string {
+    const moduleId = this.kindToModule.get(kindId);
+    if (!moduleId) {
+      return JSON.stringify({ error: `no module for kind: ${kindId}` });
+    }
+    const entry = this.active.get(moduleId);
+    if (!entry) {
+      return JSON.stringify({ error: `module not active: ${moduleId}` });
+    }
+    return entry.glue.evaluate(kindId, inputJson);
+  }
+
+  executeCommand(commandId: string, argsJson = "{}"): string {
+    for (const entry of this.active.values()) {
+      if (!entry.manifest.contributes.commands.some((command) => command.id === commandId)) {
+        continue;
+      }
+      return entry.glue.command(commandId, argsJson);
+    }
+    return JSON.stringify({ error: `unknown command: ${commandId}` });
+  }
+
+  catalogueSections(): CatalogueSection[] {
+    const sections: CatalogueSection[] = [];
+    for (const [id, entry] of this.active) {
+      const items = entry.manifest.contributes.neuronKinds.map((kind) => ({
+        kind: "neuron",
+        neuronKind: kind.id,
+        name: kind.name,
+        summary: kind.summary,
+      }));
+      if (items.length === 0) continue;
+      sections.push({ id, title: entry.manifest.name, items });
+    }
+    return sections;
+  }
+
+  catalogueJson(): string {
+    return JSON.stringify(this.catalogueSections());
+  }
+
+  private placeholderManifest(id: string): FlowModuleManifestV1 {
+    return {
+      schema: "flow.module/v1",
+      id,
+      name: titleizeModuleId(id),
+      version: "0.0.0",
+      activationEvents: [],
+      contributes: { neuronKinds: [], widgets: [], commands: [], settings: [] },
+    };
+  }
+}
+
+export const flowExtensionHost = new FlowExtensionHost();
+
+declare global {
+  interface Window {
+    __flowExtensionHost?: FlowExtensionHost;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.__flowExtensionHost = flowExtensionHost;
+}
+
+export function parseFlowModuleManifest(json: string): FlowModuleManifestV1 {
+  const parsed = JSON.parse(json) as FlowModuleManifestV1;
+  if (parsed.schema !== "flow.module/v1") {
+    throw new Error(`unsupported module manifest schema: ${parsed.schema}`);
+  }
+  return parsed;
+}
+
+function titleizeModuleId(moduleId: string): string {
+  return moduleId.length > 0 ? moduleId[0]!.toUpperCase() + moduleId.slice(1) : moduleId;
+}
+
+export function createFlowEvalBridge(host: FlowExtensionHost = flowExtensionHost): (kindId: string, inputJson: string) => string {
+  return (kindId, inputJson) => host.evaluate(kindId, inputJson);
+}
+// #endregion 🔖ExtensionHost
 
 // #region 🔖Fixture
 export interface FlowFixtureV1 {
@@ -281,6 +563,8 @@ export interface FlowCanvasProps {
   readonly store?: FlowStore;
   readonly fixtureDragDrop?: boolean;
   readonly reorganize?: FlowReorganizeRequest;
+  readonly extensionRevision?: number;
+  readonly extensionHost?: FlowExtensionHost;
   readonly onPreviewText?: (text: string) => void;
   readonly onFixtureChange?: (fixtureJson: string) => void;
   readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
@@ -293,6 +577,8 @@ export function FlowCanvas({
   store,
   fixtureDragDrop = false,
   reorganize,
+  extensionRevision = 0,
+  extensionHost = flowExtensionHost,
   onPreviewText,
   onFixtureChange,
   onCatalogueReady,
@@ -389,10 +675,22 @@ export function FlowCanvas({
     }
   }, [reorganize?.epoch, reorganize?.optionsJson, evaluate, persistFixture, renderFrame]);
 
-  const loadCatalogue = useCallback((session: FlowSession) => {
-    const sections = parseFlowCatalogueSections(session.catalogueJson());
-    onCatalogueReadyRef.current?.(sections);
-  }, []);
+  const syncExtensionSurface = useCallback(
+    (session: FlowSession) => {
+      session.setEvalBridge(createFlowEvalBridge(extensionHost));
+      session.setCatalogueJson(extensionHost.catalogueJson());
+      const sections = parseFlowCatalogueSections(session.catalogueJson());
+      onCatalogueReadyRef.current?.(sections);
+    },
+    [extensionHost],
+  );
+
+  const loadCatalogue = useCallback(
+    (session: FlowSession) => {
+      syncExtensionSurface(session);
+    },
+    [syncExtensionSurface],
+  );
 
   const commitWidgetDrop = useCallback(
     (detail: FlowWidgetDropDetail) => {
@@ -414,33 +712,56 @@ export function FlowCanvas({
   );
 
   useEffect(() => {
+    const session = sessionRef.current;
+    if (!session || extensionRevision < 0) return;
+    syncExtensionSurface(session);
+    evaluate();
+    renderFrame();
+  }, [evaluate, extensionRevision, renderFrame, syncExtensionSurface]);
+
+  useEffect(() => {
+    return extensionHost.subscribe(() => {
+      const session = sessionRef.current;
+      if (!session) return;
+      syncExtensionSurface(session);
+      evaluate();
+      renderFrame();
+    });
+  }, [evaluate, extensionHost, renderFrame, syncExtensionSurface]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
-    const session = new FlowSession();
-    sessionRef.current = session;
-    const saved = storeRef.current.load();
-    const json = saved ?? fixtureJson ?? flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
-    session.loadFixtureJson(json);
-    loadCatalogue(session);
-    evaluate();
-    try {
-      const layout = JSON.parse(session.fixtureJson()).layout ?? {};
-      console.log(`[DEBUG] flow fixture layout: ${JSON.stringify(layout)}`);
-    } catch {
-      /* fixture not serializable yet */
-    }
-    const rect = container.getBoundingClientRect();
-    const dpr = globalThis.devicePixelRatio || 1;
-    const initW = Math.max(1, Math.round(rect.width));
-    const initH = Math.max(1, Math.round(rect.height));
-    session.setSize(initW, initH, dpr);
-    canvas.width = Math.round(initW * dpr);
-    canvas.height = Math.round(initH * dpr);
-    canvas.style.width = `${initW}px`;
-    canvas.style.height = `${initH}px`;
+    let cancelled = false;
     let cleanupResize: (() => void) | undefined;
-    void session.attachCanvas(canvas, initW, initH, dpr).then(() => {
+    void (async () => {
+      await extensionHost.activateDefaults();
+      if (cancelled) return;
+      const session = new FlowSession();
+      sessionRef.current = session;
+      const saved = storeRef.current.load();
+      const json = saved ?? fixtureJson ?? flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
+      session.loadFixtureJson(json);
+      syncExtensionSurface(session);
+      evaluate();
+      try {
+        const layout = JSON.parse(session.fixtureJson()).layout ?? {};
+        console.log(`[DEBUG] flow fixture layout: ${JSON.stringify(layout)}`);
+      } catch {
+        /* fixture not serializable yet */
+      }
+      const rect = container.getBoundingClientRect();
+      const dpr = globalThis.devicePixelRatio || 1;
+      const initW = Math.max(1, Math.round(rect.width));
+      const initH = Math.max(1, Math.round(rect.height));
+      session.setSize(initW, initH, dpr);
+      canvas.width = Math.round(initW * dpr);
+      canvas.height = Math.round(initH * dpr);
+      canvas.style.width = `${initW}px`;
+      canvas.style.height = `${initH}px`;
+      await session.attachCanvas(canvas, initW, initH, dpr);
+      if (cancelled) return;
       const resize = () => {
         const rect = container.getBoundingClientRect();
         const dpr = globalThis.devicePixelRatio || 1;
@@ -465,13 +786,14 @@ export function FlowCanvas({
         ro.disconnect();
         if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       };
-    });
+    })();
     return () => {
+      cancelled = true;
       cleanupResize?.();
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       sessionRef.current = null;
     };
-  }, [evaluate, fixtureJson, loadCatalogue, renderFrame]);
+  }, [evaluate, extensionHost, fixtureJson, renderFrame, syncExtensionSurface]);
 
   const clientToCanvas = useCallback((clientX: number, clientY: number): { x: number; y: number } => {
     const canvas = canvasRef.current;
@@ -691,6 +1013,38 @@ if (import.meta.vitest) {
       expect(store.load()).toBe(json);
       store.clear();
       expect(store.load()).toBeNull();
+    });
+  });
+
+  describe("flow extension host", () => {
+    it("parses module manifest", () => {
+      const manifest = parseFlowModuleManifest(
+        JSON.stringify({
+          schema: "flow.module/v1",
+          id: "math",
+          name: "Math",
+          version: "0.1.0",
+          activationEvents: ["onStartup"],
+          contributes: {
+            neuronKinds: [{ id: "math.add", module: "math", name: "Add", summary: "Sum", inputs: ["a"], outputs: ["number"] }],
+            widgets: [],
+            commands: [],
+            settings: [],
+          },
+        }),
+      );
+      expect(manifest.id).toBe("math");
+      expect(manifest.contributes.neuronKinds[0]?.id).toBe("math.add");
+    });
+
+    it("aggregates active catalogue sections", async () => {
+      const host = new FlowExtensionHost();
+      await host.activate("math");
+      const sections = host.catalogueSections();
+      expect(sections.some((section) => section.id === "math")).toBe(true);
+      expect(JSON.stringify(sections)).toContain("math.add");
+      await host.deactivate("math");
+      expect(host.catalogueSections().some((section) => section.id === "math")).toBe(false);
     });
   });
 

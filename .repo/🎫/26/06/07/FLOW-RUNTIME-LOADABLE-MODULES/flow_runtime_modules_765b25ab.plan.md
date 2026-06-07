@@ -4,28 +4,28 @@ overview: Convert flow modules from compile-time Rust crates linked into flow/co
 todos:
   - id: neural-dispatch
     content: Add Evaluator::evaluate_with(dispatch) to neural/engine/lib.rs; delegate evaluate() to it; add test.
-    status: in_progress
+    status: completed
   - id: module-wasm-abi
     content: Give each flow/modules/{math,text,logic,dictionary} its own cdylib + wasm-bindgen ABI (manifest/evaluate/command/activate/deactivate), script.ts, project.json, package.json.
-    status: pending
+    status: completed
   - id: core-bridge
     content: Remove module deps from flow/core; add eval bridge + host catalogue; rewrite evaluate_internal/catalogue_json; add setEvalBridge/setCatalogueJson to FlowSession.
-    status: pending
+    status: completed
   - id: extension-host
     content: Implement FlowExtensionHost in flow/react (loader map, activate/deactivate, evaluate routing, catalogue aggregation) and wire FlowCanvas startup async.
-    status: pending
+    status: completed
   - id: build-aliases
     content: Build all module wasms from flow/react & flow/play scripts; add @flow/module-* vite/vitest aliases.
-    status: pending
+    status: completed
   - id: extensions-panel
     content: Add VSCode-like Extensions panel + command palette in flow/play and framework renderer; toggle activate/deactivate and refresh catalogue.
-    status: pending
+    status: completed
   - id: infra
     content: Register module wasm builds in launch.json following existing flow grouping; verify Cargo workspace members.
-    status: pending
+    status: completed
   - id: tests-validate
     content: Extend existing tests (neural, modules, core, react, play) and the flow play runtime validator for enable/disable behavior.
-    status: pending
+    status: completed
 isProject: false
 ---
 

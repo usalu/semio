@@ -371,12 +371,14 @@ mod tests {
     #[test]
     fn evaluate_with_custom_dispatch() {
         let tree = Tree {
-            neurons: vec![Neuron { id: "b".into(), kind: "double".into(), params: Dictionary::new() }],
+            neurons: vec![Neuron {
+                id: "b".into(),
+                kind: "double".into(),
+                params: Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.0))),
+            }],
             synapses: vec![],
         };
-        let mut seeds = HashMap::new();
-        seeds.insert("b".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.0))));
-        let out = Evaluator::new(&Registry::new()).evaluate_with(&tree, &seeds, &mut |kind, input| {
+        let out = Evaluator::new(&Registry::new()).evaluate_with(&tree, &HashMap::new(), &mut |kind, input| {
             assert_eq!(kind, "double");
             let n = input.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
             Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n * 2.0))))

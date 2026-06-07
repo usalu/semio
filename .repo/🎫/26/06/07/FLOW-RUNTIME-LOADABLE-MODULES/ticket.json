@@ -1,0 +1,19 @@
+{
+  "title": "Flow Runtime Loadable Modules",
+  "emoji": "🌊",
+  "status": "closed",
+  "description": "Convert flow modules from compile-time Rust crates linked into flow/core into independently compiled WASM extensions, loaded/unloaded at runtime by a VSCode-style JS extension host.",
+  "summary": "Converted flow modules from compile-time linkage in flow/core into independently compiled WASM extensions with a VSCode-style extension host. Each module (math, text, logic, dictionary) exposes manifest/evaluate/command/activate/deactivate via wasm-bindgen. flow/core evaluates neurons through a JS bridge (setEvalBridge) and accepts host-aggregated catalogue JSON. flow/react FlowExtensionHost loads modules dynamically, aggregates catalogue, and routes evaluation. Flow play gained an Extensions workbench panel with enable/disable toggles and command palette. Build scripts compile all module WASMs; launch.json registers per-module wasm targets. Runtime validator confirms deactivate math removes catalogue kinds and breaks preview, reactivate restores preview 3.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1545"
+  },
+  "goal": "🎯flow",
+  "plan": {
+    "client": "cursor",
+    "id": "765b25ab",
+    "local": "flow_runtime_modules_765b25ab.plan.md"
+  },
+  "sessions": [
+    "⚪5c487ee0c9e4440d8cdadc4a3a466c04"
+  ]
+}

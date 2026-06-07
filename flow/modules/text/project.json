@@ -1,0 +1,13 @@
+{
+  "name": "@flow/module-text",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "flow/modules/text",
+        "command": "bun ./script.ts wasm"
+      }
+    }
+  }
+}

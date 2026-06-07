@@ -749,6 +749,11 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@framework/presentation/renderer/react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
     { find: "@flow/play", replacement: resolve(repoRoot, "flow/play/index.ts") },
     { find: "@flow/react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
+    { find: "@flow/module-math", replacement: resolve(repoRoot, "flow/modules/math/pkg/flow_module_math.js") },
+    { find: "@flow/module-text", replacement: resolve(repoRoot, "flow/modules/text/pkg/flow_module_text.js") },
+    { find: "@flow/module-logic", replacement: resolve(repoRoot, "flow/modules/logic/pkg/flow_module_logic.js") },
+    { find: "@flow/module-dictionary", replacement: resolve(repoRoot, "flow/modules/dictionary/pkg/flow_module_dictionary.js") },
+    { find: "@flow/module-list", replacement: resolve(repoRoot, "flow/modules/list/pkg/flow_module_list.js") },
     { find: "@dag/play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
     { find: "@dag/react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
   ];

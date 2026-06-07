@@ -1,5 +1,5 @@
 [package]
-name = "flow_module_dictionary"
+name = "flow_module_list"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

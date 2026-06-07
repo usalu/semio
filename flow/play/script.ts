@@ -14,14 +14,19 @@ import {
 import { playgroundDevPortString, playgroundPortEnv } from "../../ui/styling/playground-dev-ports.ts";
 
 const wasmScript = join(import.meta.dir, "../core/script.ts");
-const validateRuntimeScript = join(
-  import.meta.dir,
-  "../../.repo/🎫/26/06/07/FLOW-LANGUAGE-VERTICAL-SLICE/validate-flow-runtime.mjs",
-);
+const moduleWasmScripts = ["math", "text", "logic", "dictionary", "list"].map((name) => join(import.meta.dir, `../modules/${name}/script.ts`));
+
+function runFlowModuleWasmBuilds(root: string): void {
+  for (const script of moduleWasmScripts) {
+    runBun([script, "wasm"], root, playPollingEnv());
+  }
+}
+const validateRuntimeScript = join(import.meta.dir, "../../.repo/🎫/26/06/07/FLOW-RUNTIME-LOADABLE-MODULES/validate-flow-runtime.mjs");
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
+    runFlowModuleWasmBuilds(this.root);
     runViteBunxDev(this.root, segments, {
       portEnv: playgroundPortEnv("flow"),
       defaultPort: playgroundDevPortString("flow"),
@@ -33,6 +38,7 @@ class DevScript extends BundleScript {
 class ValidateScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
+    runFlowModuleWasmBuilds(this.root);
     runBun([validateRuntimeScript, ...segments], this.root, {
       ...playPollingEnv(),
       FLOW_PLAY_PORT: process.env.FLOW_PLAY_PORT ?? playgroundDevPortString("flow"),
@@ -43,14 +49,20 @@ class ValidateScript extends BundleScript {
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
+    runFlowModuleWasmBuilds(this.root);
     runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, playPollingEnv());
   }
 }
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "-p", "flow_module_dictionary", "-p", "flow_core"], this.repoRoot, playPollingEnv());
+    runCargo(
+      ["test", "-p", "flow_module_wasm", "-p", "flow_module_math", "-p", "flow_module_text", "-p", "flow_module_logic", "-p", "flow_module_dictionary", "-p", "flow_module_list", "-p", "flow_core", "-p", "neural_engine"],
+      this.repoRoot,
+      playPollingEnv(),
+    );
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
+    runFlowModuleWasmBuilds(this.root);
     runVitest(this.root, segments);
   }
 }

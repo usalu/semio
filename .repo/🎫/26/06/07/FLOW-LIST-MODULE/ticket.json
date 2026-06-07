@@ -1,0 +1,14 @@
+{
+  "title": "Flow List Module",
+  "emoji": "📋",
+  "status": "closed",
+  "description": "Add flow list module where a list is a dictionary with index keys. Provide list neuron kinds and integrate with math (e.g. sum over list of numbers).",
+  "summary": "Added flow_module_list WASM extension with neuron kinds (list.empty, list.pack, list.get, list.set, list.append, list.size, list.remove) treating lists as dictionaries with string index keys (\"0\", \"1\", …). Wired list into flow play catalogue, react extension host, vitest/vite aliases, and workspace build. Added math.sum neuron that sums numbers from a list dictionary input, with tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1546"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪2cd2cda2c5a547d08919918bbc87e3fc"
+  ]
+}

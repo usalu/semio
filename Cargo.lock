@@ -1370,10 +1370,6 @@ checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
 name = "flow_core"
 version = "0.1.0"
 dependencies = [
- "flow_module_dictionary",
- "flow_module_logic",
- "flow_module_math",
- "flow_module_text",
  "infinite_cavas",
  "js-sys",
  "mathematical_graph_port_directed_dag",
@@ -1390,28 +1386,64 @@ dependencies = [
 name = "flow_module_dictionary"
 version = "0.1.0"
 dependencies = [
+ "flow_module_wasm",
+ "getrandom 0.3.4",
  "neural_engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "flow_module_list"
+version = "0.1.0"
+dependencies = [
+ "flow_module_wasm",
+ "getrandom 0.3.4",
+ "neural_engine",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "flow_module_logic"
 version = "0.1.0"
 dependencies = [
+ "flow_module_wasm",
+ "getrandom 0.3.4",
  "neural_engine",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "flow_module_math"
 version = "0.1.0"
 dependencies = [
+ "flow_module_wasm",
+ "getrandom 0.3.4",
  "neural_engine",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "flow_module_text"
 version = "0.1.0"
 dependencies = [
+ "flow_module_wasm",
+ "getrandom 0.3.4",
  "neural_engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "flow_module_wasm"
+version = "0.1.0"
+dependencies = [
+ "neural_engine",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

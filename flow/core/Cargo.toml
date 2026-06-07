@@ -10,10 +10,6 @@ path = "lib.rs"
 
 [dependencies]
 neural_engine = { path = "../../neural/engine" }
-flow_module_math = { path = "../modules/math" }
-flow_module_text = { path = "../modules/text" }
-flow_module_logic = { path = "../modules/logic" }
-flow_module_dictionary = { path = "../modules/dictionary" }
 mathematical_graph_port_directed_dag = { path = "../../mathematical/graph/port/directed/dag" }
 infinite_cavas = { path = "../../infinite/cavas/vello" }
 serde = { version = "1.0.219", features = ["derive"] }

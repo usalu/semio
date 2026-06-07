@@ -4,10 +4,18 @@ import { join } from "node:path";
 import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runVitest } from "../../repo/lib/js/src/index.ts";
 
 const wasmScript = join(import.meta.dir, "../core/script.ts");
+const moduleWasmScripts = ["math", "text", "logic", "dictionary"].map((name) => join(import.meta.dir, `../modules/${name}/script.ts`));
+
+function runFlowModuleWasmBuilds(): void {
+  for (const script of moduleWasmScripts) {
+    runBun([script, "wasm"], import.meta.dir, playPollingEnv());
+  }
+}
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
+    runFlowModuleWasmBuilds();
     runVitest(this.root, segments);
   }
 }

@@ -5,8 +5,14 @@ edition = "2021"
 rust-version = "1.88"
 
 [lib]
-crate-type = ["rlib"]
+crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
+flow_module_wasm = { path = "../wasm" }
 neural_engine = { path = "../../../neural/engine" }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+wasm-bindgen = "0.2.106"
