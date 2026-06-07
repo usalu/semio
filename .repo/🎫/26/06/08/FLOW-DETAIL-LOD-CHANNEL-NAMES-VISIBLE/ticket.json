@@ -1,0 +1,14 @@
+{
+  "title": "Flow Detail Lod Channel Names Visible",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "On detail LOD the names of the channels should be visible in the flow editor.",
+  "summary": "Channel names are now visible at detail LOD. `DagDrawLod::shows_port_labels` includes Detail alongside Micro. Port label anchors (left/right aligned, compact font) are serialized into `label_overlay_paint_state_json` and painted by the FlowCanvas Canvas 2D overlay, matching the existing node-label workaround for invisible Vello text.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1586"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪f6b643dadcb0408fbfd98cd085aa29e3"
+  ]
+}

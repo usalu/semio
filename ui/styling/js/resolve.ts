@@ -87,6 +87,34 @@ function headlessTokenFromVarRef(ref: string): string | undefined {
 	return STYLING_TOKENS[key as StylingTokenKey];
 }
 
+const SEMANTIC_HEADLESS_FALLBACK: Partial<Record<string, StylingTokenKey>> = {
+	"border-element-color": "gray",
+	"border-normal-color": "gray",
+	"border-emphasized-color": "dark",
+	"hover-interactive-fill": "gray",
+	foreground: "dark",
+};
+
+function headlessSemanticFromVarRef(ref: string): string | undefined {
+	const m = ref.match(/^var\(\s*(--[a-z0-9-]+)\s*\)$/iu);
+	if (!m) {
+		return undefined;
+	}
+	const key = SEMANTIC_HEADLESS_FALLBACK[m[1]!.slice(2)];
+	return key ? tokenHex(key) : undefined;
+}
+
+function cssProbeAvailable(): boolean {
+	if (typeof document === "undefined" || import.meta.env?.VITEST) {
+		return false;
+	}
+	try {
+		return document.createElement("canvas").getContext("2d") != null;
+	} catch {
+		return false;
+	}
+}
+
 function probeCssComputed(property: "color" | "backgroundColor", value: string): string {
 	if (typeof document === "undefined") {
 		return "";
@@ -120,7 +148,12 @@ function cssPaintToHex(css: string, fallback: string): string {
 		return fallback;
 	}
 	const canvas = document.createElement("canvas");
-	const ctx = canvas.getContext("2d");
+	let ctx: CanvasRenderingContext2D | null = null;
+	try {
+		ctx = canvas.getContext("2d");
+	} catch {
+		return fallback;
+	}
 	if (!ctx) {
 		return fallback;
 	}
@@ -136,6 +169,31 @@ function cssPaintToHex(css: string, fallback: string): string {
 	return fallback;
 }
 
+function resolvePaintExpressionHex(trimmed: string, fallback: string, onResolved?: (hex: string) => void): string {
+	if (isHexColor(trimmed)) {
+		const hex = normalizeHex(trimmed);
+		onResolved?.(hex);
+		return hex;
+	}
+	if (cssProbeAvailable()) {
+		const raw = probeCssComputed("backgroundColor", trimmed);
+		if (raw && raw !== "rgba(0, 0, 0, 0)") {
+			const hex = cssPaintToHex(raw, "");
+			if (isHexColor(hex)) {
+				onResolved?.(hex);
+				return hex;
+			}
+		}
+	}
+	const palette = headlessTokenFromVarRef(trimmed) ?? headlessSemanticFromVarRef(trimmed);
+	if (palette) {
+		onResolved?.(palette);
+		return palette;
+	}
+	onResolved?.(fallback);
+	return fallback;
+}
+
 /** @emoji 🎨 Resolves a CSS color expression or hex literal to `#rrggbb`, using palette fallback in headless mode. */
 export function resolveColorHex(ref: string, fallbackKey: StylingTokenKey | string = "gray"): string {
 	const cacheKey = `${ref}|${fallbackKey}`;
@@ -144,51 +202,28 @@ export function resolveColorHex(ref: string, fallbackKey: StylingTokenKey | stri
 		return cached;
 	}
 	const fallback = tokenHex(fallbackKey);
-	const trimmed = ref.trim();
-	if (isHexColor(trimmed)) {
-		const hex = normalizeHex(trimmed);
+	return resolvePaintExpressionHex(ref.trim(), fallback, (hex) => {
 		_resolveCache.set(cacheKey, hex);
-		return hex;
-	}
-	const palette = headlessTokenFromVarRef(trimmed);
-	if (palette) {
-		_resolveCache.set(cacheKey, palette);
-		return palette;
-	}
-	if (typeof document !== "undefined") {
-		const raw = probeCssComputed("color", trimmed);
-		if (raw && raw !== "rgba(0, 0, 0, 0)") {
-			const hex = cssPaintToHex(raw, fallback);
-			_resolveCache.set(cacheKey, hex);
-			return hex;
-		}
-	}
-	const result = fallback;
-	_resolveCache.set(cacheKey, result);
-	return result;
+	});
 }
 
 /** @emoji 🎨 Resolves a semantic CSS custom property (e.g. `--foreground`) to `#rrggbb`. */
 export function resolveSemanticColorHex(cssVar: string, fallbackKey: StylingTokenKey | string = "gray"): string {
 	const name = cssVar.startsWith("--") ? cssVar : `--${cssVar}`;
-	return resolveColorHex(`var(${name})`, fallbackKey);
+	return resolveBackgroundColorHex(`var(${name})`, fallbackKey);
 }
 
 /** @emoji 🎨 Resolves a CSS background-color expression to `#rrggbb`. */
 export function resolveBackgroundColorHex(ref: string, fallbackKey: StylingTokenKey | string = "gray"): string {
+	const cacheKey = `bg|${ref}|${fallbackKey}`;
+	const cached = _resolveCache.get(cacheKey);
+	if (cached !== undefined) {
+		return cached;
+	}
 	const fallback = tokenHex(fallbackKey);
-	const trimmed = ref.trim();
-	const palette = headlessTokenFromVarRef(trimmed);
-	if (palette) {
-		return palette;
-	}
-	if (typeof document !== "undefined") {
-		const raw = probeCssComputed("backgroundColor", trimmed);
-		if (raw && raw !== "rgba(0, 0, 0, 0)") {
-			return cssPaintToHex(raw, fallback);
-		}
-	}
-	return fallback;
+	return resolvePaintExpressionHex(ref.trim(), fallback, (hex) => {
+		_resolveCache.set(cacheKey, hex);
+	});
 }
 
 /** @emoji 🎨 Resolves a CSS color expression to RGBA8888 for Vello/WASM theme payloads. */
@@ -245,9 +280,9 @@ export function readableForegroundHex(
 }
 
 /** @emoji 🎨 Elements semantic tokens for graph canvas selection chrome. */
-const GRAPH_VELLO_CSS_COLOR_PRIMARY = tokenVar("primary");
 const GRAPH_VELLO_CSS_SELECTED_FILL = "color-mix(in oklab, var(--color-primary) 28%, var(--color-panel))";
 const GRAPH_VELLO_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondary) 24%, var(--color-panel))";
+const GRAPH_VELLO_CSS_HOVER_FILL = themeColorVar("hover-interactive-fill");
 
 /** @emoji 🎨 Serializes UI semantic CSS for DAG/flow Vello WASM paints (`VelloThemePalette` JSON). */
 export function serializeGraphVelloThemePaletteJson(): string {
@@ -256,46 +291,47 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		const hex = resolveBackgroundColorHex(expr, fallKey);
 		return [...resolveColorRgba(hex, fallKey, alpha ?? 255)];
 	};
-	const element = resolveColorRgba(themeColorVar("element"), "gray");
+	const element = resolveColorRgba(semanticVar("border-element-color"), "gray");
+	const emphasized = resolveColorRgba(semanticVar("border-emphasized-color"), "dark");
 	return JSON.stringify({
 		rasterClear: pbg(semanticVar("canvas"), "light-8-9"),
 		gridMinorStroke: [element[0], element[1], element[2], 56],
-		edgeStroke: pc(themeColorVar("muted-foreground"), "gray"),
-		edgeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
-		edgeStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		edgeStroke: [element[0], element[1], element[2], 255],
+		edgeStrokeHovered: [element[0], element[1], element[2], 255],
+		edgeStrokeSelected: [emphasized[0], emphasized[1], emphasized[2], 255],
 		edgeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
 		edgeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		nodeFill: pbg(themeColorVar("panel"), "l-l-l-g"),
-		nodeStroke: pc(themeColorVar("element"), "gray"),
-		nodeFillHovered: pbg(themeColorVar("border"), "gray"),
-		nodeStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
+		nodeStroke: [element[0], element[1], element[2], 255],
+		nodeFillHovered: pbg(GRAPH_VELLO_CSS_HOVER_FILL, "gray"),
+		nodeStrokeHovered: [element[0], element[1], element[2], 255],
 		nodeFillSelected: pbg(GRAPH_VELLO_CSS_SELECTED_FILL, "primary"),
-		nodeStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		nodeStrokeSelected: [emphasized[0], emphasized[1], emphasized[2], 255],
 		nodeFillSelectionExit: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
 		nodeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
 		nodeFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
 		nodeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		indirectHandleFill: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
 		indirectHandleStroke: pc(tokenVar("secondary"), "secondary"),
-		handleFill: pbg(themeColorVar("base"), "light"),
-		handleStroke: pc(themeColorVar("element"), "gray"),
-		handleFillHovered: pbg(themeColorVar("border"), "gray"),
-		handleStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
-		handleFillSelected: pbg(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
-		handleStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		handleFill: [element[0], element[1], element[2], 0],
+		handleStroke: [element[0], element[1], element[2], 255],
+		handleFillHovered: pbg(GRAPH_VELLO_CSS_HOVER_FILL, "gray"),
+		handleStrokeHovered: [element[0], element[1], element[2], 255],
+		handleFillSelected: pbg(GRAPH_VELLO_CSS_SELECTED_FILL, "primary"),
+		handleStrokeSelected: [emphasized[0], emphasized[1], emphasized[2], 255],
 		handleFillSelectionExit: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
 		handleStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
 		handleFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
 		handleStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
-		wireStroke: pc(themeColorVar("muted-foreground"), "gray"),
-		wireStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
-		wireStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
+		wireStroke: [element[0], element[1], element[2], 255],
+		wireStrokeHovered: [element[0], element[1], element[2], 255],
+		wireStrokeSelected: [emphasized[0], emphasized[1], emphasized[2], 255],
 		wireStrokeHighlighted: pc(tokenVar("secondary"), "secondary"),
 		wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		selectionPreviewFill: pbg("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", 31),
-		selectionPreviewStroke: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
-		labelFill: pc(themeColorVar("foreground"), "dark"),
-		labelFillHovered: pc(themeColorVar("emphasized"), "dark"),
+		selectionPreviewStroke: [emphasized[0], emphasized[1], emphasized[2], 180],
+		labelFill: [element[0], element[1], element[2], 255],
+		labelFillHovered: [emphasized[0], emphasized[1], emphasized[2], 255],
 		labelHalo: pbg(semanticVar("canvas"), "light-8-9", 200),
 	});
 }
@@ -341,6 +377,13 @@ if (import.meta.vitest) {
 			expect(readableForegroundHex("var(--color-light)")).toBe(tokenHex("dark"));
 		});
 
+		it("resolveColorHex resolves semantic element vars to gray not foreground", () => {
+			clearColorResolveCache();
+			expect(resolveColorHex("var(--color-element)", "gray")).toBe("#7b827d");
+			expect(resolveSemanticColorHex("border-element-color", "gray")).toBe("#7b827d");
+			expect(resolveColorHex("var(--color-element)", "gray")).not.toBe(tokenHex("dark"));
+		});
+
 		it("serializeGraphVelloThemePaletteJson emits VelloThemePalette fields", () => {
 			clearColorResolveCache();
 			const parsed = JSON.parse(serializeGraphVelloThemePaletteJson()) as {
@@ -348,6 +391,10 @@ if (import.meta.vitest) {
 				nodeFill: number[];
 				nodeStroke: number[];
 				nodeStrokeHovered: number[];
+				nodeStrokeSelected: number[];
+				edgeStroke: number[];
+				handleStroke: number[];
+				handleFill: number[];
 				labelFill: number[];
 				labelFillHovered: number[];
 				labelHalo: number[];
@@ -358,9 +405,15 @@ if (import.meta.vitest) {
 			expect(parsed.labelFill).toHaveLength(4);
 			expect(parsed.labelFillHovered).toHaveLength(4);
 			expect(parsed.labelHalo[3]).toBeGreaterThan(0);
-			expect(parsed.labelFill).toEqual([0, 17, 23, 255]);
+			expect(parsed.labelFill).toEqual([123, 130, 125, 255]);
+			expect(parsed.edgeStroke).toEqual([123, 130, 125, 255]);
+			expect(parsed.handleStroke).toEqual([123, 130, 125, 255]);
 			expect(parsed.nodeStroke).toEqual([123, 130, 125, 255]);
-			expect(parsed.nodeStroke).not.toEqual(parsed.nodeStrokeHovered);
+			expect(parsed.nodeStrokeHovered).toEqual(parsed.nodeStroke);
+			expect(parsed.nodeStrokeSelected).toEqual(parsed.labelFillHovered);
+			expect(parsed.nodeStrokeSelected).not.toEqual(parsed.nodeStroke);
+			expect(parsed.handleFill[3]).toBe(0);
+			expect(parsed.labelFill).not.toEqual(parsed.labelFillHovered);
 			expect(parsed.labelFill).not.toEqual(parsed.rasterClear);
 			expect(parsed.gridMinorStroke).toEqual([123, 130, 125, 56]);
 			expect(parsed.gridMinorStroke[3]).toBeLessThan(255);

@@ -1,13 +1,16 @@
 {
   "title": "Flow Computation Two Column Layout",
   "emoji": "🎨",
-  "status": "open",
+  "status": "closed",
   "description": "Change flow computation nodes from three-column layout (inputs | vertical name | outputs) to two-column layout (inputs | outputs) with horizontal name centered above the rectangle.",
+  "summary": "Fixed computation node title sitting too far above the rectangle: label height from label_extent is screen px and was applied as world offset (scaling with zoom²). Position now converts screen gap + half label height to world space via zoom. Tighter 0.2× label gap. WASM rebuilt.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1579"
   },
   "goal": "🎯geometry🎯brep",
   "sessions": [
-    "⚪f16856dbf369443bbecbd9db80877a56"
+    "⚪f16856dbf369443bbecbd9db80877a56",
+    "⚪90b6eef21ebb47ef9d14d360469405da",
+    "⚪f6fc6ff227fc4e84afcbfeaf23dd30ce"
   ]
 }

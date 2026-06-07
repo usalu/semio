@@ -3,12 +3,13 @@
   "emoji": "📐",
   "status": "closed",
   "description": "Add borders between computation node channel rows in DAG/flow canvas rendering.",
-  "summary": "Added computation node channel borders in DAG paint_scene and ghost preview: horizontal dividers between IO channel rows plus vertical dividers separating input, name, and output columns. Borders use chrome stroke at normal+ LOD alongside existing port labels.",
+  "summary": "Added horizontal channel row borders on computation nodes in DAG/flow paint: dividers between every input row (left column) and every output row (right column), using chrome stroke at normal+ LOD alongside the existing vertical column divider. Ghost node preview includes the same row dividers.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1555"
   },
   "goal": "🎯flow",
   "sessions": [
-    "⚪1e62ba6311764e74a70e346564521e93"
+    "⚪1e62ba6311764e74a70e346564521e93",
+    "⚪704556e66dde445cbe2c0aa6a5212943"
   ]
 }

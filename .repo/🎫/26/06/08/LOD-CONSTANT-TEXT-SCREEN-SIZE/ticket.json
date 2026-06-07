@@ -1,0 +1,15 @@
+{
+  "title": "Lod Constant Text Screen Size",
+  "emoji": "🔤",
+  "status": "closed",
+  "description": "Make text the same screen size when zooming inside an LOD band across infinite canvas consumers (flow node names, GIS map labels, puzzle 2d, etc.). Text must scale to compensate for camera zoom within the band.",
+  "summary": "Fixed LOD text scaling: labels now grow/shrink with camera zoom inside each LOD band (base_px * zoom / band_floor) so they stay proportional to world geometry. Added `lod_band_label_screen_px` to infinite/cavas. DAG passes scaled `fontScreenPx` to the flow canvas overlay; puzzle 2d uses `puzzle2dLodBandLabelScreenPx`; GIS map scales labels by span within band. Rebuilt DAG and flow-core WASM.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1589"
+  },
+  "goal": "🎯infinite",
+  "sessions": [
+    "⚪0e206da4ab9d4b839b1b71ad4750b097",
+    "⚪413a973715c241a386372a478ed5cf27"
+  ]
+}

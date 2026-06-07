@@ -4,8 +4,10 @@ pub mod geometry;
 pub mod scene_json;
 
 pub use geometry::{
-    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, encode_board_stroke_scene, handle_position_on_circle,
-    handle_position_on_rectangle, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge, rectangle_handle_angle_toward,
+    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, encode_board_stroke_scene,
+    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_position_on_circle,
+    handle_position_on_rectangle, normalize_or_zero,
+    ray_from_origin_to_axis_aligned_rectangle_edge, rectangle_handle_angle_toward,
 };
 pub use scene_json::{board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};
 

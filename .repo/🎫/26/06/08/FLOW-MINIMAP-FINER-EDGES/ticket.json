@@ -1,0 +1,14 @@
+{
+  "title": "Flow Minimap Finer Edges",
+  "emoji": "🗺️",
+  "status": "closed",
+  "description": "On minimap LOD the edges should be finer and not so thick.",
+  "summary": "Minimap LOD edges now use a 1px screen stroke instead of the default 2px. Added `DagDrawLod::edge_stroke_screen_px` and `DAG_EDGE_STROKE_MINIMAP_SCREEN_PX`; `paint_scene` picks stroke width from the active LOD tier.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1587"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪f586a84949ef47e59bca760ceb81be8f"
+  ]
+}

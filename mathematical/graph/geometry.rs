@@ -1,6 +1,7 @@
 //! 📐 Graph geometry: handle positions, edge beziers, hit-test distances.
 
-use crate::cavas::vello::kurbo::{Affine, CubicBez, ParamCurve, Point, Stroke, Vec2};
+use crate::cavas::vello::kurbo::{Affine, Arc, BezPath, Circle, CubicBez, ParamCurve, Point, Rect, Shape, Stroke, Vec2};
+use crate::NodeShape;
 use crate::cavas::vello::peniko::Color;
 use crate::cavas::vello::Scene;
 
@@ -44,6 +45,88 @@ pub fn ray_from_origin_to_axis_aligned_rectangle_edge(hw: f64, hh: f64, ux: f64,
         return Point::new(hw, 0.0);
     }
     Point::new(ux * t_best, uy * t_best)
+}
+
+/// 🕳️ Even-odd clip path: local outer bounds minus the parent node body (keeps handle paint outside transparent nodes).
+pub fn handle_outside_node_clip_path(
+    handle_center: Point,
+    handle_radius: f64,
+    node_center: Point,
+    node_shape: NodeShape,
+    node_radius: f64,
+    node_width: f64,
+    node_height: f64,
+) -> BezPath {
+    let margin = (handle_radius * 2.5).max(4.0);
+    let outer = Rect::new(
+        handle_center.x - margin,
+        handle_center.y - margin,
+        handle_center.x + margin,
+        handle_center.y + margin,
+    );
+    let mut path = BezPath::new();
+    append_shape_elements(&mut path, &outer);
+    match node_shape {
+        NodeShape::Circle => {
+            append_shape_elements(&mut path, &Circle::new(node_center, node_radius.max(1e-9)));
+        }
+        NodeShape::Rectangle => {
+            let hw = node_width.max(1e-9) * 0.5;
+            let hh = node_height.max(1e-9) * 0.5;
+            append_shape_elements(
+                &mut path,
+                &Rect::new(
+                    node_center.x - hw,
+                    node_center.y - hh,
+                    node_center.x + hw,
+                    node_center.y + hh,
+                ),
+            );
+        }
+    }
+    path
+}
+
+fn append_shape_elements(path: &mut BezPath, shape: &impl Shape) {
+    for element in shape.path_elements(0.1) {
+        path.push(element);
+    }
+}
+
+fn handle_exterior_cap_arc(center: Point, outward: Vec2, radius: f64) -> Option<Arc> {
+    let out = normalize_or_zero(outward);
+    let r = radius.max(1e-9);
+    if out.hypot() < 1e-9 {
+        return None;
+    }
+    let peak_angle = out.y.atan2(out.x);
+    let start_angle = peak_angle + std::f64::consts::FRAC_PI_2;
+    Some(Arc::new(center, (r, r), start_angle, -std::f64::consts::PI, 0.0))
+}
+
+/// 🌗 Closed fill path for the handle cap outside a node body (semicircle on the `outward` side).
+pub fn handle_exterior_cap_fill_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+    let r = radius.max(1e-9);
+    let mut path = BezPath::new();
+    if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
+        append_shape_elements(&mut path, &arc);
+        path.close_path();
+        return path;
+    }
+    append_shape_elements(&mut path, &Circle::new(center, r));
+    path
+}
+
+/// 🌗 Open arc path for stroking only the exterior handle cap (flat rim edge stays behind the node).
+pub fn handle_exterior_cap_stroke_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+    let r = radius.max(1e-9);
+    let mut path = BezPath::new();
+    if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
+        append_shape_elements(&mut path, &arc);
+        return path;
+    }
+    append_shape_elements(&mut path, &Circle::new(center, r));
+    path
 }
 
 pub fn handle_position_on_circle(center: Point, radius: f64, angle: f64) -> Point {
@@ -113,6 +196,54 @@ fn distance_to_segment(point: Point, start: Point, end: Point) -> f64 {
     let projection = clamp_f64((point - start).dot(segment) / segment_len_squared, 0.0, 1.0);
     let closest = start + segment * projection;
     distance_between(point, closest)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn outside_node_clip_path_excludes_node_interior() {
+        let node_center = Point::new(0.0, 0.0);
+        let handle_center = Point::new(40.0, 0.0);
+        let clip = handle_outside_node_clip_path(handle_center, 5.0, node_center, NodeShape::Circle, 40.0, 80.0, 80.0);
+        assert!(clip.elements().len() > 4);
+        assert!(node_center.distance(handle_center) > 39.0);
+    }
+
+    fn assert_cap_bulges_outward(center: Point, outward: Vec2, radius: f64) {
+        let fill = handle_exterior_cap_fill_path(center, outward, radius);
+        let out = normalize_or_zero(outward);
+        let bb = fill.bounding_box();
+        let peak = center + out * radius;
+        let trough = center - out * radius;
+        if out.x.abs() >= out.y.abs() {
+            if out.x > 0.0 {
+                assert!((bb.x1 - peak.x).abs() < 0.25, "east cap must peak at +x");
+                assert!(bb.x0 > trough.x + 0.25, "east cap must not peak inward");
+            } else {
+                assert!((bb.x0 - peak.x).abs() < 0.25, "west cap must peak at -x");
+                assert!(bb.x1 < trough.x - 0.25, "west cap must not peak inward");
+            }
+        } else if out.y > 0.0 {
+            assert!((bb.y1 - peak.y).abs() < 0.25, "south cap must peak at +y");
+            assert!(bb.y0 > trough.y + 0.25, "south cap must not peak inward");
+        } else {
+            assert!((bb.y0 - peak.y).abs() < 0.25, "north cap must peak at -y");
+            assert!(bb.y1 < trough.y + 0.25, "north cap must not peak inward");
+        }
+    }
+
+    #[test]
+    fn exterior_cap_paths_bulge_outward_on_all_cardinals() {
+        let radius = 5.0;
+        assert_cap_bulges_outward(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
+        assert_cap_bulges_outward(Point::new(-40.0, 0.0), Vec2::new(-1.0, 0.0), radius);
+        assert_cap_bulges_outward(Point::new(0.0, 30.0), Vec2::new(0.0, 1.0), radius);
+        assert_cap_bulges_outward(Point::new(0.0, -30.0), Vec2::new(0.0, -1.0), radius);
+        let stroke = handle_exterior_cap_stroke_path(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
+        assert!(!stroke.elements().iter().any(|el| matches!(el, crate::cavas::vello::kurbo::PathEl::ClosePath)));
+    }
 }
 
 pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> Scene {

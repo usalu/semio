@@ -1,0 +1,15 @@
+{
+  "title": "Flow Graph Navbar Toggle Theming",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Flow nodes/handles/edges must match navbar toggle theming: element gray default, hover fill + emphasized content, selected primary fill + emphasized stroke/text.",
+  "summary": "Fixed root cause of flow graph chrome appearing emphasized at rest: CSS var probing used the color property which inherited foreground when vars were unresolved, poisoning the Vello theme and label overlay cache. Probes now use backgroundColor with semantic headless fallbacks for border-element-color. Graph theme and overlay resolve border-element-color/border-emphasized-color directly. Hover keeps element-gray strokes (fill + emphasized text only, matching navbar toggles); selection keeps primary fill + emphasized stroke/text. Icons use label_fill; icon cache clears on theme push; dark-mode class changes re-sync theme.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1591"
+  },
+  "goal": "🎯ui🎯theming",
+  "sessions": [
+    "⚪3fdee907306f4d59a2f38e25fee4f3fd",
+    "⚪dd736698f6884fbebbeabb08bdc0bc51"
+  ]
+}

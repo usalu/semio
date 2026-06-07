@@ -973,7 +973,7 @@ mod host_tests {
         let neutral_hint = h.encoded_scene_hint();
         h.set_selection_ids_silent(&["a".into()]);
         assert_eq!(h.test_content_scene_generation(), gen_before, "selection chrome must paint via dynamic fill/stroke layers without rebuilding cached icons");
-        assert_eq!(h.encoded_scene_hint(), neutral_hint, "selection chrome swaps fill/stroke tints without adding cached icon paths");
+        assert_ne!(h.encoded_scene_hint(), neutral_hint, "selected node fill appears in overlay fill layer at normal LOD");
         assert_eq!(h.test_resolve_node_style_kind("a"), Some(BoardElementStyleKind::Selected));
     }
 
@@ -1321,7 +1321,8 @@ mod host_tests {
         let neutral_hint = h.encoded_scene_hint();
         h.set_selection_ids_silent(&["a".into()]);
         assert_eq!(h.test_content_scene_generation(), gen);
-        assert_eq!(h.encoded_scene_hint(), neutral_hint);
+        let selected_hint = h.encoded_scene_hint();
+        assert_ne!(selected_hint, neutral_hint);
         h.set_selection_ids_silent(&[]);
         assert_eq!(h.test_content_scene_generation(), gen);
         assert_eq!(h.encoded_scene_hint(), neutral_hint);

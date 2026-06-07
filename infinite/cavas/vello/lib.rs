@@ -702,6 +702,23 @@ pub mod lod {
             self.lods.iter().position(|lod| lod.id == id)
         }
     }
+
+    /// @emoji 🔤 Fixed screen label px for a LOD band; stays constant while zooming inside the band.
+    pub fn band_label_screen_px(band_px: &[f64], band_index: usize, fallback: f64) -> f64 {
+        band_px.get(band_index).copied().unwrap_or(fallback)
+    }
+
+    /// @emoji 🔤 Lower camera-zoom bound for a LOD band (previous band `max_zoom`, or `zoom_min`).
+    pub fn band_floor_zoom(band_floor_zoom: &[f64], band_index: usize, zoom_min: f64) -> f64 {
+        band_floor_zoom.get(band_index).copied().unwrap_or(zoom_min).max(zoom_min)
+    }
+
+    /// @emoji 🔤 Label screen px scaled with camera zoom inside one LOD band so text keeps the same proportion to world geometry.
+    pub fn lod_band_label_screen_px(base_screen_px: f64, zoom: f64, band_floor_zoom: f64) -> f64 {
+        let z = zoom.max(0.05);
+        let floor = band_floor_zoom.max(0.05);
+        base_screen_px * z / floor
+    }
 }
 // #endregion 🔖Lod
 

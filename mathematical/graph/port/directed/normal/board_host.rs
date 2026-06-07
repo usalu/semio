@@ -17,7 +17,9 @@ use infinite_cavas::geom_sel::{
 use infinite_cavas::camera::Camera;
 use crate::{
     board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
-    handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero, normalize_selection_mode, pick_merge_mode_for_modifiers,
+    handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_position_on_circle,
+    handle_position_on_rectangle, merge_ids_into_selection,
+    merge_pick_into_selection, normalize_or_zero, normalize_selection_mode, pick_merge_mode_for_modifiers,
     rectangle_handle_angle_toward, selection_drag_shape, ActiveTool, BoardElementStyleKind, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry,
     FixtureV1Json, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape,
     CachedIconBody, IconPaintCache, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
@@ -1235,13 +1237,14 @@ impl BoardHost {
         stroke
     }
 
-    fn resolve_edge_stroke_paint(&self, e: &EdgeData, chrome_pass: StyleChromePass, lod_scale_width: f64) -> (Color, Stroke, f64) {
+    fn resolve_edge_stroke_paint(&self, e: &EdgeData, chrome_pass: StyleChromePass, lod: BoardDrawLod, lod_scale_width: f64) -> (Color, Stroke, f64) {
         let style_kind = self.resolve_edge_style_kind(e, chrome_pass);
         let chrome = Self::edge_stroke_for_style(&self.vello_theme, style_kind);
         let kind_def = self.edge_kinds.get(e.edge_kind.as_str());
         let base_color = kind_def.and_then(|d| d.color).unwrap_or(self.vello_theme.edge_stroke);
         let stroke_color = match style_kind {
             BoardElementStyleKind::Neutral | BoardElementStyleKind::Original => base_color,
+            _ if lod == BoardDrawLod::Minimap => chrome,
             _ => Self::lerp_color(base_color, chrome, 0.55),
         };
         let catalog_w = kind_def.map(|d| d.stroke_width).unwrap_or(2.0);
@@ -4127,20 +4130,36 @@ impl BoardHost {
         paint_override: Option<(Color, Color, f64)>,
         world_space: bool,
         layer: NodeHandlePaintLayer,
+        exterior_cap: bool,
     ) {
         let c = self.draw_space_point(center, world_space);
         let r = self.draw_space_len(radius_world, world_space);
-        let circle = Circle::new(c, r);
         let (fill, stroke_c, stroke_px) =
             if let Some((f, s, sw)) = paint_override { (f, s, sw) } else { (self.resolve_handle_fill_color(h, &self.vello_theme, style_kind), self.resolve_handle_stroke_color(h, &self.vello_theme, style_kind), 2.0_f64) };
         let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill);
         let paint_stroke = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
         let paint_icons = draw_icon && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
+        let outward = if exterior_cap {
+            self.nodes
+                .get(h.node_id.as_str())
+                .map(|n| normalize_or_zero(center - Point::new(n.x, n.y)))
+                .filter(|v| v.hypot() > 1e-9)
+        } else {
+            None
+        };
         if paint_fill {
-            scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+            if let Some(out) = outward {
+                scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &handle_exterior_cap_fill_path(c, out, r));
+            } else {
+                scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &Circle::new(c, r));
+            }
         }
         if paint_stroke {
-            scene.stroke(&Stroke::new(stroke_px), Affine::IDENTITY, stroke_c, None, &circle);
+            if let Some(out) = outward {
+                scene.stroke(&Stroke::new(stroke_px), Affine::IDENTITY, stroke_c, None, &handle_exterior_cap_stroke_path(c, out, r));
+            } else {
+                scene.stroke(&Stroke::new(stroke_px), Affine::IDENTITY, stroke_c, None, &Circle::new(c, r));
+            }
         }
         if paint_icons {
             if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
@@ -4188,7 +4207,7 @@ impl BoardHost {
             let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
             let stroke_px = 2.0_f64;
             let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { Some((self.vello_theme.indirect_handle_fill, self.vello_theme.indirect_handle_stroke, stroke_px)) } else { None };
-            self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, world_space, NodeHandlePaintLayer::Full);
+            self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, world_space, NodeHandlePaintLayer::Full, false);
         }
     }
 
@@ -4234,7 +4253,7 @@ impl BoardHost {
         };
         let draw_node_stroke = lod != BoardDrawLod::Minimap || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
         let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
-        let fill = if lod == BoardDrawLod::Minimap && matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) {
+        let fill = if lod == BoardDrawLod::Minimap {
             stroke_c
         } else {
             self.resolve_node_fill_color(n, &self.vello_theme, style_kind)
@@ -4364,23 +4383,6 @@ impl BoardHost {
         let draw_handle_icons = lod == BoardDrawLod::Micro;
         let link_source = self.active_link_source_handle_id().map(str::to_string);
         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
-        for n in self.nodes.values() {
-            if !n.visible {
-                continue;
-            }
-            if let Some(ids) = only_ids {
-                if !ids.contains(&n.id) {
-                    continue;
-                }
-            }
-            if let Some(tb) = tile_filter {
-                if !world_boxes_overlap(*tb, self.node_world_bounds(n, pad)) {
-                    continue;
-                }
-            }
-            let chrome_pass = self.chrome_pass_for_entity(&n.id, overlay_ids);
-            self.paint_node_geometry(scene, n, lod, world_space, layer, chrome_pass, link_compat_nodes.contains(&n.id));
-        }
         for h in self.handles.values() {
             if !draw_handles || !self.handle_effectively_visible(h.id.as_str()) {
                 continue;
@@ -4398,7 +4400,24 @@ impl BoardHost {
             }
             let Some(wp) = self.handle_world_pos(h) else { continue };
             let style_kind = self.resolve_handle_style_kind(h, self.chrome_pass_for_entity(&h.id, overlay_ids));
-            self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space, layer);
+            self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space, layer, true);
+        }
+        for n in self.nodes.values() {
+            if !n.visible {
+                continue;
+            }
+            if let Some(ids) = only_ids {
+                if !ids.contains(&n.id) {
+                    continue;
+                }
+            }
+            if let Some(tb) = tile_filter {
+                if !world_boxes_overlap(*tb, self.node_world_bounds(n, pad)) {
+                    continue;
+                }
+            }
+            let chrome_pass = self.chrome_pass_for_entity(&n.id, overlay_ids);
+            self.paint_node_geometry(scene, n, lod, world_space, layer, chrome_pass, link_compat_nodes.contains(&n.id));
         }
     }
 
@@ -4417,22 +4436,6 @@ impl BoardHost {
         let draw_handle_icons = lod == BoardDrawLod::Micro;
         let link_source = self.active_link_source_handle_id().map(str::to_string);
         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
-        for n in self.nodes.values() {
-            if !n.visible {
-                continue;
-            }
-            if let Some(ids) = only_ids {
-                if !ids.contains(&n.id) {
-                    continue;
-                }
-            }
-            if let Some(tb) = tile_filter {
-                if !world_boxes_overlap(*tb, self.node_world_bounds(n, pad)) {
-                    continue;
-                }
-            }
-            self.paint_node_geometry(scene, n, lod, world_space, layer, chrome_pass, link_compat_nodes.contains(&n.id));
-        }
         for h in self.handles.values() {
             if !draw_handles || !self.handle_effectively_visible(h.id.as_str()) {
                 continue;
@@ -4450,7 +4453,23 @@ impl BoardHost {
             }
             let Some(wp) = self.handle_world_pos(h) else { continue };
             let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
-            self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space, layer);
+            self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space, layer, true);
+        }
+        for n in self.nodes.values() {
+            if !n.visible {
+                continue;
+            }
+            if let Some(ids) = only_ids {
+                if !ids.contains(&n.id) {
+                    continue;
+                }
+            }
+            if let Some(tb) = tile_filter {
+                if !world_boxes_overlap(*tb, self.node_world_bounds(n, pad)) {
+                    continue;
+                }
+            }
+            self.paint_node_geometry(scene, n, lod, world_space, layer, chrome_pass, link_compat_nodes.contains(&n.id));
         }
     }
 
@@ -4492,7 +4511,7 @@ impl BoardHost {
                 let chrome_pass = overlay_ids
                     .map(|ids| self.chrome_pass_for_entity(&e.id, ids))
                     .unwrap_or(StyleChromePass::CachedBase);
-                let (stroke_color, edge_stroke, stroke_w) = self.resolve_edge_stroke_paint(e, chrome_pass, edge_sw);
+                let (stroke_color, edge_stroke, stroke_w) = self.resolve_edge_stroke_paint(e, chrome_pass, lod, edge_sw);
                 scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
                 let (source_tip, target_tip) = self.resolve_edge_tips(e);
                 Self::append_edge_tips_on_curve(scene, &curve, stroke_color, stroke_w, source_tip, target_tip);

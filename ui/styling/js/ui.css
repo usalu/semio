@@ -833,11 +833,21 @@
 }
 
 [data-slot="navbar"] {
-  border-bottom-color: var(--border-emphasized-color);
+  border-bottom-color: var(--border-normal-color);
+  transition: border-color 120ms ease;
+}
+
+[data-slot="navbar"]:hover {
+  border-bottom-color: var(--border-emphasized-color) !important;
 }
 
 [data-slot="footer"] {
-  border-top-color: var(--border-emphasized-color);
+  border-top-color: var(--border-normal-color);
+  transition: border-color 120ms ease;
+}
+
+[data-slot="footer"]:hover {
+  border-top-color: var(--border-emphasized-color) !important;
 }
 
 [data-slot="navbar"] :is(
@@ -1300,6 +1310,11 @@
 [data-slot="panel-chrome-frame"] {
   border-width: 1px;
   border-style: solid;
+  border-color: var(--border-normal-color) !important;
+  transition: border-color 120ms ease;
+}
+
+[data-panel]:hover [data-slot="panel-chrome-frame"] {
   border-color: var(--border-emphasized-color) !important;
 }
 

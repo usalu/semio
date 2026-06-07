@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ContextMenuController, SelectionMarquee, type ContextMenuItem, type SelectionMarqueeCoverage } from "@ui/react";
-import { serializeGraphVelloThemePaletteJson } from "@ui/styling";
+import { clearColorResolveCache, resolveSemanticColorHex, serializeGraphVelloThemePaletteJson } from "@ui/styling";
 import { isDagDrawLodKind, type DagDrawLodKind } from "@dag/react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 
@@ -758,7 +758,7 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
           type="text"
           value={query}
           placeholder="Add function…"
-          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
+          className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onInputKeyDown}
         />
@@ -784,7 +784,7 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
               <li key={`${item.kind}-${item.neuronKind ?? item.action ?? item.name}`}>
                 <button
                   type="button"
-                  className={`flex w-full flex-col gap-0.5 px-3 py-1.5 text-left text-sm ${active ? "bg-accent/15 text-accent" : "hover:bg-accent/10"}`}
+                  className={`flex w-full flex-col gap-0.5 px-3 py-1.5 text-left text-sm ${active ? "bg-accent/15 text-accent" : "text-foreground hover:bg-accent/10"}`}
                   onMouseEnter={() => setActiveIndex(globalIndex)}
                   onClick={() => commitItem(item)}
                 >
@@ -800,6 +800,137 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
   );
 }
 // #endregion 🔖Spotlight
+
+// #region 🔖TextOverlay
+const FLOW_LABEL_SCREEN_PX = 11;
+const FLOW_LABEL_FONT_FAMILY = "ui-sans-serif, system-ui, sans-serif";
+
+interface FlowLabelOverlayRow {
+  readonly id: string;
+  readonly text: string;
+  readonly layout: "horizontal" | "vertical";
+  readonly align?: "left" | "center" | "right";
+  readonly x: number;
+  readonly y: number;
+  readonly nodeW: number;
+  readonly nodeH: number;
+  readonly fontScreenPx?: number;
+}
+
+interface FlowLabelOverlayPaintState {
+  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+  readonly width: number;
+  readonly height: number;
+  readonly labels: readonly FlowLabelOverlayRow[];
+}
+
+function flowWorldToScreen(
+  point: { readonly x: number; readonly y: number },
+  camera: { readonly x: number; readonly y: number; readonly zoom: number },
+  width: number,
+  height: number,
+): { readonly x: number; readonly y: number } {
+  return {
+    x: (point.x - camera.x) * camera.zoom + width / 2,
+    y: (point.y - camera.y) * camera.zoom + height / 2,
+  };
+}
+
+function flowClampLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxW: number, maxH: number): number {
+  let px = Math.max(4, Math.round(targetPx));
+  ctx.font = `${px}px ${FLOW_LABEL_FONT_FAMILY}`;
+  if (ctx.measureText(text).width <= maxW && px * 1.2 <= maxH) {
+    return px;
+  }
+  let low = 4;
+  let high = px;
+  let best = 4;
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    ctx.font = `${mid}px ${FLOW_LABEL_FONT_FAMILY}`;
+    const w = ctx.measureText(text).width;
+    const h = mid * 1.2;
+    if (w <= maxW && h <= maxH) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+  return best;
+}
+
+function flowOverlayLabelFill(
+  nodeId: string,
+  _hoveredId: string | null,
+  _selectedIds: readonly string[],
+  previewOffIds: readonly string[],
+): string {
+  if (previewOffIds.includes(nodeId)) {
+    return resolveSemanticColorHex("border-element-color", "gray");
+  }
+  return resolveSemanticColorHex("border-emphasized-color", "dark");
+}
+
+function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement, width: number, height: number, dpr: number): void {
+  let state: FlowLabelOverlayPaintState;
+  try {
+    state = JSON.parse(session.labelOverlayPaintStateJson()) as FlowLabelOverlayPaintState;
+  } catch {
+    return;
+  }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const pixelW = Math.max(1, Math.round(width * dpr));
+  const pixelH = Math.max(1, Math.round(height * dpr));
+  if (canvas.width !== pixelW || canvas.height !== pixelH) {
+    canvas.width = pixelW;
+    canvas.height = pixelH;
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  const zoom = Math.max(0.05, Number(state.camera?.zoom) || 1);
+  const camera = {
+    x: Number(state.camera?.x) || 0,
+    y: Number(state.camera?.y) || 0,
+    zoom,
+  };
+  const viewportW = Number(state.width) || width;
+  const viewportH = Number(state.height) || height;
+  const hoveredId = session.hoveredWidgetId() ?? null;
+  const selectedIds = parseFlowWidgetIdArray(session.selectedWidgetIds());
+  const previewOffIds = parseFlowWidgetIdArray(session.previewOffWidgetIds());
+  const inset = 0.88;
+  for (const row of state.labels ?? []) {
+    const text = typeof row.text === "string" ? row.text.trim() : "";
+    if (!text) continue;
+    const anchor = flowWorldToScreen({ x: Number(row.x), y: Number(row.y) }, camera, viewportW, viewportH);
+    const maxW = Math.max(4, Number(row.nodeW) * zoom * inset);
+    const maxH = Math.max(4, Number(row.nodeH) * zoom * inset);
+    const fontScreenPx = Number(row.fontScreenPx);
+    const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : FLOW_LABEL_SCREEN_PX;
+    const fontPx = flowClampLabelFontPx(ctx, text, targetPx, maxW, maxH);
+    ctx.font = `${fontPx}px ${FLOW_LABEL_FONT_FAMILY}`;
+    ctx.fillStyle = flowOverlayLabelFill(row.id, hoveredId, selectedIds, previewOffIds);
+    ctx.globalAlpha = previewOffIds.includes(row.id) ? 0.5 : 1;
+    if (row.layout === "vertical") {
+      ctx.save();
+      ctx.translate(anchor.x, anchor.y);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+    } else {
+      const align = row.align === "left" || row.align === "right" ? row.align : "center";
+      ctx.textAlign = align;
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, anchor.x, anchor.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+// #endregion 🔖TextOverlay
 
 // #region 🔖FlowCanvas
 export type FlowSelectionMode = "default" | "additive" | "subtractive" | "invertive";
@@ -920,6 +1051,8 @@ export function FlowCanvas({
 }: FlowCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const textOverlayRef = useRef<HTMLCanvasElement>(null);
+  const viewportRef = useRef({ width: 1, height: 1, dpr: 1 });
   const sessionRef = useRef<FlowSession | null>(null);
   const rafRef = useRef<number | null>(null);
   const wheelZoomEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -960,11 +1093,20 @@ export function FlowCanvas({
     const session = sessionRef.current;
     if (!session) return;
     try {
+      clearColorResolveCache();
       session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
     } catch {
       /* document theme tokens not ready */
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    const obs = new MutationObserver(() => syncVelloTheme());
+    obs.observe(root, { attributes: true, attributeFilter: ["class", "style", "data-theme"] });
+    return () => obs.disconnect();
+  }, [syncVelloTheme]);
 
   useEffect(() => {
     onPreviewTextRef.current = onPreviewText;
@@ -1086,7 +1228,13 @@ export function FlowCanvas({
     try {
       syncLodMode();
       syncVelloTheme();
-      sessionRef.current?.renderFrame();
+      const session = sessionRef.current;
+      session?.renderFrame();
+      const overlay = textOverlayRef.current;
+      if (session && overlay) {
+        const { width, height, dpr } = viewportRef.current;
+        paintFlowLabelOverlays(session, overlay, width, height, dpr);
+      }
       reportDrawLod();
     } catch {
       /* gpu not ready */
@@ -1280,6 +1428,7 @@ export function FlowCanvas({
       const dpr = globalThis.devicePixelRatio || 1;
       const initW = Math.max(1, Math.round(rect.width));
       const initH = Math.max(1, Math.round(rect.height));
+      viewportRef.current = { width: initW, height: initH, dpr };
       session.setSize(initW, initH, dpr);
       canvas.width = Math.round(initW * dpr);
       canvas.height = Math.round(initH * dpr);
@@ -1292,6 +1441,7 @@ export function FlowCanvas({
         const dpr = globalThis.devicePixelRatio || 1;
         const w = Math.max(1, Math.round(rect.width));
         const h = Math.max(1, Math.round(rect.height));
+        viewportRef.current = { width: w, height: h, dpr };
         canvas.width = Math.round(w * dpr);
         canvas.height = Math.round(h * dpr);
         canvas.style.width = `${w}px`;
@@ -1576,6 +1726,7 @@ export function FlowCanvas({
       <canvas
         ref={canvasRef}
         className="absolute inset-0 block h-full w-full touch-none"
+        aria-hidden
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
@@ -1584,6 +1735,12 @@ export function FlowCanvas({
         onDoubleClick={onCanvasDoubleClick}
         onWheel={onWheel}
         onContextMenu={onCanvasContextMenu}
+      />
+      <canvas
+        ref={textOverlayRef}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 block h-full w-full"
+        data-testid="flow-text-overlay"
       />
       <ContextMenuController
         items={surfaceContextMenu?.items ?? []}
@@ -1617,6 +1774,21 @@ export function FlowCanvas({
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
+
+  describe("flow label overlay", () => {
+    it("flowWorldToScreen maps world center to viewport center at zoom 1", () => {
+      const screen = flowWorldToScreen({ x: 0, y: 0 }, { x: 0, y: 0, zoom: 1 }, 800, 600);
+      expect(screen).toEqual({ x: 400, y: 300 });
+    });
+
+    it("flowOverlayLabelFill uses emphasized by default and element when preview is off", () => {
+      const element = resolveSemanticColorHex("border-element-color", "gray");
+      const emphasized = resolveSemanticColorHex("border-emphasized-color", "dark");
+      expect(flowOverlayLabelFill("node-a", null, [], [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", "node-a", [], [])).toBe(emphasized);
+      expect(flowOverlayLabelFill("node-a", null, [], ["node-a"])).toBe(element);
+    });
+  });
 
   describe("flow react fixture", () => {
     it("default fixture serializes", () => {

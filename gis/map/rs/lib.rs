@@ -1032,24 +1032,31 @@ pub mod vector_tiles {
         span_deg <= super::GIS_MAP_LOD_MAX_SPAN_DEG[5]
     }
 
-    /// @emoji 🔤 Screen label size from viewport span; capped tighter in city/district/street bands.
+    const GIS_MAP_LABEL_BAND_SCREEN_PX: [f64; 8] = [26.0, 26.0, 20.0, 14.0, 12.5, 12.0, 10.5, 10.5];
+
+    fn map_lod_band_floor_span_deg(lod_idx: usize) -> f64 {
+        if lod_idx == 0 {
+            return 180.0;
+        }
+        super::GIS_MAP_LOD_MAX_SPAN_DEG
+            .get(lod_idx.saturating_sub(1))
+            .copied()
+            .unwrap_or(180.0)
+            .max(0.05)
+    }
+
+    /// @emoji 🔤 Label screen px scaled with viewport span inside one map LOD band.
+    pub fn vector_label_px_for_lod(lod_idx: usize, span_deg: f64, weight: f64) -> f64 {
+        let base = GIS_MAP_LABEL_BAND_SCREEN_PX.get(lod_idx).copied().unwrap_or(10.5);
+        let span = span_deg.max(0.05);
+        let floor = map_lod_band_floor_span_deg(lod_idx);
+        base * floor / span * weight
+    }
+
+    /// @emoji 🔤 Resolves the active map LOD band from viewport span, then returns its zoom-scaled label px.
     pub fn vector_label_px(span_deg: f64, weight: f64) -> f64 {
-        let caps = super::GIS_MAP_LOD_MAX_SPAN_DEG;
-        let raw = 280.0 / span_deg.max(0.25);
-        let cap = if span_deg <= caps[6] {
-            10.5
-        } else if span_deg <= caps[5] {
-            12.0
-        } else if span_deg <= caps[4] {
-            12.5
-        } else if span_deg <= caps[3] {
-            14.0
-        } else if span_deg <= caps[2] {
-            20.0
-        } else {
-            26.0
-        };
-        raw.clamp(8.0, cap) * weight
+        let lod_idx = super::resolve_map_lod_index_from_span(span_deg);
+        vector_label_px_for_lod(lod_idx, span_deg, weight)
     }
 
     pub fn place_label_rank(class: &str, layer: &str) -> u16 {
@@ -2597,9 +2604,9 @@ impl MapHost {
         let label_fill = self.theme.label_fill;
         let label_halo = self.theme.label_halo;
         let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
-        let zoom_px = (280.0 / span.max(0.25)).clamp(11.0, 24.0);
+        let lod_idx = resolve_map_lod_index_from_span(span);
         let pos_scale = self.layer_stroke_scale.positions;
-        let pos_label_px = zoom_px * self.layer_stroke_scale.position_labels;
+        let pos_label_px = vector_tiles::vector_label_px_for_lod(lod_idx, span, self.layer_stroke_scale.position_labels);
         for pos in self.positions.values() {
             let fill = match pos.kind.as_deref() {
                 Some("donor") => self.theme.route_stroke,
@@ -3681,10 +3688,11 @@ mod tests {
     }
 
     #[test]
-    fn vector_label_px_caps_city_band_size() {
-        let px = super::vector_tiles::vector_label_px(2.0, 1.0);
-        assert!(px <= 14.0, "city-band labels should stay small (px={px})");
-        assert!(px >= 8.0);
+    fn vector_label_px_scales_with_span_inside_city_band() {
+        let wide = super::vector_tiles::vector_label_px(2.0, 1.0);
+        let narrow = super::vector_tiles::vector_label_px(1.3, 1.0);
+        assert!(narrow > wide, "labels should grow when zooming in (span shrinks): {wide} vs {narrow}");
+        assert!((wide - 12.5 * 4.0 / 2.0).abs() < 1e-6);
     }
 
     #[test]

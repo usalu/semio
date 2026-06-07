@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { serializeGraphVelloThemePaletteJson } from "@ui/styling";
+import { clearColorResolveCache, serializeGraphVelloThemePaletteJson } from "@ui/styling";
 import initDagWasm, { DagSession, initSync } from "../pkg/mathematical_graph_port_directed_dag.js";
 
 // #region 🔖GpuWasmBridge
@@ -169,7 +169,7 @@ export const DAG_DEFAULT_FIXTURE: DagFixtureV1 = {
   schema: "dag.fixture/v1",
   camera: { x: 0, y: 0, zoom: 1 },
   nodes: [
-    { id: "slider", name: "Amount", kind: "slider", x: -400, y: -40, width: 180, height: 80, min: 0, max: 10, step: 0.5, value: 5, output: { id: "out", label: "value" } },
+    { id: "slider", name: "Amount", kind: "slider", x: -400, y: -40, width: 120, height: 20, min: 0, max: 10, step: 0.5, value: 5, output: { id: "out", label: "value" } },
     { id: "mode", name: "Mode", kind: "select", x: -400, y: 80, width: 180, height: 80, options: ["Add", "Multiply", "Max"], selected: 0, output: { id: "out", label: "mode" } },
     { id: "scale", name: "Scale", kind: "computation", x: -120, y: -40, width: 160, height: 72, inputs: [{ id: "in", label: "value" }], outputs: [{ id: "out", label: "scaled" }] },
     {
@@ -323,6 +323,7 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange,
     const session = sessionRef.current;
     if (!session) return;
     try {
+      clearColorResolveCache();
       session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
     } catch {
       /* document theme tokens not ready */

@@ -6,8 +6,9 @@ use serde::{Deserialize, Serialize};
 
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed::{
-    self as graph, compute_edge_bezier_points, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
-    VelloThemePalette,
+    self as graph, compute_edge_bezier_points, handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, normalize_or_zero,
+    DirectedPortGraphEngine, Edge, EdgeId,
+    GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection, VelloThemePalette,
 };
 use graph::BoardEvent;
 
@@ -55,6 +56,8 @@ const DAG_NODE_COLUMN_GAP: f64 = 2.0;
 const DAG_IO_COLUMN_MIN: f64 = 32.0;
 const DAG_IO_COLUMN_MAX: f64 = 44.0;
 const DAG_IO_WIDGET_HEIGHT: f64 = 28.0;
+const DAG_SLIDER_TRACK_MIN_WIDTH: f64 = 120.0;
+const DAG_SLIDER_TRACK_HEIGHT: f64 = 20.0;
 const DAG_LABEL_SCREEN_PX: f64 = 11.0;
 const DAG_LABEL_COMPACT_SCREEN_PX: f64 = 10.0;
 
@@ -119,6 +122,16 @@ pub fn io_widget_height(name: &str) -> f64 {
     let name_px = DAG_LABEL_SCREEN_PX * 1.05;
     let (label_w, _) = label_extent(name, name_px);
     (label_w + DAG_IO_WIDGET_HEIGHT + DAG_NODE_EDGE_INSET * 2.0).max(40.0)
+}
+
+/// 📐 Horizontal slider track width (name and value sit outside the rectangle).
+pub fn slider_widget_width(_name: &str) -> f64 {
+    DAG_SLIDER_TRACK_MIN_WIDTH
+}
+
+/// 📐 Horizontal slider track height.
+pub fn slider_widget_height() -> f64 {
+    DAG_SLIDER_TRACK_HEIGHT
 }
 
 fn io_widget_label_center(node: &DagNodeSpec) -> (f64, f64) {
@@ -331,16 +344,25 @@ pub fn slider_track_center(node: &DagNodeSpec) -> Option<(f64, f64)> {
 
 fn slider_track_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
     let hw = node.width * 0.5;
-    let hh = node.height * 0.5;
     let pad = DAG_NODE_EDGE_INSET;
-    let track_y = node.y + hh - 8.0;
-    let track_h = 6.0;
+    let track_y = node.y;
+    let hit_h = 8.0;
     (
         node.x - hw + pad,
-        track_y - track_h * 0.5,
-        node.x + hw - pad - 12.0,
-        track_y + track_h * 0.5,
+        track_y - hit_h * 0.5,
+        node.x + hw - pad,
+        track_y + hit_h * 0.5,
     )
+}
+
+fn slider_value_world_center(node: &DagNodeSpec, value_text: &str, paint_px: f64, zoom: f64) -> (f64, f64) {
+    use cavas::text::label_extent;
+    let hw = node.width * 0.5;
+    let (value_w, _) = label_extent(value_text, paint_px);
+    let z = zoom.max(0.05);
+    let screen_gap = DAG_LABEL_SCREEN_PX * 0.35;
+    let world_offset = (screen_gap + value_w * 0.5) / z;
+    (node.x - hw - world_offset, node.y)
 }
 
 fn select_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
@@ -414,12 +436,78 @@ fn computation_output_label_x(node: &DagNodeSpec, label: &str, px: f64) -> f64 {
     node.x + node.width * 0.5 - DAG_NODE_EDGE_INSET - label_w
 }
 
-fn computation_name_world_center(node: &DagNodeSpec, label: &str, px: f64, zoom: f64) -> (f64, f64) {
+fn computation_column_divider_x(node: &DagNodeSpec) -> Option<f64> {
+    let inputs = node.inputs();
+    let outputs = node.outputs();
+    if inputs.is_empty() || outputs.is_empty() {
+        return None;
+    }
+    let hw = node.width * 0.5;
+    let port_px = DAG_LABEL_COMPACT_SCREEN_PX;
+    let left_w = io_port_column_width(inputs, port_px);
+    let right_w = io_port_column_width(outputs, port_px);
+    let left_end = node.x - hw + DAG_NODE_EDGE_INSET + left_w;
+    let right_start = node.x + hw - DAG_NODE_EDGE_INSET - right_w;
+    Some(if right_start <= left_end {
+        node.x
+    } else {
+        (left_end + right_start) * 0.5
+    })
+}
+
+fn computation_input_column_x_bounds(node: &DagNodeSpec) -> Option<(f64, f64)> {
+    let inputs = node.inputs();
+    if inputs.is_empty() && !node.variadic_inputs() {
+        return None;
+    }
+    let hw = node.width * 0.5;
+    let port_px = DAG_LABEL_COMPACT_SCREEN_PX;
+    let left = node.x - hw + DAG_NODE_EDGE_INSET;
+    let right = left + io_port_column_width(inputs, port_px);
+    Some((left, right))
+}
+
+fn computation_output_column_x_bounds(node: &DagNodeSpec) -> Option<(f64, f64)> {
+    let outputs = node.outputs();
+    let variadic_outputs = matches!(&node.kind, DagNodeKind::Computation { variadic_outputs: true, .. });
+    if outputs.is_empty() && !variadic_outputs {
+        return None;
+    }
+    let hw = node.width * 0.5;
+    let port_px = DAG_LABEL_COMPACT_SCREEN_PX;
+    let right = node.x + hw - DAG_NODE_EDGE_INSET;
+    let left = right - io_port_column_width(outputs, port_px);
+    Some((left, right))
+}
+
+fn computation_io_side_row_counts(node: &DagNodeSpec) -> (usize, usize) {
+    let DagNodeKind::Computation {
+        inputs,
+        outputs,
+        variadic_inputs,
+        variadic_outputs,
+    } = &node.kind
+    else {
+        return (0, 0);
+    };
+    let input_rows = inputs.len() + usize::from(*variadic_inputs);
+    let output_rows = outputs.len() + usize::from(*variadic_outputs);
+    (input_rows, output_rows)
+}
+
+fn channel_row_divider_y(node_y: f64, node_height: f64, after_row_index: usize) -> f64 {
+    let hh = node_height * 0.5;
+    node_y - hh + after_row_index as f64 * DAG_CHANNEL_ROW_HEIGHT
+}
+
+fn computation_name_world_center(node: &DagNodeSpec, label: &str, paint_px: f64, zoom: f64) -> (f64, f64) {
     use cavas::text::label_extent;
     let hh = node.height * 0.5;
-    let (_, label_h) = label_extent(label, px);
-    let world_gap = (DAG_LABEL_SCREEN_PX * 0.35) / zoom.max(0.05);
-    (node.x, node.y - hh - world_gap - label_h * 0.5)
+    let (_, label_h) = label_extent(label, paint_px);
+    let z = zoom.max(0.05);
+    let screen_gap = DAG_LABEL_SCREEN_PX * 0.2;
+    let world_offset = (screen_gap + label_h * 0.5) / z;
+    (node.x, node.y - hh - world_offset)
 }
 
 fn io_widget_name_column_bounds(node: &DagNodeSpec, px: f64) -> (f64, f64, f64, f64) {
@@ -459,7 +547,11 @@ fn fit_node_size(node: &mut DagNodeSpec) {
             node.width = computation_node_width(&node.name, inputs, outputs);
             node.height = computation_node_height(inputs.len(), outputs.len(), *variadic_inputs, *variadic_outputs);
         }
-        DagNodeKind::Slider { .. } | DagNodeKind::Select { .. } | DagNodeKind::Note { .. } | DagNodeKind::Preview { .. } | DagNodeKind::Action { .. } => {
+        DagNodeKind::Slider { .. } => {
+            node.width = slider_widget_width(&node.name);
+            node.height = slider_widget_height();
+        }
+        DagNodeKind::Select { .. } | DagNodeKind::Note { .. } | DagNodeKind::Preview { .. } | DagNodeKind::Action { .. } => {
             node.width = io_widget_width(&node.name);
             node.height = io_widget_height(&node.name);
         }
@@ -792,6 +884,12 @@ const DAG_LODS: &[Lod; 6] = &[
 
 const DAG_LOD_SCALE: LodScale = LodScale { lods: DAG_LODS };
 
+const DAG_LOD_BAND_FLOOR_ZOOM: &[f64] = &[0.05, 0.15, 0.35, 0.55, 1.25, 2.5];
+
+fn dag_lod_band_floor_zoom(lod_index: usize) -> f64 {
+    cavas::lod::band_floor_zoom(DAG_LOD_BAND_FLOOR_ZOOM, lod_index, 0.05)
+}
+
 /// 🔵 Port dot world radius; screen size grows with camera zoom like node geometry.
 const DAG_HANDLE_WORLD_RADIUS: f64 = 5.0;
 
@@ -799,6 +897,7 @@ const DAG_NODE_STROKE_SCREEN_PX: f64 = 1.5;
 const DAG_NODE_STROKE_SELECTED_SCREEN_PX: f64 = 2.25;
 const DAG_NODE_STROKE_HOVERED_SCREEN_PX: f64 = 2.0;
 const DAG_EDGE_STROKE_SCREEN_PX: f64 = 2.0;
+const DAG_EDGE_STROKE_MINIMAP_SCREEN_PX: f64 = 1.0;
 const DAG_CHROME_STROKE_SCREEN_PX: f64 = 1.25;
 
 fn dag_world_stroke(screen_px: f64, zoom: f64) -> f64 {
@@ -809,12 +908,12 @@ fn dag_label_layout_px() -> f64 {
     DAG_LABEL_SCREEN_PX
 }
 
-fn dag_label_paint_px(zoom: f64) -> f64 {
-    (DAG_LABEL_SCREEN_PX * zoom.max(0.05)).max(DAG_LABEL_SCREEN_PX)
+fn dag_label_paint_px(zoom: f64, lod_index: usize) -> f64 {
+    cavas::lod::lod_band_label_screen_px(DAG_LABEL_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
 }
 
-fn dag_label_compact_paint_px(zoom: f64) -> f64 {
-    (DAG_LABEL_COMPACT_SCREEN_PX * zoom.max(0.05)).max(DAG_LABEL_COMPACT_SCREEN_PX)
+fn dag_label_compact_paint_px(zoom: f64, lod_index: usize) -> f64 {
+    cavas::lod::lod_band_label_screen_px(DAG_LABEL_COMPACT_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
 }
 
 fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
@@ -845,11 +944,47 @@ pub(crate) fn dag_node_label_fill(theme: &VelloThemePalette, dimmed: bool, selec
     if dimmed {
         vello_color_with_alpha(theme.label_fill, 110)
     } else if selected {
-        theme.label_fill
+        theme.label_fill_hovered
     } else if hovered {
         theme.label_fill_hovered
     } else {
         theme.label_fill
+    }
+}
+
+pub(crate) fn dag_handle_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+    if dimmed {
+        vello_color_with_alpha(theme.handle_fill_disabled, 120)
+    } else if selected {
+        theme.handle_fill_selected
+    } else if hovered {
+        theme.handle_fill_hovered
+    } else {
+        theme.handle_fill
+    }
+}
+
+pub(crate) fn dag_handle_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+    if dimmed {
+        vello_color_with_alpha(theme.handle_stroke_disabled, 120)
+    } else if selected {
+        theme.handle_stroke_selected
+    } else if hovered {
+        theme.handle_stroke_hovered
+    } else {
+        theme.handle_stroke
+    }
+}
+
+pub(crate) fn dag_edge_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+    if dimmed {
+        vello_color_with_alpha(theme.edge_stroke_disabled, 120)
+    } else if selected {
+        theme.edge_stroke_selected
+    } else if hovered {
+        theme.edge_stroke_hovered
+    } else {
+        theme.edge_stroke
     }
 }
 
@@ -873,14 +1008,11 @@ pub(crate) fn dag_node_paint_fill(
     selected: bool,
     hovered: bool,
 ) -> Option<cavas::vello::peniko::Color> {
-    let chrome = dimmed || selected || hovered;
     if lod == DagDrawLod::Minimap {
-        if chrome {
-            Some(dag_node_body_fill(theme, dimmed, selected, hovered))
-        } else {
-            Some(dag_node_body_stroke(theme, dimmed, selected, hovered))
-        }
-    } else if chrome {
+        return Some(dag_node_body_stroke(theme, dimmed, selected, hovered));
+    }
+    let chrome = dimmed || selected || hovered;
+    if chrome {
         Some(dag_node_body_fill(theme, dimmed, selected, hovered))
     } else {
         None
@@ -962,7 +1094,7 @@ impl DagDrawLod {
     }
 
     pub fn shows_port_labels(self) -> bool {
-        matches!(self, Self::Micro)
+        matches!(self, Self::Detail | Self::Micro)
     }
 
     pub fn shows_handles(self) -> bool {
@@ -975,6 +1107,13 @@ impl DagDrawLod {
 
     pub fn shows_detail_text(self) -> bool {
         matches!(self, Self::Detail | Self::Micro)
+    }
+
+    pub fn edge_stroke_screen_px(self) -> f64 {
+        match self {
+            Self::Minimap => DAG_EDGE_STROKE_MINIMAP_SCREEN_PX,
+            _ => DAG_EDGE_STROKE_SCREEN_PX,
+        }
     }
 }
 
@@ -1622,6 +1761,9 @@ impl DagHost {
     }
 
     fn try_widget_pointer_down(&mut self, world_x: f64, world_y: f64) -> bool {
+        if !self.draw_lod_for_frame().shows_controls() {
+            return false;
+        }
         let Some((idx, is_slider)) = self.widget_hit_at(world_x, world_y) else {
             return false;
         };
@@ -1702,7 +1844,9 @@ impl DagHost {
     }
 
     pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.vello_theme.merge_from_json(json)
+        self.vello_theme.merge_from_json(json)?;
+        self.icon_paint_cache.clear();
+        Ok(())
     }
 
     /// 🖼 Screen-node overlay rects in CSS pixel space for DOM media layers.
@@ -1741,6 +1885,128 @@ impl DagHost {
         serde_json::to_string(&overlays).map_err(|e| e.to_string())
     }
 
+    fn port_label_overlay_rows(node: &DagNodeSpec, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+        use cavas::text::label_extent;
+        let hw = node.width * 0.5;
+        let handle_inset = 8.0 / zoom.max(0.05);
+        let inputs = node.inputs();
+        let outputs = node.outputs();
+        let computation = matches!(node.kind, DagNodeKind::Computation { .. });
+        let port_layout_px = if computation {
+            dag_label_compact_paint_px(zoom, lod_index)
+        } else {
+            dag_label_paint_px(zoom, lod_index)
+        };
+        let mut rows = Vec::new();
+        let input_column_w = if computation {
+            io_port_column_width(&inputs, port_layout_px)
+        } else {
+            (hw - handle_inset).max(8.0)
+        };
+        let output_column_w = if computation {
+            io_port_column_width(&outputs, port_layout_px)
+        } else {
+            (hw - handle_inset).max(8.0)
+        };
+        for (i, port) in inputs.iter().enumerate() {
+            let label = port.label.trim();
+            if label.is_empty() {
+                continue;
+            }
+            let world_y = port_center_y(node, i, inputs.len());
+            let world_x = if computation {
+                computation_input_label_x(node)
+            } else {
+                node.x - hw + handle_inset
+            };
+            rows.push(serde_json::json!({
+                "id": node.id,
+                "text": label,
+                "layout": "horizontal",
+                "align": "left",
+                "x": world_x,
+                "y": world_y,
+                "nodeW": input_column_w,
+                "nodeH": DAG_CHANNEL_ROW_HEIGHT,
+                "fontScreenPx": port_layout_px,
+            }));
+        }
+        for (i, port) in outputs.iter().enumerate() {
+            let label = port.label.trim();
+            if label.is_empty() {
+                continue;
+            }
+            let world_y = port_center_y(node, i, outputs.len());
+            let (world_x, column_w) = if computation {
+                let left = computation_output_label_x(node, label, port_layout_px);
+                (left + port_label_text_width(label, port_layout_px), output_column_w)
+            } else {
+                let (label_w, _) = label_extent(label, port_layout_px);
+                (node.x + hw - handle_inset, label_w / zoom.max(0.05))
+            };
+            rows.push(serde_json::json!({
+                "id": node.id,
+                "text": label,
+                "layout": "horizontal",
+                "align": "right",
+                "x": world_x,
+                "y": world_y,
+                "nodeW": column_w,
+                "nodeH": DAG_CHANNEL_ROW_HEIGHT,
+                "fontScreenPx": port_layout_px,
+            }));
+        }
+        rows
+    }
+
+    /// 🏷️ Camera, draw LOD, and node label anchors for the JS canvas text overlay (must match the last GPU frame).
+    pub fn label_overlay_paint_state_json(&self) -> Result<String, String> {
+        let lod = self.draw_lod_for_frame();
+        let cam = &self.fixture.camera;
+        let lod_index = DAG_LOD_SCALE.resolve_index(cam.zoom);
+        let paint_px = dag_label_paint_px(cam.zoom, lod_index);
+        let mut labels = Vec::new();
+        for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
+            let node = self.node_spec_for_paint(idx, fixture_node);
+            let node = node.as_ref();
+            if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
+                let (layout, x, y) = if lod.node_label_is_horizontal() {
+                    ("horizontal", node.x, node.y)
+                } else if matches!(node.kind, DagNodeKind::Computation { .. }) && lod.shows_computation_layout() {
+                    let (lx, ly) = computation_name_world_center(node, &text, paint_px, cam.zoom);
+                    ("horizontal", lx, ly)
+                } else if matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls() {
+                    let (lx, ly) = computation_name_world_center(node, &text, paint_px, cam.zoom);
+                    ("horizontal", lx, ly)
+                } else {
+                    let (lx, ly) = io_widget_label_center(node);
+                    ("vertical", lx, ly)
+                };
+                labels.push(serde_json::json!({
+                    "id": node.id,
+                    "text": text,
+                    "layout": layout,
+                    "x": x,
+                    "y": y,
+                    "nodeW": node.width,
+                    "nodeH": node.height,
+                    "fontScreenPx": paint_px,
+                }));
+            }
+            if lod.shows_port_labels() {
+                labels.extend(Self::port_label_overlay_rows(node, cam.zoom, lod_index));
+            }
+        }
+        serde_json::to_string(&serde_json::json!({
+            "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
+            "lod": lod.label(),
+            "width": self.width,
+            "height": self.height,
+            "labels": labels,
+        }))
+        .map_err(|e| e.to_string())
+    }
+
     fn paint_variadic_plus_controls(
         scene: &mut cavas::vello::Scene,
         cam: &cavas::camera::Camera,
@@ -1765,6 +2031,7 @@ impl DagHost {
         node: &DagNodeSpec,
         layout_px: f64,
         paint_px: f64,
+        lod_index: usize,
         label_fill: cavas::vello::peniko::Color,
         label_halo: cavas::vello::peniko::Color,
     ) {
@@ -1778,7 +2045,7 @@ impl DagHost {
         let computation = matches!(node.kind, DagNodeKind::Computation { .. });
         let port_layout_px = if computation { DAG_LABEL_COMPACT_SCREEN_PX } else { layout_px };
         let port_paint_px = if computation {
-            dag_label_compact_paint_px(cam.zoom)
+            dag_label_compact_paint_px(cam.zoom, lod_index)
         } else {
             paint_px
         };
@@ -1855,6 +2122,70 @@ impl DagHost {
         }
     }
 
+    fn paint_computation_column_divider(
+        scene: &mut cavas::vello::Scene,
+        aff: cavas::vello::kurbo::Affine,
+        node: &DagNodeSpec,
+        chrome_stroke: f64,
+        stroke: cavas::vello::peniko::Color,
+    ) {
+        use cavas::vello::kurbo::{Line, Point, Stroke};
+        let Some(divider_x) = computation_column_divider_x(node) else {
+            return;
+        };
+        let hh = node.height * 0.5;
+        let top = node.y - hh;
+        let bottom = node.y + hh;
+        let stroke_style = Stroke::new(chrome_stroke);
+        scene.stroke(
+            &stroke_style,
+            aff,
+            stroke,
+            None,
+            &Line::new(Point::new(divider_x, top), Point::new(divider_x, bottom)),
+        );
+    }
+
+    fn paint_computation_channel_row_dividers(
+        scene: &mut cavas::vello::Scene,
+        aff: cavas::vello::kurbo::Affine,
+        node: &DagNodeSpec,
+        chrome_stroke: f64,
+        stroke: cavas::vello::peniko::Color,
+    ) {
+        use cavas::vello::kurbo::{Line, Point, Stroke};
+        let (input_rows, output_rows) = computation_io_side_row_counts(node);
+        let stroke_style = Stroke::new(chrome_stroke);
+        if input_rows > 1 {
+            if let Some((left, right)) = computation_input_column_x_bounds(node) {
+                for row in 1..input_rows {
+                    let y = channel_row_divider_y(node.y, node.height, row);
+                    scene.stroke(
+                        &stroke_style,
+                        aff,
+                        stroke,
+                        None,
+                        &Line::new(Point::new(left, y), Point::new(right, y)),
+                    );
+                }
+            }
+        }
+        if output_rows > 1 {
+            if let Some((left, right)) = computation_output_column_x_bounds(node) {
+                for row in 1..output_rows {
+                    let y = channel_row_divider_y(node.y, node.height, row);
+                    scene.stroke(
+                        &stroke_style,
+                        aff,
+                        stroke,
+                        None,
+                        &Line::new(Point::new(left, y), Point::new(right, y)),
+                    );
+                }
+            }
+        }
+    }
+
     fn paint_io_widget_channel_borders(
         scene: &mut cavas::vello::Scene,
         aff: cavas::vello::kurbo::Affine,
@@ -1877,6 +2208,14 @@ impl DagHost {
             DagNodeLabel::Name => node.name.trim(),
         };
         if text.is_empty() { None } else { Some(text) }
+    }
+
+    fn node_caption_delegated_to_js_overlay(node: &DagNodeSpec, lod: DagDrawLod) -> bool {
+        Self::node_label_text(node, lod).is_some()
+    }
+
+    fn port_labels_delegated_to_js_overlay(lod: DagDrawLod) -> bool {
+        lod.shows_port_labels()
     }
 
     fn paint_node_lod_icon(
@@ -1916,6 +2255,19 @@ impl DagHost {
         let (label_x, label_y) = computation_name_world_center(node, label, px, cam.zoom);
         let anchor = world_to_screen(cam, viewport, Point::new(label_x, label_y));
         Self::paint_node_name_horizontal(scene, anchor, label, px, label_fill, label_halo);
+    }
+
+    fn paint_slider_name(
+        scene: &mut cavas::vello::Scene,
+        cam: &cavas::camera::Camera,
+        viewport: &cavas::camera::Viewport,
+        node: &DagNodeSpec,
+        label: &str,
+        px: f64,
+        label_fill: cavas::vello::peniko::Color,
+        label_halo: cavas::vello::peniko::Color,
+    ) {
+        Self::paint_computation_node_name(scene, cam, viewport, node, label, px, label_fill, label_halo);
     }
 
     fn paint_io_widget_name(
@@ -1974,25 +2326,38 @@ impl DagHost {
         let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
         let aff = camera_content_affine(&cam, &viewport);
-        let accent = theme.wire_stroke_highlighted;
-        let ghost_fill = vello_color_with_alpha(accent, 48);
+        let ghost_stroke = theme.node_stroke_hovered;
+        let ghost_fill = vello_color_with_alpha(theme.node_fill_hovered, 128);
         let label_fill = dag_node_label_fill(theme, false, false, true);
         let label_halo = theme.label_halo;
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
         let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
         scene.fill(Fill::NonZero, aff, ghost_fill, None, &rect);
-        scene.stroke(&Stroke::new(dag_world_stroke(DAG_NODE_STROKE_HOVERED_SCREEN_PX, cam.zoom)), aff, accent, None, &rect);
+        scene.stroke(&Stroke::new(dag_world_stroke(DAG_NODE_STROKE_HOVERED_SCREEN_PX, cam.zoom)), aff, ghost_stroke, None, &rect);
         let layout_px = dag_label_layout_px();
-        let paint_px = dag_label_paint_px(cam.zoom);
-        let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
         let lod = DagDrawLod::Micro;
-        self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, accent, ghost_fill);
+        let lod_index = DAG_LOD_SCALE.resolve_index(cam.zoom);
+        let paint_px = dag_label_paint_px(cam.zoom, lod_index);
+        let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
+        self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, label_fill, ghost_fill);
         if let Some(label) = Self::node_label_text(node, lod) {
+            let caption_on_overlay = Self::node_caption_delegated_to_js_overlay(node, lod);
             if matches!(node.kind, DagNodeKind::Computation { .. }) {
-                Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
-                Self::paint_computation_node_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
-            } else {
+                let chrome_stroke = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
+                if !Self::port_labels_delegated_to_js_overlay(lod) {
+                    Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, lod_index, label_fill, label_halo);
+                }
+                Self::paint_computation_column_divider(scene, aff, node, chrome_stroke, ghost_stroke);
+                Self::paint_computation_channel_row_dividers(scene, aff, node, chrome_stroke, ghost_stroke);
+                if !caption_on_overlay {
+                    Self::paint_computation_node_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
+                }
+            } else if matches!(node.kind, DagNodeKind::Slider { .. }) {
+                if !caption_on_overlay {
+                    Self::paint_slider_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
+                }
+            } else if !caption_on_overlay {
                 Self::paint_node_name_horizontal(scene, center_screen, label, paint_px, label_fill, label_halo);
             }
         }
@@ -2009,10 +2374,11 @@ impl DagHost {
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
         let aff = camera_content_affine(&cam, &viewport);
         let lod = self.draw_lod_for_frame();
-        let lod_index = DAG_LOD_SCALE.resolve_index(cam.zoom) as i8;
+        let lod_index = DAG_LOD_SCALE.resolve_index(cam.zoom);
+        let lod_index_i8 = lod_index as i8;
         let prev_lod = self.last_logged_lod.get();
-        if prev_lod != lod_index {
-            self.last_logged_lod.set(lod_index);
+        if prev_lod != lod_index_i8 {
+            self.last_logged_lod.set(lod_index_i8);
             dag_debug_log(&format!(
                 "[DEBUG] dag draw lod={} zoom={:.3} icon={} label={:?}",
                 lod.label(),
@@ -2022,17 +2388,55 @@ impl DagHost {
             ));
         }
         let snap = self.engine.render_snapshot();
-        let edge_stroke = dag_world_stroke(DAG_EDGE_STROKE_SCREEN_PX, cam.zoom);
-        for curve in &snap.edges {
-            scene.stroke(&Stroke::new(edge_stroke), aff, theme.edge_stroke, None, curve);
+        let edge_stroke = dag_world_stroke(lod.edge_stroke_screen_px(), cam.zoom);
+        for (&eid, _edge) in &self.engine.edges {
+            if let Some(curve) = self.engine.edge_curve(eid) {
+                let is_selected = self.engine.selection.edge_ids.contains(&eid);
+                let is_hovered = self.engine.hover == Some(eid);
+                let stroke_c = dag_edge_body_stroke(theme, false, is_selected, is_hovered);
+                scene.stroke(&Stroke::new(edge_stroke), aff, stroke_c, None, &curve);
+            }
         }
         if let Some((a, b)) = snap.pending_edge {
             let preview = compute_edge_bezier_points(a, b, a, b);
-            scene.stroke(&Stroke::new(edge_stroke), aff, theme.edge_stroke_selected, None, &preview);
+            scene.stroke(&Stroke::new(edge_stroke), aff, dag_edge_body_stroke(theme, false, true, false), None, &preview);
+        }
+        if lod.shows_handles() {
+            let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
+            for (hid, center, _radius) in &snap.handles {
+                let node_id = self.engine.handles.get(hid).map(|handle| handle.node_id);
+                let is_dimmed = node_id.is_some_and(|nid| self.dimmed.contains(&nid));
+                let is_selected = self.engine.selection.handle_ids.contains(hid);
+                let is_hovered = self.engine.hover == Some(*hid);
+                let fill = dag_handle_body_fill(theme, is_dimmed, is_selected, is_hovered);
+                let stroke_c = dag_handle_body_stroke(theme, is_dimmed, is_selected, is_hovered);
+                let chrome = is_dimmed || is_selected || is_hovered;
+                let outward = node_id
+                    .and_then(|nid| self.engine.nodes.get(&nid))
+                    .map(|node| normalize_or_zero(*center - node.center))
+                    .filter(|v| v.hypot() > 1e-9);
+                if let Some(out) = outward {
+                    if chrome {
+                        scene.fill(Fill::NonZero, aff, fill, None, &handle_exterior_cap_fill_path(*center, out, DAG_HANDLE_WORLD_RADIUS));
+                    }
+                    scene.stroke(
+                        &Stroke::new(handle_stroke_px),
+                        aff,
+                        stroke_c,
+                        None,
+                        &handle_exterior_cap_stroke_path(*center, out, DAG_HANDLE_WORLD_RADIUS),
+                    );
+                } else {
+                    let circle = Circle::new(*center, DAG_HANDLE_WORLD_RADIUS);
+                    if chrome {
+                        scene.fill(Fill::NonZero, aff, fill, None, &circle);
+                    }
+                    scene.stroke(&Stroke::new(handle_stroke_px), aff, stroke_c, None, &circle);
+                }
+            }
         }
         let node_stroke = theme.node_stroke;
         let label_halo = theme.label_halo;
-        let accent = theme.wire_stroke_highlighted;
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let node = node.as_ref();
@@ -2055,37 +2459,34 @@ impl DagHost {
             }
             scene.stroke(&Stroke::new(dag_world_stroke(stroke_screen_px, cam.zoom)), aff, stroke, None, &rect);
             let layout_px = dag_label_layout_px();
-            let paint_px = dag_label_paint_px(cam.zoom);
+            let paint_px = dag_label_paint_px(cam.zoom, lod_index);
             let chrome_stroke = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
             let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
             let node_fill = fill.unwrap_or(theme.node_fill);
-            self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, stroke, node_fill);
+            self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, label_fill, node_fill);
             let label_text = Self::node_label_text(node, lod);
+            let caption_on_overlay = Self::node_caption_delegated_to_js_overlay(node, lod);
             if lod.node_label_is_horizontal() {
-                if let Some(label) = label_text {
+                if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                     Self::paint_node_name_horizontal(scene, center_screen, label, paint_px, label_fill, label_halo);
                 }
             } else {
             match &node.kind {
                 DagNodeKind::Computation { variadic_inputs, .. } => {
                     if lod.shows_computation_layout() {
-                        if lod.shows_port_labels() {
-                            Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
-                        }
-                        if let Some(label) = label_text {
+                        Self::paint_computation_column_divider(scene, aff, node, chrome_stroke, stroke);
+                        Self::paint_computation_channel_row_dividers(scene, aff, node, chrome_stroke, stroke);
+                        if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                             Self::paint_computation_node_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
                         }
                         if *variadic_inputs && cam.zoom >= DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
-                            Self::paint_variadic_plus_controls(scene, &cam, &viewport, node, paint_px, accent, label_halo);
+                            Self::paint_variadic_plus_controls(scene, &cam, &viewport, node, paint_px, label_fill, label_halo);
                         }
                     }
                 }
                 DagNodeKind::Slider { min, max, value, .. } => {
-                    if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
-                    }
-                    if let Some(label) = label_text {
-                        Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
+                    if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
+                        Self::paint_slider_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
                     }
                     if lod.shows_controls() {
                         let (x0, y0, x1, y1) = slider_track_bounds(node);
@@ -2095,23 +2496,19 @@ impl DagHost {
                         let span = (max - min).max(1e-6);
                         let t = ((*value - *min) / span).clamp(0.0, 1.0);
                         let thumb_x = x0 + t * (x1 - x0);
-                        scene.fill(Fill::NonZero, aff, accent, None, &Circle::new(Point::new(thumb_x, track_y), 5.0 / cam.zoom.max(0.05)));
-                    }
-                    if lod.shows_detail_text() {
+                        scene.fill(Fill::NonZero, aff, label_fill, None, &Circle::new(Point::new(thumb_x, track_y), 5.0 / cam.zoom.max(0.05)));
                         let value_text = format!("{value:.1}");
-                        let (_, _, x1, _) = slider_track_bounds(node);
-                        let value_pos = world_to_screen(&cam, &viewport, Point::new(x1 + 8.0 / cam.zoom.max(0.05), node.y + hh - 14.0));
-                        append_label(scene, &value_text, value_pos, paint_px * 0.9, label_fill, label_halo);
-                    }
-                    if lod.shows_port_labels() {
-                        Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
+                        let value_px = paint_px * 0.9;
+                        let (vx, vy) = slider_value_world_center(node, &value_text, value_px, cam.zoom);
+                        let value_pos = world_to_screen(&cam, &viewport, Point::new(vx, vy));
+                        append_label(scene, &value_text, value_pos, value_px, label_fill, label_halo);
                     }
                 }
                 DagNodeKind::Select { options, selected, .. } => {
                     if lod.shows_controls() {
                         Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
-                    if let Some(label) = label_text {
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
                     }
                     if lod.shows_controls() {
@@ -2126,15 +2523,12 @@ impl DagHost {
                             append_label(scene, "▾", chevron, paint_px, label_fill, label_halo);
                         }
                     }
-                    if lod.shows_port_labels() {
-                        Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
-                    }
                 }
                 DagNodeKind::Screen { media, .. } => {
                     if lod.shows_controls() {
                         Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
-                    if let Some(label) = label_text {
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
                     }
                     if lod.shows_controls() {
@@ -2154,15 +2548,12 @@ impl DagHost {
                             append_label(scene, kind_label, hint, paint_px * 0.85, vello_color_with_alpha(label_fill, 140), label_halo);
                         }
                     }
-                    if lod.shows_port_labels() {
-                        Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
-                    }
                 }
                 DagNodeKind::Note { text, .. } => {
                     if lod.shows_controls() {
                         Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
-                    if let Some(label) = label_text {
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
                     }
                     if lod.shows_controls() {
@@ -2175,15 +2566,12 @@ impl DagHost {
                         let pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + hh * 0.12));
                         append_label(scene, display, pos, paint_px * 0.95, label_fill, label_halo);
                     }
-                    if lod.shows_port_labels() {
-                        Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
-                    }
                 }
                 DagNodeKind::Preview { text, .. } => {
                     if lod.shows_controls() {
                         Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
-                    if let Some(label) = label_text {
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
                     }
                     if lod.shows_controls() {
@@ -2196,15 +2584,12 @@ impl DagHost {
                         let pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + hh * 0.12));
                         append_label(scene, display, pos, paint_px * 1.05, label_fill, label_halo);
                     }
-                    if lod.shows_port_labels() {
-                        Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
-                    }
                 }
                 DagNodeKind::Action { label, .. } => {
                     if lod.shows_controls() {
                         Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
-                    if let Some(label) = label_text {
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
                     }
                     if lod.shows_controls() {
@@ -2216,21 +2601,8 @@ impl DagHost {
                             append_label(scene, label, pos, paint_px * 0.95, label_fill, label_halo);
                         }
                     }
-                    if lod.shows_port_labels() {
-                        Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
-                    }
                 }
             }
-            }
-        }
-        if lod.shows_handles() {
-            for (hid, center, _radius) in &snap.handles {
-                let fill = match self.engine.handles.get(hid).map(|h| h.role) {
-                    Some(HandleRole::Source) => theme.wire_stroke_highlighted,
-                    Some(HandleRole::Target) => theme.edge_stroke_selection_exit,
-                    _ => theme.edge_stroke,
-                };
-                scene.fill(Fill::NonZero, aff, fill, None, &Circle::new(*center, DAG_HANDLE_WORLD_RADIUS));
             }
         }
     }
@@ -2282,6 +2654,15 @@ mod wasm_session {
         #[wasm_bindgen(js_name = nodeOverlaysJson)]
         pub fn node_overlays_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.node_overlays_json().map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = labelOverlayPaintStateJson)]
+        pub fn label_overlay_paint_state_json(&self) -> Result<String, JsValue> {
+            self.state
+                .borrow()
+                .host
+                .label_overlay_paint_state_json()
+                .map_err(|e| JsValue::from_str(&e))
         }
 
         #[wasm_bindgen(js_name = attachCanvas)]
@@ -2670,8 +3051,8 @@ mod tests {
             icon: "emoji:🎚️".into(),
             x: 100.0,
             y: 50.0,
-            width: 180.0,
-            height: 48.0,
+            width: slider_widget_width("Amount"),
+            height: slider_widget_height(),
             kind: DagNodeKind::Slider {
                 min: 0.0,
                 max: 10.0,
@@ -2685,6 +3066,7 @@ mod tests {
         let (left, top, right, bottom) = slider_track_bounds(&node);
         assert!(left >= node.x - hw);
         assert!(right <= node.x + hw);
+        assert!((top + bottom) * 0.5 - node.y < 1e-6);
         assert!(top >= node.y - hh);
         assert!(bottom <= node.y + hh);
     }
@@ -2701,8 +3083,8 @@ mod tests {
                 icon: "emoji:🎚️".into(),
                 x: 0.0,
                 y: 0.0,
-                width: 180.0,
-                height: 80.0,
+                width: slider_widget_width("Amount"),
+                height: slider_widget_height(),
                 kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 2.0, output: IoPortSpec { id: "out".into(), label: "value".into() } },
             }],
             edges: vec![],
@@ -2717,6 +3099,38 @@ mod tests {
             panic!("expected slider");
         };
         assert!((value - 2.0).abs() > 0.1);
+    }
+
+    #[test]
+    fn dag_host_slider_drag_ignored_when_controls_hidden() {
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![DagNodeSpec {
+                id: "slider".into(),
+                name: "Amount".into(),
+                abbreviation: "Amount".into(),
+                icon: "emoji:🎚️".into(),
+                x: 0.0,
+                y: 0.0,
+                width: slider_widget_width("Amount"),
+                height: slider_widget_height(),
+                kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 2.0, output: IoPortSpec { id: "out".into(), label: "value".into() } },
+            }],
+            edges: vec![],
+        });
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("minimap");
+        host.set_viewport(800, 600, 1.0);
+        let (x0, y0, x1, y1) = slider_track_bounds(&host.fixture.nodes[0]);
+        let mid_y = (y0 + y1) * 0.5;
+        let (sx, sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, mid_y));
+        host.pointer_down(sx, sy, false);
+        host.pointer_up(sx, sy);
+        let DagNodeKind::Slider { value, .. } = host.fixture.nodes[0].kind else {
+            panic!("expected slider");
+        };
+        assert!((value - 2.0).abs() < 1e-6, "minimap LOD should only move the node rectangle, not adjust the value");
     }
 
     #[test]
@@ -2745,6 +3159,91 @@ mod tests {
             panic!("expected select");
         };
         assert_eq!(selected, 1);
+    }
+
+    #[test]
+    fn dag_host_label_overlay_paint_state_json_includes_compact_labels() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("compact");
+        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let labels = raw["labels"].as_array().expect("labels");
+        assert!(!labels.is_empty());
+        assert!(labels.iter().all(|row| row["layout"] == "horizontal"));
+        assert!(labels[0]["text"].as_str().unwrap_or("").len() > 0);
+    }
+
+    #[test]
+    fn dag_host_label_overlay_paint_state_json_includes_slider_name() {
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
+            nodes: vec![DagNodeSpec {
+                id: "slider".into(),
+                name: "Radius".into(),
+                abbreviation: "Radius".into(),
+                icon: "emoji:🎚️".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 120.0,
+                height: 32.0,
+                kind: DagNodeKind::Slider {
+                    min: 0.0,
+                    max: 10.0,
+                    step: 0.5,
+                    value: 3.0,
+                    output: IoPortSpec { id: "out".into(), label: "value".into() },
+                },
+            }],
+            edges: vec![],
+        });
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("micro");
+        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let labels = raw["labels"].as_array().expect("labels");
+        assert!(labels.iter().any(|row| row["text"] == "Radius" && row["layout"] == "horizontal"));
+    }
+
+    #[test]
+    fn dag_host_label_overlay_paint_state_json_includes_detail_port_labels() {
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
+            nodes: vec![DagNodeSpec {
+                id: "box".into(),
+                name: "brep.box".into(),
+                abbreviation: "box".into(),
+                icon: "emoji:📦".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 96.0,
+                height: 42.0,
+                kind: DagNodeKind::Computation {
+                    inputs: vec![
+                        IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
+                        IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
+                    ],
+                    outputs: vec![IoPortSpec { id: "out".into(), label: "geometry".into() }],
+                    variadic_inputs: false,
+                    variadic_outputs: false,
+                },
+            }],
+            edges: vec![],
+        });
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("detail");
+        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let labels = raw["labels"].as_array().expect("labels");
+        let port_labels: Vec<_> = labels
+            .iter()
+            .filter(|row| row["align"].as_str().is_some())
+            .collect();
+        assert_eq!(port_labels.len(), 3, "expected input and output channel labels");
+        assert!(port_labels.iter().any(|row| row["text"] == "cornerA" && row["align"] == "left"));
+        assert!(port_labels.iter().any(|row| row["text"] == "geometry" && row["align"] == "right"));
     }
 
     #[test]
@@ -2905,15 +3404,37 @@ mod tests {
     }
 
     #[test]
+    fn computation_column_divider_splits_io_columns() {
+        let inputs = vec![
+            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
+            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
+        ];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
+        let width = computation_node_width("Box", &inputs, &outputs);
+        let height = computation_node_height(2, 1, false, false);
+        let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
+        let divider_x = computation_column_divider_x(&node).expect("divider");
+        let hw = width * 0.5;
+        assert!(divider_x > node.x - hw + 1.0);
+        assert!(divider_x < node.x + hw - 1.0);
+    }
+
+    #[test]
     fn computation_name_sits_above_rectangle_centered() {
         let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
         let width = computation_node_width("Box", &inputs, &outputs);
         let height = computation_node_height(1, 1, false, false);
         let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
-        let (label_x, label_y) = computation_name_world_center(&node, "Box", DAG_LABEL_SCREEN_PX, 1.0);
+        let paint_px = dag_label_paint_px(1.0, 3);
+        let (label_x, label_y) = computation_name_world_center(&node, "Box", paint_px, 1.0);
         assert!((label_x - node.x).abs() < 1e-6);
-        assert!(label_y < node.y - height * 0.5);
+        let top = node.y - height * 0.5;
+        assert!(label_y < top);
+        let world_offset = top - label_y;
+        let (_, label_h) = cavas::text::label_extent("Box", paint_px);
+        let screen_offset = world_offset * 1.0;
+        assert!((screen_offset - (DAG_LABEL_SCREEN_PX * 0.2 + label_h * 0.5)).abs() < 1e-6);
     }
 
     #[test]
@@ -2922,6 +3443,15 @@ mod tests {
         let height = io_widget_height("Amount");
         assert!(width < height, "control nodes should be taller than wide for vertical titles");
         assert!(height >= 40.0);
+    }
+
+    #[test]
+    fn slider_widget_size_is_horizontal_track() {
+        let width = slider_widget_width("Amount");
+        let height = slider_widget_height();
+        assert!(width > height, "slider track should be wider than tall");
+        assert_eq!(width, 120.0);
+        assert_eq!(height, 20.0);
     }
 
     #[test]
@@ -2945,6 +3475,35 @@ mod tests {
             42.0,
         );
         assert_eq!(computation_channel_row_count(&node), 3);
+    }
+
+    #[test]
+    fn computation_channel_row_dividers_align_with_row_bounds() {
+        let inputs = vec![
+            IoPortSpec { id: "a".into(), label: "cornerA".into() },
+            IoPortSpec { id: "b".into(), label: "cornerB".into() },
+            IoPortSpec { id: "c".into(), label: "height".into() },
+        ];
+        let outputs = vec![
+            IoPortSpec { id: "outA".into(), label: "geometry".into() },
+            IoPortSpec { id: "outB".into(), label: "mesh".into() },
+        ];
+        let width = computation_node_width("Box", &inputs, &outputs);
+        let height = computation_node_height(3, 2, false, false);
+        let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
+        let (input_rows, output_rows) = computation_io_side_row_counts(&node);
+        assert_eq!(input_rows, 3);
+        assert_eq!(output_rows, 2);
+        let (input_left, input_right) = computation_input_column_x_bounds(&node).expect("input column");
+        let (output_left, output_right) = computation_output_column_x_bounds(&node).expect("output column");
+        assert!(input_left < input_right);
+        assert!(output_left < output_right);
+        assert!(input_right < output_left);
+        let divider_y = channel_row_divider_y(node.y, node.height, 1);
+        let (_, _row0_top, _, row0_bottom) = channel_row_bounds(&node, 0);
+        let (_, row1_top, _, _row1_bottom) = channel_row_bounds(&node, 1);
+        assert!((divider_y - row0_bottom).abs() < 1e-6);
+        assert!((divider_y - row1_top).abs() < 1e-6);
     }
 
     #[test]
@@ -3000,8 +3559,10 @@ mod tests {
         assert_eq!(DagDrawLod::Detail.node_label(), DagNodeLabel::Abbreviation);
         assert!(DagDrawLod::Normal.shows_computation_layout());
         assert!(!DagDrawLod::Compact.shows_computation_layout());
-        assert!(!DagDrawLod::Detail.shows_port_labels());
+        assert!(DagDrawLod::Detail.shows_port_labels());
         assert!(DagDrawLod::Micro.shows_port_labels());
+        assert_eq!(DagDrawLod::Minimap.edge_stroke_screen_px(), DAG_EDGE_STROKE_MINIMAP_SCREEN_PX);
+        assert_eq!(DagDrawLod::Normal.edge_stroke_screen_px(), DAG_EDGE_STROKE_SCREEN_PX);
     }
 
     #[test]
@@ -3022,13 +3583,13 @@ mod tests {
     }
 
     #[test]
-    fn dag_label_paint_px_scales_with_camera_zoom() {
+    fn dag_label_paint_px_scales_with_zoom_inside_lod_band() {
         assert_eq!(dag_label_layout_px(), DAG_LABEL_SCREEN_PX);
-        assert!((dag_label_paint_px(1.0) - DAG_LABEL_SCREEN_PX).abs() < 1e-9);
-        assert!((dag_label_paint_px(2.0) - DAG_LABEL_SCREEN_PX * 2.0).abs() < 1e-9);
-        assert!((dag_label_paint_px(0.5) - DAG_LABEL_SCREEN_PX).abs() < 1e-9);
-        assert!((dag_label_paint_px(0.25) - DAG_LABEL_SCREEN_PX).abs() < 1e-9);
-        assert!((dag_label_compact_paint_px(0.25) - DAG_LABEL_COMPACT_SCREEN_PX).abs() < 1e-9);
+        let normal = 3usize;
+        assert!((dag_label_paint_px(0.55, normal) - DAG_LABEL_SCREEN_PX).abs() < 1e-9);
+        assert!((dag_label_paint_px(1.1, normal) - DAG_LABEL_SCREEN_PX * 1.1 / 0.55).abs() < 1e-9);
+        assert!((dag_label_paint_px(0.55, normal) - dag_label_paint_px(1.1, normal) * 0.55 / 1.1).abs() < 1e-9);
+        assert!((dag_label_compact_paint_px(1.1, normal) - DAG_LABEL_COMPACT_SCREEN_PX * 1.1 / 0.55).abs() < 1e-9);
     }
 
     #[test]
@@ -3085,6 +3646,18 @@ mod tests {
             theme.node_fill_selected.to_rgba8()
         );
         assert_eq!(
+            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, true)
+                .expect("minimap hovered")
+                .to_rgba8(),
+            theme.node_stroke_hovered.to_rgba8()
+        );
+        assert_ne!(
+            dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, true)
+                .expect("minimap hovered")
+                .to_rgba8(),
+            theme.node_fill_hovered.to_rgba8()
+        );
+        assert_eq!(
             dag_node_body_stroke(&theme, false, false, true).to_rgba8(),
             theme.node_stroke_hovered.to_rgba8()
         );
@@ -3096,6 +3669,26 @@ mod tests {
             dag_node_label_fill(&theme, false, false, false).to_rgba8(),
             theme.label_fill.to_rgba8()
         );
+        assert_eq!(
+            dag_node_label_fill(&theme, false, true, false).to_rgba8(),
+            theme.label_fill_hovered.to_rgba8()
+        );
+    }
+
+    #[test]
+    fn dag_handle_and_edge_stroke_use_theme_defaults() {
+        use cavas::vello::peniko::Color;
+        let theme = VelloThemePalette {
+            edge_stroke: Color::from_rgba8(100, 110, 120, 255),
+            edge_stroke_hovered: Color::from_rgba8(10, 20, 30, 255),
+            edge_stroke_selected: Color::from_rgba8(40, 50, 60, 255),
+            handle_stroke: Color::from_rgba8(130, 140, 150, 255),
+            handle_stroke_hovered: Color::from_rgba8(20, 30, 40, 255),
+            handle_stroke_selected: Color::from_rgba8(50, 60, 70, 255),
+            ..VelloThemePalette::default()
+        };
+        assert_eq!(dag_edge_body_stroke(&theme, false, false, false).to_rgba8(), theme.edge_stroke.to_rgba8());
+        assert_eq!(dag_handle_body_stroke(&theme, false, false, false).to_rgba8(), theme.handle_stroke.to_rgba8());
     }
 
     #[test]

@@ -1,0 +1,17 @@
+{
+  "title": "Flow Duplicate Io Channel Labels",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Input/output channel names appear twice in the flow editor because port labels are painted both via Vello (paint_port_labels) and the JS Canvas 2D overlay (port_label_overlay_rows). Skip Vello port label painting when delegated to the JS overlay.",
+  "summary": "Fixed duplicate slider names (and tightened hover-ghost caption painting). Slider labels were serialized into the JS canvas overlay but Vello still called `paint_slider_name`. Slider and computation node captions now skip Vello painting when `node_caption_delegated_to_js_overlay` is true, matching io widgets and port labels.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1593"
+  },
+  "goal": "🎯flow",
+  "sessions": [
+    "⚪d19f979f21b74105a7514b463febe6ff",
+    "⚪65c71c53d5f04238b596929694692414",
+    "⚪01d4a818f1634fe7a7feef6d583a30d9",
+    "⚪a9673a7c226a49cc85a00911ec332a91"
+  ]
+}

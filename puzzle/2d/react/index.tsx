@@ -1584,15 +1584,15 @@ const PUZZLE_2D_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondar
 const PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA = {
   rasterClear: resolveColorRgba(semanticVar("base"), "light"),
   gridMinorStroke: [...resolveColorRgba(themeColorVar("element"), "gray").slice(0, 3), 56] as [number, number, number, number],
-  edgeStroke: resolveColorRgba(themeColorVar("muted-foreground"), "gray"),
-  edgeStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
+  edgeStroke: resolveColorRgba(themeColorVar("element"), "gray"),
+  edgeStrokeHovered: resolveColorRgba(themeColorVar("emphasized"), "dark"),
   edgeStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
   edgeStrokeSelectionExit: resolveColorRgba(tokenVar("secondary"), "secondary"),
   edgeStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
   nodeFill: resolveColorRgba(themeColorVar("panel"), "l-l-l-g"),
-  nodeStroke: resolveColorRgba(themeColorVar("emphasized"), "dark"),
-  nodeFillHovered: resolveColorRgba(themeColorVar("hover-panel"), "light-5-7"),
-  nodeStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
+  nodeStroke: resolveColorRgba(themeColorVar("element"), "gray"),
+  nodeFillHovered: resolveColorRgba(themeColorVar("border"), "gray"),
+  nodeStrokeHovered: resolveColorRgba(themeColorVar("emphasized"), "dark"),
   nodeFillSelected: resolveColorRgba(PUZZLE_2D_CSS_SELECTED_FILL, "primary"),
   nodeStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
   nodeFillSelectionExit: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
@@ -1602,17 +1602,17 @@ const PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA = {
   indirectHandleFill: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
   indirectHandleStroke: resolveColorRgba(tokenVar("secondary"), "secondary"),
   handleFill: resolveColorRgba(themeColorVar("base"), "light"),
-  handleStroke: resolveColorRgba(themeColorVar("emphasized"), "dark"),
-  handleFillHovered: resolveColorRgba(themeColorVar("hover-panel"), "light-5-7"),
-  handleStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
+  handleStroke: resolveColorRgba(themeColorVar("element"), "gray"),
+  handleFillHovered: resolveColorRgba(themeColorVar("border"), "gray"),
+  handleStrokeHovered: resolveColorRgba(themeColorVar("emphasized"), "dark"),
   handleFillSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
   handleStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
   handleFillSelectionExit: resolveColorRgba(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
   handleStrokeSelectionExit: resolveColorRgba(tokenVar("secondary"), "secondary"),
   handleFillDisabled: resolveColorRgba("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", 128),
   handleStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
-  wireStroke: resolveColorRgba(themeColorVar("muted-foreground"), "gray"),
-  wireStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
+  wireStroke: resolveColorRgba(themeColorVar("element"), "gray"),
+  wireStrokeHovered: resolveColorRgba(themeColorVar("emphasized"), "dark"),
   wireStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
   wireStrokeHighlighted: resolveColorRgba(tokenVar("secondary"), "secondary"),
   wireStrokeDisabled: resolveColorRgba("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
@@ -1625,7 +1625,7 @@ function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dSty
   const stroke = (expr: string, fbKey: string, fb = tokenHex(fbKey)): string => resolveColorHex(expr, fbKey) || fb;
   const fill = (expr: string, fbKey: string, fb = tokenHex(fbKey)): string => resolveBackgroundColorHex(expr, fbKey) || fb;
   return {
-    edge: { stroke: stroke(themeColorVar("muted-foreground"), "gray", f.edge.stroke ?? tokenHex("gray")), strokeWidth: 2 },
+    edge: { stroke: stroke(themeColorVar("element"), "gray", f.edge.stroke ?? tokenHex("gray")), strokeWidth: 2 },
     "edge.highlighted": {
       stroke: stroke(tokenVar("secondary"), "secondary", f["edge.highlighted"]?.stroke ?? tokenHex("secondary")),
       strokeWidth: 2,
@@ -1677,15 +1677,15 @@ function serializePuzzle2dVelloThemeJson(): string {
       const element = resolveColorRgba(themeColorVar("element"), "gray");
       return [element[0], element[1], element[2], fb.gridMinorStroke[3]];
     })(),
-    edgeStroke: pc(themeColorVar("muted-foreground"), "gray"),
-    edgeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+    edgeStroke: pc(themeColorVar("element"), "gray"),
+    edgeStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
     edgeStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
     edgeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
     edgeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.edgeStrokeDisabled[3]),
     nodeFill: pbg(themeColorVar("panel"), "l-l-l-g"),
-    nodeStroke: pc(themeColorVar("emphasized"), "dark"),
-    nodeFillHovered: pbg(themeColorVar("hover-panel"), "light-5-7"),
-    nodeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+    nodeStroke: pc(themeColorVar("element"), "gray"),
+    nodeFillHovered: pbg(themeColorVar("border"), "gray"),
+    nodeStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
     nodeFillSelected: pbg(PUZZLE_2D_CSS_SELECTED_FILL, "primary"),
     nodeStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
     nodeFillSelectionExit: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
@@ -1695,17 +1695,17 @@ function serializePuzzle2dVelloThemeJson(): string {
     indirectHandleFill: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
     indirectHandleStroke: pc(tokenVar("secondary"), "secondary"),
     handleFill: pbg(themeColorVar("base"), "light"),
-    handleStroke: pc(themeColorVar("emphasized"), "dark"),
-    handleFillHovered: pbg(themeColorVar("hover-panel"), "light-5-7"),
-    handleStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+    handleStroke: pc(themeColorVar("element"), "gray"),
+    handleFillHovered: pbg(themeColorVar("border"), "gray"),
+    handleStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
     handleFillSelected: pbg(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
     handleStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
     handleFillSelectionExit: pbg(PUZZLE_2D_CSS_HIGHLIGHTED_FILL, "secondary"),
     handleStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
     handleFillDisabled: pbg("color-mix(in oklab, var(--color-panel) 50%, transparent)", "l-l-l-g", fb.handleFillDisabled[3]),
     handleStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.handleStrokeDisabled[3]),
-    wireStroke: pc(themeColorVar("muted-foreground"), "gray"),
-    wireStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+    wireStroke: pc(themeColorVar("element"), "gray"),
+    wireStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
     wireStrokeSelected: pc(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
     wireStrokeHighlighted: pc(tokenVar("secondary"), "secondary"),
     wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", fb.wireStrokeDisabled[3]),
@@ -3687,6 +3687,39 @@ function summarizeRasterSurfaceFailure(err: unknown): string {
 
 function puzzle2dAbbreviateCaption(raw: string, maxChars: number): string {
   return raw.length <= maxChars ? raw : `${raw.slice(0, Math.max(1, maxChars - 1))}…`;
+}
+
+/** @emoji 🔤 Base screen label px for a puzzle-2d LOD band at the band floor zoom. */
+export function puzzle2dLodNodeLabelScreenPx(lod: Puzzle2dDrawLodKind): number {
+  switch (lod) {
+    case "compact":
+    case "normal":
+      return 10;
+    case "detail":
+      return 10;
+    case "micro":
+      return 11;
+    default:
+      return 11;
+  }
+}
+
+/** @emoji 📐 Lower camera-zoom bound for a puzzle-2d LOD band (previous band `maxZoom`). */
+export function puzzle2dLodBandFloorZoom(lod: Puzzle2dDrawLodKind): number {
+  const scale = getPuzzle2dLodScale();
+  const index = scale.findIndex((entry) => entry.id === lod);
+  if (index <= 0) {
+    return 0.05;
+  }
+  const prev = scale[index - 1]?.maxZoom;
+  return typeof prev === "number" && Number.isFinite(prev) && prev > 0 ? prev : 0.05;
+}
+
+/** @emoji 🔤 Label screen px scaled with zoom inside one puzzle-2d LOD band. */
+export function puzzle2dLodBandLabelScreenPx(lod: Puzzle2dDrawLodKind, zoom: number): number {
+  const z = Math.max(0.05, zoom);
+  const floor = Math.max(0.05, puzzle2dLodBandFloorZoom(lod));
+  return puzzle2dLodNodeLabelScreenPx(lod) * (z / floor);
 }
 
 /** @emoji 🏷️ Abbreviated node caption for the text overlay canvas, or null when the LOD band hides node labels. */
@@ -6638,11 +6671,12 @@ export class Puzzle2dRenderer {
       const style = this.getStyle(node.style, chromeKey);
       const family = node.textFontFamily;
       ctx.fillStyle = readableForegroundHex(this.nodeLabelFillForOverlay(node, style, chromeKey));
+      const lodLabelPx = puzzle2dLodBandLabelScreenPx(lod, overlayZoom);
       if (node.textAutofit) {
-        const layoutKey = `${node.id}\0${lod}\0${Math.round(maxW)}\0${Math.round(maxH)}\0${caption}\0${family ?? ""}`;
+        const layoutKey = `${node.id}\0${lod}\0${lodLabelPx.toFixed(2)}\0${Math.round(maxW)}\0${caption}\0${family ?? ""}`;
         let layout = this.textOverlayLayoutCache.get(layoutKey);
         if (!layout) {
-          const fontPx = puzzle2dFitTextFontPx(ctx, caption, maxW, maxH, 4, 512, family);
+          const fontPx = puzzle2dFitTextFontPx(ctx, caption, maxW, maxH, 4, lodLabelPx, family);
           ctx.font = puzzle2dBuildCanvasFontSpec(fontPx, family);
           let line = caption;
           if (ctx.measureText(line).width > maxW) {
@@ -6657,10 +6691,10 @@ export class Puzzle2dRenderer {
         ctx.fillText(layout.line, boxCenter.x, boxCenter.y);
         continue;
       }
-      const fixedKey = `${node.id}\0${lod}\0${Math.round(maxW)}\0${node.textFontSize}\0${caption}\0${family ?? ""}`;
+      const fixedKey = `${node.id}\0${lod}\0${lodLabelPx.toFixed(2)}\0${Math.round(maxW)}\0${caption}\0${family ?? ""}`;
       let fixedLayout = this.textOverlayLayoutCache.get(fixedKey);
       if (!fixedLayout) {
-        const fontPx = node.textFontSize;
+        const fontPx = Math.min(node.textFontSize, lodLabelPx);
         ctx.font = puzzle2dBuildCanvasFontSpec(fontPx, family);
         const line = puzzle2dEllipsisTextToWidth(ctx, caption, maxW);
         fixedLayout = { line, fontPx };
@@ -7305,6 +7339,16 @@ if (puzzle2dVitest) {
 
     it("DEFAULT_HANDLE_KIND_CATALOG stores a theme token reference", () => {
       expect(DEFAULT_HANDLE_KIND_CATALOG[0]?.color).toBe("var(--color-muted-foreground)");
+    });
+  });
+
+  describe("puzzle2dLodBandLabelScreenPx", () => {
+    it("scales with zoom inside a LOD band", () => {
+      const floor = puzzle2dLodBandFloorZoom("normal");
+      const lo = puzzle2dLodBandLabelScreenPx("normal", floor);
+      const hi = puzzle2dLodBandLabelScreenPx("normal", floor * 2);
+      expect(lo).toBe(puzzle2dLodNodeLabelScreenPx("normal"));
+      expect(hi).toBeCloseTo(lo * 2, 5);
     });
   });
 

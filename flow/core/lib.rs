@@ -7,8 +7,8 @@ pub use neural_engine as neural;
 use std::collections::{BTreeMap, HashMap};
 
 use dag::{
-    computation_node_height, computation_node_width, io_widget_height, io_widget_width, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec,
-    IoPortSpec,
+    computation_node_height, computation_node_width, io_widget_height, io_widget_width, slider_widget_height, slider_widget_width, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost,
+    DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec,
 };
 use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
@@ -229,7 +229,8 @@ fn widget_io_ports(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>
 fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (f64, f64) {
     let label = widget_label(widget);
     match widget {
-        Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } => {
+        Widget::InputSlider { .. } => (slider_widget_width(&label), slider_widget_height()),
+        Widget::InputNote { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } => {
             (io_widget_width(&label), io_widget_height(&label))
         }
         Widget::Neuron { neuronKind, input_ports, .. } => {
@@ -1217,6 +1218,10 @@ impl FlowHost {
     pub fn draw_lod_label(&self) -> &'static str {
         self.dag.draw_lod_label()
     }
+
+    pub fn label_overlay_paint_state_json(&self) -> Result<String, String> {
+        self.dag.label_overlay_paint_state_json()
+    }
 }
 
 fn widget_id_for(widget: &Widget) -> &str {
@@ -1489,6 +1494,15 @@ impl FlowSession {
     #[wasm_bindgen(js_name = drawLodLabel)]
     pub fn draw_lod_label(&self) -> String {
         self.state.borrow().host.draw_lod_label().to_string()
+    }
+
+    #[wasm_bindgen(js_name = labelOverlayPaintStateJson)]
+    pub fn label_overlay_paint_state_json(&self) -> Result<String, JsValue> {
+        self.state
+            .borrow()
+            .host
+            .label_overlay_paint_state_json()
+            .map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = attachCanvas)]

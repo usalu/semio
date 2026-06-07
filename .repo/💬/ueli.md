@@ -3014,6 +3014,21 @@ As an example reimplemnt the intro (the first 5 slides of eg-ice-25) of the new 
 
 ---
 
+## procedural
+
+---
+
+Every node must have a name, an abbreviation and an icon
+Names and abbreviations are always in PascalCase.
+mnimap: nothing
+overview: icon only
+compact: abbreviation
+normal: name
+detail: icon and abreviation
+micro: icon and name
+
+---
+
 ## 🧰repo
 
 ###

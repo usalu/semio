@@ -3290,7 +3290,7 @@ export function getLevelZClass(level: Level): string {
 	}
 }
 
-/** @emoji 📏 Foreground shell stroke — panel frame, navbar bottom, footer top only. */
+/** @emoji 📏 Emphasized shell stroke for active/selected chrome accents. */
 export const borderEmphasizedClass = "!border-emphasized";
 
 /** @emoji 📏 Emphasized chrome frame (`border` + {@link borderEmphasizedClass}). */
@@ -3305,8 +3305,14 @@ export const borderEmphasizedTopClass = `border-t ${borderEmphasizedClass}`;
 /** @emoji 📏 Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
 export const borderNormalClass = "!border-normal";
 
-/** @emoji 📏 Normal bottom edge under panel tabs — not {@link borderEmphasizedClass}. */
+/** @emoji 📏 Normal chrome frame (`border` + {@link borderNormalClass}); emphasized on `[data-panel]:hover` via CSS. */
+export const borderNormalFrameClass = `box-border border border-solid ${borderNormalClass}`;
+
+/** @emoji 📏 Normal navbar bottom edge; emphasized on `[data-slot="navbar"]:hover` via CSS. */
 export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
+
+/** @emoji 📏 Normal footer top edge; emphasized on `[data-slot="footer"]:hover` via CSS. */
+export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
 /** @emoji 📏 Implicit element border color (controls, dropdowns, dividers). */
 export const borderElementClass = "border-element";
@@ -3321,8 +3327,8 @@ export const formControlFocusBorderClass = cn(
 /** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
 
-/** @emoji 🪟 Panel outline — emphasized rectangle on the frame layer (`box-border`). */
-export const panelChromeBorderClass = borderEmphasizedFrameClass;
+/** @emoji 🪟 Panel outline — normal gray frame; emphasized while the pointer is inside `[data-panel]`. */
+export const panelChromeBorderClass = borderNormalFrameClass;
 
 /** @emoji 🪟 Frosted fill layer behind panel content (no stroke — border lives on the frame). */
 export const panelGlassFillClass = glassPanelClass;
@@ -3772,7 +3778,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
   const bgClass = getLevelBgClass(level);
   return (
-    <footer id="ui.footer" data-slot="footer" className={cn(borderEmphasizedTopClass, "flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
+    <footer id="ui.footer" data-slot="footer" className={cn(borderNormalTopClass, "flex items-center h-medium transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
       <div className="flex items-center h-full px-single min-w-0">
         <ActionGroup className="border">
           {sortedItems.map((item) => (
@@ -8019,7 +8025,7 @@ function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   return (
-    <nav id="ui.navbar" data-slot="navbar" className={cn(borderEmphasizedBottomClass, "h-large z-navbar", bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" className={cn(borderNormalBottomClass, "h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0">
           {items.map((item, index) => (
@@ -22928,13 +22934,16 @@ if (treeVitest) {
       expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
     });
 
-    it("uses emphasized shell edges only on panel frame, navbar bottom, and footer top", () => {
-      expect(panelChromeBorderClass).toContain("border-emphasized");
+    it("uses normal shell edges on panel frame, navbar bottom, and footer top with CSS hover emphasis", () => {
+      expect(panelChromeBorderClass).toContain("border-normal");
+      expect(panelChromeBorderClass).not.toContain("border-emphasized");
       const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
-      expect(navbarMarkup).toContain(borderEmphasizedBottomClass);
+      expect(navbarMarkup).toContain(borderNormalBottomClass);
+      expect(navbarMarkup).not.toContain("border-emphasized");
       expect(navbarMarkup).not.toContain("border-border");
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ id: "ui.footer.minimize", icon: "minus" }]} />);
-      expect(footerMarkup).toContain(borderEmphasizedTopClass);
+      expect(footerMarkup).toContain(borderNormalTopClass);
+      expect(footerMarkup).not.toContain("border-emphasized");
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");
@@ -22950,7 +22959,8 @@ if (treeVitest) {
         <SidePanel position="left" visible tabs={[{ id: "tab-a", icon: PanelRightIcon, tree: { sections: [] } }]} />,
       );
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
-      expect(panelMarkup).toContain("border-emphasized");
+      expect(panelMarkup).toContain("border-normal");
+      expect(panelMarkup).not.toContain("border-emphasized");
       expect(panelMarkup).not.toContain("divide-x");
       expect(panelMarkup).toContain(borderNormalClass);
       expect(panelMarkup).not.toContain("border-b-current");
