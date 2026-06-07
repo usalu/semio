@@ -4,8 +4,8 @@
 // #endregion 🧲Header
 
 //#region 🔌Adapters
-import type { Design, Kit, Session, SetResult, Type } from "@semio/js";
-import { Kit as JsKitEntity, Session as SemioSession } from "@semio/js";
+import type { Design, Kit, Piece, Session, SetResult, Type } from "@semio/js";
+import { Design as JsDesign, Kit as JsKitEntity, Piece as JsPiece, Session as SemioSession } from "@semio/js";
 import {
 	fetchSemioFileSystemChildren,
 	type SemioFileSystemChildRef,
@@ -39,6 +39,7 @@ import {
 	type VirtualFileSystemNodeRecord,
 	type VirtualFileSystemScope,
 	type VirtualFileSystemSchemaModel,
+	type VirtualFileSystemVisibleNode,
 	createDefaultLayout,
 	createTabStackLayout,
 	registerPlatformComponent,
@@ -53,16 +54,24 @@ import {
 	type Puzzle5dModel,
 	type SideTabSpec,
 	type UiNode,
+	type UiTreeNode,
 	type WindowBodyViewContext,
 	getPlatformControllerById,
 	WindowKindRuntime,
 	AppRuntime,
 } from "@framework/platform/core";
 import type { NavigationDestination, NavigationLevel, SearchItemSpec } from "@framework/core";
+import {
+	type RelationshipKind,
+	type WiresFixtureV1,
+	wiresFixtureBoard,
+	wiresKitInstanceId,
+} from "@reasoning/mindmap/wires/react";
 //#endregion 🔌Adapters
 
 //#region 🪁SemioUiI18n
 import {
+	iconSvgMarkup,
 	registerUiTranslationBundles,
 	setControlLabelIdResolver,
 	type UiLabelValue,
@@ -7175,10 +7184,10 @@ const semioSketchpadTranslationBundles = {
                 }
               }
             },
-            "diagram": {
+            "wires": {
               "label": {
-                "normal": "Diagram",
-                "beginner": "A force-directed graph showing all kit artifacts and their relationships"
+                "normal": "Wires",
+                "beginner": "Relationships between visible file-system nodes (Owns, Is, References, Has)"
               }
             }
           },
@@ -10643,11 +10652,11 @@ export async function openSketchpadKitFromImport(
 }
 
 /** @emoji 🧪 Full metabolism WIP kit (~19MB, served from `/fixtures/` in sketchpad Vite). */
-const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH = "kit/dev/metabolism/wip/initialKit";
+const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH = "stores/metabolism/wip/initialKit";
 const SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}/kit.semio.json`;
 
 /** @emoji 🧪 Default dev auto-seed kit (served from `/fixtures/` in sketchpad Vite). */
-const SKETCHPAD_DEV_FIXTURE_KIT_URL = "/fixtures/nakagin-capsule-tower.filtered.kit.semio.json";
+const SKETCHPAD_DEV_FIXTURE_KIT_URL = SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_URL;
 
 /** @emoji 🧪 Nakagin-filtered kit URL used for dev auto-seed. */
 export const SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL = SKETCHPAD_DEV_FIXTURE_KIT_URL;
@@ -10676,7 +10685,8 @@ export type SketchpadKitSnapshot = { readonly kit: Kit };
 export interface SketchpadRouteSelection {
 	readonly pieceIds: readonly string[];
 	readonly connectionIds: readonly string[];
-	readonly kitDiagramNodeIds: readonly string[];
+	readonly kitWiresNodeIds: readonly string[];
+	readonly kitWiresHoveredNodeId: string | null;
 }
 
 /** @emoji 📥 Home kit import progress surfaced in workbench chrome. */
@@ -10716,7 +10726,7 @@ export interface SketchpadShellSnapshot {
 }
 
 function sketchpadEmptyRouteSelection(): SketchpadRouteSelection {
-	return { pieceIds: [], connectionIds: [], kitDiagramNodeIds: [] };
+	return { pieceIds: [], connectionIds: [], kitWiresNodeIds: [], kitWiresHoveredNodeId: null };
 }
 
 function sketchpadEmptyHomeUiState(): SketchpadHomeUiState {
@@ -10761,7 +10771,8 @@ export function parseSketchpadRouteSelectionQuery(uri: string): SketchpadRouteSe
 	return {
 		pieceIds: params.getAll("piece"),
 		connectionIds: params.getAll("conn"),
-		kitDiagramNodeIds: params.getAll("diag"),
+		kitWiresNodeIds: params.getAll("wires"),
+		kitWiresHoveredNodeId: null,
 	};
 }
 
@@ -10770,7 +10781,7 @@ export function sketchpadRouteSelectionUriFilters(selection: SketchpadRouteSelec
 	const params = new URLSearchParams();
 	for (const id of selection.pieceIds) params.append("piece", id);
 	for (const id of selection.connectionIds) params.append("conn", id);
-	for (const id of selection.kitDiagramNodeIds) params.append("diag", id);
+	for (const id of selection.kitWiresNodeIds) params.append("wires", id);
 	const serialized = params.toString();
 	return serialized.length > 0 ? `?${serialized}` : "";
 }
@@ -11000,9 +11011,22 @@ hasTypes {
   }
 }
 qualities { edges { node { id key value } } }
-hasFolders { edges { node { id path description } } }
+hasFolders { edges { node { id path description files { edges { node { id name url description folderId } } } } } }
 authors { edges { node { id name } } }
-hasFiles { edges { node { id url description } } }`;
+hasFiles { edges { node { id name url description folderId } } }`;
+
+/** @emoji 📁 Maps GraphQL {@code folderId} onto kit file DTO {@code folder} refs. */
+function sketchpadFileDtoFromGraphqlNode(node: Record<string, unknown>): Record<string, unknown> {
+	const folderRef = node["folder"];
+	if (folderRef != null && typeof folderRef === "object" && "id" in folderRef) return node;
+	const folderId = node["folderId"];
+	if (folderId == null || folderId === "") {
+		const { folderId: _omit, ...rest } = node;
+		return rest;
+	}
+	const { folderId: _omit, ...rest } = node;
+	return { ...rest, folder: { id: String(folderId) } };
+}
 
 function sketchpadFormatKitTimestamp(value: unknown): string {
 	if (value == null || value === "") return "";
@@ -11087,6 +11111,22 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 				return { ...node, representations, ports, connectors } as Type;
 			});
 	};
+	const filesById = new Map<string, Record<string, unknown>>();
+	for (const file of nodes("hasFiles")) {
+		const normalized = sketchpadFileDtoFromGraphqlNode(file);
+		const id = String(normalized["id"] ?? "");
+		if (id) filesById.set(id, normalized);
+	}
+	for (const folder of nodes("hasFolders")) {
+		const nested = (folder["files"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
+		for (const edge of nested) {
+			const file = edge.node;
+			if (!file) continue;
+			const normalized = sketchpadFileDtoFromGraphqlNode(file);
+			const id = String(normalized["id"] ?? "");
+			if (id) filesById.set(id, normalized);
+		}
+	}
 	return {
 		id: String(data["id"] ?? ""),
 		name: String(data["name"] ?? ""),
@@ -11094,7 +11134,7 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
 		version: data["version"] != null ? String(data["version"]) : undefined,
 		createdAt: data["createdAt"] != null ? String(data["createdAt"]) : undefined,
 		updatedAt: data["updatedAt"] != null ? String(data["updatedAt"]) : undefined,
-		files: nodes("hasFiles") as Kit["files"],
+		files: [...filesById.values()] as Kit["files"],
 		folders: nodes("hasFolders") as Kit["folders"],
 		authors: nodes("authors") as Kit["authors"],
 		qualities: nodes("qualities") as Kit["qualities"],
@@ -11352,6 +11392,11 @@ function sketchpadReadEntityId(ref: unknown): string | null {
 	return null;
 }
 
+/** @emoji 📄 True when a kit file row belongs at kit VFS root (not under a folder). */
+function sketchpadKitFileAtKitRoot(file: Record<string, unknown>): boolean {
+	return sketchpadReadEntityId(file["folder"]) == null;
+}
+
 const SKETCHPAD_METABOLISM_KIT_ASSET_ROOT = `/fixtures/${SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH}`;
 
 /** @emoji 📍 Normalizes a path relative to the metabolism wip kit fixture root (supports `../representations/*.glb`). */
@@ -11384,6 +11429,11 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 	const map = new Map<string, string>();
 	for (const file of kit.files ?? []) {
 		const row = file as { id: string; url?: string; uri?: string; path?: string; name?: string; blob?: string };
+		const puzzleMesh = sketchpadPuzzle3dMeshUrlForKitFile(row);
+		if (puzzleMesh) {
+			map.set(row.id, puzzleMesh);
+			continue;
+		}
 		if (row.blob && typeof row.blob === "string" && /^(?:blob:|data:|https?:)/i.test(row.blob)) {
 			map.set(row.id, row.blob);
 			continue;
@@ -11391,11 +11441,6 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 		const direct = row.url ?? row.uri;
 		if (direct) {
 			map.set(row.id, direct);
-			continue;
-		}
-		const puzzleMesh = sketchpadPuzzle3dMeshUrlForKitFile(row);
-		if (puzzleMesh) {
-			map.set(row.id, puzzleMesh);
 			continue;
 		}
 		if (row.path) {
@@ -11435,6 +11480,14 @@ export interface SketchpadTypeRepresentationRef {
 	readonly tags?: unknown;
 }
 
+function sketchpadMergeKitTypeRepresentations(target: Type, source: Type | undefined): Type {
+	if (!source) return target;
+	const liveReps = sketchpadListTypeRepresentations(target);
+	const bundleReps = sketchpadListTypeRepresentations(source);
+	if (liveReps.length > 0 || bundleReps.length === 0) return target;
+	return { ...target, representations: source.representations } as Type;
+}
+
 /** @emoji 🔀 Overlays bundle projection types/files when GraphQL materialization omits representations. */
 export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Kit): Kit {
 	const sourceFiles = source.files ?? [];
@@ -11446,15 +11499,19 @@ export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Ki
 					...targetFiles,
 					...sourceFiles.filter((file) => !targetFiles.some((row) => row.id === file.id)),
 				];
-	const types = (target.types ?? []).map((type) => {
-		const sourceType = source.types?.find((row) => row.id === type.id);
-		if (!sourceType) return type;
-		const liveReps = sketchpadListTypeRepresentations(type);
-		const bundleReps = sketchpadListTypeRepresentations(sourceType);
-		if (liveReps.length > 0 || bundleReps.length === 0) return type;
-		return { ...type, representations: sourceType.representations } as Type;
-	});
-	return { ...target, files, types } as Kit;
+	const sourceTypes = sketchpadKitTypeRows(source);
+	const types = sketchpadKitTypeRows(target).map((type) =>
+		sketchpadMergeKitTypeRepresentations(type, sourceTypes.find((row) => row.id === type.id)),
+	);
+	const targetTypologies = sketchpadKitTypologyRows(target);
+	const sourceTypologies = sketchpadKitTypologyRows(source);
+	const typologies =
+		sourceTypologies.length === 0
+			? (target as { typologies?: unknown }).typologies
+			: targetTypologies.length === 0
+				? (source as { typologies?: unknown }).typologies
+				: (target as { typologies?: unknown }).typologies;
+	return { ...target, files, types, typologies } as Kit;
 }
 
 /** @emoji 📋 Lists representation rows on a kit kind. */
@@ -11575,9 +11632,9 @@ function sketchpadTopologyAnchorFullId(partId: string, anchorId: string): string
 	return `${partId}:${anchorId}`;
 }
 
-/** @emoji 🧩 Stable FiveD instance id for kit diagram surfaces. */
-export function sketchpadKitDiagramInstanceId(kitId: string): string {
-	return `${kitId}:kit:diagram`;
+/** @emoji 🧩 Stable FiveD instance id for kit wires surfaces. */
+export function sketchpadKitWiresInstanceId(kitId: string): string {
+	return wiresKitInstanceId(kitId);
 }
 
 /** @emoji 🧩 Stable FiveD instance id for a design scene (volume). */
@@ -11625,11 +11682,11 @@ export function parseSketchpadPuzzleInstanceId(instanceId: string): {
 	readonly kitId: string | null;
 	readonly designId: string | null;
 	readonly typeId: string | null;
-	readonly pane: "kit-diagram" | "scene" | "diagram" | "type-scene" | null;
+	readonly pane: "kit-wires" | "scene" | "diagram" | "type-scene" | null;
 } {
 	const parts = instanceId.split(":");
-	if (parts.length === 3 && parts[1] === "kit" && parts[2] === "diagram") {
-		return { kitId: parts[0] ?? null, designId: null, typeId: null, pane: "kit-diagram" };
+	if (parts.length === 3 && parts[1] === "kit" && parts[2] === "wires") {
+		return { kitId: parts[0] ?? null, designId: null, typeId: null, pane: "kit-wires" };
 	}
 	if (parts.length === 6 && parts[1] === "type" && parts[3] === "rep" && parts[5] === "scene") {
 		return { kitId: parts[0] ?? null, designId: null, typeId: parts[2] ?? null, pane: "type-scene" };
@@ -11660,6 +11717,326 @@ function sketchpadEmptyVolumeFixture(): SketchpadVolumeFixtureV1 {
 		attractions: [],
 	};
 }
+
+//#region 🔖KitWires
+/** @emoji 🔗 Rust-backed reference rows for kit wires (design transitive refs, piece blueprints). */
+export type SketchpadKitWiresReferenceData = {
+	readonly designTransitiveTypes: ReadonlyMap<string, readonly string[]>;
+	readonly designTransitiveDesigns: ReadonlyMap<string, readonly string[]>;
+	readonly pieceBlueprints: ReadonlyMap<string, { readonly kind: "Type" | "Design"; readonly id: string }>;
+};
+
+const SKETCHPAD_KIT_WIRES_KIND_CATALOGS: WiresFixtureV1["kindCatalogs"] = {
+	identityKinds: [
+		{ id: "semio.kit.kit", name: "Kit", shape: "rectangle", color: "#1e3a5f" },
+		{ id: "semio.kit.typology", name: "Typology", shape: "rectangle", color: "#334155" },
+		{ id: "semio.kit.folder", name: "Folder", shape: "rectangle", color: "#475569" },
+		{ id: "semio.kit.design", name: "Design", shape: "circle", color: "#0f766e" },
+		{ id: "semio.kit.type", name: "Type", shape: "rectangle", color: "#7c3aed" },
+		{ id: "semio.kit.piece", name: "Piece", shape: "rectangle", color: "#ca8a04" },
+		{ id: "semio.kit.connection", name: "Connection", shape: "rectangle", color: "#b45309" },
+		{ id: "semio.kit.representation", name: "Representation", shape: "rectangle", color: "#6366f1" },
+		{ id: "semio.kit.port", name: "Port", shape: "rectangle", color: "#0891b2" },
+		{ id: "semio.kit.connector", name: "Connector", shape: "rectangle", color: "#0284c7" },
+		{ id: "semio.kit.kit", name: "Kit", shape: "rectangle", color: "#334155" },
+		{ id: "semio.kit.file", name: "File", shape: "rectangle", color: "#64748b" },
+		{ id: "semio.kit.family", name: "Family", shape: "rectangle", color: "#4b5563" },
+	],
+	relationshipKinds: [
+		{ id: "wires.owns", name: "Owns", color: "#64748b", pattern: "solid" },
+		{ id: "wires.is", name: "Is", color: "#7c3aed", pattern: "solid" },
+		{ id: "wires.references", name: "References", color: "#0ea5e9", pattern: "dashed" },
+		{ id: "wires.has", name: "Has", color: "#0f766e", pattern: "dotted" },
+	],
+};
+
+function sketchpadKitWiresIdentityKind(fileNodeKindId: string): string {
+	return `semio.kit.${fileNodeKindId}`;
+}
+
+/** @emoji 🖼️ Avatar icon for a kit wires node: vendored SVG for the node icon (or kind icon), else `undefined` to fall back to the text label. */
+function sketchpadKitWiresNodeIconKind(node: VirtualFileSystemVisibleNode): string | undefined {
+	const iconId = node.icon ?? SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds[node.fileNodeKindId]?.icon;
+	return iconId ? iconSvgMarkup(iconId) : undefined;
+}
+
+function sketchpadKitWiresContainmentKind(parentKind: string): RelationshipKind {
+	switch (parentKind) {
+		case "type":
+		case "design":
+		case "piece":
+			return "has";
+		default:
+			return "owns";
+	}
+}
+
+function sketchpadKitWiresLayoutPosition(fileNodeKindId: string, index: number): { readonly x: number; readonly y: number } {
+	const layerY: Record<string, number> = {
+		kit: 0,
+		typology: 80,
+		folder: 80,
+		family: 80,
+		design: 160,
+		type: 160,
+		piece: 240,
+		connection: 280,
+		representation: 320,
+		port: 360,
+		connector: 400,
+		file: 440,
+	};
+	const y = layerY[fileNodeKindId] ?? 200;
+	return { x: (index % 12) * 96, y: y + Math.floor(index / 12) * 56 };
+}
+
+function sketchpadKitWiresEdgeId(kind: RelationshipKind, sourceId: string, targetId: string): string {
+	return `wires-${kind}-${sourceId}-${targetId}`;
+}
+
+/** @emoji 🔗 Visible VFS nodes for kit wires, including the kit root ({@link visibleVirtualFileSystemNodesFromTree} omits it). */
+export function sketchpadKitWiresVisibleNodes(
+	root: VirtualFileSystemNodeRecord,
+	visibleFromTree: readonly VirtualFileSystemVisibleNode[],
+): readonly VirtualFileSystemVisibleNode[] {
+	if (visibleFromTree.some((node) => node.id === root.id)) return visibleFromTree;
+	return [{ ...root, parentId: null }, ...visibleFromTree];
+}
+
+function sketchpadExpandedDesignIds(
+	scope: VirtualFileSystemScope,
+	expandedIds: readonly string[],
+	vfsMeta: ReadonlyMap<string, { readonly fileNodeKindId: string }>,
+): ReadonlySet<string> {
+	const out = new Set<string>();
+	for (const id of expandedIds) {
+		if (vfsMeta.get(id)?.fileNodeKindId === "design") out.add(id);
+	}
+	return out;
+}
+
+function sketchpadCollectDesignTransitiveTypesFromDto(design: Design, kit: Kit, rootDesignId: string): readonly string[] {
+	const out = new Set<string>();
+	const visit = (row: Design) => {
+		for (const piece of row.pieces ?? []) {
+			const typeId = (piece as { type?: { id?: string } }).type?.id ?? (piece as { ref?: { type?: { id?: string } } }).ref?.type?.id;
+			if (typeId) out.add(String(typeId));
+			const nestedId =
+				(piece as { design?: { id?: string } }).design?.id ?? (piece as { ref?: { design?: { id?: string } } }).ref?.design?.id;
+			if (nestedId && nestedId !== rootDesignId) {
+				const nested = findDesignInKit(kit, nestedId);
+				if (nested) visit(nested);
+			}
+		}
+	};
+	visit(design);
+	return [...out];
+}
+
+function sketchpadCollectDesignTransitiveDesignsFromDto(design: Design, kit: Kit, rootDesignId: string): readonly string[] {
+	const out = new Set<string>();
+	const visit = (row: Design) => {
+		for (const piece of row.pieces ?? []) {
+			const nestedId =
+				(piece as { design?: { id?: string } }).design?.id ?? (piece as { ref?: { design?: { id?: string } } }).ref?.design?.id;
+			if (nestedId && nestedId !== rootDesignId) {
+				out.add(String(nestedId));
+				const nested = findDesignInKit(kit, nestedId);
+				if (nested) visit(nested);
+			}
+		}
+	};
+	visit(design);
+	return [...out];
+}
+
+function sketchpadPieceBlueprintFromDto(piece: Piece, kit: Kit): { readonly kind: "Type" | "Design"; readonly id: string } | null {
+	const row = piece as {
+		readonly type?: { readonly id?: string };
+		readonly design?: { readonly id?: string };
+		readonly blueprint?: { readonly id?: string };
+		readonly ref?: { readonly type?: { readonly id?: string }; readonly design?: { readonly id?: string } };
+	};
+	if (row.type?.id) return { kind: "Type", id: String(row.type.id) };
+	if (row.design?.id) return { kind: "Design", id: String(row.design.id) };
+	if (row.ref?.type?.id) return { kind: "Type", id: String(row.ref.type.id) };
+	if (row.ref?.design?.id) return { kind: "Design", id: String(row.ref.design.id) };
+	const blueprintId = row.blueprint?.id;
+	if (!blueprintId) return null;
+	if (findTypeInKit(kit, blueprintId)) return { kind: "Type", id: blueprintId };
+	if (findDesignInKit(kit, blueprintId)) return { kind: "Design", id: blueprintId };
+	return null;
+}
+
+/** @emoji 🔗 Loads design transitive refs and piece blueprints from the rust-backed {@link SemioJsKitStore}. */
+export async function sketchpadFetchKitWiresReferences(
+	store: SemioKitStore,
+	kit: Kit,
+	visible: readonly VirtualFileSystemVisibleNode[],
+	expandedDesignIds: ReadonlySet<string>,
+	vfsMeta: ReadonlyMap<string, { readonly fileNodeKindId: string; readonly designId?: string }>,
+): Promise<SketchpadKitWiresReferenceData> {
+	const visibleIds = new Set(visible.map((node) => node.id));
+	const designTransitiveTypes = new Map<string, readonly string[]>();
+	const designTransitiveDesigns = new Map<string, readonly string[]>();
+	const pieceBlueprints = new Map<string, { readonly kind: "Type" | "Design"; readonly id: string }>();
+
+	if (store instanceof SemioJsKitStore) {
+		const jsStore = store.jsStore;
+		for (const node of visible) {
+			if (node.fileNodeKindId === "design" && !expandedDesignIds.has(node.id)) {
+				const design = jsStore.design(node.id) as JsDesign;
+				const [types, designs] = await Promise.all([design.referencesTypesTransitive(), design.referencesDesignsTransitive()]);
+				designTransitiveTypes.set(
+					node.id,
+					types.map((t) => t.id).filter((id) => visibleIds.has(id)),
+				);
+				designTransitiveDesigns.set(
+					node.id,
+					designs.map((d) => d.id).filter((id) => visibleIds.has(id) && id !== node.id),
+				);
+			}
+			if (node.fileNodeKindId === "piece") {
+				const designId = vfsMeta.get(node.id)?.designId ?? node.parentId ?? "";
+				if (!designId) continue;
+				const piece = jsStore.design(designId).piece(node.id) as JsPiece;
+				const blueprint = await piece.blueprint();
+				if (blueprint) pieceBlueprints.set(node.id, { kind: blueprint.blueprintKind, id: blueprint.id });
+			}
+		}
+		return { designTransitiveTypes, designTransitiveDesigns, pieceBlueprints };
+	}
+
+	for (const node of visible) {
+		if (node.fileNodeKindId === "design" && !expandedDesignIds.has(node.id)) {
+			const design = findDesignInKit(kit, node.id);
+			if (!design) continue;
+			designTransitiveTypes.set(
+				node.id,
+				sketchpadCollectDesignTransitiveTypesFromDto(design, kit, node.id).filter((id) => visibleIds.has(id)),
+			);
+			designTransitiveDesigns.set(
+				node.id,
+				sketchpadCollectDesignTransitiveDesignsFromDto(design, kit, node.id).filter((id) => visibleIds.has(id)),
+			);
+		}
+		if (node.fileNodeKindId === "piece") {
+			const designId = vfsMeta.get(node.id)?.designId ?? node.parentId ?? "";
+			const design = findDesignInKit(kit, designId);
+			const piece = design?.pieces?.find((row) => row.id === node.id);
+			if (!piece) continue;
+			const blueprint = sketchpadPieceBlueprintFromDto(piece, kit);
+			if (blueprint) pieceBlueprints.set(node.id, blueprint);
+		}
+	}
+	return { designTransitiveTypes, designTransitiveDesigns, pieceBlueprints };
+}
+
+/** @emoji 🔗 Builds a {@link WiresFixtureV1} from visible kit VFS nodes and rust reference data. */
+export function sketchpadKitWiresFixtureFromVisible(
+	kit: Kit,
+	kitId: string,
+	visible: readonly VirtualFileSystemVisibleNode[],
+	references: SketchpadKitWiresReferenceData,
+	expandedDesignIds: ReadonlySet<string>,
+): WiresFixtureV1 {
+	const visibleIds = new Set(visible.map((node) => node.id));
+	const identityByNodeId = new Map<string, number>();
+	const identities: WiresFixtureV1["identities"][number][] = [];
+	const relationships: WiresFixtureV1["relationships"][number][] = [];
+	const boardNodes: { id: string; x: number; y: number; text?: string; iconKind?: string; nodeKind?: string; shape?: "circle" | "rectangle"; width?: number; height?: number; radius?: number }[] =
+		[];
+	const boardEdges: { id: string; source: string; target: string }[] = [];
+	const edgeIds = new Set<string>();
+	let relationshipId = 1;
+	let identityId = 1;
+	const kindIndex = new Map<string, number>();
+
+	const pushRelationship = (kind: RelationshipKind, sourceId: string, targetId: string) => {
+		if (!visibleIds.has(sourceId) || !visibleIds.has(targetId) || sourceId === targetId) return;
+		const edgeId = sketchpadKitWiresEdgeId(kind, sourceId, targetId);
+		if (edgeIds.has(edgeId)) return;
+		edgeIds.add(edgeId);
+		const sourceIdentityId = identityByNodeId.get(sourceId);
+		const targetIdentityId = identityByNodeId.get(targetId);
+		if (sourceIdentityId == null || targetIdentityId == null) return;
+		relationships.push({
+			relationshipId: relationshipId++,
+			sourceIdentityId,
+			targetIdentityId,
+			kind,
+			edgeId,
+		});
+		boardEdges.push({ id: edgeId, source: sourceId, target: targetId });
+	};
+
+	for (const node of visible) {
+		const kindCount = kindIndex.get(node.fileNodeKindId) ?? 0;
+		kindIndex.set(node.fileNodeKindId, kindCount + 1);
+		const position = sketchpadKitWiresLayoutPosition(node.fileNodeKindId, kindCount);
+		identityByNodeId.set(node.id, identityId);
+		identities.push({
+			identityId: identityId++,
+			label: node.name,
+			nodeId: node.id,
+			identityKind: sketchpadKitWiresIdentityKind(node.fileNodeKindId),
+		});
+		const shape = node.fileNodeKindId === "design" ? "circle" : "rectangle";
+		const iconKind = sketchpadKitWiresNodeIconKind(node);
+		boardNodes.push({
+			id: node.id,
+			x: position.x,
+			y: position.y,
+			text: node.name,
+			nodeKind: sketchpadKitWiresIdentityKind(node.fileNodeKindId),
+			shape,
+			...(iconKind ? { iconKind } : {}),
+			...(shape === "circle" ? { radius: 28 } : { width: 120, height: 40 }),
+		});
+	}
+
+	const kindById = new Map(visible.map((node) => [node.id, node.fileNodeKindId] as const));
+	for (const node of visible) {
+		if (node.parentId == null) continue;
+		const parentKind = kindById.get(node.parentId) ?? "kit";
+		pushRelationship(sketchpadKitWiresContainmentKind(parentKind), node.parentId, node.id);
+	}
+
+	for (const [pieceId, blueprint] of references.pieceBlueprints) {
+		if (!visibleIds.has(blueprint.id)) continue;
+		pushRelationship("is", pieceId, blueprint.id);
+	}
+
+	for (const node of visible) {
+		if (node.fileNodeKindId !== "design" || expandedDesignIds.has(node.id)) continue;
+		for (const typeId of references.designTransitiveTypes.get(node.id) ?? []) {
+			pushRelationship("references", node.id, typeId);
+		}
+		for (const designId of references.designTransitiveDesigns.get(node.id) ?? []) {
+			pushRelationship("references", node.id, designId);
+		}
+	}
+
+	const camera = sketchpadFlatCameraFromPartCenters(boardNodes.map((node) => ({ x: node.x, y: node.y })));
+	return {
+		schema: "reasoning.wires.fixture/v1",
+		source: { kitPath: `/kits/${kitId}`, kitId, kitName: String(kit.name ?? kitId) },
+		identities,
+		relationships,
+		board: {
+			schema: "reasoning.mindmap.fixture/v1",
+			camera,
+			nodes: boardNodes,
+			edges: boardEdges,
+		},
+		kindCatalogs: SKETCHPAD_KIT_WIRES_KIND_CATALOGS,
+	};
+}
+
+function sketchpadTopologyPayloadForKitWires(fixture: WiresFixtureV1): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(wiresFixtureBoard(fixture) as unknown as SketchpadPuzzle2dFixtureV1, sketchpadEmptyVolumeFixture());
+}
+//#endregion 🔖KitWires
 
 type SketchpadKitDiagramNodeKind = "type" | "design" | "quality" | "port" | "file" | "folder" | "author";
 
@@ -12205,28 +12582,33 @@ function sketchpadPieceSceneOrigin(piece: { readonly id: string }, index: number
 	return [index * 2, 0, 0];
 }
 
-/** @emoji 🧭 Maps kit diagram node ids to sketchpad routes. */
-export function sketchpadPathFromDiagramNodeId(kitId: string, diagramNodeId: string): string | null {
-	const sep = diagramNodeId.indexOf(":");
-	if (sep <= 0) return null;
-	const kind = diagramNodeId.slice(0, sep);
-	const id = diagramNodeId.slice(sep + 1);
-	if (kind === "type") return `/kits/${kitId}/types/${id}`;
-	if (kind === "design") return `/kits/${kitId}/designs/${id}`;
-	if (kind === "quality" || kind === "port" || kind === "file" || kind === "folder" || kind === "author") {
-		return `/kits/${kitId}?${kind}=${encodeURIComponent(id)}`;
+/** @emoji 🧭 Maps kit wires node ids to sketchpad routes. */
+export function sketchpadPathFromWiresNodeId(kitId: string, nodeId: string, fileNodeKindId: string): string | null {
+	switch (fileNodeKindId) {
+		case "type":
+			return `/kits/${kitId}/types/${nodeId}`;
+		case "design":
+			return `/kits/${kitId}/designs/${nodeId}`;
+		case "folder":
+			return `/kits/${kitId}?folder=${encodeURIComponent(nodeId)}`;
+		case "file":
+			return `/kits/${kitId}?file=${encodeURIComponent(nodeId)}`;
+		default:
+			return null;
 	}
-	return null;
 }
 
-/** @emoji 🧭 Navigates from the first recognized kit diagram selection entry. */
-export function sketchpadNavigateFromDiagramSelection(instanceId: string, puzzle2dIds: readonly string[]): void {
+/** @emoji 🧭 Navigates from the first recognized kit wires selection entry. */
+export function sketchpadNavigateFromWiresSelection(instanceId: string, puzzle2dIds: readonly string[]): void {
 	const { kitId, pane } = parseSketchpadPuzzleInstanceId(instanceId);
-	if (!kitId || pane !== "kit-diagram") return;
+	if (!kitId || pane !== "kit-wires") return;
 	const ctrl = getSketchpadShellController();
 	if (!ctrl) return;
-	for (const diagramId of puzzle2dIds) {
-		const path = sketchpadPathFromDiagramNodeId(kitId, diagramId);
+	const meta = ctrl.kitWiresNodeMetaForKit(kitId);
+	for (const nodeId of puzzle2dIds) {
+		const kind = meta.get(nodeId)?.fileNodeKindId;
+		if (!kind) continue;
+		const path = sketchpadPathFromWiresNodeId(kitId, nodeId, kind);
 		if (path) {
 			ctrl.navigateTo(path);
 			return;
@@ -12243,15 +12625,20 @@ export function sketchpadApplyPuzzle2dSelection(
 	const scope = parseSketchpadPuzzleInstanceId(instanceId);
 	const ctrl = controller ?? getSketchpadShellController();
 	if (!ctrl || !scope.kitId) return;
-	if (scope.pane === "kit-diagram") {
+	if (scope.pane === "kit-wires") {
 		if (puzzle2dIds.length === 1) {
-			const path = sketchpadPathFromDiagramNodeId(scope.kitId, puzzle2dIds[0]!);
-			if (path) {
-				ctrl.navigateTo(path);
-				return;
+			const kind = ctrl.kitWiresNodeMetaForKit(scope.kitId).get(puzzle2dIds[0]!)?.fileNodeKindId;
+			if (kind) {
+				const path = sketchpadPathFromWiresNodeId(scope.kitId, puzzle2dIds[0]!, kind);
+				if (path) {
+					ctrl.navigateTo(path);
+					return;
+				}
 			}
 		}
-		ctrl.setRouteSelection({ ...ctrl.routeSelection, kitDiagramNodeIds: [...puzzle2dIds] });
+		const nextSelection = { ...ctrl.routeSelection, kitWiresNodeIds: [...puzzle2dIds] };
+		ctrl.setRouteSelection(nextSelection);
+		ctrl.syncKitWiresSelectionToVfs(scope.kitId, nextSelection.kitWiresNodeIds);
 		return;
 	}
 	if (scope.pane === "diagram" || scope.pane === "scene") {
@@ -12273,7 +12660,7 @@ export function sketchpadApplyPuzzle2dSelection(
 				pieceIds.push(id);
 			}
 		}
-		ctrl.setRouteSelection({ pieceIds, connectionIds, kitDiagramNodeIds: [] });
+		ctrl.setRouteSelection({ pieceIds, connectionIds, kitWiresNodeIds: [] });
 	}
 }
 
@@ -12383,9 +12770,6 @@ function sketchpadSceneCameraFromDesign(design: Design): SketchpadVolumeFixtureV
 	return { position: [target[0] + 8, target[1] + 8, target[2] + 8], target, zoom: 1 };
 }
 
-function sketchpadTopologyPayloadForKitDiagram(kit: Kit): PlatformTopologyPayload {
-	return sketchpadTopologyPayload(sketchpadKitPuzzle2dFixtureFromKit(kit), sketchpadEmptyVolumeFixture());
-}
 
 function sketchpadTopologyPayloadForDesignScene(design: Design, kit?: Kit): PlatformTopologyPayload {
 	return sketchpadTopologyPayload(
@@ -12798,7 +13182,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 			for (const file of kit.files ?? []) {
 				const row = file as Record<string, unknown>;
 				const id = String(row["id"] ?? "");
-				if (!id) continue;
+				if (!id || !sketchpadKitFileAtKitRoot(row)) continue;
 				const vfsFile = sketchpadKitVfsFileRowFields(row);
 				const filePath = `/${sketchpadKitFileBasename(row)}`;
 				rows.push({
@@ -12868,7 +13252,7 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 		for (const file of kit.files ?? []) {
 			const row = file as Record<string, unknown>;
 			const id = String(row["id"] ?? "");
-			if (!id) continue;
+			if (!id || !sketchpadKitFileAtKitRoot(row)) continue;
 			const vfsFile = sketchpadKitVfsFileRowFields(row);
 			const filePath = `/${sketchpadKitFileBasename(row)}`;
 			rows.push({
@@ -12951,6 +13335,32 @@ function sketchpadKitVfsChildren(kit: Kit, parentId: string): readonly VirtualFi
 				parentId,
 				hasChildren: false,
 				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("connection", { path: connectionPath }),
+			});
+		}
+		return out;
+	}
+	for (const folder of kit.folders ?? []) {
+		const row = folder as Record<string, unknown>;
+		const folderId = String(row["id"] ?? "");
+		if (folderId !== parentId) continue;
+		const out: VirtualFileSystemNodeRecord[] = [];
+		for (const file of kit.files ?? []) {
+			const fileRow = file as Record<string, unknown>;
+			const fileId = String(fileRow["id"] ?? "");
+			if (!fileId) continue;
+			if (sketchpadReadEntityId(fileRow["folder"]) !== folderId) continue;
+			const vfsFile = sketchpadKitVfsFileRowFields(fileRow);
+			const filePath = `/${sketchpadKitFileBasename(fileRow)}`;
+			out.push({
+				id: fileId,
+				fileNodeKindId: "file",
+				name: vfsFile.name,
+				icon: vfsFile.icon,
+				path: filePath,
+				parentId,
+				hasChildren: false,
+				navigateUri: `/kits/${kitId}?file=${encodeURIComponent(fileId)}`,
+				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("file", { path: filePath }),
 			});
 		}
 		return out;
@@ -13088,7 +13498,7 @@ export const SKETCHPAD_SURFACE_HOME_VFS = virtualFileSystemSurfaceId(SKETCHPAD_H
 
 const SKETCHPAD_BODY_HOME = "semio.sketchpad.window.home";
 const SKETCHPAD_BODY_KIT_VFS = "semio.sketchpad.window.kit.vfs";
-const SKETCHPAD_BODY_KIT_DIAGRAM = "semio.sketchpad.window.kit.diagram";
+const SKETCHPAD_BODY_KIT_WIRES = "semio.sketchpad.window.kit.wires";
 const SKETCHPAD_BODY_DESIGN_SCENE = "semio.sketchpad.window.design.scene";
 const SKETCHPAD_BODY_DESIGN_DIAGRAM = "semio.sketchpad.window.design.diagram";
 const SKETCHPAD_BODY_TYPE = "semio.sketchpad.window.type";
@@ -13097,7 +13507,7 @@ const SKETCHPAD_BODY_DOCS = "semio.sketchpad.window.docs";
 const SKETCHPAD_BODY_FEEDBACK = "semio.sketchpad.window.feedback";
 const SKETCHPAD_SURFACE_KIT_VFS = virtualFileSystemSurfaceId(SKETCHPAD_KIT_APP_ID);
 const SKETCHPAD_SURFACE_DESIGN_VFS = virtualFileSystemSurfaceId(SKETCHPAD_DESIGN_APP_ID);
-const SKETCHPAD_SURFACE_KIT_DIAGRAM = "semio.sketchpad.surface.kit.diagram/v1";
+const SKETCHPAD_SURFACE_KIT_WIRES = "semio.sketchpad.surface.kit.wires/v1";
 const SKETCHPAD_SURFACE_DESIGN_SCENE = "semio.sketchpad.surface.design.scene/v1";
 const SKETCHPAD_SURFACE_DESIGN_DIAGRAM = "semio.sketchpad.surface.design.diagram/v1";
 const SKETCHPAD_SURFACE_WORKBENCH = "semio.sketchpad.surface.workbench/v1";
@@ -13175,19 +13585,21 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 	constructor(componentKind: ComponentKind, surfaceId: string, controllerId: string, initialSnapshot: TSnapshot, platform: Platform) {
 		super(componentKind, surfaceId, controllerId, initialSnapshot);
 		this.route = parseSketchpadRouteScopeFromPath(platform.uri);
+		let lastPlatformUri = platform.uri;
 		this.detachRoute = platform.subscribe(() => {
-			const nextRoute = parseSketchpadRouteScopeFromPath(platform.uri);
-			if (
+			const nextUri = platform.uri;
+			if (nextUri === lastPlatformUri) return;
+			lastPlatformUri = nextUri;
+			const nextRoute = parseSketchpadRouteScopeFromPath(nextUri);
+			const routeStructureChanged =
 				nextRoute.kitId !== this.route.kitId ||
 				nextRoute.designId !== this.route.designId ||
 				nextRoute.typeId !== this.route.typeId ||
 				nextRoute.docsPath !== this.route.docsPath ||
-				nextRoute.qualityId !== this.route.qualityId
-			) {
-				this.route = nextRoute;
-				this.attachActiveKitStore();
-				this.refresh();
-			}
+				nextRoute.qualityId !== this.route.qualityId;
+			this.route = nextRoute;
+			if (routeStructureChanged) this.attachActiveKitStore();
+			this.refresh();
 		});
 		const shellStore = getSketchpadShellController()?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL);
 		if (shellStore) {
@@ -13226,11 +13638,27 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
 
 /** @emoji 📁 Per-app virtual file system surface backed by {@link SketchpadShellController}. */
 class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFileSystemModel> {
+	private readonly detachKitWiresHover?: () => void;
+
 	constructor(
 		readonly vfsAppId: string,
 		platform: Platform,
 	) {
 		super("virtualFileSystem", virtualFileSystemSurfaceId(vfsAppId), SKETCHPAD_SHELL_CONTROLLER_ID, { rows: [] }, platform);
+		if (vfsAppId !== SKETCHPAD_KIT_APP_ID) return;
+		const ctrl = getSketchpadShellController();
+		if (!ctrl) return;
+		this.detachKitWiresHover = ctrl.kitWiresHoverStore.subscribe(() => {
+			const hoveredRowId = ctrl.kitWiresHoverStore.getSnapshot();
+			const snap = this.getSnapshot();
+			if (snap.hoveredRowId === hoveredRowId) return;
+			this.setSnapshot({ ...snap, hoveredRowId });
+		});
+	}
+
+	override dispose(): void {
+		this.detachKitWiresHover?.();
+		super.dispose();
 	}
 
 	override buildSnapshot(): VirtualFileSystemModel {
@@ -13247,7 +13675,7 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 		if (this.vfsAppId === SKETCHPAD_HOME_APP_ID) {
 			const shell = ctrl.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
 			const expanded = shell?.home.expandedRowIds.length ? shell.home.expandedRowIds : ["sketchpad-home"];
-			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_HOME_APP_ID), expanded);
+			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_HOME_APP_ID)).setAll(expanded);
 		}
 		if (this.vfsAppId === SKETCHPAD_KIT_APP_ID && this.route.kitId) {
 			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), this.route.kitId);
@@ -13259,41 +13687,49 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 	}
 }
 
-/** @emoji 📋 Kit diagram surface (FiveD flat topology). */
-export class SketchpadKitDiagram extends SketchpadRoutedComponent<Puzzle5dModel> {
+/** @emoji 🔗 Kit wires surface (FiveD flat WIRES topology). */
+export class SketchpadKitWires extends SketchpadRoutedComponent<Puzzle5dModel> {
+	private readonly detachKitWiresHover?: () => void;
+
 	constructor(platform: Platform) {
 		super(
 			"puzzle5d",
-			SKETCHPAD_SURFACE_KIT_DIAGRAM,
+			SKETCHPAD_SURFACE_KIT_WIRES,
 			SKETCHPAD_SHELL_CONTROLLER_ID,
-			{ presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_DIAGRAM },
+			{ presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_WIRES },
 			platform,
 		);
+		const ctrl = getSketchpadShellController();
+		if (!ctrl) return;
+		this.detachKitWiresHover = ctrl.kitWiresHoverStore.subscribe(() => {
+			const puzzle2dHoveredId = ctrl.kitWiresHoverStore.getSnapshot();
+			const snap = this.getSnapshot();
+			if (snap.puzzle2dHoveredId === puzzle2dHoveredId) return;
+			this.setSnapshot({ ...snap, puzzle2dHoveredId });
+		});
+	}
+
+	override dispose(): void {
+		this.detachKitWiresHover?.();
+		super.dispose();
 	}
 
 	override buildSnapshot(): Puzzle5dModel {
 		const { kitId } = this.route;
 		if (!kitId) {
-			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_DIAGRAM, emptyMessage: "Open a kit to view the diagram" };
+			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_WIRES, emptyMessage: "Open a kit to view wires" };
 		}
 		const store = getSketchpadShellController()?.getKitStore(kitId);
 		if (!store) {
-			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_DIAGRAM, emptyMessage: "Kit loading…" };
+			return { presentation: "flat", instanceId: SKETCHPAD_SURFACE_KIT_WIRES, emptyMessage: "Kit loading…" };
 		}
-		const kit = store.getSnapshot().kit;
-		const hasContent =
-			(kit.types?.length ?? 0) +
-				(kit.designs?.length ?? 0) +
-				(kit.qualities?.length ?? 0) +
-				sketchpadCollectKitPorts(kit).length +
-				(kit.files?.length ?? 0) +
-				(kit.folders?.length ?? 0) +
-				(kit.authors?.length ?? 0) >
-			0;
+		const ctrl = getSketchpadShellController();
+		const routeSelection = ctrl?.routeSelection;
 		return {
 			presentation: "flat",
-			instanceId: sketchpadKitDiagramInstanceId(kitId),
-			emptyMessage: hasContent ? undefined : "No kit entities to diagram",
+			instanceId: sketchpadKitWiresInstanceId(kitId),
+			...(routeSelection?.kitWiresNodeIds.length ? { puzzle2dSelection: routeSelection.kitWiresNodeIds } : {}),
+			puzzle2dHoveredId: ctrl?.kitWiresHoverStore.getSnapshot() ?? null,
 		};
 	}
 }
@@ -13395,9 +13831,10 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 
 	override buildSnapshot(): PanelModel {
 		const ctrl = getSketchpadShellController();
-		const { kitId, designId, typeId } = this.route;
+		const routeUri = ctrl?.navigationPath ?? getSketchpadPlatform()?.uri ?? "/";
+		const path = routeUri.split("?")[0] ?? "/";
+		const { kitId, designId, typeId, qualityId } = parseSketchpadRouteScopeFromPath(routeUri);
 		if (!kitId) {
-			const path = getSketchpadPlatform()?.uri.split("?")[0] ?? "/";
 			if (path.startsWith("/docs")) {
 				const docsPath = parseSketchpadRouteScopeFromPath(path).docsPath;
 				const children: UiNode[] = [
@@ -13506,7 +13943,6 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
 			]);
 		}
-		const { qualityId } = this.route;
 		if (qualityId && kit) {
 			const quality = findQualityInKit(kit, qualityId);
 			const key = quality?.key ?? qualityId;
@@ -13517,10 +13953,10 @@ class SketchpadWorkbenchPanel extends SketchpadRoutedComponent<PanelModel> {
 				{ text: `Kit · ${kit.name ?? kitId} (${kind})` },
 			]);
 		}
-		const diagramSelected = ctrl?.routeSelection.kitDiagramNodeIds ?? [];
+		const diagramSelected = ctrl?.routeSelection.kitWiresNodeIds ?? [];
 		if (diagramSelected.length > 0 && kit) {
 			const lines: { text: string; emphasize?: boolean }[] = [
-				{ text: "Kit diagram", emphasize: true },
+				{ text: "Kit wires", emphasize: true },
 				{ text: `${diagramSelected.length} node(s) selected` },
 			];
 			for (const diagramId of diagramSelected.slice(0, 6)) {
@@ -13556,11 +13992,29 @@ class SketchpadDetailsPanel extends SketchpadRoutedComponent<PanelModel> {
 
 	override buildSnapshot(): PanelModel {
 		const ctrl = getSketchpadShellController();
-		const { kitId, designId, typeId } = this.route;
+		const routeUri = ctrl?.navigationPath ?? getSketchpadPlatform()?.uri ?? "/";
+		const pathOnly = routeUri.split("?")[0] ?? "/";
+		const { kitId, designId, typeId, qualityId } = parseSketchpadRouteScopeFromPath(routeUri);
 		if (!kitId) {
+			if (pathOnly === "/") {
+				const shell = ctrl?.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
+				const selected = shell?.home.selectedKitIds ?? [];
+				if (selected.length > 0) {
+					const lines: { text: string; emphasize?: boolean }[] = [
+						{ text: "Details", emphasize: true },
+						{ text: `${selected.length} kit(s) selected` },
+					];
+					for (const id of selected.slice(0, 8)) {
+						const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
+						lines.push({ text: kit?.name ?? id });
+					}
+					if (selected.length > 8) lines.push({ text: "…" });
+					return sketchpadPanelTextStack(lines);
+				}
+			}
 			return sketchpadPanelTextStack([
 				{ text: "Details", emphasize: true },
-				{ text: "No kit in scope." },
+				{ text: "Select a kit on Home to see details." },
 			]);
 		}
 		const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
@@ -13576,16 +14030,22 @@ class SketchpadDetailsPanel extends SketchpadRoutedComponent<PanelModel> {
 			if (design?.description) lines.push({ text: design.description });
 			if (design?.unit) lines.push({ text: `Unit · ${design.unit}` });
 			lines.push({ text: `Pieces · ${design?.pieces?.length ?? 0}` });
-			const selected = ctrl?.routeSelection.pieceIds ?? [];
-			if (selected.length === 1) {
-				const piece = findPieceInDesign(design!, selected[0]!);
+			const pieceIds = ctrl?.routeSelection.pieceIds ?? [];
+			const connectionIds = ctrl?.routeSelection.connectionIds ?? [];
+			if (pieceIds.length === 1) {
+				const piece = findPieceInDesign(design!, pieceIds[0]!);
 				if (piece) {
 					lines.push({ text: `Selected · ${piece.name ?? piece.id}` });
-					const typeId = sketchpadReadEntityId((piece as { type?: unknown }).type);
-					if (typeId) lines.push({ text: `Type · ${findTypeInKit(kit, typeId)?.name ?? typeId}` });
+					const selectedTypeId = sketchpadReadEntityId((piece as { type?: unknown }).type);
+					if (selectedTypeId) lines.push({ text: `Type · ${findTypeInKit(kit, selectedTypeId)?.name ?? selectedTypeId}` });
 				}
-			} else if (selected.length > 1) {
-				lines.push({ text: `${selected.length} pieces selected` });
+			} else if (pieceIds.length > 1) {
+				lines.push({ text: `${pieceIds.length} pieces selected` });
+			}
+			if (connectionIds.length === 1) {
+				lines.push({ text: `Connection · ${connectionIds[0]}` });
+			} else if (connectionIds.length > 1) {
+				lines.push({ text: `${connectionIds.length} connections selected` });
 			}
 			return sketchpadPanelTextStack(lines);
 		}
@@ -13602,7 +14062,6 @@ class SketchpadDetailsPanel extends SketchpadRoutedComponent<PanelModel> {
 			lines.push({ text: `Representations · ${reps} · Connectors · ${connectors}` });
 			return sketchpadPanelTextStack(lines);
 		}
-		const { qualityId } = this.route;
 		if (qualityId) {
 			const quality = findQualityInKit(kit, qualityId);
 			const lines: { text: string; emphasize?: boolean }[] = [
@@ -13611,6 +14070,30 @@ class SketchpadDetailsPanel extends SketchpadRoutedComponent<PanelModel> {
 			];
 			if (quality?.key) lines.push({ text: `Key · ${quality.key}` });
 			if (quality?.value) lines.push({ text: `Value · ${quality.value}` });
+			return sketchpadPanelTextStack(lines);
+		}
+		const vfsSelected = ctrl?.routeSelection.kitWiresNodeIds ?? [];
+		if (vfsSelected.length > 0) {
+			const meta = ctrl?.kitWiresNodeMetaForKit(kitId) ?? new Map();
+			const lines: { text: string; emphasize?: boolean }[] = [
+				{ text: "Selection", emphasize: true },
+				{ text: `${vfsSelected.length} item(s) selected` },
+			];
+			for (const nodeId of vfsSelected.slice(0, 8)) {
+				const kind = meta.get(nodeId)?.fileNodeKindId;
+				let label = nodeId;
+				if (kind === "type") label = findTypeInKit(kit, nodeId)?.name ?? nodeId;
+				else if (kind === "design") label = findDesignInKit(kit, nodeId)?.name ?? nodeId;
+				else if (kind === "folder") {
+					const folder = (kit.folders ?? []).find((row) => String((row as { id?: unknown }).id ?? "") === nodeId);
+					label = folder && typeof (folder as { path?: unknown }).path === "string" ? (folder as { path: string }).path : nodeId;
+				} else if (kind === "file") {
+					const file = (kit.files ?? []).find((row) => String((row as { id?: unknown }).id ?? "") === nodeId);
+					label = file ? sketchpadKitFileBasename(file as Record<string, unknown>) : nodeId;
+				}
+				lines.push({ text: kind ? `${kind} · ${label}` : label });
+			}
+			if (vfsSelected.length > 8) lines.push({ text: "…" });
 			return sketchpadPanelTextStack(lines);
 		}
 		return sketchpadPanelTextStack([
@@ -13630,7 +14113,7 @@ class SketchpadPlatformComponents {
 			new SketchpadAppVirtualFileSystem(SKETCHPAD_HOME_APP_ID, platform),
 			new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform),
 			new SketchpadAppVirtualFileSystem(SKETCHPAD_DESIGN_APP_ID, platform),
-			new SketchpadKitDiagram(platform),
+			new SketchpadKitWires(platform),
 			new SketchpadDesignScene(platform),
 			new SketchpadDesignDiagram(platform),
 			new SketchpadWorkbenchPanel(platform),
@@ -13658,6 +14141,10 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		string,
 		Map<string, { readonly fileNodeKindId: string; readonly typeId?: string; readonly designId?: string }>
 	>();
+	private readonly kitWiresReferenceCache = new Map<string, SketchpadKitWiresReferenceData>();
+	private readonly kitWiresVfsPreparePromises = new Map<string, Promise<void>>();
+	private kitWiresSyncGeneration = 0;
+	readonly kitWiresHoverStore = new ObservableCell<string | null>(null);
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SKETCHPAD_SHELL_CONTROLLER_ID, commandBus, hostNotify);
@@ -13695,13 +14182,16 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	setRouteSelection(selection: SketchpadRouteSelection): void {
 		const shell = this.shellStore.get();
 		const pathOnly = shell.navigationPath.split("?")[0] ?? "/";
+		const kitId = parseSketchpadRouteScopeFromPath(shell.navigationPath).kitId;
 		if (!sketchpadPathSupportsRouteSelectionQuery(pathOnly)) {
 			this.shellStore.set({ ...shell, routeSelection: selection });
+			if (kitId) this.syncKitWiresSelectionToVfs(kitId, selection.kitWiresNodeIds);
 			this.emit();
 			return;
 		}
 		const navigationPath = `${pathOnly}${sketchpadRouteSelectionUriFilters(selection)}`;
 		this.shellStore.set({ ...shell, routeSelection: selection, navigationPath });
+		if (kitId) this.syncKitWiresSelectionToVfs(kitId, selection.kitWiresNodeIds);
 		const platform = getSketchpadPlatform();
 		if (platform) sketchpadCommitUri(platform, navigationPath);
 		this.emit();
@@ -13726,6 +14216,88 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		this.emit();
 	}
 
+	/** @emoji 🔗 VFS node kind metadata for kit wires selection navigation. */
+	kitWiresNodeMetaForKit(kitId: string): ReadonlyMap<string, { readonly fileNodeKindId: string }> {
+		const scopeKey = virtualFileSystemScopeKey(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID));
+		const map = this.vfsNodeMetaByScope.get(scopeKey);
+		if (!map) return new Map();
+		const root = this.getRoot(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID));
+		const out = new Map<string, { readonly fileNodeKindId: string }>();
+		if (root.id === kitId || root.fileNodeKindId === "kit") {
+			out.set(root.id, { fileNodeKindId: root.fileNodeKindId });
+		}
+		for (const [id, meta] of map) out.set(id, meta);
+		return out;
+	}
+
+	/** @emoji 📁 Expands kit VFS through first-level branches so wires identities match visible table rows. */
+	async prepareKitWiresVfsForTopology(kitId: string): Promise<void> {
+		const cached = this.kitWiresVfsPreparePromises.get(kitId);
+		if (cached) return cached;
+		const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
+		const prepare = (async () => {
+			const expanded = this.expandedStore(scope);
+			await this.ensureChildrenLoadedAsync(kitId, scope);
+			const childrenSnapshot = this.childrenStore(scope).getSnapshot();
+			const rootChildren = childrenSnapshot[kitId] ?? childrenSnapshot["__root__"] ?? [];
+			const expandedIds = new Set(expanded.getSnapshot());
+			expandedIds.add(kitId);
+			for (const child of rootChildren) {
+				expandedIds.add(child.id);
+			}
+			expanded.setAll([...expandedIds]);
+			await Promise.all([...expandedIds].filter((id) => id !== kitId).map((id) => this.ensureChildrenLoadedAsync(id, scope)));
+		})();
+		this.kitWiresVfsPreparePromises.set(kitId, prepare);
+		try {
+			await prepare;
+		} catch (error) {
+			this.kitWiresVfsPreparePromises.delete(kitId);
+			throw error;
+		}
+	}
+
+	private clearKitWiresVfsPrepare(kitId: string): void {
+		this.kitWiresVfsPreparePromises.delete(kitId);
+	}
+
+	/** @emoji 🎯 Mirrors kit wires diagram selection onto the kit VFS table. */
+	syncKitWiresSelectionToVfs(kitId: string, nodeIds: readonly string[]): void {
+		const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
+		if (this.vfsRouteRootByScope.get(virtualFileSystemScopeKey(scope)) !== kitId) return;
+		this.selectedRowIdsByScope.set(virtualFileSystemScopeKey(scope), [...nodeIds]);
+	}
+
+	/** @emoji 🖱️ Updates kit wires hover (diagram ↔ VFS), without URL query sync. */
+	setKitWiresHoveredNodeId(nodeId: string | null): void {
+		if (this.kitWiresHoverStore.getSnapshot() === nodeId) return;
+		this.kitWiresHoverStore.set(nodeId);
+	}
+
+	/** @emoji 🔗 Rebuilds kit wires topology from visible VFS nodes and rust reference queries. */
+	syncKitWiresTopology(kitId: string): void {
+		const store = this.getKitStore(kitId);
+		const kit = store?.getSnapshot().kit;
+		if (!kit) return;
+		const generation = ++this.kitWiresSyncGeneration;
+		void this.prepareKitWiresVfsForTopology(kitId).then(() => {
+			if (generation !== this.kitWiresSyncGeneration) return;
+			const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
+			const root = this.getRoot(scope);
+			const visible = sketchpadKitWiresVisibleNodes(root, this.visibleVirtualFileSystemNodes(scope));
+			const scopeKey = virtualFileSystemScopeKey(scope);
+			const vfsMeta = this.vfsNodeMetaByScope.get(scopeKey) ?? new Map();
+			const expandedDesignIds = sketchpadExpandedDesignIds(scope, this.expandedStore(scope).getSnapshot(), vfsMeta);
+			void sketchpadFetchKitWiresReferences(store!, kit, visible, expandedDesignIds, vfsMeta).then((references) => {
+				if (generation !== this.kitWiresSyncGeneration) return;
+				this.kitWiresReferenceCache.set(kitId, references);
+				const fixture = sketchpadKitWiresFixtureFromVisible(kit, kitId, visible, references, expandedDesignIds);
+				this.upsertTopologyStore(sketchpadKitWiresInstanceId(kitId), sketchpadTopologyPayloadForKitWires(fixture));
+				this.emit();
+			});
+		});
+	}
+
 	/** @emoji 🔍 Resolves a controller-owned kit store. */
 	getKitStore(kitId: string): SemioKitStore | undefined {
 		return this.getStore<SketchpadKitSnapshot>(sketchpadKitStoreId(kitId)) as SemioKitStore | undefined;
@@ -13745,8 +14317,8 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		if (!kitId) return;
 		const kit = this.getKitStore(kitId)?.getSnapshot().kit;
 		if (!kit) return;
-		if (surfaceId === SKETCHPAD_SURFACE_KIT_DIAGRAM) {
-			this.upsertTopologyStore(sketchpadKitDiagramInstanceId(kitId), sketchpadTopologyPayloadForKitDiagram(kit));
+		if (surfaceId === SKETCHPAD_SURFACE_KIT_WIRES) {
+			this.syncKitWiresTopology(kitId);
 			return;
 		}
 		const typeRepSurface = sketchpadParseTypeRepresentationSurfaceId(surfaceId);
@@ -14028,10 +14600,17 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		const root = this.getRoot(scope);
 		map.set(root.id, { fileNodeKindId: root.fileNodeKindId, designId: route.designId ?? undefined, typeId: route.typeId ?? undefined });
 		for (const row of rows) {
+			const parentMeta = row.parentId ? map.get(row.parentId) : undefined;
+			const designId =
+				row.fileNodeKindId === "piece" || row.fileNodeKindId === "connection"
+					? parentMeta?.fileNodeKindId === "design"
+						? row.parentId!
+						: (route.designId ?? parentMeta?.designId)
+					: (route.designId ?? parentMeta?.designId);
 			map.set(row.id, {
 				fileNodeKindId: row.fileNodeKindId,
-				designId: route.designId ?? undefined,
-				typeId: row.fileNodeKindId === "type" ? row.id : route.typeId ?? undefined,
+				designId: designId ?? undefined,
+				typeId: row.fileNodeKindId === "type" ? row.id : (route.typeId ?? parentMeta?.typeId),
 			});
 		}
 	}
@@ -14060,6 +14639,11 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		this.vfsNodeMetaByScope.delete(scopeKey);
 		this.childrenByScope.delete(scopeKey);
 		this.pendingChildrenLoadsByScope.delete(scopeKey);
+		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
+			this.clearKitWiresVfsPrepare(rootNodeId);
+			this.kitWiresHoverStore.set(null);
+			this.syncKitWiresTopology(rootNodeId);
+		}
 	}
 
 	/** @emoji 🔄 Drops cached vfs children when the live kit changes. */
@@ -14067,13 +14651,12 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		for (const appId of [SKETCHPAD_KIT_APP_ID, SKETCHPAD_DESIGN_APP_ID] as const) {
 			const scope = sketchpadVfsScope(appId);
 			const scopeKey = virtualFileSystemScopeKey(scope);
-			this.vfsNodeMetaByScope.delete(scopeKey);
-			this.childrenByScope.delete(scopeKey);
-			this.pendingChildrenLoadsByScope.delete(scopeKey);
-			if (this.vfsRouteRootByScope.get(scopeKey) === kitId) {
-				this.vfsRouteRootByScope.delete(scopeKey);
-			}
+		this.vfsNodeMetaByScope.delete(scopeKey);
+		this.childrenByScope.delete(scopeKey);
+		this.pendingChildrenLoadsByScope.delete(scopeKey);
 		}
+		this.kitWiresReferenceCache.delete(kitId);
+		this.clearKitWiresVfsPrepare(kitId);
 		this.emit();
 	}
 
@@ -14089,11 +14672,44 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
 			return { ...model, dragDropEnabled: false };
 		}
+		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
+			const routeSelection = this.shellStore.get().routeSelection;
+			return {
+				...model,
+				selectedRowIds: routeSelection.kitWiresNodeIds.length ? [...routeSelection.kitWiresNodeIds] : model.selectedRowIds,
+				hoveredRowId: this.kitWiresHoverStore.getSnapshot(),
+			};
+		}
 		return model;
 	}
 
 	protected override runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
 		const scope = this.resolveScope(args);
+		if (scope?.appId === SKETCHPAD_KIT_APP_ID) {
+			if (command === "setVirtualFileSystemRowSelection") {
+				const selectionPayload = args as { rowIds?: readonly string[]; anchorRowId?: string };
+				const rowIds = selectionPayload.rowIds ? [...selectionPayload.rowIds] : [];
+				const key = virtualFileSystemScopeKey(scope);
+				this.selectedRowIdsByScope.set(key, rowIds);
+				if (selectionPayload.anchorRowId) {
+					this.selectionAnchorRowIdByScope.set(key, selectionPayload.anchorRowId);
+				} else if (!rowIds.length) {
+					this.selectionAnchorRowIdByScope.delete(key);
+				}
+				const kitId = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath).kitId;
+				if (kitId) {
+					this.setRouteSelection({ ...this.routeSelection, kitWiresNodeIds: rowIds });
+				} else {
+					this.emit();
+				}
+				return true;
+			}
+			if (command === "virtualFileSystemRowHover") {
+				const rowId = (args as { rowId?: string | null }).rowId ?? null;
+				this.setKitWiresHoveredNodeId(rowId);
+				return true;
+			}
+		}
 		if (scope?.appId === SKETCHPAD_HOME_APP_ID) {
 			const payload = (args ?? {}) as { nodeId?: string; rowId?: string };
 			if (command === "toggleVirtualFileSystemExpand" && payload.nodeId) {
@@ -14101,8 +14717,16 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				const expanded = new Set(shell.home.expandedRowIds);
 				if (expanded.has(payload.nodeId)) expanded.delete(payload.nodeId);
 				else expanded.add(payload.nodeId);
-				this.updateHome({ ...shell.home, expandedRowIds: [...expanded] });
-				return super.runVirtualFileSystemCommand(command, args);
+				const expandedRowIds = [...expanded];
+				this.updateHome({ ...shell.home, expandedRowIds });
+				const homeScope = sketchpadVfsScope(SKETCHPAD_HOME_APP_ID);
+				const expandedStore = this.expandedStore(homeScope);
+				expandedStore.setAll(expandedRowIds.length ? expandedRowIds : [this.getRoot(homeScope).id]);
+				if (expanded.has(payload.nodeId)) {
+					this.ensureChildrenLoaded(payload.nodeId, homeScope);
+				}
+				this.emit();
+				return true;
 			}
 			if (command === "setVirtualFileSystemRowSelection") {
 				const selectionPayload = args as { rowIds?: readonly string[] };
@@ -14120,7 +14744,16 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	}
 
 	override run(command: string, args?: unknown): void {
-		if (this.runVirtualFileSystemCommand(command, args)) return;
+		if (this.runVirtualFileSystemCommand(command, args)) {
+			if (command !== "virtualFileSystemRowHover") {
+				const scope = this.resolveScope(args);
+				if (scope?.appId === SKETCHPAD_KIT_APP_ID) {
+					const kitId = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath).kitId;
+					if (kitId) this.syncKitWiresTopology(kitId);
+				}
+			}
+			return;
+		}
 		const shell = this.shellStore.get();
 		switch (command) {
 			case "setNavigation": {
@@ -14264,6 +14897,14 @@ export class SketchpadShellController extends VirtualFileSystemController {
 				sketchpadApplyPuzzle2dSelection(payload.instanceId, payload.puzzle2dIds);
 				break;
 			}
+			case "puzzle5dHover": {
+				const payload = args as { instanceId: string; nodeId: string | null };
+				const { pane } = parseSketchpadPuzzleInstanceId(payload.instanceId);
+				if (pane === "kit-wires") {
+					this.setKitWiresHoveredNodeId(payload.nodeId);
+				}
+				break;
+			}
 			case "createTemporaryKit": {
 				const name = (args as { name?: string }).name;
 				void this.createTemporaryKit(name).catch((error) => {
@@ -14371,7 +15012,7 @@ function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
 
 function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
 	return [
-		{ id: "windows", iconId: "semio.sketchpad.icon.windows", panel: "windows", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY },
+		{ id: "display", iconId: "semio.sketchpad.icon.windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY },
 		{ id: "workbench", iconId: "semio.sketchpad.icon.workbench", panel: "workbench", bodyKey: SKETCHPAD_PANEL_WORKBENCH_BODY },
 		{ id: "details", iconId: "semio.sketchpad.icon.details", panel: "details", bodyKey: SKETCHPAD_PANEL_DETAILS_BODY },
 	];
@@ -14398,9 +15039,9 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
 					windowKinds: [
 						{ id: "vfs", label: "File System", bodyKey: SKETCHPAD_BODY_KIT_VFS },
-						{ id: "diagram", label: "Diagram", bodyKey: SKETCHPAD_BODY_KIT_DIAGRAM },
+						{ id: "wires", label: "Wires", bodyKey: SKETCHPAD_BODY_KIT_WIRES },
 					],
-					defaultLayout: createDefaultLayout(["vfs", "diagram"], "row", [50, 50], ["File System", "Diagram"]),
+					defaultLayout: createDefaultLayout(["vfs", "wires"], "row", [50, 50], ["File System", "Wires"]),
 					commands: sketchpadKitAppCommands(),
 					panelTabs: sketchpadKitPanelTabs(),
 				},
@@ -14451,8 +15092,8 @@ function registerSketchpadWindowBodies(): void {
 	registerWindowBody(SKETCHPAD_BODY_KIT_VFS, () =>
 		buildVirtualFileSystemWindowBody(SKETCHPAD_SURFACE_KIT_VFS, SKETCHPAD_SHELL_CONTROLLER_ID, "vfs"),
 	);
-	registerWindowBody(SKETCHPAD_BODY_KIT_DIAGRAM, () =>
-		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_KIT_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, "diagram"),
+	registerWindowBody(SKETCHPAD_BODY_KIT_WIRES, () =>
+		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_KIT_WIRES, SKETCHPAD_SHELL_CONTROLLER_ID, "wires"),
 	);
 	registerWindowBody(SKETCHPAD_BODY_DESIGN_SCENE, () =>
 		buildPuzzle5dWindowBody(SKETCHPAD_SURFACE_DESIGN_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, "scene"),
@@ -14474,30 +15115,63 @@ function registerSketchpadWindowBodies(): void {
 	registerSidePanelBody(SKETCHPAD_PANEL_WINDOWS_BODY, (ctx) => {
 		const app = ctx.platform.getActiveApp();
 		const windowKinds = app?.windowKinds ?? [];
-		return {
-			type: "stack",
-			direction: "vertical",
-			gap: "tight",
-			children: windowKinds.map((windowKind) => ({
-				type: "text",
-				value: windowKind.label,
-				dataAttributes: { "data-window-kind-id": windowKind.id },
-			})),
+		const tree: UiTreeNode = {
+			type: "tree",
+			sections: [
+				{
+					id: "sketchpad.windows.list",
+					label: "Windows",
+					defaultOpen: true,
+					items: windowKinds.map((windowKind) => ({
+						id: `sketchpad.windows.${windowKind.id}`,
+						label: windowKind.label,
+					})),
+				},
+			],
 		};
+		return tree;
 	});
-	registerSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, () =>
-		buildPanelWindowBody(SKETCHPAD_SURFACE_WORKBENCH, SKETCHPAD_SHELL_CONTROLLER_ID, "workbench"),
-	);
-	registerSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, () =>
-		buildPanelWindowBody(SKETCHPAD_SURFACE_DETAILS, SKETCHPAD_SHELL_CONTROLLER_ID, "details"),
-	);
+	registerSidePanelBody(SKETCHPAD_PANEL_WORKBENCH_BODY, () => ({
+		type: "tree",
+		sections: [
+			{
+				id: "sketchpad.workbench.panel",
+				label: "Workbench",
+				defaultOpen: true,
+				items: [
+					{
+						id: "sketchpad.workbench.host",
+						label: "",
+						control: buildPanelWindowBody(SKETCHPAD_SURFACE_WORKBENCH, SKETCHPAD_SHELL_CONTROLLER_ID, "workbench"),
+					},
+				],
+			},
+		],
+	}));
+	registerSidePanelBody(SKETCHPAD_PANEL_DETAILS_BODY, () => ({
+		type: "tree",
+		sections: [
+			{
+				id: "sketchpad.details.panel",
+				label: "Details",
+				defaultOpen: true,
+				items: [
+					{
+						id: "sketchpad.details.host",
+						label: "",
+						control: buildPanelWindowBody(SKETCHPAD_SURFACE_DETAILS, SKETCHPAD_SHELL_CONTROLLER_ID, "details"),
+					},
+				],
+			},
+		],
+	}));
 }
 
 function applySketchpadUri(platform: Platform, uri: string): void {
-	const path = uri.split("?")[0] ?? "/";
+	const pathOnly = uri.split("?")[0] ?? "/";
 	platform.uri = uri;
-	platform.activeAppId = sketchpadAppIdFromPath(path);
-	platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setNavigation", { path });
+	platform.activeAppId = sketchpadAppIdFromPath(pathOnly);
+	platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setNavigation", { path: uri });
 	sketchpadSyncTypeAppChrome(platform);
 	platform.notify();
 }
@@ -14921,20 +15595,21 @@ if (import.meta.vitest) {
 
 	describe("sketchpad dev fixtures", () => {
 		it("auto-seeds from nakagin filtered fixture URL", () => {
-			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
+			expect(SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL).toBe("/fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
 		});
 
 		it("preloads dev fixture on home without navigating to kit app", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
-			const fixtureJson = readFileSync(fixturePath, "utf8");
+			const { readInitialKitFixtureFromPath } = await import("../../../../fixtures/script.ts");
+			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
+			const fixtureJson = JSON.stringify(readInitialKitFixtureFromPath(fixturePath));
 			const previousFetch = globalThis.fetch;
 			globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 				const url =
 					typeof input === "string" ? input : input instanceof URL ? input.href : input instanceof Request ? input.url : String(input);
-				if (url.includes("nakagin-capsule-tower.filtered")) {
+				if (url.includes("stores/metabolism/wip/initialKit/kit.semio.json")) {
 					return new Response(fixtureJson, { status: 200, headers: { "Content-Type": "application/json" } });
 				}
 				return previousFetch(input, init);
@@ -15079,8 +15754,9 @@ if (import.meta.vitest) {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, join } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/nakagin-capsule-tower.filtered.kit.semio.json");
-			const bundleKit = sketchpadKitFromDecodedBundle(JSON.parse(readFileSync(fixturePath, "utf8")));
+			const { readInitialKitFixtureFromPath } = await import("../../../../fixtures/script.ts");
+			const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixtures/stores/metabolism/wip/initialKit/kit.semio.json");
+			const bundleKit = sketchpadKitFromDecodedBundle(readInitialKitFixtureFromPath(fixturePath));
 			const bundleType = bundleKit?.types?.find((t) => (t.representations?.length ?? 0) > 0);
 			expect(bundleType).toBeDefined();
 			const bundleRepCount = bundleType ? sketchpadListTypeRepresentations(bundleType).length : 0;
@@ -15187,15 +15863,161 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("sketchpadKitWiresVisibleNodes", () => {
+		it("prepends kit root when the platform helper omits it", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			const root: VirtualFileSystemNodeRecord = {
+				id: kitId,
+				fileNodeKindId: "kit",
+				name: "K",
+				path: "/",
+				parentId: null,
+				hasChildren: true,
+			};
+			const visible: VirtualFileSystemVisibleNode[] = [
+				{ id: typeId, fileNodeKindId: "type", name: "T", path: "/T", parentId: kitId, hasChildren: false },
+			];
+			const merged = sketchpadKitWiresVisibleNodes(root, visible);
+			expect(merged).toHaveLength(2);
+			expect(merged[0]?.id).toBe(kitId);
+			expect(merged[1]?.id).toBe(typeId);
+		});
+	});
+
+	describe("sketchpadKitWiresFixtureFromVisible", () => {
+		it("emits one identity per visible vfs node and owns containment edges", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			const kit = { id: kitId, name: "K" } as Kit;
+			const visible: VirtualFileSystemVisibleNode[] = [
+				{ id: kitId, fileNodeKindId: "kit", name: "K", path: "/K", parentId: null, hasChildren: true },
+				{ id: typeId, fileNodeKindId: "type", name: "T", path: "/T", parentId: kitId, hasChildren: false },
+			];
+			const fixture = sketchpadKitWiresFixtureFromVisible(
+				kit,
+				kitId,
+				visible,
+				{ designTransitiveTypes: new Map(), designTransitiveDesigns: new Map(), pieceBlueprints: new Map() },
+				new Set(),
+			);
+			expect(fixture.identities).toHaveLength(2);
+			expect(fixture.relationships.some((rel) => rel.kind === "owns" && rel.edgeId.includes(kitId) && rel.edgeId.includes(typeId))).toBe(true);
+		});
+
+		it("renders node avatars as the label text plus a vendored icon when the kind resolves one", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			const unknownId = "99999999-8888-7777-6666-555555555555";
+			const kit = { id: kitId, name: "K" } as Kit;
+			const visible: VirtualFileSystemVisibleNode[] = [
+				{ id: kitId, fileNodeKindId: "kit", name: "Kit Alpha", path: "/K", parentId: null, hasChildren: true },
+				{ id: typeId, fileNodeKindId: "type", name: "Beam", path: "/T", parentId: kitId, hasChildren: false },
+				{ id: unknownId, fileNodeKindId: "mystery", name: "Mystery", path: "/M", parentId: kitId, hasChildren: false },
+			];
+			const fixture = sketchpadKitWiresFixtureFromVisible(
+				kit,
+				kitId,
+				visible,
+				{ designTransitiveTypes: new Map(), designTransitiveDesigns: new Map(), pieceBlueprints: new Map() },
+				new Set(),
+			);
+			const byId = new Map(fixture.board.nodes.map((node) => [node.id, node] as const));
+			const kitNode = byId.get(kitId) as { text?: string; iconKind?: string };
+			const typeNode = byId.get(typeId) as { text?: string; iconKind?: string };
+			const unknownNode = byId.get(unknownId) as { text?: string; iconKind?: string };
+			expect(kitNode.text).toBe("Kit Alpha");
+			expect(typeNode.text).toBe("Beam");
+			expect(kitNode.iconKind).toContain("<svg");
+			expect(typeNode.iconKind).toContain("<svg");
+			expect(unknownNode.text).toBe("Mystery");
+			expect(unknownNode.iconKind).toBeUndefined();
+			const board = wiresFixtureBoard(fixture);
+			const boardType = board.nodes.find((node) => node.id === typeId) as { text?: string; iconKind?: string };
+			expect(boardType.text).toBe("Beam");
+			expect(boardType.iconKind).toContain("<svg");
+		});
+
+		it("includes kit file vfs rows and folder containment edges", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const folderId = "22222222-3333-4444-5555-666666666666";
+			const fileId = "33333333-4444-5555-6666-777777777777";
+			const kit = {
+				id: kitId,
+				name: "K",
+				folders: [{ id: folderId, path: "/docs" }],
+				files: [{ id: fileId, name: "readme.txt", folder: { id: folderId } }],
+			} as Kit;
+			const visible: VirtualFileSystemVisibleNode[] = [
+				{ id: kitId, fileNodeKindId: "kit", name: "K", path: "/K", parentId: null, hasChildren: true },
+				{ id: folderId, fileNodeKindId: "folder", name: "docs", path: "/docs", parentId: kitId, hasChildren: true },
+				{ id: fileId, fileNodeKindId: "file", name: "readme.txt", path: "/readme.txt", parentId: folderId, hasChildren: false },
+			];
+			const fixture = sketchpadKitWiresFixtureFromVisible(
+				kit,
+				kitId,
+				visible,
+				{ designTransitiveTypes: new Map(), designTransitiveDesigns: new Map(), pieceBlueprints: new Map() },
+				new Set(),
+			);
+			expect(fixture.identities.some((row) => row.nodeId === fileId)).toBe(true);
+			expect(fixture.relationships.some((rel) => rel.kind === "owns" && rel.edgeId.includes(folderId) && rel.edgeId.includes(fileId))).toBe(true);
+		});
+
+		it("uses references for collapsed design and has+is when design is expanded", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const designId = "22222222-3333-4444-5555-666666666666";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			const pieceId = "33333333-4444-5555-6666-777777777777";
+			const kit = { id: kitId, name: "K" } as Kit;
+			const visibleCollapsed: VirtualFileSystemVisibleNode[] = [
+				{ id: designId, fileNodeKindId: "design", name: "D", path: "/D", parentId: kitId, hasChildren: true },
+				{ id: typeId, fileNodeKindId: "type", name: "T", path: "/T", parentId: kitId, hasChildren: false },
+			];
+			const collapsedFixture = sketchpadKitWiresFixtureFromVisible(
+				kit,
+				kitId,
+				visibleCollapsed,
+				{
+					designTransitiveTypes: new Map([[designId, [typeId]]]),
+					designTransitiveDesigns: new Map(),
+					pieceBlueprints: new Map(),
+				},
+				new Set(),
+			);
+			expect(collapsedFixture.relationships.some((rel) => rel.kind === "references")).toBe(true);
+			expect(collapsedFixture.relationships.some((rel) => rel.kind === "has" && rel.edgeId.includes(pieceId))).toBe(false);
+
+			const visibleExpanded: VirtualFileSystemVisibleNode[] = [
+				...visibleCollapsed,
+				{ id: pieceId, fileNodeKindId: "piece", name: "P", path: "/P", parentId: designId, hasChildren: false },
+			];
+			const expandedFixture = sketchpadKitWiresFixtureFromVisible(
+				kit,
+				kitId,
+				visibleExpanded,
+				{
+					designTransitiveTypes: new Map([[designId, [typeId]]]),
+					designTransitiveDesigns: new Map(),
+					pieceBlueprints: new Map([[pieceId, { kind: "Type", id: typeId }]]),
+				},
+				new Set([designId]),
+			);
+			expect(expandedFixture.relationships.some((rel) => rel.kind === "references")).toBe(false);
+			expect(expandedFixture.relationships.some((rel) => rel.kind === "has" && rel.edgeId.includes(pieceId))).toBe(true);
+			expect(expandedFixture.relationships.some((rel) => rel.kind === "is" && rel.edgeId.includes(pieceId) && rel.edgeId.includes(typeId))).toBe(true);
+		});
+	});
+
 	describe("parseSketchpadPuzzleInstanceId", () => {
-		it("parses kit diagram and design panes", () => {
+		it("parses kit wires and design panes", () => {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const designId = "11111111-2222-3333-4444-555555555555";
-			expect(parseSketchpadPuzzleInstanceId(sketchpadKitDiagramInstanceId(kitId))).toEqual({
+			expect(parseSketchpadPuzzleInstanceId(sketchpadKitWiresInstanceId(kitId))).toEqual({
 				kitId,
 				designId: null,
 				typeId: null,
-				pane: "kit-diagram",
+				pane: "kit-wires",
 			});
 			expect(parseSketchpadPuzzleInstanceId(sketchpadDesignSceneInstanceId(kitId, designId))).toEqual({
 				kitId,
@@ -15228,12 +16050,28 @@ if (import.meta.vitest) {
 	});
 
 	describe("sketchpadKitFileUrlById", () => {
-		it("maps embedded file blobs to data URLs", () => {
+		it("maps embedded file blobs to data URLs when the row is not a metabolism glb name", () => {
 			const kit = {
 				id: "k",
-				files: [{ id: "f1", name: "mesh.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
+				files: [{ id: "f1", name: "mesh.bin", blob: "data:application/octet-stream;base64,AAAA" }],
 			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:model/gltf-binary;base64,AAAA");
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("data:application/octet-stream;base64,AAAA");
+		});
+
+		it("resolves metabolism glbs by file name for puzzle 3d even without url", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "bridge.glb" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/meshes/bridge.glb");
+		});
+
+		it("prefers fixture /meshes over inline blobs for metabolism glb names", () => {
+			const kit = {
+				id: "k",
+				files: [{ id: "f1", name: "bridge.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
+			} as Kit;
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/meshes/bridge.glb");
 		});
 
 		it("resolves metabolism representation glbs for puzzle 3d via /meshes", () => {
@@ -15420,17 +16258,18 @@ if (import.meta.vitest) {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const designId = "11111111-2222-3333-4444-555555555555";
 			const selection = parseSketchpadRouteSelectionQuery(
-				`/kits/${kitId}/designs/${designId}?piece=p1&piece=p2&conn=c1&diag=type:t1`,
+				`/kits/${kitId}/designs/${designId}?piece=p1&piece=p2&conn=c1&wires=type:t1`,
 			);
 			expect(selection.pieceIds).toEqual(["p1", "p2"]);
 			expect(selection.connectionIds).toEqual(["c1"]);
-			expect(selection.kitDiagramNodeIds).toEqual(["type:t1"]);
+			expect(selection.kitWiresNodeIds).toEqual(["type:t1"]);
+			expect(selection.kitWiresHoveredNodeId).toBeNull();
 		});
 	});
 
 	describe("sketchpadRouteSelectionUriFilters", () => {
 		it("round-trips selection through query serialization", () => {
-			const selection = { pieceIds: ["a"], connectionIds: ["b"], kitDiagramNodeIds: ["type:x"] };
+			const selection = { pieceIds: ["a"], connectionIds: ["b"], kitWiresNodeIds: ["type:x"], kitWiresHoveredNodeId: null };
 			const uri = `/kits/k/designs/d${sketchpadRouteSelectionUriFilters(selection)}`;
 			expect(parseSketchpadRouteSelectionQuery(uri)).toEqual(selection);
 		});
@@ -15443,7 +16282,7 @@ if (import.meta.vitest) {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 			const designId = "11111111-2222-3333-4444-555555555555";
 			ctrl.navigateTo(`/kits/${kitId}/designs/${designId}`);
-			ctrl.setRouteSelection({ pieceIds: ["piece-a"], connectionIds: [], kitDiagramNodeIds: [] });
+			ctrl.setRouteSelection({ pieceIds: ["piece-a"], connectionIds: [], kitWiresNodeIds: [], kitWiresHoveredNodeId: null });
 			expect(ctrl.navigationPath).toBe(`/kits/${kitId}/designs/${designId}?piece=piece-a`);
 			expect(ctrl.routeSelection.pieceIds).toEqual(["piece-a"]);
 			ctrl.dispose();
@@ -15459,6 +16298,47 @@ if (import.meta.vitest) {
 			expect(home.selectedKitIds).toEqual(["k1"]);
 			expect(home.sortColumnId).toBe("updated");
 			expect(home.sortDescending).toBe(true);
+		});
+	});
+
+	describe("Sketchpad details panel", () => {
+		it("reflects home kit selection in the panel snapshot", async () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const platform = await buildSketchpadPlatform();
+			const ctrl = getSketchpadShellController()!;
+			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "Selected Kit" } as Kit), { kind: "fixture" });
+			ctrl.navigateTo("/");
+			platform.uri = "/";
+			ctrl.updateHome({ ...sketchpadEmptyHomeUiState(), selectedKitIds: [kitId], expandedRowIds: ["sketchpad-home"] });
+			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS);
+			details?.refresh();
+			const body = (details?.getSnapshot() as PanelModel).body;
+			const values =
+				body.type === "stack" ? body.children.flatMap((child) => (child.type === "text" ? [child.value] : [])) : [];
+			expect(values.some((value) => value.includes("Selected Kit"))).toBe(true);
+			ctrl.dispose();
+		});
+
+		it("reflects kit virtual file system row selection", async () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			const platform = await buildSketchpadPlatform();
+			const ctrl = getSketchpadShellController()!;
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({ id: kitId, name: "Kit", types: [{ id: typeId, name: "Column" }] } as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}`);
+			platform.uri = `/kits/${kitId}`;
+			ctrl.buildVirtualFileSystemModel(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID));
+			ctrl.setRouteSelection({ pieceIds: [], connectionIds: [], kitWiresNodeIds: [typeId], kitWiresHoveredNodeId: null });
+			const details = platform.getComponent(SKETCHPAD_SURFACE_DETAILS);
+			details?.refresh();
+			const body = (details?.getSnapshot() as PanelModel).body;
+			const values =
+				body.type === "stack" ? body.children.flatMap((child) => (child.type === "text" ? [child.value] : [])) : [];
+			expect(values.some((value) => value.includes("Column"))).toBe(true);
+			ctrl.dispose();
 		});
 	});
 
@@ -15519,7 +16399,7 @@ if (import.meta.vitest) {
 			const vfs = new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform);
 			await new Promise<void>((resolve) => setTimeout(resolve, 0));
 			const snap = vfs.buildSnapshot();
-			expect(snap.rows.some((row) => row.id === kitId && row.fileNodeKindId === "kit")).toBe(true);
+			expect(snap.rows.some((row) => row.id === kitId && row.fileNodeKindId === "kit")).toBe(false);
 			expect(snap.rows.some((row) => row.id === typeId)).toBe(true);
 			expect(snap.rows.some((row) => row.id === designId && row.navigateUri?.includes(`/designs/${designId}`))).toBe(true);
 			expect(snap.rows.some((row) => row.id === folderId)).toBe(true);
@@ -15548,6 +16428,30 @@ if (import.meta.vitest) {
 			snap = vfs.buildSnapshot();
 			expect(snap.rows.some((row) => row.id === typeB)).toBe(true);
 			expect(snap.rows.some((row) => row.id === typeA)).toBe(false);
+			ctrl.dispose();
+		});
+
+		it("keeps manually expanded kit vfs folders through kit wires prepare", async () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-333333333333";
+			const folderId = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff";
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({
+					id: kitId,
+					name: "Expand Kit",
+					folders: [{ id: folderId, path: "/representations" }],
+				} as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}`);
+			const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
+			ctrl.syncVirtualFileSystemRoute(scope, kitId);
+			ctrl.expandedStore(scope).toggle(folderId);
+			await ctrl.prepareKitWiresVfsForTopology(kitId);
+			expect(ctrl.expandedStore(scope).getSnapshot()).toContain(folderId);
+			const snap = ctrl.buildVirtualFileSystemModel(scope);
+			expect(snap.rows.some((row) => row.id === folderId && row.expanded)).toBe(true);
 			ctrl.dispose();
 		});
 	});
@@ -15654,7 +16558,7 @@ if (import.meta.vitest) {
 				id: "k",
 				files: [{ id: "f1", path: "files/mesh.glb" }],
 			} as Kit;
-			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/kit/dev/metabolism/wip/initialKit/files/mesh.glb");
+			expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/fixtures/stores/metabolism/wip/initialKit/files/mesh.glb");
 		});
 
 		it("maps parent-relative representation paths to /meshes", () => {
@@ -15714,48 +16618,96 @@ if (import.meta.vitest) {
 			ctrl.dispose();
 		});
 
-		it("stores multi-select on kit diagram without navigating", () => {
+		it("stores multi-select on kit wires without navigating", () => {
 			const bus = new CommandBus();
 			const ctrl = new SketchpadShellController(bus, () => {});
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
 			ctrl.registerKitStore(kitId, new InMemorySemioKitStore({ id: kitId, name: "K", types: [], designs: [] } as Kit));
 			ctrl.navigateTo(`/kits/${kitId}`);
-			sketchpadApplyPuzzle2dSelection(sketchpadKitDiagramInstanceId(kitId), ["type:a", "design:b"], ctrl);
-			expect(ctrl.routeSelection.kitDiagramNodeIds).toEqual(["type:a", "design:b"]);
+			sketchpadApplyPuzzle2dSelection(sketchpadKitWiresInstanceId(kitId), [typeId], ctrl);
+			expect(ctrl.routeSelection.kitWiresNodeIds).toEqual([typeId]);
 			expect(ctrl.navigationPath).toBe(
-				`/kits/${kitId}${sketchpadRouteSelectionUriFilters({ pieceIds: [], connectionIds: [], kitDiagramNodeIds: ["type:a", "design:b"] })}`,
+				`/kits/${kitId}${sketchpadRouteSelectionUriFilters({ pieceIds: [], connectionIds: [], kitWiresNodeIds: [typeId], kitWiresHoveredNodeId: null })}`,
 			);
 			ctrl.dispose();
 		});
 	});
 
-	describe("sketchpadPathFromDiagramNodeId", () => {
-		it("maps kit diagram nodes to routes", () => {
+	describe("sketchpadKitVfsChildren", () => {
+		it("lists files under a folder parent", () => {
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-			expect(sketchpadPathFromDiagramNodeId(kitId, "type:11111111-2222-3333-4444-555555555555")).toBe(
-				`/kits/${kitId}/types/11111111-2222-3333-4444-555555555555`,
-			);
+			const folderId = "22222222-3333-4444-5555-666666666666";
+			const fileId = "33333333-4444-5555-6666-777777777777";
+			const kit = {
+				id: kitId,
+				folders: [{ id: folderId, path: "/docs" }],
+				files: [{ id: fileId, name: "readme.txt", folder: { id: folderId } }],
+			} as Kit;
+			const rows = sketchpadKitVfsChildren(kit, folderId);
+			expect(rows).toHaveLength(1);
+			expect(rows[0]?.id).toBe(fileId);
+			expect(rows[0]?.fileNodeKindId).toBe("file");
+		});
+	});
+
+	describe("sketchpadPathFromWiresNodeId", () => {
+		it("maps kit wires nodes to routes", () => {
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			expect(sketchpadPathFromWiresNodeId(kitId, typeId, "type")).toBe(`/kits/${kitId}/types/${typeId}`);
 		});
 	});
 
 	describe("SketchpadShellController topology", () => {
-		it("upserts topology store for kit diagram surface", () => {
+		it("upserts topology store for kit wires surface", async () => {
 			const bus = new CommandBus();
 			const ctrl = new SketchpadShellController(bus, () => {});
 			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
 			ctrl.registerKitStore(
 				kitId,
 				new InMemorySemioKitStore({
 					id: kitId,
 					name: "K",
-					types: [{ id: "t1", name: "T" }],
+					types: [{ id: typeId, name: "T" }],
 					designs: [],
 				} as Kit),
 			);
-			ctrl.syncTopologyForSurface(SKETCHPAD_SURFACE_KIT_DIAGRAM, { kitId, designId: null, typeId: null });
-			const topo = ctrl.getStore(platformTopologyStoreId(sketchpadKitDiagramInstanceId(kitId))) as PlatformTopologyStore;
+			ctrl.navigateTo(`/kits/${kitId}`);
+			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
+			ctrl.syncTopologyForSurface(SKETCHPAD_SURFACE_KIT_WIRES, { kitId, designId: null, typeId: null });
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			const topo = ctrl.getStore(platformTopologyStoreId(sketchpadKitWiresInstanceId(kitId))) as PlatformTopologyStore;
 			expect(topo).toBeDefined();
-			expect(topo!.getSnapshot().flat.schema).toBe("puzzle.2d.fixture/v1");
+			const flat = topo!.getSnapshot().flat as { schema?: string; edges?: readonly unknown[] };
+			expect(flat.schema).toBe("puzzle.2d.fixture/v1");
+			expect(flat.edges?.length).toBeGreaterThan(0);
+			ctrl.dispose();
+		});
+
+		it("concurrent kit wires syncs share one vfs prepare and emit containment edges", async () => {
+			const bus = new CommandBus();
+			const ctrl = new SketchpadShellController(bus, () => {});
+			const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+			const typeId = "11111111-2222-3333-4444-555555555555";
+			ctrl.registerKitStore(
+				kitId,
+				new InMemorySemioKitStore({
+					id: kitId,
+					name: "K",
+					types: [{ id: typeId, name: "T" }],
+					designs: [],
+				} as Kit),
+			);
+			ctrl.navigateTo(`/kits/${kitId}`);
+			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
+			ctrl.syncKitWiresTopology(kitId);
+			ctrl.syncKitWiresTopology(kitId);
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			const topo = ctrl.getStore(platformTopologyStoreId(sketchpadKitWiresInstanceId(kitId))) as PlatformTopologyStore;
+			const flat = topo!.getSnapshot().flat as { edges?: readonly { source?: string; target?: string; edgeKind?: string }[] };
+			expect(flat.edges?.some((edge) => edge.source === kitId && edge.target === typeId)).toBe(true);
 			ctrl.dispose();
 		});
 	});

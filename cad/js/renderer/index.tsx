@@ -5,20 +5,31 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, type EngagementSpec, type ThreeEvent } from "@ui/react";
+import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, UnifiedGumball, type EngagementControl, type EngagementSpec, type GumballConfig, type ThreeEvent } from "@ui/react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
 // #region 🔌PortWiring
-const Canvas = sceneHostPort.fiber.canvas;
 const useFrame = sceneHostPort.fiber.useFrame;
 const useThree = sceneHostPort.fiber.useThree;
-const { Line, OrbitControls, Text, TransformControls } = sceneHostPort.drei;
-const createPortal = sceneHostPort.fiber.createPortal;
+const { Line, Text } = sceneHostPort.drei;
 const THREE = sceneHostPort.three;
-const MOUSE = THREE.MOUSE;
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 // #endregion 🔌PortWiring
+
+import {
+  createTemplatePool,
+  DEFAULT_LOD_GRID_FACTOR,
+  DEFAULT_MANUAL_LOD,
+  ViewRadiusLayer,
+  WorldCameraInvalidator,
+  WorldCanvas,
+  WorldLayer,
+  WorldLodBridge,
+  WorldLodGridHelper,
+  WorldOrbitGated,
+  type WorldCanvasProps,
+} from "@infinite/world/r3f";
 
 import {
   abortActiveInteractionSession,
@@ -67,6 +78,7 @@ import {
   listKeyedInteractionTransitions,
   interactionLengthEntryForState,
   interactionScalarEntryForState,
+  interactionControlForState,
   interactionInNumericEntryState,
   interactionNumericEntryApplyEvent,
   interactionNumericEntryCommitEvent,
@@ -82,6 +94,7 @@ import {
   type InteractionRuntimeOptions,
   type InteractionSnapshot,
   type InteractionSpec,
+  type ResolvedInteractionEngagementControl,
   type DisplayItem,
   type DisplayModel,
   type TransformationSpec,
@@ -101,11 +114,11 @@ import {
   type ObjectRef,
   type Vec3,
   type SpatialComputeMode,
-  cadTransformGumballModeToControlsMode,
+  cadGumballConfigVisible,
   selectionTargetsCenter,
-  collectTargetVertices,
+  selectionTargetsPointTransformDiff,
   selectionTargetsHaveTransformableVertices,
-  type CadTransformGumballMode,
+  type CadGumballConfig,
   type ModelDiff,
   ensureTypologyObjectFromCreateDiff,
 } from "@cad/js/core";
@@ -1587,10 +1600,8 @@ function gumballSnapshotFromObject3D(object: THREE.Object3D): GumballMatrixSnaps
   };
 }
 
-/** @emoji 🎛 Applies a gumball world-matrix delta to all vertices reachable from `targets`. */
+/** @emoji 🎛 Applies a gumball world-matrix delta to vertices and nurbs poles on topology-selected targets. */
 export function transformGumballMatrixDiff(model: Model, targets: readonly SelectionTarget[], before: GumballMatrixSnapshot, after: GumballMatrixSnapshot): ModelDiff {
-  const vertexIds = collectTargetVertices(model, targets);
-  if (vertexIds.size === 0) return EMPTY_MODEL_DIFF;
   const mBefore = new THREE.Matrix4().compose(
     new THREE.Vector3(before.position[0], before.position[1], before.position[2]),
     new THREE.Quaternion(before.quaternion[0], before.quaternion[1], before.quaternion[2], before.quaternion[3]),
@@ -1603,22 +1614,16 @@ export function transformGumballMatrixDiff(model: Model, targets: readonly Selec
   );
   const delta = mAfter.multiply(mBefore.clone().invert());
   const point = new THREE.Vector3();
-  const modified: { id: VertexRef; position: Vec3 }[] = [];
-  for (const vid of vertexIds) {
-    const v = model.vertices[vid];
-    if (!v) continue;
-    point.set(v.position[0], v.position[1], v.position[2]);
+  return selectionTargetsPointTransformDiff(model, targets, (position) => {
+    point.set(position[0], position[1], position[2]);
     point.applyMatrix4(delta);
-    const next: Vec3 = [point.x, point.y, point.z];
-    if (next[0] === v.position[0] && next[1] === v.position[1] && next[2] === v.position[2]) continue;
-    modified.push({ id: v.id, position: next });
-  }
-  return modified.length ? { vertices: { modified } } : EMPTY_MODEL_DIFF;
+    return [point.x, point.y, point.z];
+  });
 }
 
 /** @emoji 🎛 R3F gumball for multi-target primitive transforms (pivot at selection bbox center). */
 export function SpatialTransformGumball(props: {
-  readonly mode: CadTransformGumballMode;
+  readonly config: CadGumballConfig;
   readonly model: Model;
   readonly targets: readonly SelectionTarget[];
   readonly previewKernel?: SpatialPreviewKernel;
@@ -1629,8 +1634,6 @@ export function SpatialTransformGumball(props: {
   const groupRef = reactHostPort.useRef<THREE.Group>(null);
   const [tcTarget, setTcTarget] = reactHostPort.useState<THREE.Object3D | null>(null);
   const beforeRef = reactHostPort.useRef<GumballMatrixSnapshot | null>(null);
-  const scene = useThree((state) => state.scene);
-  const controlsMode = cadTransformGumballModeToControlsMode(props.mode);
   const canTransform = selectionTargetsHaveTransformableVertices(props.model, props.targets);
 
   reactHostPort.useLayoutEffect(() => {
@@ -1641,9 +1644,9 @@ export function SpatialTransformGumball(props: {
     group.scale.set(1, 1, 1);
     group.updateMatrixWorld(true);
     setTcTarget(group);
-  }, [pivot, props.mode, props.targets]);
+  }, [pivot, props.targets, props.config]);
 
-  if (!pivot || !canTransform) return null;
+  if (!pivot || !canTransform || !cadGumballConfigVisible(props.config)) return null;
 
   return (
     <>
@@ -1652,31 +1655,27 @@ export function SpatialTransformGumball(props: {
           <boxGeometry args={[0.001, 0.001, 0.001]} />
         </mesh>
       </group>
-      {tcTarget
-        ? createPortal(
-            <TransformControls
-              object={tcTarget}
-              mode={controlsMode}
-              onMouseDown={() => {
-                if (groupRef.current) beforeRef.current = gumballSnapshotFromObject3D(groupRef.current);
-              }}
-              onMouseUp={() => {
-                const before = beforeRef.current;
-                const group = groupRef.current;
-                beforeRef.current = null;
-                if (!before || !group || !pivot) return;
-                const after = gumballSnapshotFromObject3D(group);
-                const diff = transformGumballMatrixDiff(props.model, props.targets, before, after);
-                if (!isEmptyModelDiff(diff)) props.onCommit(diff);
-                group.position.set(pivot[0], pivot[1], pivot[2]);
-                group.quaternion.set(0, 0, 0, 1);
-                group.scale.set(1, 1, 1);
-                group.updateMatrixWorld(true);
-              }}
-            />,
-            scene,
-          )
-        : null}
+      {tcTarget ? (
+        <UnifiedGumball
+          target={tcTarget}
+          config={props.config as GumballConfig}
+          onDragStart={() => {
+            if (groupRef.current) beforeRef.current = gumballSnapshotFromObject3D(groupRef.current);
+          }}
+          onDragEnd={(_kind, before, after) => {
+            const snapshot = beforeRef.current;
+            beforeRef.current = null;
+            const group = groupRef.current;
+            if (!snapshot || !group || !pivot) return;
+            const diff = transformGumballMatrixDiff(props.model, props.targets, snapshot, after);
+            if (!isEmptyModelDiff(diff)) props.onCommit(diff);
+            group.position.set(pivot[0], pivot[1], pivot[2]);
+            group.quaternion.set(0, 0, 0, 1);
+            group.scale.set(1, 1, 1);
+            group.updateMatrixWorld(true);
+          }}
+        />
+      ) : null}
     </>
   );
 }
@@ -1918,9 +1917,9 @@ export function GroundPickPlane({ planeZ = 0, enabled = true, onPick, onContextP
     onPointerMove([p.x, p.y, planeZ] as unknown as Vec3);
   };
   return (
-    <mesh position={[0, 0, planeZ]} onPointerDown={onPointerDown} onContextMenu={onContextMenu} onPointerMove={onPointerMoveH}>
+    <mesh position={[0, 0, planeZ]} renderOrder={1} onPointerDown={onPointerDown} onContextMenu={onContextMenu} onPointerMove={onPointerMoveH}>
       <planeGeometry args={[120, 120]} />
-      <meshBasicMaterial transparent opacity={planeOpacity} color={resolvedPlaneColor} side={THREE.DoubleSide} />
+      <meshBasicMaterial transparent opacity={planeOpacity} color={resolvedPlaneColor} side={THREE.DoubleSide} depthWrite={false} />
     </mesh>
   );
 }
@@ -2566,6 +2565,15 @@ function SpatialPickHitTarget({
 // #endregion 🧲GeometryInteraction
 
 // #region 🧊CommittedMesh
+const CAD_WORLD_CHUNK_SIZE = 256;
+const CAD_WORLD_MAX_DISTANCE = 8000;
+const cadMeshGeometryPool = createTemplatePool<string>();
+
+/** @emoji 📍 Chunk anchor at mesh bounds center for view-radius streaming. */
+export function meshTransferOrigin(mesh: MeshTransfer): Vec3 {
+  return boundsFromMeshTransfers([mesh])?.center ?? [0, 0, 0];
+}
+
 /** @emoji 🧊 Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
 export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): THREE.BufferGeometry {
   const geo = new THREE.BufferGeometry();
@@ -2614,8 +2622,19 @@ export const COMMITTED_MESH_FACE_OPACITY = 0.72;
 
 /** @emoji 🧊 Shaded B-Rep mesh + edge overlay; optional face picking via `faceIndex`. */
 export function TessellatedCommitMesh({ mesh: data, pickable = false, showFaces = true, showEdges = true, onFacePointerMove, onFacePointerDown }: TessellatedCommitMeshProps): ReactNode {
-  const geometry = reactHostPort.useMemo(() => buildBufferGeometryFromMeshTransfer(data), [data.position, data.normal, data.index, data.faceGroups]);
-  reactHostPort.useEffect(() => () => geometry.dispose(), [geometry]);
+  const geometryKey = meshTransferContentKey(data);
+  const geometry = reactHostPort.useMemo(() => {
+    cadMeshGeometryPool.acquire(geometryKey);
+    const template = cadMeshGeometryPool.getOrCreate(geometryKey, () => buildBufferGeometryFromMeshTransfer(data));
+    return template.clone();
+  }, [geometryKey, data.position, data.normal, data.index, data.faceGroups]);
+  reactHostPort.useEffect(
+    () => () => {
+      geometry.dispose();
+      cadMeshGeometryPool.release(geometryKey);
+    },
+    [geometry, geometryKey],
+  );
   if (!showFaces && !showEdges) return null;
   const faceInfoById = reactHostPort.useMemo(() => {
     const map = new Map<string, FaceInfo>();
@@ -2677,6 +2696,16 @@ export function TessellatedCommitMesh({ mesh: data, pickable = false, showFaces 
   );
 }
 
+function ChunkedCommitMeshRow(
+  props: TessellatedCommitMeshProps & {
+    readonly origin: Vec3;
+    readonly rowKey: string;
+  },
+): ReactNode {
+  const { origin: _origin, rowKey: _rowKey, ...meshProps } = props;
+  return <TessellatedCommitMesh {...meshProps} />;
+}
+
 /** @emoji 🧊 Renders all committed document solids tessellated by the active kernel. */
 export function CommittedMeshLayer({
   meshes,
@@ -2698,11 +2727,21 @@ export function CommittedMeshLayer({
   if (meshes.length === 0 || (!showFaces && !showEdges)) return null;
   const rev = modelRevision ?? 0;
   return (
-    <group>
+    <ViewRadiusLayer chunkSize={CAD_WORLD_CHUNK_SIZE} maxDistance={CAD_WORLD_MAX_DISTANCE}>
       {meshes.map((row, i) => (
-        <TessellatedCommitMesh key={`${row.solid}:r${rev}:${meshTransferContentKey(row.mesh, i)}`} mesh={row.mesh} pickable={pickable} showFaces={showFaces} showEdges={showEdges} onFacePointerMove={onFacePointerMove} onFacePointerDown={onFacePointerDown} />
+        <ChunkedCommitMeshRow
+          key={`${row.solid}:r${rev}:${meshTransferContentKey(row.mesh, i)}`}
+          rowKey={`${row.solid}:r${rev}:${meshTransferContentKey(row.mesh, i)}`}
+          origin={meshTransferOrigin(row.mesh)}
+          mesh={row.mesh}
+          pickable={pickable}
+          showFaces={showFaces}
+          showEdges={showEdges}
+          onFacePointerMove={onFacePointerMove}
+          onFacePointerDown={onFacePointerDown}
+        />
       ))}
-    </group>
+    </ViewRadiusLayer>
   );
 }
 // #endregion 🧊CommittedMesh
@@ -2767,7 +2806,7 @@ export interface InteractionCanvasProps {
   readonly shadows?: boolean | "basic" | "percentage" | "soft" | "variance";
   readonly style?: CSSProperties;
   readonly className?: string;
-  readonly gl?: React.ComponentProps<typeof Canvas>["gl"];
+  readonly gl?: WorldCanvasProps["gl"];
   readonly onPointerDown?: (event: PointerEvent) => void;
   readonly onPointerMove?: (event: PointerEvent) => void;
   readonly onPointerUp?: (event: PointerEvent) => void;
@@ -2856,46 +2895,7 @@ function InteractionSelectionInvalidateBridge({ selectionKey }: { readonly selec
   return null;
 }
 
-/** @emoji 🔄 Keeps demand frameloop alive while the camera moves (playground `Invalidator`). */
-function SpatialInvalidator(): null {
-  const { controls, camera } = useThree();
-  const lastPos = reactHostPort.useRef(new THREE.Vector3());
-  const lastTarget = reactHostPort.useRef(new THREE.Vector3());
-  useFrame(({ invalidate }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- drei OrbitControls
-    const ctrl = controls as any;
-    if (!ctrl) return;
-    const target = ctrl.target as THREE.Vector3 | undefined;
-    const moved = !camera.position.equals(lastPos.current) || (target ? !target.equals(lastTarget.current) : false);
-    if (moved) {
-      lastPos.current.copy(camera.position);
-      if (target) lastTarget.current.copy(target);
-      invalidate();
-    }
-  });
-  return null;
-}
-
-/** @emoji 🛰️ Orbit controls that repaint on demand and never block R3F pointer routing. */
-function SpatialOrbitControls({ onCameraNavigate }: { readonly onCameraNavigate?: (active: boolean) => void }): ReactNode {
-  const invalidate = useThree((state) => state.invalidate);
-  return (
-    <OrbitControls
-      makeDefault
-      enableDamping={false}
-      onChange={() => invalidate()}
-      onStart={() => onCameraNavigate?.(true)}
-      onEnd={() => onCameraNavigate?.(false)}
-      mouseButtons={{
-        LEFT: -1 as unknown as MOUSE,
-        MIDDLE: MOUSE.DOLLY,
-        RIGHT: MOUSE.ROTATE,
-      }}
-    />
-  );
-}
-
-/** @emoji 🪩 Root `<Canvas>` configuration for factory viewports. */
+/** @emoji 🪩 Root infinite-world canvas for factory viewports ({@link WorldCanvas}, z-up). */
 export function InteractionCanvas({
   children,
   onCanvasReady,
@@ -2921,34 +2921,32 @@ export function InteractionCanvas({
   onLostPointerCapture,
 }: InteractionCanvasProps): ReactNode {
   return (
-    <Canvas
+    <WorldCanvas
       frameloop={frameloop}
       className={className}
       style={{ height: "100%", width: "100%", ...style }}
       dpr={dpr}
       shadows={shadows}
-      camera={{
-        up: [0, 0, 1],
-        position: cameraPosition,
-        fov: cameraFov,
-        ...(cameraNear !== undefined ? { near: cameraNear } : {}),
-        ...(cameraFar !== undefined ? { far: cameraFar } : {}),
-      }}
+      cameraUp={[0, 0, 1]}
+      cameraPosition={cameraPosition}
+      cameraFov={cameraFov}
+      cameraNear={cameraNear}
+      cameraFar={cameraFar}
+      background={background}
       gl={gl}
-      onPointerDown={(event) => onPointerDown?.(event.nativeEvent)}
-      onPointerMove={(event) => onPointerMove?.(event.nativeEvent)}
-      onPointerUp={(event) => onPointerUp?.(event.nativeEvent)}
-      onPointerLeave={(event) => onPointerLeave?.(event.nativeEvent)}
-      onPointerCancel={(event) => onPointerCancel?.(event.nativeEvent)}
-      onWheel={(event) => onWheel?.(event.nativeEvent)}
-      onContextMenu={(event) => onContextMenu?.(event.nativeEvent)}
-      onDoubleClick={(event) => onDoubleClick?.(event.nativeEvent)}
-      onLostPointerCapture={(event) => onLostPointerCapture?.(event.nativeEvent)}
-      onCreated={({ camera, gl: renderer }) => onCanvasReady?.({ camera, domElement: renderer.domElement })}
+      onCanvasReady={onCanvasReady}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerLeave}
+      onPointerCancel={onPointerCancel}
+      onWheel={onWheel}
+      onContextMenu={onContextMenu}
+      onDoubleClick={onDoubleClick}
+      onLostPointerCapture={onLostPointerCapture}
     >
-      {background ? <color attach="background" args={[background]} /> : null}
       {children}
-    </Canvas>
+    </WorldCanvas>
   );
 }
 
@@ -2994,7 +2992,7 @@ export interface InteractionSpatialViewProps {
   readonly theme?: InteractionSpatialViewTheme;
   readonly slots?: InteractionSpatialViewSlots;
   /** @emoji 🎛 When set with targets, shows a gumball at the selection centroid (toolbar move/rotate/scale). */
-  readonly transformGumballMode?: CadTransformGumballMode | null;
+  readonly transformGumballConfig?: CadGumballConfig | null;
   readonly transformGumballTargets?: readonly SelectionTarget[];
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
 }
@@ -3047,7 +3045,7 @@ export function InteractionSpatialView({
   autoFitBehavior = "initial",
   theme = defaultInteractionSpatialViewTheme,
   slots,
-  transformGumballMode = null,
+  transformGumballConfig = null,
   transformGumballTargets = [],
   onTransformGumballCommit,
 }: InteractionSpatialViewProps): ReactNode {
@@ -3061,18 +3059,7 @@ export function InteractionSpatialView({
     onSnapshotRevisionChange?.(snapshot.revision);
   }, [snapshot.revision, onSnapshotRevisionChange]);
   const resolvedTheme = { ...defaultInteractionSpatialViewTheme, ...theme };
-  const gridDivisions = resolvedTheme.gridDivisions ?? 40;
-  const gridSize = resolvedTheme.gridSize ?? 40;
-  const gridHelper = reactHostPort.useMemo(() => {
-    const palette = spatialSceneColors();
-    const g = new THREE.GridHelper(gridSize, gridDivisions, spatialSceneColorToHex(palette.gridMajor), spatialSceneColorToHex(palette.gridMinor));
-    g.rotation.x = Math.PI / 2;
-    g.position.set(0, 0, 0.002);
-    g.traverse((obj) => {
-      obj.raycast = raycastNone;
-    });
-    return g;
-  }, [gridDivisions, gridSize]);
+  const cadLodRef = reactHostPort.useRef(DEFAULT_MANUAL_LOD);
   const layerMeshes = reactHostPort.useMemo(() => {
     if (committedMeshes?.length) return committedMeshes;
     if (committedMesh) return [{ solid: solidRef("committed"), mesh: committedMesh }];
@@ -3113,77 +3100,105 @@ export function InteractionSpatialView({
     <>
       {slots?.beforeScene}
       <InvalidateOnRevision revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${pickGeometryRevision}:${hoveredTargetKey ?? ""}:${selectedTargetKey ?? ""}:${selectedTargetKeys?.size ?? 0}`} />
-      <SpatialInvalidator />
+      <WorldCameraInvalidator />
       {autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
-      {slots?.environment}
-      {slots?.lights ?? (
-        <>
-          <ambientLight intensity={resolvedTheme.ambientIntensity ?? 0.45} />
-          <directionalLight position={dirPos} intensity={resolvedTheme.directionalIntensity ?? 1.1} />
-        </>
-      )}
-      <SpatialOrbitControls onCameraNavigate={onCameraNavigate} />
-      <primitive object={gridHelper} />
-      <GroundPickPlane
-        enabled={pickPlaneEnabled}
-        onPick={onGroundPickEvent}
-        onContextPick={onGroundContextEvent}
-        onPointerMove={onScenePointerMoveEvent}
-        pointerMoveEnabled={groundMoveOn}
-        planeColor={resolvedTheme.groundPlaneColor ?? spatialSceneColors().groundPlane}
-        planeOpacity={resolvedTheme.groundPlaneOpacity}
-      />
-      <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />
-      {showPickLayer ? (
-        <SpatialPickGeometryLayer
-          geometry={scenePickGeometry}
-          activeModelDefinitionId={activeModelDefinitionId}
-          modelDefinitionRevision={modelDefinitionRevision}
-          geometryPreviewTransform={geometryPreviewTransform}
-          selectionAccept={selectionAccept}
-          selectionKindToggles={selectionKindToggles}
-          filterKindToggles={filterKindToggles}
-          hoveredTargetKey={hoveredTargetKey}
-          selectedTargetKey={selectedTargetKey}
-          selectedTargetKeys={selectedTargetKeys}
-          hostSelectionEnabled={hostSelectionEnabled}
-          onSelectionRequest={onSelectionRequest}
-        />
-      ) : null}
-      {heightMoveOn && origin && corner ? <HeightDragSurface origin={origin} corner={corner} /> : null}
-      {zRodMoveOn && origin ? <VerticalZDragRod origin={origin} /> : null}
-      {origin && (heightMoveOn || zRodMoveOn) ? (
-        <SpatialConstrainedPointerBridge
-          mode={zRodMoveOn ? "vertical-z" : heightMoveOn ? "height-yz" : null}
-          origin={origin}
-          corner={corner}
-          enabled={heightMoveOn || zRodMoveOn}
-          onPointerMove={onScenePointerMoveEvent}
-          onPointerDown={
-            zRodMoveOn
-              ? (point) => {
-                  const event = createSpatialPickEvent("pointer.down", point, null);
-                  onInteractionEvent?.(event);
-                }
-              : undefined
-          }
-        />
-      ) : null}
-      <CommittedMeshLayer
-        meshes={layerMeshes}
-        modelRevision={geometry?.revision ?? 0}
-        pickable={committedMeshPickable}
-        showFaces={sceneVisibility.showCommittedFaces}
-        showEdges={sceneVisibility.showCommittedEdges}
-        onFacePointerDown={onCommittedFacePointerDown}
-        onFacePointerMove={onCommittedFacePointerMove}
-      />
-      <InteractionDisplay geometry={geometry} model={displayModel ?? snapshot.display} renderItem={renderDisplayItem} />
-      {slots?.afterDisplay}
-      {slots?.afterCommitted}
-      {transformGumballMode && geometry && onTransformGumballCommit ? (
-        <SpatialTransformGumball mode={transformGumballMode} model={geometry} targets={transformGumballTargets} previewKernel={previewKernel} onCommit={onTransformGumballCommit} />
-      ) : null}
+      <WorldLodBridge
+        lodRef={cadLodRef}
+        distanceReference={100}
+        gridFactor={DEFAULT_LOD_GRID_FACTOR}
+        gridSnapEnabled={false}
+        showLodGrid={false}
+        automaticLod
+        depthVariableLod={false}
+        manualLod={DEFAULT_MANUAL_LOD}
+        gridDatum={[0, 0, 0]}
+      >
+        {slots?.environment}
+        {slots?.lights ?? (
+          <>
+            <ambientLight intensity={resolvedTheme.ambientIntensity ?? 0.45} />
+            <directionalLight position={dirPos} intensity={resolvedTheme.directionalIntensity ?? 1.1} />
+          </>
+        )}
+        <WorldOrbitGated onCameraNavigate={onCameraNavigate} />
+        <WorldLayer order={0} name="cad.grid">
+          <WorldLodGridHelper gridDatum={[0, 0, 0]} />
+        </WorldLayer>
+        <WorldLayer order={10} name="cad.ground-pick">
+          <GroundPickPlane
+            enabled={pickPlaneEnabled}
+            onPick={onGroundPickEvent}
+            onContextPick={onGroundContextEvent}
+            onPointerMove={onScenePointerMoveEvent}
+            pointerMoveEnabled={groundMoveOn}
+            planeColor={resolvedTheme.groundPlaneColor ?? spatialSceneColors().groundPlane}
+            planeOpacity={resolvedTheme.groundPlaneOpacity}
+          />
+        </WorldLayer>
+        <WorldLayer order={20} name="cad.factory-wireframe">
+          <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />
+        </WorldLayer>
+        <WorldLayer order={30} name="cad.pick">
+          {showPickLayer ? (
+            <SpatialPickGeometryLayer
+              geometry={scenePickGeometry}
+              activeModelDefinitionId={activeModelDefinitionId}
+              modelDefinitionRevision={modelDefinitionRevision}
+              geometryPreviewTransform={geometryPreviewTransform}
+              selectionAccept={selectionAccept}
+              selectionKindToggles={selectionKindToggles}
+              filterKindToggles={filterKindToggles}
+              hoveredTargetKey={hoveredTargetKey}
+              selectedTargetKey={selectedTargetKey}
+              selectedTargetKeys={selectedTargetKeys}
+              hostSelectionEnabled={hostSelectionEnabled}
+              onSelectionRequest={onSelectionRequest}
+            />
+          ) : null}
+        </WorldLayer>
+        <WorldLayer order={35} name="cad.interaction-drag">
+          {heightMoveOn && origin && corner ? <HeightDragSurface origin={origin} corner={corner} /> : null}
+          {zRodMoveOn && origin ? <VerticalZDragRod origin={origin} /> : null}
+          {origin && (heightMoveOn || zRodMoveOn) ? (
+            <SpatialConstrainedPointerBridge
+              mode={zRodMoveOn ? "vertical-z" : heightMoveOn ? "height-yz" : null}
+              origin={origin}
+              corner={corner}
+              enabled={heightMoveOn || zRodMoveOn}
+              onPointerMove={onScenePointerMoveEvent}
+              onPointerDown={
+                zRodMoveOn
+                  ? (point) => {
+                      const event = createSpatialPickEvent("pointer.down", point, null);
+                      onInteractionEvent?.(event);
+                    }
+                  : undefined
+              }
+            />
+          ) : null}
+        </WorldLayer>
+        <WorldLayer order={40} name="cad.committed">
+          <CommittedMeshLayer
+            meshes={layerMeshes}
+            modelRevision={geometry?.revision ?? 0}
+            pickable={committedMeshPickable}
+            showFaces={sceneVisibility.showCommittedFaces}
+            showEdges={sceneVisibility.showCommittedEdges}
+            onFacePointerDown={onCommittedFacePointerDown}
+            onFacePointerMove={onCommittedFacePointerMove}
+          />
+        </WorldLayer>
+        <WorldLayer order={50} name="cad.display">
+          <InteractionDisplay geometry={geometry} model={displayModel ?? snapshot.display} renderItem={renderDisplayItem} />
+          {slots?.afterDisplay}
+        </WorldLayer>
+        <WorldLayer order={60} name="cad.gumball">
+          {slots?.afterCommitted}
+          {cadGumballConfigVisible(transformGumballConfig) && geometry && onTransformGumballCommit ? (
+            <SpatialTransformGumball config={transformGumballConfig!} model={geometry} targets={transformGumballTargets} previewKernel={previewKernel} onCommit={onTransformGumballCommit} />
+          ) : null}
+        </WorldLayer>
+      </WorldLodBridge>
     </>
   );
 }
@@ -3747,7 +3762,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly autoFitBehavior?: SpatialAutoFitBehavior;
   readonly tessellationTolerance?: number;
   /** @emoji 🎛 Toolbar gumball mode; hidden while an interaction session is active. */
-  readonly transformGumballMode?: CadTransformGumballMode | null;
+  readonly transformGumballConfig?: CadGumballConfig | null;
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
 }
 
@@ -3756,6 +3771,62 @@ export interface InteractionReplEngagementInteraction {
   readonly id: string;
   readonly key: string;
   readonly label: string;
+}
+
+function engagementRingOptionNumericValue(optionId: string): number | null {
+  const match = optionId.match(/^(?:angle|length)-(.+)$/);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : null;
+}
+
+/** @emoji 🎛 Maps {@link ResolvedInteractionEngagementControl} to a live {@link EngagementControl}. */
+export function buildEngagementControlFromResolved(
+  resolved: ResolvedInteractionEngagementControl,
+  handlers: {
+    readonly onNumericChange: (value: number) => void;
+    readonly onNumericCommit?: (value: number) => void;
+  },
+): EngagementControl {
+  if (resolved.kind === "ring") {
+    return {
+      kind: "ring",
+      id: `engagement-control-${resolved.label.toLowerCase().replace(/\s+/g, "-")}`,
+      label: resolved.label,
+      value: resolved.value,
+      options: resolved.options.map((row) => ({ id: row.id, label: row.label })),
+      onSelect: (id) => {
+        const numeric = engagementRingOptionNumericValue(id);
+        if (numeric !== null) handlers.onNumericChange(numeric);
+      },
+    };
+  }
+  if (resolved.kind === "slider") {
+    return {
+      kind: "slider",
+      id: `engagement-control-${resolved.label.toLowerCase().replace(/\s+/g, "-")}`,
+      label: resolved.label,
+      value: resolved.value,
+      min: resolved.min,
+      max: resolved.max!,
+      step: resolved.step,
+      unit: resolved.unit,
+      onChange: handlers.onNumericChange,
+      onCommit: handlers.onNumericCommit,
+    };
+  }
+  return {
+    kind: "stepper",
+    id: `engagement-control-${resolved.label.toLowerCase().replace(/\s+/g, "-")}`,
+    label: resolved.label,
+    value: resolved.value,
+    min: resolved.min,
+    max: resolved.max,
+    step: resolved.step,
+    unit: resolved.unit,
+    onChange: handlers.onNumericChange,
+    onCommit: handlers.onNumericCommit,
+  };
 }
 
 /** @emoji 💬 Inputs for {@link buildInteractionReplEngagement} (interaction state + callbacks for the floating panel). */
@@ -3768,6 +3839,7 @@ export interface InteractionReplEngagementInputs {
   readonly lastResponseErrorCount: number;
   readonly selectionCount: number;
   readonly cmdLine: string;
+  readonly control?: EngagementControl;
   readonly transitions: readonly InteractionKeybindRow[];
   readonly interactions: readonly InteractionReplEngagementInteraction[];
   readonly onTransition: (row: InteractionKeybindRow) => void;
@@ -3836,10 +3908,12 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
         detail: replUserFacingSuggestionDetail(interaction.key),
         onSelect: () => inputs.onStartInteraction(interaction.id),
       }));
-  if (options.length === 0 && !input && status.length === 0 && possibleEngagements.length === 0) return null;
+  if (options.length === 0 && !input && !inputs.control && status.length === 0 && possibleEngagements.length === 0) return null;
   return {
+    sessionActive: inputs.boundInteractionSession,
     options: options.length ? options : undefined,
     input,
+    control: inputs.control,
     status: status.length ? status : undefined,
     possibleEngagements: possibleEngagements.length ? possibleEngagements : undefined,
   };
@@ -3925,7 +3999,7 @@ export function InteractionRepl({
   frameloop = "always",
   canvas: canvasOverrides,
   spatialView: spatialViewOverrides,
-  transformGumballMode = null,
+  transformGumballConfig = null,
   onTransformGumballCommit,
 }: InteractionReplProps): ReactNode {
   const engagementCommandMode = !showAside && showEngagement;
@@ -3995,7 +4069,7 @@ export function InteractionRepl({
   const cameraNavigatingRef = reactHostPort.useRef(false);
   const interactionActive = isInteractionSessionActive(spec, snapshot.state);
   const boundInteractionSession = Boolean(interactionId) && interactionActive;
-  const activeTransformGumballMode = !boundInteractionSession && transformGumballMode ? transformGumballMode : null;
+  const activeTransformGumballConfig = !boundInteractionSession && cadGumballConfigVisible(transformGumballConfig) ? transformGumballConfig : null;
   const displayedSelectionTargets = reactHostPort.useMemo(
     () => replDisplayedSelectionTargets(boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState),
     [boundInteractionSession, activeModelDefinitionId, snapshot.state, rendererSelectionByModel, interactionSelectionByState],
@@ -4718,6 +4792,38 @@ export function InteractionRepl({
     })();
   }, [cmdLine, confirmInteractionSelection, spec, rt, tryCommitNumericEntry, tryConfirmOrNumericCommit, tryFinalizeInteractionStep, trySubmitLine, filtered, runSuggestion, activeIndex]);
 
+  const applyEngagementNumericValue = reactHostPort.useCallback(
+    (value: number) => {
+      setCmdLine(String(value));
+      const state = rt.getSnapshot().state;
+      const applyEv = interactionNumericEntryApplyEvent(spec, state, value);
+      if (applyEv) void rt.send(applyEv);
+    },
+    [spec, rt, setCmdLine],
+  );
+
+  const commitEngagementNumericValue = reactHostPort.useCallback(
+    (value: number) => {
+      applyEngagementNumericValue(value);
+      void (async () => {
+        if (interactionInNumericEntryState(spec, rt.getSnapshot().state)) {
+          await tryCommitNumericEntry();
+        }
+      })();
+    },
+    [applyEngagementNumericValue, spec, rt, tryCommitNumericEntry],
+  );
+
+  const engagementControl = reactHostPort.useMemo((): EngagementControl | undefined => {
+    if (!showEngagement || !boundInteractionSession || !interactionInNumericEntryState(spec, snapshot.state)) return undefined;
+    const resolved = interactionControlForState(spec, snapshot.state, rt.getSnapshot().context as Record<string, unknown>);
+    if (!resolved) return undefined;
+    return buildEngagementControlFromResolved(resolved, {
+      onNumericChange: applyEngagementNumericValue,
+      onNumericCommit: commitEngagementNumericValue,
+    });
+  }, [applyEngagementNumericValue, boundInteractionSession, commitEngagementNumericValue, rt, showEngagement, snapshot.state, spec]);
+
   const engagementSpec = reactHostPort.useMemo<EngagementSpec | null>(
     () =>
       buildInteractionReplEngagement({
@@ -4729,6 +4835,7 @@ export function InteractionRepl({
         lastResponseErrorCount: snapshot.lastResponse?.errors?.length ?? 0,
         selectionCount: displayedSelectionTargets.length,
         cmdLine,
+        control: engagementControl,
         transitions: transitionRows,
         interactions: scopedInteractions,
         onTransition: runTransitionRow,
@@ -4738,7 +4845,7 @@ export function InteractionRepl({
         onRepeatLast: lastFinalizedInteractionId ? repeatLastFinalizedInteraction : undefined,
         onAbort: handleEscapeKey,
       }),
-    [showEngagement, engagementCommandMode, boundInteractionSession, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine, handleEscapeKey, lastFinalizedInteractionId, repeatLastFinalizedInteraction],
+    [showEngagement, engagementCommandMode, boundInteractionSession, engagementControl, transitionRows, scopedInteractions, runTransitionRow, interactionId, snapshot.state, snapshot.lastResponse, displayedSelectionTargets, cmdLine, setCmdLine, submitEngagementLine, handleEscapeKey, lastFinalizedInteractionId, repeatLastFinalizedInteraction],
   );
 
   reactHostPort.useEffect(() => {
@@ -4947,7 +5054,7 @@ export function InteractionRepl({
             autoFitBehavior={autoFitBehavior}
             theme={viewTheme}
             slots={viewSlots}
-            transformGumballMode={activeTransformGumballMode}
+            transformGumballConfig={activeTransformGumballConfig}
             transformGumballTargets={displayedSelectionTargets}
             onTransformGumballCommit={onTransformGumballCommit}
             {...spatialViewOverrides}
@@ -5631,6 +5738,7 @@ if (import.meta.vitest) {
         lastResponseOk: true,
         onTransition: (row) => transitionRuns.push(row.key),
       });
+      expect(spec?.sessionActive).toBe(true);
       expect(spec?.options?.[0]?.label).toBe("CConfirm");
       expect(spec?.input?.placeholder).toBe(ENGAGEMENT_USER.commandPlaceholderActive);
       expect(spec?.status?.map((row) => row.content)).toEqual(["Step: First Corner", "2 selected", "OK"]);
@@ -5703,6 +5811,25 @@ if (import.meta.vitest) {
     it("summarizes failed responses with error counts", () => {
       const spec = buildInteractionReplEngagement({ ...baseInputs, lastResponseOk: false, lastResponseErrorCount: 2 });
       expect(spec?.status?.some((row) => row.content === "Error (2)")).toBe(true);
+    });
+
+    it("forwards engagement control when numeric entry is active", () => {
+      const changed: number[] = [];
+      const spec = buildInteractionReplEngagement({
+        ...baseInputs,
+        state: "first_corner_height",
+        control: {
+          kind: "stepper",
+          label: "Height",
+          value: 2,
+          min: 0,
+          step: 0.1,
+          onChange: (value) => changed.push(value),
+        },
+      });
+      expect(spec?.control?.kind).toBe("stepper");
+      spec?.control?.kind === "stepper" && spec.control.onChange?.(4);
+      expect(changed).toEqual([4]);
     });
   });
 
@@ -5936,6 +6063,39 @@ if (import.meta.vitest) {
       applyModelDiff(model, diff);
       for (const v of Object.values(model.vertices)) {
         expect(v.position[0]).toBeGreaterThanOrEqual(1.5);
+      }
+    });
+
+    it("transformGumballMatrixDiff rotates solid selection vertices", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+      const solidId = Object.keys(model.solids)[0]!;
+      const before = Object.values(model.vertices).map((v) => v.position.join(","));
+      const diff = transformGumballMatrixDiff(
+        model,
+        [{ kind: "solid", id: solidId, editable: true }],
+        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        { position: [0, 0, 0], quaternion: [0, 0, 0.7071068, 0.7071068], scale: [1, 1, 1] },
+      );
+      applyModelDiff(model, diff);
+      const after = Object.values(model.vertices).map((v) => v.position.join(","));
+      expect(after.sort().join("|")).not.toBe(before.sort().join("|"));
+    });
+
+    it("transformGumballMatrixDiff scales solid selection vertices", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+      const solidId = Object.keys(model.solids)[0]!;
+      const diff = transformGumballMatrixDiff(
+        model,
+        [{ kind: "solid", id: solidId, editable: true }],
+        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 2, 2] },
+      );
+      applyModelDiff(model, diff);
+      for (const v of Object.values(model.vertices)) {
+        expect(v.position[0]).toBeGreaterThanOrEqual(0);
+        expect(v.position[0]).toBeLessThanOrEqual(2.01);
       }
     });
 

@@ -11,95 +11,107 @@
 //#region 🗃️Exports
 // Builtin Metabolism kit and UI icons only — test JSON lives in `@semio/fixtures`.
 
-import MetabolismKitData from "../fixtures/kit/dev/metabolism/wip/initialKit/kit.semio.json";
+import { assembleSplitInitialKitFromDirectory } from "../fixtures/script.ts";
+import { createIconComponent } from "@ui/react";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-export {
-  Plus as AddIcon, AlertCircle as AlertCircleIcon,
-  ArrowLeft as ArrowLeftIcon,
-  Award as AwardIcon,
-  BookOpen as BookIcon,
-  Camera as CameraIcon,
-  MessageCircle as ChatIcon,
-  Check as CheckIcon,
-  CheckIcon as CheckIconAlt,
-  ChevronDown as ChevronDownIcon,
-  ChevronDownIcon as ChevronDownIconAlt,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-  ChevronsUpDown as ChevronsUpDownIcon,
-  X as CloseIcon,
-  XIcon as CloseIconAlt,
-  Code as CodeIcon,
-  Network as ConnectionIcon,
-  Crosshair as ConnectorIcon, Copy as CopyIcon, Info as DetailsIcon,
-  Grid3x3 as DiagramIcon,
-  Link2Off as DisconnectIcon,
-  FileText as DocumentIcon,
-  ExternalLink as ExternalLinkIcon,
-  FileArchive as FileArchiveIcon,
-  FileCode as FileCodeIcon,
-  FileImage as FileImageIcon,
-  FileJson as FileJsonIcon,
-  FileSpreadsheet as FileSpreadsheetIcon,
-  FileType as FileTypeIcon,
-  FileVideo as FileVideoIcon,
-  Focus as FocusIcon,
-  Folder as FolderIcon,
-  Globe as GlobeIcon,
-  GripVertical as GripVerticalIcon,
-  Hand as HandIcon,
-  Hash as HashIcon,
-  Home as HomeIcon,
-  Layers as HudIcon,
-  PanelTop as HudPanelIcon,
-  Info as InfoIcon,
-  Combine as IntersectIcon,
-  Layout as LayoutIcon,
-  PanelLeft as LeftSidePanelIcon,
-  Lightbulb as LightbulbIcon,
-  Loader2 as LoaderIcon,
-  HardDrive as LocalKitIcon,
-  Maximize2 as Maximize2Icon,
-  MessageCircle,
-  Minimize2 as Minimize2Icon,
-  Monitor as MonitorIcon,
-  Moon as MoonIcon,
-  MoreHorizontal as MoreHorizontalIcon,
-  MousePointer as MousePointerIcon,
-  ArrowLeft as NavigateBackIcon,
-  ArrowRight as NavigateForwardIcon,
-  ArrowUp as NavigateUpIcon,
-  Pause as PauseIcon,
-  Puzzle as PieceIcon,
-  Play as PlayIcon,
-  Plug as PortIcon,
-  Circle as RecordIcon,
-  Cloud as RemoteKitIcon,
-  Minus as RemoveIcon, RotateCcw as ResetIcon, PanelRight as RightSidePanelIcon,
-  Eye as SceneIcon,
-  SearchIcon as SearchIcon,
-  MousePointer2 as SelectToolIcon,
-  Settings as SettingsIcon, SkipBack as SkipBackIcon,
-  SkipForward as SkipForwardIcon,
-  Smartphone as SmartphoneIcon,
-  ArrowUp as SortAscendingIcon,
-  ArrowDown as SortDescendingIcon,
-  BarChart3 as StatsIcon,
-  Square as StopIcon,
-  Sun as SunIcon,
-  Tablet as TabletIcon,
-  Table2 as TableViewIcon,
-  Clock as TemporaryKitIcon,
-  Hammer as ToolbarIcon,
-  Wrench as ToolsIcon,
-  TriangleAlert as TriangleAlertIcon,
-  GraduationCap as TutorialIcon,
-  Box as TypeIcon,
-  User as UserIcon,
-  Box as WorkbenchIcon
-} from "lucide-react";
+const MetabolismKitData = assembleSplitInitialKitFromDirectory(
+  join(dirname(fileURLToPath(import.meta.url)), "../fixtures/stores/metabolism/wip/initialKit"),
+);
 
-export type { LucideIcon } from "lucide-react";
+//#region 🔖Icons
+export const AddIcon = createIconComponent("plus");
+export const AlertCircleIcon = createIconComponent("alert-circle");
+export const ArrowLeftIcon = createIconComponent("arrow-left");
+export const AwardIcon = createIconComponent("award");
+export const BookIcon = createIconComponent("book-open");
+export const CameraIcon = createIconComponent("camera");
+export const ChatIcon = createIconComponent("message-circle");
+export const CheckIcon = createIconComponent("check");
+export const CheckIconAlt = CheckIcon;
+export const ChevronDownIcon = createIconComponent("chevron-down");
+export const ChevronDownIconAlt = ChevronDownIcon;
+export const ChevronLeftIcon = createIconComponent("chevron-left");
+export const ChevronRightIcon = createIconComponent("chevron-right");
+export const ChevronsUpDownIcon = createIconComponent("chevrons-up-down");
+export const CloseIcon = createIconComponent("x");
+export const CloseIconAlt = CloseIcon;
+export const CodeIcon = createIconComponent("code");
+export const ConnectionIcon = createIconComponent("network");
+export const ConnectorIcon = createIconComponent("crosshair");
+export const CopyIcon = createIconComponent("copy");
+export const DetailsIcon = createIconComponent("info");
+export const DiagramIcon = createIconComponent("grid-3x3");
+export const DisconnectIcon = createIconComponent("link-2-off");
+export const DocumentIcon = createIconComponent("file-text");
+export const ExternalLinkIcon = createIconComponent("external-link");
+export const FileArchiveIcon = createIconComponent("file-archive");
+export const FileCodeIcon = createIconComponent("file-code");
+export const FileImageIcon = createIconComponent("file-image");
+export const FileJsonIcon = createIconComponent("file-json");
+export const FileSpreadsheetIcon = createIconComponent("file-spreadsheet");
+export const FileTypeIcon = createIconComponent("file-type");
+export const FileVideoIcon = createIconComponent("file-video");
+export const FocusIcon = createIconComponent("focus");
+export const FolderIcon = createIconComponent("folder");
+export const GlobeIcon = createIconComponent("globe");
+export const GripVerticalIcon = createIconComponent("grip-vertical");
+export const HandIcon = createIconComponent("hand");
+export const HashIcon = createIconComponent("hash");
+export const HomeIcon = createIconComponent("home");
+export const HudIcon = createIconComponent("layers");
+export const HudPanelIcon = createIconComponent("panel-top");
+export const InfoIcon = createIconComponent("info");
+export const IntersectIcon = createIconComponent("combine");
+export const LayoutIcon = createIconComponent("layout");
+export const LeftSidePanelIcon = createIconComponent("panel-left");
+export const LightbulbIcon = createIconComponent("lightbulb");
+export const LoaderIcon = createIconComponent("loader-2");
+export const LocalKitIcon = createIconComponent("hard-drive");
+export const Maximize2Icon = createIconComponent("maximize-2");
+export const MessageCircle = createIconComponent("message-circle");
+export const Minimize2Icon = createIconComponent("minimize-2");
+export const MonitorIcon = createIconComponent("monitor");
+export const MoonIcon = createIconComponent("moon");
+export const MoreHorizontalIcon = createIconComponent("more-horizontal");
+export const MousePointerIcon = createIconComponent("mouse-pointer");
+export const NavigateBackIcon = createIconComponent("arrow-left");
+export const NavigateForwardIcon = createIconComponent("arrow-right");
+export const NavigateUpIcon = createIconComponent("arrow-up");
+export const PauseIcon = createIconComponent("pause");
+export const PieceIcon = createIconComponent("puzzle");
+export const PlayIcon = createIconComponent("play");
+export const PortIcon = createIconComponent("plug");
+export const RecordIcon = createIconComponent("circle");
+export const RemoteKitIcon = createIconComponent("cloud");
+export const RemoveIcon = createIconComponent("minus");
+export const ResetIcon = createIconComponent("rotate-ccw");
+export const RightSidePanelIcon = createIconComponent("panel-right");
+export const SceneIcon = createIconComponent("eye");
+export const SearchIcon = createIconComponent("search");
+export const SelectToolIcon = createIconComponent("mouse-pointer-2");
+export const SettingsIcon = createIconComponent("settings");
+export const SkipBackIcon = createIconComponent("skip-back");
+export const SkipForwardIcon = createIconComponent("skip-forward");
+export const SmartphoneIcon = createIconComponent("smartphone");
+export const SortAscendingIcon = createIconComponent("arrow-up");
+export const SortDescendingIcon = createIconComponent("arrow-down");
+export const StatsIcon = createIconComponent("bar-chart-3");
+export const StopIcon = createIconComponent("square");
+export const SunIcon = createIconComponent("sun");
+export const TabletIcon = createIconComponent("tablet");
+export const TableViewIcon = createIconComponent("table-2");
+export const TemporaryKitIcon = createIconComponent("clock");
+export const ToolbarIcon = createIconComponent("hammer");
+export const ToolsIcon = createIconComponent("wrench");
+export const TriangleAlertIcon = createIconComponent("triangle-alert");
+export const TutorialIcon = createIconComponent("graduation-cap");
+export const TypeIcon = createIconComponent("box");
+export const UserIcon = createIconComponent("user");
+export const WorkbenchIcon = createIconComponent("box");
+export type { IconName } from "@ui/assets";
+//#endregion 🔖Icons
 
 //#region 🔖KitBootstrapHelpers
 /** @emoji 🧾 Normalizes list-or-{items} shapes found on `wip.initialKit` DTOs. */

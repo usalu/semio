@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@reasoning/mindmap/wires/react",
+  "version": "0.1.0",
+  "description": "reasoning · mindmap · wires react library",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "test": "bun nx run @reasoning/mindmap/wires/react:test"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@puzzle/2d/react": "workspace:*",
+    "@reasoning/mindmap/react": "workspace:*"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "reasoning/mindmap/wires/react"
+  },
+  "bundleKind": "library"
+}

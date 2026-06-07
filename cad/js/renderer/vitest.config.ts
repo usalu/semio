@@ -42,6 +42,7 @@ export default defineConfig({
       { find: "@cad/js/kernel/brepjs", replacement: resolve(root, "../kernel/brepjs/index.ts") },
       { find: "@cad/js/machine/stately", replacement: resolve(root, "../machine/stately/index.ts") },
       { find: "@cad/js/query", replacement: resolve(root, "../query/index.ts") },
+      { find: "@infinite/world/r3f", replacement: resolve(repoRoot, "infinite/world/r3f/index.tsx") },
       { find: /^react$/, replacement: resolve(reactRoot, "index.js") },
       { find: /^react\/jsx-runtime$/, replacement: resolve(reactRoot, "jsx-runtime.js") },
       { find: /^react\/jsx-dev-runtime$/, replacement: resolve(reactRoot, "jsx-dev-runtime.js") },

@@ -9,12 +9,14 @@
 // #endregion 🧲Header
 
 import { Cursor, LoadingRow, Spinner } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box } from "lucide-react";
 
 // 🖼️#region 🛒Icons
+const Box = createIconComponent("box");
+
 const meta = {
-  title: "elements/react/Icons",
+  title: "🖱️ui⚛️react/Icons",
   component: Cursor,
   parameters: {
     layout: "centered",

@@ -40,7 +40,7 @@ const minimalKit = { types: minimalTypes, files: minimalFiles } as any;
 // #region 📌Design
 
 const meta: Meta<typeof DesignView> = {
-  title: "semio/react/Design",
+  title: "🏘️semio⚛️react/Design",
   component: DesignView,
   tags: ["autodocs"],
   parameters: { layout: "centered" },

@@ -10,15 +10,19 @@
 
 // #region 🔌Adapters
 import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem, reactHostPort } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { File, Folder, Settings } from "lucide-react";
 import type React from "react";
 import { expect, fireEvent, within } from "storybook/test";
 // #endregion 🔌Adapters
 
 // 🌳#region 📜Tree
+const File = createIconComponent("file-text");
+const Folder = createIconComponent("folder");
+const Settings = createIconComponent("settings");
+
 const meta = {
-  title: "elements/react/Tree",
+  title: "🖱️ui⚛️react/Tree",
   component: Tree,
   parameters: {
     layout: "centered",

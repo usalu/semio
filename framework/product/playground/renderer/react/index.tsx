@@ -21,8 +21,10 @@ import {
   LevelProvider,
   staticTreePanelDefinition,
   useCommandHotkey,
+  bootstrapElementsSurfaceChromeDocument,
   useElementsSurfaceChrome,
   useMediaQuery,
+  type EngagementControl,
   type EngagementSpec,
   type FooterItem,
   type NavbarItem,
@@ -36,11 +38,16 @@ import {
   type TreePanelSource,
   reactHostPort,
   Button,
+  Icon,
   IconSelector,
-  useNativeDragAndDrop,
-  usePointerDrag,
+  createIconComponent,
+  Ring,
   type ContextMenuItem,
   type UiTranslationKey,
+  readStoredUiChromeCompact,
+  readStoredUiChromeExpertise,
+  writeStoredUiChromeCompact,
+  writeStoredUiChromeExpertise,
 } from "@ui/react";
 import { clsx, type ClassValue } from "clsx";
 
@@ -52,9 +59,8 @@ const _playgroundCadToolbarI18nKeys = [
   "ui.toolbar.parent.transfer",
 ] as const satisfies readonly UiTranslationKey[];
 //#endregion 🪁I18n Compile Gate
-import type { LucideIcon } from "lucide-react";
-import { ClipboardList, Folder, Info, Library, ListTree, Settings, Tags } from "lucide-react";
 import * as React from "react";
+import type { ReactElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { twMerge } from "tailwind-merge";
 import {
@@ -89,13 +95,13 @@ import {
   type UiTreeSectionNode,
   type UiVec3Node,
   collectUiTreeItemDragData,
-  getSidePanelBodyMount,
   type UiPuzzle3dHostSurfaceNode,
   type UiTableHostSurfaceNode,
   enforcePlaygroundWindowEngagementInput,
   enforceWindowKindsEngagementInput,
   type WindowBodyViewContext,
   type WindowEngagement,
+  type WindowEngagementControl,
   type WindowLayout,
   type WindowMeasure,
 } from "@framework/playground/core";
@@ -141,20 +147,35 @@ export {
 } from "@framework/playground/core";
 import {
   ProductShell,
+  createBrowserStoragePort,
+  createFrameworkDisplayPanelTabs,
+  createFrameworkSettingsPanelTabs,
+  sideTabsToPanelTabs,
+  uiTreeNodeToTreePanelConfig,
+  renderUiControl,
   declareToolsToViewTools,
+  DisplayHostContext,
+  SettingsHostContext,
   findDefaultActiveWindowKindId,
   listPopulatedToolbarViewCategories,
   mergePlatformFooterChromeRows,
   registerSurfaceBinding,
   renderComponentHostSurface,
   unregisterSurfaceBinding,
+  registerUiPanelSurfaceHost,
   UIToolbar,
   useControllerStore,
+  shellWindowScopeId,
+  useShellWindowInstance,
   useStore,
   windowMeasuresToGolden,
+  shellTabIconComponent,
+  type DisplayHostApi,
+  type SettingsHostApi,
   type UiComponentHostSurfaceNode,
   type UIWindowMeasure,
 } from "@framework/platform/renderer/react";
+import { NamedLayoutStore } from "@framework/core";
 
 export { useControllerStore, useStore } from "@framework/platform/renderer/react";
 export type { Store } from "@framework/playground/core";
@@ -171,7 +192,7 @@ function isPlaygroundReactDescription(value: unknown): boolean {
 function enforcePlaygroundTreeItemsNoReactDescription(items: readonly TreeDataItem[], path: string): void {
   for (const item of items) {
     if (item.description != null && isPlaygroundReactDescription(item.description)) {
-      throw new Error(`Playground tree item "${path}/${item.id}" must not use a React description; use section.content with playgroundPanelSection().`);
+      throw new Error(`Playground tree item "${path}/${item.id}" must not use a React description; use item.control instead.`);
     }
     if (item.items?.length) {
       enforcePlaygroundTreeItemsNoReactDescription(item.items, `${path}/${item.id}`);
@@ -179,20 +200,16 @@ function enforcePlaygroundTreeItemsNoReactDescription(items: readonly TreeDataIt
   }
 }
 
-/** @emoji 🌲 Enforces playground panels: each section needs `items` and/or `content` (no JSON-only fallbacks). */
+/** @emoji 🌲 Enforces playground panels: each section must declare tree items. */
 export function enforcePlaygroundTreePanel(config: TreePanelConfig): void {
   if (!config.sections?.length) {
     throw new Error("Playground tree panel must declare at least one section.");
   }
   for (const section of config.sections) {
-    const hasItems = Boolean(section.items?.length);
-    const hasContent = section.content != null;
-    if (!hasItems && !hasContent) {
-      throw new Error(`Playground tree section "${section.id}" must declare items or content.`);
+    if (!section.items?.length) {
+      throw new Error(`Playground tree section "${section.id}" must declare at least one item.`);
     }
-    if (section.items?.length) {
-      enforcePlaygroundTreeItemsNoReactDescription(section.items, section.id);
-    }
+    enforcePlaygroundTreeItemsNoReactDescription(section.items, section.id);
   }
 }
 
@@ -221,24 +238,33 @@ export class StaticTreePanelDefinition implements TreePanelDefinition {
   }
 }
 
-/** @emoji 🌲 Tree panel that rebuilds sections when the builder returns a new section list. */
+/** @emoji 🌲 Tree panel that rebuilds when the builder returns sections or a full {@link TreePanelConfig}. */
 export class CallbackTreePanelDefinition implements TreePanelDefinition {
   private resolved: TreePanelConfig | null = null;
   private resolvedSections: TreeDataSection[] | null = null;
   private resolvedHighlightedIds: readonly string[] | null = null;
 
   constructor(
-    private readonly buildSections: () => TreeDataSection[],
+    private readonly buildTree: () => TreeDataSection[] | TreePanelConfig,
     private readonly buildHighlightedIds: () => readonly string[] = () => [],
   ) {}
 
   resolveTree(): TreePanelConfig {
-    const sections = this.buildSections();
-    const highlightedIds = this.buildHighlightedIds();
+    const built = this.buildTree();
+    const sections = Array.isArray(built) ? built : built.sections;
+    const extraHighlightedIds = this.buildHighlightedIds();
+    const highlightedIds =
+      extraHighlightedIds.length > 0
+        ? extraHighlightedIds
+        : Array.isArray(built)
+          ? extraHighlightedIds
+          : built.highlightedIds;
     if (this.resolved && this.resolvedSections === sections && this.resolvedHighlightedIds === highlightedIds) {
       return this.resolved;
     }
-    const config: TreePanelConfig = { sections, highlightedIds };
+    const config: TreePanelConfig = Array.isArray(built)
+      ? { sections, highlightedIds }
+      : { ...built, sections, highlightedIds };
     enforcePlaygroundTreePanel(config);
     this.resolved = config;
     this.resolvedSections = sections;
@@ -285,9 +311,11 @@ type PlaygroundSurfaceBindingHost = React.ComponentType<{ readonly node: UiCompo
 
 const puzzle3dSurfaceHosts = new Map<string, Puzzle3dSurfaceHost>();
 const puzzle2dSurfaceHosts = new Map<string, Puzzle2dSurfaceHost>();
+type GisMapSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiGisMapHostSurfaceNode }>;
+const gisMapSurfaceHosts = new Map<string, GisMapSurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -307,6 +335,12 @@ export function registerUiPuzzle2dSurfaceHost(surfaceId: string, Component: Puzz
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
+/** @emoji 🗺️ Binds `surfaceId` from {@link UiGisMapHostSurfaceNode} to a GIS map canvas. */
+export function registerUiGisMapSurfaceHost(surfaceId: string, Component: GisMapSurfaceHost): void {
+  gisMapSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
 /** @emoji 📊 Binds `surfaceId` from {@link UiTableHostSurfaceNode} to a host table body. */
 export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSurfaceHost): void {
   tableSurfaceHosts.set(surfaceId, Component);
@@ -316,6 +350,16 @@ export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSu
 function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): React.ReactElement {
   if (node.type === "puzzle2d") {
     const Host = puzzle2dSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
+  if (node.type === "gismap") {
+    const Host = gisMapSurfaceHosts.get(node.surfaceId);
     if (Host) {
       return (
         <div className="absolute inset-0 min-h-0 min-w-0">
@@ -364,31 +408,42 @@ function dispatchUiCommand(bus: CommandBus, descriptor: CommandDescriptor, patch
 }
 
 function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: CommandBus): TreeDataItem[] {
-  return items.map((item) => ({
-    id: item.id,
-    label: item.label,
-    description: item.description,
-    defaultOpen: item.defaultOpen,
-    isSelected: item.selected,
-    draggable: item.draggable,
-    dragData: item.dragData,
-    className: item.draggable || item.dragData ? "cursor-grab active:cursor-grabbing" : undefined,
-    items: item.items?.length ? uiTreeItemsToTreeData(item.items, commandBus) : undefined,
-    onClick: item.command
-      ? () => {
-          dispatchUiCommand(commandBus, item.command!, {});
-        }
-      : undefined,
-    onPointerEnter: item.onPointerEnter,
-    onPointerLeave: item.onPointerLeave,
-  }));
+  return items.map((item) => {
+    const legacyActivate = (item as UiTreeItemNode & { readonly onClick?: () => void }).onClick;
+    return {
+      id: item.id,
+      label: item.label,
+      description: item.description,
+      control: item.control ? renderUiControl(item.control, commandBus) : undefined,
+      defaultOpen: item.defaultOpen,
+      isSelected: item.selected,
+      draggable: item.draggable,
+      dragData: item.dragData,
+      className: item.draggable || item.dragData ? "cursor-grab active:cursor-grabbing" : undefined,
+      items: item.items?.length ? uiTreeItemsToTreeData(item.items, commandBus) : undefined,
+      onClick:
+        legacyActivate ??
+        (item.command
+          ? () => {
+              dispatchUiCommand(commandBus, item.command!, {});
+            }
+          : undefined),
+      onPointerEnter: item.onPointerEnter,
+      onPointerLeave: item.onPointerLeave,
+    };
+  });
 }
+
 
 function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDragAndDropController | undefined {
   void commandBus;
   const dragByItemId = collectUiTreeItemDragData(sections);
   if (dragByItemId.size === 0) {
     return undefined;
+  }
+  const sample = dragByItemId.values().next().value;
+  if (sample && PUZZLE_2D_FIXTURE_DRAG_V1_MIME in sample) {
+    return puzzle2dFixturePaletteTreeDragController(dragByItemId);
   }
   return puzzle3dFixturePaletteTreeDragController(dragByItemId);
 }
@@ -401,6 +456,15 @@ function PlaygroundDeclarativeTree(props: { readonly treeNode: UiTreeNode; reado
   const dragAndDropController = reactHostPort.useMemo(() => buildUiTreeDragAndDropController(treeSections, commandBus), [treeSections, commandBus]);
   const selectedIds = treeNode.selectedIds as string[] | undefined;
   const highlightedIds = treeNode.highlightedIds;
+  const onSelectionChange = reactHostPort.useCallback(
+    (ids: string[]) => {
+      if (!treeNode.selectionChange) {
+        return;
+      }
+      dispatchUiCommand(commandBus, treeNode.selectionChange, { ids });
+    },
+    [commandBus, treeNode.selectionChange],
+  );
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <Tree
@@ -411,6 +475,7 @@ function PlaygroundDeclarativeTree(props: { readonly treeNode: UiTreeNode; reado
         dragAndDropController={dragAndDropController}
         selectedIds={selectedIds}
         highlightedIds={highlightedIds}
+        onSelectionChange={onSelectionChange}
       />
     </div>
   );
@@ -540,6 +605,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "puzzle3d":
     case "puzzle5d":
     case "cad":
+    case "gismap":
     case "panel":
     case "table":
       return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" ? "panel" : "canvas");
@@ -606,19 +672,8 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
 //#endregion 🔖UiRenderer
 
 //#region 🔖DeclarativeHosts
-const shellTabIcons = new Map<string, LucideIcon>();
-
-/** @emoji 🖼 Registers a Lucide icon constructor for side-panel tab headers keyed by `iconId`. */
-export function registerTabIcon(iconId: string, Icon: LucideIcon): void {
-  shellTabIcons.set(iconId, Icon);
-}
-
-function shellTabIconComponent(iconId: string): React.ComponentType<{ size?: number }> {
-  return function ShellResolvedTabIcon({ size = 16 }: { size?: number }) {
-    const Lucide = shellTabIcons.get(iconId);
-    return Lucide ? <Lucide size={size} /> : <span style={{ display: "inline-block", width: size }} data-missing-icon={iconId} />;
-  };
-}
+import { registerIcon, registerTabIcon } from "@framework/platform/renderer/react";
+export { registerIcon, registerTabIcon };
 
 const declarativeWindowBodyComponents = new Map<string, React.FC>();
 
@@ -657,13 +712,81 @@ export interface UIWindowKindDefinition {
   engagement?: EngagementSpec;
 }
 
+/** @emoji 🎛 Maps a neutral {@link WindowEngagementControl} to a ui {@link EngagementControl} with bus callbacks. */
+export function windowEngagementControlToGolden(control: WindowEngagementControl | undefined, bus: CommandBus): EngagementControl | undefined {
+  if (!control) return undefined;
+  if (control.kind === "ring") {
+    return {
+      kind: "ring",
+      id: control.id,
+      label: control.label,
+      value: control.value,
+      disabled: control.disabled,
+      options: control.options.map((row) => ({ id: row.id, label: row.label, disabled: row.disabled })),
+      onSelect: control.onSelect
+        ? (id: string) => bus.dispatch(control.onSelect!.controllerId, control.onSelect!.command, { ...(control.onSelect!.args as object | undefined), id })
+        : undefined,
+    };
+  }
+  const dispatchNumeric = (cmd: CommandDescriptor | undefined, value: number) => {
+    if (!cmd) return;
+    bus.dispatch(cmd.controllerId, cmd.command, { ...(cmd.args as object | undefined), value });
+  };
+  return {
+    kind: control.kind,
+    id: control.id,
+    label: control.label,
+    value: control.value,
+    min: control.min,
+    max: control.max,
+    step: control.step,
+    unit: control.unit,
+    disabled: control.disabled,
+    onChange: control.onChange ? (value: number) => dispatchNumeric(control.onChange, value) : undefined,
+    onCommit: control.onCommit ? (value: number) => dispatchNumeric(control.onCommit, value) : undefined,
+  };
+}
+
+/** @emoji 🎛 Mirrors a live ui {@link EngagementControl} into a neutral {@link WindowEngagementControl} with command routing. */
+export function engagementSpecControlMirror(
+  control: EngagementControl | undefined,
+  controllerId: string,
+  commandArgs: Record<string, unknown>,
+): WindowEngagementControl | undefined {
+  if (!control) return undefined;
+  if (control.kind === "ring") {
+    return {
+      kind: "ring",
+      id: control.id,
+      label: control.label,
+      value: control.value,
+      disabled: control.disabled,
+      options: control.options.map((row) => ({ id: row.id, label: row.label, disabled: row.disabled })),
+      onSelect: control.onSelect ? { controllerId, command: "engagementControlSelect", args: { ...commandArgs } } : undefined,
+    };
+  }
+  return {
+    kind: control.kind,
+    id: control.id,
+    label: control.label,
+    value: control.value,
+    min: control.min,
+    max: control.max,
+    step: control.step,
+    unit: control.unit,
+    disabled: control.disabled,
+    onChange: control.onChange ? { controllerId, command: "engagementControlChange", args: { ...commandArgs } } : undefined,
+    onCommit: control.onCommit ? { controllerId, command: "engagementControlCommit", args: { ...commandArgs } } : undefined,
+  };
+}
+
 /** @emoji 💬 Converts a React-neutral {@link WindowEngagement} into a ui {@link EngagementSpec} with bus-dispatching callbacks. */
 export function windowEngagementToGolden(engagement: WindowEngagement | undefined, bus: CommandBus): EngagementSpec | undefined {
   if (!engagement) return undefined;
   const options = engagement.options?.map((option) => ({
     id: option.id,
     label: option.label,
-    icon: option.iconId ? shellTabIconComponent(option.iconId)({}) : undefined,
+    icon: option.iconId ? shellTabIconComponent(option.iconId, "details")({}) : undefined,
     pressed: option.pressed,
     disabled: option.disabled,
     onPress: option.command ? () => bus.dispatch(option.command!.controllerId, option.command!.command, option.command!.args) : undefined,
@@ -689,9 +812,11 @@ export function windowEngagementToGolden(engagement: WindowEngagement | undefine
     detail: row.detail,
     onSelect: row.command ? () => bus.dispatch(row.command!.controllerId, row.command!.command, row.command!.args) : undefined,
   }));
-  const hasContent = (options?.length ?? 0) > 0 || Boolean(input) || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
+  const control = windowEngagementControlToGolden(engagement.control, bus);
+  const hasContent =
+    (options?.length ?? 0) > 0 || Boolean(input) || Boolean(control) || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
   if (!hasContent) return undefined;
-  return { options, input, status, possibleEngagements };
+  return { sessionActive: engagement.sessionActive, options, input, control, status, possibleEngagements };
 }
 
 export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], bus: CommandBus): UIWindowKindDefinition[] {
@@ -706,31 +831,8 @@ export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], b
 }
 
 /** @emoji 📑 Converts playground side tabs into enforced tree panel configs (sections with items). */
-export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], bus: CommandBus): SidePanelTabConfig[] {
-  void bus;
-  return tabs.map((tab, orderIndex) => {
-    const declarativeFactory = getSidePanelBodyFactory(tab.bodyKey);
-    if (declarativeFactory && getSidePanelBodyMount(tab.bodyKey) === "treeRoot") {
-      return resolveSidePanelTabSource({
-        id: tab.id,
-        icon: shellTabIconComponent(tab.iconId),
-        order: tab.order ?? orderIndex,
-        panel: <DeclarativeTreeWorkbenchPanel tabId={tab.id} bodyKey={tab.bodyKey} />,
-      });
-    }
-    const Body = declarativeFactory ? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey) : () => <PlaygroundPanelBody><div className="p-2 text-xs">Missing panel {tab.bodyKey}</div></PlaygroundPanelBody>;
-    const panelBody = <Body />;
-    const sectionLabel = tab.label?.trim();
-    const sections: TreeDataSection[] = sectionLabel
-      ? [{ id: `${tab.id}.section`, label: sectionLabel, defaultOpen: true, content: panelBody }]
-      : [{ id: `${tab.id}.body`, label: "", defaultOpen: true, content: panelBody }];
-    return resolveSidePanelTabSource({
-      id: tab.id,
-      icon: shellTabIconComponent(tab.iconId),
-      order: tab.order ?? orderIndex,
-      tree: staticTreePanelDefinition({ sections }),
-    });
-  });
+export function sideTabsToPlaygroundPanelTabs(tabs: readonly SideTabSpec[], runtime: Platform, bus: CommandBus): SidePanelTabConfig[] {
+  return sideTabsToPanelTabs(tabs, runtime, bus);
 }
 
 /** @emoji 🌲 Declarative `type: "tree"` workbench tab mounted as the side-panel root (no nested shell tree). */
@@ -741,6 +843,7 @@ function DeclarativeTreeWorkbenchPanel(props: { readonly tabId: string; readonly
     () => runtime.generation,
     () => 0,
   );
+  usePuzzle3dPlaySnapshotPanelRefresh(props.bodyKey);
   const ctx: SidePanelBodyViewContext = {
     runtime,
     windowKindId: props.tabId,
@@ -769,6 +872,7 @@ function DeclarativeSidePanelBody(props: { readonly tabId: string; readonly body
     () => runtime.generation,
     () => 0,
   );
+  usePuzzle3dPlaySnapshotPanelRefresh(props.bodyKey);
   const ctx: SidePanelBodyViewContext = {
     runtime,
     windowKindId: props.tabId,
@@ -911,6 +1015,7 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
         ? mergePanelTabs(
             sideTabsToPlaygroundPanelTabs(
               activeApp.panelTabs.filter((tab) => tab.panel === "workbench"),
+              runtime,
               bus,
             ),
             augmentPanelTabs?.workbench,
@@ -924,6 +1029,7 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
         ? mergePanelTabs(
             sideTabsToPlaygroundPanelTabs(
               activeApp.panelTabs.filter((tab) => tab.panel === "details"),
+              runtime,
               bus,
             ),
             augmentPanelTabs?.details,
@@ -963,11 +1069,11 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
   );
 
   const workbenchIcon = reactHostPort.useMemo(
-    () => (workbenchTabs[0]?.icon ? reactHostPort.createElement(workbenchTabs[0].icon, { size: 16 }) : <Folder size={16} />),
+    () => (workbenchTabs[0]?.icon ? reactHostPort.createElement(workbenchTabs[0].icon, { size: 16 }) : <Icon icon="folder" size={16} />),
     [workbenchTabs],
   );
   const detailsIcon = reactHostPort.useMemo(
-    () => (detailsTabs[0]?.icon ? reactHostPort.createElement(detailsTabs[0].icon, { size: 16 }) : <Info size={16} />),
+    () => (detailsTabs[0]?.icon ? reactHostPort.createElement(detailsTabs[0].icon, { size: 16 }) : <Icon icon="info" size={16} />),
     [detailsTabs],
   );
 
@@ -1043,6 +1149,66 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
   const detectedMobile = useMediaQuery(mobileQuery);
   const resolvedMobile = mobile ?? detectedMobile ?? runtime.mobile;
 
+  const [activeLeftPanelKind, setActiveLeftPanelKind] = reactHostPort.useState<"workbench" | "display">("workbench");
+  const [activeRightPanelKind, setActiveRightPanelKind] = reactHostPort.useState<"details" | "settings">("details");
+  const [uiCompact, setUiCompact] = reactHostPort.useState(readStoredUiChromeCompact);
+  const [uiExpertise, setUiExpertise] = reactHostPort.useState(readStoredUiChromeExpertise);
+  useElementsSurfaceChrome({ ...PLAYGROUND_SYSTEM_SURFACE_CHROME, compact: uiCompact, expertise: uiExpertise });
+
+  const namedLayoutStore = reactHostPort.useMemo(
+    () => (shell.activeApp ? new NamedLayoutStore(shell.activeApp.id, createBrowserStoragePort()) : null),
+    [shell.activeApp?.id],
+  );
+  const [displayHost, setDisplayHost] = reactHostPort.useState<DisplayHostApi | null>(null);
+  const displayTabs = reactHostPort.useMemo(
+    () => (shell.activeApp && shell.activeApp.windowKinds.length > 0 ? createFrameworkDisplayPanelTabs(() => displayHost, shell.bus) : []),
+    [displayHost, shell.activeApp, shell.bus],
+  );
+  const displayIcon = reactHostPort.useMemo(() => <Icon icon="layout-grid" size={16} />, []);
+
+  const hasModeNav = (shell.activeAppBase?.modes.length ?? 0) > 1;
+  const setActiveModeId = reactHostPort.useCallback(
+    (id: string) => {
+      shell.activeAppBase?.setActiveModeId(id);
+      runtime.notifyChrome();
+    },
+    [runtime, shell.activeAppBase],
+  );
+  const settingsHostApi = reactHostPort.useMemo<SettingsHostApi>(
+    () => ({
+      compact: uiCompact,
+      setCompact: (compact: boolean) => {
+        setUiCompact(compact);
+        writeStoredUiChromeCompact(compact);
+      },
+      expertise: uiExpertise,
+      setExpertise: (expertise: Expertise) => {
+        setUiExpertise(expertise);
+        writeStoredUiChromeExpertise(expertise);
+      },
+      modes: (shell.activeAppBase?.modes ?? []).map((mode) => ({ id: mode.id, label: mode.label, iconId: mode.iconId })),
+      activeModeId: shell.activeModeId,
+      setActiveModeId,
+      hasModeNav,
+    }),
+    [hasModeNav, setActiveModeId, shell.activeAppBase?.modes, shell.activeModeId, uiCompact, uiExpertise],
+  );
+  const settingsTabs = reactHostPort.useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostApi, shell.bus), [settingsHostApi, shell.bus]);
+  const settingsIcon = reactHostPort.useMemo(() => <Icon icon="settings-2" size={16} />, []);
+
+  const leftSidePanelTabs = activeLeftPanelKind === "display" ? displayTabs : shell.workbenchTabs;
+  const rightSidePanelTabs = activeRightPanelKind === "settings" ? settingsTabs : shell.detailsTabs;
+
+  const toggleLastActiveLeftSidePanel = reactHostPort.useCallback(() => {
+    if (leftSidePanelTabs.length === 0) return;
+    setPanelVisibility((prev) => ({ ...prev, leftSidePanel: !prev.leftSidePanel }));
+  }, [leftSidePanelTabs.length, setPanelVisibility]);
+
+  const toggleLastActiveRightSidePanel = reactHostPort.useCallback(() => {
+    if (rightSidePanelTabs.length === 0) return;
+    setPanelVisibility((prev) => ({ ...prev, rightSidePanel: !prev.rightSidePanel }));
+  }, [rightSidePanelTabs.length, setPanelVisibility]);
+
   if (!shell.activeAppBase || !shell.activeApp || !shell.playgroundContextValue) return null;
 
   const navbarItems = reactHostPort.useMemo<NavbarItem[]>(
@@ -1056,29 +1222,73 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         key: "panelToggles",
         content: (
           <div className="flex min-w-0 items-stretch border border-element h-medium">
+            {displayTabs.length > 0 ? (
+              <Toggle
+                id="ui.panelToggle.display"
+                pressed={panelVisibility.leftSidePanel && activeLeftPanelKind === "display"}
+                onPressedChange={(pressed) => {
+                  if (pressed) setActiveLeftPanelKind("display");
+                  setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed || (activeLeftPanelKind === "workbench" && p.leftSidePanel) }));
+                }}
+                icon={displayIcon}
+                className="rounded-none border-0 shrink-0"
+              />
+            ) : null}
             <Toggle
               id="ui.panelToggle.workbench"
-              pressed={panelVisibility.leftSidePanel}
-              onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed }))}
+              pressed={panelVisibility.leftSidePanel && activeLeftPanelKind === "workbench"}
+              onPressedChange={(pressed) => {
+                if (pressed) setActiveLeftPanelKind("workbench");
+                setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed || (activeLeftPanelKind === "display" && p.leftSidePanel) }));
+              }}
               icon={shell.workbenchIcon}
-              className="rounded-none border-0 shrink-0"
+              className={cn("rounded-none border-0 shrink-0", displayTabs.length > 0 && "border-l")}
             />
             <Toggle
               id="ui.panelToggle.details"
-              pressed={panelVisibility.rightSidePanel}
-              onPressedChange={(pressed) => setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed }))}
+              pressed={panelVisibility.rightSidePanel && activeRightPanelKind === "details"}
+              onPressedChange={(pressed) => {
+                if (pressed) setActiveRightPanelKind("details");
+                setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed || (activeRightPanelKind === "settings" && p.rightSidePanel) }));
+              }}
               icon={shell.detailsIcon}
+              className="rounded-none border-0 border-l shrink-0"
+            />
+            <Toggle
+              id="ui.panelToggle.settings"
+              pressed={panelVisibility.rightSidePanel && activeRightPanelKind === "settings"}
+              onPressedChange={(pressed) => {
+                if (pressed) setActiveRightPanelKind("settings");
+                setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed || (activeRightPanelKind === "details" && p.rightSidePanel) }));
+              }}
+              icon={settingsIcon}
               className="rounded-none border-0 border-l shrink-0"
             />
           </div>
         ),
       },
     ],
-    [panelVisibility.leftSidePanel, panelVisibility.rightSidePanel, setPanelVisibility, shell.activeApp, shell.detailsIcon, shell.workbenchIcon],
+    [
+      activeLeftPanelKind,
+      activeRightPanelKind,
+      displayIcon,
+      displayTabs.length,
+      panelVisibility.leftSidePanel,
+      panelVisibility.rightSidePanel,
+      setPanelVisibility,
+      settingsIcon,
+      shell.activeApp,
+      shell.detailsIcon,
+      shell.workbenchIcon,
+    ],
   );
+
+  if (!namedLayoutStore) return null;
 
   return (
     <PlaygroundContext.Provider value={shell.playgroundContextValue}>
+      <DisplayHostContext.Provider value={displayHost}>
+      <SettingsHostContext.Provider value={settingsHostApi}>
       <PlaygroundKeybindings keybindings={playgroundKeybindings} bus={shell.bus} />
       <ProductShell
         platform={runtime}
@@ -1089,14 +1299,19 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         navbarItems={navbarItems}
         footerItems={shell.footerItems}
         slotToolbar={shell.toolbarElement}
-        leftSidePanelTabs={shell.workbenchTabs}
-        rightSidePanelTabs={shell.detailsTabs}
+        leftSidePanelTabs={leftSidePanelTabs}
+        rightSidePanelTabs={rightSidePanelTabs}
         panelVisibility={panelVisibility}
         leftPanelSize={leftPanelSize}
         onLeftPanelSizeChange={setLeftPanelSize}
         rightPanelSize={rightPanelSize}
         onRightPanelSizeChange={setRightPanelSize}
         goldenWindowKinds={shell.goldenWindowKinds}
+        windowKindCatalog={shell.activeApp.windowKinds}
+        namedLayouts={shell.activeApp.namedLayouts}
+        namedLayoutStore={namedLayoutStore}
+        commandBus={shell.bus}
+        onDisplayHostReady={setDisplayHost}
         defaultLayout={shell.activeApp.defaultLayout}
         activeWindowKindId={shell.activeWindowKindId}
         onActiveWindowKindChange={shell.onActiveWindowKindChange}
@@ -1106,7 +1321,11 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
           shell.activeAppBase!.setActiveModeId(modeId);
           runtime.notifyChrome();
         }}
+        onToggleLastActiveLeftSidePanel={toggleLastActiveLeftSidePanel}
+        onToggleLastActiveRightSidePanel={toggleLastActiveRightSidePanel}
       />
+      </SettingsHostContext.Provider>
+      </DisplayHostContext.Provider>
     </PlaygroundContext.Provider>
   );
 };
@@ -1135,13 +1354,13 @@ export function PlaygroundPanelBody({ children }: { readonly children: React.Rea
   return <div className="text-foreground flex min-h-0 min-w-0 flex-1 flex-col gap-single overflow-hidden p-single text-xs">{children}</div>;
 }
 
-/** @emoji 🌲 Content-only tree section for playground workbench/details panels. */
+/** @emoji 🌲 Tree section whose sole row hosts arbitrary React as an inline control (inspector batches). */
 export function playgroundPanelSection(id: string, label: string, body: React.ReactNode, options?: { readonly defaultOpen?: boolean }): TreeDataSection {
   return {
     id,
     label,
     defaultOpen: options?.defaultOpen ?? true,
-    content: <PlaygroundPanelBody>{body}</PlaygroundPanelBody>,
+    items: [{ id: `${id}.host`, label: "", control: <PlaygroundPanelBody>{body}</PlaygroundPanelBody> }],
   };
 }
 //#endregion 🔖PlaygroundShell
@@ -1152,6 +1371,7 @@ type PlaygroundDomRoot = HTMLElement & { __playgroundRoot?: Root };
 /** @emoji 🚀 Mounts an arbitrary React tree into `#root` (or `rootId`) inside {@link PlaygroundShell}. */
 export function mountPlaygroundApp(element: React.ReactElement, rootId = "root"): void {
   if (typeof document === "undefined") return;
+  bootstrapElementsSurfaceChromeDocument(PLAYGROUND_SYSTEM_SURFACE_CHROME.theme);
   const rootElement = document.getElementById(rootId) as PlaygroundDomRoot | null;
   if (!rootElement) throw new Error(`React root #${rootId} missing.`);
   rootElement.__playgroundRoot ??= createRoot(rootElement);
@@ -1173,13 +1393,15 @@ import {
   applyConnectToFixture,
   applyPaletteObjectDropToFixture,
   blockedVortexFullIdsFromAttractions,
-  mergePaletteObjectFromDrop,
+  resolvePuzzle3dFixtureDrop,
   puzzle3dFixturePaletteTreeDragController,
   buildPuzzle3dPlayEngagement,
   getPuzzle3dBrushEngagementEpoch,
   puzzle3dBrushEngagementSourceRef,
   requestPuzzle3dZoomToSelection,
   subscribePuzzle3dBrushEngagementSource,
+  isLoadableMeshUrl,
+  resolveObjectKindMeshUrl,
   type FixtureV1,
   type Puzzle3dFixtureDropDetail,
   type RelocatePayload,
@@ -1195,7 +1417,15 @@ import {
   PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
   PUZZLE_3D_PLAY_APP_ID,
   PUZZLE_3D_PLAY_STORE_ID,
+  PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS,
   Puzzle3dPlayShellController,
+  installPuzzle3dPlayBrushHost,
+  clearPuzzle3dFillSession,
+  preparePuzzle3dFillSession,
+  puzzle3dFillPendingCountRef,
+  puzzle3dFillSessionRef,
+  subscribePuzzle3dFillSessionReady,
+  getPuzzle3dFillSessionReadyEpoch,
   parseKindCatalogs,
   parseKindCompatibility,
   type Puzzle3dPlayHostBridge,
@@ -1211,6 +1441,29 @@ function usePuzzle3dPlayController(): Puzzle3dPlayShellController | undefined {
 function usePuzzle3dPlaySnapshot(): Puzzle3dPlaySnapshot {
   const ctrl = usePuzzle3dPlayController();
   return useControllerStore(ctrl, PUZZLE_3D_PLAY_STORE_ID) ?? PUZZLE_3D_PLAY_IDLE_SNAPSHOT;
+}
+
+function puzzle3dPlaySelectionSnapshotKey(ctrl: Puzzle3dPlayShellController | undefined, bodyKey: string): string {
+  if (!ctrl || !PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS.has(bodyKey)) {
+    return "";
+  }
+  const selection = ctrl.getSnapshot().selection;
+  return `${selection.objectIds.join("\0")}\0${selection.vortexIds.join("\0")}\0${selection.attractionIds.join("\0")}`;
+}
+
+/** @emoji 🔔 Re-renders hierarchy/inspector panels on puzzle 3D selection without a shell generation bump. */
+function usePuzzle3dPlaySnapshotPanelRefresh(bodyKey: string): void {
+  const ctrl = usePuzzle3dPlayController();
+  reactHostPort.useSyncExternalStore(
+    (listener) => {
+      if (!ctrl || !PUZZLE_3D_PLAY_SNAPSHOT_PANEL_BODY_KEYS.has(bodyKey)) {
+        return () => {};
+      }
+      return ctrl.subscribeSnapshot(listener);
+    },
+    () => puzzle3dPlaySelectionSnapshotKey(ctrl, bodyKey),
+    () => "",
+  );
 }
 
 /** @emoji 💬 Enforces CAD-style puzzle 3D play engagement (command input row required). */
@@ -1250,7 +1503,8 @@ export function puzzle3dPlayEngagementMirror(engagement: EngagementSpec | null):
     detail: row.detail,
     command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { possibleId: row.id } },
   }));
-  return { options, input, status, possibleEngagements };
+  const control = engagementSpecControlMirror(engagement.control, PUZZLE_3D_PLAY_CONTROLLER_ID, {});
+  return { sessionActive: engagement.sessionActive, options, input, control, status, possibleEngagements };
 }
 
 function Puzzle3dPlayEngagementPublisher(props: {
@@ -1260,6 +1514,12 @@ function Puzzle3dPlayEngagementPublisher(props: {
 }): null {
   const { ctrl, snap, bus } = props;
   const [cmdLine, setCmdLine] = reactHostPort.useState("");
+  const [fillCount, setFillCount] = reactHostPort.useState(0);
+  const fillSessionReadyEpoch = reactHostPort.useSyncExternalStore(
+    subscribePuzzle3dFillSessionReady,
+    getPuzzle3dFillSessionReadyEpoch,
+    getPuzzle3dFillSessionReadyEpoch,
+  );
   const engagementSpecRef = reactHostPort.useRef<EngagementSpec | null>(null);
   const brushEngagementEpoch = reactHostPort.useSyncExternalStore(subscribePuzzle3dBrushEngagementSource, getPuzzle3dBrushEngagementEpoch, getPuzzle3dBrushEngagementEpoch);
   const brushSource = puzzle3dBrushEngagementSourceRef.current;
@@ -1271,17 +1531,65 @@ function Puzzle3dPlayEngagementPublisher(props: {
     [bus],
   );
   const onSelectTool = reactHostPort.useCallback(() => {
+    if (snap.activeTool === "fill") {
+      const base = clearPuzzle3dFillSession();
+      if (base && ctrl) {
+        ctrl.patchFixture(() => structuredClone(base));
+      }
+      setFillCount(0);
+    }
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "select" });
-  }, [bus]);
+  }, [bus, ctrl, snap.activeTool]);
   const onBrushTool = reactHostPort.useCallback(() => {
+    if (snap.activeTool === "fill") {
+      const base = clearPuzzle3dFillSession();
+      if (base && ctrl) {
+        ctrl.patchFixture(() => structuredClone(base));
+      }
+      setFillCount(0);
+    }
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "brush" });
+  }, [bus, ctrl, snap.activeTool]);
+  const onFillTool = reactHostPort.useCallback(() => {
+    puzzle3dFillPendingCountRef.current = 0;
+    setFillCount(0);
+    bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setActiveTool", { tool: "fill" });
   }, [bus]);
+  const onFillCount = reactHostPort.useCallback(
+    (count: number) => {
+      const n = Math.max(0, Math.min(1000, Math.round(count)));
+      puzzle3dFillPendingCountRef.current = n;
+      setFillCount(n);
+      bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillCount", { count: n });
+    },
+    [bus],
+  );
+  const fillAutoStartedRef = reactHostPort.useRef(false);
+  reactHostPort.useEffect(() => {
+    if (snap.activeTool !== "fill") {
+      fillAutoStartedRef.current = false;
+      return;
+    }
+    if (fillAutoStartedRef.current) {
+      return;
+    }
+    const sequenceLength = puzzle3dFillSessionRef.current.sequence.length;
+    if (sequenceLength === 0) {
+      return;
+    }
+    fillAutoStartedRef.current = true;
+    const pending = puzzle3dFillPendingCountRef.current;
+    const nextCount = pending > 0 ? Math.min(pending, sequenceLength) : 1;
+    puzzle3dFillPendingCountRef.current = nextCount;
+    setFillCount(nextCount);
+    bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillCount", { count: nextCount });
+  }, [bus, fillSessionReadyEpoch, snap.activeTool]);
   const onRepeatLastEngagement = reactHostPort.useCallback(() => {
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "engagementRepeatLast", {});
   }, [bus]);
   const onEngagementAbort = reactHostPort.useCallback(() => {
     setCmdLine("");
-    if (snap.activeTool === "brush") {
+    if (snap.activeTool === "brush" || snap.activeTool === "fill") {
       onSelectTool();
     }
   }, [onSelectTool, snap.activeTool]);
@@ -1293,6 +1601,11 @@ function Puzzle3dPlayEngagementPublisher(props: {
       const token = normalizeEngagementCommandText(value.trim());
       if (engagementCommandTokenEquals(token, "brush")) {
         onBrushTool();
+        setCmdLine("");
+        return;
+      }
+      if (engagementCommandTokenEquals(token, "fill")) {
+        onFillTool();
         setCmdLine("");
         return;
       }
@@ -1320,13 +1633,14 @@ function Puzzle3dPlayEngagementPublisher(props: {
       }
       setCmdLine("");
     },
-    [brushSource, onBrushTool, onSelectTool, onZoomToSelection, rememberEngagementRepeat, snap.activeTool],
+    [brushSource, onBrushTool, onFillTool, onSelectTool, onZoomToSelection, rememberEngagementRepeat, snap.activeTool],
   );
   const spec = reactHostPort.useMemo(
     () =>
       buildPuzzle3dPlayEngagement({
         activeTool: snap.activeTool,
         cmdLine,
+        fillCount,
         selectionCount,
         onCmdLineChange: setCmdLine,
         onCmdLineSubmit,
@@ -1334,6 +1648,8 @@ function Puzzle3dPlayEngagementPublisher(props: {
         onAbort: onEngagementAbort,
         onSelectTool,
         onBrushTool,
+        onFillTool,
+        onFillCount,
         onCycleBrushCandidate: () => brushSource.cycleCandidate(),
         onPickBrushCandidate: (index) => {
           const candidate = brushSource.candidates[index];
@@ -1347,7 +1663,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushTargetActive: brushSource.targetActive,
         brushPlacementProbePending: brushSource.placementProbePending,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, onBrushTool, onCmdLineSubmit, onEngagementAbort, onRepeatLastEngagement, onSelectTool, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool],
+    [brushEngagementEpoch, brushSource, cmdLine, fillCount, onBrushTool, onCmdLineSubmit, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -1391,6 +1707,27 @@ function Puzzle3dPlayEngagementPublisher(props: {
             engagementSpecRef.current?.possibleEngagements?.find((row) => row.id === possibleId)?.onSelect?.();
             break;
           }
+          case "engagementControlChange": {
+            const value = (args as { value?: number })?.value;
+            const control = engagementSpecRef.current?.control;
+            if (value === undefined || !control || control.kind === "ring") break;
+            control.onChange?.(value);
+            break;
+          }
+          case "engagementControlCommit": {
+            const value = (args as { value?: number })?.value;
+            const control = engagementSpecRef.current?.control;
+            if (value === undefined || !control || control.kind === "ring") break;
+            control.onCommit?.(value);
+            break;
+          }
+          case "engagementControlSelect": {
+            const id = (args as { id?: string })?.id;
+            const control = engagementSpecRef.current?.control;
+            if (!id || !control || control.kind !== "ring") break;
+            control.onSelect?.(id);
+            break;
+          }
           default:
             break;
         }
@@ -1402,11 +1739,17 @@ function Puzzle3dPlayEngagementPublisher(props: {
   return null;
 }
 
-function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
+const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
   const { runtime } = useApp();
   const bus = runtime.commandBus;
   const ctrl = usePuzzle3dPlayController();
   const snap = usePuzzle3dPlaySnapshot();
+  const shellInstance = useShellWindowInstance();
+  const viewportCamera = reactHostPort.useMemo(
+    () => ctrl?.cameraForInstance(shellInstance?.instanceId) ?? snap.fixture?.camera,
+    [ctrl, shellInstance?.instanceId, snap.cameraSeedEpoch, snap.fixture?.camera],
+  );
+  const cameraSeedKey = shellInstance ? `${shellInstance.instanceId}:${snap.cameraSeedEpoch}` : snap.cameraSeedEpoch;
   const engagementPublisher =
     ctrl && node.controllerId === PUZZLE_3D_PLAY_CONTROLLER_ID ? (
       <Puzzle3dPlayEngagementPublisher ctrl={ctrl} snap={snap} bus={bus} />
@@ -1429,6 +1772,9 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   }
   const kindCompatibility = reactHostPort.useMemo(() => parseKindCompatibility(snap.fixture.meta), [snap.fixture]);
   const kindCatalogs = reactHostPort.useMemo(() => parseKindCatalogs(snap.fixture.meta), [snap.fixture]);
+  reactHostPort.useEffect(() => {
+    installPuzzle3dPlayBrushHost(snap.fixture.meta as Record<string, unknown> | undefined);
+  }, [snap.fixture.meta]);
   const blockedVortexFullIds = reactHostPort.useMemo(() => blockedVortexFullIdsFromAttractions(snap.fixture.attractions), [snap.fixture]);
   const patchFixture = reactHostPort.useCallback(
     (updater: (prev: FixtureV1) => FixtureV1) => {
@@ -1445,20 +1791,64 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
   const proximityRelocateEnabled = snap.fixture.attractions.length > 0;
   const handleFixtureDrop = reactHostPort.useCallback(
     (detail: Puzzle3dFixtureDropDetail) => {
-      const placed = mergePaletteObjectFromDrop(detail, kindCatalogs, snap.fixture);
-      if (placed) {
-        patchFixture((fixture) => applyPaletteObjectDropToFixture(fixture, placed));
+      const result = resolvePuzzle3dFixtureDrop(detail, kindCatalogs, snap.fixture);
+      if (result.kind === "palette-object") {
+        patchFixture((fixture) => applyPaletteObjectDropToFixture(fixture, result.object));
         bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelection", {
-          selection: { objectIds: [placed.id], vortexIds: [], attractionIds: [] },
+          selection: { objectIds: [result.object.id], vortexIds: [], attractionIds: [] },
         });
         return;
       }
-      const parsed = parseFixtureV1(detail.fixture);
-      if (parsed) {
-        ctrl?.patchFixture(() => parsed);
+      if (result.kind === "replace-fixture") {
+        ctrl?.patchFixture(() => result.fixture);
       }
     },
-    [bus, ctrl, kindCatalogs, patchFixture],
+    [bus, ctrl, kindCatalogs, patchFixture, snap.fixture],
+  );
+  const fillBaseCaptureRef = reactHostPort.useRef<FixtureV1 | null>(null);
+  const prevActiveToolRef = reactHostPort.useRef(snap.activeTool);
+  reactHostPort.useLayoutEffect(() => {
+    const prev = prevActiveToolRef.current;
+    prevActiveToolRef.current = snap.activeTool;
+    if (snap.activeTool === "fill" && prev !== "fill") {
+      fillBaseCaptureRef.current = structuredClone(snap.fixture);
+    }
+    if (snap.activeTool !== "fill") {
+      fillBaseCaptureRef.current = null;
+    }
+  }, [snap.activeTool, snap.fixture]);
+  const fillPrepareTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fillSessionPreparedRef = reactHostPort.useRef(false);
+  reactHostPort.useEffect(() => {
+    if (snap.activeTool !== "fill") {
+      fillSessionPreparedRef.current = false;
+    }
+  }, [snap.activeTool]);
+  const onFillMeshesReady = reactHostPort.useCallback(() => {
+    if (fillPrepareTimerRef.current !== null) {
+      clearTimeout(fillPrepareTimerRef.current);
+    }
+    fillPrepareTimerRef.current = setTimeout(() => {
+      fillPrepareTimerRef.current = null;
+      const base = fillBaseCaptureRef.current;
+      if (!base) {
+        return;
+      }
+      if (!fillSessionPreparedRef.current) {
+        preparePuzzle3dFillSession(base, kindCatalogs, kindCompatibility, snap.brushPlacementCollisionTolerance);
+        if (puzzle3dFillSessionRef.current.sequence.length > 0) {
+          fillSessionPreparedRef.current = true;
+        }
+      }
+    }, 0);
+  }, [bus, kindCatalogs, kindCompatibility, snap.brushPlacementCollisionTolerance]);
+  reactHostPort.useEffect(
+    () => () => {
+      if (fillPrepareTimerRef.current !== null) {
+        clearTimeout(fillPrepareTimerRef.current);
+      }
+    },
+    [],
   );
   return (
     <>
@@ -1475,13 +1865,15 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
       >
         <PlayCanvas
           fixture={snap.fixture}
+          camera={viewportCamera}
+          cameraSeedKey={cameraSeedKey}
           proximityRelocateEnabled={proximityRelocateEnabled}
           kindCatalogs={kindCatalogs}
           kindCompatibility={kindCompatibility}
           blockedVortexFullIds={blockedVortexFullIds}
           lodTag={snap.lodTag}
           lodProps={snap.lodProps}
-          relocateMode={snap.relocateMode}
+          gumballConfig={snap.gumballConfig}
           selection={snap.selection}
           selectedId={snap.selectedId}
           selectedLabel={snap.selectedLabel}
@@ -1498,10 +1890,12 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
           onIndirectConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteIndirect")}
           onProximityConnect={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteProximity")}
           onLodChange={(lod) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setEffectiveLod", { lod })}
-          onCamera={(camera) => ctrl?.setCamera(camera)}
+          onCamera={(camera) => ctrl?.setCamera(camera, shellInstance?.instanceId)}
           onAttractionCompatibleObjects={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteCompatibleObjects")}
           onAttractionTargetRing={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteTargetRing")}
           brushActive={snap.activeTool === "brush"}
+          fillActive={snap.activeTool === "fill"}
+          onFillMeshesReady={onFillMeshesReady}
           onBrushPlace={(payload) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "addBrushObject", payload)}
           brushPlacementCollisionTolerance={snap.brushPlacementCollisionTolerance}
           fixtureDragDrop
@@ -1518,7 +1912,7 @@ function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfa
     </div>
     </>
   );
-}
+}, (prev, next) => prev.node.surfaceId === next.node.surfaceId && prev.node.controllerId === next.node.controllerId);
 
 let puzzle3dPlayChromeRegistered = false;
 
@@ -1527,14 +1921,25 @@ export function registerPuzzle3dPlaySurfaceHosts(): void {
   if (puzzle3dPlayChromeRegistered) return;
   puzzle3dPlayChromeRegistered = true;
   registerUiPuzzle3dSurfaceHost(PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID, Puzzle3dPlayViewportHost);
-  registerTabIcon(PUZZLE_3D_PLAY_ICON_INSPECTOR, ClipboardList);
-  registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, Tags);
-  registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, ListTree);
-  registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, Settings);
+  registerTabIcon(PUZZLE_3D_PLAY_ICON_INSPECTOR, "clipboard-list");
+  registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, "tags");
+  registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, "list-tree");
+  registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, "settings");
   const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
   if (fixture) {
-    const urls = [...new Set(fixture.objects.map((object) => object.meshUrl))];
-    for (const url of urls) sceneHostPort.drei.useGLTF.preload(url);
+    const catalogs = parseKindCatalogs(fixture.meta);
+    const urls = [
+      ...new Set(
+        fixture.objects
+          .map((object) => resolveObjectKindMeshUrl(object.objectKind ?? "", catalogs, fixture) ?? object.meshUrl)
+          .filter((url): url is string => Boolean(url)),
+      ),
+    ];
+    for (const url of urls) {
+      if (isLoadableMeshUrl(url)) {
+        sceneHostPort.drei.useGLTF.preload(url);
+      }
+    }
   }
 }
 
@@ -1616,7 +2021,7 @@ function Puzzle5dPlayStatusPanel(): React.ReactElement {
       </div>
       <div>
         <dt className="text-muted-foreground font-medium">Relocate</dt>
-        <dd>{snapshot.relocateMode}</dd>
+        <dd>{JSON.stringify(snapshot.gumballConfig)}</dd>
       </div>
       <div>
         <dt className="text-muted-foreground font-medium">Connect events</dt>
@@ -1642,7 +2047,7 @@ class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
-      icon: ListTree,
+      icon: createIconComponent("list-tree"),
       order: 0,
       tree: new StaticTreePanelDefinition({ sections: this.buildTree().sections as TreeDataSection[] }),
     };
@@ -1653,7 +2058,7 @@ class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: "puzzle-5d-play-status",
-      icon: ClipboardList,
+      icon: createIconComponent("clipboard-list"),
       order: 0,
       tree: new StaticTreePanelDefinition({
         sections: [playgroundPanelSection("puzzle-5d-play-status.section", "Paired play", <Puzzle5dPlayStatusPanel />)],
@@ -1698,7 +2103,7 @@ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceN
     <FiveD
       mode="3d"
       instanceId="play-3d"
-      relocateMode={snapshot.relocateMode}
+      gumballConfig={snapshot.gumballConfig}
       puzzle3d={{
         ...snapshot.lod3dProps,
         camera: snapshot.camera3d ?? snapshot.fixture3d.camera,
@@ -1791,10 +2196,31 @@ import {
   PUZZLE_2D_PLAY_BODY_KEY_SELECTION,
   PUZZLE_2D_PLAY_CONTROLLER_ID,
   PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
+} from "@puzzle/2d/play";
+import {
+  buildWiresPlayHierarchySections,
+  buildWiresPlayKindsTree,
+  WIRES_PLAY_DEFAULT_FIXTURE,
+  WIRES_PLAY_FIXTURE,
+  WIRES_PLAY_HIERARCHY_TAB_ID,
+  WIRES_PLAY_KINDS_TAB_ID,
+  WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS,
+  wiresPlayHierarchyGraphIdFromTreeItemId,
+  wiresPlayHierarchyTreeHighlightedIds,
+  wiresPlayHierarchyTreeSelectedIds,
+  wiresPlayIdentityLabelForNodeId,
+  wiresPlayRelationshipKindDisplayName,
+} from "@reasoning/mindmap/wires/play";
+import {
   PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
   Puzzle2dPlayShellController,
+  puzzle2dPlayPaneFromShellWindowId,
   PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID,
   buildPuzzle2dPlayHierarchySections,
+  buildPuzzle2dPlayKindsTree,
+  PUZZLE_2D_PLAY_KINDS_TAB_ID,
+  PUZZLE_2D_PLAY_ICON_KINDS,
+  puzzle2dPlayAllSelectionFromFixture,
   puzzle2dPlayHierarchyGraphIdFromTreeItemId,
   puzzle2dPlayHierarchyTreeHighlightedIds,
   puzzle2dPlayHierarchyTreeSelectedIds,
@@ -1802,35 +2228,44 @@ import {
   buildPuzzle2dPlayDetailDeclarativeBody,
   buildPuzzle2dPlaySelectionDeclarativeBody,
   buildPuzzle2dPlayRuntime,
-  filterPuzzle2dPlayStructuralDeleteBatch,
+  flushPuzzle2dPlayStructuralDeleteBatch,
   puzzle2dPlayForwardsCanvasStructuralDelete,
+  puzzle2dPlayApplyNodeStructuralDeleteToFixture,
   puzzle2dPlayRehydrateFixtureEdgesIfMissing,
+  puzzle2dPlayInspectorKindSectionLabel,
+  puzzle2dPlayKindCatalogSelectItems,
   type Puzzle2dPlayHostBridge,
   type Puzzle2dPlayPaneId,
   type Puzzle2dPlayStructuralDeleteItem,
 } from "@puzzle/2d/play";
 import {
-  mergeKindCatalogBundleByRowId,
   DEFAULT_KIND_CATALOG_BUNDLE,
   BUILTIN_PORT_HANDLE_KIND,
   PUZZLE_2D_CAMERA_ZOOM_MIN,
   PUZZLE_2D_CAMERA_ZOOM_MAX,
   PUZZLE_2D_PRESELECT_EMPTY,
   PUZZLE_2D_SELECTION_TARGETS_DEFAULT,
-  fixtureMetaKindCatalogBundle,
   puzzle2dFixtureMetaKindCompatibility,
   puzzle2dFixtureNodeCaption,
   puzzle2dFixtureHandleEndpointDisplayLabel,
   puzzle2dFixtureMergedKindCatalogs,
   puzzle2dFixtureObjectDisplayLabel,
+  puzzle2dNodeKindOverlayLabel,
+  puzzle2dHandleKindOverlayLabel,
+  puzzle2dEdgeKindOverlayLabel,
+  puzzle2dApplyNodeKindToFixtureNode,
+  puzzle2dHandleAngleFromRingT,
+  puzzle2dHandleAngleToRingT,
   classifyPuzzle2dIconSelectorMode,
   parsePuzzle2dFixtureV1,
   Puzzle2dCanvas,
-  applyBrushPlacementToFixture,
-  puzzle2dGuardBrushPlacementStructuralDeletes,
   puzzle2dIsBrushPlacementStructuralDeleteGuarded,
   puzzle2dSyncFixtureDescriptorToAllAuthoringPeers,
+  puzzle2dSyncBrushSessionToAllAuthoringPeers,
+  puzzle2dCommitBrushPlacementToPlay,
+  puzzle2dSetBrushPlaceCommitHandler,
   puzzle2dActiveRenderer,
+  applyBrushFillPlacementsToFixture,
   DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
   DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
   puzzle2dSyncSelectionToAllAuthoringPeers,
@@ -1838,13 +2273,12 @@ import {
   clonePuzzle2dFixtureV1,
   puzzle2dFixtureSceneMarkers,
   type Puzzle2dStructureDeletePayload,
-  encodePuzzle2dFixtureForDragV1,
   mergePaletteNodeFromDrop,
-  setPuzzle2dFixtureDragDataTransfer,
+  puzzle2dCommitPaletteNodeDropToPlay,
+  puzzle2dFixturePaletteTreeDragController,
   PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
-  PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE,
   PUZZLE_2D_LOD_MODE_AUTOMATIC,
-  DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS,
+  layoutPuzzle2dFixtureRedrawHandles,
   layoutPuzzle2dFixtureRedrawNodes,
   normalizePuzzle2dSelectionProp,
   type Puzzle2dFixtureV1,
@@ -1873,7 +2307,29 @@ import {
 import type { Playground } from "@framework/playground/core";
 // #endregion 🔌Adapters
 
-const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = mergeKindCatalogBundleByRowId({ ...DEFAULT_KIND_CATALOG_BUNDLE }, fixtureMetaKindCatalogBundle(PUZZLE_2D_PLAY_DEFAULT_FIXTURE) ?? {});
+const PUZZLE_2D_PLAY_IS_WIRES = import.meta.env.PUZZLE_PLAY_ENTRY === "wires";
+
+function puzzle2dPlayHierarchyTreeSelectedIdsForFixture(fixture: Puzzle2dFixtureV1, graphSelectionIds: readonly string[]): string[] {
+  return PUZZLE_2D_PLAY_IS_WIRES
+    ? wiresPlayHierarchyTreeSelectedIds(fixture, graphSelectionIds)
+    : puzzle2dPlayHierarchyTreeSelectedIds(fixture, graphSelectionIds);
+}
+
+function puzzle2dPlayHierarchyTreeHighlightedIdsForFixture(fixture: Puzzle2dFixtureV1, graphHoverId: string | null): readonly string[] {
+  return PUZZLE_2D_PLAY_IS_WIRES
+    ? wiresPlayHierarchyTreeHighlightedIds(fixture, graphHoverId)
+    : puzzle2dPlayHierarchyTreeHighlightedIds(fixture, graphHoverId);
+}
+
+function puzzle2dPlayHierarchyGraphIdFromTreeItemIdForPlay(treeItemId: string): string | null {
+  return PUZZLE_2D_PLAY_IS_WIRES ? wiresPlayHierarchyGraphIdFromTreeItemId(treeItemId) : puzzle2dPlayHierarchyGraphIdFromTreeItemId(treeItemId);
+}
+
+function puzzle2dPlayResolvedDefaultFixture(): Puzzle2dFixtureV1 {
+  return PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_DEFAULT_FIXTURE : PUZZLE_2D_PLAY_DEFAULT_FIXTURE;
+}
+
+const PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayResolvedDefaultFixture());
 
 // #region 🔖Kinds
 export type { Puzzle2dPlayPaneId } from "@puzzle/2d/play";
@@ -1939,6 +2395,10 @@ function triptychCamerasFromFixture(fixture: Puzzle2dFixtureV1): Record<Puzzle2d
     "2d-overview": { ...cam },
     "2d-selection": { ...cam },
   };
+}
+
+function puzzle2dPlayInitialCameras(): Record<Puzzle2dPlayPaneId, CameraState> {
+  return triptychCamerasFromFixture(puzzle2dPlayResolvedDefaultFixture());
 }
 
 /** @emoji ⏱️ After redraw play stops: camera stays fixed for the first third of this span, then eases in the remaining two thirds to bbox fit (3s total). */
@@ -2032,7 +2492,9 @@ interface Puzzle2dPlayShellValue {
   commitBrushPlacement: (payload: Puzzle2dBrushPlacePayload) => void;
   /** @emoji 📶 Per-pane LOD select value (`automatic` or a pinned tier). */
   puzzle2dLodModeByPane: Record<Puzzle2dPlayPaneId, Puzzle2dLodModeKind>;
+  lodModeForScope: (scopeId: string, pane: Puzzle2dPlayPaneId) => Puzzle2dLodModeKind;
   setPuzzle2dLodModeForPane: (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => void;
+  activeScopeId: string;
   /** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
   applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
   /** @emoji 🗑️ Batches canvas structural deletes; ignores ids already absent from the shared fixture. */
@@ -2084,8 +2546,10 @@ interface Puzzle2dPlaySelectionValue {
 
 interface Puzzle2dPlayCamerasValue {
   camerasByPane: Record<Puzzle2dPlayPaneId, CameraState>;
+  cameraByScope: Record<string, CameraState>;
   /** @emoji 📷 Writes the active pane’s imperative camera into {@link puzzle2dPlayPaneCamerasBaseline}. */
   syncBaselineFromViewportCamera: (cam: CameraState) => void;
+  cameraForScope: (scopeId: string, pane: Puzzle2dPlayPaneId) => CameraState;
 }
 
 /** @emoji 🌳 Workbench hierarchy bound to play fixture + selection (not static tree snapshots). */
@@ -2094,18 +2558,29 @@ function Puzzle2dPlayHierarchyPanel(): ReactElement {
   const { selectionIds, setSelectionIds } = usePuzzle2dPlaySelection();
   const onHierarchySelect = reactHostPort.useCallback((id: string) => setSelectionIds([id]), [setSelectionIds]);
   const onHierarchyHover = reactHostPort.useCallback((id: string | null) => setHierarchyHover(id), [setHierarchyHover]);
-  const sections = reactHostPort.useMemo(
-    () => buildPuzzle2dPlayHierarchySections(fixture, [], onHierarchySelect, undefined, { omitItemSelection: true, onHover: onHierarchyHover }).sections as TreeDataSection[],
-    [fixture, onHierarchyHover, onHierarchySelect],
-  );
+  const sections = reactHostPort.useMemo(() => {
+    if (PUZZLE_2D_PLAY_IS_WIRES) {
+      return buildWiresPlayHierarchySections(WIRES_PLAY_FIXTURE, fixture, [], onHierarchySelect, {
+        omitItemSelection: true,
+        onHover: onHierarchyHover,
+      }).sections as TreeDataSection[];
+    }
+    return buildPuzzle2dPlayHierarchySections(fixture, [], onHierarchySelect, undefined, {
+      omitItemSelection: true,
+      onHover: onHierarchyHover,
+    }).sections as TreeDataSection[];
+  }, [fixture, onHierarchyHover, onHierarchySelect]);
   const treeSelectedIds = reactHostPort.useMemo(
-    () => puzzle2dPlayHierarchyTreeSelectedIds(fixture, [...selectionIds]),
+    () => puzzle2dPlayHierarchyTreeSelectedIdsForFixture(fixture, [...selectionIds]),
     [fixture, selectionIds],
   );
-  const treeHighlightedIds = reactHostPort.useMemo(() => puzzle2dPlayHierarchyTreeHighlightedIds(fixture, hoveredId), [fixture, hoveredId]);
+  const treeHighlightedIds = reactHostPort.useMemo(
+    () => puzzle2dPlayHierarchyTreeHighlightedIdsForFixture(fixture, hoveredId),
+    [fixture, hoveredId],
+  );
   const onTreeSelectionChange = reactHostPort.useCallback(
     (treeIds: string[]) => {
-      const graphIds = treeIds.map(puzzle2dPlayHierarchyGraphIdFromTreeItemId).filter((id): id is string => id !== null);
+      const graphIds = treeIds.map(puzzle2dPlayHierarchyGraphIdFromTreeItemIdForPlay).filter((id): id is string => id !== null);
       if (graphIds.length > 0) {
         setSelectionIds(graphIds);
       }
@@ -2127,69 +2602,98 @@ function Puzzle2dPlayHierarchyPanel(): ReactElement {
 class Puzzle2dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
-      id: PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
-      icon: ListTree,
+      id: PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_HIERARCHY_TAB_ID : PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
+      icon: createIconComponent("list-tree"),
       order: 0,
-      tree: new StaticTreePanelDefinition({
-        sections: [
-          {
-            id: "puzzle-2d-play-hierarchy.shell",
-            defaultOpen: true,
-            content: <Puzzle2dPlayHierarchyPanel />,
-            items: [],
-          },
-        ],
-      }),
+      tree: new CallbackTreePanelDefinition(
+        () => {
+          const shell = puzzle2dPlayShellRef.current;
+          const selection = puzzle2dPlaySelectionRef.current;
+          const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
+          if (!shell || !selection) {
+            const loadingId = PUZZLE_2D_PLAY_IS_WIRES ? "wires-play-hierarchy.loading" : "puzzle-2d-play-hierarchy.loading";
+            return [{ id: loadingId, label: "Hierarchy", items: [{ id: "loading", label: "…" }] }];
+          }
+          const onHierarchySelect = (id: string) => selection.setSelectionIds([id]);
+          const onHierarchyHover = (id: string | null) => shell.setHierarchyHover(id);
+          const treeNode = PUZZLE_2D_PLAY_IS_WIRES
+            ? (buildWiresPlayHierarchySections(WIRES_PLAY_FIXTURE, shell.fixture, [...selection.selectionIds], onHierarchySelect, {
+                omitItemSelection: true,
+                onHover: onHierarchyHover,
+              }) as UiTreeNode)
+            : buildPuzzle2dPlayHierarchySections(shell.fixture, [...selection.selectionIds], onHierarchySelect, undefined, {
+                omitItemSelection: true,
+                onHover: onHierarchyHover,
+              });
+          return uiTreeNodeToTreePanelConfig(
+            {
+              ...treeNode,
+              selectedIds: puzzle2dPlayHierarchyTreeSelectedIdsForFixture(shell.fixture, [...selection.selectionIds]),
+              highlightedIds: puzzle2dPlayHierarchyTreeHighlightedIdsForFixture(shell.fixture, shell.hoveredId),
+            },
+            bus,
+          );
+        },
+        () => {
+          const shell = puzzle2dPlayShellRef.current;
+          if (!shell) return [];
+          return [...puzzle2dPlayHierarchyTreeHighlightedIdsForFixture(shell.fixture, shell.hoveredId)];
+        },
+      ),
     };
   }
 }
 
-class Puzzle2dPlayLibraryPanelDefinition extends PureSidePanelTabDefinition {
+function Puzzle2dPlayKindsPanel(): ReactElement {
+  const { fixture } = usePuzzle2dPlayShell();
+  const kindCatalogs = reactHostPort.useMemo(
+    () => puzzle2dFixtureMergedKindCatalogs(fixture),
+    [fixture],
+  );
+  const treeNode = reactHostPort.useMemo(
+    () => (PUZZLE_2D_PLAY_IS_WIRES ? buildWiresPlayKindsTree(WIRES_PLAY_FIXTURE.kindCatalogs) : buildPuzzle2dPlayKindsTree(kindCatalogs)),
+    [kindCatalogs],
+  );
+  const commandBus = reactHostPort.useMemo(() => new CommandBus(), []);
+  return <PlaygroundDeclarativeTree treeNode={treeNode} commandBus={commandBus} />;
+}
+
+class Puzzle2dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
-      id: "puzzle-2d-play-library",
-      icon: Library,
+      id: PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_KINDS_TAB_ID : PUZZLE_2D_PLAY_KINDS_TAB_ID,
+      icon: createIconComponent("tags"),
       order: 1,
-      tree: new StaticTreePanelDefinition({
-        sections: [
-          {
-            id: "puzzle-2d-play-library.section",
-            label: "Library",
-            defaultOpen: true,
-            content: <Puzzle2dFixtureLibraryPanel />,
-            items: [],
-          },
-        ],
+      tree: new CallbackTreePanelDefinition(() => {
+        const shell = puzzle2dPlayShellRef.current;
+        const bus = puzzle2dPlayRuntimeRef.current?.commandBus ?? new CommandBus();
+        if (!shell) {
+          const loadingId = PUZZLE_2D_PLAY_IS_WIRES ? "wires-play-kinds.loading" : "puzzle-2d-play-kinds.loading";
+          return [{ id: loadingId, label: "Kinds", items: [{ id: "loading", label: "…" }] }];
+        }
+        const treeNode = PUZZLE_2D_PLAY_IS_WIRES
+          ? buildWiresPlayKindsTree(WIRES_PLAY_FIXTURE.kindCatalogs)
+          : buildPuzzle2dPlayKindsTree(puzzle2dFixtureMergedKindCatalogs(shell.fixture));
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
     };
   }
 }
 
 class Puzzle2dPlayInspectorPanelDefinition extends PureSidePanelTabDefinition {
-  private cachedSections: TreeDataSection[] | null = null;
-  private cacheKey = "";
-
-  constructor(private readonly buildSections: () => TreeDataSection[]) {
-    super();
-  }
-
-  private resolveSections(): TreeDataSection[] {
-    const sections = this.buildSections();
-    const key = sections.map((section) => `${section.id}:${section.items?.length ?? 0}`).join("|");
-    if (key === this.cacheKey && this.cachedSections) {
-      return this.cachedSections;
-    }
-    this.cacheKey = key;
-    this.cachedSections = sections;
-    return sections;
-  }
-
   buildTab(): SidePanelTabConfig {
     return {
       id: "puzzle-2d-play-inspector",
-      icon: ClipboardList,
+      icon: createIconComponent("clipboard-list"),
       order: 0,
-      tree: new CallbackTreePanelDefinition(() => this.resolveSections()),
+      tree: new CallbackTreePanelDefinition(() => {
+        const shell = puzzle2dPlayShellRef.current;
+        const selection = puzzle2dPlaySelectionRef.current;
+        if (!shell || !selection) {
+          return [{ id: "puzzle-2d-play-inspector.loading", label: "Detail", items: [{ id: "loading", label: "…" }] }];
+        }
+        return buildPuzzle2dPlayInspectorSections(shell.fixture, selection.selectionIds, shell.patchFixture);
+      }),
     };
   }
 }
@@ -2198,24 +2702,18 @@ class Puzzle2dPlaySettingsPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: "puzzle-2d-play-settings",
-      icon: Settings,
+      icon: createIconComponent("settings"),
       order: 1,
-      tree: new StaticTreePanelDefinition({
-        sections: [
-          {
-            id: "puzzle-2d-play-settings.section",
-            label: "Settings",
-            defaultOpen: true,
-            content: <Puzzle2dPlaySettingsPanel />,
-            items: [],
-          },
-        ],
-      }),
+      tree: new CallbackTreePanelDefinition(() => [playgroundPanelSection("puzzle-2d-play-settings.section", "Settings", <Puzzle2dPlaySettingsPanel />)]),
     };
   }
 }
 
 const Puzzle2dPlayShellContext = reactHostPort.createContext<Puzzle2dPlayShellValue | null>(null);
+
+const puzzle2dPlayShellRef: { current: Puzzle2dPlayShellValue | null } = { current: null };
+const puzzle2dPlaySelectionRef: { current: Puzzle2dPlaySelectionValue | null } = { current: null };
+const puzzle2dPlayRuntimeRef: { current: Platform | null } = { current: null };
 
 const Puzzle2dPlaySelectionContext = reactHostPort.createContext<Puzzle2dPlaySelectionValue | null>(null);
 
@@ -2362,7 +2860,7 @@ function Puzzle2dPlaySettingsPanel(): ReactElement {
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
       <div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element pb-2">
-        <Settings className="size-4 shrink-0" />
+        <Icon icon="settings" size={16} className="shrink-0" />
         <div>
           <div className="font-semibold uppercase tracking-wide">Settings</div>
           <div className="text-[11px] opacity-80">pane: {activePaneId}</div>
@@ -2479,7 +2977,8 @@ function Puzzle2dPaneChrome({ children, paneId }: { children: ReactNode; paneId:
         setHoverPane(paneId);
       }}
       onPointerLeave={(event) => {
-        if (event.currentTarget.contains(event.relatedTarget as globalThis.Node)) {
+        const related = event.relatedTarget;
+        if (related instanceof Node && event.currentTarget.contains(related)) {
           return;
         }
         clearHoverForPane(paneId);
@@ -2499,20 +2998,23 @@ function puzzle2dPlayLodCanvasProps(mode: Puzzle2dLodModeKind): { automaticLod: 
 
 const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
   paneId,
+  scopeId,
   showBackgroundMenu,
 }: {
   paneId: Puzzle2dPlayPaneId;
+  scopeId: string;
   showBackgroundMenu?: boolean;
 }): ReactElement {
   const {
     activePaneId,
+    activeScopeId,
     patchFixture,
     queueStructuralDelete,
     puzzle2dActiveTool,
     puzzle2dBrushFlushDistance,
     puzzle2dGridSnapEnabled,
     sceneAuthoringEpoch,
-    puzzle2dLodModeByPane,
+    lodModeForScope,
     puzzle2dRedrawPlaying,
     puzzle2dSelectionMethod,
     puzzle2dSelectionMode,
@@ -2522,16 +3024,16 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     handleCanvasFixtureDrop,
     resetPuzzle2dRedrawProgressiveEpoch,
   } = usePuzzle2dPlayShell();
-  const { camerasByPane, syncBaselineFromViewportCamera } = usePuzzle2dPlayCameras();
-  const camera = camerasByPane[paneId];
-  const lodProps = puzzle2dPlayLodCanvasProps(puzzle2dLodModeByPane[paneId]);
+  const { cameraForScope, syncBaselineFromViewportCamera } = usePuzzle2dPlayCameras();
+  const camera = cameraForScope(scopeId, paneId);
+  const lodProps = puzzle2dPlayLodCanvasProps(lodModeForScope(scopeId, paneId));
   const reportEffectiveLod = reactHostPort.useContext(Puzzle2dPlayLodRuntimeContext);
   const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => reportEffectiveLod?.(paneId, lod), [paneId, reportEffectiveLod]);
   const { applyCanvasSelection } = usePuzzle2dPlayCanvasSelection();
   const onSelect = reactHostPort.useCallback((snapshot: Puzzle2dSelectionSnapshot) => applyCanvasSelection(snapshot.ids), [applyCanvasSelection]);
   const demoNodeId = fixture.nodes[0]?.id;
   const demoEdgeId = fixture.edges[0]?.id;
-  const kindCompatibility = reactHostPort.useMemo(() => puzzle2dFixtureMetaKindCompatibility(fixture.meta), [fixture.meta]);
+  const kindCompatibility = reactHostPort.useMemo(() => puzzle2dFixtureMetaKindCompatibility(fixture), [fixture]);
   const sceneMarkers = reactHostPort.useMemo(
     () =>
       puzzle2dFixtureSceneMarkers(fixture, {
@@ -2585,35 +3087,36 @@ const Puzzle2dPlayPaneCanvas = React.memo(function Puzzle2dPlayPaneCanvas({
     [patchFixture],
   );
   const { notifyBrushCandidates } = usePuzzle2dPlayShell();
+  const isWiresPlay = PUZZLE_2D_PLAY_IS_WIRES;
+  const resolvedSelectionTargets = isWiresPlay ? { nodes: true, edges: true, handles: false } : puzzle2dSelectionTargets;
   return (
     <Puzzle2dPaneChrome paneId={paneId}>
       <Puzzle2dCanvas
         {...lodProps}
+        graphPortMode={isWiresPlay ? "normal" : undefined}
         declarativeSceneDescriptor={declarativeSceneDescriptor}
         onLodChange={onLodChange}
         camera={camera}
         className="min-h-0 flex-1"
         contextMenu={showBackgroundMenu ? puzzle2dPlayCanvasBackgroundMenu : undefined}
-        fixtureDragDrop
+        fixtureDragDrop={!isWiresPlay}
         activeTool={puzzle2dActiveTool}
         brushFlushDistance={puzzle2dBrushFlushDistance}
         brushNodeSize={DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX}
         gridSnapEnabled={puzzle2dGridSnapEnabled}
         kindCatalogs={PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS}
-        kindCompatibility={kindCompatibility}
-        lodZoomThresholds={DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS}
-        onCamera={activePaneId === paneId ? syncBaselineFromViewportCamera : undefined}
+        kindCompatibility={isWiresPlay ? undefined : kindCompatibility}
+        onCamera={activeScopeId === scopeId ? syncBaselineFromViewportCamera : undefined}
         onDelete={onCanvasDelete}
         onDrag={onCanvasDrag}
         onDragEnd={onCanvasDragEnd}
-        onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
+        onFixtureDrop={isWiresPlay ? undefined : (d) => handleCanvasFixtureDrop(paneId, d)}
         onSelect={onSelect}
-        onBrushPlace={commitBrushPlacement}
         onBrushCandidates={notifyBrushCandidates}
         sceneAuthoringEpoch={sceneAuthoringEpoch}
         selectionMethod={puzzle2dSelectionMethod}
         selectionMode={puzzle2dSelectionMode}
-        selectionTargets={puzzle2dSelectionTargets}
+        selectionTargets={resolvedSelectionTargets}
       >
         {sceneMarkers}
       </Puzzle2dCanvas>
@@ -2625,8 +3128,10 @@ function Puzzle2dPlayPaneSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSu
   if (node.controllerId !== PUZZLE_2D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_2D_PLAY_SURFACE_ID) {
     return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 2d surface binding</div>;
   }
-  const paneId = node.paneId as Puzzle2dPlayPaneId;
-  return <Puzzle2dPlayPaneCanvas paneId={paneId} showBackgroundMenu={paneId === "2d-overview"} />;
+  const shellInstance = useShellWindowInstance();
+  const paneId = (shellInstance?.windowKindId ?? node.paneId) as Puzzle2dPlayPaneId;
+  const scopeId = shellWindowScopeId(shellInstance, paneId);
+  return <Puzzle2dPlayPaneCanvas paneId={paneId} scopeId={scopeId} showBackgroundMenu={paneId === "2d-overview"} />;
 }
 
 let puzzle2dPlayChromeRegistered = false;
@@ -2639,117 +3144,13 @@ export function registerPuzzle2dPlaySurfaceHosts(): void {
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildPuzzle2dPlayOverviewDeclarativeBody);
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildPuzzle2dPlayDetailDeclarativeBody);
   registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildPuzzle2dPlaySelectionDeclarativeBody);
-  registerTabIcon("puzzle.2d-play.icon.library", Library);
-  registerTabIcon("puzzle.2d-play.icon.inspector", ClipboardList);
-  registerTabIcon("puzzle.2d-play.icon.settings", Settings);
+  registerTabIcon(PUZZLE_2D_PLAY_ICON_KINDS, "tags");
+  registerTabIcon("puzzle.2d-play.icon.inspector", "clipboard-list");
+  registerTabIcon("puzzle.2d-play.icon.settings", "settings");
 }
 // #endregion 🔖Panes
 
 // #region 🔖SidePanels
-// #region 🔖PaletteFixtureShelf
-/** @emoji 📐 Palette seeds match {@link PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX} (circle radius = span/2). */
-
-const PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
-  parsePuzzle2dFixtureV1({
-    camera: { x: 0, y: 0, zoom: 1 },
-    edges: [],
-    meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
-    nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX / 2, x: 0, y: 0 }],
-    schema: "puzzle.2d.fixture/v1",
-  }) ??
-  (() => {
-    throw new Error("Puzzle 2d play: palette circle drag fixture failed validation.");
-  })();
-
-const PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: Puzzle2dFixtureV1 =
-  parsePuzzle2dFixtureV1({
-    camera: { x: 0, y: 0, zoom: 1 },
-    edges: [],
-    meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
-    nodes: [
-      {
-        handles: [{ angle: 0, id: "palette-seed-rectangle.h0" }],
-        height: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX,
-        id: "palette-seed-rectangle",
-        shape: "rectangle",
-        width: PUZZLE_2D_PLAY_DEFAULT_NODE_SIZE_PX,
-        x: 0,
-        y: 0,
-      },
-    ],
-    schema: "puzzle.2d.fixture/v1",
-  }) ??
-  (() => {
-    throw new Error("Puzzle 2d play: palette rectangle drag fixture failed validation.");
-  })();
-
-/** @emoji 👻 Draggable chip with drag image rendered under `document.body` so host panel overflow does not clip the preview. */
-function Puzzle2dFixturePaletteDraggable(props: { fixture: Puzzle2dFixtureV1; label: string; preview: ReactNode }): ReactElement {
-  const { fixture: dragFixture, label, preview } = props;
-  const dragProps = useNativeDragAndDrop(
-    reactHostPort.useMemo(
-      () => ({
-        onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
-          setPuzzle2dFixtureDragDataTransfer(event.dataTransfer, dragFixture);
-          event.dataTransfer.effectAllowed = "copy";
-          const { clientHeight, clientWidth } = event.currentTarget;
-          event.dataTransfer.setDragImage(event.currentTarget, clientWidth / 2, clientHeight / 2);
-        },
-      }),
-      [dragFixture],
-    ),
-  );
-  return (
-    <div className="border-element bg-background flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing" title={label} {...dragProps}>
-      {preview}
-    </div>
-  );
-}
-// #endregion 🔖PaletteFixtureShelf
-
-/** @emoji 📥 Left rail: drag the active graph onto a puzzle 2d pane (in-app MIME payload, not filesystem JSON files). */
-function Puzzle2dFixtureLibraryPanel(): ReactElement {
-  const { fixture } = usePuzzle2dPlayShell();
-
-  const shelfDragProps = useNativeDragAndDrop(
-    reactHostPort.useMemo(
-      () => ({
-        onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
-          setPuzzle2dFixtureDragDataTransfer(event.dataTransfer, fixture);
-          event.dataTransfer.effectAllowed = "copy";
-        },
-      }),
-      [fixture],
-    ),
-  );
-
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 text-sm">
-      <div className="text-muted-foreground text-xs uppercase tracking-wide" data-testid="puzzle-2d-play-fixture-shelf">
-        Fixture shelf
-      </div>
-      <div className="flex flex-col gap-2">
-        <div className="text-muted-foreground text-[11px] uppercase tracking-wide">Shapes</div>
-        <div className="flex flex-wrap gap-2">
-          <Puzzle2dFixturePaletteDraggable fixture={PUZZLE_2D_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE} label="Drag circle onto the puzzle 2d canvas" preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />} />
-          <Puzzle2dFixturePaletteDraggable fixture={PUZZLE_2D_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE} label="Drag rectangle onto the puzzle 2d canvas" preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />} />
-        </div>
-      </div>
-      <div className="border-element bg-muted/30 flex min-h-30 cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing" {...shelfDragProps}>
-        <p className="font-medium">Active graph</p>
-        <p className="text-muted-foreground text-xs">Drag onto any puzzle 2d tab to load this graph (same payload for all panes).</p>
-      </div>
-      <div className="border-element space-y-1 rounded border p-2 text-xs">
-        <div className="text-muted-foreground">Loaded</div>
-        <div>schema: {fixture.schema}</div>
-        <div>
-          nodes: {fixture.nodes.length} · edges: {fixture.edges.length}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function findNode(fixture: Puzzle2dFixtureV1, id: string): Puzzle2dFixtureNodeV1 | undefined {
   return fixture.nodes.find((n) => n.id === id);
 }
@@ -2821,61 +3222,56 @@ function normalizeAngleRad(t: number): number {
   return x;
 }
 
-/** @emoji ⭕ Draggable ring control for handle polar angle `t` (radians, east-zero CCW in puzzle 2d space). */
-function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; onChange: (next: number) => void; value: number }): ReactElement {
-  const ref = reactHostPort.useRef<HTMLDivElement | null>(null);
+function puzzle2dInspectorKindSelectItems(
+  catalogRows: readonly { readonly id: string; readonly name: string }[] | undefined,
+  currentKindIds: readonly string[],
+  labelForOrphan: (kindId: string) => string,
+): readonly { readonly value: string; readonly label: string }[] {
+  const byId = new Map(puzzle2dPlayKindCatalogSelectItems(catalogRows).map((row) => [row.value, row] as const));
+  for (const kindId of currentKindIds) {
+    const trimmed = kindId.trim();
+    if (trimmed !== "" && !byId.has(trimmed)) {
+      byId.set(trimmed, { value: trimmed, label: labelForOrphan(trimmed) });
+    }
+  }
+  return [...byId.values()].sort((a, b) => a.label.localeCompare(b.label));
+}
 
-  const setFromClient = reactHostPort.useCallback(
-    (clientX: number, clientY: number) => {
-      const el = ref.current;
-      if (!el) {
-        return;
-      }
-      const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      const dx = clientX - cx;
-      const dy = clientY - cy;
-      onChange(normalizeAngleRad(Math.atan2(dy, dx)));
-    },
-    [onChange],
-  );
-
-  const pointerDragProps = usePointerDrag<HTMLDivElement>({
-    onStart: (event) => {
-      event.preventDefault();
-      setFromClient(event.clientX, event.clientY);
-    },
-    onMove: (event) => {
-      setFromClient(event.clientX, event.clientY);
-    },
-  });
-
-  const size = 88;
-  const stroke = 3;
-  const r = size / 2 - stroke * 2;
-  const cx = size / 2;
-  const cy = size / 2;
-  const knobX = cx + r * Math.cos(value);
-  const knobY = cy + r * Math.sin(value);
-
+function InspectorKindSelect({
+  id,
+  items,
+  label,
+  onValueChange,
+  uniform,
+  value,
+}: {
+  id: string;
+  items: readonly { readonly value: string; readonly label: string }[];
+  label: string;
+  onValueChange: (next: string) => void;
+  uniform: boolean;
+  value: string;
+}): ReactElement {
+  const selectValue = uniform && value !== "" ? value : undefined;
   return (
-    <div className="flex flex-col items-center gap-1">
-      <div
-        className={`border-element bg-muted/20 touch-none select-none rounded-full border ${angleUniform ? "" : "pointer-events-none opacity-40"}`}
-        ref={ref}
-        style={{ height: size, width: size }}
-        {...(angleUniform ? pointerDragProps : {})}
+    <Label id={id} label={label}>
+      <Select
+        key={uniform && value ? `${id}-${value}` : `${id}-mixed`}
+        onValueChange={onValueChange}
+        value={selectValue}
       >
-        <svg aria-label="Angle t" height={size} viewBox={`0 0 ${size} ${size}`} width={size}>
-          <circle cx={cx} cy={cy} fill="none" r={r} stroke="currentColor" strokeOpacity={0.35} strokeWidth={stroke} />
-          <line stroke="currentColor" strokeOpacity={0.45} strokeWidth={1} x1={cx} x2={cx + r} y1={cy} y2={cy} />
-          <line stroke="currentColor" strokeOpacity={0.25} strokeWidth={1} x1={cx} x2={cx} y1={cy} y2={cy - r} />
-          <circle cx={knobX} cy={knobY} fill="var(--foreground)" r={5} stroke="var(--background)" strokeWidth={2} />
-        </svg>
-      </div>
-      <div className="text-muted-foreground font-mono text-[10px]">{angleUniform ? `t = ${value.toFixed(4)} rad` : "Mixed t"}</div>
-    </div>
+        <SelectTrigger className="h-7 font-mono text-xs">
+          <SelectValue placeholder={uniform ? "kind" : "Mixed"} />
+        </SelectTrigger>
+        <SelectContent>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Label>
   );
 }
 
@@ -2908,10 +3304,12 @@ function NumericStepperRow({ id, label, onAbsolute, onDelta, step, uniform, valu
 /** @emoji 🟠 Batch node inspector: name (`text`), shape, center, size fields apply to every selected node. */
 function InspectorNodeBatch({
   fixture,
+  kindCatalogs,
   nodeIds,
   patchFixture,
 }: {
   fixture: Puzzle2dFixtureV1;
+  kindCatalogs: KindCatalogBundle;
   nodeIds: readonly string[];
   patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
 }): ReactElement {
@@ -2925,6 +3323,14 @@ function InspectorNodeBatch({
   const iconKinds = targets.map((n) => n.iconKind ?? "");
   const iconKindUniform = allEqual(iconKinds);
   const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
+
+  const nodeKinds = targets.map((n) => n.nodeKind ?? "");
+  const nodeKindUniform = allEqual(nodeKinds);
+  const nodeKindValue = nodeKindUniform ? (nodeKinds[0] ?? "") : "";
+  const nodeKindItems = reactHostPort.useMemo(
+    () => puzzle2dInspectorKindSelectItems(kindCatalogs.nodes, nodeKinds, (kindId) => puzzle2dNodeKindOverlayLabel(kindId, kindCatalogs)),
+    [kindCatalogs, nodeKinds],
+  );
 
   const shapes = targets.map((n) => (nodeIsRectangle(n) ? "rectangle" : "circle"));
   const shapeUniform = allEqual(shapes);
@@ -2988,11 +3394,26 @@ function InspectorNodeBatch({
     [patchNodes],
   );
 
+  const onNodeKind = reactHostPort.useCallback(
+    (next: string) => {
+      patchNodes((n) => puzzle2dApplyNodeKindToFixtureNode(n, next, kindCatalogs));
+    },
+    [kindCatalogs, patchNodes],
+  );
+
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
-      <Label id="puzzle-2d-play.inspector.node.name" label="Name">
+      <Label id="puzzle-2d-play.inspector.node.name" label={PUZZLE_2D_PLAY_IS_WIRES ? "Label" : "Name"}>
         <Input className="h-7 font-mono text-xs" onChange={(e: ChangeEvent<HTMLInputElement>) => onText(e.target.value)} placeholder={textUniform ? undefined : "Mixed"} value={textValue} />
       </Label>
+      <InspectorKindSelect
+        id="puzzle-2d-play.inspector.node.kind"
+        items={nodeKindItems}
+        label={PUZZLE_2D_PLAY_IS_WIRES ? "Identity kind" : "Node kind"}
+        onValueChange={onNodeKind}
+        uniform={nodeKindUniform}
+        value={nodeKindValue}
+      />
       <Label id="puzzle-2d-play.inspector.node.icon" label="Icon">
         <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.node.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
       </Label>
@@ -3057,10 +3478,12 @@ function InspectorNodeBatch({
 /** @emoji 🟣 Batch handle inspector: polar `t`, hit radius, optional id when single selection. */
 function InspectorHandleBatch({
   fixture,
+  kindCatalogs,
   handleIds,
   patchFixture,
 }: {
   fixture: Puzzle2dFixtureV1;
+  kindCatalogs: KindCatalogBundle;
   handleIds: readonly string[];
   patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
 }): ReactElement {
@@ -3076,6 +3499,14 @@ function InspectorHandleBatch({
   const iconKinds = handles.map((h) => h.iconKind ?? "");
   const iconKindUniform = allEqual(iconKinds);
   const iconKindValue = iconKindUniform ? (iconKinds[0] ?? "") : "";
+
+  const handleKinds = handles.map((h) => h.handleKind);
+  const handleKindUniform = allEqual(handleKinds);
+  const handleKindValue = handleKindUniform ? (handleKinds[0] ?? "") : "";
+  const handleKindItems = reactHostPort.useMemo(
+    () => puzzle2dInspectorKindSelectItems(kindCatalogs.handles, handleKinds, (kindId) => puzzle2dHandleKindOverlayLabel(kindId, kindCatalogs)),
+    [handleKinds, kindCatalogs],
+  );
 
   const patchHandles = reactHostPort.useCallback(
     (updater: (h: Puzzle2dFixtureHandleV1) => Puzzle2dFixtureHandleV1) => {
@@ -3098,40 +3529,79 @@ function InspectorHandleBatch({
     [patchHandles],
   );
 
+  const onHandleKind = reactHostPort.useCallback(
+    (next: string) => {
+      const trimmed = next.trim();
+      if (trimmed === "") {
+        return;
+      }
+      patchHandles((h) => ({ ...h, handleKind: trimmed }));
+    },
+    [patchHandles],
+  );
+
+  const ringParentNodes = reactHostPort.useMemo(
+    () =>
+      handles
+        .map((h) => findHandleOwner(fixture, h.id)?.node)
+        .filter((n): n is Puzzle2dFixtureNodeV1 => Boolean(n)),
+    [fixture, handles],
+  );
+  const ringParentShapes = ringParentNodes.map((n) => n.shape ?? "circle");
+  const ringParentShapeUniform = allEqual(ringParentShapes);
+  const ringParentNode = ringParentShapeUniform ? ringParentNodes[0] : undefined;
+  const ringEnabled = angleUniform && ringParentNode !== undefined;
+  const ringOrbT = ringEnabled ? puzzle2dHandleAngleToRingT(ringParentNode, angleValue) : 0;
+
+  const onRingOrbChange = reactHostPort.useCallback(
+    (_orbId: string, _oldT: number, newT: number) => {
+      if (!ringParentNode) {
+        return;
+      }
+      const next = normalizeAngleRad(puzzle2dHandleAngleFromRingT(ringParentNode, newT));
+      patchHandles((h) => ({ ...h, angle: next }));
+    },
+    [patchHandles, ringParentNode],
+  );
+
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
-      <div className="flex flex-wrap items-start gap-4">
-        <AngleTRing
-          angleUniform={angleUniform}
-          onChange={(t) => {
-            patchHandles((h) => ({ ...h, angle: t }));
-          }}
-          value={angleValue}
+      <InspectorKindSelect
+        id="puzzle-2d-play.inspector.handle.kind"
+        items={handleKindItems}
+        label="Handle kind"
+        onValueChange={onHandleKind}
+        uniform={handleKindUniform}
+        value={handleKindValue}
+      />
+      <Label id="puzzle-2d-play.inspector.handle.t.ring" label="t">
+        <Ring
+          id="puzzle-2d-play.inspector.handle.t.ring.control"
+          onOrbChange={onRingOrbChange}
+          orbs={[{ disabled: !ringEnabled, id: "angle", selected: true, t: ringOrbT }]}
         />
-        <div className="min-w-0 flex-1 space-y-3">
-          <NumericStepperRow
-            id="puzzle-2d-play.inspector.handle.t"
-            label="t (rad)"
-            onAbsolute={(v) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(v) }))}
-            onDelta={(d) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(h.angle + d) }))}
-            step={0.05}
-            uniform={angleUniform}
-            value={angleUniform ? angleValue : Number.NaN}
-          />
-          <NumericStepperRow
-            id="puzzle-2d-play.inspector.handle.radius"
-            label="Hit radius"
-            onAbsolute={(v) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, v) }))}
-            onDelta={(d) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, (h.radius ?? 8) + d) }))}
-            step={1}
-            uniform={radiusUniform}
-            value={radiusValue}
-          />
-          <Label id="puzzle-2d-play.inspector.handle.icon" label="Icon">
-            <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.handle.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
-          </Label>
-        </div>
-      </div>
+      </Label>
+      <NumericStepperRow
+        id="puzzle-2d-play.inspector.handle.t"
+        label="t (rad)"
+        onAbsolute={(v) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(v) }))}
+        onDelta={(d) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(h.angle + d) }))}
+        step={0.05}
+        uniform={angleUniform}
+        value={angleUniform ? angleValue : Number.NaN}
+      />
+      <NumericStepperRow
+        id="puzzle-2d-play.inspector.handle.radius"
+        label="Hit radius"
+        onAbsolute={(v) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, v) }))}
+        onDelta={(d) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, (h.radius ?? 8) + d) }))}
+        step={1}
+        uniform={radiusUniform}
+        value={radiusValue}
+      />
+      <Label id="puzzle-2d-play.inspector.handle.icon" label="Icon">
+        <IconSelector classifyPuzzle2dIconSelectorMode={classifyPuzzle2dIconSelectorMode} id="puzzle-2d-play.inspector.handle.icon.selector" onChange={onIconKind} uniform={iconKindUniform} value={iconKindValue} />
+      </Label>
     </div>
   );
 }
@@ -3154,7 +3624,28 @@ function InspectorEdgeBatch({
   const targets = edges.map((e) => e.target);
   const sourceUniform = allEqual(sources);
   const targetUniform = allEqual(targets);
-  const handleOptions = reactHostPort.useMemo(() => listHandleIds(fixture), [fixture]);
+  const handleOptions = reactHostPort.useMemo(
+    () => (PUZZLE_2D_PLAY_IS_WIRES ? fixture.nodes.map((node) => node.id) : listHandleIds(fixture)),
+    [fixture],
+  );
+  const endpointLabel = reactHostPort.useCallback(
+    (endpointId: string) =>
+      PUZZLE_2D_PLAY_IS_WIRES ? (wiresPlayIdentityLabelForNodeId(endpointId) ?? endpointId) : puzzle2dFixtureHandleEndpointDisplayLabel(endpointId, fixture, kindCatalogs),
+    [fixture, kindCatalogs],
+  );
+  const edgeKinds = edges.map((e) => e.edgeKind ?? "");
+  const edgeKindUniform = allEqual(edgeKinds);
+  const edgeKindValue = edgeKindUniform ? (edgeKinds[0] ?? "") : "";
+  const edgeKindItems = reactHostPort.useMemo(
+    () => puzzle2dInspectorKindSelectItems(kindCatalogs.edges, edgeKinds, (kindId) => puzzle2dEdgeKindOverlayLabel(kindId, kindCatalogs)),
+    [edgeKinds, kindCatalogs],
+  );
+  const wiresRelationshipKinds = reactHostPort.useMemo(
+    () => edges.map((edge) => wiresPlayRelationshipKindDisplayName(edge.id) ?? ""),
+    [edges],
+  );
+  const wiresRelationshipKindUniform = allEqual(wiresRelationshipKinds);
+  const wiresRelationshipKindValue = wiresRelationshipKindUniform ? (wiresRelationshipKinds[0] ?? "") : "";
 
   const patchEdges = reactHostPort.useCallback(
     (updater: (e: Puzzle2dFixtureEdgeV1) => Puzzle2dFixtureEdgeV1) => {
@@ -3166,9 +3657,37 @@ function InspectorEdgeBatch({
     [idSet, patchFixture],
   );
 
+  const onEdgeKind = reactHostPort.useCallback(
+    (next: string) => {
+      const trimmed = next.trim();
+      patchEdges((edge) => {
+        if (trimmed === "") {
+          const { edgeKind: _drop, ...rest } = edge;
+          return rest;
+        }
+        return { ...edge, edgeKind: trimmed };
+      });
+    },
+    [patchEdges],
+  );
+
   return (
     <div className="border-element/60 space-y-3 border-l pl-2">
-      <Label id="puzzle-2d-play.inspector.edge.source" label="Source">
+      {PUZZLE_2D_PLAY_IS_WIRES ? (
+        <Label id="puzzle-2d-play.inspector.edge.relationship-kind" label="Relationship kind">
+          <Input className="h-7 font-mono text-xs" readOnly value={wiresRelationshipKindUniform ? wiresRelationshipKindValue : "Mixed"} />
+        </Label>
+      ) : (
+        <InspectorKindSelect
+          id="puzzle-2d-play.inspector.edge.kind"
+          items={edgeKindItems}
+          label="Edge kind"
+          onValueChange={onEdgeKind}
+          uniform={edgeKindUniform}
+          value={edgeKindValue}
+        />
+      )}
+      <Label id="puzzle-2d-play.inspector.edge.source" label={PUZZLE_2D_PLAY_IS_WIRES ? "From identity" : "Source"}>
         <Select
           onValueChange={(v) => {
             patchEdges((e) => ({ ...e, source: v }));
@@ -3181,13 +3700,13 @@ function InspectorEdgeBatch({
           <SelectContent>
             {handleOptions.map((hid) => (
               <SelectItem key={hid} value={hid}>
-                {puzzle2dFixtureHandleEndpointDisplayLabel(hid, fixture, kindCatalogs)}
+                {endpointLabel(hid)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </Label>
-      <Label id="puzzle-2d-play.inspector.edge.target" label="Target">
+      <Label id="puzzle-2d-play.inspector.edge.target" label={PUZZLE_2D_PLAY_IS_WIRES ? "To identity" : "Target"}>
         <Select
           onValueChange={(v) => {
             patchEdges((e) => ({ ...e, target: v }));
@@ -3200,7 +3719,7 @@ function InspectorEdgeBatch({
           <SelectContent>
             {handleOptions.map((hid) => (
               <SelectItem key={`target-${hid}`} value={hid}>
-                {puzzle2dFixtureHandleEndpointDisplayLabel(hid, fixture, kindCatalogs)}
+                {endpointLabel(hid)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -3210,15 +3729,17 @@ function InspectorEdgeBatch({
   );
 }
 
-/** @emoji 🔎 Playground tree inspector sections for the active pane selection (every section has items). */
-function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selection: Puzzle2dPlaySelectionValue): TreeDataSection[] {
-  const { activePaneId, fixture, patchFixture } = shell;
-  const { selectionIds } = selection;
-  const kindCatalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
+function classifyPuzzle2dPlayInspectorSelection(fixture: Puzzle2dFixtureV1, selectionIds: ReadonlySet<string>): {
+  readonly nodeIds: readonly string[];
+  readonly handleIds: readonly string[];
+  readonly edgeIds: readonly string[];
+  readonly unknownIds: readonly string[];
+} {
   const ids = [...selectionIds].sort((a, b) => a.localeCompare(b));
   const nodeIds: string[] = [];
   const handleIds: string[] = [];
   const edgeIds: string[] = [];
+  const unknownIds: string[] = [];
   for (const id of ids) {
     if (findNode(fixture, id)) {
       nodeIds.push(id);
@@ -3226,34 +3747,45 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selec
       edgeIds.push(id);
     } else if (findHandleOwner(fixture, id)) {
       handleIds.push(id);
+    } else {
+      unknownIds.push(id);
     }
   }
-  if (ids.length === 0) {
+  return { nodeIds, handleIds, edgeIds, unknownIds };
+}
+
+/** @emoji 🔎 Playground tree inspector sections for the active selection (up to three kind sections). */
+export function buildPuzzle2dPlayInspectorSections(
+  fixture: Puzzle2dFixtureV1,
+  selectionIds: ReadonlySet<string>,
+  patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void,
+): TreeDataSection[] {
+  const kindCatalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
+  const { nodeIds, handleIds, edgeIds, unknownIds } = classifyPuzzle2dPlayInspectorSelection(fixture, selectionIds);
+  if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0 && unknownIds.length === 0) {
     return [
       playgroundPanelSection(
         "puzzle-2d-play-inspector.empty",
         "Detail",
         <p className="text-muted-foreground leading-snug">
-          pane: {activePaneId}. No selection. Click the graph or pick another tab.
+          {PUZZLE_2D_PLAY_IS_WIRES
+            ? "No selection. Click the graph or pick an identity or relationship in the hierarchy."
+            : "No selection. Click the graph or pick a row in the hierarchy."}
         </p>,
       ),
     ];
   }
-  const sections: TreeDataSection[] = [
-    playgroundPanelSection(
-      "puzzle-2d-play-inspector.header",
-      "Detail",
-      <p className="text-muted-foreground text-[11px] leading-snug">
-        {activePaneId} · {ids.length} selected
-      </p>,
-    ),
-  ];
+  const sections: TreeDataSection[] = [];
   if (nodeIds.length > 0) {
     sections.push(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-nodes",
-        `Nodes (${nodeIds.length})`,
-        <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} />,
+        PUZZLE_2D_PLAY_IS_WIRES
+          ? nodeIds.length === 1
+            ? "Identity"
+            : "Identities"
+          : puzzle2dPlayInspectorKindSectionLabel("node", nodeIds.length),
+        <InspectorNodeBatch fixture={fixture} kindCatalogs={kindCatalogs} nodeIds={nodeIds} patchFixture={patchFixture} />,
       ),
     );
   }
@@ -3261,8 +3793,8 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selec
     sections.push(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-handles",
-        `Handles (${handleIds.length})`,
-        <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} />,
+        puzzle2dPlayInspectorKindSectionLabel("handle", handleIds.length),
+        <InspectorHandleBatch fixture={fixture} kindCatalogs={kindCatalogs} handleIds={handleIds} patchFixture={patchFixture} />,
       ),
     );
   }
@@ -3270,21 +3802,36 @@ function buildPuzzle2dPlayInspectorSections(shell: Puzzle2dPlayShellValue, selec
     sections.push(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-edges",
-        `Edges (${edgeIds.length})`,
+        PUZZLE_2D_PLAY_IS_WIRES
+          ? edgeIds.length === 1
+            ? "Relationship"
+            : "Relationships"
+          : puzzle2dPlayInspectorKindSectionLabel("edge", edgeIds.length),
         <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} kindCatalogs={kindCatalogs} patchFixture={patchFixture} />,
       ),
     );
   }
-  if (nodeIds.length === 0 && handleIds.length === 0 && edgeIds.length === 0) {
+  if (unknownIds.length > 0) {
     sections.push(
       playgroundPanelSection(
         "puzzle-2d-play-inspector-unknown",
         "Selection",
-        <p className="text-[11px] text-warning-foreground leading-snug">{ids.map((id) => puzzle2dFixtureObjectDisplayLabel(id, fixture, kindCatalogs)).join(", ")}</p>,
+        <p className="text-[11px] text-warning-foreground leading-snug">{unknownIds.map((id) => puzzle2dFixtureObjectDisplayLabel(id, fixture, kindCatalogs)).join(", ")}</p>,
       ),
     );
   }
   return sections;
+}
+
+/** @emoji 🔎 Details side panel bound to play fixture + selection (reacts to context, not shell generation). */
+function Puzzle2dPlayInspectorPanel(): ReactElement {
+  const { fixture, patchFixture } = usePuzzle2dPlayShell();
+  const { selectionIds } = usePuzzle2dPlaySelection();
+  const sections = reactHostPort.useMemo(
+    () => buildPuzzle2dPlayInspectorSections(fixture, selectionIds, patchFixture),
+    [fixture, patchFixture, selectionIds],
+  );
+  return <Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={sections} />;
 }
 // #endregion 🔖SidePanels
 
@@ -3308,18 +3855,28 @@ interface Puzzle2dPlayRedrawLoopSnapshot {
 }
 
 // #region 🔖Entrypoint
-const initialFixture = clonePuzzle2dFixtureV1(PUZZLE_2D_PLAY_DEFAULT_FIXTURE);
+const initialFixture = clonePuzzle2dFixtureV1(puzzle2dPlayResolvedDefaultFixture());
 
-function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Platform }): ReactElement {
+function Puzzle2dPlayInner({
+  puzzle2dRuntime,
+  playgroundKeybindings,
+}: {
+  readonly puzzle2dRuntime: Platform;
+  readonly playgroundKeybindings?: readonly import("@framework/playground/core").PlaygroundKeybinding[];
+}): ReactElement {
   const [fixture, setFixtureState] = reactHostPort.useState<Puzzle2dFixtureV1>(() => clonePuzzle2dFixtureV1(initialFixture));
   const fixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1>(fixture);
   fixtureRef.current = fixture;
-  const [puzzle2dPlayPaneCamerasBaseline, setPuzzle2dPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => triptychCamerasFromFixture(initialFixture));
+  const [puzzle2dPlayPaneCamerasBaseline, setPuzzle2dPlayPaneCamerasBaseline] = reactHostPort.useState<Record<Puzzle2dPlayPaneId, CameraState>>(() => puzzle2dPlayInitialCameras());
   const puzzle2dPlayPaneCamerasBaselineRef = reactHostPort.useRef(puzzle2dPlayPaneCamerasBaseline);
   puzzle2dPlayPaneCamerasBaselineRef.current = puzzle2dPlayPaneCamerasBaseline;
-  const [activePaneId, setActivePaneId] = reactHostPort.useState<Puzzle2dPlayPaneId>("2d-overview");
+  const [activeScopeId, setActiveScopeId] = reactHostPort.useState("2d-overview");
+  const activeScopeIdRef = reactHostPort.useRef(activeScopeId);
+  activeScopeIdRef.current = activeScopeId;
+  const activePaneId = puzzle2dPlayPaneFromShellWindowId(activeScopeId) ?? "2d-overview";
   const activePaneIdRef = reactHostPort.useRef(activePaneId);
   activePaneIdRef.current = activePaneId;
+  const [cameraByScope, setCameraByScope] = reactHostPort.useState<Record<string, CameraState>>({});
   const [selectionIds, setSelectionIdsState] = reactHostPort.useState<Set<string>>(() => selectionSeedForFixture(initialFixture));
   const [preselection, setPreselection] = reactHostPort.useState<Puzzle2dPreselectSnapshot>(PUZZLE_2D_PRESELECT_EMPTY);
   const [hoveredId, setHoveredId] = reactHostPort.useState<string | null>(null);
@@ -3332,6 +3889,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const [puzzle2dGridSnapEnabled, setPuzzle2dGridSnapEnabled] = reactHostPort.useState(false);
   const [puzzle2dActiveTool, setPuzzle2dActiveTool] = reactHostPort.useState<Puzzle2dActiveTool>("select");
   const [puzzle2dBrushFlushDistance, setPuzzle2dBrushFlushDistance] = reactHostPort.useState(DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX);
+  const puzzle2dFillBaseFixtureRef = reactHostPort.useRef<Puzzle2dFixtureV1 | null>(null);
+  const puzzle2dFillSequenceRef = reactHostPort.useRef<Puzzle2dBrushPlacePayload[]>([]);
+  const puzzle2dFillSeedRef = reactHostPort.useRef(0);
   const puzzle2dShellController = puzzle2dRuntime.getActiveApp()?.controller as Puzzle2dPlayShellController | undefined;
   const shellGeneration = reactHostPort.useSyncExternalStore(
     (onStoreChange) => puzzle2dRuntime.subscribe(onStoreChange),
@@ -3344,6 +3904,10 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     "2d-overview": PUZZLE_2D_LOD_MODE_AUTOMATIC,
     "2d-selection": PUZZLE_2D_LOD_MODE_AUTOMATIC,
   };
+  const lodModeForScope = reactHostPort.useCallback(
+    (scopeId: string, pane: Puzzle2dPlayPaneId) => puzzle2dShellController?.lodModeForScope(scopeId, pane) ?? puzzle2dLodModeByPane[pane],
+    [puzzle2dLodModeByPane, puzzle2dShellController],
+  );
   const setPuzzle2dLodModeForPane = reactHostPort.useCallback(
     (pane: Puzzle2dPlayPaneId, mode: Puzzle2dLodModeKind) => {
       puzzle2dRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setLodModeForPane", { pane, value: mode });
@@ -3360,7 +3924,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         payload.candidates.length > 0
           ? payload.candidates.map((kindId, index) => ({
               id: `puzzle2d.brush.${kindId}.${index}`,
-              label: kindId.split(".").pop() ?? kindId,
+              label: puzzle2dNodeKindOverlayLabel(kindId, PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS),
             }))
           : [];
       puzzle2dShellController?.setBrushEngagementPossibles(rows);
@@ -3368,25 +3932,46 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     [puzzle2dActiveTool, puzzle2dShellController],
   );
 
+  const preparePuzzle2dFillSession = reactHostPort.useCallback((base: Puzzle2dFixtureV1) => {
+    puzzle2dFillBaseFixtureRef.current = clonePuzzle2dFixtureV1(base);
+    puzzle2dFillSeedRef.current = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
+    const renderer = puzzle2dActiveRenderer();
+    puzzle2dFillSequenceRef.current =
+      renderer?.computeBrushFillSequence(puzzle2dFillBaseFixtureRef.current, 1000, puzzle2dFillSeedRef.current) ?? [];
+    console.log("[DEBUG] puzzle2d fill sequence length", puzzle2dFillSequenceRef.current.length, "seed", puzzle2dFillSeedRef.current);
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    puzzle2dShellController?.setKindCatalogs(PUZZLE_2D_PLAY_DEFAULT_KIND_CATALOGS);
+  }, [puzzle2dShellController]);
+
   const setPuzzle2dEffectiveLodForPane = reactHostPort.useCallback(
     (pane: Puzzle2dPlayPaneId, lod: Puzzle2dDrawLodKind) => {
       puzzle2dRuntime.commandBus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "setEffectiveLodForPane", { pane, lod });
     },
     [puzzle2dRuntime.commandBus],
   );
-  const onPuzzle2dPlayActiveWindowChange = reactHostPort.useCallback((windowKindId: string) => {
-    if (windowKindId === "2d-overview" || windowKindId === "2d-detail" || windowKindId === "2d-selection") {
-      setActivePaneId(windowKindId);
+  const onPuzzle2dPlayActiveWindowChange = reactHostPort.useCallback((shellWindowId: string) => {
+    if (puzzle2dPlayPaneFromShellWindowId(shellWindowId)) {
+      setActiveScopeId(shellWindowId);
     }
   }, []);
-  const [puzzle2dRedrawPlaying, setPuzzle2dRedrawPlaying] = reactHostPort.useState(false);
+
+  const setActivePaneId = reactHostPort.useCallback((pane: Puzzle2dPlayPaneId) => {
+    setActiveScopeId((current) => (puzzle2dPlayPaneFromShellWindowId(current) === pane ? current : pane));
+  }, []);
+  const [puzzle2dRedrawPlaying, setPuzzle2dRedrawPlaying] = reactHostPort.useState(
+    PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS.puzzle2dRedrawPlaying : false,
+  );
   const [forceLayoutFullIterations, setForceLayoutFullIterations] = reactHostPort.useState(200);
   const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = reactHostPort.useState(64);
   const [forceLayoutGravity, setForceLayoutGravity] = reactHostPort.useState(0.012);
   const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = reactHostPort.useState(80);
   const [puzzle2dRedrawPlayMaxItersPerFrame, setPuzzle2dRedrawPlayMaxItersPerFrame] = reactHostPort.useState(96);
   const [puzzle2dRedrawProgressiveEnabled, setPuzzle2dRedrawProgressiveEnabled] = reactHostPort.useState(true);
-  const [puzzle2dRedrawProgressiveAutoStopMs, setPuzzle2dRedrawProgressiveAutoStopMs] = reactHostPort.useState(3000);
+  const [puzzle2dRedrawProgressiveAutoStopMs, setPuzzle2dRedrawProgressiveAutoStopMs] = reactHostPort.useState(
+    PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS.puzzle2dRedrawProgressiveAutoStopMs : 3000,
+  );
   const [puzzle2dRedrawMode, setPuzzle2dRedrawMode] = reactHostPort.useState<Puzzle2dRedrawModeKind>("force-graph");
   const [puzzle2dRedrawHandlesAfterNodes, setPuzzle2dRedrawHandlesAfterNodes] = reactHostPort.useState(false);
   const [treeLayoutLayerSpacing, setTreeLayoutLayerSpacing] = reactHostPort.useState(120);
@@ -3401,7 +3986,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     setSceneAuthoringEpoch((epoch) => epoch + 1);
   }, []);
 
+  const authoringStructuralMutationRef = reactHostPort.useRef(false);
   const applyStructuralDelete = reactHostPort.useCallback((kind: "edge" | "node", id: string) => {
+    authoringStructuralMutationRef.current = true;
     const pruneSelections = (removeIds: readonly string[]): void => {
       const remove = new Set(removeIds);
       setSelectionIdsState((prev) => new Set([...prev].filter((x) => !remove.has(x))));
@@ -3411,7 +3998,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         if (!prev.edges.some((e) => e.id === id)) {
           return prev;
         }
-        return { ...prev, edges: prev.edges.filter((e) => e.id !== id) };
+        const next = { ...prev, edges: prev.edges.filter((e) => e.id !== id) };
+        puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
+        return next;
       });
       pruneSelections([id]);
       bumpSceneAuthoringEpoch();
@@ -3420,16 +4009,12 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     const node = fixtureRef.current.nodes.find((n) => n.id === id);
     const handleIds = node?.handles.map((h) => h.id) ?? [];
     setFixtureState((prev) => {
-      const n = prev.nodes.find((x) => x.id === id);
-      if (!n) {
+      const next = puzzle2dPlayApplyNodeStructuralDeleteToFixture(prev, id);
+      if (next === prev) {
         return prev;
       }
-      const hset = new Set(n.handles.map((h) => h.id));
-      return {
-        ...prev,
-        edges: prev.edges.filter((e) => !hset.has(e.source) && !hset.has(e.target)),
-        nodes: prev.nodes.filter((x) => x.id !== id),
-      };
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
+      return next;
     });
     pruneSelections([id, ...handleIds]);
     bumpSceneAuthoringEpoch();
@@ -3448,11 +4033,25 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   }, [guardFixtureAuthoringFromStructuralDeletes]);
 
   reactHostPort.useLayoutEffect(() => {
+    if (authoringStructuralMutationRef.current) {
+      authoringStructuralMutationRef.current = false;
+      return;
+    }
     setFixtureState((prev) => puzzle2dPlayRehydrateFixtureEdgesIfMissing(prev, initialFixture));
   }, [fixture.edges.length]);
 
   const structuralDeleteQueueRef = reactHostPort.useRef<Puzzle2dPlayStructuralDeleteItem[]>([]);
   const structuralDeleteFlushScheduledRef = reactHostPort.useRef(false);
+  const flushStructuralDeleteQueue = reactHostPort.useCallback((): number => {
+    structuralDeleteFlushScheduledRef.current = false;
+    const batch = structuralDeleteQueueRef.current;
+    if (batch.length === 0) {
+      return 0;
+    }
+    structuralDeleteQueueRef.current = [];
+    const applied = flushPuzzle2dPlayStructuralDeleteBatch(batch, fixtureRef.current, applyStructuralDelete);
+    return applied.length;
+  }, [applyStructuralDelete]);
   const queueStructuralDelete = reactHostPort.useCallback(
     (kind: "edge" | "node", id: string) => {
       if (puzzle2dIsBrushPlacementStructuralDeleteGuarded(id)) {
@@ -3471,20 +4070,10 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       }
       structuralDeleteFlushScheduledRef.current = true;
       queueMicrotask(() => {
-        structuralDeleteFlushScheduledRef.current = false;
-        const batch = structuralDeleteQueueRef.current;
-        structuralDeleteQueueRef.current = [];
-        const pending = filterPuzzle2dPlayStructuralDeleteBatch(batch, fixtureRef.current);
-        for (const item of pending) {
-          if (item.kind === "edge") {
-            applyStructuralDelete("edge", item.id);
-            continue;
-          }
-          applyStructuralDelete("node", item.id);
-        }
+        flushStructuralDeleteQueue();
       });
     },
-    [applyStructuralDelete],
+    [flushStructuralDeleteQueue],
   );
 
   const setFixture = reactHostPort.useCallback((next: Puzzle2dFixtureV1) => {
@@ -3550,16 +4139,14 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     (_pane: Puzzle2dPlayPaneId, detail: Puzzle2dFixtureDropDetail) => {
       skipNextCameraBasisResyncRef.current = true;
       guardFixtureAuthoringFromStructuralDeletes(200);
-      const merged = mergePaletteNodeFromDrop(detail);
-      if (merged) {
-        paletteDropNodeGuardRef.current.add(merged.id);
+      const placedNodeId = puzzle2dCommitPaletteNodeDropToPlay(detail, { patchFixture, setSelectionIds });
+      if (placedNodeId) {
+        paletteDropNodeGuardRef.current.add(placedNodeId);
         if (typeof globalThis.setTimeout === "function") {
           globalThis.setTimeout(() => {
-            paletteDropNodeGuardRef.current.delete(merged.id);
+            paletteDropNodeGuardRef.current.delete(placedNodeId);
           }, 600);
         }
-        patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, merged] }));
-        setSelectionIds([merged.id]);
         return;
       }
       setFixture(detail.fixture);
@@ -3570,18 +4157,32 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const commitBrushPlacement = reactHostPort.useCallback(
     (payload: Puzzle2dBrushPlacePayload) => {
       guardFixtureAuthoringFromStructuralDeletes(200);
-      patchFixture((prev) => {
-        const result = applyBrushPlacementToFixture(prev, payload, puzzle2dFixtureMergedKindCatalogs(prev));
-        if (result.kind !== "placed") {
-          return prev;
-        }
-        puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
-        puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
-        return result.fixture;
+      puzzle2dCommitBrushPlacementToPlay(payload, {
+        catalogsForFixture: puzzle2dFixtureMergedKindCatalogs,
+        patchFixture,
       });
     },
     [guardFixtureAuthoringFromStructuralDeletes, patchFixture],
   );
+
+  reactHostPort.useLayoutEffect(() => {
+    puzzle2dSetBrushPlaceCommitHandler(commitBrushPlacement);
+    return () => {
+      puzzle2dSetBrushPlaceCommitHandler(null);
+    };
+  }, [commitBrushPlacement]);
+
+  reactHostPort.useEffect(() => {
+    if (puzzle2dActiveTool !== "brush") {
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+      return;
+    }
+    const flushedCount = flushStructuralDeleteQueue();
+    if (flushedCount > 0) {
+      return;
+    }
+    puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture);
+  }, [fixture, puzzle2dActiveTool, flushStructuralDeleteQueue]);
 
   const remapIdInSelections = reactHostPort.useCallback((replacedId: string, replacementId: string) => {
     if (replacedId === replacementId) {
@@ -3619,8 +4220,16 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       return;
     }
     const c = { x: cam.x, y: cam.y, zoom: cam.zoom };
+    const scope = activeScopeIdRef.current;
+    const pane = activePaneIdRef.current;
+    setCameraByScope((prev) => {
+      const p = prev[scope] ?? puzzle2dPlayPaneCamerasBaselineRef.current[pane];
+      if (Math.abs(p.x - c.x) < 1e-6 && Math.abs(p.y - c.y) < 1e-6 && Math.abs(p.zoom - c.zoom) < 1e-9) {
+        return prev;
+      }
+      return { ...prev, [scope]: { ...c } };
+    });
     setPuzzle2dPlayPaneCamerasBaseline((prev) => {
-      const pane = activePaneIdRef.current;
       const p = prev[pane];
       if (Math.abs(p.x - c.x) < 1e-6 && Math.abs(p.y - c.y) < 1e-6 && Math.abs(p.zoom - c.zoom) < 1e-9) {
         return prev;
@@ -3628,6 +4237,14 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       return { ...prev, [pane]: { ...c } };
     });
   }, []);
+
+  const cameraForScope = reactHostPort.useCallback(
+    (scopeId: string, pane: Puzzle2dPlayPaneId): CameraState => {
+      const merged = cameraDisplayOverrideByPane ?? puzzle2dPlayPaneCamerasBaseline;
+      return cameraByScope[scopeId] ?? merged[pane];
+    },
+    [cameraByScope, cameraDisplayOverrideByPane, puzzle2dPlayPaneCamerasBaseline],
+  );
 
   reactHostPort.useEffect(() => {
     if (puzzle2dRedrawPlaying) {
@@ -3857,7 +4474,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     puzzle2dRedrawProgressiveAutoStopMs: 3000,
     puzzle2dRedrawProgressiveEnabled: true,
     puzzle2dRedrawPlayMaxItersPerFrame: 96,
-    camerasByPane: triptychCamerasFromFixture(initialFixture),
+    camerasByPane: puzzle2dPlayInitialCameras(),
     forceLayoutGravity: 0.012,
     forceLayoutIdealEdgeLength: 64,
     forceLayoutRepulsionStrength: 80,
@@ -4022,6 +4639,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const shellValue = reactHostPort.useMemo<Puzzle2dPlayShellValue>(
     () => ({
       activePaneId,
+      activeScopeId,
       applyPuzzle2dRedrawHandlesOnce,
       applyPuzzle2dRedrawOnce,
       applyStructuralDelete,
@@ -4060,6 +4678,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       setPuzzle2dRedrawProgressiveEnabled,
       setPuzzle2dGridSnapEnabled,
       puzzle2dLodModeByPane,
+      lodModeForScope,
       setPuzzle2dLodModeForPane,
       setPuzzle2dSelectionMethod,
       setPuzzle2dSelectionMode,
@@ -4086,6 +4705,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     }),
     [
       activePaneId,
+      activeScopeId,
       applyPuzzle2dRedrawHandlesOnce,
       applyPuzzle2dRedrawOnce,
       applyStructuralDelete,
@@ -4104,7 +4724,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
       puzzle2dBrushFlushDistance,
       notifyBrushCandidates,
       puzzle2dLodModeByPane,
+      lodModeForScope,
       setPuzzle2dLodModeForPane,
+      setActivePaneId,
       fixture,
       forceLayoutFullIterations,
       forceLayoutGravity,
@@ -4150,16 +4772,18 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   const camerasValue = reactHostPort.useMemo(
     (): Puzzle2dPlayCamerasValue => ({
       camerasByPane,
+      cameraByScope,
       syncBaselineFromViewportCamera,
+      cameraForScope,
     }),
-    [camerasByPane, syncBaselineFromViewportCamera],
+    [cameraByScope, cameraForScope, camerasByPane, syncBaselineFromViewportCamera],
   );
 
   // #region 🔖ToolbarHostBridge
   const puzzle2dPlayToolbarHostRef = reactHostPort.useRef({
     activePaneId: "2d-overview" as Puzzle2dPlayPaneId,
     applyPuzzle2dRedrawHandlesOnce: () => {},
-    camerasByPane: triptychCamerasFromFixture(initialFixture),
+    camerasByPane: puzzle2dPlayInitialCameras(),
     patchFixture: (_updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => {},
     setPuzzle2dGridSnapEnabled: (_value: boolean | ((prev: boolean) => boolean)) => {},
     setPuzzle2dRedrawPlaying: (_value: boolean | ((prev: boolean) => boolean)) => {},
@@ -4212,6 +4836,9 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
           case "clearSelection":
             h.setSelectionIds([]);
             break;
+          case "selectAllSelection":
+            h.setSelectionIds(puzzle2dPlayAllSelectionFromFixture(fixture, puzzle2dSelectionTargets));
+            break;
           case "toggleGridSnap":
             h.setPuzzle2dGridSnapEnabled((prev) => !prev);
             break;
@@ -4254,12 +4881,44 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
           case "redrawHandlesOnce":
             h.applyPuzzle2dRedrawHandlesOnce();
             break;
-          case "setActiveTool":
-            setPuzzle2dActiveTool((args as { tool: Puzzle2dActiveTool }).tool);
+          case "setActiveTool": {
+            const { tool, prevTool } = args as { tool: Puzzle2dActiveTool; prevTool?: Puzzle2dActiveTool };
+            const prev = prevTool ?? puzzle2dActiveTool;
+            setPuzzle2dActiveTool(tool);
+            if (tool === "fill" && prev !== "fill") {
+              preparePuzzle2dFillSession(fixture);
+              puzzle2dShellController?.setBrushEngagementPossibles([]);
+            } else if (prev === "fill" && tool !== "fill") {
+              const base = puzzle2dFillBaseFixtureRef.current;
+              if (base) {
+                patchFixture(() => clonePuzzle2dFixtureV1(base));
+              }
+              puzzle2dFillBaseFixtureRef.current = null;
+              puzzle2dFillSequenceRef.current = [];
+            }
             break;
+          }
+          case "setFillCount": {
+            const { count } = args as { count?: number };
+            const n = Math.max(0, Math.min(1000, Math.round(Number(count) ?? 0)));
+            const base = puzzle2dFillBaseFixtureRef.current;
+            if (!base) {
+              break;
+            }
+            const prefix = puzzle2dFillSequenceRef.current.slice(0, n);
+            const catalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
+            patchFixture(() => applyBrushFillPlacementsToFixture(base, prefix, catalogs));
+            console.log("[DEBUG] puzzle2d fill count", n, "applied", prefix.length);
+            break;
+          }
           case "setBrushFlushDistance":
             setPuzzle2dBrushFlushDistance((args as { distance: number }).distance);
             break;
+          case "setBrushKindWeights": {
+            const payload = args as { nodeWeights?: Record<string, number>; handleWeights?: Record<string, number> };
+            puzzle2dActiveRenderer()?.setBrushKindWeights(payload.nodeWeights ?? {}, payload.handleWeights ?? {});
+            break;
+          }
           case "pickBrushCandidate": {
             const { index } = args as { index?: number };
             if (typeof index === "number" && Number.isFinite(index)) {
@@ -4284,31 +4943,36 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
     puzzle2dSelectionMode,
     puzzle2dSelectionTargets,
     puzzle2dShellController,
+    preparePuzzle2dFillSession,
+    fixture,
+    patchFixture,
     setPuzzle2dActiveTool,
     setPuzzle2dBrushFlushDistance,
   ]);
   // #endregion 🔖ToolbarHostBridge
 
-  const shellValueRef = reactHostPort.useRef(shellValue);
-  shellValueRef.current = shellValue;
-  const selectionValueRef = reactHostPort.useRef(selectionValue);
-  selectionValueRef.current = selectionValue;
   const puzzle2dPlayHierarchyPanel = reactHostPort.useMemo(() => new Puzzle2dPlayHierarchyPanelDefinition(), []);
-  const puzzle2dPlayLibraryPanel = reactHostPort.useMemo(() => new Puzzle2dPlayLibraryPanelDefinition(), []);
+  const puzzle2dPlayKindsPanel = reactHostPort.useMemo(() => new Puzzle2dPlayKindsPanelDefinition(), []);
   const puzzle2dPlaySettingsPanel = reactHostPort.useMemo(() => new Puzzle2dPlaySettingsPanelDefinition(), []);
-  const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(
-    () =>
-      new Puzzle2dPlayInspectorPanelDefinition(() =>
-        buildPuzzle2dPlayInspectorSections(shellValueRef.current, selectionValueRef.current),
-      ),
-    [],
-  );
+  const puzzle2dPlayInspectorPanel = reactHostPort.useMemo(() => new Puzzle2dPlayInspectorPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
-      workbench: [puzzle2dPlayHierarchyPanel, puzzle2dPlayLibraryPanel],
+      workbench: [puzzle2dPlayHierarchyPanel, puzzle2dPlayKindsPanel],
       details: [puzzle2dPlayInspectorPanel, puzzle2dPlaySettingsPanel],
     }),
-    [puzzle2dPlayHierarchyPanel, puzzle2dPlayInspectorPanel, puzzle2dPlaySettingsPanel, puzzle2dPlayLibraryPanel],
+    [puzzle2dPlayHierarchyPanel, puzzle2dPlayKindsPanel, puzzle2dPlayInspectorPanel, puzzle2dPlaySettingsPanel],
+  );
+
+  puzzle2dPlayRuntimeRef.current = puzzle2dRuntime;
+  puzzle2dPlayShellRef.current = shellValue;
+  puzzle2dPlaySelectionRef.current = selectionValue;
+  reactHostPort.useEffect(
+    () => () => {
+      puzzle2dPlayShellRef.current = null;
+      puzzle2dPlaySelectionRef.current = null;
+      puzzle2dPlayRuntimeRef.current = null;
+    },
+    [],
   );
 
   return (
@@ -4317,7 +4981,7 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
         <Puzzle2dPlayCanvasSelectionContext.Provider value={canvasSelectionValue}>
           <Puzzle2dPlayCamerasContext.Provider value={camerasValue}>
             <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
-              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
+              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} playgroundKeybindings={playgroundKeybindings} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} />
             </Puzzle2dPlayLodRuntimeContext.Provider>
           </Puzzle2dPlayCamerasContext.Provider>
         </Puzzle2dPlayCanvasSelectionContext.Provider>
@@ -4326,13 +4990,13 @@ function Puzzle2dPlayInner({ puzzle2dRuntime }: { readonly puzzle2dRuntime: Plat
   );
 }
 
-function Puzzle2dPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <Puzzle2dPlayInner puzzle2dRuntime={runtime} />;
+function Puzzle2dPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
+  return <Puzzle2dPlayInner puzzle2dRuntime={playground.runtime} playgroundKeybindings={playground.keybindings} />;
 }
 
 /** @emoji 🚀 Mounts puzzle 2d play chrome for a {@link Playground}. */
 export function mountPuzzle2dPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<Puzzle2dPlayChrome runtime={playground.runtime} />, rootId);
+  mountPlaygroundApp(<Puzzle2dPlayChrome playground={playground} />, rootId);
 }
 
 const puzzle2dPlayChromeBoot: PlaygroundChromeBoot = {
@@ -4345,10 +5009,780 @@ export function boot2dPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, puzzle2dPlayChromeBoot, rootId);
 }
 
+/** @emoji 🔗 WIRES play entry: shared play chrome with WIRES fixture and domain labels (`reasoning/mindmap/wires/play`). */
+export function bootWiresPlay(playground: Playground, rootId = "root"): void {
+  boot2dPlay(playground, rootId);
+}
+
 // #endregion 🔖Entrypoint
 
 // #endregion 🛝PlayHost
 //#endregion 🔖Puzzle2dPlayHost
+
+//#region 🔖MapPlayHost
+import {
+  GIS_MAP_PLAY_APP_ID,
+  GIS_MAP_PLAY_BODY_KEY_MAIN,
+  GIS_MAP_PLAY_CONTROLLER_ID,
+  GIS_MAP_PLAY_IDLE_SNAPSHOT,
+  GIS_MAP_PLAY_STORE_ID,
+  GIS_MAP_PLAY_SURFACE_ID,
+  GIS_MAP_PLAY_WINDOW_KIND_ID,
+  buildMapPlayMainDeclarativeBody,
+  type MapPlayController,
+} from "@gis/map/play";
+import { MapCanvas, Position, Region, Route, type GisMapLodId } from "@gis/map/react";
+import type { UiGisMapHostSurfaceNode } from "@framework/platform/core";
+
+let mapPlayChromeRegistered = false;
+
+function useMapPlayController(): MapPlayController | undefined {
+  const { runtime } = useApp();
+  return runtime.getActiveApp()?.controller as MapPlayController | undefined;
+}
+
+function useMapPlaySnapshot() {
+  const ctrl = useMapPlayController();
+  return useControllerStore(ctrl, GIS_MAP_PLAY_STORE_ID) ?? GIS_MAP_PLAY_IDLE_SNAPSHOT;
+}
+
+function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSurfaceNode }): ReactElement {
+  const shellInstance = useShellWindowInstance();
+  const scopeId = shellWindowScopeId(shellInstance, GIS_MAP_PLAY_WINDOW_KIND_ID);
+  const ctrl = useMapPlayController();
+  const snapshot = useMapPlaySnapshot();
+  const renderMode = ctrl?.getRenderModeForScope(scopeId) ?? snapshot.renderModeByInstance[scopeId] ?? snapshot.renderMode;
+  const vectorStyle = ctrl?.getVectorStyleForScope(scopeId) ?? snapshot.vectorStyleByInstance[scopeId] ?? snapshot.vectorStyle;
+  const lodMode = ctrl?.getLodModeForScope(scopeId) ?? snapshot.lodModeByInstance[scopeId] ?? snapshot.lodMode;
+  const layerVisibility = ctrl?.getLayerVisibilityForScope(scopeId) ?? snapshot.layerVisibilityByInstance[scopeId] ?? snapshot.layerVisibility;
+  const layerStrokeScale = ctrl?.getLayerStrokeScaleForScope(scopeId) ?? snapshot.layerStrokeScaleByInstance[scopeId] ?? snapshot.layerStrokeScale;
+  const reportEffectiveLod = reactHostPort.useCallback(
+    (lodId: GisMapLodId) => {
+      ctrl?.run("setEffectiveLod", { lod: lodId, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
+  return (
+    <MapCanvas
+      className="min-h-0 flex-1"
+      renderMode={renderMode}
+      vectorStyle={vectorStyle}
+      lodMode={lodMode}
+      layerVisibility={layerVisibility}
+      layerStrokeScale={layerStrokeScale}
+      onEffectiveLodChange={reportEffectiveLod}
+    >
+      <Position id="zurich" lon={8.54} lat={47.37} label="Zürich" />
+      <Position id="bern" lon={7.45} lat={46.95} label="Bern" />
+      <Route
+        id="alps-route"
+        points={[
+          [8.54, 47.37],
+          [7.45, 46.95],
+          [9.2, 46.5],
+        ]}
+      />
+      <Region
+        id="lake-region"
+        ring={[
+          [8.2, 47.6],
+          [8.9, 47.6],
+          [8.9, 47.1],
+          [8.2, 47.1],
+        ]}
+      />
+    </MapCanvas>
+  );
+}
+
+export function registerMapPlaySurfaceHosts(): void {
+  if (mapPlayChromeRegistered) return;
+  mapPlayChromeRegistered = true;
+  registerUiGisMapSurfaceHost(GIS_MAP_PLAY_SURFACE_ID, MapPlayPaneSurfaceHost);
+  registerWindowBody(GIS_MAP_PLAY_BODY_KEY_MAIN, buildMapPlayMainDeclarativeBody);
+}
+
+function MapPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <PlaygroundView runtime={runtime} defaultAppId={GIS_MAP_PLAY_APP_ID} initialPanelVisibility={{ leftSidePanel: false, rightSidePanel: false }} />;
+}
+
+export function mountMapPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<MapPlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const mapPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerMapPlaySurfaceHosts,
+  mount: mountMapPlayChrome,
+};
+
+export function bootMapPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, mapPlayChromeBoot, rootId);
+}
+//#endregion 🔖MapPlayHost
+
+//#region 🔖PresentationPlayHost
+import {
+	PRESENTATION_PLAY_BODY_KEY_MAIN,
+	PRESENTATION_PLAY_CONTROLLER_ID,
+	PRESENTATION_PLAY_ICON_DETAILS,
+	PRESENTATION_PLAY_ICON_HIERARCHY,
+	PRESENTATION_PLAY_IDLE_SNAPSHOT,
+	PRESENTATION_PLAY_STORE_ID,
+	PRESENTATION_PLAY_SURFACE_ID,
+	PresentationPlayController,
+	registerPresentationPlayDeclarativeBodies,
+	type PresentationPlaySnapshot,
+} from "@framework/presentation/play";
+import {
+	moveNormalizedRect,
+	resizeNormalizedRect,
+	NORMALIZED_RECT_MIN_FRACTION,
+	FIGURE_TILE_PDF_PAGE_ASPECT,
+	figureTileMediaKindFromFile,
+	type FigureTileMediaKind,
+	type NormalizedRectHandle,
+	type DispositionPosition,
+	type FigureTileSource,
+} from "@framework/presentation/core";
+import type { UiPanelHostSurfaceNode } from "@framework/platform/core";
+
+const PRESENTATION_TILE_HANDLES: readonly NormalizedRectHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
+const PRESENTATION_TILE_VIEWPORT_MIN_ZOOM = 0.2;
+const PRESENTATION_TILE_VIEWPORT_MAX_ZOOM = 12;
+const PRESENTATION_FIGURE_FILE_ACCEPT =
+	"image/*,video/*,application/pdf,.pdf,.svg,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.mp4,.webm,.ogg,.ogv,.mov,.m4v,.mkv";
+
+function clampFigureTileZoom(zoom: number): number {
+	return Math.min(PRESENTATION_TILE_VIEWPORT_MAX_ZOOM, Math.max(PRESENTATION_TILE_VIEWPORT_MIN_ZOOM, zoom));
+}
+
+interface FigureTileViewportState {
+	readonly zoom: number;
+	readonly panX: number;
+	readonly panY: number;
+}
+
+interface FigureTileContentLayout {
+	readonly width: number;
+	readonly height: number;
+	readonly offsetX: number;
+	readonly offsetY: number;
+}
+
+function figureTileContentLayout(viewportWidth: number, viewportHeight: number, aspect: number): FigureTileContentLayout {
+	if (viewportWidth <= 0 || viewportHeight <= 0) {
+		return { width: 1, height: 1, offsetX: 0, offsetY: 0 };
+	}
+	const viewportAspect = viewportWidth / viewportHeight;
+	if (viewportAspect >= aspect) {
+		const height = viewportHeight;
+		const width = height * aspect;
+		return { width, height, offsetX: (viewportWidth - width) / 2, offsetY: 0 };
+	}
+	const width = viewportWidth;
+	const height = width / aspect;
+	return { width, height, offsetX: 0, offsetY: (viewportHeight - height) / 2 };
+}
+
+function figureTileZoomAtClient(
+	viewport: FigureTileViewportState,
+	clientX: number,
+	clientY: number,
+	viewportRect: DOMRect,
+	layout: FigureTileContentLayout,
+	deltaScale: number,
+): FigureTileViewportState {
+	const nextZoom = clampFigureTileZoom(viewport.zoom * deltaScale);
+	if (nextZoom === viewport.zoom) {
+		return viewport;
+	}
+	const anchorX = clientX - viewportRect.left;
+	const anchorY = clientY - viewportRect.top;
+	const contentX = (anchorX - layout.offsetX - viewport.panX) / viewport.zoom;
+	const contentY = (anchorY - layout.offsetY - viewport.panY) / viewport.zoom;
+	return {
+		zoom: nextZoom,
+		panX: anchorX - layout.offsetX - contentX * nextZoom,
+		panY: anchorY - layout.offsetY - contentY * nextZoom,
+	};
+}
+
+function revokeFigureObjectUrl(url: string | null): void {
+	if (url?.startsWith("blob:")) {
+		URL.revokeObjectURL(url);
+	}
+}
+
+function probeFigureTileMediaAspect(
+	src: string,
+	kind: FigureTileMediaKind,
+): Promise<number> {
+	if (kind === "video") {
+		return new Promise((resolve, reject) => {
+			const video = document.createElement("video");
+			video.preload = "metadata";
+			video.onloadedmetadata = () => {
+				const aspect = video.videoWidth > 0 && video.videoHeight > 0 ? video.videoWidth / video.videoHeight : 16 / 9;
+				resolve(aspect);
+			};
+			video.onerror = () => reject(new Error("video metadata"));
+			video.src = src;
+		});
+	}
+	if (kind === "pdf") {
+		return Promise.resolve(FIGURE_TILE_PDF_PAGE_ASPECT);
+	}
+	return new Promise((resolve, reject) => {
+		const img = new Image();
+		img.onload = () => {
+			const aspect = img.naturalWidth > 0 && img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 1;
+			resolve(aspect);
+		};
+		img.onerror = () => reject(new Error("image metadata"));
+		img.src = src;
+	});
+}
+
+function FigureTileMediaPreview(props: { readonly source: FigureTileSource }): ReactElement {
+	const { source } = props;
+	const kind = source.kind ?? "figure";
+	if (kind === "video") {
+		return (
+			<video
+				className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+				src={source.src}
+				muted
+				playsInline
+				preload="metadata"
+				controls={false}
+			/>
+		);
+	}
+	if (kind === "pdf") {
+		const page = source.pdfPage ?? 1;
+		const pdfSrc = `${source.src}#page=${page}&view=FitH`;
+		return <iframe className="pointer-events-none absolute inset-0 h-full w-full border-0 bg-background" src={pdfSrc} title="PDF preview" />;
+	}
+	return <img alt="" className="pointer-events-none absolute inset-0 h-full w-full object-contain" draggable={false} src={source.src} />;
+}
+
+function FigureSourcePicker(props: {
+	readonly onPickFile: (file: File) => void;
+}): ReactElement {
+	const { onPickFile } = props;
+	const fileInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+	const [dragActive, setDragActive] = reactHostPort.useState(false);
+
+	const onInputChange = reactHostPort.useCallback(
+		(event: React.ChangeEvent<HTMLInputElement>) => {
+			const file = event.target.files?.[0];
+			if (file) {
+				onPickFile(file);
+			}
+			event.target.value = "";
+		},
+		[onPickFile],
+	);
+
+	const onDragOver = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
+		event.preventDefault();
+		setDragActive(true);
+	}, []);
+
+	const onDragLeave = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
+		event.preventDefault();
+		setDragActive(false);
+	}, []);
+
+	const onDrop = reactHostPort.useCallback(
+		(event: React.DragEvent<HTMLDivElement>) => {
+			event.preventDefault();
+			setDragActive(false);
+			const file = event.dataTransfer.files?.[0];
+			if (file) {
+				onPickFile(file);
+			}
+		},
+		[onPickFile],
+	);
+
+	return (
+		<div
+			className={cn(
+				"border-border bg-muted/20 flex min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-md border border-dashed p-6 text-center",
+				dragActive && "border-primary bg-primary/5",
+			)}
+			onDragLeave={onDragLeave}
+			onDragOver={onDragOver}
+			onDrop={onDrop}
+		>
+			<Icon icon="image-up" size="large" className="text-muted-foreground" />
+			<div className="flex flex-col gap-1">
+				<p className="text-sm font-medium">Pick figure media</p>
+				<p className="text-muted-foreground text-xs">Image, SVG, video, or PDF — drag and drop or choose a file</p>
+			</div>
+			<Button id="presentation.play.pick-figure" type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+				Choose file…
+			</Button>
+			<input accept={PRESENTATION_FIGURE_FILE_ACCEPT} className="hidden" onChange={onInputChange} ref={fileInputRef} type="file" />
+		</div>
+	);
+}
+
+function usePresentationPlayController(): PresentationPlayController | undefined {
+	const { runtime } = useApp();
+	return runtime.getActiveApp()?.controller as PresentationPlayController | undefined;
+}
+
+function usePresentationPlaySnapshot(): PresentationPlaySnapshot {
+	const ctrl = usePresentationPlayController();
+	return useControllerStore(ctrl, PRESENTATION_PLAY_STORE_ID) ?? PRESENTATION_PLAY_IDLE_SNAPSHOT;
+}
+
+function clampUnit(value: number): number {
+	return Math.min(1, Math.max(0, value));
+}
+
+function normalizedPointFromClient(
+	clientX: number,
+	clientY: number,
+	viewportRect: DOMRect,
+	viewport: FigureTileViewportState,
+	layout: FigureTileContentLayout,
+): { readonly x: number; readonly y: number } {
+	const localX = (clientX - viewportRect.left - layout.offsetX - viewport.panX) / viewport.zoom;
+	const localY = (clientY - viewportRect.top - layout.offsetY - viewport.panY) / viewport.zoom;
+	return {
+		x: clampUnit(localX / layout.width),
+		y: clampUnit(localY / layout.height),
+	};
+}
+
+function normalizedRectFromDrag(
+	start: { readonly x: number; readonly y: number },
+	end: { readonly x: number; readonly y: number },
+): DispositionPosition {
+	const x = Math.min(start.x, end.x);
+	const y = Math.min(start.y, end.y);
+	const width = Math.max(NORMALIZED_RECT_MIN_FRACTION, Math.abs(end.x - start.x));
+	const height = Math.max(NORMALIZED_RECT_MIN_FRACTION, Math.abs(end.y - start.y));
+	return {
+		x: clampUnit(x),
+		y: clampUnit(y),
+		width: Math.min(width, 1 - x),
+		height: Math.min(height, 1 - y),
+	};
+}
+
+function FigureTilesSurfaceHost({ node }: { readonly node: UiPanelHostSurfaceNode }): ReactElement {
+	const { runtime } = useApp();
+	const controller = usePresentationPlayController();
+	const snapshot = usePresentationPlaySnapshot();
+	const viewportRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+	const contentRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+	const figureObjectUrlRef = reactHostPort.useRef<string | null>(null);
+	const spacePressedRef = reactHostPort.useRef(false);
+	const [viewportSize, setViewportSize] = reactHostPort.useState({ width: 0, height: 0 });
+	const [viewport, setViewport] = reactHostPort.useState<FigureTileViewportState>({ zoom: 1, panX: 0, panY: 0 });
+	const [spacePressed, setSpacePressed] = reactHostPort.useState(false);
+	const [isPanning, setIsPanning] = reactHostPort.useState(false);
+	const [marquee, setMarquee] = reactHostPort.useState<{ readonly start: { readonly x: number; readonly y: number }; readonly end: { readonly x: number; readonly y: number } } | null>(null);
+	const dragRef = reactHostPort.useRef<
+		| {
+				readonly kind: "move" | NormalizedRectHandle | "marquee" | "pan";
+				readonly tileId?: string;
+				readonly startClient: { readonly x: number; readonly y: number };
+				readonly startCrop?: DispositionPosition;
+				readonly marqueeStart?: { readonly x: number; readonly y: number };
+				readonly startPan?: { readonly x: number; readonly y: number };
+		  }
+		| null
+	>(null);
+
+	reactHostPort.useEffect(() => {
+		if (!snapshot.clipboardPrompt || snapshot.clipboardEpoch <= 0) {
+			return;
+		}
+		void navigator.clipboard?.writeText(snapshot.clipboardPrompt).catch(() => undefined);
+	}, [snapshot.clipboardEpoch, snapshot.clipboardPrompt]);
+
+	const dispatch = reactHostPort.useCallback(
+		(command: string, args?: unknown) => {
+			if (!controller) {
+				return;
+			}
+			runtime.commandBus.dispatch(controller.id, command, args);
+		},
+		[controller, runtime.commandBus],
+	);
+
+	reactHostPort.useEffect(() => () => revokeFigureObjectUrl(figureObjectUrlRef.current), []);
+
+	reactHostPort.useEffect(() => {
+		setViewport({ zoom: 1, panX: 0, panY: 0 });
+	}, [snapshot.source.src]);
+
+	reactHostPort.useEffect(() => {
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.code !== "Space" || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+				return;
+			}
+			event.preventDefault();
+			spacePressedRef.current = true;
+			setSpacePressed(true);
+		};
+		const onKeyUp = (event: KeyboardEvent) => {
+			if (event.code !== "Space") {
+				return;
+			}
+			spacePressedRef.current = false;
+			setSpacePressed(false);
+		};
+		window.addEventListener("keydown", onKeyDown);
+		window.addEventListener("keyup", onKeyUp);
+		return () => {
+			window.removeEventListener("keydown", onKeyDown);
+			window.removeEventListener("keyup", onKeyUp);
+		};
+	}, []);
+
+	const applyFigureFile = reactHostPort.useCallback(
+		(file: File) => {
+			const kind = figureTileMediaKindFromFile(file.type, file.name);
+			if (!kind) {
+				return;
+			}
+			revokeFigureObjectUrl(figureObjectUrlRef.current);
+			const url = URL.createObjectURL(file);
+			figureObjectUrlRef.current = url;
+			void probeFigureTileMediaAspect(url, kind)
+				.then((sourceAspect) => {
+					dispatch("setSource", {
+						src: url,
+						kind,
+						sourceAspect,
+						...(kind === "pdf" ? { pdfPage: 1 } : {}),
+					});
+				})
+				.catch(() => {
+					revokeFigureObjectUrl(url);
+					if (figureObjectUrlRef.current === url) {
+						figureObjectUrlRef.current = null;
+					}
+				});
+		},
+		[dispatch],
+	);
+
+	const hasFigure = snapshot.source.src.trim().length > 0;
+	const aspect = snapshot.source.sourceAspect ?? 1;
+	const contentLayout = reactHostPort.useMemo(
+		() => figureTileContentLayout(viewportSize.width, viewportSize.height, aspect),
+		[aspect, viewportSize.height, viewportSize.width],
+	);
+
+	reactHostPort.useEffect(() => {
+		const element = viewportRef.current;
+		if (!element || !hasFigure) {
+			return;
+		}
+		const observer = new ResizeObserver(([entry]) => {
+			const { width, height } = entry.contentRect;
+			setViewportSize({ width, height });
+		});
+		observer.observe(element);
+		return () => observer.disconnect();
+	}, [hasFigure]);
+
+	reactHostPort.useEffect(() => {
+		const element = viewportRef.current;
+		if (!element || !hasFigure) {
+			return;
+		}
+		const onWheel = (event: WheelEvent) => {
+			event.preventDefault();
+			const rect = element.getBoundingClientRect();
+			const layout = figureTileContentLayout(viewportSize.width, viewportSize.height, aspect);
+			const deltaScale = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+			setViewport((current) => figureTileZoomAtClient(current, event.clientX, event.clientY, rect, layout, deltaScale));
+		};
+		element.addEventListener("wheel", onWheel, { passive: false });
+		return () => element.removeEventListener("wheel", onWheel);
+	}, [aspect, hasFigure, viewportSize.height, viewportSize.width]);
+
+	const viewportPoint = reactHostPort.useCallback(
+		(clientX: number, clientY: number) => {
+			const rect = viewportRef.current?.getBoundingClientRect();
+			if (!rect) {
+				return { x: 0, y: 0 };
+			}
+			return normalizedPointFromClient(clientX, clientY, rect, viewport, contentLayout);
+		},
+		[contentLayout, viewport],
+	);
+
+	const onContentPointerDown = reactHostPort.useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (!viewportRef.current) {
+				return;
+			}
+			const target = event.target as HTMLElement;
+			if (target.dataset.tileHandle || target.dataset.tileId) {
+				return;
+			}
+			if (event.button === 1 || (event.button === 0 && (spacePressedRef.current || event.altKey))) {
+				dragRef.current = {
+					kind: "pan",
+					startClient: { x: event.clientX, y: event.clientY },
+					startPan: { x: viewport.panX, y: viewport.panY },
+				};
+				setIsPanning(true);
+				event.currentTarget.setPointerCapture(event.pointerId);
+				return;
+			}
+			if (event.button !== 0) {
+				return;
+			}
+			const point = viewportPoint(event.clientX, event.clientY);
+			dragRef.current = {
+				kind: "marquee",
+				startClient: { x: event.clientX, y: event.clientY },
+				marqueeStart: point,
+			};
+			setMarquee({ start: point, end: point });
+			event.currentTarget.setPointerCapture(event.pointerId);
+		},
+		[viewport.panX, viewport.panY, viewportPoint],
+	);
+
+	const onTilePointerDown = reactHostPort.useCallback(
+		(tileId: string, crop: DispositionPosition) => (event: React.PointerEvent) => {
+			event.stopPropagation();
+			if (spacePressedRef.current || event.altKey) {
+				return;
+			}
+			dispatch("setSelectedIds", { ids: [tileId] });
+			dragRef.current = {
+				kind: "move",
+				tileId,
+				startClient: { x: event.clientX, y: event.clientY },
+				startCrop: crop,
+			};
+			event.currentTarget.setPointerCapture(event.pointerId);
+		},
+		[dispatch],
+	);
+
+	const onHandlePointerDown = reactHostPort.useCallback(
+		(tileId: string, crop: DispositionPosition, handle: NormalizedRectHandle) => (event: React.PointerEvent) => {
+			event.stopPropagation();
+			dispatch("setSelectedIds", { ids: [tileId] });
+			dragRef.current = {
+				kind: handle,
+				tileId,
+				startClient: { x: event.clientX, y: event.clientY },
+				startCrop: crop,
+			};
+			event.currentTarget.setPointerCapture(event.pointerId);
+		},
+		[dispatch],
+	);
+
+	const onPointerMove = reactHostPort.useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			const drag = dragRef.current;
+			if (!drag) {
+				return;
+			}
+			if (drag.kind === "pan" && drag.startPan) {
+				setViewport((current) => ({
+					...current,
+					panX: drag.startPan!.x + (event.clientX - drag.startClient.x),
+					panY: drag.startPan!.y + (event.clientY - drag.startClient.y),
+				}));
+				return;
+			}
+			const scaleX = contentLayout.width * viewport.zoom;
+			const scaleY = contentLayout.height * viewport.zoom;
+			const dx = scaleX > 0 ? (event.clientX - drag.startClient.x) / scaleX : 0;
+			const dy = scaleY > 0 ? (event.clientY - drag.startClient.y) / scaleY : 0;
+			if (drag.kind === "marquee" && drag.marqueeStart) {
+				const end = viewportPoint(event.clientX, event.clientY);
+				setMarquee({ start: drag.marqueeStart, end });
+				return;
+			}
+			if (!drag.tileId || !drag.startCrop) {
+				return;
+			}
+			const nextCrop =
+				drag.kind === "move"
+					? moveNormalizedRect(drag.startCrop, dx, dy)
+					: resizeNormalizedRect(drag.startCrop, drag.kind, dx, dy);
+			dispatch("setTileCrop", { id: drag.tileId, crop: nextCrop });
+		},
+		[contentLayout.height, contentLayout.width, dispatch, viewport.zoom, viewportPoint],
+	);
+
+	const onPointerUp = reactHostPort.useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			const drag = dragRef.current;
+			if (!drag) {
+				return;
+			}
+			if (drag.kind === "marquee" && drag.marqueeStart) {
+				const end = viewportPoint(event.clientX, event.clientY);
+				const crop = normalizedRectFromDrag(drag.marqueeStart, end);
+				dispatch("addTile", { crop });
+				setMarquee(null);
+			}
+			if (drag.kind === "pan") {
+				setIsPanning(false);
+			}
+			dragRef.current = null;
+			try {
+				event.currentTarget.releasePointerCapture(event.pointerId);
+			} catch {
+				// pointer already released
+			}
+		},
+		[dispatch, viewportPoint],
+	);
+
+	const onViewportDoubleClick = reactHostPort.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+		const target = event.target as HTMLElement;
+		if (target.dataset.tileHandle || target.dataset.tileId) {
+			return;
+		}
+		setViewport({ zoom: 1, panX: 0, panY: 0 });
+	}, []);
+
+	if (node.controllerId !== PRESENTATION_PLAY_CONTROLLER_ID || node.surfaceId !== PRESENTATION_PLAY_SURFACE_ID) {
+		return <div className="p-2 text-xs text-muted-foreground">Invalid presentation tile surface binding</div>;
+	}
+
+	if (!hasFigure) {
+		return (
+			<div className="flex h-full min-h-0 w-full p-2">
+				<FigureSourcePicker onPickFile={applyFigureFile} />
+			</div>
+		);
+	}
+
+	const viewportCursor = isPanning ? "grabbing" : spacePressed ? "grab" : undefined;
+
+	return (
+		<div className="flex h-full min-h-0 w-full flex-col">
+			<div ref={viewportRef} className="relative min-h-0 flex-1 overflow-hidden bg-muted/30" style={{ cursor: viewportCursor }}>
+				<div
+					ref={contentRef}
+					className="absolute touch-none select-none"
+					style={{
+						left: contentLayout.offsetX,
+						top: contentLayout.offsetY,
+						width: contentLayout.width,
+						height: contentLayout.height,
+						transform: `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`,
+						transformOrigin: "0 0",
+					}}
+					onPointerDown={onContentPointerDown}
+					onPointerMove={onPointerMove}
+					onPointerUp={onPointerUp}
+					onPointerCancel={onPointerUp}
+					onDoubleClick={onViewportDoubleClick}
+				>
+					<FigureTileMediaPreview source={snapshot.source} />
+					{snapshot.tiles.map((tile) => {
+						const selected = snapshot.selectedIds.includes(tile.id);
+						return (
+							<div
+								key={tile.id}
+								data-tile-id={tile.id}
+								className={cn(
+									"absolute box-border cursor-move border-2",
+									selected ? "border-primary bg-primary/20" : "border-accent bg-accent/10",
+								)}
+								style={{
+									left: `${tile.crop.x * 100}%`,
+									top: `${tile.crop.y * 100}%`,
+									width: `${tile.crop.width * 100}%`,
+									height: `${tile.crop.height * 100}%`,
+								}}
+								onPointerDown={onTilePointerDown(tile.id, tile.crop)}
+							>
+								<span className="bg-background/80 pointer-events-none absolute left-0 top-0 max-w-full truncate px-1 text-[10px]">{tile.name}</span>
+								{selected
+									? PRESENTATION_TILE_HANDLES.map((handle) => (
+											<button
+												key={handle}
+												type="button"
+												data-tile-handle={handle}
+												className="bg-primary absolute z-10 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background"
+												style={{
+													left: handle.includes("w") ? "0%" : handle.includes("e") ? "100%" : "50%",
+													top: handle.includes("n") ? "0%" : handle.includes("s") ? "100%" : "50%",
+													cursor: `${handle}-resize`,
+												}}
+												onPointerDown={onHandlePointerDown(tile.id, tile.crop, handle)}
+											/>
+										))
+									: null}
+							</div>
+						);
+					})}
+					{marquee ? (
+						<div
+							className="border-primary/80 bg-primary/10 pointer-events-none absolute border border-dashed"
+							style={{
+								left: `${Math.min(marquee.start.x, marquee.end.x) * 100}%`,
+								top: `${Math.min(marquee.start.y, marquee.end.y) * 100}%`,
+								width: `${Math.abs(marquee.end.x - marquee.start.x) * 100}%`,
+								height: `${Math.abs(marquee.end.y - marquee.start.y) * 100}%`,
+							}}
+						/>
+					) : null}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+let presentationPlayChromeRegistered = false;
+
+export function registerPresentationPlaySurfaceHosts(): void {
+	if (presentationPlayChromeRegistered) {
+		return;
+	}
+	presentationPlayChromeRegistered = true;
+	registerUiPanelSurfaceHost(PRESENTATION_PLAY_SURFACE_ID, FigureTilesSurfaceHost);
+	registerPresentationPlayDeclarativeBodies();
+	registerTabIcon(PRESENTATION_PLAY_ICON_HIERARCHY, "list-tree");
+	registerTabIcon(PRESENTATION_PLAY_ICON_DETAILS, "clipboard-list");
+}
+
+function PresentationPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
+	return (
+		<PlaygroundView
+			runtime={playground.runtime}
+			defaultAppId={PRESENTATION_PLAY_CONTROLLER_ID}
+			initialPanelVisibility={playground.initialPanelVisibility}
+			playgroundKeybindings={playground.keybindings}
+		/>
+	);
+}
+
+export function mountPresentationPlayChrome(playground: Playground, rootId = "root"): void {
+	mountPlaygroundApp(<PresentationPlayChrome playground={playground} />, rootId);
+}
+
+const presentationPlayChromeBoot: PlaygroundChromeBoot = {
+	registerHosts: registerPresentationPlaySurfaceHosts,
+	mount: mountPresentationPlayChrome,
+};
+
+export function bootPresentationPlay(playground: Playground, rootId = "root"): void {
+	bootPlayground(playground, presentationPlayChromeBoot, rootId);
+}
+//#endregion 🔖PresentationPlayHost
 
 //#region 🔖Boot
 import type { Playground } from "@framework/playground/core";
@@ -4449,6 +5883,39 @@ if (import.meta.vitest) {
       expect(dispatched).toEqual([{ command: "start", args: undefined }]);
     });
 
+    it("maps engagement control commands through the bus", () => {
+      const bus = new CommandBus();
+      const dispatched: { command: string; args?: unknown }[] = [];
+      bus.register({
+        id: "ctrl",
+        commandBus: bus,
+        dispose() {},
+        run(command: string, args?: unknown) {
+          dispatched.push({ command, args });
+        },
+      } as never);
+      const spec = windowEngagementToGolden(
+        {
+          input: { id: "engagement-input", onChange: { controllerId: "ctrl", command: "engagementInput" } },
+          control: {
+            kind: "stepper",
+            value: 2,
+            min: 0,
+            step: 0.1,
+            onChange: { controllerId: "ctrl", command: "engagementControlChange" },
+            onCommit: { controllerId: "ctrl", command: "engagementControlCommit" },
+          },
+        },
+        bus,
+      );
+      spec?.control?.kind === "stepper" && spec.control.onChange?.(3);
+      spec?.control?.kind === "stepper" && spec.control.onCommit?.(3);
+      expect(dispatched).toEqual([
+        { command: "engagementControlChange", args: { value: 3 } },
+        { command: "engagementControlCommit", args: { value: 3 } },
+      ]);
+    });
+
     it("threads engagement through windowKindsToGolden", () => {
       const wk = new WindowKindRuntime("w", "W", "body", undefined, [], {
         input: { id: "engagement-input", onChange: { controllerId: "ctrl", command: "engagementInput" } },
@@ -4459,21 +5926,23 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("CallbackTreePanelDefinition", () => {
+    it("accepts a full TreePanelConfig from the builder", () => {
+      const panel = new CallbackTreePanelDefinition(() => ({
+        sections: [{ id: "a", items: [{ id: "i", label: "Item" }] }],
+        selectedIds: ["i"],
+      }));
+      expect(panel.resolveTree().selectedIds).toEqual(["i"]);
+    });
+  });
+
   describe("enforcePlaygroundTreePanel", () => {
-    it("rejects sections without items or content", () => {
+    it("rejects sections without items", () => {
       expect(() =>
         enforcePlaygroundTreePanel({
           sections: [{ id: "a" }],
         }),
-      ).toThrow(/items or content/);
-    });
-
-    it("accepts content-only sections", () => {
-      expect(() =>
-        enforcePlaygroundTreePanel({
-          sections: [{ id: "a", content: "panel body" }],
-        }),
-      ).not.toThrow();
+      ).toThrow(/at least one item/);
     });
 
     it("accepts sections with items", () => {
@@ -4494,10 +5963,10 @@ if (import.meta.vitest) {
   });
 
   describe("playgroundPanelSection", () => {
-    it("wraps panel bodies in PlaygroundPanelBody content", () => {
+    it("wraps panel bodies in a tree item control", () => {
       const section = playgroundPanelSection("panel.test", "Test", <span data-testid="body">x</span>);
-      expect(section.content).toBeTruthy();
-      expect(section.items).toBeUndefined();
+      expect(section.items?.length).toBe(1);
+      expect(section.items?.[0]?.control).toBeTruthy();
     });
   });
 
@@ -4587,6 +6056,24 @@ if (import.meta.vitest) {
         expect(html).toContain('data-host="puzzle2d"');
         expect(html).not.toContain("Unsupported UiNode");
       } finally {
+        unregisterSurfaceBinding(surfaceId);
+      }
+    });
+
+    it("renders gismap nodes through GIS map surface hosts", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const { buildMapWindowBody } = await import("@framework/playground/core");
+      const surfaceId = "playground.test/gismap";
+      function TestGisMapHost(): React.ReactElement {
+        return <div data-host="gismap">gis map canvas</div>;
+      }
+      registerUiGisMapSurfaceHost(surfaceId, TestGisMapHost);
+      try {
+        const html = renderToStaticMarkup(<UiRenderer node={buildMapWindowBody(surfaceId, "ctrl", "main")} commandBus={new CommandBus()} />);
+        expect(html).toContain('data-host="gismap"');
+        expect(html).not.toContain("Unsupported UiNode");
+      } finally {
+        gisMapSurfaceHosts.delete(surfaceId);
         unregisterSurfaceBinding(surfaceId);
       }
     });

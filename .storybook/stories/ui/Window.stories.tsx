@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🌊Window
 
 const meta = {
-  title: "elements/react/Window",
+  title: "🖱️ui⚛️react/Window",
   component: Window,
   parameters: {
     layout: "fullscreen",
@@ -42,7 +42,7 @@ export const Default: Story = {
   },
   render: (args) => (
     <div className="h-[400px] w-[600px]">
-      <Window {...args} />
+      <Window {...args} fill />
     </div>
   ),
 };
@@ -59,7 +59,7 @@ export const WithControls: Story = {
   },
   render: (args) => (
     <div className="h-[400px] w-[600px]">
-      <Window {...args} />
+      <Window {...args} fill />
     </div>
   ),
 };
@@ -77,7 +77,7 @@ export const Loading: Story = {
   },
   render: (args) => (
     <div className="h-[400px] w-[600px]">
-      <Window {...args} />
+      <Window {...args} fill />
     </div>
   ),
 };
@@ -90,7 +90,24 @@ export const WithError: Story = {
   },
   render: (args) => (
     <div className="h-[400px] w-[600px]">
-      <Window {...args} />
+      <Window {...args} fill />
+    </div>
+  ),
+};
+
+export const WithEngagement: Story = {
+  args: {
+    id: "engagement-window",
+    children: <WindowContent title="Window with Engagement" />,
+    engagement: {
+      options: [{ id: "opt-grid", label: "Grid", onPress: () => {} }],
+      input: { placeholder: "Command…" },
+      status: [{ id: "status", content: "Ready" }],
+    },
+  },
+  render: (args) => (
+    <div className="h-[400px] w-[600px]">
+      <Window {...args} fill />
     </div>
   ),
 };

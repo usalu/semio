@@ -1,5 +1,6 @@
 ---
 technology: framework
+emoji: 🥅
 ---
 
 # Framework

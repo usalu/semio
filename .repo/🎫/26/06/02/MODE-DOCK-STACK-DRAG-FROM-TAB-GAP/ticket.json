@@ -1,0 +1,14 @@
+{
+  "title": "Mode Dock Stack Drag From Tab Gap",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "When dragging between the last tab and the fullscreen button, the window stack should be moved all at once.",
+  "summary": "Dragging the tab-bar gap (between the last tab and maximize/close controls) now starts a stack-level dock drag: the whole tab stack is extracted from the layout, shown as a window preview, and relocated via split/root-split drops while tab drags keep single-tab behavior.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1517"
+  },
+  "goal": "🎯framework🎯ui",
+  "sessions": [
+    "⚪98c97234c076485cade8af438b38aef2"
+  ]
+}

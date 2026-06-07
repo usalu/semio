@@ -1,3 +1,8 @@
+---
+technology: puzzle
+emoji: 🧩
+---
+
 # Puzzle2d - Puzzl3d - Puzzle5d
 
 # NodeKind (2d) - ObjectKind (3d) - PartKind (5d)

@@ -3,29 +3,26 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { ContextMenuController, reactHostPort, type ContextMenuItem } from "@ui/react";
-import React from "react";
-import Reconciler from "react-reconciler";
-import { ContinuousEventPriority, DefaultEventPriority, DiscreteEventPriority, LegacyRoot, NoEventPriority } from "react-reconciler/constants";
+import {
+  CavasEventBindingController,
+  ContextMenuController,
+  ContinuousEventPriority,
+  DefaultEventPriority,
+  DiscreteEventPriority,
+  LegacyRoot,
+  NoEventPriority,
+  reactHostPort,
+  React,
+  Reconciler,
+  type ContextMenuItem,
+  type RenderMode,
+} from "@infinite/cavas/react-renderer";
+import { type TreeDragAndDropController } from "@ui/react";
+
+/** @emoji 🧩 Puzzle 2d alias for the generic canvas event binding controller. */
+type Puzzle2dEventBindingController = CavasEventBindingController;
+const Puzzle2dEventBindingController = CavasEventBindingController;
 // #endregion 🔌Adapters
-
-type Puzzle2dListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
-
-class Puzzle2dEventBindingController {
-  private readonly cleanups: Array<() => void> = [];
-
-  listen(target: Puzzle2dListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
-    if (!target) return;
-    target.addEventListener(kind, listener, options);
-    this.cleanups.push(() => target.removeEventListener(kind, listener, options));
-  }
-
-  dispose(): void {
-    while (this.cleanups.length > 0) {
-      this.cleanups.pop()?.();
-    }
-  }
-}
 
 // #region 🔖GpuWasmBridge
 import initPuzzle2dWasm, { boardComputeEdgeBezier, boardHandlePositionCircle, boardHandlePositionRectangle, boardRedrawHandlesFixtureJson, boardRedrawLayoutFixtureJson, BoardSession, initSync } from "../rs/pkg/puzzle_2d.js";
@@ -46,11 +43,14 @@ export async function ensurePuzzle2dWasmLoaded(): Promise<void> {
 }
 
 export { BoardSession };
+
+/** @emoji 🧠 Normal graphs bind edges to node ids; ported graphs use handle endpoints. */
+export type Puzzle2dGraphPortMode = "normal" | "ported";
 // #endregion 🔖GpuWasmBridge
 
 //#region 🔖Kinds
 export type Puzzle2dSceneObjectKind = "node" | "handle" | "edge" | "wire";
-export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
+export type { RenderMode };
 export type Puzzle2dSelectionMethod = "lasso" | "rectangle";
 export type Puzzle2dSelectionMode = "additive" | "default" | "invertive" | "subtractive";
 
@@ -111,23 +111,37 @@ export interface NodeKind {
   name: string;
   shape?: "circle" | "rectangle";
   stroke?: string;
+  /** @emoji 📐 Catalog scale multiplier for brush / palette preview sizing (matches WASM `NodeKindDef.scale`). */
+  scale?: number;
   /** @emoji 🎯 Local handle templates for palette / brush instantiation on this node kind. */
   handles?: readonly NodeKindHandleTemplate[];
 }
 
-/** @emoji 🪢 Edge-kind catalog row (defaults for instances; richer fields reserved for future stroke). */
+/** @emoji 🔺 Edge tip shape registry row (referenced by {@link EdgeKind} and per-edge overrides). */
+export interface EdgeTip {
+  filled?: boolean;
+  geometry?: "arrow" | "fine-arrow" | "diamond" | "circle" | "bar";
+  id: string;
+  scale?: number;
+}
+
+/** @emoji 🪢 Edge-kind catalog row (defaults for instances; stroke + source/target tips). */
 export interface EdgeKind {
   color?: string;
   defaultShapeProps?: Record<string, unknown>;
+  directed?: boolean;
   id: string;
   name: string;
   pattern?: string;
   shape?: "bezier" | "line";
+  sourceTip?: string;
   stroke?: string;
+  targetTip?: string;
 }
 
 /** @emoji 📚 Central WASM+host registries for semantic puzzle 2d kinds (omit slices to leave prior catalog entries untouched when pushing partial updates is not supported — always send full merged bundle from callers). */
 export interface KindCatalogBundle {
+  edgeTips?: readonly EdgeTip[];
   edges?: readonly EdgeKind[];
   handles?: readonly HandleKind[];
   nodes?: readonly NodeKind[];
@@ -185,11 +199,198 @@ export function mergeKindCatalogBundleByRowId(base: KindCatalogBundle, patch: Ki
     return [...byId.values()].sort((a, b) => a.id.localeCompare(b.id));
   }
   return {
+    edgeTips: mergedSlice(base.edgeTips, patch.edgeTips) ?? base.edgeTips,
     edges: mergedSlice(base.edges, patch.edges) ?? base.edges,
     handles: mergedSlice(base.handles, patch.handles) ?? base.handles,
     nodes: mergedSlice(base.nodes, patch.nodes) ?? base.nodes,
     wires: mergedSlice(base.wires, patch.wires) ?? base.wires,
   };
+}
+
+/** @emoji 🚪 Nakagin door-capsule right handle kind id (platform/tambour right pairing). */
+export const PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND = "door capsule right";
+
+/** @emoji 🚪 Nakagin door-capsule left handle kind id (platform/tambour left pairing). */
+export const PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND = "door capsule left";
+
+const PUZZLE2D_DOOR_CAPSULE_HANDLE_KINDS = new Set([PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND, PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND]);
+
+/** @emoji 🚪 Maps nakagin capsule kind names (J/S right, L/Z left) to a door-capsule side. */
+export function puzzle2dMetabolismDoorCapsuleSideFromKindName(kindName: string | undefined): "left" | "right" | null {
+  const name = kindName?.trim() ?? "";
+  if (name === "") {
+    return null;
+  }
+  const tail = /(?:Capsule(?: With Balcony)?|Trapezoid Capsule)\s+([A-Za-z])\s*$/.exec(name)?.[1] ?? /Capsule\s+([A-Za-z])\s*$/.exec(name)?.[1];
+  if (!tail) {
+    return null;
+  }
+  if (tail === "J" || tail === "S") {
+    return "right";
+  }
+  if (tail === "L" || tail === "Z") {
+    return "left";
+  }
+  return null;
+}
+
+/** @emoji 🚪 Resolves door-capsule handle kind id from a capsule kind name. */
+export function puzzle2dMetabolismDoorCapsuleHandleKindFromKindName(kindName: string | undefined): string | null {
+  const side = puzzle2dMetabolismDoorCapsuleSideFromKindName(kindName);
+  if (side === "left") {
+    return PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND;
+  }
+  if (side === "right") {
+    return PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND;
+  }
+  return null;
+}
+
+function relabelDoorCapsuleNodeKindHandleTemplate(kindName: string, template: NodeKindHandleTemplate): NodeKindHandleTemplate {
+  const nextKind = puzzle2dMetabolismDoorCapsuleHandleKindFromKindName(kindName);
+  if (!nextKind || !PUZZLE2D_DOOR_CAPSULE_HANDLE_KINDS.has(template.handleKind)) {
+    return template;
+  }
+  return nextKind === template.handleKind ? template : { ...template, handleKind: nextKind };
+}
+
+function relabelDoorCapsuleNodeKindRow(kind: NodeKind): NodeKind {
+  if (!kind.handles?.length) {
+    return kind;
+  }
+  const name = kind.name?.trim() || kind.id;
+  const handles = kind.handles.map((handle) => relabelDoorCapsuleNodeKindHandleTemplate(name, handle));
+  if (handles.every((handle, index) => handle === kind.handles![index])) {
+    return kind;
+  }
+  return { ...kind, handles };
+}
+
+/** @emoji 🚪 Relabels nakagin door-capsule handle templates in a kind catalog from capsule kind names. */
+export function enrichKindCatalogBundleDoorCapsules(bundle: KindCatalogBundle | undefined): KindCatalogBundle | undefined {
+  if (!bundle?.nodes?.length) {
+    return bundle;
+  }
+  let touched = false;
+  const nodes = bundle.nodes.map((kind) => {
+    const next = relabelDoorCapsuleNodeKindRow(kind);
+    if (next !== kind) {
+      touched = true;
+    }
+    return next;
+  });
+  return touched ? { ...bundle, nodes } : bundle;
+}
+
+//#region MetabolismNodeKindIcons
+/** @emoji 🖼️ Baked metabolism SVG table keys (`puzzle/2d/rs/build.rs`) for Nakagin / metabolism node-kind catalog ids. */
+export const PUZZLE2D_METABOLISM_NODE_KIND_ICON_BY_ID: Readonly<Record<string, string>> = {
+  Balcony: "metabolism",
+  Base: "base",
+  "Base Blob": "base_blob",
+  Bridge: "metabolism",
+  Capital: "capital",
+  Capsule: "metabolism",
+  "Capsule Backslash": "capsule_backslash",
+  "Capsule J": "capsule_J",
+  "Capsule L": "capsule_L",
+  "Capsule P": "capsule_p",
+  "Capsule q": "capsule_q",
+  "Capsule S": "capsule_s",
+  "Capsule Slash": "capsule_slash",
+  "Capsule With Balcony Backslash": "capsule-with-balcony_backslash",
+  "Capsule With Balcony J": "capsule-with-balcony_J",
+  "Capsule With Balcony L": "capsule-with-balcony_L",
+  "Capsule With Balcony P": "capsule-with-balcony_p",
+  "Capsule With Balcony Q": "capsule-with-balcony_q",
+  "Capsule With Balcony S": "capsule-with-balcony_s",
+  "Capsule With Balcony Slash": "capsule-with-balcony_slash",
+  "Capsule With Balcony Z": "capsule-with-balcony_z",
+  "Capsule Z": "capsule_z",
+  "Cylindric Capital": "cylindric-capital",
+  "Cylindric First Storey Tambour": "cylindric-tambour_first-storey",
+  "Cylindric Last Storey Tambour": "cylindric-tambour_last-storey",
+  "Cylindric Single Storey Tambour": "cylindric-tambour_single-storey",
+  "Cylindric Tambour": "cylindric-tambour",
+  Ellipsoid: "ellipsoid-capsule_J",
+  "First Storey Tambour": "tambour_first-storey",
+  "Last Storey Tambour": "tambour_last-storey",
+  "Single Storey Tambour": "tambour_single-storey",
+  Tambour: "tambour",
+  Trapezoid: "metabolism",
+  "Trapezoid Capsule Backslash": "trapezoid-capsule_backslash",
+  "Trapezoid Capsule J": "trapezoid-capsule_J",
+  "Trapezoid Capsule L": "trapezoid-capsule_L",
+  "Trapezoid Capsule P": "trapezoid-capsule_p",
+  "Trapezoid Capsule Q": "trapezoid-capsule_q",
+  "Trapezoid Capsule S": "trapezoid-capsule_s",
+  "Trapezoid Capsule Slash": "trapezoid-capsule_slash",
+  "Trapezoid Capsule Z": "trapezoid-capsule_z",
+};
+
+/** @emoji 🏷️ Resolves a node-kind catalog icon: explicit `icon` row, else {@link PUZZLE2D_METABOLISM_NODE_KIND_ICON_BY_ID}. */
+export function puzzle2dNodeKindCatalogIcon(kind: Pick<NodeKind, "id" | "icon"> | undefined): string | undefined {
+  const explicit = kind?.icon?.trim();
+  if (explicit) {
+    return explicit;
+  }
+  const id = kind?.id?.trim() ?? "";
+  if (id === "") {
+    return undefined;
+  }
+  return PUZZLE2D_METABOLISM_NODE_KIND_ICON_BY_ID[id];
+}
+
+/** @emoji 🖼️ Fills missing `icon` on node-kind catalog rows from {@link PUZZLE2D_METABOLISM_NODE_KIND_ICON_BY_ID}. */
+export function enrichKindCatalogBundleMetabolismIcons(bundle: KindCatalogBundle | undefined): KindCatalogBundle | undefined {
+  if (!bundle?.nodes?.length) {
+    return bundle;
+  }
+  let touched = false;
+  const nodes = bundle.nodes.map((kind) => {
+    if (kind.icon?.trim()) {
+      return kind;
+    }
+    const icon = puzzle2dNodeKindCatalogIcon(kind);
+    if (!icon) {
+      return kind;
+    }
+    touched = true;
+    return { ...kind, icon };
+  });
+  return touched ? { ...bundle, nodes } : bundle;
+}
+
+/** @emoji 🔀 Merges default catalogs, door-capsule handle relabeling, and metabolism node icons. */
+export function puzzle2dMergeKindCatalogBundle(patch: KindCatalogBundle | undefined): KindCatalogBundle {
+  const merged = mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, patch ?? {});
+  const door = enrichKindCatalogBundleDoorCapsules(merged) ?? merged;
+  return enrichKindCatalogBundleMetabolismIcons(door) ?? door;
+}
+//#endregion MetabolismNodeKindIcons
+
+function puzzle2dResolveDoorCapsuleHandleKindForNodeKind(nodeKindId: string | undefined, catalogs: KindCatalogBundle | undefined, handleKind: string): string {
+  const kindId = nodeKindId?.trim() ?? "";
+  const catalogName = kindId === "" ? "" : (catalogs?.nodes?.find((row) => row.id === kindId)?.name?.trim() ?? "");
+  const expected = puzzle2dMetabolismDoorCapsuleHandleKindFromKindName(catalogName || kindId);
+  if (!expected || !PUZZLE2D_DOOR_CAPSULE_HANDLE_KINDS.has(handleKind)) {
+    return handleKind;
+  }
+  return expected;
+}
+
+/** @emoji 🧩 Applies a semantic node kind to a fixture node and relabels door-capsule handles when needed. */
+export function puzzle2dApplyNodeKindToFixtureNode(node: Puzzle2dFixtureNodeV1, kindId: string, catalogs: KindCatalogBundle): Puzzle2dFixtureNodeV1 {
+  const trimmed = kindId.trim();
+  const handles = node.handles.map((handle) => ({
+    ...handle,
+    handleKind: puzzle2dResolveDoorCapsuleHandleKindForNodeKind(trimmed || undefined, catalogs, handle.handleKind),
+  }));
+  if (trimmed === "") {
+    const { nodeKind: _drop, ...rest } = node;
+    return { ...rest, handles };
+  }
+  return { ...node, nodeKind: trimmed, handles };
 }
 
 function parseNodeKindHandleTemplates(raw: unknown): NodeKindHandleTemplate[] | undefined {
@@ -250,44 +451,149 @@ function parseNodeKindsFromFixtureJson(raw: unknown): readonly NodeKind[] | unde
   return nodes.length ? nodes : undefined;
 }
 
-/** @emoji 🗂️ Returns `meta.kindCatalogs` from raw puzzle 2d fixture JSON when present (nodes/handles slices only). */
-export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
+function parseEdgeTipCatalogRow(box: Record<string, unknown>): EdgeTip | null {
+  const id = typeof box.id === "string" ? box.id.trim() : "";
+  if (id === "") {
+    return null;
+  }
+  const geometryRaw = box.geometry;
+  const geometry =
+    geometryRaw === "arrow" || geometryRaw === "fine-arrow" || geometryRaw === "diamond" || geometryRaw === "circle" || geometryRaw === "bar" ? geometryRaw : undefined;
+  const scaleRaw = box.scale;
+  const scale = typeof scaleRaw === "number" && Number.isFinite(scaleRaw) && scaleRaw > 0 ? scaleRaw : undefined;
+  return {
+    id,
+    ...(typeof box.filled === "boolean" ? { filled: box.filled } : {}),
+    ...(geometry !== undefined ? { geometry } : {}),
+    ...(scale !== undefined ? { scale } : {}),
+  };
+}
+
+function parseEdgeTipsFromFixtureJson(raw: unknown): readonly EdgeTip[] | undefined {
+  if (!Array.isArray(raw)) {
+    return undefined;
+  }
+  const tips: EdgeTip[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") {
+      continue;
+    }
+    const parsed = parseEdgeTipCatalogRow(row as Record<string, unknown>);
+    if (parsed) {
+      tips.push(parsed);
+    }
+  }
+  return tips.length ? tips : undefined;
+}
+
+function parseCatalogTipField(raw: unknown): string | undefined {
+  if (typeof raw !== "string") {
+    return undefined;
+  }
+  const s = raw.trim();
+  if (s === "") {
+    return undefined;
+  }
+  return s;
+}
+
+function parseEdgeKindsFromFixtureJson(raw: unknown): readonly EdgeKind[] | undefined {
+  if (!Array.isArray(raw)) {
+    return undefined;
+  }
+  const edges: EdgeKind[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") {
+      continue;
+    }
+    const box = row as Record<string, unknown>;
+    const id = typeof box.id === "string" ? box.id.trim() : "";
+    if (id === "") {
+      continue;
+    }
+    const name = typeof box.name === "string" ? box.name.trim() : id;
+    const patternRaw = box.pattern;
+    const pattern = patternRaw === "solid" || patternRaw === "dashed" || patternRaw === "dotted" ? patternRaw : undefined;
+    const sourceTip = parseCatalogTipField(box.sourceTip ?? box.source_tip);
+    const targetTip = parseCatalogTipField(box.targetTip ?? box.target_tip ?? box.marker);
+    const directed = typeof box.directed === "boolean" ? box.directed : undefined;
+    edges.push({
+      id,
+      name,
+      ...(typeof box.color === "string" && box.color.trim() !== "" ? { color: box.color.trim() } : {}),
+      ...(typeof box.stroke === "string" && box.stroke.trim() !== "" ? { stroke: box.stroke.trim() } : {}),
+      ...(pattern !== undefined ? { pattern } : {}),
+      ...(sourceTip !== undefined ? { sourceTip } : {}),
+      ...(targetTip !== undefined ? { targetTip } : {}),
+      ...(directed !== undefined ? { directed } : {}),
+      ...(box.shape === "bezier" || box.shape === "line" ? { shape: box.shape } : {}),
+      ...(box.defaultShapeProps && typeof box.defaultShapeProps === "object" ? { defaultShapeProps: box.defaultShapeProps as Record<string, unknown> } : {}),
+    });
+  }
+  return edges.length ? edges : undefined;
+}
+
+function puzzle2dFixtureMetaRecord(raw: unknown): Record<string, unknown> | undefined {
   if (!raw || typeof raw !== "object") {
     return undefined;
   }
-  const root = raw as Record<string, unknown>;
-  const meta = root.meta;
-  if (!meta || typeof meta !== "object") {
+  const box = raw as Record<string, unknown>;
+  if (box.meta && typeof box.meta === "object") {
+    return box.meta as Record<string, unknown>;
+  }
+  if (box.kindCompatibility !== undefined || box.kindCatalogs !== undefined) {
+    return box;
+  }
+  return undefined;
+}
+
+/** @emoji 🗂️ Returns `meta.kindCatalogs` from raw puzzle 2d fixture JSON when present. */
+export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
+  const meta = puzzle2dFixtureMetaRecord(raw);
+  if (!meta) {
     return undefined;
   }
-  const kc = (meta as Record<string, unknown>).kindCatalogs;
+  const kc = meta.kindCatalogs;
   if (!kc || typeof kc !== "object") {
     return undefined;
   }
   const box = kc as Record<string, unknown>;
   const nodesRaw = box.nodes;
   const handlesRaw = box.handles;
+  const edgesRaw = box.edges;
+  const edgeTipsRaw = box.edgeTips;
   const out: KindCatalogBundle = {};
   const nodes = parseNodeKindsFromFixtureJson(nodesRaw);
   if (nodes) {
     out.nodes = nodes;
   }
+  const edgeTips = parseEdgeTipsFromFixtureJson(edgeTipsRaw);
+  if (edgeTips) {
+    out.edgeTips = edgeTips;
+  }
+  const edges = parseEdgeKindsFromFixtureJson(edgesRaw);
+  if (edges) {
+    out.edges = edges;
+  }
   if (Array.isArray(handlesRaw)) {
     out.handles = handlesRaw as readonly HandleKind[];
   }
-  if (out.nodes === undefined && out.handles === undefined) {
+  if (out.nodes === undefined && out.handles === undefined && out.edges === undefined && out.edgeTips === undefined) {
     return undefined;
   }
-  return out;
+  return enrichKindCatalogBundleDoorCapsules(out) ?? out;
 }
 
-/** @emoji 🔗 Returns `meta.kindCompatibility` from raw puzzle 2d fixture JSON when present. */
+/** @emoji 🔗 Returns `meta.kindCompatibility` from raw puzzle 2d fixture JSON or a `meta` slice when present. */
 export function puzzle2dFixtureMetaKindCompatibility(raw: unknown): readonly KindCompatEntry[] | undefined {
-  if (!raw || typeof raw !== "object") return undefined;
-  const meta = (raw as Record<string, unknown>).meta;
-  if (!meta || typeof meta !== "object") return undefined;
-  const entries = (meta as Record<string, unknown>).kindCompatibility;
-  if (!Array.isArray(entries)) return undefined;
+  const meta = puzzle2dFixtureMetaRecord(raw);
+  if (!meta) {
+    return undefined;
+  }
+  const entries = meta.kindCompatibility;
+  if (!Array.isArray(entries)) {
+    return undefined;
+  }
   return entries as readonly KindCompatEntry[];
 }
 
@@ -340,6 +646,9 @@ function serializeKindCatalogBundle(bundle: KindCatalogBundle): string {
       if (e.icon != null && String(e.icon).trim() !== "") {
         row.icon = String(e.icon).trim();
       }
+      if (e.scale != null && Number.isFinite(e.scale) && e.scale > 0) {
+        row.scale = e.scale;
+      }
       if (e.defaultShapeProps) {
         row.defaultShapeProps = e.defaultShapeProps;
       }
@@ -376,13 +685,47 @@ function serializeKindCatalogBundle(bundle: KindCatalogBundle): string {
       if (e.pattern != null && String(e.pattern).trim() !== "") {
         row.pattern = String(e.pattern).trim();
       }
+      if (e.sourceTip != null && String(e.sourceTip).trim() !== "") {
+        row.sourceTip = String(e.sourceTip).trim();
+      }
+      if (e.targetTip != null && String(e.targetTip).trim() !== "") {
+        row.targetTip = String(e.targetTip).trim();
+      }
+      if (e.directed === false) {
+        row.directed = false;
+      }
       if (e.defaultShapeProps) {
         row.defaultShapeProps = e.defaultShapeProps;
       }
       return row;
     })
     .filter((x): x is NonNullable<typeof x> => x !== null);
-  return JSON.stringify({ edgeKinds: edges, handleKinds: handles, nodeKinds: nodes, wireKinds: wires });
+  const edgeTips = (bundle.edgeTips ?? [])
+    .map((t) => {
+      const id = String(t.id ?? "").trim();
+      if (id === "") {
+        return null;
+      }
+      const row: Record<string, unknown> = { id };
+      if (t.geometry) {
+        row.geometry = t.geometry;
+      }
+      if (t.filled === true || t.filled === false) {
+        row.filled = t.filled;
+      }
+      if (t.scale != null && Number.isFinite(t.scale) && t.scale > 0) {
+        row.scale = t.scale;
+      }
+      return row;
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+  return JSON.stringify({
+    edgeKinds: edges,
+    edgeTips,
+    handleKinds: handles,
+    nodeKinds: nodes,
+    wireKinds: wires,
+  });
 }
 /** 🧱 World-space clip tiling for the Vello WASM canvas (`world-clip`) or monolithic encoding (`none`). */
 export type WorldRasterTilingKind = "none" | "world-clip";
@@ -556,9 +899,13 @@ export type Puzzle2dFixtureNodeV1 = Puzzle2dFixtureCircleNodeV1 | Puzzle2dFixtur
 
 /** @emoji 📄 Edge record inside {@link Puzzle2dFixtureV1}. */
 export interface Puzzle2dFixtureEdgeV1 {
+  /** @emoji 🧩 Optional semantic edge-kind id for catalog defaults and compatibility. */
+  edgeKind?: string;
   id: string;
   source: string;
+  sourceTip?: string;
   target: string;
+  targetTip?: string;
 }
 
 /** @emoji 📄 Parsed `puzzle.2d.fixture/v1` JSON for declarative puzzle 2d scenes. */
@@ -651,6 +998,7 @@ export interface Puzzle2dRedrawLayoutOptions {
   centerX?: number;
   centerY?: number;
   randomSeed?: number;
+  lockedNodeIds?: readonly string[];
   forceGraph?: Puzzle2dForceGraphLayoutOptions;
   hierarchicalTree?: {
     direction: Puzzle2dHierarchicalTreeDirectionKind;
@@ -758,7 +1106,7 @@ export interface Puzzle2dLinkTargetRingPayload {
 }
 
 /** @emoji 🖌️ Active puzzle 2d viewport tool. */
-export type Puzzle2dActiveTool = "select" | "brush";
+export type Puzzle2dActiveTool = "select" | "brush" | "fill";
 
 /** @emoji 📐 Default brush node span in world units (play authoring uses the same value). */
 export const DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX = 40;
@@ -775,8 +1123,10 @@ export interface Puzzle2dBrushPlacePayload {
   readonly targetHandleIndex: number;
   readonly x: number;
   readonly y: number;
+  readonly edgeId?: string;
   readonly height?: number;
   readonly iconKind?: string;
+  readonly nodeId?: string;
   readonly radius?: number;
   readonly width?: number;
 }
@@ -786,6 +1136,14 @@ export interface Puzzle2dBrushCandidatesPayload {
   readonly candidates: readonly string[];
   readonly index: number;
   readonly sourceHandleId: string;
+}
+
+/** @emoji 🖌️ Shared brush slot state mirrored across play authoring panes. */
+export interface Puzzle2dBrushSessionSnapshot {
+  readonly candidateIndex: number;
+  readonly candidates: readonly string[];
+  readonly preview: Puzzle2dEventMap["brushPreview"] | null;
+  readonly sourceHandleId: string | null;
 }
 
 /** @emoji 🔗 Host-driven link gesture preview mirrored across flat surfaces (see {@link Puzzle2dCanvasProps.linkSession}). */
@@ -935,8 +1293,12 @@ export interface Puzzle2dEdgeProps {
   highlighted?: boolean;
   selected?: boolean;
   source: string;
+  /** @emoji 🔺 Per-instance source tip id (`none` disables). */
+  sourceTip?: string;
   style?: string;
   target: string;
+  /** @emoji 🔺 Per-instance target tip id (`none` disables). */
+  targetTip?: string;
   userData?: Record<string, unknown>;
   visible?: boolean;
 }
@@ -960,8 +1322,10 @@ export interface Puzzle2dWireProps {
 
 export interface EdgeOptions extends Puzzle2dSceneObjectOptions {
   edgeKind?: string;
-  source: Puzzle2dSceneHandle;
-  target: Puzzle2dSceneHandle;
+  source: Puzzle2dSceneNode | Puzzle2dSceneHandle;
+  sourceTip?: string;
+  target: Puzzle2dSceneNode | Puzzle2dSceneHandle;
+  targetTip?: string;
 }
 
 export interface WireOptions extends Puzzle2dSceneObjectOptions {
@@ -971,6 +1335,14 @@ export interface WireOptions extends Puzzle2dSceneObjectOptions {
   target: Puzzle2dSceneHandle | null;
   wireKind?: string;
 }
+
+/** @emoji 🎯 Edge endpoint: handle (ported) or node center (normal). */
+export type Puzzle2dSceneEdgeAnchor = Puzzle2dSceneNode | Puzzle2dSceneHandle;
+
+type Puzzle2dSceneNodeOptions = NodeOptions;
+type Puzzle2dSceneHandleOptions = HandleOptions;
+type Puzzle2dSceneEdgeOptions = EdgeOptions;
+type Puzzle2dSceneWireOptions = WireOptions;
 
 type FrameListener = (state: FrameState, dt: number) => void;
 type Puzzle2dCanvasElement = HTMLCanvasElement & { __puzzle2dRenderer?: Puzzle2dRenderer };
@@ -1000,8 +1372,8 @@ export const PUZZLE_2D_CAMERA_ZOOM_MAX = 32;
 const MIN_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MIN;
 const MAX_ZOOM = PUZZLE_2D_CAMERA_ZOOM_MAX;
 
-/** @emoji ⌨️ True when Delete/Backspace should reach the puzzle 2d canvas instead of staying in a focused text control. */
-function shouldPuzzle2dHandleDeleteShortcut(): boolean {
+/** @emoji ⌨️ True when canvas shortcuts should reach the puzzle 2d renderer instead of a focused text control. */
+function shouldPuzzle2dHandleCanvasKeyboardShortcut(): boolean {
   const el = document.activeElement;
   if (!el || !(el instanceof HTMLElement)) {
     return true;
@@ -1015,72 +1387,42 @@ function shouldPuzzle2dHandleDeleteShortcut(): boolean {
   }
   return true;
 }
+
+/** @emoji ⌨️ Collects every visible scene id included by the active selection target toggles. */
+export function puzzle2dCollectAllSelectableIdsFromScene(scene: Puzzle2dScene, targets: Puzzle2dSelectionTargets): string[] {
+  const ids: string[] = [];
+  if (targets.nodes) {
+    for (const node of scene.nodes.values()) {
+      if (node.visible !== false) {
+        ids.push(node.id);
+      }
+    }
+  }
+  if (targets.handles) {
+    for (const handle of scene.handles.values()) {
+      if (handle.visible !== false) {
+        ids.push(handle.id);
+      }
+    }
+  }
+  if (targets.edges) {
+    for (const edge of scene.edges.values()) {
+      if (edge.visible !== false) {
+        ids.push(edge.id);
+      }
+    }
+  }
+  return ids;
+}
+
 /** 📐 Quantized large grid step in world units (LOD grids scale `10` / `2.5` / `0.5` / `0.1` by {@link DEFAULT_PUZZLE_2D_GRID_FACTOR}). */
 export const PUZZLE_2D_LOD_GRID_MAJOR_QUANTUM = 10;
 
 /** @emoji 📐 Positive multiplier for LOD world grid steps (`10×` / `2.5×` / `0.5×` / `0.1×` world units per band); default `10` yields `100` / `25` / `5` / `1`. */
 export const DEFAULT_PUZZLE_2D_GRID_FACTOR = 10;
 
-/** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < compact < `compactMaxZoom` < normal < `normalMaxZoom` < detail < `detailMaxZoom` ≤ micro. */
-export interface Puzzle2dLodZoomThresholds {
-  minimapMaxZoom: number;
-  overviewMaxZoom: number;
-  compactMaxZoom: number;
-  normalMaxZoom: number;
-  detailMaxZoom: number;
-}
-
-export const DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS: Puzzle2dLodZoomThresholds = {
-  minimapMaxZoom: 0.15,
-  overviewMaxZoom: 0.35,
-  compactMaxZoom: 0.55,
-  normalMaxZoom: 1.25,
-  detailMaxZoom: 2.5,
-};
-
-/** 📐 Alias of {@link DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.minimapMaxZoom}. */
-export const PUZZLE_2D_LOD_MINIMAP_MAX_ZOOM = DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.minimapMaxZoom;
-
-/** 📐 Alias of {@link DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.normalMaxZoom} (detail band starts here). */
-export const PUZZLE_2D_LOD_DETAIL_MIN_ZOOM = DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.normalMaxZoom;
-
-/** 📐 Alias of {@link DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.detailMaxZoom} (micro band starts here). */
-export const PUZZLE_2D_LOD_MICRO_MIN_ZOOM = DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS.detailMaxZoom;
-
-/** @emoji 📶 LOD label for `data-puzzle2d-lod` using explicit thresholds. */
-export function resolvePuzzle2dLodLabelFromThresholds(zoom: number, t: Puzzle2dLodZoomThresholds): Puzzle2dDrawLodKind {
-  const z = zoom;
-  if (z < t.minimapMaxZoom) {
-    return "minimap";
-  }
-  if (z < t.overviewMaxZoom) {
-    return "overview";
-  }
-  if (z < t.compactMaxZoom) {
-    return "compact";
-  }
-  if (z < t.normalMaxZoom) {
-    return "normal";
-  }
-  if (z < t.detailMaxZoom) {
-    return "detail";
-  }
-  return "micro";
-}
-
-/** @emoji 📶 LOD tier for `data-puzzle2d-lod` using {@link DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS}. */
-export function resolvePuzzle2dLodLabel(zoom: number): Puzzle2dDrawLodKind {
-  return resolvePuzzle2dLodLabelFromThresholds(zoom, DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS);
-}
-
 /** @emoji 📶 WASM draw LOD tier label (matches `data-puzzle2d-lod` / `setForcedDrawLodLabel`). */
 export type Puzzle2dDrawLodKind = "compact" | "detail" | "micro" | "minimap" | "normal" | "overview";
-
-/** @emoji 📶 Select value: camera zoom picks the draw LOD band. */
-export const PUZZLE_2D_LOD_MODE_AUTOMATIC = "automatic" as const;
-
-/** @emoji 📶 Puzzle 2d play / window LOD select value (`automatic` or a pinned {@link Puzzle2dDrawLodKind}). */
-export type Puzzle2dLodModeKind = typeof PUZZLE_2D_LOD_MODE_AUTOMATIC | Puzzle2dDrawLodKind;
 
 const PUZZLE_2D_DRAW_LOD_KINDS: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
@@ -1088,6 +1430,79 @@ const PUZZLE_2D_DRAW_LOD_KINDS: readonly Puzzle2dDrawLodKind[] = ["minimap", "ov
 export function isPuzzle2dDrawLodKind(label: string): label is Puzzle2dDrawLodKind {
   return (PUZZLE_2D_DRAW_LOD_KINDS as readonly string[]).includes(label);
 }
+
+/** @emoji 📶 Compile-time LOD row mirrored from {@link BoardSession.lodScaleJson}. */
+export interface Puzzle2dLodEntry {
+  id: Puzzle2dDrawLodKind;
+  name: string;
+  description: string;
+  maxZoom: number;
+}
+
+let puzzle2dLodScaleCache: readonly Puzzle2dLodEntry[] | null = null;
+
+function parsePuzzle2dLodScaleJson(raw: string): readonly Puzzle2dLodEntry[] {
+  const rows = JSON.parse(raw) as Array<{ id?: string; name?: string; description?: string; maxZoom?: number }>;
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+  const out: Puzzle2dLodEntry[] = [];
+  for (const row of rows) {
+    if (typeof row.id !== "string" || !isPuzzle2dDrawLodKind(row.id) || typeof row.maxZoom !== "number") {
+      continue;
+    }
+    out.push({
+      id: row.id,
+      name: typeof row.name === "string" ? row.name : row.id,
+      description: typeof row.description === "string" ? row.description : "",
+      maxZoom: row.maxZoom,
+    });
+  }
+  return out;
+}
+
+/** @emoji 📶 Fixed LOD table declared in puzzle 2d WASM (single source of truth). */
+export function getPuzzle2dLodScale(): readonly Puzzle2dLodEntry[] {
+  if (!puzzle2dLodScaleCache) {
+    puzzle2dLodScaleCache = parsePuzzle2dLodScaleJson(new BoardSession().lodScaleJson());
+  }
+  return puzzle2dLodScaleCache;
+}
+
+/** @emoji 📶 LOD label for `data-puzzle2d-lod` using the compile-time WASM scale. */
+export function resolvePuzzle2dLodLabelFromScale(zoom: number, scale: readonly Puzzle2dLodEntry[]): Puzzle2dDrawLodKind {
+  for (const lod of scale) {
+    if (zoom < lod.maxZoom) {
+      return lod.id;
+    }
+  }
+  return scale[scale.length - 1]?.id ?? "micro";
+}
+
+/** @emoji 📶 LOD tier for `data-puzzle2d-lod` using {@link getPuzzle2dLodScale}. */
+export function resolvePuzzle2dLodLabel(zoom: number): Puzzle2dDrawLodKind {
+  return resolvePuzzle2dLodLabelFromScale(zoom, getPuzzle2dLodScale());
+}
+
+function lodEntryMaxZoom(id: Puzzle2dDrawLodKind): number {
+  const row = getPuzzle2dLodScale().find((lod) => lod.id === id);
+  return row?.maxZoom ?? Number.POSITIVE_INFINITY;
+}
+
+/** 📐 Upper zoom bound for the minimap band (`zoom <` this value). */
+export const PUZZLE_2D_LOD_MINIMAP_MAX_ZOOM = lodEntryMaxZoom("minimap");
+
+/** 📐 Lower zoom bound for the detail band (normal band ends here). */
+export const PUZZLE_2D_LOD_DETAIL_MIN_ZOOM = lodEntryMaxZoom("normal");
+
+/** 📐 Lower zoom bound for the micro band (detail band ends here). */
+export const PUZZLE_2D_LOD_MICRO_MIN_ZOOM = lodEntryMaxZoom("detail");
+
+/** @emoji 📶 Select value: camera zoom picks the draw LOD band. */
+export const PUZZLE_2D_LOD_MODE_AUTOMATIC = "automatic" as const;
+
+/** @emoji 📶 Puzzle 2d play / window LOD select value (`automatic` or a pinned {@link Puzzle2dDrawLodKind}). */
+export type Puzzle2dLodModeKind = typeof PUZZLE_2D_LOD_MODE_AUTOMATIC | Puzzle2dDrawLodKind;
 
 /** @emoji 📶 Maps a window LOD select value to {@link Puzzle2dCanvasProps} LOD fields. */
 export function puzzle2dLodCanvasProps(mode: Puzzle2dLodModeKind): { automaticLod: boolean; lod?: Puzzle2dDrawLodKind } {
@@ -1192,6 +1607,9 @@ function puzzle2dProbeCssComputed(property: "color" | "backgroundColor", value: 
   const el = document.createElement("span");
   const key = property === "color" ? "color" : "background-color";
   el.setAttribute("style", `${key}:${value};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
+  if (document.documentElement.classList.contains("dark")) {
+    el.classList.add("dark");
+  }
   document.documentElement.appendChild(el);
   const out = getComputedStyle(el)[property];
   el.remove();
@@ -1647,7 +2065,20 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
     if (!id || !source || !target) {
       return null;
     }
-    edges.push({ id, source, target });
+    const edgeKindRaw = edge.edgeKind ?? edge.edge_kind;
+    const edgeKind = typeof edgeKindRaw === "string" && edgeKindRaw.trim() !== "" ? edgeKindRaw.trim() : undefined;
+    const sourceTipRaw = edge.sourceTip ?? edge.source_tip;
+    const sourceTip = typeof sourceTipRaw === "string" && sourceTipRaw.trim() !== "" ? sourceTipRaw.trim() : undefined;
+    const targetTipRaw = edge.targetTip ?? edge.target_tip;
+    const targetTip = typeof targetTipRaw === "string" && targetTipRaw.trim() !== "" ? targetTipRaw.trim() : undefined;
+    edges.push({
+      id,
+      source,
+      target,
+      ...(edgeKind !== undefined ? { edgeKind } : {}),
+      ...(sourceTip !== undefined ? { sourceTip } : {}),
+      ...(targetTip !== undefined ? { targetTip } : {}),
+    });
   }
   const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
   return { camera, edges, meta, nodes, schema: "puzzle.2d.fixture/v1" };
@@ -1731,6 +2162,336 @@ function isPaletteNodeDragFixture(fixture: Puzzle2dFixtureV1): boolean {
   return seedId.startsWith("palette-seed-");
 }
 
+/** @emoji 🧩 Minimal fixture encoding one node kind for workbench palette drags. */
+export function buildPaletteNodeDragFixture(nodeKindId: string, catalogs?: KindCatalogBundle): Puzzle2dFixtureV1 {
+  const kind = catalogs?.nodes?.find((row) => row.id === nodeKindId);
+  const templates = kind?.handles ?? [];
+  const handles = puzzle2dFixtureHandlesFromNodeKind("palette-seed-node", templates);
+  const icon = puzzle2dNodeKindCatalogIcon(kind ?? { id: nodeKindId });
+  const shape = kind?.shape ?? "circle";
+  const scale = kind?.scale != null && Number.isFinite(kind.scale) && kind.scale > 0 ? kind.scale : 1;
+  const brush = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX * scale;
+  const seed: Puzzle2dFixtureNodeV1 =
+    shape === "rectangle"
+      ? {
+          handles,
+          height: brush,
+          id: "palette-seed-node",
+          nodeKind: nodeKindId,
+          shape: "rectangle",
+          width: brush,
+          x: 0,
+          y: 0,
+          ...(icon ? { iconKind: icon } : {}),
+        }
+      : {
+          handles,
+          id: "palette-seed-node",
+          nodeKind: nodeKindId,
+          radius: brush / 2,
+          x: 0,
+          y: 0,
+          ...(icon ? { iconKind: icon } : {}),
+        };
+  return {
+    schema: "puzzle.2d.fixture/v1",
+    camera: { x: 0, y: 0, zoom: 1 },
+    edges: [],
+    meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
+    nodes: [seed],
+  };
+}
+
+/** @emoji 📤 `dataTransfer` map for dragging one node kind from the workbench kinds tree. */
+export function puzzle2dPlayNodeKindDragData(nodeKindId: string, catalogs?: KindCatalogBundle): Record<string, string> {
+  const encoded = encodePuzzle2dFixtureForDragV1(buildPaletteNodeDragFixture(nodeKindId, catalogs));
+  return { [PUZZLE_2D_FIXTURE_DRAG_V1_MIME]: encoded, [PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME]: encoded };
+}
+
+/** @emoji 🎯 Non-scene handle id so WASM draws palette drop preview node without a preview edge wire. */
+export const PUZZLE_2D_PALETTE_FIXTURE_DROP_PREVIEW_SOURCE_HANDLE = "__palette_fixture_drop_preview__";
+
+/** @emoji 🖱️ True while a workbench node-kind palette drag is in flight (some hosts hide custom MIME in `types`). */
+export const puzzle2dFixturePaletteDragRef = { active: false };
+
+/** @emoji 📦 Encoded palette fixture payload for the active workbench drag (HTML5 + pointer). */
+export const puzzle2dFixturePaletteDragEncodedRef = { current: null as string | null };
+
+/** @emoji 📍 Last pointer position for an in-flight palette fixture drag (window `dragover` / `pointermove`). */
+export const puzzle2dFixturePaletteDragClientRef = { clientX: 0, clientY: 0 };
+
+/** @emoji 🌍 Last resolved world point for palette fixture-drop preview (shared across play panes). */
+export const puzzle2dFixturePaletteDragWorldRef = { current: null as Point | null };
+
+/** @emoji ✅ Set when a palette node drop was committed so tree `onDragEnd` can skip redundant preview teardown. */
+export const puzzle2dFixturePaletteDropCommittedRef = { current: false };
+
+/** @emoji 🧩 Kind catalogs + brush size for palette-drop preview on all authoring panes. */
+export const puzzle2dFixturePaletteDragPreviewOptionsRef = {
+  catalogs: undefined as KindCatalogBundle | undefined,
+  brushNodeSize: DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+};
+
+let puzzle2dPaletteDragPreviewRafId: number | null = null;
+
+function puzzle2dStopPaletteDragPreviewLoop(): void {
+  if (puzzle2dPaletteDragPreviewRafId !== null) {
+    globalThis.cancelAnimationFrame?.(puzzle2dPaletteDragPreviewRafId);
+    puzzle2dPaletteDragPreviewRafId = null;
+  }
+}
+
+function puzzle2dTickPaletteDragPreview(): void {
+  const encoded = puzzle2dReadActivePaletteDragEncoded();
+  if (!encoded) {
+    puzzle2dStopPaletteDragPreviewLoop();
+    return;
+  }
+  const { clientX, clientY } = puzzle2dFixturePaletteDragClientRef;
+  const world = puzzle2dResolvePaletteDragWorldAtClient(clientX, clientY);
+  if (!world) {
+    return;
+  }
+  puzzle2dPushPaletteFixtureDropPreviewWorldToAllPeers(world, encoded);
+  const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
+  if (!requestFrame) {
+    puzzle2dPaletteDragPreviewRafId = null;
+    return;
+  }
+  puzzle2dPaletteDragPreviewRafId = requestFrame(puzzle2dTickPaletteDragPreview);
+}
+
+function puzzle2dStartPaletteDragPreviewLoop(): void {
+  if (puzzle2dPaletteDragPreviewRafId !== null) {
+    return;
+  }
+  puzzle2dTickPaletteDragPreview();
+}
+
+/** @emoji 👻 Notes palette-drag client coordinates and mirrors the WASM ghost on every authoring pane. */
+export function puzzle2dNotePaletteFixtureDragClient(clientX: number, clientY: number): void {
+  puzzle2dFixturePaletteDragClientRef.clientX = clientX;
+  puzzle2dFixturePaletteDragClientRef.clientY = clientY;
+  if (!puzzle2dReadActivePaletteDragEncoded()) {
+    return;
+  }
+  const world = puzzle2dResolvePaletteDragWorldAtClient(clientX, clientY);
+  if (world) {
+    puzzle2dPushPaletteFixtureDropPreviewWorldToAllPeers(world);
+  }
+  puzzle2dStartPaletteDragPreviewLoop();
+}
+
+/** @emoji 🖱️ Pointer-driven palette drag when native HTML5 tree drag does not start (Electron / scroll panels). */
+export const puzzle2dFixturePalettePointerDragRef = { active: false, encoded: null as string | null };
+
+/** @emoji 📦 Reads the encoded palette drag payload when a workbench fixture drag is active. */
+export function puzzle2dReadActivePaletteDragEncoded(): string | null {
+  const pointer = puzzle2dFixturePalettePointerDragRef.encoded?.trim();
+  if (pointer) {
+    return pointer;
+  }
+  const shared = puzzle2dFixturePaletteDragEncodedRef.current?.trim();
+  return shared ? shared : null;
+}
+
+/** @emoji 🖱️ Begins pointer palette drag with an encoded fixture payload. */
+export function beginPuzzle2dFixturePalettePointerDrag(encoded: string): void {
+  puzzle2dFixturePaletteDropCommittedRef.current = false;
+  puzzle2dFixturePalettePointerDragRef.active = true;
+  puzzle2dFixturePalettePointerDragRef.encoded = encoded;
+  puzzle2dFixturePaletteDragEncodedRef.current = encoded;
+  puzzle2dFixturePaletteDragRef.active = true;
+  window.dispatchEvent(new CustomEvent("puzzle2d-fixture-drag-session", { detail: { encoded } }));
+  puzzle2dStartPaletteDragPreviewLoop();
+}
+
+/** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
+export function cancelPuzzle2dFixturePalettePointerDrag(): void {
+  if (!puzzle2dFixturePalettePointerDragRef.active && !puzzle2dFixturePaletteDragRef.active) {
+    return;
+  }
+  puzzle2dFixturePalettePointerDragRef.active = false;
+  puzzle2dFixturePalettePointerDragRef.encoded = null;
+  puzzle2dFixturePaletteDragEncodedRef.current = null;
+  puzzle2dFixturePaletteDragRef.active = false;
+  puzzle2dStopPaletteDragPreviewLoop();
+  window.dispatchEvent(new CustomEvent("puzzle2d-fixture-drag-session", { detail: null }));
+}
+
+/** @emoji 🎯 True when client coordinates are over the puzzle 2D fixture drop host. */
+export function isClientPointOverPuzzle2dFixtureDropHost(clientX: number, clientY: number, host: HTMLElement | null | undefined): boolean {
+  if (!host) {
+    return false;
+  }
+  const rect = host.getBoundingClientRect();
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
+/** @emoji 📍 Maps client coordinates to canvas screen + world space for fixture drops (set by {@link Puzzle2dCanvas}). */
+export const puzzle2dFixtureDropPointerToWorldRef: {
+  current: ((clientX: number, clientY: number) => { screen: Point; world: Point } | null) | null;
+} = { current: null };
+
+/** @emoji 📥 Commits a palette fixture drop at client coordinates (pointer or HTML5 drop). */
+export function commitPuzzle2dFixtureDropAtClient(
+  clientX: number,
+  clientY: number,
+  fixture: Puzzle2dFixtureV1,
+  host: HTMLElement | null | undefined,
+  onFixtureDrop: ((detail: Puzzle2dFixtureDropDetail) => void) | undefined,
+): boolean {
+  if (!onFixtureDrop) {
+    return false;
+  }
+  const mapped = puzzle2dFixtureDropPointerToWorldRef.current?.(clientX, clientY);
+  if (mapped) {
+    onFixtureDrop({ fixture, screen: mapped.screen, world: mapped.world });
+    return true;
+  }
+  const dropHost = host ?? null;
+  const renderer = puzzle2dActiveRenderer();
+  if (!dropHost || !renderer) {
+    return false;
+  }
+  const rect = dropHost.getBoundingClientRect();
+  const screen = { x: clientX - rect.left, y: clientY - rect.top };
+  onFixtureDrop({ fixture, screen, world: renderer.screenToWorld(screen) });
+  return true;
+}
+
+/** @emoji 🖱️ Ends pointer palette drag; invokes `onPaletteDrop` when the pointer is over the host (world mapping is the caller's job). */
+export function endPuzzle2dFixturePalettePointerDrag(
+  clientX: number,
+  clientY: number,
+  host: HTMLElement | null | undefined,
+  onPaletteDrop?: (fixture: Puzzle2dFixtureV1) => void,
+): void {
+  if (!puzzle2dFixturePalettePointerDragRef.active) {
+    return;
+  }
+  const encoded = puzzle2dFixturePalettePointerDragRef.encoded;
+  cancelPuzzle2dFixturePalettePointerDrag();
+  if (!encoded) {
+    return;
+  }
+  const fixture = decodePuzzle2dFixtureFromDragV1(encoded);
+  if (!fixture) {
+    return;
+  }
+  if (!isClientPointOverPuzzle2dFixtureDropHost(clientX, clientY, host)) {
+    return;
+  }
+  onPaletteDrop?.(fixture);
+}
+
+/** @emoji 🔍 True when `dataTransfer.types` carries a puzzle 2D fixture palette drag. */
+export function puzzle2dFixtureDragMimeInTypes(types: readonly string[]): boolean {
+  return types.includes(PUZZLE_2D_FIXTURE_DRAG_V1_MIME) || types.includes(PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME);
+}
+
+/** @emoji 🔍 Whether the viewport should accept a palette fixture drop for this drag gesture. */
+export function puzzle2dFixtureDragAcceptsTransfer(types: readonly string[]): boolean {
+  if (puzzle2dFixturePalettePointerDragRef.active || puzzle2dFixturePaletteDragRef.active) {
+    return true;
+  }
+  return puzzle2dFixtureDragMimeInTypes(types);
+}
+
+/** @emoji 👻 WASM palette-drop ghost node payload ({@link Puzzle2dRenderer.setFixtureDropPreview}). */
+export type Puzzle2dFixtureDropPreviewPayload = Record<string, unknown>;
+
+/** @emoji 👁️ Highlighted palette-drop preview node JSON for {@link setFixtureDropPreviewJson} (shared world point for every pane). */
+export function buildPaletteFixtureDropPreviewPayloadAtWorld(
+  world: Point,
+  fixture: Puzzle2dFixtureV1,
+  catalogs: KindCatalogBundle | undefined,
+  brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+): Puzzle2dFixtureDropPreviewPayload | null {
+  if (!isPaletteNodeDragFixture(fixture)) {
+    return null;
+  }
+  const template = fixture.nodes[0];
+  if (!template?.nodeKind) {
+    return null;
+  }
+  const kind = catalogs?.nodes?.find((row) => row.id === template.nodeKind);
+  const shape = template.shape ?? kind?.shape ?? "circle";
+  const iconKind = template.iconKind?.trim() || puzzle2dNodeKindCatalogIcon(kind ?? { id: template.nodeKind });
+  const scale = kind?.scale != null && Number.isFinite(kind.scale) && kind.scale > 0 ? kind.scale : 1;
+  const node: Puzzle2dFixtureDropPreviewPayload = {
+    nodeKind: template.nodeKind,
+    shape,
+    x: world.x,
+    y: world.y,
+    ...(iconKind ? { iconKind } : {}),
+  };
+  if (shape === "rectangle") {
+    node.height = (template.height ?? brushNodeSize) * scale;
+    node.width = (template.width ?? brushNodeSize) * scale;
+  } else {
+    node.radius = (template.radius ?? brushNodeSize / 2) * scale;
+  }
+  return node;
+}
+
+/** @emoji ⎋ Aborts an in-flight workbench palette fixture drag and clears all pane previews. */
+export function abortPuzzle2dFixturePaletteDrag(): void {
+  const wasActive = puzzle2dFixturePalettePointerDragRef.active || puzzle2dFixturePaletteDragRef.active;
+  puzzle2dFixturePalettePointerDragRef.active = false;
+  puzzle2dFixturePalettePointerDragRef.encoded = null;
+  puzzle2dFixturePaletteDragEncodedRef.current = null;
+  puzzle2dFixturePaletteDragRef.active = false;
+  if (wasActive) {
+    window.dispatchEvent(new CustomEvent("puzzle2d-fixture-drag-session", { detail: null }));
+  }
+  puzzle2dStopPaletteDragPreviewLoop();
+  puzzle2dFixturePaletteDragWorldRef.current = null;
+  puzzle2dClearFixtureDropPreviewAllAuthoringPeers();
+}
+
+/** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry puzzle 2D fixture palette `dragData`. */
+export function puzzle2dFixturePaletteTreeDragController(dragDataByItemId: ReadonlyMap<string, Record<string, string>>): TreeDragAndDropController {
+  const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
+    const payload = dragData?.[PUZZLE_2D_FIXTURE_DRAG_V1_MIME];
+    return payload?.trim() ? payload : undefined;
+  };
+  return {
+    getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
+    pointerPaletteDrag: {
+      readEncodedDragPayload: readEncoded,
+      begin: beginPuzzle2dFixturePalettePointerDrag,
+      cancel: cancelPuzzle2dFixturePalettePointerDrag,
+    },
+    onDragStart: ({ sourceItem }) => {
+      if (puzzle2dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      puzzle2dFixturePaletteDropCommittedRef.current = false;
+      puzzle2dFixturePaletteDragRef.active = true;
+      const payload = readEncoded(dragDataByItemId.get(sourceItem.id));
+      if (payload) {
+        puzzle2dFixturePaletteDragEncodedRef.current = payload;
+        window.dispatchEvent(new CustomEvent("puzzle2d-fixture-drag-session", { detail: { encoded: payload } }));
+        puzzle2dStartPaletteDragPreviewLoop();
+      }
+    },
+    onDragEnd: () => {
+      if (puzzle2dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      puzzle2dFixturePaletteDragEncodedRef.current = null;
+      puzzle2dFixturePaletteDragRef.active = false;
+      if (!puzzle2dFixturePaletteDropCommittedRef.current) {
+        puzzle2dStopPaletteDragPreviewLoop();
+        puzzle2dClearFixtureDropPreviewAllAuthoringPeers();
+      }
+      puzzle2dFixturePaletteDropCommittedRef.current = false;
+      window.dispatchEvent(new CustomEvent("puzzle2d-fixture-drag-session", { detail: null }));
+    },
+  };
+}
+
 /** @emoji 🧩 When the drag payload is a palette seed, returns one node placed at the drop world point; else null so the scene should be replaced. */
 export function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puzzle2dFixtureNodeV1 | null {
   if (!isPaletteNodeDragFixture(detail.fixture)) {
@@ -1755,24 +2516,68 @@ export function puzzle2dRectangleHandleAngleFromCadPoint(x: number, y: number): 
   return Math.atan2(-x, -y);
 }
 
-/** @emoji 🔌 Kit type connector row (CAD point + port handle kind) for catalog extraction. */
+/** @emoji 🔌 Kit type connector row (semio connector: ring `t`, optional CAD point, port handle kind). */
 export interface KitConnectorCadRow {
   readonly point?: { readonly x: number; readonly y: number; readonly z: number };
   readonly direction?: { readonly x: number; readonly y: number; readonly z: number };
   readonly port?: { readonly handleKind?: string };
+  readonly t?: number;
+}
+
+/** @emoji ⭕ Normalizes semio connector {@link Ring} `t` into `[0, 1)`. */
+export function puzzle2dNormalizeRingT(t: number): number {
+  return ((t % 1) + 1) % 1;
+}
+
+/** @emoji 🎯 Prototype node for mapping connector `t` to stored handle angles. */
+export type Puzzle2dNodeKindHandleAnglePrototype = {
+  readonly shape?: "circle" | "rectangle";
+  readonly width?: number;
+  readonly height?: number;
+  readonly radius?: number;
+};
+
+/** @emoji 🧲 Options for {@link puzzle2dNodeKindHandlesFromKitConnectors}. */
+export type Puzzle2dNodeKindHandlesFromKitConnectorsOptions = {
+  readonly defaultRadius?: number;
+  readonly prototype?: Puzzle2dNodeKindHandleAnglePrototype;
+};
+
+/** @emoji 🧲 Builds {@link NodeKind.handles} from kit connectors; prefers semio ring `t` over CAD point. */
+export function puzzle2dNodeKindHandleAnglePrototype(
+  prototype?: Puzzle2dNodeKindHandleAnglePrototype,
+): { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number } {
+  const brush = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
+  const shape = prototype?.shape ?? "circle";
+  if (shape === "rectangle") {
+    return { height: prototype?.height ?? brush, radius: 0, shape: "rectangle", width: prototype?.width ?? brush, x: 0, y: 0 };
+  }
+  return { height: 0, radius: prototype?.radius ?? brush / 2, shape: "circle", width: 0, x: 0, y: 0 };
 }
 
 /** @emoji 🧲 Builds {@link NodeKind.handles} from kit connectors; keeps every distinct perimeter angle (same `handleKind` allowed). */
-export function puzzle2dNodeKindHandlesFromKitConnectors(connectors: readonly KitConnectorCadRow[], defaultRadius = 3): NodeKindHandleTemplate[] {
+export function puzzle2dNodeKindHandlesFromKitConnectors(
+  connectors: readonly KitConnectorCadRow[],
+  options: Puzzle2dNodeKindHandlesFromKitConnectorsOptions = {},
+): NodeKindHandleTemplate[] {
+  const defaultRadius = options.defaultRadius ?? 3;
+  const prototype = puzzle2dNodeKindHandleAnglePrototype(options.prototype);
   const seen = new Set<string>();
   const out: NodeKindHandleTemplate[] = [];
   for (const connector of connectors) {
     const handleKind = connector.port?.handleKind?.trim() ?? "";
-    const point = connector.point;
-    if (handleKind === "" || !point) {
+    if (handleKind === "") {
       continue;
     }
-    const angle = puzzle2dRectangleHandleAngleFromCadPoint(point.x, point.y);
+    let angle: number | null = null;
+    if (typeof connector.t === "number" && Number.isFinite(connector.t)) {
+      angle = puzzle2dHandleAngleFromRingT(prototype, puzzle2dNormalizeRingT(connector.t));
+    } else if (connector.point) {
+      angle = puzzle2dRectangleHandleAngleFromCadPoint(connector.point.x, connector.point.y);
+    }
+    if (angle === null) {
+      continue;
+    }
     const key = `${handleKind}|${angle.toFixed(6)}`;
     if (seen.has(key)) {
       continue;
@@ -1804,11 +2609,16 @@ export function applyBrushPlacementToFixture(
   payload: Puzzle2dBrushPlacePayload,
   catalogs?: KindCatalogBundle,
 ): Puzzle2dBrushPlacementApplyResult {
-  const nodeId = `puzzle2d.brush.${crypto.randomUUID()}`;
+  const nodeId = payload.nodeId?.trim() || `puzzle2d.brush.${crypto.randomUUID()}`;
   const handles = puzzle2dFixtureHandlesFromNodeKind(nodeId, payload.handles);
   const targetHandle = handles[payload.targetHandleIndex];
   if (!targetHandle) {
     return { kind: "unchanged" };
+  }
+  const edgeId = payload.edgeId?.trim() || `puzzle2d.brush.edge.${crypto.randomUUID()}`;
+  const placedEdge = fixture.edges.find((e) => e.id === edgeId);
+  if (fixture.nodes.some((n) => n.id === nodeId) && placedEdge?.source === payload.sourceHandleId) {
+    return { kind: "placed", fixture, nodeId, edgeId };
   }
   if (fixture.edges.some((e) => e.source === payload.sourceHandleId || e.target === payload.sourceHandleId)) {
     return { kind: "unchanged" };
@@ -1816,7 +2626,6 @@ export function applyBrushPlacementToFixture(
   if (handles.some((h) => fixture.edges.some((e) => e.source === h.id || e.target === h.id))) {
     return { kind: "unchanged" };
   }
-  const edgeId = `puzzle2d.brush.edge.${crypto.randomUUID()}`;
   const edge: Puzzle2dFixtureEdgeV1 = { id: edgeId, source: payload.sourceHandleId, target: targetHandle.id };
   const iconKind = payload.iconKind?.trim() || puzzle2dIconKindForBrushNodeKind(fixture, catalogs, payload.nodeKind);
   const base = { handles, id: nodeId, nodeKind: payload.nodeKind, x: payload.x, y: payload.y, ...(iconKind ? { iconKind } : {}) };
@@ -1832,7 +2641,155 @@ export function applyBrushPlacementToFixture(
   };
 }
 
-/** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
+/** @emoji 🪣 WASM scene descriptor JSON for a fixture snapshot (fill probes). */
+export function puzzle2dWasmDescriptorJsonFromFixture(fixture: Puzzle2dFixtureV1): string {
+  const nodes: Record<string, unknown>[] = [];
+  for (const node of fixture.nodes) {
+    const base: Record<string, unknown> = {
+      id: node.id,
+      x: node.x,
+      y: node.y,
+      draggable: true,
+      selected: false,
+      visible: true,
+    };
+    if (node.iconKind) {
+      base.iconKind = node.iconKind;
+    }
+    if (node.nodeKind) {
+      base.nodeKind = node.nodeKind;
+    }
+    if (node.root) {
+      base.root = true;
+    }
+    if (node.text) {
+      base.text = node.text;
+    }
+    if (node.shape === "rectangle") {
+      base.shape = "rectangle";
+      base.width = node.width;
+      base.height = node.height;
+    } else {
+      base.shape = "circle";
+      base.radius = node.radius;
+    }
+    nodes.push(base);
+  }
+  const handles: Record<string, unknown>[] = [];
+  for (const node of fixture.nodes) {
+    for (const handle of node.handles) {
+      handles.push({
+        id: handle.id,
+        nodeId: node.id,
+        angle: handle.angle,
+        handleKind: handle.handleKind,
+        selected: false,
+        visible: true,
+        ...(handle.radius !== undefined ? { radius: handle.radius } : {}),
+      });
+    }
+  }
+  const edges = fixture.edges.map((edge) => ({
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    selected: false,
+    visible: true,
+    ...(edge.edgeKind ? { edgeKind: edge.edgeKind } : {}),
+  }));
+  return JSON.stringify({ nodes, handles, edges, wires: [] });
+}
+
+/** @emoji 🪣 Appends a deterministic fill prefix to a base fixture. */
+export function applyBrushFillPlacementsToFixture(
+  fixture: Puzzle2dFixtureV1,
+  payloads: readonly Puzzle2dBrushPlacePayload[],
+  catalogs?: KindCatalogBundle,
+): Puzzle2dFixtureV1 {
+  let next = fixture;
+  for (const payload of payloads) {
+    const result = applyBrushPlacementToFixture(next, payload, catalogs);
+    if (result.kind === "placed") {
+      next = result.fixture;
+    }
+  }
+  return next;
+}
+
+/** @emoji 🖌️ Appends a brushed node and edge to an imperative {@link Puzzle2dRenderer} scene (same rules as {@link applyBrushPlacementToFixture}). */
+export function applyBrushPlacementToRendererScene(
+  renderer: Puzzle2dRenderer,
+  payload: Puzzle2dBrushPlacePayload,
+  catalogs?: KindCatalogBundle,
+): boolean {
+  const sourceObj = renderer.scene.getObjectById(payload.sourceHandleId);
+  if (!isPuzzle2dSceneHandleObject(sourceObj)) {
+    return false;
+  }
+  if ([...renderer.scene.edges.values()].some((e) => e.source.id === payload.sourceHandleId || e.target.id === payload.sourceHandleId)) {
+    return false;
+  }
+  const nodeId = payload.nodeId?.trim() || `puzzle2d.brush.${crypto.randomUUID()}`;
+  if (renderer.scene.nodes.has(nodeId)) {
+    return false;
+  }
+  const edgeId = payload.edgeId?.trim() || `puzzle2d.brush.edge.${crypto.randomUUID()}`;
+  if (renderer.scene.edges.has(edgeId)) {
+    return false;
+  }
+  const handles = puzzle2dFixtureHandlesFromNodeKind(nodeId, payload.handles);
+  const targetHandle = handles[payload.targetHandleIndex];
+  if (!targetHandle) {
+    return false;
+  }
+  if (handles.some((h) => [...renderer.scene.edges.values()].some((e) => e.source.id === h.id || e.target.id === h.id))) {
+    return false;
+  }
+  const catalogIcon = puzzle2dNodeKindCatalogIcon(catalogs?.nodes?.find((row) => row.id === payload.nodeKind));
+  const iconKind = payload.iconKind?.trim() || catalogIcon;
+  const nodeProps =
+    payload.shape === "rectangle"
+      ? {
+          draggable: true as const,
+          height: payload.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+          iconKind,
+          id: nodeId,
+          nodeKind: payload.nodeKind,
+          shape: "rectangle" as const,
+          width: payload.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+          x: payload.x,
+          y: payload.y,
+        }
+      : {
+          draggable: true as const,
+          iconKind,
+          id: nodeId,
+          nodeKind: payload.nodeKind,
+          radius: payload.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2,
+          shape: "circle" as const,
+          x: payload.x,
+          y: payload.y,
+        };
+  const node = newPuzzle2dNodeFromProps(nodeProps);
+  renderer.scene.add(node);
+  for (const handleRow of handles) {
+    const handle = new Puzzle2dSceneHandle({
+      angle: handleRow.angle,
+      handleKind: handleRow.handleKind,
+      id: handleRow.id,
+      node,
+      ...(handleRow.radius !== undefined ? { radius: handleRow.radius } : {}),
+    });
+    renderer.scene.add(handle);
+  }
+  const targetObj = renderer.scene.getObjectById(targetHandle.id);
+  if (!isPuzzle2dSceneHandleObject(targetObj)) {
+    return false;
+  }
+  renderer.scene.ingestWasmEdge(new Puzzle2dSceneEdge({ id: edgeId, source: sourceObj, target: targetObj }));
+  renderer.markSceneDescriptorDirty();
+  return true;
+}
 export function computeHandlePosition(node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number }, angle: number): Point {
   if (node.shape === "rectangle") {
     const flat = boardHandlePositionRectangle(node.x, node.y, node.width, node.height, angle);
@@ -1847,6 +2804,51 @@ export function computeHandleTangent(angle: number): Point {
     x: -Math.sin(angle),
     y: Math.cos(angle),
   };
+}
+
+/** @emoji 🧭 North-zero rectangle handle angle for the ray from node center toward a board point (`y` down). */
+export function puzzle2dRectangleHandleAngleToward(cx: number, cy: number, towardX: number, towardY: number): number {
+  const dx = towardX - cx;
+  const dy = towardY - cy;
+  const len = Math.hypot(dx, dy);
+  if (len < 1e-9) {
+    return 0;
+  }
+  return Math.atan2(-dx / len, -dy / len);
+}
+
+/** @emoji ⭕ Maps a stored handle angle to {@link Ring} `t` via the node perimeter direction (board `y` down). */
+export function puzzle2dHandleAngleToRingT(
+  node: { height: number; radius: number; shape?: "circle" | "rectangle"; width: number; x: number; y: number },
+  angle: number,
+): number {
+  const shape = node.shape ?? "circle";
+  const pos = computeHandlePosition({ ...node, shape }, angle);
+  const ux = pos.x - node.x;
+  const uy = pos.y - node.y;
+  const len = Math.hypot(ux, uy);
+  if (len < 1e-9) {
+    return 0;
+  }
+  let a = Math.atan2(uy / len, ux / len) + Math.PI / 2;
+  if (a < 0) {
+    a += Math.PI * 2;
+  }
+  return (a / (Math.PI * 2)) % 1;
+}
+
+/** @emoji ⭕ Maps {@link Ring} `t` back to stored handle angle for the node shape (circle east-zero, rectangle north-zero). */
+export function puzzle2dHandleAngleFromRingT(
+  node: { height: number; radius: number; shape?: "circle" | "rectangle"; width: number; x: number; y: number },
+  t: number,
+): number {
+  const direction = t * Math.PI * 2 - Math.PI / 2;
+  const towardX = node.x + Math.cos(direction) * 1000;
+  const towardY = node.y + Math.sin(direction) * 1000;
+  if ((node.shape ?? "circle") === "rectangle") {
+    return puzzle2dRectangleHandleAngleToward(node.x, node.y, towardX, towardY);
+  }
+  return Math.atan2(towardY - node.y, towardX - node.x);
 }
 
 /** @emoji 📏 Largest font size (px) so a single-line string fits `maxW`×`maxH` in layout pixels (binary search). */
@@ -1937,12 +2939,12 @@ export function puzzle2dNodeTextPlacementAnchor(centerX: number, centerY: number
 /** @emoji 🧾 Minimal 2D canvas text metrics surface for {@link puzzle2dFitTextFontPx}. */
 export type CanvasTextMeasuring = Pick<CanvasRenderingContext2D, "font" | "measureText">;
 
-/** 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
-export function computeEdgeBezier(sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle): CubicBezierCurve {
-  const sourcePoint = sourceHandle.position;
-  const targetPoint = targetHandle.position;
-  const sourceCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
-  const targetCenter = { x: targetHandle.node.x, y: targetHandle.node.y };
+/** @emoji 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
+export function computeEdgeBezier(source: Puzzle2dSceneEdgeAnchor, target: Puzzle2dSceneEdgeAnchor): CubicBezierCurve {
+  const sourcePoint = puzzle2dSceneEdgeAnchorPosition(source);
+  const targetPoint = puzzle2dSceneEdgeAnchorPosition(target);
+  const sourceCenter = puzzle2dSceneEdgeAnchorCenter(source);
+  const targetCenter = puzzle2dSceneEdgeAnchorCenter(target);
   const flat = boardComputeEdgeBezier(sourcePoint.x, sourcePoint.y, sourceCenter.x, sourceCenter.y, targetPoint.x, targetPoint.y, targetCenter.x, targetCenter.y);
   return {
     p0: { x: flat[0], y: flat[1] },
@@ -1950,6 +2952,40 @@ export function computeEdgeBezier(sourceHandle: Puzzle2dSceneHandle, targetHandl
     p2: { x: flat[4], y: flat[5] },
     p3: { x: flat[6], y: flat[7] },
   };
+}
+
+function puzzle2dSceneEdgeAnchorPosition(anchor: Puzzle2dSceneEdgeAnchor): Point {
+  if (isPuzzle2dSceneHandleObject(anchor)) {
+    return anchor.position;
+  }
+  return { x: anchor.x, y: anchor.y };
+}
+
+function puzzle2dSceneEdgeAnchorCenter(anchor: Puzzle2dSceneEdgeAnchor): Point {
+  if (isPuzzle2dSceneHandleObject(anchor)) {
+    return { x: anchor.node.x, y: anchor.node.y };
+  }
+  return { x: anchor.x, y: anchor.y };
+}
+
+function puzzle2dSceneEdgeAnchorNodeId(anchor: Puzzle2dSceneEdgeAnchor): string {
+  return isPuzzle2dSceneHandleObject(anchor) ? anchor.node.id : anchor.id;
+}
+
+function isPuzzle2dSceneEdgeAnchor(obj: Puzzle2dSceneObject | undefined | null): obj is Puzzle2dSceneEdgeAnchor {
+  return isPuzzle2dSceneNodeObject(obj) || isPuzzle2dSceneHandleObject(obj);
+}
+
+function resolvePuzzle2dSceneEdgeAnchor(scene: Puzzle2dScene, id: string): Puzzle2dSceneEdgeAnchor | undefined {
+  const handle = scene.handles.get(id);
+  if (handle) {
+    return handle;
+  }
+  const node = scene.nodes.get(id);
+  if (node) {
+    return node;
+  }
+  return undefined;
 }
 
 /** 🧵 Same radial cubic as {@link computeEdgeBezier} but the far end is a free world point (transient link / {@link Wire}). */
@@ -2122,6 +3158,10 @@ export class Puzzle2dSceneNode extends Puzzle2dSceneObject {
     return "node";
   }
 
+  get position(): Point {
+    return { x: this.x, y: this.y };
+  }
+
   setPosition(x: number, y: number): this {
     this.x = x;
     this.y = y;
@@ -2214,12 +3254,14 @@ export class Puzzle2dSceneHandle extends Puzzle2dSceneObject {
   }
 }
 
-/** 🪢 Cubic edge between two boundary handles; control arms stay on the radial **outside** of each node so the stroke does not cut through the disk interior. {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
+/** 🪢 Cubic edge between two anchors (handles in ported mode, node centers in normal mode). {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
 export class Puzzle2dSceneEdge extends Puzzle2dSceneObject {
   /** @emoji 🧩 Semantic edge-kind id forwarded to WASM. */
   edgeKind: string;
-  source: Puzzle2dSceneHandle;
-  target: Puzzle2dSceneHandle;
+  source: Puzzle2dSceneEdgeAnchor;
+  sourceTip: string;
+  target: Puzzle2dSceneEdgeAnchor;
+  targetTip: string;
 
   constructor(options: Puzzle2dSceneEdgeOptions) {
     super(options.id, options);
@@ -2227,6 +3269,8 @@ export class Puzzle2dSceneEdge extends Puzzle2dSceneObject {
     this.target = options.target;
     const ek = typeof options.edgeKind === "string" ? options.edgeKind.trim() : "";
     this.edgeKind = ek;
+    this.sourceTip = typeof options.sourceTip === "string" ? options.sourceTip.trim() : "";
+    this.targetTip = typeof options.targetTip === "string" ? options.targetTip.trim() : "";
   }
 
   get kind(): Puzzle2dSceneObjectKind {
@@ -2237,9 +3281,9 @@ export class Puzzle2dSceneEdge extends Puzzle2dSceneObject {
     return computeEdgeBezier(this.source, this.target);
   }
 
-  setEndpoints(sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle): this {
-    this.source = sourceHandle;
-    this.target = targetHandle;
+  setEndpoints(source: Puzzle2dSceneEdgeAnchor, target: Puzzle2dSceneEdgeAnchor): this {
+    this.source = source;
+    this.target = target;
     return this;
   }
 }
@@ -2422,7 +3466,7 @@ export class Puzzle2dScene {
   remove(object: Puzzle2dSceneObject): this {
     if (isPuzzle2dSceneNodeObject(object)) {
       for (const edge of Array.from(this.edges.values())) {
-        if (edge.source.node === object || edge.target.node === object) {
+        if (puzzle2dSceneEdgeAnchorNodeId(edge.source) === object.id || puzzle2dSceneEdgeAnchorNodeId(edge.target) === object.id) {
           this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
           this.remove(edge);
         }
@@ -2597,10 +3641,10 @@ export function computePuzzle2dGraphObservationSnapshot(scene: Puzzle2dScene): P
   while (queue.length > 0) {
     const u = queue.shift()!;
     for (const edge of scene.edges.values()) {
-      if (edge.source.node.id !== u) {
+      if (puzzle2dSceneEdgeAnchorNodeId(edge.source) !== u) {
         continue;
       }
-      const v = edge.target.node.id;
+      const v = puzzle2dSceneEdgeAnchorNodeId(edge.target);
       if (!reachable.has(v)) {
         reachable.add(v);
         queue.push(v);
@@ -2608,8 +3652,8 @@ export function computePuzzle2dGraphObservationSnapshot(scene: Puzzle2dScene): P
     }
   }
   const childNodeIds = sortIds([...reachable].filter((id) => !rootSet.has(id)));
-  const childEdgeIds = sortIds([...scene.edges.values()].filter((e) => reachable.has(e.source.node.id) && reachable.has(e.target.node.id)).map((e) => e.id));
-  const parentEdgeIds = sortIds([...scene.edges.values()].filter((e) => rootSet.has(e.source.node.id)).map((e) => e.id));
+  const childEdgeIds = sortIds([...scene.edges.values()].filter((e) => reachable.has(puzzle2dSceneEdgeAnchorNodeId(e.source)) && reachable.has(puzzle2dSceneEdgeAnchorNodeId(e.target))).map((e) => e.id));
+  const parentEdgeIds = sortIds([...scene.edges.values()].filter((e) => rootSet.has(puzzle2dSceneEdgeAnchorNodeId(e.source))).map((e) => e.id));
   const nodeSigById = new Map<string, string>();
   for (const node of scene.nodes.values()) {
     nodeSigById.set(node.id, puzzle2dGraphNodeSig(node));
@@ -2688,9 +3732,14 @@ export function puzzle2dNodeKindOverlayLabel(nodeKind: string, catalogs: KindCat
   return puzzle2dKindCatalogRowName(nodeKind, catalogs.nodes);
 }
 
+/** @emoji 🧩 Resolves an edge-kind catalog label for panels and overlays. */
+export function puzzle2dEdgeKindOverlayLabel(edgeKind: string, catalogs: KindCatalogBundle): string {
+  return puzzle2dKindCatalogRowName(edgeKind, catalogs.edges);
+}
+
 /** @emoji 🔀 Merges {@link DEFAULT_KIND_CATALOG_BUNDLE} with `meta.kindCatalogs` on a parsed fixture. */
 export function puzzle2dFixtureMergedKindCatalogs(fixture: Puzzle2dFixtureV1): KindCatalogBundle {
-  return mergeKindCatalogBundleByRowId(DEFAULT_KIND_CATALOG_BUNDLE, fixtureMetaKindCatalogBundle(fixture) ?? {});
+  return puzzle2dMergeKindCatalogBundle(fixtureMetaKindCatalogBundle(fixture));
 }
 
 /** @emoji 🏷️ Icon for a brushed node: catalog `icon`, else the first fixture peer with the same `nodeKind`. */
@@ -2699,7 +3748,7 @@ export function puzzle2dIconKindForBrushNodeKind(fixture: Puzzle2dFixtureV1, cat
   if (kindId === "") {
     return undefined;
   }
-  const fromCatalog = catalogs?.nodes?.find((row) => row.id === kindId)?.icon?.trim();
+  const fromCatalog = puzzle2dNodeKindCatalogIcon(catalogs?.nodes?.find((row) => row.id === kindId));
   if (fromCatalog) {
     return fromCatalog;
   }
@@ -2894,6 +3943,8 @@ export class Puzzle2dRenderer {
   readonly wasmHostAuthoredEdgeIds = new Set<string>();
   /** @emoji 🔗 Endpoint ids for each {@link Puzzle2dRenderer.wasmHostAuthoredEdgeIds} entry so merge can rebuild the descriptor if the scene edge was removed transiently (e.g. handle purge ordering). */
   readonly wasmHostAuthoredLinkByEdgeId = new Map<string, { source: string; target: string }>();
+  /** @emoji 🚫 Edge/node ids removed by user Delete; declarative resync must not resurrect them on the source pane before fixture commits. */
+  private readonly authoritativeStructuralSuppressions = new Set<string>();
 
   private batchDepth = 0;
   /** @emoji 🔇 While >0, {@link Puzzle2dScene.remove} does not emit delete events (dispose / JSX resync). */
@@ -2959,11 +4010,61 @@ export class Puzzle2dRenderer {
 
   /** @emoji 📌 Stores the declarative host descriptor used to recover edges after WASM structural drains. */
   rememberHostDeclarativeSceneDescriptor(descriptor: Puzzle2dSceneDescriptor): void {
-    this.hostDeclarativeSceneDescriptor = descriptor;
+    this.hostDeclarativeSceneDescriptor = this.descriptorWithoutAuthoritativeRemovals(descriptor);
+  }
+
+  /** @emoji 🚫 True when user Delete removed this structural id and JSX/WASM resync must not bring it back. */
+  isAuthoritativeStructuralRemovalSuppressed(kind: "edge" | "node", id: string): boolean {
+    return this.authoritativeStructuralSuppressions.has(`${kind}:${id}`);
+  }
+
+  private markAuthoritativeStructuralRemoval(payload: Puzzle2dStructureDeletePayload): void {
+    if (payload.kind === "wire") {
+      return;
+    }
+    this.authoritativeStructuralSuppressions.add(`${payload.kind}:${payload.id}`);
+  }
+
+  /** @emoji 🔄 Clears structural suppressions for fixture ids so authoritative sync can restore edges (brush slot occupancy). */
+  clearAuthoritativeStructuralSuppressionsForDescriptor(descriptor: Puzzle2dSceneDescriptor): void {
+    for (const node of descriptor.nodes) {
+      this.authoritativeStructuralSuppressions.delete(`node:${node.id}`);
+    }
+    for (const edge of descriptor.edges) {
+      this.authoritativeStructuralSuppressions.delete(`edge:${edge.id}`);
+    }
+  }
+
+  /** @emoji 🧹 Strips user-deleted ids from a declarative descriptor before host remember / edge ensure. */
+  descriptorWithoutAuthoritativeRemovals(descriptor: Puzzle2dSceneDescriptor): Puzzle2dSceneDescriptor {
+    const nodes = descriptor.nodes.filter((node) => !this.isAuthoritativeStructuralRemovalSuppressed("node", node.id));
+    const nodeIds = new Set(nodes.map((node) => node.id));
+    const handles = descriptor.handles.filter((handle) => nodeIds.has(handle.nodeId));
+    const handleIds = new Set(handles.map((handle) => handle.id));
+    const edges = descriptor.edges.filter((edge) => {
+      if (this.isAuthoritativeStructuralRemovalSuppressed("edge", edge.id)) {
+        return false;
+      }
+      const sourceOk = handleIds.has(edge.source) || nodeIds.has(edge.source);
+      const targetOk = handleIds.has(edge.target) || nodeIds.has(edge.target);
+      return sourceOk && targetOk;
+    });
+    const wires = descriptor.wires.filter((wire) => {
+      if (!handleIds.has(wire.source)) {
+        return false;
+      }
+      return wire.target === undefined || handleIds.has(wire.target);
+    });
+    const nextNodes = nodes.map((node) => ({
+      ...node,
+      handles: node.handles.filter((handle) => handleIds.has(handle.id)),
+    }));
+    return { edges, handles, nodes: nextNodes, wires };
   }
 
   /** @emoji ✂️ Drops a structural id from {@link Puzzle2dRenderer.hostDeclarativeSceneDescriptor} after an authoritative delete so zoom drains do not resurrect it. */
   pruneHostDeclarativeStructuralDelete(payload: Puzzle2dStructureDeletePayload): void {
+    this.markAuthoritativeStructuralRemoval(payload);
     const host = this.hostDeclarativeSceneDescriptor;
     if (!host) {
       return;
@@ -2973,9 +4074,9 @@ export class Puzzle2dRenderer {
       if (edges.length === host.edges.length) {
         return;
       }
-      const next = { ...host, edges };
-      this.rememberHostDeclarativeSceneDescriptor(next);
-      this.setDeclarativeSceneEdgeExpectation(edges.length);
+      const next = this.descriptorWithoutAuthoritativeRemovals({ ...host, edges });
+      this.hostDeclarativeSceneDescriptor = next;
+      this.setDeclarativeSceneEdgeExpectation(next.edges.length);
       return;
     }
     if (payload.kind === "wire") {
@@ -2987,19 +4088,26 @@ export class Puzzle2dRenderer {
       return;
     }
     const removedHandleIds = new Set(host.handles.filter((handle) => handle.nodeId === payload.id).map((handle) => handle.id));
+    for (const edge of host.edges) {
+      if (edge.source === payload.id || edge.target === payload.id || removedHandleIds.has(edge.source) || removedHandleIds.has(edge.target)) {
+        this.markAuthoritativeStructuralRemoval({ kind: "edge", id: edge.id });
+      }
+    }
     const nodes = host.nodes.filter((node) => node.id !== payload.id);
     if (nodes.length === host.nodes.length) {
       return;
     }
     const handles = host.handles.filter((handle) => handle.nodeId !== payload.id);
-    const edges = host.edges.filter((edge) => !removedHandleIds.has(edge.source) && !removedHandleIds.has(edge.target));
+    const edges = host.edges.filter(
+      (edge) => edge.source !== payload.id && edge.target !== payload.id && !removedHandleIds.has(edge.source) && !removedHandleIds.has(edge.target),
+    );
     const nextNodes = nodes.map((node) => ({
       ...node,
       handles: node.handles.filter((handle) => handle.nodeId !== payload.id),
     }));
-    const next = { ...host, edges, handles, nodes: nextNodes };
-    this.rememberHostDeclarativeSceneDescriptor(next);
-    this.setDeclarativeSceneEdgeExpectation(edges.length);
+    const next = this.descriptorWithoutAuthoritativeRemovals({ ...host, edges, handles, nodes: nextNodes });
+    this.hostDeclarativeSceneDescriptor = next;
+    this.setDeclarativeSceneEdgeExpectation(next.edges.length);
   }
 
   /** @emoji 🪢 Re-syncs imperative edges from {@link Puzzle2dRenderer.rememberHostDeclarativeSceneDescriptor} when WASM drains cleared them but the host still expects edges. */
@@ -3009,6 +4117,10 @@ export class Puzzle2dRenderer {
       return false;
     }
     if (this.scene.edges.size >= descriptor.edges.length) {
+      return false;
+    }
+    const missingEdges = descriptor.edges.filter((edge) => !this.scene.edges.has(edge.id));
+    if (missingEdges.length === 0) {
       return false;
     }
     this.resetDeclarativeSceneSyncFingerprint();
@@ -3150,9 +4262,16 @@ export class Puzzle2dRenderer {
     if (!graphMutated) {
       return;
     }
+    this.pruneHostDeclarativeStructuralDelete(payload);
     this.bumpWasmHostSceneMergeResyncEpoch();
     this.markSceneDescriptorDirty();
     this.invalidate();
+  }
+
+  /** @emoji ✂️ Commits an authoritative structural delete to peers and the host declarative snapshot (used when WASM drains skip scene delete events). */
+  private commitAuthoritativeStructuralDelete(payload: Puzzle2dStructureDeletePayload): void {
+    this.pruneHostDeclarativeStructuralDelete(payload);
+    puzzle2dBroadcastStructuralRemove(this, payload);
   }
 
   /** @emoji 🧹 Clears {@link Puzzle2dRenderer.applyNodePositionFromProps} caches so declarative fixture commits always win on every pane. */
@@ -3167,7 +4286,7 @@ export class Puzzle2dRenderer {
   /** @emoji 💾 Last `gpuReady` snapshot; used while {@link Puzzle2dRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
   private cachedWasmGpuReady = false;
   private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
-  private drawLodStore = new SnapshotStore<Puzzle2dDrawLodKind>(resolvePuzzle2dLodLabelFromThresholds(DEFAULT_CAMERA.zoom, DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS));
+  private drawLodStore = new SnapshotStore<Puzzle2dDrawLodKind>(resolvePuzzle2dLodLabel(DEFAULT_CAMERA.zoom));
   private canvas: HTMLCanvasElement | null;
   private dpr = 1;
   private emitter = new TypedEmitter<Puzzle2dEventMap>();
@@ -3224,6 +4343,7 @@ export class Puzzle2dRenderer {
   private scheduledSelectEmitRafId: number | null = null;
   private pendingSelectEmitSnapshot: Puzzle2dSelectionSnapshot | null = null;
   private kindCompatJson = "[]";
+  private lastPushedKindCompatJson: string | null = null;
   private kindCatalogsBundle: KindCatalogBundle = DEFAULT_KIND_CATALOG_BUNDLE;
   private kindCatalogsJson = serializeKindCatalogBundle(DEFAULT_KIND_CATALOG_BUNDLE);
   private lastPushedKindCatalogsJson: string | null = null;
@@ -3241,6 +4361,8 @@ export class Puzzle2dRenderer {
   private inputInvalidateRafId: number | null = null;
   /** @emoji 🖌️ Replays brush pointer leave/move after {@link Puzzle2dRenderer.wasmSessionCallBlockedForReentry} drops an input event. */
   private pendingBrushWasmFlush: "leave" | "move" | null = null;
+  /** @emoji 🖌️ Deferred {@link Puzzle2dRenderer.setBrushSession} JSON when WASM reentry blocks the mirror push. */
+  private pendingBrushSessionJsonForWasm: string | null = null;
   private lastPushedCameraX = Number.NaN;
   private lastPushedCameraY = Number.NaN;
   private lastPushedCameraZoom = Number.NaN;
@@ -3255,15 +4377,16 @@ export class Puzzle2dRenderer {
   private height = 1;
   private textOverlayCanvas: HTMLCanvasElement | null = null;
 
-  private lodZoomThresholds: Puzzle2dLodZoomThresholds = { ...DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS };
   private automaticLod = true;
   private forcedDrawLodLabel: Puzzle2dDrawLodKind | undefined = undefined;
   private gridSnapEnabled = false;
   private gridFactor = DEFAULT_PUZZLE_2D_GRID_FACTOR;
   private activeTool: Puzzle2dActiveTool = "select";
   private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
+  private brushNodeKindWeights: Record<string, number> = {};
+  private brushHandleKindWeights: Record<string, number> = {};
+  private lastBrushKindWeightsJsonForWasm: string | null = null;
   private brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
-  private lastLodThresholdsJsonForWasm: string | null = null;
   private lastActiveToolForWasm: Puzzle2dActiveTool | null = null;
   private lastBrushFlushDistanceForWasm: number | null = null;
   private lastBrushNodeSizeForWasm: number | null = null;
@@ -3271,6 +4394,7 @@ export class Puzzle2dRenderer {
   private lastForcedDrawLodLabelForWasm: string | null = null;
   private lastGridSnapEnabledForWasm: boolean | null = null;
   private lastGridFactorForWasm: number | null = null;
+  readonly graphPortMode: Puzzle2dGraphPortMode;
 
   worldRasterTiling: WorldRasterTilingKind;
 
@@ -3280,28 +4404,20 @@ export class Puzzle2dRenderer {
       renderMode?: RenderMode;
       selection?: Puzzle2dSelectionOptions;
       worldRasterTiling?: WorldRasterTilingKind;
-      lodZoomThresholds?: Puzzle2dLodZoomThresholds;
       /** @emoji 📶 When true (default), WASM draw LOD follows camera zoom; when false, {@link lod} pins the tier when set. */
       automaticLod?: boolean;
       /** @emoji 📶 Pinned draw LOD when `automaticLod` is false. */
       lod?: Puzzle2dDrawLodKind;
       gridSnapEnabled?: boolean;
       gridFactor?: number;
+      /** @emoji 🧠 `normal` uses {@link BoardSession.newNormal}; default `ported`. */
+      graphPortMode?: Puzzle2dGraphPortMode;
     } = {},
   ) {
     this.canvas = options.canvas ?? null;
     this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
     this.selectionOptions = resolveSelectionOptions(options.selection);
     this.worldRasterTiling = options.worldRasterTiling ?? "world-clip";
-    this.lodZoomThresholds = options.lodZoomThresholds
-      ? {
-          minimapMaxZoom: options.lodZoomThresholds.minimapMaxZoom,
-          overviewMaxZoom: options.lodZoomThresholds.overviewMaxZoom,
-          compactMaxZoom: options.lodZoomThresholds.compactMaxZoom,
-          normalMaxZoom: options.lodZoomThresholds.normalMaxZoom,
-          detailMaxZoom: options.lodZoomThresholds.detailMaxZoom,
-        }
-      : { ...DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS };
     this.gridSnapEnabled = options.gridSnapEnabled ?? false;
     const gf = options.gridFactor;
     this.gridFactor = typeof gf === "number" && Number.isFinite(gf) && gf > 0 && gf <= 1e6 ? gf : DEFAULT_PUZZLE_2D_GRID_FACTOR;
@@ -3311,11 +4427,12 @@ export class Puzzle2dRenderer {
     if (this.automaticLod) {
       this.forcedDrawLodLabel = undefined;
     }
+    this.graphPortMode = options.graphPortMode ?? "ported";
     this.scene = new Puzzle2dScene(this);
-    this.session = new BoardSession();
+    this.session = this.graphPortMode === "normal" ? BoardSession.newNormal() : new BoardSession();
     const initialSel = this.selectionOptions;
     this.session.setSelectionOptions(initialSel.method, puzzle2dSelectionModeForHost(initialSel.mode), initialSel.targets.nodes, initialSel.targets.edges, initialSel.targets.handles);
-    this.session.setHandleLinkCompatJson(this.kindCompatJson);
+    this.pushKindCompatToWasmSessionIfNeeded();
     try {
       this.session.setKindCatalogsJson(this.kindCatalogsJson);
     } catch (err) {
@@ -3486,33 +4603,6 @@ export class Puzzle2dRenderer {
     this.markDirty();
   }
 
-  /** @emoji 📶 Updates LOD zoom thresholds on the WASM host and text overlay; mirrors `setLodZoomThresholdsJson` (`minimapMaxZoom` / `overviewMaxZoom` / `compactMaxZoom` / `normalMaxZoom` / `detailMaxZoom`). */
-  setLodZoomThresholds(next: Puzzle2dLodZoomThresholds): void {
-    const c: Puzzle2dLodZoomThresholds = {
-      minimapMaxZoom: next.minimapMaxZoom,
-      overviewMaxZoom: next.overviewMaxZoom,
-      compactMaxZoom: next.compactMaxZoom,
-      normalMaxZoom: next.normalMaxZoom,
-      detailMaxZoom: next.detailMaxZoom,
-    };
-    if (
-      c.minimapMaxZoom === this.lodZoomThresholds.minimapMaxZoom &&
-      c.overviewMaxZoom === this.lodZoomThresholds.overviewMaxZoom &&
-      c.compactMaxZoom === this.lodZoomThresholds.compactMaxZoom &&
-      c.normalMaxZoom === this.lodZoomThresholds.normalMaxZoom &&
-      c.detailMaxZoom === this.lodZoomThresholds.detailMaxZoom
-    ) {
-      return;
-    }
-    this.lodZoomThresholds = c;
-    if (this.wasmSessionCallBlockedForReentry()) {
-      this.invalidated = true;
-      return;
-    }
-    this.lastLodThresholdsJsonForWasm = null;
-    this.markDirty();
-  }
-
   /** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (see {@link DEFAULT_PUZZLE_2D_GRID_FACTOR}). */
   setGridFactor(next: number): void {
     const n = typeof next === "number" && Number.isFinite(next) && next > 0 && next <= 1e6 ? next : DEFAULT_PUZZLE_2D_GRID_FACTOR;
@@ -3529,6 +4619,215 @@ export class Puzzle2dRenderer {
   }
 
   private lastLinkSessionJsonForWasm: string | null = null;
+  private lastBrushSessionJsonForWasm: string | null = null;
+  private lastFixtureDropPreviewJsonForWasm: string | null = null;
+  private pendingFixtureDropPreviewJsonForWasm: string | null = null;
+  private paletteFixtureDropPreviewWorld: Point | null = null;
+  private paletteFixtureDropPreviewDragEncoded: string | null = null;
+  private paletteFixtureDropPreviewCatalogs: KindCatalogBundle | undefined;
+  private paletteFixtureDropPreviewBrushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
+
+  /** @emoji 📍 Maps client coordinates to world space using this pane's WASM viewport (driver pane under the pointer). */
+  fixtureDropWorldFromClient(clientX: number, clientY: number): Point | null {
+    const host = this.canvas?.parentElement ?? this.canvas;
+    if (!host || !isClientPointOverPuzzle2dFixtureDropHost(clientX, clientY, host)) {
+      return null;
+    }
+    const rect = host.getBoundingClientRect();
+    const screen = { x: clientX - rect.left, y: clientY - rect.top };
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return this.screenToWorld(screen);
+    }
+    this.pushWasmViewportAndSizeToSession();
+    if (this.wasmHostOwnsViewportCamera()) {
+      const cam = this.readWasmCameraSnapshot();
+      if (cam) {
+        return {
+          x: (screen.x - this.width / 2) / cam.zoom + cam.x,
+          y: (screen.y - this.height / 2) / cam.zoom + cam.y,
+        };
+      }
+    }
+    return this.screenToWorld(screen);
+  }
+
+  /** @emoji 👻 Sets or clears the workbench palette fixture-drop ghost on the WASM host. */
+  setFixtureDropPreview(payload: Puzzle2dFixtureDropPreviewPayload | null): void {
+    if (!payload) {
+      this.paletteFixtureDropPreviewWorld = null;
+      this.paletteFixtureDropPreviewDragEncoded = null;
+      this.queueFixtureDropPreviewToWasm();
+      return;
+    }
+    const x = payload.x;
+    const y = payload.y;
+    if (typeof x !== "number" || typeof y !== "number" || !Number.isFinite(x) || !Number.isFinite(y)) {
+      return;
+    }
+    const json = JSON.stringify(payload);
+    if (json === this.lastFixtureDropPreviewJsonForWasm) {
+      return;
+    }
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.pendingFixtureDropPreviewJsonForWasm = json;
+      this.invalidated = true;
+      return;
+    }
+    this.pushFixtureDropPreviewJsonToWasm(json);
+  }
+
+  /** @emoji 👻 Mirrors a shared world-space palette-drop ghost onto this pane's WASM host. */
+  pushPaletteFixtureDropPreviewAtWorld(
+    world: Point,
+    encoded: string,
+    catalogs: KindCatalogBundle | undefined,
+    brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
+  ): void {
+    this.paletteFixtureDropPreviewWorld = world;
+    this.paletteFixtureDropPreviewDragEncoded = encoded;
+    this.paletteFixtureDropPreviewCatalogs = catalogs;
+    this.paletteFixtureDropPreviewBrushNodeSize = brushNodeSize;
+    this.queueFixtureDropPreviewToWasm();
+  }
+
+  private queueFixtureDropPreviewToWasm(): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    this.commitPaletteFixtureDropPreviewToWasm();
+  }
+
+  private commitPaletteFixtureDropPreviewToWasm(): void {
+    const world = this.paletteFixtureDropPreviewWorld;
+    const encoded = this.paletteFixtureDropPreviewDragEncoded;
+    if (!world || !encoded) {
+      this.pushFixtureDropPreviewJsonToWasm("");
+      return;
+    }
+    const fixture = decodePuzzle2dFixtureFromDragV1(encoded);
+    if (!fixture) {
+      this.pushFixtureDropPreviewJsonToWasm("");
+      return;
+    }
+    const payload = buildPaletteFixtureDropPreviewPayloadAtWorld(
+      world,
+      fixture,
+      this.paletteFixtureDropPreviewCatalogs,
+      this.paletteFixtureDropPreviewBrushNodeSize,
+    );
+    if (!payload) {
+      this.pushFixtureDropPreviewJsonToWasm("");
+      return;
+    }
+    const json = JSON.stringify(payload);
+    if (json === this.lastFixtureDropPreviewJsonForWasm) {
+      return;
+    }
+    this.pushFixtureDropPreviewJsonToWasm(json);
+  }
+
+  private pushFixtureDropPreviewJsonToWasm(json: string): void {
+    try {
+      this.pushWasmViewportAndSizeToSession();
+      if (json.length === 0) {
+        this.session.clearFixtureDropPreview();
+      } else {
+        this.session.setFixtureDropPreviewJson(json);
+      }
+      this.lastFixtureDropPreviewJsonForWasm = json;
+      this.pendingFixtureDropPreviewJsonForWasm = null;
+      this.invalidate();
+    } catch (err) {
+      console.error("[DEBUG] setFixtureDropPreview failed", err);
+    }
+  }
+
+  private flushPendingFixtureDropPreviewMirror(): void {
+    if (this.paletteFixtureDropPreviewWorld !== null && !this.wasmSessionCallBlockedForReentry()) {
+      this.commitPaletteFixtureDropPreviewToWasm();
+    }
+    const pending = this.pendingFixtureDropPreviewJsonForWasm;
+    if (pending === null || this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
+    if (pending === this.lastFixtureDropPreviewJsonForWasm) {
+      this.pendingFixtureDropPreviewJsonForWasm = null;
+      return;
+    }
+    this.pendingFixtureDropPreviewJsonForWasm = null;
+    this.pushFixtureDropPreviewJsonToWasm(pending);
+  }
+
+  /** @emoji 🖌️ Mirrors shared brush slot preview into this pane's WASM host. */
+  setBrushSession(snapshot: Puzzle2dBrushSessionSnapshot | null): void {
+    const json = snapshot
+      ? JSON.stringify({
+          sourceHandleId: snapshot.sourceHandleId ?? "",
+          candidates: snapshot.candidates,
+          index: snapshot.candidateIndex,
+          preview: snapshot.preview,
+        })
+      : "";
+    if (json === this.lastBrushSessionJsonForWasm) {
+      return;
+    }
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.pendingBrushSessionJsonForWasm = json;
+      this.invalidated = true;
+      return;
+    }
+    this.pushBrushSessionJsonToWasm(json);
+  }
+
+  private pushBrushSessionJsonToWasm(json: string): void {
+    try {
+      if (json.length === 0) {
+        this.session.clearBrushSessionJson();
+      } else {
+        this.session.setBrushSessionJson(json);
+      }
+      this.applyWasmDrainToScene(this.session.drainEventsJson());
+      this.lastBrushSessionJsonForWasm = json;
+    } catch (err) {
+      console.error("[DEBUG] setBrushSession failed", err);
+    }
+    this.markDirty();
+  }
+
+  private flushPendingBrushSessionMirror(): void {
+    const pending = this.pendingBrushSessionJsonForWasm;
+    if (pending === null || this.wasmSessionCallBlockedForReentry()) {
+      return;
+    }
+    if (pending === this.lastBrushSessionJsonForWasm) {
+      this.pendingBrushSessionJsonForWasm = null;
+      return;
+    }
+    this.pendingBrushSessionJsonForWasm = null;
+    this.pushBrushSessionJsonToWasm(pending);
+  }
+
+  /** @emoji 📡 Pushes the imperative scene graph to WASM immediately (brush place and structural edits). */
+  pushAuthoritativeSceneToWasmHost(): void {
+    this.ensureImperativeSceneForWasmPush();
+    this.pushAuthoritativeDescriptorToWasmSession();
+    this.invalidate();
+  }
+
+  /** @emoji 🧩 Hydrates the imperative scene from the host descriptor when the canvas mounted before fixture sync. */
+  private ensureImperativeSceneForWasmPush(): void {
+    if (this.scene.nodes.size === 0) {
+      return;
+    }
+    const descriptor = this.hostDeclarativeSceneDescriptor;
+    if (!descriptor || this.scene.nodes.size >= descriptor.nodes.length) {
+      return;
+    }
+    this.resetDeclarativeSceneSyncFingerprint();
+    syncPuzzle2dScene(this, descriptor);
+    puzzle2dEnsureSceneEdgesFromDescriptor(this, descriptor);
+  }
 
   /** @emoji 🔗 Mirrors a host {@link Puzzle2dLinkSessionSnapshot} into WASM for cross-surface link preview. */
   setLinkSession(snapshot: Puzzle2dLinkSessionSnapshot | null): void {
@@ -3599,10 +4898,10 @@ export class Puzzle2dRenderer {
     if (!this.automaticLod && this.forcedDrawLodLabel !== undefined) {
       return this.forcedDrawLodLabel;
     }
-    return resolvePuzzle2dLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
+    return resolvePuzzle2dLodLabel(this.camera.zoom);
   }
 
-  /** @emoji 🖌️ Select or brush viewport tool on the WASM host. */
+  /** @emoji 🖌️ Select, brush, or fill viewport tool on the WASM host. */
   setActiveTool(tool: Puzzle2dActiveTool): void {
     if (this.activeTool === tool) {
       return;
@@ -3613,6 +4912,52 @@ export class Puzzle2dRenderer {
     this.markDirty();
   }
 
+  /** @emoji 🪣 Computes a deterministic fill sequence against a fixture snapshot (temporarily syncs WASM, then restores the live scene). */
+  computeBrushFillSequence(fixture: Puzzle2dFixtureV1, maxCount: number, seed: number): Puzzle2dBrushPlacePayload[] {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      return [];
+    }
+    const capped = Math.max(0, Math.min(1000, Math.round(maxCount)));
+    const fillCompat = puzzle2dFixtureMetaKindCompatibility(fixture);
+    const prevCompatJson = this.kindCompatJson;
+    if (fillCompat !== undefined) {
+      const normalized = (fillCompat ?? []).map((p) => {
+        const rawSp = String(p.specificity ?? "handle")
+          .trim()
+          .toLowerCase();
+        const specificity = rawSp === "general" || rawSp === "node" || rawSp === "edge" || rawSp === "handle" || rawSp === "wire" ? rawSp : "handle";
+        return {
+          source: String(p.source ?? "").trim(),
+          target: String(p.target ?? "").trim(),
+          bidirectional: p.bidirectional === true,
+          important: p.important === true,
+          specificity,
+        };
+      });
+      this.session.setHandleLinkCompatJson(JSON.stringify(normalized));
+    }
+    try {
+      this.session.syncDescriptorJson(puzzle2dWasmDescriptorJsonFromFixture(fixture));
+      this.session.setBrushFlushDistance(this.brushFlushDistance);
+      this.session.setBrushNodeSize(this.brushNodeSize);
+      this.session.setBrushKindWeights(
+        JSON.stringify({ nodeWeights: this.brushNodeKindWeights, handleWeights: this.brushHandleKindWeights }),
+      );
+      const json = this.session.brushFillJson(capped, seed >>> 0);
+      this.pushSceneToWasmDriver();
+      const parsed = JSON.parse(json) as { placements?: Puzzle2dBrushPlacePayload[] };
+      return parsed.placements ?? [];
+    } catch (err) {
+      console.error("[DEBUG] computeBrushFillSequence failed", err);
+      this.pushSceneToWasmDriver();
+      return [];
+    } finally {
+      if (fillCompat !== undefined) {
+        this.session.setHandleLinkCompatJson(prevCompatJson);
+      }
+    }
+  }
+
   /** @emoji 📐 Brush slot offset along handle outward normal (world units). */
   setBrushFlushDistance(distance: number): void {
     const next = Number.isFinite(distance) && distance >= 0 ? distance : DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
@@ -3621,6 +4966,14 @@ export class Puzzle2dRenderer {
     }
     this.brushFlushDistance = next;
     this.lastBrushFlushDistanceForWasm = null;
+    this.markDirty();
+  }
+
+  /** @emoji 🎚️ Per-kind brush suggestion weights pushed to WASM (node + handle groups). */
+  setBrushKindWeights(nodeWeights: Readonly<Record<string, number>>, handleWeights: Readonly<Record<string, number>>): void {
+    this.brushNodeKindWeights = { ...nodeWeights };
+    this.brushHandleKindWeights = { ...handleWeights };
+    this.lastBrushKindWeightsJsonForWasm = null;
     this.markDirty();
   }
 
@@ -3664,6 +5017,19 @@ export class Puzzle2dRenderer {
     this.markDirty();
   }
 
+  /** @emoji 🔗 Pushes {@link kindCompatJson} to WASM when it changed (descriptor cache must not skip compat). */
+  private pushKindCompatToWasmSessionIfNeeded(): void {
+    if (this.kindCompatJson === this.lastPushedKindCompatJson) {
+      return;
+    }
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    this.session.setHandleLinkCompatJson(this.kindCompatJson);
+    this.lastPushedKindCompatJson = this.kindCompatJson;
+  }
+
   /** @emoji 🔗 Sets kind-compatibility rules for link gestures (empty = unrestricted). */
   setKindCompatibility(entries: readonly KindCompatEntry[] | undefined): void {
     const normalized = (entries ?? []).map((p) => {
@@ -3684,8 +5050,8 @@ export class Puzzle2dRenderer {
       return;
     }
     this.kindCompatJson = json;
+    this.pushKindCompatToWasmSessionIfNeeded();
     if (this.wasmSessionCallBlockedForReentry()) {
-      this.invalidated = true;
       return;
     }
     this.pushSceneToWasmDriver();
@@ -3693,12 +5059,13 @@ export class Puzzle2dRenderer {
 
   /** @emoji 🧩 Sets WASM semantic kind catalogs (handles, wires, nodes, edges). */
   setKindCatalogs(bundle: KindCatalogBundle | undefined): void {
-    const merged: KindCatalogBundle = {
+    const mergedRaw: KindCatalogBundle = {
       edges: bundle?.edges ?? DEFAULT_KIND_CATALOG_BUNDLE.edges,
       handles: bundle?.handles ?? DEFAULT_KIND_CATALOG_BUNDLE.handles,
       nodes: bundle?.nodes ?? DEFAULT_KIND_CATALOG_BUNDLE.nodes,
       wires: bundle?.wires ?? DEFAULT_KIND_CATALOG_BUNDLE.wires,
     };
+    const merged = enrichKindCatalogBundleMetabolismIcons(enrichKindCatalogBundleDoorCapsules(mergedRaw) ?? mergedRaw) ?? mergedRaw;
     this.kindCatalogsBundle = merged;
     const json = serializeKindCatalogBundle(merged);
     if (json === this.kindCatalogsJson) {
@@ -4239,6 +5606,9 @@ export class Puzzle2dRenderer {
               this.markDirty();
             });
         }
+        this.flushPendingBrushWasmInput();
+        this.flushPendingBrushSessionMirror();
+        this.flushPendingFixtureDropPreviewMirror();
         gpuReady = this.readGpuReady();
         if (gpuReady) {
           syncedGpuThisFrame = this.syncGpuFrame();
@@ -4258,6 +5628,8 @@ export class Puzzle2dRenderer {
       }
       this.applyCanvasDebugAttributes();
       this.flushPendingBrushWasmInput();
+      this.flushPendingBrushSessionMirror();
+      this.flushPendingFixtureDropPreviewMirror();
     } finally {
       this.renderPipelineDepth -= 1;
       if (this.renderPipelineDepth === 0 && this.invalidated && !this.isDisposed) {
@@ -4294,7 +5666,7 @@ export class Puzzle2dRenderer {
     this.session.setSelectionOptions(o.method, puzzle2dSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
     this.session.setWorldRasterTiling(this.worldRasterTiling);
     this.pushLodAndGridSnapToWasmSession();
-    this.session.setHandleLinkCompatJson(this.kindCompatJson);
+    this.pushKindCompatToWasmSessionIfNeeded();
     try {
       this.session.setKindCatalogsJson(this.kindCatalogsJson);
     } catch (err) {
@@ -4395,6 +5767,12 @@ export class Puzzle2dRenderer {
       if (edge.edgeKind.trim() !== "") {
         er.edgeKind = edge.edgeKind;
       }
+      if (edge.sourceTip.trim() !== "") {
+        er.sourceTip = edge.sourceTip;
+      }
+      if (edge.targetTip.trim() !== "") {
+        er.targetTip = edge.targetTip;
+      }
       edges.push(er);
     }
     const wires: Record<string, unknown>[] = [];
@@ -4421,6 +5799,19 @@ export class Puzzle2dRenderer {
     const json = JSON.stringify({ nodes, handles, edges, wires });
     this.lastSceneWasmFingerprint = fingerprint;
     return json;
+  }
+
+  /** @emoji 📡 Pushes the current imperative scene graph (including empty) to the WASM host. */
+  private syncImperativeSceneDescriptorToWasmSession(): void {
+    const desc = this.descriptorJsonForWasmHost();
+    try {
+      this.session.syncDescriptorJson(desc);
+      this.lastPushedDescriptorJson = desc;
+      this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
+      this.lastSceneWasmFingerprint = puzzle2dSceneWasmFingerprintFromRenderer(this);
+    } catch (err) {
+      console.error("[DEBUG] syncDescriptorJson failed", err);
+    }
   }
 
   private syncPuzzle2dAppearanceFromDocument(): void {
@@ -4451,21 +5842,6 @@ export class Puzzle2dRenderer {
   }
 
   private pushLodAndGridSnapToWasmSession(): void {
-    const lodJson = JSON.stringify({
-      minimapMaxZoom: this.lodZoomThresholds.minimapMaxZoom,
-      overviewMaxZoom: this.lodZoomThresholds.overviewMaxZoom,
-      compactMaxZoom: this.lodZoomThresholds.compactMaxZoom,
-      normalMaxZoom: this.lodZoomThresholds.normalMaxZoom,
-      detailMaxZoom: this.lodZoomThresholds.detailMaxZoom,
-    });
-    if (lodJson !== this.lastLodThresholdsJsonForWasm) {
-      try {
-        this.session.setLodZoomThresholdsJson(lodJson);
-        this.lastLodThresholdsJsonForWasm = lodJson;
-      } catch (err) {
-        console.error("[DEBUG] setLodZoomThresholdsJson failed", err);
-      }
-    }
     if (this.lastGridSnapEnabledForWasm !== this.gridSnapEnabled) {
       this.session.setGridSnapEnabled(this.gridSnapEnabled);
       this.lastGridSnapEnabledForWasm = this.gridSnapEnabled;
@@ -4494,6 +5870,14 @@ export class Puzzle2dRenderer {
     if (this.lastBrushFlushDistanceForWasm === null || !nearlyEqual(this.lastBrushFlushDistanceForWasm, this.brushFlushDistance)) {
       this.session.setBrushFlushDistance(this.brushFlushDistance);
       this.lastBrushFlushDistanceForWasm = this.brushFlushDistance;
+    }
+    const brushKindWeightsJson = JSON.stringify({
+      nodeWeights: this.brushNodeKindWeights,
+      handleWeights: this.brushHandleKindWeights,
+    });
+    if (this.lastBrushKindWeightsJsonForWasm !== brushKindWeightsJson) {
+      this.session.setBrushKindWeights(brushKindWeightsJson);
+      this.lastBrushKindWeightsJsonForWasm = brushKindWeightsJson;
     }
     if (this.lastBrushNodeSizeForWasm === null || !nearlyEqual(this.lastBrushNodeSizeForWasm, this.brushNodeSize)) {
       this.session.setBrushNodeSize(this.brushNodeSize);
@@ -4616,6 +6000,7 @@ export class Puzzle2dRenderer {
       puzzle2dWasmDescriptorJsonMatchesScene(this, this.lastPushedDescriptorJson);
     const deferDescriptorSync = this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs() || this.preselectIds.size > 0;
     if (descriptorCacheValid) {
+      this.pushKindCompatToWasmSessionIfNeeded();
       this.flushPendingIncrementalNodeMovesToWasm();
       this.pushWasmViewportAndSizeToSession();
       this.pushWasmSelectionAndPreselectToSession();
@@ -4630,7 +6015,7 @@ export class Puzzle2dRenderer {
     this.session.setSelectionOptions(o.method, puzzle2dSelectionModeForHost(o.mode), o.targets.nodes, o.targets.edges, o.targets.handles);
     this.session.setWorldRasterTiling(this.worldRasterTiling);
     this.pushLodAndGridSnapToWasmSession();
-    this.session.setHandleLinkCompatJson(this.kindCompatJson);
+    this.pushKindCompatToWasmSessionIfNeeded();
     if (this.kindCatalogsJson !== this.lastPushedKindCatalogsJson) {
       try {
         this.session.setKindCatalogsJson(this.kindCatalogsJson);
@@ -4648,25 +6033,16 @@ export class Puzzle2dRenderer {
     }
     const flushedIncrementalNodeMoves = this.flushPendingIncrementalNodeMovesToWasm();
     if (!deferDescriptorSync) {
-      if (this.scene.nodes.size === 0) {
-        this.invalidated = true;
-        return;
-      }
-      let deferEdgelessWasmDescriptorPush = this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.size === 0;
+      const sceneEmpty = this.scene.nodes.size === 0;
+      let deferEdgelessWasmDescriptorPush = !sceneEmpty && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.size === 0;
       if (deferEdgelessWasmDescriptorPush) {
         deferEdgelessWasmDescriptorPush = !this.reconcileHostDeclarativeSceneEdges();
       }
-      const skipFullDescriptorSync = (flushedIncrementalNodeMoves && descriptorCacheValid) || descriptorCacheValid;
+      const skipFullDescriptorSync = !sceneEmpty && ((flushedIncrementalNodeMoves && descriptorCacheValid) || descriptorCacheValid);
       if (!deferEdgelessWasmDescriptorPush && !skipFullDescriptorSync) {
         const desc = this.descriptorJsonForWasmHost();
         if (desc !== this.lastPushedDescriptorJson) {
-          try {
-            this.session.syncDescriptorJson(desc);
-            this.lastPushedDescriptorJson = desc;
-            this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
-          } catch (err) {
-            console.error("[DEBUG] syncDescriptorJson failed", err);
-          }
+          this.syncImperativeSceneDescriptorToWasmSession();
         } else {
           this.lastPushedSceneDescriptorEpoch = this.sceneDescriptorEpoch;
         }
@@ -4676,6 +6052,17 @@ export class Puzzle2dRenderer {
     }
     this.pushWasmViewportAndSizeToSession();
     this.syncPuzzle2dAppearanceFromDocument();
+    this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentStructuralRemoves: true });
+  }
+
+  /** @emoji 📡 Pushes the imperative scene graph to WASM immediately after user structural deletes (avoids stale WASM edges on the source pane). */
+  private pushAuthoritativeDescriptorToWasmSession(): void {
+    if (this.wasmSessionCallBlockedForReentry()) {
+      this.invalidated = true;
+      return;
+    }
+    this.ensureImperativeSceneForWasmPush();
+    this.syncImperativeSceneDescriptorToWasmSession();
     this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentStructuralRemoves: true });
   }
 
@@ -4779,7 +6166,10 @@ export class Puzzle2dRenderer {
           case "edgeDelete": {
             const id = String((row.payload as { id: string }).id);
             const spuriousWasmEdgeDelete =
-              drainOptions.silentStructuralRemoves && this.declarativeSceneEdgeExpectation > 0 && this.scene.edges.has(id);
+              drainOptions.silentStructuralRemoves &&
+              this.declarativeSceneEdgeExpectation > 0 &&
+              this.scene.edges.has(id) &&
+              !this.isAuthoritativeStructuralRemovalSuppressed("edge", id);
             if (spuriousWasmEdgeDelete) {
               const edge = this.scene.edges.get(id);
               if (edge) {
@@ -4808,7 +6198,12 @@ export class Puzzle2dRenderer {
               graphMutatedForHostMerge = true;
             }
             if (!spuriousWasmEdgeDelete) {
-              this.pruneHostDeclarativeStructuralDelete({ kind: "edge", id });
+              const payload = { kind: "edge" as const, id };
+              if (this.structuralDeleteFixtureMirrorDepth > 0) {
+                this.commitAuthoritativeStructuralDelete(payload);
+              } else {
+                this.pruneHostDeclarativeStructuralDelete(payload);
+              }
             }
             break;
           }
@@ -4827,7 +6222,12 @@ export class Puzzle2dRenderer {
               graphMutatedForHostMerge = true;
             }
             if (!drainOptions.silentStructuralRemoves || this.structuralDeleteFixtureMirrorDepth > 0) {
-              this.pruneHostDeclarativeStructuralDelete({ kind: "node", id });
+              const payload = { kind: "node" as const, id };
+              if (this.structuralDeleteFixtureMirrorDepth > 0 && drainOptions.silentStructuralRemoves) {
+                this.commitAuthoritativeStructuralDelete(payload);
+              } else {
+                this.pruneHostDeclarativeStructuralDelete(payload);
+              }
             }
             break;
           }
@@ -4838,9 +6238,9 @@ export class Puzzle2dRenderer {
             if (!id || !sourceId || !targetId || this.scene.edges.has(id)) {
               break;
             }
-            const sourceObj = this.scene.getObjectById(sourceId);
-            const targetObj = this.scene.getObjectById(targetId);
-            if (!isPuzzle2dSceneHandleObject(sourceObj) || !isPuzzle2dSceneHandleObject(targetObj)) {
+            const sourceObj = resolvePuzzle2dSceneEdgeAnchor(this.scene, sourceId);
+            const targetObj = resolvePuzzle2dSceneEdgeAnchor(this.scene, targetId);
+            if (!sourceObj || !targetObj) {
               break;
             }
             this.wasmHostAuthoredEdgeIds.add(id);
@@ -4888,19 +6288,6 @@ export class Puzzle2dRenderer {
             });
             break;
           }
-          case "brushPreview": {
-            this.emitter.emit("brushPreview", row.payload as Puzzle2dEventMap["brushPreview"]);
-            break;
-          }
-          case "brushCandidates": {
-            const p = row.payload as { sourceHandleId?: string; candidates?: string[]; index?: number };
-            this.emitter.emit("brushCandidates", {
-              sourceHandleId: String(p.sourceHandleId ?? ""),
-              candidates: Array.isArray(p.candidates) ? p.candidates.map(String) : [],
-              index: Number(p.index ?? 0),
-            });
-            break;
-          }
           case "brushPlace": {
             const p = row.payload as Record<string, unknown>;
             const handlesRaw = Array.isArray(p.handles) ? p.handles : [];
@@ -4919,6 +6306,10 @@ export class Puzzle2dRenderer {
             const shape = String(p.shape ?? "circle") === "rectangle" ? "rectangle" : "circle";
             const iconKindRaw = p.iconKind;
             const iconKind = typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
+            const nodeIdRaw = p.nodeId;
+            const edgeIdRaw = p.edgeId;
+            const nodeId = typeof nodeIdRaw === "string" && nodeIdRaw.trim() !== "" ? nodeIdRaw.trim() : undefined;
+            const edgeId = typeof edgeIdRaw === "string" && edgeIdRaw.trim() !== "" ? edgeIdRaw.trim() : undefined;
             const payload: Puzzle2dBrushPlacePayload = {
               handles,
               nodeKind: String(p.nodeKind ?? ""),
@@ -4927,6 +6318,8 @@ export class Puzzle2dRenderer {
               targetHandleIndex: Number(p.targetHandleIndex ?? 0),
               x: Number(p.x),
               y: Number(p.y),
+              ...(nodeId ? { nodeId } : {}),
+              ...(edgeId ? { edgeId } : {}),
               ...(iconKind ? { iconKind } : {}),
               ...(shape === "rectangle"
                 ? { height: Number(p.height), width: Number(p.width) }
@@ -4935,7 +6328,25 @@ export class Puzzle2dRenderer {
             if (payload.nodeKind === "" || payload.sourceHandleId === "" || !Number.isFinite(payload.x) || !Number.isFinite(payload.y)) {
               break;
             }
+            puzzle2dInvokeBrushPlaceCommit(payload);
             this.emitter.emit("brushPlace", payload);
+            break;
+          }
+          case "brushPreview": {
+            const previewPayload = row.payload as Puzzle2dEventMap["brushPreview"];
+            this.emitter.emit("brushPreview", previewPayload);
+            puzzle2dUpdateBrushSessionFromSource(this, null, previewPayload);
+            break;
+          }
+          case "brushCandidates": {
+            const p = row.payload as { sourceHandleId?: string; candidates?: string[]; index?: number };
+            const candidatesPayload: Puzzle2dBrushCandidatesPayload = {
+              sourceHandleId: String(p.sourceHandleId ?? ""),
+              candidates: Array.isArray(p.candidates) ? p.candidates.map(String) : [],
+              index: Number(p.index ?? 0),
+            };
+            this.emitter.emit("brushCandidates", candidatesPayload);
+            puzzle2dUpdateBrushSessionFromSource(this, candidatesPayload, null);
             break;
           }
           default:
@@ -4952,11 +6363,8 @@ export class Puzzle2dRenderer {
         this.bumpWasmHostSceneMergeResyncEpoch();
         this.markSceneDescriptorDirty();
       }
-      if (
-        this.declarativeSceneEdgeExpectation > 0 &&
-        this.hostDeclarativeSceneDescriptor &&
-        this.scene.edges.size < this.declarativeSceneEdgeExpectation
-      ) {
+      const hostEdgeExpectation = this.hostDeclarativeSceneDescriptor?.edges.length ?? this.declarativeSceneEdgeExpectation;
+      if (hostEdgeExpectation > 0 && this.hostDeclarativeSceneDescriptor && this.scene.edges.size < hostEdgeExpectation) {
         if (this.reconcileHostDeclarativeSceneEdges()) {
           this.markSceneDescriptorDirty();
           this.bumpWasmHostSceneMergeResyncEpoch();
@@ -5511,6 +6919,7 @@ export class Puzzle2dRenderer {
       this.session.deleteSelection();
       this.applyWasmDrainToScene(this.session.drainEventsJson());
     });
+    this.pushAuthoritativeDescriptorToWasmSession();
     this.invalidate();
   }
 
@@ -5544,7 +6953,19 @@ export class Puzzle2dRenderer {
       this.scheduleInputInvalidate();
       return;
     }
-    if (!shouldPuzzle2dHandleDeleteShortcut()) {
+    if ((event.key === "a" || event.key === "A") && (event.ctrlKey || event.metaKey)) {
+      if (!shouldPuzzle2dHandleCanvasKeyboardShortcut()) {
+        return;
+      }
+      event.preventDefault();
+      const ids = puzzle2dCollectAllSelectableIdsFromScene(this.scene, this.selectionOptions.targets);
+      if (ids.length === 0) {
+        return;
+      }
+      this.setSelectionIds(ids);
+      return;
+    }
+    if (!shouldPuzzle2dHandleCanvasKeyboardShortcut()) {
       return;
     }
     if (event.key !== "Delete" && event.key !== "Backspace") {
@@ -5916,26 +7337,50 @@ if (puzzle2dVitest) {
       expect(pE.y).toBeCloseTo(50);
     });
 
-    it("labels minimap, overview, compact, normal, detail, and micro LOD bands from zoom thresholds", () => {
+    it("puzzle2dHandleAngleToRingT and puzzle2dHandleAngleFromRingT round-trip circle and rectangle nodes", () => {
+      const circle = { height: 0, id: "c", radius: 40, shape: "circle" as const, width: 0, x: 0, y: 0 };
+      for (const angle of [0, 0.5, Math.PI, -2.8253]) {
+        const t = puzzle2dHandleAngleToRingT(circle, angle);
+        const back = puzzle2dHandleAngleFromRingT(circle, t);
+        const posA = computeHandlePosition(circle, angle);
+        const posB = computeHandlePosition(circle, back);
+        expect(posB.x).toBeCloseTo(posA.x, 2);
+        expect(posB.y).toBeCloseTo(posA.y, 2);
+      }
+      const rect = { height: 56, id: "r", radius: 0, shape: "rectangle" as const, width: 100, x: 0, y: 100 };
+      for (const angle of [0, Math.PI / 4, Math.PI, (3 * Math.PI) / 2, -2.8253]) {
+        const t = puzzle2dHandleAngleToRingT(rect, angle);
+        const back = puzzle2dHandleAngleFromRingT(rect, t);
+        const posA = computeHandlePosition(rect, angle);
+        const posB = computeHandlePosition(rect, back);
+        expect(posB.x).toBeCloseTo(posA.x, 2);
+        expect(posB.y).toBeCloseTo(posA.y, 2);
+      }
+    });
+
+    it("labels minimap, overview, compact, normal, detail, and micro LOD bands from compile-time scale", () => {
+      const scale = getPuzzle2dLodScale();
+      expect(scale.length).toBe(6);
       expect(resolvePuzzle2dLodLabel(0.1)).toBe("minimap");
       expect(resolvePuzzle2dLodLabel(0.25)).toBe("overview");
       expect(resolvePuzzle2dLodLabel(0.4)).toBe("compact");
       expect(resolvePuzzle2dLodLabel(0.9)).toBe("normal");
       expect(resolvePuzzle2dLodLabel(1.3)).toBe("detail");
       expect(resolvePuzzle2dLodLabel(2.6)).toBe("micro");
-      const tight: Puzzle2dLodZoomThresholds = {
-        minimapMaxZoom: 0.2,
-        overviewMaxZoom: 0.35,
-        compactMaxZoom: 0.45,
-        normalMaxZoom: 0.6,
-        detailMaxZoom: 1,
-      };
-      expect(resolvePuzzle2dLodLabelFromThresholds(0.15, tight)).toBe("minimap");
-      expect(resolvePuzzle2dLodLabelFromThresholds(0.3, tight)).toBe("overview");
-      expect(resolvePuzzle2dLodLabelFromThresholds(0.4, tight)).toBe("compact");
-      expect(resolvePuzzle2dLodLabelFromThresholds(0.5, tight)).toBe("normal");
-      expect(resolvePuzzle2dLodLabelFromThresholds(0.7, tight)).toBe("detail");
-      expect(resolvePuzzle2dLodLabelFromThresholds(1.1, tight)).toBe("micro");
+      const tight: Puzzle2dLodEntry[] = [
+        { id: "minimap", name: "Minimap", description: "", maxZoom: 0.2 },
+        { id: "overview", name: "Overview", description: "", maxZoom: 0.35 },
+        { id: "compact", name: "Compact", description: "", maxZoom: 0.45 },
+        { id: "normal", name: "Normal", description: "", maxZoom: 0.6 },
+        { id: "detail", name: "Detail", description: "", maxZoom: 1 },
+        { id: "micro", name: "Micro", description: "", maxZoom: Number.POSITIVE_INFINITY },
+      ];
+      expect(resolvePuzzle2dLodLabelFromScale(0.15, tight)).toBe("minimap");
+      expect(resolvePuzzle2dLodLabelFromScale(0.3, tight)).toBe("overview");
+      expect(resolvePuzzle2dLodLabelFromScale(0.4, tight)).toBe("compact");
+      expect(resolvePuzzle2dLodLabelFromScale(0.5, tight)).toBe("normal");
+      expect(resolvePuzzle2dLodLabelFromScale(0.7, tight)).toBe("detail");
+      expect(resolvePuzzle2dLodLabelFromScale(1.1, tight)).toBe("micro");
     });
 
     it("switches caption policy across the six LOD bands", () => {
@@ -6174,6 +7619,112 @@ if (puzzle2dVitest) {
       expect(nodeDeletes).toContain("shared");
       expect(rendererA.scene.nodes.has("shared")).toBe(false);
       expect(rendererB.scene.nodes.has("shared")).toBe(false);
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("delete-all syncs empty descriptor to wasm on source and peer panes", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      syncPuzzle2dScene(rendererA, descriptor);
+      syncPuzzle2dScene(rendererB, descriptor);
+      rendererA.rememberHostDeclarativeSceneDescriptor(descriptor);
+      rendererB.rememberHostDeclarativeSceneDescriptor(descriptor);
+      rendererA.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+      rendererB.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      const syncA = vi.spyOn(rendererA.session, "syncDescriptorJson");
+      const syncB = vi.spyOn(rendererB.session, "syncDescriptorJson");
+      rendererA.setSelectionIdsSilent(["a", "b", "a:h0", "b:h0", "edge-1"]);
+      rendererA["deleteSelectedObjects"]();
+      expect(rendererA.scene.nodes.size).toBe(0);
+      expect(rendererB.scene.nodes.size).toBe(0);
+      expect(rendererA.scene.edges.size).toBe(0);
+      expect(rendererB.scene.edges.size).toBe(0);
+      const emptyDescriptor = JSON.stringify({ nodes: [], handles: [], edges: [], wires: [] });
+      expect(syncA).toHaveBeenCalled();
+      expect(syncA.mock.calls.some((call) => call[0] === emptyDescriptor)).toBe(true);
+      rendererB["pushSceneToWasmDriver"]();
+      expect(syncB.mock.calls.some((call) => call[0] === emptyDescriptor)).toBe(true);
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("ensureImperativeSceneForWasmPush does not resurrect nodes after delete-all", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0} />
+          <Node id="b" radius={10} x={40} y={0} />
+        </>,
+      );
+      syncPuzzle2dScene(renderer, descriptor);
+      renderer.rememberHostDeclarativeSceneDescriptor(descriptor);
+      renderer.withFixtureStructuralDeleteMirror(() => {
+        for (const node of [...renderer.scene.nodes.values()]) {
+          renderer.scene.remove(node);
+        }
+      });
+      expect(renderer.scene.nodes.size).toBe(0);
+      renderer["ensureImperativeSceneForWasmPush"]();
+      expect(renderer.scene.nodes.size).toBe(0);
+      renderer.dispose();
+    });
+
+    it("broadcasts edge deletes to peer renderers after authoritative wasm drain", () => {
+      const { canvas: canvasA } = createMockCanvas();
+      const { canvas: canvasB } = createMockCanvas();
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const sourceNodeA = new Puzzle2dSceneNode({ id: "a", radius: 10, x: 0, y: 0 });
+      const targetNodeA = new Puzzle2dSceneNode({ id: "b", radius: 10, x: 40, y: 0 });
+      const sourceNodeB = new Puzzle2dSceneNode({ id: "a", radius: 10, x: 0, y: 0 });
+      const targetNodeB = new Puzzle2dSceneNode({ id: "b", radius: 10, x: 40, y: 0 });
+      const sourceHandleA = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNodeA });
+      const targetHandleA = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNodeA });
+      const sourceHandleB = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNodeB });
+      const targetHandleB = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNodeB });
+      const edgeA = new Puzzle2dSceneEdge({ id: "edge-1", source: sourceHandleA, target: targetHandleA });
+      const edgeB = new Puzzle2dSceneEdge({ id: "edge-1", source: sourceHandleB, target: targetHandleB });
+      rendererA.scene.add(sourceNodeA).add(targetNodeA).add(edgeA);
+      rendererB.scene.add(sourceNodeB).add(targetNodeB).add(edgeB);
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      rendererA.rememberHostDeclarativeSceneDescriptor(descriptor);
+      rendererB.rememberHostDeclarativeSceneDescriptor(descriptor);
+      rendererA.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+      rendererB.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+      rendererA.withFixtureStructuralDeleteMirror(() => {
+        rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "edgeDelete", payload: { id: "edge-1" } }]));
+      });
+      expect(rendererA.scene.edges.has("edge-1")).toBe(false);
+      expect(rendererB.scene.edges.has("edge-1")).toBe(false);
+      rendererA["applyWasmDrainToScene"](JSON.stringify([]), { silentStructuralRemoves: true });
+      expect(rendererA.scene.edges.has("edge-1")).toBe(false);
+      expect(rendererB.scene.edges.has("edge-1")).toBe(false);
       rendererA.dispose();
       rendererB.dispose();
     });
@@ -6560,6 +8111,56 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
+    it("syncPuzzle2dScene binds node-id edges in normal graph mode", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test", graphPortMode: "normal" });
+      const descriptor = {
+        nodes: [{ id: "a", x: 0, y: 0, radius: 24, draggable: true, handles: [] }],
+        handles: [],
+        edges: [{ id: "e1", source: "a", target: "a" }],
+        wires: [],
+      };
+      syncPuzzle2dScene(renderer, descriptor);
+      expect(renderer.scene.edges.size).toBe(1);
+      const edge = renderer.scene.edges.get("e1");
+      expect(edge?.source.id).toBe("a");
+      expect(edge?.target.id).toBe("a");
+      renderer.dispose();
+    });
+
+    it("applyNodePositionSilent mirrors peer drag across normal-mode renderers", () => {
+      const rendererA = new Puzzle2dRenderer({ renderMode: "headless-test", graphPortMode: "normal" });
+      const rendererB = new Puzzle2dRenderer({ renderMode: "headless-test", graphPortMode: "normal" });
+      const descriptor = {
+        nodes: [{ id: "a", x: 0, y: 0, radius: 24, draggable: true, handles: [] }],
+        handles: [],
+        edges: [],
+        wires: [],
+      };
+      syncPuzzle2dScene(rendererA, descriptor);
+      syncPuzzle2dScene(rendererB, descriptor);
+      rendererA["applyWasmDrainToScene"](JSON.stringify([{ name: "nodeMove", payload: { id: "a", x: 120, y: 40 } }]), {});
+      expect(rendererB.scene.nodes.get("a")?.x).toBe(120);
+      expect(rendererB.scene.nodes.get("a")?.y).toBe(40);
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers syncs normal graph across panes", () => {
+      const fixture = {
+        schema: "puzzle.2d.fixture/v1" as const,
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [{ id: "a", x: 10, y: 20, radius: 24, handles: [] as const }],
+        edges: [{ id: "e1", source: "a", target: "a" }],
+      };
+      const peerA = new Puzzle2dRenderer({ renderMode: "headless-test", graphPortMode: "normal" });
+      const peerB = new Puzzle2dRenderer({ renderMode: "headless-test", graphPortMode: "normal" });
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture);
+      expect(peerA.scene.nodes.get("a")?.x).toBe(10);
+      expect(peerB.scene.edges.size).toBe(1);
+      peerA.dispose();
+      peerB.dispose();
+    });
+
     it("pushSceneToWasmDriver does not stomp wasm camera when host owns viewport", () => {
       const { canvas } = createMockCanvas();
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
@@ -6879,6 +8480,29 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
+    it("puzzle2dEnsureSceneEdgesFromDescriptor does not resurrect authoritatively deleted edges", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const descriptor = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={10} x={0} y={0}>
+            <Handle angle={0} handleKind={BUILTIN_PORT_HANDLE_KIND} id="a:h0" />
+          </Node>
+          <Node id="b" radius={10} x={40} y={0}>
+            <Handle angle={Math.PI} handleKind={BUILTIN_PORT_HANDLE_KIND} id="b:h0" />
+          </Node>
+          <Edge id="edge-1" source="a:h0" target="b:h0" />
+        </>,
+      );
+      syncPuzzle2dScene(renderer, descriptor);
+      renderer.withFixtureStructuralDeleteMirror(() => {
+        renderer["applyWasmDrainToScene"](JSON.stringify([{ name: "edgeDelete", payload: { id: "edge-1" } }]));
+      });
+      expect(renderer.scene.edges.has("edge-1")).toBe(false);
+      puzzle2dEnsureSceneEdgesFromDescriptor(renderer, descriptor);
+      expect(renderer.scene.edges.has("edge-1")).toBe(false);
+      renderer.dispose();
+    });
+
     it("authoritative edge delete prunes host declarative snapshot so silent zoom drains do not restore edges", () => {
       const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
       const descriptor = buildPuzzle2dSceneDescriptor(
@@ -6982,6 +8606,48 @@ if (puzzle2dVitest) {
       expect(nodeDeletes).toContain("source");
 
       renderer.dispose();
+    });
+
+    it("ctrl+a selects every visible scene object matching selection targets", () => {
+      const { canvas } = createMockCanvas();
+      document.body.appendChild(canvas);
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const sourceNode = new Puzzle2dSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
+      const targetNode = new Puzzle2dSceneNode({ id: "target", radius: 36, x: 220, y: 0 });
+      const sourceHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+      const targetHandle = new Puzzle2dSceneHandle({ handleKind: BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
+      const edge = new Puzzle2dSceneEdge({ source: sourceHandle, id: "edge-1", target: targetHandle });
+      renderer.scene.add(sourceNode).add(targetNode).add(edge);
+      renderer.render();
+
+      canvas.focus();
+      canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: 8, clientY: 8 }));
+      window.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "a", ctrlKey: true }));
+
+      expect(new Set(renderer.selection.getSnapshot().ids)).toEqual(new Set(["source", "target", "src-h", "tgt-h", "edge-1"]));
+
+      renderer.dispose();
+      canvas.remove();
+    });
+
+    it("does not select all on ctrl+a while a text field owns focus", () => {
+      const { canvas } = createMockCanvas();
+      document.body.appendChild(canvas);
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const sourceNode = new Puzzle2dSceneNode({ id: "source", radius: 36, x: 0, y: 0 });
+      renderer.scene.add(sourceNode);
+      renderer.render();
+
+      canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: 8, clientY: 8 }));
+      const input = document.createElement("input");
+      document.body.appendChild(input);
+      input.focus();
+      window.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "a", ctrlKey: true }));
+      expect(renderer.selection.getSnapshot().ids).toEqual([]);
+
+      input.remove();
+      renderer.dispose();
+      canvas.remove();
     });
 
     it("does not delete the puzzle 2d selection while a text field owns focus", () => {
@@ -7706,6 +9372,21 @@ if (puzzle2dVitest) {
       expect(catalogs?.nodes?.[0]?.handles).toEqual([{ angle: 0.805, radius: 3, handleKind: "semio.kit.handle.door" }]);
     });
 
+    it("parses edge kinds from fixture meta.kindCatalogs", () => {
+      const catalogs = fixtureMetaKindCatalogBundle({
+        meta: {
+          kindCatalogs: {
+            edges: [
+              { id: "wires.owns", name: "Owns", color: "#64748b", pattern: "solid", targetTip: "filled-diamond", directed: false, stroke: "2" },
+              { id: "wires.references", name: "References", color: "#a855f7", pattern: "dashed", targetTip: "fine-arrow", directed: false, stroke: "1.5" },
+            ],
+          },
+        },
+      });
+      expect(catalogs?.edges?.[0]).toMatchObject({ id: "wires.owns", targetTip: "filled-diamond", pattern: "solid", directed: false });
+      expect(catalogs?.edges?.[1]).toMatchObject({ id: "wires.references", targetTip: "fine-arrow", pattern: "dashed", directed: false });
+    });
+
     it("puzzle2dRectangleHandleAngleFromCadPoint matches board north-zero rectangle convention", () => {
       expect(puzzle2dRectangleHandleAngleFromCadPoint(-1.3, -1.25)).toBeCloseTo(0.805, 3);
     });
@@ -7713,6 +9394,37 @@ if (puzzle2dVitest) {
     it("puzzle2dFixtureHandlesFromNodeKind maps templates to fixture handles", () => {
       const handles = puzzle2dFixtureHandlesFromNodeKind("n1", [{ angle: 1.2, radius: 3, handleKind: "semio.kit.handle.a" }]);
       expect(handles).toEqual([{ angle: 1.2, handleKind: "semio.kit.handle.a", id: "n1:h0", radius: 3 }]);
+    });
+
+    it("applyBrushPlacementToFixture is idempotent when the same brush ids are already in the fixture", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [{ id: "edge-a", source: "a:h0", target: "b:h0" }],
+        nodes: [
+          { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
+          { handles: [{ angle: Math.PI, id: "b:h0" }], id: "brush-node", nodeKind: "k", radius: 20, x: 120, y: 0 },
+        ],
+        schema: "puzzle.2d.fixture/v1",
+      });
+      expect(fixture).toBeTruthy();
+      const payload: Puzzle2dBrushPlacePayload = {
+        edgeId: "edge-a",
+        handles: [{ angle: Math.PI, handleKind: "port" }],
+        nodeId: "brush-node",
+        nodeKind: "k",
+        shape: "circle",
+        sourceHandleId: "a:h0",
+        targetHandleIndex: 0,
+        x: 120,
+        y: 0,
+        radius: 20,
+      };
+      const result = applyBrushPlacementToFixture(fixture!, payload);
+      expect(result.kind).toBe("placed");
+      if (result.kind === "placed") {
+        expect(result.fixture.nodes).toHaveLength(2);
+        expect(result.fixture.edges).toHaveLength(1);
+      }
     });
 
     it("applyBrushPlacementToFixture appends node and parent edge", () => {
@@ -7782,6 +9494,97 @@ if (puzzle2dVitest) {
       expect(puzzle2dIsBrushPlacementStructuralDeleteGuarded("other")).toBe(false);
     });
 
+    it("puzzle2dSubscribeBrushSession notifies on sync updates", () => {
+      let notifyCount = 0;
+      const unsub = puzzle2dSubscribeBrushSession(() => {
+        notifyCount += 1;
+      });
+      const snapshot: Puzzle2dBrushSessionSnapshot = {
+        candidateIndex: 0,
+        candidates: ["brush.kind"],
+        preview: { edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 }, node: { nodeKind: "brush.kind", radius: 20, shape: "circle", x: 80, y: 0 } },
+        sourceHandleId: "a:h0",
+      };
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot);
+      expect(puzzle2dGetBrushSessionSnapshot()?.preview?.node).toBeTruthy();
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+      expect(puzzle2dGetBrushSessionSnapshot()).toBeNull();
+      expect(notifyCount).toBeGreaterThanOrEqual(2);
+      unsub();
+    });
+
+    it("mirrors brush session onto every authoring peer except the driving renderer", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const drivingCanvas = createMockCanvas();
+      const mirrorCanvas = createMockCanvas();
+      const driving = new Puzzle2dRenderer({ canvas: drivingCanvas.canvas, renderMode: "headless-test" });
+      const mirror = new Puzzle2dRenderer({ canvas: mirrorCanvas.canvas, renderMode: "headless-test" });
+      const brushCatalogs = {
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      };
+      const brushCompat = [{ source: "port", target: "port" }] as const;
+      const setup = (renderer: Puzzle2dRenderer) => {
+        renderer.setCamera(0, 0, 1);
+        const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+        new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
+        renderer.scene.add(node);
+        renderer.setActiveTool("brush");
+        renderer.setBrushFlushDistance(80);
+        renderer.setBrushNodeSize(40);
+        renderer.setKindCatalogs(brushCatalogs);
+        renderer.setKindCompatibility(brushCompat);
+        renderer.render();
+      };
+      setup(driving);
+      setup(mirror);
+      const snapshot: Puzzle2dBrushSessionSnapshot = {
+        candidateIndex: 0,
+        candidates: ["brush.kind"],
+        preview: {
+          edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 },
+          node: { nodeKind: "brush.kind", radius: 20, shape: "circle", x: 80, y: 0, handles: [{ handleKind: "port", angle: Math.PI }] },
+        },
+        sourceHandleId: "a:h0",
+      };
+      const mirrorBefore = mirror.session.encodedSceneHint();
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot, driving);
+      mirror.render();
+      expect(mirror.session.encodedSceneHint()).toBeGreaterThan(mirrorBefore);
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+      driving.dispose();
+      mirror.dispose();
+    });
+
+    it("flushPendingBrushSessionMirror applies deferred setBrushSession JSON", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const mirror = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      mirror.setCamera(0, 0, 1);
+      const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
+      new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
+      mirror.scene.add(node);
+      mirror.setActiveTool("brush");
+      mirror.setKindCatalogs({
+        handles: [{ id: "port", name: "Port", color: "#888888" }],
+        nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
+      });
+      mirror.render();
+      const pendingJson = JSON.stringify({
+        sourceHandleId: "a:h0",
+        candidates: ["brush.kind"],
+        index: 0,
+        preview: {
+          edge: { sourceHandleId: "a:h0", targetHandleIndex: 0 },
+          node: { nodeKind: "brush.kind", radius: 20, shape: "circle", x: 80, y: 0, handles: [{ handleKind: "port", angle: Math.PI }] },
+        },
+      });
+      mirror["pendingBrushSessionJsonForWasm"] = pendingJson;
+      mirror["flushPendingBrushSessionMirror"]();
+      mirror.render();
+      expect(mirror["lastBrushSessionJsonForWasm"]).toBe(pendingJson);
+      mirror.dispose();
+    });
+
     it("brushPlace fires when pointer leaves brush slot", async () => {
       await ensurePuzzle2dWasmLoaded();
       const { canvas } = createMockCanvas();
@@ -7794,6 +9597,7 @@ if (puzzle2dVitest) {
         handles: [{ id: "port", name: "Port", color: "#888888" }],
         nodes: [{ id: "brush.kind", name: "Brush", handles: [{ handleKind: "port", angle: Math.PI }] }],
       });
+      renderer.setKindCompatibility([{ source: "port", target: "port" }]);
       const node = new Puzzle2dSceneNode({ id: "a", radius: 40, x: 0, y: 0 });
       new Puzzle2dSceneHandle({ handleKind: "port", angle: 0, id: "a:h0", node });
       renderer.scene.add(node);
@@ -7812,7 +9616,96 @@ if (puzzle2dVitest) {
       renderer.dispose();
     });
 
-    it("puzzle2dNodeKindHandlesFromKitConnectors keeps two connectors with the same handleKind at different CAD points", () => {
+    it("puzzle2dFixtureMetaKindCompatibility reads rules from fixture root or meta slice", async () => {
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as { meta?: { kindCompatibility?: unknown[] } };
+      const fromRoot = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson);
+      const fromMeta = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson.meta);
+      expect(fromRoot?.length).toBeGreaterThan(0);
+      expect(fromMeta?.length).toBe(fromRoot?.length);
+    });
+
+    it("nakagin kindCompatibility never links circular and rectangular shaped core ports", async () => {
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default;
+      const compat = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson) ?? [];
+      const shapedCoreCross = compat.filter((row) => {
+        const source = String(row.source ?? "");
+        const target = String(row.target ?? "");
+        const sourceShaped = source.includes(" circular ") || source.includes(" rectangular ");
+        const targetShaped = target.includes(" circular ") || target.includes(" rectangular ");
+        if (!sourceShaped || !targetShaped) {
+          return false;
+        }
+        const sourceCircular = source.includes(" circular ");
+        const targetCircular = target.includes(" circular ");
+        return sourceCircular !== targetCircular;
+      });
+      expect(shapedCoreCross).toEqual([]);
+    });
+
+    it("nakagin door tambour brush excludes Capital after kindCompatibility sync on warm descriptor cache", async () => {
+      await ensurePuzzle2dWasmLoaded();
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const compat = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson) ?? [];
+      const catalogs = fixtureMetaKindCatalogBundle(nakaginFixtureJson) ?? {};
+      const DOOR_TAMBOUR_LEFT = "door tambour left";
+      const CAPITAL_KIND = "Capital";
+      const { canvas } = createMockCanvas();
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      renderer.setCamera(0, 0, 1);
+      renderer.setKindCatalogs(catalogs);
+      renderer.setActiveTool("brush");
+      renderer.setBrushFlushDistance(80);
+      renderer.setBrushNodeSize(40);
+      const node = new Puzzle2dSceneNode({
+        id: "tambour",
+        nodeKind: "Tambour",
+        radius: 40,
+        x: 0,
+        y: 0,
+      });
+      new Puzzle2dSceneHandle({ id: "tambour:h0", handleKind: DOOR_TAMBOUR_LEFT, angle: 0, node });
+      renderer.scene.add(node);
+      renderer.render();
+      renderer.setKindCompatibility(compat);
+      const handleWorld = computeHandlePosition({ height: 80, radius: 40, shape: "circle", width: 80, x: 0, y: 0 }, 0);
+      const slotWorld = { x: handleWorld.x + (handleWorld.x - 0) * 2, y: handleWorld.y + (handleWorld.y - 0) * 2 };
+      const slotScreen = renderer.worldToScreen(slotWorld);
+      let lastCandidates: readonly string[] = [];
+      renderer.on("brushCandidates", (payload) => {
+        lastCandidates = payload.candidates;
+      });
+      canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
+      expect(lastCandidates.length).toBeGreaterThan(0);
+      expect(lastCandidates).not.toContain(CAPITAL_KIND);
+      renderer.dispose();
+    });
+
+    it("puzzle2dNodeKindHandlesFromKitConnectors maps semio ring t to distinct perimeter angles", () => {
+      const handleKind = "core rectangular bottom";
+      const handles = puzzle2dNodeKindHandlesFromKitConnectors(
+        [
+          { t: -0.125, port: { handleKind } },
+          { t: 0.125, port: { handleKind } },
+        ],
+        { prototype: { shape: "circle", radius: DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2 } },
+      );
+      expect(handles).toHaveLength(2);
+      expect(handles[0]?.angle).not.toBeCloseTo(handles[1]?.angle ?? 0, 4);
+      const p0 = computeHandlePosition(
+        { height: 0, radius: DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2, shape: "circle", width: 0, x: 0, y: 0 },
+        handles[0]!.angle,
+      );
+      const p1 = computeHandlePosition(
+        { height: 0, radius: DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2, shape: "circle", width: 0, x: 0, y: 0 },
+        handles[1]!.angle,
+      );
+      expect(p0.y).toBeLessThan(0);
+      expect(p1.y).toBeLessThan(0);
+      expect(p0.x).toBeLessThan(0);
+      expect(p1.x).toBeGreaterThan(0);
+    });
+
+    it("puzzle2dNodeKindHandlesFromKitConnectors falls back to CAD point when ring t is absent", () => {
       const handleKind = "semio.kit.handle.core-rect-bottom";
       const handles = puzzle2dNodeKindHandlesFromKitConnectors([
         { point: { x: -7.5, y: -7.7, z: 7.5 }, port: { handleKind } },
@@ -8378,12 +10271,14 @@ function applyHandleProps(instance: Puzzle2dSceneHandle, props: Puzzle2dHandlePr
   instance.setAngle(props.angle);
 }
 
-function applyEdgeProps(instance: Puzzle2dSceneEdge, props: Puzzle2dEdgeProps, sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle): void {
+function applyEdgeProps(instance: Puzzle2dSceneEdge, props: Puzzle2dEdgeProps, source: Puzzle2dSceneEdgeAnchor, target: Puzzle2dSceneEdgeAnchor): void {
   instance.style = props.style ?? null;
   instance.userData = { ...(props.userData ?? {}) };
   instance.visible = props.visible ?? true;
   instance.edgeKind = typeof props.edgeKind === "string" ? props.edgeKind.trim() : "";
-  instance.setEndpoints(sourceHandle, targetHandle);
+  instance.sourceTip = typeof props.sourceTip === "string" ? props.sourceTip.trim() : "";
+  instance.targetTip = typeof props.targetTip === "string" ? props.targetTip.trim() : "";
+  instance.setEndpoints(source, target);
 }
 
 function applyWireProps(instance: Puzzle2dSceneWire, props: Puzzle2dWireProps, sourceHandle: Puzzle2dSceneHandle, targetHandle: Puzzle2dSceneHandle | null): void {
@@ -8437,6 +10332,8 @@ function propsEqualEdge(a: Puzzle2dEdgeProps, b: Puzzle2dEdgeProps): boolean {
     a.source === b.source &&
     a.target === b.target &&
     (a.edgeKind ?? "").trim() === (b.edgeKind ?? "").trim() &&
+    (a.sourceTip ?? "").trim() === (b.sourceTip ?? "").trim() &&
+    (a.targetTip ?? "").trim() === (b.targetTip ?? "").trim() &&
     a.highlighted === b.highlighted &&
     a.selected === b.selected &&
     a.style === b.style &&
@@ -8523,15 +10420,15 @@ function mountEdge(renderer: Puzzle2dRenderer, edgeHost: Puzzle2dHostEdge): void
   if (edgeHost.impl?.parent) {
     return;
   }
-  const source = renderer.scene.getObjectById(edgeHost.props.source);
-  const target = renderer.scene.getObjectById(edgeHost.props.target);
-  if (!isPuzzle2dSceneHandleObject(source) || !isPuzzle2dSceneHandleObject(target)) {
+  const source = resolvePuzzle2dSceneEdgeAnchor(renderer.scene, edgeHost.props.source);
+  const target = resolvePuzzle2dSceneEdgeAnchor(renderer.scene, edgeHost.props.target);
+  if (!source || !target) {
     return;
   }
   renderer.batch(() => {
     if (!edgeHost.impl) {
       edgeHost.impl = new Puzzle2dSceneEdge({ ...edgeHost.props, source, target });
-      renderer.scene.add(edgeHost.impl);
+      renderer.scene.ingestWasmEdge(edgeHost.impl);
     } else {
       applyEdgeProps(edgeHost.impl, edgeHost.props, source, target);
     }
@@ -8829,9 +10726,9 @@ const puzzle2dSceneHost = Reconciler({
     if (type === PUZZLE_2D_HOST_EDGE) {
       const e = instance as Puzzle2dHostEdge;
       e.props = nextProps as Puzzle2dEdgeProps;
-      const from = renderer.scene.getObjectById(e.props.source);
-      const to = renderer.scene.getObjectById(e.props.target);
-      if (!isPuzzle2dSceneHandleObject(from) || !isPuzzle2dSceneHandleObject(to)) {
+      const from = resolvePuzzle2dSceneEdgeAnchor(renderer.scene, e.props.source);
+      const to = resolvePuzzle2dSceneEdgeAnchor(renderer.scene, e.props.target);
+      if (!from || !to) {
         return;
       }
       renderer.batch(() => {
@@ -8969,8 +10866,6 @@ export interface Puzzle2dCanvasProps {
   onReady?: (renderer: Puzzle2dRenderer) => void;
   /** @emoji 🔔 Fires after any graph observation emission in this flush (see other `on*` graph props). */
   onChange?: () => void;
-  /** @emoji 📶 LOD zoom bands for WASM draw + overlay captions (`data-puzzle2d-lod`). */
-  lodZoomThresholds?: Puzzle2dLodZoomThresholds;
   /** @emoji 📶 When true (default), camera zoom selects draw LOD; when false, {@link lod} pins the tier. */
   automaticLod?: boolean;
   /** @emoji 📶 Pinned draw LOD when `automaticLod` is false. */
@@ -9063,6 +10958,8 @@ export interface Puzzle2dCanvasProps {
   width?: number;
   /** 🧩 World-space clip tiling for Vello (`world-clip`, default) vs monolithic scene (`none`). */
   worldRasterTiling?: WorldRasterTilingKind;
+  /** @emoji 🧠 `normal` binds edges to node ids; default `ported`. */
+  graphPortMode?: Puzzle2dGraphPortMode;
 }
 
 export type Puzzle2dNodeCircleProps = {
@@ -9285,12 +11182,13 @@ function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: H
 
 /** @emoji 🗂️ Builds a {@link Puzzle2dSceneDescriptor} from {@link Puzzle2dFixtureV1} without walking React `children` (stable play sync). */
 export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixtureV1): Puzzle2dSceneDescriptor {
+  const catalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
   const nodes: NodeDescriptor[] = [];
   const handles: HandleDescriptor[] = [];
   for (const node of fixture.nodes) {
     const nodeHandles: HandleDescriptor[] = node.handles.map((handle) => ({
       angle: handle.angle,
-      handleKind: handle.handleKind,
+      handleKind: puzzle2dResolveDoorCapsuleHandleKindForNodeKind(node.nodeKind, catalogs, handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND),
       id: handle.id,
       nodeId: node.id,
       ...(handle.color !== undefined ? { color: handle.color } : {}),
@@ -9324,6 +11222,9 @@ export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixture
     id: edge.id,
     source: edge.source,
     target: edge.target,
+    ...(edge.edgeKind !== undefined ? { edgeKind: edge.edgeKind } : {}),
+    ...(edge.sourceTip !== undefined ? { sourceTip: edge.sourceTip } : {}),
+    ...(edge.targetTip !== undefined ? { targetTip: edge.targetTip } : {}),
   }));
   return { edges, handles, nodes, wires: [] };
 }
@@ -9369,12 +11270,13 @@ function puzzle2dResolveHostSceneDescriptor(declarativeSceneDescriptor: Puzzle2d
 
 /** @emoji 🪢 Re-runs {@link syncPuzzle2dScene} when the descriptor lists edges but the imperative scene does not (WASM drain / mount race). */
 function puzzle2dEnsureSceneEdgesFromDescriptor(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): void {
-  if (descriptor.edges.length === 0 || renderer.scene.edges.size === descriptor.edges.length) {
+  const filtered = renderer.descriptorWithoutAuthoritativeRemovals(descriptor);
+  if (filtered.edges.length === 0 || renderer.scene.edges.size === filtered.edges.length) {
     return;
   }
-  renderer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
+  renderer.setDeclarativeSceneEdgeExpectation(filtered.edges.length);
   renderer.resetDeclarativeSceneSyncFingerprint();
-  syncPuzzle2dScene(renderer, descriptor);
+  syncPuzzle2dScene(renderer, filtered);
 }
 //#endregion 🔖Descriptor Build
 
@@ -9388,7 +11290,8 @@ function requireRenderer(renderer: Puzzle2dRenderer | null): Puzzle2dRenderer {
 //#region 🔖Scene Sync
 /** @emoji 🔗 Merges WASM‑created edges into the JSX descriptor until React children list the same edge id (then authorship is cleared via {@link Puzzle2dRenderer.clearWasmHostAuthorshipForEdge}). */
 export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRenderer, descriptor: Puzzle2dSceneDescriptor): Puzzle2dSceneDescriptor {
-  const jsxEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
+  const descriptorBase = renderer.descriptorWithoutAuthoritativeRemovals(descriptor);
+  const jsxEdgeIds = new Set(descriptorBase.edges.map((edge) => edge.id));
   for (const id of Array.from(renderer.wasmHostAuthoredEdgeIds)) {
     if (jsxEdgeIds.has(id)) {
       renderer.clearWasmHostAuthorshipForEdge(id);
@@ -9415,9 +11318,9 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRende
       renderer.clearWasmHostAuthorshipForEdge(id);
       continue;
     }
-    const sourceH = renderer.scene.getObjectById(link.source);
-    const targetH = renderer.scene.getObjectById(link.target);
-    if (!isPuzzle2dSceneHandleObject(sourceH) || !isPuzzle2dSceneHandleObject(targetH)) {
+    const sourceH = resolvePuzzle2dSceneEdgeAnchor(renderer.scene, link.source);
+    const targetH = resolvePuzzle2dSceneEdgeAnchor(renderer.scene, link.target);
+    if (!sourceH || !targetH) {
       continue;
     }
     extra.push({
@@ -9431,16 +11334,256 @@ export function mergeWasmHostAuthoredEdgesIntoDescriptor(renderer: Puzzle2dRende
     });
   }
   if (extra.length === 0) {
-    return descriptor;
+    return descriptorBase;
   }
-  return { ...descriptor, edges: [...descriptor.edges, ...extra] };
+  return { ...descriptorBase, edges: [...descriptorBase.edges, ...extra] };
 }
 
 //#region 🔖MultiViewAuthoring
 const puzzle2dAuthoringPeerRenderers = new Set<Puzzle2dRenderer>();
 
+/** @emoji 🎯 Authoring pane whose fixture-drop host contains the pointer (play triptych driver). */
+export function puzzle2dAuthoringPeerRendererAtClient(clientX: number, clientY: number): Puzzle2dRenderer | null {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive()) {
+      continue;
+    }
+    const world = peer.fixtureDropWorldFromClient(clientX, clientY);
+    if (world) {
+      return peer;
+    }
+  }
+  return null;
+}
+
+/** @emoji 🌍 Resolves a shared world point from the pane under the pointer (WASM viewport on the driver pane). */
+export function puzzle2dResolvePaletteDragWorldAtClient(clientX: number, clientY: number): Point | null {
+  const driver = puzzle2dAuthoringPeerRendererAtClient(clientX, clientY) ?? puzzle2dActiveRenderer();
+  if (!driver) {
+    return null;
+  }
+  const world = driver.fixtureDropWorldFromClient(clientX, clientY);
+  if (world) {
+    puzzle2dFixturePaletteDragWorldRef.current = world;
+    return world;
+  }
+  return puzzle2dFixturePaletteDragWorldRef.current;
+}
+
+/** @emoji 👻 Mirrors the palette fixture-drop ghost on every active authoring pane at one world point. */
+export function puzzle2dPushPaletteFixtureDropPreviewWorldToAllPeers(
+  world: Point,
+  encoded?: string,
+  catalogs = puzzle2dFixturePaletteDragPreviewOptionsRef.catalogs,
+  brushNodeSize = puzzle2dFixturePaletteDragPreviewOptionsRef.brushNodeSize,
+): void {
+  const payload = encoded?.trim() ?? puzzle2dReadActivePaletteDragEncoded();
+  if (!payload) {
+    return;
+  }
+  puzzle2dFixturePaletteDragWorldRef.current = world;
+  const fixture = decodePuzzle2dFixtureFromDragV1(payload);
+  if (!fixture || !buildPaletteFixtureDropPreviewPayloadAtWorld(world, fixture, catalogs, brushNodeSize)) {
+    return;
+  }
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.pushPaletteFixtureDropPreviewAtWorld(world, payload, catalogs, brushNodeSize);
+  }
+}
+
+let puzzle2dSharedBrushSession: Puzzle2dBrushSessionSnapshot | null = null;
+let puzzle2dBrushPlaceCommitHandler: ((payload: Puzzle2dBrushPlacePayload) => void) | null = null;
+const puzzle2dBrushSessionListeners = new Set<() => void>();
+
+/** @emoji 🧪 Reads the shared brush session (tests only). */
+export function puzzle2dSharedBrushSessionForTests(): Puzzle2dBrushSessionSnapshot | null {
+  return puzzle2dSharedBrushSession;
+}
+
+/** @emoji 🖌️ Snapshot for {@link puzzle2dSubscribeBrushSession} / `useSyncExternalStore`. */
+export function puzzle2dGetBrushSessionSnapshot(): Puzzle2dBrushSessionSnapshot | null {
+  return puzzle2dSharedBrushSession;
+}
+
+/** @emoji 🖌️ Subscribes to shared brush session updates (play mirrors Overview / Zoom / Selection). */
+export function puzzle2dSubscribeBrushSession(listener: () => void): () => void {
+  puzzle2dBrushSessionListeners.add(listener);
+  return () => {
+    puzzle2dBrushSessionListeners.delete(listener);
+  };
+}
+
+function puzzle2dNotifyBrushSessionListeners(): void {
+  for (const listener of puzzle2dBrushSessionListeners) {
+    listener();
+  }
+}
+
+/** @emoji 🖌️ Commits a WASM brush placement into the fixture and every authoring pane scene. */
+export function puzzle2dCommitBrushPlacementToPlay(
+  payload: Puzzle2dBrushPlacePayload,
+  options: {
+    readonly catalogsForFixture: (fixture: Puzzle2dFixtureV1) => KindCatalogBundle | undefined;
+    readonly patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
+  },
+): boolean {
+  puzzle2dSyncBrushSessionToAllAuthoringPeers(null);
+  let placed = false;
+  options.patchFixture((prev) => {
+    const catalogs = options.catalogsForFixture(prev);
+    const result = applyBrushPlacementToFixture(prev, payload, catalogs);
+    if (result.kind !== "placed") {
+      return prev;
+    }
+    placed = true;
+    puzzle2dGuardBrushPlacementStructuralDeletes(result.nodeId, result.edgeId);
+    puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(result.fixture);
+    return result.fixture;
+  });
+  if (placed) {
+    puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
+  }
+  return placed;
+}
+
+/** @emoji 📦 Commits a palette node drop into the fixture and every authoring pane immediately (mirrors {@link puzzle2dCommitBrushPlacementToPlay}). */
+export function puzzle2dCommitPaletteNodeDropToPlay(
+  detail: Puzzle2dFixtureDropDetail,
+  options: {
+    readonly patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
+    readonly setSelectionIds: (ids: readonly string[]) => void;
+  },
+): string | null {
+  puzzle2dStopPaletteDragPreviewLoop();
+  puzzle2dClearFixtureDropPreviewAllAuthoringPeers();
+  const merged = mergePaletteNodeFromDrop(detail);
+  if (!merged) {
+    return null;
+  }
+  let placed = false;
+  options.patchFixture((prev) => {
+    const next = { ...prev, nodes: [...prev.nodes, merged] };
+    placed = true;
+    puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
+    return next;
+  });
+  if (!placed) {
+    return null;
+  }
+  puzzle2dFixturePaletteDropCommittedRef.current = true;
+  puzzle2dPushAuthoritativeSceneToAllAuthoringPeers();
+  options.setSelectionIds([merged.id]);
+  puzzle2dFixturePaletteDragRef.active = false;
+  puzzle2dFixturePaletteDragEncodedRef.current = null;
+  puzzle2dFixturePalettePointerDragRef.active = false;
+  puzzle2dFixturePalettePointerDragRef.encoded = null;
+  puzzle2dFixturePaletteDragWorldRef.current = null;
+  window.dispatchEvent(new CustomEvent("puzzle2d-fixture-drag-session", { detail: null }));
+  return merged.id;
+}
+
+/** @emoji 🖌️ Registers play (or host) fixture commit for WASM {@link Puzzle2dEventMap.brushPlace} drains. */
+export function puzzle2dSetBrushPlaceCommitHandler(handler: ((payload: Puzzle2dBrushPlacePayload) => void) | null): void {
+  puzzle2dBrushPlaceCommitHandler = handler;
+}
+
+function puzzle2dInvokeBrushPlaceCommit(payload: Puzzle2dBrushPlacePayload): void {
+  puzzle2dBrushPlaceCommitHandler?.(payload);
+}
+
+function puzzle2dBrushPreviewIsEmpty(preview: Puzzle2dEventMap["brushPreview"] | null | undefined): boolean {
+  if (!preview) {
+    return true;
+  }
+  return preview.node === null || preview.node === undefined;
+}
+
+function puzzle2dUpdateBrushSessionFromSource(
+  source: Puzzle2dRenderer,
+  candidates: Puzzle2dBrushCandidatesPayload | null,
+  preview: Puzzle2dEventMap["brushPreview"] | null | undefined,
+): void {
+  const prev = puzzle2dSharedBrushSession;
+  const resolvedPreview =
+    preview === undefined ? (prev?.preview ?? null) : puzzle2dBrushPreviewIsEmpty(preview) ? null : preview;
+  const sourceFromCandidates = candidates?.sourceHandleId?.trim() ?? "";
+  const sourceHandleId =
+    sourceFromCandidates.length > 0
+      ? sourceFromCandidates
+      : resolvedPreview?.edge?.sourceHandleId?.trim() ||
+        (preview !== undefined && puzzle2dBrushPreviewIsEmpty(preview) ? null : prev?.sourceHandleId) ||
+        null;
+  const nextCandidates = candidates !== null ? candidates.candidates : (prev?.candidates ?? []);
+  if (candidates !== null && sourceFromCandidates.length === 0 && nextCandidates.length === 0) {
+    const previewEmpty = preview === undefined ? !prev?.preview : puzzle2dBrushPreviewIsEmpty(preview);
+    if (previewEmpty) {
+      puzzle2dSyncBrushSessionToAllAuthoringPeers(null, source);
+      return;
+    }
+  }
+  const next: Puzzle2dBrushSessionSnapshot = {
+    candidateIndex: candidates?.index ?? prev?.candidateIndex ?? 0,
+    candidates: nextCandidates,
+    preview: resolvedPreview,
+    sourceHandleId: sourceHandleId && sourceHandleId.length > 0 ? sourceHandleId : null,
+  };
+  if (!next.sourceHandleId && !next.preview && next.candidates.length === 0) {
+    puzzle2dSyncBrushSessionToAllAuthoringPeers(null, source);
+    return;
+  }
+  puzzle2dSyncBrushSessionToAllAuthoringPeers(next, source);
+}
+
+/** @emoji 👻 Mirrors palette fixture-drop preview onto every authoring pane except `skip`. */
+export function puzzle2dSyncFixtureDropPreviewToAllAuthoringPeers(payload: Puzzle2dFixtureDropPreviewPayload | null, skip?: Puzzle2dRenderer): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive() || peer === skip) {
+      continue;
+    }
+    peer.setFixtureDropPreview(payload);
+  }
+}
+
+/** @emoji 👻 Clears palette fixture-drop preview on every authoring pane. */
+export function puzzle2dClearFixtureDropPreviewAllAuthoringPeers(): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.setFixtureDropPreview(null);
+  }
+}
+
+/** @emoji 🖌️ Mirrors brush slot preview onto every authoring pane except the driving renderer. */
+export function puzzle2dSyncBrushSessionToAllAuthoringPeers(snapshot: Puzzle2dBrushSessionSnapshot | null, skip?: Puzzle2dRenderer): void {
+  puzzle2dSharedBrushSession = snapshot;
+  puzzle2dNotifyBrushSessionListeners();
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive() || peer === skip) {
+      continue;
+    }
+    peer.setBrushSession(snapshot);
+  }
+}
+
+/** @emoji 📡 Pushes the imperative scene to WASM on every authoring pane (after brush place). */
+export function puzzle2dPushAuthoritativeSceneToAllAuthoringPeers(): void {
+  for (const peer of puzzle2dAuthoringPeerRenderers) {
+    if (!peer.authoringPeerActive()) {
+      continue;
+    }
+    peer.pushAuthoritativeSceneToWasmHost();
+  }
+}
+
 function puzzle2dRegisterAuthoringPeer(renderer: Puzzle2dRenderer): void {
   puzzle2dAuthoringPeerRenderers.add(renderer);
+  if (puzzle2dSharedBrushSession) {
+    renderer.setBrushSession(puzzle2dSharedBrushSession);
+  }
 }
 
 function puzzle2dUnregisterAuthoringPeer(renderer: Puzzle2dRenderer): void {
@@ -9514,19 +11657,24 @@ export function puzzle2dIsBrushPlacementStructuralDeleteGuarded(id: string): boo
   return puzzle2dBrushStructuralDeleteGuardIds.has(id);
 }
 
-/** @emoji 🔄 Syncs a committed fixture graph into every authoring pane before WASM can push a stale descriptor. */
+/** @emoji 🔄 Syncs a committed fixture graph into every authoring pane (same descriptor on every peer). */
 export function puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture: Puzzle2dFixtureV1): void {
   const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture);
   for (const peer of puzzle2dAuthoringPeerRenderers) {
     if (!peer.authoringPeerActive()) {
       continue;
     }
-    const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(peer, descriptor);
-    peer.rememberHostDeclarativeSceneDescriptor(merged);
-    peer.setDeclarativeSceneEdgeExpectation(merged.edges.length);
+    peer.clearAuthoritativeStructuralSuppressionsForDescriptor(descriptor);
+    for (const edgeId of Array.from(peer.wasmHostAuthoredEdgeIds)) {
+      peer.clearWasmHostAuthorshipForEdge(edgeId);
+    }
+    peer.rememberHostDeclarativeSceneDescriptor(descriptor);
+    peer.setDeclarativeSceneEdgeExpectation(descriptor.edges.length);
     peer.resetDeclarativeSceneSyncFingerprint();
-    syncPuzzle2dScene(peer, merged);
-    puzzle2dEnsureSceneEdgesFromDescriptor(peer, merged);
+    syncPuzzle2dScene(peer, descriptor);
+    puzzle2dEnsureSceneEdgesFromDescriptor(peer, descriptor);
+    peer.markSceneDescriptorDirty();
+    peer.invalidate();
   }
 }
 //#endregion 🔖MultiViewAuthoring
@@ -9555,7 +11703,10 @@ export function puzzle2dSceneDescriptorFingerprint(descriptor: Puzzle2dSceneDesc
     .sort()
     .join("|");
   const edgeParts = descriptor.edges
-    .map((e) => `e:${e.id}:${e.source}:${e.target},${e.visible !== false ? 1 : 0},${e.selected ? 1 : 0},${e.style ?? ""},${e.edgeKind ?? ""}`)
+    .map(
+      (e) =>
+        `e:${e.id}:${e.source}:${e.target},${e.visible !== false ? 1 : 0},${e.selected ? 1 : 0},${e.style ?? ""},${e.edgeKind ?? ""},${e.sourceTip ?? ""},${e.targetTip ?? ""}`,
+    )
     .sort()
     .join("|");
   const wireParts = descriptor.wires
@@ -9618,7 +11769,7 @@ function puzzle2dSceneWasmFingerprintFromRenderer(renderer: Puzzle2dRenderer): s
   const edgeParts: string[] = [];
   for (const edge of renderer.scene.edges.values()) {
     edgeParts.push(
-      `e:${edge.id}:${edge.source.id}:${edge.target.id},${edge.visible ? 1 : 0},${renderer.selectionIds.has(edge.id) ? 1 : 0},${edge.style ?? ""},${edge.edgeKind}`,
+      `e:${edge.id}:${edge.source.id}:${edge.target.id},${edge.visible ? 1 : 0},${renderer.selectionIds.has(edge.id) ? 1 : 0},${edge.style ?? ""},${edge.edgeKind},${edge.sourceTip},${edge.targetTip}`,
     );
   }
   edgeParts.sort();
@@ -9676,17 +11827,17 @@ export function syncPuzzle2dScene(renderer: Puzzle2dRenderer, descriptor: Puzzle
     }
 
     for (const edgeDescriptor of descriptor.edges) {
-      const sourceHandle = renderer.scene.getObjectById(edgeDescriptor.source);
-      const targetHandle = renderer.scene.getObjectById(edgeDescriptor.target);
-      if (!isPuzzle2dSceneHandleObject(sourceHandle) || !isPuzzle2dSceneHandleObject(targetHandle)) {
+      const sourceAnchor = resolvePuzzle2dSceneEdgeAnchor(renderer.scene, edgeDescriptor.source);
+      const targetAnchor = resolvePuzzle2dSceneEdgeAnchor(renderer.scene, edgeDescriptor.target);
+      if (!sourceAnchor || !targetAnchor) {
         continue;
       }
       const existingEdge = renderer.scene.getObjectById(edgeDescriptor.id);
-      const edge = isPuzzle2dSceneEdgeObject(existingEdge) ? existingEdge : new Puzzle2dSceneEdge({ ...edgeDescriptor, source: sourceHandle, target: targetHandle });
+      const edge = isPuzzle2dSceneEdgeObject(existingEdge) ? existingEdge : new Puzzle2dSceneEdge({ ...edgeDescriptor, source: sourceAnchor, target: targetAnchor });
       if (!isPuzzle2dSceneEdgeObject(existingEdge)) {
         renderer.scene.add(edge);
       }
-      applyEdgeProps(edge, edgeDescriptor, sourceHandle, targetHandle);
+      applyEdgeProps(edge, edgeDescriptor, sourceAnchor, targetAnchor);
     }
 
     for (const wireDescriptor of descriptor.wires) {
@@ -9841,6 +11992,123 @@ function Puzzle2dHostSubtree({
 }
 //#endregion 🔖HostMountBridge
 
+//#region 🔖FixturePaletteDragPreview
+/** @emoji 📍 Window + canvas drag targets and live preview ticks for palette fixture drops (mirrors 3D {@link FixtureDropPointerBridge}). */
+function Puzzle2dFixtureDropPointerBridge(props: {
+  readonly canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  readonly containerRef: React.RefObject<HTMLDivElement | null>;
+  readonly enabled: boolean;
+  readonly setFixtureDragActive: (active: boolean) => void;
+  readonly fixtureDragDepthRef: React.MutableRefObject<number>;
+}): null {
+  reactHostPort.useEffect(() => {
+    if (!props.enabled) {
+      return;
+    }
+    const bindings = new Puzzle2dEventBindingController();
+    const canvas = props.canvasRef.current;
+    const root = props.containerRef.current;
+    const dropHost = (): HTMLElement | null => root ?? canvas ?? null;
+
+    const resetDragDepth = (): void => {
+      props.fixtureDragDepthRef.current = 0;
+      props.setFixtureDragActive(false);
+    };
+
+    const onDragEnter = (event: DragEvent): void => {
+      if (!puzzle2dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
+        return;
+      }
+      event.preventDefault();
+      props.fixtureDragDepthRef.current += 1;
+      props.setFixtureDragActive(true);
+      puzzle2dNotePaletteFixtureDragClient(event.clientX, event.clientY);
+    };
+
+    const onDragLeave = (event: DragEvent): void => {
+      if (!puzzle2dFixtureDragAcceptsTransfer([...event.dataTransfer!.types])) {
+        return;
+      }
+      const target = event.currentTarget as HTMLElement;
+      const related = event.relatedTarget as globalThis.Node | null;
+      if (related && target.contains(related)) {
+        return;
+      }
+      props.fixtureDragDepthRef.current = Math.max(0, props.fixtureDragDepthRef.current - 1);
+      if (props.fixtureDragDepthRef.current === 0) {
+        props.setFixtureDragActive(false);
+      }
+    };
+
+    const onDragOver = (event: DragEvent): void => {
+      if (!puzzle2dFixtureDragAcceptsTransfer([...event.dataTransfer!.types]) && !puzzle2dReadActivePaletteDragEncoded()) {
+        return;
+      }
+      event.preventDefault();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+      }
+      puzzle2dNotePaletteFixtureDragClient(event.clientX, event.clientY);
+    };
+
+    const attach = (element: HTMLElement | null | undefined): void => {
+      if (!element) {
+        return;
+      }
+      bindings.listen(element, "dragenter", onDragEnter as EventListener);
+      bindings.listen(element, "dragleave", onDragLeave as EventListener);
+      bindings.listen(element, "dragover", onDragOver as EventListener);
+    };
+
+    attach(canvas);
+    attach(root);
+    bindings.listen(globalThis, "dragover", onDragOver as EventListener);
+  }, [props.canvasRef, props.containerRef, props.enabled, props.fixtureDragDepthRef, props.setFixtureDragActive]);
+
+  reactHostPort.useEffect(() => {
+    if (!props.enabled) {
+      return;
+    }
+    const dropHost = (): HTMLElement | null => props.containerRef.current ?? props.canvasRef.current;
+
+    const onWindowPointerMove = (event: PointerEvent): void => {
+      if (!puzzle2dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      props.setFixtureDragActive(isClientPointOverPuzzle2dFixtureDropHost(event.clientX, event.clientY, dropHost()));
+      puzzle2dNotePaletteFixtureDragClient(event.clientX, event.clientY);
+    };
+
+    window.addEventListener("pointermove", onWindowPointerMove);
+    return () => window.removeEventListener("pointermove", onWindowPointerMove);
+  }, [props.canvasRef, props.containerRef, props.enabled, props.setFixtureDragActive]);
+
+  return null;
+}
+
+/** @emoji ⎋ Global Escape handler while a workbench palette fixture drag is active. */
+function Puzzle2dFixturePaletteDragEscapeBridge(props: { readonly enabled: boolean }): null {
+  reactHostPort.useEffect(() => {
+    if (!props.enabled) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") {
+        return;
+      }
+      if (!puzzle2dReadActivePaletteDragEncoded()) {
+        return;
+      }
+      event.preventDefault();
+      abortPuzzle2dFixturePaletteDrag();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [props.enabled]);
+  return null;
+}
+//#endregion 🔖FixturePaletteDragPreview
+
 //#region 🔖Canvas
 /** 🖼️ React puzzle 2d root that keeps the hot path inside the imperative renderer. */
 export function Puzzle2dCanvas({
@@ -9856,7 +12124,6 @@ export function Puzzle2dCanvas({
   gridSnapEnabled,
   kindCatalogs,
   kindCompatibility,
-  lodZoomThresholds,
   automaticLod,
   lod,
   onLodChange,
@@ -9916,6 +12183,7 @@ export function Puzzle2dCanvas({
   style,
   width,
   worldRasterTiling,
+  graphPortMode,
 }: Puzzle2dCanvasProps): ReactElement {
   const canvasRef = reactHostPort.useRef<HTMLCanvasElement | null>(null);
   const textOverlayCanvasRef = reactHostPort.useRef<HTMLCanvasElement | null>(null);
@@ -9934,20 +12202,42 @@ export function Puzzle2dCanvas({
   const puzzle2dTargetMenusRef = reactHostPort.useRef(new Map<string, ContextMenuItem[]>());
   const [surfaceContextMenu, setSurfaceContextMenu] = reactHostPort.useState<{ clientX: number; clientY: number; items: ContextMenuItem[] } | null>(null);
   const [fixtureDragActive, setFixtureDragActive] = reactHostPort.useState(false);
-  const fileDragDepthRef = reactHostPort.useRef(0);
+  const fixtureDragDepthRef = reactHostPort.useRef(0);
+  const onFixtureDropRef = reactHostPort.useRef(onFixtureDrop);
+  onFixtureDropRef.current = onFixtureDrop;
   const resolvedFixtureDragDrop = fixtureDragDrop ?? Boolean(onFixtureDrop);
+  const resolvedBrushNodeSize = brushNodeSize ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX;
+  const kindCatalogsRef = reactHostPort.useRef(kindCatalogs);
+  kindCatalogsRef.current = kindCatalogs;
+
+  reactHostPort.useLayoutEffect(() => {
+    puzzle2dFixturePaletteDragPreviewOptionsRef.catalogs = kindCatalogsRef.current;
+    puzzle2dFixturePaletteDragPreviewOptionsRef.brushNodeSize = resolvedBrushNodeSize;
+  }, [kindCatalogs, resolvedBrushNodeSize]);
+
+  const pushPalettePreviewAtClient = reactHostPort.useCallback((clientX: number, clientY: number): void => {
+    puzzle2dNotePaletteFixtureDragClient(clientX, clientY);
+  }, []);
+
+  const resetFixtureDragDepth = reactHostPort.useCallback((): void => {
+    fixtureDragDepthRef.current = 0;
+    setFixtureDragActive(false);
+  }, []);
+
   const handleDragEnter = reactHostPort.useCallback(
     (event: DragEvent<HTMLDivElement>): void => {
       if (!resolvedFixtureDragDrop) {
         return;
       }
-      if (![...event.dataTransfer.types].includes(PUZZLE_2D_FIXTURE_DRAG_V1_MIME)) {
+      if (!puzzle2dFixtureDragAcceptsTransfer([...event.dataTransfer.types])) {
         return;
       }
-      fileDragDepthRef.current += 1;
+      event.preventDefault();
+      fixtureDragDepthRef.current += 1;
       setFixtureDragActive(true);
+      pushPalettePreviewAtClient(event.clientX, event.clientY);
     },
-    [resolvedFixtureDragDrop],
+    [pushPalettePreviewAtClient, resolvedFixtureDragDrop],
   );
 
   const handleDragLeave = reactHostPort.useCallback(
@@ -9955,11 +12245,16 @@ export function Puzzle2dCanvas({
       if (!resolvedFixtureDragDrop) {
         return;
       }
-      if (event.currentTarget.contains(event.relatedTarget as globalThis.Node)) {
+      if (!puzzle2dFixtureDragAcceptsTransfer([...event.dataTransfer.types])) {
         return;
       }
-      fileDragDepthRef.current = Math.max(0, fileDragDepthRef.current - 1);
-      if (fileDragDepthRef.current === 0) {
+      const target = event.currentTarget as HTMLElement;
+      const related = event.relatedTarget as globalThis.Node | null;
+      if (related && target.contains(related)) {
+        return;
+      }
+      fixtureDragDepthRef.current = Math.max(0, fixtureDragDepthRef.current - 1);
+      if (fixtureDragDepthRef.current === 0) {
         setFixtureDragActive(false);
       }
     },
@@ -9971,40 +12266,110 @@ export function Puzzle2dCanvas({
       if (!resolvedFixtureDragDrop) {
         return;
       }
-      if ([...event.dataTransfer.types].includes(PUZZLE_2D_FIXTURE_DRAG_V1_MIME)) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
+      if (!puzzle2dFixtureDragAcceptsTransfer([...event.dataTransfer.types])) {
+        return;
       }
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+      pushPalettePreviewAtClient(event.clientX, event.clientY);
     },
-    [resolvedFixtureDragDrop],
+    [pushPalettePreviewAtClient, resolvedFixtureDragDrop],
   );
+
+  const commitFixtureDropAtClient = reactHostPort.useCallback((clientX: number, clientY: number, fixture: Puzzle2dFixtureV1): boolean => {
+    const handler = onFixtureDropRef.current;
+    if (!handler) {
+      return false;
+    }
+    const canvas = canvasRef.current;
+    const renderer = rendererRef.current;
+    const host = containerRef.current ?? canvas;
+    if (!canvas || !renderer || !host) {
+      return false;
+    }
+    const rect = host.getBoundingClientRect();
+    const screen = { x: clientX - rect.left, y: clientY - rect.top };
+    const world = puzzle2dFixturePaletteDragWorldRef.current ?? renderer.fixtureDropWorldFromClient(clientX, clientY) ?? renderer.screenToWorld(screen);
+    const detail: Puzzle2dFixtureDropDetail = { fixture, screen, world };
+    handler(detail);
+    renderer.emit("fixtureDrop", detail);
+    return true;
+  }, []);
 
   const handleDrop = reactHostPort.useCallback(
     (event: DragEvent<HTMLDivElement>): void => {
       if (!resolvedFixtureDragDrop) {
         return;
       }
-      event.preventDefault();
-      fileDragDepthRef.current = 0;
-      setFixtureDragActive(false);
       const fixture = readPuzzle2dFixtureDragDataTransfer(event.dataTransfer);
+      const accepts =
+        fixture !== null ||
+        puzzle2dFixtureDragAcceptsTransfer([...event.dataTransfer.types]);
+      if (!accepts) {
+        return;
+      }
+      event.preventDefault();
+      resetFixtureDragDepth();
       if (!fixture) {
         return;
       }
+      commitFixtureDropAtClient(event.clientX, event.clientY, fixture);
+    },
+    [commitFixtureDropAtClient, resetFixtureDragDepth, resolvedFixtureDragDrop],
+  );
+
+  reactHostPort.useLayoutEffect(() => {
+    if (!resolvedFixtureDragDrop) {
+      puzzle2dFixtureDropPointerToWorldRef.current = null;
+      return;
+    }
+    puzzle2dFixtureDropPointerToWorldRef.current = (clientX, clientY) => {
       const canvas = canvasRef.current;
       const renderer = rendererRef.current;
-      if (!canvas || !renderer) {
+      const host = containerRef.current ?? canvas;
+      if (!canvas || !renderer || !host) {
+        return null;
+      }
+      const rect = host.getBoundingClientRect();
+      const screen = { x: clientX - rect.left, y: clientY - rect.top };
+      return { screen, world: renderer.screenToWorld(screen) };
+    };
+    return () => {
+      puzzle2dFixtureDropPointerToWorldRef.current = null;
+    };
+  }, [resolvedFixtureDragDrop]);
+
+  reactHostPort.useEffect(() => {
+    if (!resolvedFixtureDragDrop) {
+      return;
+    }
+    const dropHost = (): HTMLElement | null => containerRef.current ?? canvasRef.current;
+
+    const onWindowPointerUp = (event: PointerEvent): void => {
+      if (!puzzle2dFixturePalettePointerDragRef.active) {
         return;
       }
-      const bounds = canvas.getBoundingClientRect();
-      const screen = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-      const world = renderer.screenToWorld(screen);
-      const detail: Puzzle2dFixtureDropDetail = { fixture, screen, world };
-      onFixtureDrop?.(detail);
-      renderer.emit("fixtureDrop", detail);
-    },
-    [onFixtureDrop, resolvedFixtureDragDrop],
-  );
+      resetFixtureDragDepth();
+      endPuzzle2dFixturePalettePointerDrag(event.clientX, event.clientY, dropHost(), (fixture) => {
+        commitFixtureDropAtClient(event.clientX, event.clientY, fixture);
+      });
+    };
+
+    const onWindowPointerCancel = (): void => {
+      if (!puzzle2dFixturePalettePointerDragRef.active) {
+        return;
+      }
+      resetFixtureDragDepth();
+      abortPuzzle2dFixturePaletteDrag();
+    };
+
+    window.addEventListener("pointerup", onWindowPointerUp);
+    window.addEventListener("pointercancel", onWindowPointerCancel);
+    return () => {
+      window.removeEventListener("pointerup", onWindowPointerUp);
+      window.removeEventListener("pointercancel", onWindowPointerCancel);
+    };
+  }, [commitFixtureDropAtClient, resetFixtureDragDepth, resolvedFixtureDragDrop]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
@@ -10307,11 +12672,11 @@ export function Puzzle2dCanvas({
       automaticLod: automaticLod ?? true,
       gridFactor: gridFactor ?? DEFAULT_PUZZLE_2D_GRID_FACTOR,
       gridSnapEnabled: gridSnapEnabled ?? false,
-      lodZoomThresholds: lodZoomThresholds ?? DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS,
       ...(lod !== undefined ? { lod } : {}),
       renderMode,
       selection: { method: selectionMethod, mode: selectionMode, targets: selectionTargets },
       worldRasterTiling,
+      ...(graphPortMode !== undefined ? { graphPortMode } : {}),
     });
     rendererRef.current = renderer;
     activePuzzle2dRenderer = renderer;
@@ -10328,7 +12693,7 @@ export function Puzzle2dCanvas({
         }
       });
     };
-  }, [renderMode]);
+  }, [graphPortMode, renderMode]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
@@ -10356,14 +12721,6 @@ export function Puzzle2dCanvas({
     }
     renderer.setGridFactor(gridFactor ?? DEFAULT_PUZZLE_2D_GRID_FACTOR);
   }, [gridFactor]);
-
-  reactHostPort.useLayoutEffect(() => {
-    const renderer = rendererRef.current;
-    if (!renderer) {
-      return;
-    }
-    renderer.setLodZoomThresholds(lodZoomThresholds ?? DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS);
-  }, [lodZoomThresholds]);
 
   reactHostPort.useLayoutEffect(() => {
     const renderer = rendererRef.current;
@@ -10579,6 +12936,7 @@ export function Puzzle2dCanvas({
     <Puzzle2dContext.Provider value={contextRenderer}>
       <div
         className={["relative box-border min-h-0 min-w-0 size-full select-none", className, fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : ""].filter(Boolean).join(" ") || undefined}
+        data-puzzle2d-fixture-drag-active={fixtureDragActive ? "true" : undefined}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -10588,6 +12946,18 @@ export function Puzzle2dCanvas({
       >
         <canvas className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" data-testid="puzzle2d-canvas" ref={canvasRef} />
         {renderMode === "headless-test" ? null : <canvas aria-hidden className="pointer-events-none absolute inset-0 block size-full min-h-0 min-w-0" data-testid="puzzle2d-text-overlay" ref={textOverlayCanvasRef} />}
+        {resolvedFixtureDragDrop ? (
+          <>
+            <Puzzle2dFixtureDropPointerBridge
+              canvasRef={canvasRef}
+              containerRef={containerRef}
+              enabled
+              fixtureDragDepthRef={fixtureDragDepthRef}
+              setFixtureDragActive={setFixtureDragActive}
+            />
+            <Puzzle2dFixturePaletteDragEscapeBridge enabled />
+          </>
+        ) : null}
         {contextRenderer ? (
           <>
             <HostMountProvider>
@@ -10752,6 +13122,273 @@ if (puzzle2dReactVitest) {
   }
 
   describe("puzzle2d react helpers", () => {
+    it("enrichKindCatalogBundleDoorCapsules relabels Capsule L and Capsule Z to door capsule left", () => {
+      const bundle: KindCatalogBundle = {
+        handles: [
+          { id: PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND, name: "door capsule right", color: "#0f0" },
+          { id: PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND, name: "door capsule left", color: "#00f" },
+        ],
+        nodes: [
+          {
+            id: "Capsule L",
+            name: "Capsule L",
+            handles: [{ handleKind: PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND, angle: -0.8, radius: 3 }],
+          },
+          {
+            id: "Capsule S",
+            name: "Capsule S",
+            handles: [{ handleKind: PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND, angle: 0.8, radius: 3 }],
+          },
+        ],
+      };
+      const enriched = enrichKindCatalogBundleDoorCapsules(bundle);
+      expect(enriched?.nodes?.find((row) => row.name === "Capsule L")?.handles?.[0]?.handleKind).toBe(PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND);
+      expect(enriched?.nodes?.find((row) => row.name === "Capsule S")?.handles?.[0]?.handleKind).toBe(PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND);
+    });
+
+    it("enrichKindCatalogBundleMetabolismIcons fills icon on node kinds without explicit icon", () => {
+      const bundle: KindCatalogBundle = {
+        nodes: [
+          { id: "Capsule J", name: "Capsule J" },
+          { id: "First Storey Tambour", name: "First Storey Tambour" },
+        ],
+      };
+      const enriched = enrichKindCatalogBundleMetabolismIcons(bundle);
+      expect(enriched?.nodes?.find((row) => row.id === "Capsule J")?.icon).toBe("capsule_J");
+      expect(enriched?.nodes?.find((row) => row.id === "First Storey Tambour")?.icon).toBe("tambour_first-storey");
+    });
+
+    it("buildPaletteNodeDragFixture seeds iconKind from metabolism node-kind icons", () => {
+      const catalogs = enrichKindCatalogBundleMetabolismIcons({
+        nodes: [{ id: "Capsule J", name: "Capsule J", handles: [{ handleKind: "door capsule right", angle: 0 }] }],
+      });
+      const fixture = buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined);
+      expect(fixture.nodes[0]).toMatchObject({ nodeKind: "Capsule J", iconKind: "capsule_J" });
+    });
+
+    it("buildPaletteFixtureDropPreviewPayloadAtWorld carries a shared world point for every pane", () => {
+      const catalogs = enrichKindCatalogBundleMetabolismIcons({
+        nodes: [{ id: "Capsule J", name: "Capsule J", handles: [{ handleKind: "door capsule right", angle: 0 }] }],
+      });
+      const fixture = buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined);
+      const preview = buildPaletteFixtureDropPreviewPayloadAtWorld({ x: 48, y: 72 }, fixture, catalogs ?? undefined);
+      expect(preview).toMatchObject({ iconKind: "capsule_J", nodeKind: "Capsule J", x: 48, y: 72 });
+    });
+
+    it("puzzle2dCommitPaletteNodeDropToPlay syncs the new node to every authoring peer immediately", async () => {
+      const canvasA = document.createElement("canvas");
+      const canvasB = document.createElement("canvas");
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const fixture = parsePuzzle2dFixtureV1({
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a:h0", angle: 0 }] }],
+        edges: [],
+      });
+      if (!fixture) {
+        throw new Error("fixture parse failed");
+      }
+      rendererA["setSize"](200, 200, 1);
+      rendererB["setSize"](200, 200, 1);
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      const catalogs = enrichKindCatalogBundleMetabolismIcons({
+        nodes: [{ id: "Capsule J", name: "Capsule J", handles: [{ handleKind: "door capsule right", angle: 0 }] }],
+      });
+      const dragFixture = buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined);
+      const encoded = encodePuzzle2dFixtureForDragV1(dragFixture);
+      let fixtureState = fixture;
+      const nodeId = puzzle2dCommitPaletteNodeDropToPlay(
+        { fixture: dragFixture, screen: { x: 100, y: 100 }, world: { x: 12, y: 18 } },
+        {
+          patchFixture: (updater) => {
+            fixtureState = updater(fixtureState);
+            return fixtureState;
+          },
+          setSelectionIds: () => undefined,
+        },
+      );
+      expect(nodeId).toBeTruthy();
+      rendererA.render();
+      rendererB.render();
+      expect(rendererA.scene.nodes.has(nodeId!)).toBe(true);
+      expect(rendererB.scene.nodes.has(nodeId!)).toBe(true);
+      rendererA.dispose();
+      rendererB.dispose();
+    });
+
+    it("puzzle2dPushPaletteFixtureDropPreviewWorldToAllPeers mirrors preview onto every authoring peer", async () => {
+      const canvasA = document.createElement("canvas");
+      const canvasB = document.createElement("canvas");
+      const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
+      const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
+      const hostA = document.createElement("div");
+      const hostB = document.createElement("div");
+      hostA.appendChild(canvasA);
+      hostB.appendChild(canvasB);
+      const rect = { left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200, x: 0, y: 0, toJSON: () => ({}) };
+      hostA.getBoundingClientRect = () => rect;
+      hostB.getBoundingClientRect = () => rect;
+      const catalogs = enrichKindCatalogBundleMetabolismIcons({
+        nodes: [{ id: "Capsule J", name: "Capsule J", handles: [{ handleKind: "door capsule right", angle: 0 }] }],
+      });
+      const encoded = encodePuzzle2dFixtureForDragV1(buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined));
+      rendererA["setSize"](200, 200, 1);
+      rendererB["setSize"](200, 200, 1);
+      rendererA["pushSceneToWasmDriver"]();
+      rendererB["pushSceneToWasmDriver"]();
+      const hintA0 = rendererA.session.encodedSceneHint();
+      const hintB0 = rendererB.session.encodedSceneHint();
+      beginPuzzle2dFixturePalettePointerDrag(encoded);
+      try {
+        puzzle2dFixturePaletteDropCommittedRef.current = false;
+        puzzle2dPushPaletteFixtureDropPreviewWorldToAllPeers({ x: 10, y: 20 }, encoded, catalogs ?? undefined);
+        rendererA.render();
+        rendererB.render();
+        expect(rendererA.session.encodedSceneHint()).toBeGreaterThan(hintA0);
+        expect(rendererB.session.encodedSceneHint()).toBeGreaterThan(hintB0);
+      } finally {
+        abortPuzzle2dFixturePaletteDrag();
+        rendererA.dispose();
+        rendererB.dispose();
+      }
+    });
+
+    it("pushPaletteFixtureDropPreviewAtWorld paints a highlighted ghost on the WASM canvas", async () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 400;
+      canvas.height = 300;
+      const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
+      const host = document.createElement("div");
+      host.appendChild(canvas);
+      host.getBoundingClientRect = () => ({ left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300, x: 0, y: 0, toJSON: () => ({}) });
+      const catalogs = enrichKindCatalogBundleMetabolismIcons({
+        nodes: [{ id: "Capsule J", name: "Capsule J", handles: [{ handleKind: "door capsule right", angle: 0 }] }],
+      });
+      const encoded = encodePuzzle2dFixtureForDragV1(buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined));
+      renderer["setSize"](400, 300, 1);
+      renderer["pushSceneToWasmDriver"]();
+      const hintBefore = renderer.session.encodedSceneHint();
+      beginPuzzle2dFixturePalettePointerDrag(encoded);
+      try {
+        renderer.pushPaletteFixtureDropPreviewAtWorld({ x: 12, y: 18 }, encoded, catalogs ?? undefined);
+        renderer.render();
+        const hintDuring = renderer.session.encodedSceneHint();
+        expect(hintDuring).toBeGreaterThan(hintBefore);
+      } finally {
+        abortPuzzle2dFixturePaletteDrag();
+        renderer.dispose();
+      }
+    });
+
+    it("beginPuzzle2dFixturePalettePointerDrag ends with palette fixture over host", () => {
+      const host = document.createElement("div");
+      host.getBoundingClientRect = () => ({ left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200, x: 0, y: 0, toJSON: () => ({}) });
+      const dragFixture = buildPaletteNodeDragFixture("Capsule J");
+      const encoded = encodePuzzle2dFixtureForDragV1(dragFixture);
+      let dropped: Puzzle2dFixtureV1 | null = null;
+      beginPuzzle2dFixturePalettePointerDrag(encoded);
+      expect(puzzle2dFixturePalettePointerDragRef.active).toBe(true);
+      endPuzzle2dFixturePalettePointerDrag(10, 10, host, (fixture) => {
+        dropped = fixture;
+      });
+      expect(puzzle2dFixturePalettePointerDragRef.active).toBe(false);
+      expect(dropped?.nodes[0]?.nodeKind).toBe("Capsule J");
+    });
+
+    it("puzzle2dNotePaletteFixtureDragClient updates shared client ref and starts preview loop", () => {
+      const dragFixture = buildPaletteNodeDragFixture("Capsule J");
+      const encoded = encodePuzzle2dFixtureForDragV1(dragFixture);
+      beginPuzzle2dFixturePalettePointerDrag(encoded);
+      try {
+        puzzle2dNotePaletteFixtureDragClient(64, 96);
+        expect(puzzle2dFixturePaletteDragClientRef).toMatchObject({ clientX: 64, clientY: 96 });
+      } finally {
+        abortPuzzle2dFixturePaletteDrag();
+      }
+    });
+
+    it("puzzle2dFixturePaletteTreeDragController toggles palette drag ref and drag session", () => {
+      const encoded = encodePuzzle2dFixtureForDragV1(buildPaletteNodeDragFixture("Capsule J"));
+      const dragData = new Map([["row-1", { [PUZZLE_2D_FIXTURE_DRAG_V1_MIME]: encoded }]]);
+      const controller = puzzle2dFixturePaletteTreeDragController(dragData);
+      const item = { id: "row-1", label: "Capsule J" };
+      const section = { id: "kinds", label: "Kinds" };
+      const onSession = (event: Event): void => {
+        const detail = (event as CustomEvent<{ readonly encoded: string } | null>).detail;
+        if (!detail) {
+          expect(puzzle2dFixturePaletteDragRef.active).toBe(false);
+        } else {
+          expect(puzzle2dFixturePaletteDragRef.active).toBe(true);
+          expect(detail.encoded).toBe(encoded);
+        }
+      };
+      window.addEventListener("puzzle2d-fixture-drag-session", onSession);
+      try {
+        controller.onDragStart?.({ items: [item], sourceItem: item, section });
+        expect(puzzle2dFixturePaletteDragRef.active).toBe(true);
+        controller.onDragEnd?.({ items: [item], sourceItem: item, section });
+        expect(puzzle2dFixturePaletteDragRef.active).toBe(false);
+      } finally {
+        window.removeEventListener("puzzle2d-fixture-drag-session", onSession);
+        puzzle2dFixturePaletteDragRef.active = false;
+        puzzle2dFixturePalettePointerDragRef.active = false;
+        puzzle2dFixturePalettePointerDragRef.encoded = null;
+      }
+    });
+
+    it("parsePuzzle2dFixtureV1 preserves edgeKind on edges", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a:h0", angle: 0 }] }],
+        edges: [{ id: "e1", source: "a:h0", target: "a:h0", edgeKind: BUILTIN_LINK_EDGE_KIND }],
+      });
+      expect(fixture?.edges[0]?.edgeKind).toBe(BUILTIN_LINK_EDGE_KIND);
+    });
+
+    it("buildPuzzle2dSceneDescriptorFromFixture forwards edgeKind to the descriptor", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a:h0", angle: 0 }] }],
+        edges: [{ id: "e1", source: "a:h0", target: "a:h0", edgeKind: BUILTIN_LINK_EDGE_KIND }],
+      });
+      expect(fixture).toBeTruthy();
+      const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture!);
+      expect(descriptor.edges[0]?.edgeKind).toBe(BUILTIN_LINK_EDGE_KIND);
+    });
+
+    it("puzzle2dApplyNodeKindToFixtureNode sets nodeKind on the fixture node", () => {
+      const node: Puzzle2dFixtureCircleNodeV1 = {
+        handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "n:h0" }],
+        id: "n",
+        radius: 10,
+        x: 0,
+        y: 0,
+      };
+      const catalogs: KindCatalogBundle = { nodes: [{ id: "kind-a", name: "Kind A" }] };
+      const next = puzzle2dApplyNodeKindToFixtureNode(node, "kind-a", catalogs);
+      expect(next.nodeKind).toBe("kind-a");
+    });
+
+    it("buildPuzzle2dSceneDescriptorFromFixture relabels placed Capsule L door handles", async () => {
+      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
+      expect(fixture).toBeTruthy();
+      const capsuleLKind = "Capsule L";
+      const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture!);
+      const leftHandles = descriptor.handles.filter(
+        (handle) => fixture!.nodes.find((node) => node.id === handle.nodeId)?.nodeKind === capsuleLKind && handle.handleKind === PUZZLE2D_DOOR_CAPSULE_LEFT_HANDLE_KIND,
+      );
+      expect(leftHandles.length).toBeGreaterThan(0);
+      const wrongRight = descriptor.handles.some(
+        (handle) => fixture!.nodes.find((node) => node.id === handle.nodeId)?.nodeKind === capsuleLKind && handle.handleKind === PUZZLE2D_DOOR_CAPSULE_RIGHT_HANDLE_KIND,
+      );
+      expect(wrongRight).toBe(false);
+    });
+
     it("puzzle2dFixtureSceneMarkers maps nakagin fixture into scene descriptors", async () => {
       const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
       const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
@@ -10926,6 +13563,95 @@ if (puzzle2dReactVitest) {
       syncPuzzle2dScene(renderer, merged);
       expect(renderer.scene.edges.has("edge-link-map")).toBe(true);
       renderer.dispose();
+    });
+
+    it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers gives every pane the same graph", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [{ id: "edge-real", source: "a:h0", target: "b:h0" }],
+        nodes: [
+          { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
+          { handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, x: 200, y: 0 },
+        ],
+        schema: "puzzle.2d.fixture/v1",
+      });
+      expect(fixture).toBeTruthy();
+      const peerA = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const peerB = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const jsx = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={40} x={0} y={0}>
+            <Handle handleKind="port" angle={0} id="a:h0" />
+          </Node>
+          <Node id="b" radius={40} x={200} y={0}>
+            <Handle handleKind="port" angle={Math.PI} id="b:h0" />
+          </Node>
+        </>,
+      );
+      syncPuzzle2dScene(peerA, jsx);
+      syncPuzzle2dScene(peerB, jsx);
+      const sourceHandle = peerA.scene.handles.get("a:h0");
+      const targetHandle = peerA.scene.handles.get("b:h0");
+      expect(sourceHandle).toBeDefined();
+      expect(targetHandle).toBeDefined();
+      peerA.scene.ingestWasmEdge(
+        new Puzzle2dSceneEdge({
+          id: "edge-ghost",
+          source: sourceHandle as Puzzle2dSceneHandle,
+          target: targetHandle as Puzzle2dSceneHandle,
+        }),
+      );
+      peerA.wasmHostAuthoredEdgeIds.add("edge-ghost");
+      peerA.wasmHostAuthoredLinkByEdgeId.set("edge-ghost", { source: "a:h0", target: "b:h0" });
+      expect(peerA.scene.edges.has("edge-ghost")).toBe(true);
+      expect(peerB.scene.edges.size).toBe(0);
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture!);
+      expect(peerA.scene.edges.size).toBe(1);
+      expect(peerB.scene.edges.size).toBe(1);
+      expect(peerA.scene.edges.has("edge-real")).toBe(true);
+      expect(peerB.scene.edges.has("edge-real")).toBe(true);
+      expect(peerA.scene.edges.has("edge-ghost")).toBe(false);
+      peerA.dispose();
+      peerB.dispose();
+    });
+
+    it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers clears edge suppressions so fixture edges reach scene", () => {
+      const fixture = parsePuzzle2dFixtureV1({
+        camera: { x: 0, y: 0, zoom: 1 },
+        edges: [{ id: "edge-real", source: "a:h0", target: "b:h0" }],
+        nodes: [
+          { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
+          { handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, x: 200, y: 0 },
+        ],
+        schema: "puzzle.2d.fixture/v1",
+      });
+      expect(fixture).toBeTruthy();
+      const peer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const jsx = buildPuzzle2dSceneDescriptor(
+        <>
+          <Node id="a" radius={40} x={0} y={0}>
+            <Handle handleKind="port" angle={0} id="a:h0" />
+          </Node>
+          <Node id="b" radius={40} x={200} y={0}>
+            <Handle handleKind="port" angle={Math.PI} id="b:h0" />
+          </Node>
+          <Edge id="edge-real" source="a:h0" target="b:h0" />
+        </>,
+      );
+      syncPuzzle2dScene(peer, jsx);
+      peer.pruneHostDeclarativeStructuralDelete({ kind: "edge", id: "edge-real" });
+      peer.runWithoutSceneDeleteEvents(() => {
+        const edge = peer.scene.edges.get("edge-real");
+        if (edge) {
+          peer.scene.remove(edge);
+        }
+      });
+      expect(peer.scene.edges.has("edge-real")).toBe(false);
+      expect(peer.isAuthoritativeStructuralRemovalSuppressed("edge", "edge-real")).toBe(true);
+      puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture!);
+      expect(peer.isAuthoritativeStructuralRemovalSuppressed("edge", "edge-real")).toBe(false);
+      expect(peer.scene.edges.has("edge-real")).toBe(true);
+      peer.dispose();
     });
 
     it("keeps wasm-only link edges after graph drain by re-running JSX merge when children omit Edge markers", async () => {
@@ -11138,6 +13864,30 @@ if (puzzle2dReactVitest) {
         );
       });
       expect(nodeDeletes).toEqual([]);
+      unmountPuzzle2dHostMount(hostMount);
+      renderer.dispose();
+    });
+
+    it("host edge mount does not emit edgeCreate (declarative topology must not look like user connect)", () => {
+      const renderer = new Puzzle2dRenderer({ renderMode: "headless-test" });
+      const edgeCreates: Puzzle2dEdgeLinkPayload[] = [];
+      renderer.on("edgeCreate", (event) => edgeCreates.push(event));
+      const hostMount = createPuzzle2dHostMount(renderer);
+      act(() => {
+        updatePuzzle2dHostMount(
+          hostMount,
+          createElement(
+            Fragment,
+            null,
+            createElement(PUZZLE_2D_HOST_NODE, { id: "a", radius: 10, x: 0, y: 0 }),
+            createElement(PUZZLE_2D_HOST_NODE, { id: "b", radius: 10, x: 120, y: 0 }),
+            createElement(PUZZLE_2D_HOST_EDGE, { id: "e-ab", source: "a", target: "b" }),
+          ),
+          null,
+        );
+      });
+      expect(renderer.scene.edges.has("e-ab")).toBe(true);
+      expect(edgeCreates).toEqual([]);
       unmountPuzzle2dHostMount(hostMount);
       renderer.dispose();
     });

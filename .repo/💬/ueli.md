@@ -240,6 +240,12 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+We are splitting puzzle 2d into general reusable bundles.
+It must be extendable on multiple levels.
+every extension is just a rust file.@infinite/cavas/react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @infinite/cavas/react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap 
+
+---
+
 Make sure everything strictly follows the naming pattern.
 Only these commands are allowed: `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, `purge`
 COMMAND.SUB...script.ts
@@ -422,6 +428,22 @@ Add a checkbox element which is an action that can be checked and unchecked.
 
 ---
 
+Every panel has tabs.
+Every tab has a tree.
+Every tree has section.
+This must be enforced.
+Frameworks etc must be built the same way.
+Currently everything is very inconsistent.
+
+---
+
+ui:
+Spacebar is a special key when inside a window. It acts as control key.
+e.g. when no engangement is active, then pressing space repeats the last finalized engangement.
+e.g. when something is typed into the engagment input (cant have spaces) then pressing space starts the engangement.
+
+---
+
 Generalize virtual file system.
 Add FileNodeKind (which has id, name, icon, description, descriptors, etc)
 Add DescriptorKind
@@ -475,6 +497,35 @@ Refactor everything
 ---
 
 ## 🧩puzzle
+
+---
+
+Add default suggestion percentages to all node/object kinds and handles/vortices.
+Make sure that:
+tambours appear 15 times more often than bases.
+tambours appear 10 times more often than capitals.
+capsules appear 8 times more often than tambours.
+
+---
+
+puzzle 2d and puzzle 3d:
+Add a new feature: Fill
+When fill engangement is an active then show a slider from 0 to 1000.
+The slider is the amount of nodes/objects that should be added.
+Extend it with the same princinple and distribution.
+Make sure the nodes/objects have new collision, Repeat the process until all objects have been added.
+1. Pick a free handle/vortex
+2. Pick a compatible (non colliding) node/object according distribution
+3. Repeat until all the amount of target objects have been filles or no more nodes/object can be added. Return also incomplete solutions.
+
+---
+
+Every node kind/object kind and handle kind/vortex kind should have have a suggestion percentage.
+Add one slider per kind to window option.
+The total should always be 1. Hence when one slider is moved, it automatically adjust the others proportionally.
+When the brush is active make the suggestions randomized according the percentage.
+
+---
 
 ### 🏁2d
 
@@ -2455,6 +2506,14 @@ semio/sketchpad:
 
 ---
 
+the kit app uses WIRES for displaying the relationships.
+Make sure that the data is directly comming from the rust store.
+It is synchronized with the vfs.
+Every visible file node is shown as identity in wires.
+e.g. if a design  is collapsed and it has a transitive relationship to a type which is also shown then add it. if design is uncolapsed and the pieces are shown, then show instead of the transitive relations the direct relationsjip.
+
+---
+
 The rules are simple:
 Every hook either returns an id or a atomic value type.
 Every entity hook has no paramter.
@@ -2910,6 +2969,19 @@ The two specific implemtations must be used:
 ---
 
 ## 🥅framework
+
+###
+
+---
+
+all frameworks must have a general toggle Display next to workbench. It is a left panel. 
+It has two tabs: Windows, Layout
+Windows are the window kinds. every window kind can a set of templates (e.g. top, perspective, etc for 3d, or other kind of templates).
+Layout are reusable layouts (e.g. top view left top, north view left bottom, perspective right)
+This exists in all products such as platforms, playgrounds, etc 
+The mechanism must be general
+
+---
 
 ### 🚉platform
 

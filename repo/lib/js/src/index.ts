@@ -878,7 +878,7 @@ export function dispatchSubcommand(
 
 /** 📁Walks parents until the monorepo root (`nx.json` + workspace `package.json`). */
 export function findRepoRoot(start: string): string {
-  let dir = start;
+  let dir = start?.trim() ? start : getWorkspaceRoot();
   for (let i = 0; i < 32; i++) {
     if (existsSync(join(dir, "nx.json")) && existsSync(join(dir, "package.json"))) return dir;
     const parent = dirname(dir);
@@ -1023,15 +1023,15 @@ export function runViteBunxDev(
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const port = process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173";
   const portInUse = isDevPortInUse(host, Number(port));
+  if (portInUse) {
+    console.error(
+      `[dev] Port ${port} is already in use. Stop the running dev server, then restart (clears Vite prebundle cache and avoids 504 Outdated Optimize Dep).`,
+    );
+    process.exit(1);
+  }
   if (opts.clearViteCache) {
-    if (portInUse) {
-      console.error(
-        `[dev] Port ${port} is already in use; skipping Vite cache clear to avoid 504 Outdated Optimize Dep. Stop the existing dev server and restart.`,
-      );
-    } else {
-      const viteCache = join(bundleRoot, "node_modules", ".vite");
-      if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
-    }
+    const viteCache = join(bundleRoot, "node_modules", ".vite");
+    if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
   }
   const wantStrictPort = opts.strictPort ?? true;
   const viteArgs = ["vite", "--config", "vite.config.ts", "--host", host, "--port", port];
@@ -1062,6 +1062,24 @@ export type WasmPackWebPkg = {
   sideEffects?: string[];
 };
 
+/** 📦True when any wasm-pack input is newer than the built `.wasm` artifact. */
+function wasmPackInputsStale(rsDir: string, wasmPath: string): boolean {
+  if (!existsSync(wasmPath)) return true;
+  const wasmMtime = statSync(wasmPath).mtimeMs;
+  const repoRoot = getWorkspaceRoot();
+  const inputs = [
+    join(rsDir, "lib.rs"),
+    join(rsDir, "Cargo.toml"),
+    join(rsDir, "Cargo.lock"),
+    join(repoRoot, "Cargo.toml"),
+    join(repoRoot, "Cargo.lock"),
+  ];
+  for (const input of inputs) {
+    if (existsSync(input) && statSync(input).mtimeMs > wasmMtime) return true;
+  }
+  return false;
+}
+
 /** 📦`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export function runWasmPackWebBuild(opts: {
   rsDir: string;
@@ -1071,8 +1089,22 @@ export function runWasmPackWebBuild(opts: {
   wasmBaseName: string;
 }): void {
   const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName } = opts;
+  const pkgDir = join(rsDir, "pkg");
+  const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
   if (process.env[skipEnvVar] === "1") {
     console.log(`[${logPrefix}] ${skipEnvVar}=1 → skipping wasm-pack build`);
+    return;
+  }
+  if (!wasmPackInputsStale(rsDir, wasmPath)) {
+    console.log(`[${logPrefix}] pkg/${wasmBaseName}_bg.wasm up to date → skipping wasm-pack build`);
+    if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
+    const pkgJson = {
+      type: "module",
+      version: pkg.version ?? "0.1.0",
+      sideEffects: pkg.sideEffects ?? ["./snippets/*"],
+      ...pkg,
+    };
+    writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
     return;
   }
   console.log(`[${logPrefix}] wasm-pack build --release --target web --out-dir pkg --no-pack`);
@@ -1088,7 +1120,6 @@ export function runWasmPackWebBuild(opts: {
   }
   console.log(`[${logPrefix}] wasm-pack build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
-  const pkgDir = join(rsDir, "pkg");
   if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
   const pkgJson = {
     type: "module",
@@ -1098,7 +1129,6 @@ export function runWasmPackWebBuild(opts: {
   };
   writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
 
-  const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
   if (existsSync(wasmPath)) {
     const sz = (statSync(wasmPath).size / (1024 * 1024)).toFixed(2);
     console.log(`[${logPrefix}] pkg/${wasmBaseName}_bg.wasm ready (${sz} MiB) + pkg/package.json restored`);
@@ -1114,4 +1144,51 @@ export function scriptPathFromUrl(scriptUrl: string): string {
 }
 //#endregion 🔖Process
 //#endregion 🔖bundle-script
+
+export {
+  bumpCounterFromHistory,
+  bumpCounterFromSubject,
+  buildMicroCommitMessage,
+  digestMicroCommitMessage,
+  extractCounterFromSubject,
+  installMicroCommitGitHooks,
+  normalizeBulletLines,
+  resetMicroCommitTemplates,
+  runMicroCommit,
+  shouldRefreshPreparedCommitMessage,
+  writeMicroCommitTemplates,
+} from "./micro-commit.ts";
+export type { MicroCommitLevel } from "./micro-commit.ts";
+
+export {
+  BUNDLE_DATE_SECTION_RE,
+  BUNDLE_WIP_SUBJECT_RE,
+  buildCommitMessage,
+  findLastBundleWipCommit,
+  formatBundleSubject,
+  formatBundleTagName,
+  bulletMatchesCommitHistory,
+  bundleScopeLabelError,
+  commitBundleBodyError,
+  commitHistoryCompareLines,
+  emitCommitDiff,
+  emitCommitLog,
+  formatCommitPrepareAgentReply,
+  formatCommitPrepareCommands,
+  formatGitSignedTagCommand,
+  resolveCommitBundleRange,
+  validateBundleBulletsFresh,
+  validateBundleCommitAttribution,
+  validateBundleDayDeltasAttribution,
+  partitionRangeDeltasByBundle,
+  isBundleScopeLine,
+  isCommitPrepareOnly,
+  labelPathTokens,
+  leadingEmojiClusterCount,
+  normalizeBundleScopeLabel,
+  parseCommitBundleBody,
+  parseCommitSteps,
+  runCommit,
+} from "./commit.ts";
+export type { CommitBundleDateSection, CommitBundleSection, CommitLevel, CommitSteps } from "./commit.ts";
 

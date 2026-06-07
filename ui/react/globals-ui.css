@@ -113,3 +113,33 @@
 }
 /* #endregion 🎃TreeHoverPath */
 
+/* #region 👻PanelGhost */
+[data-ghost="true"] [data-dim]:not([data-active-interaction]):not([data-active-ancestor]) {
+  opacity: 0.05;
+  pointer-events: none;
+  transition: opacity 150ms;
+  scrollbar-width: none;
+}
+
+[data-ghost="true"] [data-dim]:not([data-active-interaction]):not([data-active-ancestor])::-webkit-scrollbar {
+  display: none;
+}
+
+[data-ghost="true"] :not([data-active-interaction]):not([data-active-ancestor]):not(:is([data-active-interaction] *, [data-active-ancestor] *)) {
+  scrollbar-width: none;
+}
+
+[data-ghost="true"] :not([data-active-interaction]):not([data-active-ancestor]):not(:is([data-active-interaction] *, [data-active-ancestor] *))::-webkit-scrollbar {
+  display: none;
+}
+
+[data-ghost="true"] [data-dim][data-active-ancestor] {
+  opacity: 1;
+}
+
+[data-ghost="true"] [data-active-interaction] {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* #endregion 👻PanelGhost */
+

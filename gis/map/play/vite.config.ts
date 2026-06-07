@@ -1,0 +1,25 @@
+// #region 🧲Header
+/** @emoji 🛝 Vite dev/build for `@gis/map/play`. */
+// #endregion 🧲Header
+
+// #region 🔌Adapters
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createPlaygroundPlayViteConfig } from "../../../ui/styling/vite-elements-assets.ts";
+// #endregion 🔌Adapters
+
+const playDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(playDir, "../../..");
+
+export default createPlaygroundPlayViteConfig({
+  playDir,
+  repoRoot,
+  playEntryKind: "map",
+  extraAliases: [{ find: "@gis/map/react", replacement: path.resolve(playDir, "../react/index.tsx") }],
+  resolveDedupe: ["react", "react-dom", "@gis/map/react", "three"],
+  optimizeDeps: {
+    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@infinite/cavas/react-renderer", "@gis/map/react"],
+    esbuildOptions: { target: "esnext" },
+  },
+  watchIgnored: ["../rs/lib.rs", "../rs/target/**", "../rs/Cargo.toml", "../rs/script.ts"],
+});

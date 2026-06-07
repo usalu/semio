@@ -62,7 +62,7 @@ public class Tests
     {
         var path = Path.Combine(AssetsPath, filename);
         if (!System.IO.File.Exists(path)) throw new FileNotFoundException($"Asset not found at {Path.GetFullPath(path)}");
-        var json = System.IO.File.ReadAllText(path);
+        var json = Utility.ReadKitFixtureJson(path);
         if (typeof(T) == typeof(Kit))
             return (T)(object)Utility.DeserializeKit(json)!;
         if (typeof(T) == typeof(Design))

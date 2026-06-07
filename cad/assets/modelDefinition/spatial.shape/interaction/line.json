@@ -20,7 +20,11 @@
       {
         "state": "end_of_line",
         "anchor": "points.start",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ]
   },
@@ -523,16 +527,28 @@
           "kind": "path",
           "root": "context",
           "segments": [
-            { "kind": "field", "name": "points" },
-            { "kind": "field", "name": "start" }
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "field",
+              "name": "start"
+            }
           ]
         },
         "p1": {
           "kind": "path",
           "root": "context",
           "segments": [
-            { "kind": "field", "name": "points" },
-            { "kind": "field", "name": "end" }
+            {
+              "kind": "field",
+              "name": "points"
+            },
+            {
+              "kind": "field",
+              "name": "end"
+            }
           ]
         }
       }

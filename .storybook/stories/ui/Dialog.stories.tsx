@@ -14,7 +14,7 @@ import { useState } from "react";
 
 // 💬#region 🧸Dialog
 const meta = {
-  title: "elements/react/Dialog",
+  title: "🖱️ui⚛️react/Dialog",
   component: Dialog,
   parameters: {
     layout: "centered",

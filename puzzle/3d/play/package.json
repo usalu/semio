@@ -14,7 +14,9 @@
     "test": "bun nx run @puzzle/3d/play:test"
   },
   "dependencies": {
-    "@framework/playground/core": "workspace:*"
+    "@framework/playground/core": "workspace:*",
+    "@infinite/world/r3f": "workspace:*",
+    "@puzzle/3d/react": "workspace:*"
   },
   "devDependencies": {
     "@framework/playground/renderer/react": "workspace:*",

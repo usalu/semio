@@ -52,16 +52,7 @@
                 },
                 {
                     "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-                    "name": "door capsule east",
-                    "compatiblePorts": [
-                        {
-                            "id": "019ab243-21f4-73df-8cb4-50266f6860b8"
-                        }
-                    ]
-                },
-                {
-                    "id": "019ab243-21f4-73df-8cb4-4f2766b68b25",
-                    "name": "door capsule west",
+                    "name": "door capsule right",
                     "compatiblePorts": [
                         {
                             "id": "019ab243-21f4-73df-8cb4-57263e420e70"
@@ -69,20 +60,17 @@
                     ]
                 },
                 {
-                    "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
-                    "name": "door tambour east",
+                    "id": "019ab243-21f4-73df-8cb4-4f2766b68b25",
+                    "name": "door capsule left",
                     "compatiblePorts": [
                         {
-                            "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-                        },
-                        {
-                            "id": "019ab243-21f4-73df-8cb4-58d90f95991e"
+                            "id": "019ab243-21f4-73df-8cb4-50266f6860b8"
                         }
                     ]
                 },
                 {
-                    "id": "019ab243-21f4-73df-8cb4-57263e420e70",
-                    "name": "door tambour west",
+                    "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
+                    "name": "door tambour left",
                     "compatiblePorts": [
                         {
                             "id": "019ab243-21f4-73df-8cb4-4f2766b68b25"
@@ -93,8 +81,20 @@
                     ]
                 },
                 {
+                    "id": "019ab243-21f4-73df-8cb4-57263e420e70",
+                    "name": "door tambour right",
+                    "compatiblePorts": [
+                        {
+                            "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+                        },
+                        {
+                            "id": "019ab243-21f4-73df-8cb4-58d90f95991e"
+                        }
+                    ]
+                },
+                {
                     "id": "019ab243-21f4-73df-8cb4-58d90f95991e",
-                    "name": "platform east",
+                    "name": "platform right",
                     "compatiblePorts": [
                         {
                             "id": "019ab243-21f4-73df-8cb4-57263e420e70"
@@ -103,7 +103,7 @@
                 },
                 {
                     "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
-                    "name": "platform west",
+                    "name": "platform left",
                     "compatiblePorts": [
                         {
                             "id": "019ab243-21f4-73df-8cb4-50266f6860b8"
@@ -382,14 +382,14 @@
         },
         {
             "id": "e4c4a387-32a6-52d2-b0bb-a5e452272eb2",
-            "key": "platform east length",
-            "name": "platform east length",
+            "key": "platform right length",
+            "name": "platform right length",
             "unit": "m"
         },
         {
             "id": "3f17d8c5-c460-555f-be31-a99797da842c",
-            "key": "platform west length",
-            "name": "platform west length",
+            "key": "platform left length",
+            "name": "platform left length",
             "unit": "m"
         },
         {
@@ -2429,7 +2429,7 @@
                                     },
                                     "description": "🥇 The top system center of the elevator.",
                                     "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-76bc3f56347a"
+                                        "id": "019ab243-21f4-73df-8cb4-7ddf5d3ba702"
                                     },
                                     "mandatory": false,
                                     "props": [
@@ -2771,7 +2771,7 @@
                                     },
                                     "description": "🎤 The bottom system center of the elevator.",
                                     "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-73ce526cb47c"
+                                        "id": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
                                     },
                                     "mandatory": false,
                                     "props": [
@@ -2807,7 +2807,7 @@
                                     },
                                     "description": "🎧 The top system center of the elevator.",
                                     "port": {
-                                        "id": "019ab243-21f4-73df-8cb4-60ea93872506"
+                                        "id": "019ab243-21f4-73df-8cb4-6b15b40049fb"
                                     },
                                     "mandatory": false,
                                     "props": [

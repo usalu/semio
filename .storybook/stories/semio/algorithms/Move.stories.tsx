@@ -71,7 +71,7 @@ function MoveFrame() {
 }
 
 const meta = {
-  title: "semio/algorithms/Move",
+  title: "🏘️semio🧪algorithms/Move",
   component: MoveFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

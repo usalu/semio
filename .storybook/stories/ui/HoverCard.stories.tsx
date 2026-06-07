@@ -9,8 +9,8 @@
 // #endregion 🧲Header
 
 import { Aside, Avatar, AvatarFallback, AvatarImage, Button, Card, CardGrid, HoverCard, HoverCardContent, HoverCardTrigger } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { CalendarDays } from "lucide-react";
 
 const HoverCardExamples = () => (
   <div className="space-y-4">
@@ -54,8 +54,10 @@ const HoverCardExamples = () => (
 );
 
 // 🔷#region 🔧HoverCard
+const CalendarDays = createIconComponent("calendar-days");
+
 const meta = {
-  title: "elements/react/HoverCard",
+  title: "🖱️ui⚛️react/HoverCard",
   component: HoverCardExamples,
   parameters: {
     layout: "centered",

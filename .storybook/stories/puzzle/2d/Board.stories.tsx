@@ -25,7 +25,7 @@ import {
 import nakaginCapsuleTowerPuzzle2dFixture from "../../../../puzzle/2d/fixture/nakagin-capsule-tower.2d.json";
 
 const meta = {
-	title: "puzzle/2d",
+	title: "🧩puzzle🩻2d",
 	component: Puzzle2dCanvas,
 	parameters: {
 		layout: "fullscreen",

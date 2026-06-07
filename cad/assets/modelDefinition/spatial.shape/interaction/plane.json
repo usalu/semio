@@ -20,7 +20,11 @@
       {
         "state": "other_corner_or_length",
         "anchor": "points.cornerA",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ]
   },

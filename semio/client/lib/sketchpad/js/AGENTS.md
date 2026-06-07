@@ -1,8 +1,9 @@
 ---
 technology: semio
+path: 🏘️semio✍️sketchpad
 bundle:
  name: sketchpad
- emoji: ✏️
+ emoji: ✍️
  description: The sketchpad bundle for semio.
  kind: ui
 ---

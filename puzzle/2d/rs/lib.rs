@@ -1,1954 +1,18 @@
-//! 🎛️ Single-source board crate: vector geometry (`vcompute`), selection predicates (`geom_sel`), serde scene JSON (`scene_json`), interactive `BoardHost`, retained `BoardEngine`, and wasm-bindgen facades — all in this file (nested `mod` blocks only; no extra `.rs` files).
-#![allow(clippy::missing_errors_doc, reason = "Board engine is internal to the elements board bundle.")]
+//! 🧩 Puzzle 2d board: elements palette, icon codec, `BoardHost`, WASM session on `mathematical_graph` + `infinite_cavas`.
+#![allow(clippy::missing_errors_doc, reason = "Puzzle board bundle is internal to puzzle 2d.")]
+
+pub use infinite_cavas::{self as cavas, *};
+pub use cavas::vello::kurbo::{CubicBez, Point, Vec2};
+pub use mathematical_graph_port_directed::{self as graph, handle_position, BoardEngine, BoardEvent, Camera, Edge, EdgeId, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection};
+pub use graph::{
+    apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_redraw_layout_to_fixture_v1_json,
+    ForceGraphLayoutOptions, GraphExtension,
+};
+pub use gis_map as map;
+pub use reasoning_mindmap as mindmap;
 
 pub use vello_svg::usvg;
 pub use vello_svg::vello;
-
-// #region 🏷️BoardIconAssets
-
-mod board_icon_assets {
-    //! @emoji 📎 Static bytes for board icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
-
-    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("assets/NotoColorEmoji-subset.ttf");
-}
-
-// #endregion 🏷️BoardIconAssets
-
-mod vcompute {
-    use crate::vello::kurbo::{Affine, CubicBez, ParamCurve, Point, Stroke, Vec2};
-    use crate::vello::peniko::Color;
-    use crate::vello::Scene;
-
-    #[inline]
-    pub fn clamp_f64(value: f64, min: f64, max: f64) -> f64 {
-        value.max(min).min(max)
-    }
-
-    #[inline]
-    pub fn distance_between(left: Point, right: Point) -> f64 {
-        (right - left).hypot()
-    }
-
-    #[inline]
-    pub fn normalize_or_zero(vector: Vec2) -> Vec2 {
-        let len = vector.hypot();
-        if len <= f64::EPSILON {
-            return Vec2::new(0.0, 0.0);
-        }
-        vector / len
-    }
-
-    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-    pub fn ray_from_origin_to_axis_aligned_rectangle_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Point {
-        let mut t_best = f64::INFINITY;
-        if ux.abs() > 1e-12 {
-            let tx = ux.signum() * hw / ux;
-            let y_at = uy * tx;
-            if tx > 0.0 && y_at.abs() <= hh + 1e-9 {
-                t_best = t_best.min(tx);
-            }
-        }
-        if uy.abs() > 1e-12 {
-            let ty = uy.signum() * hh / uy;
-            let x_at = ux * ty;
-            if ty > 0.0 && x_at.abs() <= hw + 1e-9 {
-                t_best = t_best.min(ty);
-            }
-        }
-        if !t_best.is_finite() || t_best <= 0.0 || t_best == f64::INFINITY {
-            return Point::new(hw, 0.0);
-        }
-        Point::new(ux * t_best, uy * t_best)
-    }
-
-    pub fn handle_position_on_circle(center: Point, radius: f64, angle: f64) -> Point {
-        let ux = angle.cos();
-        let uy = angle.sin();
-        center + Vec2::new(ux * radius, uy * radius)
-    }
-
-    /// 🧭 Rectangle handle `angle` is **0 at top edge center (north)**, increasing **counter‑clockwise** in board space (`y` down): `π/4` NW corner, `π/2` west midpoint, `π` south, `3π/2` east; circles keep **east‑zero** `atan2(dy,dx)` convention.
-    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-    pub fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
-        let hw = width / 2.0;
-        let hh = height / 2.0;
-        let ux = -angle.sin();
-        let uy = -angle.cos();
-        let local = ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
-        center + Vec2::new(local.x, local.y)
-    }
-
-    /// 🧭 East-zero polar angle for a circle handle that meets the ray from `center` toward `toward` on the rim.
-    pub fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
-        let d = toward - center;
-        f64::atan2(d.y, d.x)
-    }
-
-    /// 🧭 North-zero rectangle handle angle so the rim point lies on the ray from `center` toward `toward`.
-    pub fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, toward: Point) -> f64 {
-        let u = normalize_or_zero(toward - center);
-        f64::atan2(-u.x, -u.y)
-    }
-
-    pub fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
-        let mut source_radial = normalize_or_zero(source_point - source_center);
-        if source_radial == Vec2::new(0.0, 0.0) {
-            source_radial = normalize_or_zero(target_point - source_point);
-        }
-        let mut target_radial = normalize_or_zero(target_point - target_center);
-        if target_radial == Vec2::new(0.0, 0.0) {
-            target_radial = normalize_or_zero(target_point - source_point);
-        }
-        let handle_distance = distance_between(source_point, target_point);
-        let control_length = clamp_f64(handle_distance * 0.35, 24.0, 240.0);
-        let p1 = source_point + source_radial * control_length;
-        let p2 = target_point + target_radial * control_length;
-        CubicBez::new(source_point, p1, p2, target_point)
-    }
-
-    pub fn distance_point_to_cubic_bezier(point: Point, curve: CubicBez, segments: usize) -> f64 {
-        let mut smallest = f64::INFINITY;
-        let mut previous = curve.eval(0.0);
-        let n = segments.max(1);
-        for index in 1..=n {
-            let t = index as f64 / n as f64;
-            let next = curve.eval(t);
-            smallest = smallest.min(distance_to_segment(point, previous, next));
-            previous = next;
-        }
-        smallest
-    }
-
-    fn distance_to_segment(point: Point, start: Point, end: Point) -> f64 {
-        let segment = end - start;
-        let segment_len_squared = segment.dot(segment);
-        if segment_len_squared <= f64::EPSILON {
-            return distance_between(point, start);
-        }
-        let projection = clamp_f64((point - start).dot(segment) / segment_len_squared, 0.0, 1.0);
-        let closest = start + segment * projection;
-        distance_between(point, closest)
-    }
-
-    pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> Scene {
-        let mut scene = Scene::new();
-        let stroke = Stroke::new(stroke_width);
-        for curve in curves {
-            scene.stroke(&stroke, Affine::IDENTITY, Color::WHITE, None, curve);
-        }
-        scene
-    }
-}
-
-mod geom_sel {
-    use crate::vello::kurbo::{CubicBez, ParamCurve, Point};
-
-    #[derive(Clone, Copy, Debug)]
-    pub struct WorldBox {
-        pub min_x: f64,
-        pub min_y: f64,
-        pub max_x: f64,
-        pub max_y: f64,
-    }
-
-    pub fn inflate_world_box(b: WorldBox, pad: f64) -> WorldBox {
-        WorldBox { min_x: b.min_x - pad, min_y: b.min_y - pad, max_x: b.max_x + pad, max_y: b.max_y + pad }
-    }
-
-    pub fn world_boxes_overlap(a: WorldBox, b: WorldBox) -> bool {
-        a.min_x <= b.max_x && a.max_x >= b.min_x && a.min_y <= b.max_y && a.max_y >= b.min_y
-    }
-
-    pub fn world_box_contains_point(b: WorldBox, p: Point) -> bool {
-        p.x >= b.min_x && p.x <= b.max_x && p.y >= b.min_y && p.y <= b.max_y
-    }
-
-    pub fn world_box_contains_box(outer: WorldBox, inner: WorldBox) -> bool {
-        inner.min_x >= outer.min_x && inner.max_x <= outer.max_x && inner.min_y >= outer.min_y && inner.max_y <= outer.max_y
-    }
-
-    fn world_box_corners(b: WorldBox) -> [Point; 4] {
-        [Point::new(b.min_x, b.min_y), Point::new(b.max_x, b.min_y), Point::new(b.max_x, b.max_y), Point::new(b.min_x, b.max_y)]
-    }
-
-    pub fn world_box_from_points(points: &[Point]) -> Option<WorldBox> {
-        if points.is_empty() {
-            return None;
-        }
-        let mut min_x = f64::INFINITY;
-        let mut min_y = f64::INFINITY;
-        let mut max_x = f64::NEG_INFINITY;
-        let mut max_y = f64::NEG_INFINITY;
-        for p in points {
-            min_x = min_x.min(p.x);
-            min_y = min_y.min(p.y);
-            max_x = max_x.max(p.x);
-            max_y = max_y.max(p.y);
-        }
-        Some(WorldBox { min_x, min_y, max_x, max_y })
-    }
-
-    pub fn point_in_polygon(point: Point, polygon: &[Point]) -> bool {
-        if polygon.len() < 3 {
-            return false;
-        }
-        let mut inside = false;
-        let mut j = polygon.len() - 1;
-        for i in 0..polygon.len() {
-            let a = polygon[i];
-            let b = polygon[j];
-            let crosses = (a.y > point.y) != (b.y > point.y);
-            if crosses && point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x {
-                inside = !inside;
-            }
-            j = i;
-        }
-        inside
-    }
-
-    fn point_on_segment(point: Point, start: Point, end: Point) -> bool {
-        const EPS: f64 = 1e-9;
-        point.x >= start.x.min(end.x) - EPS
-            && point.x <= start.x.max(end.x) + EPS
-            && point.y >= start.y.min(end.y) - EPS
-            && point.y <= start.y.max(end.y) + EPS
-            && ((end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x)).abs() <= EPS
-    }
-
-    fn orientation(a: Point, b: Point, c: Point) -> i8 {
-        let v = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
-        if v > 1e-9 {
-            1
-        } else if v < -1e-9 {
-            -1
-        } else {
-            0
-        }
-    }
-
-    fn segments_intersect(a0: Point, a1: Point, b0: Point, b1: Point) -> bool {
-        let o1 = orientation(a0, a1, b0);
-        let o2 = orientation(a0, a1, b1);
-        let o3 = orientation(b0, b1, a0);
-        let o4 = orientation(b0, b1, a1);
-        if o1 != o2 && o3 != o4 {
-            return true;
-        }
-        point_on_segment(b0, a0, a1) || point_on_segment(b1, a0, a1) || point_on_segment(a0, b0, b1) || point_on_segment(a1, b0, b1)
-    }
-
-    fn world_box_edges(box_: WorldBox) -> [(Point, Point); 4] {
-        let [a, b, c, d] = world_box_corners(box_);
-        [(a, b), (b, c), (c, d), (d, a)]
-    }
-
-    pub fn segment_intersects_world_box(start: Point, end: Point, box_: WorldBox) -> bool {
-        if world_box_contains_point(box_, start) || world_box_contains_point(box_, end) {
-            return true;
-        }
-        world_box_edges(box_).iter().any(|&(a, b)| segments_intersect(start, end, a, b))
-    }
-
-    fn polygon_segments(polygon: &[Point]) -> Vec<(Point, Point)> {
-        if polygon.is_empty() {
-            return Vec::new();
-        }
-        let mut out = Vec::with_capacity(polygon.len());
-        for i in 0..polygon.len() {
-            out.push((polygon[i], polygon[(i + 1) % polygon.len()]));
-        }
-        out
-    }
-
-    pub fn polygon_contains_world_box(polygon: &[Point], box_: WorldBox) -> bool {
-        world_box_corners(box_).iter().all(|&p| point_in_polygon(p, polygon))
-    }
-
-    pub fn polygon_intersects_world_box(polygon: &[Point], box_: WorldBox) -> bool {
-        if world_box_corners(box_).iter().any(|&p| point_in_polygon(p, polygon)) {
-            return true;
-        }
-        if polygon.iter().any(|&p| world_box_contains_point(box_, p)) {
-            return true;
-        }
-        polygon_segments(polygon).iter().any(|&(s, e)| segment_intersects_world_box(s, e, box_))
-    }
-
-    pub fn segment_intersects_polygon(start: Point, end: Point, polygon: &[Point]) -> bool {
-        if point_in_polygon(start, polygon) || point_in_polygon(end, polygon) {
-            return true;
-        }
-        polygon_segments(polygon).iter().any(|&(a, b)| segments_intersect(start, end, a, b))
-    }
-
-    pub fn cubic_bezier_axis_bounds(c: CubicBez) -> WorldBox {
-        let xs = [c.p0.x, c.p1.x, c.p2.x, c.p3.x];
-        let ys = [c.p0.y, c.p1.y, c.p2.y, c.p3.y];
-        WorldBox {
-            min_x: xs.iter().copied().fold(f64::INFINITY, f64::min),
-            max_x: xs.iter().copied().fold(f64::NEG_INFINITY, f64::max),
-            min_y: ys.iter().copied().fold(f64::INFINITY, f64::min),
-            max_y: ys.iter().copied().fold(f64::NEG_INFINITY, f64::max),
-        }
-    }
-
-    pub fn cubic_bezier_point(c: CubicBez, t: f64) -> Point {
-        c.eval(t.clamp(0.0, 1.0))
-    }
-}
-
-mod scene_json {
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct CameraJson {
-        pub x: f64,
-        pub y: f64,
-        pub zoom: f64,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct NodeDescJson {
-        pub id: String,
-        pub x: f64,
-        pub y: f64,
-        #[serde(default)]
-        pub draggable: Option<bool>,
-        #[serde(default)]
-        pub selected: Option<bool>,
-        #[serde(default)]
-        pub style: Option<String>,
-        #[serde(default)]
-        pub text: Option<String>,
-        /// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
-        #[serde(default)]
-        pub icon_kind: Option<String>,
-        /// @emoji 🧩 Semantic node-kind id for compatibility rows at `node` specificity.
-        #[serde(default)]
-        pub node_kind: Option<String>,
-        #[serde(default)]
-        pub user_data: Option<serde_json::Value>,
-        #[serde(default)]
-        pub visible: Option<bool>,
-        #[serde(default)]
-        pub root: Option<bool>,
-        pub shape: Option<String>,
-        #[serde(default)]
-        pub radius: Option<f64>,
-        #[serde(default)]
-        pub width: Option<f64>,
-        #[serde(default)]
-        pub height: Option<f64>,
-        #[serde(default)]
-        pub scale: Option<f64>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct HandleDescJson {
-        pub id: String,
-        pub node_id: String,
-        pub angle: f64,
-        #[serde(default)]
-        pub radius: Option<f64>,
-        #[serde(default)]
-        pub selected: Option<bool>,
-        #[serde(default)]
-        pub style: Option<String>,
-        #[serde(default)]
-        pub handle_kind: Option<String>,
-        /// CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding catalog color for this handle.
-        #[serde(default)]
-        pub color: Option<String>,
-        /// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
-        #[serde(default)]
-        pub icon_kind: Option<String>,
-        #[serde(default)]
-        pub user_data: Option<serde_json::Value>,
-        #[serde(default)]
-        pub visible: Option<bool>,
-        #[serde(default)]
-        pub scale: Option<f64>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct EdgeDescJson {
-        pub id: String,
-        pub source: String,
-        pub target: String,
-        /// @emoji 🧩 Semantic edge-kind id for compatibility at `edge` specificity.
-        #[serde(default)]
-        pub edge_kind: Option<String>,
-        #[serde(default)]
-        pub selected: Option<bool>,
-        #[serde(default)]
-        pub style: Option<String>,
-        #[serde(default)]
-        pub user_data: Option<serde_json::Value>,
-        #[serde(default)]
-        pub visible: Option<bool>,
-    }
-
-    /// @emoji 🧵 Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct WireDescJson {
-        pub id: String,
-        pub source: String,
-        /// @emoji 🧩 Semantic wire-kind id (defaults from catalog when omitted in fixtures).
-        #[serde(default)]
-        pub wire_kind: Option<String>,
-        #[serde(default)]
-        pub target: Option<String>,
-        #[serde(default)]
-        pub end_x: Option<f64>,
-        #[serde(default)]
-        pub end_y: Option<f64>,
-        #[serde(default)]
-        pub selected: Option<bool>,
-        #[serde(default)]
-        pub style: Option<String>,
-        #[serde(default)]
-        pub user_data: Option<serde_json::Value>,
-        #[serde(default)]
-        pub visible: Option<bool>,
-    }
-
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct SceneDescriptorJson {
-        pub nodes: Vec<NodeDescJson>,
-        pub handles: Vec<HandleDescJson>,
-        pub edges: Vec<EdgeDescJson>,
-        #[serde(default)]
-        pub wires: Vec<WireDescJson>,
-        /// @emoji 💠 JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
-        #[serde(default)]
-        pub selection_exit_highlight_ids: Vec<String>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct FixtureV1Json {
-        pub schema: String,
-        pub camera: CameraJson,
-        pub nodes: Vec<serde_json::Value>,
-        pub edges: Vec<serde_json::Value>,
-        #[serde(default)]
-        pub meta: Option<serde_json::Value>,
-    }
-
-    /// 🧾 Reads fixture edge endpoint handle ids from `source` and `target` string fields only.
-    pub fn fixture_edge_handle_ids_from_object(eo: &serde_json::Map<String, serde_json::Value>) -> Option<(&str, &str)> {
-        let source = eo.get("source").and_then(|v| v.as_str())?;
-        let target = eo.get("target").and_then(|v| v.as_str())?;
-        Some((source, target))
-    }
-}
-
-pub use scene_json::{fixture_edge_handle_ids_from_object, CameraJson, EdgeDescJson, FixtureV1Json, HandleDescJson, NodeDescJson, SceneDescriptorJson, WireDescJson};
-
-fn board_json_hidden_flag(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    obj.get("hidden").and_then(|v| v.as_bool())
-}
-
-fn board_json_visible_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    match board_json_hidden_flag(obj) {
-        Some(hidden) => Some(!hidden),
-        None => obj.get("visible").and_then(|v| v.as_bool()),
-    }
-}
-
-fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Value>) -> bool {
-    board_json_visible_option(obj).unwrap_or(true)
-}
-
-#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-fn normalize_board_descriptor_hidden_to_visible(value: &mut serde_json::Value) {
-    let Some(root) = value.as_object_mut() else {
-        return;
-    };
-    for key in ["nodes", "handles", "edges", "wires"] {
-        let Some(rows) = root.get_mut(key).and_then(|v| v.as_array_mut()) else {
-            continue;
-        };
-        for row in rows {
-            let Some(obj) = row.as_object_mut() else {
-                continue;
-            };
-            if let Some(visible) = board_json_visible_option(obj) {
-                obj.insert("visible".into(), serde_json::json!(visible));
-            }
-        }
-    }
-}
-
-// #region 🕸️ForceGraphLayout
-mod force_graph {
-    use serde::{Deserialize, Serialize};
-    use serde_json::Value;
-    use std::collections::{HashMap, HashSet};
-    use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
-
-    use super::{board_json_visible_or_true, fixture_edge_handle_ids_from_object};
-
-    // #region 🔖Vec2
-    /// 📐 Tiny 2-vector for force layout only (no external linear-algebra crate).
-    #[derive(Clone, Copy, Debug)]
-    struct Vec2 {
-        x: f64,
-        y: f64,
-    }
-
-    impl Vec2 {
-        const ZERO: Self = Self { x: 0.0, y: 0.0 };
-        #[inline]
-        fn new(x: f64, y: f64) -> Self {
-            Self { x, y }
-        }
-        #[inline]
-        fn norm(self) -> f64 {
-            (self.x * self.x + self.y * self.y).sqrt()
-        }
-    }
-
-    impl Add for Vec2 {
-        type Output = Self;
-        #[inline]
-        fn add(self, rhs: Self) -> Self {
-            Self::new(self.x + rhs.x, self.y + rhs.y)
-        }
-    }
-
-    impl AddAssign for Vec2 {
-        #[inline]
-        fn add_assign(&mut self, rhs: Self) {
-            self.x += rhs.x;
-            self.y += rhs.y;
-        }
-    }
-
-    impl Sub for Vec2 {
-        type Output = Self;
-        #[inline]
-        fn sub(self, rhs: Self) -> Self {
-            Self::new(self.x - rhs.x, self.y - rhs.y)
-        }
-    }
-
-    impl SubAssign for Vec2 {
-        #[inline]
-        fn sub_assign(&mut self, rhs: Self) {
-            self.x -= rhs.x;
-            self.y -= rhs.y;
-        }
-    }
-
-    impl Mul<f64> for Vec2 {
-        type Output = Self;
-        #[inline]
-        fn mul(self, s: f64) -> Self {
-            Self::new(self.x * s, self.y * s)
-        }
-    }
-
-    impl Mul<Vec2> for f64 {
-        type Output = Vec2;
-        #[inline]
-        fn mul(self, v: Vec2) -> Vec2 {
-            v * self
-        }
-    }
-
-    impl MulAssign<f64> for Vec2 {
-        #[inline]
-        fn mul_assign(&mut self, s: f64) {
-            self.x *= s;
-            self.y *= s;
-        }
-    }
-
-    impl Div<f64> for Vec2 {
-        type Output = Self;
-        #[inline]
-        fn div(self, s: f64) -> Self {
-            Self::new(self.x / s, self.y / s)
-        }
-    }
-    // #endregion
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct ForceGraphLayoutOptions {
-        #[serde(default = "default_iterations")]
-        pub iterations: u32,
-        #[serde(default = "default_ideal_edge_length")]
-        pub ideal_edge_length: f64,
-        #[serde(default = "default_repulsion_strength")]
-        pub repulsion_strength: f64,
-        #[serde(default = "default_spring_strength")]
-        pub spring_strength: f64,
-        #[serde(default = "default_gravity")]
-        pub gravity: f64,
-        #[serde(default)]
-        pub center_x: Option<f64>,
-        #[serde(default)]
-        pub center_y: Option<f64>,
-        #[serde(default = "default_time_step")]
-        pub time_step: f64,
-        #[serde(default = "default_velocity_damping")]
-        pub velocity_damping: f64,
-        #[serde(default = "default_max_speed")]
-        pub max_speed: f64,
-        #[serde(default = "default_random_seed")]
-        pub random_seed: u64,
-        /// Barnes–Hut opening angle θ (`width / distance`); smaller is more accurate, larger is faster.
-        #[serde(default = "default_barnes_hut_theta")]
-        pub barnes_hut_theta: f64,
-        /// Use exact O(n²) repulsion when the visible body count is at most this (tiny graphs / tests).
-        #[serde(default = "default_pairwise_repulsion_max_bodies")]
-        pub pairwise_repulsion_max_bodies: u32,
-        /// Node ids whose `x`/`y` stay fixed for this layout pass (pinned bodies still participate in repulsion and springs).
-        #[serde(default)]
-        pub locked_node_ids: Vec<String>,
-    }
-
-    fn default_iterations() -> u32 {
-        420
-    }
-    fn default_ideal_edge_length() -> f64 {
-        140.0
-    }
-    fn default_repulsion_strength() -> f64 {
-        6500.0
-    }
-    fn default_spring_strength() -> f64 {
-        0.028
-    }
-    fn default_gravity() -> f64 {
-        0.018
-    }
-    fn default_time_step() -> f64 {
-        0.85
-    }
-    fn default_velocity_damping() -> f64 {
-        0.88
-    }
-    fn default_max_speed() -> f64 {
-        48.0
-    }
-    fn default_random_seed() -> u64 {
-        0x5eedfaced0u64
-    }
-    fn default_barnes_hut_theta() -> f64 {
-        0.78
-    }
-    fn default_pairwise_repulsion_max_bodies() -> u32 {
-        56
-    }
-
-    impl Default for ForceGraphLayoutOptions {
-        fn default() -> Self {
-            Self {
-                iterations: default_iterations(),
-                ideal_edge_length: default_ideal_edge_length(),
-                repulsion_strength: default_repulsion_strength(),
-                spring_strength: default_spring_strength(),
-                gravity: default_gravity(),
-                center_x: None,
-                center_y: None,
-                time_step: default_time_step(),
-                velocity_damping: default_velocity_damping(),
-                max_speed: default_max_speed(),
-                random_seed: default_random_seed(),
-                barnes_hut_theta: default_barnes_hut_theta(),
-                pairwise_repulsion_max_bodies: default_pairwise_repulsion_max_bodies(),
-                locked_node_ids: Vec::new(),
-            }
-        }
-    }
-
-    fn split_mix64(mut z: u64) -> u64 {
-        z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-        z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-        z ^ (z >> 31)
-    }
-
-    fn rand_unit_interval(seed: &mut u64) -> f64 {
-        *seed = split_mix64(*seed);
-        (*seed as f64) / (u64::MAX as f64)
-    }
-
-    fn node_repulsion_radius(node: &Value) -> f64 {
-        let Some(obj) = node.as_object() else {
-            return 32.0;
-        };
-        if obj.get("shape").and_then(|v| v.as_str()) == Some("rectangle") {
-            let w = obj.get("width").and_then(|v| v.as_f64()).unwrap_or(40.0);
-            let h = obj.get("height").and_then(|v| v.as_f64()).unwrap_or(40.0);
-            return ((w * w + h * h).sqrt() * 0.5).max(8.0);
-        }
-        obj.get("radius").and_then(|v| v.as_f64()).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(32.0)
-    }
-
-    // #region 🔖ForceGraphRepulsion
-    /// 📐 Repulsive acceleration on body `i` from body `j` (shared by pairwise sweep and Barnes–Hut leaves).
-    #[inline]
-    fn pairwise_repulsion_on_i_from_j(i: usize, j: usize, positions: &[Vec2], radii: &[f64], cool: f64, k_rep: f64) -> Vec2 {
-        let delta = positions[j] - positions[i];
-        let dist = delta.norm().max(1e-4);
-        let rep = k_rep * cool * (radii[i] * radii[j]).max(1.0) / (dist * dist);
-        (delta / dist) * (-rep)
-    }
-
-    mod barnes_hut {
-        use super::{pairwise_repulsion_on_i_from_j, Vec2};
-
-        const NO_CHILD: u32 = u32::MAX;
-
-        /// 🌌 Quadtree cell: empty leaf, occupied leaf, or internal node with four children.
-        #[derive(Clone, Debug)]
-        struct Cell {
-            min_x: f64,
-            min_y: f64,
-            max_x: f64,
-            max_y: f64,
-            body: Option<usize>,
-            children: [u32; 4],
-            com: Vec2,
-            mass: f64,
-            max_r: f64,
-        }
-
-        /// 🌲 Point quadtree for one repulsion pass over a fixed body set.
-        pub(super) struct QuadTree {
-            cells: Vec<Cell>,
-        }
-
-        #[inline]
-        fn is_internal(c: &Cell) -> bool {
-            c.children[0] != NO_CHILD
-        }
-
-        #[inline]
-        fn cell_width(c: &Cell) -> f64 {
-            (c.max_x - c.min_x).max(c.max_y - c.min_y)
-        }
-
-        #[inline]
-        fn point_in_cell(px: f64, py: f64, c: &Cell) -> bool {
-            px >= c.min_x && px <= c.max_x && py >= c.min_y && py <= c.max_y
-        }
-
-        fn quadrant_bounds(min_x: f64, min_y: f64, max_x: f64, max_y: f64, q: usize) -> (f64, f64, f64, f64) {
-            let mx = (min_x + max_x) * 0.5;
-            let my = (min_y + max_y) * 0.5;
-            match q {
-                0 => (min_x, min_y, mx, my),
-                1 => (mx, min_y, max_x, my),
-                2 => (min_x, my, mx, max_y),
-                3 => (mx, my, max_x, max_y),
-                _ => (min_x, min_y, max_x, max_y),
-            }
-        }
-
-        #[inline]
-        fn quadrant_index(px: f64, py: f64, mx: f64, my: f64) -> usize {
-            let east = if px >= mx { 1usize } else { 0 };
-            let north = if py >= my { 2usize } else { 0 };
-            east + north
-        }
-
-        fn empty_leaf(min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> Cell {
-            Cell { min_x, min_y, max_x, max_y, body: None, children: [NO_CHILD; 4], com: Vec2::ZERO, mass: 0.0, max_r: 0.0 }
-        }
-
-        fn subdivide_leaf(tree: &mut Vec<Cell>, ni: usize) {
-            let (min_x, min_y, max_x, max_y) = (tree[ni].min_x, tree[ni].min_y, tree[ni].max_x, tree[ni].max_y);
-            let mut ch = [NO_CHILD; 4];
-            for q in 0..4usize {
-                let (a, b, c, d) = quadrant_bounds(min_x, min_y, max_x, max_y, q);
-                let idx = tree.len();
-                tree.push(empty_leaf(a, b, c, d));
-                ch[q] = idx as u32;
-            }
-            tree[ni].body = None;
-            tree[ni].children = ch;
-            tree[ni].mass = 0.0;
-            tree[ni].com = Vec2::ZERO;
-            tree[ni].max_r = 0.0;
-        }
-
-        fn aggregate(tree: &mut Vec<Cell>, ni: usize) {
-            if !is_internal(&tree[ni]) {
-                return;
-            }
-            let mut m = 0.0f64;
-            let mut sx = 0.0f64;
-            let mut sy = 0.0f64;
-            let mut mxr = 0.0f64;
-            let ch = tree[ni].children;
-            for q in 0..4usize {
-                let chn = &tree[ch[q] as usize];
-                m += chn.mass;
-                sx += chn.com.x * chn.mass;
-                sy += chn.com.y * chn.mass;
-                mxr = mxr.max(chn.max_r);
-            }
-            if m > 0.0 {
-                sx /= m;
-                sy /= m;
-            }
-            tree[ni].mass = m;
-            tree[ni].com = Vec2::new(sx, sy);
-            tree[ni].max_r = mxr;
-        }
-
-        fn insert(tree: &mut Vec<Cell>, ni: usize, idx: usize, pos: Vec2, r: f64, positions: &[Vec2], radii: &[f64]) {
-            if is_internal(&tree[ni]) {
-                let mx = (tree[ni].min_x + tree[ni].max_x) * 0.5;
-                let my = (tree[ni].min_y + tree[ni].max_y) * 0.5;
-                let q = quadrant_index(pos.x, pos.y, mx, my);
-                let ci = tree[ni].children[q] as usize;
-                insert(tree, ci, idx, pos, r, positions, radii);
-                aggregate(tree, ni);
-                return;
-            }
-            if tree[ni].mass <= 0.0 && tree[ni].body.is_none() {
-                tree[ni].body = Some(idx);
-                tree[ni].com = pos;
-                tree[ni].mass = 1.0;
-                tree[ni].max_r = r;
-                return;
-            }
-            if let Some(ex) = tree[ni].body {
-                if ex == idx {
-                    return;
-                }
-                let p_ex = positions[ex];
-                let r_ex = radii[ex];
-                subdivide_leaf(tree, ni);
-                insert(tree, ni, ex, p_ex, r_ex, positions, radii);
-                insert(tree, ni, idx, pos, r, positions, radii);
-            }
-        }
-
-        fn square_bounds(positions: &[Vec2]) -> (f64, f64, f64, f64) {
-            let mut min_x = f64::INFINITY;
-            let mut min_y = f64::INFINITY;
-            let mut max_x = f64::NEG_INFINITY;
-            let mut max_y = f64::NEG_INFINITY;
-            for p in positions {
-                min_x = min_x.min(p.x);
-                min_y = min_y.min(p.y);
-                max_x = max_x.max(p.x);
-                max_y = max_y.max(p.y);
-            }
-            if !min_x.is_finite() || !max_x.is_finite() {
-                return (-1.0, -1.0, 1.0, 1.0);
-            }
-            let pad = 1e-3f64;
-            let w = ((max_x - min_x).max(max_y - min_y) + pad * 2.0).max(1e-6);
-            let cx = (min_x + max_x) * 0.5;
-            let cy = (min_y + max_y) * 0.5;
-            let h = w * 0.5;
-            (cx - h, cy - h, cx + h, cy + h)
-        }
-
-        fn repulsion_rec(cells: &[Cell], ni: usize, i: usize, p_i: Vec2, r_i: f64, theta: f64, cool: f64, k_rep: f64, positions: &[Vec2], radii: &[f64]) -> Vec2 {
-            let node = &cells[ni];
-            if node.mass <= 0.0 {
-                return Vec2::ZERO;
-            }
-            if !is_internal(node) {
-                if let Some(j) = node.body {
-                    if j == i {
-                        return Vec2::ZERO;
-                    }
-                    return pairwise_repulsion_on_i_from_j(i, j, positions, radii, cool, k_rep);
-                }
-                return Vec2::ZERO;
-            }
-            let width = cell_width(node);
-            let delta_c = node.com - p_i;
-            let d = delta_c.norm().max(1e-6);
-            if point_in_cell(p_i.x, p_i.y, node) {
-                let mut acc = Vec2::ZERO;
-                for q in 0..4usize {
-                    let c = node.children[q];
-                    if c != NO_CHILD {
-                        acc += repulsion_rec(cells, c as usize, i, p_i, r_i, theta, cool, k_rep, positions, radii);
-                    }
-                }
-                return acc;
-            }
-            if width / d < theta {
-                let rep = k_rep * cool * (r_i * node.max_r).max(1.0) / (d * d);
-                return (p_i - node.com) / d * rep;
-            }
-            let mut acc = Vec2::ZERO;
-            for q in 0..4usize {
-                let c = node.children[q];
-                if c != NO_CHILD {
-                    acc += repulsion_rec(cells, c as usize, i, p_i, r_i, theta, cool, k_rep, positions, radii);
-                }
-            }
-            acc
-        }
-
-        impl QuadTree {
-            pub(super) fn build(positions: &[Vec2], radii: &[f64]) -> Self {
-                let (a, b, c, d) = square_bounds(positions);
-                let mut cells = vec![empty_leaf(a, b, c, d)];
-                for i in 0..positions.len() {
-                    insert(&mut cells, 0, i, positions[i], radii[i], positions, radii);
-                }
-                Self { cells }
-            }
-
-            pub(super) fn repulsion_on_body(&self, i: usize, positions: &[Vec2], radii: &[f64], theta: f64, cool: f64, k_rep: f64) -> Vec2 {
-                repulsion_rec(&self.cells, 0, i, positions[i], radii[i], theta, cool, k_rep, positions, radii)
-            }
-        }
-    }
-
-    fn add_repulsion_forces(forces: &mut [Vec2], positions: &[Vec2], radii: &[f64], n: usize, cool: f64, k_rep: f64, theta: f64, pair_cap: usize) {
-        if n <= pair_cap {
-            for i in 0..n {
-                for j in (i + 1)..n {
-                    let f = pairwise_repulsion_on_i_from_j(i, j, positions, radii, cool, k_rep);
-                    forces[i] += f;
-                    forces[j] -= f;
-                }
-            }
-        } else {
-            let tree = barnes_hut::QuadTree::build(positions, radii);
-            for i in 0..n {
-                forces[i] += tree.repulsion_on_body(i, positions, radii, theta, cool, k_rep);
-            }
-        }
-    }
-    // #endregion
-
-    // #region 🔖ForceGraphIntegration
-    fn add_spring_forces(forces: &mut [Vec2], positions: &[Vec2], edge_pairs: &[(usize, usize)], ideal_len: f64, spring_k: f64, cool: f64) {
-        for &(i, j) in edge_pairs {
-            let delta = positions[j] - positions[i];
-            let dist = delta.norm().max(1e-4);
-            let dir = delta / dist;
-            let displacement = dist - ideal_len;
-            let f = dir * (spring_k * cool * displacement);
-            forces[i] += f;
-            forces[j] -= f;
-        }
-    }
-
-    fn add_gravity_toward(forces: &mut [Vec2], positions: &[Vec2], gx: f64, gy: f64, gamma: f64, cool: f64) {
-        if gamma <= 0.0 {
-            return;
-        }
-        let g = gamma * cool;
-        for i in 0..forces.len() {
-            let to_c = Vec2::new(gx - positions[i].x, gy - positions[i].y);
-            forces[i] += to_c * g;
-        }
-    }
-
-    fn integrate_velocity_and_positions(positions: &mut [Vec2], velocities: &mut [Vec2], forces: &[Vec2], dt_base: f64, cool: f64, damping: f64, v_max: f64) {
-        let dt = dt_base * cool.sqrt();
-        for i in 0..positions.len() {
-            let mut v = (velocities[i] + forces[i] * dt) * damping;
-            let spd = v.norm();
-            if spd > v_max {
-                v *= v_max / spd;
-            }
-            velocities[i] = v;
-            positions[i] += v * dt;
-        }
-    }
-
-    fn zero_forces_on_pinned(forces: &mut [Vec2], pin: &[Option<Vec2>]) {
-        for i in 0..forces.len() {
-            if pin[i].is_some() {
-                forces[i] = Vec2::ZERO;
-            }
-        }
-    }
-
-    fn enforce_pin_constraints(positions: &mut [Vec2], velocities: &mut [Vec2], pin: &[Option<Vec2>]) {
-        for i in 0..positions.len() {
-            if let Some(p) = pin[i] {
-                positions[i] = p;
-                velocities[i] = Vec2::ZERO;
-            }
-        }
-    }
-    // #endregion
-
-    pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
-        let Some(root) = fixture.as_object_mut() else {
-            return Err("fixture root must be object".into());
-        };
-        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
-            return Err("schema must be puzzle.2d.fixture/v1".into());
-        }
-        let edges = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-        let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
-            return Err("nodes array missing".into());
-        };
-        if nodes.is_empty() {
-            return Ok(());
-        }
-        let locked_ids: HashSet<String> = opts.locked_node_ids.iter().cloned().collect();
-        let mut handle_to_node: HashMap<String, String> = HashMap::new();
-        for node in nodes.iter() {
-            let Some(obj) = node.as_object() else {
-                continue;
-            };
-            if !board_json_visible_or_true(obj) {
-                continue;
-            }
-            let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
-                continue;
-            };
-            let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) else {
-                continue;
-            };
-            for h in handles {
-                let Some(ho) = h.as_object() else {
-                    continue;
-                };
-                if !board_json_visible_or_true(ho) {
-                    continue;
-                }
-                if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
-                    handle_to_node.insert(hid.to_string(), nid.to_string());
-                }
-            }
-        }
-        let mut id_to_index: HashMap<String, usize> = HashMap::new();
-        let mut visible_node_indices: Vec<usize> = Vec::new();
-        let mut optional_xy: Vec<Option<(f64, f64)>> = Vec::new();
-        let mut is_locked: Vec<bool> = Vec::new();
-        let mut positions: Vec<Vec2> = Vec::new();
-        let mut velocities: Vec<Vec2> = Vec::new();
-        let mut radii: Vec<f64> = Vec::new();
-        for (raw_idx, node) in nodes.iter().enumerate() {
-            let Some(obj) = node.as_object() else {
-                return Err("node must be object".into());
-            };
-            if !board_json_visible_or_true(obj) {
-                continue;
-            }
-            let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
-                return Err("node id missing".into());
-            };
-            let x_opt = obj.get("x").and_then(|v| v.as_f64());
-            let y_opt = obj.get("y").and_then(|v| v.as_f64());
-            let xy = match (x_opt, y_opt) {
-                (Some(x), Some(y)) if x.is_finite() && y.is_finite() => Some((x, y)),
-                _ => None,
-            };
-            id_to_index.insert(nid.to_string(), positions.len());
-            visible_node_indices.push(raw_idx);
-            optional_xy.push(xy);
-            is_locked.push(locked_ids.contains(nid));
-            positions.push(Vec2::ZERO);
-            velocities.push(Vec2::ZERO);
-            radii.push(node_repulsion_radius(node));
-        }
-        let n = positions.len();
-        if n == 0 {
-            return Ok(());
-        }
-        let mut sum = Vec2::ZERO;
-        let mut finite_ct: u32 = 0;
-        for xy in &optional_xy {
-            if let Some((x, y)) = xy {
-                sum += Vec2::new(*x, *y);
-                finite_ct += 1;
-            }
-        }
-        let anchor = if finite_ct > 0 { sum / (finite_ct as f64) } else { Vec2::new(opts.center_x.unwrap_or(0.0), opts.center_y.unwrap_or(0.0)) };
-        let mut seed_rng = opts.random_seed;
-        for i in 0..n {
-            positions[i] = if let Some((x, y)) = optional_xy[i] {
-                Vec2::new(x, y)
-            } else {
-                let t = i as f64;
-                let ang = t * 2.39996322972865332;
-                let r = 10.0 + t.sqrt() * 22.0;
-                let jx = (rand_unit_interval(&mut seed_rng) - 0.5) * 6.0;
-                let jy = (rand_unit_interval(&mut seed_rng) - 0.5) * 6.0;
-                anchor + Vec2::new(r * ang.cos() + jx, r * ang.sin() + jy)
-            };
-        }
-        let pin: Vec<Option<Vec2>> = (0..n).map(|i| if is_locked[i] { Some(positions[i]) } else { None }).collect();
-        let mut edge_pairs: Vec<(usize, usize)> = Vec::new();
-        let mut seen: HashSet<(usize, usize)> = HashSet::new();
-        for e in &edges {
-            let Some(eo) = e.as_object() else {
-                continue;
-            };
-            if !board_json_visible_or_true(eo) {
-                continue;
-            }
-            let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
-                continue;
-            };
-            let Some(a) = handle_to_node.get(src_h) else {
-                continue;
-            };
-            let Some(b) = handle_to_node.get(tgt_h) else {
-                continue;
-            };
-            if a == b {
-                continue;
-            }
-            let Some(&ia) = id_to_index.get(a) else {
-                continue;
-            };
-            let Some(&ib) = id_to_index.get(b) else {
-                continue;
-            };
-            let lo = ia.min(ib);
-            let hi = ia.max(ib);
-            if seen.insert((lo, hi)) {
-                edge_pairs.push((lo, hi));
-            }
-        }
-        let mut cx = 0.0f64;
-        let mut cy = 0.0f64;
-        for p in &positions {
-            cx += p.x;
-            cy += p.y;
-        }
-        cx /= n as f64;
-        cy /= n as f64;
-        let gx = opts.center_x.unwrap_or(cx);
-        let gy = opts.center_y.unwrap_or(cy);
-        let k = opts.ideal_edge_length.max(1e-6);
-        let mut rng = opts.random_seed;
-        for i in 0..n {
-            if pin[i].is_some() {
-                continue;
-            }
-            if (positions[i].x - gx).abs() < 1e-6 && (positions[i].y - gy).abs() < 1e-6 {
-                let jx = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
-                let jy = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
-                positions[i] += Vec2::new(jx, jy);
-            }
-        }
-        let iters = opts.iterations.max(1);
-        for iter in 0..iters {
-            let cool = (1.0 - iter as f64 / iters as f64).max(0.08);
-            let mut forces = vec![Vec2::ZERO; n];
-            let theta = opts.barnes_hut_theta.clamp(0.2, 1.35);
-            let pair_cap = opts.pairwise_repulsion_max_bodies.max(4) as usize;
-            add_repulsion_forces(&mut forces, &positions, &radii, n, cool, opts.repulsion_strength, theta, pair_cap);
-            add_spring_forces(&mut forces, &positions, &edge_pairs, k, opts.spring_strength, cool);
-            add_gravity_toward(&mut forces, &positions, gx, gy, opts.gravity, cool);
-            zero_forces_on_pinned(&mut forces, &pin);
-            integrate_velocity_and_positions(&mut positions, &mut velocities, &forces, opts.time_step, cool, opts.velocity_damping, opts.max_speed);
-            enforce_pin_constraints(&mut positions, &mut velocities, &pin);
-        }
-        for (idx, raw_idx) in visible_node_indices.into_iter().enumerate() {
-            let Some(node) = nodes.get_mut(raw_idx) else {
-                continue;
-            };
-            let Some(obj) = node.as_object_mut() else {
-                continue;
-            };
-            obj.insert("x".into(), serde_json::json!(positions[idx].x));
-            obj.insert("y".into(), serde_json::json!(positions[idx].y));
-        }
-        Ok(())
-    }
-
-    pub fn apply_force_graph_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
-        let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
-        let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() { ForceGraphLayoutOptions::default() } else { serde_json::from_str(options_json).map_err(|e| e.to_string())? };
-        apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &opts)?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
-    }
-}
-// #endregion 🕸️ForceGraphLayout
-
-// #region 🌳HierarchicalTreeLayout
-mod hierarchical_tree {
-    use serde::Deserialize;
-    use serde_json::Value;
-    use std::collections::{HashMap, HashSet};
-
-    use super::{board_json_visible_or_true, fixture_edge_handle_ids_from_object};
-
-    /// 🌳 Buchheim tidy-tree knobs: rank gap, sibling breadth, growth-axis string, optional world anchor for the laid subtree.
-    #[derive(Clone, Debug, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct HierarchicalTreeLayoutOptions {
-        #[serde(default = "default_layer_spacing")]
-        pub layer_spacing: f64,
-        #[serde(default = "default_sibling_gap")]
-        pub sibling_gap: f64,
-        #[serde(default = "default_direction")]
-        pub direction: String,
-        #[serde(default)]
-        pub center_x: Option<f64>,
-        #[serde(default)]
-        pub center_y: Option<f64>,
-        /// 📌 Node ids whose incoming fixture centers are kept; Buchheim still runs for placement of unlocked nodes.
-        #[serde(default)]
-        pub locked_node_ids: Vec<String>,
-    }
-
-    fn default_layer_spacing() -> f64 {
-        120.0
-    }
-    fn default_sibling_gap() -> f64 {
-        28.0
-    }
-    fn default_direction() -> String {
-        "downwards".into()
-    }
-
-    impl Default for HierarchicalTreeLayoutOptions {
-        fn default() -> Self {
-            Self { layer_spacing: default_layer_spacing(), sibling_gap: default_sibling_gap(), direction: default_direction(), center_x: None, center_y: None, locked_node_ids: Vec::new() }
-        }
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    enum TreeDirection {
-        Downwards,
-        Upwards,
-        Right,
-        Left,
-    }
-
-    impl TreeDirection {
-        fn parse(s: &str) -> Result<Self, String> {
-            match s.trim().to_ascii_lowercase().as_str() {
-                "down" | "downwards" => Ok(Self::Downwards),
-                "up" | "upwards" => Ok(Self::Upwards),
-                "right" => Ok(Self::Right),
-                "left" => Ok(Self::Left),
-                _ => Err(format!("unknown hierarchical tree direction: {s}")),
-            }
-        }
-    }
-
-    fn half_extent(node: &Value) -> f64 {
-        let Some(obj) = node.as_object() else {
-            return 24.0;
-        };
-        if obj.get("shape").and_then(|v| v.as_str()) == Some("rectangle") {
-            let w = obj.get("width").and_then(|v| v.as_f64()).unwrap_or(40.0);
-            let h = obj.get("height").and_then(|v| v.as_f64()).unwrap_or(40.0);
-            return (w.max(h) * 0.5).max(8.0);
-        }
-        obj.get("radius").and_then(|v| v.as_f64()).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(24.0)
-    }
-
-    const TREE_SUPER_ID: &str = "__tree_super__";
-
-    /** @emoji 🌲 Buchheim et al. (GD 2002) tidy tree: O(n) Reingold–Tilford with even sibling spacing (after pymag-trees listing 12). */
-    #[derive(Debug)]
-    struct BuchheimNode {
-        id: String,
-        parent: Option<usize>,
-        children: Vec<usize>,
-        x: f64,
-        y: f64,
-        mod_: f64,
-        thread: Option<usize>,
-        ancestor: usize,
-        change: f64,
-        shift: f64,
-        number: i32,
-        synthetic: bool,
-    }
-
-    fn buchheim_left_brother(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
-        let p = nodes[i].parent?;
-        let ch = &nodes[p].children;
-        let pos = ch.iter().position(|&c| c == i)?;
-        if pos == 0 {
-            return None;
-        }
-        Some(ch[pos - 1])
-    }
-
-    fn buchheim_leftmost_sibling(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
-        let p = nodes[i].parent?;
-        let ch = &nodes[p].children;
-        if ch.first() == Some(&i) {
-            return None;
-        }
-        ch.first().copied()
-    }
-
-    fn buchheim_next_right(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
-        if let Some(t) = nodes[i].thread {
-            return Some(t);
-        }
-        nodes[i].children.last().copied()
-    }
-
-    fn buchheim_next_left(nodes: &[BuchheimNode], i: usize) -> Option<usize> {
-        if let Some(t) = nodes[i].thread {
-            return Some(t);
-        }
-        nodes[i].children.first().copied()
-    }
-
-    fn buchheim_ancestor(nodes: &[BuchheimNode], vil: usize, v: usize, default_ancestor: usize) -> usize {
-        let par = nodes[v].parent.expect("buchheim ancestor needs parent");
-        let pa = nodes[vil].ancestor;
-        if nodes[par].children.iter().any(|&c| c == pa) {
-            pa
-        } else {
-            default_ancestor
-        }
-    }
-
-    fn buchheim_move_subtree(nodes: &mut [BuchheimNode], wl: usize, wr: usize, shift: f64) {
-        let subtrees = (nodes[wr].number - nodes[wl].number) as f64;
-        if subtrees <= 0.0 {
-            return;
-        }
-        nodes[wr].change -= shift / subtrees;
-        nodes[wr].shift += shift;
-        nodes[wl].change += shift / subtrees;
-        nodes[wr].x += shift;
-        nodes[wr].mod_ += shift;
-    }
-
-    fn buchheim_execute_shifts(nodes: &mut [BuchheimNode], v: usize) {
-        let mut shift = 0.0f64;
-        let mut change = 0.0f64;
-        for &w in nodes[v].children.iter().rev() {
-            nodes[w].x += shift;
-            nodes[w].mod_ += shift;
-            change += nodes[w].change;
-            shift += nodes[w].shift + change;
-        }
-    }
-
-    fn buchheim_apportion(nodes: &mut [BuchheimNode], v: usize, default_ancestor: usize, distance: f64) -> usize {
-        let mut default_ancestor = default_ancestor;
-        let w = match buchheim_left_brother(nodes, v) {
-            Some(w) => w,
-            None => return default_ancestor,
-        };
-        let mut vir = v;
-        let mut vor = v;
-        let mut vil = w;
-        let mut vol = match buchheim_leftmost_sibling(nodes, v) {
-            Some(s) => s,
-            None => return default_ancestor,
-        };
-        let mut sir = nodes[v].mod_;
-        let mut sor = nodes[v].mod_;
-        let mut sil = nodes[vil].mod_;
-        let mut sol = nodes[vol].mod_;
-        loop {
-            let vil_r = buchheim_next_right(nodes, vil);
-            let vir_l = buchheim_next_left(nodes, vir);
-            if vil_r.is_none() || vir_l.is_none() {
-                break;
-            }
-            vil = vil_r.unwrap();
-            vir = vir_l.unwrap();
-            let vol_l = buchheim_next_left(nodes, vol);
-            let vor_r = buchheim_next_right(nodes, vor);
-            if vol_l.is_none() || vor_r.is_none() {
-                break;
-            }
-            vol = vol_l.unwrap();
-            vor = vor_r.unwrap();
-            nodes[vor].ancestor = v;
-            let shift = (nodes[vil].x + sil) - (nodes[vir].x + sir) + distance;
-            if shift > 0.0 {
-                let a = buchheim_ancestor(nodes, vil, v, default_ancestor);
-                buchheim_move_subtree(nodes, a, v, shift);
-                sir += shift;
-                sor += shift;
-            }
-            sil += nodes[vil].mod_;
-            sir += nodes[vir].mod_;
-            sol += nodes[vol].mod_;
-            sor += nodes[vor].mod_;
-        }
-        if let Some(vil_r) = buchheim_next_right(nodes, vil) {
-            if buchheim_next_right(nodes, vor).is_none() {
-                nodes[vor].thread = Some(vil_r);
-                nodes[vor].mod_ += sil - sor;
-            }
-        } else if buchheim_next_left(nodes, vir).is_some() && buchheim_next_left(nodes, vol).is_none() {
-            if let Some(vir_l) = buchheim_next_left(nodes, vir) {
-                nodes[vol].thread = Some(vir_l);
-                nodes[vol].mod_ += sir - sol;
-            }
-            default_ancestor = v;
-        }
-        default_ancestor
-    }
-
-    fn buchheim_first_walk(nodes: &mut [BuchheimNode], v: usize, distance: f64) -> usize {
-        if nodes[v].children.is_empty() {
-            if buchheim_leftmost_sibling(nodes, v).is_some() {
-                let lb = buchheim_left_brother(nodes, v).expect("leaf with leftmost sibling has left brother");
-                nodes[v].x = nodes[lb].x + distance;
-            } else {
-                nodes[v].x = 0.0;
-            }
-            return v;
-        }
-        let mut default_ancestor = nodes[v].children[0];
-        for &w in &nodes[v].children.clone() {
-            buchheim_first_walk(nodes, w, distance);
-            default_ancestor = buchheim_apportion(nodes, w, default_ancestor, distance);
-        }
-        buchheim_execute_shifts(nodes, v);
-        let c0 = nodes[v].children[0];
-        let c1 = *nodes[v].children.last().expect("internal node has children");
-        let mid = (nodes[c0].x + nodes[c1].x) * 0.5;
-        if let Some(w) = buchheim_left_brother(nodes, v) {
-            nodes[v].x = nodes[w].x + distance;
-            nodes[v].mod_ = nodes[v].x - mid;
-        } else {
-            nodes[v].x = mid;
-        }
-        v
-    }
-
-    fn buchheim_second_walk(nodes: &mut [BuchheimNode], v: usize, m: f64, depth: i32, min_x: f64) -> f64 {
-        nodes[v].x += m;
-        nodes[v].y = depth as f64;
-        let mut min_x = min_x.min(nodes[v].x);
-        for &w in &nodes[v].children.clone() {
-            min_x = buchheim_second_walk(nodes, w, m + nodes[v].mod_, depth + 1, min_x);
-        }
-        min_x
-    }
-
-    fn buchheim_third_walk(nodes: &mut [BuchheimNode], v: usize, n: f64) {
-        nodes[v].x += n;
-        for &c in &nodes[v].children.clone() {
-            buchheim_third_walk(nodes, c, n);
-        }
-    }
-
-    fn run_buchheim_layout(id_to_node: &HashMap<String, Value>, roots: &[String], directed: &[(String, String)], depth: &HashMap<String, i32>) -> Result<HashMap<String, (f64, f64)>, String> {
-        let roots_set: HashSet<String> = roots.iter().cloned().collect();
-        let mut incoming: HashMap<String, Vec<String>> = HashMap::new();
-        for (u, v) in directed {
-            incoming.entry(v.clone()).or_default().push(u.clone());
-        }
-        for v in incoming.values_mut() {
-            v.sort();
-            v.dedup();
-        }
-        let mut chosen_parent: HashMap<String, String> = HashMap::new();
-        for id in id_to_node.keys() {
-            if roots_set.contains(id) {
-                continue;
-            }
-            let ps = incoming.get(id).cloned().unwrap_or_default();
-            if ps.is_empty() {
-                continue;
-            }
-            let best = ps
-                .iter()
-                .min_by_key(|p| {
-                    let dp = depth.get(*p).copied().unwrap_or(0);
-                    (dp, (*p).clone())
-                })
-                .expect("non-empty ps")
-                .clone();
-            chosen_parent.insert(id.clone(), best);
-        }
-        let mut ordered_ids: Vec<String> = id_to_node.keys().cloned().collect();
-        ordered_ids.sort();
-        let id_to_idx: HashMap<String, usize> = ordered_ids.iter().enumerate().map(|(i, s)| (s.clone(), i)).collect();
-        let super_idx = ordered_ids.len();
-        let mut nodes: Vec<BuchheimNode> =
-            ordered_ids.iter().map(|id| BuchheimNode { ancestor: 0, change: 0.0, children: vec![], id: id.clone(), mod_: 0.0, number: 0, parent: None, shift: 0.0, synthetic: false, thread: None, x: -1.0, y: 0.0 }).collect();
-        nodes.push(BuchheimNode { ancestor: super_idx, change: 0.0, children: vec![], id: TREE_SUPER_ID.to_string(), mod_: 0.0, number: 0, parent: None, shift: 0.0, synthetic: true, thread: None, x: -1.0, y: 0.0 });
-        for (i, oid) in ordered_ids.iter().enumerate() {
-            let pidx = if roots_set.contains(oid) {
-                super_idx
-            } else {
-                match chosen_parent.get(oid) {
-                    Some(p) => *id_to_idx.get(p).ok_or_else(|| format!("missing parent index for {p}"))?,
-                    None => super_idx,
-                }
-            };
-            nodes[i].parent = Some(pidx);
-        }
-        for p in 0..=super_idx {
-            nodes[p].children.clear();
-        }
-        for i in 0..super_idx {
-            let pi = nodes[i].parent.ok_or_else(|| "tree node missing parent".to_string())?;
-            nodes[pi].children.push(i);
-        }
-        for p in 0..=super_idx {
-            let mut ch: Vec<usize> = nodes[p].children.clone();
-            ch.sort_by_key(|&c| nodes[c].id.clone());
-            nodes[p].children = ch;
-        }
-        for p in 0..=super_idx {
-            if nodes[p].children.is_empty() {
-                continue;
-            }
-            let ch = nodes[p].children.clone();
-            for (k, &c) in ch.iter().enumerate() {
-                nodes[c].number = (k + 1) as i32;
-                nodes[c].ancestor = c;
-            }
-        }
-        let dist = 1.0f64;
-        buchheim_first_walk(&mut nodes, super_idx, dist);
-        let min_x = buchheim_second_walk(&mut nodes, super_idx, 0.0, 0, f64::INFINITY);
-        if min_x.is_finite() && min_x < 0.0 {
-            buchheim_third_walk(&mut nodes, super_idx, -min_x);
-        }
-        let mut out: HashMap<String, (f64, f64)> = HashMap::new();
-        for (i, n) in nodes.iter().enumerate() {
-            if i == super_idx || n.synthetic {
-                continue;
-            }
-            out.insert(n.id.clone(), (n.x, n.y));
-        }
-        Ok(out)
-    }
-
-    /// 🌳 Writes node centers: Buchheim tidy-tree on a spanning forest (min-depth parent tie-break id), synthetic multi-root; super-root not serialized.
-    pub fn apply_hierarchical_tree_layout_to_fixture_v1_value(fixture: &mut Value, opts: &HierarchicalTreeLayoutOptions) -> Result<(), String> {
-        let dir = TreeDirection::parse(&opts.direction)?;
-        let Some(root) = fixture.as_object_mut() else {
-            return Err("fixture root must be object".into());
-        };
-        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
-            return Err("schema must be puzzle.2d.fixture/v1".into());
-        }
-        let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-        let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
-            return Err("nodes array missing".into());
-        };
-        if nodes.is_empty() {
-            return Ok(());
-        }
-        let mut handle_to_node: HashMap<String, String> = HashMap::new();
-        let mut id_to_node: HashMap<String, Value> = HashMap::new();
-        for node in nodes.iter() {
-            let Some(obj) = node.as_object() else {
-                continue;
-            };
-            if !board_json_visible_or_true(obj) {
-                continue;
-            }
-            let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
-                continue;
-            };
-            id_to_node.insert(nid.to_string(), node.clone());
-            let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) else {
-                continue;
-            };
-            for h in handles {
-                let Some(ho) = h.as_object() else {
-                    continue;
-                };
-                if !board_json_visible_or_true(ho) {
-                    continue;
-                }
-                if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
-                    handle_to_node.insert(hid.to_string(), nid.to_string());
-                }
-            }
-        }
-        if id_to_node.is_empty() {
-            return Ok(());
-        }
-        let mut directed: Vec<(String, String)> = Vec::new();
-        let mut seen_dir: HashSet<(String, String)> = HashSet::new();
-        for e in &edges_json {
-            let Some(eo) = e.as_object() else {
-                continue;
-            };
-            if !board_json_visible_or_true(eo) {
-                continue;
-            }
-            let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
-                continue;
-            };
-            let Some(source_node_id) = handle_to_node.get(src_h) else {
-                continue;
-            };
-            let Some(target_node_id) = handle_to_node.get(tgt_h) else {
-                continue;
-            };
-            if source_node_id == target_node_id {
-                continue;
-            }
-            if seen_dir.insert((source_node_id.clone(), target_node_id.clone())) {
-                directed.push((source_node_id.clone(), target_node_id.clone()));
-            }
-        }
-        let mut incoming_edge_count_by_node: HashMap<String, u32> = HashMap::new();
-        for id in id_to_node.keys() {
-            incoming_edge_count_by_node.insert(id.clone(), 0);
-        }
-        for (_source_nid, target_nid) in &directed {
-            *incoming_edge_count_by_node.entry(target_nid.clone()).or_insert(0) += 1;
-        }
-        let mut roots: Vec<String> = Vec::new();
-        for node in nodes.iter() {
-            let Some(obj) = node.as_object() else {
-                continue;
-            };
-            if !board_json_visible_or_true(obj) {
-                continue;
-            }
-            if obj.get("root").and_then(|v| v.as_bool()) == Some(true) {
-                if let Some(nid) = obj.get("id").and_then(|v| v.as_str()) {
-                    roots.push(nid.to_string());
-                }
-            }
-        }
-        roots.sort();
-        roots.dedup();
-        if roots.is_empty() {
-            for (id, &d) in &incoming_edge_count_by_node {
-                if d == 0 {
-                    roots.push(id.clone());
-                }
-            }
-            roots.sort();
-        }
-        if roots.is_empty() {
-            roots = id_to_node.keys().cloned().collect();
-            roots.sort();
-        }
-        let mut depth: HashMap<String, i32> = HashMap::new();
-        for r in &roots {
-            depth.insert(r.clone(), 0);
-        }
-        let cap = directed.len().saturating_mul(3).saturating_add(nodes.len()).saturating_add(8);
-        for _ in 0..cap {
-            let mut changed = false;
-            for (source_nid, target_nid) in &directed {
-                let Some(&dp) = depth.get(source_nid) else {
-                    continue;
-                };
-                let nd = dp + 1;
-                let cur = *depth.get(target_nid).unwrap_or(&-1);
-                if nd > cur {
-                    depth.insert(target_nid.clone(), nd);
-                    changed = true;
-                }
-            }
-            if !changed {
-                break;
-            }
-        }
-        let max_depth = depth.values().copied().max().unwrap_or(0);
-        for id in id_to_node.keys() {
-            depth.entry(id.clone()).or_insert(max_depth + 1);
-        }
-        let raw = run_buchheim_layout(&id_to_node, &roots, &directed, &depth)?;
-        let mean_half: f64 = id_to_node.values().map(|nv| half_extent(nv)).sum::<f64>() / id_to_node.len().max(1) as f64;
-        let along_scale = (opts.sibling_gap + 2.0 * mean_half).max(8.0);
-        let mut pos: HashMap<String, (f64, f64)> = HashMap::new();
-        for (id, (bx, by)) in raw {
-            let along = bx * along_scale;
-            let orth = by * opts.layer_spacing;
-            let (lx, ly) = match dir {
-                TreeDirection::Downwards => (along, orth),
-                TreeDirection::Upwards => (along, -orth),
-                TreeDirection::Right => (orth, along),
-                TreeDirection::Left => (-orth, along),
-            };
-            pos.insert(id, (lx, ly));
-        }
-        let mut minx = f64::INFINITY;
-        let mut maxx = f64::NEG_INFINITY;
-        let mut miny = f64::INFINITY;
-        let mut maxy = f64::NEG_INFINITY;
-        for (id, (x, y)) in &pos {
-            let h = half_extent(id_to_node.get(id).unwrap());
-            minx = minx.min(x - h);
-            maxx = maxx.max(x + h);
-            miny = miny.min(y - h);
-            maxy = maxy.max(y + h);
-        }
-        if !minx.is_finite() {
-            minx = 0.0;
-            maxx = 1.0;
-            miny = 0.0;
-            maxy = 1.0;
-        }
-        let cx = (minx + maxx) * 0.5;
-        let cy = (miny + maxy) * 0.5;
-        let gx = opts.center_x.unwrap_or(0.0);
-        let gy = opts.center_y.unwrap_or(0.0);
-        let dx = gx - cx;
-        let dy = gy - cy;
-        let locked_set: HashSet<String> = opts.locked_node_ids.iter().cloned().collect();
-        let mut pinned_world: HashMap<String, (f64, f64)> = HashMap::new();
-        if !locked_set.is_empty() {
-            for node in nodes.iter() {
-                let Some(obj) = node.as_object() else {
-                    continue;
-                };
-                if !board_json_visible_or_true(obj) {
-                    continue;
-                }
-                let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
-                    continue;
-                };
-                if !locked_set.contains(nid) {
-                    continue;
-                }
-                if !id_to_node.contains_key(nid) {
-                    continue;
-                }
-                let px = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                let py = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                pinned_world.insert(nid.to_string(), (px, py));
-            }
-        }
-        for (id, (x, y)) in pos {
-            let (fx, fy) = if let Some(&(px, py)) = pinned_world.get(&id) { (px, py) } else { (x + dx, y + dy) };
-            let idx = nodes.iter().position(|n| n.get("id").and_then(|v| v.as_str()) == Some(id.as_str())).ok_or_else(|| format!("node index {id}"))?;
-            let Some(obj) = nodes[idx].as_object_mut() else {
-                continue;
-            };
-            obj.insert("x".into(), serde_json::json!(fx));
-            obj.insert("y".into(), serde_json::json!(fy));
-        }
-        Ok(())
-    }
-}
-// #endregion 🌳HierarchicalTreeLayout
-
-// #region 🔁RedrawLayout
-mod redraw_layout {
-    use crate::vello::kurbo::Point;
-    use serde::Deserialize;
-    use serde_json::Value;
-    use std::collections::HashMap;
-
-    use super::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
-    use super::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
-    use super::vcompute::{circle_handle_angle_toward, distance_between, rectangle_handle_angle_toward};
-    use super::{board_json_visible_or_true, fixture_edge_handle_ids_from_object};
-
-    #[derive(Debug, Clone, Copy)]
-    enum NodeShapeSnap {
-        Circle { cx: f64, cy: f64 },
-        Rect { cx: f64, cy: f64, w: f64, h: f64 },
-    }
-
-    impl NodeShapeSnap {
-        fn center(self) -> Point {
-            match self {
-                NodeShapeSnap::Circle { cx, cy, .. } | NodeShapeSnap::Rect { cx, cy, .. } => Point::new(cx, cy),
-            }
-        }
-
-        fn handle_angle_toward(self, toward: Point) -> Option<f64> {
-            let c = self.center();
-            if distance_between(c, toward) <= 1e-9 {
-                return None;
-            }
-            Some(match self {
-                NodeShapeSnap::Circle { cx, cy, .. } => circle_handle_angle_toward(Point::new(cx, cy), toward),
-                NodeShapeSnap::Rect { cx, cy, w, h } => rectangle_handle_angle_toward(Point::new(cx, cy), w, h, toward),
-            })
-        }
-    }
-
-    fn parse_node_shape_snap(node: &serde_json::Map<String, Value>) -> Option<NodeShapeSnap> {
-        let cx = node.get("x").and_then(|v| v.as_f64())?;
-        let cy = node.get("y").and_then(|v| v.as_f64())?;
-        if node.get("shape").and_then(|v| v.as_str()) == Some("rectangle") {
-            let w = node.get("width").and_then(|v| v.as_f64())?;
-            let h = node.get("height").and_then(|v| v.as_f64())?;
-            Some(NodeShapeSnap::Rect { cx, cy, w, h })
-        } else {
-            node.get("radius").and_then(|v| v.as_f64())?;
-            Some(NodeShapeSnap::Circle { cx, cy })
-        }
-    }
-
-    /// 🔗 Sets each edge endpoint handle `angle` so the chord follows node centers; last edge wins on shared handles.
-    pub fn apply_edge_handle_snap_to_fixture_v1_value(fixture: &mut Value) -> Result<(), String> {
-        let Some(root) = fixture.as_object_mut() else {
-            return Err("fixture root must be object".into());
-        };
-        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
-            return Err("schema must be puzzle.2d.fixture/v1".into());
-        }
-        let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-        let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
-            return Err("nodes array missing".into());
-        };
-        let mut shapes: Vec<Option<NodeShapeSnap>> = Vec::with_capacity(nodes.len());
-        let mut handle_loc: HashMap<String, (usize, usize)> = HashMap::new();
-        for (ni, node_val) in nodes.iter().enumerate() {
-            let Some(no) = node_val.as_object() else {
-                shapes.push(None);
-                continue;
-            };
-            if !board_json_visible_or_true(no) {
-                shapes.push(None);
-                continue;
-            }
-            shapes.push(parse_node_shape_snap(no));
-            let Some(hs) = no.get("handles").and_then(|v| v.as_array()) else {
-                continue;
-            };
-            for (hi, h) in hs.iter().enumerate() {
-                let Some(ho) = h.as_object() else {
-                    continue;
-                };
-                if !board_json_visible_or_true(ho) {
-                    continue;
-                }
-                if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
-                    handle_loc.insert(hid.to_string(), (ni, hi));
-                }
-            }
-        }
-        let mut angle_by_loc: HashMap<(usize, usize), f64> = HashMap::new();
-        for e in &edges_json {
-            let Some(eo) = e.as_object() else {
-                continue;
-            };
-            if !board_json_visible_or_true(eo) {
-                continue;
-            }
-            let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
-                continue;
-            };
-            let Some(&(ni_a, hi_a)) = handle_loc.get(src_h) else {
-                continue;
-            };
-            let Some(&(ni_b, hi_b)) = handle_loc.get(tgt_h) else {
-                continue;
-            };
-            let Some(sa) = shapes.get(ni_a).copied().flatten() else {
-                continue;
-            };
-            let Some(sb) = shapes.get(ni_b).copied().flatten() else {
-                continue;
-            };
-            if let Some(ang_a) = sa.handle_angle_toward(sb.center()) {
-                angle_by_loc.insert((ni_a, hi_a), ang_a);
-            }
-            if let Some(ang_b) = sb.handle_angle_toward(sa.center()) {
-                angle_by_loc.insert((ni_b, hi_b), ang_b);
-            }
-        }
-        for ((ni, hi), ang) in angle_by_loc {
-            let Some(node_val) = nodes.get_mut(ni) else {
-                continue;
-            };
-            let Some(no) = node_val.as_object_mut() else {
-                continue;
-            };
-            let Some(hs) = no.get_mut("handles").and_then(|v| v.as_array_mut()) else {
-                continue;
-            };
-            let Some(h) = hs.get_mut(hi) else {
-                continue;
-            };
-            let Some(ho) = h.as_object_mut() else {
-                continue;
-            };
-            ho.insert("angle".into(), serde_json::json!(ang));
-        }
-        Ok(())
-    }
-
-    pub fn apply_edge_handle_snap_to_fixture_v1_json(fixture_json: &str) -> Result<String, String> {
-        let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
-        apply_edge_handle_snap_to_fixture_v1_value(&mut fixture)?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
-    }
-
-    #[derive(Debug, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct RedrawFixtureOptions {
-        mode: String,
-        #[serde(default)]
-        center_x: Option<f64>,
-        #[serde(default)]
-        center_y: Option<f64>,
-        #[serde(default)]
-        random_seed: Option<u64>,
-        #[serde(default)]
-        redraw_handles_after: bool,
-        #[serde(default)]
-        locked_node_ids: Vec<String>,
-        #[serde(default)]
-        force_graph: Option<ForceGraphLayoutOptions>,
-        #[serde(default)]
-        hierarchical_tree: Option<HierarchicalTreeLayoutOptions>,
-    }
-
-    pub fn apply_redraw_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
-        let opts: RedrawFixtureOptions = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
-        let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
-        match opts.mode.as_str() {
-            "force-graph" => {
-                let mut fo = opts.force_graph.clone().unwrap_or_default();
-                if opts.center_x.is_some() {
-                    fo.center_x = opts.center_x;
-                }
-                if opts.center_y.is_some() {
-                    fo.center_y = opts.center_y;
-                }
-                if let Some(s) = opts.random_seed {
-                    fo.random_seed = s;
-                }
-                for id in &opts.locked_node_ids {
-                    if !fo.locked_node_ids.contains(id) {
-                        fo.locked_node_ids.push(id.clone());
-                    }
-                }
-                apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &fo)?;
-            }
-            "hierarchical-tree" => {
-                let mut hierarchical_opts = opts.hierarchical_tree.clone().unwrap_or_default();
-                if opts.center_x.is_some() {
-                    hierarchical_opts.center_x = opts.center_x;
-                }
-                if opts.center_y.is_some() {
-                    hierarchical_opts.center_y = opts.center_y;
-                }
-                for id in &opts.locked_node_ids {
-                    if !hierarchical_opts.locked_node_ids.contains(id) {
-                        hierarchical_opts.locked_node_ids.push(id.clone());
-                    }
-                }
-                apply_hierarchical_tree_layout_to_fixture_v1_value(&mut fixture, &hierarchical_opts)?;
-            }
-            other => return Err(format!("unknown redraw mode: {other}")),
-        }
-        if opts.redraw_handles_after {
-            apply_edge_handle_snap_to_fixture_v1_value(&mut fixture)?;
-        }
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
-    }
-}
-// #endregion 🔁RedrawLayout
-
-pub use force_graph::{apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
-pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json};
 
 mod elements_board_palette {
     use crate::vello::peniko::Color;
@@ -2033,7 +97,7 @@ mod board_icon_codec {
 
     fn typst_asset_font_list_plus_noto_color_emoji() -> Vec<Font> {
         let mut out = typst_asset_font_list();
-        let emoji_blob = Bytes::new(super::board_icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF);
+        let emoji_blob = Bytes::new(crate::cavas::board_icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF);
         let mut idx = 0u32;
         loop {
             if let Some(f) = Font::new(emoji_blob.clone(), idx) {
@@ -2153,239 +217,10 @@ mod board_icon_codec {
     }
 }
 
-/// @emoji 🖼️ Parses SVG via `usvg` into Vello paths; maps near-black / near-white fills and strokes to caller `fg` / `bg` (multiply with paint opacity). Each path uses `path.abs_transform()` only (usvg already stores document-absolute transforms; do not compose parent × abs when walking groups).
-mod svg_icon_vello09 {
-    use std::sync::{Arc, OnceLock};
-
-    use crate::usvg;
-    use crate::vello::kurbo::{Affine, BezPath, Point, Stroke};
-    use crate::vello::peniko::{Color, Fill};
-    use crate::vello::Scene;
-
-    // #region 🔖BoardIconUsvgParseOptions
-
-    static BOARD_ICON_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
-
-    /// @emoji 🔤 Shared `usvg` parse options with bundled Noto Color Emoji so `<text>` in Typst `emoji:` SVG matches the Typst font book; avoids system fallback glyphs.
-    pub fn usvg_options_board_icons() -> &'static usvg::Options<'static> {
-        BOARD_ICON_USVG_OPTIONS.get_or_init(|| {
-            let mut db = fontdb::Database::new();
-            db.load_font_data(super::board_icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF.to_vec());
-            let mut o = usvg::Options::default();
-            o.fontdb = Arc::new(db);
-            o.font_family = "Noto Color Emoji".into();
-            o
-        })
-    }
-
-    // #endregion 🔖BoardIconUsvgParseOptions
-
-    fn to_affine(ts: &usvg::Transform) -> Affine {
-        let usvg::Transform { sx, kx, ky, sy, tx, ty } = *ts;
-        Affine::new([sx, ky, kx, sy, tx, ty].map(f64::from))
-    }
-
-    fn to_bez_path(path: &usvg::Path) -> BezPath {
-        let mut local_path = BezPath::new();
-        let mut just_closed = false;
-        let mut most_recent_initial = (0_f64, 0_f64);
-        for elt in path.data().segments() {
-            match elt {
-                usvg::tiny_skia_path::PathSegment::MoveTo(p) => {
-                    if std::mem::take(&mut just_closed) {
-                        local_path.move_to(most_recent_initial);
-                    }
-                    most_recent_initial = (p.x.into(), p.y.into());
-                    local_path.move_to(most_recent_initial);
-                }
-                usvg::tiny_skia_path::PathSegment::LineTo(p) => {
-                    if std::mem::take(&mut just_closed) {
-                        local_path.move_to(most_recent_initial);
-                    }
-                    local_path.line_to(Point::new(p.x as f64, p.y as f64));
-                }
-                usvg::tiny_skia_path::PathSegment::QuadTo(p1, p2) => {
-                    if std::mem::take(&mut just_closed) {
-                        local_path.move_to(most_recent_initial);
-                    }
-                    local_path.quad_to(Point::new(p1.x as f64, p1.y as f64), Point::new(p2.x as f64, p2.y as f64));
-                }
-                usvg::tiny_skia_path::PathSegment::CubicTo(p1, p2, p3) => {
-                    if std::mem::take(&mut just_closed) {
-                        local_path.move_to(most_recent_initial);
-                    }
-                    local_path.curve_to(Point::new(p1.x as f64, p1.y as f64), Point::new(p2.x as f64, p2.y as f64), Point::new(p3.x as f64, p3.y as f64));
-                }
-                usvg::tiny_skia_path::PathSegment::Close => {
-                    just_closed = true;
-                    local_path.close_path();
-                }
-            }
-        }
-        local_path
-    }
-
-    fn map_solid_icon_paint(paint: &usvg::Paint, opacity: usvg::Opacity, fg: Color, bg: Color) -> Option<Color> {
-        let usvg::Paint::Color(c) = paint else {
-            return None;
-        };
-        let a = opacity.get();
-        if c.red < 22 && c.green < 22 && c.blue < 22 {
-            return Some(fg.multiply_alpha(a));
-        }
-        if c.red > 233 && c.green > 233 && c.blue > 233 {
-            return Some(bg.multiply_alpha(a));
-        }
-        Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8()))
-    }
-
-    fn render_group(scene: &mut Scene, group: &usvg::Group, fg: Color, bg: Color) {
-        for node in group.children() {
-            match node {
-                usvg::Node::Group(g) => render_group(scene, g, fg, bg),
-                usvg::Node::Path(path) => {
-                    if !path.is_visible() {
-                        continue;
-                    }
-                    let transform = to_affine(&path.abs_transform());
-                    let local_path = to_bez_path(path);
-                    if let Some(fill) = path.fill() {
-                        if let Some(color) = map_solid_icon_paint(fill.paint(), fill.opacity(), fg, bg) {
-                            scene.fill(
-                                match fill.rule() {
-                                    usvg::FillRule::NonZero => Fill::NonZero,
-                                    usvg::FillRule::EvenOdd => Fill::EvenOdd,
-                                },
-                                transform,
-                                color,
-                                None,
-                                &local_path,
-                            );
-                        }
-                    }
-                    if let Some(stroke) = path.stroke() {
-                        if let Some(color) = map_solid_icon_paint(stroke.paint(), stroke.opacity(), fg, bg) {
-                            let conv = Stroke::new(f64::from(stroke.width().get()));
-                            scene.stroke(&conv, transform, color, None, &local_path);
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
-
-    fn icon_rect_xywh(r: usvg::Rect) -> Option<(f64, f64, f64, f64)> {
-        let w = f64::from(r.width());
-        let h = f64::from(r.height());
-        if !(w > 1e-6 && h > 1e-6 && w.is_finite() && h.is_finite()) {
-            return None;
-        }
-        Some((f64::from(r.x()), f64::from(r.y()), w, h))
-    }
-
-    fn icon_rect_nonzero(r: usvg::tiny_skia_path::NonZeroRect) -> (f64, f64, f64, f64) {
-        (f64::from(r.x()), f64::from(r.y()), f64::from(r.width()), f64::from(r.height()))
-    }
-
-    fn icon_union_xywh(a: (f64, f64, f64, f64), b: (f64, f64, f64, f64)) -> (f64, f64, f64, f64) {
-        let ax1 = a.0 + a.2;
-        let ay1 = a.1 + a.3;
-        let bx1 = b.0 + b.2;
-        let by1 = b.1 + b.3;
-        let x0 = a.0.min(b.0);
-        let y0 = a.1.min(b.1);
-        let x1 = ax1.max(bx1);
-        let y1 = ay1.max(by1);
-        (x0, y0, x1 - x0, y1 - y0)
-    }
-
-    fn icon_union_rects_into(acc: &mut Option<(f64, f64, f64, f64)>, r: usvg::Rect) {
-        if let Some(xy) = icon_rect_xywh(r) {
-            *acc = Some(match acc.take() {
-                None => xy,
-                Some(a) => icon_union_xywh(a, xy),
-            });
-        }
-    }
-
-    fn icon_visit_node_bounds(node: &usvg::Node, acc: &mut Option<(f64, f64, f64, f64)>) {
-        match node {
-            usvg::Node::Group(g) => {
-                for c in g.children() {
-                    icon_visit_node_bounds(c, acc);
-                }
-            }
-            usvg::Node::Path(p) => {
-                if !p.is_visible() {
-                    return;
-                }
-                icon_union_rects_into(acc, p.abs_bounding_box());
-                icon_union_rects_into(acc, p.abs_stroke_bounding_box());
-            }
-            usvg::Node::Image(img) => {
-                if !img.is_visible() {
-                    return;
-                }
-                icon_union_rects_into(acc, img.abs_bounding_box());
-            }
-            usvg::Node::Text(t) => {
-                icon_union_rects_into(acc, t.abs_bounding_box());
-                icon_union_rects_into(acc, t.abs_stroke_bounding_box());
-            }
-        }
-    }
-
-    /// @emoji 📐 Union of visible paint bounds (paths, raster images, text) in absolute SVG space for uniform scale-and-center fits.
-    pub fn svg_icon_content_bounds(tree: &usvg::Tree) -> (f64, f64, f64, f64) {
-        let mut acc = None::<(f64, f64, f64, f64)>;
-        for c in tree.root().children() {
-            icon_visit_node_bounds(c, &mut acc);
-        }
-        if let Some(u) = acc {
-            let (_, _, bw, bh) = u;
-            if bw > 1e-6 && bh > 1e-6 {
-                return u;
-            }
-        }
-        let root = tree.root();
-        let mut u = icon_rect_nonzero(root.abs_layer_bounding_box());
-        if let Some(r) = icon_rect_xywh(root.abs_stroke_bounding_box()) {
-            u = icon_union_xywh(u, r);
-        }
-        if let Some(r) = icon_rect_xywh(root.abs_bounding_box()) {
-            u = icon_union_xywh(u, r);
-        }
-        let (_, _, bw, bh) = u;
-        if bw > 1e-6 && bh > 1e-6 {
-            return u;
-        }
-        let w = f64::from(tree.size().width());
-        let h = f64::from(tree.size().height());
-        (0.0, 0.0, w.max(1.0), h.max(1.0))
-    }
-
-    pub fn render_svg_tree_themed(scene: &mut Scene, tree: &usvg::Tree, fg: Color, bg: Color) {
-        render_group(scene, tree.root(), fg, bg);
-    }
-
-    #[allow(dead_code)]
-    pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), String> {
-        let tree = usvg::Tree::from_str(svg, usvg_options_board_icons()).map_err(|e| e.to_string())?;
-        render_svg_tree_themed(scene, &tree, fg, bg);
-        Ok(())
-    }
-
-    #[allow(dead_code)]
-    pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), String> {
-        append_svg_str_themed(scene, svg, Color::BLACK, Color::WHITE)
-    }
-}
-
 mod board_host {
-    use super::board_json_visible_option;
-    use super::elements_board_palette as board_palette;
-    use super::scene_json::*;
+    use crate::board_json_visible_option;
+    use crate::elements_board_palette as board_palette;
+    use crate::scene_json::*;
     use crate::usvg;
     use serde::Deserialize;
     use crate::vello::kurbo::{Affine, Circle, CubicBez, Point, Rect, Stroke, Vec2};
@@ -2394,22 +229,17 @@ mod board_host {
     use serde_json::json;
     use std::collections::{BTreeMap, BTreeSet};
 
-    use super::geom_sel::{
+    use crate::cavas::geom_sel::{
         cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
         world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
     };
-    use super::vcompute::{compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle};
+    use crate::cavas::vcompute::{circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, rectangle_handle_angle_toward};
 
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::hash::{Hash, Hasher};
     use std::sync::Arc;
 
-    const LOD_MINIMAP_MAX_ZOOM_DEFAULT: f64 = 0.15;
-    const LOD_OVERVIEW_MAX_ZOOM_DEFAULT: f64 = 0.35;
-    const LOD_COMPACT_MAX_ZOOM_DEFAULT: f64 = 0.55;
-    const LOD_NORMAL_MAX_ZOOM_DEFAULT: f64 = 1.25;
-    const LOD_DETAIL_MAX_ZOOM_DEFAULT: f64 = 2.5;
     const GRID_WORLD_LARGE: f64 = 10.0;
     const GRID_WORLD_MEDIUM: f64 = 2.5;
     const GRID_WORLD_SMALL: f64 = 0.5;
@@ -2430,9 +260,67 @@ mod board_host {
     const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
     const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
     const BOUNDED_DRAG_HIT_PAD_PX: f64 = 8.0;
-    pub const BOARD_CAMERA_ZOOM_MIN: f64 = 0.05;
-    pub const BOARD_CAMERA_ZOOM_MAX: f64 = 32.0;
+    pub use crate::cavas::camera::{CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX, CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN};
     const DEFAULT_WIRE_KIND_ID: &str = "wire.link";
+
+    // #region 🔖GraphPortMode
+    /// 🔌 Runtime port-model axis: ported graphs use handles; normal graphs connect node ids directly.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+    pub enum GraphPortMode {
+        #[default]
+        Ported,
+        Normal,
+    }
+
+    impl GraphPortMode {
+        pub fn has_ports(self) -> bool {
+            self == GraphPortMode::Ported
+        }
+    }
+    // #endregion 🔖GraphPortMode
+
+    use crate::cavas::lod::{Lod, LodScale};
+
+    const PUZZLE_2D_LODS: &[Lod; 6] = &[
+        Lod {
+            id: "minimap",
+            name: "Minimap",
+            description: "Whole-board silhouette; group selection and bounded drag only.",
+            max_zoom: 0.15,
+        },
+        Lod {
+            id: "overview",
+            name: "Overview",
+            description: "Topology and indirect handle rings; no per-node picks.",
+            max_zoom: 0.35,
+        },
+        Lod {
+            id: "compact",
+            name: "Compact",
+            description: "Dense graph layout with simplified chrome.",
+            max_zoom: 0.55,
+        },
+        Lod {
+            id: "normal",
+            name: "Normal",
+            description: "Standard editing: nodes, edges, and handle rings.",
+            max_zoom: 1.25,
+        },
+        Lod {
+            id: "detail",
+            name: "Detail",
+            description: "Node icons and richer strokes.",
+            max_zoom: 2.5,
+        },
+        Lod {
+            id: "micro",
+            name: "Micro",
+            description: "Maximum fidelity including handle icons.",
+            max_zoom: f64::INFINITY,
+        },
+    ];
+
+    const PUZZLE_2D_LOD_SCALE: LodScale = LodScale { lods: PUZZLE_2D_LODS };
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum BoardDrawLod {
@@ -2442,6 +330,57 @@ mod board_host {
         Normal,
         Detail,
         Micro,
+    }
+
+    impl BoardDrawLod {
+        fn label(self) -> &'static str {
+            match self {
+                Self::Minimap => "minimap",
+                Self::Overview => "overview",
+                Self::Compact => "compact",
+                Self::Normal => "normal",
+                Self::Detail => "detail",
+                Self::Micro => "micro",
+            }
+        }
+
+        fn from_id(id: &str) -> Option<Self> {
+            Some(match id {
+                "minimap" => Self::Minimap,
+                "overview" => Self::Overview,
+                "compact" => Self::Compact,
+                "normal" => Self::Normal,
+                "detail" => Self::Detail,
+                "micro" => Self::Micro,
+                _ => return None,
+            })
+        }
+
+        fn from_scale_index(index: usize) -> Self {
+            match index {
+                0 => Self::Minimap,
+                1 => Self::Overview,
+                2 => Self::Compact,
+                3 => Self::Normal,
+                4 => Self::Detail,
+                _ => Self::Micro,
+            }
+        }
+    }
+
+    pub fn puzzle_2d_lod_scale_json() -> String {
+        let rows: Vec<serde_json::Value> = PUZZLE_2D_LODS
+            .iter()
+            .map(|lod| {
+                serde_json::json!({
+                    "id": lod.id,
+                    "name": lod.name,
+                    "description": lod.description,
+                    "maxZoom": lod.max_zoom,
+                })
+            })
+            .collect();
+        serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
     }
 
     #[derive(Clone)]
@@ -2532,6 +471,8 @@ mod board_host {
         pub handles: Vec<NodeKindHandleTemplate>,
         /// @emoji 🏷️ Default WASM detail/micro icon encoding for instances of this node kind (`icon` in kind catalog JSON).
         pub icon: Option<String>,
+        /// @emoji 🎨 Catalog fill when instance has no explicit fill override.
+        pub color_fill: Option<Color>,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2556,8 +497,126 @@ mod board_host {
     }
 
     #[derive(Clone, Debug)]
+    struct FillVirtualNode {
+        node_kind: String,
+        x: f64,
+        y: f64,
+        shape: NodeShape,
+        radius: f64,
+        width: f64,
+        height: f64,
+    }
+
+    #[derive(Clone, Debug)]
+    struct FillVirtualHandle {
+        node_id: String,
+        handle_kind: String,
+        template: NodeKindHandleTemplate,
+    }
+
+    #[derive(Clone, Debug, Default)]
+    struct FillAccum {
+        connected_handles: BTreeSet<String>,
+        placements: Vec<(String, String, BrushPreviewSnapshot)>,
+        virtual_nodes: HashMap<String, FillVirtualNode>,
+        virtual_handles: HashMap<String, FillVirtualHandle>,
+        virtual_bounds: Vec<WorldBox>,
+        next_serial: u32,
+    }
+
+    #[derive(Clone, Debug)]
+    struct FixtureDropPreviewSnapshot {
+        node_kind_id: String,
+        x: f64,
+        y: f64,
+        shape: NodeShape,
+        radius: f64,
+        width: f64,
+        height: f64,
+        icon_kind: Option<String>,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum EdgeStrokePattern {
+        Solid,
+        Dashed,
+        Dotted,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum EdgeTipGeometry {
+        Arrow,
+        FineArrow,
+        Diamond,
+        Circle,
+        Bar,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct EdgeTipDef {
+        pub geometry: EdgeTipGeometry,
+        pub filled: bool,
+        pub scale: f64,
+    }
+
+    impl EdgeTipDef {
+        fn from_catalog_row(eo: &serde_json::Map<String, serde_json::Value>) -> Option<Self> {
+            let id = eo.get("id").and_then(|x| x.as_str()).unwrap_or("");
+            if eo.get("geometry").is_none() {
+                return Self::builtin_for_id(id);
+            }
+            let geometry = match eo.get("geometry").and_then(|x| x.as_str()).map(str::trim) {
+                Some("arrow") => EdgeTipGeometry::Arrow,
+                Some("fine-arrow") | Some("fine_arrow") => EdgeTipGeometry::FineArrow,
+                Some("diamond") => EdgeTipGeometry::Diamond,
+                Some("circle") => EdgeTipGeometry::Circle,
+                Some("bar") => EdgeTipGeometry::Bar,
+                _ => return None,
+            };
+            let filled = eo.get("filled").and_then(|x| x.as_bool()).unwrap_or_else(|| match geometry {
+                EdgeTipGeometry::FineArrow | EdgeTipGeometry::Bar => false,
+                EdgeTipGeometry::Diamond => eo.get("id").and_then(|x| x.as_str()).is_some_and(|id| id.contains("open")),
+                _ => true,
+            });
+            let scale = eo
+                .get("scale")
+                .and_then(|x| x.as_f64())
+                .filter(|v| v.is_finite() && *v > 0.0)
+                .unwrap_or(1.0);
+            Some(Self { geometry, filled, scale })
+        }
+
+        fn builtin_for_id(id: &str) -> Option<Self> {
+            match id.trim().to_ascii_lowercase().as_str() {
+                "arrow" | "filled-arrow" | "filled_arrow" => Some(Self { geometry: EdgeTipGeometry::Arrow, filled: true, scale: 1.0 }),
+                "fine-arrow" | "fine_arrow" => Some(Self { geometry: EdgeTipGeometry::FineArrow, filled: false, scale: 1.0 }),
+                "filled-diamond" | "filled_diamond" => Some(Self { geometry: EdgeTipGeometry::Diamond, filled: true, scale: 1.0 }),
+                "open-diamond" | "open_diamond" => Some(Self { geometry: EdgeTipGeometry::Diamond, filled: false, scale: 1.0 }),
+                _ => None,
+            }
+        }
+    }
+
+    fn builtin_edge_tips() -> BTreeMap<String, EdgeTipDef> {
+        let ids = ["arrow", "filled-arrow", "fine-arrow", "filled-diamond", "open-diamond"];
+        let mut m = BTreeMap::new();
+        for id in ids {
+            if let Some(def) = EdgeTipDef::builtin_for_id(id) {
+                m.insert(id.to_string(), def);
+            }
+        }
+        m
+    }
+
+    #[derive(Clone, Debug)]
     pub struct EdgeKindDef {
         pub name: String,
+        pub color: Option<Color>,
+        pub stroke_width: f64,
+        pub pattern: EdgeStrokePattern,
+        pub source_tip: Option<String>,
+        pub target_tip: Option<String>,
+        pub directed: bool,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -2604,6 +663,8 @@ mod board_host {
         pub visible: bool,
         pub style: Option<String>,
         pub edge_kind: String,
+        pub source_tip: Option<String>,
+        pub target_tip: Option<String>,
     }
 
     #[derive(Clone, Debug)]
@@ -2619,12 +680,7 @@ mod board_host {
         pub wire_kind: String,
     }
 
-    #[derive(Clone, Debug)]
-    pub struct Camera {
-        pub x: f64,
-        pub y: f64,
-        pub zoom: f64,
-    }
+    pub use crate::cavas::camera::Camera;
 
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct SelectionOptions {
@@ -2786,6 +842,8 @@ mod board_host {
         pub wire_kinds: BTreeMap<String, WireKindDef>,
         pub node_kinds: BTreeMap<String, NodeKindDef>,
         pub edge_kinds: BTreeMap<String, EdgeKindDef>,
+        /// @emoji 🔺 Registry of edge tip shapes keyed by catalog id (built-ins seeded at init).
+        pub edge_tips: BTreeMap<String, EdgeTipDef>,
         /// @emoji 🔗 Kind-compatibility rules for link gestures; empty = unrestricted.
         pub link_compat_rules: Vec<LinkCompatRule>,
         pub selection: BTreeSet<String>,
@@ -2808,12 +866,6 @@ mod board_host {
         /// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
         pub link_screen_preview: Option<Vec<Point>>,
         pub vello_theme: VelloThemePalette,
-        /// @emoji 📶 Upper bounds for zoom bands: `zoom < minimap`, then overview, compact, normal, detail, else micro.
-        pub lod_minimap_max_zoom: f64,
-        pub lod_overview_max_zoom: f64,
-        pub lod_compact_max_zoom: f64,
-        pub lod_normal_max_zoom: f64,
-        pub lod_detail_max_zoom: f64,
         /// @emoji 📐 Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
         pub grid_factor: f64,
         /// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
@@ -2847,14 +899,13 @@ mod board_host {
         brush_candidate_kinds: Vec<String>,
         brush_candidate_index: usize,
         brush_preview: Option<BrushPreviewSnapshot>,
+        fixture_drop_preview: Option<FixtureDropPreviewSnapshot>,
         brush_candidates_emit_key: Option<String>,
         brush_preview_emit_key: Option<String>,
-    }
-
-    impl Default for Camera {
-        fn default() -> Self {
-            Self { x: 0.0, y: 0.0, zoom: 1.0 }
-        }
+        brush_placement_serial: u64,
+        brush_node_kind_weights: HashMap<String, f64>,
+        brush_handle_kind_weights: HashMap<String, f64>,
+        pub port_mode: GraphPortMode,
     }
 
     impl Default for BoardHost {
@@ -2869,6 +920,7 @@ mod board_host {
                 wire_kinds: BTreeMap::new(),
                 node_kinds: BTreeMap::new(),
                 edge_kinds: BTreeMap::new(),
+                edge_tips: builtin_edge_tips(),
                 link_compat_rules: Vec::new(),
                 selection: BTreeSet::new(),
                 preselect: BTreeSet::new(),
@@ -2885,11 +937,6 @@ mod board_host {
                 selection_screen_preview: None,
                 link_screen_preview: None,
                 vello_theme: VelloThemePalette::default(),
-                lod_minimap_max_zoom: LOD_MINIMAP_MAX_ZOOM_DEFAULT,
-                lod_overview_max_zoom: LOD_OVERVIEW_MAX_ZOOM_DEFAULT,
-                lod_compact_max_zoom: LOD_COMPACT_MAX_ZOOM_DEFAULT,
-                lod_normal_max_zoom: LOD_NORMAL_MAX_ZOOM_DEFAULT,
-                lod_detail_max_zoom: LOD_DETAIL_MAX_ZOOM_DEFAULT,
                 grid_factor: GRID_FACTOR_DEFAULT,
                 grid_snap_enabled: false,
                 preserve_original_element_style: false,
@@ -2911,8 +958,13 @@ mod board_host {
                 brush_candidate_kinds: Vec::new(),
                 brush_candidate_index: 0,
                 brush_preview: None,
+                fixture_drop_preview: None,
                 brush_candidates_emit_key: None,
                 brush_preview_emit_key: None,
+                brush_placement_serial: 0,
+                brush_node_kind_weights: HashMap::new(),
+                brush_handle_kind_weights: HashMap::new(),
+                port_mode: GraphPortMode::Ported,
             }
         }
     }
@@ -2929,14 +981,7 @@ mod board_host {
         }
 
         fn board_draw_lod_label(lod: BoardDrawLod) -> &'static str {
-            match lod {
-                BoardDrawLod::Minimap => "minimap",
-                BoardDrawLod::Overview => "overview",
-                BoardDrawLod::Compact => "compact",
-                BoardDrawLod::Normal => "normal",
-                BoardDrawLod::Detail => "detail",
-                BoardDrawLod::Micro => "micro",
-            }
+            lod.label()
         }
 
         /// @emoji 🏷️ Camera, draw LOD, and visible node centers from the WASM host for the JS text overlay (must match the last GPU frame).
@@ -2965,16 +1010,12 @@ mod board_host {
             self.content_scene_generation
         }
 
+        fn viewport(&self) -> crate::cavas::camera::Viewport {
+            crate::cavas::camera::Viewport { width: self.width, height: self.height, dpr: self.dpr }
+        }
+
         fn camera_content_affine(&self) -> Affine {
-            let z = self.camera.zoom;
-            Affine::new([
-                z,
-                0.0,
-                0.0,
-                z,
-                self.width as f64 * 0.5 - self.camera.x * z,
-                self.height as f64 * 0.5 - self.camera.y * z,
-            ])
+            crate::cavas::camera::camera_content_affine(&self.camera, &self.viewport())
         }
     }
 
@@ -3004,26 +1045,42 @@ mod board_host {
             Self::default()
         }
 
+        /// 🧠 Normal directed graph host: no handles, edges reference node ids.
+        pub fn new_normal() -> Self {
+            let mut host = Self::default();
+            host.port_mode = GraphPortMode::Normal;
+            host.selection_options.select_handles = false;
+            host
+        }
+
+        fn has_ports(&self) -> bool {
+            self.port_mode.has_ports()
+        }
+
+        fn node_rim_point_toward(&self, node: &NodeData, toward: Point) -> Option<Point> {
+            let center = Point::new(node.x, node.y);
+            match node.shape {
+                NodeShape::Circle => {
+                    let radius = self.scaled_node_radius(node);
+                    let angle = circle_handle_angle_toward(center, toward);
+                    Some(handle_position_on_circle(center, radius, angle))
+                }
+                NodeShape::Rectangle => {
+                    let width = self.scaled_node_width(node);
+                    let height = self.scaled_node_height(node);
+                    let angle = rectangle_handle_angle_toward(center, width, height, toward);
+                    Some(handle_position_on_rectangle(center, width, height, angle))
+                }
+            }
+        }
+
         fn current_draw_lod(&self) -> BoardDrawLod {
             if !self.automatic_lod {
                 if let Some(lod) = self.forced_draw_lod {
                     return lod;
                 }
             }
-            let z = self.camera.zoom;
-            if z < self.lod_minimap_max_zoom {
-                BoardDrawLod::Minimap
-            } else if z < self.lod_overview_max_zoom {
-                BoardDrawLod::Overview
-            } else if z < self.lod_compact_max_zoom {
-                BoardDrawLod::Compact
-            } else if z < self.lod_normal_max_zoom {
-                BoardDrawLod::Normal
-            } else if z < self.lod_detail_max_zoom {
-                BoardDrawLod::Detail
-            } else {
-                BoardDrawLod::Micro
-            }
+            BoardDrawLod::from_scale_index(PUZZLE_2D_LOD_SCALE.resolve_index(self.camera.zoom))
         }
 
         fn lod_visible_grid_snap_step_world(&self) -> Option<f64> {
@@ -3050,33 +1107,6 @@ mod board_host {
             (self.snap_world_scalar(x), self.snap_world_scalar(y))
         }
 
-        /// @emoji 📶 JSON `{ "minimapMaxZoom", "overviewMaxZoom", "compactMaxZoom", "normalMaxZoom", "detailMaxZoom" }` strictly increasing CSS-scale zoom values.
-        pub fn set_lod_zoom_thresholds_from_json(&mut self, json: &str) -> Result<(), String> {
-            let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-            let a = v.get("minimapMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "minimapMaxZoom".to_string())?;
-            let b = v.get("overviewMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "overviewMaxZoom".to_string())?;
-            let c = v.get("compactMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "compactMaxZoom".to_string())?;
-            let d = v.get("normalMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "normalMaxZoom".to_string())?;
-            let e = v.get("detailMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "detailMaxZoom".to_string())?;
-            if !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&a)
-                || !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&b)
-                || !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&c)
-                || !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&d)
-                || !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&e)
-            {
-                return Err("lod zoom thresholds must lie within camera zoom bounds".into());
-            }
-            if !(a < b && b < c && c < d && d < e) {
-                return Err("lod zoom thresholds must satisfy minimap < overview < compact < normal < detail".into());
-            }
-            self.lod_minimap_max_zoom = a;
-            self.lod_overview_max_zoom = b;
-            self.lod_compact_max_zoom = c;
-            self.lod_normal_max_zoom = d;
-            self.lod_detail_max_zoom = e;
-            Ok(())
-        }
-
         pub fn set_grid_snap_enabled(&mut self, enabled: bool) {
             self.grid_snap_enabled = enabled;
         }
@@ -3094,18 +1124,13 @@ mod board_host {
                 self.forced_draw_lod = None;
                 return;
             }
-            self.forced_draw_lod = Some(match t {
-                "minimap" => BoardDrawLod::Minimap,
-                "overview" => BoardDrawLod::Overview,
-                "compact" => BoardDrawLod::Compact,
-                "normal" => BoardDrawLod::Normal,
-                "detail" => BoardDrawLod::Detail,
-                "micro" => BoardDrawLod::Micro,
-                _ => {
+            self.forced_draw_lod = match BoardDrawLod::from_id(t) {
+                Some(lod) => Some(lod),
+                None => {
                     self.forced_draw_lod = None;
                     return;
                 }
-            });
+            };
         }
 
         pub fn set_grid_factor(&mut self, v: f64) -> Result<(), String> {
@@ -3146,11 +1171,11 @@ mod board_host {
         }
 
         fn get_or_build_icon_paint(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
-            let resolved = super::board_icon_codec::board_resolve_icon_kind(encoded);
+            let resolved = crate::board_icon_codec::board_resolve_icon_kind(encoded);
             let key = match &resolved {
-                super::board_icon_codec::BoardResolvedIcon::None => return None,
-                super::board_icon_codec::BoardResolvedIcon::SvgThemed(s) | super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
-                super::board_icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
+                crate::board_icon_codec::BoardResolvedIcon::None => return None,
+                crate::board_icon_codec::BoardResolvedIcon::SvgThemed(s) | crate::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
+                crate::board_icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
             };
             {
                 let g = self.icon_vector_cache.borrow();
@@ -3159,10 +1184,10 @@ mod board_host {
                 }
             }
             let (bx, by, bw, bh, body) = match resolved {
-                super::board_icon_codec::BoardResolvedIcon::None => return None,
-                super::board_icon_codec::BoardResolvedIcon::SvgThemed(s) => {
-                    let tree = usvg::Tree::from_str(s.trim(), super::svg_icon_vello09::usvg_options_board_icons()).ok()?;
-                    let (bx, by, bw, bh) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
+                crate::board_icon_codec::BoardResolvedIcon::None => return None,
+                crate::board_icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+                    let tree = usvg::Tree::from_str(s.trim(), crate::svg_icon_vello09::usvg_options_board_icons()).ok()?;
+                    let (bx, by, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
                         return None;
                     }
@@ -3170,14 +1195,14 @@ mod board_host {
                     if preserve_original_style {
                         let _ = vello_svg::append_tree(&mut s, &tree);
                     } else {
-                        super::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+                        crate::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
-                super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+                crate::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
                     let svg_t = s.trim();
-                    let tree = usvg::Tree::from_str(svg_t, super::svg_icon_vello09::usvg_options_board_icons()).ok()?;
-                    let (bx, by, bw, bh) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
+                    let tree = usvg::Tree::from_str(svg_t, crate::svg_icon_vello09::usvg_options_board_icons()).ok()?;
+                    let (bx, by, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
                         return None;
                     }
@@ -3185,11 +1210,11 @@ mod board_host {
                     if preserve_original_style {
                         let _ = vello_svg::append_tree(&mut s, &tree);
                     } else {
-                        super::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+                        crate::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
-                super::board_icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
+                crate::board_icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
                     let bx = 0.0_f64;
                     let by = 0.0_f64;
                     let bw = f64::from(w);
@@ -3239,7 +1264,7 @@ mod board_host {
         }
 
         fn set_camera_internal(&mut self, x: f64, y: f64, zoom: f64, emit_event: bool) {
-            let zoom = zoom.clamp(BOARD_CAMERA_ZOOM_MIN, BOARD_CAMERA_ZOOM_MAX);
+            let zoom = crate::cavas::camera::clamp_zoom(zoom);
             if (self.camera.x - x).abs() < 1e-9 && (self.camera.y - y).abs() < 1e-9 && (self.camera.zoom - zoom).abs() < 1e-9 {
                 return;
             }
@@ -3355,9 +1380,25 @@ mod board_host {
                         .map(str::trim)
                         .filter(|s| !s.is_empty())
                         .map(|s| s.to_string());
-                    next.insert(id.to_string(), NodeKindDef { name, scale, shape, handles, icon });
+                    let color_fill = no
+                        .get("color")
+                        .and_then(|x| x.as_str())
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .and_then(Self::parse_css_hex_color);
+                    next.insert(id.to_string(), NodeKindDef { name, scale, shape, handles, icon, color_fill });
                 }
                 self.node_kinds = next;
+            }
+            if let Some(arr) = o.get("edgeTips").and_then(|x| x.as_array()) {
+                let mut tips = builtin_edge_tips();
+                for row in arr {
+                    let eo = row.as_object().ok_or("edge tip row must be object")?;
+                    let id = eo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("edge tip id missing")?;
+                    let def = EdgeTipDef::from_catalog_row(eo).ok_or_else(|| format!("edge tip row {:?} invalid", id))?;
+                    tips.insert(id.to_string(), def);
+                }
+                self.edge_tips = tips;
             }
             if let Some(arr) = o.get("edgeKinds").and_then(|x| x.as_array()) {
                 let mut next = BTreeMap::new();
@@ -3366,11 +1407,60 @@ mod board_host {
                     Self::reject_kind_catalog_row_legacy_label(eo, "edge")?;
                     let id = eo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("edge kind id missing")?;
                     let name = eo.get("name").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).unwrap_or("").to_string();
-                    next.insert(id.to_string(), EdgeKindDef { name });
+                    let color = eo
+                        .get("color")
+                        .and_then(|x| x.as_str())
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .and_then(Self::parse_css_hex_color);
+                    let stroke_width = eo
+                        .get("stroke")
+                        .and_then(|x| x.as_f64())
+                        .filter(|v| v.is_finite() && *v > 0.0)
+                        .or_else(|| eo.get("stroke").and_then(|x| x.as_str()).and_then(|s| s.trim().parse::<f64>().ok()).filter(|v| v.is_finite() && *v > 0.0))
+                        .unwrap_or(2.0);
+                    let pattern = match eo.get("pattern").and_then(|x| x.as_str()).map(str::trim) {
+                        Some("dashed") => EdgeStrokePattern::Dashed,
+                        Some("dotted") => EdgeStrokePattern::Dotted,
+                        _ => EdgeStrokePattern::Solid,
+                    };
+                    let source_tip = Self::parse_catalog_tip_slot(eo.get("sourceTip").or_else(|| eo.get("source_tip")).and_then(|x| x.as_str()));
+                    let target_tip = Self::parse_catalog_tip_slot(
+                        eo.get("targetTip")
+                            .or_else(|| eo.get("target_tip"))
+                            .and_then(|x| x.as_str())
+                            .or_else(|| eo.get("marker").and_then(|x| x.as_str())),
+                    );
+                    let directed = eo.get("directed").and_then(|x| x.as_bool()).unwrap_or(true);
+                    next.insert(id.to_string(), EdgeKindDef { name, color, stroke_width, pattern, source_tip, target_tip, directed });
                 }
                 self.edge_kinds = next;
             }
             Ok(())
+        }
+
+        fn parse_catalog_tip_slot(value: Option<&str>) -> Option<String> {
+            let s = value?.trim();
+            if s.is_empty() || s.eq_ignore_ascii_case("none") {
+                Some(String::new())
+            } else {
+                Some(s.to_string())
+            }
+        }
+
+        fn lookup_edge_tip<'a>(&'a self, id: &str) -> Option<&'a EdgeTipDef> {
+            if id.is_empty() {
+                return None;
+            }
+            self.edge_tips.get(id)
+        }
+
+        fn resolve_tip_slot<'a>(&'a self, slot: Option<&str>) -> Option<&'a EdgeTipDef> {
+            match slot {
+                Some("") => None,
+                Some(id) => self.lookup_edge_tip(id),
+                None => None,
+            }
         }
 
         fn parse_css_hex_color(s: &str) -> Option<Color> {
@@ -3695,6 +1785,185 @@ mod board_host {
             }
         }
 
+        fn lerp_color(a: Color, b: Color, t: f64) -> Color {
+            let t = t.clamp(0.0, 1.0);
+            let ac = a.to_rgba8();
+            let bc = b.to_rgba8();
+            Color::from_rgba8(
+                ((f64::from(ac.r) * (1.0 - t) + f64::from(bc.r) * t).round() as u8),
+                ((f64::from(ac.g) * (1.0 - t) + f64::from(bc.g) * t).round() as u8),
+                ((f64::from(ac.b) * (1.0 - t) + f64::from(bc.b) * t).round() as u8),
+                ((f64::from(ac.a) * (1.0 - t) + f64::from(bc.a) * t).round() as u8),
+            )
+        }
+
+        fn resolve_node_fill_color(&self, n: &NodeData, theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+            let theme_fill = Self::node_fill_for_style(theme, kind);
+            match kind {
+                BoardElementStyleKind::Hovered | BoardElementStyleKind::Selected | BoardElementStyleKind::Highlighted | BoardElementStyleKind::Disabled => theme_fill,
+                BoardElementStyleKind::Original | BoardElementStyleKind::Neutral => {
+                    let kind_id = n.node_kind.trim();
+                    if kind_id.is_empty() {
+                        return theme_fill;
+                    }
+                    self.node_kinds.get(kind_id).and_then(|def| def.color_fill).unwrap_or(theme_fill)
+                }
+            }
+        }
+
+        fn edge_stroke_for_kind_pattern(pattern: EdgeStrokePattern, width: f64) -> Stroke {
+            use vello::kurbo::Cap;
+            let mut stroke = Stroke::new(width);
+            match pattern {
+                EdgeStrokePattern::Solid => {}
+                EdgeStrokePattern::Dashed => {
+                    stroke.dash_pattern = vec![width * 3.0, width * 2.0].into();
+                }
+                EdgeStrokePattern::Dotted => {
+                    stroke.dash_pattern = vec![width * 0.35, width * 1.65].into();
+                    stroke.start_cap = Cap::Round;
+                    stroke.end_cap = Cap::Round;
+                }
+            }
+            stroke
+        }
+
+        fn resolve_edge_stroke_paint(&self, e: &EdgeData, chrome_pass: StyleChromePass, lod_scale_width: f64) -> (Color, Stroke, f64) {
+            let style_kind = self.resolve_edge_style_kind(e, chrome_pass);
+            let chrome = Self::edge_stroke_for_style(&self.vello_theme, style_kind);
+            let kind_def = self.edge_kinds.get(e.edge_kind.as_str());
+            let base_color = kind_def.and_then(|d| d.color).unwrap_or(self.vello_theme.edge_stroke);
+            let stroke_color = match style_kind {
+                BoardElementStyleKind::Neutral | BoardElementStyleKind::Original => base_color,
+                _ => Self::lerp_color(base_color, chrome, 0.55),
+            };
+            let catalog_w = kind_def.map(|d| d.stroke_width).unwrap_or(2.0);
+            let width_mult = match style_kind {
+                BoardElementStyleKind::Selected => 1.35,
+                BoardElementStyleKind::Hovered => 1.2,
+                _ => 1.0,
+            };
+            let width = lod_scale_width * (catalog_w / 2.0) * width_mult;
+            let pattern = kind_def.map(|d| d.pattern).unwrap_or(EdgeStrokePattern::Solid);
+            (stroke_color, Self::edge_stroke_for_kind_pattern(pattern, width), width)
+        }
+
+        fn resolve_edge_tips<'a>(&'a self, e: &EdgeData) -> (Option<&'a EdgeTipDef>, Option<&'a EdgeTipDef>) {
+            let kind_def = self.edge_kinds.get(e.edge_kind.as_str());
+            let source_slot = e.source_tip.as_deref().or_else(|| kind_def.and_then(|d| d.source_tip.as_deref()));
+            let target_slot = e.target_tip.as_deref().or_else(|| kind_def.and_then(|d| d.target_tip.as_deref()));
+            let mut source = self.resolve_tip_slot(source_slot);
+            let mut target = self.resolve_tip_slot(target_slot);
+            if target.is_none() && target_slot.is_none() {
+                let directed = kind_def.map(|d| d.directed).unwrap_or(true);
+                if directed {
+                    target = self.lookup_edge_tip("arrow");
+                }
+            }
+            (source, target)
+        }
+
+        fn append_edge_tip(scene: &mut Scene, tip: Point, dir: Vec2, color: Color, stroke_width: f64, tip_def: &EdgeTipDef) {
+            use crate::vello::kurbo::BezPath;
+            let len = dir.hypot();
+            if len < 1e-9 {
+                return;
+            }
+            let d = dir / len;
+            let n = Vec2::new(-d.y, d.x);
+            let sw = stroke_width.max(1.0) * tip_def.scale.max(0.25);
+            match tip_def.geometry {
+                EdgeTipGeometry::Arrow => {
+                    let length = sw * 4.2;
+                    let half_w = sw * 1.15;
+                    let base = tip - d * length;
+                    let mut path = BezPath::new();
+                    path.move_to(tip);
+                    path.line_to(base + n * half_w);
+                    path.line_to(base - n * half_w);
+                    path.close_path();
+                    if tip_def.filled {
+                        scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &path);
+                    } else {
+                        scene.stroke(&Stroke::new(sw.max(1.25)), Affine::IDENTITY, color, None, &path);
+                    }
+                }
+                EdgeTipGeometry::FineArrow => {
+                    let length = sw * 3.2;
+                    let half_w = sw * 0.75;
+                    let base = tip - d * length;
+                    let mut path = BezPath::new();
+                    path.move_to(tip);
+                    path.line_to(base + n * half_w);
+                    path.move_to(tip);
+                    path.line_to(base - n * half_w);
+                    let outline = Stroke::new((sw * 0.9).max(1.0));
+                    scene.stroke(&outline, Affine::IDENTITY, color, None, &path);
+                }
+                EdgeTipGeometry::Diamond => {
+                    let length = sw * 3.6;
+                    let half_w = sw * 1.05;
+                    let back = tip - d * length;
+                    let mid = tip - d * (length * 0.5);
+                    let mut path = BezPath::new();
+                    path.move_to(tip);
+                    path.line_to(mid + n * half_w);
+                    path.line_to(back);
+                    path.line_to(mid - n * half_w);
+                    path.close_path();
+                    if tip_def.filled {
+                        scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &path);
+                    } else {
+                        scene.stroke(&Stroke::new(sw.max(1.25)), Affine::IDENTITY, color, None, &path);
+                    }
+                }
+                EdgeTipGeometry::Circle => {
+                    let r = sw * 1.4;
+                    let center = tip - d * r;
+                    let circle = Circle::new(center, r);
+                    if tip_def.filled {
+                        scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &circle);
+                    } else {
+                        scene.stroke(&Stroke::new(sw.max(1.25)), Affine::IDENTITY, color, None, &circle);
+                    }
+                }
+                EdgeTipGeometry::Bar => {
+                    let half = sw * 1.25;
+                    let center = tip - d * (sw * 0.5);
+                    let mut path = BezPath::new();
+                    path.move_to(center + n * half);
+                    path.line_to(center - n * half);
+                    scene.stroke(&Stroke::new(sw.max(1.25)), Affine::IDENTITY, color, None, &path);
+                }
+            }
+        }
+
+        fn append_edge_tips_on_curve(scene: &mut Scene, curve: &CubicBez, color: Color, stroke_w: f64, source: Option<&EdgeTipDef>, target: Option<&EdgeTipDef>) {
+            let inset = stroke_w * 0.35;
+            if let Some(tip_def) = target {
+                let mut tangent = curve.p3 - curve.p2;
+                if tangent.hypot() < 1e-9 {
+                    tangent = curve.p3 - curve.p1;
+                }
+                if tangent.hypot() >= 1e-9 {
+                    let dir = tangent / tangent.hypot();
+                    let tip = curve.p3 - dir * inset;
+                    Self::append_edge_tip(scene, tip, tangent, color, stroke_w, tip_def);
+                }
+            }
+            if let Some(tip_def) = source {
+                let mut tangent = curve.p0 - curve.p1;
+                if tangent.hypot() < 1e-9 {
+                    tangent = curve.p0 - curve.p2;
+                }
+                if tangent.hypot() >= 1e-9 {
+                    let dir = tangent / tangent.hypot();
+                    let tip = curve.p0 - dir * inset;
+                    Self::append_edge_tip(scene, tip, tangent, color, stroke_w, tip_def);
+                }
+            }
+        }
+
         fn wire_stroke_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
             match kind {
                 BoardElementStyleKind::Hovered => theme.wire_stroke_hovered,
@@ -3706,6 +1975,9 @@ mod board_host {
         }
 
         fn handles_link_compatible_for_drag(&self, source: &HandleData, target: &HandleData) -> bool {
+            if !Self::handle_port_shapes_compatible(source.handle_kind.as_str(), target.handle_kind.as_str()) {
+                return false;
+            }
             if self.link_compat_rules.is_empty() {
                 return true;
             }
@@ -3730,6 +2002,26 @@ mod board_host {
                 return true;
             }
             false
+        }
+
+        fn handle_port_shape(handle_kind: &str) -> Option<&'static str> {
+            if handle_kind.contains(" circular ") {
+                Some("circular")
+            } else if handle_kind.contains(" rectangular ") {
+                Some("rectangular")
+            } else {
+                None
+            }
+        }
+
+        fn handle_port_shapes_compatible(source_handle_kind: &str, target_handle_kind: &str) -> bool {
+            match (
+                Self::handle_port_shape(source_handle_kind),
+                Self::handle_port_shape(target_handle_kind),
+            ) {
+                (Some(a), Some(b)) => a == b,
+                _ => true,
+            }
         }
 
         fn resolve_default_wire_kind_for_handle(&self, h: &HandleData) -> String {
@@ -3794,6 +2086,9 @@ mod board_host {
         }
 
         fn link_kinds_compatible_for_brush(&self, sn: &str, sh: &str, tn: &str, th: &str) -> bool {
+            if !Self::handle_port_shapes_compatible(sh, th) {
+                return false;
+            }
             if self.link_compat_rules.is_empty() {
                 return true;
             }
@@ -3822,44 +2117,111 @@ mod board_host {
             (self.brush_node_size * 0.5).max(1.0)
         }
 
+        /// @emoji 🖌️ Brush slot anchor follows indirect-handle layout at overview/normal LOD so hit targets match painted rings.
+        fn brush_handle_anchor_world(&self, h: &HandleData) -> Option<Point> {
+            if matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
+                self.indirect_handle_world_pos(h).or_else(|| self.handle_world_pos(h))
+            } else {
+                self.handle_world_pos(h)
+            }
+        }
+
         fn brush_slot_center_world(&self, h: &HandleData) -> Option<Point> {
             let n = self.nodes.get(&h.node_id)?;
-            let hw = self.handle_world_pos(h)?;
+            let hw = self.brush_handle_anchor_world(h)?;
             let nc = Point::new(n.x, n.y);
-            let normal = crate::vcompute::normalize_or_zero(hw - nc);
+            let normal = crate::cavas::vcompute::normalize_or_zero(hw - nc);
             Some(hw + normal * self.brush_flush_distance)
         }
 
+        /// @emoji 🖌️ World distance from pointer to brush slot when the pointer is on the slot, anchor, or sole-free node body.
+        fn brush_slot_pointer_hit_distance(&self, world: Point, handle_id: &str, h: &HandleData) -> Option<f64> {
+            let slot_center = self.brush_slot_center_world(h)?;
+            let zoom = self.camera.zoom.max(1e-9);
+            let slot_hit_r = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.brush_slot_hit_radius_world();
+            let d_slot = distance_between(world, slot_center);
+            if d_slot <= slot_hit_r {
+                return Some(d_slot);
+            }
+            let anchor = self.brush_handle_anchor_world(h)?;
+            let anchor_hit_r = (HANDLE_HIT_TOLERANCE_PX / zoom)
+                + self.indirect_handle_marker_radius_world(h).max(self.effective_handle_radius(h));
+            if distance_between(world, anchor) <= anchor_hit_r {
+                return Some(d_slot);
+            }
+            if self.sole_eligible_indirect_handle_on_node(&h.node_id).as_deref() == Some(handle_id) {
+                let n = self.nodes.get(&h.node_id)?;
+                if self.point_in_node_world(n, world) {
+                    return Some(d_slot);
+                }
+            }
+            None
+        }
+
         fn brush_nearest_slot_source(&self, world: Point) -> Option<String> {
-            let hit_r = self.brush_slot_hit_radius_world();
             let mut best: Option<(f64, String)> = None;
             for (hid, h) in &self.handles {
                 if !self.handle_effectively_visible(hid.as_str()) || self.handle_has_incident_edge(hid.as_str()) {
                     continue;
                 }
-                let center = self.brush_slot_center_world(h)?;
-                let d = distance_between(world, center);
-                if d <= hit_r && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+                let Some(d) = self.brush_slot_pointer_hit_distance(world, hid.as_str(), h) else {
+                    continue;
+                };
+                if best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
                     best = Some((d, hid.clone()));
                 }
             }
             best.map(|(_, id)| id)
         }
 
-        fn brush_shuffle_candidates(ids: &mut [String], seed: u64) {
+        fn brush_candidate_seed(source_handle_id: &str) -> u64 {
+            source_handle_id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)))
+        }
+
+        fn brush_kind_weight(weights: &HashMap<String, f64>, id: &str, uniform_fallback: f64) -> f64 {
+            weights
+                .get(id)
+                .copied()
+                .filter(|w| w.is_finite() && *w > 0.0)
+                .unwrap_or(uniform_fallback)
+        }
+
+        fn brush_next_seed(state: u64) -> u64 {
+            state.wrapping_mul(6364136223846793005).wrapping_add(1)
+        }
+
+        fn brush_weighted_sample_index(weights: &[f64], seed: u64) -> usize {
+            let wsum: f64 = weights.iter().sum();
+            if wsum <= 0.0 {
+                return 0;
+            }
+            let unit = (seed as f64) / (u64::MAX as f64);
+            let mut r = unit * wsum;
+            for (i, w) in weights.iter().enumerate() {
+                if r <= *w || i + 1 == weights.len() {
+                    return i;
+                }
+                r -= w;
+            }
+            weights.len().saturating_sub(1)
+        }
+
+        fn brush_weighted_order_strings(ids: &mut Vec<String>, seed: u64, weight_map: &HashMap<String, f64>) {
             if ids.len() < 2 {
                 return;
             }
+            let uniform = 1.0 / ids.len() as f64;
+            let mut remaining: Vec<String> = std::mem::take(ids);
             let mut state = seed;
-            for i in (1..ids.len()).rev() {
-                state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
-                let j = (state as usize) % (i + 1);
-                ids.swap(i, j);
+            while !remaining.is_empty() {
+                let weights: Vec<f64> = remaining
+                    .iter()
+                    .map(|id| Self::brush_kind_weight(weight_map, id.as_str(), uniform))
+                    .collect();
+                state = Self::brush_next_seed(state);
+                let pick = Self::brush_weighted_sample_index(&weights, state);
+                ids.push(remaining.remove(pick));
             }
-        }
-
-        fn brush_candidate_seed(source_handle_id: &str) -> u64 {
-            source_handle_id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)))
         }
 
         fn brush_compatible_node_kind_ids(&self, source: &HandleData) -> Vec<String> {
@@ -3890,26 +2252,23 @@ mod board_host {
             let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
             let sh = source.handle_kind.as_str();
             let tn = node_kind_id;
-            let src_pos = self.handle_world_pos(source)?;
-            let center = Point::new(cx, cy);
-            let radius = self.brush_node_size * 0.5 * kind.scale;
-            let (width, height) = if kind.shape == NodeShape::Rectangle {
-                (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
-            } else {
-                (radius * 2.0, radius * 2.0)
-            };
-            let mut best: Option<(f64, usize)> = None;
+            let _ = (cx, cy);
+            let mut compatible: Vec<(usize, f64)> = Vec::new();
             for (i, tmpl) in kind.handles.iter().enumerate() {
                 if !self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
                     continue;
                 }
-                let pos = self.brush_template_world_pos(center, kind.shape, radius, width, height, tmpl.angle);
-                let d = distance_between(src_pos, pos);
-                if best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
-                    best = Some((d, i));
-                }
+                let w = Self::brush_kind_weight(&self.brush_handle_kind_weights, tmpl.handle_kind.as_str(), 1.0);
+                compatible.push((i, w));
             }
-            best.map(|(_, i)| i)
+            if compatible.is_empty() {
+                return None;
+            }
+            let weights: Vec<f64> = compatible.iter().map(|(_, w)| *w).collect();
+            let seed = Self::brush_candidate_seed(node_kind_id)
+                ^ source.id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)));
+            let pick = Self::brush_weighted_sample_index(&weights, seed);
+            Some(compatible[pick].0)
         }
 
         fn brush_build_preview(&self, source_handle_id: &str, node_kind_id: &str) -> Option<BrushPreviewSnapshot> {
@@ -3975,8 +2334,10 @@ mod board_host {
             })
         }
 
-        fn brush_place_json(preview: &BrushPreviewSnapshot) -> serde_json::Value {
+        fn brush_place_json(preview: &BrushPreviewSnapshot, node_id: &str, edge_id: &str) -> serde_json::Value {
             let mut flat = json!({
+                "nodeId": node_id,
+                "edgeId": edge_id,
                 "nodeKind": preview.node_kind_id,
                 "sourceHandleId": preview.source_handle_id,
                 "targetHandleIndex": preview.target_handle_index,
@@ -4055,13 +2416,372 @@ mod board_host {
             }
         }
 
+        fn brush_allocate_placement_ids(&mut self) -> (String, String) {
+            self.brush_placement_serial = self.brush_placement_serial.wrapping_add(1);
+            let serial = self.brush_placement_serial;
+            (format!("puzzle2d.brush.{serial}"), format!("puzzle2d.brush.edge.{serial}"))
+        }
+
         fn brush_commit_preview(&mut self) {
             let Some(preview) = self.brush_preview.take() else {
                 return;
             };
-            self.push_event("brushPlace", Self::brush_place_json(&preview));
+            let (node_id, edge_id) = self.brush_allocate_placement_ids();
+            self.push_event("brushPlace", Self::brush_place_json(&preview, node_id.as_str(), edge_id.as_str()));
             self.bump_content_scene_generation();
             self.brush_preview_emit_key = None;
+        }
+
+        //#region 🪣Fill
+        fn fill_preview_bounds(preview: &BrushPreviewSnapshot) -> WorldBox {
+            match preview.shape {
+                NodeShape::Rectangle => WorldBox {
+                    min_x: preview.x - preview.width / 2.0,
+                    min_y: preview.y - preview.height / 2.0,
+                    max_x: preview.x + preview.width / 2.0,
+                    max_y: preview.y + preview.height / 2.0,
+                },
+                NodeShape::Circle => WorldBox {
+                    min_x: preview.x - preview.radius,
+                    min_y: preview.y - preview.radius,
+                    max_x: preview.x + preview.radius,
+                    max_y: preview.y + preview.radius,
+                },
+            }
+        }
+
+        fn fill_handle_connected(&self, accum: &FillAccum, handle_id: &str) -> bool {
+            accum.connected_handles.contains(handle_id) || self.handle_has_incident_edge(handle_id)
+        }
+
+        fn fill_collect_free_handles(&self, accum: &FillAccum) -> Vec<String> {
+            let mut out = Vec::new();
+            for (id, h) in &self.handles {
+                if self.handle_effectively_visible(id.as_str()) && !self.fill_handle_connected(accum, id.as_str()) {
+                    out.push(id.clone());
+                }
+                let _ = h;
+            }
+            for (id, vh) in &accum.virtual_handles {
+                if !accum.connected_handles.contains(id) && accum.virtual_nodes.contains_key(&vh.node_id) {
+                    out.push(id.clone());
+                }
+            }
+            out
+        }
+
+        fn fill_source_node_and_handle_kind(&self, accum: &FillAccum, handle_id: &str) -> Option<(String, String)> {
+            if let Some(h) = self.handles.get(handle_id) {
+                let nk = self.nodes.get(&h.node_id)?.node_kind.clone();
+                return Some((nk, h.handle_kind.clone()));
+            }
+            let vh = accum.virtual_handles.get(handle_id)?;
+            let node_kind = accum.virtual_nodes.get(&vh.node_id)?.node_kind.clone();
+            Some((node_kind, vh.handle_kind.clone()))
+        }
+
+        fn fill_virtual_handle_anchor_world(node: &FillVirtualNode, tmpl: &NodeKindHandleTemplate) -> Point {
+            let center = Point::new(node.x, node.y);
+            match node.shape {
+                NodeShape::Circle => handle_position_on_circle(center, node.radius, tmpl.angle),
+                NodeShape::Rectangle => handle_position_on_rectangle(center, node.width, node.height, tmpl.angle),
+            }
+        }
+
+        fn fill_slot_center_world(&self, accum: &FillAccum, handle_id: &str) -> Option<Point> {
+            if let Some(h) = self.handles.get(handle_id) {
+                return self.brush_slot_center_world(h);
+            }
+            let vh = accum.virtual_handles.get(handle_id)?;
+            let node = accum.virtual_nodes.get(&vh.node_id)?;
+            let hw = Self::fill_virtual_handle_anchor_world(node, &vh.template);
+            let nc = Point::new(node.x, node.y);
+            let normal = crate::cavas::vcompute::normalize_or_zero(hw - nc);
+            Some(hw + normal * self.brush_flush_distance)
+        }
+
+        fn fill_weight_for_handle(&self, accum: &FillAccum, handle_id: &str, uniform: f64) -> f64 {
+            let hk = if let Some(h) = self.handles.get(handle_id) {
+                h.handle_kind.as_str()
+            } else {
+                accum.virtual_handles.get(handle_id).map(|vh| vh.handle_kind.as_str()).unwrap_or("")
+            };
+            Self::brush_kind_weight(&self.brush_handle_kind_weights, hk, uniform)
+        }
+
+        fn fill_order_handles(&self, accum: &FillAccum, handles: &mut Vec<String>, seed: u64) {
+            if handles.len() < 2 {
+                return;
+            }
+            let uniform = 1.0 / handles.len() as f64;
+            let mut remaining = std::mem::take(handles);
+            let mut state = seed;
+            while !remaining.is_empty() {
+                let weights: Vec<f64> = remaining.iter().map(|id| self.fill_weight_for_handle(accum, id.as_str(), uniform)).collect();
+                state = Self::brush_next_seed(state);
+                let pick = Self::brush_weighted_sample_index(&weights, state);
+                handles.push(remaining.remove(pick));
+            }
+        }
+
+        fn fill_compatible_node_kind_ids(&self, accum: &FillAccum, source_handle_id: &str) -> Vec<String> {
+            let Some((sn, sh)) = self.fill_source_node_and_handle_kind(accum, source_handle_id) else {
+                return Vec::new();
+            };
+            let mut out: Vec<String> = Vec::new();
+            for (kind_id, kind) in &self.node_kinds {
+                if kind.handles.is_empty() {
+                    continue;
+                }
+                let tn = kind_id.as_str();
+                let compatible = kind
+                    .handles
+                    .iter()
+                    .any(|t| self.link_kinds_compatible_for_brush(sn.as_str(), sh.as_str(), tn, t.handle_kind.as_str()));
+                if compatible {
+                    out.push(kind_id.clone());
+                }
+            }
+            out
+        }
+
+        fn fill_pick_target_handle_index(&self, sn: &str, sh: &str, node_kind_id: &str, kind: &NodeKindDef, seed: u64) -> Option<usize> {
+            let tn = node_kind_id;
+            let mut compatible: Vec<(usize, f64)> = Vec::new();
+            for (i, tmpl) in kind.handles.iter().enumerate() {
+                if !self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
+                    continue;
+                }
+                let w = Self::brush_kind_weight(&self.brush_handle_kind_weights, tmpl.handle_kind.as_str(), 1.0);
+                compatible.push((i, w));
+            }
+            if compatible.is_empty() {
+                return None;
+            }
+            let weights: Vec<f64> = compatible.iter().map(|(_, w)| *w).collect();
+            let pick = Self::brush_weighted_sample_index(&weights, seed);
+            Some(compatible[pick].0)
+        }
+
+        fn fill_build_preview(&self, accum: &FillAccum, source_handle_id: &str, node_kind_id: &str, seed: u64) -> Option<BrushPreviewSnapshot> {
+            let center = self.fill_slot_center_world(accum, source_handle_id)?;
+            let (sn, sh) = self.fill_source_node_and_handle_kind(accum, source_handle_id)?;
+            let kind = self.node_kinds.get(node_kind_id)?;
+            let target_handle_index = self.fill_pick_target_handle_index(sn.as_str(), sh.as_str(), node_kind_id, kind, seed)?;
+            let radius = self.brush_node_size * 0.5 * kind.scale;
+            let (width, height) = if kind.shape == NodeShape::Rectangle {
+                (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
+            } else {
+                (radius * 2.0, radius * 2.0)
+            };
+            Some(BrushPreviewSnapshot {
+                source_handle_id: source_handle_id.to_string(),
+                node_kind_id: node_kind_id.to_string(),
+                x: center.x,
+                y: center.y,
+                shape: kind.shape,
+                radius,
+                width,
+                height,
+                handles: kind.handles.clone(),
+                target_handle_index,
+                icon_kind: kind.icon.clone(),
+            })
+        }
+
+        fn fill_collides(&self, accum: &FillAccum, preview: &BrushPreviewSnapshot) -> bool {
+            let bounds = Self::fill_preview_bounds(preview);
+            for n in self.nodes.values() {
+                if world_boxes_overlap(bounds, self.node_world_bounds(n, 0.0)) {
+                    return true;
+                }
+            }
+            for vb in &accum.virtual_bounds {
+                if world_boxes_overlap(bounds, *vb) {
+                    return true;
+                }
+            }
+            false
+        }
+
+        fn fill_apply_placement(accum: &mut FillAccum, preview: BrushPreviewSnapshot) {
+            let serial = accum.next_serial;
+            accum.next_serial += 1;
+            let node_id = format!("puzzle2d.fill.{serial}");
+            let edge_id = format!("puzzle2d.fill.edge.{serial}");
+            let target_handle_id = format!("{node_id}:h{}", preview.target_handle_index);
+            accum.connected_handles.insert(preview.source_handle_id.clone());
+            accum.connected_handles.insert(target_handle_id);
+            accum.virtual_bounds.push(Self::fill_preview_bounds(&preview));
+            accum.virtual_nodes.insert(
+                node_id.clone(),
+                FillVirtualNode {
+                    node_kind: preview.node_kind_id.clone(),
+                    x: preview.x,
+                    y: preview.y,
+                    shape: preview.shape,
+                    radius: preview.radius,
+                    width: preview.width,
+                    height: preview.height,
+                },
+            );
+            for (i, tmpl) in preview.handles.iter().enumerate() {
+                let hid = format!("{node_id}:h{i}");
+                if accum.connected_handles.contains(&hid) {
+                    continue;
+                }
+                accum.virtual_handles.insert(
+                    hid,
+                    FillVirtualHandle {
+                        node_id: node_id.clone(),
+                        handle_kind: tmpl.handle_kind.clone(),
+                        template: tmpl.clone(),
+                    },
+                );
+            }
+            accum.placements.push((node_id, edge_id, preview));
+        }
+
+        /// @emoji 🪣 Deterministic frontier fill sequence (weighted distribution + AABB collision).
+        pub fn brush_fill_json(&self, max_count: u32, seed: u64) -> String {
+            let mut accum = FillAccum::default();
+            let max = max_count.min(1000) as usize;
+            let mut state = seed;
+            while accum.placements.len() < max {
+                let mut free = self.fill_collect_free_handles(&accum);
+                if free.is_empty() {
+                    break;
+                }
+                state = Self::brush_next_seed(state);
+                self.fill_order_handles(&accum, &mut free, state);
+                let mut placed = false;
+                for source_handle_id in &free {
+                    let mut kinds = self.fill_compatible_node_kind_ids(&accum, source_handle_id.as_str());
+                    if kinds.is_empty() {
+                        continue;
+                    }
+                    state = Self::brush_next_seed(state);
+                    Self::brush_weighted_order_strings(&mut kinds, state, &self.brush_node_kind_weights);
+                    for node_kind_id in &kinds {
+                        state = Self::brush_next_seed(state);
+                        let Some(preview) = self.fill_build_preview(&accum, source_handle_id.as_str(), node_kind_id.as_str(), state) else {
+                            continue;
+                        };
+                        if self.fill_collides(&accum, &preview) {
+                            continue;
+                        }
+                        Self::fill_apply_placement(&mut accum, preview);
+                        placed = true;
+                        break;
+                    }
+                    if placed {
+                        break;
+                    }
+                }
+                if !placed {
+                    break;
+                }
+            }
+            let placements: Vec<serde_json::Value> = accum
+                .placements
+                .iter()
+                .map(|(node_id, edge_id, preview)| Self::brush_place_json(preview, node_id.as_str(), edge_id.as_str()))
+                .collect();
+            serde_json::json!({ "placements": placements }).to_string()
+        }
+        //#endregion 🪣Fill
+
+        fn brush_preview_snapshot_from_session_json(node: &serde_json::Value, edge: &serde_json::Value, source_handle_id: &str) -> Option<BrushPreviewSnapshot> {
+            let node_kind_id = node.get("nodeKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
+            let x = node.get("x").and_then(|v| v.as_f64()).filter(|v| v.is_finite())?;
+            let y = node.get("y").and_then(|v| v.as_f64()).filter(|v| v.is_finite())?;
+            let shape = match node.get("shape").and_then(|x| x.as_str()).map(str::trim) {
+                Some("rectangle") => NodeShape::Rectangle,
+                _ => NodeShape::Circle,
+            };
+            let (radius, width, height) = match shape {
+                NodeShape::Circle => (node.get("radius").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?, 0.0, 0.0),
+                NodeShape::Rectangle => {
+                    let w = node.get("width").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?;
+                    let h = node.get("height").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?;
+                    (0.0, w, h)
+                }
+            };
+            let target_handle_index = edge.get("targetHandleIndex").and_then(|v| v.as_u64()).map(|v| v as usize)?;
+            let mut handles: Vec<NodeKindHandleTemplate> = Vec::new();
+            if let Some(arr) = node.get("handles").and_then(|x| x.as_array()) {
+                for row in arr {
+                    let ho = row.as_object()?;
+                    let handle_kind = ho.get("handleKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
+                    let angle = ho.get("angle").and_then(|v| v.as_f64()).filter(|v| v.is_finite())?;
+                    let radius = ho.get("radius").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
+                    handles.push(NodeKindHandleTemplate { handle_kind: handle_kind.to_string(), angle, radius });
+                }
+            }
+            if handles.is_empty() {
+                return None;
+            }
+            let icon_kind = node.get("iconKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+            Some(BrushPreviewSnapshot {
+                source_handle_id: source_handle_id.to_string(),
+                node_kind_id: node_kind_id.to_string(),
+                x,
+                y,
+                shape,
+                radius,
+                width,
+                height,
+                handles,
+                target_handle_index,
+                icon_kind,
+            })
+        }
+
+        /// @emoji 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
+        pub fn set_brush_session_mirror_json(&mut self, json: &str) -> Result<(), String> {
+            if json.trim().is_empty() {
+                self.brush_slot_source_id = None;
+                self.brush_candidate_kinds.clear();
+                self.brush_candidate_index = 0;
+                self.brush_preview = None;
+                self.brush_preview_emit_key = None;
+                self.brush_candidates_emit_key = None;
+                self.bump_content_scene_generation();
+                return Ok(());
+            }
+            let v: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("setBrushSessionJson: {e}"))?;
+            let source = v.get("sourceHandleId").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+            self.brush_slot_source_id = source.clone();
+            self.brush_candidate_kinds = v
+                .get("candidates")
+                .and_then(|x| x.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|x| x.as_str().map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string()))
+                        .collect()
+                })
+                .unwrap_or_default();
+            self.brush_candidate_index = v.get("index").and_then(|x| x.as_u64()).map(|i| i as usize).unwrap_or(0);
+            if self.brush_candidate_kinds.is_empty() {
+                self.brush_candidate_index = 0;
+            } else {
+                self.brush_candidate_index %= self.brush_candidate_kinds.len();
+            }
+            self.brush_preview = match (source.as_deref(), v.get("preview")) {
+                (Some(source_id), Some(preview)) if !preview.is_null() => {
+                    let node = preview.get("node").filter(|n| !n.is_null());
+                    let edge = preview.get("edge").filter(|e| !e.is_null());
+                    match (node, edge) {
+                        (Some(node), Some(edge)) => Self::brush_preview_snapshot_from_session_json(node, edge, source_id),
+                        _ => None,
+                    }
+                }
+                _ => None,
+            };
+            self.brush_preview_emit_key = None;
+            self.brush_candidates_emit_key = None;
+            self.bump_content_scene_generation();
+            Ok(())
         }
 
         fn brush_enter_slot(&mut self, source_handle_id: String) {
@@ -4075,7 +2795,11 @@ mod board_host {
                 .get(source_handle_id.as_str())
                 .map(|h| self.brush_compatible_node_kind_ids(h))
                 .unwrap_or_default();
-            Self::brush_shuffle_candidates(&mut candidates, Self::brush_candidate_seed(&source_handle_id));
+            Self::brush_weighted_order_strings(
+                &mut candidates,
+                Self::brush_candidate_seed(&source_handle_id),
+                &self.brush_node_kind_weights,
+            );
             self.brush_candidate_kinds = candidates;
             self.brush_candidate_index = 0;
             self.brush_rebuild_preview();
@@ -4129,6 +2853,45 @@ mod board_host {
             }
             self.brush_flush_distance = d;
             if self.active_tool == ActiveTool::Brush {
+                self.brush_preview_emit_key = None;
+                self.brush_rebuild_preview();
+            }
+        }
+
+        pub fn set_brush_kind_weights(&mut self, json: &str) {
+            if json.is_empty() {
+                return;
+            }
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(json) else {
+                return;
+            };
+            self.brush_node_kind_weights.clear();
+            self.brush_handle_kind_weights.clear();
+            if let Some(obj) = v.get("nodeWeights").and_then(|x| x.as_object()) {
+                for (k, val) in obj {
+                    if let Some(w) = val.as_f64() {
+                        if w.is_finite() && w >= 0.0 {
+                            self.brush_node_kind_weights.insert(k.clone(), w);
+                        }
+                    }
+                }
+            }
+            if let Some(obj) = v.get("handleWeights").and_then(|x| x.as_object()) {
+                for (k, val) in obj {
+                    if let Some(w) = val.as_f64() {
+                        if w.is_finite() && w >= 0.0 {
+                            self.brush_handle_kind_weights.insert(k.clone(), w);
+                        }
+                    }
+                }
+            }
+            if self.active_tool != ActiveTool::Brush {
+                return;
+            }
+            if let Some(source) = self.brush_slot_source_id.clone() {
+                self.brush_slot_source_id = None;
+                self.brush_enter_slot(source);
+            } else {
                 self.brush_preview_emit_key = None;
                 self.brush_rebuild_preview();
             }
@@ -4239,39 +3002,149 @@ mod board_host {
             }
         }
 
-        fn append_brush_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod) {
-            let Some(ref preview) = self.brush_preview else {
-                return;
-            };
-            if matches!(lod, BoardDrawLod::Minimap) {
-                return;
-            }
-            let center = Point::new(preview.x, preview.y);
+        fn paint_highlighted_node_preview(
+            &self,
+            scene: &mut Scene,
+            _lod: BoardDrawLod,
+            x: f64,
+            y: f64,
+            shape: NodeShape,
+            radius: f64,
+            width: f64,
+            height: f64,
+            icon_kind: Option<&str>,
+        ) {
+            let center = Point::new(x, y);
             let style = BoardElementStyleKind::Highlighted;
             let fill = Self::node_fill_for_style(&self.vello_theme, style);
             let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style);
             let stroke = Stroke::new(2.0);
-            match preview.shape {
+            match shape {
                 NodeShape::Circle => {
                     let c = self.draw_space_point(center, false);
-                    let r = self.draw_space_len(preview.radius, false);
+                    let r = self.draw_space_len(radius, false);
                     let circle = Circle::new(c, r);
                     scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
                     scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &circle);
                 }
                 NodeShape::Rectangle => {
-                    let hw = preview.width * 0.5;
-                    let hh = preview.height * 0.5;
-                    let p0 = self.draw_space_point(Point::new(preview.x - hw, preview.y - hh), false);
-                    let p1 = self.draw_space_point(Point::new(preview.x + hw, preview.y + hh), false);
+                    let hw = width * 0.5;
+                    let hh = height * 0.5;
+                    let p0 = self.draw_space_point(Point::new(x - hw, y - hh), false);
+                    let p1 = self.draw_space_point(Point::new(x + hw, y + hh), false);
                     let rect = Rect::from_points(p0, p1);
                     scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
                     scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &rect);
                 }
             }
-            if let Some(ref icon) = preview.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
-                self.append_brush_node_icon_paint(scene, lod, center, preview.shape, preview.radius, preview.width, preview.height, icon, fill, stroke_c);
+            if let Some(icon) = icon_kind.map(str::trim).filter(|s| !s.is_empty()) {
+                self.append_brush_node_icon_paint(scene, BoardDrawLod::Detail, center, shape, radius, width, height, icon, fill, stroke_c);
             }
+        }
+
+        fn fixture_drop_preview_effective_dims(
+            &self,
+            preview: &FixtureDropPreviewSnapshot,
+        ) -> (NodeShape, f64, f64, f64) {
+            if let Some(kind) = self.node_kinds.get(preview.node_kind_id.as_str()) {
+                let radius = self.brush_node_size * 0.5 * kind.scale;
+                let (width, height) = if kind.shape == NodeShape::Rectangle {
+                    (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale)
+                } else {
+                    (radius * 2.0, radius * 2.0)
+                };
+                return (kind.shape, radius, width, height);
+            }
+            (preview.shape, preview.radius, preview.width, preview.height)
+        }
+
+        fn fixture_drop_preview_from_json(&self, node: &serde_json::Value) -> Option<FixtureDropPreviewSnapshot> {
+            let node_kind_id = node.get("nodeKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
+            let (x, y) = match (
+                node.get("screenX").and_then(|v| v.as_f64()).filter(|v| v.is_finite()),
+                node.get("screenY").and_then(|v| v.as_f64()).filter(|v| v.is_finite()),
+            ) {
+                (Some(sx), Some(sy)) => {
+                    let world = self.screen_to_world(Point::new(sx, sy));
+                    (world.x, world.y)
+                }
+                _ => {
+                    let x = node.get("x").and_then(|v| v.as_f64()).filter(|v| v.is_finite())?;
+                    let y = node.get("y").and_then(|v| v.as_f64()).filter(|v| v.is_finite())?;
+                    (x, y)
+                }
+            };
+            let shape = match node.get("shape").and_then(|x| x.as_str()).map(str::trim) {
+                Some("rectangle") => NodeShape::Rectangle,
+                _ => NodeShape::Circle,
+            };
+            let (radius, width, height) = match shape {
+                NodeShape::Circle => (node.get("radius").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?, 0.0, 0.0),
+                NodeShape::Rectangle => {
+                    let w = node.get("width").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?;
+                    let h = node.get("height").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0)?;
+                    (0.0, w, h)
+                }
+            };
+            let icon_kind = node.get("iconKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+            Some(FixtureDropPreviewSnapshot {
+                node_kind_id: node_kind_id.to_string(),
+                x,
+                y,
+                shape,
+                radius,
+                width,
+                height,
+                icon_kind,
+            })
+        }
+
+        /// @emoji 👻 Sets or clears the workbench palette fixture drop ghost node (independent of brush tool).
+        pub fn set_fixture_drop_preview_json(&mut self, json: &str) -> Result<(), String> {
+            if json.trim().is_empty() {
+                self.fixture_drop_preview = None;
+                self.bump_content_scene_generation();
+                return Ok(());
+            }
+            let v: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("setFixtureDropPreviewJson: {e}"))?;
+            self.fixture_drop_preview = self.fixture_drop_preview_from_json(&v);
+            if self.fixture_drop_preview.is_none() {
+                return Err("setFixtureDropPreviewJson: preview payload missing nodeKind, screen/world point, or size".into());
+            }
+            self.bump_content_scene_generation();
+            Ok(())
+        }
+
+        fn append_fixture_drop_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod) {
+            let Some(ref preview) = self.fixture_drop_preview else {
+                return;
+            };
+            let (shape, radius, width, height) = self.fixture_drop_preview_effective_dims(preview);
+            let icon_kind = preview
+                .icon_kind
+                .as_deref()
+                .filter(|s| !s.is_empty())
+                .or_else(|| self.node_kinds.get(preview.node_kind_id.as_str()).and_then(|k| k.icon.as_deref()));
+            self.paint_highlighted_node_preview(scene, lod, preview.x, preview.y, shape, radius, width, height, icon_kind);
+        }
+
+        fn append_brush_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod) {
+            let Some(ref preview) = self.brush_preview else {
+                return;
+            };
+            let _ = lod;
+            self.paint_highlighted_node_preview(
+                scene,
+                lod,
+                preview.x,
+                preview.y,
+                preview.shape,
+                preview.radius,
+                preview.width,
+                preview.height,
+                preview.icon_kind.as_deref(),
+            );
+            let center = Point::new(preview.x, preview.y);
             let source = match self.handles.get(preview.source_handle_id.as_str()) {
                 Some(h) => h,
                 None => return,
@@ -4728,11 +3601,11 @@ mod board_host {
         }
 
         pub fn world_to_screen(&self, p: Point) -> Point {
-            Point::new((p.x - self.camera.x) * self.camera.zoom + self.width as f64 / 2.0, (p.y - self.camera.y) * self.camera.zoom + self.height as f64 / 2.0)
+            crate::cavas::camera::world_to_screen(&self.camera, &self.viewport(), p)
         }
 
         pub fn screen_to_world(&self, p: Point) -> Point {
-            Point::new((p.x - self.width as f64 / 2.0) / self.camera.zoom + self.camera.x, (p.y - self.height as f64 / 2.0) / self.camera.zoom + self.camera.y)
+            crate::cavas::camera::screen_to_world(&self.camera, &self.viewport(), p)
         }
 
         fn node_kind_scale(&self, node_kind: &str) -> f64 {
@@ -5194,6 +4067,15 @@ mod board_host {
         }
 
         fn edge_curve(&self, e: &EdgeData) -> Option<CubicBez> {
+            if !self.has_ports() {
+                let source_node = self.nodes.get(&e.source)?;
+                let target_node = self.nodes.get(&e.target)?;
+                let source_center = Point::new(source_node.x, source_node.y);
+                let target_center = Point::new(target_node.x, target_node.y);
+                let source_pos = self.node_rim_point_toward(source_node, target_center)?;
+                let target_pos = self.node_rim_point_toward(target_node, source_center)?;
+                return Some(compute_edge_bezier_points(source_pos, target_pos, source_center, target_center));
+            }
             let source_handle = self.handles.get(&e.source)?;
             let target_handle = self.handles.get(&e.target)?;
             let source_node = self.nodes.get(&source_handle.node_id)?;
@@ -5233,7 +4115,17 @@ mod board_host {
                 (None, Some(x), Some(y)) if x.is_finite() && y.is_finite() => Point::new(x, y),
                 (Some(tid), _, _) => {
                     self.handles.get(tid)?;
-                    return self.edge_curve(&EdgeData { id: w.id.clone(), source: w.source.clone(), target: tid.clone(), selected: w.selected, visible: w.visible, style: w.style.clone(), edge_kind: String::new() });
+                    return self.edge_curve(&EdgeData {
+                        id: w.id.clone(),
+                        source: w.source.clone(),
+                        target: tid.clone(),
+                        selected: w.selected,
+                        visible: w.visible,
+                        style: w.style.clone(),
+                        edge_kind: String::new(),
+                        source_tip: None,
+                        target_tip: None,
+                    });
                 }
                 _ => return None,
             };
@@ -5286,7 +4178,7 @@ mod board_host {
         fn resolve_hover_world(&self, point: Point) -> Option<String> {
             let lod = self.current_draw_lod();
             let zoom = self.camera.zoom;
-            if !matches!(lod, BoardDrawLod::Minimap) {
+            if self.has_ports() && !matches!(lod, BoardDrawLod::Minimap) {
                 if matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
                     if let Some(hid) = self.sole_indirect_handle_hit_link_target(point) {
                         return Some(hid);
@@ -5378,7 +4270,7 @@ mod board_host {
             }
             let zoom = self.camera.zoom;
             let o = &self.selection_options;
-            if o.select_handles {
+            if self.has_ports() && o.select_handles {
                 if matches!(self.current_draw_lod(), BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Normal) {
                     if let Some(hid) = self.sole_indirect_handle_hit_link_target(point) {
                         return Some(hid);
@@ -5587,7 +4479,22 @@ mod board_host {
             for e in &desc.edges {
                 let existed = self.edges.contains_key(&e.id);
                 let edge_kind = e.edge_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
-                self.edges.insert(e.id.clone(), EdgeData { id: e.id.clone(), source: e.source.clone(), target: e.target.clone(), selected: e.selected.unwrap_or(false), visible: e.visible.unwrap_or(true), style: e.style.clone(), edge_kind });
+                let source_tip = Self::parse_catalog_tip_slot(e.source_tip.as_deref());
+                let target_tip = Self::parse_catalog_tip_slot(e.target_tip.as_deref());
+                self.edges.insert(
+                    e.id.clone(),
+                    EdgeData {
+                        id: e.id.clone(),
+                        source: e.source.clone(),
+                        target: e.target.clone(),
+                        selected: e.selected.unwrap_or(false),
+                        visible: e.visible.unwrap_or(true),
+                        style: e.style.clone(),
+                        edge_kind,
+                        source_tip,
+                        target_tip,
+                    },
+                );
                 if !existed {
                     self.push_event("edgeCreate", json!({ "id": e.id, "source": e.source, "target": e.target }));
                 }
@@ -5706,8 +4613,13 @@ mod board_host {
                 Ok(v) => v,
                 Err(_) => return false,
             };
-            if f.schema != "puzzle.2d.fixture/v1" {
-                return false;
+            self.port_mode = match f.schema.as_str() {
+                "reasoning.mindmap.fixture/v1" => GraphPortMode::Normal,
+                "puzzle.2d.fixture/v1" => GraphPortMode::Ported,
+                _ => return false,
+            };
+            if !self.has_ports() {
+                self.selection_options.select_handles = false;
             }
             self.set_camera(f.camera.x, f.camera.y, f.camera.zoom);
             self.clear_scene();
@@ -5729,41 +4641,46 @@ mod board_host {
                     return false;
                 }
                 let text = obj.get("text").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
-                let Some(handles_arr) = obj.get("handles").and_then(|v| v.as_array()) else {
-                    return false;
-                };
-                let mut handles: Vec<HandleDescJson> = Vec::new();
-                for h in handles_arr {
-                    let Some(ho) = h.as_object() else {
+                if self.has_ports() {
+                    let Some(handles_arr) = obj.get("handles").and_then(|v| v.as_array()) else {
                         return false;
                     };
-                    let Some(hid) = ho.get("id").and_then(|v| v.as_str()) else {
-                        return false;
-                    };
-                    let Some(angle) = ho.get("angle").and_then(|v| v.as_f64()) else {
-                        return false;
-                    };
-                    if !angle.is_finite() {
-                        return false;
+                    let mut handles: Vec<HandleDescJson> = Vec::new();
+                    for h in handles_arr {
+                        let Some(ho) = h.as_object() else {
+                            return false;
+                        };
+                        let Some(hid) = ho.get("id").and_then(|v| v.as_str()) else {
+                            return false;
+                        };
+                        let Some(angle) = ho.get("angle").and_then(|v| v.as_f64()) else {
+                            return false;
+                        };
+                        if !angle.is_finite() {
+                            return false;
+                        }
+                        let handle_kind = ho.get("handleKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from).unwrap_or_else(|| "port".into());
+                        let handle_color = ho.get("color").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
+                        let handle_icon_kind = ho.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+                        let handle_scale = ho.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
+                        handles.push(HandleDescJson {
+                            id: hid.into(),
+                            node_id: id.into(),
+                            angle,
+                            radius: None,
+                            scale: handle_scale,
+                            selected: None,
+                            style: None,
+                            handle_kind: Some(handle_kind),
+                            color: handle_color,
+                            icon_kind: handle_icon_kind,
+                            user_data: None,
+                            visible: board_json_visible_option(ho),
+                        });
                     }
-                    let handle_kind = ho.get("handleKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from).unwrap_or_else(|| "port".into());
-                    let handle_color = ho.get("color").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
-                    let handle_icon_kind = ho.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                    let handle_scale = ho.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
-                    handles.push(HandleDescJson {
-                        id: hid.into(),
-                        node_id: id.into(),
-                        angle,
-                        radius: None,
-                        scale: handle_scale,
-                        selected: None,
-                        style: None,
-                        handle_kind: Some(handle_kind),
-                        color: handle_color,
-                        icon_kind: handle_icon_kind,
-                        user_data: None,
-                        visible: board_json_visible_option(ho),
-                    });
+                    desc.handles.extend(handles);
+                } else if obj.get("handles").is_some() {
+                    return false;
                 }
                 let shape_str = obj.get("shape").and_then(|v| v.as_str());
                 let fixture_node_kind = obj.get("nodeKind").or_else(|| obj.get("node_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
@@ -5828,7 +4745,6 @@ mod board_host {
                         scale: fixture_node_scale,
                     });
                 }
-                desc.handles.extend(handles);
             }
             for entry in f.edges {
                 let Some(e) = entry.as_object() else {
@@ -5840,8 +4756,39 @@ mod board_host {
                 let Some((source, target)) = fixture_edge_handle_ids_from_object(e) else {
                     return false;
                 };
+                if !self.has_ports() {
+                    let node_ids: BTreeSet<&str> = desc.nodes.iter().map(|n| n.id.as_str()).collect();
+                    if !node_ids.contains(source) || !node_ids.contains(target) {
+                        return false;
+                    }
+                }
                 let edge_kind = e.get("edgeKind").or_else(|| e.get("edge_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                desc.edges.push(EdgeDescJson { id: id.into(), source: source.into(), target: target.into(), edge_kind, selected: None, style: None, user_data: None, visible: board_json_visible_option(e) });
+                let source_tip = e
+                    .get("sourceTip")
+                    .or_else(|| e.get("source_tip"))
+                    .and_then(|v| v.as_str())
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_string());
+                let target_tip = e
+                    .get("targetTip")
+                    .or_else(|| e.get("target_tip"))
+                    .and_then(|v| v.as_str())
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_string());
+                desc.edges.push(EdgeDescJson {
+                    id: id.into(),
+                    source: source.into(),
+                    target: target.into(),
+                    edge_kind,
+                    source_tip,
+                    target_tip,
+                    selected: None,
+                    style: None,
+                    user_data: None,
+                    visible: board_json_visible_option(e),
+                });
             }
             if self.sync_descriptor(&desc).is_err() {
                 return false;
@@ -5981,7 +4928,7 @@ mod board_host {
             }
         }
 
-        fn append_indirect_handle_ring(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, node_id: &str, chrome_pass: StyleChromePass) {
+        fn append_indirect_handle_ring(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, node_id: &str, chrome_pass: StyleChromePass, world_space: bool) {
             for h in self.handles.values() {
                 if h.node_id != node_id || !self.handle_effectively_visible(h.id.as_str()) {
                     continue;
@@ -5999,7 +4946,7 @@ mod board_host {
                 let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
                 let stroke_px = 2.0_f64;
                 let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { Some((self.vello_theme.indirect_handle_fill, self.vello_theme.indirect_handle_stroke, stroke_px)) } else { None };
-                self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, false);
+                self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, world_space);
             }
         }
 
@@ -6036,10 +4983,9 @@ mod board_host {
             chrome_pass: StyleChromePass,
         ) {
             let pad = self.drawable_cull_pad_world();
-            let draw_handles = matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
+            let draw_handles = self.has_ports() && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
             let draw_handle_icons = lod == BoardDrawLod::Micro;
-            let indirect_ring_node_id = self.indirect_ring_node_id(lod);
             let link_source = self.active_link_source_handle_id().map(str::to_string);
             let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
             for n in self.nodes.values() {
@@ -6061,7 +5007,11 @@ mod board_host {
                 let style_kind = if link_compat && matches!(resolved_style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { BoardElementStyleKind::Highlighted } else { resolved_style_kind };
                 let draw_node_stroke = lod != BoardDrawLod::Minimap || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
                 let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
-                let fill = if lod == BoardDrawLod::Minimap && matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { stroke_c } else { Self::node_fill_for_style(&self.vello_theme, style_kind) };
+                let fill = if lod == BoardDrawLod::Minimap && matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) {
+                    stroke_c
+                } else {
+                    self.resolve_node_fill_color(n, &self.vello_theme, style_kind)
+                };
                 let sw = 2.0_f64;
                 match n.shape {
                     NodeShape::Circle => {
@@ -6162,11 +5112,6 @@ mod board_host {
                 let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
                 self.append_handle_marker(scene, h, wp, self.effective_handle_radius(h), draw_handle_icons, style_kind, None, world_space);
             }
-            if let Some(node_id) = indirect_ring_node_id {
-                if only_ids.is_none() {
-                    self.append_indirect_handle_ring(scene, tile_filter, &node_id, chrome_pass);
-                }
-            }
         }
 
         fn append_edges_wires_and_link(
@@ -6183,7 +5128,6 @@ mod board_host {
             } else {
                 self.edge_screen_stroke_width_px(lod)
             };
-            let edge_stroke = Stroke::new(edge_sw);
             for e in self.edges.values() {
                 if !self.edge_effectively_visible(e) {
                     continue;
@@ -6205,8 +5149,10 @@ mod board_host {
                     let p2 = self.draw_space_point(c.p2, world_space);
                     let p3 = self.draw_space_point(c.p3, world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
-                    let stroke_color = Self::edge_stroke_for_style(&self.vello_theme, self.resolve_edge_style_kind(e, chrome_pass));
+                    let (stroke_color, edge_stroke, stroke_w) = self.resolve_edge_stroke_paint(e, chrome_pass, edge_sw);
                     scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
+                    let (source_tip, target_tip) = self.resolve_edge_tips(e);
+                    Self::append_edge_tips_on_curve(scene, &curve, stroke_color, stroke_w, source_tip, target_tip);
                 }
             }
             let wire_sw = 2.25_f64;
@@ -6281,7 +5227,15 @@ mod board_host {
                 let curve = CubicBez::new(p0, p1, p2, p3);
                 scene.stroke(&link_wire_stroke, Affine::IDENTITY, link_wire_color, None, &curve);
             }
-            if self.active_tool == ActiveTool::Brush {
+            if self.has_ports() {
+                if let Some(node_id) = self.indirect_ring_node_id(lod) {
+                    self.append_indirect_handle_ring(scene, None, &node_id, StyleChromePass::CachedBase, false);
+                }
+            }
+            if self.fixture_drop_preview.is_some() {
+                self.append_fixture_drop_preview_paint(scene, lod);
+            }
+            if self.active_tool == ActiveTool::Brush || self.brush_preview.is_some() {
                 self.append_brush_preview_paint(scene, lod);
             }
         }
@@ -6368,16 +5322,40 @@ mod board_host {
         }
 
         pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
-            let zoom_factor = if delta_y < 0.0 { 1.1 } else { 0.9 };
-            let next_zoom = (self.camera.zoom * zoom_factor).clamp(BOARD_CAMERA_ZOOM_MIN, BOARD_CAMERA_ZOOM_MAX);
-            let screen = Point::new(sx, sy);
-            let world_before = self.screen_to_world(screen);
-            let nx = world_before.x - (sx - self.width as f64 / 2.0) / next_zoom;
-            let ny = world_before.y - (sy - self.height as f64 / 2.0) / next_zoom;
-            self.set_camera_silent(nx, ny, next_zoom);
+            let viewport = self.viewport();
+            crate::cavas::camera::wheel_screen(&mut self.camera, &viewport, sx, sy, delta_y);
+            self.set_camera_silent(self.camera.x, self.camera.y, self.camera.zoom);
         }
 
         pub fn delete_selection(&mut self) {
+            if !self.has_ports() {
+                let edge_ids: Vec<_> = self.selection.iter().filter(|id| self.edges.contains_key(*id)).cloned().collect();
+                for id in &edge_ids {
+                    self.edges.remove(id);
+                    self.push_event("edgeDelete", json!({ "id": id }));
+                }
+                let node_ids: Vec<_> = self.selection.iter().filter(|id| self.nodes.contains_key(*id)).cloned().collect();
+                for nid in &node_ids {
+                    let eids: Vec<_> = self.edges.iter().filter(|(_, e)| e.source == *nid || e.target == *nid).map(|(k, _)| k.clone()).collect();
+                    for eid in eids {
+                        self.edges.remove(&eid);
+                        self.selection.remove(&eid);
+                        self.push_event("edgeDelete", json!({ "id": eid }));
+                    }
+                    self.nodes.remove(nid);
+                    self.push_event("nodeDelete", json!({ "id": nid }));
+                }
+                for id in edge_ids {
+                    self.selection.remove(&id);
+                }
+                for id in node_ids {
+                    self.selection.remove(&id);
+                }
+                self.selection_exit_highlight.clear();
+                self.sync_selection_flags_to_objects();
+                self.push_select_event();
+                return;
+            }
             let edge_ids: Vec<_> = self.selection.iter().filter(|id| self.edges.contains_key(*id)).cloned().collect();
             for id in &edge_ids {
                 self.edges.remove(id);
@@ -6515,6 +5493,9 @@ mod board_host {
         }
 
         fn edge_effectively_visible(&self, edge: &EdgeData) -> bool {
+            if !self.has_ports() {
+                return edge.visible && self.node_effectively_visible(edge.source.as_str()) && self.node_effectively_visible(edge.target.as_str());
+            }
             edge.visible && self.handle_effectively_visible(edge.source.as_str()) && self.handle_effectively_visible(edge.target.as_str())
         }
 
@@ -6599,7 +5580,20 @@ mod board_host {
                 n = n.saturating_add(1);
             };
             let edge_kind = self.default_edge_kind_for_created_link(source_row, target_row);
-            self.edges.insert(id.clone(), EdgeData { id: id.clone(), source: source_handle_id.to_string(), target: target_handle_id.to_string(), selected: false, visible: true, style: None, edge_kind });
+            self.edges.insert(
+                id.clone(),
+                EdgeData {
+                    id: id.clone(),
+                    source: source_handle_id.to_string(),
+                    target: target_handle_id.to_string(),
+                    selected: false,
+                    visible: true,
+                    style: None,
+                    edge_kind,
+                    source_tip: None,
+                    target_tip: None,
+                },
+            );
             self.push_event("edgeCreate", json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));
             if let Some(name) = also_emit {
                 self.push_event(name, json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));
@@ -7204,321 +6198,33 @@ mod board_host {
                 .map(|n| self.resolve_node_style_kind(n, StyleChromePass::InteractionOverlay))
         }
     }
+
+    impl crate::cavas::canvas_content::CanvasContent for BoardHost {
+        fn build_scene(&self) -> Scene {
+            self.build_vector_scene()
+        }
+
+        fn clear_color(&self) -> Color {
+            self.vello_theme.raster_clear
+        }
+    }
 }
 
 pub use board_host::BoardHost;
 
-use std::collections::{BTreeMap, BTreeSet};
-
-pub use crate::vello::kurbo::{CubicBez, Point, Vec2};
-use vcompute::{compute_edge_bezier_points, distance_point_to_cubic_bezier, encode_board_stroke_scene};
-
-// #region 🔖Kinds
-/// 🧭 Camera state in world units with a zoom scalar suitable for a WASM host bridge.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Camera {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
-}
-
-/// 🧩 Stable node identifier.
-pub type NodeId = u64;
-/// 🪝 Stable handle identifier.
-pub type HandleId = u64;
-/// 🪢 Stable edge identifier.
-pub type EdgeId = u64;
-
-/// 🟠 Retained node state with world-space center and circular radius.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Node {
-    pub id: NodeId,
-    pub center: Point,
-    pub radius: f64,
-    pub draggable: bool,
-}
-
-/// 🟣 Tangent handle anchored to a node at a polar angle.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Handle {
-    pub angle: f64,
-    pub id: HandleId,
-    pub node_id: NodeId,
-    pub radius: f64,
-}
-
-/// 🪢 Cubic edge connecting two handles.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Edge {
-    pub id: EdgeId,
-    pub source_handle: HandleId,
-    pub target_handle: HandleId,
-}
-
-/// 🎯 Semantic board event emitted after interaction or selection changes.
-#[derive(Clone, Debug, PartialEq)]
-pub enum BoardEvent {
-    HoverChanged { id: Option<u64> },
-    NodeMoved { id: NodeId, x: f64, y: f64 },
-    SelectionChanged { edge_ids: Vec<EdgeId>, handle_ids: Vec<HandleId>, node_ids: Vec<NodeId> },
-}
-
-/// ✅ Selection snapshot maintained by the engine hot path.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Selection {
-    pub edge_ids: BTreeSet<EdgeId>,
-    pub handle_ids: BTreeSet<HandleId>,
-    pub node_ids: BTreeSet<NodeId>,
-}
-
-/// 🖼️ Minimal render snapshot suitable for a host-side drawing layer or tests.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct RenderSnapshot {
-    pub edges: Vec<CubicBez>,
-    pub handles: Vec<(HandleId, Point, f64)>,
-    pub nodes: Vec<(NodeId, Point, f64)>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum HitObject {
-    Edge(EdgeId),
-    Handle(HandleId),
-    Node(NodeId),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum InteractionMode {
-    DragNode { node_id: NodeId, offset: Vec2 },
-    Idle,
-}
-
-impl Default for InteractionMode {
-    fn default() -> Self {
-        Self::Idle
-    }
-}
-// #endregion 🔖Kinds
-
-// #region 🔖Utilities
-impl Default for Camera {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0, zoom: 1.0 }
-    }
-}
-
-fn handle_position(node: &Node, handle: &Handle) -> Point {
-    vcompute::handle_position_on_circle(node.center, node.radius, handle.angle)
-}
-
-fn distance(left: Point, right: Point) -> f64 {
-    vcompute::distance_between(left, right)
-}
-// #endregion 🔖Utilities
-
-// #region 🔖Engine
-/// ⚙️ Single-file retained board engine; geometry uses cubic curves and vector scene encoding.
+// #region 🔖Puzzle2dExtension
+/// 🧩 Puzzle 2d domain extension over the property graph canvas.
 #[derive(Clone, Debug, Default)]
-pub struct BoardEngine {
-    camera: Camera,
-    edges: BTreeMap<EdgeId, Edge>,
-    events: Vec<BoardEvent>,
-    handles: BTreeMap<HandleId, Handle>,
-    hover: Option<u64>,
-    interaction: InteractionMode,
-    nodes: BTreeMap<NodeId, Node>,
-    selection: Selection,
-}
+pub struct Puzzle2dExtension;
 
-impl BoardEngine {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
-        self.camera = Camera { x, y, zoom };
-    }
-
-    pub fn create_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64, draggable: bool) {
-        self.nodes.insert(id, Node { center: Point::new(x, y), draggable, id, radius });
-    }
-
-    pub fn update_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64) {
-        if let Some(node) = self.nodes.get_mut(&id) {
-            node.center = Point::new(x, y);
-            node.radius = radius;
-        }
-    }
-
-    pub fn remove_node(&mut self, id: NodeId) {
-        self.nodes.remove(&id);
-        let removed_handles: Vec<HandleId> = self.handles.values().filter(|handle| handle.node_id == id).map(|handle| handle.id).collect();
-        for handle_id in removed_handles {
-            self.remove_handle(handle_id);
-        }
-        self.selection.node_ids.remove(&id);
-        self.push_selection_event();
-    }
-
-    pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f64) {
-        self.handles.insert(id, Handle { angle, id, node_id, radius: 8.0 });
-    }
-
-    pub fn create_edge(&mut self, id: EdgeId, source_handle: HandleId, target_handle: HandleId) {
-        self.edges.insert(id, Edge { id, source_handle, target_handle });
-    }
-
-    pub fn pointer_down(&mut self, x: f64, y: f64, extend_selection: bool) {
-        let point = Point::new(x, y);
-        match self.hit_test(point) {
-            Some(HitObject::Node(node_id)) => {
-                self.apply_pick_selection(HitObject::Node(node_id), extend_selection);
-                if let Some(node) = self.nodes.get(&node_id) {
-                    if node.draggable {
-                        self.interaction = InteractionMode::DragNode { node_id, offset: point - node.center };
-                    }
-                }
-                self.update_hover(Some(node_id));
-            }
-            Some(HitObject::Handle(handle_id)) => {
-                self.apply_pick_selection(HitObject::Handle(handle_id), extend_selection);
-                self.update_hover(Some(handle_id));
-                self.interaction = InteractionMode::Idle;
-            }
-            Some(HitObject::Edge(edge_id)) => {
-                self.apply_pick_selection(HitObject::Edge(edge_id), extend_selection);
-                self.update_hover(Some(edge_id));
-                self.interaction = InteractionMode::Idle;
-            }
-            None => {
-                self.selection = Selection::default();
-                self.push_selection_event();
-                self.update_hover(None);
-                self.interaction = InteractionMode::Idle;
-            }
-        }
-    }
-
-    pub fn pointer_move(&mut self, x: f64, y: f64) {
-        let point = Point::new(x, y);
-        match self.interaction {
-            InteractionMode::DragNode { node_id, offset } => {
-                if let Some(node) = self.nodes.get_mut(&node_id) {
-                    node.center = point - offset;
-                    self.events.push(BoardEvent::NodeMoved { id: node_id, x: node.center.x, y: node.center.y });
-                }
-            }
-            InteractionMode::Idle => {
-                self.update_hover(self.hit_test(point).map(|hit| match hit {
-                    HitObject::Edge(id) => id,
-                    HitObject::Handle(id) => id,
-                    HitObject::Node(id) => id,
-                }));
-            }
-        }
-    }
-
-    pub fn pointer_up(&mut self) {
-        self.interaction = InteractionMode::Idle;
-    }
-
-    pub fn render_snapshot(&self) -> RenderSnapshot {
-        let mut snapshot = RenderSnapshot::default();
-        for node in self.nodes.values() {
-            snapshot.nodes.push((node.id, node.center, node.radius));
-        }
-        for handle in self.handles.values() {
-            if let Some(node) = self.nodes.get(&handle.node_id) {
-                snapshot.handles.push((handle.id, handle_position(node, handle), handle.radius));
-            }
-        }
-        for edge in self.edges.values() {
-            if let Some(curve) = self.edge_curve(edge.id) {
-                snapshot.edges.push(curve);
-            }
-        }
-        let _stroke_scene = encode_board_stroke_scene(&snapshot.edges, 2.0);
-        let _ = _stroke_scene.encoding().path_tags.len();
-        snapshot
-    }
-
-    pub fn drain_events(&mut self) -> Vec<BoardEvent> {
-        std::mem::take(&mut self.events)
-    }
-
-    pub fn edge_curve(&self, edge_id: EdgeId) -> Option<CubicBez> {
-        let edge = self.edges.get(&edge_id)?;
-        let source_handle = self.handles.get(&edge.source_handle)?;
-        let target_handle = self.handles.get(&edge.target_handle)?;
-        let source_node = self.nodes.get(&source_handle.node_id)?;
-        let target_node = self.nodes.get(&target_handle.node_id)?;
-        let source_position = handle_position(source_node, source_handle);
-        let target_position = handle_position(target_node, target_handle);
-        Some(compute_edge_bezier_points(source_position, target_position, source_node.center, target_node.center))
-    }
-
-    fn remove_handle(&mut self, id: HandleId) {
-        self.handles.remove(&id);
-        let removed_edges: Vec<EdgeId> = self.edges.values().filter(|edge| edge.source_handle == id || edge.target_handle == id).map(|edge| edge.id).collect();
-        for edge_id in removed_edges {
-            self.edges.remove(&edge_id);
-            self.selection.edge_ids.remove(&edge_id);
-        }
-        self.selection.handle_ids.remove(&id);
-    }
-
-    fn apply_pick_selection(&mut self, hit: HitObject, extend_selection: bool) {
-        if !extend_selection {
-            self.selection = Selection::default();
-        }
-        match hit {
-            HitObject::Node(id) => {
-                self.selection.node_ids.insert(id);
-            }
-            HitObject::Handle(id) => {
-                self.selection.handle_ids.insert(id);
-            }
-            HitObject::Edge(id) => {
-                self.selection.edge_ids.insert(id);
-            }
-        }
-        self.push_selection_event();
-    }
-
-    fn update_hover(&mut self, hover: Option<u64>) {
-        if self.hover == hover {
-            return;
-        }
-        self.hover = hover;
-        self.events.push(BoardEvent::HoverChanged { id: hover });
-    }
-
-    fn push_selection_event(&mut self) {
-        self.events.push(BoardEvent::SelectionChanged { edge_ids: self.selection.edge_ids.iter().copied().collect(), handle_ids: self.selection.handle_ids.iter().copied().collect(), node_ids: self.selection.node_ids.iter().copied().collect() });
-    }
-
-    fn hit_test(&self, point: Point) -> Option<HitObject> {
-        for handle in self.handles.values().rev() {
-            let node = self.nodes.get(&handle.node_id)?;
-            if distance(point, handle_position(node, handle)) <= handle.radius + 6.0 {
-                return Some(HitObject::Handle(handle.id));
-            }
-        }
-        for node in self.nodes.values().rev() {
-            if distance(point, node.center) <= node.radius {
-                return Some(HitObject::Node(node.id));
-            }
-        }
-        for edge in self.edges.values().rev() {
-            if let Some(curve) = self.edge_curve(edge.id) {
-                if distance_point_to_cubic_bezier(point, curve, 18) <= 8.0 {
-                    return Some(HitObject::Edge(edge.id));
-                }
-            }
-        }
-        None
+impl cavas::CanvasExtension for Puzzle2dExtension {
+    fn extension_id(&self) -> &str {
+        "puzzle.2d"
     }
 }
-// #endregion 🔖Engine
+
+impl graph::GraphExtension for Puzzle2dExtension {}
+// #endregion 🔖Puzzle2dExtension
 
 // #region 🔖WasmHost
 #[cfg(target_arch = "wasm32")]
@@ -7574,13 +6280,13 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardRedrawLayoutFixtureJson)]
 pub fn board_redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, JsValue> {
-    apply_redraw_layout_to_fixture_v1_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
+    graph::apply_redraw_layout_to_fixture_v1_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardRedrawHandlesFixtureJson)]
 pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, JsValue> {
-    apply_edge_handle_snap_to_fixture_v1_json(fixture_json).map_err(|e| JsValue::from_str(&e))
+    graph::apply_edge_handle_snap_to_fixture_v1_json(fixture_json).map_err(|e| JsValue::from_str(&e))
 }
 
 // #region 🔖WasmSession
@@ -7588,59 +6294,20 @@ pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, J
 #[cfg(target_arch = "wasm32")]
 struct BoardSessionInner {
     host: BoardHost,
-    #[allow(dead_code, reason = "Retains canvas for the WebGPU surface lifetime.")]
-    canvas: Option<HtmlCanvasElement>,
-    render_ctx: Option<crate::vello::util::RenderContext>,
-    renderer: Option<crate::vello::Renderer>,
-    surface: Option<crate::vello::util::RenderSurface<'static>>,
+    gpu: cavas::gpu_session::CanvasGpuSession,
 }
 
 #[cfg(target_arch = "wasm32")]
 impl BoardSessionInner {
     fn set_logical_size_and_maybe_resize_surface(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
         self.host.set_size(lw, lh, dpr);
-        if let (Some(surface), Some(render_ctx)) = (self.surface.as_mut(), self.render_ctx.as_mut()) {
-            let cur_w = surface.config.width;
-            let cur_h = surface.config.height;
-            if cur_w != pw || cur_h != ph {
-                render_ctx.resize_surface(surface, pw, ph);
-            }
-        }
+        self.gpu.resize_surface(pw, ph);
     }
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
-        for _attempt in 0..3u8 {
-            let scene = self.host.build_vector_scene();
-            let (surface, renderer, render_ctx) = match (self.surface.as_mut(), self.renderer.as_mut(), self.render_ctx.as_mut()) {
-                (Some(s), Some(r), Some(rc)) => (s, r, rc),
-                _ => return Ok(()),
-            };
-            let dh = &render_ctx.devices[surface.dev_id];
-            let pw = surface.config.width.max(1);
-            let ph = surface.config.height.max(1);
-            let params = crate::vello::RenderParams { base_color: self.host.vello_theme.raster_clear, width: pw, height: ph, antialiasing_method: crate::vello::AaConfig::Area };
-            renderer.render_to_texture(&dh.device, &dh.queue, &scene, &surface.target_view, &params).map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
-
-            let surface_tex = match surface.surface.get_current_texture() {
-                Ok(t) => t,
-                Err(crate::vello::wgpu::SurfaceError::Outdated) => {
-                    surface.surface.configure(&dh.device, &surface.config);
-                    continue;
-                }
-                Err(crate::vello::wgpu::SurfaceError::Timeout) | Err(crate::vello::wgpu::SurfaceError::Other) => return Ok(()),
-                Err(crate::vello::wgpu::SurfaceError::Lost) | Err(crate::vello::wgpu::SurfaceError::OutOfMemory) => {
-                    return Err(JsValue::from_str("surface lost or validation error"));
-                }
-            };
-            let view = surface_tex.texture.create_view(&crate::vello::wgpu::TextureViewDescriptor::default());
-            let mut encoder = dh.device.create_command_encoder(&crate::vello::wgpu::CommandEncoderDescriptor { label: Some("elements_board_surface_blit") });
-            surface.blitter.copy(&dh.device, &mut encoder, &surface.target_view, &view);
-            dh.queue.submit(std::iter::once(encoder.finish()));
-            surface_tex.present();
-            let _ = dh.device.poll(crate::vello::wgpu::PollType::Poll).ok();
-            return Ok(());
-        }
-        Ok(())
+        let scene = self.host.build_vector_scene();
+        let clear = self.host.vello_theme.raster_clear;
+        self.gpu.render_frame(&scene, clear)
     }
 }
 
@@ -7655,12 +6322,18 @@ pub struct BoardSession {
 impl BoardSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(BoardSessionInner { host: BoardHost::new(), canvas: None, render_ctx: None, renderer: None, surface: None })) }
+        Self { state: Rc::new(RefCell::new(BoardSessionInner { host: BoardHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+    }
+
+    /// 🧠 Construct a normal-graph session (no handles; edges connect node ids).
+    #[wasm_bindgen(js_name = newNormal)]
+    pub fn new_normal() -> Self {
+        Self { state: Rc::new(RefCell::new(BoardSessionInner { host: BoardHost::new_normal(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
     pub fn gpu_ready(&self) -> bool {
-        self.state.borrow().surface.is_some()
+        self.state.borrow().gpu.gpu_ready()
     }
 
     #[wasm_bindgen(js_name = isDraggingAreaSelect)]
@@ -7677,7 +6350,7 @@ impl BoardSession {
     #[wasm_bindgen(js_name = attach_canvas)]
     pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> Promise {
         let inner = self.state.clone();
-        if inner.borrow().surface.is_some() {
+        if inner.borrow().gpu.gpu_ready() {
             return future_to_promise(async move { Err(JsValue::from_str("canvas surface already attached")) });
         }
         let lw = logical_w.max(1);
@@ -7687,20 +6360,15 @@ impl BoardSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let mut render_ctx = crate::vello::util::RenderContext::new();
-            let surface = render_ctx.create_surface(crate::vello::wgpu::SurfaceTarget::Canvas(canvas.clone()), pw, ph, crate::vello::wgpu::PresentMode::AutoVsync).await.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
-            let dev = &render_ctx.devices[surface.dev_id].device;
-            let renderer = crate::vello::Renderer::new(dev, crate::vello::RendererOptions { use_cpu: false, antialiasing_support: crate::vello::AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
-                .map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph)
+                .await
+                .map_err(|err| JsValue::from_str(&err))?;
             let mut g = inner.borrow_mut();
-            if g.surface.is_some() {
+            if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
             }
             g.host.set_size(lw, lh, dpr);
-            g.canvas = Some(canvas);
-            g.render_ctx = Some(render_ctx);
-            g.renderer = Some(renderer);
-            g.surface = Some(surface);
+            g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
             Ok(JsValue::UNDEFINED)
         })
     }
@@ -7854,9 +6522,9 @@ impl BoardSession {
         self.state.borrow_mut().host.set_world_raster_tiling(mode);
     }
 
-    #[wasm_bindgen(js_name = setLodZoomThresholdsJson)]
-    pub fn set_lod_zoom_thresholds_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_lod_zoom_thresholds_from_json(json).map_err(|e| JsValue::from_str(&e))
+    #[wasm_bindgen(js_name = lodScaleJson)]
+    pub fn lod_scale_json_wasm(&self) -> String {
+        crate::board_host::puzzle_2d_lod_scale_json()
     }
 
     #[wasm_bindgen(js_name = setGridSnapEnabled)]
@@ -7879,6 +6547,11 @@ impl BoardSession {
         self.state.borrow_mut().host.set_brush_flush_distance(distance);
     }
 
+    #[wasm_bindgen(js_name = setBrushKindWeights)]
+    pub fn set_brush_kind_weights_wasm(&mut self, json: &str) {
+        self.state.borrow_mut().host.set_brush_kind_weights(json);
+    }
+
     #[wasm_bindgen(js_name = setBrushNodeSize)]
     pub fn set_brush_node_size_wasm(&mut self, size: f64) {
         self.state.borrow_mut().host.set_brush_node_size(size);
@@ -7892,6 +6565,39 @@ impl BoardSession {
     #[wasm_bindgen(js_name = brushSetCandidateIndex)]
     pub fn brush_set_candidate_index_wasm(&mut self, index: u32) {
         self.state.borrow_mut().host.brush_set_candidate_index(index as usize);
+    }
+
+    #[wasm_bindgen(js_name = brushFillJson)]
+    pub fn brush_fill_json_wasm(&self, max_count: u32, seed: u32) -> String {
+        self.state.borrow().host.brush_fill_json(max_count, u64::from(seed))
+    }
+
+    #[wasm_bindgen(js_name = setBrushSessionJson)]
+    pub fn set_brush_session_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .set_brush_session_mirror_json(json)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = clearBrushSessionJson)]
+    pub fn clear_brush_session_json_wasm(&mut self) {
+        let _ = self.state.borrow_mut().host.set_brush_session_mirror_json("");
+    }
+
+    #[wasm_bindgen(js_name = setFixtureDropPreviewJson)]
+    pub fn set_fixture_drop_preview_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .set_fixture_drop_preview_json(json)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = clearFixtureDropPreview)]
+    pub fn clear_fixture_drop_preview_wasm(&mut self) {
+        let _ = self.state.borrow_mut().host.set_fixture_drop_preview_json("");
     }
 
     #[wasm_bindgen(js_name = setLinkSessionJson)]
@@ -7968,6 +6674,7 @@ impl BoardSession {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cavas::vello::kurbo::Point;
 
     #[test]
     fn computes_handle_positions_and_edge_curves() {
@@ -8075,10 +6782,11 @@ mod host_tests {
     use super::vcompute::handle_position_on_circle;
     use super::vcompute::handle_position_on_rectangle;
     use super::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson, WireDescJson};
-    use crate::board_host::BoardElementStyleKind;
+    use crate::board_host::{BoardElementStyleKind, EdgeStrokePattern, EdgeTipGeometry, NodeShape};
+    use crate::board_host::GraphPortMode;
     use crate::board_host::Interaction;
-    use crate::geom_sel::cubic_bezier_point;
-    use crate::vello::kurbo::Point;
+    use crate::cavas::geom_sel::cubic_bezier_point;
+    use crate::cavas::vello::kurbo::Point;
     use serde_json::json;
 
     fn set_detail_lod(h: &mut BoardHost) {
@@ -8131,7 +6839,13 @@ mod host_tests {
                     scale: None,
                 },
             ],
-            edges: vec![EdgeDescJson { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, selected: None, style: None, user_data: None, visible: None }],
+            edges: vec![EdgeDescJson { id: "e1".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None,
+                source_tip: None,
+                target_tip: None,
+                selected: None,
+                style: None,
+                user_data: None,
+                visible: None }],
             wires: vec![],
             selection_exit_highlight_ids: vec![],
         }
@@ -8273,10 +6987,10 @@ mod host_tests {
 			}"#,
         )
         .unwrap();
-        assert_eq!(h.vello_theme.node_stroke_hovered.to_rgba8(), crate::vello::peniko::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
-        assert_eq!(h.vello_theme.edge_stroke_hovered.to_rgba8(), crate::vello::peniko::Color::from_rgba8(4, 5, 6, 255).to_rgba8());
-        assert_eq!(h.vello_theme.handle_stroke_hovered.to_rgba8(), crate::vello::peniko::Color::from_rgba8(7, 8, 9, 255).to_rgba8());
-        assert_eq!(h.vello_theme.wire_stroke_hovered.to_rgba8(), crate::vello::peniko::Color::from_rgba8(10, 11, 12, 255).to_rgba8());
+        assert_eq!(h.vello_theme.node_stroke_hovered.to_rgba8(), crate::cavas::vello::peniko::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
+        assert_eq!(h.vello_theme.edge_stroke_hovered.to_rgba8(), crate::cavas::vello::peniko::Color::from_rgba8(4, 5, 6, 255).to_rgba8());
+        assert_eq!(h.vello_theme.handle_stroke_hovered.to_rgba8(), crate::cavas::vello::peniko::Color::from_rgba8(7, 8, 9, 255).to_rgba8());
+        assert_eq!(h.vello_theme.wire_stroke_hovered.to_rgba8(), crate::cavas::vello::peniko::Color::from_rgba8(10, 11, 12, 255).to_rgba8());
     }
 
     #[test]
@@ -9180,13 +7894,25 @@ mod host_tests {
             visible: None,
             scale: None,
         });
-        s.edges.push(EdgeDescJson { id: "e-bc".into(), source: "b:h0".into(), target: "c:h0".into(), edge_kind: None, selected: None, style: None, user_data: None, visible: None });
+        s.edges.push(EdgeDescJson { id: "e-bc".into(), source: "b:h0".into(), target: "c:h0".into(), edge_kind: None,
+                source_tip: None,
+                target_tip: None,
+                selected: None,
+                style: None,
+                user_data: None,
+                visible: None });
         s
     }
 
     fn link_test_scene_a_to_b_linked() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
-        s.edges.push(EdgeDescJson { id: "e-ab".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, selected: None, style: None, user_data: None, visible: None });
+        s.edges.push(EdgeDescJson { id: "e-ab".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None,
+                source_tip: None,
+                target_tip: None,
+                selected: None,
+                style: None,
+                user_data: None,
+                visible: None });
         s
     }
 
@@ -9393,6 +8119,134 @@ mod host_tests {
         let ev = h.drain_events_json();
         assert!(ev.contains("edgeCreate"), "expected edgeCreate at overview LOD, got: {ev}");
         assert!(ev.contains("proximityConnect") || ev.contains("indirectConnect"), "expected proximityConnect or indirectConnect, got: {ev}");
+    }
+
+    #[test]
+    fn board_host_parses_mindmap_fixture_without_handles() {
+        let mut h = BoardHost::new_normal();
+        let fixture = json!({
+            "schema": "reasoning.mindmap.fixture/v1",
+            "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+            "nodes": [
+                { "id": "a", "x": 0.0, "y": 0.0, "width": 48.0, "height": 48.0, "shape": "rectangle", "root": true },
+                { "id": "b", "x": 120.0, "y": 0.0, "width": 40.0, "height": 40.0, "shape": "rectangle" }
+            ],
+            "edges": [
+                { "id": "e1", "source": "a", "target": "b", "edgeKind": "wires.owns" }
+            ]
+        });
+        assert!(h.parse_fixture_v1(&fixture));
+        assert_eq!(h.port_mode, GraphPortMode::Normal);
+        assert!(h.handles.is_empty());
+        assert_eq!(h.edges.len(), 1);
+        assert_eq!(h.edges.get("e1").unwrap().source, "a");
+        assert_eq!(h.edges.get("e1").unwrap().target, "b");
+        h.set_size(800, 600, 1.0);
+        let scene = h.build_vector_scene();
+        assert!(scene.encoding().path_tags.len() > 0);
+    }
+
+    #[test]
+    fn board_host_ingests_edge_and_node_kind_catalog_visual_fields() {
+        let mut h = BoardHost::new_normal();
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "edgeKinds": [
+                    {"id":"wires.owns","name":"Owns","color":"#ff0000","stroke":"3","pattern":"dashed","targetTip":"filled-diamond","directed":false},
+                    {"id":"wires.is","name":"Is","color":"#00ff00","pattern":"dotted","targetTip":"filled-arrow","directed":false}
+                ],
+                "nodeKinds": [
+                    {"id":"capsule","name":"Capsule","shape":"circle","color":"#aabbcc"}
+                ]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let owns = h.edge_kinds.get("wires.owns").expect("owns edge kind");
+        assert_eq!(owns.stroke_width, 3.0);
+        assert_eq!(owns.pattern, EdgeStrokePattern::Dashed);
+        assert_eq!(owns.target_tip.as_deref(), Some("filled-diamond"));
+        assert!(!owns.directed);
+        assert!(owns.color.is_some());
+        let is = h.edge_kinds.get("wires.is").expect("is edge kind");
+        assert_eq!(is.pattern, EdgeStrokePattern::Dotted);
+        assert_eq!(is.target_tip.as_deref(), Some("filled-arrow"));
+        assert!(!is.directed);
+        let diamond = h.edge_tips.get("filled-diamond").expect("filled-diamond tip");
+        assert_eq!(diamond.geometry, EdgeTipGeometry::Diamond);
+        assert!(diamond.filled);
+        let capsule = h.node_kinds.get("capsule").expect("capsule node kind");
+        assert_eq!(capsule.shape, NodeShape::Circle);
+        assert!(capsule.color_fill.is_some());
+    }
+
+    #[test]
+    fn board_host_sync_descriptor_normal_graph_node_id_edges() {
+        let mut h = BoardHost::new_normal();
+        let desc = SceneDescriptorJson {
+            nodes: vec![
+                NodeDescJson {
+                    id: "a".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    draggable: Some(true),
+                    selected: None,
+                    style: None,
+                    text: None,
+                    icon_kind: None,
+                    node_kind: None,
+                    user_data: None,
+                    visible: None,
+                    root: Some(true),
+                    shape: Some("rectangle".into()),
+                    radius: None,
+                    width: Some(48.0),
+                    height: Some(48.0),
+                    scale: None,
+                },
+                NodeDescJson {
+                    id: "b".into(),
+                    x: 120.0,
+                    y: 0.0,
+                    draggable: Some(true),
+                    selected: None,
+                    style: None,
+                    text: None,
+                    icon_kind: None,
+                    node_kind: None,
+                    user_data: None,
+                    visible: None,
+                    root: None,
+                    shape: Some("rectangle".into()),
+                    radius: None,
+                    width: Some(40.0),
+                    height: Some(40.0),
+                    scale: None,
+                },
+            ],
+            handles: vec![],
+            edges: vec![EdgeDescJson {
+                id: "e1".into(),
+                source: "a".into(),
+                target: "b".into(),
+                edge_kind: Some("wires.owns".into()),
+                source_tip: None,
+                target_tip: None,
+                selected: None,
+                style: None,
+                user_data: None,
+                visible: None,
+            }],
+            wires: vec![],
+            selection_exit_highlight_ids: vec![],
+        };
+        h.sync_descriptor(&desc).unwrap();
+        assert!(h.handles.is_empty());
+        assert_eq!(h.edges.get("e1").unwrap().source, "a");
+        assert_eq!(h.edges.get("e1").unwrap().target, "b");
+        h.set_size(800, 600, 1.0);
+        let scene = h.build_vector_scene();
+        assert!(scene.encoding().path_tags.len() > 0);
     }
 
     #[test]
@@ -9648,6 +8502,25 @@ mod host_tests {
         let ha0 = h.handles.get("a:h0").unwrap();
         let ring = h.indirect_handle_world_pos(ha0).unwrap();
         assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("a:h0"));
+    }
+
+    #[test]
+    fn board_host_indirect_ring_paints_without_rebuilding_world_cache() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 1.0);
+        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.sync_descriptor(&link_test_scene_node_a_two_free_handles()).unwrap();
+        let gen = h.test_content_scene_generation();
+        let neutral_hint = h.encoded_scene_hint();
+        h.set_selection_ids_silent(&["a".into()]);
+        assert_eq!(h.test_content_scene_generation(), gen);
+        let ha0 = h.handles.get("a:h0").unwrap();
+        let ring = h.indirect_handle_world_pos(ha0).unwrap();
+        assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("a:h0"));
+        assert!(h.encoded_scene_hint() > neutral_hint, "indirect ring must paint in the live overlay, not only in stale cached geometry");
+        h.set_selection_ids_silent(&[]);
+        assert_eq!(h.encoded_scene_hint(), neutral_hint);
     }
 
     #[test]
@@ -9978,12 +8851,477 @@ mod host_tests {
         assert!(ev2.contains("brushPlace"), "expected brushPlace on leave, got: {ev2}");
         assert!(ev2.contains("brush.kind"));
         assert!(ev2.contains("a:h0"));
+        assert!(ev2.contains("nodeId"));
+        assert!(ev2.contains("edgeId"));
+    }
+
+    #[test]
+    fn board_host_brush_slot_commit_survives_pointer_move_out_of_slot() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [{ "handleKind": "child", "angle": 3.141592653589793 }]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let _ = h.drain_events_json();
+        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_move_screen(inside.x, inside.y, false, false);
+        let _ = h.drain_events_json();
+        assert_eq!(h.nodes.len(), 2);
+        let far = h.world_to_screen(Point::new(500.0, 500.0));
+        h.pointer_move_screen(far.x, far.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushPlace"), "expected brushPlace when leaving slot, got: {ev}");
+    }
+
+    #[test]
+    fn board_host_brush_fill_frontier_deterministic_and_collision_limited() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [
+                        { "handleKind": "child", "angle": 0.0 },
+                        { "handleKind": "child", "angle": 3.141592653589793 }
+                    ]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let first = h.brush_fill_json(3, 42);
+        let second = h.brush_fill_json(3, 42);
+        assert_eq!(first, second, "fill must be deterministic for the same seed");
+        let v: serde_json::Value = serde_json::from_str(&first).unwrap();
+        let placements = v.get("placements").and_then(|x| x.as_array()).unwrap();
+        assert!(!placements.is_empty(), "expected at least one fill placement");
+        assert!(placements.len() <= 3);
+        let many = h.brush_fill_json(1000, 99);
+        let many_v: serde_json::Value = serde_json::from_str(&many).unwrap();
+        let many_n = many_v.get("placements").and_then(|x| x.as_array()).map(|a| a.len()).unwrap_or(0);
+        assert!(many_n < 1000, "collision should cap fill before 1000 on a tight scene");
+    }
+
+    #[test]
+    fn board_host_fixture_drop_preview_json_paints_while_select_tool_active() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_active_tool("select");
+        h.set_fixture_drop_preview_json(
+            r#"{"nodeKind":"capsule_J","screenX":200.0,"screenY":150.0,"shape":"circle","radius":20.0,"iconKind":"capsule_J"}"#,
+        )
+        .unwrap();
+        let ev = h.drain_events_json();
+        assert!(!ev.contains("brushPlace"));
+        assert!(h.encoded_scene_hint() > 0);
+        h.set_fixture_drop_preview_json("").unwrap();
+        assert!(h.encoded_scene_hint() > 0);
+    }
+
+    #[test]
+    fn board_host_fixture_drop_preview_uses_catalog_shape_and_icon_at_overview_lod() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 0.05);
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "nodeKinds": [{
+                    "id": "capsule_J",
+                    "name": "Capsule J",
+                    "scale": 2.0,
+                    "shape": "circle",
+                    "icon": "capsule_J",
+                    "handles": [{"handleKind": "door", "angle": 0.0}]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.set_fixture_drop_preview_json(
+            r#"{"nodeKind":"capsule_J","screenX":120.0,"screenY":90.0,"shape":"circle","radius":10.0,"iconKind":"capsule_J"}"#,
+        )
+        .unwrap();
+        let hint_with_preview = h.encoded_scene_hint();
+        assert!(hint_with_preview > 0);
+        h.set_fixture_drop_preview_json("").unwrap();
+        let hint_cleared = h.encoded_scene_hint();
+        assert!(hint_cleared != hint_with_preview || hint_with_preview > 0);
+    }
+
+    #[test]
+    fn board_host_brush_session_mirror_json_shows_preview_without_pointer() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_active_tool("brush");
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [{"id": "parent", "name": "Parent", "color": "#888888"}],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [{"handleKind": "parent", "angle": 3.141592653589793}]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let _ = h.drain_events_json();
+        let session = serde_json::json!({
+            "sourceHandleId": "a:h0",
+            "candidates": ["brush.kind"],
+            "index": 0,
+            "preview": {
+                "node": {
+                    "nodeKind": "brush.kind",
+                    "x": 120.0,
+                    "y": 0.0,
+                    "shape": "circle",
+                    "radius": 20.0,
+                    "handles": [{"handleKind": "parent", "angle": 3.141592653589793}]
+                },
+                "edge": { "sourceHandleId": "a:h0", "targetHandleIndex": 0 }
+            }
+        });
+        h.set_brush_session_mirror_json(&session.to_string()).unwrap();
+        let ev = h.drain_events_json();
+        assert!(!ev.contains("brushPlace"));
+        assert!(h.encoded_scene_hint() > 0);
+    }
+
+    #[test]
+    fn board_host_brush_candidates_ordered_by_node_kind_weights() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [
+                    {
+                        "id": "light",
+                        "name": "Light",
+                        "handles": [{"handleKind": "child", "angle": 3.141592653589793}]
+                    },
+                    {
+                        "id": "heavy",
+                        "name": "Heavy",
+                        "handles": [{"handleKind": "child", "angle": 3.141592653589793}]
+                    }
+                ]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.set_brush_kind_weights(r#"{"nodeWeights":{"heavy":0.99,"light":0.01},"handleWeights":{}}"#);
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let _ = h.drain_events_json();
+        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_move_screen(inside.x, inside.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
+        let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
+        let first = v.as_array().and_then(|rows| {
+            rows.iter()
+                .find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates"))
+                .and_then(|row| row.get("payload"))
+                .and_then(|p| p.get("candidates"))
+                .and_then(|c| c.as_array())
+                .and_then(|c| c.first())
+                .and_then(|x| x.as_str())
+        });
+        assert_eq!(first, Some("heavy"));
+    }
+
+    #[test]
+    fn board_host_fill_base_core_rectangular_excludes_cylindric_tambour() {
+        const BASE_KIND: &str = "Base";
+        const CYLINDRIC_TAMBOUR_KIND: &str = "Cylindric Tambour";
+        const FIRST_STOREY_KIND: &str = "First Storey Tambour";
+        let mut h = BoardHost::new();
+        h.set_brush_flush_distance(80.0);
+        h.set_brush_node_size(40.0);
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
+        let compat_str = fixture
+            .get("meta")
+            .and_then(|m| m.get("kindCompatibility"))
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "[]".to_string());
+        h.set_handle_link_compat_from_json(&compat_str).unwrap();
+        let catalogs_str = fixture
+            .get("meta")
+            .and_then(|m| m.get("kindCatalogs"))
+            .map(|kc| {
+                serde_json::json!({
+                    "handleKinds": kc.get("handles"),
+                    "nodeKinds": kc.get("nodes"),
+                })
+                .to_string()
+            })
+            .unwrap_or_else(|| "{}".to_string());
+        h.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
+        let desc = SceneDescriptorJson {
+            nodes: vec![NodeDescJson {
+                id: "base".into(),
+                x: 0.0,
+                y: 0.0,
+                draggable: Some(true),
+                selected: None,
+                style: None,
+                text: None,
+                icon_kind: Some("base".into()),
+                node_kind: Some(BASE_KIND.into()),
+                user_data: None,
+                visible: None,
+                root: None,
+                shape: Some("circle".into()),
+                radius: Some(20.0),
+                width: None,
+                height: None,
+                scale: None,
+            }],
+            handles: vec![
+                HandleDescJson {
+                    id: "base:c0".into(),
+                    node_id: "base".into(),
+                    angle: -2.3561944901923453,
+                    radius: Some(3.0),
+                    scale: None,
+                    selected: None,
+                    visible: None,
+                    style: None,
+                    handle_kind: Some("core rectangular bottom".into()),
+                    color: None,
+                    icon_kind: None,
+                    user_data: None,
+                },
+                HandleDescJson {
+                    id: "base:c1".into(),
+                    node_id: "base".into(),
+                    angle: -0.7853981633974483,
+                    radius: Some(3.0),
+                    scale: None,
+                    selected: None,
+                    visible: None,
+                    style: None,
+                    handle_kind: Some("core rectangular bottom".into()),
+                    color: None,
+                    icon_kind: None,
+                    user_data: None,
+                },
+            ],
+            edges: vec![],
+            wires: vec![],
+            selection_exit_highlight_ids: vec![],
+        };
+        h.sync_descriptor(&desc).unwrap();
+        let out: serde_json::Value = serde_json::from_str(&h.brush_fill_json(1, 7)).unwrap();
+        let placements = out.get("placements").and_then(|x| x.as_array()).unwrap();
+        assert_eq!(placements.len(), 1, "expected one fill placement on base");
+        let node_kind = placements[0].get("nodeKind").and_then(|x| x.as_str()).unwrap_or("");
+        assert_ne!(node_kind, CYLINDRIC_TAMBOUR_KIND, "cylindric tambour must not stack on rectangular core");
+        assert_eq!(node_kind, FIRST_STOREY_KIND, "first storey tambour matches rectangular core stack");
+    }
+
+    #[test]
+    fn board_host_brush_door_tambour_left_excludes_capital_with_metabolism_compat_rules() {
+        const DOOR_TAMBOUR_LEFT: &str = "door tambour left";
+        const CAPITAL_KIND: &str = "Capital";
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
+        let compat_str = fixture
+            .get("meta")
+            .and_then(|m| m.get("kindCompatibility"))
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "[]".to_string());
+        h.set_handle_link_compat_from_json(&compat_str).unwrap();
+        let catalogs_str = fixture
+            .get("meta")
+            .and_then(|m| m.get("kindCatalogs"))
+            .map(|kc| {
+                serde_json::json!({
+                    "handleKinds": kc.get("handles"),
+                    "nodeKinds": kc.get("nodes"),
+                })
+                .to_string()
+            })
+            .unwrap_or_else(|| "{}".to_string());
+        h.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
+        let desc = SceneDescriptorJson {
+            nodes: vec![NodeDescJson {
+                id: "tambour".into(),
+                x: 0.0,
+                y: 0.0,
+                draggable: Some(true),
+                selected: None,
+                style: None,
+                text: None,
+                icon_kind: None,
+                node_kind: Some("Tambour".into()),
+                user_data: None,
+                visible: None,
+                root: None,
+                shape: Some("circle".into()),
+                radius: Some(40.0),
+                width: None,
+                height: None,
+                scale: None,
+            }],
+            handles: vec![HandleDescJson {
+                id: "tambour:h0".into(),
+                node_id: "tambour".into(),
+                angle: 0.0,
+                radius: None,
+                scale: None,
+                selected: None,
+                visible: None,
+                style: None,
+                handle_kind: Some(DOOR_TAMBOUR_LEFT.into()),
+                color: None,
+                icon_kind: None,
+                user_data: None,
+            }],
+            edges: vec![],
+            wires: vec![],
+            selection_exit_highlight_ids: vec![],
+        };
+        h.sync_descriptor(&desc).unwrap();
+        let _ = h.drain_events_json();
+        let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+        let slot = hp + (hp - Point::new(0.0, 0.0)) * (40.0 / 40.0);
+        let slot_screen = h.world_to_screen(slot);
+        h.pointer_move_screen(slot_screen.x, slot_screen.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
+        let v: serde_json::Value = serde_json::from_str(&ev).unwrap();
+        let candidates = v
+            .as_array()
+            .and_then(|rows| {
+                rows.iter()
+                    .find(|row| row.get("name").and_then(|n| n.as_str()) == Some("brushCandidates"))
+                    .and_then(|row| row.get("payload"))
+                    .and_then(|p| p.get("candidates"))
+                    .cloned()
+            })
+            .and_then(|c| c.as_array().cloned())
+            .unwrap_or_default();
+        let ids: Vec<String> = candidates.iter().filter_map(|x| x.as_str().map(str::to_string)).collect();
+        assert!(
+            !ids.iter().any(|id| id == CAPITAL_KIND),
+            "door tambour left must not suggest Capital, got: {ids:?}"
+        );
+    }
+
+    #[test]
+    fn board_host_brush_slot_accepts_pointer_on_node_body_at_overview_lod() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        set_overview_lod(&mut h);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [{ "handleKind": "child", "angle": 3.141592653589793 }]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let _ = h.drain_events_json();
+        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        h.pointer_move_screen(inside.x, inside.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushPreview"), "expected brushPreview when hovering node body at overview LOD, got: {ev}");
+        assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
+    }
+
+    #[test]
+    fn board_host_brush_slot_accepts_pointer_on_indirect_ring_anchor() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_camera(0.0, 0.0, 1.0);
+        h.set_active_tool("brush");
+        h.set_brush_flush_distance(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [{ "handleKind": "child", "angle": 3.141592653589793 }]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        h.sync_descriptor(&link_test_scene_node_a_two_free_handles()).unwrap();
+        let _ = h.drain_events_json();
+        h.set_selection_ids(&["a".into()]);
+        let ha0 = h.handles.get("a:h0").unwrap();
+        let ring = h.indirect_handle_world_pos(ha0).unwrap();
+        let s = h.world_to_screen(ring);
+        h.pointer_move_screen(s.x, s.y, false, false);
+        let ev = h.drain_events_json();
+        assert!(ev.contains("brushPreview"), "expected brushPreview on indirect ring anchor, got: {ev}");
     }
 }
 
 #[cfg(test)]
 mod force_graph_tests {
-    use super::{apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json};
+    use crate::graph::{
+        apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json,
+    };
     use serde_json::json;
     use std::collections::HashMap;
 
@@ -10104,7 +9442,7 @@ mod force_graph_tests {
                 "gravity": 0.0
             }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let nodes = parsed["nodes"].as_array().unwrap();
         assert!((nodes[0]["x"].as_f64().unwrap() - 0.0).abs() < 1e-9);
@@ -10312,7 +9650,7 @@ mod force_graph_tests {
                 "gravity": 0.0
             }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let nodes = parsed["nodes"].as_array().unwrap();
         let ax = nodes[0]["x"].as_f64().unwrap();
@@ -10343,7 +9681,7 @@ mod force_graph_tests {
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
         });
-        let out = apply_edge_handle_snap_to_fixture_v1_json(&fixture.to_string()).unwrap();
+        let out = crate::graph::apply_edge_handle_snap_to_fixture_v1_json(&fixture.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let nodes = parsed["nodes"].as_array().unwrap();
         let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
@@ -10387,7 +9725,7 @@ mod force_graph_tests {
                 "gravity": 0.0
             }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let nodes = parsed["nodes"].as_array().unwrap();
         let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
@@ -10435,7 +9773,7 @@ mod force_graph_tests {
             "randomSeed": 3,
             "forceGraph": { "iterations": 120, "idealEdgeLength": 160.0, "gravity": 0.0 }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         for n in parsed["nodes"].as_array().unwrap() {
             assert!(n["x"].as_f64().unwrap().is_finite());
@@ -10477,7 +9815,7 @@ mod force_graph_tests {
             "centerY": 0.0,
             "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut ys: HashMap<String, f64> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -10533,7 +9871,7 @@ mod force_graph_tests {
             "lockedNodeIds": ["r"],
             "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -10583,7 +9921,7 @@ mod force_graph_tests {
                 "lockedNodeIds": ["r"]
             }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -10620,7 +9958,7 @@ mod force_graph_tests {
             "centerY": 0.0,
             "hierarchicalTree": { "direction": "right", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut xs: HashMap<String, f64> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -10658,7 +9996,7 @@ mod force_graph_tests {
             "centerY": 0.0,
             "hierarchicalTree": { "direction": "upwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut ys: HashMap<String, f64> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -10689,7 +10027,7 @@ mod force_graph_tests {
             "mode": "hierarchical-tree",
             "hierarchicalTree": { "direction": "sideways" }
         });
-        let err = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap_err();
+        let err = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap_err();
         assert!(err.contains("unknown hierarchical tree direction"));
     }
 
@@ -10701,18 +10039,18 @@ mod force_graph_tests {
             "nodes": [],
             "edges": []
         });
-        let err = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
+        let err = crate::graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
         assert!(err.contains("unknown redraw mode"));
     }
 
     #[test]
     fn svg_icon_vello09_append_smoke() {
-        let mut scene = crate::vello::Scene::new();
+        let mut scene = crate::cavas::vello::Scene::new();
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#ffffff"/><path d="M0 0 L10 10" stroke="#000000" stroke-width="1"/></svg>"##;
         super::svg_icon_vello09::append_svg_str(&mut scene, svg).expect("parse svg");
-        let fg = crate::vello::peniko::Color::from_rgba8(200, 10, 10, 255);
-        let bg = crate::vello::peniko::Color::from_rgba8(10, 200, 10, 255);
-        let mut scene2 = crate::vello::Scene::new();
+        let fg = crate::cavas::vello::peniko::Color::from_rgba8(200, 10, 10, 255);
+        let bg = crate::cavas::vello::peniko::Color::from_rgba8(10, 200, 10, 255);
+        let mut scene2 = crate::cavas::vello::Scene::new();
         super::svg_icon_vello09::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
     }
 

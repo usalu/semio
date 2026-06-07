@@ -1,13 +1,15 @@
 {
-  "hooks": {
-    "Notification": "go run ./repo/client/mcp hook Notification droid",
-    "PostToolUse": "go run ./repo/client/mcp hook PostToolUse droid",
-    "PreCompact": "go run ./repo/client/mcp hook PreCompact droid",
-    "PreToolUse": "go run ./repo/client/mcp hook PreToolUse droid",
-    "SessionEnd": "go run ./repo/client/mcp hook SessionEnd droid",
-    "SessionStart": "go run ./repo/client/mcp hook SessionStart droid",
-    "Stop": "go run ./repo/client/mcp hook Stop droid",
-    "SubagentStop": "go run ./repo/client/mcp hook SubagentStop droid",
-    "UserPromptSubmit": "go run ./repo/client/mcp hook UserPromptSubmit droid"
-  }
+  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
+  "hooks": {}
+  // "hooks": {
+  //   "Notification": "bun ./script.ts dev mcp stdio client hook Notification droid",
+  //   "PostToolUse": "bun ./script.ts dev mcp stdio client hook PostToolUse droid",
+  //   "PreCompact": "bun ./script.ts dev mcp stdio client hook PreCompact droid",
+  //   "PreToolUse": "bun ./script.ts dev mcp stdio client hook PreToolUse droid",
+  //   "SessionEnd": "bun ./script.ts dev mcp stdio client hook SessionEnd droid",
+  //   "SessionStart": "bun ./script.ts dev mcp stdio client hook SessionStart droid",
+  //   "Stop": "bun ./script.ts dev mcp stdio client hook Stop droid",
+  //   "SubagentStop": "bun ./script.ts dev mcp stdio client hook SubagentStop droid",
+  //   "UserPromptSubmit": "bun ./script.ts dev mcp stdio client hook UserPromptSubmit droid"
+  // }
 }

@@ -1,0 +1,6 @@
+---
+technology: mathematical
+emoji: 🧮
+---
+# Mathematical
+

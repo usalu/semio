@@ -17,7 +17,6 @@
 		"@ui/react": "workspace:*",
 		"clsx": "^2.1.1",
 		"fuse.js": "^7.1.0",
-		"lucide-react": "^0.536.0",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
 		"react-i18next": "^16.5.2",

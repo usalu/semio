@@ -12,14 +12,18 @@
 // #endregion 🧲Header
 
 import { BottomPanel, Panel, PanelSection, SidePanel } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Info, Layers, Settings } from "lucide-react";
 import { useState } from "react";
 
 // #region 🦉Panel
 
+const Info = createIconComponent("info");
+const Layers = createIconComponent("layers");
+const Settings = createIconComponent("settings");
+
 const meta = {
-  title: "elements/react/Panel",
+  title: "🖱️ui⚛️react/Panel",
   component: Panel,
   parameters: {
     layout: "padded",

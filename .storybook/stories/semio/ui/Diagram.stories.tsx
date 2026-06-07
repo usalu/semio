@@ -29,7 +29,7 @@ const designDiff = nakaginDiff as any;
 // #region 🧫Diagram
 
 const meta: Meta<typeof Diagram> = {
-  title: "semio/react/Diagram",
+  title: "🏘️semio⚛️react/Diagram",
   component: Diagram,
   tags: ["autodocs"],
   parameters: { layout: "centered" },

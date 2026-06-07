@@ -9,6 +9,13 @@
         "command": "bun ./script.ts regenerate-metabolism-light"
       }
     },
+    "assemble-metabolism-initial-kit": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/fixtures",
+        "command": "bun -e \"import { assembleSplitInitialKitFromDirectory } from './script.ts'; console.log(JSON.stringify(assembleSplitInitialKitFromDirectory('stores/metabolism/wip/initialKit')).length)\""
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {

@@ -6759,25 +6759,56 @@ pub mod kit {
         pub async fn has_types_field(&self) -> crate::gql_relay::TypeConnection {
             crate::gql_relay::TypeConnection::from_types(self.has_types().await).await
         }
-        /// @emoji 📄 Files contained in this kit.
+        /// @emoji 📄 Kit-root files only (matches {@link file_system_vfs::children_nodes} for {@link FileSystemNodeInterface::Kit}).
         #[graphql(name = "hasFiles")]
         pub async fn has_files(&self) -> crate::gql_relay::FileConnection {
-            crate::gql_relay::FileConnection::from_entities(self.files.read().await.clone())
+            let rows = self
+                .files
+                .read()
+                .await
+                .iter()
+                .filter(|f| f.folder_id.is_none())
+                .cloned()
+                .collect();
+            crate::gql_relay::FileConnection::from_entities(rows)
         }
-        /// @emoji 📁 Folders contained in this kit.
+        /// @emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
         #[graphql(name = "hasFolders")]
         pub async fn has_folders(&self) -> crate::gql_relay::FolderConnection {
-            crate::gql_relay::FolderConnection::from_entities(self.folders.read().await.clone())
+            let rows = self
+                .folders
+                .read()
+                .await
+                .iter()
+                .filter(|f| f.parent_folder_id.is_none())
+                .cloned()
+                .collect();
+            crate::gql_relay::FolderConnection::from_entities(rows)
         }
-        /// @emoji 👪 Families contained in this kit.
+        /// @emoji 👪 Kit-root families only (not placed in a folder).
         #[graphql(name = "hasFamilies")]
         pub async fn has_families(&self) -> crate::gql_relay::FamilyConnection {
-            crate::gql_relay::FamilyConnection::from_entities(self.families.read().await.clone())
+            let rows = self
+                .families
+                .read()
+                .await
+                .iter()
+                .filter(|f| f.folder_id.is_none())
+                .cloned()
+                .collect();
+            crate::gql_relay::FamilyConnection::from_entities(rows)
         }
-        /// @emoji 🏛️ Typologies contained in this kit.
+        /// @emoji 🏛️ Kit-root typologies only (not placed in a folder).
         #[graphql(name = "hasTypologies")]
         pub async fn has_typologies(&self) -> crate::gql_relay::TypologyConnection {
-            crate::gql_relay::TypologyConnection::from_typologies(self.typologies.read().await.clone()).await
+            let tops = self.typologies.read().await.clone();
+            let mut filtered = Vec::new();
+            for topo in tops {
+                if topo.folder_id.read().await.is_none() {
+                    filtered.push(topo);
+                }
+            }
+            crate::gql_relay::TypologyConnection::from_typologies(filtered).await
         }
         /// @emoji 🪢 All pieces across designs, expanding nested design blueprints.
         #[graphql(name = "hasPiecesTransitive")]

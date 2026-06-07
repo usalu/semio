@@ -60,18 +60,7 @@ _PROPERTY_KIND_MEASURE_KINDS = {
     "category": ["include", "exclude"],
 }
 
-from dataclasses import dataclass, field
-import json
-import math
-import os
-from typing import Any, Dict, List, Literal, Optional, Tuple
-
-# pyrefly: ignore [missing-import]
-from pydantic import BaseModel, Field
-from shapely.geometry import box, Polygon, MultiPolygon
-from shapely.ops import unary_union
-
-# #endregion Imports
+# #endregion 🔌Adapters
 
 # #region CodaMcpAppRuntime
 # MCP App HTTP helpers share the streamable-http port; stdio mode omits fetchUrl on tool payloads.

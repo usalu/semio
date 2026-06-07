@@ -11,7 +11,8 @@
     "url": "https://github.com/usalu"
   },
   "dependencies": {
-    "lucide-react": "^0.536.0"
+    "@ui/assets": "workspace:*",
+    "@ui/react": "workspace:*"
   },
   "bundleKind": "assets"
 }

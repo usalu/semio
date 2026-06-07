@@ -78,6 +78,11 @@ import {
 	type ToolItem,
 	type WindowBodyViewContext,
 	type WindowMeasure,
+	type NamedLayout,
+	type StoragePort,
+	NamedLayoutStore,
+	createNamedLayout,
+	type WindowTemplate,
 	Cad,
 	Panel,
 	Puzzle2d,
@@ -108,6 +113,18 @@ import {
 	type UiTableHostSurfaceNode,
 	type UiVirtualFileSystemHostSurfaceNode,
 	type UiTextNode,
+	type UiTreeNode,
+	type UiTreeSectionNode,
+	type UiTreeItemNode,
+	type UiControlNode,
+	type UiInputNode,
+	type UiSelectNode,
+	type UiToggleNode,
+	type UiVec3Node,
+	type UiKeyValueNode,
+	type UiFieldNode,
+	type CommandDescriptor,
+	collectUiTreeItemDragData,
 	getPlatformControllerById,
 	platformTopologyStoreId,
 	registerPlatformVirtualFileSystemDemo,
@@ -115,38 +132,13 @@ import {
 	virtualFileSystemSurfaceId,
 	PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA,
 } from "@framework/platform/core";
-import {
-	ArrowLeft,
-	ArrowRight,
-	ArrowUp,
-	ArrowRightLeft as ArrowRightLeftIcon,
-	Check as CheckIcon,
-	Filter as FilterIcon,
-	Folder,
-	FolderOpen as FolderOpenIcon,
-	Hand as HandIcon,
-	Info,
-	Lasso as LassoIcon,
-	LayoutGrid as LayoutGridIcon,
-	MessageSquare,
-	Minimize2,
-	MoreHorizontal as MoreHorizontalIcon,
-	MousePointer2 as MousePointerIcon,
-	Move3d as Move3dIcon,
-	Plus as PlusIcon,
-	Save as SaveIcon,
-	Search as SearchIcon,
-	TextSearch as FindInViewIcon,
-	Settings2,
-	Settings2 as Settings2Icon,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
 import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dSelectionSnapshot } from "@puzzle/2d/react";
-import { parseFixtureV1, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@puzzle/3d/react";
+import { parseFixtureV1, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@puzzle/3d/react";
+import { PUZZLE_2D_FIXTURE_DRAG_V1_MIME, puzzle2dFixturePaletteTreeDragController } from "@puzzle/2d/react";
 import { FiveD, StoreProvider, compose5d, createStore } from "@puzzle/5d/react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -154,11 +146,11 @@ import {
 	BasicChatPanel,
 	Breadcrumb,
 	type BreadcrumbItemData,
-	Button,
-	ButtonCycle,
-	ButtonGroup,
-	ButtonGroupItem,
-	CommandDialog,
+  Button,
+  ButtonCycle,
+  ButtonGroup,
+  ButtonGroupItem,
+  CommandDialog,
 	CommandEmpty,
 	CommandGroup,
 	CommandInput,
@@ -191,35 +183,57 @@ import {
 	Window,
 	App,
 	Mode,
+	insertWindowAtDropZone,
+	SEMIO_WINDOW_TEMPLATE_MIME,
+	beginWindowTemplateDrag,
+	endWindowTemplateDrag,
+	type TreeDragAndDropController,
 	Ui,
 	type EngagementSpec,
+	type ModeCanvasDropTarget,
 	type ModeWindowDescriptor,
 	type WindowLayoutNode as ShellWindowLayoutNode,
+	type WindowTemplateDropPayload,
 	cn,
 	resolveTranslationLabel,
 	useUiTranslation,
 	useCommandHotkey,
 	useMediaQuery,
+	useSidePanelChromeHotkeys,
 	type ContextMenuItem,
 	type NavbarItem,
 	Expertise,
 	LevelProvider,
 	getLevelBgClass,
 	readStoredUiChromeCompact,
+	readStoredUiChromeExpertise,
 	UiChromeCompactProvider,
 	UiChromeLabelPolicyProvider,
 	useElementsSurfaceChrome,
 	writeStoredUiChromeCompact,
+	writeStoredUiChromeExpertise,
 	reactHostPort,
 	VirtualFileSystem as VirtualFileSystemView,
 	type VirtualFileSystemRow,
 	type VirtualFileSystemSchema,
-	windowMeasureControlClass,
-	windowMeasureLabelClass,
-	windowMeasureSectionClass,
-	windowMeasureTileClass,
-	windowMeasureToggleClass,
+	type SidePanelTabConfig,
+	type TreeDataItem,
+	type TreeDataSection,
+	type TreePanelConfig,
+	type TreePanelDefinition,
+	type TreePanelSource,
+  windowMeasureControlClass,
+  windowMeasureLabelClass,
+  windowMeasureTileClass,
+  windowMeasureToggleClass,
+  windowMeasureToggleCompactClass,
+  WindowMeasureTreeGroup,
+  WindowMeasureTreeLeaf,
+  WindowMeasuresTree,
 	type AssertUiToolbarParentKeysCovered,
+	Icon,
+	type IconName,
+	type IconSource,
 } from "@ui/react";
 // #endregion 🔌Adapters
 
@@ -241,18 +255,7 @@ export interface ChromeFooterRow {
 	readonly disabled?: boolean;
 }
 
-/** @emoji 🌲 Minimal tree panel payload for declarative side tabs. */
-export interface ChromeTreePanelConfig {
-	readonly sections: readonly { readonly id: string; readonly content: React.ReactNode }[];
-}
-
-/** @emoji 📑 Side panel tab registration consumed by {@link PlatformView}. */
-export interface SidePanelTabConfig {
-	readonly id: string;
-	readonly icon: React.ComponentType<{ readonly size?: number }>;
-	readonly order?: number;
-	readonly tree: ChromeTreePanelConfig;
-}
+export type { SidePanelTabConfig, TreePanelConfig, TreePanelDefinition, TreePanelSource } from "@ui/react";
 
 //#endregion 📦shell-chrome-types.tsx
 
@@ -302,6 +305,7 @@ export type UIWindowMeasure =
   | { kind: "reading"; id: string; label?: string; text: string; monospace?: boolean }
   | { kind: "section"; id: string; title: string }
   | { kind: "separator"; id: string }
+  | { kind: "group"; id: string; label: string; defaultOpen?: boolean; children: UIWindowMeasure[] }
   | { kind: "toggle"; id: string; label?: string; pressed?: boolean; defaultPressed?: boolean; icon?: React.ReactNode; text?: string; onPressedChange?: (pressed: boolean) => void }
   | { kind: "select"; id: string; label?: string; value?: string; defaultValue?: string; items: { id: string; value: string; label: string }[]; onValueChange?: (value: string) => void }
   | { kind: "combobox"; id: string; label?: string; value?: string; placeholder?: string; choices: { value: string; label: string }[]; onValueChange?: (value: string) => void }
@@ -321,6 +325,8 @@ export type UIWindowMeasure =
  **/
 export interface UIWindowKindDefinition {
   id: string;
+  windowKindId?: string;
+  templateId?: string;
   label?: string;
   icon?: React.ReactNode;
   component: React.ComponentType<any>;
@@ -342,6 +348,8 @@ export interface WindowLayoutWindowNode {
   kind: "window";
   windowKindId: string;
   title?: string;
+  instanceId?: string;
+  templateId?: string;
 }
 
 /**
@@ -566,163 +574,170 @@ const UIWindowMeasureFloat: React.FC<{ measureId: string; label?: string; childr
   </div>
 );
 
+function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
+  switch (measure.kind) {
+    case "group":
+      return (
+        <WindowMeasureTreeGroup id={measure.id} label={measure.label} defaultOpen={measure.defaultOpen ?? true}>
+          {measure.children.map((child) => (
+            <React.Fragment key={child.id}>{renderUIWindowMeasure(child)}</React.Fragment>
+          ))}
+        </WindowMeasureTreeGroup>
+      );
+    case "display":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
+          <div className="text-foreground max-w-full text-xs leading-snug break-words">{measure.content}</div>
+        </WindowMeasureTreeLeaf>
+      );
+    case "reading":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
+          <div className={cn("text-foreground text-xs tabular-nums", measure.monospace && "font-mono")}>{measure.text}</div>
+        </WindowMeasureTreeLeaf>
+      );
+    case "section":
+      return (
+        <WindowMeasureTreeGroup key={measure.id} id={measure.id} label={measure.title} defaultOpen>
+          {null}
+        </WindowMeasureTreeGroup>
+      );
+    case "separator":
+      return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-tiny h-px w-8 shrink-0 rounded-full" aria-hidden />;
+    case "toggle":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} fullWidth>
+          <Toggle
+            id={measure.id}
+            className={cn(windowMeasureToggleClass, windowMeasureToggleCompactClass)}
+            pressed={measure.pressed}
+            defaultPressed={measure.defaultPressed}
+            onPressedChange={measure.onPressedChange}
+            icon={measure.icon ?? <Icon icon="check" size="small" />}
+            text={measure.text}
+          />
+        </WindowMeasureTreeLeaf>
+      );
+    case "select":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
+            <SelectTrigger id={measure.id} className="h-small w-full min-w-0 py-tiny" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {measure.items.map((item) => (
+                <SelectItem key={item.id} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </WindowMeasureTreeLeaf>
+      );
+    case "combobox":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <Combobox id={measure.id} value={measure.value} options={measure.choices} placeholder={measure.placeholder} onValueChange={measure.onValueChange} className={windowMeasureControlClass} />
+        </WindowMeasureTreeLeaf>
+      );
+    case "button":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
+          <Button id={measure.id} text={measure.text} icon={measure.icon} onClick={measure.onClick} />
+        </WindowMeasureTreeLeaf>
+      );
+    case "buttonCycle":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <ButtonCycle id={measure.id} value={measure.value} onValueChange={measure.onValueChange} items={measure.items} />
+        </WindowMeasureTreeLeaf>
+      );
+    case "input":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <Input id={measure.id} lazy className={cn("h-small", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
+        </WindowMeasureTreeLeaf>
+      );
+    case "textarea":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
+          <Textarea id={measure.id} lazy className={cn("min-h-[3rem]", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
+        </WindowMeasureTreeLeaf>
+      );
+    case "checkbox":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <div className="text-foreground flex w-full min-w-0 items-center justify-end gap-single text-xs">
+            <input
+              id={measure.id}
+              type="checkbox"
+              className="border-element accent-foreground size-small shrink-0 rounded border"
+              {...(measure.checked !== undefined ? { checked: measure.checked } : { defaultChecked: measure.defaultChecked })}
+              onChange={(event) => measure.onCheckedChange?.(event.target.checked)}
+            />
+          </div>
+        </WindowMeasureTreeLeaf>
+      );
+    case "radio":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
+          <div className="flex flex-col gap-tiny" role="radiogroup" aria-labelledby={measure.id}>
+            {measure.items.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                data-slot="window-measure-radio-item"
+                className={cn(
+                  "border-element/80 hover:bg-hover-window w-full rounded border px-tiny py-tiny text-left text-xs transition-colors",
+                  measure.value === item.value && "bg-active-base text-active-foreground",
+                )}
+                onClick={() => measure.onChange?.(item.value)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </WindowMeasureTreeLeaf>
+      );
+    case "slider": {
+      const min = measure.min ?? 0;
+      const max = measure.max ?? 100;
+      const v = measure.value ?? min;
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <Slider id={measure.id} value={[v]} min={min} max={max} step={measure.step} onValueChange={(vals) => measure.onValueChange?.(vals[0] ?? min)} />
+        </WindowMeasureTreeLeaf>
+      );
+    }
+    case "number":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <Stepper id={measure.id} value={measure.value} min={measure.min} max={measure.max} step={measure.step} onChange={measure.onChange} />
+        </WindowMeasureTreeLeaf>
+      );
+    case "color":
+      return (
+        <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+          <Input id={measure.id} type="color" className={cn("h-small cursor-pointer", windowMeasureControlClass)} value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
+        </WindowMeasureTreeLeaf>
+      );
+    default: {
+      const _exhaustive: never = measure;
+      return _exhaustive;
+    }
+  }
+}
+
 /**
  * 📐 Maps declarative `UIWindowMeasure` entries into compact floating tiles aligned to the right edge.
  **/
 export const UIWindowMeasures: React.FC<{ measures: UIWindowMeasure[] }> = ({ measures }) => (
-  <div data-slot="window-measures-stack-inner" className="flex w-full min-w-0 flex-col gap-half">
-    {measures.map((measure) => {
-      switch (measure.kind) {
-        case "display":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <div className="text-foreground max-w-full text-xs leading-snug break-words">{measure.content}</div>
-            </UIWindowMeasureFloat>
-          );
-        case "reading":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <div className={cn("text-foreground text-xs tabular-nums", measure.monospace && "font-mono")}>{measure.text}</div>
-            </UIWindowMeasureFloat>
-          );
-        case "section":
-          return (
-            <span key={measure.id} data-slot="window-measure-heading" className={windowMeasureSectionClass}>
-              {measure.title}
-            </span>
-          );
-        case "separator":
-          return <div key={measure.id} data-slot="window-measure-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
-        case "toggle":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Toggle
-                id={measure.id}
-                className={windowMeasureToggleClass}
-                pressed={measure.pressed}
-                defaultPressed={measure.defaultPressed}
-                onPressedChange={measure.onPressedChange}
-                icon={measure.icon ?? <CheckIcon className="size-small" />}
-                text={measure.text}
-              />
-            </UIWindowMeasureFloat>
-          );
-        case "select":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Select id={measure.id} value={measure.value} defaultValue={measure.defaultValue} onValueChange={measure.onValueChange}>
-                <SelectTrigger id={measure.id} className="h-medium w-full min-w-0" size="sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {measure.items.map((item) => (
-                    <SelectItem key={item.id} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </UIWindowMeasureFloat>
-          );
-        case "combobox":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Combobox id={measure.id} value={measure.value} options={measure.choices} placeholder={measure.placeholder} onValueChange={measure.onValueChange} className={windowMeasureControlClass} />
-            </UIWindowMeasureFloat>
-          );
-        case "button":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Button id={measure.id} text={measure.text} icon={measure.icon} onClick={measure.onClick} />
-            </UIWindowMeasureFloat>
-          );
-        case "buttonCycle":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <ButtonCycle id={measure.id} value={measure.value} onValueChange={measure.onValueChange} items={measure.items} />
-            </UIWindowMeasureFloat>
-          );
-        case "input":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Input id={measure.id} lazy className={cn("h-medium", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} onLazyChange={measure.onLazyChange} />
-            </UIWindowMeasureFloat>
-          );
-        case "textarea":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Textarea id={measure.id} lazy className={cn("min-h-[4rem]", windowMeasureControlClass)} value={measure.value} placeholder={measure.placeholder} rows={measure.rows} onLazyChange={measure.onLazyChange} />
-            </UIWindowMeasureFloat>
-          );
-        case "checkbox":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id}>
-              <div className="text-foreground flex w-full min-w-0 items-center gap-single text-xs">
-                <input
-                  id={measure.id}
-                  type="checkbox"
-                  className="border-element accent-foreground size-small shrink-0 rounded border"
-                  {...(measure.checked !== undefined ? { checked: measure.checked } : { defaultChecked: measure.defaultChecked })}
-                  onChange={(event) => measure.onCheckedChange?.(event.target.checked)}
-                />
-                {measure.label ? (
-                  <label htmlFor={measure.id} className="cursor-pointer select-none">
-                    {measure.label}
-                  </label>
-                ) : null}
-              </div>
-            </UIWindowMeasureFloat>
-          );
-        case "radio":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <div className="flex flex-col gap-half" role="radiogroup" aria-labelledby={measure.id}>
-                {measure.items.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    data-slot="window-measure-radio-item"
-                    className={cn(
-                      "border-element/80 hover:bg-hover-window w-full rounded border px-single py-half text-left text-xs transition-colors",
-                      measure.value === item.value && "bg-active-base text-active-foreground",
-                    )}
-                    onClick={() => measure.onChange?.(item.value)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </UIWindowMeasureFloat>
-          );
-        case "slider": {
-          const min = measure.min ?? 0;
-          const max = measure.max ?? 100;
-          const v = measure.value ?? min;
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Slider id={measure.id} value={[v]} min={min} max={max} step={measure.step} onValueChange={(vals) => measure.onValueChange?.(vals[0] ?? min)} />
-            </UIWindowMeasureFloat>
-          );
-        }
-        case "number":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Stepper id={measure.id} value={measure.value} min={measure.min} max={measure.max} step={measure.step} onChange={measure.onChange} />
-            </UIWindowMeasureFloat>
-          );
-        case "color":
-          return (
-            <UIWindowMeasureFloat key={measure.id} measureId={measure.id} label={measure.label}>
-              <Input id={measure.id} type="color" className={cn("h-medium cursor-pointer", windowMeasureControlClass)} value={measure.value} onChange={(event) => measure.onChange?.(event.target.value)} />
-            </UIWindowMeasureFloat>
-          );
-        default: {
-          const _exhaustive: never = measure;
-          return _exhaustive;
-        }
-      }
-    })}
-  </div>
+  <WindowMeasuresTree>
+    {measures.map((measure) => (
+      <React.Fragment key={measure.id}>{renderUIWindowMeasure(measure)}</React.Fragment>
+    ))}
+  </WindowMeasuresTree>
 );
 
 // #endregion 🪟WindowMeasuresOverlay
@@ -732,7 +747,11 @@ function convertFrameworkLayoutNodeToShellLayout(node: WindowLayoutNode): ShellW
     return {
       kind: "stack",
       size: node.size,
-      children: node.children.map((child) => ({ kind: "window", id: child.windowKindId, title: child.title })),
+      children: node.children.map((child) => ({
+        kind: "window",
+        id: child.instanceId ?? child.windowKindId,
+        title: child.title,
+      })),
     };
   }
   return {
@@ -740,6 +759,688 @@ function convertFrameworkLayoutNodeToShellLayout(node: WindowLayoutNode): ShellW
     size: node.size,
     children: node.children.map((child) => convertFrameworkLayoutNodeToShellLayout(child)),
   };
+}
+
+function collectFrameworkWindowNodes(node: WindowLayoutNode): WindowLayoutWindowNode[] {
+  if (node.kind === "window") return [node];
+  if (node.kind === "stack") return [...node.children];
+  return node.children.flatMap((child) => collectFrameworkWindowNodes(child));
+}
+
+interface ShellWindowInstance {
+  readonly instanceId: string;
+  readonly windowKindId: string;
+  readonly templateId?: string;
+  readonly title: string;
+}
+
+function findWindowTemplate(catalog: readonly WindowKindRuntime[], windowKindId: string, templateId: string): WindowTemplate | undefined {
+  return catalog.find((kind) => kind.id === windowKindId)?.templates.find((template) => template.id === templateId);
+}
+
+function dispatchWindowTemplate(
+  bus: CommandBus,
+  catalog: readonly WindowKindRuntime[],
+  windowKindId: string,
+  templateId?: string,
+  instanceId?: string,
+): void {
+  if (!templateId) return;
+  const template = findWindowTemplate(catalog, windowKindId, templateId);
+  if (!template?.controllerId || !template.command) return;
+  const args =
+    instanceId && template.args && typeof template.args === "object"
+      ? { ...(template.args as Record<string, unknown>), instanceId }
+      : instanceId
+        ? { instanceId }
+        : template.args;
+  bus.dispatch(template.controllerId, template.command, args);
+}
+
+//#region 🪟ShellWindowInstance
+export interface ShellWindowInstanceContextValue {
+  readonly instanceId: string;
+  readonly windowKindId: string;
+  readonly templateId?: string;
+}
+
+const ShellWindowInstanceContext = reactHostPort.createContext<ShellWindowInstanceContextValue | null>(null);
+
+/** @emoji 🪟 Active resizable shell window instance (camera, topology, template scope). */
+export function useShellWindowInstance(): ShellWindowInstanceContextValue | null {
+  return reactHostPort.useContext(ShellWindowInstanceContext);
+}
+
+/** @emoji 🪟 Stable scope key for per-instance viewport state (defaults to window kind id on bootstrap). */
+export function shellWindowScopeId(instance: ShellWindowInstanceContextValue | null, fallbackWindowKindId: string): string {
+  return instance?.instanceId ?? fallbackWindowKindId;
+}
+
+function ShellWindowInstanceProvider(props: { readonly value: ShellWindowInstanceContextValue; readonly children: React.ReactNode }): React.ReactElement {
+  return <ShellWindowInstanceContext.Provider value={props.value}>{props.children}</ShellWindowInstanceContext.Provider>;
+}
+//#endregion 🪟ShellWindowInstance
+
+function createShellInstanceId(windowKindId: string, index: number): string {
+  const suffix = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${index}`;
+  return `win-${windowKindId}-${suffix}`;
+}
+
+function bootstrapShellInstances(layout: WindowLayout, catalog: readonly WindowKindRuntime[]): ShellWindowInstance[] {
+  return collectFrameworkWindowNodes(layout.root).map((node, index) => {
+    const kind = catalog.find((entry) => entry.id === node.windowKindId);
+    const template = node.templateId ? findWindowTemplate(catalog, node.windowKindId, node.templateId) : undefined;
+    return {
+      instanceId: node.instanceId ?? node.windowKindId,
+      windowKindId: node.windowKindId,
+      templateId: node.templateId,
+      title: node.title ?? template?.label ?? kind?.label ?? node.windowKindId,
+    };
+  });
+}
+
+function shellLayoutNodeToFramework(node: ShellWindowLayoutNode, instancesById: ReadonlyMap<string, ShellWindowInstance>): WindowLayoutNode {
+  if (node.kind === "window") {
+    const instance = instancesById.get(node.id);
+    if (!instance) return { kind: "window", windowKindId: node.id, title: node.title };
+    return {
+      kind: "window",
+      windowKindId: instance.windowKindId,
+      title: node.title ?? instance.title,
+      instanceId: instance.instanceId,
+      ...(instance.templateId ? { templateId: instance.templateId } : {}),
+    };
+  }
+  if (node.kind === "stack") {
+    return {
+      kind: "stack",
+      ...(node.size !== undefined ? { size: node.size } : {}),
+      children: node.children.map((child) => shellLayoutNodeToFramework(child, instancesById) as WindowLayoutWindowNode),
+    };
+  }
+  return {
+    kind: node.kind,
+    ...(node.size !== undefined ? { size: node.size } : {}),
+    children: node.children.map((child) => shellLayoutNodeToFramework(child, instancesById) as WindowLayoutStackNode | WindowLayoutAxisNode),
+  };
+}
+
+function shellLayoutToFrameworkLayout(shell: ShellWindowLayoutNode, instances: readonly ShellWindowInstance[]): WindowLayout {
+  const instancesById = new Map(instances.map((instance) => [instance.instanceId, instance]));
+  const root = shellLayoutNodeToFramework(shell, instancesById);
+  if (root.kind === "window") {
+    return { root: { kind: "stack", children: [root] } };
+  }
+  return { root };
+}
+
+function instantiateFrameworkLayout(
+  layout: WindowLayout,
+  catalog: readonly WindowKindRuntime[],
+  bus: CommandBus,
+): { instances: ShellWindowInstance[]; shellLayout: ShellWindowLayoutNode } {
+  const instances: ShellWindowInstance[] = [];
+  let counter = 0;
+  const convert = (node: WindowLayoutNode): ShellWindowLayoutNode => {
+    if (node.kind === "window") {
+      const instanceId = createShellInstanceId(node.windowKindId, counter++);
+      const kind = catalog.find((entry) => entry.id === node.windowKindId);
+      const template = node.templateId ? findWindowTemplate(catalog, node.windowKindId, node.templateId) : undefined;
+      const title = node.title ?? template?.label ?? kind?.label ?? node.windowKindId;
+      instances.push({ instanceId, windowKindId: node.windowKindId, templateId: node.templateId, title });
+      dispatchWindowTemplate(bus, catalog, node.windowKindId, node.templateId, instanceId);
+      return { kind: "window", id: instanceId, title };
+    }
+    if (node.kind === "stack") {
+      return {
+        kind: "stack",
+        ...(node.size !== undefined ? { size: node.size } : {}),
+        children: node.children.map((child) => convert(child) as WindowLayoutWindowNode),
+      };
+    }
+    return {
+      kind: node.kind,
+      ...(node.size !== undefined ? { size: node.size } : {}),
+      children: node.children.map((child) => convert(child) as WindowLayoutStackNode | WindowLayoutAxisNode),
+    };
+  };
+  return { instances, shellLayout: convert(layout.root) };
+}
+
+export function createBrowserStoragePort(): StoragePort {
+  return {
+    get: (key) => {
+      try {
+        return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
+      } catch {
+        return null;
+      }
+    },
+    set: (key, value) => {
+      try {
+        if (typeof localStorage !== "undefined") localStorage.setItem(key, value);
+      } catch {
+        /* ignore */
+      }
+    },
+    remove: (key) => {
+      try {
+        if (typeof localStorage !== "undefined") localStorage.removeItem(key);
+      } catch {
+        /* ignore */
+      }
+    },
+  };
+}
+
+export interface DisplayHostApi {
+  readonly windowKinds: readonly WindowKindRuntime[];
+  readonly namedLayouts: readonly NamedLayout[];
+  readonly userLayouts: readonly NamedLayout[];
+  saveCurrentLayout: (label: string) => void;
+  applyNamedLayout: (layoutId: string) => void;
+  deleteUserLayout: (layoutId: string) => void;
+}
+
+export const DisplayHostContext = React.createContext<DisplayHostApi | null>(null);
+
+export function useDisplayHost(): DisplayHostApi | null {
+  return reactHostPort.useContext(DisplayHostContext);
+}
+
+const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID = "framework.display.windows";
+const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID = "framework.display.layout";
+
+let displayLayoutSaveLabel = "";
+
+function dispatchUiCommand(bus: CommandBus, descriptor: CommandDescriptor, patch: Record<string, unknown>): void {
+	bus.dispatch(descriptor.controllerId, descriptor.command, { ...(descriptor.args as object | undefined), ...patch });
+}
+
+/** @emoji 🎛️ Renders a declarative {@link UiControlNode} for tree item rows. */
+export function renderUiControl(control: UiControlNode, commandBus: CommandBus, platform?: Platform): React.ReactElement {
+	switch (control.type) {
+		case "input": {
+			const node = control;
+			const commitOnBlur = node.commit === "blur";
+			return (
+				<Input
+					id={node.id}
+					type={node.inputKind === "number" ? "number" : "text"}
+					className="h-medium w-full min-w-0"
+					value={node.value}
+					placeholder={node.placeholder}
+					onChange={
+						commitOnBlur
+							? undefined
+							: (event) => {
+									const value = node.inputKind === "number" ? Number(event.target.value) : event.target.value;
+									dispatchUiCommand(commandBus, node.onChange, { value });
+								}
+					}
+					onBlur={
+						commitOnBlur
+							? (event) => {
+									const value = node.inputKind === "number" ? Number(event.target.value) : event.target.value;
+									dispatchUiCommand(commandBus, node.onChange, { value });
+								}
+							: undefined
+					}
+				/>
+			);
+		}
+		case "select":
+			return (
+				<Select value={control.value || undefined} onValueChange={(value) => dispatchUiCommand(commandBus, control.onChange, { value })}>
+					<SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
+						<SelectValue placeholder={control.placeholder ?? "Select"} />
+					</SelectTrigger>
+					<SelectContent>
+						{control.items.map((item, index) => (
+							<SelectItem key={`${control.id}:${index}:${item.value}`} value={item.value}>
+								{item.label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			);
+		case "toggle":
+			return <Toggle id={control.id} pressed={control.pressed} text={control.text} onPressedChange={(pressed) => dispatchUiCommand(commandBus, control.onChange, { pressed })} />;
+		case "vec3": {
+			const mixed = control.value === null;
+			const axes = ["x", "y", "z"] as const;
+			return (
+				<div className="grid grid-cols-3 gap-1">
+					{axes.map((axis, index) => (
+						<Input
+							key={`${control.id}.${axis}`}
+							id={`${control.id}.${axis}`}
+							type="number"
+							className="h-medium w-full min-w-0"
+							value={mixed ? "" : String(control.value![index] ?? 0)}
+							placeholder={mixed ? "—" : axis}
+							disabled={mixed}
+							onChange={(event) => {
+								if (mixed) return;
+								const parsed = Number(event.target.value);
+								if (!Number.isFinite(parsed)) return;
+								const next: [number, number, number] = [...control.value!];
+								next[index] = parsed;
+								dispatchUiCommand(commandBus, control.onChange, { value: next });
+							}}
+						/>
+					))}
+				</div>
+			);
+		}
+		case "keyValue":
+			return (
+				<dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">
+					{control.entries.map((entry) => (
+						<React.Fragment key={entry.label}>
+							<dt className="text-muted-foreground">{entry.label}</dt>
+							<dd className="tabular-nums">{entry.value}</dd>
+						</React.Fragment>
+					))}
+				</dl>
+			);
+		case "button":
+			return (
+				<Button
+					id={control.id}
+					text={control.label}
+					onClick={() => commandBus.dispatch(control.command.controllerId, control.command.command, control.command.args)}
+				/>
+			);
+		case "field":
+			return (
+				<div className="flex flex-col gap-half" data-ui-field={control.id}>
+					<label className="text-muted-foreground text-[11px]">{control.label}</label>
+					{renderUiControl(control.child, commandBus, platform)}
+				</div>
+			);
+		case "table":
+		case "panel":
+			return renderComponentHostSurface(control, "panel", platform);
+		default:
+			return <span className="text-muted-foreground text-xs">Unsupported control</span>;
+	}
+}
+
+function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: CommandBus, platform: Platform | undefined): TreeDataItem[] {
+	return items.map((item) => {
+		const legacyActivate = (item as UiTreeItemNode & { readonly onClick?: () => void }).onClick;
+		return {
+			id: item.id,
+			label: item.label,
+			description: item.description,
+			control: item.control ? renderUiControl(item.control, commandBus, platform) : undefined,
+			defaultOpen: item.defaultOpen,
+			isSelected: item.selected,
+			draggable: item.draggable,
+			dragData: item.dragData,
+			className: item.draggable || item.dragData ? "cursor-grab active:cursor-grabbing" : undefined,
+			items: item.items?.length ? uiTreeItemsToTreeData(item.items, commandBus, platform) : undefined,
+			onClick: legacyActivate ?? (item.command ? () => dispatchUiCommand(commandBus, item.command!, {}) : undefined),
+			onPointerEnter: item.onPointerEnter,
+			onPointerLeave: item.onPointerLeave,
+		};
+	});
+}
+
+function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDragAndDropController | undefined {
+	void commandBus;
+	const dragByItemId = collectUiTreeItemDragData(sections);
+	if (dragByItemId.size === 0) return undefined;
+	const sample = dragByItemId.values().next().value;
+	if (sample && PUZZLE_2D_FIXTURE_DRAG_V1_MIME in sample) {
+		return puzzle2dFixturePaletteTreeDragController(dragByItemId);
+	}
+	return puzzle3dFixturePaletteTreeDragController(dragByItemId);
+}
+
+/** @emoji 🌲 Maps a declarative {@link UiTreeNode} to a {@link TreePanelConfig}. */
+export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, commandBus: CommandBus, platform?: Platform): TreePanelConfig {
+	const sections: TreeDataSection[] = treeNode.sections.map((section) => ({
+		id: section.id,
+		label: section.label ?? "",
+		defaultOpen: section.defaultOpen,
+		items: uiTreeItemsToTreeData(section.items, commandBus, platform),
+	}));
+	return {
+		sections,
+		dragAndDropController: buildUiTreeDragAndDropController(treeNode.sections, commandBus),
+		selectedIds: treeNode.selectedIds as string[] | undefined,
+		highlightedIds: treeNode.highlightedIds,
+		onSelectionChange: treeNode.selectionChange
+			? (selectedIds) => dispatchUiCommand(commandBus, treeNode.selectionChange!, { ids: selectedIds })
+			: undefined,
+	};
+}
+
+class DeclarativeSidePanelTreeDefinition implements TreePanelDefinition {
+	constructor(
+		private readonly platform: Platform,
+		private readonly tabId: string,
+		private readonly bodyKey: string,
+		private readonly bus: CommandBus,
+	) {}
+
+	resolveTree(): TreePanelConfig {
+		const activeModeId = this.platform.getActiveApp()?.getActiveModeId() ?? null;
+		const ctx: SidePanelBodyViewContext = {
+			platform: this.platform,
+			windowKindId: this.tabId,
+			bodyKey: this.bodyKey,
+			activeModeId,
+			generation: this.platform.generation,
+		};
+		const node = getSidePanelBodyFactory(this.bodyKey)?.(ctx);
+		if (!node) {
+			return { sections: [{ id: `${this.tabId}.missing`, items: [{ id: "missing", label: `Missing panel ${this.bodyKey}` }] }] };
+		}
+		return uiTreeNodeToTreePanelConfig(node, this.bus, this.platform);
+	}
+}
+
+function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
+	const sections: TreeDataSection[] = host.windowKinds.map((kind) => ({
+		id: `framework.display.windows.${kind.id}`,
+		label: kind.label,
+		defaultOpen: true,
+		items: [
+			{
+				id: `framework.display.windows.${kind.id}.kind`,
+				label: kind.label,
+				draggable: true,
+				dragData: {
+					[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id } satisfies WindowTemplateDropPayload),
+				},
+			},
+			...kind.templates.map((template) => ({
+				id: `framework.display.windows.${kind.id}.${template.id}`,
+				label: template.label,
+				draggable: true,
+				dragData: {
+					[SEMIO_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id, templateId: template.id } satisfies WindowTemplateDropPayload),
+				},
+			})),
+		],
+	}));
+	const dragAndDropController: TreeDragAndDropController = {
+		onDragStart: ({ sourceItem }) => {
+			const encoded = sourceItem.dragData?.[SEMIO_WINDOW_TEMPLATE_MIME];
+			if (!encoded) return;
+			try {
+				const payload = JSON.parse(encoded) as WindowTemplateDropPayload;
+				if (typeof payload.windowKindId !== "string") return;
+				const label =
+					typeof sourceItem.label === "string"
+						? sourceItem.label
+						: typeof sourceItem.label === "number"
+							? String(sourceItem.label)
+							: "Window";
+				beginWindowTemplateDrag({ payload, label });
+			} catch {
+				/* ignore */
+			}
+		},
+		onDragEnd: () => {
+			endWindowTemplateDrag();
+		},
+	};
+	return {
+		sections: sections.length ? sections : [{ id: "framework.display.windows.empty", items: [{ id: "empty", label: "—" }] }],
+		dragAndDropController,
+	};
+}
+
+function buildDisplayLayoutTree(host: DisplayHostApi, bus: CommandBus): TreePanelConfig {
+	const layouts = [...host.namedLayouts.filter((entry) => entry.origin === "builtin"), ...host.userLayouts];
+	return {
+		sections: [
+			{
+				id: "framework.display.layout.save",
+				label: resolveTranslationLabel("ui.display.saveLayout"),
+				defaultOpen: true,
+				items: [
+					{
+						id: "framework.display.layout.save.label",
+						label: resolveTranslationLabel("ui.display.saveLayoutPlaceholder"),
+						control: (
+							<Input
+								id="framework.display.save-label"
+								value={displayLayoutSaveLabel}
+								onChange={(event) => {
+									displayLayoutSaveLabel = event.target.value;
+								}}
+								placeholder={resolveTranslationLabel("ui.display.saveLayoutPlaceholder")}
+							/>
+						),
+					},
+					{
+						id: "framework.display.layout.save.action",
+						label: resolveTranslationLabel("ui.display.saveLayout"),
+						control: (
+							<Button
+								id="framework.display.save"
+								size="sm"
+								text={resolveTranslationLabel("ui.display.saveLayout")}
+								disabled={!displayLayoutSaveLabel.trim()}
+								onClick={() => {
+									const label = displayLayoutSaveLabel.trim();
+									if (!label) return;
+									host.saveCurrentLayout(label);
+									displayLayoutSaveLabel = "";
+								}}
+							/>
+						),
+					},
+				],
+			},
+			{
+				id: "framework.display.layout.list",
+				label: resolveTranslationLabel("ui.display.tab.layout"),
+				defaultOpen: true,
+				items: layouts.map((entry) => ({
+					id: `framework.display.layout.${entry.id}`,
+					label: entry.label,
+					description: entry.origin === "user" ? resolveTranslationLabel("ui.display.deleteLayout") : undefined,
+					onClick: () => host.applyNamedLayout(entry.id),
+					...(entry.origin === "user"
+						? {
+								actions: [
+									{
+										id: `framework.display.delete.${entry.id}`,
+										icon: <Icon icon="trash-2" size="small" />,
+										onClick: () => host.deleteUserLayout(entry.id),
+									},
+								],
+							}
+						: {}),
+				})),
+			},
+		],
+	};
+}
+
+class DisplayWindowsTreeDefinition implements TreePanelDefinition {
+	constructor(private readonly getHost: () => DisplayHostApi | null) {}
+
+	resolveTree(): TreePanelConfig {
+		const host = this.getHost();
+		if (!host) {
+			return { sections: [{ id: "framework.display.unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
+		}
+		return buildDisplayWindowsTree(host);
+	}
+}
+
+class DisplayLayoutTreeDefinition implements TreePanelDefinition {
+	constructor(
+		private readonly getHost: () => DisplayHostApi | null,
+		private readonly bus: CommandBus,
+	) {}
+
+	resolveTree(): TreePanelConfig {
+		const host = this.getHost();
+		if (!host) {
+			return { sections: [{ id: "framework.display.unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
+		}
+		return buildDisplayLayoutTree(host, this.bus);
+	}
+}
+
+/** @emoji 🖥️ Framework display panel tabs (windows + layout), each with its own tree. */
+export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | null, bus: CommandBus): SidePanelTabConfig[] {
+	return [
+		{
+			id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID,
+			icon: shellTabIconComponent("framework.display.windows", "display"),
+			order: -100,
+			tree: new DisplayWindowsTreeDefinition(getHost),
+		},
+		{
+			id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID,
+			icon: shellTabIconComponent("framework.display.layout", "display"),
+			order: -99,
+			tree: new DisplayLayoutTreeDefinition(getHost, bus),
+		},
+	];
+}
+
+/** @emoji 🖥️ First display tab (windows); prefer {@link createFrameworkDisplayPanelTabs}. */
+export function createFrameworkDisplayPanelTab(getHost: () => DisplayHostApi | null, bus: CommandBus): SidePanelTabConfig {
+	return createFrameworkDisplayPanelTabs(getHost, bus)[0]!;
+}
+
+export interface SettingsHostModeEntry {
+	readonly id: string;
+	readonly label: string;
+	readonly iconId?: string;
+}
+
+export interface SettingsHostApi {
+	readonly compact: boolean;
+	setCompact: (compact: boolean) => void;
+	readonly expertise: Expertise;
+	setExpertise: (expertise: Expertise) => void;
+	readonly modes: readonly SettingsHostModeEntry[];
+	readonly activeModeId: string | null;
+	setActiveModeId: (modeId: string) => void;
+	readonly hasModeNav: boolean;
+}
+
+export const SettingsHostContext = React.createContext<SettingsHostApi | null>(null);
+
+export function useSettingsHost(): SettingsHostApi | null {
+	return reactHostPort.useContext(SettingsHostContext);
+}
+
+const FRAMEWORK_SETTINGS_GENERAL_TAB_ID = "framework.settings.general";
+
+const SETTINGS_EXPERTISE_OPTIONS: readonly Expertise[] = [Expertise.BEGINNER, Expertise.NORMAL, Expertise.EXPERT];
+
+function settingsExpertiseLabel(expertise: Expertise): string {
+	switch (expertise) {
+		case Expertise.BEGINNER:
+			return resolveTranslationLabel("settings.expertise.beginner");
+		case Expertise.EXPERT:
+			return resolveTranslationLabel("settings.expertise.expert");
+		default:
+			return resolveTranslationLabel("settings.expertise.normal");
+	}
+}
+
+function buildFrameworkSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
+	const items: TreeDataItem[] = [
+		{
+			id: "framework.settings.general.compact",
+			label: resolveTranslationLabel("settings.compact"),
+			control: (
+				<Toggle
+					id="framework.settings.compact"
+					pressed={host.compact}
+					onPressedChange={(pressed) => {
+						host.setCompact(pressed);
+						writeStoredUiChromeCompact(pressed);
+					}}
+				/>
+			),
+		},
+		{
+			id: "framework.settings.general.expertise",
+			label: resolveTranslationLabel("ui.settings.tab.expertise"),
+			control: (
+				<Select value={host.expertise} onValueChange={(value) => host.setExpertise(value as Expertise)}>
+					<SelectTrigger id="framework.settings.expertise" className="h-medium w-full min-w-0" size="sm">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						{SETTINGS_EXPERTISE_OPTIONS.map((tier) => (
+							<SelectItem key={tier} id={`framework.settings.expertise.${tier}`} value={tier}>
+								{settingsExpertiseLabel(tier)}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			),
+		},
+	];
+	if (host.hasModeNav && host.modes.length > 1) {
+		items.push({
+			id: "framework.settings.general.mode",
+			label: resolveTranslationLabel("ui.settings.tab.mode"),
+			control: (
+				<Select value={host.activeModeId ?? undefined} onValueChange={(modeId) => host.setActiveModeId(modeId)}>
+					<SelectTrigger id="framework.settings.mode" className="h-medium w-full min-w-0" size="sm">
+						<SelectValue placeholder={resolveTranslationLabel("ui.settings.tab.mode")} />
+					</SelectTrigger>
+					<SelectContent>
+						{host.modes.map((mode) => (
+							<SelectItem key={mode.id} id={`framework.settings.mode.${mode.id}`} value={mode.id}>
+								{mode.label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			),
+		});
+	}
+	return {
+		sections: [
+			{
+				id: "framework.settings.general.section",
+				label: resolveTranslationLabel("ui.settings.tab.general"),
+				defaultOpen: true,
+				items,
+			},
+		],
+	};
+}
+
+class FrameworkSettingsGeneralTreeDefinition implements TreePanelDefinition {
+	constructor(private readonly getHost: () => SettingsHostApi | null) {}
+
+	resolveTree(): TreePanelConfig {
+		const host = this.getHost();
+		if (!host) {
+			return { sections: [{ id: "framework.settings.unavailable", items: [{ id: "unavailable", label: "Settings unavailable" }] }] };
+		}
+		return buildFrameworkSettingsGeneralTree(host);
+	}
+}
+
+/** @emoji ⚙️ Framework settings panel tabs (general chrome options). */
+export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi | null, _bus: CommandBus): SidePanelTabConfig[] {
+	return [
+		{
+			id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
+			icon: shellTabIconComponent("framework.settings.general", "settings"),
+			order: -100,
+			tree: new FrameworkSettingsGeneralTreeDefinition(getHost),
+		},
+	];
 }
 
 /** @emoji 🧭 Converts {@link WindowLayout} to the shell {@link Mode} layout tree. */
@@ -774,11 +1475,15 @@ export function resolveShellModeWindowBody(cache: Map<string, ShellModeWindowBod
   }
   const WindowComponent = windowKind.component;
   const body = (
-    <ContextMenu items={windowKind.contextMenu}>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <WindowComponent />
-      </div>
-    </ContextMenu>
+    <ShellWindowInstanceProvider
+      value={{ instanceId: windowKind.id, windowKindId: windowKind.windowKindId ?? windowKind.id, templateId: windowKind.templateId }}
+    >
+      <ContextMenu items={windowKind.contextMenu}>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <WindowComponent />
+        </div>
+      </ContextMenu>
+    </ShellWindowInstanceProvider>
   );
   cache.set(windowKind.id, { component: windowKind.component, contextMenu: windowKind.contextMenu, body });
   return body;
@@ -787,31 +1492,145 @@ export function resolveShellModeWindowBody(cache: Map<string, ShellModeWindowBod
 /** @emoji 🪟 Pure-React resizable mode canvas backed by {@link Mode}. */
 export const ShellModeCanvas: React.FC<{
   windowKinds: UIWindowKindDefinition[];
+  windowKindCatalog: readonly WindowKindRuntime[];
   defaultLayout: WindowLayout;
+  namedLayouts: readonly NamedLayout[];
+  namedLayoutStore: NamedLayoutStore;
+  commandBus: CommandBus;
   activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string) => void;
-}> = reactHostPort.memo(function ShellModeCanvas({ windowKinds, defaultLayout, activeWindowId, onActiveWindowChange }) {
+  onDisplayHostReady?: (host: DisplayHostApi) => void;
+}> = reactHostPort.memo(function ShellModeCanvas({
+  windowKinds,
+  windowKindCatalog,
+  defaultLayout,
+  namedLayouts,
+  namedLayoutStore,
+  commandBus,
+  activeWindowId,
+  onActiveWindowChange,
+  onDisplayHostReady,
+}) {
+  const layoutKey = reactHostPort.useMemo(() => JSON.stringify(defaultLayout), [defaultLayout]);
+  const catalogKey = reactHostPort.useMemo(() => windowKindCatalog.map((kind) => kind.id).join("|"), [windowKindCatalog]);
+  const defaultLayoutRef = reactHostPort.useRef(defaultLayout);
+  const windowKindCatalogRef = reactHostPort.useRef(windowKindCatalog);
+  defaultLayoutRef.current = defaultLayout;
+  windowKindCatalogRef.current = windowKindCatalog;
+  const [instances, setInstances] = reactHostPort.useState<ShellWindowInstance[]>(() => bootstrapShellInstances(defaultLayout, windowKindCatalog));
+  const [shellLayout, setShellLayout] = reactHostPort.useState<ShellWindowLayoutNode>(() => convertFrameworkLayoutToShellLayout(defaultLayout));
+  const liveFrameworkLayoutRef = reactHostPort.useRef<WindowLayout>(defaultLayout);
+
+  reactHostPort.useEffect(() => {
+    const layout = defaultLayoutRef.current;
+    const catalog = windowKindCatalogRef.current;
+    setInstances(bootstrapShellInstances(layout, catalog));
+    setShellLayout(convertFrameworkLayoutToShellLayout(layout));
+    liveFrameworkLayoutRef.current = layout;
+  }, [layoutKey, catalogKey]);
+
   const windowBodyCacheRef = reactHostPort.useRef(new Map<string, ShellModeWindowBodyCacheEntry>());
-  reactHostPort.useLayoutEffect(() => {
-    const liveIds = new Set(windowKinds.map((windowKind) => windowKind.id));
-    for (const windowKindId of windowBodyCacheRef.current.keys()) {
-      if (!liveIds.has(windowKindId)) windowBodyCacheRef.current.delete(windowKindId);
-    }
-  }, [windowKinds]);
+  const kindById = reactHostPort.useMemo(() => new Map(windowKinds.map((kind) => [kind.id, kind])), [windowKinds]);
+
   const windows = reactHostPort.useMemo<ModeWindowDescriptor[]>(
     () =>
-      windowKinds.map((windowKind) => ({
-        id: windowKind.id,
-        title: windowKind.label,
-        showControls: true,
-        controls: windowKind.controls ? <UIWindowControlsGroup controls={windowKind.controls} /> : undefined,
-        measures: windowKind.measures?.length ? <UIWindowMeasures measures={windowKind.measures} /> : undefined,
-        engagement: windowKind.engagement ?? windowControlsToEngagement(windowKind.controls),
-        children: resolveShellModeWindowBody(windowBodyCacheRef.current, windowKind),
-      })),
-    [windowKinds],
+      instances.map((instance) => {
+        const windowKind = kindById.get(instance.windowKindId);
+        const component =
+          windowKind?.component ??
+          (() => (
+            <div className="p-2 text-xs text-muted-foreground">
+              Missing window kind &quot;{instance.windowKindId}&quot;
+            </div>
+          ));
+        return {
+          id: instance.instanceId,
+          title: instance.title,
+          fill: true,
+          showControls: true,
+          controls: windowKind?.controls ? <UIWindowControlsGroup controls={windowKind.controls} /> : undefined,
+          measures: windowKind?.measures?.length ? <UIWindowMeasures measures={windowKind.measures} /> : undefined,
+          engagement: windowKind?.engagement ?? windowControlsToEngagement(windowKind?.controls),
+          children: resolveShellModeWindowBody(windowBodyCacheRef.current, {
+            id: instance.instanceId,
+            windowKindId: instance.windowKindId,
+            templateId: instance.templateId,
+            label: instance.title,
+            component: component as React.ComponentType,
+            controls: windowKind?.controls,
+            measures: windowKind?.measures,
+            engagement: windowKind?.engagement,
+          }),
+        };
+      }),
+    [instances, kindById],
   );
-  const shellLayout = reactHostPort.useMemo(() => convertFrameworkLayoutToShellLayout(defaultLayout), [defaultLayout]);
+
+  const instancesRef = reactHostPort.useRef(instances);
+  instancesRef.current = instances;
+
+  const handleLayoutChange = reactHostPort.useCallback((layout: ShellWindowLayoutNode) => {
+    setShellLayout(layout);
+    liveFrameworkLayoutRef.current = shellLayoutToFrameworkLayout(layout, instancesRef.current);
+  }, []);
+
+  const handleTemplateDrop = reactHostPort.useCallback(
+    (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
+      const kind = windowKindCatalog.find((entry) => entry.id === payload.windowKindId);
+      const template = findWindowTemplate(windowKindCatalog, payload.windowKindId, payload.templateId);
+      const instanceId = createShellInstanceId(payload.windowKindId, instances.length);
+      const title = template?.label ?? kind?.label ?? payload.windowKindId;
+      setInstances((prev) => [...prev, { instanceId, windowKindId: payload.windowKindId, templateId: payload.templateId, title }]);
+      setShellLayout((prev) => insertWindowAtDropZone(prev, instanceId, target));
+      dispatchWindowTemplate(commandBus, windowKindCatalog, payload.windowKindId, payload.templateId, instanceId);
+      onActiveWindowChange?.(instanceId);
+    },
+    [commandBus, instances.length, onActiveWindowChange, windowKindCatalog],
+  );
+
+  const applyNamedLayout = reactHostPort.useCallback(
+    (layoutId: string) => {
+      const entry = [...namedLayouts, ...namedLayoutStore.getSnapshot()].find((layout) => layout.id === layoutId);
+      if (!entry) return;
+      const next = instantiateFrameworkLayout(entry.layout, windowKindCatalog, commandBus);
+      setInstances(next.instances);
+      setShellLayout(next.shellLayout);
+      liveFrameworkLayoutRef.current = entry.layout;
+      const active = next.instances[0]?.instanceId;
+      if (active) onActiveWindowChange?.(active);
+    },
+    [commandBus, namedLayoutStore, namedLayouts, onActiveWindowChange, windowKindCatalog],
+  );
+
+  const saveCurrentLayout = reactHostPort.useCallback(
+    (label: string) => {
+      const layout = shellLayoutToFrameworkLayout(shellLayout, instances);
+      liveFrameworkLayoutRef.current = layout;
+      const id = `user-${label.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
+      namedLayoutStore.save(createNamedLayout(id, label, layout, "user"));
+    },
+    [instances, namedLayoutStore, shellLayout],
+  );
+
+  const deleteUserLayout = reactHostPort.useCallback((layoutId: string) => namedLayoutStore.remove(layoutId), [namedLayoutStore]);
+
+  const userLayouts = reactHostPort.useSyncExternalStore(namedLayoutStore.subscribe.bind(namedLayoutStore), () => namedLayoutStore.getSnapshot(), () => namedLayoutStore.getSnapshot());
+
+  const onDisplayHostReadyRef = reactHostPort.useRef(onDisplayHostReady);
+  onDisplayHostReadyRef.current = onDisplayHostReady;
+  const namedLayoutsRef = reactHostPort.useRef(namedLayouts);
+  namedLayoutsRef.current = namedLayouts;
+
+  reactHostPort.useEffect(() => {
+    onDisplayHostReadyRef.current?.({
+      windowKinds: windowKindCatalogRef.current,
+      namedLayouts: namedLayoutsRef.current,
+      userLayouts,
+      saveCurrentLayout,
+      applyNamedLayout,
+      deleteUserLayout,
+    });
+  }, [applyNamedLayout, catalogKey, deleteUserLayout, saveCurrentLayout, userLayouts]);
 
   return (
     <Mode
@@ -819,6 +1638,8 @@ export const ShellModeCanvas: React.FC<{
       layout={shellLayout}
       activeWindowId={activeWindowId}
       onActiveWindowChange={onActiveWindowChange}
+      onLayoutChange={handleLayoutChange}
+      onTemplateDrop={handleTemplateDrop}
       className="h-full w-full"
     />
   );
@@ -1145,34 +1966,21 @@ export function listPopulatedToolbarViewCategories(tools?: ToolbarViewTools): Ap
 }
 
 function resolveAppToolCategoryIcon(category: AppToolCategory): React.ReactNode {
-  switch (category) {
-    case "hand":
-      return <HandIcon className="size-tiny" aria-hidden />;
-    case "selection":
-      return <MousePointerIcon className="size-tiny" aria-hidden />;
-    case "lasso":
-      return <LassoIcon className="size-tiny" aria-hidden />;
-    case "filter":
-      return <FilterIcon className="size-tiny" aria-hidden />;
-    case "open":
-      return <FolderOpenIcon className="size-tiny" aria-hidden />;
-    case "save":
-      return <SaveIcon className="size-tiny" aria-hidden />;
-    case "transfer":
-      return <ArrowRightLeftIcon className="size-tiny" aria-hidden />;
-    case "transform":
-      return <Move3dIcon className="size-tiny" aria-hidden />;
-    case "create":
-      return <PlusIcon className="size-tiny" aria-hidden />;
-    case "view":
-      return <LayoutGridIcon className="size-tiny" aria-hidden />;
-    case "actions":
-      return <MoreHorizontalIcon className="size-tiny" aria-hidden />;
-    case "settings":
-      return <Settings2Icon className="size-tiny" aria-hidden />;
-    default:
-      return <SearchIcon className="size-tiny" aria-hidden />;
-  }
+  const icons: Record<AppToolCategory, IconName> = {
+    hand: "hand",
+    selection: "mouse-pointer-2",
+    lasso: "lasso",
+    filter: "filter",
+    open: "folder-open",
+    save: "save",
+    transfer: "arrow-right-left",
+    transform: "move-3d",
+    create: "plus",
+    view: "layout-grid",
+    actions: "more-horizontal",
+    settings: "settings-2",
+  };
+  return <Icon icon={icons[category] ?? "search"} size="tiny" />;
 }
 
 const UIToolbarItems: React.FC<{ items: readonly UIToolbarItem[] }> = ({ items }) => {
@@ -1560,7 +2368,9 @@ export function useStore<TSnapshot>(store: Store<TSnapshot>): TSnapshot {
 /** @emoji 🎛 Resolves a controller-owned store by id and binds it with {@link useStore}. */
 export function useControllerStore<TSnapshot>(controller: Controller | undefined, storeId: string): TSnapshot | undefined {
 	const store = controller?.getStore<TSnapshot>(storeId);
-	return store ? useStore(store) : undefined;
+	const subscribe = React.useCallback((listener: () => void) => store?.subscribe(listener) ?? (() => {}), [store]);
+	const getSnapshot = React.useCallback(() => store?.getSnapshot(), [store]);
+	return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
 function virtualFileSystemSchemaFromModel(schema: VirtualFileSystemSchemaModel): VirtualFileSystemSchema {
@@ -1570,6 +2380,26 @@ function virtualFileSystemSchemaFromModel(schema: VirtualFileSystemSchemaModel):
 const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component, platform, commandBus }) => {
 	const model = useStore(component as VirtualFileSystemSurface);
 	const controllerId = component.controllerId;
+	const hoverDispatchRowIdRef = React.useRef<string | null>(null);
+	React.useEffect(() => {
+		hoverDispatchRowIdRef.current = model.hoveredRowId ?? null;
+	}, [model.hoveredRowId]);
+	const dispatchRowHover = React.useCallback(
+		(rowId: string | null) => {
+			if (!platform) return;
+			if (hoverDispatchRowIdRef.current === rowId) return;
+			hoverDispatchRowIdRef.current = rowId;
+			const vfs = component as VirtualFileSystemSurface;
+			React.startTransition(() => {
+				platform.commandBus.dispatch(controllerId, "virtualFileSystemRowHover", {
+					appId: vfs.appId,
+					rowId,
+					surfaceId: component.surfaceId,
+				});
+			});
+		},
+		[component, controllerId, platform],
+	);
 	const schema = model.schema.fileNodeKinds && Object.keys(model.schema.fileNodeKinds).length
 		? virtualFileSystemSchemaFromModel(model.schema)
 		: virtualFileSystemSchemaFromModel(PLATFORM_VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA);
@@ -1593,6 +2423,15 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 				rows={rows}
 				selectedRowIds={model.selectedRowIds ? new Set(model.selectedRowIds) : undefined}
 				emptyMessage={model.emptyMessage ?? "No file system nodes"}
+				rowClassName={(row) => (model.hoveredRowId === row.id ? "bg-hover-temporary" : "")}
+				onRowMouseEnter={(row) => {
+					if (model.hoveredRowId === row.id) return;
+					dispatchRowHover(row.id);
+				}}
+				onRowMouseLeave={(row) => {
+					if (model.hoveredRowId !== row.id && hoverDispatchRowIdRef.current !== row.id) return;
+					dispatchRowHover(null);
+				}}
 				onToggleExpand={(rowId) => {
 					if (!platform) return;
 					const vfs = component as VirtualFileSystemSurface;
@@ -1772,27 +2611,65 @@ const BuiltinPuzzle3dKindRenderer: ComponentKindRenderer = ({ component, node })
 	);
 };
 
+/** @emoji 🔑 Stable topology identity ignoring flat node positions (live force updates positions locally). */
+export function platformTopologyStructureKey(flat: Record<string, unknown>, volume: Record<string, unknown>): string {
+	const parsed = parsePuzzle2dFixtureV1(flat);
+	if (!parsed) return "";
+	const nodes = [...parsed.nodes]
+		.map((node) => node.id)
+		.sort()
+		.join(",");
+	const edges = [...parsed.edges]
+		.map((edge) => `${edge.id}:${edge.source}:${edge.target}`)
+		.sort()
+		.join(";");
+	return `${nodes}|${edges}|${JSON.stringify(volume)}`;
+}
+
 function usePlatformTopologyStore(
 	controller: Controller | undefined,
 	instanceId: string,
 ): ReturnType<typeof createStore> | null {
 	const payload = useControllerStore<PlatformTopologyPayload>(controller, platformTopologyStoreId(instanceId));
-	const [topologyStore, setTopologyStore] = React.useState<ReturnType<typeof createStore> | null>(null);
+	const topologyStoreRef = React.useRef<ReturnType<typeof createStore> | null>(null);
+	const lastStructureKeyRef = React.useRef<string | null>(null);
+	const flatPayloadRef = React.useRef(payload?.flat);
+	const volumePayloadRef = React.useRef(payload?.volume);
+	flatPayloadRef.current = payload?.flat;
+	volumePayloadRef.current = payload?.volume;
+	const structureKey =
+		flatPayloadRef.current && volumePayloadRef.current
+			? platformTopologyStructureKey(flatPayloadRef.current, volumePayloadRef.current)
+			: null;
+	const [, setTopologyEpoch] = React.useState(0);
 	React.useEffect(() => {
-		if (!payload) {
-			setTopologyStore(null);
+		if (!structureKey) {
+			if (topologyStoreRef.current !== null) {
+				topologyStoreRef.current = null;
+				lastStructureKeyRef.current = null;
+				setTopologyEpoch((epoch) => epoch + 1);
+			}
 			return;
 		}
-		const model = compose5d(parsePuzzle2dFixtureV1(payload.flat)!, parseFixtureV1(payload.volume)!);
-		setTopologyStore((previous) => {
-			if (previous) {
-				previous.replaceModel(model);
-				return previous;
+		const flatPayload = flatPayloadRef.current;
+		const volumePayload = volumePayloadRef.current;
+		if (!flatPayload || !volumePayload) {
+			return;
+		}
+		const model = compose5d(parsePuzzle2dFixtureV1(flatPayload)!, parseFixtureV1(volumePayload)!);
+		const existing = topologyStoreRef.current;
+		if (existing) {
+			if (lastStructureKeyRef.current !== structureKey) {
+				existing.replaceModel(model);
+				lastStructureKeyRef.current = structureKey;
 			}
-			return createStore(model);
-		});
-	}, [payload]);
-	return topologyStore;
+			return;
+		}
+		topologyStoreRef.current = createStore(model);
+		lastStructureKeyRef.current = structureKey;
+		setTopologyEpoch((epoch) => epoch + 1);
+	}, [structureKey]);
+	return topologyStoreRef.current;
 }
 
 /** @emoji 🎯 Maps FiveD flat/volume selection to `puzzle5dSelection` command payload. */
@@ -1817,12 +2694,17 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 		() =>
 			model.presentation === "flat"
 				? {
+						...(model.puzzle2dSelection?.length ? { selection: { ids: [...model.puzzle2dSelection] } } : {}),
+						...(model.puzzle2dHoveredId !== undefined ? { hoveredId: model.puzzle2dHoveredId } : {}),
 						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
 							commandBus.dispatch(component.controllerId, "puzzle5dSelection", puzzle5dSelectionPayload(instanceId, "flat", snapshot));
 						},
+						onHover: (payload: { readonly id: string | null }) => {
+							commandBus.dispatch(component.controllerId, "puzzle5dHover", { instanceId, nodeId: payload.id });
+						},
 					}
 				: undefined,
-		[commandBus, component.controllerId, instanceId, model.presentation],
+		[commandBus, component.controllerId, instanceId, model.presentation, model.puzzle2dHoveredId, model.puzzle2dSelection],
 	);
 	const puzzle3dSelect = React.useMemo(
 		() =>
@@ -1863,7 +2745,13 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 			data-testid={`platform-five-d-${instanceId}`}
 		>
 			<StoreProvider store={topologyStore}>
-				<FiveD mode={fiveDMode} instanceId={instanceId} puzzle2d={puzzle2dSelect} puzzle3d={puzzle3dSelect} />
+				<FiveD
+					instanceId={instanceId}
+					liveForceGraph={instanceId.endsWith(":kit:wires")}
+					mode={fiveDMode}
+					puzzle2d={puzzle2dSelect}
+					puzzle3d={puzzle3dSelect}
+				/>
 			</StoreProvider>
 		</div>
 	);
@@ -2165,7 +3053,7 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 					className={cn(
 						stackClass(node),
 						node.direction === "vertical" &&
-							node.children.some((c) => c.type === "puzzle2d" || c.type === "puzzle3d" || c.type === "puzzle5d" || c.type === "cad") &&
+							node.children.some((c) => c.type === "puzzle2d" || c.type === "puzzle3d" || c.type === "puzzle5d" || c.type === "cad" || c.type === "gismap") &&
 							"relative min-h-0 flex-1",
 					)}
 				>
@@ -2194,6 +3082,8 @@ function renderNode(node: UiNode, commandBus: CommandBus, horizontalParent: bool
 			return renderPuzzle5d(node, platform, commandBus);
 		case "cad":
 			return renderCad(node, platform, commandBus);
+		case "gismap":
+			return renderBoundComponent(node, "canvas", platform, commandBus);
 		default:
 			return (
 				<div className="p-2 text-xs text-destructive">
@@ -2212,6 +3102,38 @@ export function UiRenderer({ node, commandBus, platform }: UiRendererProps): Rea
 //#region ­ƒº¬Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
+
+	describe("platformTopologyStructureKey", () => {
+		it("ignores node position changes", () => {
+			const flatA = {
+				schema: "puzzle.2d.fixture/v1",
+				nodes: [{ id: "a", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
+				edges: [],
+			};
+			const flatB = {
+				schema: "puzzle.2d.fixture/v1",
+				nodes: [{ id: "a", x: 40, y: 50, shape: "circle", radius: 8, handles: [] }],
+				edges: [],
+			};
+			const volume = { schema: "puzzle.3d.fixture/v1", objects: [], attractions: [], cables: [] };
+			expect(platformTopologyStructureKey(flatA, volume)).toBe(platformTopologyStructureKey(flatB, volume));
+		});
+
+		it("changes when node ids change", () => {
+			const volume = { schema: "puzzle.3d.fixture/v1", objects: [], attractions: [], cables: [] };
+			const flatA = {
+				schema: "puzzle.2d.fixture/v1",
+				nodes: [{ id: "a", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
+				edges: [],
+			};
+			const flatB = {
+				schema: "puzzle.2d.fixture/v1",
+				nodes: [{ id: "b", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
+				edges: [],
+			};
+			expect(platformTopologyStructureKey(flatA, volume)).not.toBe(platformTopologyStructureKey(flatB, volume));
+		});
+	});
 
 	describe("ShellModeCanvas", () => {
 		it("resolveShellModeWindowBody reuses the same body node when only engagement chrome changes", () => {
@@ -2238,6 +3160,76 @@ if (import.meta.vitest) {
 			});
 			expect(second).toBe(first);
 			expect(third).not.toBe(first);
+		});
+
+		it("resolveShellModeWindowBody isolates bodies per shell instance id", () => {
+			const cache = new Map<string, ShellModeWindowBodyCacheEntry>();
+			const Host: React.FC = () => <div data-testid="viewport-host" />;
+			const overviewA = resolveShellModeWindowBody(cache, {
+				id: "2d-overview",
+				windowKindId: "2d-overview",
+				label: "Overview",
+				component: Host,
+			});
+			const overviewB = resolveShellModeWindowBody(cache, {
+				id: "win-2d-overview-extra",
+				windowKindId: "2d-overview",
+				label: "Overview copy",
+				component: Host,
+			});
+			expect(overviewA).not.toBe(overviewB);
+		});
+	});
+
+	describe("display windows tree", () => {
+		it("lists a draggable kind row and optional template children", () => {
+			const host: DisplayHostApi = {
+				windowKinds: [
+					{
+						id: "cad-play-shape",
+						label: "Shape",
+						bodyKey: "cad.play.shape",
+						templates: [{ id: "top", label: "Top", controllerId: "cad", command: "setView", args: {} }],
+					} as WindowKindRuntime,
+				],
+				namedLayouts: [],
+				userLayouts: [],
+				saveCurrentLayout: () => {},
+				applyNamedLayout: () => {},
+				deleteUserLayout: () => {},
+			};
+			const tree = new DisplayWindowsTreeDefinition(() => host).resolveTree();
+			const items = tree.sections[0]?.items ?? [];
+			expect(items).toHaveLength(2);
+			const kindRow = JSON.parse(items[0]!.dragData![SEMIO_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
+			expect(kindRow.windowKindId).toBe("cad-play-shape");
+			expect(kindRow.templateId).toBeUndefined();
+			const templateRow = JSON.parse(items[1]!.dragData![SEMIO_WINDOW_TEMPLATE_MIME]!) as WindowTemplateDropPayload;
+			expect(templateRow.templateId).toBe("top");
+		});
+	});
+
+	describe("settings general tree", () => {
+		it("exposes compact and expertise rows and optional mode row", () => {
+			const host: SettingsHostApi = {
+				compact: false,
+				setCompact: () => {},
+				expertise: Expertise.NORMAL,
+				setExpertise: () => {},
+				modes: [
+					{ id: "edit", label: "Edit" },
+					{ id: "inspect", label: "Inspect" },
+				],
+				activeModeId: "edit",
+				setActiveModeId: () => {},
+				hasModeNav: true,
+			};
+			const tree = new FrameworkSettingsGeneralTreeDefinition(() => host).resolveTree();
+			const items = tree.sections[0]?.items ?? [];
+			expect(items.length).toBeGreaterThanOrEqual(2);
+			expect(items.some((item) => item.id === "framework.settings.general.compact")).toBe(true);
+			expect(items.some((item) => item.id === "framework.settings.general.expertise")).toBe(true);
+			expect(items.some((item) => item.id === "framework.settings.general.mode")).toBe(true);
 		});
 	});
 
@@ -2382,53 +3374,49 @@ if (import.meta.vitest) {
 //#endregion ­ƒôªui-declarative-renderer.tsx
 
 //#region ­ƒôªshell-bridge.tsx
-const elementIconNodes = new Map<string, React.ReactNode>();
+const registeredIcons = new Map<string, IconSource>();
 
 /** @emoji ­ƒû╝ Registers a static icon node resolved by `iconId` for toolbars, footers, and tabs. */
+export function registerIcon(iconId: string, source: IconSource): void {
+	registeredIcons.set(iconId, source);
+}
+
 export function registerElementIcon(iconId: string, node: React.ReactNode): void {
-	elementIconNodes.set(iconId, node);
+	registerIcon(iconId, { node });
+}
+
+export function registerTabIcon(iconId: string, name: IconName): void {
+	registerIcon(iconId, name);
 }
 
 /** @emoji ­ƒöì Returns a registered element icon node for navbar/search rows. */
-export function resolveElementIcon(iconId: string): React.ReactNode | undefined {
-	return elementIconNodes.get(iconId);
+export function resolveElementIcon(iconId: string, size = 16): React.ReactNode | undefined {
+	const source = registeredIcons.get(iconId);
+	if (!source) return undefined;
+	return (
+		<span className="inline-flex items-center justify-center" style={{ width: size, height: size }}>
+			<Icon icon={source} size={size} />
+		</span>
+	);
 }
 
-const shellTabIcons = new Map<string, LucideIcon>();
-
-const PANEL_KIND_LUCIDE: Record<PanelKind, LucideIcon> = {
-	windows: LayoutGridIcon,
-	overview: FolderOpenIcon,
-	workbench: Folder,
-	details: Info,
-	settings: Settings2,
-	chat: MessageSquare,
+const PANEL_KIND_ICON: Record<PanelKind, IconName> = {
+	display: "layout-grid",
+	overview: "folder-open",
+	workbench: "folder",
+	details: "info",
+	settings: "settings-2",
+	chat: "message-square",
 };
 
-/** @emoji 🖼️ Ready-made Lucide icon for a {@link PanelKind} navbar toggle or tab fallback. */
-function renderPanelKindIcon(kind: PanelKind, size = 16): React.ReactNode {
-	const Icon = PANEL_KIND_LUCIDE[kind];
-	return Icon ? <Icon size={size} /> : null;
+function renderPanelKindIcon(kind: PanelKind, size: number | "tiny" | "small" | "base" | "large" = 16): React.ReactNode {
+	return <Icon icon={PANEL_KIND_ICON[kind]} size={size} />;
 }
 
-/** @emoji 🔍 Resolves a tab icon from registry, then falls back to the panel kind default. */
 function resolveTabIconNode(iconId: string, panelKind: PanelKind, size = 16): React.ReactNode {
-	const node = elementIconNodes.get(iconId);
-	if (node) {
-		return (
-			<span className="inline-flex items-center justify-center" style={{ width: size, height: size }}>
-				{node}
-			</span>
-		);
-	}
-	const Lucide = shellTabIcons.get(iconId);
-	if (Lucide) return <Lucide size={size} />;
+	const registered = resolveElementIcon(iconId, size);
+	if (registered) return registered;
 	return renderPanelKindIcon(panelKind, size);
-}
-
-/** @emoji ­ƒû� Registers a Lucide icon constructor for side-panel tab headers keyed by `iconId`. */
-export function registerTabIcon(iconId: string, Icon: LucideIcon): void {
-	shellTabIcons.set(iconId, Icon);
 }
 
 const windowBodyByKey = new Map<string, React.ComponentType<unknown>>();
@@ -2526,44 +3514,55 @@ function getDeclarativeSidePanelBodyComponent(tabId: string, bodyKey: string): R
 	return component;
 }
 
+function mapWindowMeasureToGolden(measure: WindowMeasure, bus: CommandBus): UIWindowMeasure {
+	if (measure.kind === "group") {
+		return {
+			id: measure.id,
+			kind: "group",
+			label: measure.label,
+			defaultOpen: measure.defaultOpen,
+			children: measure.children.map((child) => mapWindowMeasureToGolden(child, bus)),
+		};
+	}
+	if (measure.kind === "select") {
+		return {
+			id: measure.id,
+			kind: "select",
+			label: measure.label,
+			value: measure.value,
+			items: measure.items.map((item) => ({ id: item.id, value: item.value, label: item.label })),
+			onValueChange: (value: string) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
+		};
+	}
+	if (measure.kind === "slider") {
+		return {
+			id: measure.id,
+			kind: "slider",
+			label: measure.label,
+			value: measure.value,
+			min: measure.min,
+			max: measure.max,
+			step: measure.step,
+			onValueChange: (value: number) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
+		};
+	}
+	if (measure.kind === "toggle") {
+		return {
+			id: measure.id,
+			kind: "toggle",
+			label: measure.label,
+			text: measure.text,
+			pressed: measure.pressed,
+			onPressedChange: (pressed: boolean) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), pressed }),
+		};
+	}
+	return { id: measure.id, kind: "display", content: null };
+}
+
 /** @emoji 📐 Maps {@link WindowMeasure} controller rows to {@link UIWindowMeasure} tiles for {@link ShellModeCanvas}. */
 export function windowMeasuresToGolden(measures: readonly WindowMeasure[], bus: CommandBus): UIWindowMeasure[] | undefined {
 	if (!measures.length) return undefined;
-	return measures.map((measure) => {
-		if (measure.kind === "select") {
-			return {
-				id: measure.id,
-				kind: "select",
-				label: measure.label,
-				value: measure.value,
-				items: measure.items.map((item) => ({ id: item.id, value: item.value, label: item.label })),
-				onValueChange: (value: string) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
-			};
-		}
-		if (measure.kind === "slider") {
-			return {
-				id: measure.id,
-				kind: "slider",
-				label: measure.label,
-				value: measure.value,
-				min: measure.min,
-				max: measure.max,
-				step: measure.step,
-				onValueChange: (value: number) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), value }),
-			};
-		}
-		if (measure.kind === "toggle") {
-			return {
-				id: measure.id,
-				kind: "toggle",
-				label: measure.label,
-				text: measure.text,
-				pressed: measure.pressed,
-				onPressedChange: (pressed: boolean) => bus.dispatch(measure.onChange.controllerId, measure.onChange.command, { ...(measure.onChange.args as object | undefined), pressed }),
-			};
-		}
-		return { id: measure.id, kind: "display", content: null };
-	});
+	return measures.map((measure) => mapWindowMeasureToGolden(measure, bus));
 }
 
 /** @emoji ­ƒ¬ƒ Converts framework window kinds into golden-layout window definitions. */
@@ -2585,25 +3584,45 @@ export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], b
 	});
 }
 
-function shellTabIconComponent(iconId: string, panelKind: PanelKind): React.ComponentType<{ size?: number }> {
+export function shellTabIconComponent(iconId: string, panelKind: PanelKind): React.ComponentType<{ size?: number }> {
 	return function ShellResolvedTabIcon({ size = 16 }: { size?: number }) {
 		return <>{resolveTabIconNode(iconId, panelKind, size)}</>;
 	};
 }
 
-/** @emoji ­ƒôæ Converts framework side tabs into panel tab configs. */
-export function sideTabsToPanelTabs(tabs: readonly SideTabSpec[], bus: CommandBus): SidePanelTabConfig[] {
-	void bus;
+/** @emoji 📑 Converts framework side tabs into panel tab configs with declarative trees. */
+export function sideTabsToPanelTabs(tabs: readonly SideTabSpec[], platform: Platform, bus: CommandBus): SidePanelTabConfig[] {
 	return tabs.map((tab, orderIndex) => {
 		const declarativeFactory = getSidePanelBodyFactory(tab.bodyKey);
-		const Body = declarativeFactory
-			? getDeclarativeSidePanelBodyComponent(tab.id, tab.bodyKey)
-			: (sidePanelBodyByKey.get(tab.bodyKey) ?? (() => <div className="p-2 text-xs">Missing panel {tab.bodyKey}</div>));
+		if (declarativeFactory) {
+			return {
+				id: tab.id,
+				icon: shellTabIconComponent(tab.iconId, tab.panel),
+				order: tab.order ?? orderIndex,
+				tree: new DeclarativeSidePanelTreeDefinition(platform, tab.id, tab.bodyKey, bus),
+			};
+		}
+		const ReactBody = sidePanelBodyByKey.get(tab.bodyKey);
+		if (ReactBody) {
+			return {
+				id: tab.id,
+				icon: shellTabIconComponent(tab.iconId, tab.panel),
+				order: tab.order ?? orderIndex,
+				tree: {
+					sections: [
+						{
+							id: `${tab.id}.legacy`,
+							items: [{ id: `${tab.id}.legacy.body`, label: "", control: <ReactBody /> }],
+						},
+					],
+				},
+			};
+		}
 		return {
 			id: tab.id,
 			icon: shellTabIconComponent(tab.iconId, tab.panel),
 			order: tab.order ?? orderIndex,
-			tree: { sections: [{ id: `${tab.id}.body`, content: <Body /> }] },
+			tree: { sections: [{ id: `${tab.id}.missing`, items: [{ id: "missing", label: `Missing panel ${tab.bodyKey}` }] }] },
 		};
 	});
 }
@@ -2616,7 +3635,7 @@ export function declarativeFooterToChromeRows(items: readonly DeclarativeFooterI
 		order: item.order,
 		className: item.className,
 		disabled: item.disabled,
-		icon: item.iconId ? elementIconNodes.get(item.iconId) : undefined,
+		icon: item.iconId ? resolveElementIcon(item.iconId) : undefined,
 		onClick: item.controllerId && item.command ? () => bus.dispatch(item.controllerId!, item.command!, item.args) : undefined,
 	}));
 }
@@ -2638,7 +3657,7 @@ function shellToolToToolbarItem(item: ToolItem, bus: CommandBus): UIToolbarItem 
 	if (item.kind === "separator") {
 		return { id: item.id, kind: "separator", order: item.order };
 	}
-	const iconNode = item.iconId ? elementIconNodes.get(item.iconId) : undefined;
+	const iconNode = item.iconId ? resolveElementIcon(item.iconId) : undefined;
 	if (item.kind === "toggle") {
 		return {
 			id: item.id,
@@ -2692,7 +3711,7 @@ const ProductFindItemsSync: React.FC<{
 	onFindSelect?: (itemId: string) => void;
 }> = ({ findItems, onFindSelect }) => {
 	const { setFindItems, setOnFindItem } = useUIFind();
-	const resolvedFindItems = findItems ?? [];
+	const resolvedFindItems = findItems ?? EMPTY_UI_FIND_ITEMS;
 	reactHostPort.useEffect(() => {
 		setFindItems(resolvedFindItems);
 		setOnFindItem(onFindSelect);
@@ -2706,7 +3725,10 @@ function panelKindToggleIcon(kind: PanelKind, tabs: SidePanelTabConfig[]): React
 
 function resolveAppPanelTabsByKind(
 	app: ResolvedAppState,
+	platform: Platform,
 	bus: CommandBus,
+	getDisplayHost: () => DisplayHostApi | null,
+	getSettingsHost: () => SettingsHostApi | null,
 	augment?: Partial<Record<PanelKind, SidePanelTabConfig[]>>,
 ): Record<PanelKind, SidePanelTabConfig[]> {
 	const grouped = new Map<PanelKind, SideTabSpec[]>();
@@ -2716,9 +3738,15 @@ function resolveAppPanelTabsByKind(
 	}
 	const result = {} as Record<PanelKind, SidePanelTabConfig[]>;
 	for (const kind of PANEL_KINDS) {
-		const resolved = sideTabsToPanelTabs(grouped.get(kind) ?? [], bus);
+		const resolved = sideTabsToPanelTabs(grouped.get(kind) ?? [], platform, bus);
 		result[kind] = mergeConfigEntries(resolved, augment?.[kind]) ?? resolved;
 	}
+	if (app.windowKinds.length > 0) {
+		const displayTabs = createFrameworkDisplayPanelTabs(getDisplayHost, bus);
+		result.display = mergeConfigEntries(result.display, displayTabs) ?? displayTabs;
+	}
+	const settingsTabs = createFrameworkSettingsPanelTabs(getSettingsHost, bus);
+	result.settings = mergeConfigEntries(result.settings, settingsTabs) ?? settingsTabs;
 	return result;
 }
 
@@ -2811,6 +3839,11 @@ export interface ProductShellProps {
 	readonly rightPanelSize: number;
 	readonly onRightPanelSizeChange: (size: number) => void;
 	readonly goldenWindowKinds: UIWindowKindDefinition[];
+	readonly windowKindCatalog: readonly WindowKindRuntime[];
+	readonly namedLayouts: readonly NamedLayout[];
+	readonly namedLayoutStore: NamedLayoutStore;
+	readonly commandBus: CommandBus;
+	readonly onDisplayHostReady?: (host: DisplayHostApi) => void;
 	readonly defaultLayout: WindowLayout;
 	readonly activeWindowKindId: string | null;
 	readonly onActiveWindowKindChange: (windowKindId: string) => void;
@@ -2822,6 +3855,8 @@ export interface ProductShellProps {
 	readonly onSearchOpenChange?: (open: boolean) => void;
 	readonly findOpen?: boolean;
 	readonly onFindOpenChange?: (open: boolean) => void;
+	readonly onToggleLastActiveLeftSidePanel?: () => void;
+	readonly onToggleLastActiveRightSidePanel?: () => void;
 }
 
 /** @emoji 🪨 Navbar + canvas (windows) + footer with left/right panels floating over the canvas. */
@@ -2843,6 +3878,11 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 	rightPanelSize,
 	onRightPanelSizeChange,
 	goldenWindowKinds,
+	windowKindCatalog,
+	namedLayouts,
+	namedLayoutStore,
+	commandBus,
+	onDisplayHostReady,
 	defaultLayout,
 	activeWindowKindId,
 	onActiveWindowKindChange,
@@ -2854,6 +3894,8 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 	onSearchOpenChange,
 	findOpen: findOpenProp,
 	onFindOpenChange,
+	onToggleLastActiveLeftSidePanel,
+	onToggleLastActiveRightSidePanel,
 }) => {
 	reactHostPort.useEffect(() => {
 		if (defaultAppId) platform.setActiveAppId(defaultAppId);
@@ -2865,6 +3907,11 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 	const searchOpen = searchOpenProp ?? internalSearchOpen;
 	const setSearchOpen = onSearchOpenChange ?? setInternalSearchOpen;
 	const findOpen = findOpenProp ?? false;
+
+	useSidePanelChromeHotkeys({
+		onToggleLeft: leftSidePanelTabs.length > 0 ? onToggleLastActiveLeftSidePanel : undefined,
+		onToggleRight: rightSidePanelTabs.length > 0 ? onToggleLastActiveRightSidePanel : undefined,
+	});
 
 	useCommandHotkey(
 		"ctrl+p,meta+p",
@@ -2924,6 +3971,11 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 								{app.id === activeAppId ? (
 									<ShellModeCanvas
 										windowKinds={goldenWindowKinds}
+										windowKindCatalog={windowKindCatalog}
+										namedLayouts={namedLayouts}
+										namedLayoutStore={namedLayoutStore}
+										commandBus={commandBus}
+										onDisplayHostReady={onDisplayHostReady}
 										defaultLayout={defaultLayout}
 										activeWindowId={activeWindowKindId}
 										onActiveWindowChange={onActiveWindowKindChange}
@@ -2952,6 +4004,11 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 								>
 									<ShellModeCanvas
 										windowKinds={goldenWindowKinds}
+										windowKindCatalog={windowKindCatalog}
+										namedLayouts={namedLayouts}
+										namedLayoutStore={namedLayoutStore}
+										commandBus={commandBus}
+										onDisplayHostReady={onDisplayHostReady}
 										defaultLayout={defaultLayout}
 										activeWindowId={activeWindowKindId}
 										onActiveWindowChange={onActiveWindowKindChange}
@@ -2972,6 +4029,11 @@ export const ProductShell: React.FC<ProductShellProps> = ({
 			activeWindowKindId,
 			defaultLayout,
 			goldenWindowKinds,
+			windowKindCatalog,
+			namedLayouts,
+			namedLayoutStore,
+			commandBus,
+			onDisplayHostReady,
 			multiApp,
 			onActiveModeChange,
 			onActiveWindowKindChange,
@@ -3147,7 +4209,6 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		platform.mobile = mobile;
 		platform.mobileQuery = mobileQuery;
 		platform.className = className ?? "";
-		platform.notify();
 	}, [uriProp, onNavigate, onGoBack, onGoForward, onGoUp, canGoBackProp, canGoForwardProp, canGoUpProp, mobile, mobileQuery, className, platform]);
 
 	const [leftPanelSize, setLeftPanelSize] = reactHostPort.useState(280);
@@ -3173,10 +4234,11 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const [searchOpen, setSearchOpen] = reactHostPort.useState(false);
 	const [findOpen, setFindOpen] = reactHostPort.useState(false);
 	const [uiCompact, setUiCompact] = reactHostPort.useState(readStoredUiChromeCompact);
+	const [uiExpertise, setUiExpertise] = reactHostPort.useState(readStoredUiChromeExpertise);
 	const detectedMobile = useMediaQuery(mobileQuery);
 	const resolvedMobile = mobile ?? detectedMobile ?? platform.mobile;
 
-	useElementsSurfaceChrome({ ...PLATFORM_SYSTEM_SURFACE_CHROME, compact: uiCompact });
+	useElementsSurfaceChrome({ ...PLATFORM_SYSTEM_SURFACE_CHROME, compact: uiCompact, expertise: uiExpertise });
 
 	const togglePanel = reactHostPort.useCallback((panel: keyof UIPanelVisibility) => {
 		setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
@@ -3195,8 +4257,48 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	if (!activeAppBase) return null;
 
 	const activeModeId = activeAppBase.getActiveModeId();
-	const activeApp = activeAppBase.resolve(activeModeId);
-	const panelTabsByKind = resolveAppPanelTabsByKind(activeApp, platform.commandBus, augmentPanelTabs);
+	const activeApp = reactHostPort.useMemo(
+		() => activeAppBase.resolve(activeModeId),
+		[activeAppBase, activeModeId, shellGen],
+	);
+	const [displayHost, setDisplayHost] = reactHostPort.useState<DisplayHostApi | null>(null);
+	const handleDisplayHostReady = reactHostPort.useCallback((host: DisplayHostApi) => {
+		setDisplayHost((previous) => (previous?.windowKinds === host.windowKinds ? previous : host));
+	}, []);
+
+	const hasModeNav = activeAppBase.modes.length > 1;
+	const setActiveModeId = reactHostPort.useCallback(
+		(id: string) => {
+			activeAppBase.setActiveModeId(id);
+			platform.notifyChrome();
+		},
+		[activeAppBase, platform],
+	);
+
+	const settingsHostApi = reactHostPort.useMemo<SettingsHostApi>(
+		() => ({
+			compact: uiCompact,
+			setCompact: (compact: boolean) => {
+				setUiCompact(compact);
+				writeStoredUiChromeCompact(compact);
+			},
+			expertise: uiExpertise,
+			setExpertise: (expertise: Expertise) => {
+				setUiExpertise(expertise);
+				writeStoredUiChromeExpertise(expertise);
+			},
+			modes: activeAppBase.modes.map((mode) => ({ id: mode.id, label: mode.label, iconId: mode.iconId })),
+			activeModeId,
+			setActiveModeId,
+			hasModeNav,
+		}),
+		[activeModeId, activeAppBase.modes, hasModeNav, setActiveModeId, uiCompact, uiExpertise],
+	);
+
+	const panelTabsByKind = reactHostPort.useMemo(
+		() => resolveAppPanelTabsByKind(activeApp, platform, platform.commandBus, () => displayHost, () => settingsHostApi, augmentPanelTabs),
+		[activeApp, platform, augmentPanelTabs, displayHost, settingsHostApi],
+	);
 	const leftKindsWithTabs = LEFT_PANEL_KINDS.filter((kind) => panelTabsByKind[kind].length > 0);
 	const rightKindsWithTabs = RIGHT_PANEL_KINDS.filter((kind) => panelTabsByKind[kind].length > 0);
 	const panelKindsWithTabs = PANEL_KINDS.filter((kind) => panelTabsByKind[kind].length > 0);
@@ -3217,11 +4319,11 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	const activeDesktopRightPanelTabs = panelTabsByKind[activeDesktopRightPanelKind] ?? [];
 	const activeMobilePanelTabs = panelTabsByKind[activeMobilePanelKind] ?? [];
 
-	const hasModeNav = activeAppBase.modes.length > 1;
-	const setActiveModeId = (id: string) => {
-		activeAppBase.setActiveModeId(id);
-		platform.notifyChrome();
-	};
+	const activeWindowLayoutKey = reactHostPort.useMemo(() => JSON.stringify(activeApp.defaultLayout), [activeApp.defaultLayout]);
+	const activeWindowKindsKey = reactHostPort.useMemo(
+		() => activeApp.windowKinds.map((windowKind) => windowKind.id).join("|"),
+		[activeApp.windowKinds],
+	);
 	const [activeWindowKindId, setActiveWindowKindId] = reactHostPort.useState<string | null>(() => findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds));
 
 	reactHostPort.useEffect(() => {
@@ -3229,7 +4331,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 			if (previous && activeApp.windowKinds.some((windowKind) => windowKind.id === previous)) return previous;
 			return findDefaultActiveWindowKindId(activeApp.defaultLayout, activeApp.windowKinds);
 		});
-	}, [activeApp.defaultLayout, activeApp.windowKinds]);
+	}, [activeApp, activeWindowKindsKey, activeWindowLayoutKey]);
 
 	const handleActiveWindowChange = reactHostPort.useCallback(
 		(windowKindId: string) => {
@@ -3273,6 +4375,11 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		(kind: PanelKind, pressed: boolean) => {
 			if (pressed) {
 				setActiveMobilePanelKind(kind);
+				if (panelSide(kind) === "left") {
+					setActiveDesktopLeftPanelKind(kind);
+				} else {
+					setActiveDesktopRightPanelKind(kind);
+				}
 				setMobilePanelVisible(true);
 				return;
 			}
@@ -3283,37 +4390,52 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		[activeMobilePanelKind],
 	);
 
-	const navbarItems: NavbarItem[] = [];
+	const toggleLastActiveLeftSidePanel = reactHostPort.useCallback(() => {
+		if (leftKindsWithTabs.length === 0) return;
+		const kind = activeDesktopLeftPanelKind;
+		if (resolvedMobile) {
+			openMobilePanel(kind, !(mobilePanelVisible && activeMobilePanelKind === kind));
+			return;
+		}
+		openDesktopLeftPanel(kind, !panelVisibility.leftSidePanel);
+	}, [
+		activeDesktopLeftPanelKind,
+		activeMobilePanelKind,
+		leftKindsWithTabs.length,
+		mobilePanelVisible,
+		openDesktopLeftPanel,
+		openMobilePanel,
+		panelVisibility.leftSidePanel,
+		resolvedMobile,
+	]);
 
-	if (hasModeNav) {
-		navbarItems.push({
-			key: "modeNav",
-			content: (
-				<Select id={`ui.mode.select.${activeAppBase.id}`} onValueChange={setActiveModeId} value={activeModeId ?? undefined}>
-					<SelectTrigger className="h-medium w-30" id={`ui.mode.select.${activeAppBase.id}.trigger`} size="sm">
-						<SelectValue placeholder="Mode" />
-					</SelectTrigger>
-					<SelectContent>
-						{activeAppBase.modes.map((mode) => (
-							<SelectItem key={mode.id} id={`ui.mode.select.${activeAppBase.id}.${mode.id}`} value={mode.id}>
-								<span className="flex items-center gap-single">
-									{mode.iconId ? resolveElementIcon(mode.iconId) ?? null : null}
-									<span>{mode.label}</span>
-								</span>
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-			),
-		});
-	}
+	const toggleLastActiveRightSidePanel = reactHostPort.useCallback(() => {
+		if (rightKindsWithTabs.length === 0) return;
+		const kind = activeDesktopRightPanelKind;
+		if (resolvedMobile) {
+			openMobilePanel(kind, !(mobilePanelVisible && activeMobilePanelKind === kind));
+			return;
+		}
+		openDesktopRightPanel(kind, !panelVisibility.rightSidePanel);
+	}, [
+		activeDesktopRightPanelKind,
+		activeMobilePanelKind,
+		mobilePanelVisible,
+		openDesktopRightPanel,
+		openMobilePanel,
+		panelVisibility.rightSidePanel,
+		resolvedMobile,
+		rightKindsWithTabs.length,
+	]);
+
+	const navbarItems: NavbarItem[] = [];
 
 	navbarItems.push({
 		key: "navBack",
 		content: (
 			<ButtonGroup id="ui.nav.back">
 				<ButtonGroupItem id="ui.nav.back" onClick={onGoBack} className={cn(!canGoBackProp && "opacity-30 pointer-events-none")}>
-					<ArrowLeft className="size-small" />
+					<Icon icon="arrow-left" size="small" />
 				</ButtonGroupItem>
 			</ButtonGroup>
 		),
@@ -3323,7 +4445,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		content: (
 			<ButtonGroup id="ui.nav.forward">
 				<ButtonGroupItem id="ui.nav.forward" onClick={onGoForward} className={cn(!canGoForwardProp && "opacity-30 pointer-events-none")}>
-					<ArrowRight className="size-small" />
+					<Icon icon="arrow-right" size="small" />
 				</ButtonGroupItem>
 			</ButtonGroup>
 		),
@@ -3333,7 +4455,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		content: (
 			<ButtonGroup id="ui.nav.up">
 				<ButtonGroupItem id="ui.nav.up" onClick={onGoUp} className={cn(!canGoUpProp && "opacity-30 pointer-events-none")}>
-					<ArrowUp className="size-small" />
+					<Icon icon="arrow-up" size="small" />
 				</ButtonGroupItem>
 			</ButtonGroup>
 		),
@@ -3359,46 +4481,62 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	navbarItems.push({
 		key: "search",
-		content: <Toggle id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<SearchIcon size={16} />} />,
+		content: <Toggle id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<Icon icon="search" size={16} />} />,
 	});
 
 	navbarItems.push({
 		key: "find",
-		content: <Toggle id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<FindInViewIcon size={16} />} />,
+		content: <Toggle id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<Icon icon="text-search" size={16} />} />,
 	});
 
 	const { t } = useUiTranslation();
-	const panelToggleItems = panelKindsWithTabs.map((kind) => {
-		const tabs = panelTabsByKind[kind];
-		const icon = panelKindToggleIcon(kind, tabs);
-		const side = panelSide(kind);
-		const text = resolveTranslationLabel(t(`ui.panelToggle.${kind}` as const));
-		if (resolvedMobile) {
-			return {
-				id: `ui.panelToggle.${kind}`,
-				icon,
-				text,
-				pressed: mobilePanelVisible && activeMobilePanelKind === kind,
-				onPressedChange: (pressed: boolean) => openMobilePanel(kind, pressed),
-			};
-		}
-		if (side === "left") {
-			return {
-				id: `ui.panelToggle.${kind}`,
-				icon,
-				text,
-				pressed: panelVisibility.leftSidePanel && activeDesktopLeftPanelKind === kind,
-				onPressedChange: (pressed: boolean) => openDesktopLeftPanel(kind, pressed),
-			};
-		}
-		return {
-			id: `ui.panelToggle.${kind}`,
-			icon,
-			text,
-			pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === kind,
-			onPressedChange: (pressed: boolean) => openDesktopRightPanel(kind, pressed),
-		};
-	});
+	const panelToggleItems = reactHostPort.useMemo(
+		() =>
+			panelKindsWithTabs.map((kind) => {
+				const tabs = panelTabsByKind[kind];
+				const icon = panelKindToggleIcon(kind, tabs);
+				const side = panelSide(kind);
+				const text = resolveTranslationLabel(t(`ui.panelToggle.${kind}` as const));
+				if (resolvedMobile) {
+					return {
+						id: `ui.panelToggle.${kind}`,
+						icon,
+						text,
+						pressed: mobilePanelVisible && activeMobilePanelKind === kind,
+						onPressedChange: (pressed: boolean) => openMobilePanel(kind, pressed),
+					};
+				}
+				if (side === "left") {
+					return {
+						id: `ui.panelToggle.${kind}`,
+						icon,
+						text,
+						pressed: panelVisibility.leftSidePanel && activeDesktopLeftPanelKind === kind,
+						onPressedChange: (pressed: boolean) => openDesktopLeftPanel(kind, pressed),
+					};
+				}
+				return {
+					id: `ui.panelToggle.${kind}`,
+					icon,
+					text,
+					pressed: panelVisibility.rightSidePanel && activeDesktopRightPanelKind === kind,
+					onPressedChange: (pressed: boolean) => openDesktopRightPanel(kind, pressed),
+				};
+			}),
+		[
+			activeDesktopLeftPanelKind,
+			activeDesktopRightPanelKind,
+			activeMobilePanelKind,
+			mobilePanelVisible,
+			openDesktopLeftPanel,
+			openDesktopRightPanel,
+			openMobilePanel,
+			panelKindsWithTabs,
+			panelTabsByKind,
+			resolvedMobile,
+			t,
+		],
+	);
 
 	if (panelToggleItems.length > 0) {
 		navbarItems.push({
@@ -3407,24 +4545,10 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 		});
 	}
 
-	const mergedFooterItems = mergePlatformFooterChromeRows(platform, activeApp, [
-		{
-			id: "settings.compact",
-			order: -20,
-			content: (
-				<Toggle
-					id="settings.compact"
-					pressed={uiCompact}
-					onPressedChange={(pressed) => {
-						setUiCompact(pressed);
-						writeStoredUiChromeCompact(pressed);
-					}}
-					icon={<Minimize2 className="size-small" aria-hidden />}
-				/>
-			),
-		},
-		...(extraFooterItems ?? []),
-	]);
+	const mergedFooterItems = reactHostPort.useMemo(
+		() => mergePlatformFooterChromeRows(platform, activeApp, [...(extraFooterItems ?? [])]),
+		[activeApp, extraFooterItems, platform],
+	);
 
 	const searchItemsResolved = reactHostPort.useMemo(
 		() =>
@@ -3441,13 +4565,20 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	const goldenWindowKinds = reactHostPort.useMemo(
 		() => resolvedWindowKindsOverride ?? windowKindsToGolden(activeApp.windowKinds, platform.commandBus),
-		[activeApp.windowKinds, resolvedWindowKindsOverride, platform.commandBus],
+		[activeApp, resolvedWindowKindsOverride, platform.commandBus],
+	);
+
+	const namedLayoutStore = reactHostPort.useMemo(
+		() => new NamedLayoutStore(activeApp.id, createBrowserStoragePort()),
+		[activeApp.id],
 	);
 
 	const toolbarElement = slotToolbar ?? (hasToolbarTools && mergedTools ? <UIToolbar tools={mergedTools} /> : undefined);
 
 	return (
 		<UiChromeCompactProvider compact={uiCompact}>
+			<DisplayHostContext.Provider value={displayHost}>
+			<SettingsHostContext.Provider value={settingsHostApi}>
 			<AppContext.Provider
 				value={{
 					platform,
@@ -3498,6 +4629,11 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 					rightPanelSize={rightPanelSize}
 					onRightPanelSizeChange={setRightPanelSize}
 					goldenWindowKinds={goldenWindowKinds}
+					windowKindCatalog={activeApp.windowKinds}
+					namedLayouts={activeApp.namedLayouts}
+					namedLayoutStore={namedLayoutStore}
+					commandBus={platform.commandBus}
+					onDisplayHostReady={handleDisplayHostReady}
 					defaultLayout={activeApp.defaultLayout as WindowLayout}
 					activeWindowKindId={activeWindowKindId}
 					onActiveWindowKindChange={handleActiveWindowChange}
@@ -3509,9 +4645,13 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 					onSearchOpenChange={setSearchOpen}
 					findOpen={findOpen}
 					onFindOpenChange={setFindOpen}
-					/>
+					onToggleLastActiveLeftSidePanel={toggleLastActiveLeftSidePanel}
+					onToggleLastActiveRightSidePanel={toggleLastActiveRightSidePanel}
+				/>
 				</UIFindProvider>
 			</AppContext.Provider>
+			</SettingsHostContext.Provider>
+			</DisplayHostContext.Provider>
 		</UiChromeCompactProvider>
 	);
 };
@@ -3553,10 +4693,74 @@ if (import.meta.vitest) {
 					]}
 				/>,
 			);
-			expect(markup).toContain('data-slot="window-measure-float"');
-			expect(markup).toContain('data-slot="window-measures-stack-inner"');
+			expect(markup).toContain('data-slot="window-measures-tree"');
+			expect(markup).toContain('data-slot="window-measure-tree-row"');
 			expect(markup).toContain("w-full");
 			expect(markup).not.toContain("shadow-md");
+		});
+
+		it("renders nested measure groups compactly", () => {
+			const markup = renderToStaticMarkup(
+				<UIWindowMeasures
+					measures={[
+						{
+							id: "brush",
+							kind: "group",
+							label: "Brush",
+							defaultOpen: true,
+							children: [
+								{
+									id: "tolerance",
+									kind: "slider",
+									label: "Tolerance 0.50",
+									value: 0.5,
+									min: 0,
+									max: 1,
+									onValueChange: () => {},
+								},
+							],
+						},
+					]}
+				/>,
+			);
+			expect(markup).toContain('data-slot="window-measures-tree"');
+			expect(markup).toContain("Brush");
+			expect(markup).toContain('data-slot="tree-guide"');
+			expect(markup).toContain('data-slot="window-measure-tree-content"');
+			expect(markup).toContain('data-slot="select-trigger"');
+			expect(markup).not.toContain('data-slot="tree-section-row"');
+		});
+	});
+
+	describe("windowMeasuresToGolden", () => {
+		it("maps nested measure groups recursively", () => {
+			const bus = new CommandBus();
+			const golden = windowMeasuresToGolden(
+				[
+					{
+						kind: "group",
+						id: "brush",
+						label: "Brush",
+						defaultOpen: false,
+						children: [
+							{
+								kind: "toggle",
+								id: "tool",
+								text: "On",
+								pressed: true,
+								onChange: { controllerId: "test", command: "toggleTool" },
+							},
+						],
+					},
+				],
+				bus,
+			);
+			expect(golden?.[0]?.kind).toBe("group");
+			if (golden?.[0]?.kind !== "group") {
+				return;
+			}
+			expect(golden[0].defaultOpen).toBe(false);
+			expect(golden[0].children[0]?.kind).toBe("toggle");
 		});
 	});
 
@@ -3686,10 +4890,11 @@ if (import.meta.vitest) {
 			expect(markup).toContain('data-panel="leftSidePanel"');
 			expect(markup).toContain('id="ui.panelToggle.workbench"');
 			expect(markup).toContain('id="ui.panelToggle.details"');
-			expect(markup).not.toContain('id="ui.panelToggle.settings"');
+			expect(markup).toContain('id="ui.panelToggle.settings"');
 			expect(markup).not.toContain("data-missing-icon");
-			expect(markup).toContain('lucide lucide-folder');
-			expect(markup).toContain('lucide lucide-info');
+			expect(markup).toContain('data-icon="folder"');
+			expect(markup).toContain('data-icon="info"');
+			expect(markup).toContain('data-icon="settings-2"');
 		});
 
 		it("renders navbar buttons and toggles with inline labels even when compact chrome is on", () => {
@@ -3741,8 +4946,8 @@ if (import.meta.vitest) {
 			wb.addApp(app);
 			const markup = renderToStaticMarkup(<PlatformView platform={wb} initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />);
 
-			expect(markup).toContain('lucide lucide-folder');
-			expect(markup).toContain('lucide lucide-info');
+			expect(markup).toContain('data-icon="folder"');
+			expect(markup).toContain('data-icon="info"');
 			expect(markup).not.toContain("data-missing-icon");
 		});
 

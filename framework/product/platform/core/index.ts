@@ -15,6 +15,7 @@ import {
 	createTabStackLayout,
 	mergeAppTools,
 	mergeById,
+	mergeNamedLayouts,
 	mergeSearchItems,
 	resolveMode,
 	type AppTools,
@@ -25,6 +26,7 @@ import {
 	type PlatformSubscriber,
 	type SearchItemSpec,
 	type SideTabSpec,
+	type NamedLayout,
 	type WindowLayout,
 	type WindowMeasure,
 } from "@framework/core";
@@ -59,11 +61,159 @@ export interface UiSeparatorNode {
 	readonly type: "separator";
 }
 
+/** @emoji ✏️ Text or number input bound to a command. */
+export interface UiInputNode {
+	readonly type: "input";
+	readonly id: string;
+	readonly inputKind: "text" | "number";
+	readonly value: string;
+	readonly placeholder?: string;
+	readonly commit?: "change" | "blur";
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 📋 Select control bound to a command (`value` in args). */
+export interface UiSelectNode {
+	readonly type: "select";
+	readonly id: string;
+	readonly value: string;
+	readonly items: readonly { readonly value: string; readonly label: string }[];
+	readonly placeholder?: string;
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 🔘 Toggle control bound to a command (`pressed` in args). */
+export interface UiToggleNode {
+	readonly type: "toggle";
+	readonly id: string;
+	readonly pressed: boolean;
+	readonly text?: string;
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 📐 Three-axis numeric row; `value` null renders mixed placeholder. */
+export interface UiVec3Node {
+	readonly type: "vec3";
+	readonly id: string;
+	readonly value: readonly [number, number, number] | null;
+	readonly onChange: CommandDescriptor;
+}
+
+/** @emoji 📋 Read-only label/value rows. */
+export interface UiKeyValueNode {
+	readonly type: "keyValue";
+	readonly entries: readonly { readonly label: string; readonly value: string }[];
+}
+
+/** @emoji 🏷️ Labeled field wrapping one declarative control. */
+export interface UiFieldNode {
+	readonly type: "field";
+	readonly id: string;
+	readonly label: string;
+	readonly child: UiControlNode;
+}
+
+/** @emoji 🎛️ Inline control hosted on a tree item row (includes panel table surfaces). */
+export type UiControlNode =
+	| UiInputNode
+	| UiSelectNode
+	| UiToggleNode
+	| UiVec3Node
+	| UiButtonNode
+	| UiKeyValueNode
+	| UiFieldNode
+	| UiTableHostSurfaceNode
+	| UiPanelHostSurfaceNode;
+
+/** @emoji 📂 Collapsible form section used while building {@link UiTreeNode} bodies (not a panel root). */
+export interface UiSectionNode {
+	readonly type: "section";
+	readonly id: string;
+	readonly label?: string;
+	readonly defaultOpen?: boolean;
+	readonly children: readonly UiNode[];
+}
+
+/** @emoji 🌿 One tree row; optional nested items, selection command, and inline control. */
+export interface UiTreeItemNode {
+	readonly id: string;
+	readonly label: string;
+	readonly description?: string;
+	readonly selected?: boolean;
+	readonly defaultOpen?: boolean;
+	readonly command?: CommandDescriptor;
+	readonly draggable?: boolean;
+	readonly dragData?: Readonly<Record<string, string>>;
+	readonly onPointerEnter?: () => void;
+	readonly onPointerLeave?: () => void;
+	readonly items?: readonly UiTreeItemNode[];
+	readonly control?: UiControlNode;
+}
+
+/** @emoji 🌲 Tree section for {@link UiTreeNode}. */
+export interface UiTreeSectionNode {
+	readonly id: string;
+	readonly label?: string;
+	readonly defaultOpen?: boolean;
+	readonly items: readonly UiTreeItemNode[];
+}
+
+/** @emoji 🎯 Optional tree selection overlay (row ids). */
+export interface SidePanelTreeSelection {
+	readonly selectedIds?: readonly string[];
+	readonly highlightedIds?: readonly string[];
+}
+
+/** @emoji 🌲 Side-panel tab body: sections of tree items only. */
+export interface UiTreeNode {
+	readonly type: "tree";
+	readonly sections: readonly UiTreeSectionNode[];
+	readonly selectedIds?: readonly string[];
+	readonly highlightedIds?: readonly string[];
+	readonly selectionChange?: CommandDescriptor;
+}
+
+/** @emoji 🖱️ Collects declarative tree item `dragData` by row id (depth-first across sections). */
+export function collectUiTreeItemDragData(sections: readonly UiTreeSectionNode[]): Map<string, Record<string, string>> {
+	const out = new Map<string, Record<string, string>>();
+	const visitItems = (items: readonly UiTreeItemNode[]): void => {
+		for (const item of items) {
+			if (item.dragData) {
+				out.set(item.id, item.dragData);
+			}
+			if (item.items?.length) {
+				visitItems(item.items);
+			}
+		}
+	};
+	for (const section of sections) {
+		visitItems(section.items);
+	}
+	return out;
+}
+
+/** @emoji 🌲 Single-root tree body for a side panel tab. */
+export function sidePanelTreeRootItems(
+	sectionId: string,
+	items: readonly UiTreeItemNode[],
+	selection?: SidePanelTreeSelection,
+): UiTreeNode {
+	if (!items.length) {
+		throw new Error("sidePanelTreeRootItems requires at least one root item.");
+	}
+	return {
+		type: "tree",
+		sections: [{ id: sectionId, defaultOpen: true, items }],
+		...(selection?.selectedIds ? { selectedIds: selection.selectedIds } : {}),
+		...(selection?.highlightedIds ? { highlightedIds: selection.highlightedIds } : {}),
+	};
+}
+
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "panel";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "panel";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -115,6 +265,16 @@ export interface UiPuzzle5dHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 🗺️ Host-bound GIS map surface (Web Mercator tiles + overlays). */
+export interface UiGisMapHostSurfaceNode {
+	readonly type: "gismap";
+	readonly componentKind: "gismap";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
 /** @emoji 📐 Host-bound CAD spatial surface. */
 export interface UiCadHostSurfaceNode {
 	readonly type: "cad";
@@ -139,14 +299,56 @@ export type UiComponentHostSurfaceNode =
 	| UiPuzzle2dHostSurfaceNode
 	| UiPuzzle3dHostSurfaceNode
 	| UiPuzzle5dHostSurfaceNode
+	| UiGisMapHostSurfaceNode
 	| UiCadHostSurfaceNode
 	| UiPanelHostSurfaceNode;
+
+/** @emoji 🌲 Converts declarative form sections into a strict side-panel tree. */
+export function uiDeclarativeSectionsToTree(sections: readonly UiSectionNode[]): UiTreeNode {
+	const treeSections: UiTreeSectionNode[] = sections.map((section) => ({
+		id: section.id,
+		label: section.label,
+		defaultOpen: section.defaultOpen ?? true,
+		items: section.children.map((child, index) => uiDeclarativeChildToTreeItem(child, `${section.id}.${index}`)),
+	}));
+	return {
+		type: "tree",
+		sections: treeSections.length ? treeSections : [{ id: "empty", items: [{ id: "empty", label: "—" }] }],
+	};
+}
+
+function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeItemNode {
+	if (node.type === "text") {
+		return { id: `${fallbackId}.text`, label: node.value };
+	}
+	if (node.type === "field") {
+		return { id: node.id, label: node.label, control: node };
+	}
+	if (node.type === "button") {
+		return { id: node.id ?? fallbackId, label: node.label, control: node };
+	}
+	if (node.type === "input" || node.type === "select" || node.type === "toggle" || node.type === "vec3" || node.type === "keyValue") {
+		return { id: "id" in node ? String(node.id) : fallbackId, label: "", control: node };
+	}
+	if (node.type === "separator") {
+		return { id: `${fallbackId}.sep`, label: "—" };
+	}
+	return { id: fallbackId, label: node.type };
+}
 
 export type UiNode =
 	| UiStackNode
 	| UiTextNode
 	| UiButtonNode
 	| UiSeparatorNode
+	| UiSectionNode
+	| UiInputNode
+	| UiSelectNode
+	| UiToggleNode
+	| UiVec3Node
+	| UiKeyValueNode
+	| UiFieldNode
+	| UiTreeNode
 	| UiComponentHostSurfaceNode;
 
 /** @emoji 📊 Canonical table window body: only the host-bound table surface. */
@@ -200,6 +402,18 @@ export function buildPuzzle5dWindowBody(surfaceId: string, controllerId: string,
 	return {
 		type: "puzzle5d",
 		componentKind: "puzzle5d",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 🗺️ Canonical GIS map window body. */
+export function buildMapWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiGisMapHostSurfaceNode {
+	return {
+		type: "gismap",
+		componentKind: "gismap",
 		surfaceId,
 		controllerId,
 		...(paneId ? { paneId } : {}),
@@ -347,6 +561,7 @@ export interface VirtualFileSystemModel {
 	readonly schema: VirtualFileSystemSchemaModel;
 	readonly rows: readonly VirtualFileSystemRowModel[];
 	readonly selectedRowIds?: readonly string[];
+	readonly hoveredRowId?: string | null;
 	readonly emptyMessage?: string;
 	readonly dragDropEnabled?: boolean;
 }
@@ -385,6 +600,8 @@ export interface Puzzle5dModel {
 	readonly presentation: "flat" | "volume";
 	readonly instanceId: string;
 	readonly emptyMessage?: string;
+	readonly puzzle2dSelection?: readonly string[];
+	readonly puzzle2dHoveredId?: string | null;
 }
 
 /** @emoji 📐 Render-agnostic CAD view-model for {@link Cad}. */
@@ -641,12 +858,40 @@ export function buildVirtualFileSystemModelRows(
 			...(node.descriptorValues ? { descriptorValues: node.descriptorValues } : {}),
 		});
 		if (!expanded) return;
-		const children = childrenByParentId[node.id] ?? (depth === 0 ? rootBucket : undefined);
+		const children = childrenByParentId[node.id];
 		if (!children?.length) return;
 		for (const child of children) visit(child, depth + 1);
 	};
-	visit(root, 0);
+	const rootChildren = childrenByParentId[root.id] ?? rootBucket;
+	if (rootChildren?.length) {
+		for (const child of rootChildren) visit(child, 0);
+	}
 	return rows;
+}
+
+/** @emoji 📁 One VFS tree node currently visible (root + expanded branches) with its parent id. */
+export type VirtualFileSystemVisibleNode = VirtualFileSystemNodeRecord & { readonly parentId: string | null };
+
+/** @emoji 📁 Collects visible VFS nodes from root, expanded ids, and lazily loaded children. */
+export function visibleVirtualFileSystemNodesFromTree(
+	root: VirtualFileSystemNodeRecord,
+	childrenByParentId: Readonly<Record<string, readonly VirtualFileSystemNodeRecord[]>>,
+	expandedIds: ReadonlySet<string>,
+): readonly VirtualFileSystemVisibleNode[] {
+	const nodes: VirtualFileSystemVisibleNode[] = [];
+	const rootBucket = childrenByParentId["__root__"];
+	const visit = (node: VirtualFileSystemNodeRecord, parentId: string | null, depth: number) => {
+		nodes.push({ ...node, parentId });
+		if (!node.hasChildren || !expandedIds.has(node.id)) return;
+		const children = childrenByParentId[node.id];
+		if (!children?.length) return;
+		for (const child of children) visit(child, node.id, depth + 1);
+	};
+	const rootChildren = childrenByParentId[root.id] ?? rootBucket;
+	if (rootChildren?.length) {
+		for (const child of rootChildren) visit(child, root.id, 0);
+	}
+	return nodes;
 }
 
 /** @emoji 📁 Base controller: per-app VFS; loads children only for expanded nodes. */
@@ -654,6 +899,7 @@ export abstract class VirtualFileSystemController extends Controller {
 	protected readonly expandedByScope = new Map<string, VirtualFileSystemExpandedStore>();
 	protected readonly childrenByScope = new Map<string, VirtualFileSystemChildrenStore>();
 	protected readonly pendingChildrenLoadsByScope = new Map<string, Set<string>>();
+	protected readonly childrenLoadPromisesByScope = new Map<string, Map<string, Promise<void>>>();
 	protected readonly selectedRowIdsByScope = new Map<string, string[]>();
 	protected readonly selectionAnchorRowIdByScope = new Map<string, string>();
 
@@ -744,6 +990,39 @@ export abstract class VirtualFileSystemController extends Controller {
 		});
 	}
 
+	/** @emoji 📁 Like {@link ensureChildrenLoaded} but resolves when children are present (sync or async). */
+	protected ensureChildrenLoadedAsync(parentId: string, scope: VirtualFileSystemScope): Promise<void> {
+		const childrenStore = this.childrenStore(scope);
+		const snapshot = childrenStore.getSnapshot();
+		const key = parentId === this.getRoot(scope).id ? "__root__" : parentId;
+		if (snapshot[key] !== undefined) {
+			return Promise.resolve();
+		}
+		const scopeKey = virtualFileSystemScopeKey(scope);
+		let promises = this.childrenLoadPromisesByScope.get(scopeKey);
+		if (!promises) {
+			promises = new Map();
+			this.childrenLoadPromisesByScope.set(scopeKey, promises);
+		}
+		const existing = promises.get(key);
+		if (existing) {
+			return existing;
+		}
+		const load = (async () => {
+			if (!this.virtualFileSystemUsesAsyncChildren()) {
+				this.ensureChildrenLoaded(parentId, scope);
+				return;
+			}
+			const loaded = await this.loadChildrenAsync(parentId, scope);
+			childrenStore.setChildren(key, loaded);
+			this.emit();
+		})().finally(() => {
+			promises!.delete(key);
+		});
+		promises.set(key, load);
+		return load;
+	}
+
 	protected syncOpenBranches(scope: VirtualFileSystemScope): void {
 		const expanded = this.expandedStore(scope).getSnapshot();
 		for (const nodeId of expanded) {
@@ -770,6 +1049,13 @@ export abstract class VirtualFileSystemController extends Controller {
 			emptyMessage: rows.length ? undefined : "No file system nodes",
 			dragDropEnabled: true,
 		};
+	}
+
+	/** @emoji 📁 Visible file nodes for the current expansion state (same visibility as the VFS table). */
+	visibleVirtualFileSystemNodes(scope: VirtualFileSystemScope): readonly VirtualFileSystemVisibleNode[] {
+		this.syncOpenBranches(scope);
+		const expandedIds = new Set(this.expandedStore(scope).getSnapshot());
+		return visibleVirtualFileSystemNodesFromTree(this.getRoot(scope), this.childrenStore(scope).getSnapshot(), expandedIds);
 	}
 
 	protected runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
@@ -1189,8 +1475,9 @@ export class WindowKindRuntime extends BaseWindowKindRuntime {
 		iconId?: string,
 		measures: readonly WindowMeasure[] = [],
 		capabilities?: readonly Capability[],
+		templates: readonly WindowTemplate[] = [],
 	) {
-		super(id, label, bodyKey, iconId, measures);
+		super(id, label, bodyKey, iconId, measures, templates);
 		if (capabilities?.length) this.capabilities.push(...capabilities);
 	}
 }
@@ -1225,6 +1512,7 @@ export interface ResolvedAppState {
 	readonly tools: AppTools | undefined;
 	readonly commands: SearchItemSpec[];
 	readonly windowKinds: readonly WindowKindRuntime[];
+	readonly namedLayouts: readonly NamedLayout[];
 	readonly defaultLayout: WindowLayout;
 	readonly panelTabs: SideTabSpec[];
 	readonly footerItems: FooterItem[];
@@ -1249,6 +1537,7 @@ export function resolveAppState(app: AppRuntime, requestedModeId?: string | null
 		tools: mergeAppTools(app.tools, mode?.tools),
 		commands: mergeSearchItems(app.commands, mode?.commands) ?? app.commands,
 		windowKinds: mergedWindowKinds,
+		namedLayouts: mergeNamedLayouts(app.namedLayouts, mode?.namedLayouts),
 		defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
 		panelTabs: mergedPanelTabs,
 		footerItems: mergeById(app.footerItems, mode?.footerItems) ?? app.footerItems,
@@ -1341,15 +1630,28 @@ export function unregisterWindowBody(bodyKey: string): void {
 /** @emoji 📑 View context for declarative side-panel tab bodies (same snapshot fields as window bodies). */
 export type SidePanelBodyViewContext = WindowBodyViewContext;
 
-const sidePanelBodyByKey = new Map<string, (ctx: SidePanelBodyViewContext) => UiNode>();
+const sidePanelBodyByKey = new Map<string, (ctx: SidePanelBodyViewContext) => UiTreeNode>();
+
+function assertSidePanelTreeBody(bodyKey: string, node: UiNode): asserts node is UiTreeNode {
+	if (node.type !== "tree") {
+		throw new Error(`Declarative side-panel body "${bodyKey}" must be type "tree". Found "${node.type}".`);
+	}
+	if (!node.sections.length) {
+		throw new Error(`Declarative side-panel body "${bodyKey}" must have at least one section.`);
+	}
+}
 
 /** @emoji 📝 Registers a framework-free side-panel tree for `bodyKey`. */
-export function registerSidePanelBody(bodyKey: string, build: (ctx: SidePanelBodyViewContext) => UiNode): void {
-	sidePanelBodyByKey.set(bodyKey, build);
+export function registerSidePanelBody(bodyKey: string, build: (ctx: SidePanelBodyViewContext) => UiTreeNode): void {
+	sidePanelBodyByKey.set(bodyKey, (ctx) => {
+		const node = build(ctx);
+		assertSidePanelTreeBody(bodyKey, node);
+		return node;
+	});
 }
 
 /** @emoji 🔍 Returns the declarative side-panel builder for `bodyKey`, if any. */
-export function getSidePanelBodyFactory(bodyKey: string): ((ctx: SidePanelBodyViewContext) => UiNode) | undefined {
+export function getSidePanelBodyFactory(bodyKey: string): ((ctx: SidePanelBodyViewContext) => UiTreeNode) | undefined {
 	return sidePanelBodyByKey.get(bodyKey);
 }
 
@@ -1906,15 +2208,21 @@ if (import.meta.vitest) {
 				surfaceId: virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_A),
 			};
 			let model = ctrl.buildVirtualFileSystemModel(scopeA);
-			expect(model.rows.map((row) => row.id)).toEqual(["workspace-a", "folder-models", "branch-alpha"]);
+			expect(model.rows.map((row) => row.id)).toEqual(["folder-models", "branch-alpha"]);
+			expect(ctrl.visibleVirtualFileSystemNodes(scopeA).map((node) => node.id)).toEqual(["folder-models", "branch-alpha"]);
 			ctrl.run("toggleVirtualFileSystemExpand", { ...scopeA, nodeId: "folder-models" });
 			model = ctrl.buildVirtualFileSystemModel(scopeA);
-			expect(model.rows.map((row) => row.id)).toEqual(["workspace-a", "folder-models", "leaf-capsule", "branch-alpha"]);
+			expect(model.rows.map((row) => row.id)).toEqual(["folder-models", "leaf-capsule", "branch-alpha"]);
+			expect(ctrl.visibleVirtualFileSystemNodes(scopeA).map((node) => node.id)).toEqual([
+				"folder-models",
+				"leaf-capsule",
+				"branch-alpha",
+			]);
 			const scopeB: VirtualFileSystemScope = {
 				appId: PlatformVirtualFileSystemDemoController.APP_B,
 				surfaceId: virtualFileSystemSurfaceId(PlatformVirtualFileSystemDemoController.APP_B),
 			};
-			expect(ctrl.buildVirtualFileSystemModel(scopeB).rows.map((row) => row.id)).toEqual(["workspace-b", "branch-b1"]);
+			expect(ctrl.buildVirtualFileSystemModel(scopeB).rows.map((row) => row.id)).toEqual(["branch-b1"]);
 		});
 
 		it("replaces row selection from setVirtualFileSystemRowSelection", () => {

@@ -9,12 +9,16 @@
 // #endregion 🧲Header
 
 import { ButtonGroup, ButtonGroupItem } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box, List, Network } from "lucide-react";
 
 // 🔘#region 🧵ButtonGroup
+const Box = createIconComponent("box");
+const List = createIconComponent("list");
+const Network = createIconComponent("network");
+
 const meta = {
-  title: "elements/react/ButtonGroup",
+  title: "🖱️ui⚛️react/ButtonGroup",
   component: ButtonGroup,
   parameters: {
     layout: "centered",

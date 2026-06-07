@@ -3944,7 +3944,7 @@ def _mcp_app_tool_payload(result: object) -> dict:
 
 # #region 👓Constants
 FIXTURES_DIR = pathlib.Path(__file__).resolve().parent.parent.parent.parent / "fixtures"
-KIT_METABOLISM_PATH = FIXTURES_DIR / "kit" / "dev" / "metabolism" / "wip" / "initialKit" / "kit.semio.json"
+KIT_METABOLISM_PATH = FIXTURES_DIR / "stores" / "metabolism" / "wip" / "initialKit" / "kit.semio.json"
 METABOLISM_DIR = FIXTURES_DIR / "kit" / "dev" / "metabolism"
 
 # #endregion 👓Constants

@@ -9,12 +9,16 @@
 // #endregion 🧲Header
 
 import { ActionGroup, ActionGroupItem } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Copy, Download, ExternalLink } from "lucide-react";
 
 // 🔷#region 🌩️ActionGroup
+const Copy = createIconComponent("copy");
+const Download = createIconComponent("download");
+const ExternalLink = createIconComponent("external-link");
+
 const meta = {
-  title: "elements/react/ActionGroup",
+  title: "🖱️ui⚛️react/ActionGroup",
   component: ActionGroup,
   parameters: {
     layout: "centered",

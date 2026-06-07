@@ -1,0 +1,14 @@
+{
+  "title": "Suppress Overview Slide Jump After Drag",
+  "emoji": "🎞",
+  "status": "closed",
+  "description": "In projektetage presentation, Escape opens reveal overview. Dragging dispositions in overview then releasing jumps to that slide; should only navigate when clicking empty slide space, not after drag/marquee.",
+  "summary": "Fixed reveal overview exiting when releasing a disposition drag or marquee. After a gesture crosses the drag threshold, a one-shot capture click handler on `.reveal` prevents reveal.js `onSlideClicked` from running; empty-space clicks still navigate. Added unit test; all 97 presentation renderer tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1528"
+  },
+  "goal": "🎯framework🎯product🎯presentation",
+  "sessions": [
+    "⚪c569dc48fd7b48169b17c66e7eff4887"
+  ]
+}

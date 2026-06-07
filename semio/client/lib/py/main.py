@@ -18976,10 +18976,60 @@ REPORTS_REPRESENTATION_KPI_DIR = (
 )
 
 
+def _assemble_split_initial_kit_from_directory(initial_kit_dir: str) -> dict:
+    """🧩 Merges split kit shell JSON with sibling types/ and designs/ sidecars."""
+    with open(os.path.join(initial_kit_dir, "kit.semio.json"), "r", encoding="utf-8") as f:
+        kit = json.load(f)
+    type_by_id: dict[str, dict] = {}
+    types_dir = os.path.join(initial_kit_dir, "types")
+    if os.path.isdir(types_dir):
+        for name in os.listdir(types_dir):
+            if not name.endswith(".type.semio.json"):
+                continue
+            with open(os.path.join(types_dir, name), "r", encoding="utf-8") as tf:
+                row = json.load(tf)
+            if isinstance(row, dict) and row.get("id"):
+                type_by_id[str(row["id"])] = row
+    design_by_id: dict[str, dict] = {}
+    designs_dir = os.path.join(initial_kit_dir, "designs")
+    if os.path.isdir(designs_dir):
+        for name in os.listdir(designs_dir):
+            if not name.endswith(".design.semio.json"):
+                continue
+            with open(os.path.join(designs_dir, name), "r", encoding="utf-8") as df:
+                row = json.load(df)
+            if isinstance(row, dict) and row.get("id"):
+                design_by_id[str(row["id"])] = row
+
+    def _items(node):
+        if isinstance(node, list):
+            return node
+        if isinstance(node, dict) and isinstance(node.get("items"), list):
+            return node["items"]
+        return []
+
+    for topo in _items(kit.get("typologies")):
+        if not isinstance(topo, dict):
+            continue
+        type_items = _items(topo.get("types"))
+        if type_items:
+            merged_types = [type_by_id.get(str(stub.get("id", "")), stub) for stub in type_items if isinstance(stub, dict)]
+            topo["types"] = {"hash": topo.get("types", {}).get("hash", "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"), "items": merged_types}
+        design_items = _items(topo.get("designs"))
+        if design_items:
+            merged_designs = [design_by_id.get(str(stub.get("id", "")), stub) for stub in design_items if isinstance(stub, dict)]
+            topo["designs"] = {"hash": topo.get("designs", {}).get("hash", "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"), "items": merged_designs}
+    return kit
+
+
 def _test_load_json(filename: str) -> dict:
     path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, filename)
     if not os.path.exists(path):
         raise FileNotFoundError(f"Asset not found: {path}")
+    if filename.endswith("kit.semio.json"):
+        initial_kit_dir = os.path.dirname(path)
+        if os.path.isdir(os.path.join(initial_kit_dir, "types")):
+            return _assemble_split_initial_kit_from_directory(initial_kit_dir)
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 

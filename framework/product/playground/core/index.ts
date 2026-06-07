@@ -15,6 +15,7 @@ import {
   createDefaultLayout,
   createTabStackLayout,
   mergeById,
+  mergeNamedLayouts,
   Platform,
   resolveMode,
   type AppTools,
@@ -74,124 +75,38 @@ export interface UiTableHostSurfaceNode {
   readonly paneId?: string;
 }
 
-/** @emoji 📂 Collapsible panel section for side-panel declarative trees. */
-export interface UiSectionNode {
-  readonly type: "section";
-  readonly id: string;
-  readonly label?: string;
-  readonly defaultOpen?: boolean;
-  readonly children: readonly UiNode[];
-}
+import {
+  collectUiTreeItemDragData,
+  getSidePanelBodyFactory,
+  registerSidePanelBody,
+  sidePanelTreeRootItems,
+  unregisterSidePanelBody,
+  type UiTreeNode,
+  type UiTreeSectionNode,
+} from "@framework/platform/core";
 
-/** @emoji 🏷️ Labeled field wrapping one declarative control. */
-export interface UiFieldNode {
-  readonly type: "field";
-  readonly id: string;
-  readonly label: string;
-  readonly child: UiNode;
-}
+export type {
+  UiControlNode,
+  UiSectionNode,
+  UiFieldNode,
+  UiInputNode,
+  UiKeyValueNode,
+  UiSelectNode,
+  UiToggleNode,
+  UiTreeItemNode,
+  UiTreeNode,
+  UiTreeSectionNode,
+  UiVec3Node,
+  SidePanelTreeSelection,
+} from "@framework/platform/core";
 
-/** @emoji ✏️ Text or number input bound to a command. */
-export interface UiInputNode {
-  readonly type: "input";
-  readonly id: string;
-  readonly inputKind: "text" | "number";
-  readonly value: string;
-  readonly placeholder?: string;
-  readonly commit?: "change" | "blur";
-  readonly onChange: CommandDescriptor;
-}
+export { collectUiTreeItemDragData, sidePanelTreeRootItems, uiDeclarativeSectionsToTree } from "@framework/platform/core";
 
-/** @emoji 📋 Select control bound to a command (`value` in args). */
-export interface UiSelectNode {
-  readonly type: "select";
-  readonly id: string;
-  readonly value: string;
-  readonly items: readonly { readonly value: string; readonly label: string }[];
-  readonly placeholder?: string;
-  readonly onChange: CommandDescriptor;
-}
+/** @emoji 🎯 Playground alias for {@link SidePanelTreeSelection}. */
+export type PlaygroundTreePanelSelection = import("@framework/platform/core").SidePanelTreeSelection;
 
-/** @emoji 🔘 Toggle control bound to a command (`pressed` in args). */
-export interface UiToggleNode {
-  readonly type: "toggle";
-  readonly id: string;
-  readonly pressed: boolean;
-  readonly text?: string;
-  readonly onChange: CommandDescriptor;
-}
-
-/** @emoji 📐 Three-axis numeric row; `value` null renders mixed placeholder. */
-export interface UiVec3Node {
-  readonly type: "vec3";
-  readonly id: string;
-  readonly value: readonly [number, number, number] | null;
-  readonly onChange: CommandDescriptor;
-}
-
-/** @emoji 📋 Read-only label/value rows. */
-export interface UiKeyValueNode {
-  readonly type: "keyValue";
-  readonly entries: readonly { readonly label: string; readonly value: string }[];
-}
-
-/** @emoji 🌿 One tree row; optional nested items and selection command. */
-export interface UiTreeItemNode {
-  readonly id: string;
-  readonly label: string;
-  readonly description?: string;
-  readonly selected?: boolean;
-  readonly defaultOpen?: boolean;
-  readonly command?: CommandDescriptor;
-  /** @emoji 🖱️ When true, row is draggable when the panel tree supplies a drag controller. */
-  readonly draggable?: boolean;
-  /** @emoji 📤 Extra `dataTransfer` MIME entries for in-app drags (e.g. puzzle fixture palette). */
-  readonly dragData?: Readonly<Record<string, string>>;
-  readonly onPointerEnter?: () => void;
-  readonly onPointerLeave?: () => void;
-  readonly items?: readonly UiTreeItemNode[];
-}
-
-/** @emoji 🌲 Tree section for {@link UiTreeNode}. */
-export interface UiTreeSectionNode {
-  readonly id: string;
-  readonly label?: string;
-  readonly defaultOpen?: boolean;
-  readonly items: readonly UiTreeItemNode[];
-}
-
-/** @emoji 🎯 Optional tree selection overlay (row ids); avoids rebuilding sections on every pick. */
-export interface PlaygroundTreePanelSelection {
-  readonly selectedIds?: readonly string[];
-  readonly highlightedIds?: readonly string[];
-}
-
-/** @emoji 🌲 Workbench/details tree panel body. */
-export interface UiTreeNode {
-  readonly type: "tree";
-  readonly sections: readonly UiTreeSectionNode[];
-  readonly selectedIds?: readonly string[];
-  readonly highlightedIds?: readonly string[];
-}
-
-/** @emoji 🖱️ Collects declarative tree item `dragData` by row id (depth-first across sections). */
-export function collectUiTreeItemDragData(sections: readonly UiTreeSectionNode[]): Map<string, Record<string, string>> {
-  const out = new Map<string, Record<string, string>>();
-  const visitItems = (items: readonly UiTreeItemNode[]): void => {
-    for (const item of items) {
-      if (item.dragData) {
-        out.set(item.id, item.dragData);
-      }
-      if (item.items?.length) {
-        visitItems(item.items);
-      }
-    }
-  };
-  for (const section of sections) {
-    visitItems(section.items);
-  }
-  return out;
-}
+/** @emoji 🌲 Playground alias for {@link sidePanelTreeRootItems}. */
+export { sidePanelTreeRootItems as playgroundTreePanelRootItems };
 
 export type UiNode =
   | UiStackNode
@@ -203,35 +118,12 @@ export type UiNode =
   | import("@framework/platform/core").UiPuzzle5dHostSurfaceNode
   | import("@framework/platform/core").UiCadHostSurfaceNode
   | UiTableHostSurfaceNode
-  | UiSectionNode
-  | UiFieldNode
-  | UiInputNode
-  | UiSelectNode
-  | UiToggleNode
-  | UiVec3Node
-  | UiKeyValueNode
-  | UiTreeNode;
-
-/** @emoji 🌲 Single-root tree body for a side panel (no duplicate section title). */
-export function playgroundTreePanelRootItems(
-  sectionId: string,
-  items: readonly UiTreeItemNode[],
-  selection?: PlaygroundTreePanelSelection,
-): UiTreeNode {
-  if (!items.length) {
-    throw new Error("playgroundTreePanelRootItems requires at least one root item.");
-  }
-  return {
-    type: "tree",
-    sections: [{ id: sectionId, defaultOpen: true, items }],
-    ...(selection?.selectedIds ? { selectedIds: selection.selectedIds } : {}),
-    ...(selection?.highlightedIds ? { highlightedIds: selection.highlightedIds } : {}),
-  };
-}
+  | import("@framework/platform/core").UiTreeNode;
 
 import {
   buildPuzzle2dWindowBody,
   buildPuzzle3dWindowBody,
+  buildMapWindowBody,
   isCanvasOnlyWindowBody,
 } from "@framework/platform/core";
 
@@ -240,6 +132,8 @@ export {
   buildPuzzle3dWindowBody,
   buildPuzzle5dWindowBody,
   buildCadWindowBody,
+  buildMapWindowBody,
+  buildPanelWindowBody,
   isCanvasOnlyWindowBody,
 } from "@framework/platform/core";
 
@@ -268,7 +162,7 @@ export interface WindowEngagementInput {
   readonly disabled?: boolean;
   readonly onChange?: CommandDescriptor;
   readonly onSubmit?: CommandDescriptor;
-  /** @emoji 🔁 Restarts the last engagement when Space is pressed with an empty command. */
+  /** @emoji 🔁 Repeats the last finalized engagement when Space is pressed with an empty command (non-empty command uses {@link onSubmit}). */
   readonly onRepeatLast?: CommandDescriptor;
   readonly onAbort?: CommandDescriptor;
 }
@@ -287,22 +181,102 @@ export interface WindowEngagementPossible {
   readonly command?: CommandDescriptor;
 }
 
+/** @emoji 🔘 One discrete option on an engagement ring control. */
+export interface WindowEngagementRingOption {
+  readonly id: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+}
+
+/** @emoji 🎚 Engagement slider control (neutral). */
+export interface WindowEngagementSliderControl {
+  readonly kind: "slider";
+  readonly id?: string;
+  readonly label?: string;
+  readonly value: number;
+  readonly min: number;
+  readonly max: number;
+  readonly step?: number;
+  readonly unit?: string;
+  readonly disabled?: boolean;
+  readonly onChange?: CommandDescriptor;
+  readonly onCommit?: CommandDescriptor;
+}
+
+/** @emoji 🔢 Engagement stepper control (neutral). */
+export interface WindowEngagementStepperControl {
+  readonly kind: "stepper";
+  readonly id?: string;
+  readonly label?: string;
+  readonly value: number;
+  readonly min?: number;
+  readonly max?: number;
+  readonly step?: number;
+  readonly unit?: string;
+  readonly disabled?: boolean;
+  readonly onChange?: CommandDescriptor;
+  readonly onCommit?: CommandDescriptor;
+}
+
+/** @emoji 🧫 Engagement ring control (neutral). */
+export interface WindowEngagementRingControl {
+  readonly kind: "ring";
+  readonly id?: string;
+  readonly label?: string;
+  readonly value?: string;
+  readonly options: readonly WindowEngagementRingOption[];
+  readonly disabled?: boolean;
+  readonly onSelect?: CommandDescriptor;
+}
+
+/** @emoji 🎛 Optional engagement UI control for playground windows. */
+export type WindowEngagementControl = WindowEngagementSliderControl | WindowEngagementStepperControl | WindowEngagementRingControl;
+
 /** @emoji 💬 React-neutral floating window engagement (options/input/status) resolved to a UI panel by the renderer. */
 export interface WindowEngagement {
+  /** @emoji 🎯 Ongoing engagement session (step input + step options stay visible). */
+  readonly sessionActive?: boolean;
   readonly options?: readonly WindowEngagementOption[];
   readonly input?: WindowEngagementInput;
+  readonly control?: WindowEngagementControl;
   readonly status?: readonly WindowEngagementStatus[];
   readonly possibleEngagements?: readonly WindowEngagementPossible[];
+}
+
+function windowEngagementControlDigest(control: WindowEngagementControl | undefined): string {
+  if (!control) return "";
+  if (control.kind === "ring") {
+    const options = control.options.map((row) => `${row.id}\u0001${row.label}\u0001${row.disabled ? 1 : 0}`).join("\u0002");
+    return `ring\u0001${control.id ?? ""}\u0001${control.label ?? ""}\u0001${control.value ?? ""}\u0001${control.disabled ? 1 : 0}\u0001${options}\u0001${engagementCommandDigest(control.onSelect)}`;
+  }
+  const bounds =
+    control.kind === "slider"
+      ? `${control.min}\u0001${control.max}`
+      : `${control.min ?? ""}\u0001${control.max ?? ""}`;
+  return `${control.kind}\u0001${control.id ?? ""}\u0001${control.label ?? ""}\u0001${control.value}\u0001${bounds}\u0001${control.step ?? ""}\u0001${control.unit ?? ""}\u0001${control.disabled ? 1 : 0}\u0001${engagementCommandDigest(control.onChange)}\u0001${engagementCommandDigest(control.onCommit)}`;
+}
+
+function engagementCommandDigest(cmd: CommandDescriptor | undefined): string {
+  if (!cmd) return "";
+  return `${cmd.controllerId}\u0005${cmd.command}\u0005${cmd.args === undefined ? "" : JSON.stringify(cmd.args)}`;
 }
 
 /** @emoji 🔑 Stable digest for {@link WindowEngagement} equality (skips redundant shell updates). */
 export function windowEngagementDigest(engagement: WindowEngagement | undefined): string {
   if (!engagement) return "";
-  const options = (engagement.options ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.pressed ? 1 : 0}\u0001${row.disabled ? 1 : 0}`).join("\u0002");
-  const input = engagement.input ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}` : "";
+  const options = (engagement.options ?? [])
+    .map((row) => `${row.id}\u0001${row.label}\u0001${row.pressed ? 1 : 0}\u0001${row.disabled ? 1 : 0}\u0001${engagementCommandDigest(row.command)}`)
+    .join("\u0002");
+  const input = engagement.input
+    ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}\u0001${engagementCommandDigest(engagement.input.onChange)}\u0001${engagementCommandDigest(engagement.input.onSubmit)}\u0001${engagementCommandDigest(engagement.input.onRepeatLast)}\u0001${engagementCommandDigest(engagement.input.onAbort)}`
+    : "";
   const status = (engagement.status ?? []).map((row) => `${row.id}\u0001${row.text}`).join("\u0002");
-  const possibles = (engagement.possibleEngagements ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}`).join("\u0002");
-  return [options, input, status, possibles].join("\u0003");
+  const possibles = (engagement.possibleEngagements ?? [])
+    .map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}\u0001${engagementCommandDigest(row.command)}`)
+    .join("\u0002");
+  const session = engagement.sessionActive ? "1" : "0";
+  const control = windowEngagementControlDigest(engagement.control);
+  return [session, options, input, status, possibles, control].join("\u0003");
 }
 
 /** @emoji ⚖️ Returns whether two neutral engagement snapshots are equivalent for shell sync. */
@@ -317,9 +291,12 @@ export function enforcePlaygroundWindowEngagementInput(engagement: WindowEngagem
   }
 }
 
-/** @emoji 💬 Ensures every playground window kind exposes a command {@link WindowEngagementInput}. */
+/** @emoji 💬 Ensures every playground window kind that declares engagement exposes a command {@link WindowEngagementInput}. */
 export function enforceWindowKindsEngagementInput(windowKinds: readonly WindowKindRuntime[], contextLabel: string): void {
   for (const windowKind of windowKinds) {
+    if (windowKind.engagement === undefined) {
+      continue;
+    }
     enforcePlaygroundWindowEngagementInput(windowKind.engagement, `${contextLabel} window "${windowKind.id}"`);
   }
 }
@@ -337,8 +314,9 @@ export class WindowKindRuntime extends BaseWindowKindRuntime {
     iconId?: string,
     measures: readonly WindowMeasure[] = [],
     engagement?: WindowEngagement,
+    templates: readonly import("@framework/core").WindowTemplate[] = [],
   ) {
-    super(id, label, bodyKey, iconId, measures);
+    super(id, label, bodyKey, iconId, measures, templates);
     this.engagement = engagement;
   }
 }
@@ -384,6 +362,7 @@ export function resolveAppState(app: AppRuntime, requestedModeId?: string | null
     iconId: mode?.iconId ?? app.iconId,
     tools: mergeAppTools(app.tools, mode?.tools),
     windowKinds: mergedWindowKinds,
+    namedLayouts: mergeNamedLayouts(app.namedLayouts, mode?.namedLayouts),
     defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
     panelTabs: mergedPanelTabs,
     footerItems: mergeById(app.footerItems, mode?.footerItems) ?? app.footerItems,
@@ -417,43 +396,17 @@ export function getWindowBodyFactory(bodyKey: string): ((ctx: WindowBodyViewCont
 export function unregisterWindowBody(bodyKey: string): void {
   windowBodyByKey.delete(bodyKey);
 }
+
 //#endregion 🔖WindowBodyViewContext
 
 //#region 🔖SidePanelBodyViewContext
-export type SidePanelBodyViewContext = WindowBodyViewContext;
+export type { SidePanelBodyViewContext } from "@framework/platform/core";
 
-/** @emoji 🌲 `nested` wraps the body in a shell tree section; `treeRoot` mounts a declarative tree as the tab root. */
-export type SidePanelBodyMount = "nested" | "treeRoot";
-
-const sidePanelBodyByKey = new Map<string, (ctx: SidePanelBodyViewContext) => UiNode>();
-const sidePanelBodyMountByKey = new Map<string, SidePanelBodyMount>();
-
-export function registerSidePanelBody(
-  bodyKey: string,
-  build: (ctx: SidePanelBodyViewContext) => UiNode,
-  options?: { readonly mount?: SidePanelBodyMount },
-): void {
-  sidePanelBodyByKey.set(bodyKey, build);
-  if (options?.mount) {
-    sidePanelBodyMountByKey.set(bodyKey, options.mount);
-  } else {
-    sidePanelBodyMountByKey.delete(bodyKey);
-  }
-}
-
-export function getSidePanelBodyFactory(bodyKey: string): ((ctx: SidePanelBodyViewContext) => UiNode) | undefined {
-  return sidePanelBodyByKey.get(bodyKey);
-}
-
-/** @emoji 🌲 How a declarative side-panel body mounts in the workbench shell tree. */
-export function getSidePanelBodyMount(bodyKey: string): SidePanelBodyMount {
-  return sidePanelBodyMountByKey.get(bodyKey) ?? "nested";
-}
-
-export function unregisterSidePanelBody(bodyKey: string): void {
-  sidePanelBodyByKey.delete(bodyKey);
-  sidePanelBodyMountByKey.delete(bodyKey);
-}
+export {
+  getSidePanelBodyFactory,
+  registerSidePanelBody,
+  unregisterSidePanelBody,
+} from "@framework/platform/core";
 //#endregion 🔖SidePanelBodyViewContext
 
 //#region 🔖Playground
@@ -704,8 +657,14 @@ export function buildPlaygroundWorkbenchApp(ids: PlaygroundIds, controller: Play
   return app;
 }
 
+/** @emoji 🧭 Resolves the platform snapshot from playground (`runtime`) or product shell (`platform`) body context. */
+export function platformFromViewContext(ctx: SidePanelBodyViewContext | WindowBodyViewContext): Platform | undefined {
+  const snapshot = ctx as SidePanelBodyViewContext & WindowBodyViewContext;
+  return snapshot.platform ?? snapshot.runtime;
+}
+
 export function playgroundControllerFromContext(ctx: WindowBodyViewContext | SidePanelBodyViewContext): PlaygroundController<string> | undefined {
-  return ctx.runtime.getActiveApp()?.controller as PlaygroundController<string> | undefined;
+  return platformFromViewContext(ctx)?.getActiveApp()?.controller as PlaygroundController<string> | undefined;
 }
 
 /** @emoji 🪟 Declarative main window: lone puzzle3d viewport surface. */
@@ -716,20 +675,62 @@ export function buildPlaygroundMainWindowBody(ids: PlaygroundIds, ctx: WindowBod
   return buildPuzzle3dWindowBody(ids.mainPuzzle3dViewportSurfaceId, ids.controllerId);
 }
 
-/** @emoji 📋 Declarative workbench side tab: host-bound table surface. */
-export function buildPlaygroundWorkbenchPanelBody(ids: PlaygroundIds, ctx: SidePanelBodyViewContext): UiNode {
+/** @emoji 📋 Declarative workbench side tab: host-bound table surface in a single tree item. */
+export function buildPlaygroundWorkbenchPanelBody(ids: PlaygroundIds, ctx: SidePanelBodyViewContext): UiTreeNode {
   if (!playgroundControllerFromContext(ctx)) {
-    return { type: "text", value: "Missing playground controller" };
+    return sidePanelTreeRootItems("playground.workbench.missing", [{ id: "missing", label: "Missing playground controller" }]);
   }
-  return { type: "table", surfaceId: ids.workbenchPanelSurfaceId, controllerId: ids.controllerId };
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "playground.workbench.table",
+        label: "Workbench",
+        defaultOpen: true,
+        items: [
+          {
+            id: "playground.workbench.table.host",
+            label: "",
+            control: {
+              type: "table",
+              componentKind: "table",
+              surfaceId: ids.workbenchPanelSurfaceId,
+              controllerId: ids.controllerId,
+            },
+          },
+        ],
+      },
+    ],
+  };
 }
 
-/** @emoji 🔎 Declarative details side tab: host-bound table surface. */
-export function buildPlaygroundDetailsPanelBody(ids: PlaygroundIds, ctx: SidePanelBodyViewContext): UiNode {
+/** @emoji 🔎 Declarative details side tab: host-bound table surface in a single tree item. */
+export function buildPlaygroundDetailsPanelBody(ids: PlaygroundIds, ctx: SidePanelBodyViewContext): UiTreeNode {
   if (!playgroundControllerFromContext(ctx)) {
-    return { type: "text", value: "Missing playground controller" };
+    return sidePanelTreeRootItems("playground.details.missing", [{ id: "missing", label: "Missing playground controller" }]);
   }
-  return { type: "table", surfaceId: ids.detailsPanelSurfaceId, controllerId: ids.controllerId };
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "playground.details.table",
+        label: "Details",
+        defaultOpen: true,
+        items: [
+          {
+            id: "playground.details.table.host",
+            label: "",
+            control: {
+              type: "table",
+              componentKind: "table",
+              surfaceId: ids.detailsPanelSurfaceId,
+              controllerId: ids.controllerId,
+            },
+          },
+        ],
+      },
+    ],
+  };
 }
 
 export interface RegisterPlaygroundDeclarativeBodiesOptions {
@@ -740,7 +741,7 @@ export interface RegisterPlaygroundDeclarativeBodiesOptions {
 
 export interface PlaygroundSidePanelBodyRegistration {
   readonly bodyKey: string;
-  readonly build: (ctx: SidePanelBodyViewContext) => UiNode;
+  readonly build: (ctx: SidePanelBodyViewContext) => UiTreeNode;
 }
 
 /** @emoji 📝 Registers multiple side-panel declarative trees. */
@@ -822,9 +823,16 @@ if (import.meta.vitest) {
   }
 
   describe("enforceWindowKindsEngagementInput", () => {
-    it("throws when any window kind lacks engagement.input", () => {
+    it("allows window kinds without engagement", () => {
+      expect(() => enforceWindowKindsEngagementInput([new WindowKindRuntime("w", "W", "body")], "Test app")).not.toThrow();
+    });
+
+    it("throws when a window kind declares engagement without input", () => {
       expect(() =>
-        enforceWindowKindsEngagementInput([new WindowKindRuntime("w", "W", "body")], "Test app"),
+        enforceWindowKindsEngagementInput(
+          [new WindowKindRuntime("w", "W", "body", undefined, [], { options: [{ id: "a", label: "A" }] })],
+          "Test app",
+        ),
       ).toThrow(/engagement\.input/);
     });
   });
@@ -843,6 +851,19 @@ if (import.meta.vitest) {
       engaged.engagement = { status: [{ id: "state", text: "active" }] };
       expect(engaged.engagement?.status?.[0]?.text).toBe("active");
     });
+
+    it("windowEngagementDigest includes control value and command routing", () => {
+      const left: WindowEngagement = {
+        input: { id: "engagement-input", onChange: { controllerId: "ctrl", command: "engagementInput" } },
+        control: { kind: "stepper", value: 1, min: 0, onChange: { controllerId: "ctrl", command: "engagementControlChange" } },
+      };
+      const right: WindowEngagement = {
+        input: { id: "engagement-input", onChange: { controllerId: "ctrl", command: "engagementInput" } },
+        control: { kind: "stepper", value: 2, min: 0, onChange: { controllerId: "ctrl", command: "engagementControlChange" } },
+      };
+      expect(windowEngagementsEqual(left, left)).toBe(true);
+      expect(windowEngagementsEqual(left, right)).toBe(false);
+    });
   });
 
   describe("PlaygroundController", () => {
@@ -860,13 +881,20 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("getSidePanelBodyMount", () => {
-    it("defaults to nested and remembers treeRoot registration", () => {
-      const key = "test.playground.mount";
-      registerSidePanelBody(key, () => ({ type: "text", value: "x" }));
-      expect(getSidePanelBodyMount(key)).toBe("nested");
-      registerSidePanelBody(key, () => ({ type: "tree", sections: [] }), { mount: "treeRoot" });
-      expect(getSidePanelBodyMount(key)).toBe("treeRoot");
+  describe("registerSidePanelBody", () => {
+    it("rejects non-tree panel bodies", () => {
+      const key = "test.playground.panel.invalid";
+      registerSidePanelBody(key, () => ({ type: "text", value: "x" }) as UiTreeNode);
+      expect(() => getSidePanelBodyFactory(key)!({} as SidePanelBodyViewContext)).toThrow(/must be type "tree"/);
+      unregisterSidePanelBody(key);
+    });
+    it("accepts tree panel bodies with sections", () => {
+      const key = "test.playground.panel.tree";
+      registerSidePanelBody(key, () => ({
+        type: "tree",
+        sections: [{ id: "s", items: [{ id: "i", label: "Item" }] }],
+      }));
+      expect(getSidePanelBodyFactory(key)?.({} as SidePanelBodyViewContext).type).toBe("tree");
       unregisterSidePanelBody(key);
     });
   });

@@ -95,8 +95,144 @@ export interface WindowMeasureToggle {
 	readonly onChange: CommandDescriptor;
 }
 
-export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle;
+/** @emoji 🌳 Collapsible branch in the window measures rail; {@link children} are leaves or nested groups. */
+export interface WindowMeasureGroup {
+	readonly kind: "group";
+	readonly id: string;
+	readonly label: string;
+	readonly defaultOpen?: boolean;
+	readonly children: readonly WindowMeasure[];
+}
+
+export type WindowMeasure = WindowMeasureSelect | WindowMeasureSlider | WindowMeasureToggle | WindowMeasureGroup;
 //#endregion 🔖WindowMeasure
+
+//#region 🔖KindWeights
+export type KindWeightMap = Readonly<Record<string, number>>;
+
+/** @emoji ⚖️ Equal weights for every id; sum is 1 (or empty map when no ids). */
+export function uniformKindWeights(ids: readonly string[]): KindWeightMap {
+	if (ids.length === 0) {
+		return {};
+	}
+	const w = 1 / ids.length;
+	return Object.fromEntries(ids.map((id) => [id, w]));
+}
+
+/** @emoji 🏗️ Relative brush-suggestion weight for a single base-tier kind (before group normalization). */
+export const PUZZLE_KIND_SUGGESTION_WEIGHT_BASE = 1;
+
+/** @emoji 🥁 Tambour kinds are suggested 15× as often as base kinds (per-kind weight ratio). */
+export const PUZZLE_KIND_SUGGESTION_WEIGHT_TAMBOUR = 15;
+
+/** @emoji 🏛️ Capital kinds are suggested 10× less often than tambour kinds (tambour:capital = 10:1). */
+export const PUZZLE_KIND_SUGGESTION_WEIGHT_CAPITAL = PUZZLE_KIND_SUGGESTION_WEIGHT_TAMBOUR / 10;
+
+/** @emoji 💊 Capsule kinds are suggested 8× as often as tambour kinds (per-kind weight ratio). */
+export const PUZZLE_KIND_SUGGESTION_WEIGHT_CAPSULE = PUZZLE_KIND_SUGGESTION_WEIGHT_TAMBOUR * 8;
+
+/** @emoji 🎚️ Classifies a catalog kind id into a default brush suggestion tier (nakagin tower vocabulary). */
+export function puzzleKindSuggestionRelativeWeight(kindId: string): number {
+	const k = kindId.toLowerCase();
+	if (k.includes("capsule")) {
+		return PUZZLE_KIND_SUGGESTION_WEIGHT_CAPSULE;
+	}
+	if (k.includes("tambour")) {
+		return PUZZLE_KIND_SUGGESTION_WEIGHT_TAMBOUR;
+	}
+	if (k.includes("capital") || k.startsWith("roof ")) {
+		return PUZZLE_KIND_SUGGESTION_WEIGHT_CAPITAL;
+	}
+	if (k === "base" || k === "base blob" || k.startsWith("core ")) {
+		return PUZZLE_KIND_SUGGESTION_WEIGHT_BASE;
+	}
+	return PUZZLE_KIND_SUGGESTION_WEIGHT_BASE;
+}
+
+/** @emoji 🎚️ Default puzzle brush weights for catalog ids (capsule > tambour > capital > base; sums to 1). */
+export function defaultPuzzleKindWeights(ids: readonly string[]): KindWeightMap {
+	if (ids.length === 0) {
+		return {};
+	}
+	const raw = ids.map((id) => puzzleKindSuggestionRelativeWeight(id));
+	const sum = raw.reduce((acc, w) => acc + w, 0);
+	if (sum <= 0) {
+		return uniformKindWeights(ids);
+	}
+	return Object.fromEntries(ids.map((id, i) => [id, raw[i]! / sum]));
+}
+
+/** @emoji 🎚️ Renormalizes one kind-weight group after a slider move so the group still sums to 1. */
+export function normalizeKindWeightGroup(weights: KindWeightMap, changedId: string, newValue: number): KindWeightMap {
+	const clamped = Math.max(0, Math.min(1, newValue));
+	const ids = Object.keys(weights);
+	if (ids.length === 0) {
+		return { [changedId]: clamped };
+	}
+	const rest = ids.filter((id) => id !== changedId);
+	const budget = 1 - clamped;
+	if (rest.length === 0) {
+		return { [changedId]: 1 };
+	}
+	const restSum = rest.reduce((acc, id) => acc + (weights[id] ?? 0), 0);
+	const next: Record<string, number> = { [changedId]: clamped };
+	if (restSum <= 0) {
+		const each = budget / rest.length;
+		for (const id of rest) {
+			next[id] = each;
+		}
+	} else {
+		for (const id of rest) {
+			next[id] = (budget * (weights[id] ?? 0)) / restSum;
+		}
+	}
+	return next;
+}
+
+/** @emoji 🔀 Merges catalog ids with existing weights (uniform for new ids, drops unknown). */
+export function syncKindWeightMap(ids: readonly string[], existing: KindWeightMap): KindWeightMap {
+	if (ids.length === 0) {
+		return {};
+	}
+	const prev = ids.map((id) => existing[id] ?? 0);
+	const sum = prev.reduce((a, b) => a + b, 0);
+	if (sum <= 0) {
+		return defaultPuzzleKindWeights(ids);
+	}
+	return Object.fromEntries(ids.map((id, i) => [id, prev[i]! / sum]));
+}
+
+export type WeightedOrderRng = () => number;
+
+/** @emoji 🎲 Weighted sampling without replacement; higher weight → earlier in the list. */
+export function weightedOrder<T>(items: readonly T[], weightOf: (item: T) => number, rng: WeightedOrderRng = Math.random): readonly T[] {
+	if (items.length < 2) {
+		return [...items];
+	}
+	const remaining = [...items];
+	const out: T[] = [];
+	while (remaining.length > 0) {
+		const weights = remaining.map((item) => Math.max(0, weightOf(item)));
+		const total = weights.reduce((a, b) => a + b, 0);
+		let pick = 0;
+		if (total > 0) {
+			let r = rng() * total;
+			for (let i = 0; i < remaining.length; i += 1) {
+				r -= weights[i]!;
+				if (r <= 0) {
+					pick = i;
+					break;
+				}
+			}
+		} else {
+			pick = Math.floor(rng() * remaining.length);
+		}
+		out.push(remaining[pick]!);
+		remaining.splice(pick, 1);
+	}
+	return out;
+}
+//#endregion 🔖KindWeights
 
 //#region 🔖Layout
 /** @emoji 🪟 Single window slot in the abstract layout tree. */
@@ -104,6 +240,8 @@ export interface WindowLayoutWindowNode {
 	readonly kind: "window";
 	readonly windowKindId: string;
 	readonly title?: string;
+	readonly instanceId?: string;
+	readonly templateId?: string;
 }
 
 /** @emoji 📚 Tab stack node grouping window slots. */
@@ -126,10 +264,59 @@ export interface WindowLayout {
 }
 //#endregion 🔖Layout
 
+//#region 🔖WindowTemplate
+/** @emoji 📐 Preset for spawning a window of a kind (camera, projection, …). */
+export interface WindowTemplate {
+	readonly id: string;
+	readonly label: string;
+	readonly iconId?: string;
+	readonly controllerId?: string;
+	readonly command?: string;
+	readonly args?: unknown;
+}
+//#endregion 🔖WindowTemplate
+
+//#region 🔖NamedLayout
+/** @emoji 🧭 Reusable window arrangement (builtin catalog or user-saved). */
+export interface NamedLayout {
+	readonly id: string;
+	readonly label: string;
+	readonly iconId?: string;
+	readonly layout: WindowLayout;
+	readonly origin: "builtin" | "user";
+}
+
+/** @emoji 🧭 Factory for a catalog or saved {@link NamedLayout}. */
+export function createNamedLayout(
+	id: string,
+	label: string,
+	layout: WindowLayout,
+	origin: NamedLayout["origin"] = "builtin",
+	iconId?: string,
+): NamedLayout {
+	return { id, label, layout, origin, ...(iconId ? { iconId } : {}) };
+}
+
+/** @emoji 🔀 Merges named layouts by `id`; extension entries override base. */
+export function mergeNamedLayouts(base: readonly NamedLayout[] | undefined, extension: readonly NamedLayout[] | undefined): NamedLayout[] {
+	return mergeById(base, extension) ?? [];
+}
+//#endregion 🔖NamedLayout
+
 //#region 🔖LayoutFactories
 /** @emoji 🪟 Single window slot helper for {@link WindowLayout} trees. */
-export function createWindowLayout(windowKindId: string, title?: string): WindowLayoutWindowNode {
-	return { kind: "window", windowKindId, ...(title ? { title } : {}) };
+export function createWindowLayout(
+	windowKindId: string,
+	title?: string,
+	options?: { readonly instanceId?: string; readonly templateId?: string },
+): WindowLayoutWindowNode {
+	return {
+		kind: "window",
+		windowKindId,
+		...(title ? { title } : {}),
+		...(options?.instanceId ? { instanceId: options.instanceId } : {}),
+		...(options?.templateId ? { templateId: options.templateId } : {}),
+	};
 }
 
 /** @emoji 📚 Stack layout from ordered window kind ids. */
@@ -275,10 +462,10 @@ export interface FindItem {
 //#endregion 🔖CommandsPalette
 
 //#region 🔖SideTab
-/** @emoji 📐 Fixed platform shell panel slot (left: windows/overview/workbench; right: details/settings/chat). */
-export type PanelKind = "windows" | "overview" | "workbench" | "details" | "settings" | "chat";
+/** @emoji 📐 Fixed platform shell panel slot (left: display/workbench/overview; right: details/settings/chat). */
+export type PanelKind = "display" | "overview" | "workbench" | "details" | "settings" | "chat";
 
-export const LEFT_PANEL_KINDS: readonly PanelKind[] = ["windows", "overview", "workbench"];
+export const LEFT_PANEL_KINDS: readonly PanelKind[] = ["display", "workbench", "overview"];
 export const RIGHT_PANEL_KINDS: readonly PanelKind[] = ["details", "settings", "chat"];
 export const PANEL_KINDS: readonly PanelKind[] = [...LEFT_PANEL_KINDS, ...RIGHT_PANEL_KINDS];
 
@@ -358,6 +545,78 @@ export abstract class Store<TSnapshot> {
 	}
 }
 //#endregion 🔖Store
+
+//#region 🔖DisplayStore
+/** @emoji 💾 Key-value persistence port for user-saved display layouts (renderer supplies the backend). */
+export interface StoragePort {
+	get(key: string): string | null;
+	set(key: string, value: string): void;
+	remove(key: string): void;
+}
+
+function namedLayoutStorageKey(appId: string): string {
+	return `semio.display.layouts.${appId}`;
+}
+
+/** @emoji 🧭 Observable store of user-saved {@link NamedLayout}s for one app. */
+export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
+	private layouts: NamedLayout[] = [];
+
+	constructor(
+		private readonly appId: string,
+		private readonly storage: StoragePort,
+	) {
+		super();
+		this.layouts = this.readPersisted();
+	}
+
+	getSnapshot(): readonly NamedLayout[] {
+		return this.layouts;
+	}
+
+	save(layout: NamedLayout): void {
+		const next = mergeNamedLayouts(
+			this.layouts.filter((entry) => entry.id !== layout.id),
+			[layout],
+		);
+		this.layouts = next;
+		this.persist();
+		this.notify();
+	}
+
+	remove(layoutId: string): void {
+		const next = this.layouts.filter((entry) => entry.id !== layoutId);
+		if (next.length === this.layouts.length) return;
+		this.layouts = next;
+		this.persist();
+		this.notify();
+	}
+
+	private readPersisted(): NamedLayout[] {
+		const raw = this.storage.get(namedLayoutStorageKey(this.appId));
+		if (!raw) return [];
+		try {
+			const parsed = JSON.parse(raw) as unknown;
+			if (!Array.isArray(parsed)) return [];
+			return parsed.filter(
+				(entry): entry is NamedLayout =>
+					Boolean(entry) &&
+					typeof entry === "object" &&
+					typeof (entry as NamedLayout).id === "string" &&
+					typeof (entry as NamedLayout).label === "string" &&
+					(entry as NamedLayout).origin === "user" &&
+					Boolean((entry as NamedLayout).layout),
+			);
+		} catch {
+			return [];
+		}
+	}
+
+	private persist(): void {
+		this.storage.set(namedLayoutStorageKey(this.appId), JSON.stringify(this.layouts));
+	}
+}
+//#endregion 🔖DisplayStore
 
 //#region 🔖Observable
 /** @emoji 📦 In-memory cell store; notifies subscribers on `set`. */
@@ -572,6 +831,7 @@ export class BaseWindowKindRuntime {
 		readonly bodyKey: string,
 		readonly iconId?: string,
 		readonly measures: readonly WindowMeasure[] = [],
+		readonly templates: readonly WindowTemplate[] = [],
 	) {}
 }
 //#endregion 🔖WindowKindRuntime
@@ -581,6 +841,7 @@ export class BaseWindowKindRuntime {
 export class BaseModeRuntime {
 	tools: AppTools = {};
 	windowKinds: BaseWindowKindRuntime[] = [];
+	namedLayouts: NamedLayout[] = [];
 	defaultLayout?: WindowLayout;
 	panelTabs: SideTabSpec[] = [];
 	footerItems: FooterItem[] = [];
@@ -618,6 +879,7 @@ export interface ResolvedAppState {
 	readonly iconId: string | undefined;
 	readonly tools: AppTools | undefined;
 	readonly windowKinds: readonly BaseWindowKindRuntime[];
+	readonly namedLayouts: readonly NamedLayout[];
 	readonly defaultLayout: WindowLayout;
 	readonly panelTabs: SideTabSpec[];
 	readonly footerItems: FooterItem[];
@@ -635,6 +897,7 @@ export function resolveBaseAppState(app: BaseAppRuntime, requestedModeId?: strin
 		iconId: mode?.iconId ?? app.iconId,
 		tools: mergeAppTools(app.tools, mode?.tools),
 		windowKinds: mergedWindowKinds,
+		namedLayouts: mergeNamedLayouts(app.namedLayouts, mode?.namedLayouts),
 		defaultLayout: mode?.defaultLayout ?? app.defaultLayout,
 		panelTabs: mergedPanelTabs,
 		footerItems: mergeById(app.footerItems, mode?.footerItems) ?? app.footerItems,
@@ -649,6 +912,7 @@ export class BaseAppRuntime {
 	defaultModeId?: string;
 	private activeModeIdOverride: string | null = null;
 	windowKinds: BaseWindowKindRuntime[] = [];
+	namedLayouts: NamedLayout[] = [];
 	defaultLayout!: WindowLayout;
 	tools: AppTools = {};
 	panelTabs: SideTabSpec[] = [];
@@ -959,6 +1223,80 @@ if (import.meta.vitest) {
 				[{ id: "x", label: "new" }],
 			);
 			expect(merged?.[0].label).toBe("new");
+		});
+	});
+
+	describe("display panel types", () => {
+		it("LEFT_PANEL_KINDS places display left of workbench", () => {
+			expect(LEFT_PANEL_KINDS).toEqual(["display", "workbench", "overview"]);
+		});
+
+		it("createWindowLayout carries template and instance ids", () => {
+			const node = createWindowLayout("kind-a", "Title", { instanceId: "inst-1", templateId: "top" });
+			expect(node.instanceId).toBe("inst-1");
+			expect(node.templateId).toBe("top");
+		});
+
+		it("NamedLayoutStore persists user layouts via StoragePort", () => {
+			const memory = new Map<string, string>();
+			const storage: StoragePort = {
+				get: (key) => memory.get(key) ?? null,
+				set: (key, value) => {
+					memory.set(key, value);
+				},
+				remove: (key) => {
+					memory.delete(key);
+				},
+			};
+			const store = new NamedLayoutStore("app-a", storage);
+			const layout = createStackLayout(["main"]);
+			store.save(createNamedLayout("user-1", "Mine", layout, "user"));
+			expect(store.getSnapshot()).toHaveLength(1);
+			const reloaded = new NamedLayoutStore("app-a", storage);
+			expect(reloaded.getSnapshot()[0]?.label).toBe("Mine");
+			reloaded.remove("user-1");
+			expect(reloaded.getSnapshot()).toHaveLength(0);
+		});
+	});
+
+	describe("kind weight helpers", () => {
+		it("normalizeKindWeightGroup keeps group sum at 1", () => {
+			const base = { a: 0.5, b: 0.3, c: 0.2 };
+			const next = normalizeKindWeightGroup(base, "a", 0.8);
+			const sum = Object.values(next).reduce((acc, v) => acc + v, 0);
+			expect(sum).toBeCloseTo(1, 5);
+			expect(next.a).toBeCloseTo(0.8, 5);
+		});
+
+		it("weightedOrder favors high weights at the front with fixed rng", () => {
+			const items = ["a", "b", "c"];
+			const ordered = weightedOrder(items, (id) => (id === "a" ? 100 : 1), () => 0);
+			expect(ordered[0]).toBe("a");
+		});
+
+		it("defaultPuzzleKindWeights sums to 1 and encodes tambour/base/capital/capsule ratios", () => {
+			const weights = defaultPuzzleKindWeights(["Base", "Capital", "Tambour", "Capsule J"]);
+			const sum = Object.values(weights).reduce((acc, v) => acc + v, 0);
+			expect(sum).toBeCloseTo(1, 8);
+			const base = weights.Base ?? 0;
+			const capital = weights.Capital ?? 0;
+			const tambour = weights.Tambour ?? 0;
+			const capsule = weights["Capsule J"] ?? 0;
+			expect(tambour / base).toBeCloseTo(15, 5);
+			expect(tambour / capital).toBeCloseTo(10, 5);
+			expect(capsule / tambour).toBeCloseTo(8, 5);
+		});
+
+		it("syncKindWeightMap uses default puzzle weights when existing group is empty", () => {
+			const synced = syncKindWeightMap(["Base", "Tambour"], {});
+			expect(synced.Base! / synced.Tambour!).toBeCloseTo(1 / 15, 5);
+		});
+
+		it("puzzleKindSuggestionRelativeWeight maps handle and vortex catalog ids", () => {
+			expect(puzzleKindSuggestionRelativeWeight("door capsule right")).toBe(PUZZLE_KIND_SUGGESTION_WEIGHT_CAPSULE);
+			expect(puzzleKindSuggestionRelativeWeight("tambour circular top")).toBe(PUZZLE_KIND_SUGGESTION_WEIGHT_TAMBOUR);
+			expect(puzzleKindSuggestionRelativeWeight("roof rectangular top")).toBe(PUZZLE_KIND_SUGGESTION_WEIGHT_CAPITAL);
+			expect(puzzleKindSuggestionRelativeWeight("core rectangular bottom")).toBe(PUZZLE_KIND_SUGGESTION_WEIGHT_BASE);
 		});
 	});
 

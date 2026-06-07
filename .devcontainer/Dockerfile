@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-mono \
     fonts-noto \
     ripgrep \
+    cloc \
     netcat-openbsd \
     iproute2 \
     net-tools \

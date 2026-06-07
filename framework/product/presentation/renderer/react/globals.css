@@ -95,11 +95,41 @@
 	overflow: visible;
 }
 
+.reveal .slides > section > section.presentation-arrangement--interactive:not(.presentation-arrangement--positioned) {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.reveal .slides > section > section.presentation-arrangement--interactive > .presentation-arrangement-surface {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
 .reveal .slides > section > section.presentation-arrangement--positioned {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	text-align: initial;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.reveal .slides > section > section.presentation-arrangement--positioned > .presentation-arrangement-surface {
+	position: relative;
+	flex: 1 1 auto;
+	align-self: stretch;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
 }
 
 /* #region 🔖Interaction */
@@ -200,7 +230,22 @@
 
 .reveal
 	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
-	:is(.presentation-disposition-frame, .presentation-morph-slot--figure),
+	.presentation-morph-slot--figure::after,
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	background: color-mix(in oklab, var(--color-primary) 40%, transparent);
+	transition: background-color 0.15s ease;
+}
+
 .reveal
 	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
 	.presentation-morph-anchor,
@@ -211,9 +256,6 @@
 	transition: background-color 0.15s ease;
 }
 
-.reveal
-	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
-	:is(.presentation-disposition-frame, .presentation-morph-slot--figure)::after,
 .reveal
 	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
 	.presentation-morph-anchor::after,
@@ -228,11 +270,14 @@
 	position: relative;
 }
 
-.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition--fullscreen,
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition--enlarged,
+.reveal
+	.presentation-arrangement-surface
+	> .presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--pinned),
 .reveal
 	.slides
 	> section.presentation-arrangement--interactive
-	> .presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--pinned) {
+	> .presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--pinned) {
 	display: flex;
 	position: absolute;
 	align-items: center;
@@ -241,11 +286,11 @@
 	background: color-mix(in oklab, var(--base) 94%, transparent);
 }
 
-.reveal .presentation-interactive-disposition--fullscreen {
+.reveal .presentation-interactive-disposition--enlarged {
 	z-index: 50;
 }
 
-.reveal .presentation-interactive-disposition--fullscreen .presentation-interactive-disposition__content {
+.reveal .presentation-interactive-disposition--enlarged .presentation-interactive-disposition__content {
 	flex: 1 1 auto;
 	width: 100%;
 	height: 100%;
@@ -258,13 +303,13 @@
 	min-height: 0;
 }
 
-.reveal .presentation-interactive-disposition--fullscreen .presentation-interactive-disposition__chrome {
+.reveal .presentation-interactive-disposition--enlarged .presentation-interactive-disposition__chrome {
 	z-index: 2;
 }
 
 .reveal
 	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
 	:is(.presentation-disposition-frame, .presentation-morph-slot) {
 	position: static !important;
@@ -277,11 +322,29 @@
 
 .reveal
 	.presentation-arrangement-canvas
-	.presentation-interactive-disposition--fullscreen:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
 	.presentation-figure-crop-fill {
 	width: 100% !important;
 	height: 100% !important;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged:not(
+		.presentation-interactive-disposition--offset
+	)
+	.presentation-interactive-disposition__content
+	.presentation-morph-anchor,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged:not(
+		.presentation-interactive-disposition--offset
+	)
+	.presentation-interactive-disposition__content
+	.presentation-media-pdf-document {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
 }
 
 .reveal .presentation-interactive-disposition--pinned,
@@ -313,8 +376,21 @@
 	.presentation-arrangement-canvas
 	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
 	.presentation-interactive-disposition__content
-	:is(.presentation-disposition-frame, .presentation-morph-slot) {
+	:is(.presentation-disposition-frame, .presentation-morph-slot:not(.presentation-morph-slot--figure)) {
 	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-morph-slot--figure {
+	position: relative !important;
 	left: auto !important;
 	top: auto !important;
 	width: 100% !important;
@@ -446,11 +522,25 @@
 	cursor: ew-resize;
 }
 
-.reveal .presentation-interaction-fullscreen {
+.reveal .presentation-interactive-disposition > .presentation-interaction-actions {
 	position: absolute;
 	top: 4px;
 	right: 4px;
-	z-index: 60;
+	z-index: 90;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	pointer-events: none;
+}
+
+.reveal .presentation-interactive-disposition--enlarged > .presentation-interaction-actions {
+	z-index: 90;
+}
+
+.reveal .presentation-interaction-enlarge,
+.reveal .presentation-interaction-reset {
+	position: static;
 	pointer-events: auto;
 	width: 1.5rem;
 	height: 1.5rem;
@@ -462,6 +552,98 @@
 	font-size: 0.75rem;
 	line-height: 1;
 	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.reveal .presentation-interaction-enlarge:hover,
+.reveal .presentation-interaction-reset:hover {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-element-color);
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged
+	.presentation-morph-anchor {
+	position: relative;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged
+	.presentation-pdf-page-nav,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-pdf-page-nav {
+	position: absolute;
+	left: 50%;
+	bottom: 0.75rem;
+	z-index: 3;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 0.5rem;
+	transform: translateX(-50%);
+	pointer-events: auto;
+}
+
+.reveal .presentation-pdf-page-nav__button {
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: 1px solid var(--border-window-color);
+	border-radius: 4px;
+	background: color-mix(in oklab, var(--panel) 92%, transparent);
+	color: var(--foreground);
+	font-size: 1.125rem;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease,
+		opacity 0.15s ease;
+}
+
+.reveal .presentation-pdf-page-nav__button:hover:not(:disabled) {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-element-color);
+}
+
+.reveal .presentation-pdf-page-nav__button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+.reveal .presentation-interaction-slide-reset-host {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 70;
+	width: 5rem;
+	height: 5rem;
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-slide-reset {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 1;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 1px solid var(--border-window-color);
+	border-radius: 4px;
+	background: var(--panel);
+	color: var(--foreground);
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 1;
 	pointer-events: auto;
 	transition:
 		background-color 0.15s ease,
@@ -469,7 +651,41 @@
 		border-color 0.15s ease;
 }
 
-.reveal .presentation-interaction-fullscreen:hover {
+.reveal
+	.presentation-interactive-disposition--kind-video:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-video,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-pdf,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-pdf
+	canvas {
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-slide-reset-host:hover .presentation-interaction-slide-reset,
+.reveal .presentation-interaction-slide-reset-host:focus-within .presentation-interaction-slide-reset,
+.reveal
+	.presentation-interaction-slide-reset-host.presentation-interaction-slide-reset-host--near
+	.presentation-interaction-slide-reset {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.reveal .presentation-interaction-slide-reset-host:hover .presentation-interaction-slide-reset:hover,
+.reveal
+	.presentation-interaction-slide-reset-host.presentation-interaction-slide-reset-host--near
+	.presentation-interaction-slide-reset:hover,
+.reveal
+	.presentation-interaction-slide-reset-host:focus-within
+	.presentation-interaction-slide-reset:hover {
 	background: var(--hover-panel);
 	color: var(--foreground);
 	border-color: var(--border-element-color);
@@ -506,7 +722,9 @@
 	pointer-events: none;
 }
 
-.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition,
+.reveal
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition:not(.presentation-target-ghost):not(.presentation-source-ghost),
 .reveal .presentation-arrangement-canvas > .presentation-interactive-row-band {
 	pointer-events: auto;
 }
@@ -569,14 +787,125 @@
 	width: 100%;
 	height: 100%;
 	background-repeat: no-repeat;
-	background-size: var(--presentation-figure-bg-size);
+	background-size: var(--presentation-figure-bg-size, cover);
 	background-position: var(--presentation-figure-bg-position);
 }
 
-.reveal .slides section[data-auto-animate="pending"] .presentation-figure-crop-fill,
-.reveal .slides section[data-auto-animate="running"] .presentation-figure-crop-fill {
-	background-size: var(--presentation-figure-bg-size-morph);
-	background-position: var(--presentation-figure-bg-position-morph);
+.reveal .presentation-morph-slot--figure {
+	overflow: hidden;
+	background-repeat: no-repeat;
+	background-size: var(--presentation-figure-bg-size, cover);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"]
+	.presentation-morph-crop-from.presentation-morph-slot--figure,
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"]
+	.presentation-morph-crop-from
+	.presentation-morph-slot--figure {
+	background-size: var(--presentation-figure-bg-size, cover);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-from.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-from
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	animation: presentation-figure-crop-morph-from-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+.reveal
+	.slides
+	section[data-auto-animate="pending"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section[data-auto-animate="pending"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size, cover));
+	background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
+}
+
+.reveal
+	.slides
+	section[data-auto-animate="running"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section[data-auto-animate="running"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	animation: presentation-figure-crop-morph-grid-to-focus var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+@keyframes presentation-figure-crop-morph-grid-to-focus {
+	from {
+		background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size, cover));
+		background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+}
+
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	animation: presentation-figure-crop-morph-from-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+@keyframes presentation-figure-crop-morph-to-rest {
+	from {
+		background-size: var(--presentation-figure-bg-size-morph, cover);
+		background-position: var(--presentation-figure-bg-position-morph);
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+}
+
+@keyframes presentation-figure-crop-morph-from-rest {
+	from {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size-morph, cover);
+		background-position: var(--presentation-figure-bg-position-morph);
+	}
+}
+
+@keyframes presentation-target-ghost-frame {
+	from {
+		left: var(--presentation-morph-frame-left);
+		top: var(--presentation-morph-frame-top);
+		width: var(--presentation-morph-frame-width);
+		height: var(--presentation-morph-frame-height);
+	}
+	to {
+		left: var(--presentation-frame-left);
+		top: var(--presentation-frame-top);
+		width: var(--presentation-frame-width);
+		height: var(--presentation-frame-height);
+	}
 }
 
 .reveal .presentation-figure-crop-frame,
@@ -600,7 +929,7 @@
 	opacity: 0;
 }
 
-@keyframes presentation-morph-source-fade-out {
+@keyframes presentation-target-ghost-fade-out {
 	from {
 		opacity: 1;
 	}
@@ -609,86 +938,74 @@
 	}
 }
 
-@keyframes presentation-morph-into-fade-in {
+@keyframes presentation-morph-one-fade-out {
 	from {
-		opacity: 0;
+		opacity: 1;
 	}
 	to {
-		opacity: 1;
+		opacity: 0;
 	}
 }
 
-.reveal .presentation-morph-source {
+.reveal .presentation-target-ghost {
 	opacity: 0;
 	visibility: visible;
-	pointer-events: none;
+	z-index: 0;
+	pointer-events: none !important;
 }
 
-.reveal .presentation-morph-into {
+.reveal .presentation-morph-target:not(.opacity-20) {
 	opacity: 1;
 	visibility: visible;
 }
 
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-source {
-	opacity: 1 !important;
-	visibility: visible !important;
-	pointer-events: auto;
-	animation: none !important;
+.reveal .presentation-morph-target.opacity-20 {
+	opacity: 0.2;
+	visibility: visible;
 }
 
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-source {
-	visibility: visible !important;
-	pointer-events: none;
-	animation: presentation-morph-source-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
-}
-
-.reveal
-	.slides
-	section[title="catalogue-focus"].presentation-arrangement--settled
-	.presentation-arrangement-canvas
-	> .presentation-interactive-disposition.presentation-interactive-disposition--kind-figure {
+.reveal .presentation-source-ghost {
 	opacity: 0 !important;
+	visibility: hidden !important;
+	z-index: 0;
 	pointer-events: none !important;
 }
 
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-into {
-	opacity: 0 !important;
-	visibility: hidden !important;
+.reveal .presentation-morph-one {
+	opacity: 1;
+	visibility: visible;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-target-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: none !important;
+	animation: none !important;
+}
+
+.reveal .slides section[data-auto-animate="running"] .presentation-target-ghost {
+	visibility: visible !important;
+	pointer-events: none;
+	animation: presentation-target-ghost-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-source-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
 	pointer-events: none;
 	animation: none !important;
 }
 
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-into {
+.reveal .slides section[data-auto-animate="running"] .presentation-source-ghost {
+	opacity: 1 !important;
 	visibility: visible !important;
-	pointer-events: auto;
-	animation: presentation-morph-into-fade-in var(--presentation-auto-animate-duration, 1s) ease forwards !important;
-}
-
-.reveal
-	.slides
-	section[data-settle-before-morph-to]:not([data-auto-animate="pending"]):not([data-auto-animate="running"]):not(
-		.presentation-arrangement--settled
-	)
-	.presentation-morph-slot--dormant {
-	opacity: 0 !important;
-	visibility: hidden !important;
 	pointer-events: none;
 }
 
-.reveal
-	.slides
-	section[data-settle-before-morph-to].presentation-arrangement--settled
-	.presentation-morph-slot--dormant,
-.reveal
-	.slides
-	section[data-settle-before-morph-to][data-auto-animate="pending"]
-	.presentation-morph-slot--dormant,
-.reveal
-	.slides
-	section[data-settle-before-morph-to][data-auto-animate="running"]
-	.presentation-morph-slot--dormant {
-	opacity: 1 !important;
-	visibility: visible !important;
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-one[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-one[data-auto-animate-target] {
+	animation: presentation-morph-one-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+	pointer-events: none !important;
 }
 
 .reveal .presentation-disposition-frame--overlay {
@@ -713,44 +1030,78 @@
 
 .reveal .presentation-media-pdf {
 	display: block;
+	flex-shrink: 0;
 	background: #fff;
 	line-height: 0;
-	max-height: 100%;
-	max-width: 100%;
 }
 
 .reveal .presentation-media-pdf canvas {
 	display: block;
-	max-height: 100%;
-	max-width: 100%;
+	width: auto;
+	height: auto;
 }
 
-.reveal .slides section[data-auto-animate] [data-id="goal"] h2 {
+.reveal .slides section[data-auto-animate] [data-id^="goal"] h2 {
 	white-space: nowrap;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] {
+.reveal .slides > section > section.presentation-arrangement--intro {
 	--r-heading-margin: 0 0 0.12em 0;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] h4[data-id] {
-	margin: 0;
-	line-height: 1.1;
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--intro:not(.presentation-arrangement--positioned) {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-rows {
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-text-morph-block {
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--intro:not(.presentation-arrangement--positioned)
+	:is(h1, h2, h3, h4, p) {
+	display: block;
+	margin: 0;
+	line-height: 1.1;
+	width: auto;
+	max-width: 100%;
+	margin-inline: auto;
+	text-wrap: balance;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-rows {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
 	row-gap: 0.15em;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-authors + .presentation-intro-affiliations {
-	margin-top: 0.35em;
-}
-
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-line {
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-line {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
 	column-gap: 0.35em;
 }
 
-.reveal .slides > section > section[data-auto-animate-id^="intro--"] .presentation-intro-affiliations .presentation-affiliation-row {
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-authors + .presentation-intro-affiliations {
+	margin-top: 0.35em;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-affiliations .presentation-affiliation-row {
 	width: fit-content;
 	max-width: 100%;
 }

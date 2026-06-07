@@ -11,8 +11,11 @@ import type {
     BulletEmbodiment,
     DispositionPosition,
     DispositionStyle,
+    Arrangement,
     FigureEmbodiment,
+    FigureMosaicGrid,
     ParticipantEmphasis,
+    Slide,
     PdfEmbodiment,
     Presentation,
     RenderSlide,
@@ -32,11 +35,14 @@ import {
     expandThoughtSlides,
     formatPresentationUrlHash,
     intro,
+    isIntroArrangementId,
+    morphId,
     parsePresentationSlideHash,
     presentationLanguage,
     presentationSlideAt,
     resolutionScopeForArrangement,
     resolveArrangement,
+    resolveEmbodiment,
     resolveTextMorphRoot,
     remapSplitDispositions,
     split,
@@ -46,6 +52,7 @@ import {
 import {
     applyElementsSurfaceChrome,
     Expertise,
+    Icon,
     type ElementsSurfaceChromeInput,
 } from "@ui/react";
 import {
@@ -64,7 +71,6 @@ import {
     type ReactNode,
     type RefObject,
 } from "react";
-import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { Document, Page, pdfjs } from "react-pdf";
 import Reveal from "reveal.js";
@@ -214,7 +220,263 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
 }
 //#endregion 🔖RevealChrome
 
+//#region 🔖RevealMorph
+/** @emoji 👻 reveal.js-only morph companion role (not part of presentation core). */
+export type RevealMorphCompanionKind = "source" | "target";
+
+/** @emoji ✅ Resolved disposition plus optional reveal.js morph companion metadata. */
+export interface RevealResolvedDisposition extends ResolvedDisposition {
+	readonly revealMorphCompanion?: RevealMorphCompanionKind;
+	/** @emoji 📐 Source slide frame for target ghosts: paired with {@link ResolvedDisposition.position} for frame and crop morph during auto-animate. */
+	readonly revealMorphFromFrame?: DispositionPosition;
+	/** @emoji 📐 Target slide frame for source tiles: paired with {@link ResolvedDisposition.position} when the next slide morphFrom references this participant. */
+	readonly revealMorphToFrame?: DispositionPosition;
+	/** @emoji 📐 Previous-slide morphTo slot frame (catalogue grid) for crop morph into {@link ResolvedDisposition.position}. */
+	readonly revealMorphFromMorphToFrame?: DispositionPosition;
+}
+
+function primaryDispositionByParticipant(arrangement: Arrangement): Map<string, { readonly participantId: string; readonly embodimentId: string; readonly emphasis: ParticipantEmphasis }> {
+	const map = new Map<string, { readonly participantId: string; readonly embodimentId: string; readonly emphasis: ParticipantEmphasis }>();
+	for (const disposition of arrangement.dispositions) {
+		if (!map.has(disposition.participantId)) {
+			map.set(disposition.participantId, disposition);
+		}
+	}
+	return map;
+}
+
+function dispositionByParticipant(arrangement: Arrangement): Map<string, Disposition> {
+	const map = new Map<string, Disposition>();
+	for (const disposition of arrangement.dispositions) {
+		if (!map.has(disposition.participantId)) {
+			map.set(disposition.participantId, disposition);
+		}
+	}
+	return map;
+}
+
+function revealMorphCompanionFromMorphFrom(
+	scope: ReturnType<typeof buildResolutionScope>,
+	sourceSlide: Slide,
+	arrangement: Arrangement,
+	options?: { readonly morphLineTargets?: boolean },
+): RevealResolvedDisposition[] {
+	const sourceByParticipant = primaryDispositionByParticipant(sourceSlide.arrangement);
+	const sourceDeclByParticipant = dispositionByParticipant(sourceSlide.arrangement);
+	const morphLineTargets = options?.morphLineTargets ?? true;
+	const companions: RevealResolvedDisposition[] = [];
+	for (const disposition of arrangement.dispositions) {
+		for (const slot of disposition.morphFrom ?? []) {
+			const sourceDisposition = sourceByParticipant.get(slot.participantId);
+			const sourceDecl = sourceDeclByParticipant.get(slot.participantId);
+			const participant = scope.participants.get(slot.participantId);
+			if (!participant) {
+				throw new Error(`morphFrom slot references unknown participant "${slot.participantId}".`);
+			}
+			const embodimentId = slot.embodimentId ?? sourceDisposition?.embodimentId;
+			if (!embodimentId) {
+				throw new Error(
+					`morphFrom slot for "${slot.participantId}" needs embodimentId (or a source disposition with embodimentId).`,
+				);
+			}
+			companions.push({
+				participant,
+				embodiment: resolveEmbodiment(scope, embodimentId),
+				emphasis: sourceDisposition?.emphasis ?? "active",
+				embodimentId,
+				morphId: morphId(participant.id),
+				position: slot.position,
+				revealMorphFromFrame: sourceDecl?.position,
+				revealMorphCompanion: "target",
+			});
+		}
+	}
+	return companions;
+}
+
+function revealMorphCompanionFromMorphTo(
+	scope: ReturnType<typeof buildResolutionScope>,
+	targetSlide: Slide,
+	arrangement: Arrangement,
+): RevealResolvedDisposition[] {
+	const targetByParticipant = primaryDispositionByParticipant(targetSlide.arrangement);
+	const companions: RevealResolvedDisposition[] = [];
+	for (const disposition of arrangement.dispositions) {
+		for (const slot of disposition.morphTo ?? []) {
+			const targetDisposition = targetByParticipant.get(slot.participantId);
+			const participant = scope.participants.get(slot.participantId);
+			if (!participant) {
+				throw new Error(`morphTo slot references unknown participant "${slot.participantId}".`);
+			}
+			const embodimentId = slot.embodimentId ?? targetDisposition?.embodimentId;
+			if (!embodimentId) {
+				throw new Error(
+					`morphTo slot for "${slot.participantId}" needs embodimentId (or a target disposition with embodimentId).`,
+				);
+			}
+			companions.push({
+				participant,
+				embodiment: resolveEmbodiment(scope, embodimentId),
+				emphasis: targetDisposition?.emphasis ?? disposition.emphasis,
+				embodimentId,
+				morphId: morphId(participant.id),
+				position: slot.position,
+				revealMorphCompanion: "source",
+			});
+		}
+	}
+	return companions;
+}
+
+function revealMorphToFrameByParticipant(nextSlide: Slide): Map<string, DispositionPosition> {
+	const map = new Map<string, DispositionPosition>();
+	for (const disposition of nextSlide.arrangement.dispositions) {
+		for (const slot of disposition.morphFrom ?? []) {
+			if (!map.has(slot.participantId)) {
+				map.set(slot.participantId, slot.position);
+			}
+		}
+	}
+	return map;
+}
+
+function revealMorphFromMorphToFrameByParticipant(previousSlide: Slide): Map<string, DispositionPosition> {
+	const map = new Map<string, DispositionPosition>();
+	for (const disposition of previousSlide.arrangement.dispositions) {
+		for (const slot of disposition.morphTo ?? []) {
+			if (!map.has(slot.participantId)) {
+				map.set(slot.participantId, slot.position);
+			}
+		}
+	}
+	return map;
+}
+
+/** @emoji 🔀 Resolves an arrangement and appends reveal.js morph companions for one-to-many / many-to-one. */
+export function resolveRevealArrangement(
+	scope: ReturnType<typeof buildResolutionScope>,
+	arrangement: Arrangement,
+	context: { readonly previousSlide?: Slide; readonly nextSlide?: Slide },
+): RevealResolvedDisposition[] {
+	const resolved = resolveArrangement(scope, arrangement) as RevealResolvedDisposition[];
+	const companions: RevealResolvedDisposition[] = [];
+	if (context.previousSlide !== undefined) {
+		companions.push(...revealMorphCompanionFromMorphFrom(scope, context.previousSlide, arrangement));
+	}
+	const hasMorphTo = arrangement.dispositions.some((disposition) => (disposition.morphTo?.length ?? 0) > 0);
+	if (context.nextSlide !== undefined && hasMorphTo) {
+		companions.push(...revealMorphCompanionFromMorphTo(scope, context.nextSlide, arrangement));
+	}
+	const morphToFrames =
+		context.nextSlide !== undefined ? revealMorphToFrameByParticipant(context.nextSlide) : undefined;
+	const morphFromMorphToFrames =
+		context.previousSlide !== undefined
+			? revealMorphFromMorphToFrameByParticipant(context.previousSlide)
+			: undefined;
+	const withMorphFrames = resolved.map((disposition) => {
+		if (disposition.revealMorphCompanion !== undefined || disposition.position === undefined) {
+			return disposition;
+		}
+		let updated = disposition;
+		const revealMorphToFrame = morphToFrames?.get(disposition.participant.id);
+		if (revealMorphToFrame !== undefined) {
+			updated = { ...updated, revealMorphToFrame };
+		}
+		const revealMorphFromMorphToFrame = morphFromMorphToFrames?.get(disposition.participant.id);
+		if (revealMorphFromMorphToFrame !== undefined) {
+			updated = { ...updated, revealMorphFromMorphToFrame };
+		}
+		return updated;
+	});
+	return [...withMorphFrames, ...companions];
+}
+
+function isRevealMorphCompanionOnly(disposition: RevealResolvedDisposition): boolean {
+	return disposition.revealMorphCompanion !== undefined;
+}
+
+function visibleRevealArrangementPositions(resolved: readonly RevealResolvedDisposition[]): DispositionPosition[] {
+	const positions: DispositionPosition[] = [];
+	for (const disposition of resolved) {
+		if (isRevealMorphCompanionOnly(disposition)) {
+			continue;
+		}
+		if (disposition.style?.opacity === 0) {
+			continue;
+		}
+		if (disposition.position) {
+			positions.push(disposition.position);
+		}
+	}
+	return positions;
+}
+
+/** @emoji ⊕ Centers visible placements; omits reveal-only morph companions. */
+export function centerRevealResolvedArrangement(resolved: readonly RevealResolvedDisposition[]): RevealResolvedDisposition[] {
+	const positions = visibleRevealArrangementPositions(resolved);
+	if (positions.length === 0) {
+		return [...resolved];
+	}
+	const bounds = unionDispositionPositions(positions);
+	const offset = {
+		x: (1 - bounds.width) / 2 - bounds.x,
+		y: (1 - bounds.height) / 2 - bounds.y,
+		width: 0,
+		height: 0,
+	};
+	const epsilon = 1e-6;
+	if (Math.abs(offset.x) < epsilon && Math.abs(offset.y) < epsilon) {
+		return [...resolved];
+	}
+	return resolved.map((disposition) => {
+		if (!disposition.position || isRevealMorphCompanionOnly(disposition)) {
+			return disposition;
+		}
+		return {
+			...disposition,
+			position: {
+				x: disposition.position.x + offset.x,
+				y: disposition.position.y + offset.y,
+				width: disposition.position.width,
+				height: disposition.position.height,
+			},
+		};
+	});
+}
+//#endregion 🔖RevealMorph
+
 //#region 🔖ArrangementSettled
+/** @emoji 🔗 True when two slide sections share the same reveal.js auto-animate run id. */
+export function slidesShareAutoAnimateId(
+	fromSlide: HTMLElement | null | undefined,
+	toSlide: HTMLElement | null | undefined,
+): boolean {
+	const fromId = fromSlide?.getAttribute("data-auto-animate-id");
+	const toId = toSlide?.getAttribute("data-auto-animate-id");
+	return fromId !== null && fromId !== undefined && fromId === toId;
+}
+
+/** @emoji ⏳ True while reveal.js auto-animate is pending or running on one section. */
+export function isSectionAutoAnimating(sectionEl: HTMLElement): boolean {
+	const state = sectionEl.getAttribute("data-auto-animate");
+	return state === "pending" || state === "running";
+}
+
+/** @emoji ⏳ True while reveal.js auto-animate is measuring or running on this slide (or any slide in the deck). */
+export function isRevealSlideAutoAnimating(sectionEl: HTMLElement): boolean {
+	if (isSectionAutoAnimating(sectionEl)) {
+		return true;
+	}
+	const deck = sectionEl.closest(".reveal");
+	if (!(deck instanceof HTMLElement)) {
+		return false;
+	}
+	return (
+		deck.querySelector('section[data-auto-animate="pending"], section[data-auto-animate="running"]') !==
+		null
+	);
+}
+
 /** @emoji ⏳ Clears settled state on arrival so split tiles stay visible at rest; drops settled on slides no longer adjacent. */
 export function syncArrangementSettledState(
 	deckEl: HTMLElement,
@@ -228,6 +490,13 @@ export function syncArrangementSettledState(
 		}
 	}
 	if (currentSlide?.hasAttribute("data-settle-before-morph-to")) {
+		currentSlide.classList.remove("presentation-arrangement--settled");
+	}
+	if (
+		currentSlide?.classList.contains("presentation-arrangement--settled") &&
+		currentSlide.getAttribute("data-auto-animate") !== "pending" &&
+		currentSlide.getAttribute("data-auto-animate") !== "running"
+	) {
 		currentSlide.classList.remove("presentation-arrangement--settled");
 	}
 }
@@ -263,9 +532,15 @@ export function slideChangedEventSlides(event: Event): {
 /** @emoji 🧹 Strips reveal.js FLIP `transform`/`transition` only; never `left`/`top`/`width`/`height` (React owns those on morph frames). */
 export function clearRevealAutoAnimateInlineLayout(deckEl: HTMLElement): void {
 	const flipProps = ["transform", "transition"] as const;
-	for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
-		for (const prop of flipProps) {
-			element.style.removeProperty(prop);
+	const selectors = [
+		"[data-auto-animate-target]",
+		".presentation-arrangement--intro :is(h1, h2, h3, h4, p)",
+	];
+	for (const selector of selectors) {
+		for (const element of deckEl.querySelectorAll<HTMLElement>(selector)) {
+			for (const prop of flipProps) {
+				element.style.removeProperty(prop);
+			}
 		}
 	}
 }
@@ -277,29 +552,72 @@ export function finalizeRevealAutoAnimateRestState(deckEl: HTMLElement): void {
 	)) {
 		slide.setAttribute("data-auto-animate", "");
 	}
+	clearManyToOneMorphArrangementClass(deckEl);
 	clearRevealAutoAnimateInlineLayout(deckEl);
 	for (const element of deckEl.querySelectorAll<HTMLElement>("[data-auto-animate-target]")) {
 		delete element.dataset.autoAnimateTarget;
 	}
+	const presentSlide = deckEl.querySelector<HTMLElement>("section.present");
+	if (
+		presentSlide?.classList.contains("presentation-arrangement--settled") &&
+		presentSlide.getAttribute("data-auto-animate") !== "pending" &&
+		presentSlide.getAttribute("data-auto-animate") !== "running"
+	) {
+		presentSlide.classList.remove("presentation-arrangement--settled");
+	}
 }
 
-/** @emoji ⏳ Swaps split tiles for dormant morph anchors on the outgoing slide when auto-animating to a listed target. */
-export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSlide: HTMLElement): void {
+/** @emoji 🔀 Slide class while auto-animating a `data-settle-before-morph-to` many-to-one run (focus tiles → label ghosts). */
+export const PRESENTATION_MANY_TO_ONE_MORPH_CLASS = "presentation-arrangement--many-to-one-morph";
+
+/** @emoji 🔀 True when `fromSlide` settles into `toSlide` via `data-settle-before-morph-to` (arrangement id on `title`). */
+export function isManyToOneMorphTransition(fromSlide: HTMLElement, toSlide: HTMLElement): boolean {
 	const settleBefore = fromSlide.getAttribute("data-settle-before-morph-to");
 	if (!settleBefore) {
-		return;
+		return false;
 	}
-	const toIds = settleBefore.split(",").filter((id) => id.length > 0);
 	const toId = toSlide.getAttribute("title");
-	if (!toId || !toIds.includes(toId)) {
+	if (!toId) {
+		return false;
+	}
+	return settleBefore.split(",").some((entry) => entry.trim() === toId);
+}
+
+/** @emoji 🧹 Clears {@link PRESENTATION_MANY_TO_ONE_MORPH_CLASS} from all slides in the deck. */
+export function clearManyToOneMorphArrangementClass(deckEl: HTMLElement): void {
+	for (const slide of deckEl.querySelectorAll<HTMLElement>(
+		`section.${PRESENTATION_MANY_TO_ONE_MORPH_CLASS}`,
+	)) {
+		slide.classList.remove(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
+	}
+}
+
+/** @emoji 🔀 Marks the active many-to-one morph run on `fromSlide` and `toSlide` only. */
+export function syncManyToOneMorphArrangementClass(
+	deckEl: HTMLElement,
+	fromSlide: HTMLElement | null,
+	toSlide: HTMLElement | null,
+): void {
+	clearManyToOneMorphArrangementClass(deckEl);
+	if (fromSlide && toSlide && isManyToOneMorphTransition(fromSlide, toSlide)) {
+		fromSlide.classList.add(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
+		toSlide.classList.add(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
+	}
+}
+
+/** @emoji ⏳ Prepares settle + many-to-one frame/crop morph before reveal auto-animate measures FLIP. */
+export function prepareArrangementBeforeAutoAnimate(fromSlide: HTMLElement, toSlide: HTMLElement): void {
+	const deckEl = fromSlide.closest(".reveal");
+	if (deckEl instanceof HTMLElement) {
+		syncManyToOneMorphArrangementClass(deckEl, fromSlide, toSlide);
+	}
+	if (!isManyToOneMorphTransition(fromSlide, toSlide)) {
 		return;
 	}
 	fromSlide.classList.add("presentation-arrangement--settled");
 	void fromSlide.offsetHeight;
 	void toSlide.offsetHeight;
-	for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-morph-source")) {
-		void ghost.offsetHeight;
-	}
+	syncManyToOneGhostMorphFramesFromDom(fromSlide, toSlide);
 }
 
 type AutoAnimateMatcherHost = {
@@ -313,11 +631,86 @@ type AutoAnimateMatcherHost = {
 	) => void;
 };
 
-function elementIsMorphSourceAnchor(element: HTMLElement): boolean {
+function elementIsTargetGhostAnchor(element: HTMLElement): boolean {
 	return (
-		element.classList.contains("presentation-morph-source") ||
-		element.closest(".presentation-morph-source") !== null
+		element.classList.contains("presentation-target-ghost") ||
+		element.closest(".presentation-target-ghost") !== null
 	);
+}
+
+function elementIsSourceGhostAnchor(element: HTMLElement): boolean {
+	return (
+		element.classList.contains("presentation-source-ghost") ||
+		element.closest(".presentation-source-ghost") !== null
+	);
+}
+
+function elementIsMorphOneAnchor(element: HTMLElement): boolean {
+	return (
+		element.classList.contains("presentation-morph-one") ||
+		element.closest(".presentation-morph-one") !== null
+	);
+}
+
+function elementIsLabelMorphSource(element: HTMLElement): boolean {
+	return element.classList.contains("presentation-affiliation-morph-source");
+}
+
+/** @emoji 🎯 True when this node may be a reveal.js auto-animate pair endpoint (intro wrapper or canvas-framed tile). */
+export function isRevealAutoAnimatePairSource(element: HTMLElement): boolean {
+	if (!element.hasAttribute("data-id")) {
+		return false;
+	}
+	if (element.classList.contains("presentation-interactive-disposition")) {
+		return element.classList.contains("presentation-interactive-disposition--canvas-framed");
+	}
+	if (element.closest(".presentation-interactive-disposition") !== null) {
+		return element.matches("h1, h2, h3, h4, h5, h6, p, img, video");
+	}
+	return true;
+}
+
+/** @emoji 📐 Slide-local ink box for reveal.js `measure` (avoids viewport `getBoundingClientRect` fly-in when `center: true`). */
+export function revealInkMeasureForAutoAnimate(element: HTMLElement): {
+	readonly x: number;
+	readonly y: number;
+	readonly width: number;
+	readonly height: number;
+} {
+	const slide = element.closest(
+		"section.presentation-arrangement--interactive, section[data-auto-animate]",
+	);
+	if (!(slide instanceof HTMLElement)) {
+		const rect = element.getBoundingClientRect();
+		return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+	}
+	const slideBounds = slideLayoutBounds(slide);
+	const ink = tightElementBoundsRect(element) ?? element.getBoundingClientRect();
+	return {
+		x: ink.left - slideBounds.left,
+		y: ink.top - slideBounds.top,
+		width: ink.width,
+		height: ink.height,
+	};
+}
+
+function isIntroFlowSlide(slide: HTMLElement): boolean {
+	return (
+		slide.classList.contains("presentation-arrangement--intro") &&
+		!slide.classList.contains("presentation-arrangement--positioned")
+	);
+}
+
+/** @emoji 🎯 reveal.js auto-animate options for canvas morph text (translate only). */
+export function revealTextAutoAnimatePairOptions(
+	_from: HTMLElement,
+	_fromSlide: HTMLElement,
+	_toSlide: HTMLElement,
+): Record<string, unknown> {
+	return {
+		scale: false,
+		measure: revealInkMeasureForAutoAnimate,
+	};
 }
 
 function elementIsFigureMorphSlot(element: HTMLElement): boolean {
@@ -328,16 +721,95 @@ function elementIsFigureMorphSlot(element: HTMLElement): boolean {
 	);
 }
 
-/** @emoji 🔗 reveal.js auto-animate matcher: figure tiles pair only with morph-source ghosts, never label text. */
+function elementIsInteractiveFigureDisposition(element: HTMLElement): boolean {
+	return (
+		element.classList.contains("presentation-interactive-disposition") &&
+		elementIsFigureMorphSlot(element) &&
+		!elementIsSourceGhostAnchor(element) &&
+		!elementIsTargetGhostAnchor(element)
+	);
+}
+
+/** @emoji 🎯 Picks the `to` morph anchor for one `data-id` (focus tile → label target ghost, catalogue source → focus tile). */
+export function resolveMorphAutoAnimateTo(
+	fromElement: HTMLElement,
+	toSlide: HTMLElement,
+): HTMLElement | null {
+	const id = fromElement.getAttribute("data-id");
+	if (!id) {
+		return null;
+	}
+	const escapedId = id.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+	let candidates = [...toSlide.querySelectorAll<HTMLElement>(`[data-id="${escapedId}"]`)];
+	if (candidates.length === 0) {
+		const baseId = id.replace(/--\d+$/, "");
+		if (baseId !== id) {
+			candidates = [...toSlide.querySelectorAll<HTMLElement>(`[data-id="${baseId.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"]`)];
+		} else {
+			candidates = [...toSlide.querySelectorAll<HTMLElement>(`[data-id="${escapedId}--0"]`)];
+		}
+	}
+	if (candidates.length === 0) {
+		return null;
+	}
+	if (elementIsInteractiveFigureDisposition(fromElement)) {
+		const targetGhost = candidates.find(
+			(candidate) =>
+				candidate.classList.contains("presentation-interactive-disposition") &&
+				elementIsTargetGhostAnchor(candidate),
+		);
+		if (targetGhost) {
+			return targetGhost;
+		}
+	}
+	if (elementIsSourceGhostAnchor(fromElement)) {
+		const focusTile = candidates.find((candidate) => elementIsInteractiveFigureDisposition(candidate));
+		if (focusTile) {
+			return focusTile;
+		}
+	}
+	const visible = candidates.find((candidate) => !elementIsLabelMorphSource(candidate));
+	if (visible) {
+		return visible;
+	}
+	return (
+		candidates.find(
+			(candidate) =>
+				!elementIsSourceGhostAnchor(candidate) ||
+				(elementIsTargetGhostAnchor(candidate) &&
+					candidate.classList.contains("presentation-interactive-disposition")),
+		) ?? null
+	);
+}
+
+/** @emoji 🔗 reveal.js auto-animate matcher: intro uses stock `data-id` pairing; catalogue uses ghost-aware pairing. */
 export function presentationAutoAnimateMatcher(
 	this: AutoAnimateMatcherHost,
 	fromSlide: HTMLElement,
 	toSlide: HTMLElement,
 ): { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] {
+	if (isIntroFlowSlide(fromSlide) && isIntroFlowSlide(toSlide)) {
+		const pairs: { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] = [];
+		this.findAutoAnimateMatches(pairs, fromSlide, toSlide, "[data-id]", (node) => {
+			return `${node.nodeName}:::${node.getAttribute("data-id")}`;
+		});
+		return pairs;
+	}
+
 	const pairs: { from: HTMLElement; to: HTMLElement; options?: Record<string, unknown> }[] = [];
-	this.findAutoAnimateMatches(pairs, fromSlide, toSlide, "[data-id]", (node) => {
-		return `${node.nodeName}:::${node.getAttribute("data-id")}`;
-	});
+	for (const fromElement of fromSlide.querySelectorAll<HTMLElement>("[data-id]")) {
+		if (!isRevealAutoAnimatePairSource(fromElement)) {
+			continue;
+		}
+		const toElement = resolveMorphAutoAnimateTo(fromElement, toSlide);
+		if (toElement && isRevealAutoAnimatePairSource(toElement)) {
+			const isTextLeaf = fromElement.matches("h1, h2, h3, h4, h5, h6, p");
+			const options = isTextLeaf
+				? revealTextAutoAnimatePairOptions(fromElement, fromSlide, toSlide)
+				: undefined;
+			pairs.push({ from: fromElement, to: toElement, ...(options ? { options } : {}) });
+		}
+	}
 	const reserved: HTMLElement[] = [];
 	return pairs.filter((pair) => {
 		if (reserved.includes(pair.to)) {
@@ -345,12 +817,27 @@ export function presentationAutoAnimateMatcher(
 		}
 		if (
 			elementIsFigureMorphSlot(pair.from) &&
-			pair.to.closest(".presentation-morph-into") !== null &&
-			!elementIsMorphSourceAnchor(pair.to)
+			pair.to.closest(".presentation-morph-target") !== null &&
+			!elementIsTargetGhostAnchor(pair.to)
 		) {
 			return false;
 		}
-		if (elementIsMorphSourceAnchor(pair.to) && !elementIsFigureMorphSlot(pair.from)) {
+		if (elementIsTargetGhostAnchor(pair.to) && !elementIsFigureMorphSlot(pair.from)) {
+			return false;
+		}
+		if (elementIsSourceGhostAnchor(pair.to)) {
+			return false;
+		}
+		if (elementIsMorphOneAnchor(pair.from)) {
+			return false;
+		}
+		if (elementIsSourceGhostAnchor(pair.from) && !elementIsInteractiveFigureDisposition(pair.to)) {
+			return false;
+		}
+		if (elementIsFigureMorphSlot(pair.from) && elementIsMorphOneAnchor(pair.to)) {
+			return false;
+		}
+		if (elementIsLabelMorphSource(pair.from) && !elementIsLabelMorphSource(pair.to)) {
 			return false;
 		}
 		reserved.push(pair.to);
@@ -370,40 +857,52 @@ export function patchAutoAnimateUniformScale(css: string): string {
 	});
 }
 
-/** @emoji 👻 Opacity overrides so morph ghosts fade 1→0 and morph targets 0→1 during reveal `running`. */
+/** @emoji 👻 Figure ghost visibility during reveal auto-animate (FLIP only; no intro text keyframes). */
 export function presentationMorphGhostAutoAnimateCss(durationSeconds: number): string {
 	const duration = `${durationSeconds}s`;
 	return `
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-source[data-auto-animate-target],
-.reveal .slides section[data-auto-animate="pending"] .presentation-affiliation-morph-source[data-auto-animate-target] {
+.reveal .slides section[data-auto-animate="pending"] .presentation-target-ghost[data-auto-animate-target] {
 	opacity: 1 !important;
 	visibility: visible !important;
 	animation: none !important;
 }
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target],
-.reveal .slides section[data-auto-animate="running"] .presentation-affiliation-morph-source[data-auto-animate-target] {
+.reveal .slides section[data-auto-animate="running"] .presentation-target-ghost[data-auto-animate-target] {
 	visibility: visible !important;
-	animation: presentation-morph-source-fade-out ${duration} ease forwards !important;
+	animation: presentation-target-ghost-fade-out ${duration} ease forwards !important;
 }
-.reveal .slides section[data-auto-animate="pending"] .presentation-morph-into[data-auto-animate-target] {
-	opacity: 0 !important;
-	visibility: hidden !important;
-	animation: none !important;
+.reveal .slides section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"] .presentation-target-ghost.presentation-interactive-disposition--canvas-framed {
+	left: var(--presentation-morph-frame-left) !important;
+	top: var(--presentation-morph-frame-top) !important;
+	width: var(--presentation-morph-frame-width) !important;
+	height: var(--presentation-morph-frame-height) !important;
+	transform: none !important;
+	transition: none !important;
 }
-.reveal .slides section[data-auto-animate="running"] .presentation-morph-into[data-auto-animate-target] {
+.reveal .slides section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"] .presentation-target-ghost.presentation-interactive-disposition--canvas-framed[data-auto-animate-target] {
 	visibility: visible !important;
-	animation: presentation-morph-into-fade-in ${duration} ease forwards !important;
+	transform: none !important;
+	transition: none !important;
+	animation: presentation-target-ghost-frame ${duration} ease forwards,
+		presentation-target-ghost-fade-out ${duration} ease forwards !important;
+}
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-one[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-one[data-auto-animate-target] {
+	animation: presentation-morph-one-fade-out ${duration} ease forwards !important;
 }
 `;
 }
 
-/** @emoji 🩹 Patches reveal auto-animate sheet: uniform scale, morph ghost opacity 1→0. */
+/** @emoji 🩹 Patches reveal auto-animate sheet: uniform scale for catalogue tiles only; intro text keeps native FLIP. */
 export function patchPresentationAutoAnimateStyleSheet(
 	sheet: { innerHTML: string },
 	durationSeconds: number,
+	options?: { readonly manyToOneMorph?: boolean; readonly introFlowMorph?: boolean },
 ): void {
-	sheet.innerHTML =
-		patchAutoAnimateUniformScale(sheet.innerHTML) + presentationMorphGhostAutoAnimateCss(durationSeconds);
+	let css = sheet.innerHTML;
+	if (options?.manyToOneMorph !== true && options?.introFlowMorph !== true) {
+		css = patchAutoAnimateUniformScale(css);
+	}
+	sheet.innerHTML = css + presentationMorphGhostAutoAnimateCss(durationSeconds);
 }
 //#endregion 🔖ArrangementSettled
 
@@ -475,6 +974,18 @@ const PresentationSlideEpochContext = createContext(0);
 /** @emoji 🔗 When true, the interactive canvas wrapper owns `data-id` for reveal.js auto-animate. */
 const MorphAnchorOnWrapperContext = createContext(false);
 
+/** @emoji ⛶ When true, {@link PdfMorphView} measures against the enlarged slide content box, not the declared catalogue frame. */
+const PresentationDispositionEnlargeContext = createContext(false);
+
+/** @emoji 📐 Live slide frame for {@link FigureMorphView} cover math (drag/resize updates this). */
+const PresentationFigureCropFrameContext = createContext<DispositionPosition | undefined>(undefined);
+
+/** @emoji 📐 Slide width÷height for mosaic windowed-cover (`undefined` → use {@link FigureEmbodiment.sourceAspect}). */
+const PresentationSlideAspectContext = createContext<number | undefined>(undefined);
+
+/** @emoji 🆔 Interactive disposition id for ephemeral pdf page navigation in {@link PdfMorphView}. */
+const PresentationInteractiveDispositionIdContext = createContext<string | undefined>(undefined);
+
 export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { readonly width: number; readonly height: number } {
 	const width = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-width") ?? "960");
 	const height = Number.parseFloat(revealEl?.style.getPropertyValue("--presentation-slide-height") ?? "700");
@@ -484,11 +995,103 @@ export function parsePresentationSlideCssSize(revealEl: HTMLElement | null): { r
 	};
 }
 
-/** @emoji 📐 Measures the disposition frame for react-pdf; re-runs when the slide becomes visible. */
-function usePdfPageSize(
+/** @emoji 📐 Uniform react-pdf scale so the page covers the disposition frame without distortion. */
+export function pdfCoverScale(
+	containerWidth: number,
+	containerHeight: number,
+	pageWidth: number,
+	pageHeight: number,
+): number | null {
+	if (containerWidth <= 0 || containerHeight <= 0 || pageWidth <= 0 || pageHeight <= 0) {
+		return null;
+	}
+	return Math.max(containerWidth / pageWidth, containerHeight / pageHeight);
+}
+
+/** @emoji 📑 Ordered PDF page numbers for navigation; empty means all document pages. */
+export function pdfEmbodimentPageList(embodiment: PdfEmbodiment): readonly number[] {
+	return embodiment.pages ?? [];
+}
+
+/** @emoji 📄 Starting page for a pdf embodiment (subset or single page). */
+export function pdfEmbodimentInitialPage(embodiment: PdfEmbodiment): number {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 0) {
+		const declared = embodiment.page ?? pages[0];
+		return pages.includes(declared) ? declared : pages[0];
+	}
+	return embodiment.page ?? 1;
+}
+
+/** @emoji 🧭 Whether pdf prev/next controls apply for this embodiment. */
+export function pdfPageNavEnabled(embodiment: PdfEmbodiment, numPages: number | null): boolean {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 1) {
+		return true;
+	}
+	return pages.length === 0 && numPages !== null && numPages > 1;
+}
+
+/** @emoji ◀️ True when pdf page nav can move to an earlier page. */
+export function pdfCanGoToPreviousPage(
+	currentPage: number,
+	embodiment: PdfEmbodiment,
+	numPages: number | null,
+): boolean {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 0) {
+		return pages.indexOf(currentPage) > 0;
+	}
+	return currentPage > 1;
+}
+
+/** @emoji ▶️ True when pdf page nav can move to a later page. */
+export function pdfCanGoToNextPage(
+	currentPage: number,
+	embodiment: PdfEmbodiment,
+	numPages: number | null,
+): boolean {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 0) {
+		const index = pages.indexOf(currentPage);
+		return index >= 0 && index < pages.length - 1;
+	}
+	return numPages !== null && currentPage < numPages;
+}
+
+/** @emoji 📄 Target page for prev/next within a subset or the full document. */
+export function pdfAdjacentPage(
+	currentPage: number,
+	direction: "prev" | "next",
+	embodiment: PdfEmbodiment,
+	numPages: number | null,
+): number {
+	const pages = pdfEmbodimentPageList(embodiment);
+	if (pages.length > 0) {
+		let index = pages.indexOf(currentPage);
+		if (index < 0) {
+			index = direction === "next" ? -1 : pages.length;
+		}
+		const nextIndex = direction === "prev" ? index - 1 : index + 1;
+		return pages[nextIndex] ?? currentPage;
+	}
+	const step = direction === "prev" ? -1 : 1;
+	const next = currentPage + step;
+	if (direction === "prev" && next < 1) {
+		return currentPage;
+	}
+	if (direction === "next" && numPages !== null && next > numPages) {
+		return currentPage;
+	}
+	return next;
+}
+
+/** @emoji 📐 Measures the react-pdf viewport from the disposition frame or enlarged slide content box. */
+function usePdfContainerSize(
 	anchorRef: RefObject<HTMLDivElement | null>,
 	position: DispositionPosition | undefined,
 	slideEpoch: number,
+	enlarged: boolean,
 ): { readonly width?: number; readonly height?: number } {
 	const [size, setSize] = useState<{ readonly width?: number; readonly height?: number }>({});
 	useEffect(() => {
@@ -496,28 +1099,43 @@ function usePdfPageSize(
 		if (!el) {
 			return;
 		}
+		const measureTarget = (): HTMLElement | null => {
+			if (enlarged) {
+				return (
+					el.closest(".presentation-interactive-disposition--enlarged")?.querySelector(
+						".presentation-interactive-disposition__content",
+					) ?? null
+				);
+			}
+			return el.closest(".presentation-disposition-frame");
+		};
 		const measure = (): void => {
-			const frame = el.closest(".presentation-disposition-frame");
-			const frameRect = frame?.getBoundingClientRect();
-			if (frameRect && frameRect.width > 8 && frameRect.height > 8) {
+			const target = measureTarget();
+			const targetRect = target?.getBoundingClientRect();
+			if (targetRect && targetRect.width > 8 && targetRect.height > 8) {
 				setSize({
-					width: Math.floor(frameRect.width),
-					height: Math.floor(frameRect.height),
+					width: Math.floor(targetRect.width),
+					height: Math.floor(targetRect.height),
 				});
 				return;
 			}
 			const slide = parsePresentationSlideCssSize(el.closest(".reveal"));
-			const width = position ? Math.floor(slide.width * position.width) : Math.floor(slide.width * 0.8);
-			const height = position ? Math.floor(slide.height * position.height) : Math.floor(slide.height * 0.4);
+			const frame = enlarged ? SLIDE_INTERACTIVE_ENLARGE_FRAME : position;
+			const width = frame
+				? Math.floor(slide.width * frame.width)
+				: Math.floor(slide.width * 0.8);
+			const height = frame
+				? Math.floor(slide.height * frame.height)
+				: Math.floor(slide.height * 0.4);
 			if (width > 0 && height > 0) {
 				setSize({ width, height });
 			}
 		};
 		measure();
-		const frame = el.closest(".presentation-disposition-frame");
+		const observed = measureTarget();
 		const observer =
-			frame && typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
-		observer?.observe(frame);
+			observed && typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+		observer?.observe(observed);
 		const visibility =
 			typeof IntersectionObserver !== "undefined"
 				? new IntersectionObserver((entries) => {
@@ -531,7 +1149,15 @@ function usePdfPageSize(
 			observer?.disconnect();
 			visibility?.disconnect();
 		};
-	}, [anchorRef, position?.height, position?.width, position?.x, position?.y, slideEpoch]);
+	}, [
+		anchorRef,
+		enlarged,
+		position?.height,
+		position?.width,
+		position?.x,
+		position?.y,
+		slideEpoch,
+	]);
 	return size;
 }
 //#endregion 🔖SlideEpoch
@@ -546,19 +1172,31 @@ function centeredLineClass(morphId: string, embodiment: TextEmbodiment, emphasis
 	return [lineClass(morphId, embodiment, emphasis), "text-center"].filter(Boolean).join(" ");
 }
 
-/** @emoji 🎯 Renders {@link TextEmbodiment}; `data-id` sits on leaf text nodes so reveal.js does not double-match wrappers and headings. */
-function textMorphAnchorId(anchorId: string, lineIndex: number, lineCount: number): string {
+/** @emoji 🎯 Renders {@link TextEmbodiment}; `data-id` on leaf text unless the intro wrapper owns the morph anchor. */
+/** @emoji 🎯 Stable reveal.js `data-id` for one text line; single-line blocks use the morph id, multi-line use `--index`. */
+function textMorphAnchorId(
+	anchorId: string,
+	lineIndex: number,
+	lineCount: number,
+	_root: ReturnType<typeof resolveTextMorphRoot>,
+): string {
 	return lineCount === 1 ? anchorId : `${anchorId}--${lineIndex}`;
+}
+
+function morphLeafDataId(anchorOnWrapper: boolean, id: string): { readonly "data-id"?: string } {
+	return anchorOnWrapper ? {} : { "data-id": id };
 }
 
 function TextMorphView({
 	morphId: anchorId,
 	embodiment,
 	emphasis,
+	anchorOnWrapper = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: TextEmbodiment;
 	readonly emphasis: ParticipantEmphasis;
+	readonly anchorOnWrapper?: boolean;
 }): ReactNode {
 	const root = resolveTextMorphRoot(embodiment);
 	const centeredHeadingClass = centeredLineClass(anchorId, embodiment, emphasis);
@@ -567,7 +1205,7 @@ function TextMorphView({
 	switch (root) {
 		case "title":
 			return (
-				<h1 data-id={anchorId} className={centeredLineClass(anchorId, embodiment, emphasis)}>
+				<h1 {...morphLeafDataId(anchorOnWrapper, anchorId)} className={centeredLineClass(anchorId, embodiment, emphasis)}>
 					{embodiment.lines[0]}
 				</h1>
 			);
@@ -576,8 +1214,8 @@ function TextMorphView({
 				<div className="w-full text-center">
 					{embodiment.lines.map((line, lineIndex) => (
 						<p
-							key={line}
-							data-id={textMorphAnchorId(anchorId, lineIndex, lineCount)}
+							key={`${anchorId}--${lineIndex}`}
+							{...morphLeafDataId(anchorOnWrapper, textMorphAnchorId(anchorId, lineIndex, lineCount, root))}
 							className={[lineClass(anchorId, embodiment, emphasis), "text-center"].filter(Boolean).join(" ") || "text-center"}
 						>
 							{line}
@@ -588,7 +1226,7 @@ function TextMorphView({
 		case "heading-line":
 		case "subheading-line":
 			return (
-				<h2 data-id={anchorId} className={centeredHeadingClass}>
+				<h2 {...morphLeafDataId(anchorOnWrapper, anchorId)} className={centeredHeadingClass}>
 					{embodiment.lines[0]}
 				</h2>
 			);
@@ -596,7 +1234,11 @@ function TextMorphView({
 			return (
 				<div className="w-full text-center">
 					{embodiment.lines.map((line, lineIndex) => (
-						<h2 key={line} data-id={textMorphAnchorId(anchorId, lineIndex, lineCount)} className={centeredHeadingClass}>
+						<h2
+							key={`${anchorId}--${lineIndex}`}
+							{...morphLeafDataId(anchorOnWrapper, textMorphAnchorId(anchorId, lineIndex, lineCount, root))}
+							className={centeredHeadingClass}
+						>
 							{line}
 						</h2>
 					))}
@@ -626,11 +1268,15 @@ function authorDisplayName(person: AuthorPerson, embodiment: AuthorsEmbodiment):
 function AuthorsMorphView({
 	morphId: anchorId,
 	embodiment,
+	emphasis,
+	anchorOnWrapper = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: AuthorsEmbodiment;
+	readonly emphasis: ParticipantEmphasis;
+	readonly anchorOnWrapper?: boolean;
 }): ReactNode {
-	const namesMuted = embodiment.abbreviateFirstName === true;
+	const namesMuted = embodiment.abbreviateFirstName === true || emphasis === "muted";
 	const rows = authorRows(embodiment);
 	return (
 		<div className="presentation-intro-rows presentation-intro-authors flex w-full max-w-full flex-col items-center text-center">
@@ -644,7 +1290,7 @@ function AuthorsMorphView({
 						return (
 							<h4
 								key={person.name}
-								data-id={`${anchorId}--${person.name}`}
+								{...morphLeafDataId(anchorOnWrapper, `${anchorId}--${person.name}`)}
 								className={morphTextClass(anchorId, "m-0 shrink-0 text-center")}
 							>
 								{namesMuted ? <span className="opacity-20">{displayName}</span> : displayName}
@@ -712,10 +1358,16 @@ function affiliationLineContent(
 function AffiliationsMorphView({
 	morphId: anchorId,
 	embodiment,
+	anchorOnWrapper = false,
 }: {
 	readonly morphId: string;
 	readonly embodiment: AffiliationsEmbodiment;
+	readonly anchorOnWrapper?: boolean;
 }): ReactNode {
+	const rowClass = morphTextClass(
+		anchorId,
+		"presentation-affiliation-row m-0 inline-flex max-w-full shrink-0 flex-row flex-nowrap items-center justify-center gap-x-[0.35em] text-center",
+	);
 	return (
 		<div className="presentation-intro-rows presentation-intro-affiliations flex w-full max-w-full flex-col items-center text-center">
 			{embodiment.entries.map((entry) => {
@@ -725,17 +1377,11 @@ function AffiliationsMorphView({
 						key={entry.mark}
 						className="presentation-intro-line flex w-full flex-row flex-wrap items-center justify-center gap-x-[0.35em]"
 					>
-						<h4
-							data-id={`${anchorId}--${entry.mark}`}
-							className={morphTextClass(
-								anchorId,
-								"presentation-affiliation-row m-0 inline-flex max-w-full shrink-0 flex-row flex-nowrap items-center justify-center gap-x-[0.35em] text-center",
-							)}
-						>
+						<h4 {...morphLeafDataId(anchorOnWrapper, `${anchorId}--${entry.mark}`)} className={rowClass}>
 							{affiliationLineContent(entry, "line", displayLabel)}
 							{entry.suffix ? (
 								<span
-									data-id={`${anchorId}--${entry.suffix.mark}`}
+									{...morphLeafDataId(anchorOnWrapper, `${anchorId}--${entry.suffix.mark}`)}
 									className="inline-flex shrink-0 items-center justify-center text-center"
 								>
 									{affiliationLineContent(entry, "suffix", affiliationLineLabel(entry, "suffix"))}
@@ -769,60 +1415,344 @@ function BulletMorphView({
 	);
 }
 
-/** @emoji 🖼 CSS vars for crop tiles: uniform cover (shorter-side scale, centered) in frame and during reveal auto-animate. */
+/** @emoji 🔗 Resolves deck-relative figure paths against the Vite base URL. */
+export function resolvePresentationAssetUrl(src: string): string {
+	if (/^(?:[a-z]+:)?\/\//i.test(src) || src.startsWith("data:") || src.startsWith("blob:")) {
+		return src;
+	}
+	const trimmed = src.replace(/^\.\//, "");
+	const base = import.meta.env.BASE_URL ?? "/";
+	return `${base.endsWith("/") ? base : `${base}/`}${trimmed}`.replace(/\/{2,}/g, "/");
+}
+
+/** @emoji 📐 Physical aspect of a normalized crop (width÷height in source pixels). */
+export function figureCropPhysicalAspect(crop: DispositionPosition, sourceAspect = 1): number {
+	return (crop.width / crop.height) * sourceAspect;
+}
+
+const FIGURE_MOSAIC_ALIGN_EPSILON = 1e-4;
+
+/** @emoji 🧩 Grid column/row for a split crop, or null when the crop is not a mosaic cell. */
+export function figureMosaicCellIndex(
+	crop: DispositionPosition,
+	mosaic: { readonly rows: number; readonly columns: number; readonly frame?: DispositionPosition },
+): { readonly column: number; readonly row: number } | null {
+	const { rows, columns } = mosaic;
+	if (rows < 1 || columns < 1) {
+		return null;
+	}
+	const mosaicFrame = mosaic.frame ?? { x: 0, y: 0, width: 1, height: 1 };
+	const colWidth = mosaicFrame.width / columns;
+	const rowHeight = mosaicFrame.height / rows;
+	if (
+		Math.abs(crop.width - colWidth) > FIGURE_MOSAIC_ALIGN_EPSILON ||
+		Math.abs(crop.height - rowHeight) > FIGURE_MOSAIC_ALIGN_EPSILON
+	) {
+		return null;
+	}
+	const column = Math.round((crop.x - mosaicFrame.x) / colWidth);
+	const row = Math.round((crop.y - mosaicFrame.y) / rowHeight);
+	if (column < 0 || column >= columns || row < 0 || row >= rows) {
+		return null;
+	}
+	if (
+		Math.abs(crop.x - (mosaicFrame.x + column * colWidth)) > FIGURE_MOSAIC_ALIGN_EPSILON ||
+		Math.abs(crop.y - (mosaicFrame.y + row * rowHeight)) > FIGURE_MOSAIC_ALIGN_EPSILON
+	) {
+		return null;
+	}
+	return { column, row };
+}
+
+/** @emoji 🧩 Edge-aligned background-position for one cell in a rows×columns sprite grid. */
+export function figureMosaicBackgroundPosition(
+	column: number,
+	row: number,
+	columns: number,
+	rows: number,
+): { readonly posX: number; readonly posY: number } {
+	return {
+		posX: columns <= 1 ? 50 : (column / (columns - 1)) * 100,
+		posY: rows <= 1 ? 50 : (row / (rows - 1)) * 100,
+	};
+}
+
+/** @emoji 📐 Background-position along one axis when cover overflows (k≥1; k=1 → edge-aligned i/(n−1)). */
+export function overflowAxisPosition(index: number, count: number, coverOverflowK: number): number {
+	if (count <= 1) {
+		return 50;
+	}
+	if (Math.abs(coverOverflowK - 1) < FIGURE_MOSAIC_ALIGN_EPSILON) {
+		return (index / (count - 1)) * 100;
+	}
+	const cellSpan = 1 / count;
+	const numerator = (1 - coverOverflowK) / 2 - index / count;
+	const denominator = cellSpan - coverOverflowK;
+	return (numerator / denominator) * 100;
+}
+
+/** @emoji 🪟 One mosaic cell as a window onto a single cover render of `frame` (no per-crop sprite zoom). */
+export function mosaicWindowedCoverVars(
+	cell: { readonly column: number; readonly row: number },
+	grid: { readonly rows: number; readonly columns: number },
+	frame: DispositionPosition,
+	sourceAspect: number,
+	slideAspect?: number,
+): { readonly size: string; readonly posX: number; readonly posY: number } {
+	const { rows, columns } = grid;
+	const { column, row } = cell;
+	const slideAR = slideAspect ?? sourceAspect;
+	const frameAspect = (frame.width / frame.height) * slideAR;
+	if (frameAspect >= sourceAspect) {
+		const k = frameAspect / sourceAspect;
+		return {
+			size: `${columns * 100}% auto`,
+			posX: columns <= 1 ? 50 : (column / (columns - 1)) * 100,
+			posY: overflowAxisPosition(row, rows, k),
+		};
+	}
+	const k = sourceAspect / frameAspect;
+	return {
+		size: `auto ${rows * 100}%`,
+		posY: rows <= 1 ? 50 : (row / (rows - 1)) * 100,
+		posX: overflowAxisPosition(column, columns, k),
+	};
+}
+
+/** @emoji 🖼 True when the crop is the full source bitmap. */
+function figureCropIsFullImage(crop: DispositionPosition): boolean {
+	return (
+		crop.width >= 1 - FIGURE_MOSAIC_ALIGN_EPSILON && crop.height >= 1 - FIGURE_MOSAIC_ALIGN_EPSILON
+	);
+}
+
+/** @emoji 🖼 Positions a normalized source crop when background width is `(100/crop.width)%` (uniform, no distortion). */
+export function figureCropBackgroundPosition(crop: DispositionPosition): {
+	readonly posX: number;
+	readonly posY: number;
+} {
+	if (figureCropIsFullImage(crop)) {
+		return { posX: 50, posY: 50 };
+	}
+	const spanX = 1 - crop.width;
+	const spanY = 1 - crop.height;
+	return {
+		posX: spanX > FIGURE_MOSAIC_ALIGN_EPSILON ? (crop.x / spanX) * 100 : 50,
+		posY: spanY > FIGURE_MOSAIC_ALIGN_EPSILON ? (crop.y / spanY) * 100 : 50,
+	};
+}
+
+/** @emoji 🖼 Uniform background-size: `cover` for full image, else `N% auto` / `auto N%` zoomed to the crop (never dual-axis `%`). */
+export function figureCropBackgroundSize(
+	crop: DispositionPosition,
+	frame: DispositionPosition,
+	sourceAspect = 1,
+): string {
+	if (figureCropIsFullImage(crop)) {
+		return "cover";
+	}
+	if (frame.width <= 0 || frame.height <= 0 || crop.width <= 0 || crop.height <= 0) {
+		return "cover";
+	}
+	const zoomW = 100 / crop.width;
+	const zoomH = 100 / crop.height;
+	const cropSpanHAtZoomW = (crop.height * zoomW * frame.width) / sourceAspect;
+	const cropAspect = figureCropPhysicalAspect(crop, sourceAspect);
+	const frameAspect = frame.width / frame.height;
+	const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
+	if (cropSpanHAtZoomW >= frame.height) {
+		return `${zoomW * coverScale}% auto`;
+	}
+	return `auto ${zoomH * coverScale}%`;
+}
+
+/** @emoji 🖼 Centered crop cover in a slide frame (non-mosaic / focus morph). */
+function figureCropCoverVars(
+	crop: DispositionPosition,
+	frame: DispositionPosition,
+	sourceAspect = 1,
+): { readonly size: string; readonly posX: number; readonly posY: number } {
+	const { posX, posY } = figureCropBackgroundPosition(crop);
+	return {
+		size: figureCropBackgroundSize(crop, frame, sourceAspect),
+		posX,
+		posY,
+	};
+}
+
+/** @emoji 🪟 Mosaic cell background vars (windowed cover of `mosaic.frame`). */
+function figureMosaicCellCoverVars(
+	crop: DispositionPosition,
+	mosaic: FigureMosaicGrid,
+	sourceAspect: number,
+	slideAspect?: number,
+): { readonly size: string; readonly posX: number; readonly posY: number } | null {
+	const cell = figureMosaicCellIndex(crop, mosaic);
+	if (!cell) {
+		return null;
+	}
+	const mosaicFrame = mosaic.frame ?? { x: 0, y: 0, width: 1, height: 1 };
+	return mosaicWindowedCoverVars(cell, mosaic, mosaicFrame, sourceAspect, slideAspect);
+}
+
+/** @emoji 📐 Reads `left`/`top`/`width`/`height` percent inline styles as a normalized disposition frame. */
+export function readPercentDispositionFrame(element: HTMLElement): DispositionPosition | null {
+	const read = (property: "left" | "top" | "width" | "height"): number | null => {
+		const raw = element.style.getPropertyValue(property);
+		if (!raw.endsWith("%")) {
+			return null;
+		}
+		const value = Number.parseFloat(raw);
+		return Number.isFinite(value) ? value / 100 : null;
+	};
+	const x = read("left");
+	const y = read("top");
+	const width = read("width");
+	const height = read("height");
+	if (x === null || y === null || width === null || height === null) {
+		return null;
+	}
+	return { x, y, width, height };
+}
+
+/** @emoji 🔀 Copies live focus-tile frames from slide 8 onto label-slide target ghosts before many-to-one FLIP. */
+export function syncManyToOneGhostMorphFramesFromDom(fromSlide: HTMLElement, toSlide: HTMLElement): void {
+	if (!isManyToOneMorphTransition(fromSlide, toSlide)) {
+		return;
+	}
+	for (const ghost of toSlide.querySelectorAll<HTMLElement>(
+		".presentation-target-ghost.presentation-interactive-disposition--canvas-framed",
+	)) {
+		const morphId = ghost.getAttribute("data-id");
+		if (!morphId) {
+			continue;
+		}
+		const escapedId = morphId.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+		const sourceEl = fromSlide.querySelector<HTMLElement>(
+			`.presentation-interactive-disposition--canvas-framed[data-id="${escapedId}"]`,
+		);
+		if (!sourceEl) {
+			continue;
+		}
+		const sourceFrame =
+			measureElementRectInSection(sourceEl, fromSlide) ?? readPercentDispositionFrame(sourceEl);
+		if (!sourceFrame || !isUsableMeasuredRect(sourceFrame)) {
+			continue;
+		}
+		const labelFrame = readPercentDispositionFrame(ghost) ?? measureElementRectInSection(ghost, toSlide);
+		if (!labelFrame || !isUsableMeasuredRect(labelFrame)) {
+			continue;
+		}
+		applyMorphFrameCssVars(ghost, sourceFrame, labelFrame);
+		const slot = ghost.querySelector<HTMLElement>(".presentation-morph-slot--figure");
+		const cropRaw = slot?.dataset.presentationMorphCrop;
+		if (slot && cropRaw) {
+			try {
+				const crop = JSON.parse(cropRaw) as DispositionPosition;
+				applyFigureCropCssVars(
+					slot,
+					figureCropBackgroundVarsTargetGhost(
+						{ kind: "figure", src: "", crop },
+						crop,
+						sourceFrame,
+						labelFrame,
+					),
+				);
+			} catch {
+				// skip invalid crop payload
+			}
+		}
+		void ghost.offsetHeight;
+	}
+}
+
+/** @emoji 📐 Custom properties for morphing a canvas frame from `from` into `to` during reveal auto-animate. */
+export function morphFrameCssVars(
+	from: DispositionPosition,
+	to: DispositionPosition,
+): CSSProperties {
+	return {
+		["--presentation-morph-frame-left" as string]: `${from.x * 100}%`,
+		["--presentation-morph-frame-top" as string]: `${from.y * 100}%`,
+		["--presentation-morph-frame-width" as string]: `${from.width * 100}%`,
+		["--presentation-morph-frame-height" as string]: `${from.height * 100}%`,
+		["--presentation-frame-left" as string]: `${to.x * 100}%`,
+		["--presentation-frame-top" as string]: `${to.y * 100}%`,
+		["--presentation-frame-width" as string]: `${to.width * 100}%`,
+		["--presentation-frame-height" as string]: `${to.height * 100}%`,
+	};
+}
+
+/** @emoji 📐 Writes {@link morphFrameCssVars} onto an element via `style.setProperty` (required for CSS variables). */
+export function applyMorphFrameCssVars(
+	element: HTMLElement,
+	from: DispositionPosition,
+	to: DispositionPosition,
+): void {
+	for (const [key, value] of Object.entries(morphFrameCssVars(from, to))) {
+		if (typeof value === "string") {
+			element.style.setProperty(key, value);
+		}
+	}
+}
+
+/** @emoji 🖼 Applies figure crop CSS variables from a vars object via `setProperty`. */
+export function applyFigureCropCssVars(element: HTMLElement, vars: CSSProperties): void {
+	for (const [key, value] of Object.entries(vars)) {
+		if (typeof value === "string" && key.startsWith("--presentation-figure-bg-")) {
+			element.style.setProperty(key, value);
+		}
+	}
+}
+
+/** @emoji 🖼 CSS vars for crop tiles: mosaic windowed cover at rest/grid; centered crop cover for focus morph. */
 export function figureCropBackgroundVars(
 	embodiment: FigureEmbodiment,
 	crop: DispositionPosition,
 	frame?: DispositionPosition,
+	morphToFrame?: DispositionPosition,
+	fromMorphToFrame?: DispositionPosition,
+	slideAspect?: number,
 ): CSSProperties {
-	const stretchWidth = crop.width > 0 ? 100 / crop.width : 100;
-	const stretchHeight = crop.height > 0 ? 100 / crop.height : 100;
-	const stretchPosX = crop.width >= 1 ? 0 : (crop.x / (1 - crop.width)) * 100;
-	const stretchPosY = crop.height >= 1 ? 0 : (crop.y / (1 - crop.height)) * 100;
-	let morphWidth = stretchWidth;
-	let morphHeight = stretchHeight;
-	let morphPosX = stretchPosX;
-	let morphPosY = stretchPosY;
-	let restWidth = stretchWidth;
-	let restHeight = stretchHeight;
-	let restPosX = stretchPosX;
-	let restPosY = stretchPosY;
-	if (frame !== undefined && frame.width > 0 && frame.height > 0 && crop.width > 0 && crop.height > 0) {
-		const cropAspect = crop.width / crop.height;
-		const frameAspect = frame.width / frame.height;
-		const coverScale = Math.max(frameAspect / cropAspect, cropAspect / frameAspect);
-		const coverWidth = stretchWidth * coverScale;
-		const coverHeight = stretchHeight * coverScale;
-		const coverPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
-		const coverPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
-		morphWidth = coverWidth;
-		morphHeight = coverHeight;
-		morphPosX = coverPosX;
-		morphPosY = coverPosY;
-		restWidth = coverWidth;
-		restHeight = coverHeight;
-		restPosX = coverPosX;
-		restPosY = coverPosY;
-	} else {
-		const uniform = Math.max(stretchWidth, stretchHeight);
-		morphWidth = uniform;
-		morphHeight = uniform;
-		restWidth = uniform;
-		restHeight = uniform;
-		const centerPosX = crop.width >= 1 ? 50 : (crop.x + crop.width / 2) * 100;
-		const centerPosY = crop.height >= 1 ? 50 : (crop.y + crop.height / 2) * 100;
-		morphPosX = centerPosX;
-		morphPosY = centerPosY;
-		restPosX = centerPosX;
-		restPosY = centerPosY;
-	}
-	return {
-		backgroundImage: `url("${embodiment.src}")`,
-		["--presentation-figure-bg-size" as string]: `${restWidth}% ${restHeight}%`,
-		["--presentation-figure-bg-position" as string]: `${restPosX}% ${restPosY}%`,
-		["--presentation-figure-bg-size-morph" as string]: `${morphWidth}% ${morphHeight}%`,
-		["--presentation-figure-bg-position-morph" as string]: `${morphPosX}% ${morphPosY}%`,
+	const mosaic = embodiment.mosaic;
+	const sourceAspect = embodiment.sourceAspect ?? 1;
+	const mosaicRest = mosaic ? figureMosaicCellCoverVars(crop, mosaic, sourceAspect, slideAspect) : null;
+	const restBasis = frame ?? morphToFrame;
+	const rest = mosaicRest
+		? mosaicRest
+		: restBasis
+			? figureCropCoverVars(crop, restBasis, sourceAspect)
+			: figureCropCoverVars(crop, { x: 0, y: 0, width: 1, height: 1 }, sourceAspect);
+	const morphBasis = morphToFrame ?? frame;
+	const morph = morphBasis ? figureCropCoverVars(crop, morphBasis, sourceAspect) : rest;
+	const gridFrom = fromMorphToFrame
+		? mosaic
+			? (figureMosaicCellCoverVars(crop, mosaic, sourceAspect, slideAspect) ??
+				figureCropCoverVars(crop, fromMorphToFrame, sourceAspect))
+			: figureCropCoverVars(crop, fromMorphToFrame, sourceAspect)
+		: undefined;
+	const vars: CSSProperties = {
+		backgroundImage: `url("${resolvePresentationAssetUrl(embodiment.src)}")`,
+		["--presentation-figure-bg-size" as string]: rest.size,
+		["--presentation-figure-bg-position" as string]: `${rest.posX}% ${rest.posY}%`,
+		["--presentation-figure-bg-size-morph" as string]: morph.size,
+		["--presentation-figure-bg-position-morph" as string]: `${morph.posX}% ${morph.posY}%`,
 	};
+	if (gridFrom) {
+		vars["--presentation-figure-bg-grid-size" as string] = gridFrom.size;
+		vars["--presentation-figure-bg-grid-position" as string] = `${gridFrom.posX}% ${gridFrom.posY}%`;
+	}
+	return vars;
+}
+
+/** @emoji 👻 Target ghost crop vars: `--presentation-figure-bg-size` = source tile frame, `-morph` = label slot (many-to-one 8→9). */
+export function figureCropBackgroundVarsTargetGhost(
+	embodiment: FigureEmbodiment,
+	crop: DispositionPosition,
+	sourceFrame: DispositionPosition,
+	labelFrame: DispositionPosition,
+): CSSProperties {
+	return figureCropBackgroundVars(embodiment, crop, sourceFrame, labelFrame);
 }
 
 function FigureMorphView({
@@ -833,7 +1763,10 @@ function FigureMorphView({
 	style,
 	dormantAnchor,
 	anchorOnWrapper = false,
-	morphSource = false,
+	revealMorphCompanion,
+	morphFrame,
+	morphToFrame,
+	fromMorphToFrame,
 }: {
 	readonly morphId: string;
 	readonly embodiment: FigureEmbodiment;
@@ -842,10 +1775,19 @@ function FigureMorphView({
 	readonly style?: DispositionStyle;
 	readonly dormantAnchor?: boolean;
 	readonly anchorOnWrapper?: boolean;
-	readonly morphSource?: boolean;
+	readonly revealMorphCompanion?: RevealMorphCompanionKind;
+	readonly morphFrame?: DispositionPosition;
+	readonly morphToFrame?: DispositionPosition;
+	readonly fromMorphToFrame?: DispositionPosition;
 }): ReactNode {
 	if (embodiment.crop && position) {
-		const dormant = dormantAnchor === true || (!morphSource && style?.opacity === 0);
+		const cropFrame = useContext(PresentationFigureCropFrameContext) ?? position;
+		const slideAspect = useContext(PresentationSlideAspectContext);
+		const dormant = dormantAnchor === true;
+		const morphCropFrom =
+			revealMorphCompanion === "target" && morphFrame !== undefined && position !== undefined;
+		const morphCropTo =
+			position !== undefined && (fromMorphToFrame !== undefined || morphToFrame !== undefined);
 		const frameStyle = anchorOnWrapper
 			? {
 					position: "relative" as const,
@@ -862,21 +1804,34 @@ function FigureMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--figure",
-					morphSource ? "presentation-morph-source" : undefined,
+					revealMorphCompanion === "target" ? "presentation-target-ghost" : undefined,
+					revealMorphCompanion === "source" ? "presentation-source-ghost" : undefined,
+					morphCropFrom ? "presentation-morph-crop-from" : undefined,
+					morphCropTo ? "presentation-morph-crop-to" : undefined,
 					dormant ? "presentation-morph-slot--dormant" : undefined,
 					emphasisClass(emphasis),
 				]
 					.filter(Boolean)
 					.join(" ")}
-				style={frameStyle}
+				style={{
+					...frameStyle,
+					...(morphCropFrom && morphFrame
+						? figureCropBackgroundVarsTargetGhost(embodiment, embodiment.crop, morphFrame, position)
+						: figureCropBackgroundVars(
+								embodiment,
+								embodiment.crop,
+								cropFrame,
+								morphToFrame,
+								fromMorphToFrame,
+								slideAspect,
+							)),
+				}}
+				{...(morphCropFrom && embodiment.crop
+					? { "data-presentation-morph-crop": JSON.stringify(embodiment.crop) }
+					: {})}
 				role="img"
 				aria-label={embodiment.alt ?? ""}
-			>
-				<div
-					className="presentation-figure-crop-fill"
-					style={figureCropBackgroundVars(embodiment, embodiment.crop, position)}
-				/>
-			</div>
+			/>
 		);
 	}
 	return (
@@ -921,7 +1876,7 @@ function PositionedTextMorphView({
 					"presentation-disposition-frame",
 					"presentation-morph-slot",
 					"presentation-morph-slot--label",
-					"presentation-morph-into",
+					"presentation-morph-target",
 					emphasisClass(emphasis),
 				]
 					.filter(Boolean)
@@ -1007,8 +1962,79 @@ function PdfMorphView({
 }): ReactNode {
 	const anchorRef = useRef<HTMLDivElement>(null);
 	const slideEpoch = useContext(PresentationSlideEpochContext);
-	const pageSize = usePdfPageSize(anchorRef, position, slideEpoch);
-	const pageHeight = pageSize.height;
+	const enlarged = useContext(PresentationDispositionEnlargeContext);
+	const dispositionId = useContext(PresentationInteractiveDispositionIdContext);
+	const interaction = useContext(PresentationInteractionContext);
+	const declaredPage = pdfEmbodimentInitialPage(embodiment);
+	const currentPage =
+		dispositionId !== undefined && interaction !== null
+			? interaction.getPdfPage(dispositionId, declaredPage)
+			: declaredPage;
+	const containerSize = usePdfContainerSize(anchorRef, position, slideEpoch, enlarged);
+	const [pageViewport, setPageViewport] = useState<{
+		readonly width: number;
+		readonly height: number;
+	} | null>(null);
+	const [numPages, setNumPages] = useState<number | null>(null);
+	useEffect(() => {
+		setPageViewport(null);
+	}, [currentPage, embodiment.src, slideEpoch]);
+	const pdfSrcRef = useRef(embodiment.src);
+	useEffect(() => {
+		if (pdfSrcRef.current === embodiment.src) {
+			return;
+		}
+		pdfSrcRef.current = embodiment.src;
+		setNumPages(null);
+	}, [embodiment.src]);
+	const onDocumentLoadSuccess = useCallback(({ numPages: total }: { readonly numPages: number }) => {
+		setNumPages(total);
+	}, []);
+	const onPageLoadSuccess = useCallback(
+		(page: { getViewport: (options: { readonly scale: number }) => { readonly width: number; readonly height: number } }) => {
+			const viewport = page.getViewport({ scale: 1 });
+			setPageViewport({ width: viewport.width, height: viewport.height });
+		},
+		[],
+	);
+	const coverScale = useMemo(() => {
+		if (containerSize.width === undefined || containerSize.height === undefined || pageViewport === null) {
+			return null;
+		}
+		return pdfCoverScale(
+			containerSize.width,
+			containerSize.height,
+			pageViewport.width,
+			pageViewport.height,
+		);
+	}, [containerSize.height, containerSize.width, pageViewport]);
+	const ready =
+		containerSize.width !== undefined &&
+		containerSize.height !== undefined &&
+		containerSize.width > 0 &&
+		containerSize.height > 0;
+	const selected =
+		dispositionId !== undefined && interaction !== null && interaction.isSelected(dispositionId);
+	const showPageNav =
+		(enlarged || selected) &&
+		dispositionId !== undefined &&
+		interaction !== null &&
+		pdfPageNavEnabled(embodiment, numPages);
+	const goToPage = useCallback(
+		(nextPage: number) => {
+			if (dispositionId === undefined || interaction === null) {
+				return;
+			}
+			interaction.setPdfPage(dispositionId, nextPage, declaredPage);
+		},
+		[declaredPage, dispositionId, interaction],
+	);
+	const goToAdjacentPage = useCallback(
+		(direction: "prev" | "next") => {
+			goToPage(pdfAdjacentPage(currentPage, direction, embodiment, numPages));
+		},
+		[currentPage, embodiment, goToPage, numPages],
+	);
 	return (
 		<div ref={anchorRef} data-id={anchorId} className={morphAnchorClass(emphasis)}>
 			<Document
@@ -1016,17 +2042,54 @@ function PdfMorphView({
 				file={embodiment.src}
 				loading={<span className="presentation-media-pdf-loading">…</span>}
 				error={<span className="presentation-media-pdf-error">PDF</span>}
+				onLoadSuccess={onDocumentLoadSuccess}
 			>
-				{pageHeight ? (
+				{ready ? (
 					<Page
+						key={currentPage}
 						className="presentation-media-pdf"
-						pageNumber={embodiment.page ?? 1}
-						height={pageHeight}
+						pageNumber={currentPage}
+						scale={coverScale ?? 1}
+						onLoadSuccess={onPageLoadSuccess}
 						renderTextLayer={false}
 						renderAnnotationLayer={false}
 					/>
 				) : null}
 			</Document>
+			{showPageNav ? (
+				<div className="presentation-pdf-page-nav" role="group" aria-label="PDF pages">
+					<button
+						type="button"
+						className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--prev"
+						title="Previous page"
+						disabled={!pdfCanGoToPreviousPage(currentPage, embodiment, numPages)}
+						onPointerDown={(event) => {
+							event.stopPropagation();
+						}}
+						onClick={(event) => {
+							event.stopPropagation();
+							goToAdjacentPage("prev");
+						}}
+					>
+						‹
+					</button>
+					<button
+						type="button"
+						className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--next"
+						title="Next page"
+						disabled={!pdfCanGoToNextPage(currentPage, embodiment, numPages)}
+						onPointerDown={(event) => {
+							event.stopPropagation();
+						}}
+						onClick={(event) => {
+							event.stopPropagation();
+							goToAdjacentPage("next");
+						}}
+					>
+						›
+					</button>
+				</div>
+			) : null}
 		</div>
 	);
 }
@@ -1069,7 +2132,7 @@ function DispositionFrame({
 	children,
 	overlay,
 }: {
-	readonly disposition: ResolvedDisposition;
+	readonly disposition: RevealResolvedDisposition;
 	readonly children: ReactNode;
 	readonly overlay?: boolean;
 }): ReactNode {
@@ -1092,7 +2155,7 @@ function DispositionFrame({
 	);
 }
 
-function MorphDispositionView({ disposition }: { readonly disposition: ResolvedDisposition }): ReactNode {
+function MorphDispositionView({ disposition }: { readonly disposition: RevealResolvedDisposition }): ReactNode {
 	const { embodiment, emphasis, morphId: anchorId } = disposition;
 	const anchorOnWrapper = useContext(MorphAnchorOnWrapperContext);
 	let content: ReactNode;
@@ -1111,13 +2174,33 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 					/>
 				);
 			}
-			content = <TextMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
+			content = (
+				<TextMorphView
+					morphId={anchorId}
+					embodiment={embodiment}
+					emphasis={emphasis}
+					anchorOnWrapper={anchorOnWrapper}
+				/>
+			);
 			break;
 		case "authors":
-			content = <AuthorsMorphView morphId={anchorId} embodiment={embodiment} />;
+			content = (
+				<AuthorsMorphView
+					morphId={anchorId}
+					embodiment={embodiment}
+					emphasis={emphasis}
+					anchorOnWrapper={anchorOnWrapper}
+				/>
+			);
 			break;
 		case "affiliations":
-			content = <AffiliationsMorphView morphId={anchorId} embodiment={embodiment} />;
+			content = (
+				<AffiliationsMorphView
+					morphId={anchorId}
+					embodiment={embodiment}
+					anchorOnWrapper={anchorOnWrapper}
+				/>
+			);
 			break;
 		case "bullet":
 			content = <BulletMorphView morphId={anchorId} embodiment={embodiment} emphasis={emphasis} />;
@@ -1132,7 +2215,10 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 						position={disposition.position}
 						style={disposition.style}
 						anchorOnWrapper={anchorOnWrapper}
-						morphSource={disposition.morphSource}
+						revealMorphCompanion={disposition.revealMorphCompanion}
+						morphFrame={disposition.revealMorphFromFrame}
+						morphToFrame={disposition.revealMorphToFrame}
+						fromMorphToFrame={disposition.revealMorphFromMorphToFrame}
 					/>
 				);
 			}
@@ -1143,7 +2229,7 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 					emphasis={emphasis}
 					position={disposition.position}
 					anchorOnWrapper={anchorOnWrapper}
-					morphSource={disposition.morphSource}
+					revealMorphCompanion={disposition.revealMorphCompanion}
 				/>
 			);
 			break;
@@ -1181,6 +2267,53 @@ function MorphDispositionView({ disposition }: { readonly disposition: ResolvedD
 const DISPOSITION_MIN_FRACTION = 0.02;
 const POINTER_DRAG_THRESHOLD_PX = 3;
 
+/** @emoji 🗺 Whether reveal.js is showing the slide grid (Escape overview). */
+export function revealDeckInOverview(element: Element | null): boolean {
+	return element?.closest(".reveal")?.classList.contains("overview") ?? false;
+}
+
+/** @emoji 🗺 Swallow the post-gesture click reveal.js uses to leave overview (capture on `.reveal`). */
+export function suppressRevealOverviewSlideNavigation(event: Event): void {
+	const origin = event.target;
+	if (!(origin instanceof Element)) {
+		return;
+	}
+	const reveal = origin.closest(".reveal");
+	if (!reveal) {
+		return;
+	}
+	const swallowClick = (clickEvent: MouseEvent): void => {
+		if (!(clickEvent.target instanceof Element) || !clickEvent.target.closest("section")) {
+			return;
+		}
+		clickEvent.preventDefault();
+		clickEvent.stopImmediatePropagation();
+		reveal.removeEventListener("click", swallowClick, true);
+	};
+	reveal.addEventListener("click", swallowClick, true);
+}
+
+/** @emoji 🖱 Disposition ids to move/resize for this gesture (before async `selectIds` commits). */
+function resolveDispositionDragGroupIds(
+	id: string,
+	wasSelected: boolean,
+	additive: boolean,
+	selectedIds: ReadonlySet<string>,
+): readonly string[] {
+	if (!wasSelected) {
+		if (additive) {
+			const group = new Set(selectedIds);
+			group.add(id);
+			return group.size > 1 ? [...group] : [id];
+		}
+		return [id];
+	}
+	if (additive) {
+		return [id];
+	}
+	return selectedIds.size > 1 ? [...selectedIds] : [id];
+}
+
 /** @emoji 📐 Ephemeral slide-space rectangle for interactive dispositions (normalized 0..1). */
 export type DispositionTransform = DispositionPosition;
 
@@ -1204,7 +2337,7 @@ const DISPOSITION_RESIZE_HANDLES: readonly DispositionResizeHandle[] = [
 /** @emoji 🔑 Stable id for one resolved disposition on a slide. */
 export function dispositionInteractionId(
 	renderSlideId: string,
-	disposition: ResolvedDisposition,
+	disposition: RevealResolvedDisposition,
 	index: number,
 ): string {
 	return `${renderSlideId}--${disposition.morphId}--${disposition.embodimentId ?? index}`;
@@ -1213,7 +2346,7 @@ export function dispositionInteractionId(
 /** @emoji 🔑 Stable id for one split tile on an interactive slide. */
 export function tileDispositionInteractionId(
 	renderSlideId: string,
-	disposition: ResolvedDisposition,
+	disposition: RevealResolvedDisposition,
 	dispositionIndex: number,
 	tileKey: string,
 ): string {
@@ -1223,7 +2356,7 @@ export function tileDispositionInteractionId(
 /** @emoji 🔑 Stable id for a visual row band grouping split tiles on one disposition. */
 export function rowBandInteractionId(
 	renderSlideId: string,
-	disposition: ResolvedDisposition,
+	disposition: RevealResolvedDisposition,
 	dispositionIndex: number,
 	rowIndex: number,
 ): string {
@@ -1233,7 +2366,7 @@ export function rowBandInteractionId(
 /** @emoji 🖱 One interactive placement (whole disposition or a single split tile). */
 export interface InteractiveDispositionPlacement {
 	readonly id: string;
-	readonly disposition: ResolvedDisposition;
+	readonly disposition: RevealResolvedDisposition;
 	/** @emoji 📐 Wrapper frame (row-local for tiles inside a visual row). */
 	readonly declaredRect: DispositionPosition | undefined;
 	/** @emoji 📐 Slide-space frame for marquee, drag, and resize. */
@@ -1259,7 +2392,7 @@ export interface InteractiveSlideLayout {
 /** @emoji 🧩 Builds one interactive placement per resolved disposition. */
 export function buildInteractiveSlideLayout(
 	renderSlideId: string,
-	resolved: readonly ResolvedDisposition[],
+	resolved: readonly RevealResolvedDisposition[],
 	morph = false,
 ): InteractiveSlideLayout {
 	const placements: InteractiveDispositionPlacement[] = [];
@@ -1272,7 +2405,7 @@ export function buildInteractiveSlideLayout(
 			sectionRect: declaredRect,
 			revealMorphId:
 				morph && declaredRect !== undefined
-					? disposition.morphSource
+					? disposition.revealMorphCompanion !== undefined
 						? disposition.morphId
 						: disposition.morphFrom?.length
 							? undefined
@@ -1422,23 +2555,23 @@ export function scaleRectWithinGroup(
 	};
 }
 
-/** @emoji ⛶ Centered near-slide frame for interactive fullscreen (uniform across figure, video, pdf, tiles). */
-export const SLIDE_INTERACTIVE_FULLSCREEN_FRAME: DispositionPosition = {
+/** @emoji ⛶ Centered near-slide frame for interactive enlarge (uniform across figure, video, pdf, tiles). */
+export const SLIDE_INTERACTIVE_ENLARGE_FRAME: DispositionPosition = {
 	x: 0.05,
 	y: 0.075,
 	width: 0.9,
 	height: 0.85,
 };
 
-/** @emoji ⛶ Toggles uniform slide-fullscreen frame vs stashed pre-fullscreen rect. */
-export function toggleFullscreenRect(
+/** @emoji ⛶ Toggles uniform enlarged slide frame vs stashed pre-enlarge rect. */
+export function toggleEnlargeRect(
 	current: DispositionPosition,
 	stash: DispositionPosition | undefined,
 ): { readonly rect: DispositionPosition; readonly stash: DispositionPosition | undefined } {
 	if (stash !== undefined) {
 		return { rect: stash, stash: undefined };
 	}
-	return { rect: SLIDE_INTERACTIVE_FULLSCREEN_FRAME, stash: current };
+	return { rect: SLIDE_INTERACTIVE_ENLARGE_FRAME, stash: current };
 }
 
 /** @emoji 📐 reveal.js nested slide section with usable layout height for pointer math. */
@@ -1505,10 +2638,10 @@ export function interactiveDispositionChromeStyle(options: {
 	readonly selected: boolean;
 	readonly effectiveRect: DispositionPosition | undefined;
 	readonly canvasFramed: boolean;
-	readonly fullscreen: boolean;
+	readonly enlarged: boolean;
 }): CSSProperties | undefined {
-	const { selected, effectiveRect, canvasFramed, fullscreen } = options;
-	if (!selected || !effectiveRect || fullscreen || canvasFramed) {
+	const { selected, effectiveRect, canvasFramed, enlarged } = options;
+	if (!selected || !effectiveRect || enlarged || canvasFramed) {
 		return undefined;
 	}
 	return transformFrameStyle(effectiveRect);
@@ -1553,7 +2686,7 @@ export function measureElementRectInSection(
 }
 
 const DISPOSITION_BOUNDS_SELECTORS =
-	"[data-id], .presentation-disposition-frame, .presentation-morph-anchor, .presentation-intro-line, .presentation-morph-text, h1, h2, h3, h4, p, li, img, video, .presentation-media-figure, .presentation-figure-crop-fill";
+	"[data-id], .presentation-disposition-frame, .presentation-morph-anchor, .presentation-intro-line, .presentation-morph-text, h1, h2, h3, h4, p, li, img, video, .presentation-media-figure, .presentation-figure-crop-fill, .presentation-morph-slot--figure";
 
 function unionDomRects(a: DOMRect, b: DOMRect): DOMRect {
 	const left = Math.min(a.left, b.left);
@@ -1740,14 +2873,8 @@ export function isUsableMeasuredRect(rect: DispositionPosition): boolean {
 	return rect.width >= DISPOSITION_MIN_FRACTION && rect.height >= DISPOSITION_MIN_FRACTION;
 }
 
-/** @emoji 📐 Declared placement for one resolved disposition. */
-export function declaredDispositionRect(disposition: ResolvedDisposition): DispositionPosition | undefined {
-	if (disposition.morphSource) {
-		return disposition.position;
-	}
-	if (disposition.style?.opacity === 0) {
-		return undefined;
-	}
+/** @emoji 📐 Declared placement for one resolved disposition (includes dormant morph anchors at opacity 0). */
+export function declaredDispositionRect(disposition: RevealResolvedDisposition): DispositionPosition | undefined {
 	return disposition.position;
 }
 
@@ -1784,12 +2911,15 @@ export function sectionVisualScale(sectionEl: HTMLElement): number {
 	return elementVisualScale(slideCoordinateRoot(sectionEl));
 }
 
-/** @emoji ↔️ Node that receives flow `translate3d` during drag (content when laid out, else disposition root). */
+/** @emoji ↔️ Node that receives flow `translate3d` during drag (offset wrapper, else content, else disposition root). */
 export function flowDragTransformElement(
 	sectionEl: HTMLElement,
 	root: HTMLElement | null,
 	content: HTMLElement | null,
 ): HTMLElement {
+	if (root?.classList.contains("presentation-interactive-disposition--offset")) {
+		return root;
+	}
 	if (content && content.offsetWidth > 0 && content.offsetHeight > 0) {
 		return content;
 	}
@@ -1799,17 +2929,19 @@ export function flowDragTransformElement(
 	return slideCoordinateRoot(sectionEl);
 }
 
-/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate on the flow drag target (1:1 with cursor). */
+/** @emoji ↔️ Pointer travel in screen px → local px for CSS translate on the flow drag target. */
 export function flowPointerDeltaToLocal(
-	_transformEl: HTMLElement,
+	transformEl: HTMLElement,
 	startClientX: number,
 	startClientY: number,
 	currentClientX: number,
 	currentClientY: number,
 ): { readonly dx: number; readonly dy: number } {
+	const scale = elementVisualScale(transformEl);
+	const safe = Number.isFinite(scale) && scale > 0 ? Math.min(4, Math.max(0.05, scale)) : 1;
 	return {
-		dx: currentClientX - startClientX,
-		dy: currentClientY - startClientY,
+		dx: (currentClientX - startClientX) / safe,
+		dy: (currentClientY - startClientY) / safe,
 	};
 }
 
@@ -1830,6 +2962,69 @@ export function dispositionPositionChanged(
 		Math.abs(a.y - b.y) > 1e-6 ||
 		Math.abs(a.width - b.width) > 1e-6 ||
 		Math.abs(a.height - b.height) > 1e-6
+	);
+}
+
+const SLIDE_INTERACTION_RESET_PROXIMITY_PX = 72;
+
+/** @emoji 📐 True when any disposition on the slide has ephemeral layout (drag, resize, enlarge, or pdf page). */
+export function slideHasEphemeralLayout(
+	transforms: ReadonlyMap<string, DispositionTransform>,
+	enlargedIds: ReadonlySet<string>,
+	declaredRects: ReadonlyMap<string, DispositionPosition | undefined>,
+	pdfPageById: ReadonlyMap<string, number> = new Map(),
+): boolean {
+	if (enlargedIds.size > 0 || pdfPageById.size > 0) {
+		return true;
+	}
+	for (const [id, transform] of transforms) {
+		const declared = declaredRects.get(id);
+		if (declared === undefined) {
+			return true;
+		}
+		if (dispositionPositionChanged(declared, transform)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/** @emoji 📐 True when a disposition transform differs from its declared anchor. */
+export function dispositionHasEphemeralLayout(
+	transform: DispositionTransform | undefined,
+	anchorRect: DispositionPosition | undefined,
+	measuredNatural: DispositionPosition | undefined,
+	flowLayout: boolean,
+): boolean {
+	if (!transform) {
+		return false;
+	}
+	if (!flowLayout) {
+		return anchorRect !== undefined && dispositionPositionChanged(anchorRect, transform);
+	}
+	if (measuredNatural) {
+		return dispositionPositionChanged(
+			flowDispositionManipulationRect(measuredNatural, undefined),
+			transform,
+		);
+	}
+	return true;
+}
+
+/** @emoji 🎯 Pointer is within the top-right hotspot where the slide reset control lives. */
+export function pointerNearSlideResetHotspot(
+	section: HTMLElement,
+	clientX: number,
+	clientY: number,
+	proximityPx = SLIDE_INTERACTION_RESET_PROXIMITY_PX,
+): boolean {
+	const bounds = slideLayoutBounds(section);
+	const reachX = Math.max(proximityPx, bounds.width * 0.12);
+	const reachY = Math.max(proximityPx, bounds.height * 0.12);
+	return (
+		clientX >= bounds.right - reachX &&
+		clientY >= bounds.top &&
+		clientY <= bounds.top + reachY
 	);
 }
 
@@ -1887,7 +3082,10 @@ export function isFlowPixelOffsetTransform(
 		return false;
 	}
 	if (measured !== undefined) {
-		return true;
+		if (transform.x === 0 && transform.y === 0) {
+			return true;
+		}
+		return !isNormalizedSlideFrame(transform);
 	}
 	if (Math.abs(transform.x) > 1 || Math.abs(transform.y) > 1) {
 		return true;
@@ -1958,15 +3156,26 @@ export function flowPixelOffsetToSectionRect(
 interface PresentationInteractionState {
 	readonly selectedIds: ReadonlySet<string>;
 	readonly transforms: ReadonlyMap<string, DispositionTransform>;
-	readonly fullscreenIds: ReadonlySet<string>;
+	readonly enlargedIds: ReadonlySet<string>;
+	readonly enlargeStashById: ReadonlyMap<string, DispositionPosition>;
+	readonly pdfPageById: ReadonlyMap<string, number>;
 	readonly isSelected: (id: string) => boolean;
-	readonly isFullscreen: (id: string) => boolean;
+	readonly isEnlarged: (id: string) => boolean;
+	readonly hasPdfPageOverride: (id: string) => boolean;
 	readonly getTransform: (id: string) => DispositionTransform | undefined;
+	readonly getEnlargeStash: (id: string) => DispositionPosition | undefined;
+	readonly getPdfPage: (id: string, defaultPage: number) => number;
 	readonly setTransform: (id: string, rect: DispositionTransform) => void;
 	readonly setTransforms: (updates: ReadonlyMap<string, DispositionTransform>) => void;
+	readonly setPdfPage: (id: string, page: number, defaultPage: number) => void;
+	readonly stashEnlargeRect: (id: string, rect: DispositionPosition) => void;
+	readonly clearEnlargeStash: (id: string) => void;
 	readonly selectIds: (ids: readonly string[], additive: boolean) => void;
 	readonly clearSelection: () => void;
-	readonly toggleFullscreen: (id: string) => void;
+	readonly toggleEnlarge: (id: string) => void;
+	readonly clearTransform: (id: string) => void;
+	readonly resetSlide: (dispositionIds: readonly string[]) => void;
+	readonly clearEphemeralLayout: () => void;
 }
 
 const PresentationInteractionContext = createContext<PresentationInteractionState | null>(null);
@@ -1979,23 +3188,74 @@ function usePresentationInteractionState(): PresentationInteractionState {
 	return value;
 }
 
-/** @emoji 🖱 Ephemeral selection, transforms, and slide-fullscreen flags; resets when slideEpoch changes. */
-export function usePresentationInteraction(slideEpoch: number): PresentationInteractionState {
+/** @emoji 🖱 Per-slide selection, transforms, and enlarge flags; cleared only via reset controls. */
+export function usePresentationInteraction(): PresentationInteractionState {
 	const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
 	const [transforms, setTransforms] = useState<ReadonlyMap<string, DispositionTransform>>(() => new Map());
-	const [fullscreenIds, setFullscreenIds] = useState<ReadonlySet<string>>(() => new Set());
-
-	useEffect(() => {
-		setSelectedIds(new Set());
-		setTransforms(new Map());
-		setFullscreenIds(new Set());
-	}, [slideEpoch]);
+	const [enlargedIds, setEnlargedIds] = useState<ReadonlySet<string>>(() => new Set());
+	const [enlargeStashById, setEnlargeStashById] = useState<ReadonlyMap<string, DispositionPosition>>(
+		() => new Map(),
+	);
+	const [pdfPageById, setPdfPageById] = useState<ReadonlyMap<string, number>>(() => new Map());
 
 	const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
 
-	const isFullscreen = useCallback((id: string) => fullscreenIds.has(id), [fullscreenIds]);
+	const isEnlarged = useCallback((id: string) => enlargedIds.has(id), [enlargedIds]);
+
+	const hasPdfPageOverride = useCallback((id: string) => pdfPageById.has(id), [pdfPageById]);
+
+	const getPdfPage = useCallback(
+		(id: string, defaultPage: number) => pdfPageById.get(id) ?? defaultPage,
+		[pdfPageById],
+	);
+
+	const setPdfPage = useCallback((id: string, page: number, defaultPage: number) => {
+		setPdfPageById((previous) => {
+			const had = previous.has(id);
+			const same = page === defaultPage;
+			if (!had && same) {
+				return previous;
+			}
+			if (had && same) {
+				const next = new Map(previous);
+				next.delete(id);
+				return next;
+			}
+			const next = new Map(previous);
+			next.set(id, page);
+			return next;
+		});
+	}, []);
 
 	const getTransform = useCallback((id: string) => transforms.get(id), [transforms]);
+
+	const getEnlargeStash = useCallback((id: string) => enlargeStashById.get(id), [enlargeStashById]);
+
+	const stashEnlargeRect = useCallback((id: string, rect: DispositionPosition) => {
+		setEnlargeStashById((previous) => {
+			const existing = previous.get(id);
+			if (
+				existing &&
+				!dispositionPositionChanged(existing, rect)
+			) {
+				return previous;
+			}
+			const next = new Map(previous);
+			next.set(id, rect);
+			return next;
+		});
+	}, []);
+
+	const clearEnlargeStash = useCallback((id: string) => {
+		setEnlargeStashById((previous) => {
+			if (!previous.has(id)) {
+				return previous;
+			}
+			const next = new Map(previous);
+			next.delete(id);
+			return next;
+		});
+	}, []);
 
 	const setTransform = useCallback((id: string, rect: DispositionTransform) => {
 		setTransforms((previous) => {
@@ -2034,11 +3294,10 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 
 	const clearSelection = useCallback(() => {
 		setSelectedIds(new Set());
-		setFullscreenIds(new Set());
 	}, []);
 
-	const toggleFullscreen = useCallback((id: string) => {
-		setFullscreenIds((previous) => {
+	const toggleEnlarge = useCallback((id: string) => {
+		setEnlargedIds((previous) => {
 			const next = new Set(previous);
 			if (next.has(id)) {
 				next.delete(id);
@@ -2049,32 +3308,142 @@ export function usePresentationInteraction(slideEpoch: number): PresentationInte
 		});
 	}, []);
 
+	const clearTransform = useCallback((id: string) => {
+		setTransforms((previous) => {
+			if (!previous.has(id)) {
+				return previous;
+			}
+			const next = new Map(previous);
+			next.delete(id);
+			return next;
+		});
+	}, []);
+
+	const resetSlide = useCallback((dispositionIds: readonly string[]) => {
+		const idSet = new Set(dispositionIds);
+		setSelectedIds((previous) => {
+			const next = new Set(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
+		setTransforms((previous) => {
+			let changed = false;
+			for (const id of idSet) {
+				if (previous.has(id)) {
+					changed = true;
+					break;
+				}
+			}
+			if (!changed) {
+				return previous;
+			}
+			const next = new Map(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
+		setEnlargedIds((previous) => {
+			const next = new Set(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
+		setEnlargeStashById((previous) => {
+			let changed = false;
+			for (const id of idSet) {
+				if (previous.has(id)) {
+					changed = true;
+					break;
+				}
+			}
+			if (!changed) {
+				return previous;
+			}
+			const next = new Map(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
+		setPdfPageById((previous) => {
+			let changed = false;
+			for (const id of idSet) {
+				if (previous.has(id)) {
+					changed = true;
+					break;
+				}
+			}
+			if (!changed) {
+				return previous;
+			}
+			const next = new Map(previous);
+			for (const id of idSet) {
+				next.delete(id);
+			}
+			return next;
+		});
+	}, []);
+
+	const clearEphemeralLayout = useCallback(() => {
+		setSelectedIds(new Set());
+		setTransforms(new Map());
+		setEnlargedIds(new Set());
+		setEnlargeStashById(new Map());
+		setPdfPageById(new Map());
+	}, []);
+
 	return useMemo(
 		() => ({
 			selectedIds,
 			transforms,
-			fullscreenIds,
+			enlargedIds,
+			enlargeStashById,
+			pdfPageById,
 			isSelected,
-			isFullscreen,
+			isEnlarged,
+			hasPdfPageOverride,
 			getTransform,
+			getEnlargeStash,
+			getPdfPage,
 			setTransform,
 			setTransforms: setTransformsBatch,
+			setPdfPage,
+			stashEnlargeRect,
+			clearEnlargeStash,
 			selectIds,
 			clearSelection,
-			toggleFullscreen,
+			toggleEnlarge,
+			clearTransform,
+			resetSlide,
+			clearEphemeralLayout,
 		}),
 		[
 			selectedIds,
 			transforms,
-			fullscreenIds,
+			enlargedIds,
+			enlargeStashById,
+			pdfPageById,
 			isSelected,
-			isFullscreen,
+			isEnlarged,
+			hasPdfPageOverride,
 			getTransform,
+			getEnlargeStash,
+			getPdfPage,
 			setTransform,
 			setTransformsBatch,
+			setPdfPage,
+			stashEnlargeRect,
+			clearEnlargeStash,
 			selectIds,
 			clearSelection,
-			toggleFullscreen,
+			toggleEnlarge,
+			clearTransform,
+			resetSlide,
+			clearEphemeralLayout,
 		],
 	);
 }
@@ -2194,7 +3563,7 @@ const InteractiveRowBand: FC<{
 
 const InteractiveDisposition: FC<{
 	readonly id: string;
-	readonly disposition: ResolvedDisposition;
+	readonly disposition: RevealResolvedDisposition;
 	readonly declaredRect: DispositionPosition | undefined;
 	readonly sectionDeclaredRect: DispositionPosition | undefined;
 	readonly allDeclaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
@@ -2228,8 +3597,9 @@ const InteractiveDisposition: FC<{
 		transform !== undefined &&
 		isFlowPixelOffsetTransform(transform, measuredNatural);
 	const flowSectionFrame = transformed && flowLayout && !flowPixelOffset;
-	const fullscreen = interaction.isFullscreen(id);
-	const canvasFramed = declaredRect !== undefined && !fullscreen;
+	const enlarged = interaction.isEnlarged(id);
+	const morphGhost = isRevealMorphCompanionOnly(disposition);
+	const canvasFramed = declaredRect !== undefined && !enlarged;
 	const canvasPlacement = interactionRect !== undefined;
 	const effectiveRect = resolveEffectiveDispositionRect(id, interactionRect, interaction, registry);
 	const canvasAnchorRect = interactionRect;
@@ -2238,11 +3608,11 @@ const InteractiveDisposition: FC<{
 	const canvasDragActive = Boolean(
 		canvasLiveTransform &&
 			canvasAnchorRect &&
-			!fullscreen &&
+			!enlarged &&
 			dispositionPositionChanged(canvasAnchorRect, canvasLiveTransform),
 	);
 	const pinned =
-		!fullscreen &&
+		!enlarged &&
 		((transformed && !flowLayout && !canvasFramed) ||
 			flowSectionFrame ||
 			(canvasFramed && canvasDragActive && !flowPixelOffset));
@@ -2252,7 +3622,13 @@ const InteractiveDisposition: FC<{
 	);
 	const useFlowInkFrame = flowLayout && !flowSectionFrame;
 	const [inkInWrapper, setInkInWrapper] = useState<DispositionPosition | null>(null);
-	const displayDisposition = disposition;
+	const [enlargedFlowContentScale, setEnlargedFlowContentScale] = useState<number | null>(null);
+	const displayDisposition =
+		enlarged && disposition.position !== undefined
+			? disposition.embodiment.kind === "figure" && disposition.embodiment.crop !== undefined
+				? { ...disposition, position: SLIDE_INTERACTIVE_ENLARGE_FRAME }
+				: { ...disposition, position: undefined }
+			: disposition;
 
 	const measureDispositionRect = useCallback((): DispositionPosition | null => {
 		const section = sectionRef.current;
@@ -2285,7 +3661,7 @@ const InteractiveDisposition: FC<{
 			return;
 		}
 		const section = sectionRef.current;
-		if (!section || !section.classList.contains("present")) {
+		if (!section || !section.classList.contains("present") || isRevealSlideAutoAnimating(section)) {
 			registry.registerRect(id, null);
 			return;
 		}
@@ -2298,13 +3674,41 @@ const InteractiveDisposition: FC<{
 			setInkInWrapper(null);
 			return;
 		}
+		if (gesturing) {
+			return;
+		}
+		const section = sectionRef.current;
+		if (section && isRevealSlideAutoAnimating(section)) {
+			return;
+		}
 		const root = rootRef.current;
 		if (!root) {
 			setInkInWrapper(null);
 			return;
 		}
 		setInkInWrapper(measureDispositionBoundsInContainer(root, root));
-	}, [useFlowInkFrame, selected, gesturing, flowPixelOffset, transform, slideEpoch, disposition]);
+	}, [useFlowInkFrame, selected, gesturing, flowPixelOffset, transform, slideEpoch, disposition, sectionRef]);
+
+	useLayoutEffect(() => {
+		if (!enlarged || !flowLayout) {
+			setEnlargedFlowContentScale(null);
+			return;
+		}
+		const section = sectionRef.current;
+		const root = rootRef.current;
+		if (!section || !root || !section.classList.contains("present")) {
+			setEnlargedFlowContentScale(null);
+			return;
+		}
+		const baseline = measureDispositionBoundsInSection(root, section);
+		if (!baseline) {
+			setEnlargedFlowContentScale(null);
+			return;
+		}
+		setEnlargedFlowContentScale(
+			interactiveDispositionContentScale(SLIDE_INTERACTIVE_ENLARGE_FRAME, baseline),
+		);
+	}, [enlarged, flowLayout, slideEpoch, sectionRef]);
 
 	const ensureRectForManipulation = useCallback(
 		(kind: "move" | "resize"): DispositionPosition | null => {
@@ -2352,6 +3756,7 @@ const InteractiveDisposition: FC<{
 			mode: "move" | DispositionResizeHandle,
 			initialRect: DispositionPosition,
 			requireDragThreshold: boolean,
+			dragMemberIds: readonly string[],
 		): void => {
 			const section = sectionRef.current;
 			if (!section) {
@@ -2361,27 +3766,29 @@ const InteractiveDisposition: FC<{
 			const gesturePlacementBounds = fractionContainer.getBoundingClientRect();
 			const pointerId = origin.pointerId;
 			const startClient = { x: origin.clientX, y: origin.clientY };
-			const selectedAtStart = new Set(interaction.selectedIds);
-			if (!selectedAtStart.has(id)) {
-				selectedAtStart.add(id);
-			}
-			const groupIds =
-				selectedAtStart.has(id) && selectedAtStart.size > 1 ? [...selectedAtStart] : [id];
+			const groupIds = dragMemberIds.length > 1 ? [...dragMemberIds] : [id];
 			const startRects = new Map<string, DispositionPosition>();
 			for (const memberId of groupIds) {
 				const memberDeclared = allDeclaredRects.get(memberId);
-				let rect: DispositionPosition | undefined =
-					interaction.getTransform(memberId) ?? memberDeclared;
+				const natural = memberId === id ? initialRect : registry.getRect(memberId);
+				let rect: DispositionPosition | undefined = interaction.getTransform(memberId);
 				if (!rect) {
-					const natural = memberId === id ? initialRect : registry.getRect(memberId);
-					if (natural) {
+					if (flowLayout && natural) {
+						rect = flowDispositionManipulationRect(natural, undefined);
+					} else if (natural) {
 						rect =
 							memberDeclared !== undefined
 								? natural
 								: flowDispositionManipulationRect(natural, undefined);
+					} else {
+						rect = memberDeclared;
 					}
+				} else if (flowLayout && natural) {
+					rect = isFlowPixelOffsetTransform(rect, natural)
+						? rect
+						: flowDispositionManipulationRect(natural, undefined);
 				}
-				if (rect && (memberDeclared !== undefined || isUsableMeasuredRect(rect))) {
+				if (rect && (flowLayout || memberDeclared !== undefined || isUsableMeasuredRect(rect))) {
 					startRects.set(memberId, rect);
 				}
 			}
@@ -2399,7 +3806,7 @@ const InteractiveDisposition: FC<{
 				rootRef.current,
 				contentRef.current,
 			);
-			if (allDeclaredRects.get(id) === undefined) {
+			if (flowLayout) {
 				const root = rootRef.current;
 				if (root && root.offsetWidth > 0 && root.offsetHeight > 0) {
 					setFlowReservePx({ width: root.offsetWidth, height: root.offsetHeight });
@@ -2423,7 +3830,7 @@ const InteractiveDisposition: FC<{
 				const updates = new Map<string, DispositionTransform>();
 				if (mode === "move") {
 					for (const [memberId, rect] of startRects) {
-						if (allDeclaredRects.get(memberId) === undefined) {
+						if (flowLayout) {
 							const { dx, dy } = flowPointerDeltaToLocal(
 								flowTransformEl,
 								startClient.x,
@@ -2477,6 +3884,9 @@ const InteractiveDisposition: FC<{
 				if (upEvent.pointerId !== pointerId) {
 					return;
 				}
+				if (dragging) {
+					suppressRevealOverviewSlideNavigation(upEvent);
+				}
 				setGesturing(false);
 				window.removeEventListener("pointermove", onMove);
 				window.removeEventListener("pointerup", onUp);
@@ -2497,7 +3907,7 @@ const InteractiveDisposition: FC<{
 			window.addEventListener("pointerup", onUp);
 			window.addEventListener("pointercancel", onUp);
 		},
-		[id, canvasPlacement, allDeclaredRects, interaction, registry, sectionRef],
+		[id, flowLayout, canvasPlacement, allDeclaredRects, interaction, registry, sectionRef],
 	);
 
 	const seedCanvasTransform = useCallback((): DispositionPosition | null => {
@@ -2516,15 +3926,28 @@ const InteractiveDisposition: FC<{
 		if (event.button !== 0) {
 			return;
 		}
-		if ((event.target as HTMLElement).closest(".presentation-interaction-handle")) {
+		const target = event.target instanceof Element ? event.target : null;
+		if (target?.closest(".presentation-interaction-handle")) {
 			return;
 		}
-		if ((event.target as HTMLElement).closest(".presentation-interaction-fullscreen")) {
+		if (target?.closest(".presentation-interaction-enlarge")) {
+			return;
+		}
+		if (target?.closest(".presentation-interaction-reset")) {
+			return;
+		}
+		if (target?.closest(".presentation-pdf-page-nav")) {
 			return;
 		}
 		event.preventDefault();
 		event.stopPropagation();
 		const additive = event.shiftKey;
+		const dragMemberIds = resolveDispositionDragGroupIds(
+			id,
+			selected,
+			additive,
+			interaction.selectedIds,
+		);
 		if (!selected) {
 			interaction.selectIds([id], additive);
 		} else if (additive) {
@@ -2545,6 +3968,7 @@ const InteractiveDisposition: FC<{
 			"move",
 			rect,
 			true,
+			dragMemberIds,
 		);
 	};
 
@@ -2554,6 +3978,12 @@ const InteractiveDisposition: FC<{
 		}
 		event.preventDefault();
 		event.stopPropagation();
+		const dragMemberIds = resolveDispositionDragGroupIds(
+			id,
+			selected,
+			false,
+			interaction.selectedIds,
+		);
 		if (!selected) {
 			interaction.selectIds([id], false);
 		}
@@ -2572,18 +4002,65 @@ const InteractiveDisposition: FC<{
 			handle,
 			rect,
 			false,
+			dragMemberIds,
 		);
 	};
 
-	const onFullscreenClick = (event: React.MouseEvent): void => {
+	const onEnlargeClick = (event: React.MouseEvent): void => {
 		event.preventDefault();
 		event.stopPropagation();
 		if (!selected) {
 			interaction.selectIds([id], false);
 		}
-		interaction.toggleFullscreen(id);
+		if (enlarged) {
+			const stashed = interaction.getEnlargeStash(id);
+			interaction.toggleEnlarge(id);
+			interaction.clearEnlargeStash(id);
+			if (stashed) {
+				if (interactionRect && !dispositionPositionChanged(interactionRect, stashed)) {
+					interaction.clearTransform(id);
+				} else {
+					interaction.setTransform(id, stashed);
+				}
+			}
+			return;
+		}
+		const preEnlargeRect = effectiveRect ?? interactionRect;
+		if (preEnlargeRect) {
+			interaction.stashEnlargeRect(id, preEnlargeRect);
+		}
+		interaction.toggleEnlarge(id);
 	};
 
+	const onResetClick = (event: React.MouseEvent): void => {
+		event.preventDefault();
+		event.stopPropagation();
+		if (!selected) {
+			interaction.selectIds([id], false);
+		}
+		if (enlarged) {
+			const stashed = interaction.getEnlargeStash(id);
+			interaction.toggleEnlarge(id);
+			interaction.clearEnlargeStash(id);
+			if (stashed && interactionRect && !dispositionPositionChanged(interactionRect, stashed)) {
+				interaction.clearTransform(id);
+			} else if (stashed) {
+				interaction.setTransform(id, stashed);
+			} else {
+				interaction.clearTransform(id);
+			}
+			return;
+		}
+		interaction.clearTransform(id);
+	};
+
+	const morphCropFrom =
+		disposition.revealMorphCompanion === "target" &&
+		disposition.revealMorphFromFrame !== undefined &&
+		disposition.position !== undefined;
+	const morphCropTo =
+		disposition.position !== undefined &&
+		(disposition.revealMorphFromMorphToFrame !== undefined || disposition.revealMorphToFrame !== undefined);
 	const wrapperClass = [
 		"presentation-interactive-disposition",
 		`presentation-interactive-disposition--kind-${disposition.embodiment.kind}`,
@@ -2592,9 +4069,13 @@ const InteractiveDisposition: FC<{
 		pinned ? "presentation-interactive-disposition--pinned" : undefined,
 		canvasFramed ? "presentation-interactive-disposition--canvas-framed" : undefined,
 		gesturing ? "presentation-interactive-disposition--gesturing" : undefined,
-		fullscreen ? "presentation-interactive-disposition--fullscreen" : undefined,
-		disposition.morphSource ? "presentation-morph-source" : undefined,
-		(disposition.morphFrom?.length ?? 0) > 0 ? "presentation-morph-into" : undefined,
+		enlarged ? "presentation-interactive-disposition--enlarged" : undefined,
+		disposition.revealMorphCompanion === "target" ? "presentation-target-ghost" : undefined,
+		disposition.revealMorphCompanion === "source" ? "presentation-source-ghost" : undefined,
+		morphCropFrom ? "presentation-morph-crop-from" : undefined,
+		morphCropTo ? "presentation-morph-crop-to" : undefined,
+		(disposition.morphFrom?.length ?? 0) > 0 ? "presentation-morph-target" : undefined,
+		(disposition.morphTo?.length ?? 0) > 0 ? "presentation-morph-one" : undefined,
 	]
 		.filter(Boolean)
 		.join(" ");
@@ -2604,57 +4085,86 @@ const InteractiveDisposition: FC<{
 	if (flowReservePx) {
 		Object.assign(wrapperFrame, flowDispositionReserveStyle(flowReservePx));
 	}
+	const flowDragOffsetStyle =
+		flowPixelOffset && transform ? flowDispositionOffsetStyle(transform) : undefined;
+	if (flowDragOffsetStyle) {
+		Object.assign(wrapperFrame, flowDragOffsetStyle);
+	}
 	if (canvasFramed && canvasAnchorRect) {
 		// 🔀 The wrapper owns the reveal `data-id` morph anchor; placing it on the live ephemeral
 		// rect (drag/resize) makes reveal.js auto-animate capture the modified frame as the morph
 		// `from`, so morphs start from the current disposition including ephemeral modifications.
-		// 👻 Morph-source ghosts must stay on morphFrom label frames, never ephemeral focus tiles.
-		const morphAnchorRect = disposition.morphSource
-			? canvasAnchorRect
-			: (canvasLiveTransform ?? canvasAnchorRect);
+		// 👻 Target ghosts keep label layout; live source frames are synced from slide 8 DOM before morph.
+		const morphAnchorRect =
+			disposition.revealMorphCompanion === "target"
+				? canvasAnchorRect
+				: disposition.revealMorphCompanion === "source"
+					? canvasAnchorRect
+					: (canvasLiveTransform ?? canvasAnchorRect);
 		Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
+		if (
+			morphCropFrom &&
+			disposition.revealMorphFromFrame !== undefined &&
+			disposition.position !== undefined
+		) {
+			for (const [key, value] of Object.entries(
+				morphFrameCssVars(disposition.revealMorphFromFrame, disposition.position),
+			)) {
+				if (typeof value === "string") {
+					(wrapperFrame as Record<string, string>)[key] = value;
+				}
+			}
+		}
 	} else if (transformed && transform && !flowPixelOffset) {
 		Object.assign(wrapperFrame, transformFrameStyle(transform));
 	}
-	const wrapperStyle: CSSProperties | undefined = fullscreen
-		? transformFrameStyle(SLIDE_INTERACTIVE_FULLSCREEN_FRAME)
+	if (morphGhost) {
+		Object.assign(wrapperFrame, { pointerEvents: "none", zIndex: 0 });
+	}
+	const wrapperStyle: CSSProperties | undefined = enlarged
+		? transformFrameStyle(SLIDE_INTERACTIVE_ENLARGE_FRAME)
 		: Object.keys(wrapperFrame).length > 0
 			? wrapperFrame
 			: undefined;
-	const contentInkStyle: CSSProperties | undefined =
-		flowInkActive && inkInWrapper ? transformFrameStyle(inkInWrapper) : undefined;
-	const flowDragOffsetStyle =
-		flowPixelOffset && transform ? flowDispositionOffsetStyle(transform) : undefined;
 	const resizeContentBaseline = measuredNatural ?? interactionRect;
 	const resizeContentScale =
+		!enlarged &&
 		!canvasFramed &&
 		!flowPixelOffset &&
 		transform &&
 		resizeContentBaseline
 			? interactiveDispositionContentScale(transform, resizeContentBaseline)
 			: null;
-	const contentStyle: CSSProperties | undefined = {
-		...(contentInkStyle ?? {}),
-		...(flowDragOffsetStyle ?? {}),
-		...(resizeContentScale !== null ? interactiveDispositionContentScaleStyle(resizeContentScale) : {}),
-	};
-	const hasContentStyle = Object.keys(contentStyle).length > 0;
+	const contentScale = enlargedFlowContentScale ?? resizeContentScale;
+	const contentStyle: CSSProperties | undefined =
+		contentScale !== null ? interactiveDispositionContentScaleStyle(contentScale) : undefined;
+	const hasContentStyle = contentStyle !== undefined;
 	const chromeLayoutRect =
 		flowSectionFrame && transform
 			? transform
 			: canvasLiveTransform ?? effectiveRect;
-	const chromeStyle: CSSProperties | undefined = useFlowInkFrame
-		? undefined
-		: interactiveDispositionChromeStyle({
-				selected: selected || gesturing,
-				effectiveRect: chromeLayoutRect,
-				canvasFramed,
-				fullscreen,
-			});
+	const sectionAnimating =
+		sectionRef.current !== null && isSectionAutoAnimating(sectionRef.current);
+	const flowInkChromeRect = useFlowInkFrame ? inkInWrapper : undefined;
+	const chromeStyle: CSSProperties | undefined = interactiveDispositionChromeStyle({
+		selected: (selected || gesturing) && !sectionAnimating,
+		effectiveRect: flowInkChromeRect ?? chromeLayoutRect,
+		canvasFramed,
+		enlarged,
+	});
 	const showControls =
-		(selected || gesturing) &&
-		Boolean(useFlowInkFrame ? inkInWrapper ?? measuredNatural : chromeLayoutRect ?? effectiveRect);
-	const showHandles = showControls && !fullscreen;
+		!morphGhost &&
+		(selected || gesturing || enlarged) &&
+		Boolean(
+			enlarged ||
+				selected ||
+				gesturing ||
+				(useFlowInkFrame ? inkInWrapper : chromeLayoutRect ?? effectiveRect),
+		);
+	const showHandles = showControls && !enlarged;
+	const canResetPosition =
+		enlarged ||
+		dispositionHasEphemeralLayout(transform, interactionRect, measuredNatural, flowLayout);
 
 	return (
 		<div
@@ -2664,53 +4174,78 @@ const InteractiveDisposition: FC<{
 			{...(rowBandId ? { "data-row-band": rowBandId } : {})}
 			className={wrapperClass}
 			style={wrapperStyle}
-			onPointerDown={onPointerDown}
+			onPointerDown={morphGhost ? undefined : onPointerDown}
+			aria-hidden={morphGhost ? true : undefined}
 		>
 			<div
 				ref={contentRef}
 				className="presentation-interactive-disposition__content"
 				style={hasContentStyle ? contentStyle : undefined}
 			>
-				<MorphAnchorOnWrapperContext.Provider
-					value={Boolean(revealMorphId && declaredRect !== undefined)}
-				>
-					<MorphDispositionView disposition={displayDisposition} />
-				</MorphAnchorOnWrapperContext.Provider>
-				{showControls ? (
-					<>
-						{showHandles ? (
-							<div
-								className="presentation-interactive-disposition__chrome"
-								style={chromeStyle}
-								aria-hidden
-							>
-								{DISPOSITION_RESIZE_HANDLES.map((handle) => (
-									<div
-										key={handle}
-										className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
-										onPointerDown={onHandlePointerDown(handle)}
-									/>
-								))}
-							</div>
-						) : null}
-						<button
-							type="button"
-							className="presentation-interaction-fullscreen"
-							title={fullscreen ? "Exit slide fullscreen" : "Slide fullscreen"}
-							aria-pressed={fullscreen}
-							onClick={onFullscreenClick}
+				<PresentationInteractiveDispositionIdContext.Provider value={id}>
+					<PresentationDispositionEnlargeContext.Provider value={enlarged}>
+						<MorphAnchorOnWrapperContext.Provider
+							value={Boolean(revealMorphId && declaredRect !== undefined)}
 						>
-							{fullscreen ? "⤢" : "⤢"}
-						</button>
-					</>
+							<PresentationFigureCropFrameContext.Provider
+								value={canvasLiveTransform ?? displayDisposition.position}
+							>
+								<MorphDispositionView disposition={displayDisposition} />
+							</PresentationFigureCropFrameContext.Provider>
+						</MorphAnchorOnWrapperContext.Provider>
+					</PresentationDispositionEnlargeContext.Provider>
+				</PresentationInteractiveDispositionIdContext.Provider>
+				{showHandles ? (
+					<div
+						className="presentation-interactive-disposition__chrome"
+						style={chromeStyle}
+						aria-hidden
+					>
+						{DISPOSITION_RESIZE_HANDLES.map((handle) => (
+							<div
+								key={handle}
+								className={`presentation-interaction-handle presentation-interaction-handle--${handle}`}
+								onPointerDown={onHandlePointerDown(handle)}
+							/>
+						))}
+					</div>
 				) : null}
 			</div>
+			{showControls ? (
+				<div className="presentation-interaction-actions">
+					{canResetPosition ? (
+						<button
+							type="button"
+							className="presentation-interaction-reset"
+							title="Reset position"
+							onClick={onResetClick}
+						>
+							<Icon icon="rotate-ccw" size="small" />
+						</button>
+					) : null}
+					<button
+						type="button"
+						className="presentation-interaction-enlarge"
+						title={enlarged ? "Exit enlarge" : "Enlarge"}
+						aria-pressed={enlarged}
+						onClick={onEnlargeClick}
+					>
+						<Icon icon="maximize-2" size="small" />
+					</button>
+				</div>
+			) : null}
 		</div>
 	);
 };
 
 function isDispositionPointerTarget(target: EventTarget | null): boolean {
-	if (!(target instanceof HTMLElement)) {
+	if (!(target instanceof Element)) {
+		return false;
+	}
+	if (
+		target.closest(".presentation-target-ghost") ||
+		target.closest(".presentation-source-ghost")
+	) {
 		return false;
 	}
 	return Boolean(
@@ -2718,7 +4253,11 @@ function isDispositionPointerTarget(target: EventTarget | null): boolean {
 			target.closest(".presentation-interactive-row-band") ||
 			target.closest(".presentation-interactive-visual-row") ||
 			target.closest(".presentation-interaction-handle") ||
-			target.closest(".presentation-interaction-fullscreen"),
+			target.closest(".presentation-interaction-enlarge") ||
+			target.closest(".presentation-pdf-page-nav__button") ||
+			target.closest(".presentation-interaction-reset") ||
+			target.closest(".presentation-interaction-slide-reset") ||
+			target.closest(".presentation-interaction-slide-reset-host"),
 	);
 }
 
@@ -2771,6 +4310,7 @@ function useSlideBackgroundInteraction({
 			const fractionContainer = dispositionPlacementContainer(section, canvasPlacement);
 			const fraction = clientToSectionFraction(fractionContainer, event.clientX, event.clientY);
 			const start = { x: fraction.x, y: fraction.y };
+			const startedInOverview = revealDeckInOverview(section);
 			let moved = false;
 
 			const onMove = (moveEvent: PointerEvent): void => {
@@ -2791,9 +4331,12 @@ function useSlideBackgroundInteraction({
 				window.removeEventListener("pointerup", onUp);
 				setMarquee(null);
 				if (!moved) {
-					interaction.clearSelection();
+					if (!startedInOverview) {
+						interaction.clearSelection();
+					}
 					return;
 				}
+				suppressRevealOverviewSlideNavigation(upEvent);
 				const end = clientToSectionFraction(fractionContainer, upEvent.clientX, upEvent.clientY);
 				const box = normalizeMarquee(start, end);
 				const rule = marqueeSelectionRule(start, end);
@@ -2815,6 +4358,77 @@ function useSlideBackgroundInteraction({
 
 	return { onPointerDownCapture, marquee };
 }
+
+const SlideInteractionReset: FC<{
+	readonly sectionRef: RefObject<HTMLElement | null>;
+	readonly dispositionIds: readonly string[];
+	readonly declaredRects: ReadonlyMap<string, DispositionPosition | undefined>;
+}> = ({ sectionRef, dispositionIds, declaredRects }) => {
+	const interaction = usePresentationInteractionState();
+	const hostRef = useRef<HTMLDivElement>(null);
+	const modified = dispositionIds.some((id) => {
+		if (interaction.isEnlarged(id)) {
+			return true;
+		}
+		if (interaction.hasPdfPageOverride(id)) {
+			return true;
+		}
+		const transform = interaction.getTransform(id);
+		const declared = declaredRects.get(id);
+		return dispositionHasEphemeralLayout(transform, declared, undefined, declared === undefined);
+	});
+
+	useEffect(() => {
+		if (!modified) {
+			return;
+		}
+		const section = sectionRef.current;
+		const host = hostRef.current;
+		if (!section || !host) {
+			return;
+		}
+		const syncNear = (clientX: number, clientY: number): void => {
+			host.classList.toggle(
+				"presentation-interaction-slide-reset-host--near",
+				pointerNearSlideResetHotspot(section, clientX, clientY),
+			);
+		};
+		const onMove = (event: PointerEvent): void => {
+			syncNear(event.clientX, event.clientY);
+		};
+		const onLeave = (): void => {
+			host.classList.remove("presentation-interaction-slide-reset-host--near");
+		};
+		window.addEventListener("pointermove", onMove, { passive: true });
+		section.addEventListener("pointerleave", onLeave);
+		return () => {
+			window.removeEventListener("pointermove", onMove);
+			section.removeEventListener("pointerleave", onLeave);
+			host.classList.remove("presentation-interaction-slide-reset-host--near");
+		};
+	}, [declaredRects, modified, sectionRef]);
+
+	if (!modified) {
+		return null;
+	}
+
+	return (
+		<div ref={hostRef} className="presentation-interaction-slide-reset-host">
+			<button
+				type="button"
+				className="presentation-interaction-slide-reset"
+				title="Reset slide"
+				onClick={(event) => {
+					event.preventDefault();
+					event.stopPropagation();
+					interaction.resetSlide(dispositionIds);
+				}}
+			>
+				<Icon icon="rotate-ccw" size="small" />
+			</button>
+		</div>
+	);
+};
 
 const InteractionLayer: FC<{
 	readonly marquee: {
@@ -2868,11 +4482,24 @@ const ArrangementSection: FC<{
 		() => resolutionScopeForArrangement(presentation, chapter, sequence, thought, renderSlide.arrangement),
 		[presentation, chapter, sequence, thought, renderSlide.arrangement],
 	);
-	const resolved = resolveArrangement(scope, renderSlide.arrangement);
+	const slideContext = useMemo(() => {
+		const index = thought.slides.findIndex((slide) => slide.arrangement.id === renderSlide.id);
+		if (index < 0) {
+			return {};
+		}
+		return {
+			previousSlide: index > 0 ? thought.slides[index - 1] : undefined,
+			nextSlide: index < thought.slides.length - 1 ? thought.slides[index + 1] : undefined,
+		};
+	}, [thought.slides, renderSlide.id]);
+	const resolved = useMemo(
+		() => resolveRevealArrangement(scope, renderSlide.arrangement, slideContext),
+		[scope, renderSlide.arrangement, slideContext],
+	);
 	const morph = renderSlide.autoAnimateId !== undefined;
 	const positioned = resolved.some((disposition) => disposition.position !== undefined);
 	const layoutResolved =
-		positioned && !morph ? centerResolvedArrangement(resolved) : resolved;
+		positioned && !morph ? centerRevealResolvedArrangement(resolved) : resolved;
 	const interactiveLayout = useMemo(
 		() => buildInteractiveSlideLayout(renderSlide.id, layoutResolved, morph),
 		[layoutResolved, morph, renderSlide.id],
@@ -2884,6 +4511,13 @@ const ArrangementSection: FC<{
 		}
 		return map;
 	}, [interactiveLayout.placements]);
+	const interactiveDispositionIds = useMemo(
+		() =>
+			interactiveLayout.placements
+				.filter((entry) => !isRevealMorphCompanionOnly(entry.disposition))
+				.map((entry) => entry.id),
+		[interactiveLayout.placements],
+	);
 	const placements = (
 		<>
 			{interactiveLayout.rowBands.map((band) => (
@@ -2913,7 +4547,7 @@ const ArrangementSection: FC<{
 				settleBeforeMorphTo={renderSlide.arrangement.settleBeforeMorphTo}
 				slideId={renderSlide.id}
 				positioned={positioned}
-				dispositionIds={interactiveLayout.placements.map((entry) => entry.id)}
+				dispositionIds={interactiveDispositionIds}
 				declaredRects={declaredRects}
 				placements={placements}
 			/>
@@ -2960,29 +4594,76 @@ const ArrangementSectionSurface: FC<{
 			className={[
 				"presentation-arrangement--interactive",
 				positioned ? "presentation-arrangement--positioned" : undefined,
+				isIntroArrangementId(slideId) ? "presentation-arrangement--intro" : undefined,
 			]
 				.filter(Boolean)
 				.join(" ")}
 		>
-			<InteractionLayer marquee={backgroundInteraction.marquee} />
-			{positioned ? (
-				<div className="presentation-arrangement-canvas">
-					{placements}
-				</div>
-			) : (
-				placements
-			)}
+			<div className="presentation-arrangement-surface">
+				<InteractionLayer marquee={backgroundInteraction.marquee} />
+				{positioned ? (
+					<div className="presentation-arrangement-canvas">
+						{placements}
+					</div>
+				) : (
+					placements
+				)}
+				<SlideInteractionReset
+					sectionRef={sectionRef}
+					dispositionIds={dispositionIds}
+					declaredRects={declaredRects}
+				/>
+			</div>
 		</section>
 	);
 };
 //#endregion 🔖ArrangementSection
 
 //#region 🔖PresentationInteractionProvider
+/** @emoji 🖱 Clears selection and ephemeral layout when reveal.js changes the active slide. */
+const PresentationSlideInteractionBridge: FC<{
+	readonly deckRef: RefObject<Reveal.Api | null>;
+}> = ({ deckRef }) => {
+	const interaction = usePresentationInteractionState();
+
+	useEffect(() => {
+		const attach = (deck: Reveal.Api): (() => void) => {
+			const onSlideChanged = (): void => {
+				interaction.clearEphemeralLayout();
+			};
+			deck.on("slidechanged", onSlideChanged);
+			return () => {
+				deck.off("slidechanged", onSlideChanged);
+			};
+		};
+
+		const deck = deckRef.current;
+		if (deck) {
+			return attach(deck);
+		}
+
+		let detach: (() => void) | undefined;
+		const poll = window.setInterval(() => {
+			const ready = deckRef.current;
+			if (!ready) {
+				return;
+			}
+			window.clearInterval(poll);
+			detach = attach(ready);
+		}, 50);
+		return () => {
+			window.clearInterval(poll);
+			detach?.();
+		};
+	}, [deckRef, interaction]);
+
+	return null;
+};
+
 const PresentationInteractionProvider: FC<{
-	readonly slideEpoch: number;
 	readonly children: ReactNode;
-}> = ({ slideEpoch, children }) => {
-	const interaction = usePresentationInteraction(slideEpoch);
+}> = ({ children }) => {
+	const interaction = usePresentationInteraction();
 	return (
 		<PresentationInteractionContext.Provider value={interaction}>{children}</PresentationInteractionContext.Provider>
 	);
@@ -2999,6 +4680,11 @@ export const PresentationDeck: FC<{
 	const deckRef = useRef<Reveal.Api | null>(null);
 	const previousSlideRef = useRef<HTMLElement | null>(null);
 	const [slideEpoch, setSlideEpoch] = useState(0);
+	const [slideAspect, setSlideAspect] = useState<number | undefined>(undefined);
+	const syncSlideAspect = useCallback((deckEl: HTMLElement): void => {
+		const { width, height } = parsePresentationSlideCssSize(deckEl);
+		setSlideAspect(width / height);
+	}, []);
 
 	useEffect(() => {
 		const deckEl = deckDivRef.current;
@@ -3010,7 +4696,7 @@ export const PresentationDeck: FC<{
 			transition: options?.transition ?? "fade",
 			autoAnimate: true,
 			autoAnimateMatcher: presentationAutoAnimateMatcher,
-			autoAnimateUnmatched: true,
+			autoAnimateUnmatched: false,
 			center: true,
 		};
 		// Custom hash format appends `?slide=` after the path; reveal.js hash sync stays off.
@@ -3058,6 +4744,7 @@ export const PresentationDeck: FC<{
 		};
 		const onResize = (): void => {
 			syncPresentationSlideSizeVars(deckEl, deck);
+			syncSlideAspect(deckEl);
 		};
 		let autoAnimateFinalizeTimer: ReturnType<typeof setTimeout> | undefined;
 		const scheduleFinalizeAutoAnimateRest = (): void => {
@@ -3076,6 +4763,7 @@ export const PresentationDeck: FC<{
 				clearTimeout(autoAnimateFinalizeTimer);
 				autoAnimateFinalizeTimer = undefined;
 			}
+			relaxHiddenPreflight();
 			const slideEvent = event as Event & { readonly indexh?: number; readonly indexv?: number };
 			const fromSlide = deck.getCurrentSlide() as HTMLElement | null;
 			if (!fromSlide || slideEvent.indexh === undefined || slideEvent.indexv === undefined) {
@@ -3091,19 +4779,12 @@ export const PresentationDeck: FC<{
 				finalizeRevealAutoAnimateRestState(deckEl);
 			}
 			prepareArrangementBeforeAutoAnimate(fromSlide, toSlide);
-			if (toSlide.getAttribute("title") === "catalogue-labels") {
-				flushSync(() => {
-					setSlideEpoch((epoch) => epoch + 1);
-				});
-				for (const ghost of toSlide.querySelectorAll<HTMLElement>(".presentation-morph-source")) {
-					void ghost.offsetHeight;
-				}
-			}
 		};
 		const onSlideChanged = (event: Event): void => {
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
+			syncSlideAspect(deckEl);
 			syncPresentSlideMedia();
 			syncSlideUrl();
 			const { previousSlide: eventPrevious, currentSlide: eventCurrent } = slideChangedEventSlides(event);
@@ -3114,7 +4795,10 @@ export const PresentationDeck: FC<{
 			}
 			syncArrangementSettledState(deckEl, currentSlide, previousSlide);
 			previousSlideRef.current = currentSlide;
-			setSlideEpoch((epoch) => epoch + 1);
+			if (!slidesShareAutoAnimateId(previousSlide, currentSlide)) {
+				setSlideEpoch((epoch) => epoch + 1);
+			}
+			scheduleFinalizeAutoAnimateRest();
 		};
 		const onWindowHashChange = (): void => {
 			if (!slideUrlEnabled) {
@@ -3143,7 +4827,17 @@ export const PresentationDeck: FC<{
 			if (sheet && typeof sheet.innerHTML === "string") {
 				const durationSeconds =
 					typeof deck.getConfig().autoAnimateDuration === "number" ? deck.getConfig().autoAnimateDuration : 1;
-				patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds);
+				patchPresentationAutoAnimateStyleSheet(sheet, durationSeconds, {
+					manyToOneMorph:
+						fromSlide !== undefined &&
+						toSlide !== undefined &&
+						isManyToOneMorphTransition(fromSlide, toSlide),
+					introFlowMorph:
+						fromSlide !== undefined &&
+						toSlide !== undefined &&
+						isIntroFlowSlide(fromSlide) &&
+						isIntroFlowSlide(toSlide),
+				});
 			}
 			scheduleFinalizeAutoAnimateRest();
 		};
@@ -3151,6 +4845,7 @@ export const PresentationDeck: FC<{
 			relaxHiddenPreflight();
 			syncRevealBackgroundKind(deckEl);
 			syncPresentationSlideSizeVars(deckEl, deck);
+			syncSlideAspect(deckEl);
 			syncPresentSlideMedia();
 			if (slideUrlEnabled) {
 				const indices = readPresentationSlideIndicesFromUrl();
@@ -3166,15 +4861,25 @@ export const PresentationDeck: FC<{
 					if (current.h !== indices.h || current.v !== indices.v) {
 						const slideResult = deck.slide(indices.h, indices.v) as Promise<void> | undefined;
 						if (slideResult && typeof slideResult.then === "function") {
-							void slideResult.then(afterSlideSync);
+							void slideResult.then(() => {
+								afterSlideSync();
+								finalizeRevealAutoAnimateRestState(deckEl);
+								scheduleFinalizeAutoAnimateRest();
+							});
 						} else {
 							afterSlideSync();
+							finalizeRevealAutoAnimateRestState(deckEl);
+							scheduleFinalizeAutoAnimateRest();
 						}
 					} else {
 						afterSlideSync();
+						finalizeRevealAutoAnimateRestState(deckEl);
+						scheduleFinalizeAutoAnimateRest();
 					}
 				} else {
 					afterSlideSync();
+					finalizeRevealAutoAnimateRestState(deckEl);
+					scheduleFinalizeAutoAnimateRest();
 				}
 				window.addEventListener("hashchange", onWindowHashChange);
 			} else {
@@ -3182,6 +4887,8 @@ export const PresentationDeck: FC<{
 				syncArrangementSettledState(deckEl, currentSlide, previousSlideRef.current);
 				previousSlideRef.current = currentSlide;
 				setSlideEpoch((epoch) => epoch + 1);
+				finalizeRevealAutoAnimateRestState(deckEl);
+				scheduleFinalizeAutoAnimateRest();
 			}
 			options?.onRevealReady?.(deck);
 			deck.on("beforeslidechange", onBeforeSlideChange);
@@ -3209,7 +4916,9 @@ export const PresentationDeck: FC<{
 
 	return (
 		<PresentationSlideEpochContext.Provider value={slideEpoch}>
-			<PresentationInteractionProvider slideEpoch={slideEpoch}>
+			<PresentationSlideAspectContext.Provider value={slideAspect}>
+			<PresentationInteractionProvider>
+				<PresentationSlideInteractionBridge deckRef={deckRef} />
 				<div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
 					<div className="slides">
 						{presentation.chapters.flatMap((chapter) =>
@@ -3233,6 +4942,7 @@ export const PresentationDeck: FC<{
 					</div>
 				</div>
 			</PresentationInteractionProvider>
+			</PresentationSlideAspectContext.Provider>
 		</PresentationSlideEpochContext.Provider>
 	);
 };
@@ -3279,6 +4989,202 @@ if (import.meta.vitest) {
 		"utf8",
 	);
 
+	function stockRevealAutoAnimateMatcherHost(): AutoAnimateMatcherHost {
+		return {
+			findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
+				const reserved = new Set<HTMLElement>();
+				for (const fromElement of fromScope.querySelectorAll<HTMLElement>(selector)) {
+					const fromKey = serializer(fromElement);
+					for (const toElement of toScope.querySelectorAll<HTMLElement>(selector)) {
+						if (reserved.has(toElement) || serializer(toElement) !== fromKey) {
+							continue;
+						}
+						pairs.push({ from: fromElement, to: toElement });
+						reserved.add(toElement);
+						break;
+					}
+				}
+			},
+		};
+	}
+
+	describe("resolveRevealArrangement", () => {
+		it("appends target companions for morphFrom on the labels slide", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "col1" }, { id: "tile" }],
+					embodiments: [
+						{ kind: "text", id: "label", lines: ["A"], level: "heading" },
+						{ kind: "figure", id: "tile-figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					],
+				},
+			]);
+			const previousSlide: Slide = {
+				arrangement: {
+					id: "focus",
+					dispositions: [
+						{
+							participantId: "tile",
+							embodimentId: "tile-figure",
+							emphasis: "active",
+							position: { x: 0.5, y: 0.5, width: 0.2, height: 0.2 },
+						},
+					],
+				},
+			};
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "labels",
+					dispositions: [
+						{
+							participantId: "col1",
+							embodimentId: "label",
+							emphasis: "active",
+							morphFrom: [
+								{
+									participantId: "tile",
+									embodimentId: "tile-figure",
+									position: { x: 0.2, y: 0.3, width: 0.2, height: 0.1 },
+								},
+							],
+						},
+					],
+				},
+				{ previousSlide },
+			);
+			expect(resolved).toHaveLength(2);
+			const companion = resolved.find((entry) => entry.revealMorphCompanion === "target");
+			expect(companion?.morphId).toBe("tile");
+			expect(companion?.position).toEqual({ x: 0.2, y: 0.3, width: 0.2, height: 0.1 });
+			expect(companion?.revealMorphFromFrame).toEqual({ x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
+		});
+
+		it("sets revealMorphToFrame on focus tiles when the next slide morphFrom references them", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "tile" }, { id: "col1" }],
+					embodiments: [
+						{ kind: "figure", id: "tile-figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+						{ kind: "text", id: "label", lines: ["A"], level: "heading" },
+					],
+				},
+			]);
+			const focusPosition = { x: 0.5, y: 0.5, width: 0.2, height: 0.2 };
+			const labelPosition = { x: 0.2, y: 0.3, width: 0.2, height: 0.1 };
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "focus",
+					dispositions: [
+						{
+							participantId: "tile",
+							embodimentId: "tile-figure",
+							emphasis: "active",
+							position: focusPosition,
+						},
+					],
+				},
+				{
+					nextSlide: {
+						arrangement: {
+							id: "labels",
+							dispositions: [
+								{
+									participantId: "col1",
+									embodimentId: "label",
+									emphasis: "active",
+									morphFrom: [
+										{
+											participantId: "tile",
+											embodimentId: "tile-figure",
+											position: labelPosition,
+										},
+									],
+								},
+							],
+						},
+					},
+				},
+			);
+			expect(resolved.find((entry) => entry.participant.id === "tile")?.revealMorphToFrame).toEqual(
+				labelPosition,
+			);
+		});
+
+		it("morphFrameCssVars maps normalized frames to presentation custom properties", () => {
+			expect(
+				morphFrameCssVars(
+					{ x: 0.1, y: 0.2, width: 0.3, height: 0.4 },
+					{ x: 0.5, y: 0.6, width: 0.2, height: 0.1 },
+				),
+			).toEqual({
+				"--presentation-morph-frame-left": "10%",
+				"--presentation-morph-frame-top": "20%",
+				"--presentation-morph-frame-width": "30%",
+				"--presentation-morph-frame-height": "40%",
+				"--presentation-frame-left": "50%",
+				"--presentation-frame-top": "60%",
+				"--presentation-frame-width": "20%",
+				"--presentation-frame-height": "10%",
+			});
+		});
+
+		it("keeps target-ghost rest crop on the source tile frame and morph crop on the label slot", () => {
+			const crop = { x: 0.8, y: 0.7, width: 0.15, height: 0.2 };
+			const embodiment = { kind: "figure" as const, src: "/catalogue.png", crop };
+			const sourceFrame = { x: 0.77, y: 0.11, width: 0.2, height: 0.78 };
+			const labelFrame = { x: 0.653333, y: 0.44, width: 0.246667, height: 0.12 };
+			const vars = figureCropBackgroundVarsTargetGhost(embodiment, crop, sourceFrame, labelFrame);
+			const sourceOnly = figureCropBackgroundVars(embodiment, crop, sourceFrame);
+			const labelOnly = figureCropBackgroundVars(embodiment, crop, labelFrame);
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe(
+				sourceOnly["--presentation-figure-bg-size" as keyof typeof sourceOnly],
+			);
+			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBe(
+				labelOnly["--presentation-figure-bg-size" as keyof typeof labelOnly],
+			);
+		});
+
+		it("appends source companions for morphTo on the whole slide", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "whole" }, { id: "tile-a" }],
+					embodiments: [
+						{ kind: "figure", id: "whole--figure", src: "/a.png" },
+						{ kind: "figure", id: "tile-a--figure", src: "/a.png", crop: { x: 0, y: 0, width: 0.5, height: 1 } },
+					],
+				},
+			]);
+			const nextSlide: Slide = {
+				arrangement: {
+					id: "tiles",
+					dispositions: [
+						{ participantId: "tile-a", embodimentId: "tile-a--figure", emphasis: "active" },
+					],
+				},
+			};
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "whole",
+					dispositions: [
+						{
+							participantId: "whole",
+							embodimentId: "whole--figure",
+							emphasis: "active",
+							morphTo: [{ participantId: "tile-a", position: { x: 0.1, y: 0.1, width: 0.35, height: 0.8 } }],
+						},
+					],
+				},
+				{ nextSlide },
+			);
+			expect(resolved).toHaveLength(2);
+			const companion = resolved.find((entry) => entry.revealMorphCompanion === "source");
+			expect(companion?.morphId).toBe("tile-a");
+		});
+	});
+
 	describe("PresentationDeck", () => {
 		let container: HTMLDivElement;
 
@@ -3324,7 +5230,7 @@ if (import.meta.vitest) {
 			expect(revealEl?.getAttribute("style")).toContain("100vw");
 			expect(container.querySelector('[data-id^="title"]')).toBeTruthy();
 			expect(container.querySelector('[data-id^="description"]')).toBeTruthy();
-			expect(container.querySelector('[data-id="goal"]')).toBeTruthy();
+			expect(container.querySelector('[data-id^="goal"]')).toBeTruthy();
 			expect(container.querySelector('[data-id^="authors--"]')).toBeTruthy();
 			expect(container.querySelector('[data-id^="institutions--"]')).toBeTruthy();
 		});
@@ -3342,6 +5248,7 @@ if (import.meta.vitest) {
 			});
 			for (const slide of container.querySelectorAll('.slides > section > section[data-auto-animate-id="einleitung--m0"]')) {
 				expect(slide.classList.contains("presentation-arrangement--interactive")).toBe(true);
+				expect(slide.classList.contains("presentation-arrangement--intro")).toBe(true);
 				expect(slide.classList.contains("presentation-arrangement--positioned")).toBe(false);
 				expect(slide.querySelector(".presentation-arrangement-canvas")).toBeNull();
 				expect(slide.querySelectorAll("[data-disposition-id]").length).toBeGreaterThan(0);
@@ -3408,24 +5315,20 @@ if (import.meta.vitest) {
 			expect(slide("affiliations-2")?.querySelector('h5[data-id="institutions"]')).toBeNull();
 			expect(slide("affiliations-2")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("Uni");
 			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.textContent).toContain("LUH");
+			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
 			expect(slide("affiliations-3")?.querySelector(".presentation-affiliation-morph-source")).toBeNull();
 			expect(
 				slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"]')?.classList.contains("presentation-affiliation-row"),
 			).toBe(true);
 			expect(slide("affiliations-3")?.querySelector('[data-id="institutions--x"]')?.textContent).toContain("Chair X");
 			expect(slide("affiliations-3")?.querySelector('h4[data-id="institutions--1"] [data-id="institutions--x"]')).toBeTruthy();
-			expect(slide("affiliations-3")?.textContent).toContain("Chair X");
 			expect(slide("affiliations-1")?.querySelector('h4[data-id="authors--Alice Example"] sup')?.textContent).toBe("a");
 			const marked2 = slide("affiliations-2")?.querySelector('h4[data-id="authors--Alice Example"] sup');
 			expect(marked2?.textContent).toBe("a,1");
-			expect(marked2?.querySelector('h4[data-id="authors--Alice Example"] sup span:not(.opacity-20)')?.textContent).toBe(
-				"1",
-			);
+			expect(marked2?.querySelector("span:not(.opacity-20)")?.textContent).toBe("1");
 			const marked3 = slide("affiliations-3")?.querySelector('h4[data-id="authors--Alice Example"] sup');
 			expect(marked3?.textContent).toBe("a,1,x");
-			expect(marked3?.querySelector('h4[data-id="authors--Alice Example"] sup span:not(.opacity-20)')?.textContent).toBe(
-				"x",
-			);
+			expect(marked3?.querySelector("span:not(.opacity-20)")?.textContent).toBe("x");
 			expect(slide("affiliations-1")?.querySelector('[data-id="authors--Alice Example"]')?.textContent).toContain("A. Example");
 			expect(slide("affiliations-1")?.querySelector('[data-id="authors--Alice Example"] .opacity-20')).toBeTruthy();
 			expect(slide("authors")?.querySelector('[data-id="authors--Alice Example"] .opacity-20')).toBeNull();
@@ -3463,11 +5366,11 @@ if (import.meta.vitest) {
 			};
 			expectMorphClass('h1[data-id^="title"], h2[data-id^="title"]', "presentation-morph-text--title");
 			expectMorphClass(
-				'h2[data-id^="description"], p[data-id^="description"], h2[data-id="goal"], p[data-id="goal"]',
+				'h2[data-id^="description"], p[data-id^="description"], h2[data-id^="goal"], p[data-id^="goal"]',
 				"presentation-morph-text--secondary",
 			);
 			expect(container.querySelector('h2[data-id^="title"].presentation-morph-text--secondary')).toBeNull();
-			expect(container.querySelector('h2[data-id="goal"].presentation-morph-text--title')).toBeNull();
+			expect(container.querySelector('h2[data-id^="goal"].presentation-morph-text--title')).toBeNull();
 		});
 
 		it("does not use reveal fit-text on intro headings", () => {
@@ -3482,6 +5385,34 @@ if (import.meta.vitest) {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
 			expect(container.querySelector(".r-fit-text")).toBeNull();
+		});
+
+		it("enables reveal auto-animate on intro morph slides without forcing unmatched fade-in", () => {
+			const deck = intro({ language: "de",
+				title: { full: ["A"], short: "Short" },
+				description: { full: ["D"], short: "D short" },
+				goal: ["G1", "G2"],
+				authors: {
+					lines: [
+						[{ name: "Alice", marks: ["a"] }, { name: "Bob", marks: ["a"] }],
+						[{ name: "Carol", marks: ["a"] }],
+					],
+				},
+				affiliations: testAffiliationSteps,
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			for (const slide of container.querySelectorAll(
+				'.slides > section > section[data-auto-animate-id="einleitung--m0"]',
+			)) {
+				expect(slide.classList.contains("presentation-arrangement--intro")).toBe(true);
+				expect(slide.hasAttribute("data-auto-animate-unmatched")).toBe(false);
+			}
+			expect(globalsCssSource).toMatch(
+				/\.presentation-arrangement--intro:not\(\.presentation-arrangement--positioned\)[\s\S]*:is\(h1,\s*h2,\s*h3,\s*h4,\s*p\)[\s\S]*margin:\s*0/s,
+			);
+			expect(globalsCssSource).not.toMatch(/data-auto-animate-id\^="intro--"/);
 		});
 
 		it("enables reveal auto-animate and tags every morph arrangement with data-auto-animate", () => {
@@ -3500,10 +5431,10 @@ if (import.meta.vitest) {
 			);
 			expect(morphSections.length).toBe(7);
 			const slide = (id: string) => container.querySelector(`.slides > section > section[title="${id}"]`);
-			expect(slide("title")?.querySelector('[data-id^="title"]')).toBeTruthy();
+			expect(slide("title")?.querySelector('h2[data-id^="title"]')).toBeTruthy();
 			expect(slide("title")?.querySelector('[data-id^="description"]')).toBeNull();
-			expect(slide("description")?.querySelector('[data-id^="description"]')).toBeTruthy();
-			expect(slide("goal")?.querySelector('[data-id="goal"]')).toBeTruthy();
+			expect(slide("description")?.querySelector('h2[data-id^="description"]')).toBeTruthy();
+			expect(slide("goal")?.querySelector('h2[data-id^="goal"]')).toBeTruthy();
 		});
 
 		it("renders video and pdf embodiments with data-id for auto-animate", () => {
@@ -3635,18 +5566,17 @@ if (import.meta.vitest) {
 			const first = wrappers[0] as HTMLElement;
 			expect(first.classList.contains("presentation-interactive-disposition")).toBe(true);
 			expect(first.style.position).toBe("absolute");
-			const tileFrame = first.querySelector('.presentation-disposition-frame[data-id^="tile-r"]') as HTMLElement;
+			const tileFrame = first.querySelector(
+				'.presentation-morph-slot--figure[data-id^="tile-r"]',
+			) as HTMLElement;
 			expect(tileFrame).toBeTruthy();
-			const fill = tileFrame.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
-			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
-			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("240% 240%");
-			const fills = [...container.querySelectorAll(".presentation-figure-crop-fill")] as HTMLElement[];
-			for (const node of fills) {
-				const size = node.style.getPropertyValue("--presentation-figure-bg-size");
-				const [width, height] = size.split(/\s+/);
-				expect(width).toBe(height);
+			expect(tileFrame.style.backgroundImage).toContain("/catalogue.png");
+			expect(tileFrame.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(/% auto$/);
+			const tiles = [...container.querySelectorAll(".presentation-morph-slot--figure")] as HTMLElement[];
+			for (const node of tiles) {
+				expect(node.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(/% auto$/);
 			}
-			const positions = fills.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
+			const positions = tiles.map((node) => node.style.getPropertyValue("--presentation-figure-bg-position"));
 			expect(new Set(positions).size).toBe(4);
 			expect(first.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
 		});
@@ -3715,20 +5645,11 @@ if (import.meta.vitest) {
 			const toSlide = sections.find((section) => section.title === "catalogue-focus");
 			expect(fromSlide).toBeDefined();
 			expect(toSlide).toBeDefined();
-			const host: AutoAnimateMatcherHost = {
-				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
-					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
-						const key = serializer(element);
-						const toElement = toScope.querySelector<HTMLElement>(
-							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
-						);
-						if (toElement) {
-							pairs.push({ from: element, to: toElement });
-						}
-					}
-				},
-			};
-			const pairs = presentationAutoAnimateMatcher.call(host, fromSlide!, toSlide!);
+			const pairs = presentationAutoAnimateMatcher.call(
+				{ findAutoAnimateMatches: () => {} } as AutoAnimateMatcherHost,
+				fromSlide!,
+				toSlide!,
+			);
 			expect(pairs).toHaveLength(4);
 			expect(pairs.every((pair) => pair.from.getAttribute("data-id") === pair.to.getAttribute("data-id"))).toBe(
 				true,
@@ -3822,13 +5743,14 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot') as HTMLElement | null;
-			const fill = slot?.querySelector(".presentation-figure-crop-fill") as HTMLElement | null;
-			expect(fill?.style.backgroundImage).toContain("/catalogue.png");
+			const slot = container.querySelector(
+				'[data-id="catalogue-col1"].presentation-morph-slot--figure',
+			) as HTMLElement | null;
+			expect(slot?.style.backgroundImage).toContain("/catalogue.png");
 			expect(slot?.querySelector("h2")).toBeNull();
 			expect(slot?.style.left).toBe("35%");
-			expect(fill?.style.getPropertyValue("--presentation-figure-bg-size")).toBe("200% 100%");
-			expect(fill?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("25% 50%");
+			expect(slot?.style.getPropertyValue("--presentation-figure-bg-size")).toMatch(/% auto$/);
+			expect(slot?.style.getPropertyValue("--presentation-figure-bg-position")).toBe("0% 50%");
 		});
 
 		it("rewrites non-uniform auto-animate scale() to a uniform zoom", () => {
@@ -3842,11 +5764,46 @@ if (import.meta.vitest) {
 			patchPresentationAutoAnimateStyleSheet(sheet, 0.8);
 			expect(sheet.innerHTML).toContain("scale(2)");
 			expect(sheet.innerHTML).toContain(
-				'[data-auto-animate="running"] .presentation-morph-source[data-auto-animate-target]',
+				'[data-auto-animate="running"] .presentation-target-ghost[data-auto-animate-target]',
 			);
 			expect(sheet.innerHTML).toContain("opacity: 1 !important");
-			expect(sheet.innerHTML).toContain("presentation-morph-source-fade-out 0.8s ease forwards !important");
-			expect(sheet.innerHTML).toContain("presentation-morph-into-fade-in 0.8s ease forwards !important");
+			expect(sheet.innerHTML).toContain("presentation-target-ghost-fade-out 0.8s ease forwards !important");
+			expect(sheet.innerHTML).not.toContain("presentation-morph-target-fade-in");
+		});
+
+		it("preserves anisotropic scale() in the auto-animate sheet for intro flow morph", () => {
+			const sheet = { innerHTML: "transform: scale(1, 2) !important;" };
+			patchPresentationAutoAnimateStyleSheet(sheet, 0.8, { introFlowMorph: true });
+			expect(sheet.innerHTML).toContain("scale(1, 2)");
+			expect(sheet.innerHTML).not.toContain("scale(2)");
+		});
+
+		it("preserves anisotropic scale() in the auto-animate sheet for many-to-one morph", () => {
+			const sheet = { innerHTML: "transform: scale(0.4, 0.9) !important;" };
+			patchPresentationAutoAnimateStyleSheet(sheet, 0.8, { manyToOneMorph: true });
+			expect(sheet.innerHTML).toContain("scale(0.4, 0.9)");
+			expect(sheet.innerHTML).not.toContain("scale(0.9)");
+			expect(sheet.innerHTML).toContain("presentation-target-ghost-frame 0.8s ease forwards");
+		});
+
+		it("animates figure crop and target-ghost frames only during many-to-one auto-animate", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, resolve } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
+			expect(css).toContain("presentation-figure-crop-morph-from-rest");
+			expect(css).toContain("presentation-figure-crop-morph-grid-to-focus");
+			expect(
+				css.match(
+					/presentation-morph-crop-from[\s\S]*?presentation-figure-crop-morph-from-rest/,
+				),
+			).toBeTruthy();
+			expect(css).toContain("@keyframes presentation-target-ghost-frame");
+			expect(css).toContain(
+				"section.presentation-arrangement--many-to-one-morph[data-auto-animate=\"running\"]",
+			);
+			expect(css).toContain(".presentation-morph-crop-from");
+			expect(css).toContain(".presentation-morph-crop-to");
 		});
 
 		it("rests morph-source ghosts with opacity only so reveal can measure FLIP targets", async () => {
@@ -3855,19 +5812,72 @@ if (import.meta.vitest) {
 			const { fileURLToPath } = await import("node:url");
 			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
 			const css = readFileSync(cssPath, "utf8");
-			const restRule = css.match(/\.reveal \.presentation-morph-source \{[\s\S]*?\}/)?.[0] ?? "";
+			const restRule =
+				css.match(
+					/\.reveal \.presentation-target-ghost \{[\s\S]*?\}/,
+				)?.[0] ?? "";
 			expect(restRule).toContain("opacity: 0");
 			expect(restRule).not.toContain("opacity: 0 !important");
 			expect(restRule).not.toContain("visibility: hidden");
-			const runningRule =
-				css.match(
-					/\.reveal \.slides section\[data-auto-animate="running"\] \.presentation-morph-source \{[\s\S]*?\}/,
-				)?.[0] ?? "";
-			expect(runningRule).toContain("presentation-morph-source-fade-out");
-			expect(runningRule).not.toMatch(/opacity:\s*1\s*!important/);
+			expect(css).toMatch(
+				/section\[data-auto-animate="running"\][\s\S]*?presentation-target-ghost-fade-out/,
+			);
+			expect(restRule).toContain("pointer-events: none !important");
+			expect(restRule).toContain("z-index: 0");
+			expect(css).toContain(
+				"> .presentation-interactive-disposition:not(.presentation-target-ghost):not(.presentation-source-ghost)",
+			);
+			expect(css).toMatch(
+				/section\[data-auto-animate="pending"\][\s\S]*?\.presentation-target-ghost/,
+			);
 		});
 
-		it("uses uniform cover at rest and during auto-animate morph vars", () => {
+		it("resolvePresentationAssetUrl maps deck-relative paths through the Vite base", () => {
+			expect(resolvePresentationAssetUrl("/bauteilbörse.png")).toBe("/bauteilbörse.png");
+			expect(resolvePresentationAssetUrl("./bauteilbörse.png")).toBe("/bauteilbörse.png");
+		});
+
+		it("keeps figure selection chrome as a translucent overlay, not a solid fill", async () => {
+			const { readFileSync } = await import("node:fs");
+			const { dirname, resolve } = await import("node:path");
+			const { fileURLToPath } = await import("node:url");
+			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
+			expect(css).toContain(
+				".presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected",
+			);
+			expect(css).toContain(".presentation-morph-slot--figure::after");
+			expect(css).not.toMatch(
+				/\.presentation-interactive-disposition--kind-figure\.presentation-interactive-disposition--selected[\s\S]*?\.presentation-morph-slot--figure\s*\{[^}]*background-color:\s*var\(--color-primary\)/,
+			);
+		});
+
+		it("computes pdf cover scale from container and page viewport", () => {
+			expect(pdfCoverScale(768, 280, 595, 842)).toBeCloseTo(768 / 595);
+			expect(pdfCoverScale(200, 400, 595, 842)).toBeCloseTo(400 / 842);
+			expect(pdfCoverScale(0, 400, 595, 842)).toBeNull();
+		});
+
+		it("navigates only within a declared pdf page subset", () => {
+			const thesis: PdfEmbodiment = {
+				kind: "pdf",
+				id: "thesis--doc",
+				src: "/thesis.pdf",
+				page: 25,
+				pages: [1, 12, 25, 35, 42, 43, 51],
+			};
+			expect(pdfEmbodimentInitialPage(thesis)).toBe(25);
+			expect(pdfEmbodimentInitialPage({ ...thesis, page: 99 })).toBe(1);
+			expect(pdfPageNavEnabled(thesis, null)).toBe(true);
+			expect(pdfPageNavEnabled({ ...thesis, pages: [1] }, null)).toBe(false);
+			expect(pdfCanGoToPreviousPage(25, thesis, null)).toBe(true);
+			expect(pdfCanGoToNextPage(51, thesis, null)).toBe(false);
+			expect(pdfAdjacentPage(25, "next", thesis, null)).toBe(35);
+			expect(pdfAdjacentPage(51, "next", thesis, null)).toBe(51);
+			expect(pdfAdjacentPage(51, "prev", thesis, null)).toBe(43);
+			expect(pdfAdjacentPage(1, "prev", thesis, null)).toBe(1);
+		});
+
+		it("uses cover for full image and uniform crop zoom for partial crops", () => {
 			const crop = { x: 0, y: 0, width: 0.5, height: 1 };
 			const square = figureCropBackgroundVars(
 				{ kind: "figure", src: "/catalogue.png", crop },
@@ -3879,25 +5889,161 @@ if (import.meta.vitest) {
 				crop,
 				{ x: 0, y: 0, width: 1, height: 0.25 },
 			);
-			expect(square["--presentation-figure-bg-size-morph" as keyof typeof square]).toBe("400% 200%");
-			expect(wide["--presentation-figure-bg-size-morph" as keyof typeof wide]).toBe("1600% 800%");
-			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("1600% 800%");
-			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% 200%");
-			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("25% 50%");
-			expect(square["--presentation-figure-bg-position" as keyof typeof square]).toBe("25% 50%");
+			expect(square["--presentation-figure-bg-size" as keyof typeof square]).toBe("400% auto");
+			expect(wide["--presentation-figure-bg-size" as keyof typeof wide]).toBe("1600% auto");
+			expect(wide["--presentation-figure-bg-position" as keyof typeof wide]).toBe("0% 50%");
+			expect(square["--presentation-figure-bg-position" as keyof typeof square]).toBe("0% 50%");
 		});
 
-		it("assigns distinct crop background positions per split tile", () => {
-			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
-			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
-			const embodiment = { kind: "figure" as const, src: "/catalogue.png" };
-			const positions = tiles.map(
-				(tile) =>
-					figureCropBackgroundVars(embodiment, tile.crop, tile.position)[
-						"--presentation-figure-bg-position" as keyof ReturnType<typeof figureCropBackgroundVars>
-					],
+		it("uses CSS cover for full catalogue in the catalogue frame", () => {
+			const sourceAspect = 1222 / 896;
+			const crop = { x: 0, y: 0, width: 1, height: 1 };
+			const frame = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+			const vars = figureCropBackgroundVars(
+				{ kind: "figure", src: "/bauteilbörse.png", crop, sourceAspect },
+				crop,
+				frame,
 			);
-			expect(new Set(positions).size).toBe(4);
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe("cover");
+			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe("50% 50%");
+		});
+
+		it("uses windowed mosaic for rest and grid and centered crop for morph on catalogue-to-focus", () => {
+			const sourceAspect = 1222 / 896;
+			const catalogueFrame = { x: 0.127, y: 0.2, width: 0.746, height: 0.75 };
+			const mosaic = { rows: 3, columns: 5, frame: catalogueFrame };
+			const crop = {
+				x: catalogueFrame.x + catalogueFrame.width / 5,
+				y: catalogueFrame.y + catalogueFrame.height / 3,
+				width: catalogueFrame.width / 5,
+				height: catalogueFrame.height / 3,
+			};
+			const gridFrame = { x: 0.127, y: 0.2, width: 0.1492, height: 0.1823 };
+			const focusFrame = { x: 0.1, y: 0.2, width: 0.15, height: 0.18 };
+			const labelFrame = { x: 0.6, y: 0.44, width: 0.24, height: 0.12 };
+			const windowed = mosaicWindowedCoverVars(
+				{ column: 1, row: 1 },
+				mosaic,
+				catalogueFrame,
+				sourceAspect,
+			);
+			const morphPos = figureCropBackgroundPosition(crop);
+			const morphSize = figureCropBackgroundSize(crop, labelFrame, sourceAspect);
+			const vars = figureCropBackgroundVars(
+				{
+					kind: "figure",
+					id: "tile-figure",
+					src: "/bauteilbörse.png",
+					crop,
+					sourceAspect,
+					mosaic,
+				},
+				crop,
+				focusFrame,
+				labelFrame,
+				gridFrame,
+			);
+			expect(vars["--presentation-figure-bg-size" as keyof typeof vars]).toBe(windowed.size);
+			expect(vars["--presentation-figure-bg-position" as keyof typeof vars]).toBe(
+				`${windowed.posX}% ${windowed.posY}%`,
+			);
+			expect(vars["--presentation-figure-bg-grid-size" as keyof typeof vars]).toBe(windowed.size);
+			expect(vars["--presentation-figure-bg-grid-position" as keyof typeof vars]).toBe(
+				`${windowed.posX}% ${windowed.posY}%`,
+			);
+			expect(vars["--presentation-figure-bg-size-morph" as keyof typeof vars]).toBe(morphSize);
+			expect(vars["--presentation-figure-bg-position-morph" as keyof typeof vars]).toBe(
+				`${morphPos.posX}% ${morphPos.posY}%`,
+			);
+		});
+
+		it("mosaic windowed cover uses columns×100% width for catalogue 3×5 on a wide slide", () => {
+			const sourceAspect = 1222 / 896;
+			const frame = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+			const slideAspect = 960 / 700;
+			const vars = mosaicWindowedCoverVars(
+				{ column: 0, row: 1 },
+				{ rows: 3, columns: 5 },
+				frame,
+				sourceAspect,
+				slideAspect,
+			);
+			expect(vars.size).toBe("500% auto");
+			expect(vars.posX).toBe(0);
+		});
+
+		it("sets revealMorphFromMorphToFrame from the previous slide morphTo slots", () => {
+			const scope = buildResolutionScope([
+				{
+					participants: [{ id: "tile" }],
+					embodiments: [
+						{
+							kind: "figure",
+							id: "tile-figure",
+							src: "/a.png",
+							crop: { x: 0, y: 0, width: 0.5, height: 1 },
+						},
+					],
+				},
+			]);
+			const gridFrame = { x: 0.1, y: 0.1, width: 0.2, height: 0.3 };
+			const focusFrame = { x: 0.4, y: 0.2, width: 0.15, height: 0.18 };
+			const resolved = resolveRevealArrangement(
+				scope,
+				{
+					id: "focus",
+					dispositions: [
+						{
+							participantId: "tile",
+							embodimentId: "tile-figure",
+							emphasis: "active",
+							position: focusFrame,
+						},
+					],
+				},
+				{
+					previousSlide: {
+						arrangement: {
+							id: "catalogue",
+							dispositions: [
+								{
+									participantId: "catalogue",
+									embodimentId: "catalogue--figure",
+									morphTo: [{ participantId: "tile", embodimentId: "tile-figure", position: gridFrame }],
+								},
+							],
+						},
+					},
+				},
+			);
+			expect(resolved.find((entry) => entry.participant.id === "tile")?.revealMorphFromMorphToFrame).toEqual(
+				gridFrame,
+			);
+		});
+
+		it("assigns windowed mosaic cover per split tile", () => {
+			const frame = { x: 0.1, y: 0.1, width: 0.8, height: 0.6 };
+			const mosaic = { rows: 2, columns: 2, frame };
+			const tiles = splitFigureGrid({ rows: 2, columns: 2, frame });
+			const embodiment = {
+				kind: "figure" as const,
+				src: "/catalogue.png",
+				mosaic,
+			};
+			const expected = tiles.map((tile, index) => {
+				const column = index % 2;
+				const row = Math.floor(index / 2);
+				return mosaicWindowedCoverVars({ column, row }, mosaic, frame, 1);
+			});
+			const varsList = tiles.map((tile) =>
+				figureCropBackgroundVars(embodiment, tile.crop, tile.position),
+			);
+			expect(varsList.map((vars) => vars["--presentation-figure-bg-size" as keyof typeof vars])).toEqual(
+				expected.map((entry) => entry.size),
+			);
+			expect(varsList.map((vars) => vars["--presentation-figure-bg-position" as keyof typeof vars])).toEqual(
+				expected.map((entry) => `${entry.posX}% ${entry.posY}%`),
+			);
 		});
 
 		it("clearRevealAutoAnimateInlineLayout removes only FLIP transform from auto-animate targets", () => {
@@ -3918,14 +6064,16 @@ if (import.meta.vitest) {
 			const slide = document.createElement("section");
 			slide.classList.add("present");
 			slide.setAttribute("data-auto-animate", "running");
+			slide.classList.add(PRESENTATION_MANY_TO_ONE_MORPH_CLASS);
 			const morphSource = document.createElement("div");
-			morphSource.className = "presentation-morph-source";
+			morphSource.className = "presentation-target-ghost";
 			morphSource.dataset.autoAnimateTarget = "0";
 			slide.appendChild(morphSource);
 			deckEl.appendChild(slide);
 			document.body.appendChild(deckEl);
 			finalizeRevealAutoAnimateRestState(deckEl);
 			expect(slide.getAttribute("data-auto-animate")).toBe("");
+			expect(slide.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(false);
 			expect(morphSource.hasAttribute("data-auto-animate-target")).toBe(false);
 			deckEl.remove();
 		});
@@ -3956,8 +6104,38 @@ if (import.meta.vitest) {
 			expect(pairs[0]?.from.classList.contains("presentation-morph-slot--figure")).toBe(true);
 		});
 
+		it("detects reveal slide auto-animate pending or running on section or deck", () => {
+			const section = document.createElement("section");
+			const deck = document.createElement("div");
+			deck.className = "reveal";
+			deck.appendChild(section);
+			expect(isRevealSlideAutoAnimating(section)).toBe(false);
+			expect(isSectionAutoAnimating(section)).toBe(false);
+			section.setAttribute("data-auto-animate", "pending");
+			expect(isSectionAutoAnimating(section)).toBe(true);
+			expect(isRevealSlideAutoAnimating(section)).toBe(true);
+			section.setAttribute("data-auto-animate", "");
+			const other = document.createElement("section");
+			other.setAttribute("data-auto-animate", "running");
+			deck.appendChild(other);
+			expect(isSectionAutoAnimating(section)).toBe(false);
+			expect(isRevealSlideAutoAnimating(section)).toBe(true);
+		});
+
+		it("detects consecutive slides in the same auto-animate run", () => {
+			const focus = document.createElement("section");
+			focus.setAttribute("data-auto-animate-id", "medien--m0");
+			const labels = document.createElement("section");
+			labels.setAttribute("data-auto-animate-id", "medien--m0");
+			const overview = document.createElement("section");
+			overview.setAttribute("data-auto-animate-id", "medien--m1");
+			expect(slidesShareAutoAnimateId(focus, labels)).toBe(true);
+			expect(slidesShareAutoAnimateId(focus, overview)).toBe(false);
+		});
+
 		it("clears settled state when arriving on a slide and prepares it before morph to listed targets", () => {
 			const deckEl = document.createElement("div");
+			deckEl.className = "reveal";
 			const focus = document.createElement("section");
 			focus.setAttribute("title", "catalogue-focus");
 			focus.setAttribute("data-settle-before-morph-to", "catalogue-labels");
@@ -3968,14 +6146,81 @@ if (import.meta.vitest) {
 			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(false);
 			const labels = document.createElement("section");
 			labels.setAttribute("title", "catalogue-labels");
+			deckEl.appendChild(labels);
 			prepareArrangementBeforeAutoAnimate(focus, labels);
 			expect(focus.classList.contains("presentation-arrangement--settled")).toBe(true);
+			expect(focus.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(true);
+			expect(labels.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(true);
 		});
 
-		it("marks zero-opacity crop morph slots dormant until the arrangement settles", () => {
+		it("syncManyToOneGhostMorphFramesFromDom uses live source tile geometry on target ghosts", () => {
+			const deckEl = document.createElement("div");
+			deckEl.className = "reveal";
+			const focus = document.createElement("section");
+			focus.setAttribute("title", "catalogue-focus");
+			focus.setAttribute("data-settle-before-morph-to", "catalogue-labels");
+			focus.style.cssText = "position:relative;width:960px;height:540px;";
+			const labels = document.createElement("section");
+			labels.setAttribute("title", "catalogue-labels");
+			labels.style.cssText = "position:relative;width:960px;height:540px;";
+			const source = document.createElement("div");
+			source.className =
+				"presentation-interactive-disposition presentation-interactive-disposition--canvas-framed";
+			source.setAttribute("data-id", "Stütze");
+			Object.assign(source.style, {
+				position: "absolute",
+				left: "20%",
+				top: "10%",
+				width: "15%",
+				height: "70%",
+			});
+			const ghost = document.createElement("div");
+			ghost.className =
+				"presentation-interactive-disposition presentation-target-ghost presentation-interactive-disposition--canvas-framed";
+			ghost.setAttribute("data-id", "Stütze");
+			Object.assign(ghost.style, {
+				position: "absolute",
+				left: "60%",
+				top: "44%",
+				width: "24%",
+				height: "12%",
+			});
+			const slot = document.createElement("div");
+			slot.className = "presentation-morph-slot presentation-morph-slot--figure";
+			slot.dataset.presentationMorphCrop = JSON.stringify({ x: 0, y: 0, width: 0.5, height: 1 });
+			ghost.append(slot);
+			focus.append(source);
+			labels.append(ghost);
+			deckEl.append(focus, labels);
+			document.body.append(deckEl);
+			syncManyToOneGhostMorphFramesFromDom(focus, labels);
+			expect(ghost.style.getPropertyValue("--presentation-morph-frame-left")).toBe("20%");
+			expect(ghost.style.getPropertyValue("--presentation-morph-frame-top")).toBe("10%");
+			expect(ghost.style.getPropertyValue("--presentation-morph-frame-width")).toBe("15%");
+			expect(ghost.style.getPropertyValue("--presentation-morph-frame-height")).toBe("70%");
+			expect(ghost.style.getPropertyValue("--presentation-frame-left")).toBe("60%");
+			deckEl.remove();
+		});
+
+		it("does not mark many-to-one morph for catalogue to focus auto-animate", () => {
+			const deckEl = document.createElement("div");
+			deckEl.className = "reveal";
+			const catalogue = document.createElement("section");
+			catalogue.setAttribute("title", "catalogue");
+			const focus = document.createElement("section");
+			focus.setAttribute("title", "catalogue-focus");
+			focus.setAttribute("data-settle-before-morph-to", "catalogue-labels");
+			deckEl.append(catalogue, focus);
+			expect(isManyToOneMorphTransition(catalogue, focus)).toBe(false);
+			prepareArrangementBeforeAutoAnimate(catalogue, focus);
+			expect(focus.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(false);
+			expect(catalogue.classList.contains(PRESENTATION_MANY_TO_ONE_MORPH_CLASS)).toBe(false);
+		});
+
+		it("renders expanded source ghosts for one-to-many morphTo", () => {
 			const deck: Presentation = {
-				id: "dormant-crop",
-				name: "Dormant",
+				id: "source-ghost",
+				name: "Source ghost",
 				chapters: [
 					{
 						id: "main",
@@ -3984,12 +6229,13 @@ if (import.meta.vitest) {
 								id: "main",
 								thoughts: [
 									{
-										id: "crop",
-										participants: [{ id: "catalogue-col1" }],
+										id: "split",
+										participants: [{ id: "whole" }, { id: "tile-a" }],
 										embodiments: [
+											{ kind: "figure", id: "whole--figure", src: "/catalogue.png" },
 											{
 												kind: "figure",
-												id: "catalogue-col1--crop",
+												id: "tile-a--figure",
 												src: "/catalogue.png",
 												crop: { x: 0, y: 0, width: 0.5, height: 1 },
 											},
@@ -3997,14 +6243,33 @@ if (import.meta.vitest) {
 										slides: [
 											{
 												arrangement: {
-													id: "focus",
+													id: "whole",
 													dispositions: [
 														{
-															participantId: "catalogue-col1",
-															embodimentId: "catalogue-col1--crop",
+															participantId: "whole",
+															embodimentId: "whole--figure",
 															emphasis: "active",
-															position: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
-															style: { opacity: 0 },
+															position: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 },
+															morphTo: [
+																{
+																	participantId: "tile-a",
+																	position: { x: 0.1, y: 0.1, width: 0.35, height: 0.8 },
+																},
+															],
+														},
+													],
+												},
+												transition: { kind: "morph" },
+											},
+											{
+												arrangement: {
+													id: "tiles",
+													dispositions: [
+														{
+															participantId: "tile-a",
+															embodimentId: "tile-a--figure",
+															emphasis: "active",
+															position: { x: 0.05, y: 0.2, width: 0.4, height: 0.6 },
 														},
 													],
 												},
@@ -4020,9 +6285,12 @@ if (import.meta.vitest) {
 			act(() => {
 				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
-			const slot = container.querySelector('[data-id="catalogue-col1"].presentation-morph-slot--dormant') as HTMLElement | null;
-			expect(slot).toBeTruthy();
-			expect(slot?.classList.contains("presentation-morph-slot--dormant")).toBe(true);
+			const wholeSlide = container.querySelector('section[title="whole"]') as HTMLElement;
+			const sourceGhost = wholeSlide.querySelector(
+				'.presentation-interactive-disposition.presentation-source-ghost[data-id="tile-a"]',
+			);
+			expect(sourceGhost).toBeTruthy();
+			expect(wholeSlide.querySelectorAll(".presentation-morph-one").length).toBe(1);
 		});
 
 		it("renders positioned labels with data-id on the morph slot frame", () => {
@@ -4164,7 +6432,158 @@ if (import.meta.vitest) {
 		});
 	});
 
+	describe("reveal text morph", () => {
+		it("pairs intro leaf text nodes, not disposition wrappers", () => {
+			const fromSlide = document.createElement("section");
+			fromSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const toSlide = document.createElement("section");
+			toSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const fromWrap = document.createElement("div");
+			fromWrap.className = "presentation-interactive-disposition";
+			const fromHeading = document.createElement("h2");
+			fromHeading.setAttribute("data-id", "description");
+			fromHeading.textContent = "Long description line";
+			fromWrap.append(fromHeading);
+			fromSlide.append(fromWrap);
+			const toWrap = document.createElement("div");
+			toWrap.className = "presentation-interactive-disposition";
+			const toHeading = document.createElement("h2");
+			toHeading.setAttribute("data-id", "description");
+			toHeading.textContent = "Short";
+			toWrap.append(toHeading);
+			toSlide.append(toWrap);
+			expect(isRevealAutoAnimatePairSource(fromWrap)).toBe(false);
+			expect(isRevealAutoAnimatePairSource(fromHeading)).toBe(true);
+			const pairs = presentationAutoAnimateMatcher.call(
+				stockRevealAutoAnimateMatcherHost(),
+				fromSlide,
+				toSlide,
+			);
+			expect(pairs).toEqual([
+				{
+					from: fromHeading,
+					to: toHeading,
+				},
+			]);
+		});
+
+		it("pairs short and full heading-block lines via a shared --0 suffix", () => {
+			const fromSlide = document.createElement("section");
+			fromSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const toSlide = document.createElement("section");
+			toSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const fromHeading = document.createElement("h2");
+			fromHeading.setAttribute("data-id", "description--0");
+			fromHeading.textContent = "Short";
+			fromSlide.append(fromHeading);
+			const toLine0 = document.createElement("h2");
+			toLine0.setAttribute("data-id", "description--0");
+			toLine0.textContent = "Long line one";
+			const toLine1 = document.createElement("h2");
+			toLine1.setAttribute("data-id", "description--1");
+			toLine1.textContent = "Long line two";
+			toSlide.append(toLine0, toLine1);
+			const pairs = presentationAutoAnimateMatcher.call(
+				stockRevealAutoAnimateMatcherHost(),
+				fromSlide,
+				toSlide,
+			);
+			expect(pairs).toEqual([
+				{
+					from: fromHeading,
+					to: toLine0,
+				},
+			]);
+		});
+
+		it("uses stock reveal auto-animate options on intro text pairs", () => {
+			const fromSlide = document.createElement("section");
+			fromSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const toSlide = document.createElement("section");
+			toSlide.className = "presentation-arrangement--interactive presentation-arrangement--intro";
+			const fromHeading = document.createElement("h2");
+			fromHeading.setAttribute("data-id", "description--0");
+			fromSlide.append(fromHeading);
+			const toHeading = document.createElement("h2");
+			toHeading.setAttribute("data-id", "description--0");
+			toSlide.append(toHeading);
+			const pairs = presentationAutoAnimateMatcher.call(
+				stockRevealAutoAnimateMatcherHost(),
+				fromSlide,
+				toSlide,
+			);
+			expect(pairs[0]?.options).toBeUndefined();
+		});
+
+		it("uses slide-local measure options on non-intro text pairs", () => {
+			const fromSlide = document.createElement("section");
+			fromSlide.className = "presentation-arrangement--interactive";
+			const toSlide = document.createElement("section");
+			toSlide.className = "presentation-arrangement--interactive";
+			const heading = document.createElement("h2");
+			heading.setAttribute("data-id", "label");
+			expect(revealTextAutoAnimatePairOptions(heading, fromSlide, toSlide)).toEqual({
+				scale: false,
+				measure: revealInkMeasureForAutoAnimate,
+			});
+		});
+
+		it("measures morph text relative to the slide box, not the viewport", () => {
+			const section = document.createElement("section");
+			section.className = "presentation-arrangement--interactive";
+			const heading = document.createElement("h2");
+			heading.textContent = "Plattform";
+			section.append(heading);
+			document.body.append(section);
+			section.getBoundingClientRect = () => new DOMRect(500, 0, 960, 700);
+			heading.getBoundingClientRect = () => new DOMRect(780, 300, 400, 48);
+			const viewport = heading.getBoundingClientRect();
+			const measured = revealInkMeasureForAutoAnimate(heading);
+			document.body.removeChild(section);
+			expect(measured.x).not.toBeCloseTo(viewport.left);
+			expect(measured.x).toBeGreaterThanOrEqual(0);
+			expect(measured.x + measured.width).toBeLessThanOrEqual(960);
+		});
+	});
+
 	describe("presentation interaction geometry", () => {
+		it("detects disposition ephemeral layout from anchor and transform", () => {
+			const declared = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+			expect(dispositionHasEphemeralLayout(undefined, declared, undefined, false)).toBe(false);
+			expect(dispositionHasEphemeralLayout(declared, declared, undefined, false)).toBe(false);
+			expect(
+				dispositionHasEphemeralLayout({ x: 0.3, y: 0.3, width: 0.4, height: 0.2 }, declared, undefined, false),
+			).toBe(true);
+		});
+
+		it("detects slide ephemeral layout and reset hotspot proximity", () => {
+			const declared = new Map<string, DispositionPosition | undefined>([
+				["a", { x: 0.2, y: 0.3, width: 0.4, height: 0.2 }],
+			]);
+			expect(slideHasEphemeralLayout(new Map(), new Set(), declared)).toBe(false);
+			expect(
+				slideHasEphemeralLayout(
+					new Map([["a", { x: 0.2, y: 0.3, width: 0.4, height: 0.2 }]]),
+					new Set(),
+					declared,
+				),
+			).toBe(false);
+			expect(
+				slideHasEphemeralLayout(
+					new Map([["a", { x: 0.3, y: 0.3, width: 0.4, height: 0.2 }]]),
+					new Set(),
+					declared,
+				),
+			).toBe(true);
+			expect(slideHasEphemeralLayout(new Map(), new Set(["a"]), declared)).toBe(true);
+			const section = document.createElement("section");
+			document.body.appendChild(section);
+			section.getBoundingClientRect = () => new DOMRect(0, 0, 960, 700);
+			expect(pointerNearSlideResetHotspot(section, 920, 20)).toBe(true);
+			expect(pointerNearSlideResetHotspot(section, 100, 20)).toBe(false);
+			document.body.removeChild(section);
+		});
+
 		it("detects intersection and containment", () => {
 			const a = { x: 0.1, y: 0.1, width: 0.3, height: 0.3 };
 			const b = { x: 0.25, y: 0.25, width: 0.3, height: 0.3 };
@@ -4185,6 +6604,38 @@ if (import.meta.vitest) {
 			expect(marqueeSelects(windowMarquee, inside, "window")).toBe(true);
 			expect(marqueeSelects(windowMarquee, partial, "window")).toBe(false);
 			expect(marqueeSelects(windowMarquee, partial, "crossing")).toBe(true);
+		});
+
+		it("detects reveal overview from an element inside the deck", () => {
+			const reveal = document.createElement("div");
+			reveal.className = "reveal";
+			const section = document.createElement("section");
+			reveal.appendChild(section);
+			expect(revealDeckInOverview(section)).toBe(false);
+			reveal.classList.add("overview");
+			expect(revealDeckInOverview(section)).toBe(true);
+		});
+
+		it("suppresses the reveal overview slide click after pointer gestures", () => {
+			const reveal = document.createElement("div");
+			reveal.className = "reveal";
+			const slide = document.createElement("section");
+			const inner = document.createElement("div");
+			reveal.appendChild(slide);
+			slide.appendChild(inner);
+			let overviewClickCalls = 0;
+			slide.addEventListener(
+				"click",
+				() => {
+					overviewClickCalls += 1;
+				},
+				true,
+			);
+			suppressRevealOverviewSlideNavigation({ target: inner } as Event);
+			const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+			inner.dispatchEvent(click);
+			expect(overviewClickCalls).toBe(0);
+			expect(click.defaultPrevented).toBe(true);
 		});
 
 		it("translates and resizes with minimum size", () => {
@@ -4218,7 +6669,10 @@ if (import.meta.vitest) {
 			const measured = { x: 0.2, y: 0.3, width: 0.25, height: 0.1 };
 			const offset = { x: 96, y: 40, width: 0.25, height: 0.1 };
 			expect(isFlowPixelOffsetTransform(offset, measured)).toBe(true);
-			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.25, height: 0.1 }, measured)).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.25, height: 0.1 }, measured)).toBe(
+				false,
+			);
+			expect(isFlowPixelOffsetTransform({ x: 12, y: -4, width: 0.25, height: 0.1 }, measured)).toBe(true);
 			expect(isFlowPixelOffsetTransform(offset, undefined)).toBe(true);
 			expect(isFlowPixelOffsetTransform({ ...offset, width: 0.3 }, measured)).toBe(false);
 			const section = document.createElement("section");
@@ -4272,7 +6726,7 @@ if (import.meta.vitest) {
 					selected: true,
 					effectiveRect: rect,
 					canvasFramed: false,
-					fullscreen: false,
+					enlarged: false,
 				}),
 			).toEqual(transformFrameStyle(rect));
 			expect(
@@ -4280,7 +6734,7 @@ if (import.meta.vitest) {
 					selected: true,
 					effectiveRect: rect,
 					canvasFramed: true,
-					fullscreen: false,
+					enlarged: false,
 				}),
 			).toBeUndefined();
 		});
@@ -4297,14 +6751,43 @@ if (import.meta.vitest) {
 			expect(isFlowPixelOffsetTransform({ x: 0, y: 0, width: 0.25, height: 0.1 }, measured)).toBe(true);
 		});
 
-		it("maps flow pointer delta 1:1 with screen travel", () => {
+		it("maps flow pointer delta through drag target visual scale", () => {
 			const section = document.createElement("section");
 			section.className = "presentation-arrangement--interactive";
 			document.body.appendChild(section);
+			section.getBoundingClientRect = () => new DOMRect(0, 0, 480, 350);
+			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(section, "offsetHeight", { value: 700, configurable: true });
 			const delta = flowPointerDeltaToLocal(section, 100, 200, 150, 260);
 			document.body.removeChild(section);
-			expect(delta.dx).toBe(50);
-			expect(delta.dy).toBe(60);
+			expect(delta.dx).toBeCloseTo(100);
+			expect(delta.dy).toBeCloseTo(120);
+		});
+
+		it("intro morph title placements have no declared slide frame", () => {
+			const deck = intro({
+				language: "de",
+				title: { full: ["Title"], short: "T" },
+				description: { full: ["D"], short: "d" },
+				goal: ["G"],
+				authors: { lines: [[{ name: "A" }]] },
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[{ mark: "a", name: "Faculty" }, { mark: "1", name: "Uni" }],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni", shortName: "U", suffix: { mark: "x", name: "Chair" } },
+						],
+					],
+				},
+			});
+			const thought = deck.chapters[0]!.sequences[0]!.thoughts[0]!;
+			const renderSlide = expandThoughtSlides(thought)[0]!;
+			const scope = buildResolutionScope([thought]);
+			const resolved = resolveRevealArrangement(scope, renderSlide.arrangement, {});
+			const layout = buildInteractiveSlideLayout(renderSlide.id, resolved, true);
+			expect(layout.placements.every((entry) => entry.sectionRect === undefined)).toBe(true);
 		});
 
 		it("maps flow drag 1:1 when reveal stack layout is tall but drag target is slide-sized", () => {
@@ -4332,14 +6815,17 @@ if (import.meta.vitest) {
 			expect(slideCoordinateRoot(inner)).toBe(inner);
 			const delta = flowPointerDeltaToLocal(content, 100, 200, 120, 220);
 			document.body.removeChild(reveal);
-			expect(delta.dx).toBe(20);
-			expect(delta.dy).toBe(20);
+			expect(delta.dx).toBeCloseTo(40);
+			expect(delta.dy).toBeCloseTo(40);
 		});
 
 		it("does not treat sub-unit flow drag offsets as normalized slide frames", () => {
 			const measured = { x: 0.35, y: 0.4, width: 0.3, height: 0.08 };
-			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 }, measured)).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 12, y: 4, width: 0.3, height: 0.08 }, measured)).toBe(true);
 			expect(isNormalizedSlideFrame({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 })).toBe(true);
+			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 }, measured)).toBe(
+				false,
+			);
 			expect(isFlowPixelOffsetTransform({ x: 0.5, y: 0.2, width: 0.3, height: 0.08 }, undefined)).toBe(
 				false,
 			);
@@ -4393,7 +6879,7 @@ if (import.meta.vitest) {
 			expect(tight!.width).toBeLessThan(960);
 		});
 
-		it("scales group members and toggles fullscreen", () => {
+		it("scales group members and toggles enlarge", () => {
 			const a = { x: 0.1, y: 0.2, width: 0.2, height: 0.2 };
 			const b = { x: 0.5, y: 0.2, width: 0.2, height: 0.2 };
 			const group = groupBoundingRect([a, b]);
@@ -4401,10 +6887,10 @@ if (import.meta.vitest) {
 			const grown = { x: 0, y: 0.1, width: 0.8, height: 0.3 };
 			const scaledA = scaleRectWithinGroup(a, group!, grown);
 			expect(scaledA.x).toBeCloseTo(0);
-			const full = toggleFullscreenRect(a, undefined);
-			expect(full.rect).toEqual(SLIDE_INTERACTIVE_FULLSCREEN_FRAME);
+			const full = toggleEnlargeRect(a, undefined);
+			expect(full.rect).toEqual(SLIDE_INTERACTIVE_ENLARGE_FRAME);
 			expect(full.stash).toEqual(a);
-			const restored = toggleFullscreenRect(full.rect, full.stash);
+			const restored = toggleEnlargeRect(full.rect, full.stash);
 			expect(restored.rect).toEqual(a);
 		});
 
@@ -4580,19 +7066,15 @@ if (import.meta.vitest) {
 			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
 			prepareArrangementBeforeAutoAnimate(focusSlide, labelSlide);
 			expect(focusSlide.classList.contains("presentation-arrangement--settled")).toBe(true);
-			const host: AutoAnimateMatcherHost = {
-				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
-					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
-						const toElement = toScope.querySelector<HTMLElement>(
-							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
-						);
-						if (toElement) {
-							pairs.push({ from: element, to: toElement });
-						}
-					}
-				},
-			};
-			const pairs = presentationAutoAnimateMatcher.call(host, focusSlide, labelSlide);
+			const pairs = presentationAutoAnimateMatcher.call(
+				{ findAutoAnimateMatches: () => {} } as AutoAnimateMatcherHost,
+				focusSlide,
+				labelSlide,
+			);
+			expect(pairs.every((pair) => !elementIsSourceGhostAnchor(pair.from))).toBe(true);
+			expect(pairs.every((pair) => !elementIsSourceGhostAnchor(pair.to))).toBe(true);
+			expect(pairs.every((pair) => elementIsTargetGhostAnchor(pair.to))).toBe(true);
+			expect(pairs.every((pair) => elementIsInteractiveFigureDisposition(pair.from))).toBe(true);
 			const columnIds = [CATALOGUE_COL1, CATALOGUE_COL2, CATALOGUE_COL3];
 			const tileIds = [
 				...CATALOGUE_COLUMN_TILE_KEYS.col1,
@@ -4605,44 +7087,117 @@ if (import.meta.vitest) {
 					pairs.some(
 						(pair) =>
 							pair.from.getAttribute("data-id") === id &&
-							elementIsMorphSourceAnchor(pair.to),
+							elementIsTargetGhostAnchor(pair.to),
 					),
 				).length,
 			).toBeGreaterThanOrEqual(8);
-			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-into").length).toBe(3);
-			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-into[data-id]").length).toBe(0);
+			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-target").length).toBe(3);
+			expect(labelSlide.querySelectorAll(".presentation-interactive-disposition.presentation-morph-target[data-id]").length).toBe(0);
 			expect(
 				tileIds.every(
 					(id) =>
-						labelSlide.querySelector(`[data-id="${id}"]`)?.closest(".presentation-morph-source") !== null,
+						labelSlide.querySelector(`[data-id="${id}"]`)?.closest(".presentation-target-ghost") !== null,
 				),
 			).toBe(true);
-			expect(labelSlide.querySelectorAll(".presentation-morph-source").length).toBeGreaterThanOrEqual(8);
+			expect(labelSlide.querySelectorAll(".presentation-target-ghost").length).toBeGreaterThanOrEqual(8);
 			const labelSlot = inlineColumnLabelPosition(2);
 			const focusStuetze = focusSlide.querySelector(
 				'[data-disposition-id^="catalogue-focus--Stütze"]',
 			) as HTMLElement | null;
 			const labelGhost = labelSlide.querySelector(
-				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-morph-source',
+				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-target-ghost',
 			) as HTMLElement | null;
 			expect(focusStuetze?.style.left).not.toBe(`${labelSlot.x * 100}%`);
 			expect(labelGhost?.style.left).toBe(`${labelSlot.x * 100}%`);
 			expect(labelGhost?.style.top).toBe(`${labelSlot.y * 100}%`);
 			expect(labelGhost?.style.width).toBe(`${labelSlot.width * 100}%`);
 			expect(labelGhost?.style.height).toBe(`${labelSlot.height * 100}%`);
-			expect(labelGhost?.classList.contains("presentation-morph-source")).toBe(true);
+			expect(labelGhost?.classList.contains("presentation-target-ghost")).toBe(true);
 			expect(labelGhost?.getAttribute("data-disposition-id")).toContain("catalogue-labels");
 			mountRoot.remove();
 		});
 
-		it("hides settled catalogue-focus tiles in stylesheet while morphing into labels", async () => {
+		it("styles source ghosts hidden at rest and visible during auto-animate", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
 			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
 			const css = readFileSync(cssPath, "utf8");
-			expect(css).toContain('section[title="catalogue-focus"].presentation-arrangement--settled');
-			expect(css).toContain("opacity: 0 !important");
+			expect(css).toContain(".reveal .presentation-source-ghost");
+			expect(css).toContain(
+				'section[data-auto-animate="pending"] .presentation-source-ghost',
+			);
+			expect(css).not.toContain('section[title="catalogue-focus"]');
+		});
+
+		it("shows catalogue full figure at rest with source ghosts and focus tiles visible", async () => {
+			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
+				await import("@framework/presentation/core");
+			type SlideFile = import("@framework/presentation/core").SlideFile;
+			const { presentationMeta } = await import("@mit-bestand/praesentation/projektetage-spec");
+			const slideModules = import.meta.glob<{ default: SlideFile }>(
+				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
+				{ eager: true },
+			);
+			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
+			expect(catalogueSlide.classList.contains("presentation-arrangement--settled")).toBe(false);
+			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(false);
+			const catalogueFigure = catalogueSlide.querySelector(
+				'.presentation-morph-one .presentation-morph-slot--figure[role="img"]',
+			) as HTMLElement | null;
+			expect(catalogueFigure?.style.backgroundImage).toContain("bauteilb");
+			expect(catalogueSlide.querySelectorAll(".presentation-morph-one").length).toBe(1);
+			const sourceGhosts = catalogueSlide.querySelectorAll(
+				".presentation-interactive-disposition.presentation-source-ghost",
+			);
+			expect(sourceGhosts.length).toBe(10);
+			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			const focusSlots = focusSlide.querySelectorAll(".presentation-morph-slot--figure");
+			expect(focusSlots.length).toBe(10);
+			for (const slot of focusSlots) {
+				expect(slot.classList.contains("presentation-target-ghost")).toBe(false);
+				expect(slot.classList.contains("presentation-source-ghost")).toBe(false);
+				const backgroundImage = (slot as HTMLElement).style.backgroundImage;
+				expect(backgroundImage.length).toBeGreaterThan(0);
+				expect(backgroundImage).toContain("bauteilb");
+			}
+			mountRoot.remove();
+		});
+
+		it("renders target ghosts but no source ghosts on focus and labels slides", async () => {
+			const { loadPresentationFromSlideGlob } = await import("@framework/presentation/core");
+			type SlideFile = import("@framework/presentation/core").SlideFile;
+			const { presentationMeta } = await import("@mit-bestand/praesentation/projektetage-spec");
+			const slideModules = import.meta.glob<{ default: SlideFile }>(
+				"../../../../../mit-bestand/präsentation/33.projektetage/slide/**/*.ts",
+				{ eager: true },
+			);
+			const deck = loadPresentationFromSlideGlob(presentationMeta, slideModules);
+			const mountRoot = document.createElement("div");
+			document.body.appendChild(mountRoot);
+			act(() => {
+				mountPresentation(mountRoot, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
+			const labelSlide = mountRoot.querySelector('section[title="catalogue-labels"]') as HTMLElement;
+			expect(focusSlide.querySelectorAll(".presentation-source-ghost").length).toBe(0);
+			expect(labelSlide.querySelectorAll(".presentation-source-ghost").length).toBe(0);
+			expect(labelSlide.querySelectorAll(".presentation-target-ghost").length).toBeGreaterThanOrEqual(8);
+			for (const ghost of labelSlide.querySelectorAll<HTMLElement>(
+				".presentation-interactive-disposition.presentation-target-ghost",
+			)) {
+				expect(ghost.style.pointerEvents).toBe("none");
+				expect(ghost.getAttribute("aria-hidden")).toBe("true");
+			}
+			mountRoot.remove();
 		});
 
 		it("puts reveal data-id on catalogue tile wrappers for catalogue-to-focus morph", async () => {
@@ -4706,21 +7261,16 @@ if (import.meta.vitest) {
 			const catalogueSlide = mountRoot.querySelector('section[title="catalogue"]') as HTMLElement;
 			const focusSlide = mountRoot.querySelector('section[title="catalogue-focus"]') as HTMLElement;
 			expect(catalogueSlide.getAttribute("data-auto-animate-id")).toBe(focusSlide.getAttribute("data-auto-animate-id"));
-			expect(catalogueSlide.hasAttribute("data-settle-before-morph-to")).toBe(false);
+			expect(
+				catalogueSlide.querySelectorAll(".presentation-interactive-disposition.presentation-source-ghost")
+					.length,
+			).toBe(10);
 			catalogueSlide.setAttribute("data-auto-animate", "pending");
-			const host: AutoAnimateMatcherHost = {
-				findAutoAnimateMatches(pairs, fromScope, toScope, selector, serializer) {
-					for (const element of fromScope.querySelectorAll<HTMLElement>(selector)) {
-						const toElement = toScope.querySelector<HTMLElement>(
-							`${selector}[data-id="${element.getAttribute("data-id")}"]`,
-						);
-						if (toElement) {
-							pairs.push({ from: element, to: toElement });
-						}
-					}
-				},
-			};
-			const pairs = presentationAutoAnimateMatcher.call(host, catalogueSlide, focusSlide);
+			const pairs = presentationAutoAnimateMatcher.call(
+				{ findAutoAnimateMatches: () => {} } as AutoAnimateMatcherHost,
+				catalogueSlide,
+				focusSlide,
+			);
 			const componentTileIds = CATALOGUE_FOCUS_TILES.map((tile) => tile.participantId);
 			expect(componentTileIds.every((id) => pairs.some((pair) => pair.from.getAttribute("data-id") === id))).toBe(
 				true,
@@ -4728,7 +7278,7 @@ if (import.meta.vitest) {
 			mountRoot.remove();
 		});
 
-		it("places catalogue-labels morph-source ghosts at inline label frames", async () => {
+		it("places catalogue-labels target ghosts at inline label frames", async () => {
 			const { collectPresentationSlides, loadPresentationFromSlideGlob } =
 				await import("@framework/presentation/core");
 			type SlideFile = import("@framework/presentation/core").SlideFile;
@@ -4756,7 +7306,7 @@ if (import.meta.vitest) {
 				'[data-disposition-id^="catalogue-focus--Stütze"]',
 			) as HTMLElement | null;
 			const labelGhost = labelSlide.querySelector(
-				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-morph-source',
+				'[data-disposition-id^="catalogue-labels--Stütze"].presentation-target-ghost',
 			) as HTMLElement | null;
 			expect(focusStuetze?.style.left).not.toBe(`${labelSlot.x * 100}%`);
 			expect(labelGhost?.style.left).toBe(`${labelSlot.x * 100}%`);
@@ -4834,7 +7384,7 @@ if (import.meta.vitest) {
 			expect(focusSlide.getAttribute("data-auto-animate-id")).toBe(labelSlide.getAttribute("data-auto-animate-id"));
 			expect(labelSlide.getAttribute("data-auto-animate")).not.toBe("running");
 			expect(labelSlide.querySelector("[data-auto-animate-target]")).toBeNull();
-			expect(labelSlide.querySelectorAll(".presentation-morph-source[data-auto-animate-target]").length).toBe(0);
+			expect(labelSlide.querySelectorAll(".presentation-target-ghost[data-auto-animate-target]").length).toBe(0);
 			mountRoot.remove();
 		});
 
@@ -4867,6 +7417,56 @@ if (import.meta.vitest) {
 														embodimentId: "box--main",
 														emphasis: "active",
 														position: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 },
+													},
+												],
+											},
+										},
+									],
+								},
+							],
+						},
+					],
+				},
+			],
+		};
+
+		const twoSlideDeck: Presentation = {
+			id: "interactive-two-slide",
+			name: "Interactive Two Slide",
+			chapters: [
+				{
+					id: "main",
+					sequences: [
+						{
+							id: "main",
+							thoughts: [
+								{
+									id: "pair",
+									participants: [{ id: "box" }],
+									embodiments: [{ kind: "text", id: "box--main", lines: ["Hello"], level: "body" }],
+									slides: [
+										{
+											arrangement: {
+												id: "alpha",
+												dispositions: [
+													{
+														participantId: "box",
+														embodimentId: "box--main",
+														emphasis: "active",
+														position: { x: 0.2, y: 0.3, width: 0.4, height: 0.2 },
+													},
+												],
+											},
+										},
+										{
+											arrangement: {
+												id: "beta",
+												dispositions: [
+													{
+														participantId: "box",
+														embodimentId: "box--main",
+														emphasis: "active",
+														position: { x: 0.55, y: 0.55, width: 0.3, height: 0.15 },
 													},
 												],
 											},
@@ -5016,7 +7616,7 @@ if (import.meta.vitest) {
 				pointerClick(disposition);
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
-			expect(disposition.querySelector(".presentation-interaction-fullscreen")).toBeTruthy();
+			expect(disposition.querySelector(".presentation-interaction-enlarge")).toBeTruthy();
 			act(() => {
 				pointerClick(layer);
 			});
@@ -5031,7 +7631,31 @@ if (import.meta.vitest) {
 			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
 		});
 
-		it("drags flow intro title disposition", () => {
+		it("keeps selection when empty slide click started in reveal overview", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const reveal = container.querySelector(".reveal") as HTMLElement;
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const layer = section.querySelector(".presentation-interaction-layer") as HTMLElement;
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			reveal.classList.add("overview");
+			act(() => {
+				pointerClick(layer);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			reveal.classList.remove("overview");
+			act(() => {
+				pointerClick(layer);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
+		});
+
+		it("allows intro flow disposition drag with pixel offsets", () => {
 			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1"], short: "D short" },
@@ -5059,44 +7683,211 @@ if (import.meta.vitest) {
 			) as HTMLElement;
 			section.classList.add("present");
 			const disposition = section.querySelector("[data-disposition-id]") as HTMLElement;
-			const content = disposition.querySelector(
-				".presentation-interactive-disposition__content",
-			) as HTMLElement;
-			const heading = disposition.querySelector("h2") as HTMLElement;
+			const titleLine = section.querySelector('h2[data-id^="title"]') as HTMLElement;
 			mockClientRect(section, 0, 0, 960, 700);
-			mockClientRect(disposition, 0, 280, 960, 120);
-			mockClientRect(content, 0, 280, 960, 120);
-			mockClientRect(heading, 330, 300, 300, 80);
+			mockClientRect(disposition, 330, 120, 300, 80);
+			mockClientRect(titleLine, 330, 120, 300, 80);
 			act(() => {
 				pointerClick(disposition);
-			});
-			expect(disposition.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
-			act(() => {
 				pointerDrag(disposition, 480, 320, 560, 360);
 			});
-			const dragMatch = content.style.transform.match(
-				/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/,
-			);
-			expect(dragMatch).not.toBeNull();
-			expect(Number.parseFloat(dragMatch![1]!)).toBeCloseTo(80, 0);
-			expect(Number.parseFloat(dragMatch![2]!)).toBeCloseTo(40, 0);
 			expect(disposition.classList.contains("presentation-interactive-disposition--offset")).toBe(true);
-			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
-			expect(content.style.transform).toContain("translate");
-			expect(disposition.style.transform).toBe("");
-			expect(disposition.style.left).toBe("");
-			expect(disposition.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
-			const chrome = disposition.querySelector(
-				".presentation-interactive-disposition__chrome",
+			expect(disposition.style.transform).toContain("translate3d(");
+		});
+
+		it("pairs intro description morph on leaf text for reveal auto-animate", () => {
+			unmountPresentation();
+			const deck = intro({
+				language: "de",
+				title: { full: ["Entwerfen mit Bestand"], short: "Entwerfen mit Bestand" },
+				description: {
+					full: [
+						"Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten",
+					],
+					short: "Plattform zum Entwerfen mit wiederverwendete Bauteilen",
+				},
+				goal: ["Mehr Zeit zum manuellen Entwerfen", "dank Automatisierung!"],
+				authors: { lines: [[{ name: "Alice" }]] },
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni" },
+						],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni", shortName: "LUH", suffix: { mark: "x", name: "Chair X" } },
+						],
+					],
+				},
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const descriptionSlide = container.querySelector(
+				'section[title="description"]',
 			) as HTMLElement;
-			expect(chrome.isConnected).toBe(true);
-			expect(chrome.style.left).toBe("");
-			expect(content.style.left).not.toBe("");
-			expect(content.style.width).not.toBe("");
-			expect(chrome.querySelectorAll(".presentation-interaction-handle").length).toBe(8);
+			const goalSlide = container.querySelector('section[title="goal"]') as HTMLElement;
+			expect(descriptionSlide.hasAttribute("data-auto-animate")).toBe(true);
+			expect(descriptionSlide.getAttribute("data-auto-animate-id")).toBe(
+				goalSlide.getAttribute("data-auto-animate-id"),
+			);
+			const pairs = presentationAutoAnimateMatcher.call(
+				stockRevealAutoAnimateMatcherHost(),
+				descriptionSlide,
+				goalSlide,
+			);
+			expect(pairs.some((pair) => pair.from.getAttribute("data-id") === "description")).toBe(true);
+			expect(
+				pairs.every((pair) => pair.from.matches("h1, h2, h3, h4, h5, h6, p")),
+			).toBe(true);
+			const descriptionPair = pairs.find((pair) => pair.from.getAttribute("data-id") === "description");
+			expect(descriptionPair?.to.getAttribute("data-id")).toBe("description");
+			expect(descriptionPair?.to.textContent).toContain("Plattform zum Entwerfen");
+			expect(descriptionPair?.options).toBeUndefined();
+			expect(goalSlide.querySelector('h2[data-id="description"]')).toBeTruthy();
+			const authorsSlide = container.querySelector('section[title="authors"]') as HTMLElement;
+			const goalToAuthors = presentationAutoAnimateMatcher.call(
+				stockRevealAutoAnimateMatcherHost(),
+				goalSlide,
+				authorsSlide,
+			);
+			expect(
+				goalToAuthors.some(
+					(pair) =>
+						pair.from.getAttribute("data-id") === "description" &&
+						pair.to.getAttribute("data-id") === "description",
+				),
+			).toBe(true);
+			const authorsPair = goalToAuthors.find((pair) => pair.from.getAttribute("data-id")?.startsWith("authors--"));
+			expect(authorsPair).toBeTruthy();
+			expect(authorsPair?.from.matches("h4")).toBe(true);
+			expect(authorsPair?.options).toBeUndefined();
+			expect(
+				authorsSlide.querySelector('h2[data-id="description"].opacity-20'),
+			).toBeTruthy();
+		});
+
+		it("pairs authors across affiliation steps with non-zero morph measure delta", () => {
+			unmountPresentation();
+			const deck = intro({
+				language: "de",
+				title: { full: ["A"], short: "A" },
+				description: { full: ["D"], short: "D" },
+				goal: ["G"],
+				authors: {
+					lines: [
+						[{ name: "Alice Example" }, { name: "Bob Beta" }],
+						[{ name: "Carol Creator" }],
+					],
+				},
+				affiliations: {
+					steps: [
+						[{ mark: "a", name: "Faculty" }],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni" },
+						],
+						[
+							{ mark: "a", name: "Faculty" },
+							{ mark: "1", name: "Uni", shortName: "LUH", suffix: { mark: "x", name: "Chair" } },
+						],
+					],
+				},
+			});
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const authorsSlide = container.querySelector('section[title="authors"]') as HTMLElement;
+			const aff1Slide = container.querySelector('section[title="affiliations-1"]') as HTMLElement;
+			const pairs = presentationAutoAnimateMatcher.call(
+				stockRevealAutoAnimateMatcherHost(),
+				authorsSlide,
+				aff1Slide,
+			);
+			const authorsPair = pairs.find((pair) => pair.from.getAttribute("data-id")?.startsWith("authors--"));
+			expect(authorsPair).toBeTruthy();
+			expect(authorsPair?.options).toBeUndefined();
+			expect(authorsPair?.from.textContent).toContain("Alice Example");
+			expect(authorsPair?.to.textContent).toContain("A.");
 		});
 
 		it("resizes flow disposition from se handle when nested reveal section has zero height", () => {
+			const deck: Presentation = {
+				id: "flow-resize",
+				name: "Flow Resize",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "flow",
+										participants: [{ id: "label" }],
+										embodiments: [
+											{ kind: "text", id: "label--body", lines: ["Flow label"], level: "body" },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "flow",
+													dispositions: [
+														{
+															participantId: "label",
+															embodimentId: "label--body",
+															emphasis: "active",
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const section = container.querySelector(
+				".slides > section > section.presentation-arrangement--interactive:not(.presentation-arrangement--intro)",
+			) as HTMLElement;
+			const stack = section.parentElement as HTMLElement;
+			section.classList.add("present");
+			stack.classList.add("present");
+			Object.defineProperty(stack, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(stack, "offsetHeight", { value: 700, configurable: true });
+			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
+			Object.defineProperty(section, "offsetHeight", { value: 0, configurable: true });
+			const disposition = section.querySelector("[data-disposition-id]") as HTMLElement;
+			const label = disposition.querySelector("p") as HTMLElement;
+			mockClientRect(stack, 0, 0, 960, 700);
+			mockClientRect(section, 0, 0, 960, 0);
+			mockClientRect(disposition, 330, 300, 300, 80);
+			mockClientRect(label, 330, 300, 300, 80);
+			act(() => {
+				pointerClick(disposition);
+			});
+			const handle = disposition.querySelector(
+				".presentation-interaction-handle--se",
+			) as HTMLElement;
+			act(() => {
+				pointerDrag(handle, 620, 370, 720, 420);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(parseFloat(disposition.style.width)).toBeGreaterThan(15);
+			expect(parseFloat(disposition.style.height)).toBeGreaterThan(5);
+			expect(disposition.querySelector(".presentation-interactive-disposition__content")?.style.transform).toContain(
+				"scale(",
+			);
+		});
+
+		it("toggles enlarge on an intro flow disposition", () => {
 			const deck = intro({ language: "de",
 				title: { full: ["A", "B", "C"], short: "Short" },
 				description: { full: ["D1"], short: "D short" },
@@ -5128,27 +7919,50 @@ if (import.meta.vitest) {
 			Object.defineProperty(stack, "offsetWidth", { value: 960, configurable: true });
 			Object.defineProperty(stack, "offsetHeight", { value: 700, configurable: true });
 			Object.defineProperty(section, "offsetWidth", { value: 960, configurable: true });
-			Object.defineProperty(section, "offsetHeight", { value: 0, configurable: true });
+			Object.defineProperty(section, "offsetHeight", { value: 700, configurable: true });
+			mockClientRect(stack, 0, 0, 960, 700);
+			mockClientRect(section, 0, 0, 960, 700);
 			const disposition = section.querySelector("[data-disposition-id]") as HTMLElement;
 			const heading = disposition.querySelector("h2") as HTMLElement;
-			mockClientRect(stack, 0, 0, 960, 700);
-			mockClientRect(section, 0, 0, 960, 0);
 			mockClientRect(disposition, 330, 300, 300, 80);
 			mockClientRect(heading, 330, 300, 300, 80);
 			act(() => {
 				pointerClick(disposition);
 			});
-			const handle = disposition.querySelector(
-				".presentation-interaction-handle--se",
-			) as HTMLElement;
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			const enlargeButton = disposition.querySelector(
+				".presentation-interaction-enlarge",
+			) as HTMLButtonElement;
+			expect(enlargeButton).toBeTruthy();
 			act(() => {
-				pointerDrag(handle, 620, 370, 720, 420);
+				enlargeButton.click();
 			});
-			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-			expect(parseFloat(disposition.style.width)).toBeGreaterThan(15);
-			expect(parseFloat(disposition.style.height)).toBeGreaterThan(5);
-			expect(disposition.querySelector(".presentation-interactive-disposition__content")?.style.transform).toContain(
-				"scale(",
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			expect(parseFloat(disposition.style.height)).toBeCloseTo(SLIDE_INTERACTIVE_ENLARGE_FRAME.height * 100);
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
+			expect(content.style.transform).toMatch(/^scale\(/);
+			expect(section.querySelector(".presentation-interaction-slide-reset-host")).toBeTruthy();
+			const resetButton = disposition.querySelector(
+				".presentation-interaction-reset",
+			) as HTMLButtonElement;
+			expect(resetButton).toBeTruthy();
+			act(() => {
+				resetButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
+			expect(content.style.transform).toBe("");
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
+			expect(globalsCssSource).toMatch(
+				/\.presentation-arrangement-surface\s*>\s*\.presentation-interactive-disposition--enlarged/s,
 			);
 		});
 
@@ -5248,6 +8062,76 @@ if (import.meta.vitest) {
 			expect(
 				dispositions[0]!.querySelector(".presentation-interactive-disposition__content")?.style.transform,
 			).toBe("");
+		});
+
+		it("click-drags only the newly targeted disposition when another stays selected", () => {
+			const twoBoxDeck: Presentation = {
+				id: "interactive-dom-click-drag",
+				name: "Interactive DOM Click Drag",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "placed",
+										participants: [{ id: "left" }, { id: "right" }],
+										embodiments: [
+											{ kind: "text", id: "left--main", lines: ["Left"], level: "body" },
+											{ kind: "text", id: "right--main", lines: ["Right"], level: "body" },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "placed",
+													dispositions: [
+														{
+															participantId: "left",
+															embodimentId: "left--main",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.3, width: 0.3, height: 0.2 },
+														},
+														{
+															participantId: "right",
+															embodimentId: "right--main",
+															emphasis: "active",
+															position: { x: 0.6, y: 0.3, width: 0.3, height: 0.2 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, twoBoxDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const dispositions = [...container.querySelectorAll("[data-disposition-id]")] as HTMLElement[];
+			const section = dispositions[0]!.closest(
+				"section.presentation-arrangement--interactive",
+			) as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(dispositions[0]!, 96, 210, 288, 140);
+			mockClientRect(dispositions[1]!, 576, 210, 288, 140);
+			act(() => {
+				pointerClick(dispositions[0]!, 240, 280);
+			});
+			const leftBefore = dispositions[0]!.style.left;
+			const rightBefore = dispositions[1]!.style.left;
+			act(() => {
+				pointerDrag(dispositions[1]!, 720, 280, 880, 320);
+			});
+			expect(dispositions[0]!.style.left).toBe(leftBefore);
+			expect(dispositions[1]!.style.left).not.toBe(rightBefore);
 		});
 
 		it("shows tile disposition drag preview outside the declared frame without clipping", () => {
@@ -5375,7 +8259,7 @@ if (import.meta.vitest) {
 			expect(chromeRect.height).toBeCloseTo(wrapperRect.height, 0);
 		});
 
-		it("toggles slide fullscreen on a canvas-framed disposition", () => {
+		it("toggles enlarge on a canvas-framed disposition", () => {
 			act(() => {
 				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
 			});
@@ -5383,35 +8267,615 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerClick(disposition);
 			});
-			const fullscreen = disposition.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
-			expect(fullscreen.getAttribute("aria-pressed")).toBe("false");
+			const enlargeButton = disposition.querySelector(".presentation-interaction-enlarge") as HTMLButtonElement;
+			expect(enlargeButton.getAttribute("aria-pressed")).toBe("false");
 			act(() => {
-				fullscreen.click();
+				enlargeButton.click();
 			});
 			expect(disposition.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
-			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
-			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.width * 100}%`);
-			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
-			const fullscreenOn = disposition.querySelector(
-				".presentation-interaction-fullscreen",
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.width * 100}%`);
+			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.height * 100}%`);
+			const enlargeOn = disposition.querySelector(
+				".presentation-interaction-enlarge",
 			) as HTMLButtonElement;
-			expect(fullscreenOn.getAttribute("aria-pressed")).toBe("true");
+			expect(enlargeOn.getAttribute("aria-pressed")).toBe("true");
 			act(() => {
-				fullscreenOn.click();
+				enlargeOn.click();
 			});
-			expect(disposition.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(false);
-			const fullscreenOff = disposition.querySelector(
-				".presentation-interaction-fullscreen",
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
+			const enlargeOff = disposition.querySelector(
+				".presentation-interaction-enlarge",
 			) as HTMLButtonElement;
-			expect(fullscreenOff.getAttribute("aria-pressed")).toBe("false");
+			expect(enlargeOff.getAttribute("aria-pressed")).toBe("false");
 		});
 
-		it("toggles slide fullscreen on a cropped figure tile disposition", () => {
+		it("restores pre-enlarge frame after exit enlarge following drag", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			act(() => {
+				pointerClick(disposition);
+			});
+			const declaredLeft = parseFloat(disposition.style.left);
+			act(() => {
+				pointerDrag(disposition, 300, 280, 400, 320);
+			});
+			const draggedLeft = parseFloat(disposition.style.left);
+			expect(draggedLeft).not.toBeCloseTo(declaredLeft, 1);
+			const enlargeButton = disposition.querySelector(
+				".presentation-interaction-enlarge",
+			) as HTMLButtonElement;
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.width * 100}%`);
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
+			expect(parseFloat(disposition.style.left)).toBeCloseTo(draggedLeft, 1);
+			expect(parseFloat(disposition.style.left)).not.toBeCloseTo(declaredLeft, 1);
+		});
+
+		it("exits enlarge through the corner control while slide reset host is active", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			act(() => {
+				pointerClick(disposition);
+			});
+			const enlargeButton = disposition.querySelector(
+				".presentation-interaction-enlarge",
+			) as HTMLButtonElement;
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(section.querySelector(".presentation-interaction-slide-reset-host")).toBeTruthy();
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
+			expect(enlargeButton.getAttribute("aria-pressed")).toBe("false");
+		});
+
+		it("enlarges when pointerdown lands on the svg icon inside the enlarge button", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			const enlargeButton = disposition.querySelector(
+				".presentation-interaction-enlarge",
+			) as HTMLButtonElement;
+			const icon = enlargeButton.querySelector("svg");
+			expect(icon).toBeTruthy();
+			act(() => {
+				pointerClick(icon!);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+		});
+
+		it("keeps enlarge when empty slide click clears selection", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			act(() => {
+				pointerClick(disposition);
+			});
+			const enlargeButton = disposition.querySelector(".presentation-interaction-enlarge") as HTMLButtonElement;
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			act(() => {
+				pointerClick(canvas, 8, 8);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(false);
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			const enlargeWhileDeselected = disposition.querySelector(
+				".presentation-interaction-enlarge",
+			) as HTMLButtonElement;
+			expect(enlargeWhileDeselected).toBeTruthy();
+			act(() => {
+				enlargeWhileDeselected.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
+		});
+
+		it("clears drag and selection after navigating away and back", async () => {
+			const alphaRef = collectPresentationSlides(twoSlideDeck)[0];
+			const betaRef = collectPresentationSlides(twoSlideDeck)[1];
+			expect(alphaRef?.slide).toBe("alpha");
+			expect(betaRef?.slide).toBe("beta");
+			let revealApi: Reveal.Api | undefined;
+			act(() => {
+				mountPresentation(container, twoSlideDeck, {
+					hash: false,
+					slideNumber: false,
+					surfaceChrome: false,
+					onRevealReady: (api) => {
+						revealApi = api;
+					},
+				});
+			});
+			await new Promise<void>((resolve) => {
+				const start = Date.now();
+				const wait = (): void => {
+					if (revealApi) {
+						resolve();
+						return;
+					}
+					if (Date.now() - start > 5000) {
+						throw new Error("reveal.js did not become ready.");
+					}
+					setTimeout(wait, 50);
+				};
+				wait();
+			});
+			const alphaSlide = container.querySelector('section[title="alpha"]') as HTMLElement;
+			const disposition = alphaSlide.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			const originLeft = disposition.style.left;
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--selected")).toBe(true);
+			act(() => {
+				pointerDrag(disposition, 300, 280, 380, 320);
+			});
+			const modifiedLeft = disposition.style.left;
+			expect(modifiedLeft).not.toBe(originLeft);
+			await revealApi!.slide(betaRef!.h, betaRef!.v);
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			await revealApi!.slide(alphaRef!.h, alphaRef!.v);
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			const alphaSlideAgain = container.querySelector('section[title="alpha"]') as HTMLElement;
+			const dispositionAgain = alphaSlideAgain.querySelector("[data-disposition-id]") as HTMLElement;
+			expect(dispositionAgain.style.left).toBe(originLeft);
+			expect(dispositionAgain.classList.contains("presentation-interactive-disposition--selected")).toBe(
+				false,
+			);
+		});
+
+		it("resets the whole slide from the proximity control in the top-right corner", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			expect(globalsCssSource).toMatch(
+				/\.presentation-interaction-slide-reset-host\s*\{[^}]*pointer-events:\s*none/s,
+			);
+			expect(globalsCssSource).toMatch(
+				/\.presentation-interactive-disposition\s*>\s*\.presentation-interaction-actions\s*\{[^}]*z-index:\s*90/s,
+			);
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			const originLeft = disposition.style.left;
+			expect(section.querySelector(".presentation-interaction-slide-reset")).toBeNull();
+			act(() => {
+				pointerDrag(disposition, 300, 280, 380, 320);
+			});
+			expect(disposition.style.left).not.toBe(originLeft);
+			const slideResetHost = section.querySelector(
+				".presentation-interaction-slide-reset-host",
+			) as HTMLElement;
+			const slideReset = slideResetHost.querySelector(
+				".presentation-interaction-slide-reset",
+			) as HTMLButtonElement;
+			expect(slideResetHost).toBeTruthy();
+			expect(slideResetHost.classList.contains("presentation-interaction-slide-reset-host--near")).toBe(
+				false,
+			);
+			act(() => {
+				window.dispatchEvent(
+					new PointerEvent("pointermove", { bubbles: true, clientX: 920, clientY: 20, pointerId: 2 }),
+				);
+			});
+			expect(slideResetHost.classList.contains("presentation-interaction-slide-reset-host--near")).toBe(
+				true,
+			);
+			act(() => {
+				slideReset.click();
+			});
+			expect(disposition.style.left).toBe(originLeft);
+			expect(section.querySelector(".presentation-interaction-slide-reset")).toBeNull();
+		});
+
+		it("resets a dragged canvas-framed disposition to its declared position", () => {
+			act(() => {
+				mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector("[data-disposition-id]") as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 192, 210, 384, 140);
+			const originLeft = disposition.style.left;
+			const originTop = disposition.style.top;
+			act(() => {
+				pointerDrag(disposition, 300, 280, 380, 320);
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
+			expect(disposition.style.left).not.toBe(originLeft);
+			expect(disposition.querySelector(".presentation-interaction-enlarge")).toBeTruthy();
+			const reset = disposition.querySelector(".presentation-interaction-reset") as HTMLButtonElement;
+			expect(reset).toBeTruthy();
+			const actions = disposition.querySelector(".presentation-interaction-actions")!;
+			const buttons = [...actions.querySelectorAll("button")];
+			expect(buttons[0]?.classList.contains("presentation-interaction-reset")).toBe(true);
+			expect(buttons[1]?.classList.contains("presentation-interaction-enlarge")).toBe(true);
+			act(() => {
+				reset.click();
+			});
+			expect(disposition.style.left).toBe(originLeft);
+			expect(disposition.style.top).toBe(originTop);
+			expect(disposition.querySelector(".presentation-interaction-reset")).toBeNull();
+		});
+
+		it("scales pdf pages to cover the disposition frame", async () => {
+			const deck: Presentation = {
+				id: "pdf-cover",
+				name: "Pdf Cover",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "media",
+										participants: [{ id: "thesis" }],
+										embodiments: [
+											{ kind: "pdf", id: "thesis--doc", src: "/thesis.pdf", page: 1 },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "media",
+													dispositions: [
+														{
+															participantId: "thesis",
+															embodimentId: "thesis--doc",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector(
+				".presentation-interactive-disposition--kind-pdf",
+			) as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const frame = disposition.querySelector(".presentation-disposition-frame") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(frame, 96, 385, 768, 280);
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			const page = disposition.querySelector(".react-pdf__Page") as HTMLElement;
+			const expected = pdfCoverScale(768, 280, 595, 842);
+			expect(expected).not.toBeNull();
+			expect(Number(page.dataset.scale)).toBeCloseTo(expected ?? 0);
+		});
+
+		it("drops nested pdf frame and uses enlarged slide sizing when toggling enlarge", () => {
+			const deck: Presentation = {
+				id: "pdf-enlarge",
+				name: "Pdf Enlarge",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "media",
+										participants: [{ id: "thesis" }],
+										embodiments: [
+											{ kind: "pdf", id: "thesis--doc", src: "/thesis.pdf", page: 1 },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "media",
+													dispositions: [
+														{
+															participantId: "thesis",
+															embodimentId: "thesis--doc",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector(
+				".presentation-interactive-disposition--kind-pdf",
+			) as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 96, 385, 768, 280);
+			act(() => {
+				pointerClick(disposition);
+			});
+			expect(disposition.querySelector(".presentation-disposition-frame")).toBeTruthy();
+			const enlargeButton = disposition.querySelector(
+				".presentation-interaction-enlarge",
+			) as HTMLButtonElement;
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
+			mockClientRect(content, 48, 52, 864, 595);
+			act(() => {
+				enlargeButton.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
+			expect(disposition.style.width).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.width * 100}%`);
+			expect(disposition.style.height).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.height * 100}%`);
+			expect(disposition.querySelector(".presentation-disposition-frame")).toBeNull();
+			const pageCanvas = disposition.querySelector(
+				".presentation-media-pdf canvas",
+			) as HTMLCanvasElement | null;
+			if (pageCanvas) {
+				expect(pageCanvas.height).toBeGreaterThan(400);
+			}
+			expect(globalsCssSource).toMatch(
+				/\.presentation-interactive-disposition--kind-pdf\.presentation-interactive-disposition--enlarged[\s\S]*\.presentation-media-pdf-document[\s\S]*height\s*:\s*100%/s,
+			);
+		});
+
+		it("shows center-bottom pdf page nav when enlarged and switches pages", async () => {
+			const deck: Presentation = {
+				id: "pdf-page-nav",
+				name: "Pdf Page Nav",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "media",
+										participants: [{ id: "thesis" }],
+										embodiments: [
+											{ kind: "pdf", id: "thesis--doc", src: "/thesis.pdf", page: 1 },
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "media",
+													dispositions: [
+														{
+															participantId: "thesis",
+															embodimentId: "thesis--doc",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector(
+				".presentation-interactive-disposition--kind-pdf",
+			) as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			const canvas = section.querySelector(".presentation-arrangement-canvas") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(canvas, 0, 0, 960, 700);
+			mockClientRect(disposition, 96, 385, 768, 280);
+			act(() => {
+				pointerClick(disposition);
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(disposition.querySelector(".presentation-pdf-page-nav")).toBeTruthy();
+			const content = disposition.querySelector(
+				".presentation-interactive-disposition__content",
+			) as HTMLElement;
+			mockClientRect(content, 48, 52, 864, 595);
+			const enlargeButton = disposition.querySelector(
+				".presentation-interaction-enlarge",
+			) as HTMLButtonElement;
+			act(() => {
+				enlargeButton.click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			const nav = disposition.querySelector(".presentation-pdf-page-nav");
+			expect(nav).toBeTruthy();
+			const page = disposition.querySelector(".react-pdf__Page") as HTMLElement;
+			expect(page.dataset.page).toBe("1");
+			const nextButton = disposition.querySelector(
+				".presentation-pdf-page-nav__button--next",
+			) as HTMLButtonElement;
+			const prevButton = disposition.querySelector(
+				".presentation-pdf-page-nav__button--prev",
+			) as HTMLButtonElement;
+			expect(prevButton.disabled).toBe(true);
+			expect(nextButton.disabled).toBe(false);
+			act(() => {
+				nextButton.click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(disposition.querySelector(".react-pdf__Page")?.getAttribute("data-page")).toBe("2");
+			expect(
+				(disposition.querySelector(".presentation-pdf-page-nav__button--prev") as HTMLButtonElement).disabled,
+			).toBe(false);
+		});
+
+		it("navigates only within pdf pages declared on the embodiment", async () => {
+			const deck: Presentation = {
+				id: "pdf-page-subset",
+				name: "Pdf Page Subset",
+				chapters: [
+					{
+						id: "main",
+						sequences: [
+							{
+								id: "main",
+								thoughts: [
+									{
+										id: "media",
+										participants: [{ id: "thesis" }],
+										embodiments: [
+											{
+												kind: "pdf",
+												id: "thesis--doc",
+												src: "/thesis.pdf",
+												page: 1,
+												pages: [1, 12, 25],
+											},
+										],
+										slides: [
+											{
+												arrangement: {
+													id: "media",
+													dispositions: [
+														{
+															participantId: "thesis",
+															embodimentId: "thesis--doc",
+															emphasis: "active",
+															position: { x: 0.1, y: 0.55, width: 0.8, height: 0.4 },
+														},
+													],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			};
+			act(() => {
+				mountPresentation(container, deck, { hash: false, slideNumber: false, surfaceChrome: false });
+			});
+			const disposition = container.querySelector(
+				".presentation-interactive-disposition--kind-pdf",
+			) as HTMLElement;
+			const section = disposition.closest("section.presentation-arrangement--interactive") as HTMLElement;
+			mockClientRect(section, 0, 0, 960, 700);
+			mockClientRect(disposition, 96, 385, 768, 280);
+			act(() => {
+				pointerClick(disposition);
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			const nextButton = () =>
+				disposition.querySelector(".presentation-pdf-page-nav__button--next") as HTMLButtonElement;
+			const prevButton = () =>
+				disposition.querySelector(".presentation-pdf-page-nav__button--prev") as HTMLButtonElement;
+			const pageNumber = () =>
+				disposition.querySelector(".react-pdf__Page")?.getAttribute("data-page");
+			expect(pageNumber()).toBe("1");
+			act(() => {
+				const next = nextButton();
+				pointerClick(next);
+				next.click();
+			});
+			expect(disposition.classList.contains("presentation-interactive-disposition--gesturing")).toBe(
+				false,
+			);
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(pageNumber()).toBe("12");
+			act(() => {
+				const next = nextButton();
+				pointerClick(next);
+				next.click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(pageNumber()).toBe("25");
+			expect(nextButton().disabled).toBe(true);
+			act(() => {
+				prevButton().click();
+			});
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+			});
+			expect(pageNumber()).toBe("12");
+		});
+
+		it("toggles enlarge on a cropped figure tile disposition", () => {
 			const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
 			const grid = split({ source: "/catalogue.png", rows: 2, columns: 2, frame, alt: "Catalogue" });
 			const deck: Presentation = {
-				id: "split-fullscreen",
-				name: "Split Fullscreen",
+				id: "split-enlarge",
+				name: "Split Enlarge",
 				chapters: [
 					{
 						id: "main",
@@ -5446,24 +8910,31 @@ if (import.meta.vitest) {
 			act(() => {
 				pointerClick(tile);
 			});
-			const fullscreen = tile.querySelector(".presentation-interaction-fullscreen") as HTMLButtonElement;
+			const enlargeButton = tile.querySelector(".presentation-interaction-enlarge") as HTMLButtonElement;
 			act(() => {
-				fullscreen.click();
+				enlargeButton.click();
 			});
-			expect(tile.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(true);
+			expect(tile.classList.contains("presentation-interactive-disposition--enlarged")).toBe(true);
 			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(false);
 			expect(tile.classList.contains("presentation-interactive-disposition--pinned")).toBe(false);
 			expect(tile.style.position).toBe("absolute");
-			expect(tile.style.width).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.width * 100}%`);
-			expect(tile.style.height).toBe(`${SLIDE_INTERACTIVE_FULLSCREEN_FRAME.height * 100}%`);
+			expect(tile.style.width).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.width * 100}%`);
+			expect(tile.style.height).toBe(`${SLIDE_INTERACTIVE_ENLARGE_FRAME.height * 100}%`);
 			expect(canvas.contains(tile)).toBe(true);
+			const cropSlot = tile.querySelector(".presentation-morph-slot--figure") as HTMLElement | null;
+			expect(cropSlot).toBeTruthy();
+			expect(tile.querySelector(".presentation-media-figure")).toBeNull();
+			expect(cropSlot?.style.backgroundImage).toContain("catalogue.png");
+			const bgSize = cropSlot?.style.getPropertyValue("--presentation-figure-bg-size");
+			expect(bgSize).toBeTruthy();
+			expect(bgSize).not.toBe("100% 100%");
 			expect(globalsCssSource).toMatch(
-				/\.presentation-interactive-disposition--fullscreen:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-crop-fill[\s\S]*width\s*:\s*100%\s*!important/s,
+				/\.presentation-interactive-disposition--enlarged:not\(\.presentation-interactive-disposition--offset\)[\s\S]*\.presentation-figure-crop-fill[\s\S]*width\s*:\s*100%\s*!important/s,
 			);
 			act(() => {
-				fullscreen.click();
+				enlargeButton.click();
 			});
-			expect(tile.classList.contains("presentation-interactive-disposition--fullscreen")).toBe(false);
+			expect(tile.classList.contains("presentation-interactive-disposition--enlarged")).toBe(false);
 			expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
 		});
 	});

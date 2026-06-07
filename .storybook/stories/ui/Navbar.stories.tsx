@@ -9,12 +9,24 @@
 // #endregion 🧲Header
 
 import { Button, LevelProvider, Navbar, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Bell, ChevronDown, Home, Menu, Redo, Search, Settings, Undo, User, ZoomIn, ZoomOut } from "lucide-react";
 
 // 🔷#region 🩺Navbar
+const Bell = createIconComponent("bell");
+const ChevronDown = createIconComponent("chevron-down");
+const Home = createIconComponent("home");
+const Menu = createIconComponent("list");
+const Redo = createIconComponent("rotate-cw");
+const Search = createIconComponent("search");
+const Settings = createIconComponent("settings");
+const Undo = createIconComponent("rotate-ccw");
+const User = createIconComponent("user");
+const ZoomIn = createIconComponent("zoom-in");
+const ZoomOut = createIconComponent("zoom-out");
+
 const meta = {
-  title: "elements/react/Navbar",
+  title: "🖱️ui⚛️react/Navbar",
   component: Navbar,
   parameters: {
     layout: "fullscreen",

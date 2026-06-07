@@ -1,0 +1,8 @@
+{
+  "title": "Emoji Path Consistency",
+  "emoji": "🏷️",
+  "status": "closed",
+  "summary": "Aligned .vscode/launch.json and Storybook story titles with canonical two-level area emoji paths (🏘️semio✍️sketchpad, 🖱️ui⚛️react, 🧩puzzle🩻2d, 🌐gis📍map, ♾️infinite✈️cavas, etc.). Reference table in ticket folder emoji-paths.md.",
+  "description": "Align launch.json, Storybook titles, and dev docs with canonical area emoji paths (e.g. 🏘️semio✍️sketchpad, 🖱️ui⚛️react, 🧩puzzle🩻2d).",
+  "goal": "🎯aioptimizedrepo"
+}

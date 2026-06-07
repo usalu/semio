@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🏪Vec
 
 const meta = {
-  title: "semio/react/Vec",
+  title: "🏘️semio⚛️react/Vec",
   component: Vec,
   parameters: { layout: "centered" },
   tags: ["autodocs"],

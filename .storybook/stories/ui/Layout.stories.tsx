@@ -9,13 +9,19 @@
 // #endregion 🧲Header
 
 import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Page, SidePanel, Window } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Home, Info, Layers, Settings, User } from "lucide-react";
 import { useState } from "react";
 
 // 🔷#region 🪨Layout
+const Home = createIconComponent("home");
+const Info = createIconComponent("info");
+const Layers = createIconComponent("layers");
+const Settings = createIconComponent("settings");
+const User = createIconComponent("user");
+
 const meta = {
-  title: "elements/react/Layout",
+  title: "🖱️ui⚛️react/Layout",
   component: Layout,
   parameters: {
     layout: "fullscreen",

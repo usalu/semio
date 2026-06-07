@@ -9,13 +9,18 @@
 // #endregion 🧲Header
 
 import { Button, ButtonCycle } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box, List, Network, Plus } from "lucide-react";
 import { useState } from "react";
 
 // 🔘#region 🔤Button
+const Box = createIconComponent("box");
+const List = createIconComponent("list");
+const Network = createIconComponent("network");
+const Plus = createIconComponent("plus");
+
 const meta = {
-  title: "elements/react/Button",
+  title: "🖱️ui⚛️react/Button",
   component: Button,
   parameters: {
     layout: "centered",
@@ -39,7 +44,7 @@ export const Default: Story = {
 // #region 🪬ButtonCycle
 
 const cycleMeta = {
-  title: "elements/react/ButtonCycle",
+  title: "🖱️ui⚛️react/ButtonCycle",
   component: ButtonCycle,
   parameters: {
     layout: "centered",

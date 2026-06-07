@@ -14,7 +14,7 @@ import { useState } from "react";
 
 // 💻#region 🏩Slider
 const meta = {
-  title: "elements/react/Slider",
+  title: "🖱️ui⚛️react/Slider",
   component: Slider,
   parameters: {
     layout: "centered",

@@ -9,8 +9,8 @@
 // #endregion 🧲Header
 
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Plus, Settings, Trash2 } from "lucide-react";
 
 const TooltipExamples = () => (
   <div className="space-y-4">
@@ -62,8 +62,12 @@ const TooltipExamples = () => (
 );
 
 // 🔷#region 🎙️Tooltip
+const Plus = createIconComponent("plus");
+const Settings = createIconComponent("settings");
+const Trash2 = createIconComponent("trash2");
+
 const meta = {
-  title: "elements/react/Tooltip",
+  title: "🖱️ui⚛️react/Tooltip",
   component: TooltipExamples,
   parameters: {
     layout: "centered",

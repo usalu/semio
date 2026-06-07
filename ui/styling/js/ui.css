@@ -140,6 +140,14 @@
     --z-navbar: 100;
     --z-modal: 1000;
     --z-tutorial: 10000;
+    --glass-blur: 24px;
+    --glass-panel-blur: 40px;
+    --glass-window-options-blur: 14px;
+    --glass-saturate: 1.45;
+    --glass-panel-alpha: 0.58;
+    --glass-window-options-alpha: 0.22;
+    --glass-toolbar-alpha: 0.3;
+    --glass-menu-alpha: 0.36;
     --muted: var(--color-light-8-9);
     --muted-foreground: var(--color-gray);
     --accent: var(--color-primary);
@@ -716,6 +724,7 @@
 /* https://reactflow.dev/learn/customization/theming */
 
 @theme inline {
+  --color-background: var(--base);
   --color-base: var(--base);
   --color-canvas: var(--canvas);
   --color-window: var(--window);
@@ -1074,9 +1083,65 @@
   z-index: var(--z-tutorial);
 }
 
+@utility ui-glass-panel {
+  -webkit-backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-panel-alpha) * 100%), transparent);
+}
+
+/* Panel frame stroke is on [data-panel]; inset scroll hosts so native/overlay scrollbars do not cover it. */
+[data-panel] [data-slot="scroll-area"] {
+  box-sizing: border-box;
+  padding: 1px;
+}
+
+@utility ui-glass-toolbar {
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-toolbar-alpha) * 100%), transparent);
+}
+
+@utility ui-glass-menu {
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--temporary) calc(var(--glass-menu-alpha) * 100%), transparent);
+}
+
+@utility ui-glass-window-options {
+  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
+}
+
+[data-slot="window-measures-stack"] {
+  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
+}
+
 @utility text-tiny {
   font-size: var(--text-2xs);
   line-height: var(--text-2xs--line-height);
+}
+
+@utility text-2xs {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+}
+
+/* Window measures rail: force compact type; component defaults (text-xs/text-sm) are larger. */
+[data-slot="window-measures-tree"] {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+}
+
+[data-slot="window-measures-tree"] [data-slot="tree-label"],
+[data-slot="window-measures-tree"] [data-slot="inline-label"],
+[data-slot="window-measures-tree"] [data-slot="select-trigger"],
+[data-slot="window-measures-tree"] [data-slot="select-value"],
+[data-slot="window-measures-tree"] [data-slot="slider-value"] {
+  font-size: var(--text-2xs) !important;
+  line-height: var(--text-2xs--line-height) !important;
 }
 
 /* Puzzle 2d (and other full-bleed canvases) fill the window body; stack padding is for panel chrome only. */

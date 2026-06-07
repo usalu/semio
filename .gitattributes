@@ -3,6 +3,7 @@
 
 # Shell scripts must always use LF
 *.sh text eol=lf
+repo/hooks/* text eol=lf
 
 # Batch files should use CRLF on Windows
 *.bat text eol=crlf

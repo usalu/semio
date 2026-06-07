@@ -62,19 +62,31 @@ A demo is an iframe that when active has full control over keyboard etc.
 
 # Disposition
 
-A disposition is a concrete positioned, styled embodiment.
-A disposition is ephemerally modifyable (hoverable, draggable, selectable, resizable and rotatetable).
+A disposition is a concrete positioned, sized and styled embodiment.
+A disposition is modifyable (hoverable, draggable, selectable, resizable and rotatetable).
+Every disposition has two small buttons on the top right that appear when it is selected: reset, enlarge.
+The reset button resets all modifications. The enlarge button turns the large.
 A selection rectangle is started when the user clicks into empty stapce.
-When the selection rectangle is going to the left, partial 
-Because every disposition either disappears or morphs between slides, all ephemeral modification are lost after a slide changge.
+When the selection rectangle is going to the left partial inclusion is enough in order to select it.
+When the selection rectangle is going to the right full inclusion is necessary in order to select it.
 You MUST NOT distort an embodiment. It is always a filled, scaled to the shorter-side, centered and covers an arbitrary target size.
 
 # Morph
 
-A morph is when one disposition changes to another disposition.
-You MUST always start by first morphing the source embodiment from the the source position and source style into the target position and target style, and then afterwards switch embodiment from source to target.
-You MUST NOT start by switching the embodiment, and then afterwards morphing the target embodiment from the the source position and source style into the target position and target style.
-You MUST morph from the current disposition (including ephemeral modifications), although after the morph the ephemeral modifications will be gone.
+A morph is when source dispositions (position, size, style) morphs into target dispositions (position, size, style).
+You MUST morph from the actual disposition including modifications.
+
+## OneToOne
+
+One disposition morphing into one disposition.
+
+## OneToMany
+
+One disposition morphing into many dispositions.
+
+## ManyToOne
+
+Many disposition morphinh into many dispositions.
 
 # Arrangement
 

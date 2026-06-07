@@ -13,7 +13,7 @@
         "parallel": false
       }
     },
-    "build": {
+    "wasm": {
       "executor": "nx:run-commands",
       "inputs": [
         "{projectRoot}/Cargo.toml",
@@ -30,8 +30,31 @@
       "outputs": ["{projectRoot}/pkg"],
       "options": {
         "cwd": "semio/client/lib/rs",
-        "commands": ["bun script.ts build"],
-        "parallel": false
+        "command": "bun script.ts wasm"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["wasm"],
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/Cargo.lock",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/package.json",
+        "{projectRoot}/.cargo/**/*",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/bun.lock",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "outputs": ["{projectRoot}/pkg"],
+      "options": {
+        "cwd": "semio/client/lib/rs",
+        "command": "bun script.ts build",
+        "env": {
+          "SEMIO_RS_SKIP_WASM": "1"
+        }
       }
     },
     "test": {

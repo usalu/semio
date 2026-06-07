@@ -197,7 +197,7 @@ const necessaryStaircaseOntology: OntologyTreeNode = {
 
 // 🌳#region 🌧️OntologyTreeStory
 const ontologyMeta = {
-  title: "elements/react/OntologyTree",
+  title: "🖱️ui⚛️react/OntologyTree",
   component: OntologyTree,
   parameters: {
     layout: "padded",

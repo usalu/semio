@@ -21,12 +21,20 @@
       {
         "state": "scale_factor_or_first_reference_point",
         "anchor": "points.origin",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       },
       {
         "state": "second_reference_point",
         "anchor": "points.axisPoint",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ]
   },

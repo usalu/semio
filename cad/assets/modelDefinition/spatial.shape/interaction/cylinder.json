@@ -21,12 +21,20 @@
       {
         "state": "radius",
         "anchor": "points.base",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       },
       {
         "state": "end_of_cylinder",
         "anchor": "points.base",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ]
   },

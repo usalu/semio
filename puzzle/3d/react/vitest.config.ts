@@ -12,6 +12,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: {
+			"@infinite/world/r3f": resolve(root, "../../../infinite/world/r3f/index.tsx"),
 			"@ui/react": resolve(root, "../../../ui/react/index.tsx"),
 			"@puzzle/3d/play": resolve(root, "../play/index.ts"),
 			"@framework/playground/core": resolve(root, "../../../framework/product/playground/core/index.ts"),

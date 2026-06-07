@@ -1,60 +1,62 @@
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "command": "go run ./repo/client/mcp hook PostToolUse copilot-chat",
-        "timeout": 30,
-        "type": "command"
-      }
-    ],
-    "PreCompact": [
-      {
-        "command": "go run ./repo/client/mcp hook PreCompact copilot-chat",
-        "timeout": 30,
-        "type": "command"
-      }
-    ],
-    "PreToolUse": [
-      {
-        "command": "go run ./repo/client/mcp hook PreToolUse copilot-chat",
-        "timeout": 30,
-        "type": "command"
-      }
-    ],
-    "SessionStart": [
-      {
-        "command": "go run ./repo/client/mcp hook SessionStart copilot-chat",
-        "timeout": 30,
-        "type": "command"
-      }
-    ],
-    "Stop": [
-      {
-        "command": "go run ./repo/client/mcp hook Stop copilot-chat",
-        "timeout": 30,
-        "type": "command"
-      }
-    ],
-    "SubagentStart": [
-      {
-        "command": "go run ./repo/client/mcp hook SubagentStart copilot-chat",
-        "timeout": 30,
-        "type": "command"
-      }
-    ],
-    "SubagentStop": [
-      {
-        "command": "go run ./repo/client/mcp hook SubagentStop copilot-chat",
-        "timeout": 30,
-        "type": "command"
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "command": "go run ./repo/client/mcp hook UserPromptSubmit copilot-chat",
-        "timeout": 30,
-        "type": "command"
-      }
-    ]
-  }
+  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
+  "hooks": {}
+  // "hooks": {
+  //   "PostToolUse": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio copilot hook PostToolUse",
+  //       "timeout": 30,
+  //       "type": "command"
+  //     }
+  //   ],
+  //   "PreCompact": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio copilot hook PreCompact",
+  //       "timeout": 30,
+  //       "type": "command"
+  //     }
+  //   ],
+  //   "PreToolUse": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio copilot hook PreToolUse",
+  //       "timeout": 30,
+  //       "type": "command"
+  //     }
+  //   ],
+  //   "SessionStart": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio copilot hook SessionStart",
+  //       "timeout": 30,
+  //       "type": "command"
+  //     }
+  //   ],
+  //   "Stop": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio copilot hook Stop",
+  //       "timeout": 30,
+  //       "type": "command"
+  //     }
+  //   ],
+  //   "SubagentStart": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio copilot hook SubagentStart",
+  //       "timeout": 30,
+  //       "type": "command"
+  //     }
+  //   ],
+  //   "SubagentStop": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio copilot hook SubagentStop",
+  //       "timeout": 30,
+  //       "type": "command"
+  //     }
+  //   ],
+  //   "UserPromptSubmit": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio copilot hook UserPromptSubmit",
+  //       "timeout": 30,
+  //       "type": "command"
+  //     }
+  //   ]
+  // }
 }

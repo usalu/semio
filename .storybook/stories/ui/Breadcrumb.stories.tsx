@@ -9,13 +9,16 @@
 // #endregion 🧲Header
 
 import { Breadcrumb, BreadcrumbItemData, NotFound, PageNavigation } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { AlertCircle, Home } from "lucide-react";
 import { MemoryRouter } from "react-router";
 
 // 📖#region 💡Breadcrumb
+const AlertCircle = createIconComponent("alert-circle");
+const Home = createIconComponent("home");
+
 const meta = {
-  title: "elements/react/Breadcrumb",
+  title: "🖱️ui⚛️react/Breadcrumb",
   component: Breadcrumb,
   parameters: {
     layout: "centered",

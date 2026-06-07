@@ -15,7 +15,7 @@ const Pane = ({ label }: { label: string }) => (
 );
 
 const meta = {
-  title: "elements/react/Mode",
+  title: "🖱️ui⚛️react/Mode",
   component: Mode,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

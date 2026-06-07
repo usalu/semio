@@ -23,7 +23,7 @@ export default createPlaygroundPlayViteConfig({
 		{ find: /^three\/addons\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },
 	],
 	build: { outDir: "dist", emptyOutDir: true },
-	resolveDedupe: ["react", "react-dom", "three"],
+	resolveDedupe: ["react", "react-dom", "three", "@puzzle/3d/react"],
 	optimizeDeps: {
 		include: [
 			"react",
@@ -34,6 +34,9 @@ export default createPlaygroundPlayViteConfig({
 			"@react-three/fiber",
 			"@react-three/drei",
 			"lucide-react",
+			"@infinite/world/r3f",
+			"@infinite/cavas/react-renderer",
+			"@puzzle/3d/react",
 		],
 		esbuildOptions: { target: "esnext" },
 	},

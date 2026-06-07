@@ -21,12 +21,20 @@
       {
         "state": "start_of_arc",
         "anchor": "points.center",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       },
       {
         "state": "end_point_or_angle",
         "anchor": "points.start",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ]
   },

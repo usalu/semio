@@ -20,7 +20,6 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
@@ -86,68 +85,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
 import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import type { LucideIcon } from "lucide-react";
-import {
-  Plus as AddIcon,
-  AlertCircle as AlertCircleIcon,
-  BookOpen as BookIcon,
-  Box as BoxIcon,
-  CircleDot as CircleDotIcon,
-  Component as ComponentIcon,
-  Camera as CameraIcon,
-  Check as CheckIcon,
-  CheckIcon as CheckIconAlt,
-  ChevronDown as ChevronDownIcon,
-  ChevronDownIcon as ChevronDownIconAlt,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-  ChevronsUpDown as ChevronsUpDownIcon,
-  X as CloseIcon,
-  XIcon as CloseIconAlt,
-  FileArchive as FileArchiveIcon,
-  FileCode as FileCodeIcon,
-  FileImage as FileImageIcon,
-  FileJson as FileJsonIcon,
-  FileSpreadsheet as FileSpreadsheetIcon,
-  FileText as DocumentIcon,
-  FileType as FileTypeIcon,
-  ExternalLink as ExternalLinkIcon,
-  Folder as FolderIcon,
-  GripVertical as GripVerticalIcon,
-  Image as Puzzle2dIconRasterGlyphIcon,
-  ImagePlus as Puzzle2dIconFileImportIcon,
-  Info as InfoIcon,
-  Lightbulb as LightbulbIcon,
-  Maximize2 as Maximize2Icon,
-  MessageSquare as MessageSquareIcon,
-  Minimize2 as Minimize2Icon,
-  ArrowLeft as NavigateBackIcon,
-  ArrowRight as NavigateForwardIcon,
-  ArrowUp as NavigateUpIcon,
-  Minus as RemoveIcon,
-  SearchIcon,
-  TextSearch as FindInViewIcon,
-  Hand as HandIcon,
-  Lasso as LassoIcon,
-  Layout as LayoutIcon,
-  LayoutGrid as LayoutGridIcon,
-  Landmark as LandmarkIcon,
-  Link as LinkIcon,
-  MousePointer2 as MousePointerIcon,
-  MoreHorizontal as MoreHorizontalIcon,
-  FolderOpen as FolderOpenIcon,
-  Plus as PlusIcon,
-  Plug as PlugIcon,
-  Puzzle as PuzzleIcon,
-  Filter as FilterIcon,
-  Settings2 as Settings2Icon,
-  Shapes as Puzzle2dIconCatalogGlyphIcon,
-  Sigma as Puzzle2dIconMathGlyphIcon,
-  Smile as Puzzle2dIconEmojiGlyphIcon,
-  TriangleAlert as TriangleAlertIcon,
-  GraduationCap as TutorialIcon,
-  Users as UsersIcon,
-} from "lucide-react";
+import { ICONS, type IconName } from "@ui/assets";
+export type { IconName };
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -290,10 +229,188 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// #region 🔖Icon
+/** @emoji 📐 Named size tokens for {@link Icon}. */
+export type IconSizeToken = "tiny" | "small" | "base" | "large";
+
+const ICON_SIZE_PX: Record<IconSizeToken, number> = {
+  tiny: 12,
+  small: 20,
+  base: 24,
+  large: 32,
+};
+
+/** @emoji 📐 Resolves {@link Icon} `size` to pixel dimensions. */
+export function resolveIconSizePx(size?: number | IconSizeToken): number {
+  if (size === undefined) return ICON_SIZE_PX.base;
+  if (typeof size === "number") return size;
+  return ICON_SIZE_PX[size];
+}
+
+/** @emoji 🖼 Icon payload: built-in name, inline svg/url, or custom node. */
+export type IconSource =
+  | IconName
+  | { readonly name: IconName }
+  | { readonly svg: string }
+  | { readonly url: string }
+  | { readonly node: React.ReactNode };
+
+export interface IconProps {
+  icon: IconSource;
+  size?: number | IconSizeToken;
+  className?: string;
+  title?: string;
+}
+
+function normalizeIconSource(source: IconSource): Exclude<IconSource, IconName> | { readonly name: IconName } {
+  if (typeof source === "string") return { name: source };
+  return source;
+}
+
+/** @emoji 🖼 Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
+export function iconSvgMarkup(name: string): string | undefined {
+  return (ICONS as Record<string, string>)[name];
+}
+
+/** @emoji 🖼 Renders vendored UI SVG icons without depending on an external icon library. */
+export function Icon({ icon, size = "base", className, title }: IconProps): React.ReactElement {
+  const px = resolveIconSizePx(size);
+  const normalized = normalizeIconSource(icon);
+  if ("node" in normalized) {
+    return (
+      <span
+        className={cn("inline-flex shrink-0 items-center justify-center", className)}
+        style={{ width: px, height: px }}
+        title={title}
+      >
+        {normalized.node}
+      </span>
+    );
+  }
+  if ("url" in normalized) {
+    return <img src={normalized.url} alt="" width={px} height={px} className={cn("shrink-0", className)} title={title} />;
+  }
+  const svgMarkup = "svg" in normalized ? normalized.svg : ICONS[normalized.name];
+  return (
+    <span
+      className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", className)}
+      style={{ width: px, height: px }}
+      title={title}
+      data-icon={"name" in normalized ? normalized.name : undefined}
+      dangerouslySetInnerHTML={{ __html: svgMarkup }}
+      aria-hidden={title ? undefined : true}
+    />
+  );
+}
+
+/** @emoji 🔗 Binds a built-in {@link IconName} for APIs expecting `ComponentType<{ size?: number }>`. */
+export function createIconComponent(name: IconName): React.ComponentType<{ size?: number; className?: string }> {
+  return function BoundIcon({ size = 16, className }: { size?: number; className?: string }) {
+    return <Icon icon={name} size={size} className={className} />;
+  };
+}
+
+const AddIcon = createIconComponent("plus");
+const AlertCircleIcon = createIconComponent("alert-circle");
+const BookIcon = createIconComponent("book-open");
+const BoxIcon = createIconComponent("box");
+const CircleDotIcon = createIconComponent("circle-dot");
+const ComponentIcon = createIconComponent("component");
+const CameraIcon = createIconComponent("camera");
+const CheckIcon = createIconComponent("check");
+const CheckIconAlt = CheckIcon;
+const ChevronDownIcon = createIconComponent("chevron-down");
+const ChevronDownIconAlt = ChevronDownIcon;
+const ChevronLeftIcon = createIconComponent("chevron-left");
+const ChevronRightIcon = createIconComponent("chevron-right");
+const ChevronUpIcon = createIconComponent("chevron-up");
+const ChevronsUpDownIcon = createIconComponent("chevrons-up-down");
+const CloseIcon = createIconComponent("x");
+const CloseIconAlt = CloseIcon;
+const DocumentIcon = createIconComponent("file-text");
+const ExternalLinkIcon = createIconComponent("external-link");
+const FileArchiveIcon = createIconComponent("file-archive");
+const FileCodeIcon = createIconComponent("file-code");
+const FileImageIcon = createIconComponent("file-image");
+const FileJsonIcon = createIconComponent("file-json");
+const FileSpreadsheetIcon = createIconComponent("file-spreadsheet");
+const FileTypeIcon = createIconComponent("file-type");
+const FilterIcon = createIconComponent("filter");
+const FindInViewIcon = createIconComponent("text-search");
+const FolderIcon = createIconComponent("folder");
+const FolderOpenIcon = createIconComponent("folder-open");
+const GripVerticalIcon = createIconComponent("grip-vertical");
+const HandIcon = createIconComponent("hand");
+const InfoIcon = createIconComponent("info");
+const LandmarkIcon = createIconComponent("landmark");
+const LayoutIcon = createIconComponent("layout");
+const LayoutGridIcon = createIconComponent("layout-grid");
+const LassoIcon = createIconComponent("lasso");
+const LightbulbIcon = createIconComponent("lightbulb");
+const LinkIcon = createIconComponent("link");
+const Maximize2Icon = createIconComponent("maximize-2");
+const MessageSquareIcon = createIconComponent("message-square");
+const Minimize2Icon = createIconComponent("minimize-2");
+const MoreHorizontalIcon = createIconComponent("more-horizontal");
+const MousePointerIcon = createIconComponent("mouse-pointer-2");
+const NavigateBackIcon = createIconComponent("arrow-left");
+const NavigateForwardIcon = createIconComponent("arrow-right");
+const NavigateUpIcon = createIconComponent("arrow-up");
+const PlusIcon = createIconComponent("plus");
+const PlugIcon = createIconComponent("plug");
+const PuzzleIcon = createIconComponent("puzzle");
+const Puzzle2dIconCatalogGlyphIcon = createIconComponent("shapes");
+const Puzzle2dIconEmojiGlyphIcon = createIconComponent("smile");
+const Puzzle2dIconFileImportIcon = createIconComponent("image-plus");
+const Puzzle2dIconMathGlyphIcon = createIconComponent("sigma");
+const Puzzle2dIconRasterGlyphIcon = createIconComponent("image");
+const RemoveIcon = createIconComponent("minus");
+const SearchIcon = createIconComponent("search");
+const Settings2Icon = createIconComponent("settings-2");
+const TutorialIcon = createIconComponent("graduation-cap");
+const TriangleAlertIcon = createIconComponent("triangle-alert");
+const UsersIcon = createIconComponent("users");
+// #endregion 🔖Icon
+
 // #region 🖱️ContextMenu
 
-const contextMenuContentClassName =
-  "bg-transparent backdrop-blur-sm w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-foreground";
+export type GlassTier = "panel" | "toolbar" | "menu" | "windowOptions";
+
+export const glassPanelClass = "ui-glass-panel";
+export const glassToolbarClass = "ui-glass-toolbar";
+export const glassMenuClass = "ui-glass-menu";
+export const glassWindowOptionsClass = "ui-glass-window-options";
+
+const GlassTierContext = reactHostPort.createContext<GlassTier | null>(null);
+
+/** @emoji 🪟 Sets the glass opacity tier for portaled overlays (e.g. window-options selects). */
+export const GlassTierProvider: React.FC<{ readonly tier: GlassTier; readonly children: React.ReactNode }> = ({ tier, children }) => (
+  <GlassTierContext.Provider value={tier}>{children}</GlassTierContext.Provider>
+);
+
+/** @emoji 🪝 Returns the nearest {@link GlassTierProvider} tier, else `menu`. */
+export function useGlassTier(): GlassTier {
+  return reactHostPort.useContext(GlassTierContext) ?? "menu";
+}
+
+/** @emoji 🎨 Tailwind glass surface class for a {@link GlassTier}. */
+export function getGlassSurfaceClass(tier: GlassTier): string {
+  switch (tier) {
+    case "panel":
+      return glassPanelClass;
+    case "toolbar":
+      return glassToolbarClass;
+    case "windowOptions":
+      return glassWindowOptionsClass;
+    default:
+      return glassMenuClass;
+  }
+}
+
+const contextMenuContentClassName = cn(
+  glassMenuClass,
+  "w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-foreground",
+);
 const contextMenuItemClassName =
   "text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
 const contextMenuShortcutClassName = "ml-auto text-xs text-muted-foreground pl-tiny";
@@ -304,7 +421,7 @@ const contextMenuShortcutClassName = "ml-auto text-xs text-muted-foreground pl-t
 export interface ContextMenuItem {
   id: string;
   label?: string;
-  icon?: LucideIcon | string;
+  icon?: IconSource | string;
   shortcut?: string;
   disabled?: boolean;
   separator?: boolean;
@@ -319,10 +436,10 @@ function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
     return null;
   }
   if (typeof icon === "string") {
+    if (icon in ICONS) return <Icon icon={icon as IconName} size="small" className="shrink-0" />;
     return <span className="text-base shrink-0">{icon}</span>;
   }
-  const Icon = icon;
-  return <Icon className="size-small shrink-0" />;
+  return <Icon icon={icon} size="small" className="shrink-0" />;
 }
 
 /**
@@ -622,64 +739,176 @@ function applyDocumentBodyBaseColors(): void {
   document.body.style.color = "var(--foreground)";
 }
 
+/** @emoji 🌓 Resolves whether {@link ElementsSurfaceTheme} is dark for the current system preference. */
+export function resolveElementsSurfaceChromeDark(theme: ElementsSurfaceTheme): boolean {
+  if (theme === "dark") return true;
+  if (theme === "light") return false;
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+/** @emoji 🌓 True when `document.documentElement` currently carries the dark surface chrome class. */
+export function isElementsSurfaceChromeDarkApplied(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+}
+
+type ElementsSurfaceChromeLease = { readonly id: number; readonly input: ElementsSurfaceChromeInput };
+
+let elementsSurfaceChromeLeaseSeq = 0;
+const elementsSurfaceChromeLeases: ElementsSurfaceChromeLease[] = [];
+let elementsSurfaceChromeDomBindings: ReturnType<typeof createDOMEventBinding> | null = null;
+let elementsSurfaceChromeSystemListenersInstalled = false;
+let elementsSurfaceChromeDeferredClearFrame = 0;
+
+function activeElementsSurfaceChromeInput(): ElementsSurfaceChromeInput | undefined {
+  return elementsSurfaceChromeLeases[elementsSurfaceChromeLeases.length - 1]?.input;
+}
+
+function syncElementsSurfaceChromeProviders(input: ElementsSurfaceChromeInput | undefined): void {
+  if (input) {
+    setExpertiseProvider(() => input.expertise);
+    setUiChromeCompactProvider(() => input.compact ?? false);
+    return;
+  }
+  setExpertiseProvider(() => Expertise.NORMAL);
+  setUiChromeCompactProvider(() => readStoredUiChromeCompact());
+}
+
+function clearElementsSurfaceChromeDom(): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  root.classList.remove("dark");
+  root.classList.remove("touch");
+  delete root.dataset.uiDevice;
+  delete root.dataset.uiCompact;
+  delete root.dataset.uiTheme;
+  root.style.colorScheme = "";
+  document.body.style.backgroundColor = "";
+  document.body.style.color = "";
+  document.body.style.colorScheme = "";
+}
+
+function applyElementsSurfaceChromeThemeDom(theme: ElementsSurfaceTheme): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const dark = resolveElementsSurfaceChromeDark(theme);
+  root.classList.toggle("dark", dark);
+  root.dataset.uiTheme = dark ? "dark" : "light";
+  const scheme = dark ? "dark" : "light";
+  root.style.colorScheme = scheme;
+  if (document.body) {
+    document.body.style.colorScheme = scheme;
+    applyDocumentBodyBaseColors();
+  }
+}
+
+/** @emoji 🌓 Applies `html.dark` and `color-scheme` before React/CSS load (play/static entries); does not register a surface-chrome lease. */
+export function bootstrapElementsSurfaceChromeDocument(theme: ElementsSurfaceTheme = "system"): void {
+  if (typeof document === "undefined") return;
+  cancelElementsSurfaceChromeDeferredClear();
+  applyElementsSurfaceChromeThemeDom(theme);
+}
+
+function cancelElementsSurfaceChromeDeferredClear(): void {
+  if (elementsSurfaceChromeDeferredClearFrame === 0 || typeof cancelAnimationFrame === "undefined") {
+    elementsSurfaceChromeDeferredClearFrame = 0;
+    return;
+  }
+  cancelAnimationFrame(elementsSurfaceChromeDeferredClearFrame);
+  elementsSurfaceChromeDeferredClearFrame = 0;
+}
+
+function scheduleElementsSurfaceChromeDeferredClear(): void {
+  if (typeof requestAnimationFrame === "undefined") {
+    if (elementsSurfaceChromeLeases.length === 0) {
+      clearElementsSurfaceChromeDom();
+    }
+    return;
+  }
+  cancelElementsSurfaceChromeDeferredClear();
+  elementsSurfaceChromeDeferredClearFrame = requestAnimationFrame(() => {
+    elementsSurfaceChromeDeferredClearFrame = 0;
+    if (elementsSurfaceChromeLeases.length === 0) {
+      clearElementsSurfaceChromeDom();
+    }
+  });
+}
+
+function applyElementsSurfaceChromeDom(input: ElementsSurfaceChromeInput): void {
+  if (typeof document === "undefined") return;
+  cancelElementsSurfaceChromeDeferredClear();
+  applyElementsSurfaceChromeThemeDom(input.theme);
+  const root = document.documentElement;
+  root.dataset.uiDevice = input.device;
+  root.classList.toggle("touch", input.device === "tablet");
+  root.dataset.uiCompact = (input.compact ?? false) ? "true" : "false";
+}
+
+function syncElementsSurfaceChromeDomFromLeaseStack(): void {
+  const input = activeElementsSurfaceChromeInput();
+  if (!input) {
+    clearElementsSurfaceChromeDom();
+    return;
+  }
+  applyElementsSurfaceChromeDom(input);
+}
+
+function ensureElementsSurfaceChromeSystemListeners(): void {
+  if (elementsSurfaceChromeSystemListenersInstalled || typeof window === "undefined" || typeof document === "undefined") {
+    return;
+  }
+  elementsSurfaceChromeSystemListenersInstalled = true;
+  const bindings = createDOMEventBinding();
+  if (typeof window.matchMedia !== "function") {
+    installElementsSurfaceBrowserDefaultSuppression(bindings);
+    elementsSurfaceChromeDomBindings = bindings;
+    return;
+  }
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const onSystemThemeChange = (event: MediaQueryListEvent): void => {
+    const input = activeElementsSurfaceChromeInput();
+    if (!input || input.theme !== "system") return;
+    const root = document.documentElement;
+    const dark = event.matches;
+    root.classList.toggle("dark", dark);
+    root.dataset.uiTheme = dark ? "dark" : "light";
+    const scheme = dark ? "dark" : "light";
+    root.style.colorScheme = scheme;
+    if (document.body) {
+      document.body.style.colorScheme = scheme;
+      applyDocumentBodyBaseColors();
+    }
+    root.dataset.uiDevice = input.device;
+    root.classList.toggle("touch", input.device === "tablet");
+    root.dataset.uiCompact = (input.compact ?? false) ? "true" : "false";
+  };
+  bindings.listen(mq, "change", onSystemThemeChange);
+  installElementsSurfaceBrowserDefaultSuppression(bindings);
+  elementsSurfaceChromeDomBindings = bindings;
+}
+
 /**
  * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state, browser default input, and tooltip expertise.
  */
-export function applyElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): () => void {
-  setExpertiseProvider(() => expertise);
-  setUiChromeCompactProvider(() => compact);
-  const cleanups: Array<() => void> = [
-    () => setExpertiseProvider(() => Expertise.NORMAL),
-    () => setUiChromeCompactProvider(() => readStoredUiChromeCompact()),
-  ];
-
-  if (typeof window !== "undefined" && typeof document !== "undefined") {
-    const root = document.documentElement;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const bindings = createDOMEventBinding();
-    const applyTheme = (): void => {
-      const prefersDark = mq.matches;
-      const dark = theme === "dark" || (theme === "system" && prefersDark);
-      root.classList.toggle("dark", dark);
-      applyDocumentBodyBaseColors();
-    };
-    applyTheme();
-    bindings.listen(mq, "change", applyTheme);
-    installElementsSurfaceBrowserDefaultSuppression(bindings);
-    cleanups.push(() => {
-      bindings.dispose();
-      root.classList.remove("dark");
-      document.body.style.backgroundColor = "";
-      document.body.style.color = "";
-    });
-  }
-
-  if (typeof document !== "undefined") {
-    const root = document.documentElement;
-    root.dataset.uiDevice = device;
-    if (device === "tablet") {
-      root.classList.add("touch");
-    } else {
-      root.classList.remove("touch");
-    }
-    cleanups.push(() => {
-      delete root.dataset.uiDevice;
-      root.classList.remove("touch");
-    });
-  }
-
-  if (typeof document !== "undefined") {
-    const root = document.documentElement;
-    root.dataset.uiCompact = compact ? "true" : "false";
-    cleanups.push(() => {
-      delete root.dataset.uiCompact;
-    });
-  }
-
+export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput): () => void {
+  const lease: ElementsSurfaceChromeLease = { id: ++elementsSurfaceChromeLeaseSeq, input };
+  elementsSurfaceChromeLeases.push(lease);
+  ensureElementsSurfaceChromeSystemListeners();
+  syncElementsSurfaceChromeProviders(input);
+  syncElementsSurfaceChromeDomFromLeaseStack();
   return () => {
-    while (cleanups.length > 0) {
-      cleanups.pop()?.();
+    const index = elementsSurfaceChromeLeases.findIndex((entry) => entry.id === lease.id);
+    if (index >= 0) {
+      elementsSurfaceChromeLeases.splice(index, 1);
     }
+    if (elementsSurfaceChromeLeases.length === 0) {
+      syncElementsSurfaceChromeProviders(undefined);
+      scheduleElementsSurfaceChromeDeferredClear();
+      return;
+    }
+    syncElementsSurfaceChromeProviders(activeElementsSurfaceChromeInput());
+    syncElementsSurfaceChromeDomFromLeaseStack();
   };
 }
 
@@ -687,9 +916,17 @@ export function applyElementsSurfaceChrome({ theme, device, expertise, compact =
  * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
  */
 export function useElementsSurfaceChrome({ theme, device, expertise, compact = false }: ElementsSurfaceChromeInput): { mobile: boolean } {
-  reactHostPort.useEffect(() => applyElementsSurfaceChrome({ theme, device, expertise, compact }), [compact, device, expertise, theme]);
+  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ theme, device, expertise, compact }), [compact, device, expertise, theme]);
 
   return { mobile: device === "mobile" };
+}
+
+/** @emoji 🧪 Clears surface-chrome leases and DOM overrides between vitest cases. */
+export function resetElementsSurfaceChromeForTests(): void {
+  cancelElementsSurfaceChromeDeferredClear();
+  elementsSurfaceChromeLeases.length = 0;
+  syncElementsSurfaceChromeProviders(undefined);
+  clearElementsSurfaceChromeDom();
 }
 
 // #region 🎛️UiChromeCompact
@@ -706,6 +943,23 @@ export function readStoredUiChromeCompact(): boolean {
 export function writeStoredUiChromeCompact(compact: boolean): void {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(UI_CHROME_COMPACT_STORAGE_KEY, compact ? "true" : "false");
+}
+
+/** @emoji 🎚 localStorage key for surface expertise tier. */
+export const UI_CHROME_EXPERTISE_STORAGE_KEY = "ui.chrome.expertise";
+
+/** @emoji 🎚 Reads persisted surface expertise from localStorage. */
+export function readStoredUiChromeExpertise(): Expertise {
+  if (typeof localStorage === "undefined") return Expertise.NORMAL;
+  const raw = localStorage.getItem(UI_CHROME_EXPERTISE_STORAGE_KEY);
+  if (raw === Expertise.BEGINNER || raw === Expertise.NORMAL || raw === Expertise.EXPERT) return raw;
+  return Expertise.NORMAL;
+}
+
+/** @emoji 🎚 Persists surface expertise to localStorage. */
+export function writeStoredUiChromeExpertise(expertise: Expertise): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(UI_CHROME_EXPERTISE_STORAGE_KEY, expertise);
 }
 
 const UiChromeCompactContext = reactHostPort.createContext<boolean | null>(null);
@@ -850,6 +1104,25 @@ export function useControlInlineText(id: string | undefined, text?: string): str
   if (compact && labelPolicy !== "always") return undefined;
   return useControlAccessibleLabel(id, text);
 }
+
+/** @emoji 🏷️ Native title/aria-label for chrome controls (avoids Radix tooltip `setTrigger` ref update loops). */
+export function ChromeControlHint({
+  id,
+  text,
+  children,
+}: {
+  readonly id?: string;
+  readonly text?: string;
+  readonly children: React.ReactElement;
+}): React.ReactElement {
+  const label = useControlAccessibleLabel(id, text);
+  if (!label || !React.isValidElement(children)) return children;
+  const childProps = children.props as { readonly title?: string; readonly "aria-label"?: string };
+  return React.cloneElement(children, {
+    title: childProps.title ?? label,
+    "aria-label": childProps["aria-label"] ?? label,
+  } as Record<string, unknown>);
+}
 // #endregion 🎛️UiChromeCompact
 
 // #endregion 🌈SurfaceChrome
@@ -935,12 +1208,28 @@ export type UiTranslationSchema = {
       readonly empty: UiLabelValue;
     };
     readonly panelToggle: {
-      readonly windows: UiLabelValue;
+      readonly display: UiLabelValue;
       readonly overview: UiLabelValue;
       readonly workbench: UiLabelValue;
       readonly details: UiLabelValue;
       readonly settings: UiLabelValue;
       readonly chat: UiLabelValue;
+    };
+    readonly display: {
+      readonly tab: {
+        readonly windows: UiLabelValue;
+        readonly layout: UiLabelValue;
+      };
+      readonly saveLayout: UiLabelValue;
+      readonly saveLayoutPlaceholder: UiLabelValue;
+      readonly deleteLayout: UiLabelValue;
+    };
+    readonly settings: {
+      readonly tab: {
+        readonly general: UiLabelValue;
+        readonly mode: UiLabelValue;
+        readonly expertise: UiLabelValue;
+      };
     };
     readonly toolbar: {
       readonly group: {
@@ -1148,10 +1437,10 @@ export const uiChromeTranslationBundles = {
       },
     },
     "panelToggle": {
-      "windows": {
+      "display": {
         "label": {
-          "normal": "Fenster",
-          "beginner": "Fenster"
+          "normal": "Anzeige",
+          "beginner": "Anzeige"
         }
       },
       "overview": {
@@ -1184,6 +1473,22 @@ export const uiChromeTranslationBundles = {
           "beginner": "Chat"
         }
       }
+    },
+    display: {
+      tab: {
+        windows: { label: { normal: "Fenster", beginner: "Fenster" } },
+        layout: { label: { normal: "Layout", beginner: "Layout" } },
+      },
+      saveLayout: { label: { normal: "Layout speichern", beginner: "Layout speichern" } },
+      saveLayoutPlaceholder: { label: { normal: "Layoutname", beginner: "Layoutname" } },
+      deleteLayout: { label: { normal: "Loeschen", beginner: "Loeschen" } },
+    },
+    settings: {
+      tab: {
+        general: { label: { normal: "Allgemein", beginner: "Allgemein" } },
+        mode: { label: { normal: "Modus", beginner: "Modus" } },
+        expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
+      },
     },
     toolbar: {
       group: {
@@ -1459,10 +1764,10 @@ export const uiChromeTranslationBundles = {
       },
     },
     "panelToggle": {
-      "windows": {
+      "display": {
         "label": {
-          "normal": "Windows",
-          "beginner": "Windows"
+          "normal": "Display",
+          "beginner": "Display"
         }
       },
       "overview": {
@@ -1495,6 +1800,22 @@ export const uiChromeTranslationBundles = {
           "beginner": "Chat"
         }
       }
+    },
+    display: {
+      tab: {
+        windows: { label: { normal: "Windows", beginner: "Windows" } },
+        layout: { label: { normal: "Layout", beginner: "Layout" } },
+      },
+      saveLayout: { label: { normal: "Save layout", beginner: "Save layout" } },
+      saveLayoutPlaceholder: { label: { normal: "Layout name", beginner: "Layout name" } },
+      deleteLayout: { label: { normal: "Delete", beginner: "Delete" } },
+    },
+    settings: {
+      tab: {
+        general: { label: { normal: "General", beginner: "General" } },
+        mode: { label: { normal: "Mode", beginner: "Mode" } },
+        expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
+      },
     },
     toolbar: {
       group: {
@@ -1923,6 +2244,36 @@ export function useCommandHotkey(
   useHotkeys(finalHotkey, callback, options || {}, deps || []);
 }
 
+/** @emoji ⌨️ Chords for toggling the last active left/right chrome side panels. */
+export const SIDE_PANEL_TOGGLE_LEFT_HOTKEY = "ctrl+b,meta+b";
+export const SIDE_PANEL_TOGGLE_RIGHT_HOTKEY = "ctrl+shift+b,meta+shift+b";
+
+/**
+ * ⌨️ Binds {@link SIDE_PANEL_TOGGLE_LEFT_HOTKEY} and {@link SIDE_PANEL_TOGGLE_RIGHT_HOTKEY} when handlers are provided.
+ **/
+export function useSidePanelChromeHotkeys(options: {
+  readonly onToggleLeft?: () => void;
+  readonly onToggleRight?: () => void;
+}): void {
+  const { onToggleLeft, onToggleRight } = options;
+  useHotkeys(
+    SIDE_PANEL_TOGGLE_LEFT_HOTKEY,
+    () => {
+      onToggleLeft?.();
+    },
+    { preventDefault: true, enabled: onToggleLeft != null },
+    [onToggleLeft],
+  );
+  useHotkeys(
+    SIDE_PANEL_TOGGLE_RIGHT_HOTKEY,
+    () => {
+      onToggleRight?.();
+    },
+    { preventDefault: true, enabled: onToggleRight != null },
+    [onToggleRight],
+  );
+}
+
 /**
  * Hook returning whether a CSS media query currently matches.
  **/
@@ -2014,49 +2365,223 @@ export enum SectionSpecificity {
 // #endregion 🔊Section Specificity
 
 // #region 🔤Interaction Context
-// React context for tracking active UI interactions.
-// Consumers MUST wrap interactive elements with InteractionProvider.
+// Global ghost mode dims all panel chrome to 5% on any interaction; the active control stays visible.
 
-/**
- * InteractionCommands holds the data fields for a InteractionCommands record.
- **/
+const PANEL_GHOST_MOVE_THRESHOLD_PX = 4;
+
+/** @emoji 👻 Global ghost session API (begin/end while dragging or editing). */
+export interface PanelGhostValue {
+  readonly active: boolean;
+  readonly begin: (target: EventTarget | null) => void;
+  readonly end: () => void;
+}
+
+const PanelGhostContext = reactHostPort.createContext<PanelGhostValue | undefined>(undefined);
+
+/** @emoji 👻 Returns the global ghost controller when inside {@link GhostProvider}. */
+export const usePanelGhost = (): PanelGhostValue | undefined => reactHostPort.useContext(PanelGhostContext);
+
 interface InteractionCommands {
   setActiveInteraction: (elementId?: string, interactionId?: string) => void;
 }
 
-/**
- * InteractionContext holds the data fields for a InteractionContext record.
- **/
 const InteractionContext = reactHostPort.createContext<InteractionCommands | undefined>(undefined);
-/**
- * ActiveInteractionContext holds the data fields for a ActiveInteractionContext record.
- **/
 const ActiveInteractionContext = reactHostPort.createContext<string | undefined>(undefined);
 
-/**
- * Context provider for UI interaction commands and active state.
- **/
+/** @emoji 🔤 External provider for interaction commands; prefer {@link GhostProvider} at layout root. */
 export const InteractionProvider: React.FC<{
   commands?: InteractionCommands;
   activeInteraction?: string;
   children: React.ReactNode;
-}> = ({ commands, activeInteraction, children }) => {
+}> = ({ commands, activeInteraction, children }) => (
+  <InteractionContext.Provider value={commands}>
+    <ActiveInteractionContext.Provider value={activeInteraction}>{children}</ActiveInteractionContext.Provider>
+  </InteractionContext.Provider>
+);
+
+const useInteractionCommands = () => reactHostPort.useContext(InteractionContext);
+const useActiveInteraction = () => reactHostPort.useContext(ActiveInteractionContext);
+
+type GhostController = PanelGhostValue & {
+  readonly commands: InteractionCommands;
+  readonly activeInteraction?: string;
+};
+
+function findGhostRegionAncestor(target: Element): Element | null {
+  let node: Element | null = target;
+  while (node) {
+    if (node.hasAttribute("data-ghost-region")) return node;
+    node = node.parentElement;
+  }
+  return null;
+}
+
+function useGhostController(): GhostController {
+  const [active, setActive] = reactHostPort.useState(false);
+  const [activeInteraction, setActiveInteractionState] = reactHostPort.useState<string | undefined>(undefined);
+  const activeMarkedRefs = reactHostPort.useRef<HTMLElement[]>([]);
+  const sessionActiveRef = reactHostPort.useRef(false);
+
+  const clearActiveMarks = reactHostPort.useCallback(() => {
+    for (const el of activeMarkedRefs.current) {
+      el.removeAttribute("data-active-interaction");
+      el.removeAttribute("data-active-ancestor");
+    }
+    activeMarkedRefs.current = [];
+  }, []);
+
+  const begin = reactHostPort.useCallback(
+    (target: EventTarget | null) => {
+      clearActiveMarks();
+      sessionActiveRef.current = true;
+      setActive(true);
+      if (!target || !(target instanceof Element)) return;
+      const region = findGhostRegionAncestor(target);
+      if (!region) return;
+      const dimNodes: HTMLElement[] = [];
+      let node: Element | null = target;
+      while (node && node !== region) {
+        if (node.hasAttribute("data-dim")) dimNodes.push(node as HTMLElement);
+        node = node.parentElement;
+      }
+      const marked: HTMLElement[] = [];
+      if (dimNodes.length === 0) {
+        const fallback = target as HTMLElement;
+        fallback.setAttribute("data-active-interaction", "");
+        marked.push(fallback);
+      } else {
+        dimNodes[0].setAttribute("data-active-interaction", "");
+        marked.push(dimNodes[0]);
+        for (let i = 1; i < dimNodes.length; i++) {
+          dimNodes[i].setAttribute("data-active-ancestor", "");
+          marked.push(dimNodes[i]);
+        }
+      }
+      activeMarkedRefs.current = marked;
+    },
+    [clearActiveMarks],
+  );
+
+  const end = reactHostPort.useCallback(() => {
+    clearActiveMarks();
+    sessionActiveRef.current = false;
+    setActive(false);
+    setActiveInteractionState(undefined);
+  }, [clearActiveMarks]);
+
+  const setActiveInteraction = reactHostPort.useCallback(
+    (elementId?: string, interactionId?: string) => {
+      if (interactionId) {
+        setActiveInteractionState(interactionId);
+        const el = elementId ? document.getElementById(elementId) : null;
+        begin(el);
+        return;
+      }
+      end();
+    },
+    [begin, end],
+  );
+
+  const commands = reactHostPort.useMemo<InteractionCommands>(() => ({ setActiveInteraction }), [setActiveInteraction]);
+
+  const controllerRef = reactHostPort.useRef<GhostController | null>(null);
+  controllerRef.current = { active, begin, end, commands, activeInteraction };
+
+  reactHostPort.useEffect(() => {
+    const pendingRef: { current: { readonly x: number; readonly y: number; readonly target: EventTarget } | null } = { current: null };
+    const beganViaPointerDragRef = { current: false };
+    const bindings = createDOMEventBinding();
+    const capture = true;
+    const onDown = (event: Event) => {
+      const pointerEvent = event as PointerEvent;
+      if (pointerEvent.button !== 0) return;
+      pendingRef.current = { x: pointerEvent.clientX, y: pointerEvent.clientY, target: pointerEvent.target };
+    };
+    const onMove = (event: Event) => {
+      const pointerEvent = event as PointerEvent;
+      const pending = pendingRef.current;
+      if (!pending || sessionActiveRef.current) return;
+      const dx = pointerEvent.clientX - pending.x;
+      const dy = pointerEvent.clientY - pending.y;
+      if (dx * dx + dy * dy < PANEL_GHOST_MOVE_THRESHOLD_PX * PANEL_GHOST_MOVE_THRESHOLD_PX) return;
+      controllerRef.current?.begin(pending.target);
+      beganViaPointerDragRef.current = true;
+      pendingRef.current = null;
+    };
+    const onUp = () => {
+      pendingRef.current = null;
+      if (beganViaPointerDragRef.current) {
+        beganViaPointerDragRef.current = false;
+        controllerRef.current?.end();
+      }
+    };
+    bindings.listen(document, "pointerdown", onDown, capture);
+    bindings.listen(document, "pointermove", onMove, capture);
+    bindings.listen(document, "pointerup", onUp, capture);
+    bindings.listen(document, "pointercancel", onUp, capture);
+    return () => bindings.dispose();
+  }, []);
+
+  return reactHostPort.useMemo(
+    () => ({ active, begin, end, commands, activeInteraction }),
+    [active, activeInteraction, begin, commands, end],
+  );
+}
+
+/** @emoji 👻 Mounts global ghost detection and interaction context for layout + panels. */
+export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const ghost = useGhostController();
+  const panelGhostValue = reactHostPort.useMemo<PanelGhostValue>(
+    () => ({ active: ghost.active, begin: ghost.begin, end: ghost.end }),
+    [ghost.active, ghost.begin, ghost.end],
+  );
   return (
-    <InteractionContext.Provider value={commands}>
-      <ActiveInteractionContext.Provider value={activeInteraction}>{children}</ActiveInteractionContext.Provider>
-    </InteractionContext.Provider>
+    <PanelGhostContext.Provider value={panelGhostValue}>
+      <InteractionContext.Provider value={ghost.commands}>
+        <ActiveInteractionContext.Provider value={ghost.activeInteraction}>{children}</ActiveInteractionContext.Provider>
+      </InteractionContext.Provider>
+    </PanelGhostContext.Provider>
   );
 };
 
-/**
- * useInteractionCommands holds the data fields for a useInteractionCommands record.
- **/
-const useInteractionCommands = () => reactHostPort.useContext(InteractionContext);
-/** useActiveInteraction holds the data fields for a useActiveInteraction record.
- **/
-/**
- **/
-const useActiveInteraction = () => reactHostPort.useContext(ActiveInteractionContext);
+interface GhostRegionShellProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  /** @emoji 🫳 When true, the region root is click-through while ghosted (panels over canvas). */
+  clickThroughWhenGhost?: boolean;
+}
+
+/** @emoji 👻 Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active. */
+const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell(
+  { children, className, style, clickThroughWhenGhost = false, ...props },
+  ref,
+) {
+  const ghost = usePanelGhost();
+  const mergedStyle = reactHostPort.useMemo(
+    () => ({
+      ...(style as React.CSSProperties | undefined),
+      pointerEvents: clickThroughWhenGhost && ghost?.active ? ("none" as const) : undefined,
+    }),
+    [clickThroughWhenGhost, ghost?.active, style],
+  );
+  return (
+    <div ref={ref} data-ghost-region data-ghost={ghost?.active ? "true" : undefined} className={className} style={mergedStyle} {...props}>
+      {children}
+    </div>
+  );
+});
+
+interface PanelGhostRootProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
+
+/** @emoji 👻 Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
+function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRootProps) {
+  return (
+    <GhostRegionShell clickThroughWhenGhost className={className} style={style} {...props}>
+      {children}
+    </GhostRegionShell>
+  );
+}
 
 // #endregion 🔤Interaction Context
 
@@ -2158,6 +2683,30 @@ export const activeLineClass = "border-active-base";
 /** @emoji 📏 Secondary chrome frame (`border border-element`) wrapping window body or caps. */
 export const windowFrameClass = `border ${secondaryLineClass}`;
 
+/** @emoji 🪟 Panel chrome stroke only; mount on the panel root (`box-border`) so scrollbars stay inside the frame. */
+export const panelChromeBorderClass = windowFrameClass;
+
+/** @emoji 🪟 Frosted fill layer behind panel content (no stroke — border lives on the root). */
+export const panelGlassFillClass = glassPanelClass;
+
+/** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
+export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
+
+/** @emoji ↔️ Accent stroke on the panel resize edge while hovered or dragging. */
+export function panelResizeEdgeAccentClass(resizeSide: ResizeSide, active: boolean): string | undefined {
+  if (!active) return undefined;
+  switch (resizeSide) {
+    case "left":
+      return "border-l-accent";
+    case "right":
+      return "border-r-accent";
+    case "top":
+      return "border-t-accent";
+    case "bottom":
+      return "border-b-accent";
+  }
+}
+
 /** @emoji 📏 Top cap sides only — no bottom edge; z-index covers the body top stroke under the cap. */
 export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${secondaryLineClass} bg-window`;
 
@@ -2234,23 +2783,31 @@ export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-
 export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
 
 /** @emoji 📐 Fixed width of the right-edge window measures column (never wider than the window body). */
-export const windowMeasuresRailWidthClass = "w-[min(10rem,calc(100%-0.5rem))]";
+export const windowMeasuresRailWidthClass = "w-[min(14rem,calc(100%-0.5rem))]";
 
-/** @emoji 📐 Outer overlay for floating window measures along the right edge. */
+/** @emoji 📐 Max width cap for window engagement (matches {@link Engagement} design target). */
+export const windowEngagementMaxWidthPx = 28 * 16;
+
+/** @emoji 📐 Outer overlay for floating window measures along the top-right edge. */
 export const windowMeasuresOverlayClass =
-  "pointer-events-none absolute inset-y-0 right-0 z-panel flex flex-col items-stretch p-single";
+  "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-single";
 
-/** @emoji 📐 Scrollable stack of measure tiles inside the rail (tiles opt in to hits; gaps pass through to the canvas). */
-export const windowMeasuresStackClass =
-  "pointer-events-none flex min-h-0 flex-1 flex-col gap-half overflow-y-auto overscroll-contain";
+/** @emoji 📐 Scrollable frosted rail for window measures (height follows content, capped by the window body). */
+export const windowMeasuresStackClass = cn(
+  glassWindowOptionsClass,
+  "pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-y-auto overscroll-contain rounded-md border border-element/40 p-tiny shadow-sm",
+);
+
+/** @emoji 📐 Vertical rhythm between top-level measure groups in the rail. */
+export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
 /** @emoji 📐 Single measure tile in the window rail. */
 export const windowMeasureTileClass =
-  "pointer-events-auto select-none border-element/40 bg-window/90 w-full min-w-0 shrink-0 rounded-sm border px-single py-half";
+  `pointer-events-auto select-none border-element/40 ${glassWindowOptionsClass} w-full min-w-0 shrink-0 rounded-sm border px-tiny py-tiny`;
 
 /** @emoji 📐 Optional measure caption above a control. */
 export const windowMeasureLabelClass =
-  "text-muted-foreground mb-half block min-w-0 truncate text-[10px] font-medium leading-none";
+  "text-muted-foreground mb-tiny block min-w-0 truncate text-[10px] font-medium leading-none";
 
 /** @emoji 📐 Measure section title without a heavy chrome box. */
 export const windowMeasureSectionClass =
@@ -2259,9 +2816,31 @@ export const windowMeasureSectionClass =
 /** @emoji 📐 Constrains measure controls to the rail width. */
 export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 
+/** @emoji 🌳 Compact disclosure header for a nested measure group. */
+export const windowMeasureGroupHeaderClass =
+  "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 hover:bg-hover-window";
+
+/** @emoji 🌳 Indented children under a measure group (minimal chrome). */
+export const windowMeasureGroupChildrenClass =
+  "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-l border-element/30 pl-tiny ml-tiny pb-0 pt-0";
+
+/** @emoji 🌳 Nested measure leaf without an outer tile border (indent only). */
+export const windowMeasureTileNestedClass =
+  "pointer-events-auto select-none w-full min-w-0 shrink-0 px-0 py-0";
+
 /** @emoji 📐 Toggle sized to fit inside a measure tile. */
 export const windowMeasureToggleClass =
-  "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:max-w-full [&_[data-slot=toggle-group-item]_span.text-xs]:truncate";
+  "w-full max-w-full [&_[data-slot=toggle-group]]:w-full [&_[data-slot=toggle-group-item]]:min-w-0 [&_[data-slot=toggle-group-item]]:max-w-full [&_[data-slot=inline-label]]:max-w-full [&_[data-slot=inline-label]]:truncate";
+
+/** @emoji 📐 Dense toggle row for nested measure groups (shorter control chrome). */
+export const windowMeasureToggleCompactClass =
+  "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single [&_[data-slot=inline-label]]:!text-tiny";
+
+/** @emoji 🌳 Typography for measure tree group headers. */
+export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-muted-foreground";
+
+/** @emoji 🌳 Typography for measure tree leaf labels. */
+export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-foreground";
 
 /** @emoji 🎨 Tailwind border token class for a {@link Level}. */
 export function getLevelBorderElementClass(level: Level): string {
@@ -2352,7 +2931,7 @@ export interface ElementProps extends ElementBaseProps {}
  * Command holds the data fields for a Command record.
  **/
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
-  return <CommandPrimitive data-slot="command" className={cn("bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
+  return <CommandPrimitive data-slot="command" className={cn(glassMenuClass, "text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
 }
 
 /**
@@ -2399,7 +2978,7 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
   return (
     <div data-slot="command-input-wrapper" className="flex h-medium items-center gap-single border-b border-element px-tiny">
       <SearchIcon className="size-small shrink-0 opacity-50" />
-      <CommandPrimitive.Input data-slot="command-input" className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)} {...props} />
+      <CommandPrimitive.Input data-slot="command-input" className={cn("placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50", className)} {...uiFormControlBrowserDefaultProps} {...props} />
     </div>
   );
 }
@@ -2539,32 +3118,34 @@ export interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, mobilePanel, canvas, toolbar, mobile = false, className = "" }) => (
-  <div className={cn("flex flex-col overflow-hidden", mobile ? "touch h-full w-full" : "h-screen w-screen", className)}>
-    {navbar && <div className="flex-shrink-0">{navbar}</div>}
-    {mobile ? (
-      <div className="flex flex-col flex-1 min-h-0">
-        {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
-        <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-      </div>
-    ) : (
-      <div className="flex flex-1 min-h-0 relative">
-        {leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
-        <div className="flex flex-col flex-1 min-w-0 relative">
-          <div className="flex flex-1 min-h-0 relative">
-            <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-            {rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
-          </div>
-          {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
+  <GhostProvider>
+    <div className={cn("flex flex-col overflow-hidden", mobile ? "touch h-full w-full" : "h-screen w-screen", className)}>
+      {navbar && <div className="flex-shrink-0">{navbar}</div>}
+      {mobile ? (
+        <div className="flex flex-col flex-1 min-h-0">
+          {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
+          <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
         </div>
-      </div>
-    )}
-    {(footer || toolbar) && (
-      <div className="flex-shrink-0 relative">
-        {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
-        {footer}
-      </div>
-    )}
-  </div>
+      ) : (
+        <div className="flex flex-1 min-h-0 relative">
+          {leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
+          <div className="flex flex-col flex-1 min-w-0 relative">
+            <div className="flex flex-1 min-h-0 relative">
+              <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
+              {rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
+            </div>
+            {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
+          </div>
+        </div>
+      )}
+      {(footer || toolbar) && (
+        <div className="flex-shrink-0 relative">
+          {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
+          {footer}
+        </div>
+      )}
+    </div>
+  </GhostProvider>
 );
 
 export { Layout };
@@ -2594,6 +3175,7 @@ function PopoverTrigger({ className, ...props }: React.ComponentProps<typeof Pop
  * PopoverContent holds the data fields for a PopoverContent record.
  **/
 function PopoverContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  const glassClass = getGlassSurfaceClass(useGlassTier());
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
@@ -2601,7 +3183,8 @@ function PopoverContent({ className, align = "center", sideOffset = 4, ...props 
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
+          glassClass,
+          "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
           className,
         )}
         {...props}
@@ -2911,6 +3494,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       .join(" ");
   }, [id]);
   const displayLabel = resolvedLabel ?? fallbackLabel;
+  const controlHint = useControlAccessibleLabel(id);
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const isInsideTreeRow = reactHostPort.useContext(TreeRowAlignmentContext);
   const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
@@ -2918,6 +3502,8 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
   const propertyLabelRef = reactHostPort.useRef<HTMLDivElement>(null);
   const propertyControlRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [propertyRowStacked, setPropertyRowStacked] = reactHostPort.useState(false);
+  const propertyRowStackedRef = reactHostPort.useRef(propertyRowStacked);
+  propertyRowStackedRef.current = propertyRowStacked;
 
   reactHostPort.useEffect(() => {
     const rowElement = propertyRowRef.current;
@@ -2937,7 +3523,8 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       const labelRect = labelElement.getBoundingClientRect();
       const controlRect = controlElement.getBoundingClientRect();
       const overlaps = labelRect.right + detailPanelPropertyInlineGapPx > controlRect.left;
-      const shouldStack = propertyRowStacked ? overlaps || minimumInlineWidthPx > rowWidthPx - detailPanelPropertyStackedToInlineHysteresisPx : overlaps || minimumInlineWidthPx > rowWidthPx;
+      const stacked = propertyRowStackedRef.current;
+      const shouldStack = stacked ? overlaps || minimumInlineWidthPx > rowWidthPx - detailPanelPropertyStackedToInlineHysteresisPx : overlaps || minimumInlineWidthPx > rowWidthPx;
       setPropertyRowStacked((current) => (current === shouldStack ? current : shouldStack));
     };
 
@@ -2960,22 +3547,11 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
         cancelAnimationFrame(animationFrame);
       }
     };
-  }, [id, label, level, treePropertyRowOffsetPx, children, propertyRowStacked]);
+  }, [id, label, level, treePropertyRowOffsetPx]);
 
   if (labelLayoutKind === "treeGroupHeader") {
-    const treeGroupHeaderLabel = id ? (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span data-slot="tree-label" id={labelElementId} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]" style={treeItemLabelStyle}>
-            {displayLabel}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>
-          <DescriptionTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    ) : (
-      <span data-slot="tree-label" id={labelElementId} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]">
+    const treeGroupHeaderLabel = (
+      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]" style={treeItemLabelStyle}>
         {displayLabel}
       </span>
     );
@@ -3008,35 +3584,27 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
     );
   }
 
-  const propertyLabelElement = (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        {isTree ? (
-          <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}>
-            <div className="inline-flex min-w-0 h-[22px]">
-              <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]">
-                {resolvedLabel}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div ref={propertyLabelRef} data-slot="property-label-inline" className="min-w-0">
-            <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]">
-              {resolvedLabel}
-            </span>
-          </div>
-        )}
-      </TooltipTrigger>
-      <TooltipContent>
-        <DescriptionTooltipContent id={id} />
-      </TooltipContent>
-    </Tooltip>
+  const propertyLabelElement = isTree ? (
+    <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}>
+      <div className="inline-flex min-w-0 h-[22px]">
+        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]">
+          {resolvedLabel}
+        </span>
+      </div>
+    </div>
+  ) : (
+    <div ref={propertyLabelRef} data-slot="property-label-inline" className="min-w-0">
+      <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]">
+        {resolvedLabel}
+      </span>
+    </div>
   );
 
   const propertyRowElement = (
     <div
       ref={propertyRowRef}
       id={rowId}
+      data-dim
       data-slot="property-row"
       data-property-layout={propertyRowStacked ? "stacked" : "inline"}
       style={{
@@ -3087,14 +3655,8 @@ interface SemioTooltipProps {
 function SemioTooltip({ children, config }: SemioTooltipProps) {
   const mode = useTooltipMode();
   if (mode === Expertise.EXPERT) return children;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent>
-        <EnhancedTooltipContent config={config} />
-      </TooltipContent>
-    </Tooltip>
-  );
+  if (!React.isValidElement(children)) return children;
+  return <ChromeControlHint id={config.id}>{children}</ChromeControlHint>;
 }
 
 /**
@@ -3110,14 +3672,8 @@ interface IdSemioTooltipProps {
 function IdSemioTooltip({ id, children }: IdSemioTooltipProps) {
   const mode = useTooltipMode();
   if (mode === Expertise.EXPERT) return children;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent>
-        <DescriptionTooltipContent id={id} />
-      </TooltipContent>
-    </Tooltip>
-  );
+  if (!React.isValidElement(children)) return <>{children}</>;
+  return <ChromeControlHint id={id}>{children}</ChromeControlHint>;
 }
 
 export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
@@ -3340,7 +3896,7 @@ export { Avatar, AvatarFallback, AvatarImage };
  **/
 export interface CardProps {
   title: string;
-  icon?: string | LucideIcon;
+  icon?: string | IconSource;
   children: React.ReactNode;
   className?: string;
   contextMenu?: ContextMenuItem[];
@@ -3350,12 +3906,11 @@ export interface CardProps {
  * Content card with title, icon, and children.
  **/
 export const Card: React.FC<CardProps> = ({ title, icon, children, className = "", contextMenu }) => {
-  const IconComponent = typeof icon === "string" ? null : icon;
   return (
     <ContextMenu items={contextMenu}>
       <div className={`border p-single ${className}`}>
         <div className="flex items-start gap-tiny mb-single">
-          {IconComponent && <IconComponent className="size-small flex-shrink-0 mt-0.5" />}
+          {icon && typeof icon !== "string" && <Icon icon={icon} size="small" className="flex-shrink-0 mt-0.5" />}
           {typeof icon === "string" && <span className="text-xl flex-shrink-0">{icon}</span>}
           <h3 className="font-semibold text-base">{title}</h3>
         </div>
@@ -3576,7 +4131,7 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
+          cn(glassMenuClass, "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden"),
           className,
         )}
         {...props}
@@ -3733,9 +4288,10 @@ function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const divideClass = getLevelDivideElementClass(level);
+  const contextValue = reactHostPort.useMemo(() => ({ level }), [level]);
   return (
     <div data-slot="action-group" data-detail-panel-control="fit" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", borderClass, divideClass, className)} {...props}>
-      <ActionGroupContext.Provider value={{ level }}>{children}</ActionGroupContext.Provider>
+      <ActionGroupContext.Provider value={contextValue}>{children}</ActionGroupContext.Provider>
     </div>
   );
 }
@@ -3759,6 +4315,7 @@ function ActionGroupItem({
   const level = context.level ?? "base";
   const hasText = Boolean(text);
 
+  const accessibleLabel = useControlAccessibleLabel(id, text);
   const actionGroupItemElement = (
     <Component
       data-slot="action-group-item"
@@ -3766,6 +4323,7 @@ function ActionGroupItem({
       type={Component === "button" ? "button" : undefined}
       role={Component === "div" && (props as any).onClick ? "button" : undefined}
       tabIndex={Component === "div" && (props as any).onClick ? 0 : undefined}
+      title={accessibleLabel}
       data-level={context.level || level}
       className={cn(
         actionGroupItemVariants({
@@ -3782,17 +4340,6 @@ function ActionGroupItem({
       {text && <span className="text-tiny whitespace-nowrap">{text}</span>}
     </Component>
   );
-
-  if (id) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{actionGroupItemElement}</TooltipTrigger>
-        <TooltipContent>
-          <DescriptionTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
 
   return actionGroupItemElement;
 }
@@ -3902,6 +4449,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
       id={id}
       aria-label={ariaLabel}
+      title={accessibleLabel}
       className={cn(
         "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single h-medium border",
         hasText && "aspect-auto gap-single",
@@ -3919,17 +4467,6 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       {inlineText ? <span className="text-tiny whitespace-nowrap">{inlineText}</span> : null}
     </Comp>
   );
-
-  if (id && !isInternalChromeControlId(id)) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{actionElement}</TooltipTrigger>
-        <TooltipContent>
-          <DescriptionTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
 
   return actionElement;
 }
@@ -3991,17 +4528,20 @@ function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, c
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const divideClass = getLevelDivideElementClass(level);
+  const buttonGroupContextValue = reactHostPort.useMemo(() => ({ level }), [level]);
   const buttonGroupElement = (
-    <div
-      data-slot="button-group"
-      data-detail-panel-control={detailPanelWidthMode}
-      id={id}
-      data-level={level}
-      className={cn("group/button-group flex items-center border divide-x overflow-hidden h-medium", detailPanelWidthMode === "fill" ? "w-full min-w-0" : "w-fit shrink-0", borderClass, divideClass, className)}
-      {...props}
-    >
-      {children}
-    </div>
+    <ButtonGroupContext.Provider value={buttonGroupContextValue}>
+      <div
+        data-slot="button-group"
+        data-detail-panel-control={detailPanelWidthMode}
+        id={id}
+        data-level={level}
+        className={cn("group/button-group flex items-center border divide-x overflow-hidden h-medium", detailPanelWidthMode === "fill" ? "w-full min-w-0" : "w-fit shrink-0", borderClass, divideClass, className)}
+        {...props}
+      >
+        {children}
+      </div>
+    </ButtonGroupContext.Provider>
   );
 
   if (showLabel && id) {
@@ -4044,6 +4584,7 @@ function ButtonGroupItem({
       data-slot="button-group-item"
       id={id}
       aria-label={ariaLabel}
+      title={ariaLabel}
       data-level={context.level || level}
       className={cn(
         buttonGroupItemVariants({
@@ -4059,17 +4600,6 @@ function ButtonGroupItem({
       {inlineText ? <span className="text-xs whitespace-nowrap">{inlineText}</span> : null}
     </Comp>
   );
-
-  if (id && !isInternalChromeControlId(id)) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{buttonGroupItemElement}</TooltipTrigger>
-        <TooltipContent>
-          <DescriptionTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
 
   return buttonGroupItemElement;
 }
@@ -4665,18 +5195,14 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
 
   const inputValue = lazy ? localValue : externalValue;
 
-  const activeInteraction = useActiveInteraction();
-  const isInteracting = interactionId && activeInteraction === interactionId;
-  const shouldFade = activeInteraction && !isInteracting;
   const inputDisplayValue = inputValue?.toString() || "";
   const showCollapsedDisplay = !!showLabel && !isFocused && isCollapsibleInputType(type);
   const allowStackedOverflow = isStackedOverflowInputType(type);
 
   const inputEmptyOpacity = isInPropertyValueColumn && !inputDisplayValue && !isFocused ? 0.6 : 1;
-  const inputFinalOpacity = shouldFade ? 0 : inputEmptyOpacity;
 
   const inputElement = (
-    <div data-slot="input-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: inputFinalOpacity, transition: "opacity 150ms" }}>
+    <div data-slot="input-root" data-detail-panel-control="fill" data-dim className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: inputEmptyOpacity, transition: "opacity 150ms" }}>
       {showCollapsedDisplay ? (
         <CollapsedFieldDisplay
           allowStackedOverflow={allowStackedOverflow}
@@ -4710,6 +5236,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           placeholder={computedPlaceholder}
+          {...uiFormControlBrowserDefaultProps}
           {...props}
         />
       )}
@@ -4849,12 +5376,14 @@ function SelectTrigger({
  * SelectContent holds the data fields for a SelectContent record.
  **/
 function SelectContent({ className, children, position = "popper", ...props }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const glassClass = getGlassSurfaceClass(useGlassTier());
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          "bg-transparent backdrop-blur-sm text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-temporary max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
+          glassClass,
+          "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-temporary max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
           position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
         )}
@@ -4930,11 +5459,6 @@ function SelectScrollDownButton({ className, ...props }: React.ComponentProps<ty
   );
 }
 
-/**
- * ChevronUpIcon holds the data fields for a ChevronUpIcon record.
- **/
-const ChevronUpIcon = ChevronDownIconAlt;
-
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue };
 
 // #endregion 🔎Select
@@ -4978,10 +5502,6 @@ function Slider({
   const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
-  const activeInteraction = useActiveInteraction();
-  const isInteracting = interactionId && activeInteraction === interactionId;
-  const shouldFade = activeInteraction && !isInteracting;
-
   const _values = reactHostPort.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
 
   const displayValue = _values[0] ?? min;
@@ -5092,10 +5612,12 @@ function Slider({
     }
   };
 
+  const sliderTitle = useControlAccessibleLabel(id);
   const sliderElement = (
     <SliderPrimitive.Root
       data-slot="slider"
       id={id}
+      title={sliderTitle}
       defaultValue={defaultValue}
       value={value}
       min={min}
@@ -5127,20 +5649,11 @@ function Slider({
     </SliderPrimitive.Root>
   );
 
-  const wrappedSlider = (
-    <Tooltip>
-      <TooltipTrigger asChild>{sliderElement}</TooltipTrigger>
-      <TooltipContent>
-        <DescriptionTooltipContent id={id} />
-      </TooltipContent>
-    </Tooltip>
-  );
-
   const sliderContent = (
-    <div data-slot="slider-content" data-detail-panel-control="fill" style={{ opacity: shouldFade ? 0 : isInPropertyValueColumn && !hasBeenEdited ? 0.6 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
+    <div data-slot="slider-content" data-detail-panel-control="fill" data-dim style={{ opacity: isInPropertyValueColumn && !hasBeenEdited ? 0.6 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
       <div data-slot="slider-row" className="grid h-[22px] grid-cols-[minmax(0,1fr)_28px] items-center gap-x-[8px]">
         <div data-slot="slider-track-cell" className="min-w-0">
-          {wrappedSlider}
+          {sliderElement}
         </div>
         {isEditing ? (
           <Input
@@ -5215,7 +5728,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   const timeoutRef = reactHostPort.useRef<NodeJS.Timeout | null>(null);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
-  const activeInteraction = useActiveInteraction();
 
   reactHostPort.useEffect(() => {
     if (value !== undefined) {
@@ -5412,6 +5924,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         aria-labelledby={labelElementId}
         id={id}
         inputMode="decimal"
+        {...uiFormControlBrowserDefaultProps}
       />
       <button
         data-slot="stepper-plus"
@@ -5551,6 +6064,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           placeholder={effectivePlaceholder}
+          {...uiFormControlBrowserDefaultProps}
           {...props}
         />
       ) : (
@@ -5764,6 +6278,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       data-slot="toggle-group-item"
       id={id}
       aria-label={ariaLabel}
+      title={ariaLabel}
       className={cn(
         toggleVariants({
           level,
@@ -5798,16 +6313,6 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
     </ToggleGroupPrimitive.Item>
   );
 
-  if (id) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{toggleGroupItemElement}</TooltipTrigger>
-        <TooltipContent>
-          <DescriptionTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
   return toggleGroupItemElement;
 }
 
@@ -5910,8 +6415,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
     const dropdownAction = (
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Action as="div" id={dropdownId} icon={<ChevronDownIcon className="size-small" />} />
+        <PopoverTrigger>
+          <Action as="button" type="button" id={dropdownId} icon={<ChevronDownIcon className="size-small" />} />
         </PopoverTrigger>
         <PopoverContent
           side={dropdownSide}
@@ -5937,14 +6442,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
               );
 
               if (item.id) {
-                return (
-                  <Tooltip key={item.value}>
-                    <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
-                    <TooltipContent side="left">
-                      <DescriptionTooltipContent id={item.id} />
-                    </TooltipContent>
-                  </Tooltip>
-                );
+                return <ChromeControlHint key={item.value} id={item.id}>{buttonElement}</ChromeControlHint>;
               }
 
               return buttonElement;
@@ -6083,6 +6581,7 @@ interface RingProps extends ElementProps {
 
 function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onOrbHoverChange, showLabel, className }: RingProps) {
   const transaction = useTransaction();
+  const panelGhost = usePanelGhost();
   const svgRef = reactHostPort.useRef<SVGSVGElement>(null);
   const [draggingOrbId, setDraggingOrbId] = reactHostPort.useState<string | null>(null);
   const [localT, setLocalT] = reactHostPort.useState<number | null>(null);
@@ -6105,6 +6604,8 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
   const handleOrbPointerDown = reactHostPort.useCallback(
     (orbId: string, t: number) => (e: React.PointerEvent<SVGCircleElement>) => {
       e.preventDefault();
+      e.stopPropagation();
+      panelGhost?.begin(svgRef.current ?? e.currentTarget);
       setDraggingOrbId(orbId);
       setLocalT(t);
       dragStartT.current = t;
@@ -6112,7 +6613,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       transaction?.start?.();
       onOrbSelect?.(orbId);
     },
-    [transaction, onOrbSelect],
+    [onOrbSelect, panelGhost, transaction],
   );
   const flushPendingChange = reactHostPort.useCallback(
     (orbId: string) => {
@@ -6146,6 +6647,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       setLocalT(null);
       onOrbChange?.(draggingOrbId, dragStartT.current, newT);
       setDraggingOrbId(null);
+      panelGhost?.end();
       transaction?.finalize?.();
     };
     const onCancel = () => {
@@ -6155,6 +6657,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       }
       setLocalT(null);
       setDraggingOrbId(null);
+      panelGhost?.end();
       transaction?.abort?.();
     };
     const bindings = createDOMEventBinding();
@@ -6162,7 +6665,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
     bindings.listen(window, "pointerup", onUp);
     bindings.listen(window, "pointercancel", onCancel);
     return () => bindings.dispose();
-  }, [draggingOrbId, angleFromEvent, flushPendingChange, onOrbChange, transaction]);
+  }, [angleFromEvent, draggingOrbId, flushPendingChange, onOrbChange, panelGhost, transaction]);
   reactHostPort.useEffect(() => {
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
@@ -6171,6 +6674,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
   const ringElement = (
     <svg
       ref={svgRef}
+      data-dim
       data-slot="ring"
       data-detail-panel-control="fit"
       id={id}
@@ -6353,7 +6857,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-transparent backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-temporary grid w-full max-w-[calc(100%-2*var(--spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
+          cn(glassMenuClass, "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-temporary grid w-full max-w-[calc(100%-2*var(--spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg"),
           className,
         )}
         {...props}
@@ -6505,53 +7009,30 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 // #endregion 🪬Resizable
 
 // #region 🎮Scrollable
-// Custom scrollable area built on Radix ScrollArea.
-// 🔷Consumers MUST wrap content in Scrollable.
-const Scrollable = reactHostPort.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Viewport>, React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(
+/** @emoji 📜 Native overflow scroll host (avoids Radix ScrollArea `setViewport` / `setScrollbar*Enabled` ref update loops). */
+const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div"> & { orientation?: "vertical" | "horizontal" | "both" }>(
   ({ className, children, orientation = "vertical", ...props }, ref) => {
     return (
-      <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
-        <ScrollAreaPrimitive.Viewport
-          ref={ref}
-          data-slot="scroll-area-viewport"
-          className={cn(
-            "focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0",
-            orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
-          )}
-        >
+      <div
+        ref={ref}
+        data-slot="scroll-area"
+        className={cn(
+          "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1",
+          orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
+          className,
+        )}
+        {...props}
+      >
+        <div data-slot="scroll-area-viewport" className="min-h-0 min-w-0">
           {children}
-        </ScrollAreaPrimitive.Viewport>
-        {(orientation === "vertical" || orientation === "both") && <ScrollBar />}
-        {(orientation === "horizontal" || orientation === "both") && <ScrollBar orientation="horizontal" />}
-        <ScrollAreaPrimitive.Corner />
-      </ScrollAreaPrimitive.Root>
+        </div>
+      </div>
     );
   },
 );
 Scrollable.displayName = "Scrollable";
 
-/**
- * ScrollBar holds the data fields for a ScrollBar record.
- **/
-function ScrollBar({ className, orientation = "vertical", ...props }: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
-  return (
-    <ScrollAreaPrimitive.ScrollAreaScrollbar
-      data-slot="scroll-area-scrollbar"
-      orientation={orientation}
-      className={cn(
-        "flex touch-none select-none transition-colors",
-        orientation === "vertical" && "h-full w-[var(--scrollbar-size)] border-l border-l-transparent p-[1px]",
-        orientation === "horizontal" && "h-[var(--scrollbar-size)] flex-col border-t border-t-transparent p-[1px]",
-        className,
-      )}
-      {...props}
-    >
-      <ScrollAreaPrimitive.ScrollAreaThumb data-slot="scroll-area-thumb" className="relative flex-1" />
-    </ScrollAreaPrimitive.ScrollAreaScrollbar>
-  );
-}
-
-export { Scrollable, ScrollBar };
+export { Scrollable };
 
 // #endregion 🎮Scrollable
 
@@ -7258,9 +7739,9 @@ const treeItemLabelStyle: React.CSSProperties = {};
 const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-muted-foreground";
 
 /** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
-const renderTreeRowIcon = (icon: React.ReactNode | undefined, DefaultIcon: LucideIcon) => (
+const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconName) => (
   <span data-slot="tree-icon" className="flex items-center justify-center flex-shrink-0">
-    {icon ?? <DefaultIcon className={treeRowDefaultIconClassName} />}
+    {icon ?? <Icon icon={defaultIcon} size={12} className={treeRowDefaultIconClassName} />}
   </span>
 );
 const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
@@ -7426,7 +7907,7 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
       return;
     }
 
-    const branchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
+    const branchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content", "window-measure-tree-content"]);
     const rowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "tree-content", "control-tree-row"]);
     const directChildren = Array.from(branchElement.children) as HTMLElement[];
     const isRowElement = (el: HTMLElement): boolean => rowSlots.has(el.dataset.slot ?? "");
@@ -7590,6 +8071,8 @@ export interface TreeDataItem {
   label: React.ReactNode;
   icon?: React.ReactNode;
   description?: React.ReactNode;
+  /** @emoji 🎛️ Inline control rendered in a property-style tree row. */
+  control?: React.ReactNode;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
   /** Alternative branches for this item. Each branch is an array of child items. Navigation < > switches between branches. */
@@ -7615,6 +8098,7 @@ export interface TreeDataSection {
   id: string;
   label?: React.ReactNode;
   icon?: React.ReactNode;
+  /** @emoji 🧩 Arbitrary section body (window measures rail, side-panel hosts, …). */
   content?: React.ReactNode;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
@@ -7806,6 +8290,8 @@ interface SortableTreeItemsProps {
 /**
  * TreeRootProps holds the data fields for a TreeRootProps record.
  **/
+const EMPTY_TREE_SECTIONS: TreeDataSection[] = [];
+
 interface TreeRootProps {
   className?: string;
   showLines?: boolean;
@@ -8006,7 +8492,7 @@ const getTreeItemOrderedIds = (sections: TreeDataSection[], sectionItemsById: Re
 
 const treeSemanticHoverRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"]';
 
-const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]`;
+const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]`;
 
 /** @emoji 🎨 Tree row background from committed selection vs pointer-driven {@link TreeRootProps.highlightedIds}. */
 function treeRowStateClasses(isSelected: boolean, isHighlighted: boolean): string {
@@ -8052,10 +8538,11 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDrop,
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
-  const suppressLocalizedLabel = label === "";
-  const resolvedLabel = label === "" ? undefined : label;
+  const suppressLocalizedLabel = label == null || label === "";
+  const resolvedLabel = suppressLocalizedLabel ? undefined : label;
   const localizedLabel = !suppressLocalizedLabel && resolvedLabel === undefined && id ? useLabel(id) : undefined;
   const displayLabel = resolvedLabel ?? localizedLabel;
+  const controlHint = useControlAccessibleLabel(id);
   assertNoNestedTreeSections(children, "TreeSection");
   const sectionStateId = getTreeSectionStateId(id ?? String(displayLabel ?? "section"));
   const treeOpenState = useTreeOpenState(sectionStateId, defaultOpen);
@@ -8069,7 +8556,20 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const isHeaderlessSection = displayLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
+  const isHeaderlessSection =
+    suppressLocalizedLabel &&
+    localizedLabel === undefined &&
+    !icon &&
+    actions.length === 0 &&
+    !loading &&
+    !draggable &&
+    !onDoubleClick &&
+    !onSectionPointerEnter &&
+    !onSectionPointerLeave &&
+    !onDragStart &&
+    !onDragOver &&
+    !onDragLeave &&
+    !onDrop;
   const rowClassName = cn("relative h-[24px] min-h-[24px] hover:bg-hover-panel select-none overflow-hidden group min-w-0", isExpandable ? "cursor-foldable" : "cursor-selectable", className);
 
   if (isHeaderlessSection) {
@@ -8105,23 +8605,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {renderTreeRowIcon(icon, FolderIcon)}
-              {id ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate select-text" style={treeItemLabelStyle}>
-                      {displayLabel}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <DescriptionTooltipContent id={id} />
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate select-text" style={treeItemLabelStyle}>
-                  {displayLabel}
-                </span>
-              )}
+              {renderTreeRowIcon(icon, "folder")}
+              <span data-slot="tree-label" title={controlHint} className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate select-text" style={treeItemLabelStyle}>
+                {displayLabel}
+              </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
           </div>
@@ -8169,23 +8656,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {renderTreeRowIcon(icon, FolderIcon)}
-                {id ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate select-text" style={treeItemLabelStyle}>
-                        {displayLabel}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <DescriptionTooltipContent id={id} />
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate select-text" style={treeItemLabelStyle}>
-                    {displayLabel}
-                  </span>
-                )}
+                {renderTreeRowIcon(icon, "folder")}
+                <span data-slot="tree-label" title={controlHint} className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate select-text" style={treeItemLabelStyle}>
+                  {displayLabel}
+                </span>
               </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
             </div>
@@ -8286,7 +8760,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                 <div className={treeHeaderMainClassName}>
                   {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
-                  {renderTreeRowIcon(icon, FolderIcon)}
+                  {renderTreeRowIcon(icon, "folder")}
                   <span
                     data-slot="tree-label"
                     className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -8357,7 +8831,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
                 {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
-                {renderTreeRowIcon(icon, FolderIcon)}
+                {renderTreeRowIcon(icon, "folder")}
                 <span
                   data-slot="tree-label"
                   className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -8416,7 +8890,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
-              {renderTreeRowIcon(icon, DocumentIcon)}
+              {renderTreeRowIcon(icon, "file-text")}
               <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground select-text" style={treeItemLabelStyle}>
                 {displayLabel as React.ReactNode}
               </span>
@@ -8452,7 +8926,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
-            {renderTreeRowIcon(icon, DocumentIcon)}
+            {renderTreeRowIcon(icon, "file-text")}
             <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground select-text" style={treeItemLabelStyle}>
               {displayLabel as React.ReactNode}
             </span>
@@ -8532,6 +9006,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
   const resolvedLabel = label !== undefined ? label : localizedLabel;
+  const controlHint = useControlAccessibleLabel(id);
   assertNoNestedTreeSections(children, "TreeItem");
   if (sortable && sortableId) {
     return (
@@ -8589,6 +9064,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   if (layoutKind === "property" && resolvedLabel) {
     return (
       <div
+        data-dim
         data-slot="tree-property-item"
         data-tree-row-kind={isExpandable ? "group" : "property"}
         role="treeitem"
@@ -8639,51 +9115,25 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         >
           <div className={cn(treeHeaderRowClassName, "h-[22px]", treeInspectorInnerRowClassName)}>
             <div className={cn(treeHeaderMainClassName, "h-[22px]")}>
-              {renderTreeRowIcon(icon, isExpandable ? FolderIcon : DocumentIcon)}
-              {id ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      data-slot="tree-label"
-                      className={cn("flex min-w-0 flex-1 items-center text-xs font-medium text-left truncate text-foreground transition-colors hover:bg-hover-panel h-[22px] select-text", isExpandable ? "cursor-foldable" : "cursor-selectable")}
-                      style={treeItemLabelStyle}
-                      onClick={(event) => {
-                        if (event.detail > 1) return;
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if (isExpandable) {
-                          setOpen(!open);
-                          return;
-                        }
-                        onClick?.(event);
-                      }}
-                    >
-                      {resolvedLabel as React.ReactNode}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <DescriptionTooltipContent id={id} />
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <span
-                  data-slot="tree-label"
-                  className={cn("flex min-w-0 flex-1 items-center text-xs font-medium text-left truncate text-foreground transition-colors hover:bg-hover-panel h-[22px] select-text", isExpandable ? "cursor-foldable" : "cursor-selectable")}
-                  style={treeItemLabelStyle}
-                  onClick={(event) => {
-                    if (event.detail > 1) return;
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (isExpandable) {
-                      setOpen(!open);
-                      return;
-                    }
-                    onClick?.(event);
-                  }}
-                >
-                  {resolvedLabel as React.ReactNode}
-                </span>
-              )}
+              {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text")}
+              <span
+                data-slot="tree-label"
+                title={controlHint}
+                className={cn("flex min-w-0 flex-1 items-center text-xs font-medium text-left truncate text-foreground transition-colors hover:bg-hover-panel h-[22px] select-text", isExpandable ? "cursor-foldable" : "cursor-selectable")}
+                style={treeItemLabelStyle}
+                onClick={(event) => {
+                  if (event.detail > 1) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  if (isExpandable) {
+                    setOpen(!open);
+                    return;
+                  }
+                  onClick?.(event);
+                }}
+              >
+                {resolvedLabel as React.ReactNode}
+              </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
           </div>
@@ -8705,6 +9155,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     return (
       <>
         <div
+          data-dim
           data-slot="tree-item-row"
           data-tree-row-kind="group"
           data-tree-group
@@ -8752,7 +9203,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {renderTreeRowIcon(icon, FolderIcon)}
+                {renderTreeRowIcon(icon, "folder")}
                 <span
                   data-slot="tree-label"
                   className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable select-text"
@@ -8819,6 +9270,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 
   return (
     <div
+      data-dim
       data-slot="tree-item-row"
       data-tree-row-kind={layoutKind === "property" ? "property" : "leaf"}
       role="treeitem"
@@ -8842,7 +9294,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {loading && <Spinner size="small" className="text-muted-foreground" />}
-            {renderTreeRowIcon(icon, DocumentIcon)}
+            {renderTreeRowIcon(icon, "file-text")}
             <span data-slot="tree-label" className={cn("flex-1 text-xs font-normal truncate text-foreground", draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
               {resolvedLabel as React.ReactNode}
             </span>
@@ -8973,6 +9425,7 @@ export const HelperRow: React.FC<{ children: React.ReactNode; className?: string
     return (
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}>
         <div
+          data-dim
           data-slot="property-row"
           style={{ marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" }}
           className={cn(detailPanelPropertyRowClassName, "grid-cols-[96px_minmax(0,1fr)]")}
@@ -9029,11 +9482,11 @@ export interface FileTreeNode {
 
 //#region 🎃TreeHoverPath
 // 🌳Branch containers that hold child rows and render IndentationLines.
-const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
+const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content", "window-measure-tree-content"]);
 // 🔷Row-level elements that own an elbow connector.
 const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "control-tree-row"]);
 const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"]';
-const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]';
+const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]';
 const treeHoverPathAttr = "data-tree-hover-path";
 
 const clearTreeHoverPath = (root: HTMLElement) => {
@@ -9168,11 +9621,13 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
 
   const palettePointerProps = buildPalettePointerProps(item, section);
   const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && (item.draggable || item.dragData) ? "touch-none" : undefined;
+  const hasControl = Boolean(item.control);
+  const propertyLayout = hasControl;
 
   return (
     <TreeItem
       id={item.id}
-      label={getTreeItemLabel(item)}
+      label={hasControl ? item.label : getTreeItemLabel(item)}
       icon={item.icon}
       className={cn(item.className, palettePointerClassName)}
       isSelected={isRowSelected}
@@ -9186,6 +9641,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       isLastItem={isLastItem}
       actions={item.actions}
       draggable={Boolean(item.draggable) || Boolean(item.dragData) || Boolean(dragAndDropController)}
+      layoutKind={propertyLayout ? "property" : undefined}
       onClick={(event) => handleSelectItem(event, item, section, [...path])}
       onDoubleClick={(event) => handleDoubleClickItem(event, item, section, [...path])}
       onDragStart={(event) => handleDragStart(event, item, section)}
@@ -9199,6 +9655,11 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: {
       activeBranchIndex={clampedBranchIndex}
       onBranchChange={setActiveBranchIndex}
     >
+      {hasControl ? (
+        <TreeItem>
+          <TreeContent className="min-w-0 flex-1 py-half">{item.control}</TreeContent>
+        </TreeItem>
+      ) : null}
       {childItems.map((childItem, index) => (
         <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
       ))}
@@ -9219,7 +9680,9 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
   const items = getTreeSectionItems(section, sectionItemsById);
   const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
   const hasDynamicChildren = Boolean(section.getItems);
-  const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasNonEmptyChildren(section.content);
+  const hasContent = section.content != null;
+  const isContentHost = hasContent && items.length === 0 && !hasDynamicChildren && !section.emptyState;
+  const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasContent;
 
   reactHostPort.useEffect(() => {
     if (treeOpenState.open && hasDynamicChildren) {
@@ -9242,10 +9705,10 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       onPointerEnter={section.onPointerEnter}
       onPointerLeave={section.onPointerLeave}
       onDoubleClick={section.onDoubleClick}
-      onDragOver={handleDragOver}
-      onDrop={(event) => handleDropOnSection(event, section)}
+      onDragOver={isContentHost ? undefined : handleDragOver}
+      onDrop={isContentHost ? undefined : (event) => handleDropOnSection(event, section)}
     >
-      {section.content}
+      {hasContent ? section.content : null}
       {items.map((item, index) => (
         <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
       ))}
@@ -9279,8 +9742,9 @@ export const Tree = (({
   if (hasNonEmptyChildren(children)) {
     throw new Error("Tree only accepts section data through the sections prop.");
   }
+  const panelGhost = usePanelGhost();
   const [sectionItemsById, setSectionItemsById] = reactHostPort.useState<Record<string, TreeDataItem[]>>(() =>
-    (sections ?? []).reduce<Record<string, TreeDataItem[]>>((result, section) => {
+    (sections ?? EMPTY_TREE_SECTIONS).reduce<Record<string, TreeDataItem[]>>((result, section) => {
       if (section.items) {
         result[section.id] = section.items;
       }
@@ -9291,14 +9755,15 @@ export const Tree = (({
   const [loadingById, setLoadingById] = reactHostPort.useState<Record<string, boolean>>({});
   const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = reactHostPort.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
   const [draggedIds, setDraggedIds] = reactHostPort.useState<string[]>([]);
-  const resolvedSections = sections ?? [];
+  const resolvedSections = sections ?? EMPTY_TREE_SECTIONS;
   const suppressPaletteClickRef = reactHostPort.useRef(false);
-  const palettePointerGestureRef = reactHostPort.useRef<{ pending: boolean; dragging: boolean; encoded: string | null; startX: number; startY: number }>({
+  const palettePointerGestureRef = reactHostPort.useRef<{ pending: boolean; dragging: boolean; encoded: string | null; startX: number; startY: number; target: EventTarget | null }>({
     pending: false,
     dragging: false,
     encoded: null,
     startX: 0,
     startY: 0,
+    target: null,
   });
   const palettePointerWindowCleanupRef = reactHostPort.useRef<(() => void) | null>(null);
   const clearPalettePointerWindowListeners = reactHostPort.useCallback(() => {
@@ -9448,9 +9913,10 @@ export const Tree = (({
         event.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, ghost.offsetHeight / 2);
         requestAnimationFrame(() => ghost.remove());
       }
+      panelGhost?.begin(event.currentTarget);
       dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
     },
-    [dragAndDropController, itemMap],
+    [dragAndDropController, itemMap, panelGhost],
   );
 
   const handleDragEnd = reactHostPort.useCallback(
@@ -9459,8 +9925,9 @@ export const Tree = (({
       const sourceItems = sourceIds.map((id) => itemMap[id]).filter(Boolean);
       dragAndDropController?.onDragEnd?.({ items: sourceItems, sourceItem: item, section });
       setDraggedIds([]);
+      panelGhost?.end();
     },
-    [dragAndDropController, draggedIds, itemMap],
+    [dragAndDropController, draggedIds, itemMap, panelGhost],
   );
 
   const handleDrop = reactHostPort.useCallback(
@@ -9500,14 +9967,16 @@ export const Tree = (({
         gesture.dragging = true;
         suppressPaletteClickRef.current = true;
         palettePointer.begin(gesture.encoded);
+        panelGhost?.begin(gesture.target);
         dragAndDropController?.onDragStart?.({ items: [item], sourceItem: item, section });
       };
       const finishPalettePointerGesture = (): void => {
         clearPalettePointerWindowListeners();
         if (palettePointerGestureRef.current.dragging) {
           suppressPaletteClickRef.current = true;
+          panelGhost?.end();
         }
-        palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0 };
+        palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0, target: null };
       };
       return {
         onPointerDown: (event) => {
@@ -9523,7 +9992,7 @@ export const Tree = (({
             return;
           }
           clearPalettePointerWindowListeners();
-          palettePointerGestureRef.current = { pending: true, dragging: false, encoded, startX: event.clientX, startY: event.clientY };
+          palettePointerGestureRef.current = { pending: true, dragging: false, encoded, startX: event.clientX, startY: event.clientY, target: event.currentTarget };
           event.preventDefault();
           event.stopPropagation();
           const onWindowPointerMove = (moveEvent: PointerEvent): void => {
@@ -9549,6 +10018,7 @@ export const Tree = (({
             if (palettePointerGestureRef.current.dragging) {
               palettePointer.cancel();
               dragAndDropController?.onDragEnd?.({ items: [item], sourceItem: item, section });
+              panelGhost?.end();
             }
             finishPalettePointerGesture();
           };
@@ -9563,7 +10033,7 @@ export const Tree = (({
         },
       };
     },
-    [clearPalettePointerWindowListeners, dragAndDropController, resolveItemDragData],
+    [clearPalettePointerWindowListeners, dragAndDropController, panelGhost, resolveItemDragData],
   );
 
   const handleDropOnItem = reactHostPort.useCallback(
@@ -10229,6 +10699,135 @@ export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText =
 
 // #endregion 🔬ControlTree
 
+// #region 🌳WindowMeasuresTree
+
+const windowMeasureTreeValueColumnWidthPx = 104;
+const windowMeasureTreeChromeClass = "text-tiny [&_[data-slot=select-trigger]]:h-small";
+const windowMeasureTreeRowClassName = "hover:bg-hover-panel/60 select-none min-h-[18px] w-full min-w-0";
+
+interface WindowMeasureTreeRowProps {
+  left: React.ReactNode;
+  right?: React.ReactNode;
+}
+
+const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right }) => (
+  <div
+    data-dim
+    data-slot="window-measure-tree-row"
+    className={cn("grid min-w-0 w-full items-center gap-x-[6px]", windowMeasureTreeRowClassName)}
+    style={{ gridTemplateColumns: right === undefined ? "minmax(0, 1fr)" : `minmax(0, 1fr) ${windowMeasureTreeValueColumnWidthPx}px` }}
+  >
+    <div data-slot="window-measure-tree-row-left" className="relative min-w-0">
+      {left}
+    </div>
+    {right !== undefined ? <div data-slot="window-measure-tree-row-right" className="min-w-0">{right}</div> : null}
+  </div>
+);
+
+/** @emoji 🌳 Root tree shell for the window measures rail (guide lines + indentation). */
+export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
+  <div data-slot="window-measures-tree" className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)}>
+    <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{children}</TreeContext.Provider>
+  </div>
+);
+
+export interface WindowMeasureTreeGroupProps {
+  id: string;
+  label: string;
+  defaultOpen?: boolean;
+  children?: React.ReactNode;
+}
+
+/** @emoji 🌳 Collapsible measure group row (same geometry as {@link ControlTree} folders). */
+export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = true, children }) => {
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const itemId = `window-measure-group-${id}`;
+  const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
+  const hasChildren = hasNonEmptyChildren(children);
+  return (
+    <>
+      <WindowMeasureTreeRow
+        left={
+          <TreeAlignedRow
+            level={level}
+            isLastAtLevel={isLastAtLevel}
+            showLines={showLines}
+            connectCurrentLevel={level > 0}
+            extendCurrentLevelToBottom={open && hasChildren}
+            slotOffsetPx={2}
+            slot={
+              hasChildren ? (
+                <button
+                  type="button"
+                  className="flex-shrink-0 cursor-pointer border-0 bg-transparent p-0"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setOpen(!open);
+                  }}
+                >
+                  {open ? <ChevronDownIcon className="size-[10px] flex-shrink-0 text-muted-foreground" /> : <ChevronRightIcon className="size-[10px] flex-shrink-0 text-muted-foreground" />}
+                </button>
+              ) : undefined
+            }
+            contentClassName="flex min-w-0 items-center gap-[6px]"
+          >
+            <span data-slot="tree-label" className={cn("flex-1 truncate select-none", windowMeasureTreeGroupLabelClass)} style={treeItemLabelStyle}>
+              {label}
+            </span>
+          </TreeAlignedRow>
+        }
+      />
+      {open && hasChildren ? (
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier }}>
+          <TreeBranchContent slot="window-measure-tree-content">{children}</TreeBranchContent>
+        </TreeContext.Provider>
+      ) : null}
+    </>
+  );
+};
+
+export interface WindowMeasureTreeLeafProps {
+  label?: string;
+  children: React.ReactNode;
+  fullWidth?: boolean;
+}
+
+/** @emoji 🌳 Measure control leaf aligned like a tree row (label + value or full-width control). */
+export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, children, fullWidth = false }) => {
+  const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
+  const labelNode = label ? (
+    <span data-slot="tree-label" className={cn("truncate select-none", windowMeasureTreeLeafLabelClass)} style={treeItemLabelStyle}>
+      {label}
+    </span>
+  ) : null;
+  if (fullWidth) {
+    return (
+      <WindowMeasureTreeRow
+        left={
+          <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="min-w-0 w-full">
+            <div data-slot="window-measure-tree-leaf-body" className="min-w-0 w-full">
+              {children}
+            </div>
+          </TreeAlignedRow>
+        }
+      />
+    );
+  }
+  return (
+    <WindowMeasureTreeRow
+      left={
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-[6px]">
+          {labelNode}
+        </TreeAlignedRow>
+      }
+      right={<div data-slot="window-measure-tree-leaf-body" className="min-w-0">{children}</div>}
+    />
+  );
+};
+
+// #endregion 🌳WindowMeasuresTree
+
 // #endregion 📜Tree
 
 // #endregion 🗼Aggregation Components
@@ -10329,14 +10928,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
   );
 
   if (id) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{itemElement}</TooltipTrigger>
-        <TooltipContent>
-          <DescriptionTooltipContent id={id} />
-        </TooltipContent>
-      </Tooltip>
-    );
+    return <ChromeControlHint id={id}>{itemElement}</ChromeControlHint>;
   }
 
   return itemElement;
@@ -10387,7 +10979,7 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
           </button>
         </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
-          <DropdownMenuPrimitive.Content align="center" sideOffset={8} className="bg-transparent backdrop-blur-sm w-auto overflow-hidden border p-single z-temporary">
+          <DropdownMenuPrimitive.Content align="center" sideOffset={8} className={cn(glassWindowOptionsClass, "w-auto overflow-hidden border p-single z-temporary")}>
             {options.map((item, index) => {
               const menuItem = (
                 <DropdownMenuPrimitive.Item
@@ -10400,16 +10992,7 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
                 </DropdownMenuPrimitive.Item>
               );
 
-              const wrappedItem = item.id ? (
-                <Tooltip key={index}>
-                  <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
-                  <TooltipContent side="right">
-                    <DescriptionTooltipContent id={item.id} />
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                menuItem
-              );
+              const wrappedItem = item.id ? <ChromeControlHint id={item.id}>{menuItem}</ChromeControlHint> : menuItem;
 
               return (
                 <React.Fragment key={index}>
@@ -10538,6 +11121,56 @@ export interface PanelProps {
   panelKey?: string;
 }
 
+/** @emoji ↔️ Resize handle wired to panel ghost mode (must render inside {@link PanelGhostRoot}). */
+function PanelResizeHandle({
+  resizeHandleClass,
+  resizeSide,
+  size,
+  minSize,
+  maxSize,
+  onSizeChange,
+  isResizing,
+  setIsResizing,
+  setIsResizeHovered,
+}: {
+  resizeHandleClass: string;
+  resizeSide: ResizeSide;
+  size: number;
+  minSize: number;
+  maxSize: number;
+  onSizeChange?: (size: number) => void;
+  isResizing: boolean;
+  setIsResizing: (value: boolean) => void;
+  setIsResizeHovered: (value: boolean) => void;
+}) {
+  const panelGhost = usePanelGhost();
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    panelGhost?.begin(e.currentTarget);
+    setIsResizing(true);
+    const startPos = resizeSide === "top" || resizeSide === "bottom" ? e.clientY : e.clientX;
+    const startSize = size;
+    const bindings = createDOMEventBinding();
+    const handleMouseMove = (event: Event) => {
+      const moveEvent = event as MouseEvent;
+      const currentPos = resizeSide === "top" || resizeSide === "bottom" ? moveEvent.clientY : moveEvent.clientX;
+      const delta = currentPos - startPos;
+      const newSize = resizeSide === "right" || resizeSide === "bottom" ? startSize + delta : startSize - delta;
+      if (newSize >= minSize && newSize <= maxSize) {
+        onSizeChange?.(newSize);
+      }
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      panelGhost?.end();
+      bindings.dispose();
+    };
+    bindings.listen(document, "mousemove", handleMouseMove);
+    bindings.listen(document, "mouseup", handleMouseUp);
+  };
+  return <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />;
+}
+
 /**
  * Panel holds the data fields for a Panel record.
  **/
@@ -10562,50 +11195,9 @@ const Panel: React.FC<PanelProps> = ({
   const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
   if (!visible) return null;
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    const startPos = resizeSide === "top" || resizeSide === "bottom" ? e.clientY : e.clientX;
-    const startSize = size;
-    const bindings = createDOMEventBinding();
-    const handleMouseMove = (e: MouseEvent) => {
-      const currentPos = resizeSide === "top" || resizeSide === "bottom" ? e.clientY : e.clientX;
-      const delta = currentPos - startPos;
-      let newSize: number;
-      if (resizeSide === "right" || resizeSide === "bottom") {
-        newSize = startSize + delta;
-      } else {
-        newSize = startSize - delta;
-      }
-      if (newSize >= minSize && newSize <= maxSize) {
-        onSizeChange?.(newSize);
-      }
-    };
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      bindings.dispose();
-    };
-    bindings.listen(document, "mousemove", handleMouseMove);
-    bindings.listen(document, "mouseup", handleMouseUp);
-  };
   const sortedSections = [...sections].sort((a, b) => (a.order || 0) - (b.order || 0));
-  const borderClass =
-    resizeSide === "left"
-      ? isResizing || isResizeHovered
-        ? "border-l-accent"
-        : "border-l"
-      : resizeSide === "right"
-        ? isResizing || isResizeHovered
-          ? "border-r-accent"
-          : "border-r"
-        : resizeSide === "top"
-          ? isResizing || isResizeHovered
-            ? "border-t-accent"
-            : "border-t"
-          : isResizing || isResizeHovered
-            ? "border-b-accent"
-            : "border-b";
-  const containerClass = `absolute text-foreground border min-w-0 overflow-hidden ${borderClass} ${className}`;
+  const frameClass = cn(panelChromeBorderClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered));
+  const containerClass = `absolute text-foreground min-w-0 overflow-hidden box-border ${className}`;
   const hasContent = sortedSections.length > 0 || additionalContent;
   const isHorizontal = resizeSide === "left" || resizeSide === "right";
   const positionStyle = isHorizontal
@@ -10643,17 +11235,30 @@ const Panel: React.FC<PanelProps> = ({
   }, [additionalContent, emptyMessage, hasContent, panelKey, sortedSections]);
   return (
     <LevelProvider level="panel">
-      <div data-panel={panelKey} className={cn(containerClass, showBackground ? "bg-panel" : undefined)} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
-        <Scrollable className="h-full">
+      <PanelGhostRoot data-panel={panelKey} className={cn(containerClass, showBackground && frameClass)} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
+        {showBackground ? <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", panelGlassFillClass)} /> : null}
+        <Scrollable className="relative z-10 h-full">
           <div className={`${className || "p-single"} overflow-hidden min-w-0`}>
             <TreeStateProvider>
               <Tree className="min-w-0 overflow-hidden" sections={treeSections} />
             </TreeStateProvider>
           </div>
-          {footer}
+          {footer ? <div data-dim>{footer}</div> : null}
         </Scrollable>
-        {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
-      </div>
+        {onSizeChange ? (
+          <PanelResizeHandle
+            isResizing={isResizing}
+            maxSize={maxSize}
+            minSize={minSize}
+            onSizeChange={onSizeChange}
+            resizeHandleClass={resizeHandleClass}
+            resizeSide={resizeSide}
+            setIsResizing={setIsResizing}
+            setIsResizeHovered={setIsResizeHovered}
+            size={size}
+          />
+        ) : null}
+      </PanelGhostRoot>
     </LevelProvider>
   );
 };
@@ -10771,10 +11376,8 @@ export interface SidePanelTabConfig {
   id: string;
   icon: React.ComponentType<{ size?: number }>;
   order?: number;
-  /** @emoji 🌲 Static or callback tree sections; omit when {@link panel} is set. */
-  tree?: TreePanelSource;
-  /** @emoji 🌲 Live React panel body (e.g. declarative `UiTreeNode` rebuilt from runtime snapshot). */
-  panel?: React.ReactNode;
+  /** @emoji 🌲 Tree sections and items for this tab (required). */
+  tree: TreePanelSource;
 }
 
 export interface TreePanelConfig {
@@ -10929,42 +11532,34 @@ const SidePanelTreePane = reactHostPort.memo(function SidePanelTreePane({ config
   );
 });
 
-const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
-  const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
-  const [isResizing, setIsResizing] = reactHostPort.useState(false);
-  const [internalActiveTab, setInternalActiveTab] = reactHostPort.useState<string | undefined>(tabs[0]?.id);
-  const sizeRef = reactHostPort.useRef(size);
+/** @emoji ↔️ Side-panel resize handle with ghost wiring (inside {@link PanelGhostRoot}). */
+function SidePanelResizeHandle({
+  position,
+  minSize,
+  maxSize,
+  onSizeChange,
+  sizeRef,
+  resizeHandleClass,
+  isResizing,
+  setIsResizing,
+  setIsResizeHovered,
+}: {
+  position: "left" | "right";
+  minSize: number;
+  maxSize: number;
+  onSizeChange?: (size: number) => void;
+  sizeRef: React.RefObject<number>;
+  resizeHandleClass: string;
+  isResizing: boolean;
+  setIsResizing: (value: boolean) => void;
+  setIsResizeHovered: (value: boolean) => void;
+}) {
+  const panelGhost = usePanelGhost();
   const resizeStartRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
-
-  reactHostPort.useEffect(() => {
-    sizeRef.current = size;
-  }, [size]);
-
-  const currentActiveTab = activeTabId ?? internalActiveTab;
-  const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
-  const showTabBar = sortedTabs.length > 1;
-  const activeTab = reactHostPort.useMemo(
-    () => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0],
-    [currentActiveTab, sortedTabs],
-  );
-  const activeTabTree = reactHostPort.useMemo(
-    () => (activeTab?.panel ? null : activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null),
-    [activeTab],
-  );
-  const activeTabPanel = activeTab?.panel;
-
-  const handleTabChange = (tabId: string) => {
-    if (onActiveTabChange) {
-      onActiveTabChange(tabId);
-    } else {
-      setInternalActiveTab(tabId);
-    }
-  };
-  const resizeSide = position === "left" ? "right" : "left";
-
   const resizePointerProps = usePointerDrag<HTMLDivElement>({
     onStart: (event) => {
       event.preventDefault();
+      panelGhost?.begin(event.currentTarget);
       resizeStartRef.current = { pointerX: event.clientX, size: sizeRef.current };
       setIsResizing(true);
     },
@@ -10980,69 +11575,103 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
     onEnd: () => {
       resizeStartRef.current = null;
       setIsResizing(false);
+      panelGhost?.end();
     },
     onCancel: () => {
       resizeStartRef.current = null;
       setIsResizing(false);
+      panelGhost?.end();
     },
   });
+  return <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />;
+}
 
-  const borderClass = resizeSide === "left" ? (isResizing || isResizeHovered ? "border-l-accent" : "border-l") : isResizing || isResizeHovered ? "border-r-accent" : "border-r";
+const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
+  const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
+  const [isResizing, setIsResizing] = reactHostPort.useState(false);
+  const [internalActiveTab, setInternalActiveTab] = reactHostPort.useState<string | undefined>(tabs[0]?.id);
+  const sizeRef = reactHostPort.useRef(size);
+
+  reactHostPort.useEffect(() => {
+    sizeRef.current = size;
+  }, [size]);
+
+  const currentActiveTab = activeTabId ?? internalActiveTab;
+  const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
+  const showTabBar = sortedTabs.length > 0;
+  const activeTab = reactHostPort.useMemo(
+    () => sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0],
+    [currentActiveTab, sortedTabs],
+  );
+  const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
+
+  const handleTabChange = (tabId: string) => {
+    if (onActiveTabChange) {
+      onActiveTabChange(tabId);
+    } else {
+      setInternalActiveTab(tabId);
+    }
+  };
+  const resizeSide = position === "left" ? "right" : "left";
+
+  const frameClass = cn(panelChromeBorderClass, panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered));
 
   const positionStyle =
     position === "left"
       ? { left: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex }
       : { right: "var(--spacing-double)", top: "var(--spacing-double)", bottom: "var(--spacing-double)", width: `${size}px`, zIndex };
 
-  const resizeHandleClass = `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
+  const resizeHandleClass = `absolute top-0 bottom-0 z-20 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
 
   return (
     <LevelProvider level="panel">
-      <div
+      <PanelGhostRoot
         data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"}
         data-panel-visible={visible ? "true" : "false"}
-        className={cn(
-          "absolute min-w-0 overflow-hidden flex flex-col",
-          visible ? cn("text-foreground border bg-panel", borderClass) : "hidden pointer-events-none",
-          className,
-        )}
+        className={cn("absolute min-w-0 overflow-hidden flex flex-col box-border", visible ? "text-foreground" : "hidden pointer-events-none", visible && frameClass, className)}
         style={positionStyle}
         aria-hidden={visible ? undefined : true}
       >
+        {visible ? <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", panelGlassFillClass)} /> : null}
         {showTabBar && (
-          <div data-slot="side-panel-tabs" className="flex items-center h-medium border-b shrink-0 overflow-x-auto">
+          <div data-dim data-slot="side-panel-tabs" className={cn("relative z-10 flex items-center h-medium border-b shrink-0 overflow-x-auto", secondaryLineClass)}>
             {sortedTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = tab.id === activeTab?.id;
               return (
-                <Tooltip key={tab.id}>
-                  <TooltipTrigger asChild>
-                    <button
-                      data-slot="side-panel-tab-button"
-                      id={tab.id}
-                      onClick={() => handleTabChange(tab.id)}
-                      className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
-                    >
-                      <Icon size={16} />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <DescriptionTooltipContent id={tab.id} />
-                  </TooltipContent>
-                </Tooltip>
+                <ChromeControlHint key={tab.id} id={tab.id}>
+                  <button
+                    data-slot="side-panel-tab-button"
+                    id={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                  >
+                    <Icon size={16} />
+                  </button>
+                </ChromeControlHint>
               );
             })}
           </div>
         )}
-        <Scrollable className="flex-1 min-h-0">
+        <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabPanel ?? (activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null)}
+            {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
           </div>
         </Scrollable>
         {visible && onSizeChange ? (
-          <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />
+          <SidePanelResizeHandle
+            isResizing={isResizing}
+            maxSize={maxSize}
+            minSize={minSize}
+            onSizeChange={onSizeChange}
+            position={position}
+            resizeHandleClass={resizeHandleClass}
+            setIsResizing={setIsResizing}
+            setIsResizeHovered={setIsResizeHovered}
+            sizeRef={sizeRef}
+          />
         ) : null}
-      </div>
+      </PanelGhostRoot>
     </LevelProvider>
   );
 };
@@ -11076,10 +11705,9 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
 
   const currentActiveTab = activeTabId ?? internalActiveTab;
   const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const showTabBar = sortedTabs.length > 1;
+  const showTabBar = sortedTabs.length > 0;
   const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
-  const activeTabTree = activeTab?.panel ? null : activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
-  const activeTabPanel = activeTab?.panel;
+  const activeTabTree = activeTab?.tree ? resolveTreePanelSource(activeTab.tree) : null;
 
   const handleTabChange = (tabId: string) => {
     if (onActiveTabChange) {
@@ -11091,35 +11719,31 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
 
   return (
     <LevelProvider level="panel">
-      <div data-panel="mobilePanel" className={cn("w-full text-foreground border-b bg-panel flex flex-col", className)} style={{ height: `${height}px` }}>
+      <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", panelChromeBorderClass, className)} style={{ height: `${height}px` }}>
+        <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0", panelGlassFillClass)} />
         {showTabBar && (
-          <div data-slot="mobile-panel-tabs" className="flex items-center h-large border-b shrink-0 overflow-x-auto">
+          <div data-dim data-slot="mobile-panel-tabs" className={cn("relative z-10 flex items-center h-large border-b shrink-0 overflow-x-auto", secondaryLineClass)}>
             {sortedTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = tab.id === activeTab?.id;
               return (
-                <Tooltip key={tab.id}>
-                  <TooltipTrigger asChild>
-                    <button
-                      data-slot="mobile-panel-tab-button"
-                      id={tab.id}
-                      onClick={() => handleTabChange(tab.id)}
-                      className={cn("flex items-center justify-center h-full px-medium border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
-                    >
-                      <Icon size={20} />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <DescriptionTooltipContent id={tab.id} />
-                  </TooltipContent>
-                </Tooltip>
+                <ChromeControlHint key={tab.id} id={tab.id}>
+                  <button
+                    data-slot="mobile-panel-tab-button"
+                    id={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn("flex items-center justify-center h-full px-medium border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                  >
+                    <Icon size={20} />
+                  </button>
+                </ChromeControlHint>
               );
             })}
           </div>
         )}
-        <Scrollable className="flex-1 min-h-0">
+        <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabPanel ?? (activeTabTree ? (
+            {activeTabTree ? (
               <TreeStateProvider>
                 <Tree
                   className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", activeTabTree.className)}
@@ -11133,10 +11757,10 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
                   selectionMode={activeTabTree.selectionMode}
                 />
               </TreeStateProvider>
-            ) : null)}
+            ) : null}
           </div>
         </Scrollable>
-      </div>
+      </PanelGhostRoot>
     </LevelProvider>
   );
 };
@@ -11157,7 +11781,7 @@ function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
     <div
       data-slot="toolbar-zone"
       className={cn(
-        "bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border border-element",
+        cn(glassToolbarClass, "flex h-[var(--toolbar-item-height)] shrink-0 items-stretch gap-[var(--toolbar-gap)] px-[var(--toolbar-padding-inline)] rounded-md shadow-sm overflow-hidden border border-element"),
         className,
       )}
       {...props}
@@ -11216,7 +11840,7 @@ export interface EngagementInput {
   placeholder?: string;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
-  /** @emoji 🔁 Restarts the last engagement when Space is pressed with an empty command (no active session). */
+  /** @emoji 🔁 Restarts the last finalized engagement when Space is pressed with an empty command. */
   onRepeatLast?: () => void;
   /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear command. */
   onAbort?: () => void;
@@ -11235,6 +11859,57 @@ export interface EngagementPossible {
   detail?: string;
   onSelect?: () => void;
 }
+
+/** @emoji 🔘 One discrete option on an engagement {@link EngagementRingControl}. */
+export interface EngagementRingOption {
+  id: string;
+  label: string;
+  disabled?: boolean;
+}
+
+/** @emoji 🎚 Engagement range slider for numeric values (height, distance, …). */
+export interface EngagementSliderControl {
+  kind: "slider";
+  id?: string;
+  label?: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  unit?: string;
+  disabled?: boolean;
+  onChange?: (value: number) => void;
+  onCommit?: (value: number) => void;
+}
+
+/** @emoji 🔢 Engagement stepper for numeric values without fixed upper bound. */
+export interface EngagementStepperControl {
+  kind: "stepper";
+  id?: string;
+  label?: string;
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  disabled?: boolean;
+  onChange?: (value: number) => void;
+  onCommit?: (value: number) => void;
+}
+
+/** @emoji 🧫 Engagement ring (radial dial) for angles or discrete option selection. */
+export interface EngagementRingControl {
+  kind: "ring";
+  id?: string;
+  label?: string;
+  value?: string;
+  options: readonly EngagementRingOption[];
+  disabled?: boolean;
+  onSelect?: (id: string) => void;
+}
+
+/** @emoji 🎛 Optional engagement UI control ({@link EngagementSliderControl} | {@link EngagementStepperControl} | {@link EngagementRingControl}). */
+export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl;
 
 /** @emoji 🏷 i18n keys for window command chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
@@ -11280,14 +11955,42 @@ export function engagementCommandTokenEquals(a: string, b: string): boolean {
   return normalizeEngagementCommandText(a).toLowerCase() === normalizeEngagementCommandText(b).toLowerCase();
 }
 
+function engagementPossibleRankScore(query: string, item: EngagementPossible): number {
+  const ql = normalizeEngagementCommandText(query).toLowerCase();
+  if (!ql) return -1;
+  const label = normalizeEngagementCommandText(item.label).toLowerCase();
+  const detail = (item.detail ?? "").toLowerCase();
+  const id = item.id.toLowerCase();
+  if (label.startsWith(ql)) return 3000 - label.length;
+  if (detail.startsWith(ql)) return 2000 - detail.length;
+  if (id.startsWith(ql)) return 1000 - id.length;
+  const haystack = `${label} ${detail} ${id}`;
+  if (haystack.includes(ql)) return 500;
+  return -1;
+}
+
+/** @emoji 🎯 Resolves a pointer event target to an element for engagement suggestion hit-testing. */
+function engagementSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Element | null {
+  const target = event.target;
+  if (target instanceof Element) return target;
+  if (target instanceof Text) return target.parentElement;
+  return null;
+}
+
+/** @emoji 🎯 True when a pointer event targets an engagement suggestion command row. */
+export function isEngagementSuggestionCommandTarget(event: Pick<PointerEvent, "target">): boolean {
+  return Boolean(engagementSuggestionPointerTarget(event)?.closest('[cmdk-item], [data-slot="command-item"]'));
+}
+
 /** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
 export function filterEngagementPossibles(query: string, items: readonly EngagementPossible[]): EngagementPossible[] {
   const trimmed = normalizeEngagementCommandText(query).toLowerCase();
   if (!trimmed) return [...items];
-  return items.filter((item) => {
-    const haystack = `${normalizeEngagementCommandText(item.label)} ${item.detail ?? ""} ${item.id}`.toLowerCase();
-    return haystack.includes(trimmed) || item.id.toLowerCase().startsWith(trimmed);
-  });
+  return items
+    .map((item) => ({ item, score: engagementPossibleRankScore(query, item) }))
+    .filter((row) => row.score >= 0)
+    .sort((a, b) => b.score - a.score)
+    .map((row) => row.item);
 }
 
 /** @emoji ⌨️ Inline completion segments for one {@link EngagementPossible} using label casing for the matched name prefix. */
@@ -11360,6 +12063,33 @@ export function engagementHighlightedLabel(label: string, query: string, detail?
   );
 }
 
+/** @emoji 🚫 React props that disable native browser affordances on editable UI controls. */
+export const uiFormControlBrowserDefaultProps = {
+  autoComplete: "off",
+  autoCorrect: "off",
+  autoCapitalize: "off",
+  spellCheck: false,
+  "data-1p-ignore": true,
+  "data-lpignore": "true",
+} as const satisfies Pick<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck" | "data-1p-ignore" | "data-lpignore"
+>;
+
+/** @emoji 🚫 Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
+export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {
+  if (element.dataset.uiBrowserDefaults === "true") return;
+  const kind = element instanceof HTMLInputElement ? (element.type || "text").toLowerCase() : "textarea";
+  if (kind === "file" || kind === "checkbox" || kind === "radio" || kind === "hidden" || kind === "range" || kind === "color") return;
+  element.autocomplete = "off";
+  element.spellcheck = false;
+  element.autocapitalize = "off";
+  element.setAttribute("autocorrect", "off");
+  element.setAttribute("data-1p-ignore", "");
+  element.setAttribute("data-lpignore", "true");
+  element.dataset.uiBrowserDefaults = "true";
+}
+
 /** @emoji ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
 export function isUiTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
@@ -11375,7 +12105,7 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   return Boolean(t.closest('[data-slot="engagement"] input, [data-slot="engagement"] textarea'));
 }
 
-/** @emoji 🚫 Capture-phase listeners: native context menu off everywhere; Tab focus traversal off outside {@link isUiTypingTarget}. */
+/** @emoji 🚫 Capture-phase listeners: native context menu off everywhere; Tab focus traversal off outside {@link isUiTypingTarget}; form-control browser defaults on focus. */
 export function installElementsSurfaceBrowserDefaultSuppression(bindings: ReturnType<typeof createDOMEventBinding>): void {
   if (typeof document === "undefined") return;
   const onContextMenu = (event: Event): void => {
@@ -11388,8 +12118,15 @@ export function installElementsSurfaceBrowserDefaultSuppression(bindings: Return
     if (active instanceof HTMLElement && isUiTypingTarget(active)) return;
     event.preventDefault();
   };
+  const onFocusIn = (event: FocusEvent): void => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+      applyUiFormControlBrowserDefaults(target);
+    }
+  };
   bindings.listen(document, "contextmenu", onContextMenu as EventListener, true);
   bindings.listen(document, "keydown", onKeyDown as EventListener, true);
+  bindings.listen(document, "focusin", onFocusIn as EventListener, true);
 }
 
 /** @emoji ⌨️ True when the event target is already the active window engagement command field. */
@@ -11429,12 +12166,13 @@ export function focusActiveEngagementInput(): boolean {
   return true;
 }
 
-/** @emoji 👁 True when the window engagement chrome should render (non-empty command, hover, click, or focus in the engagement zone). */
+/** @emoji 👁 True when the window engagement chrome should render (active session, non-empty command, hover, click, or focus in the engagement zone). */
 export function windowEngagementChromeVisible(
   engagement: EngagementSpec | undefined,
   zone: { readonly hovered: boolean; readonly activated: boolean; readonly focused: boolean },
 ): boolean {
   if (!engagement) return false;
+  if (engagement.sessionActive) return true;
   if (engagement.input?.value?.trim()) return true;
   return zone.hovered || zone.activated || zone.focused;
 }
@@ -11447,6 +12185,7 @@ export function shouldDismissEmptyWindowEngagement(
   zone: { readonly commandActive: boolean },
 ): boolean {
   if (zone.commandActive) return false;
+  if (engagement?.sessionActive) return false;
   if (engagement?.input?.value?.trim()) return false;
   if (relatedTarget instanceof Node && zoneRoot?.contains(relatedTarget)) return false;
   if (relatedTarget instanceof Element && relatedTarget.closest('[data-slot="engagement-autocomplete"]')) return false;
@@ -11454,20 +12193,36 @@ export function shouldDismissEmptyWindowEngagement(
   return true;
 }
 
-/** @emoji 🔁 Routes Space to {@link EngagementInput.onRepeatLast} when the command line is empty and focus is outside the engagement field. */
+/** @emoji ␣ Applies Space on an engagement command line (step submit vs repeat-last when idle). */
+export function applyEngagementSpaceAction(input: EngagementInput, draft: string, sessionActive: boolean): boolean {
+  if (input.disabled) return false;
+  if (!draft.trim()) {
+    if (sessionActive) {
+      if (!input.onSubmit) return false;
+      input.onSubmit(draft);
+      return true;
+    }
+    if (!input.onRepeatLast) return false;
+    input.onRepeatLast();
+    return true;
+  }
+  if (!input.onSubmit) return false;
+  input.onSubmit(draft);
+  return true;
+}
+
+/** @emoji 🔁 Routes Space outside the engagement field: idle empty → {@link EngagementInput.onRepeatLast}; session or typed draft → {@link EngagementInput.onSubmit}. */
 export function routeWindowEngagementSpace(
   engagement: EngagementSpec | undefined,
   event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">,
 ): boolean {
   const input = engagement?.input;
-  if (!input?.onRepeatLast || input.disabled || event.defaultPrevented || event.isComposing) return false;
+  if (!input || event.defaultPrevented || event.isComposing) return false;
   if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
   if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
   const draft = normalizeEngagementCommandText(input.value ?? field?.value ?? "");
-  if (draft.trim()) return false;
-  input.onRepeatLast();
-  return true;
+  return applyEngagementSpaceAction(input, draft, Boolean(engagement?.sessionActive));
 }
 
 /** @emoji ⌨️ Routes a printable key to the active window engagement command when focus is elsewhere in the window. */
@@ -11493,7 +12248,7 @@ export function routeWindowEngagementEscape(
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
   const onAbort = engagement?.input?.onAbort;
   if (!onAbort) return false;
-  if (!zone.chromeVisible && !zone.commandActive) return false;
+  if (!engagement?.sessionActive && !zone.chromeVisible && !zone.commandActive) return false;
   if (isUiTypingTarget(event.target) && !isEngagementCommandTypingTarget(event.target)) return false;
   const focused = document.activeElement;
   if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return false;
@@ -11503,8 +12258,12 @@ export function routeWindowEngagementEscape(
 
 /** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
 export interface EngagementSpec {
+  /** @emoji 🎯 Ongoing engagement: chrome stays visible; {@link options} are step transitions; command input accepts step values. */
+  sessionActive?: boolean;
   options?: EngagementOption[];
   input?: EngagementInput;
+  /** @emoji 🎛 Optional slider, stepper, or ring control for the active step. */
+  control?: EngagementControl;
   status?: EngagementStatus[];
   possibleEngagements?: EngagementPossible[];
 }
@@ -11551,11 +12310,91 @@ export interface EngagementProps extends EngagementSpec {
   active?: boolean;
 }
 
+function engagementControlLabel(control: EngagementControl): string | undefined {
+  if (!control.label) return undefined;
+  if (control.kind === "ring" || !control.unit) return control.label;
+  return `${control.label} (${control.unit})`;
+}
+
+/** @emoji 🎛 Renders one engagement {@link EngagementControl} using Slider, Stepper, or Ring. */
+function EngagementControlView({ control }: { readonly control: EngagementControl }): React.ReactElement | null {
+  const label = engagementControlLabel(control);
+  const lastNumericRef = reactHostPort.useRef(control.kind !== "ring" ? control.value : 0);
+  reactHostPort.useEffect(() => {
+    if (control.kind !== "ring") lastNumericRef.current = control.value;
+  }, [control]);
+  if (control.kind === "slider") {
+    return (
+      <div data-slot="engagement-control" data-control-kind="slider" className="flex min-w-0 flex-col gap-half px-half">
+        {label ? <span className="text-muted-foreground text-xs">{label}</span> : null}
+        <Slider
+          id={control.id}
+          value={[control.value]}
+          min={control.min}
+          max={control.max}
+          step={control.step}
+          disabled={control.disabled}
+          onValueChange={(values) => {
+            const next = values[0];
+            if (next === undefined) return;
+            lastNumericRef.current = next;
+            control.onChange?.(next);
+          }}
+          onPointerUp={() => control.onCommit?.(lastNumericRef.current)}
+        />
+      </div>
+    );
+  }
+  if (control.kind === "stepper") {
+    return (
+      <div data-slot="engagement-control" data-control-kind="stepper" className="flex min-w-0 flex-col gap-half px-half">
+        {label ? <span className="text-muted-foreground text-xs">{label}</span> : null}
+        <Stepper
+          id={control.id}
+          value={control.value}
+          min={control.min}
+          max={control.max}
+          step={control.step}
+          onChange={(value) => {
+            lastNumericRef.current = value;
+            control.onChange?.(value);
+          }}
+          onPointerUp={() => control.onCommit?.(lastNumericRef.current)}
+        />
+      </div>
+    );
+  }
+  if (!control.options.length) return null;
+  const orbs = control.options.map((option, index) => ({
+    id: option.id,
+    t: control.options.length > 1 ? index / control.options.length : 0,
+    disabled: option.disabled || control.disabled,
+    selected: control.value === option.id,
+  }));
+  return (
+    <div data-slot="engagement-control" data-control-kind="ring" className="flex min-w-0 flex-col items-center gap-half px-half">
+      {label ? <span className="text-muted-foreground text-xs">{label}</span> : null}
+      <Ring
+        id={control.id}
+        orbs={orbs}
+        onOrbSelect={(orbId) => control.onSelect?.(orbId)}
+      />
+    </div>
+  );
+}
+
 /** @emoji 💬 Top-aligned engagement: command input with optional right chevron for possibles; status and option buttons below. */
-const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibleEngagements, className = "", active = false }) => {
+const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, input, control, status, possibleEngagements, className = "", active = false }) => {
+  const commandPlaceholderLabel = useLabel(UI_ENGAGEMENT.command);
+  const commandActivePlaceholderLabel = useLabel(UI_ENGAGEMENT.commandActive);
+  const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.commands);
   const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
   const isControlledInput = !!input?.onChange;
   const draft = normalizeEngagementCommandText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
+  const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;
+  const secondaryStatus = sessionActive ? status?.filter((row) => row.id !== "engagement-step") : status;
+  const commandPlaceholder =
+    input?.placeholder ?? (sessionActive ? commandActivePlaceholderLabel || ENGAGEMENT_USER.commandPlaceholderActive : commandPlaceholderLabel || ENGAGEMENT_USER.commandPlaceholder);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -11574,6 +12413,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
 
   const hasOptions = !!options?.length;
   const hasInput = !!input;
+  const hasControl = !!control;
   const hasStatus = !!status?.length;
   const hasPossibles = !!possibleEngagements?.length;
   const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
@@ -11618,7 +12458,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
     field?.focus({ preventScroll: true });
   }, [active, hasInput, input?.disabled, input?.id]);
 
-  if (!hasOptions && !hasInput && !hasStatus) return null;
+  if (!hasOptions && !hasInput && !hasControl && !hasStatus) return null;
 
   return (
     <LevelProvider level="overlay">
@@ -11626,9 +12466,22 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
         ref={engagementRef}
         data-slot="engagement"
         data-active={active ? "true" : undefined}
+        data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-[min(100%,28rem)] flex-col gap-half", className)}
+        className={cn(
+          "pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half",
+          sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm",
+          className,
+        )}
       >
+      {primaryStepStatus ? (
+        <div
+          data-slot="engagement-step-heading"
+          className="text-foreground px-half text-sm font-medium leading-tight"
+        >
+          {primaryStepStatus.content}
+        </div>
+      ) : null}
       {hasInput ? (
         <Popover
           open={showPossiblesList}
@@ -11684,11 +12537,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                     if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
                       event.preventDefault();
                       if (showPossiblesList && activatePossible()) return;
-                      if (!draft.trim() && input!.onRepeatLast) {
-                        input!.onRepeatLast();
-                        return;
-                      }
-                      input!.onSubmit?.(draft);
+                      applyEngagementSpaceAction(input!, draft, sessionActive);
                       return;
                     }
                     if (event.key === "Enter") {
@@ -11697,9 +12546,9 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                       input!.onSubmit?.(draft);
                     }
                   }}
-                  placeholder={input!.placeholder ?? ENGAGEMENT_USER.commandPlaceholder}
+                  placeholder={commandPlaceholder}
                   disabled={input!.disabled}
-                  aria-label={ENGAGEMENT_USER.commandPlaceholder}
+                  aria-label={commandPlaceholder}
                 />
                 {inlineCompletion ? (
                   <div
@@ -11735,7 +12584,10 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
               className="w-[min(100vw-1rem,28rem)] p-0"
               align="end"
               onOpenAutoFocus={(event) => event.preventDefault()}
-              onPointerDown={(event) => event.preventDefault()}
+              onPointerDown={(event) => {
+                if (event.target instanceof HTMLElement && event.target.closest('[cmdk-item], [data-slot="command-item"]')) return;
+                event.preventDefault();
+              }}
             >
               <Command shouldFilter={false}>
                 <CommandList>
@@ -11747,6 +12599,7 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
                           value={item.id}
                           data-active={index === activePossibleIndex ? "true" : undefined}
                           className={cn(index === activePossibleIndex && "bg-active-base")}
+                          onPointerDown={(event) => event.stopPropagation()}
                           onSelect={() => selectPossible(item)}
                         >
                           <span className="truncate">{engagementHighlightedLabel(item.label, draft, item.detail)}</span>
@@ -11763,9 +12616,10 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
           ) : null}
         </Popover>
       ) : null}
-      {hasStatus ? (
+      {hasControl ? <EngagementControlView control={control!} /> : null}
+      {secondaryStatus?.length ? (
         <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
-          {status!.map((item) => (
+          {secondaryStatus.map((item) => (
             <span key={item.id} data-slot="engagement-status-item">
               {item.content}
             </span>
@@ -11773,7 +12627,13 @@ const Engagement: React.FC<EngagementProps> = ({ options, input, status, possibl
         </div>
       ) : null}
       {hasOptions ? (
-        <div data-slot="engagement-options" className="flex flex-wrap items-center justify-center gap-half" role="group" aria-label={ENGAGEMENT_USER.commandsAria}>
+        <div
+          data-slot="engagement-options"
+          data-step-options={sessionActive ? "true" : undefined}
+          className="flex flex-wrap items-center justify-center gap-half"
+          role="group"
+          aria-label={sessionActive ? stepOptionsAriaLabel || ENGAGEMENT_USER.commandsAria : ENGAGEMENT_USER.commandsAria}
+        >
           <ButtonGroup id={UI_ENGAGEMENT.commands}>
             {options!.map((option) => {
               const commandLabel = normalizeEngagementCommandText(option.label);
@@ -11826,6 +12686,8 @@ export interface WindowConfig {
   engagement?: EngagementSpec;
   active?: boolean;
   onActivate?: () => void;
+  /** @emoji 📐 When true, the window body grows to fill its dock pane (canvas hosts). */
+  fill?: boolean;
 }
 
 /**
@@ -11854,9 +12716,43 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
 /**
  * Window holds the data fields for a Window record.
  **/
-const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures, engagement, active = false, onActivate }) => {
+function useWindowMeasuresReservePx(enabled: boolean, measures: React.ReactNode, bodyRef: React.RefObject<HTMLDivElement | null>, measuresOverlayRef: React.RefObject<HTMLDivElement | null>) {
+  const [measuresReservePx, setMeasuresReservePx] = reactHostPort.useState(0);
+  reactHostPort.useLayoutEffect(() => {
+    if (!enabled || !measures) {
+      setMeasuresReservePx(0);
+      return;
+    }
+    const update = () => {
+      const rail = measuresOverlayRef.current;
+      const width = rail ? Math.ceil(rail.getBoundingClientRect().width || rail.offsetWidth) : 0;
+      setMeasuresReservePx((prev) => (prev === width ? prev : width));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    if (bodyRef.current) observer.observe(bodyRef.current);
+    if (measuresOverlayRef.current) observer.observe(measuresOverlayRef.current);
+    return () => observer.disconnect();
+  }, [bodyRef, enabled, measures, measuresOverlayRef]);
+  return measuresReservePx;
+}
+
+/** @emoji 📐 Inline width for engagement zone: up to 28rem, minus measured options rail when present. */
+export function windowEngagementZoneMaxWidthStyle(measuresReservePx: number, hasMeasures: boolean): React.CSSProperties {
+  if (!hasMeasures) {
+    return { width: "min(28rem, 100%)" };
+  }
+  const reservePx = measuresReservePx > 0 ? measuresReservePx + 4 : Math.round(14.5 * 16);
+  return { width: `min(28rem, calc(100% - ${reservePx}px))` };
+}
+
+const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, measures, engagement, active = false, onActivate, fill = false }) => {
   const bgClass = "bg-window";
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
+  const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementDraftRef = reactHostPort.useRef("");
   const [engagementZoneHovered, setEngagementZoneHovered] = reactHostPort.useState(false);
@@ -11875,6 +12771,32 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
     setEngagementActivated(true);
     queueMicrotask(() => focusActiveEngagementInput());
   }, [engagement?.input?.value]);
+
+  reactHostPort.useEffect(() => {
+    if (!active || !engagement?.sessionActive) return;
+    setEngagementActivated(true);
+  }, [active, engagement?.sessionActive]);
+
+  reactHostPort.useEffect(() => {
+    if (!active || !engagement?.input?.onAbort) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        routeWindowEngagementEscape(engagement, event, {
+          chromeVisible: windowEngagementChromeVisible(engagement, {
+            hovered: engagementZoneHovered,
+            activated: engagementActivated,
+            focused: engagementZoneFocused,
+          }),
+          commandActive: engagementCommandActive,
+        })
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [active, engagement, engagementActivated, engagementCommandActive, engagementZoneFocused, engagementZoneHovered]);
 
   reactHostPort.useEffect(() => {
     if (!active) {
@@ -11900,7 +12822,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
   const hasControls = showControls || controls || onOpenInNewWindow || onMaximize || onMinimize || onClose;
 
   const controlsContent = hasControls && (
-    <div className="flex items-stretch gap-single">
+    <div data-dim className="flex items-stretch gap-single">
       {controls}
       {(showControls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
         <ActionGroup id={`${id}-window-controls`}>
@@ -11926,36 +12848,47 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   return (
     <LevelProvider level="window">
-      <div
+      <GhostRegionShell
         ref={windowRef}
         data-slot="window"
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
-        className={cn(`relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden ${bgClass}`, className)}
+        className={cn(
+          "relative flex w-full min-w-0 flex-col overflow-hidden",
+          fill ? "h-full min-h-0" : "h-auto max-h-full self-start",
+          bgClass,
+          className,
+        )}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref={windowBodyRef}
+          className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}
+        >
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {measures ? (
-            <div data-slot="window-measures-overlay" className={cn(windowMeasuresOverlayClass, windowMeasuresRailWidthClass)}>
-              <div data-slot="window-measures-stack" className={windowMeasuresStackClass}>
-                {measures}
+            <GlassTierProvider tier="windowOptions">
+              <div ref={measuresOverlayRef} data-slot="window-measures-overlay" className={cn(windowMeasuresOverlayClass, windowMeasuresRailWidthClass)}>
+                <div data-dim data-slot="window-measures-stack" className={windowMeasuresStackClass}>
+                  {measures}
+                </div>
               </div>
-            </div>
+            </GlassTierProvider>
           ) : null}
           {engagement && active ? (
             <div
               data-slot="window-engagement-overlay"
               data-expanded={showEngagementChrome ? "true" : undefined}
-              className="pointer-events-none absolute left-0 top-0 z-panel flex max-w-full flex-col items-start justify-start pl-1 pt-1"
+              className="pointer-events-none absolute inset-x-0 top-0 z-panel flex max-w-full flex-col items-start justify-start pl-1 pt-1"
             >
               <div
                 ref={engagementZoneRef}
                 data-slot="window-engagement-hover-zone"
+                style={engagementZoneSizeStyle}
                 className={cn(
-                  "pointer-events-auto flex w-[min(100%,28rem)] max-w-[calc(100%-5rem)] min-w-0 select-none flex-col items-stretch",
-                  !showEngagementChrome && "h-large",
+                  "pointer-events-auto flex w-full min-w-0 select-none flex-col items-stretch",
+                  !showEngagementChrome && "h-large min-w-[6rem]",
                 )}
                 onPointerEnter={() => setEngagementZoneHovered(true)}
                 onPointerLeave={(event) => dismissEngagementIfEmpty(event.relatedTarget)}
@@ -11977,7 +12910,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
             </div>
           ) : null}
         </div>
-      </div>
+      </GhostRegionShell>
     </LevelProvider>
   );
 };
@@ -13127,6 +14060,566 @@ export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; he
   };
 };
 
+// #region 🔖UnifiedGumball
+/** @emoji 🎛 World-space pose snapshot for gumball drag commits. */
+export type GumballPose = {
+  readonly position: readonly [number, number, number];
+  readonly quaternion: readonly [number, number, number, number];
+  readonly scale: readonly [number, number, number];
+};
+
+/** @emoji 🎛 Per-handle drag kinds for the unified gumball. */
+export type GumballHandleKind =
+  | "moveX"
+  | "moveY"
+  | "moveZ"
+  | "moveXY"
+  | "moveYZ"
+  | "moveXZ"
+  | "rotateX"
+  | "rotateY"
+  | "rotateZ"
+  | "scaleX"
+  | "scaleY"
+  | "scaleZ"
+  | "scaleUniform";
+
+/** @emoji 🎛 Visibility and snap settings for {@link UnifiedGumball}. */
+export interface GumballConfig {
+  readonly moveAxes?: boolean;
+  readonly movePlanes?: boolean;
+  readonly rotate?: boolean;
+  readonly scaleAxes?: boolean;
+  readonly scaleUniform?: boolean;
+  readonly translationSnap?: number;
+  readonly rotationSnap?: number;
+  readonly scaleSnap?: number;
+  readonly size?: number;
+}
+
+/** @emoji 🎛 Default unified gumball: every handle group visible. */
+export const DEFAULT_GUMBALL_CONFIG: Readonly<Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scaleUniform">>> = {
+  moveAxes: true,
+  movePlanes: true,
+  rotate: true,
+  scaleAxes: true,
+  scaleUniform: true,
+};
+
+type GumballVec3 = readonly [number, number, number];
+
+const gumballV3 = (x: number, y: number, z: number): GumballVec3 => [x, y, z];
+const gumballDot = (a: GumballVec3, b: GumballVec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const gumballSub = (a: GumballVec3, b: GumballVec3): GumballVec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const gumballAdd = (a: GumballVec3, b: GumballVec3): GumballVec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const gumballScale = (a: GumballVec3, s: number): GumballVec3 => [a[0] * s, a[1] * s, a[2] * s];
+const gumballCross = (a: GumballVec3, b: GumballVec3): GumballVec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const gumballLen = (a: GumballVec3): number => Math.hypot(a[0], a[1], a[2]);
+const gumballNorm = (a: GumballVec3): GumballVec3 => {
+  const l = gumballLen(a) || 1;
+  return [a[0] / l, a[1] / l, a[2] / l];
+};
+
+/** @emoji 🎛 Resolves partial {@link GumballConfig} with defaults. */
+export function resolveGumballConfig(config?: GumballConfig): Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scaleUniform">> & GumballConfig {
+  return {
+    ...DEFAULT_GUMBALL_CONFIG,
+    ...config,
+    moveAxes: config?.moveAxes !== false,
+    movePlanes: config?.movePlanes !== false,
+    rotate: config?.rotate !== false,
+    scaleAxes: config?.scaleAxes !== false,
+    scaleUniform: config?.scaleUniform !== false,
+  };
+}
+
+/** @emoji 🎛 True when at least one gumball handle group is enabled. */
+export function gumballConfigVisible(config?: GumballConfig): boolean {
+  const resolved = resolveGumballConfig(config);
+  return resolved.moveAxes || resolved.movePlanes || resolved.rotate || resolved.scaleAxes || resolved.scaleUniform;
+}
+
+/** @emoji 🎛 Maps a handle drag to translate / rotate / scale for host commit payloads. */
+export function gumballHandleKindToTransformMode(kind: GumballHandleKind): "translate" | "rotate" | "scale" {
+  if (kind.startsWith("move")) return "translate";
+  if (kind.startsWith("rotate")) return "rotate";
+  return "scale";
+}
+
+/** @emoji 🎛 Reads pose from a three.js object. */
+export function gumballPoseFromObject3D(object: THREE.Object3D): GumballPose {
+  return {
+    position: [object.position.x, object.position.y, object.position.z],
+    quaternion: [object.quaternion.x, object.quaternion.y, object.quaternion.z, object.quaternion.w],
+    scale: [object.scale.x, object.scale.y, object.scale.z],
+  };
+}
+
+/** @emoji 🎛 Writes pose to a three.js object. */
+export function applyGumballPose(object: THREE.Object3D, pose: GumballPose): void {
+  object.position.set(pose.position[0], pose.position[1], pose.position[2]);
+  object.quaternion.set(pose.quaternion[0], pose.quaternion[1], pose.quaternion[2], pose.quaternion[3]);
+  object.scale.set(pose.scale[0], pose.scale[1], pose.scale[2]);
+}
+
+/** @emoji 🎛 Closest-axis parameter for a world ray (axis translate drag). */
+export function gumballRayAxisParameter(rayOrigin: GumballVec3, rayDir: GumballVec3, axisPoint: GumballVec3, axisDir: GumballVec3): number {
+  const w0 = gumballSub(rayOrigin, axisPoint);
+  const a = gumballDot(rayDir, rayDir);
+  const b = gumballDot(rayDir, axisDir);
+  const c = gumballDot(axisDir, axisDir);
+  const d = gumballDot(rayDir, w0);
+  const e = gumballDot(axisDir, w0);
+  const denom = a * c - b * b;
+  if (Math.abs(denom) < 1e-10) return 0;
+  return (b * d - a * e) / denom;
+}
+
+/** @emoji 🎛 Ray-plane intersection for plane translate drags. */
+export function gumballRayPlanePoint(rayOrigin: GumballVec3, rayDir: GumballVec3, planePoint: GumballVec3, planeNormal: GumballVec3): GumballVec3 | null {
+  const denom = gumballDot(planeNormal, rayDir);
+  if (Math.abs(denom) < 1e-10) return null;
+  const t = gumballDot(planeNormal, gumballSub(planePoint, rayOrigin)) / denom;
+  return gumballAdd(rayOrigin, gumballScale(rayDir, t));
+}
+
+/** @emoji 🎛 Signed rotation angle between two vectors around an axis. */
+export function gumballAxisRotateAngle(startVec: GumballVec3, currentVec: GumballVec3, axisDir: GumballVec3): number {
+  const axis = gumballNorm(axisDir);
+  const project = (v: GumballVec3): GumballVec3 => gumballSub(v, gumballScale(axis, gumballDot(v, axis)));
+  const a = gumballNorm(project(startVec));
+  const b = gumballNorm(project(currentVec));
+  let angle = Math.acos(Math.max(-1, Math.min(1, gumballDot(a, b))));
+  if (gumballDot(gumballCross(a, b), axis) < 0) angle = -angle;
+  return angle;
+}
+
+/** @emoji 🎛 Scale factor from projected distances along an axis. */
+export function gumballAxisScaleFactor(startProj: number, currentProj: number): number {
+  if (Math.abs(startProj) < 1e-10) return 1;
+  return currentProj / startProj;
+}
+
+/** @emoji 🎛 Snaps a scalar when snap step is positive. */
+export function gumballSnapScalar(value: number, snap: number | undefined): number {
+  if (!snap || snap <= 0) return value;
+  return Math.round(value / snap) * snap;
+}
+
+const GUMBALL_AXIS_COLORS = { x: "#ef4444", y: "#22c55e", z: "#3b82f6" } as const;
+const GUMBALL_HANDLE_LENGTH = 0.85;
+const GUMBALL_ARROW_RADIUS = 0.035;
+const GUMBALL_ARROW_HEAD = 0.14;
+const GUMBALL_PLANE_OFFSET = 0.28;
+const GUMBALL_PLANE_SIZE = 0.18;
+const GUMBALL_RING_RADIUS = 1.05;
+const GUMBALL_RING_TUBE = 0.018;
+const GUMBALL_SCALE_OFFSET = 1.05;
+const GUMBALL_SCALE_BOX = 0.07;
+const GUMBALL_UNIFORM_BOX = 0.1;
+
+const GUMBALL_AXIS_BY_KIND: Readonly<Record<GumballHandleKind, GumballVec3 | null>> = {
+  moveX: gumballV3(1, 0, 0),
+  moveY: gumballV3(0, 1, 0),
+  moveZ: gumballV3(0, 0, 1),
+  moveXY: gumballV3(0, 0, 1),
+  moveYZ: gumballV3(1, 0, 0),
+  moveXZ: gumballV3(0, 1, 0),
+  rotateX: gumballV3(1, 0, 0),
+  rotateY: gumballV3(0, 1, 0),
+  rotateZ: gumballV3(0, 0, 1),
+  scaleX: gumballV3(1, 0, 0),
+  scaleY: gumballV3(0, 1, 0),
+  scaleZ: gumballV3(0, 0, 1),
+  scaleUniform: null,
+};
+
+function gumballWorldAxis(localAxis: GumballVec3, quat: THREE.Quaternion): GumballVec3 {
+  const v = new THREE.Vector3(localAxis[0], localAxis[1], localAxis[2]);
+  v.applyQuaternion(quat);
+  return [v.x, v.y, v.z];
+}
+
+function gumballRayFromNdc(ndcX: number, ndcY: number, camera: THREE.Camera): { origin: GumballVec3; dir: GumballVec3 } {
+  const origin = new THREE.Vector3();
+  const point = new THREE.Vector3(ndcX, ndcY, 0.5).unproject(camera);
+  if (camera instanceof THREE.OrthographicCamera) {
+    origin.copy(point);
+    const far = new THREE.Vector3(ndcX, ndcY, 1).unproject(camera);
+    const dir = far.sub(origin).normalize();
+    return { origin: [origin.x, origin.y, origin.z], dir: [dir.x, dir.y, dir.z] };
+  }
+  origin.copy(camera.position);
+  const dir = point.sub(origin).normalize();
+  return { origin: [origin.x, origin.y, origin.z], dir: [dir.x, dir.y, dir.z] };
+}
+
+function gumballNdcFromPointer(clientX: number, clientY: number, rect: DOMRect): { x: number; y: number } {
+  return {
+    x: ((clientX - rect.left) / rect.width) * 2 - 1,
+    y: -(((clientY - rect.top) / rect.height) * 2 - 1),
+  };
+}
+
+interface GumballDragState {
+  readonly kind: GumballHandleKind;
+  readonly before: GumballPose;
+  readonly startAxisParam: number;
+  readonly startPlanePoint: GumballVec3;
+  readonly startRotateVec: GumballVec3;
+  readonly startScaleProj: number;
+  readonly startUniformScale: GumballVec3;
+}
+
+/** @emoji 🎛 Props for {@link UnifiedGumball}. */
+export interface UnifiedGumballProps {
+  readonly target: THREE.Object3D;
+  readonly config?: GumballConfig;
+  readonly onDragStart?: (kind: GumballHandleKind, pose: GumballPose) => void;
+  readonly onDrag?: (kind: GumballHandleKind, pose: GumballPose) => void;
+  readonly onDragEnd?: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
+  readonly onDraggingChanged?: (active: boolean) => void;
+}
+
+function GumballHandleMesh(props: {
+  readonly kind: GumballHandleKind;
+  readonly color: string;
+  readonly hovered: boolean;
+  readonly onPointerDown: (kind: GumballHandleKind, event: ThreeEvent<PointerEvent>) => void;
+  readonly onPointerOver: (kind: GumballHandleKind) => void;
+  readonly onPointerOut: () => void;
+  readonly children: React.ReactNode;
+}): React.ReactElement {
+  return (
+    <mesh
+      userData={{ gumballHandleKind: props.kind }}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+        props.onPointerDown(props.kind, event);
+      }}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        props.onPointerOver(props.kind);
+      }}
+      onPointerOut={(event) => {
+        event.stopPropagation();
+        props.onPointerOut();
+      }}
+    >
+      {props.children}
+      <meshBasicMaterial color={props.color} transparent opacity={props.hovered ? 1 : 0.85} depthTest={false} depthWrite={false} />
+    </mesh>
+  );
+}
+
+function GumballHandles(props: {
+  readonly config: ReturnType<typeof resolveGumballConfig>;
+  readonly hovered: GumballHandleKind | null;
+  readonly onPointerDown: (kind: GumballHandleKind, event: ThreeEvent<PointerEvent>) => void;
+  readonly onPointerOver: (kind: GumballHandleKind) => void;
+  readonly onPointerOut: () => void;
+}): React.ReactElement {
+  const handleProps = (kind: GumballHandleKind, color: string, children: React.ReactNode) => (
+    <GumballHandleMesh kind={kind} color={color} hovered={props.hovered === kind} onPointerDown={props.onPointerDown} onPointerOver={props.onPointerOver} onPointerOut={props.onPointerOut}>
+      {children}
+    </GumballHandleMesh>
+  );
+  return (
+    <group renderOrder={999}>
+      {props.config.moveAxes ? (
+        <>
+          {handleProps(
+            "moveX",
+            GUMBALL_AXIS_COLORS.x,
+            <>
+              <mesh rotation={[0, 0, -Math.PI / 2]}>
+                <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
+              </mesh>
+              <mesh position={[GUMBALL_HANDLE_LENGTH / 2 + GUMBALL_ARROW_HEAD / 2, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+                <coneGeometry args={[GUMBALL_ARROW_RADIUS * 2.2, GUMBALL_ARROW_HEAD, 8]} />
+              </mesh>
+            </>,
+          )}
+          {handleProps(
+            "moveY",
+            GUMBALL_AXIS_COLORS.y,
+            <>
+              <mesh>
+                <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
+              </mesh>
+              <mesh position={[0, GUMBALL_HANDLE_LENGTH / 2 + GUMBALL_ARROW_HEAD / 2, 0]}>
+                <coneGeometry args={[GUMBALL_ARROW_RADIUS * 2.2, GUMBALL_ARROW_HEAD, 8]} />
+              </mesh>
+            </>,
+          )}
+          {handleProps(
+            "moveZ",
+            GUMBALL_AXIS_COLORS.z,
+            <>
+              <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
+              </mesh>
+              <mesh position={[0, 0, GUMBALL_HANDLE_LENGTH / 2 + GUMBALL_ARROW_HEAD / 2]} rotation={[Math.PI / 2, 0, 0]}>
+                <coneGeometry args={[GUMBALL_ARROW_RADIUS * 2.2, GUMBALL_ARROW_HEAD, 8]} />
+              </mesh>
+            </>,
+          )}
+        </>
+      ) : null}
+      {props.config.movePlanes ? (
+        <>
+          {handleProps(
+            "moveXY",
+            "#94a3b8",
+            <mesh position={[GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET, 0]}>
+              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+            </mesh>,
+          )}
+          {handleProps(
+            "moveYZ",
+            "#94a3b8",
+            <mesh position={[0, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET]} rotation={[0, Math.PI / 2, 0]}>
+              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+            </mesh>,
+          )}
+          {handleProps(
+            "moveXZ",
+            "#94a3b8",
+            <mesh position={[GUMBALL_PLANE_OFFSET, 0, GUMBALL_PLANE_OFFSET]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+            </mesh>,
+          )}
+        </>
+      ) : null}
+      {props.config.rotate ? (
+        <>
+          {handleProps(
+            "rotateX",
+            GUMBALL_AXIS_COLORS.x,
+            <mesh rotation={[0, Math.PI / 2, 0]}>
+              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+            </mesh>,
+          )}
+          {handleProps(
+            "rotateY",
+            GUMBALL_AXIS_COLORS.y,
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+            </mesh>,
+          )}
+          {handleProps(
+            "rotateZ",
+            GUMBALL_AXIS_COLORS.z,
+            <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />,
+          )}
+        </>
+      ) : null}
+      {props.config.scaleAxes ? (
+        <>
+          {handleProps(
+            "scaleX",
+            GUMBALL_AXIS_COLORS.x,
+            <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]}>
+              <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
+            </mesh>,
+          )}
+          {handleProps(
+            "scaleY",
+            GUMBALL_AXIS_COLORS.y,
+            <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]}>
+              <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
+            </mesh>,
+          )}
+          {handleProps(
+            "scaleZ",
+            GUMBALL_AXIS_COLORS.z,
+            <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]}>
+              <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
+            </mesh>,
+          )}
+        </>
+      ) : null}
+      {props.config.scaleUniform
+        ? handleProps(
+            "scaleUniform",
+            "#f8fafc",
+            <mesh>
+              <boxGeometry args={[GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX]} />
+            </mesh>,
+          )
+        : null}
+    </group>
+  );
+}
+
+/** @emoji 🎛 Rhino-style unified move / rotate / scale gumball for R3F scenes. */
+export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement | null {
+  const config = reactHostPort.useMemo(() => resolveGumballConfig(props.config), [props.config]);
+  const groupRef = reactHostPort.useRef<THREE.Group>(null);
+  const dragRef = reactHostPort.useRef<GumballDragState | null>(null);
+  const [hovered, setHovered] = reactHostPort.useState<GumballHandleKind | null>(null);
+  const scene = useThree((state) => state.scene);
+  const camera = useThree((state) => state.camera);
+  const gl = useThree((state) => state.gl);
+  const controls = useThree((state) => state.controls as { enabled?: boolean } | null);
+
+  useFrame(() => {
+    const group = groupRef.current;
+    const target = props.target;
+    if (!group || !target) return;
+    target.updateMatrixWorld(true);
+    target.getWorldPosition(group.position);
+    target.getWorldQuaternion(group.quaternion);
+    const dist = camera.position.distanceTo(group.position);
+    const scale = (dist * (config.size ?? 1)) / 8;
+    group.scale.setScalar(Math.max(scale, 1e-4));
+  });
+
+  const applyDrag = reactHostPort.useCallback(
+    (state: GumballDragState, ndcX: number, ndcY: number) => {
+      const target = props.target;
+      const ray = gumballRayFromNdc(ndcX, ndcY, camera);
+      const pivot = gumballV3(state.before.position[0], state.before.position[1], state.before.position[2]);
+      const quat = new THREE.Quaternion(state.before.quaternion[0], state.before.quaternion[1], state.before.quaternion[2], state.before.quaternion[3]);
+      const kind = state.kind;
+      if (kind === "moveX" || kind === "moveY" || kind === "moveZ") {
+        const localAxis = GUMBALL_AXIS_BY_KIND[kind]!;
+        const axisDir = gumballWorldAxis(localAxis, quat);
+        const param = gumballRayAxisParameter(ray.origin, ray.dir, pivot, axisDir);
+        const delta = gumballSnapScalar(param - state.startAxisParam, config.translationSnap);
+        target.position.set(state.before.position[0] + axisDir[0] * delta, state.before.position[1] + axisDir[1] * delta, state.before.position[2] + axisDir[2] * delta);
+      } else if (kind === "moveXY" || kind === "moveYZ" || kind === "moveXZ") {
+        const planeNormal = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
+        const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, planeNormal);
+        if (!hit) return;
+        const delta = gumballSub(hit, state.startPlanePoint);
+        target.position.set(state.before.position[0] + delta[0], state.before.position[1] + delta[1], state.before.position[2] + delta[2]);
+      } else if (kind === "rotateX" || kind === "rotateY" || kind === "rotateZ") {
+        const axisDir = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
+        const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, axisDir);
+        if (!hit) return;
+        const currentVec = gumballSub(hit, pivot);
+        let angle = gumballAxisRotateAngle(state.startRotateVec, currentVec, axisDir);
+        angle = gumballSnapScalar(angle, config.rotationSnap);
+        const deltaQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(axisDir[0], axisDir[1], axisDir[2]), angle);
+        target.quaternion.copy(quat).multiply(deltaQuat);
+      } else if (kind === "scaleX" || kind === "scaleY" || kind === "scaleZ") {
+        const localAxis = GUMBALL_AXIS_BY_KIND[kind]!;
+        const axisDir = gumballWorldAxis(localAxis, quat);
+        const param = gumballRayAxisParameter(ray.origin, ray.dir, pivot, axisDir);
+        let factor = gumballAxisScaleFactor(state.startScaleProj, param);
+        if (config.scaleSnap && config.scaleSnap > 0) factor = gumballSnapScalar(factor, config.scaleSnap);
+        const axisIndex = kind === "scaleX" ? 0 : kind === "scaleY" ? 1 : 2;
+        const next = [...state.before.scale] as [number, number, number];
+        next[axisIndex] = state.before.scale[axisIndex] * factor;
+        target.scale.set(next[0], next[1], next[2]);
+      } else {
+        const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, gumballWorldAxis(gumballV3(0, 0, 1), quat));
+        if (!hit) return;
+        const current = gumballSub(hit, pivot);
+        const startLen = gumballLen(state.startUniformScale);
+        const currentLen = gumballLen(current);
+        let factor = gumballAxisScaleFactor(startLen, currentLen);
+        if (config.scaleSnap && config.scaleSnap > 0) factor = gumballSnapScalar(factor, config.scaleSnap);
+        target.scale.set(state.before.scale[0] * factor, state.before.scale[1] * factor, state.before.scale[2] * factor);
+      }
+      target.updateMatrixWorld(true);
+      props.onDrag?.(kind, gumballPoseFromObject3D(target));
+    },
+    [camera, config.rotationSnap, config.scaleSnap, config.translationSnap, props],
+  );
+
+  const onWindowMoveRef = reactHostPort.useRef<(event: PointerEvent) => void>(() => {});
+  const onWindowUpRef = reactHostPort.useRef<() => void>(() => {});
+
+  const endDrag = reactHostPort.useCallback(() => {
+    const state = dragRef.current;
+    dragRef.current = null;
+    window.removeEventListener("pointermove", onWindowMoveRef.current);
+    window.removeEventListener("pointerup", onWindowUpRef.current);
+    if (controls) controls.enabled = true;
+    props.onDraggingChanged?.(false);
+    if (!state) return;
+    props.onDragEnd?.(state.kind, state.before, gumballPoseFromObject3D(props.target));
+  }, [controls, props]);
+
+  const onWindowMove = reactHostPort.useCallback(
+    (event: PointerEvent) => {
+      const state = dragRef.current;
+      if (!state) return;
+      const rect = gl.domElement.getBoundingClientRect();
+      const ndc = gumballNdcFromPointer(event.clientX, event.clientY, rect);
+      applyDrag(state, ndc.x, ndc.y);
+    },
+    [applyDrag, gl.domElement],
+  );
+
+  const onWindowUp = reactHostPort.useCallback(() => {
+    endDrag();
+  }, [endDrag]);
+
+  onWindowMoveRef.current = onWindowMove;
+  onWindowUpRef.current = onWindowUp;
+
+  reactHostPort.useEffect(
+    () => () => {
+      window.removeEventListener("pointermove", onWindowMoveRef.current);
+      window.removeEventListener("pointerup", onWindowUpRef.current);
+    },
+    [],
+  );
+
+  const beginDrag = reactHostPort.useCallback(
+    (kind: GumballHandleKind, event: ThreeEvent<PointerEvent>) => {
+      if (event.nativeEvent.button !== 0) return;
+      const target = props.target;
+      const before = gumballPoseFromObject3D(target);
+      const rect = gl.domElement.getBoundingClientRect();
+      const ndc = gumballNdcFromPointer(event.nativeEvent.clientX, event.nativeEvent.clientY, rect);
+      const ray = gumballRayFromNdc(ndc.x, ndc.y, camera);
+      const pivot = gumballV3(before.position[0], before.position[1], before.position[2]);
+      const quat = new THREE.Quaternion(before.quaternion[0], before.quaternion[1], before.quaternion[2], before.quaternion[3]);
+      let startAxisParam = 0;
+      let startPlanePoint: GumballVec3 = pivot;
+      let startRotateVec: GumballVec3 = gumballV3(1, 0, 0);
+      let startScaleProj = 1;
+      let startUniformScale: GumballVec3 = gumballV3(1, 0, 0);
+      if (kind === "moveX" || kind === "moveY" || kind === "moveZ" || kind === "scaleX" || kind === "scaleY" || kind === "scaleZ") {
+        const axisDir = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
+        startAxisParam = gumballRayAxisParameter(ray.origin, ray.dir, pivot, axisDir);
+        if (kind.startsWith("scale")) startScaleProj = startAxisParam;
+      } else if (kind.startsWith("move")) {
+        const planeNormal = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
+        startPlanePoint = gumballRayPlanePoint(ray.origin, ray.dir, pivot, planeNormal) ?? pivot;
+      } else if (kind.startsWith("rotate")) {
+        const axisDir = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
+        const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, axisDir) ?? pivot;
+        startRotateVec = gumballSub(hit, pivot);
+      } else {
+        const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, gumballWorldAxis(gumballV3(0, 0, 1), quat)) ?? gumballV3(1, 0, 0);
+        startUniformScale = gumballSub(hit, pivot);
+      }
+      dragRef.current = { kind, before, startAxisParam, startPlanePoint, startRotateVec, startScaleProj, startUniformScale };
+      if (controls) controls.enabled = false;
+      props.onDraggingChanged?.(true);
+      props.onDragStart?.(kind, before);
+      window.addEventListener("pointermove", onWindowMove);
+      window.addEventListener("pointerup", onWindowUp);
+    },
+    [camera, controls, gl.domElement, onWindowMove, onWindowUp, props],
+  );
+
+  if (!gumballConfigVisible(config)) return null;
+
+  return sceneHostPort.fiber.createPortal(
+    <group ref={groupRef}>
+      <GumballHandles config={config} hovered={hovered} onPointerDown={beginDrag} onPointerOver={setHovered} onPointerOut={() => setHovered(null)} />
+    </group>,
+    scene,
+  );
+}
+// #endregion 🔖UnifiedGumball
+
 const updateSceneCameraProjection = (camera: THREE.Camera): void => {
   if (camera instanceof THREE.OrthographicCamera || camera instanceof THREE.PerspectiveCamera) {
     camera.updateProjectionMatrix();
@@ -13696,6 +15189,88 @@ export interface TableProps<T = unknown> {
   wrapperComponent?: React.ComponentType<{ children: React.ReactNode }>;
 }
 
+interface TableDraggableRowProps<T> {
+  row: T;
+  rowId: string;
+  index: number;
+  isSelected: boolean;
+  customRowClassName: string;
+  activeId: string | null;
+  rowHeightClass: string;
+  visibleColumns: TableColumn<T>[];
+  dragDrop?: DragDropConfig;
+  onRowClick?: (row: T, index: number, event: React.MouseEvent) => void;
+  onRowDoubleClick?: (row: T, index: number) => void;
+  onRowMouseEnter?: (row: T, index: number) => void;
+  onRowMouseLeave?: (row: T, index: number) => void;
+}
+
+function TableDraggableRow<T>({
+  row,
+  rowId,
+  index,
+  isSelected,
+  customRowClassName,
+  activeId,
+  rowHeightClass,
+  visibleColumns,
+  dragDrop,
+  onRowClick,
+  onRowDoubleClick,
+  onRowMouseEnter,
+  onRowMouseLeave,
+}: TableDraggableRowProps<T>) {
+  const canDragRow = !dragDrop?.canDrag || dragDrop.canDrag(rowId);
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableRef,
+    transform,
+    isDragging: isDraggingHook,
+  } = useDraggable({
+    id: rowId,
+    disabled: !canDragRow,
+    data: { row },
+  });
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: rowId,
+    data: { row },
+  });
+  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
+  const combinedRef = (node: HTMLElement | null) => {
+    setDraggableRef(node);
+    setDroppableRef(node);
+  };
+  const baseRowClassName = `border-b border-element ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
+  const isDragging = activeId === rowId || isDraggingHook;
+  return (
+    <tr
+      ref={combinedRef}
+      style={style}
+      className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
+      {...(canDragRow ? { ...attributes, ...listeners } : {})}
+      onClick={(e) => {
+        if (e.detail >= 2) {
+          onRowDoubleClick?.(row, index);
+          return;
+        }
+        onRowClick?.(row, index, e);
+      }}
+      onMouseEnter={() => onRowMouseEnter?.(row, index)}
+      onMouseLeave={() => onRowMouseLeave?.(row, index)}
+      role={onRowClick ? "button" : undefined}
+      tabIndex={onRowClick ? 0 : undefined}
+      data-row-id={rowId}
+    >
+      {visibleColumns.map((column) => (
+        <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+          <div className="flex items-center h-full min-w-0">{column.accessor(row)}</div>
+        </td>
+      ))}
+    </tr>
+  );
+}
+
 /**
  * Table holds the data fields for a Table record.
  **/
@@ -13802,62 +15377,6 @@ const Table = <T,>({
     }
   };
 
-  const DraggableRow = ({ row, rowId, index, isSelected, customRowClassName }: { row: T; rowId: string; index: number; isSelected: boolean; customRowClassName: string }) => {
-    const canDragRow = !dragDrop?.canDrag || dragDrop.canDrag(rowId);
-    const {
-      attributes,
-      listeners,
-      setNodeRef: setDraggableRef,
-      transform,
-      isDragging: isDraggingHook,
-    } = useDraggable({
-      id: rowId,
-      disabled: !canDragRow,
-      data: { row },
-    });
-    const { setNodeRef: setDroppableRef, isOver } = useDroppable({
-      id: rowId,
-      data: { row },
-    });
-
-    const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
-
-    const combinedRef = (node: HTMLElement | null) => {
-      setDraggableRef(node);
-      setDroppableRef(node);
-    };
-
-    const baseRowClassName = `border-b border-element ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
-    const isDragging = activeId === rowId || isDraggingHook;
-
-    return (
-      <tr
-        ref={combinedRef}
-        style={style}
-        className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
-        {...(canDragRow ? { ...attributes, ...listeners } : {})}
-        onClick={(e) => {
-          if (e.detail >= 2) {
-            onRowDoubleClick?.(row, index);
-            return;
-          }
-          onRowClick?.(row, index, e);
-        }}
-        onMouseEnter={() => onRowMouseEnter?.(row, index)}
-        onMouseLeave={() => onRowMouseLeave?.(row, index)}
-        role={onRowClick ? "button" : undefined}
-        tabIndex={onRowClick ? 0 : undefined}
-        data-row-id={rowId}
-      >
-        {visibleColumns.map((column) => (
-          <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
-            <div className="flex items-center h-full min-w-0">{column.accessor(row)}</div>
-          </td>
-        ))}
-      </tr>
-    );
-  };
-
   const renderTableContent = () => {
     if (isMobile && renderMobileRow) {
       return (
@@ -13915,7 +15434,24 @@ const Table = <T,>({
                 const customRowClassName = rowClassName ? rowClassName(row, index) : "";
 
                 if (dragDrop?.enabled) {
-                  return <DraggableRow key={key} row={row} rowId={rowId} index={index} isSelected={isSelected} customRowClassName={customRowClassName} />;
+                  return (
+                    <TableDraggableRow
+                      key={key}
+                      row={row}
+                      rowId={rowId}
+                      index={index}
+                      isSelected={isSelected}
+                      customRowClassName={customRowClassName}
+                      activeId={activeId}
+                      rowHeightClass={rowHeightClass}
+                      visibleColumns={visibleColumns}
+                      dragDrop={dragDrop}
+                      onRowClick={onRowClick}
+                      onRowDoubleClick={onRowDoubleClick}
+                      onRowMouseEnter={onRowMouseEnter}
+                      onRowMouseLeave={onRowMouseLeave}
+                    />
+                  );
                 }
 
                 const baseRowClassName = `border-b border-element ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
@@ -14131,6 +15667,9 @@ export interface VirtualFileSystemProps {
   readonly onSelectionChange?: (selectedRowIds: readonly string[], context: { readonly anchorRowId?: string }) => void;
   readonly onRowClick?: (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => void;
   readonly onRowDoubleClick?: (row: VirtualFileSystemRow, index: number) => void;
+  readonly onRowMouseEnter?: (row: VirtualFileSystemRow, index: number) => void;
+  readonly onRowMouseLeave?: (row: VirtualFileSystemRow, index: number) => void;
+  readonly rowClassName?: (row: VirtualFileSystemRow, index: number) => string;
   readonly onToggleExpand?: (rowId: string) => void;
   readonly emptyMessage?: string;
   readonly className?: string;
@@ -14271,93 +15810,93 @@ export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSyste
   return columns;
 }
 
-/** @emoji 📁 Lucide icons keyed by VFS schema `icon` ids and {@link FileNodeKind} ids. */
-const VIRTUAL_FILE_SYSTEM_ICON_BY_ID: Readonly<Record<string, LucideIcon>> = {
-  "layout-grid": LayoutGridIcon,
-  folder: FolderIcon,
-  file: DocumentIcon,
-  branch: FolderIcon,
-  leaf: DocumentIcon,
-  layout: LayoutIcon,
-  component: ComponentIcon,
-  users: UsersIcon,
-  landmark: LandmarkIcon,
-  puzzle: PuzzleIcon,
-  link: LinkIcon,
-  box: BoxIcon,
-  "circle-dot": CircleDotIcon,
-  plug: PlugIcon,
-  root: LayoutGridIcon,
-  kit: LayoutGridIcon,
-  design: LayoutIcon,
-  type: ComponentIcon,
-  family: UsersIcon,
-  typology: LandmarkIcon,
-  piece: PuzzleIcon,
-  connection: LinkIcon,
-  representation: BoxIcon,
-  port: CircleDotIcon,
-  connector: PlugIcon,
-  json: FileJsonIcon,
-  jsonc: FileJsonIcon,
-  json5: FileJsonIcon,
-  yaml: FileCodeIcon,
-  yml: FileCodeIcon,
-  toml: FileCodeIcon,
-  xml: FileCodeIcon,
-  md: DocumentIcon,
-  markdown: DocumentIcon,
-  txt: DocumentIcon,
-  log: DocumentIcon,
-  pdf: FileTypeIcon,
-  png: FileImageIcon,
-  jpg: FileImageIcon,
-  jpeg: FileImageIcon,
-  gif: FileImageIcon,
-  webp: FileImageIcon,
-  svg: FileImageIcon,
-  ico: FileImageIcon,
-  bmp: FileImageIcon,
-  glb: BoxIcon,
-  gltf: BoxIcon,
-  obj: BoxIcon,
-  fbx: BoxIcon,
-  stl: BoxIcon,
-  usdz: BoxIcon,
-  zip: FileArchiveIcon,
-  tar: FileArchiveIcon,
-  gz: FileArchiveIcon,
-  tgz: FileArchiveIcon,
-  "7z": FileArchiveIcon,
-  rar: FileArchiveIcon,
-  csv: FileSpreadsheetIcon,
-  tsv: FileSpreadsheetIcon,
-  xlsx: FileSpreadsheetIcon,
-  xls: FileSpreadsheetIcon,
-  ts: FileCodeIcon,
-  tsx: FileCodeIcon,
-  js: FileCodeIcon,
-  jsx: FileCodeIcon,
-  mjs: FileCodeIcon,
-  cjs: FileCodeIcon,
-  rs: FileCodeIcon,
-  py: FileCodeIcon,
-  wasm: FileCodeIcon,
-  html: FileCodeIcon,
-  css: FileCodeIcon,
-  scss: FileCodeIcon,
-  sql: FileCodeIcon,
-  semio: FileJsonIcon,
+/** @emoji 📁 Built-in icons keyed by VFS schema `icon` ids and {@link FileNodeKind} ids. */
+const VIRTUAL_FILE_SYSTEM_ICON_BY_ID: Readonly<Record<string, IconName>> = {
+  "layout-grid": "layout-grid",
+  folder: "folder",
+  file: "file-text",
+  branch: "folder",
+  leaf: "file-text",
+  layout: "layout",
+  component: "component",
+  users: "users",
+  landmark: "landmark",
+  puzzle: "puzzle",
+  link: "link",
+  box: "box",
+  "circle-dot": "circle-dot",
+  plug: "plug",
+  root: "layout-grid",
+  kit: "layout-grid",
+  design: "layout",
+  type: "component",
+  family: "users",
+  typology: "landmark",
+  piece: "puzzle",
+  connection: "link",
+  representation: "box",
+  port: "circle-dot",
+  connector: "plug",
+  json: "file-json",
+  jsonc: "file-json",
+  json5: "file-json",
+  yaml: "file-code",
+  yml: "file-code",
+  toml: "file-code",
+  xml: "file-code",
+  md: "file-text",
+  markdown: "file-text",
+  txt: "file-text",
+  log: "file-text",
+  pdf: "file-type",
+  png: "file-image",
+  jpg: "file-image",
+  jpeg: "file-image",
+  gif: "file-image",
+  webp: "file-image",
+  svg: "file-image",
+  ico: "file-image",
+  bmp: "file-image",
+  glb: "box",
+  gltf: "box",
+  obj: "box",
+  fbx: "box",
+  stl: "box",
+  usdz: "box",
+  zip: "file-archive",
+  tar: "file-archive",
+  gz: "file-archive",
+  tgz: "file-archive",
+  "7z": "file-archive",
+  rar: "file-archive",
+  csv: "file-spreadsheet",
+  tsv: "file-spreadsheet",
+  xlsx: "file-spreadsheet",
+  xls: "file-spreadsheet",
+  ts: "file-code",
+  tsx: "file-code",
+  js: "file-code",
+  jsx: "file-code",
+  mjs: "file-code",
+  cjs: "file-code",
+  rs: "file-code",
+  py: "file-code",
+  wasm: "file-code",
+  html: "file-code",
+  css: "file-code",
+  scss: "file-code",
+  sql: "file-code",
+  semio: "file-json",
 };
 
-/** @emoji 📁 Resolves a lucide icon for a VFS schema icon id or file node kind id. */
-export function resolveVirtualFileSystemSchemaIcon(iconOrKindId: string): LucideIcon | undefined {
+/** @emoji 📁 Resolves a built-in icon for a VFS schema icon id or file node kind id. */
+export function resolveVirtualFileSystemSchemaIcon(iconOrKindId: string): IconName | undefined {
   return VIRTUAL_FILE_SYSTEM_ICON_BY_ID[iconOrKindId];
 }
 
-/** @emoji 📁 Returns a lucide icon component for a generic VFS file node kind id. */
-export function virtualFileSystemKindIcon(fileNodeKindId: string): LucideIcon {
-  return resolveVirtualFileSystemSchemaIcon(fileNodeKindId) ?? DocumentIcon;
+/** @emoji 📁 Returns a built-in icon name for a generic VFS file node kind id. */
+export function virtualFileSystemKindIcon(fileNodeKindId: string): IconName {
+  return resolveVirtualFileSystemSchemaIcon(fileNodeKindId) ?? "file-text";
 }
 
 /** @emoji 📁 True when a VFS row `icon` value is a remote or data URL image, not a schema icon id. */
@@ -14401,7 +15940,10 @@ export function buildVirtualFileSystemVisibleRows(
     name: rootId,
     hasChildren: childrenByParentId.has(rootId) || expandedIds.has(rootId),
   };
-  visit(rootNode, 0);
+  const rootChildren = childrenByParentId.get(rootNode.id);
+  if (rootChildren?.length) {
+    for (const child of rootChildren) visit(child, 0);
+  }
   return rows;
 }
 
@@ -14415,10 +15957,9 @@ const VirtualFileSystemNodeGlyph: React.FC<{
   const glyphClass = "inline-flex size-small shrink-0 items-center justify-center text-muted-foreground";
   const schemaIcon = kindIcon ? resolveVirtualFileSystemSchemaIcon(kindIcon) : undefined;
   if (schemaIcon) {
-    const Icon = schemaIcon;
     return (
       <span className={glyphClass}>
-        <Icon size={14} aria-hidden />
+        <Icon icon={schemaIcon} size={14} />
       </span>
     );
   }
@@ -14436,10 +15977,9 @@ const VirtualFileSystemNodeGlyph: React.FC<{
       </span>
     );
   }
-  const Icon = virtualFileSystemKindIcon(fileNodeKindId);
   return (
     <span className={glyphClass}>
-      <Icon size={14} aria-hidden />
+      <Icon icon={virtualFileSystemKindIcon(fileNodeKindId)} size={14} />
     </span>
   );
 };
@@ -14454,6 +15994,9 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   onSelectionChange,
   onRowClick,
   onRowDoubleClick,
+  onRowMouseEnter,
+  onRowMouseLeave,
+  rowClassName,
   onToggleExpand,
   emptyMessage = "No file system nodes",
   className = "",
@@ -14543,6 +16086,9 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       selectedRows={resolvedSelectedRowIds}
       onRowClick={handleRowClick}
       onRowDoubleClick={onRowDoubleClick}
+      onRowMouseEnter={onRowMouseEnter}
+      onRowMouseLeave={onRowMouseLeave}
+      rowClassName={rowClassName}
       emptyMessage={emptyMessage}
       rowHeight={rowHeight}
       hierarchical
@@ -14592,11 +16138,50 @@ export interface ModeWindowDescriptor extends Omit<WindowConfig, "children" | "o
   children: React.ReactNode;
 }
 
+export const SEMIO_WINDOW_TEMPLATE_MIME = "application/x-semio-window-template";
+
+/** @emoji 👻 Ephemeral window id used while previewing an external template drag on {@link Mode}. */
+export const MODE_TEMPLATE_PREVIEW_WINDOW_ID = "__semio-mode-template-preview__";
+
+export interface WindowTemplateDragSession {
+  readonly payload: WindowTemplateDropPayload;
+  readonly label: string;
+}
+
+let activeWindowTemplateDragSession: WindowTemplateDragSession | null = null;
+
+/** @emoji 🪟 Records the active palette template drag until drop or dragend. */
+export function beginWindowTemplateDrag(session: WindowTemplateDragSession): void {
+  activeWindowTemplateDragSession = session;
+}
+
+/** @emoji 🪟 Clears the active palette template drag session. */
+export function endWindowTemplateDrag(): void {
+  activeWindowTemplateDragSession = null;
+}
+
+/** @emoji 🪟 Returns the in-flight palette template drag, if any. */
+export function readActiveWindowTemplateDragSession(): WindowTemplateDragSession | null {
+  return activeWindowTemplateDragSession;
+}
+
+export type ModeCanvasDropTarget =
+  | { kind: "tab"; stackPath: string; index: number }
+  | { kind: "split"; stackPath: string; side: "left" | "right" | "top" | "bottom" }
+  | { kind: "root-split"; side: "left" | "right" | "top" | "bottom" };
+
+export interface WindowTemplateDropPayload {
+  readonly windowKindId: string;
+  readonly templateId?: string;
+}
+
 export interface ModeProps {
   windows: ModeWindowDescriptor[];
   activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string) => void;
   layout?: WindowLayoutNode;
+  onLayoutChange?: (layout: WindowLayoutNode) => void;
+  onTemplateDrop?: (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => void;
   children?: React.ReactNode;
   className?: string;
 }
@@ -14685,6 +16270,15 @@ function mapLayoutStacks(layout: WindowLayoutNode, mapper: (stack: WindowLayoutS
   };
 }
 
+function resolveStackPathForWindowId(layout: WindowLayoutNode, windowId: string): ModeLayoutPath | null {
+  let found: ModeLayoutPath | null = null;
+  mapLayoutStacks(layout, (stack, path) => {
+    if (stack.children.some((child) => child.id === windowId)) found = path;
+    return stack;
+  });
+  return found;
+}
+
 /** @emoji 🪟 Adds missing windows and removes stale ones from the layout tree. */
 function reconcileWindows(layout: WindowLayoutNode, windowIds: readonly string[]): WindowLayoutNode {
   const normalized = normalizeLayoutToStacks(layout);
@@ -14746,6 +16340,22 @@ function insertWindowAsTab(layout: WindowLayoutNode, stackPath: ModeLayoutPath, 
   });
 }
 
+/** @emoji 📑 Merges every tab from a dragged stack into another stack at the given index. */
+function mergeStackTabsIntoStack(
+  layout: WindowLayoutNode,
+  targetStackPath: ModeLayoutPath,
+  stack: WindowLayoutStackNode,
+  index: number,
+): WindowLayoutNode {
+  const insertAt = index < 0 ? undefined : index;
+  let result = layout;
+  stack.children.forEach((child, offset) => {
+    result = insertWindowAsTab(result, targetStackPath, child.id, insertAt === undefined ? undefined : insertAt + offset);
+  });
+  const activeId = stack.activeId ?? stack.children[0]?.id;
+  return activeId ? setActiveWindowInLayout(result, activeId) : result;
+}
+
 function reorderTabInStack(layout: WindowLayoutNode, stackPath: ModeLayoutPath, fromIndex: number, toIndex: number): WindowLayoutNode {
   return updateLayoutAtPath(layout, stackPath, (node) => {
     if (node.kind !== "stack") return node;
@@ -14777,6 +16387,43 @@ function splitRootWithWindow(layout: WindowLayoutNode, windowId: string, side: M
   return { kind: horizontal ? "row" : "column", children: children as (WindowLayoutAxisNode | WindowLayoutStackNode)[] };
 }
 
+/** @emoji 🪟 Detaches a tab stack from the layout tree for stack-level drag-dock. */
+function extractStackFromLayout(
+  layout: WindowLayoutNode,
+  stackPath: ModeLayoutPath,
+): { layout: WindowLayoutNode | null; stack: WindowLayoutStackNode | null } {
+  const stack = readLayoutAtPath(layout, stackPath);
+  if (!stack || stack.kind !== "stack") return { layout, stack: null };
+  if (!stackPath) return { layout: null, stack };
+  const segments = modePathSegments(stackPath);
+  const stackIndex = segments[segments.length - 1]!;
+  const parentPath = segments.slice(0, -1).join(".");
+  const parent = readLayoutAtPath(layout, parentPath);
+  if (!parent || (parent.kind !== "row" && parent.kind !== "column")) return { layout, stack: null };
+  const nextChildren = parent.children.filter((_, index) => index !== stackIndex);
+  const nextParent = collapseLayout({ ...parent, children: nextChildren });
+  if (!parentPath) return { layout: nextParent, stack };
+  const without = updateLayoutAtPath(layout, parentPath, () => nextParent ?? { kind: "stack", children: [] });
+  return { layout: collapseLayout(without), stack };
+}
+
+/** @emoji 🪟 Splits a stack with a dragged tab stack on the given side. */
+function splitWithStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPath, stack: WindowLayoutStackNode, side: ModeDockSide): WindowLayoutNode {
+  return updateLayoutAtPath(layout, targetStackPath, (node) => {
+    if (node.kind !== "stack") return node;
+    const horizontal = side === "left" || side === "right";
+    const children = side === "left" || side === "top" ? [stack, node] : [node, stack];
+    return { kind: horizontal ? "row" : "column", children, size: node.size } as WindowLayoutAxisNode;
+  });
+}
+
+/** @emoji 🪟 Splits the mode root with a dragged tab stack on the given side. */
+function splitRootWithStack(layout: WindowLayoutNode, stack: WindowLayoutStackNode, side: ModeDockSide): WindowLayoutNode {
+  const horizontal = side === "left" || side === "right";
+  const children = side === "left" || side === "top" ? [stack, layout] : [layout, stack];
+  return { kind: horizontal ? "row" : "column", children: children as (WindowLayoutAxisNode | WindowLayoutStackNode)[] };
+}
+
 /** @emoji 🪟 Writes resizable panel percentages back onto axis children. */
 function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, sizes: Record<string, number>): WindowLayoutNode {
   return updateLayoutAtPath(layout, axisPath, (node) => {
@@ -14803,6 +16450,13 @@ function resolveModeLayout(windows: readonly ModeWindowDescriptor[], layout?: Wi
   return reconcileWindows(base, windows.map((window) => window.id));
 }
 
+/** @emoji 🪟 Inserts a new window leaf at a dock drop target (external template drag). */
+export function insertWindowAtDropZone(layout: WindowLayoutNode, windowId: string, target: ModeCanvasDropTarget): WindowLayoutNode {
+  if (target.kind === "root-split") return splitRootWithWindow(layout, windowId, target.side as ModeDockSide);
+  if (target.kind === "split") return splitWithWindow(layout, target.stackPath, windowId, target.side as ModeDockSide);
+  return insertWindowAsTab(layout, target.stackPath, windowId, target.index < 0 ? undefined : target.index);
+}
+
 //#endregion 🧭ModeLayoutUtils
 
 //#region 🧭ModeDockDrag
@@ -14812,7 +16466,10 @@ type ModeDropZone =
   | { kind: "split"; stackPath: ModeLayoutPath; side: ModeDockSide }
   | { kind: "root-split"; side: ModeDockSide };
 
+type ModeDragKind = "tab" | "stack";
+
 interface ModeDragState {
+  dragKind: ModeDragKind;
   windowId: string;
   stackPath: ModeLayoutPath;
   tabIndex: number;
@@ -14823,6 +16480,7 @@ interface ModeDragState {
 }
 
 interface ModePendingDrag {
+  dragKind: ModeDragKind;
   windowId: string;
   stackPath: ModeLayoutPath;
   tabIndex: number;
@@ -14934,7 +16592,25 @@ function computeModeDropZone(
 }
 
 function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: ModeDropZone): WindowLayoutNode {
-  const { windowId, stackPath: sourcePath, tabIndex } = drag;
+  const { dragKind, windowId, stackPath: sourcePath, tabIndex } = drag;
+  if (dragKind === "stack") {
+    const targetStack = zone.kind === "tab" ? readLayoutAtPath(layout, zone.stackPath) : null;
+    const targetAnchorId =
+      targetStack?.kind === "stack" ? targetStack.activeId ?? targetStack.children[0]?.id : undefined;
+    const { layout: withoutSource, stack } = extractStackFromLayout(layout, sourcePath);
+    if (!stack) return layout;
+    const base = withoutSource ?? { kind: "stack", children: [] };
+    if (zone.kind === "root-split") return splitRootWithStack(base, stack, zone.side);
+    if (zone.stackPath === sourcePath) return layout;
+    if (zone.kind === "split") {
+      const splitTargetPath =
+        targetAnchorId !== undefined ? resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath : zone.stackPath;
+      return splitWithStack(base, splitTargetPath, stack, zone.side);
+    }
+    const mergeTargetPath =
+      targetAnchorId !== undefined ? resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath : zone.stackPath;
+    return mergeStackTabsIntoStack(base, mergeTargetPath, stack, zone.index);
+  }
   if (zone.kind === "root-split") return splitRootWithWindow(layout, windowId, zone.side);
   if (zone.kind === "split") return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
   if (zone.stackPath === sourcePath) {
@@ -14950,9 +16626,13 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
   return insertWindowAsTab(without, zone.stackPath, windowId, zone.index < 0 ? undefined : zone.index);
 }
 
-/** @emoji 🪓 Removes the dragged window from the committed layout while it floats on the cursor. */
-function modeDockOutLayout(committed: WindowLayoutNode, windowId: string): WindowLayoutNode {
-  return removeWindowFromLayout(committed, windowId) ?? committed;
+/** @emoji 🪓 Removes the dragged tab or stack from the committed layout while it floats on the cursor. */
+function modeDockOutLayout(committed: WindowLayoutNode, drag: Pick<ModeDragState, "dragKind" | "windowId" | "stackPath">): WindowLayoutNode {
+  if (drag.dragKind === "stack") {
+    const { layout } = extractStackFromLayout(committed, drag.stackPath);
+    return layout ?? { kind: "stack", children: [] };
+  }
+  return removeWindowFromLayout(committed, drag.windowId) ?? committed;
 }
 
 interface ModeTabInsertPreview {
@@ -14962,18 +16642,40 @@ interface ModeTabInsertPreview {
 
 type ModeDockTabDisplayItem = { id: string; title: string; preview?: "ghost" };
 
-/** @emoji 📑 Tab bar row with a ghost tab at the drop index so layout matches the committed drop. */
+/** @emoji 📑 Tab bar row with ghost tab(s) at the drop index so layout matches the committed drop. */
 function modeDockTabsWithInsertPreview(
   tabs: readonly { id: string; title: string }[],
   insertPreview: ModeTabInsertPreview | null,
   stackPath: ModeLayoutPath,
-  ghost: { id: string; title: string },
+  ghostTabs: readonly { id: string; title: string }[],
 ): ModeDockTabDisplayItem[] {
-  if (!insertPreview || insertPreview.stackPath !== stackPath || !ghost.id) return tabs.map((tab) => ({ ...tab }));
+  if (!insertPreview || insertPreview.stackPath !== stackPath || ghostTabs.length === 0) return tabs.map((tab) => ({ ...tab }));
   const insertAt = Math.min(Math.max(0, insertPreview.index), tabs.length);
   const row: ModeDockTabDisplayItem[] = tabs.map((tab) => ({ ...tab }));
-  row.splice(insertAt, 0, { id: ghost.id, title: ghost.title, preview: "ghost" });
+  row.splice(
+    insertAt,
+    0,
+    ...ghostTabs.map((tab) => ({ id: tab.id, title: tab.title, preview: "ghost" as const })),
+  );
   return row;
+}
+
+/** @emoji 📑 Tab descriptors shown as insert-preview ghosts for the current drag. */
+function modeDockDragInsertTabs(
+  layout: WindowLayoutNode,
+  drag: ModeDragState,
+  windowTitle: (windowId: string) => string,
+): readonly { id: string; title: string }[] {
+  if (drag.dragKind === "tab") return [{ id: drag.windowId, title: windowTitle(drag.windowId) }];
+  const stack = readLayoutAtPath(layout, drag.stackPath);
+  if (!stack || stack.kind !== "stack") return [{ id: drag.windowId, title: windowTitle(drag.windowId) }];
+  return stack.children.map((child) => ({ id: child.id, title: windowTitle(child.id) }));
+}
+
+function resolveModeTabInsertPreview(drag: ModeDragState | null, zone: ModeDropZone | null): ModeTabInsertPreview | null {
+  if (!drag || zone?.kind !== "tab") return null;
+  if (drag.dragKind === "stack" && zone.stackPath === drag.stackPath) return null;
+  return { stackPath: zone.stackPath, index: zone.index };
 }
 
 const modeDockTabInsertPreviewClass =
@@ -15033,9 +16735,10 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
   tabInsertPreview: ModeTabInsertPreview | null;
-  draggedTab: { id: string; title: string } | null;
+  draggedInsertTabs: readonly { id: string; title: string }[];
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
+  startStackDrag: (windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
   closeWindow: (windowId: string) => void;
   activateWindow: (windowId: string) => void;
@@ -15066,8 +16769,8 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : "border-b-element";
   const displayTabs = reactHostPort.useMemo(
     () =>
-      modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedTab ?? { id: "", title: "" }),
-    [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedTab],
+      modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []),
+    [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedInsertTabs],
   );
   const displayChromeGrid =
     displayTabs.length > 1 ? modeDockChromeGridPlacement(
@@ -15109,23 +16812,10 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         dock?.clearPendingDrag?.(event.pointerId);
       }}
       onPointerDownCapture={(event) => {
-        if ((event.target as HTMLElement).closest("[data-slot='mode-dock-tab-close']")) return;
         dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event);
       }}
     >
       <span className="truncate">{tab.title}</span>
-      <button
-        type="button"
-        data-slot="mode-dock-tab-close"
-        className="ml-auto flex size-small shrink-0 items-center justify-center rounded opacity-60 hover:bg-hover-window hover:opacity-100"
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => {
-          event.stopPropagation();
-          dock?.closeWindow(tab.id);
-        }}
-      >
-        <CloseIcon className="size-tiny" />
-      </button>
     </div>
   );
 
@@ -15150,14 +16840,36 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       >
         {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
       </button>
+      {activeId ? (
+        <button
+          type="button"
+          data-slot="mode-dock-close"
+          className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-window"
+          onClick={() => dock?.closeWindow(activeId)}
+        >
+          <CloseIcon className="size-small" />
+        </button>
+      ) : null}
     </div>
   );
 
   const tabGap = (
     <div
       data-slot="mode-dock-tab-gap"
-      className={cn("relative min-h-medium min-w-0 flex-1 bg-canvas", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
-      aria-hidden
+      className={cn(
+        "relative min-h-medium min-w-0 flex-1 cursor-grab bg-canvas active:cursor-grabbing",
+        perTabActiveChrome ? "z-0" : "z-[1]",
+        gapFrameClass,
+      )}
+      onPointerUp={(event) => {
+        if (event.button !== 0) return;
+        dock?.clearPendingDrag?.(event.pointerId);
+      }}
+      onPointerDownCapture={(event) => {
+        if (!activeId) return;
+        const label = tabs.find((tab) => tab.id === activeId)?.title ?? activeId;
+        dock?.startStackDrag(activeId, stackPath, label, event);
+      }}
     />
   );
 
@@ -15280,7 +16992,13 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
         (() => {
           const { children, engagement, ...windowProps } = activeDescriptor;
           return (
-            <Window {...windowProps} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
+            <Window
+              {...windowProps}
+              fill={activeDescriptor.fill ?? true}
+              engagement={engagement}
+              active={activeWindowId === activeId}
+              onActivate={() => dock?.activateWindow(activeId!)}
+            >
               {children}
             </Window>
           );
@@ -15366,7 +17084,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
 //#endregion 🧭ModeRender
 
 /** @emoji 🪟 Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
-const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, children, className = "" }) => {
+const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, layout, onLayoutChange, onTemplateDrop, children, className = "" }) => {
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
@@ -15374,6 +17092,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const [layoutState, setLayoutState] = reactHostPort.useState<WindowLayoutNode>(() => initialLayout);
   const [maximizedStackPath, setMaximizedStackPath] = reactHostPort.useState<ModeLayoutPath | null>(null);
   const [dragState, setDragState] = reactHostPort.useState<ModeDragState | null>(null);
+  const [templateDrag, setTemplateDrag] = reactHostPort.useState<{ readonly label: string; readonly x: number; readonly y: number } | null>(null);
   const [pendingDrag, setPendingDrag] = reactHostPort.useState<ModePendingDrag | null>(null);
   const [dropZone, setDropZone] = reactHostPort.useState<ModeDropZone | null>(null);
   const dropZoneRef = reactHostPort.useRef<ModeDropZone | null>(null);
@@ -15385,8 +17104,18 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const windowsKeyRef = reactHostPort.useRef(windowsKey);
   layoutStateRef.current = layoutState;
 
+  const layoutChangeSkipRef = reactHostPort.useRef(true);
+  reactHostPort.useEffect(() => {
+    if (layoutChangeSkipRef.current) {
+      layoutChangeSkipRef.current = false;
+      return;
+    }
+    onLayoutChange?.(layoutState);
+  }, [layoutState, onLayoutChange]);
+
   reactHostPort.useEffect(() => {
     const layoutChanged = layoutKeyRef.current !== layoutKey;
+    if (layoutChanged) layoutChangeSkipRef.current = true;
     if (!layoutChanged && windowsKeyRef.current === windowsKey) return;
     layoutKeyRef.current = layoutKey;
     windowsKeyRef.current = windowsKey;
@@ -15500,9 +17229,27 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => {
       if (event.button !== 0) return;
       setPendingDrag({
+        dragKind: "tab",
         windowId,
         stackPath,
         tabIndex,
+        pointerId: event.pointerId,
+        ghostLabel: label,
+        startX: event.clientX,
+        startY: event.clientY,
+      });
+    },
+    [],
+  );
+
+  const startStackDrag = reactHostPort.useCallback(
+    (windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => {
+      if (event.button !== 0) return;
+      setPendingDrag({
+        dragKind: "stack",
+        windowId,
+        stackPath,
+        tabIndex: -1,
         pointerId: event.pointerId,
         ghostLabel: label,
         startX: event.clientX,
@@ -15522,6 +17269,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         if (distance < 6) return;
         dragLayoutSnapshotRef.current = layoutStateRef.current;
         setDragState({
+          dragKind: pendingDrag.dragKind,
           windowId: pendingDrag.windowId,
           stackPath: pendingDrag.stackPath,
           tabIndex: pendingDrag.tabIndex,
@@ -15579,18 +17327,100 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
   }, []);
 
-  const draggedPreviewTitle = dragState ? (windowsById.get(dragState.windowId)?.title ?? dragState.ghostLabel) : "";
-  const tabInsertPreview =
-    dragState && dropZone?.kind === "tab" ? { stackPath: dropZone.stackPath, index: dropZone.index } : null;
-  const draggedTab = dragState ? { id: dragState.windowId, title: draggedPreviewTitle } : null;
+  const clearTemplateDragPreview = reactHostPort.useCallback(() => {
+    setTemplateDrag(null);
+    dropZoneRef.current = null;
+    setDropZone(null);
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    if (!templateDrag) return;
+    const onDragEnd = () => {
+      endWindowTemplateDrag();
+      clearTemplateDragPreview();
+    };
+    document.addEventListener("dragend", onDragEnd);
+    return () => document.removeEventListener("dragend", onDragEnd);
+  }, [templateDrag, clearTemplateDragPreview]);
+
+  const handleExternalTemplateDragOver = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!onTemplateDrop || !event.dataTransfer.types.includes(SEMIO_WINDOW_TEMPLATE_MIME)) return;
+      const session = readActiveWindowTemplateDragSession();
+      if (!session) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+      setTemplateDrag({ label: session.label, x: event.clientX, y: event.clientY });
+      refreshDropZone(event.clientX, event.clientY);
+    },
+    [onTemplateDrop, refreshDropZone],
+  );
+
+  const handleExternalTemplateDrop = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!onTemplateDrop) return;
+      const raw = event.dataTransfer.getData(SEMIO_WINDOW_TEMPLATE_MIME);
+      if (!raw) return;
+      event.preventDefault();
+      let payload: WindowTemplateDropPayload;
+      try {
+        payload = JSON.parse(raw) as WindowTemplateDropPayload;
+      } catch {
+        return;
+      }
+      if (typeof payload.windowKindId !== "string") return;
+      const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
+      stackDropElementsRef.current.forEach((elements, path) => {
+        targets.set(path, {
+          tabBar: elements.tabBar?.getBoundingClientRect() ?? null,
+          body: elements.body?.getBoundingClientRect() ?? null,
+          tabBarElement: elements.tabBar,
+        });
+      });
+      const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
+      const zone = computeModeDropZone(event.clientX, event.clientY, targets, modeRect);
+      if (!zone) return;
+      endWindowTemplateDrag();
+      clearTemplateDragPreview();
+      onTemplateDrop(payload, zone);
+    },
+    [clearTemplateDragPreview, onTemplateDrop],
+  );
+
+  const templatePreviewDrag = reactHostPort.useMemo((): ModeDragState | null => {
+    if (!templateDrag) return null;
+    return {
+      dragKind: "tab",
+      windowId: MODE_TEMPLATE_PREVIEW_WINDOW_ID,
+      stackPath: "",
+      tabIndex: -1,
+      pointerId: -1,
+      ghostLabel: templateDrag.label,
+      x: templateDrag.x,
+      y: templateDrag.y,
+    };
+  }, [templateDrag]);
+
+  const previewDragState = dragState ?? templatePreviewDrag;
+
+  const draggedPreviewTitle = previewDragState
+    ? (windowsById.get(previewDragState.windowId)?.title ?? previewDragState.ghostLabel)
+    : "";
+  const tabInsertPreview = resolveModeTabInsertPreview(previewDragState, dropZone);
+  const draggedInsertTabs = reactHostPort.useMemo(() => {
+    if (templateDrag) return [{ id: MODE_TEMPLATE_PREVIEW_WINDOW_ID, title: templateDrag.label }];
+    if (!dragState) return [];
+    return modeDockDragInsertTabs(layoutState, dragState, (windowId) => windowsById.get(windowId)?.title ?? windowId);
+  }, [dragState, layoutState, templateDrag, windowsById]);
 
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
-      dragState,
+      dragState: previewDragState,
       tabInsertPreview,
-      draggedTab,
+      draggedInsertTabs,
       registerStackDropTargets,
       startTabDrag,
+      startStackDrag,
       clearPendingDrag,
       closeWindow,
       activateWindow,
@@ -15598,11 +17428,12 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       toggleMaximize,
     }),
     [
-      dragState,
+      previewDragState,
       tabInsertPreview,
-      draggedTab,
+      draggedInsertTabs,
       registerStackDropTargets,
       startTabDrag,
+      startStackDrag,
       clearPendingDrag,
       closeWindow,
       activateWindow,
@@ -15614,7 +17445,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
 
   const dockOutLayout = reactHostPort.useMemo(
-    () => (dragState ? modeDockOutLayout(layoutState, dragState.windowId) : layoutState),
+    () => (dragState ? modeDockOutLayout(layoutState, dragState) : layoutState),
     [layoutState, dragState],
   );
 
@@ -15643,23 +17474,30 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   return (
     <div
       data-slot="mode"
-      data-dragging={dragState ? "true" : undefined}
+      data-dragging={previewDragState ? "true" : undefined}
       data-maximized-path={maximizedStackPath ?? undefined}
       className={cn("relative flex h-full min-h-0 w-full flex-col", className)}
     >
       <LevelProvider level="canvas">
-        <div ref={modeBodyRef} data-slot="mode-body" className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas", MODE_CANVAS_INSET_CLASS)}>
+        <div
+          ref={modeBodyRef}
+          data-slot="mode-body"
+          className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas", MODE_CANVAS_INSET_CLASS)}
+          onDragOver={onTemplateDrop ? handleExternalTemplateDragOver : undefined}
+          onDrop={onTemplateDrop ? handleExternalTemplateDrop : undefined}
+        >
           {body}
-        {dragState ? (
+        {previewDragState ? (
           <>
             {dropZone?.kind !== "tab" ? (
               <ModeDockDragPreview
                 title={draggedPreviewTitle}
-                tabOnly
+                content={previewDragState.dragKind === "stack" ? windowsById.get(previewDragState.windowId)?.children : undefined}
+                tabOnly={previewDragState.dragKind === "tab"}
                 style={{
                   position: "fixed",
-                  left: dragState.x + MODE_DRAG_CURSOR_OFFSET_X,
-                  top: dragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
+                  left: previewDragState.x + MODE_DRAG_CURSOR_OFFSET_X,
+                  top: previewDragState.y - MODE_DRAG_CURSOR_OFFSET_Y,
                   zIndex: 70,
                 }}
               />
@@ -15705,6 +17543,8 @@ export {
   Mode,
   removeWindowFromLayout,
   splitWithWindow,
+  splitWithStack,
+  extractStackFromLayout,
   applyModeDrop,
   reconcileWindows,
   normalizeLayoutToStacks,
@@ -15715,6 +17555,9 @@ export {
   computeTabInsertPreview,
   modeDockOutLayout,
   modeDockTabsWithInsertPreview,
+  modeDockDragInsertTabs,
+  mergeStackTabsIntoStack,
+  resolveModeTabInsertPreview,
 };
 
 // #endregion 🧭Mode
@@ -15851,6 +17694,28 @@ export { Ui };
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
+
+  describe("UnifiedGumball math", () => {
+    it("computes axis translate, plane hit, rotate angle, scale factor, and snapping", () => {
+      expect(gumballRayAxisParameter([0, 0, 0], [0, 0, 1], [1, 2, 3], [1, 0, 0])).toBeCloseTo(1, 5);
+      expect(gumballRayPlanePoint([0, 0, 0], [0, 0, 1], [0, 0, 0], [0, 0, 1])).toEqual([0, 0, 0]);
+      expect(gumballAxisRotateAngle([1, 0, 0], [0, 1, 0], [0, 0, 1])).toBeCloseTo(Math.PI / 2, 5);
+      expect(gumballAxisScaleFactor(2, 4)).toBe(2);
+      expect(gumballSnapScalar(1.05, 0.5)).toBe(1);
+      expect(gumballHandleKindToTransformMode("moveYZ")).toBe("translate");
+      expect(gumballHandleKindToTransformMode("rotateX")).toBe("rotate");
+      expect(gumballHandleKindToTransformMode("scaleUniform")).toBe("scale");
+      expect(gumballConfigVisible(DEFAULT_GUMBALL_CONFIG)).toBe(true);
+      expect(gumballConfigVisible({ moveAxes: false, movePlanes: false, rotate: false, scaleAxes: false, scaleUniform: false })).toBe(false);
+    });
+  });
+
+  describe("iconSvgMarkup", () => {
+    it("returns vendored svg markup for a known icon and undefined otherwise", () => {
+      expect(iconSvgMarkup("component")).toContain("<svg");
+      expect(iconSvgMarkup("definitely-not-a-vendored-icon")).toBeUndefined();
+    });
+  });
 
   describe("ContextMenu", () => {
     it("prevents the native context menu when no items are registered", () => {
@@ -16257,9 +18122,9 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      const soloTab = container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-tab-close']");
-      expect(soloTab).toBeTruthy();
-      fireEvent.click(soloTab!);
+      const soloClose = container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-close']");
+      expect(soloClose).toBeTruthy();
+      fireEvent.click(soloClose!);
       expect(screen.queryByText("Solo Body")).toBeNull();
       expect(screen.getByText("Peer Body")).toBeTruthy();
     });
@@ -16269,13 +18134,61 @@ if (import.meta.vitest) {
         { id: "a", title: "A" },
         { id: "b", title: "B" },
       ];
-      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 1 }, "1", { id: "drag", title: "Drag" });
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 1 }, "1", [{ id: "drag", title: "Drag" }]);
       expect(row.map((tab) => tab.id)).toEqual(["a", "drag", "b"]);
       expect(row[1]?.preview).toBe("ghost");
-      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", { id: "drag", title: "Drag" }).map((tab) => tab.id)).toEqual([
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", [{ id: "drag", title: "Drag" }]).map((tab) => tab.id)).toEqual([
         "a",
         "b",
       ]);
+    });
+
+    it("modeDockTabsWithInsertPreview inserts ghost tabs for every window in a dragged stack", () => {
+      const tabs = [
+        { id: "a", title: "A" },
+        { id: "b", title: "B" },
+      ];
+      const row = modeDockTabsWithInsertPreview(
+        tabs,
+        { stackPath: "1", index: 0 },
+        "1",
+        [
+          { id: "x", title: "X" },
+          { id: "y", title: "Y" },
+        ],
+      );
+      expect(row.map((tab) => tab.id)).toEqual(["x", "y", "a", "b"]);
+      expect(row[0]?.preview).toBe("ghost");
+      expect(row[1]?.preview).toBe("ghost");
+    });
+
+    it("applyModeDrop merges a dragged stack into another stack tab bar", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+        ],
+      };
+      const drag = {
+        dragKind: "stack" as const,
+        windowId: "a",
+        stackPath: "0",
+        tabIndex: -1,
+        pointerId: 1,
+        ghostLabel: "Stack",
+        x: 0,
+        y: 0,
+      };
+      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: "1", index: 0 });
+      const merged =
+        next.kind === "stack"
+          ? next
+          : next.kind === "row" || next.kind === "column"
+            ? next.children.find((child) => child.kind === "stack" && child.children.some((window) => window.id === "c"))
+            : null;
+      expect(merged?.kind).toBe("stack");
+      if (merged?.kind === "stack") expect(merged.children.map((child) => child.id)).toEqual(["a", "b", "c"]);
     });
 
     it("computeTabInsertPreview resolves slot geometry at tab boundaries", () => {
@@ -16323,6 +18236,27 @@ if (import.meta.vitest) {
       expect(computeModeDropZone(150, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "right" });
     });
 
+    it("beginWindowTemplateDrag records a session for mode dock preview", () => {
+      beginWindowTemplateDrag({ payload: { windowKindId: "main", templateId: "top" }, label: "Top" });
+      expect(readActiveWindowTemplateDragSession()?.label).toBe("Top");
+      endWindowTemplateDrag();
+      expect(readActiveWindowTemplateDragSession()).toBeNull();
+    });
+
+    it("insertWindowAtDropZone adds a window on root-split", () => {
+      const layout: WindowLayoutNode = {
+        kind: "stack",
+        children: [{ kind: "window", id: "a" }],
+      };
+      const next = insertWindowAtDropZone(layout, "b", { kind: "root-split", side: "right" });
+      expect(next.kind).toBe("row");
+      const ids =
+        next.kind === "row"
+          ? next.children.flatMap((child) => (child.kind === "stack" ? child.children.map((leaf) => leaf.id) : []))
+          : [];
+      expect(ids.sort()).toEqual(["a", "b"]);
+    });
+
     it("computeModeDropZone root-split uses half of the mode when pointer is outside stack bodies", () => {
       const modeRect = { left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300 } as DOMRect;
       expect(computeModeDropZone(80, 150, new Map(), modeRect)).toEqual({ kind: "root-split", side: "left" });
@@ -16339,7 +18273,7 @@ if (import.meta.vitest) {
           { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
         ],
       };
-      const dockedOut = modeDockOutLayout(layout, "b");
+      const dockedOut = modeDockOutLayout(layout, { dragKind: "tab", windowId: "b", stackPath: "0" });
       expect(modeCollectWindowIds(dockedOut)).toEqual(["a", "c"]);
       expect(modeCollectWindowIds(layout)).toEqual(["a", "b", "c"]);
     });
@@ -16362,6 +18296,49 @@ if (import.meta.vitest) {
       }
     });
 
+    it("modeDockOutLayout removes an entire stack for stack drag", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+        ],
+      };
+      const dockedOut = modeDockOutLayout(layout, { dragKind: "stack", windowId: "a", stackPath: "0" });
+      expect(modeCollectWindowIds(dockedOut)).toEqual(["c"]);
+      expect(modeCollectWindowIds(layout)).toEqual(["a", "b", "c"]);
+    });
+
+    it("applyModeDrop relocates a stack when dropping on another stack body edge", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }, { kind: "window", id: "b" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "c" }], activeId: "c" },
+        ],
+      };
+      const drag = {
+        dragKind: "stack" as const,
+        windowId: "a",
+        stackPath: "0",
+        tabIndex: -1,
+        pointerId: 1,
+        ghostLabel: "Stack",
+        x: 0,
+        y: 0,
+      };
+      const next = applyModeDrop(layout, drag, { kind: "split", stackPath: "1", side: "left" });
+      expect(next.kind).toBe("row");
+      if (next.kind !== "row") return;
+      expect(next.children).toHaveLength(2);
+      const left = next.children[0];
+      const right = next.children[1];
+      expect(left?.kind).toBe("stack");
+      expect(right?.kind).toBe("stack");
+      if (left?.kind === "stack") expect(left.children.map((child) => child.id)).toEqual(["a", "b"]);
+      if (right?.kind === "stack") expect(right.children.map((child) => child.id)).toEqual(["c"]);
+    });
+
     it("applyModeDrop splits within the same stack when dropping on a body edge zone", () => {
       const layout: WindowLayoutNode = {
         kind: "stack",
@@ -16369,6 +18346,7 @@ if (import.meta.vitest) {
         activeId: "a",
       };
       const drag = {
+        dragKind: "tab" as const,
         windowId: "a",
         stackPath: "",
         tabIndex: 0,
@@ -16462,6 +18440,24 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
     });
 
+    it("filterEngagementPossibles ranks shorter label prefix matches first", () => {
+      const items = [
+        { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e" },
+        { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e" },
+      ];
+      expect(filterEngagementPossibles("Extr", items).map((row) => row.id)).toEqual(["surface.extrudeCrv", "feature.extrudeWire"]);
+    });
+
+    it("isEngagementSuggestionCommandTarget accepts text nodes inside command rows", () => {
+      const row = document.createElement("div");
+      row.setAttribute("data-slot", "command-item");
+      const label = document.createTextNode("ExtrudeCrv");
+      row.appendChild(label);
+      document.body.appendChild(row);
+      expect(isEngagementSuggestionCommandTarget({ target: label })).toBe(true);
+      row.remove();
+    });
+
     it("engagementInlineCompletion uses label casing for matched name prefix", () => {
       const box = { id: "primitive.box", label: "Box", detail: "b" };
       const sphere = { id: "primitive.sphere", label: "Sphere", detail: "s" };
@@ -16517,12 +18513,55 @@ if (import.meta.vitest) {
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
+    it("Engagement suggestion click selects the picked row when popover keeps input focus", async () => {
+      const scrollIntoView = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = () => undefined;
+      const selected: string[] = [];
+      render(
+        <Engagement
+          active
+          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder, value: "Extr", onChange: () => {} }}
+          possibleEngagements={[
+            { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e", onSelect: () => selected.push("feature.extrudeWire") },
+            { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e", onSelect: () => selected.push("surface.extrudeCrv") },
+          ]}
+        />,
+      );
+      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      const popover = await waitFor(() => document.querySelector('[data-slot="engagement-autocomplete"]')!);
+      const crvRow = document.querySelector('[data-slot="command-item"][data-value="surface.extrudeCrv"]')!;
+      const crvLabel = crvRow.querySelector("span")?.firstChild;
+      expect(crvLabel).toBeTruthy();
+      fireEvent.pointerDown(popover, { pointerId: 1, pointerType: "mouse", buttons: 1 });
+      fireEvent.pointerDown(crvLabel!, { pointerId: 1, pointerType: "mouse", buttons: 1 });
+      fireEvent.click(crvRow);
+      await waitFor(() => expect(selected).toEqual(["surface.extrudeCrv"]));
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
     it("windowEngagementChromeVisible hides until hover, click, focus, or draft", () => {
       const engagement = { input: { value: "" }, status: [{ id: "s", content: "Idle" }] };
       expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: false, focused: false })).toBe(false);
       expect(windowEngagementChromeVisible(engagement, { hovered: true, activated: false, focused: false })).toBe(true);
       expect(windowEngagementChromeVisible(engagement, { hovered: false, activated: true, focused: false })).toBe(true);
       expect(windowEngagementChromeVisible({ input: { value: "box" } }, { hovered: false, activated: false, focused: false })).toBe(true);
+      expect(windowEngagementChromeVisible({ sessionActive: true, input: { value: "" } }, { hovered: false, activated: false, focused: false })).toBe(true);
+    });
+
+    it("applyEngagementSpaceAction submits empty draft during sessionActive", () => {
+      const submitted: string[] = [];
+      const repeated: string[] = [];
+      const input = {
+        onSubmit: (value: string) => submitted.push(value),
+        onRepeatLast: () => repeated.push("last"),
+      };
+      expect(applyEngagementSpaceAction(input, "", true)).toBe(true);
+      expect(submitted).toEqual([""]);
+      expect(repeated).toEqual([]);
+      submitted.length = 0;
+      expect(applyEngagementSpaceAction(input, "", false)).toBe(true);
+      expect(repeated).toEqual(["last"]);
+      expect(submitted).toEqual([]);
     });
 
     it("routeWindowEngagementSpace calls onRepeatLast for empty command", () => {
@@ -16541,6 +18580,56 @@ if (import.meta.vitest) {
         }),
       ).toBe(true);
       expect(repeated).toEqual(["last"]);
+    });
+
+    it("routeWindowEngagementSpace calls onSubmit for non-empty command", () => {
+      const submitted: string[] = [];
+      const engagement = {
+        input: {
+          value: "Box",
+          onSubmit: (value: string) => submitted.push(value),
+          onRepeatLast: () => submitted.push("last"),
+        },
+      };
+      const body = document.createElement("div");
+      expect(
+        routeWindowEngagementSpace(engagement, {
+          key: " ",
+          ctrlKey: false,
+          metaKey: false,
+          altKey: false,
+          defaultPrevented: false,
+          isComposing: false,
+          target: body,
+        }),
+      ).toBe(true);
+      expect(submitted).toEqual(["Box"]);
+    });
+
+    it("Engagement Space with draft calls onSubmit instead of onRepeatLast", async () => {
+      const submitted: string[] = [];
+      const repeated: string[] = [];
+      const Harness = () => {
+        const [value, setValue] = reactHostPort.useState("");
+        return (
+          <Engagement
+            active
+            input={{
+              value,
+              placeholder: "Command",
+              onChange: setValue,
+              onSubmit: (draft) => submitted.push(draft),
+              onRepeatLast: () => repeated.push("last"),
+            }}
+          />
+        );
+      };
+      render(<Harness />);
+      const field = await screen.findByPlaceholderText("Command");
+      fireEvent.change(field, { target: { value: "box" } });
+      fireEvent.keyDown(field, { key: " " });
+      expect(submitted).toEqual(["Box"]);
+      expect(repeated).toEqual([]);
     });
 
     it("Engagement Space with empty draft calls onRepeatLast instead of onSubmit", async () => {
@@ -16616,6 +18705,20 @@ if (import.meta.vitest) {
       expect(tabInFieldPrevent).not.toHaveBeenCalled();
       bindings.dispose();
       panel.remove();
+      input.remove();
+    });
+
+    it("installElementsSurfaceBrowserDefaultSuppression disables browser defaults on focused form controls", () => {
+      const bindings = createDOMEventBinding();
+      installElementsSurfaceBrowserDefaultSuppression(bindings);
+      const input = document.createElement("input");
+      document.body.appendChild(input);
+      input.focus();
+      expect(input.autocomplete).toBe("off");
+      expect(input.spellcheck).toBe(false);
+      expect(input.getAttribute("autocorrect")).toBe("off");
+      expect(input.dataset.uiBrowserDefaults).toBe("true");
+      bindings.dispose();
       input.remove();
     });
 
@@ -16699,6 +18802,21 @@ if (import.meta.vitest) {
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual(["abort"]);
       Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it("routeWindowEngagementEscape calls onAbort when sessionActive without visible chrome", () => {
+      const aborted: string[] = [];
+      const engagement: EngagementSpec = {
+        sessionActive: true,
+        input: { value: "", placeholder: "Brush", onAbort: () => aborted.push("abort") },
+      };
+      const handled = routeWindowEngagementEscape(
+        engagement,
+        { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body },
+        { chromeVisible: false, commandActive: false },
+      );
+      expect(handled).toBe(true);
+      expect(aborted).toEqual(["abort"]);
     });
 
     it("Mode Escape aborts active window engagement", async () => {
@@ -16822,7 +18940,7 @@ if (import.meta.vitest) {
       const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]');
       expect(overlay).toBeTruthy();
       expect(overlay?.className).toContain("pointer-events-none");
-      expect(overlay?.className).not.toContain("inset-x-0");
+      expect(overlay?.className).toContain("inset-x-0");
       expect(zone?.className).toContain("h-large");
       expect(zone?.className).toContain("pointer-events-auto");
       expect(overlay?.getAttribute("data-expanded")).toBeNull();
@@ -16835,12 +18953,49 @@ if (import.meta.vitest) {
       expect(screen.getByText("Idle")).toBeTruthy();
     });
 
+    it("Window engagement command row spans the sized engagement zone", () => {
+      const { container } = render(
+        <Window id="engagement-window" active engagement={{ input: { placeholder: "Command" } }}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
+      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
+      expect(overlay?.className).toContain("inset-x-0");
+      expect(zone.className).toContain("w-full");
+      expect(zone.style.width).toBe("min(28rem, 100%)");
+      fireEvent.pointerEnter(zone);
+      const row = container.querySelector('[data-slot="engagement-command-row"]');
+      const inputRoot = container.querySelector('[data-slot="engagement-command-input"] [data-slot="input-root"]');
+      expect(row?.className).toContain("w-full");
+      expect(inputRoot?.className).toContain("w-full");
+    });
+
+    it("Window engagement max width shrinks when measures rail is present", () => {
+      const { container } = render(
+        <Window
+          id="layout-window"
+          active
+          engagement={{ input: { placeholder: "Command" } }}
+          measures={<div data-testid="measure-slot">LOD</div>}
+        >
+          <div data-testid="window-body">Body</div>
+        </Window>,
+      );
+      const zone = container.querySelector('[data-slot="window-engagement-hover-zone"]') as HTMLElement;
+      expect(zone.style.width).toContain("calc(100%");
+      expect(zone.style.width).toContain("min(28rem");
+      expect(windowEngagementZoneMaxWidthStyle(200, true).width).toContain("204px");
+      expect(windowEngagementZoneMaxWidthStyle(0, false).width).toBe("min(28rem, 100%)");
+    });
+
     it("Window engagement and measures overlays pass pointer hits through to the canvas body", () => {
       const bodyDown = vi.fn();
       const { container } = render(
         <Window
           id="canvas-window"
           active
+          fill
           engagement={{ options: [{ id: "opt-a", label: "Alpha", onPress: () => {} }] }}
           measures={<div data-testid="measure-slot">LOD</div>}
         >
@@ -16874,7 +19029,9 @@ if (import.meta.vitest) {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]');
-      expect(overlay?.className).toContain("min(10rem");
+      expect(overlay?.className).toContain("min(14rem");
+      expect(overlay?.className).toContain("top-0");
+      expect(overlay?.className).not.toContain("inset-y-0");
       expect(overlay?.className).not.toContain("overflow-hidden");
       expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
     });
@@ -16995,6 +19152,11 @@ if (treeVitest) {
       expect(resolveHotkeyValue("ctrl+p")).toBe("ctrl+p");
       expect(resolveHotkeyValue({ hotkey: "ctrl+f" })).toBe("ctrl+f");
       expect(resolveHotkeyValue({ label: "Search" })).toBeUndefined();
+    });
+
+    it("exposes side panel chrome toggle chords", () => {
+      expect(SIDE_PANEL_TOGGLE_LEFT_HOTKEY).toBe("ctrl+b,meta+b");
+      expect(SIDE_PANEL_TOGGLE_RIGHT_HOTKEY).toBe("ctrl+shift+b,meta+shift+b");
     });
 
     it("tree highlight store notifies subscribers only when highlighted ids change", () => {
@@ -17263,9 +19425,13 @@ if (treeVitest) {
       expect(inputMarkup).toContain('data-slot="input-root"');
       expect(inputMarkup).toContain('data-detail-panel-control="fill"');
       expect(inputMarkup).toContain("flex min-w-0 w-full flex-1 items-stretch");
+      expect(inputMarkup).toContain('autoComplete="off"');
+      expect(inputMarkup).toContain('spellCheck="false"');
       expect(textareaMarkup).toContain('data-slot="textarea-root"');
       expect(textareaMarkup).toContain('data-detail-panel-control="fill"');
       expect(textareaMarkup).toContain("flex min-w-0 w-full flex-1 items-stretch");
+      expect(textareaMarkup).toContain('autoComplete="off"');
+      expect(textareaMarkup).toContain('spellCheck="false"');
     });
 
     it("anchors fit-content button and toggle controls to the shared property edge", () => {
@@ -17693,9 +19859,9 @@ if (treeVitest) {
         ["f1", [{ id: "t1", fileNodeKindId: "leaf", name: "Capsule", parentId: "f1", hasChildren: false }]],
       ]);
       const collapsed = buildVirtualFileSystemVisibleRows("root", childrenByParentId, new Set(["root"]), root);
-      expect(collapsed.map((row) => row.id)).toEqual(["root", "f1", "d1"]);
+      expect(collapsed.map((row) => row.id)).toEqual(["f1", "d1"]);
       const expanded = buildVirtualFileSystemVisibleRows("root", childrenByParentId, new Set(["root", "f1"]), root);
-      expect(expanded.map((row) => row.id)).toEqual(["root", "f1", "t1", "d1"]);
+      expect(expanded.map((row) => row.id)).toEqual(["f1", "t1", "d1"]);
     });
 
     it("buildVirtualFileSystemDescriptorColumns renders avatar and time cells", () => {
@@ -17755,27 +19921,27 @@ if (treeVitest) {
       expect(markup).toContain("cursor-selectable");
     });
 
-    it("renders file node kind lucide icons instead of avatars for schema icon ids", () => {
+    it("renders file node kind vendored icons instead of avatars for schema icon ids", () => {
       const markup = renderToStaticMarkup(
         <VirtualFileSystem
           schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
           rows={[{ id: "root", fileNodeKindId: "root", name: "Alpha", level: 0, hasChildren: false }]}
         />,
       );
-      expect(markup).toContain("lucide-layout-grid");
+      expect(markup).toContain('data-icon="layout-grid"');
       expect(markup).not.toContain("avatar-fallback");
     });
 
     it("resolveVirtualFileSystemSchemaIcon maps sketchpad vfs icon ids", () => {
-      expect(resolveVirtualFileSystemSchemaIcon("component")).toBe(ComponentIcon);
-      expect(resolveVirtualFileSystemSchemaIcon("circle-dot")).toBe(CircleDotIcon);
-      expect(resolveVirtualFileSystemSchemaIcon("type")).toBe(ComponentIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("component")).toBe("component");
+      expect(resolveVirtualFileSystemSchemaIcon("circle-dot")).toBe("circle-dot");
+      expect(resolveVirtualFileSystemSchemaIcon("type")).toBe("component");
     });
 
     it("resolveVirtualFileSystemSchemaIcon maps file extension ids", () => {
-      expect(resolveVirtualFileSystemSchemaIcon("glb")).toBe(BoxIcon);
-      expect(resolveVirtualFileSystemSchemaIcon("pdf")).toBe(FileTypeIcon);
-      expect(resolveVirtualFileSystemSchemaIcon("json")).toBe(FileJsonIcon);
+      expect(resolveVirtualFileSystemSchemaIcon("glb")).toBe("box");
+      expect(resolveVirtualFileSystemSchemaIcon("pdf")).toBe("file-type");
+      expect(resolveVirtualFileSystemSchemaIcon("json")).toBe("file-json");
     });
 
     it("renders per-row extension icons for kit files", () => {
@@ -17785,7 +19951,7 @@ if (treeVitest) {
           rows={[{ id: "f1", fileNodeKindId: "leaf", name: "Tower", icon: "glb", level: 0, hasChildren: false }]}
         />,
       );
-      expect(markup).toContain("lucide-box");
+      expect(markup).toContain('data-icon="box"');
       expect(markup).not.toContain("avatar-fallback");
     });
 
@@ -17915,6 +20081,83 @@ if (treeVitest) {
     });
   });
 
+  describe("ElementsSurfaceChrome", () => {
+    it("keeps dark class while nested leases are active", () => {
+      resetElementsSurfaceChromeForTests();
+      const outer = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL });
+      const inner = applyElementsSurfaceChrome({ theme: "light", device: "desktop", expertise: Expertise.NORMAL });
+      expect(document.documentElement.classList.contains("dark")).toBe(false);
+      inner();
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      outer();
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      resetElementsSurfaceChromeForTests();
+      expect(document.documentElement.classList.contains("dark")).toBe(false);
+    });
+
+    it("reapplies the previous lease after the top lease releases", () => {
+      resetElementsSurfaceChromeForTests();
+      const outer = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL, compact: false });
+      const inner = applyElementsSurfaceChrome({ theme: "dark", device: "tablet", expertise: Expertise.NORMAL, compact: true });
+      expect(document.documentElement.dataset.uiDevice).toBe("tablet");
+      expect(document.documentElement.dataset.uiCompact).toBe("true");
+      inner();
+      expect(document.documentElement.dataset.uiDevice).toBe("desktop");
+      expect(document.documentElement.dataset.uiCompact).toBe("false");
+      outer();
+      resetElementsSurfaceChromeForTests();
+    });
+
+    it("defers clearing dark until the next animation frame when the last lease releases", () => {
+      resetElementsSurfaceChromeForTests();
+      let scheduled: FrameRequestCallback | undefined;
+      const raf = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((callback: FrameRequestCallback) => {
+        scheduled = callback;
+        return 1;
+      });
+      const release = applyElementsSurfaceChrome({ theme: "dark", device: "desktop", expertise: Expertise.NORMAL });
+      release();
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      expect(raf).toHaveBeenCalled();
+      scheduled?.(0);
+      expect(document.documentElement.classList.contains("dark")).toBe(false);
+      raf.mockRestore();
+      resetElementsSurfaceChromeForTests();
+    });
+
+    it("bootstrapElementsSurfaceChromeDocument applies explicit dark before leases exist", () => {
+      resetElementsSurfaceChromeForTests();
+      bootstrapElementsSurfaceChromeDocument("dark");
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+      expect(document.documentElement.dataset.uiTheme).toBe("dark");
+      resetElementsSurfaceChromeForTests();
+    });
+  });
+
+  describe("WindowMeasuresTree", () => {
+    it("renders measure controls from section content without a stray folder header", () => {
+      const markup = renderToStaticMarkup(
+        <WindowMeasuresTree>
+          <WindowMeasureTreeGroup id="lod" label="LOD" defaultOpen>
+            <WindowMeasureTreeLeaf label="Mode">
+              <Select defaultValue="automatic">
+                <SelectTrigger id="lod-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="automatic">Auto</SelectItem>
+                </SelectContent>
+              </Select>
+            </WindowMeasureTreeLeaf>
+          </WindowMeasureTreeGroup>
+        </WindowMeasuresTree>,
+      );
+      expect(markup).toContain("LOD");
+      expect(markup).toContain('data-slot="select-trigger"');
+      expect(markup).not.toContain('data-slot="tree-section-row"');
+    });
+  });
+
   describe("control chrome", () => {
     it("shows inline labels on buttons when compact is off", () => {
       const markup = renderToStaticMarkup(
@@ -17982,6 +20225,36 @@ if (treeVitest) {
       );
       expect(markup).toContain("Go back");
       expect(markup).toContain("aspect-auto");
+    });
+
+    it("threads ButtonGroup level into ButtonGroupItem hover tokens", () => {
+      const markup = renderToStaticMarkup(
+        <LevelProvider level="window">
+          <ButtonGroup>
+            <ButtonGroupItem id="ui.engagement.commands" text="Next" />
+          </ButtonGroup>
+        </LevelProvider>,
+      );
+      expect(markup).toContain("hover:bg-hover-window");
+      expect(markup).not.toContain("hover:bg-hover-base");
+    });
+
+    it("renders select menus with popover surface tokens", async () => {
+      const { render } = await import("@testing-library/react");
+      render(
+        <Select open defaultValue="fast">
+          <SelectTrigger id="compute-mode">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fast">Fast</SelectItem>
+          </SelectContent>
+        </Select>,
+      );
+      const content = document.querySelector('[data-slot="select-content"]');
+      expect(content?.className).toContain("ui-glass-menu");
+      expect(content?.className).toContain("text-popover-foreground");
+      expect(content?.className).not.toContain("bg-transparent");
     });
 
     it("renders toggles with inline labels from the toggle group id when compact is off", () => {
@@ -18071,6 +20344,7 @@ if (treeVitest) {
                   <div className="flex min-w-0 items-stretch border border-element h-medium">
                     <Toggle id="ui.panelToggle.workbench" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 shrink-0" />
                     <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 border-l shrink-0" />
+                    <Toggle id="ui.panelToggle.settings" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 border-l shrink-0" />
                   </div>
                 ),
               },
@@ -18080,6 +20354,7 @@ if (treeVitest) {
       );
       expect(markup).toContain("Workbench");
       expect(markup).toContain("Details");
+      expect(markup).toContain("Settings");
       expect(markup).toContain("has-[_[data-slot=inline-label]]:overflow-visible");
     });
 

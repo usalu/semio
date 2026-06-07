@@ -1,0 +1,10 @@
+{
+  "title": "Fix Suggestion Pick Starts Interaction",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "When typing Ex in CAD command line and picking ExtrudeCrv from Suggestions, nothing happens. Should start interaction like other UI engagement paths.",
+  "goal": "🎯cad",
+  "sessions": [
+    "⚪895fd42cf01745a38dd0628ec7934407"
+  ]
+}

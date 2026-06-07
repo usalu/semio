@@ -1,0 +1,14 @@
+{
+  "title": "Side Panel Toggle Hotkeys",
+  "emoji": "⌨️",
+  "status": "closed",
+  "description": "Ctrl+B should always toggle the last active left panel; Ctrl+Shift+B should always toggle the last active right panel.",
+  "summary": "Added `useSidePanelChromeHotkeys` in `@ui/react` (Ctrl/Cmd+B and Ctrl/Cmd+Shift+B). `ProductShell` registers them when parents supply toggle handlers. `PlatformView` toggles the last active left/right panel kind (desktop visibility or mobile sheet), and syncs mobile panel opens into `activeDesktopLeftPanelKind` / `activeDesktopRightPanelKind`. `PlaygroundView` toggles left/right side panel visibility.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1516"
+  },
+  "goal": "🎯framework🎯ui",
+  "sessions": [
+    "⚪4d9379f96c67490d927edac495af7012"
+  ]
+}

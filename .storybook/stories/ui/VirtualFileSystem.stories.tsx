@@ -23,7 +23,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // 📁#region 📁VirtualFileSystem
 const meta = {
-  title: "elements/react/VirtualFileSystem",
+  title: "🖱️ui⚛️react/VirtualFileSystem",
   component: VirtualFileSystem,
   parameters: {
     layout: "padded",

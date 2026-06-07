@@ -274,8 +274,143 @@ type syntheticCase struct {
 
 // #endregion 🗂️Asset Structs
 
+func assembleSplitInitialKitFromDirectory(initialKitDir string) (map[string]interface{}, error) {
+	shellPath := filepath.Join(initialKitDir, "kit.semio.json")
+	data, err := os.ReadFile(shellPath)
+	if err != nil {
+		return nil, err
+	}
+	var kit map[string]interface{}
+	if err := json.Unmarshal(data, &kit); err != nil {
+		return nil, err
+	}
+	typeByID := map[string]map[string]interface{}{}
+	typesDir := filepath.Join(initialKitDir, "types")
+	if entries, err := os.ReadDir(typesDir); err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".type.semio.json") {
+				continue
+			}
+			rowData, err := os.ReadFile(filepath.Join(typesDir, entry.Name()))
+			if err != nil {
+				return nil, err
+			}
+			var row map[string]interface{}
+			if err := json.Unmarshal(rowData, &row); err != nil {
+				return nil, err
+			}
+			if id, ok := row["id"].(string); ok {
+				typeByID[id] = row
+			}
+		}
+	}
+	designByID := map[string]map[string]interface{}{}
+	designsDir := filepath.Join(initialKitDir, "designs")
+	if entries, err := os.ReadDir(designsDir); err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".design.semio.json") {
+				continue
+			}
+			rowData, err := os.ReadFile(filepath.Join(designsDir, entry.Name()))
+			if err != nil {
+				return nil, err
+			}
+			var row map[string]interface{}
+			if err := json.Unmarshal(rowData, &row); err != nil {
+				return nil, err
+			}
+			if id, ok := row["id"].(string); ok {
+				designByID[id] = row
+			}
+		}
+	}
+	itemsOf := func(node interface{}) []map[string]interface{} {
+		switch typed := node.(type) {
+		case []interface{}:
+			out := make([]map[string]interface{}, 0, len(typed))
+			for _, item := range typed {
+				if row, ok := item.(map[string]interface{}); ok {
+					out = append(out, row)
+				}
+			}
+			return out
+		case map[string]interface{}:
+			if rawItems, ok := typed["items"].([]interface{}); ok {
+				out := make([]map[string]interface{}, 0, len(rawItems))
+				for _, item := range rawItems {
+					if row, ok := item.(map[string]interface{}); ok {
+						out = append(out, row)
+					}
+				}
+				return out
+			}
+		}
+		return nil
+	}
+	for _, topo := range itemsOf(kit["typologies"]) {
+		typeItems := itemsOf(topo["types"])
+		if len(typeItems) > 0 {
+			merged := make([]interface{}, len(typeItems))
+			for i, stub := range typeItems {
+				if id, ok := stub["id"].(string); ok {
+					if full, found := typeByID[id]; found {
+						merged[i] = full
+						continue
+					}
+				}
+				merged[i] = stub
+			}
+			hash := "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+			if block, ok := topo["types"].(map[string]interface{}); ok {
+				if h, ok := block["hash"].(string); ok {
+					hash = h
+				}
+			}
+			topo["types"] = map[string]interface{}{"hash": hash, "items": merged}
+		}
+		designItems := itemsOf(topo["designs"])
+		if len(designItems) > 0 {
+			merged := make([]interface{}, len(designItems))
+			for i, stub := range designItems {
+				if id, ok := stub["id"].(string); ok {
+					if full, found := designByID[id]; found {
+						merged[i] = full
+						continue
+					}
+				}
+				merged[i] = stub
+			}
+			hash := "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+			if block, ok := topo["designs"].(map[string]interface{}); ok {
+				if h, ok := block["hash"].(string); ok {
+					hash = h
+				}
+			}
+			topo["designs"] = map[string]interface{}{"hash": hash, "items": merged}
+		}
+	}
+	return kit, nil
+}
+
 func loadJSON(t *testing.T, filename string, v interface{}) {
 	path := filepath.Join(AssetsPath, filename)
+	if strings.HasSuffix(filename, "kit.semio.json") {
+		initialKitDir := filepath.Dir(path)
+		if _, err := os.Stat(filepath.Join(initialKitDir, "types")); err == nil {
+			kit, err := assembleSplitInitialKitFromDirectory(initialKitDir)
+			if err != nil {
+				t.Fatalf("Failed to assemble split kit %s: %v", filename, err)
+			}
+			data, err := json.Marshal(kit)
+			if err != nil {
+				t.Fatalf("Failed to marshal assembled kit %s: %v", filename, err)
+			}
+			if err := json.Unmarshal(data, v); err != nil {
+				t.Fatalf("Failed to parse assembled kit %s: %v", filename, err)
+			}
+			return
+		}
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("Failed to read %s: %v", filename, err)

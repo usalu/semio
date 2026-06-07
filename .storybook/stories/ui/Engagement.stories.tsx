@@ -8,7 +8,7 @@ import * as React from "react";
 import { expect, within } from "storybook/test";
 
 const meta = {
-  title: "elements/react/Engagement",
+  title: "🖱️ui⚛️react/Engagement",
   component: Engagement,
   parameters: { layout: "centered" },
   tags: ["autodocs"],
@@ -36,6 +36,31 @@ export const Standalone: Story = {
     const canvas = within(canvasElement);
     expect(canvas.getByPlaceholderText("Ask or command…")).toBeTruthy();
     expect(canvas.getByText("Ready")).toBeTruthy();
+  },
+};
+
+export const WithControl: Story = {
+  render: () => (
+    <Engagement
+      sessionActive
+      input={{ placeholder: "Height", value: "3" }}
+      status={[{ id: "engagement-step", content: "Step: Height" }]}
+      control={{
+        kind: "stepper",
+        id: "height",
+        label: "Height",
+        value: 3,
+        min: 0,
+        step: 0.1,
+        unit: "m",
+        onChange: () => {},
+      }}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText("Height")).toBeTruthy();
+    expect(canvasElement.querySelector('[data-slot="engagement-control"][data-control-kind="stepper"]')).toBeTruthy();
   },
 };
 

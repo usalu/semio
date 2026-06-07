@@ -55,7 +55,11 @@
       {
         "state": "point_to_copy_to",
         "anchor": "from",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ]
   },

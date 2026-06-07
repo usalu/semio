@@ -9,12 +9,17 @@
 // #endregion 🧲Header
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box, Circle, Cylinder, Hexagon } from "lucide-react";
 
 // 🔷#region 🔎Select
+const Box = createIconComponent("box");
+const Circle = createIconComponent("circle");
+const Cylinder = createIconComponent("cylinder");
+const Hexagon = createIconComponent("hexagon");
+
 const meta = {
-  title: "elements/react/Select",
+  title: "🖱️ui⚛️react/Select",
   component: Select,
   parameters: {
     layout: "centered",

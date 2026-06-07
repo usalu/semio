@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🪬Steps
 
 const meta = {
-  title: "elements/react/Steps",
+  title: "🖱️ui⚛️react/Steps",
   component: Steps,
   parameters: {
     layout: "padded",

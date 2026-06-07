@@ -9,13 +9,16 @@
 // #endregion 🧲Header
 
 import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section, Steps } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 // 🔷#region 🖥️Collapsible
+const Box = createIconComponent("box");
+const ChevronDown = createIconComponent("chevron-down");
+
 const meta = {
-  title: "elements/react/Collapsible",
+  title: "🖱️ui⚛️react/Collapsible",
   component: Collapsible,
   parameters: {
     layout: "centered",

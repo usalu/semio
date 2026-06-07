@@ -17,6 +17,7 @@ target*
 .tmp*
 #--------------------------------------REPO--------------------------------------
 .repo/cache
+.repo-cache
 SPECS.md
 DOCS.md
 TODOS.md

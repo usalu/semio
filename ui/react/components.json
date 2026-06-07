@@ -17,5 +17,5 @@
     "lib": "lib",
     "utils": "lib/utils"
   },
-  "iconLibrary": "lucide"
+  "iconLibrary": "none"
 }

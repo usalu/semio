@@ -4,6 +4,17 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>CAD Play</title>
+		<script>
+			(function () {
+				try {
+					var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+					var root = document.documentElement;
+					root.classList.toggle("dark", dark);
+					root.dataset.uiTheme = dark ? "dark" : "light";
+					root.style.colorScheme = dark ? "dark" : "light";
+				} catch (_) {}
+			})();
+		</script>
 		<style>
 			html,
 			body,
@@ -13,7 +24,7 @@
 			}
 		</style>
 	</head>
-	<body class="h-screen w-screen overflow-hidden bg-background text-foreground">
+	<body class="h-screen w-screen overflow-hidden bg-base text-foreground">
 		<div class="h-full w-full" id="root"></div>
 		<script type="module" src="./index.tsx"></script>
 	</body>

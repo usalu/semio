@@ -1,0 +1,13 @@
+{
+  "title": "Panel Ghost Interaction Mode",
+  "emoji": "👻",
+  "status": "closed",
+  "description": "When UI interaction starts in a panel, active element stays visible, rest dims to 5% opacity, panel becomes click-through to canvas.",
+  "summary": "Promoted ghost to global: GhostProvider on Layout with document capture-phase pointer detection (4px threshold) dims all PanelGhostRoot regions on any interaction (GIS window drag, map pan, panel controls). Active chain uses data-active-interaction (leaf) + data-active-ancestor (outer dims). PanelGhostRoot is a passive data-ghost-region shell; Ring/tree DnD/resize/setActiveInteraction hooks unchanged. globals-ui.css separates dim opacity from pointer-events. 139/142 ui/react tests pass (3 pre-existing tree layout failures).",
+  "goal": "🎯ui",
+  "plan": {
+    "client": "cursor",
+    "id": "dc3e8955",
+    "local": "panel-ghost-interaction_dc3e8955.plan.md"
+  }
+}

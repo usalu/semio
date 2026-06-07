@@ -1,0 +1,15 @@
+{
+  "title": "Brush Engagement No Suggestions",
+  "emoji": "🖌️",
+  "status": "open",
+  "description": "Brush tool shows no preview or engagement suggestions when hovering near unconnected nodes (e.g. tambour). Fix brush slot hit-testing and anchor positions to match indirect-handle UX.",
+  "summary": "Multi-pane brush place: fixture sync now uses one canonical descriptor for all peers (no per-pane mergeWasmHostAuthoredEdges), clears wasm host edge authorship before sync, defers scene/WASM commit to commitBrushPlacement only, bumps sceneAuthoringEpoch after place.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ad84c03b55e748c0a3a72bd739850158",
+    "⚪0e1a987a9d854ec3a207de149131ab6b",
+    "⚪ed6441377cb54d208220a3d7ad032913",
+    "⚪4668c4db6cd6445bb8c386e19345b51f",
+    "⚪2842cf7139874050b25c180452dc4206"
+  ]
+}

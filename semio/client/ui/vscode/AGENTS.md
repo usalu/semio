@@ -1,8 +1,9 @@
 ---
 technology: semio
+path: 🏘️semio🖱️vscode
 bundle:
  name: vscode
- emoji: 🧩
+ emoji: 🖱️
  description: The vscode bundle for semio.
  kind: ui
 ---

@@ -179,7 +179,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
 }
 
 const meta = {
-  title: "semio/algorithms/CopyAndPaste",
+  title: "🏘️semio🧪algorithms/CopyAndPaste",
   component: CopyAndPasteFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

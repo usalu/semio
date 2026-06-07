@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #endregion 🔌Adapters
 
 const meta = {
-  title: "elements/react/App",
+  title: "🖱️ui⚛️react/App",
   component: App,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

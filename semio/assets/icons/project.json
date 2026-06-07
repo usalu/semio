@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/assets/icons",
-        "command": "echo 'icons build not yet migrated to TypeScript'",
+        "command": "bun -e \"console.log('@semio/icons delegates to @ui/assets; run build on ui/assets.')\"",
         "forwardAllArgs": true
       }
     }

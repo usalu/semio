@@ -22001,6 +22001,66 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	return nil
 }
 
+// 🔗linkTicketIssueToGoalIssue links a ticket issue under the nearest ancestor goal issue.
+func linkTicketIssueToGoalIssue(issueURL, goalRef string) {
+	goalPath := goalIDForFilesystem(goalRef)
+	for goalPath != "" {
+		goal, err := ReadGoal(goalPath)
+		if err != nil {
+			return
+		}
+		if goal.Management != nil && goal.Management.Issue != "" {
+			if err := GetManagementProvider().AddSubIssue(goal.Management.Issue, issueURL); err != nil {
+				fmt.Printf("Warning: Failed to link ticket issue to goal issue %s: %v\n", goal.Management.Issue, err)
+			}
+			return
+		}
+		goalPath = goal.Parent
+	}
+}
+
+// 🐙ensureTicketGitHubIssue creates, links, or reopens the GitHub issue for a ticket.
+func ensureTicketGitHubIssue(ticket *Ticket, title, prompt, goalRef, issue string, noManagement, reopenIfClosed bool) error {
+	if noManagement {
+		return nil
+	}
+	provider := GetManagementProvider()
+	if issue != "" {
+		ticket.Management = &TicketManagementData{Issue: issue}
+		provider.AddIssueToProject(issue)
+		linkTicketIssueToGoalIssue(issue, goalRef)
+		return nil
+	}
+	if ticket.Management != nil && ticket.Management.Issue != "" {
+		issueURL := ticket.Management.Issue
+		provider.AddIssueToProject(issueURL)
+		if reopenIfClosed {
+			if remote, err := provider.GetIssueDetails(issueURL); err == nil && strings.EqualFold(remote.State, "CLOSED") {
+				if err := provider.ReopenIssue(issueURL); err != nil {
+					return fmt.Errorf("reopen github issue: %w", err)
+				}
+			}
+		}
+		linkTicketIssueToGoalIssue(issueURL, goalRef)
+		return nil
+	}
+	issueBody := formatPromptHeading(prompt)
+	var milestone *int
+	if goalRef != "" {
+		milestone, _ = getRootGoalMilestone(goalRef)
+	}
+	issueURL, err := provider.CreateIssue(title, issueBody, milestone)
+	if err != nil {
+		return err
+	}
+	if issueURL == "" {
+		return fmt.Errorf("github issue create returned empty url")
+	}
+	ticket.Management = &TicketManagementData{Issue: issueURL}
+	linkTicketIssueToGoalIssue(issueURL, goalRef)
+	return nil
+}
+
 // 🆕CreateTicket MUST persist the new entity and return a reference to it.
 // 🆕CreateTicket creates a new ticket and persists it.
 func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) (*Ticket, error) {
@@ -22099,27 +22159,9 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 		return nil, err
 	}
 
-	skipIssue := noIssue || noManagement || strings.Contains(prompt, "NOISSUE")
-	if !skipIssue {
-		if issue != "" {
-
-			ticket.Management = &TicketManagementData{Issue: issue}
-			GetManagementProvider().AddIssueToProject(issue)
-		} else {
-
-			issueBody := formatPromptHeading(prompt)
-
-			var milestone *int
-			if goal != "" {
-				milestone, _ = getRootGoalMilestone(goal)
-			}
-
-			issueURL, err := GetManagementProvider().CreateIssue(title, issueBody, milestone)
-			if err == nil && issueURL != "" {
-				ticket.Management = &TicketManagementData{Issue: issueURL}
-			} else if err != nil {
-				fmt.Printf("Warning: Failed to create GitHub issue: %v\n", err)
-			}
+	if !noIssue {
+		if err := ensureTicketGitHubIssue(ticket, title, prompt, goal, issue, noManagement, false); err != nil {
+			fmt.Printf("Warning: Failed to create GitHub issue: %v\n", err)
 		}
 	}
 
@@ -22143,25 +22185,52 @@ func ghGetMilestoneTitle(number int) (string, error) {
 	return strings.TrimSpace(stdout), nil
 }
 
+// 🔗ghExtractIssueURL parses a GitHub issue URL from `gh issue create` output.
+func ghExtractIssueURL(output string) string {
+	output = strings.TrimSpace(output)
+	if output == "" {
+		return ""
+	}
+	if fields := strings.Fields(output); len(fields) > 0 && strings.HasPrefix(fields[0], "https://") {
+		return fields[0]
+	}
+	const prefix = "https://github.com/"
+	if idx := strings.Index(output, prefix); idx >= 0 {
+		rest := output[idx:]
+		if end := strings.IndexAny(rest, " \t\r\n"); end > 0 {
+			rest = rest[:end]
+		}
+		if strings.Contains(rest, "/issues/") {
+			return rest
+		}
+	}
+	return ""
+}
+
 // 🔸ghCreateIssue holds the data fields for a ghCreateIssue record.
 func ghCreateIssue(title, body string, milestone *int) (string, error) {
 	args := []string{"issue", "create", "--title", title, "--body", body, "--label", "ticket"}
 	if milestone != nil {
 		milestoneTitle, err := ghGetMilestoneTitle(*milestone)
 		if err != nil {
-			return "", fmt.Errorf("could not resolve milestone %d: %w", *milestone, err)
+			fmt.Printf("Warning: could not resolve milestone %d, creating issue without milestone: %v\n", *milestone, err)
+		} else {
+			args = append(args, "--milestone", milestoneTitle)
 		}
-		args = append(args, "--milestone", milestoneTitle)
 	}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
 	if exitCode != 0 {
 		return "", fmt.Errorf("gh issue create failed: %s", strings.TrimSpace(stderr))
 	}
-	issueURL := strings.TrimSpace(stdout)
-	if issueURL != "" {
-		ghAddIssueToProject(issueURL)
-		ghAssignIssueToCurrentUser(issueURL)
+	issueURL := ghExtractIssueURL(stdout)
+	if issueURL == "" {
+		issueURL = ghExtractIssueURL(stderr)
 	}
+	if issueURL == "" {
+		return "", fmt.Errorf("gh issue create succeeded but no issue url in output: stdout=%q stderr=%q", strings.TrimSpace(stdout), strings.TrimSpace(stderr))
+	}
+	ghAddIssueToProject(issueURL)
+	ghAssignIssueToCurrentUser(issueURL)
 	return issueURL, nil
 }
 
@@ -24734,12 +24803,11 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	appendTicketSessionID(ticket, currentTicketSessionID())
 	ticket.Status = TicketStatusOpen
 
+	if err := ensureTicketGitHubIssue(ticket, ticket.Title, prompt, ticket.Goal, "", noManagement, true); err != nil {
+		fmt.Printf("Warning: Failed to ensure GitHub issue: %v\n", err)
+	}
 	if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
 		issueURL := ticket.Management.Issue
-		if err := GetManagementProvider().ReopenIssue(issueURL); err != nil {
-			fmt.Printf("Warning: Failed to reopen GitHub issue: %v\n", err)
-		}
-		GetManagementProvider().AddIssueToProject(issueURL)
 		comment := formatPromptHeading(prompt)
 		if err := GetManagementProvider().AddComment(issueURL, comment); err != nil {
 			fmt.Printf("Warning: Failed to add prompt comment to GitHub issue: %v\n", err)
@@ -24771,20 +24839,26 @@ func ToolTicketOpen(emoji, title, prompt, llm, client, draft string, noIssue boo
 		output.Info("Ticket creation skipped (NOTICKET)")
 		return ToolResult{Output: *output}
 	}
-	data, _ := json.Marshal(map[string]interface{}{
-		"ticketOpen": map[string]interface{}{
-			"id":     ticket.GetID(),
-			"slug":   ticket.Slug,
-			"year":   ticket.Year,
-			"month":  ticket.Month,
-			"day":    ticket.Day,
-			"status": ticket.Status,
-			"path":   ticket.FolderPath,
-			"uri":    ticket.GetURI(),
-		},
-	})
+	ticketOpenPayload := map[string]interface{}{
+		"id":     ticket.GetID(),
+		"slug":   ticket.Slug,
+		"year":   ticket.Year,
+		"month":  ticket.Month,
+		"day":    ticket.Day,
+		"status": ticket.Status,
+		"path":   ticket.FolderPath,
+		"uri":    ticket.GetURI(),
+	}
+	if ticket.Management != nil && ticket.Management.Issue != "" {
+		ticketOpenPayload["github"] = map[string]interface{}{"issue": ticket.Management.Issue}
+	}
+	data, _ := json.Marshal(map[string]interface{}{"ticketOpen": ticketOpenPayload})
 	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
-	return toolResultFromEvents(events, ticket)
+	result := toolResultFromEvents(events, ticket)
+	if ticket.Management != nil && ticket.Management.Issue != "" {
+		result.Output.Success(fmt.Sprintf("GitHub issue: %s", ticket.Management.Issue))
+	}
+	return result
 }
 
 // 🔖ToolTicketList MUST complete the operation successfully.
@@ -34348,15 +34422,13 @@ func ticketOpenWithKind(ctx context.Context, request mcp.CallToolRequest, kind M
 	goal, _, _ := getStringArg(args, "goal")
 	client, _, _ := getStringArg(args, "client")
 	llm, _, _ := getStringArg(args, "llm")
-	noIssue, _, _ := getBoolArg(args, "no_issue")
-	noManagement, _, _ := getBoolArg(args, "no_management")
 	draft, _, _ := getStringArg(args, "draft")
 	parent, _, _ := getStringArg(args, "parent")
 	issue, _, _ := getStringArg(args, "issue")
 	planID, _, _ := getStringArg(args, "plan_id")
 	specID, _, _ := getStringArg(args, "spec_id")
 
-	result := ToolTicketOpen(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue, kind, planID, specID)
+	result := ToolTicketOpen(emoji, title, prompt, llm, client, draft, false, goal, parent, false, issue, kind, planID, specID)
 	return toolResultToMCP(result)
 }
 
@@ -38408,6 +38480,33 @@ var repoManagedGitHooks = []string{
 	"post-rewrite",
 }
 
+// 🔄installMicroCommitHook copies a repo hook script into `.git/hooks` (must stay non-blocking).
+func installMicroCommitHook(repoRoot, hookName string) error {
+	if repoRoot == "" {
+		return nil
+	}
+	src := filepath.Join(repoRoot, "repo", "hooks", hookName)
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return fmt.Errorf("read micro-commit hook %s: %w", hookName, err)
+	}
+	hookPath := filepath.Join(repoRoot, ".git", "hooks", hookName)
+	if err := os.WriteFile(hookPath, data, 0o755); err != nil {
+		return fmt.Errorf("install micro-commit hook %s: %w", hookName, err)
+	}
+	return nil
+}
+
+// 🔄installMicroCommitHooks installs micro-commit git hooks (prepare-commit-msg, post-commit reset).
+func installMicroCommitHooks(repoRoot string) error {
+	for _, name := range []string{"prepare-commit-msg", "post-commit", "post-checkout", "post-merge", "post-rewrite"} {
+		if err := installMicroCommitHook(repoRoot, name); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // 🧹removeGitHooks deletes repo-managed git hooks so commits, rebases, and squashes stay unblocked.
 func removeGitHooks(repoRoot string) ([]string, error) {
 	if repoRoot == "" {
@@ -38453,12 +38552,15 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if err := installMicroCommitHooks(repoRoot); err != nil {
+				return err
+			}
 			fmt.Fprintln(cmd.OutOrStdout(), "repo config generation is disabled; edit checked-in config files manually")
 			if len(removed) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "git hooks: none to remove")
+				fmt.Fprintln(cmd.OutOrStdout(), "git hooks: none to remove; micro-commit hooks installed")
 				return nil
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "git hooks removed: %s\n", strings.Join(removed, ", "))
+			fmt.Fprintf(cmd.OutOrStdout(), "git hooks removed: %s; micro-commit hooks installed\n", strings.Join(removed, ", "))
 			return nil
 		},
 	}
@@ -38943,14 +39045,14 @@ func syncTicketToServer(ticket *Ticket, action string) {
 	}
 	ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	payload := map[string]interface{}{
-		"action":  action,
-		"id":      ticketID,
-		"title":   ticket.Title,
-		"prompt":  ticket.Description,
-		"summary": ticket.Summary,
-		"goal":    ticket.Goal,
-		"parent":  ticket.Parent,
-		"author":  GetGitAuthorAlias(),
+		"action":    action,
+		"ticket_id": ticketID,
+		"title":     ticket.Title,
+		"prompt":    ticket.Description,
+		"summary":   ticket.Summary,
+		"goal":      ticket.Goal,
+		"parent":    ticket.Parent,
+		"author":    GetGitAuthorAlias(),
 	}
 	if ticket.Management != nil && ticket.Management.Issue != "" {
 		payload["github_issue"] = ticket.Management.Issue
@@ -39583,8 +39685,26 @@ func isDeeperGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) >= 2
 }
 
+// 🛤️goalIDForFilesystem maps repo emoji goal IDs to `.repo/🎯/...` paths for filesystem access.
+func goalIDForFilesystem(goalID string) string {
+	goalID = strings.TrimSpace(goalID)
+	if goalID == "" {
+		return ""
+	}
+	if strings.Contains(goalID, "/") {
+		return goalID
+	}
+	if strings.Contains(goalID, emojiText(EmojiGoal)) {
+		if path := semioIDToGoalPath(goalID); path != "" && path != goalID {
+			return path
+		}
+	}
+	return goalID
+}
+
 // 🔺getRootGoalID holds the data fields for a getRootGoalID record.
 func getRootGoalID(goalID string) string {
+	goalID = goalIDForFilesystem(goalID)
 	if idx := strings.Index(goalID, "/"); idx != -1 {
 		return goalID[:idx]
 	}
@@ -39592,6 +39712,7 @@ func getRootGoalID(goalID string) string {
 }
 
 func getParentGoalID(goalID string) string {
+	goalID = goalIDForFilesystem(goalID)
 	if idx := strings.LastIndex(goalID, "/"); idx != -1 {
 		return goalID[:idx]
 	}
@@ -45696,10 +45817,9 @@ func CreateMcpServer(kind McpClientKind) *server.MCPServer {
 		mcp.WithString("emoji", mcp.Required(), mcp.Description("Single emoji representing the ticket (e.g. '🎫', '🐛', '✨').")),
 		mcp.WithString("title", mcp.Required(), mcp.Description("Short title for the ticket. Shape is not enforced.")),
 		mcp.WithString("prompt", mcp.Required(), mcp.Description("Full description of the task.")),
-		mcp.WithString("goal", mcp.Description("Goal slug to associate the ticket with.")),
+		mcp.WithString("goal", mcp.Required(), mcp.Description("Goal id to associate the ticket with (from repo://goals).")),
 		mcp.WithString("client", mcp.Description("Agent client used for this ticket.")),
 		mcp.WithString("llm", mcp.Description("LLM used for this ticket.")),
-		mcp.WithBoolean("no_management", mcp.Description("Skip GitHub issue creation and management.")),
 		mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
 		mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets.")),
 		mcp.WithString("issue", mcp.Description("Existing GitHub issue URL to link instead of creating a new one.")),

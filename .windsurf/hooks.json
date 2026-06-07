@@ -1,64 +1,66 @@
 {
-  "hooks": {
-    "post_cascade_response": [
-      {
-        "command": "go run ./repo/client/mcp hook post_cascade_response windsurf-chat",
-        "show_output": false
-      }
-    ],
-    "post_mcp_tool_use": [
-      {
-        "command": "go run ./repo/client/mcp hook post_mcp_tool_use windsurf-chat",
-        "show_output": false
-      }
-    ],
-    "post_read_code": [
-      {
-        "command": "go run ./repo/client/mcp hook post_read_code windsurf-chat",
-        "show_output": false
-      }
-    ],
-    "post_setup_worktree": [
-      {
-        "command": "go run ./repo/client/mcp hook post_setup_worktree windsurf-chat",
-        "show_output": false
-      }
-    ],
-    "post_write_code": [
-      {
-        "command": "go run ./repo/client/mcp hook post_write_code windsurf-chat",
-        "show_output": false
-      }
-    ],
-    "pre_mcp_tool_use": [
-      {
-        "command": "go run ./repo/client/mcp hook pre_mcp_tool_use windsurf-chat",
-        "show_output": false
-      }
-    ],
-    "pre_read_code": [
-      {
-        "command": "go run ./repo/client/mcp hook pre_read_code windsurf-chat",
-        "show_output": false
-      }
-    ],
-    "pre_run_command": [
-      {
-        "command": "go run ./repo/client/mcp hook pre_run_command windsurf-chat",
-        "show_output": true
-      }
-    ],
-    "pre_user_prompt": [
-      {
-        "command": "go run ./repo/client/mcp hook pre_user_prompt windsurf-chat",
-        "show_output": false
-      }
-    ],
-    "pre_write_code": [
-      {
-        "command": "go run ./repo/client/mcp hook pre_write_code windsurf-chat",
-        "show_output": false
-      }
-    ]
-  }
+  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
+  "hooks": {}
+  // "hooks": {
+  //   "post_cascade_response": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook post_cascade_response windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ],
+  //   "post_mcp_tool_use": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook post_mcp_tool_use windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ],
+  //   "post_read_code": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook post_read_code windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ],
+  //   "post_setup_worktree": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook post_setup_worktree windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ],
+  //   "post_write_code": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook post_write_code windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ],
+  //   "pre_mcp_tool_use": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook pre_mcp_tool_use windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ],
+  //   "pre_read_code": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook pre_read_code windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ],
+  //   "pre_run_command": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook pre_run_command windsurf-chat",
+  //       "show_output": true
+  //     }
+  //   ],
+  //   "pre_user_prompt": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook pre_user_prompt windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ],
+  //   "pre_write_code": [
+  //     {
+  //       "command": "bun ./script.ts dev mcp stdio client hook pre_write_code windsurf-chat",
+  //       "show_output": false
+  //     }
+  //   ]
+  // }
 }

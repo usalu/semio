@@ -1,5 +1,5 @@
 ---
-emoji: 👤
+emoji: 🏘️
 ---
 
 # 🧾 Specification

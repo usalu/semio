@@ -1,0 +1,745 @@
+import { createHash } from "node:crypto";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import {
+  buildMicroCommitMetrics,
+  formatMicroCommitMetricsLines,
+  gitRepoRoot,
+  MICRO_COMMIT_ULOC_HEADER,
+  type UlocRunner,
+} from "./uloc-metrics.ts";
+
+export type MicroCommitLevel = "prepare-only" | "prepare-and-commit" | "prepare-and-commit-and-push";
+
+type Contributor = { alias: string; emoji: string; name: string; email: string; emails?: string[] };
+
+const COUNTER_RE = /^(.+🎆\d{2}🌙\d{2}☀️\d{2})🚩(\d+)$/;
+const TICKET_JSON_RE = /^\.repo\/🎫\/.+\/ticket\.json$/;
+export function digestMicroCommitMessage(message: string): string {
+  return createHash("sha256").update(message.replace(/\r\n/g, "\n").trimEnd()).digest("hex");
+}
+
+function preparedDigestPath(root: string): string {
+  return join(gitDir(root), "semio-micro-commit-digest");
+}
+
+function preparedActivePath(root: string): string {
+  return join(gitDir(root), "semio-micro-commit-active");
+}
+
+function markPrepareActive(root: string): void {
+  writeFileSync(preparedActivePath(root), "1\n");
+}
+
+function isPrepareActive(root: string): boolean {
+  return existsSync(preparedActivePath(root));
+}
+
+const GK_TEMPLATE_BASENAME = "gkcommittemplate";
+const GK_COMMIT_TEMPLATE_FILE = `${GK_TEMPLATE_BASENAME}.txt`;
+
+const MICRO_COMMIT_POST_WIPE_HOOKS = ["post-commit", "post-checkout", "post-merge", "post-rewrite"] as const;
+
+function git(root: string, args: string[]): { ok: boolean; out: string } {
+  const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+  if (r.status !== 0) return { ok: false, out: (r.stderr ?? r.stdout ?? "").trim() };
+  return { ok: true, out: (r.stdout ?? "").trim() };
+}
+
+function gitCachedNames(root: string, extra: string[] = []): string[] {
+  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root });
+  if (r.status !== 0) return [];
+  const raw = (r.stdout ?? Buffer.alloc(0)).toString("utf8");
+  if (!raw) return [];
+  return raw.split("\0").filter(Boolean);
+}
+
+function branchAllowed(root: string): boolean {
+  const b = git(root, ["branch", "--show-current"]).out;
+  return b.includes("⛳wip") || b.includes("🏗️dev");
+}
+
+function gitEmail(root: string): string {
+  return git(root, ["config", "user.email"]).out;
+}
+
+function findContributor(root: string): Contributor | null {
+  const email = gitEmail(root).toLowerCase();
+  if (!email) return null;
+  const dir = join(root, ".repo", "🧑‍💻");
+  if (!existsSync(dir)) return null;
+  for (const name of readdirSync(dir, { withFileTypes: true })) {
+    if (!name.isDirectory()) continue;
+    const path = join(dir, name.name, "contributor.json");
+    if (!existsSync(path)) continue;
+    const c = JSON.parse(readFileSync(path, "utf8")) as Contributor & { emails?: string[] };
+    const emails = [c.email, ...(c.emails ?? [])].filter((e): e is string => typeof e === "string" && e.length > 0).map((e) => e.toLowerCase());
+    if (emails.includes(email)) return c;
+  }
+  return null;
+}
+
+function loadLevel(root: string, contributor: Contributor, segments: string[]): MicroCommitLevel {
+  const token = segments.join(" ").toLowerCase();
+  if (/\b(gp|gpush|push!|\+push)\b/.test(token)) return "prepare-and-commit-and-push";
+  if (/\b(gc|commit!|\+commit)\b/.test(token)) return "prepare-and-commit";
+  if (/\b(g\.|gprepare|prepare!|\+prepare)\b/.test(token)) return "prepare-only";
+  const path = join(root, ".repo", "🧑‍💻", contributor.alias, "micro-commit.json");
+  if (existsSync(path)) {
+    const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
+    if (j.level === "prepare-and-commit" || j.level === "prepare-and-commit-and-push" || j.level === "prepare-only") {
+      return j.level;
+    }
+  }
+  return "prepare-only";
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function pad3(n: number): string {
+  return String(n).padStart(3, "0");
+}
+
+const COUNTER_LOG_DEPTH = 40;
+
+/** 🔢Reads micro-commit counter from subject line `…🚩NNN`. */
+export function extractCounterFromSubject(subject: string): { nnn: number; line1Base: string } | null {
+  const s = subject.trim();
+  const formatted = COUNTER_RE.exec(s);
+  if (!formatted) return null;
+  return { nnn: Number.parseInt(formatted[2], 10), line1Base: formatted[1] };
+}
+
+/** 🎆Bumps counter from recent `…🚩NNN` subjects (newest first). */
+export function bumpCounterFromHistory(
+  subjectsNewestFirst: string[],
+  contributor: Contributor,
+  now = new Date(),
+): { line1Base: string; nnn: string } {
+  const yy = pad2(now.getFullYear() % 100);
+  const mm = pad2(now.getMonth() + 1);
+  const dd = pad2(now.getDate());
+  const fresh = `${contributor.emoji}${contributor.alias}🎆${yy}🌙${mm}☀️${dd}`;
+  let max = 0;
+  let line1Base: string | null = null;
+  for (const subject of subjectsNewestFirst) {
+    const hit = extractCounterFromSubject(subject);
+    if (!hit) continue;
+    max = Math.max(max, hit.nnn);
+    if (!line1Base) line1Base = hit.line1Base;
+  }
+  if (max > 0) return { line1Base: line1Base ?? fresh, nnn: pad3(max + 1) };
+  return { line1Base: fresh, nnn: "001" };
+}
+
+export function bumpCounterFromSubject(
+  subject: string,
+  contributor: Contributor,
+  now = new Date(),
+): { line1Base: string; nnn: string } {
+  return bumpCounterFromHistory([subject], contributor, now);
+}
+
+function nextCounter(root: string, contributor: Contributor): { line1Base: string; nnn: string } {
+  const log = git(root, ["log", "--format=%s", `-${COUNTER_LOG_DEPTH}`]).out;
+  const subjects = log ? log.split("\n").filter(Boolean) : [];
+  return bumpCounterFromHistory(subjects, contributor);
+}
+
+function formatSecond(now: Date): string {
+  const yy = pad2(now.getFullYear() % 100);
+  const mm = pad2(now.getMonth() + 1);
+  const dd = pad2(now.getDate());
+  const hh = pad2(now.getHours());
+  const min = pad2(now.getMinutes());
+  const ss = pad2(now.getSeconds());
+  return `🎆${yy}🌙${mm}☀️${dd}⏰${hh}⌚${min}⏱️${ss}`;
+}
+
+function preparedBulletsPath(root: string): string {
+  return join(gitDir(root), "semio-micro-commit-bullets");
+}
+
+const EMOJI_LEAD_RE = /^((?:\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)+)/u;
+const MICRO_COMMIT_BULLET_RE = /^(?:\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)+\S/u;
+const TIMESTAMP_LINE_RE = /^🎆\d{2}🌙\d{2}☀️\d{2}/u;
+const RESERVED_BULLET_LEAD_EMOJIS = new Set(["🎆", "📊", "🔢", "🚩"]);
+
+/** 🏷️Leading emoji grapheme on a bullet line, or "" if none. */
+export function bulletLeadEmoji(line: string): string {
+  const m = EMOJI_LEAD_RE.exec(line.trim());
+  return m?.[1] ?? "";
+}
+
+/** 📝Formats one bullet as `{emoji}{description}` (line starts with emoji, no leading `-`). */
+export function formatMicroCommitBulletLine(line: string): string {
+  let body = line.trim().replace(/^-+\s*/, "");
+  return body.replace(new RegExp(`^${EMOJI_LEAD_RE.source}\\s+`, "u"), "$1");
+}
+
+const MICRO_COMMIT_ULOC_ROW_RE =
+  /^[\p{Extended_Pictographic}][\dk]+(?:➕\d+)?(?:✏️\d+)?(?:➖\d+)?(?:🟰\d+)?$/u;
+
+function isMicroCommitUlocLine(line: string): boolean {
+  const t = line.trim();
+  if (t.startsWith(MICRO_COMMIT_ULOC_HEADER)) return true;
+  return MICRO_COMMIT_ULOC_ROW_RE.test(t);
+}
+
+/** 📝Normalizes LLM-authored bullet lines to `{emoji}{description}`. */
+export function normalizeBulletLines(text: string): string[] {
+  return text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !l.startsWith("#") && !isMicroCommitUlocLine(l))
+    .map(formatMicroCommitBulletLine)
+    .filter((l) => l.length > 1)
+    .slice(0, 8);
+}
+
+function validateBulletSpacing(bullets: string[]): void {
+  for (const b of bullets) {
+    if (MICRO_COMMIT_BULLET_RE.test(b)) continue;
+    console.error(`micro-commit: bullet must start with {emoji} then description (no '-' prefix, no space after emoji): ${b}`);
+    process.exit(1);
+  }
+}
+
+/** 🚫Returns an error when a bullet uses reserved or timestamp emojis. */
+export function bulletEmojiValidationError(bullets: string[]): string | null {
+  for (const b of bullets) {
+    const lead = bulletLeadEmoji(b);
+    if (RESERVED_BULLET_LEAD_EMOJIS.has(lead)) {
+      return `micro-commit: ${lead} is reserved for subject/timestamp/uloc — start each bullet with the emoji that best matches that line's description`;
+    }
+    if (TIMESTAMP_LINE_RE.test(b.trim())) {
+      return "micro-commit: bullet must not copy the 🎆YY🌙MM☀️DD timestamp pattern — use one leading emoji that fits the change, not the calendar line";
+    }
+  }
+  return null;
+}
+
+function validateBulletEmojis(bullets: string[]): void {
+  const err = bulletEmojiValidationError(bullets);
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+}
+
+function writePreparedBullets(root: string, bullets: string[]): void {
+  writeFileSync(preparedBulletsPath(root), `${bullets.join("\n")}\n`);
+}
+
+function readPreparedBullets(root: string): string[] {
+  const path = preparedBulletsPath(root);
+  if (!existsSync(path)) return [];
+  return normalizeBulletLines(readFileSync(path, "utf8"));
+}
+
+const GIT_COMMIT_DRAFT_FILES = ["COMMIT_EDITMSG", "MERGE_MSG", "SQUASH_MSG"] as const;
+
+const STAGED_CHANGE_AREAS = [
+  { id: ".cursor/plans", match: (p: string) => p.startsWith(".cursor/plans/"), keywords: ["plan"] },
+  { id: ".agents", match: (p: string) => p.startsWith(".agents/") && !p.endsWith("SKILL.md"), keywords: ["skill", "agent"] },
+  { id: "repo", match: (p: string) => p.startsWith("repo/"), keywords: ["hook", "micro-commit"] },
+  { id: ".devcontainer", match: (p: string) => p.startsWith(".devcontainer/"), keywords: ["devcontainer"] },
+  {
+    id: "product",
+    match: (p: string) => /^(framework|puzzle|semio|cad|ui|mathematical|infinite|elements|coda|reuse)\//.test(p),
+    keywords: [],
+  },
+] as const;
+
+function isInsignificantStagedPath(path: string): boolean {
+  return /\/micro-commit\.ts$/.test(path) || /\/index\.test\.ts$/.test(path) || path.endsWith("SKILL.md");
+}
+
+/** 🔤Path tokens used to check whether bullets mention a staged file. */
+export function pathTokensForBulletCoverage(filePath: string): string[] {
+  return [...new Set(filePath.toLowerCase().split(/[/._-]+/).filter((s) => s.length >= 4))];
+}
+
+function bulletsMentionPathTokens(text: string, paths: string[]): boolean {
+  const tokens = paths.flatMap(pathTokensForBulletCoverage);
+  return tokens.some((t) => text.includes(t));
+}
+
+function bulletsCoverArea(text: string, paths: string[], keywords: readonly string[]): boolean {
+  if (keywords.some((k) => text.includes(k))) return true;
+  return bulletsMentionPathTokens(text, paths);
+}
+
+/** 🧪Returns staged area ids not reflected in bullets (empty = ok). */
+export function uncoveredStagedAreas(bullets: string[], staged: string[]): string[] {
+  const significant = staged.filter((p) => !isInsignificantStagedPath(p));
+  if (significant.length === 0) return [];
+  const text = bullets.join("\n").toLowerCase();
+  const missed: string[] = [];
+  const matched = new Set<string>();
+  for (const area of STAGED_CHANGE_AREAS) {
+    const files = significant.filter((p) => {
+      if (!area.match(p)) return false;
+      matched.add(p);
+      return true;
+    });
+    if (files.length === 0) continue;
+    if (!bulletsCoverArea(text, files, area.keywords)) missed.push(area.id);
+  }
+  const other = significant.filter((p) => !matched.has(p));
+  if (other.length > 0 && !bulletsMentionPathTokens(text, other)) missed.push("other staged paths");
+  return missed;
+}
+
+function validateBulletsAgainstStaged(bullets: string[], staged: string[]): void {
+  const missed = uncoveredStagedAreas(bullets, staged);
+  if (missed.length === 0) return;
+  console.error(`micro-commit: bullets must cover every staged area — missing: ${missed.join(", ")}`);
+  console.error("micro-commit: read `micro-commit diff` again (include .cursor/plans, product code, repo, …)");
+  for (const p of staged) console.error(`  ${p}`);
+  process.exit(1);
+}
+
+function readDiffBulletsInput(root: string, bulletsFile: string | null): string[] {
+  if (bulletsFile) {
+    const path = bulletsFile.startsWith("/") ? bulletsFile : join(root, bulletsFile);
+    return normalizeBulletLines(readFileSync(path, "utf8"));
+  }
+  if (!process.stdin.isTTY) {
+    return normalizeBulletLines(readFileSync(0, "utf8"));
+  }
+  return [];
+}
+
+function listCachedPaths(root: string): string[] {
+  return gitCachedNames(root);
+}
+
+function listAddedTicketPaths(root: string): string[] {
+  return gitCachedNames(root, ["--diff-filter=A"]).filter((p) => TICKET_JSON_RE.test(p));
+}
+
+function ticketBullets(root: string): string[] {
+  const bullets: string[] = [];
+  for (const rel of listAddedTicketPaths(root)) {
+    const path = join(root, rel);
+    const t = JSON.parse(readFileSync(path, "utf8")) as { emoji?: string; title?: string };
+    if (!t.emoji || !t.title) continue;
+    bullets.push(`${t.emoji}${t.title}`);
+  }
+  return bullets;
+}
+
+export function buildMicroCommitMessage(
+  root: string,
+  contributor: Contributor,
+  diffBullets: string[] = [],
+  ulocRunner?: UlocRunner,
+): string {
+  root = gitRepoRoot(root);
+  const { line1Base, nnn } = nextCounter(root, contributor);
+  const now = new Date();
+  const authored = diffBullets.length > 0 ? normalizeBulletLines(diffBullets.join("\n")) : readPreparedBullets(root);
+  const bullets = [...ticketBullets(root), ...authored].slice(0, 8);
+  if (bullets.length === 0) {
+    throw new Error("micro-commit: at least one description bullet is required");
+  }
+  const metrics = formatMicroCommitMetricsLines(buildMicroCommitMetrics(root, ulocRunner));
+  const lines = [`${line1Base}🚩${nnn}`, formatSecond(now), ...bullets];
+  if (metrics.length > 0) lines.push("", ...metrics);
+  lines.push("", `Signed-off-by: ${contributor.name} <${contributor.email}>`);
+  return `${lines.join("\n")}\n`;
+}
+
+function gitDir(root: string): string {
+  const out = git(root, ["rev-parse", "--git-dir"]).out;
+  return out.startsWith("/") ? out : join(root, out);
+}
+
+export function writeMicroCommitTemplates(root: string, message: string): void {
+  const dir = gitDir(root);
+  const gkCommitTemplate = join(dir, GK_COMMIT_TEMPLATE_FILE);
+  removeGitKrakenTemplateFiles(root);
+  writeFileSync(gkCommitTemplate, message);
+  for (const name of GIT_COMMIT_DRAFT_FILES) {
+    writeFileSync(join(dir, name), message);
+  }
+  git(root, ["config", "--local", "commit.template", gkCommitTemplate]);
+  writeFileSync(preparedDigestPath(root), `${digestMicroCommitMessage(message)}\n`);
+  markPrepareActive(root);
+}
+
+export function shouldRefreshPreparedCommitMessage(current: string, preparedDigest: string | null): boolean {
+  const trimmed = current.trim();
+  if (!trimmed) return true;
+  if (!preparedDigest) return false;
+  return digestMicroCommitMessage(current) === preparedDigest.trim();
+}
+
+function removeGitDirPrefixed(root: string, prefix: string): void {
+  const dir = gitDir(root);
+  for (const name of readdirSync(dir)) {
+    if (name.startsWith(prefix)) {
+      try {
+        rmSync(join(dir, name), { force: true });
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+function removeGitKrakenTemplateFiles(root: string): void {
+  const dir = gitDir(root);
+  for (const name of readdirSync(dir)) {
+    if (!name.startsWith(GK_TEMPLATE_BASENAME)) continue;
+    try {
+      rmSync(join(dir, name), { force: true });
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** 🧹Clears GitKraken templates, git draft messages, and micro-commit prepare state. */
+export function clearGitCommitDraftState(root: string): void {
+  const dir = gitDir(root);
+  removeGitKrakenTemplateFiles(root);
+  const gkCommitTemplate = join(dir, GK_COMMIT_TEMPLATE_FILE);
+  writeFileSync(gkCommitTemplate, "");
+  git(root, ["config", "--local", "commit.template", gkCommitTemplate]);
+  for (const name of GIT_COMMIT_DRAFT_FILES) {
+    try {
+      writeFileSync(join(dir, name), "");
+    } catch {
+      /* ignore */
+    }
+  }
+  removeGitDirPrefixed(root, "semio-micro-commit");
+}
+
+export function clearMicroCommitTemplatesOnly(root: string): void {
+  clearGitCommitDraftState(root);
+}
+
+function clearStaleTemplatesBeforePrepare(root: string): void {
+  if (!isPrepareActive(root)) clearGitCommitDraftState(root);
+}
+
+/** 🧹Removes prepare state and resets GK/git templates to empty after a commit. */
+export function wipeAfterCommit(root: string): void {
+  clearGitCommitDraftState(root);
+}
+
+export function handlePrepareCommitMsg(root: string, msgFile: string, source: string): void {
+  if (!isPrepareActive(root)) {
+    clearMicroCommitTemplatesOnly(root);
+    return;
+  }
+  if (!branchAllowed(root)) return;
+  const contributor = findContributor(root);
+  if (!contributor) return;
+  if (source === "merge" || source === "squash") return;
+  const preparedBullets = readPreparedBullets(root);
+  const newTickets = listAddedTicketPaths(root);
+  if (preparedBullets.length === 0 && newTickets.length === 0) {
+    const current = existsSync(msgFile) ? readFileSync(msgFile, "utf8") : "";
+    if (current.trim()) return;
+    return;
+  }
+  const digestPath = preparedDigestPath(root);
+  const preparedDigest = existsSync(digestPath) ? readFileSync(digestPath, "utf8") : null;
+  const current = existsSync(msgFile) ? readFileSync(msgFile, "utf8") : "";
+  if (!shouldRefreshPreparedCommitMessage(current, preparedDigest)) return;
+  const message = buildMicroCommitMessage(root, contributor, preparedBullets);
+  writeFileSync(msgFile, message);
+  writeMicroCommitTemplates(root, message);
+}
+
+const MICRO_COMMIT_BUN_PIN = "semio-micro-commit-bun";
+
+/** 🥖Resolves the Bun executable for git hooks (GUI git often has a minimal PATH). */
+export function resolveMicroCommitBunBin(root: string): string {
+  const fromEnv = process.env.SEMIO_BUN?.trim();
+  if (fromEnv) return fromEnv;
+  const argv0 = process.argv[0] ?? "";
+  if (/bun(\.exe)?$/i.test(argv0)) return argv0;
+  const win = process.platform === "win32";
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? "";
+  const bunInstall = process.env.BUN_INSTALL ?? join(home, ".bun");
+  const candidates = [
+    join(root, "node_modules", ".bin", win ? "bun.cmd" : "bun"),
+    join(root, "node_modules", ".bin", "bun.exe"),
+    join(bunInstall, "bin", win ? "bun.exe" : "bun"),
+    join(bunInstall, "bin", "bun"),
+  ];
+  for (const c of candidates) {
+    if (c && existsSync(c)) return c;
+  }
+  const which = spawnSync(win ? "where" : "which", ["bun"], { encoding: "utf8", shell: win });
+  if (which.status === 0) {
+    const first = (which.stdout ?? "").split(/\r?\n/).map((l) => l.trim()).find(Boolean);
+    if (first && existsSync(first)) return first;
+  }
+  return win ? "bun.exe" : "bun";
+}
+
+const MICRO_COMMIT_SEED_EMPTY_GK_SH = `semio_micro_commit_seed_empty_gk() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  GK_TEMPLATE="$GIT_DIR/${GK_COMMIT_TEMPLATE_FILE}"
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/gkcommittemplate*; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+  : >"$GK_TEMPLATE" 2>/dev/null || true
+  git config --local commit.template "$GK_TEMPLATE" 2>/dev/null || true
+}`;
+
+const MICRO_COMMIT_WIPE_FULL_SH = `${MICRO_COMMIT_SEED_EMPTY_GK_SH}
+semio_micro_commit_wipe() {
+  GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || return 0
+  semio_micro_commit_seed_empty_gk
+  for msg in COMMIT_EDITMSG MERGE_MSG SQUASH_MSG; do
+    if [ -f "$GIT_DIR/$msg" ]; then
+      : >"$GIT_DIR/$msg" 2>/dev/null || true
+    fi
+  done
+  if [ -d "$GIT_DIR" ]; then
+    for f in "$GIT_DIR"/semio-micro-commit-*; do
+      [ -e "$f" ] || continue
+      rm -f "$f" 2>/dev/null || true
+    done
+  fi
+}`;
+
+const MICRO_COMMIT_RESOLVE_BUN_SH = `semio_resolve_bun() {
+  ROOT="$1"
+  if [ -n "$SEMIO_BUN" ] && [ -x "$SEMIO_BUN" ]; then
+    echo "$SEMIO_BUN"
+    return
+  fi
+  if [ -f "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" ]; then
+    B=$(head -n 1 "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" | tr -d '\\r')
+    if [ -n "$B" ] && [ -x "$B" ]; then
+      echo "$B"
+      return
+    fi
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun" ]; then
+    echo "$BUN_INSTALL/bin/bun"
+    return
+  fi
+  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun.exe" ]; then
+    echo "$BUN_INSTALL/bin/bun.exe"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun" ]; then
+    echo "$ROOT/node_modules/.bin/bun"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.cmd" ]; then
+    echo "$ROOT/node_modules/.bin/bun.cmd"
+    return
+  fi
+  if [ -x "$ROOT/node_modules/.bin/bun.exe" ]; then
+    echo "$ROOT/node_modules/.bin/bun.exe"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun" ]; then
+    echo "$HOME/.bun/bin/bun"
+    return
+  fi
+  if [ -x "$HOME/.bun/bin/bun.exe" ]; then
+    echo "$HOME/.bun/bin/bun.exe"
+    return
+  fi
+  B=$(command -v bun 2>/dev/null || true)
+  if [ -n "$B" ]; then
+    echo "$B"
+  fi
+}`;
+
+/** 🪝Renders a portable `sh` git hook (LF, inline wipe; Bun only when needed). */
+export function renderMicroCommitGitHook(
+  name: "prepare-commit-msg" | (typeof MICRO_COMMIT_POST_WIPE_HOOKS)[number],
+): string {
+  const isPostWipe = (MICRO_COMMIT_POST_WIPE_HOOKS as readonly string[]).includes(name);
+  const lines = [
+    "#!/usr/bin/env sh",
+    isPostWipe ? MICRO_COMMIT_WIPE_FULL_SH : MICRO_COMMIT_SEED_EMPTY_GK_SH,
+    'ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0',
+    'cd "$ROOT" || exit 0',
+    'GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0',
+  ];
+  if (isPostWipe) {
+    lines.push(
+      MICRO_COMMIT_RESOLVE_BUN_SH,
+      'BUN=$(semio_resolve_bun "$ROOT")',
+      '[ -n "$BUN" ] && "$BUN" ./script.ts micro-commit reset 2>/dev/null || true',
+      "semio_micro_commit_wipe",
+      "exit 0",
+    );
+  } else {
+    lines.push(
+      MICRO_COMMIT_RESOLVE_BUN_SH,
+      '[ ! -f "$GIT_DIR/semio-micro-commit-active" ] && {',
+      "  semio_micro_commit_seed_empty_gk",
+      "  exit 0",
+      "}",
+      'BUN=$(semio_resolve_bun "$ROOT")',
+      '[ -z "$BUN" ] && exit 0',
+      'exec "$BUN" ./script.ts micro-commit prepare-commit-msg "$1" "$2"',
+    );
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function writeMicroCommitHookFile(path: string, body: string): void {
+  writeFileSync(path, body.replace(/\r\n/g, "\n"), "utf8");
+  try {
+    chmodSync(path, 0o755);
+  } catch {
+    /* windows */
+  }
+}
+
+export function installMicroCommitGitHooks(root: string): void {
+  const bunBin = resolveMicroCommitBunBin(root).replace(/\r/g, "");
+  mkdirSync(join(root, ".repo"), { recursive: true });
+  writeFileSync(join(root, ".repo", MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
+  const hooksDir = join(root, ".git", "hooks");
+  const repoHooksDir = join(root, "repo", "hooks");
+  mkdirSync(hooksDir, { recursive: true });
+  mkdirSync(repoHooksDir, { recursive: true });
+  for (const name of [...MICRO_COMMIT_POST_WIPE_HOOKS, "prepare-commit-msg"] as const) {
+    const body = renderMicroCommitGitHook(name);
+    writeMicroCommitHookFile(join(repoHooksDir, name), body);
+    writeMicroCommitHookFile(join(hooksDir, name), body);
+  }
+  const stalePreCommit = join(hooksDir, "pre-commit");
+  if (existsSync(stalePreCommit)) rmSync(stalePreCommit, { force: true });
+  const repoPreCommit = join(repoHooksDir, "pre-commit");
+  if (existsSync(repoPreCommit)) rmSync(repoPreCommit, { force: true });
+}
+
+export function resetMicroCommitTemplates(root: string): void {
+  wipeAfterCommit(root);
+}
+
+function emitPrepareStdout(message: string): void {
+  process.stdout.write(message.endsWith("\n") ? message : `${message}\n`);
+}
+
+export function runMicroCommit(root: string, segments: string[]): void {
+  root = gitRepoRoot(root);
+  const cmd = segments[0] ?? "prepare";
+  if (cmd === "reset") {
+    resetMicroCommitTemplates(root);
+    process.exit(0);
+  }
+  if (cmd === "install-hooks") {
+    installMicroCommitGitHooks(root);
+    process.exit(0);
+  }
+  if (cmd === "prepare-commit-msg") {
+    const msgFile = segments[1];
+    if (!msgFile) process.exit(1);
+    handlePrepareCommitMsg(root, msgFile, segments[2] ?? "");
+    process.exit(0);
+  }
+  if (!branchAllowed(root)) {
+    console.error("micro-commit: branch must contain ⛳wip or 🏗️dev");
+    process.exit(1);
+  }
+  const contributor = findContributor(root);
+  if (!contributor) {
+    console.error(`micro-commit: no contributor for git user.email ${gitEmail(root) || "(unset)"}`);
+    process.exit(1);
+  }
+  if (cmd === "stage") {
+    clearStaleTemplatesBeforePrepare(root);
+    const staged = git(root, ["add", "-A"]);
+    if (!staged.ok) {
+      console.error(staged.out || "git add -A failed");
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+  if (cmd === "diff") {
+    const patch = git(root, ["diff", "--cached"]);
+    if (!patch.ok) {
+      console.error(patch.out || "git diff --cached failed");
+      process.exit(1);
+    }
+    process.stdout.write(patch.out ? `${patch.out}\n` : "");
+    process.exit(0);
+  }
+  if (cmd !== "prepare") {
+    console.error(
+      "[micro-commit] usage: bun ./script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]",
+    );
+    process.exit(1);
+  }
+
+  const dash = segments.indexOf("--");
+  const levelSegments = dash >= 0 ? segments.slice(1, dash) : segments.slice(1);
+  const bulletsFile = dash >= 0 ? (segments[dash + 1] ?? null) : null;
+
+  const level = loadLevel(root, contributor, levelSegments);
+  clearStaleTemplatesBeforePrepare(root);
+  const staged = git(root, ["add", "-A"]);
+  if (!staged.ok) {
+    console.error(staged.out || "git add -A failed");
+    process.exit(1);
+  }
+
+  const stagedPaths = listCachedPaths(root);
+  const diffBullets = readDiffBulletsInput(root, bulletsFile);
+  if (diffBullets.length === 0) {
+    for (const p of stagedPaths) console.error(p);
+    console.error("");
+    const patch = git(root, ["diff", "--cached"]);
+    if (patch.out) console.error(patch.out);
+    console.error(
+      "\nmicro-commit: analyze the staged paths and diff above; pass 1–8 bullets on stdin (`{emoji}{description}` — pick the emoji that best matches each line, no leading `-`, no space after emoji; never 🎆 📊 🔢 🚩)",
+    );
+    process.exit(1);
+  }
+
+  validateBulletSpacing(diffBullets);
+  validateBulletEmojis(diffBullets);
+  validateBulletsAgainstStaged(diffBullets, stagedPaths);
+  writePreparedBullets(root, diffBullets);
+  let message: string;
+  try {
+    message = buildMicroCommitMessage(root, contributor, diffBullets);
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e));
+    process.exit(1);
+  }
+  writeMicroCommitTemplates(root, message);
+  emitPrepareStdout(message);
+
+  if (level === "prepare-only") process.exit(0);
+
+  const dir = gitDir(root);
+  const commit = spawnSync("git", ["commit", "-S", "-F", join(dir, "COMMIT_EDITMSG")], { cwd: root, encoding: "utf8" });
+  if (commit.status !== 0) {
+    console.error((commit.stderr ?? commit.stdout ?? "git commit failed").trim());
+    process.exit(commit.status ?? 1);
+  }
+  wipeAfterCommit(root);
+  if (level === "prepare-and-commit") process.exit(0);
+
+  const push = spawnSync("git", ["push"], { cwd: root, encoding: "utf8" });
+  if (push.status !== 0) {
+    console.error((push.stderr ?? push.stdout ?? "git push failed").trim());
+    process.exit(push.status ?? 1);
+  }
+  process.exit(0);
+}

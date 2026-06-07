@@ -12,13 +12,24 @@
 // #endregion 🧲Header
 
 import { ButtonGroup, ButtonGroupItem, ToggleGroup, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Eye, EyeOff, Hand, Maximize2, MousePointer, Move, RotateCcw, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 
 // #region 🌙Toolbar
 
+const Eye = createIconComponent("eye");
+const EyeOff = createIconComponent("eye-off");
+const Hand = createIconComponent("hand");
+const Maximize2 = createIconComponent("maximize2");
+const MousePointer = createIconComponent("mouse-pointer");
+const Move = createIconComponent("move");
+const RotateCcw = createIconComponent("rotate-ccw");
+const RotateCw = createIconComponent("rotate-cw");
+const ZoomIn = createIconComponent("zoom-in");
+const ZoomOut = createIconComponent("zoom-out");
+
 const meta = {
-  title: "elements/react/Toolbar",
+  title: "🖱️ui⚛️react/Toolbar",
   component: ToolbarZone,
   parameters: {
     layout: "centered",

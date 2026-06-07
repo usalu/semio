@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 📔Avatar
 const meta = {
-  title: "elements/react/Avatar",
+  title: "🖱️ui⚛️react/Avatar",
   component: Avatar,
   parameters: {
     layout: "centered",

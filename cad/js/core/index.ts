@@ -804,8 +804,21 @@ export interface InteractionSpec {
 /** @emoji 📞 How hosts may start an interaction (`standalone` vs nested-only `callable`). */
 export type InteractionInvocation = "standalone" | "callable";
 
+/** @emoji 🎛 Engagement control kind declared on {@link InteractionLengthEntrySpec} / {@link InteractionScalarEntrySpec}. */
+export type InteractionEngagementControlKind = "slider" | "stepper" | "ring";
+
+/** @emoji 🎛 Optional engagement control parameters on numeric interaction entries. */
+export interface InteractionEngagementEntryControl {
+  readonly control?: InteractionEngagementControlKind;
+  readonly min?: number;
+  readonly max?: number;
+  readonly step?: number;
+  readonly unit?: string;
+  readonly default?: number;
+}
+
 /** @emoji 📏 One rubber-band state where REPL digits clamp distance along the cursor ray. */
-export interface InteractionLengthEntrySpec {
+export interface InteractionLengthEntrySpec extends InteractionEngagementEntryControl {
   readonly state: string;
   readonly anchor: string;
   readonly field: string;
@@ -814,7 +827,7 @@ export interface InteractionLengthEntrySpec {
 }
 
 /** @emoji 🔢 One state where REPL digits set a scalar context field live (`set.height`, `set.radius`, …). */
-export interface InteractionScalarEntrySpec {
+export interface InteractionScalarEntrySpec extends InteractionEngagementEntryControl {
   readonly state: string;
   readonly event: string;
   readonly field: string;
@@ -826,6 +839,31 @@ export interface InteractionScalarEntrySpec {
   readonly axisFloor?: string;
   readonly axis?: readonly [number, number, number];
 }
+
+/** @emoji 🎚 Resolved numeric engagement control for one interaction state. */
+export interface ResolvedInteractionEngagementNumericControl {
+  readonly kind: "slider" | "stepper";
+  readonly label: string;
+  readonly value: number;
+  readonly min: number;
+  readonly max?: number;
+  readonly step: number;
+  readonly unit?: string;
+}
+
+/** @emoji 🧫 Resolved ring engagement control for one interaction state. */
+export interface ResolvedInteractionEngagementRingControl {
+  readonly kind: "ring";
+  readonly label: string;
+  readonly value?: string;
+  readonly options: readonly { readonly id: string; readonly label: string }[];
+  readonly min: number;
+  readonly max: number;
+  readonly step: number;
+}
+
+/** @emoji 🎛 Resolved engagement control descriptor for {@link interactionControlForState}. */
+export type ResolvedInteractionEngagementControl = ResolvedInteractionEngagementNumericControl | ResolvedInteractionEngagementRingControl;
 
 /** @emoji 🎮 Host + viewport hints for spatial picking (declared per interaction). */
 export interface InteractionSpatialConfig {
@@ -3755,17 +3793,17 @@ function transformDiff(params: Record<string, unknown>, ctx: { readonly model: M
   const rawTo = vec3Param(params, "to", vec3Param(params, "cursor", from));
   const to = ctx.preview.constrainMovePoint(from, rawTo, String(params.moveMode ?? params.mode ?? "free"), vec3Param(params, "cplaneNormal", [0, 0, 1]));
   const delta = ctx.preview.vec3Sub(to, from);
-  const ids = collectTargetVertices(ctx.model, targets);
-  const added: VertexRecord[] = [];
-  const modified: VertexRecordDiff[] = [];
-  for (const id of ids) {
-    const v = ctx.model.vertices[id];
-    if (!v) continue;
-    const moved = { id: (copy ? `${id}-copy-${Math.random().toString(36).slice(2, 8)}` : id) as VertexRef, position: ctx.preview.vec3Add(v.position, delta) };
-    if (copy) added.push(moved);
-    else modified.push(moved);
+  if (copy) {
+    const ids = collectTargetVertices(ctx.model, targets);
+    const added: VertexRecord[] = [];
+    for (const id of ids) {
+      const v = ctx.model.vertices[id];
+      if (!v) continue;
+      added.push({ id: `${id}-copy-${Math.random().toString(36).slice(2, 8)}` as VertexRef, position: ctx.preview.vec3Add(v.position, delta) });
+    }
+    return added.length ? { vertices: { added } } : EMPTY_MODEL_DIFF;
   }
-  return { ...(added.length ? { vertices: { added } } : {}), ...(modified.length ? { vertices: { modified } } : {}) };
+  return selectionTargetsPointTransformDiff(ctx.model, targets, (point) => ctx.preview.vec3Add(point, delta));
 }
 
 function anchorAction(params: Record<string, unknown>, ctx: { readonly model: Model; readonly preview: SpatialPreviewKernel }): ActionResult {
@@ -4175,6 +4213,30 @@ export function collectTargetVertices(model: Model, targets: readonly SelectionT
   return out;
 }
 
+/** @emoji 🎯 Collects edge ids when topology (edge/wire/face/…) is selected; excludes vertex-only picks. */
+export function collectTargetEdges(model: Model, targets: readonly SelectionTarget[]): Set<string> {
+  const out = new Set<string>();
+  const walk = (kind: ModelEntityKind, id: string) => {
+    if (kind === "edge") {
+      if (model.edges[id]) out.add(id);
+    } else if (kind === "wire") {
+      const w = model.wires[id];
+      if (w) for (const e of w.edgeIds) walk("edge", e);
+    } else if (kind === "face") {
+      const f = model.faces[id];
+      if (f) for (const w of f.wireIds) walk("wire", w);
+    } else if (kind === "shell") {
+      const s = model.shells[id];
+      if (s) for (const f of s.faceIds) walk("face", f);
+    } else if (kind === "solid" || kind === "geometry") {
+      const c = model.solids[id];
+      if (c) for (const s of c.shellIds) walk("shell", s);
+    }
+  };
+  for (const t of targets) walk(t.kind, t.id);
+  return out;
+}
+
 /** @emoji 📦 Center of the axis-aligned bounds of all vertices in `targets`. */
 export function selectionTargetsCenter(model: Model, targets: readonly SelectionTarget[], preview: SpatialPreviewKernel): Vec3 | null {
   const pts: Vec3[] = [];
@@ -4182,36 +4244,53 @@ export function selectionTargetsCenter(model: Model, targets: readonly Selection
     const v = model.vertices[vid];
     if (v) pts.push(v.position);
   }
+  for (const eid of collectTargetEdges(model, targets)) {
+    const curve = model.edges[eid]?.curve;
+    if (curve?.kind === "nurbs") pts.push(...curve.poles);
+  }
   const box = preview.aabbFromPoints(pts);
   if (!box) return null;
   return [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2];
 }
 
-/** @emoji 🎛 CAD play gumball modes (move / rotate / scale). */
-export type CadTransformGumballMode = "move" | "rotate" | "scale";
-
-/** @emoji 🪟 Per-window transform combobox value (`none` disables the gumball). */
-export type CadPlayTransformWindowMode = "none" | CadTransformGumballMode;
-
-/** @emoji 🪟 Ordered transform combobox entries for CAD play window measures. */
-export const CAD_PLAY_TRANSFORM_WINDOW_MODES: readonly CadPlayTransformWindowMode[] = ["none", "move", "rotate", "scale"];
-
-/** @emoji 🪟 Type guard for CAD play transform window measure values. */
-export function isCadPlayTransformWindowMode(value: string): value is CadPlayTransformWindowMode {
-  return (CAD_PLAY_TRANSFORM_WINDOW_MODES as readonly string[]).includes(value);
+/** @emoji 🎛 CAD play gumball visibility groups (same shape as ui UnifiedGumball config). */
+export interface CadGumballConfig {
+  readonly moveAxes?: boolean;
+  readonly movePlanes?: boolean;
+  readonly rotate?: boolean;
+  readonly scaleAxes?: boolean;
+  readonly scaleUniform?: boolean;
+  readonly translationSnap?: number;
+  readonly rotationSnap?: number;
+  readonly scaleSnap?: number;
+  readonly size?: number;
 }
 
-/** @emoji 🪟 Maps window combobox value to active gumball mode or `null` when disabled. */
-export function cadTransformGumballModeFromWindowMode(mode: CadPlayTransformWindowMode): CadTransformGumballMode | null {
-  return mode === "none" ? null : mode;
-}
+/** @emoji 🎛 Toggle keys for CAD play gumball window measures. */
+export type CadGumballGroupKey = keyof Pick<CadGumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scaleUniform">;
 
-/** @emoji 🪟 Human label for a CAD play transform window measure item. */
-export function cadPlayTransformWindowModeLabel(mode: CadPlayTransformWindowMode): string {
-  if (mode === "none") return "None";
-  if (mode === "move") return "Move";
-  if (mode === "rotate") return "Rotate";
-  return "Scale";
+/** @emoji 🎛 Ordered gumball group toggles for CAD play window measures. */
+export const CAD_GUMBALL_GROUPS: readonly { readonly key: CadGumballGroupKey; readonly label: string }[] = [
+  { key: "moveAxes", label: "Move Axes" },
+  { key: "movePlanes", label: "Move Planes" },
+  { key: "rotate", label: "Rotate" },
+  { key: "scaleAxes", label: "Scale Axes" },
+  { key: "scaleUniform", label: "Scale Uniform" },
+];
+
+/** @emoji 🎛 Default CAD play gumball state (hidden until a group is enabled). */
+export const CAD_GUMBALL_HIDDEN: CadGumballConfig = {
+  moveAxes: false,
+  movePlanes: false,
+  rotate: false,
+  scaleAxes: false,
+  scaleUniform: false,
+};
+
+/** @emoji 🎛 True when at least one gumball handle group is enabled. */
+export function cadGumballConfigVisible(config: CadGumballConfig | null | undefined): boolean {
+  if (!config) return false;
+  return config.moveAxes !== false || config.movePlanes !== false || config.rotate !== false || config.scaleAxes !== false || config.scaleUniform !== false;
 }
 
 /** @emoji ✋ True when `targets` resolve to at least one model vertex. */
@@ -4219,14 +4298,21 @@ export function selectionTargetsHaveTransformableVertices(model: Model, targets:
   return collectTargetVertices(model, targets).size > 0;
 }
 
-/** @emoji 🎛 Maps toolbar gumball mode to TransformControls mode. */
-export function cadTransformGumballModeToControlsMode(mode: CadTransformGumballMode): "translate" | "rotate" | "scale" {
-  if (mode === "rotate") return "rotate";
-  if (mode === "scale") return "scale";
-  return "translate";
+function modelDiffTransformNurbsPolesOnEdges(model: Model, edgeIds: Iterable<string>, mapPoint: (point: Vec3) => Vec3): ModelDiff {
+  const edgeMods: EdgeRecordDiff[] = [];
+  for (const id of edgeIds) {
+    const edge = model.edges[id];
+    const curve = edge?.curve;
+    if (curve?.kind !== "nurbs" || curve.poles.length < 2) continue;
+    const poles = curve.poles.map((pole) => mapPoint(pole));
+    if (poles.every((pole, index) => vec3Eq(pole, curve.poles[index]!))) continue;
+    edgeMods.push({ id: edge.id, curve: { ...curve, poles } });
+  }
+  return edgeMods.length ? { edges: { modified: edgeMods } } : EMPTY_MODEL_DIFF;
 }
 
-function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
+/** @emoji 🎛 Applies `mapPoint` to vertices and nurbs poles on topology-selected edges. */
+export function selectionTargetsPointTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
   const vertexIds = collectTargetVertices(model, targets);
   const modified: VertexRecordDiff[] = [];
   for (const vid of vertexIds) {
@@ -4236,7 +4322,14 @@ function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionT
     if (next[0] === v.position[0] && next[1] === v.position[1] && next[2] === v.position[2]) continue;
     modified.push({ id: v.id, position: next });
   }
-  return modified.length ? { vertices: { modified } } : EMPTY_MODEL_DIFF;
+  const nurbsDiff = modelDiffTransformNurbsPolesOnEdges(model, collectTargetEdges(model, targets), mapPoint);
+  if (!modified.length) return nurbsDiff;
+  if (isEmptyModelDiff(nurbsDiff)) return { vertices: { modified } };
+  return { vertices: { modified }, edges: nurbsDiff.edges };
+}
+
+function vertexPositionsTransformDiff(model: Model, targets: readonly SelectionTarget[], mapPoint: (point: Vec3) => Vec3): ModelDiff {
+  return selectionTargetsPointTransformDiff(model, targets, mapPoint);
 }
 
 // #region 📍InteractionPointBinding
@@ -4771,6 +4864,93 @@ export function interactionLengthEntryForState(spec: InteractionSpec, state: str
 /** @emoji 🔢 Resolved live scalar entry config for `state` (from `interaction.scalarEntry`). */
 export function interactionScalarEntryForState(spec: InteractionSpec, state: string): InteractionScalarEntrySpec | null {
   return mergeInteractionSpatial(spec).scalarEntry.find((row) => row.state === state) ?? null;
+}
+
+function engagementLabelForInteractionEntry(field: string, event?: string): string {
+  if (event === "set.height") return "Height";
+  if (event === "set.distance") return "Distance";
+  if (event === "set.angle") return "Angle";
+  if (event === "set.radius" || field === "radius") return "Radius";
+  const trimmed = field.trim();
+  if (!trimmed) return "Value";
+  return trimmed.replace(/[._-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function interactionContextNumericField(context: Record<string, unknown>, field: string, fallback: number): number {
+  const raw = context[field];
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  return fallback;
+}
+
+function defaultEngagementControlKind(entry: InteractionEngagementEntryControl, event?: string): InteractionEngagementControlKind {
+  if (entry.control) return entry.control;
+  if (event === "set.angle") return "ring";
+  return "stepper";
+}
+
+/** @emoji 🎛 Resolves declarative engagement control params for `state` (length/scalar entry + context value). */
+export function interactionControlForState(
+  spec: InteractionSpec,
+  state: string,
+  context: Record<string, unknown> = {},
+): ResolvedInteractionEngagementControl | null {
+  const scalar = interactionScalarEntryForState(spec, state);
+  if (scalar) {
+    const kind = defaultEngagementControlKind(scalar, scalar.event);
+    const label = engagementLabelForInteractionEntry(scalar.field, scalar.event);
+    const value = interactionContextNumericField(context, scalar.field, scalar.default ?? 1);
+    const step = scalar.step ?? (scalar.event === "set.angle" ? 15 : 0.1);
+    const unit = scalar.unit ?? (scalar.event === "set.angle" ? "°" : "m");
+    if (kind === "ring" || scalar.event === "set.angle") {
+      const min = scalar.min ?? 0;
+      const max = scalar.max ?? 360;
+      const segments = Math.max(4, Math.min(36, Math.round((max - min) / step) || 12));
+      const options = Array.from({ length: segments }, (_, index) => {
+        const numeric = min + (index * (max - min)) / segments;
+        const rounded = Math.round(numeric);
+        return { id: `angle-${rounded}`, label: `${rounded}°` };
+      });
+      const nearest = options.reduce((best, row) => {
+        const rowValue = Number(row.id.slice("angle-".length));
+        const bestValue = Number(best.id.slice("angle-".length));
+        return Math.abs(rowValue - value) < Math.abs(bestValue - value) ? row : best;
+      }, options[0]!);
+      return { kind: "ring", label, value: nearest.id, options, min, max, step };
+    }
+    const min = scalar.min ?? 0;
+    if (kind === "slider") {
+      return { kind: "slider", label, value, min, max: scalar.max ?? Math.max(min + 1, value * 2, 10), step, unit };
+    }
+    return { kind: "stepper", label, value, min, max: scalar.max, step, unit };
+  }
+  const length = interactionLengthEntryForState(spec, state);
+  if (!length) return null;
+  const kind = defaultEngagementControlKind(length);
+  const label = engagementLabelForInteractionEntry(length.field);
+  const live = interactionLengthEntryLiveDistance(context, length);
+  const value = live ?? length.default ?? 1;
+  const step = length.step ?? 0.1;
+  const unit = length.unit ?? "m";
+  const min = length.min ?? 0;
+  if (kind === "slider") {
+    return { kind: "slider", label, value, min, max: length.max ?? Math.max(min + 1, value * 2, 10), step, unit };
+  }
+  if (kind === "ring") {
+    const max = length.max ?? Math.max(min + step, value * 2, 10);
+    const segments = Math.max(4, Math.min(24, Math.round((max - min) / step) || 8));
+    const options = Array.from({ length: segments }, (_, index) => {
+      const numeric = min + (index * (max - min)) / segments;
+      const rounded = Math.round(numeric * 100) / 100;
+      return { id: `length-${rounded}`, label: `${rounded}${unit}` };
+    });
+    const nearest = options.reduce((best, row) => {
+      const rowValue = Number(row.id.slice("length-".length));
+      const bestValue = Number(best.id.slice("length-".length));
+      return Math.abs(rowValue - value) < Math.abs(bestValue - value) ? row : best;
+    }, options[0]!);
+    return { kind: "ring", label, value: nearest.id, options, min, max, step };
+  }
+  return { kind: "stepper", label, value, min, max: length.max, step, unit };
 }
 
 /** @emoji 🔢 True when `state` accepts live REPL numeric entry (length or scalar). */
@@ -6408,13 +6588,10 @@ if (import.meta.vitest) {
   });
 
   describe("@cad/js/core transformations", () => {
-    it("maps CAD play transform window combobox values to gumball modes", () => {
-      expect(cadTransformGumballModeFromWindowMode("none")).toBeNull();
-      expect(cadTransformGumballModeFromWindowMode("rotate")).toBe("rotate");
-      expect(isCadPlayTransformWindowMode("scale")).toBe(true);
-      expect(isCadPlayTransformWindowMode("nope")).toBe(false);
-      expect(cadPlayTransformWindowModeLabel("none")).toBe("None");
-      expect(cadPlayTransformWindowModeLabel("move")).toBe("Move");
+    it("detects visible CAD gumball configs", () => {
+      expect(cadGumballConfigVisible(CAD_GUMBALL_HIDDEN)).toBe(false);
+      expect(cadGumballConfigVisible({ ...CAD_GUMBALL_HIDDEN, rotate: true })).toBe(true);
+      expect(cadGumballConfigVisible(null)).toBe(false);
     });
 
     it("lists model definition manifests and transformation directions", () => {
@@ -7193,6 +7370,51 @@ if (import.meta.vitest) {
       expect(updated.curve?.kind).toBe("nurbs");
       if (updated.curve?.kind === "nurbs") {
         expect(updated.curve.poles[0]).toEqual([0, 3, 0]);
+      }
+    });
+
+    it("selectionTargetsPointTransformDiff moves all nurbs poles when an edge is selected", async () => {
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const created = await kernel.executeCommandDiff("curve.controlPointCurve", {
+        model,
+        points: [
+          [0, 0, 0],
+          [1, 2, 0],
+          [3, 0, 0],
+        ],
+      });
+      applyModelDiff(model, created.diff);
+      const edge = Object.values(model.edges)[0]!;
+      const before = edge.curve?.kind === "nurbs" ? edge.curve.poles.map((pole) => [...pole] as Vec3) : [];
+      applyModelDiff(model, selectionTargetsPointTransformDiff(model, [{ kind: "edge", id: edge.id }], (point) => [point[0] + 1, point[1], point[2]]));
+      const updated = model.edges[edge.id]!;
+      expect(updated.curve?.kind).toBe("nurbs");
+      if (updated.curve?.kind === "nurbs") {
+        expect(updated.curve.poles).toEqual(before.map((pole) => [pole[0] + 1, pole[1], pole[2]]));
+      }
+    });
+
+    it("selectionTargetsPointTransformDiff leaves interior poles when only a vertex is selected", async () => {
+      const model = new Model();
+      const kernel = new BrepjsKernel() as unknown as SpatialKernel;
+      const created = await kernel.executeCommandDiff("curve.controlPointCurve", {
+        model,
+        points: [
+          [0, 0, 0],
+          [1, 2, 0],
+          [3, 0, 0],
+        ],
+      });
+      applyModelDiff(model, created.diff);
+      const edge = Object.values(model.edges)[0]!;
+      const midPole = edge.curve?.kind === "nurbs" ? [...edge.curve.poles[1]!] : null;
+      const startId = edge.vertexIds[0]!;
+      applyModelDiff(model, selectionTargetsPointTransformDiff(model, [{ kind: "vertex", id: startId }], (point) => [point[0], point[1] + 5, point[2]]));
+      const updated = model.edges[edge.id]!;
+      expect(updated.curve?.kind).toBe("nurbs");
+      if (updated.curve?.kind === "nurbs" && midPole) {
+        expect(updated.curve.poles[1]).toEqual(midPole);
       }
     });
 
@@ -8149,6 +8371,22 @@ if (import.meta.vitest) {
       });
       expect(rt.getSnapshot().state).toBe("extrusion_distance");
       expect((rt.getSnapshot().context.curves as { id: string }[])[0]?.id).toBe(wireId);
+    });
+
+    it("interactionControlForState resolves stepper for box height and ring for rotate angle", () => {
+      const box = loadSpatialInteraction("primitive.box")!;
+      const height = interactionControlForState(box, "first_corner_height", { height: 3 });
+      expect(height?.kind).toBe("stepper");
+      if (height && height.kind !== "ring") {
+        expect(height.value).toBe(3);
+        expect(height.unit).toBe("m");
+      }
+      const rotate = loadSpatialInteraction("transform.rotate")!;
+      const angle = interactionControlForState(rotate, "angle_or_first_reference_point", { angle: 45 });
+      expect(angle?.kind).toBe("ring");
+      if (angle?.kind === "ring") {
+        expect(angle.options.length).toBeGreaterThan(0);
+      }
     });
 
     it("interactionNumericEntryCommitEvent uses pointer.down for length and confirm for scalar", () => {

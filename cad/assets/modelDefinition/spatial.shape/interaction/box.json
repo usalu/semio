@@ -35,27 +35,47 @@
       {
         "state": "first_corner_other_or_length",
         "anchor": "origin",
-        "field": "corner"
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       },
       {
         "state": "diagonal_rubber",
         "anchor": "diagA",
-        "field": "corner"
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       },
       {
         "state": "cube_diagonal_rubber",
         "anchor": "diagA",
-        "field": "corner"
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       },
       {
         "state": "cube_other_corner",
         "anchor": "origin",
-        "field": "corner"
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       },
       {
         "state": "center_corner",
         "anchor": "rectCenter",
-        "field": "corner"
+        "field": "corner",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ],
     "scalarEntry": [
@@ -65,7 +85,11 @@
         "field": "height",
         "commit": "confirm",
         "axisAnchor": "corner",
-        "axisFloor": "origin"
+        "axisFloor": "origin",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ]
   },

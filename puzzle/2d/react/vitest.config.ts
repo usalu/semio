@@ -11,6 +11,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: [
+			{ find: "@infinite/cavas/react-renderer", replacement: resolve(root, "../../../infinite/cavas/react-renderer/index.tsx") },
 			{ find: "@ui/react", replacement: resolve(root, "../../../ui/react/index.tsx") },
 			{ find: "@puzzle/2d/rs", replacement: resolve(root, "../rs/pkg/puzzle_2d.js") },
 		],

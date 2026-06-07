@@ -933,37 +933,37 @@
           "color": "hsl(124 52% 48%)",
           "defaultWireKind": "board.wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
-          "name": "door capsule east"
+          "name": "door capsule right"
         },
         {
           "color": "hsl(239 52% 48%)",
           "defaultWireKind": "board.wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
-          "name": "door capsule west"
+          "name": "door capsule left"
         },
         {
           "color": "hsl(344 52% 48%)",
           "defaultWireKind": "board.wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-          "name": "door tambour east"
+          "name": "door tambour left"
         },
         {
           "color": "hsl(91 52% 48%)",
           "defaultWireKind": "board.wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
-          "name": "door tambour west"
+          "name": "door tambour right"
         },
         {
           "color": "hsl(169 52% 48%)",
           "defaultWireKind": "board.wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
-          "name": "platform east"
+          "name": "platform right"
         },
         {
           "color": "hsl(215 52% 48%)",
           "defaultWireKind": "board.wire.link",
           "id": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
-          "name": "platform west"
+          "name": "platform left"
         },
         {
           "color": "hsl(277 52% 48%)",
@@ -1085,7 +1085,7 @@
         },
         {
           "id": "semio.metabolism.light.node.4b8563c5-37ad-49e8-9b6c-d635378bffce",
-          "name": "p"
+          "name": "Capsule P"
         },
         {
           "id": "semio.metabolism.light.node.4ca3b87b-cd76-4228-9f7e-1459b711f0ab",
@@ -1101,7 +1101,7 @@
         },
         {
           "id": "semio.metabolism.light.node.5af2d54e-309c-46a6-8454-c91b957a59f9",
-          "name": "J"
+          "name": "Capsule J"
         },
         {
           "id": "semio.metabolism.light.node.5b3e2b28-e331-420b-83bd-9a8c05ac2918",
@@ -1153,11 +1153,11 @@
         },
         {
           "id": "semio.metabolism.light.node.a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
-          "name": "L"
+          "name": "Capsule L"
         },
         {
           "id": "semio.metabolism.light.node.aa34760a-d543-46c8-afa1-d83a38d42f2b",
-          "name": "s"
+          "name": "Capsule S"
         },
         {
           "id": "semio.metabolism.light.node.af980393-c613-47c2-88a4-461298b0b8f9",
@@ -1173,7 +1173,7 @@
         },
         {
           "id": "semio.metabolism.light.node.c90e216d-d899-4709-995b-5abfcce75bcb",
-          "name": "\\"
+          "name": "Capsule Backslash"
         },
         {
           "id": "semio.metabolism.light.node.cb25017e-5505-4677-a71e-cccbc7a5be7d",
@@ -1189,7 +1189,7 @@
         },
         {
           "id": "semio.metabolism.light.node.ccb67521-5ca1-42cf-bd81-4058c6c5348d",
-          "name": "q"
+          "name": "Capsule Q"
         },
         {
           "id": "semio.metabolism.light.node.cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9",
@@ -1205,7 +1205,7 @@
         },
         {
           "id": "semio.metabolism.light.node.eefe6d3e-f18d-474e-b82e-04bb406d290f",
-          "name": "/"
+          "name": "Capsule Slash"
         },
         {
           "id": "semio.metabolism.light.node.f1779b1f-2324-4bad-86da-773a1e90b57c",
@@ -1213,7 +1213,7 @@
         },
         {
           "id": "semio.metabolism.light.node.f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
-          "name": "z"
+          "name": "Capsule Z"
         }
       ]
     },
@@ -1231,38 +1231,50 @@
         "specificity": "handle"
       },
       {
-        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
-        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
+        "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-994a9a023448",
+        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-46be42c7d6ab",
         "bidirectional": true,
         "specificity": "handle"
       },
       {
-        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
+        "source": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-a04a8b137527",
+        "target": "semio.metabolism.light.handle.019ab243-21f3-7380-93c6-9e678ad2f321",
+        "bidirectional": true,
+        "specificity": "handle"
+      },
+      {
+        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
         "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
         "bidirectional": true,
         "specificity": "handle"
       },
       {
-        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
+        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
         "bidirectional": true,
         "specificity": "handle"
       },
       {
         "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
-        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
-        "bidirectional": true,
-        "specificity": "handle"
-      },
-      {
-        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
         "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
         "bidirectional": true,
         "specificity": "handle"
       },
       {
-        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-50266f6860b8",
         "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+        "bidirectional": true,
+        "specificity": "handle"
+      },
+      {
+        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+        "bidirectional": true,
+        "specificity": "handle"
+      },
+      {
+        "source": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-57263e420e70",
+        "target": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-58d90f95991e",
         "bidirectional": true,
         "specificity": "handle"
       },
@@ -1347,7 +1359,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "03b08a1d-bd01-4d7f-829e-e9008af5f8c1:link",
           "radius": 3
         }
@@ -1423,7 +1435,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "087e2e86-96d9-4034-aa11-45e360a73761:link",
           "radius": 3
         }
@@ -1556,7 +1568,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "10bbba6a-100d-4b4e-b5fa-6aa851caaa52:link",
           "radius": 3
         }
@@ -2339,7 +2351,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "3beea11e-35a1-414a-a21d-a188157591a8:link",
           "radius": 3
         }
@@ -2790,7 +2802,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "5de35caa-0f02-43d7-ae74-aa730efd3386:link",
           "radius": 3
         }
@@ -2934,7 +2946,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "60f7c606-1326-44c9-9fd7-4a3a17d15e0c:link",
           "radius": 3
         }
@@ -2953,7 +2965,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "64239b67-f7c9-4c25-9d22-4225f6668cd7:link",
           "radius": 3
         }
@@ -3207,7 +3219,7 @@
       "handles": [
         {
           "angle": 1.521916,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "6bd6036e-dd1d-4ef6-9e34-090ff050dba4:link",
           "radius": 3
         }
@@ -3226,7 +3238,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "6c2cce5c-e3ea-42e4-aa65-498c0c47c453:link",
           "radius": 3
         }
@@ -3430,7 +3442,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "794499b1-500b-41b1-a271-29e67f4629c5:link",
           "radius": 3
         }
@@ -3776,7 +3788,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "88bc30e1-0cd9-4a34-bd4d-2463f2660c78:link",
           "radius": 3
         }
@@ -4160,7 +4172,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "976cd37f-4099-46c1-b9fe-f693ac20490c:link",
           "radius": 3
         }
@@ -4217,7 +4229,7 @@
       "handles": [
         {
           "angle": 4.506401,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "9a209b1a-86b5-4852-9a90-c238c35b1038:link",
           "radius": 3
         }
@@ -4255,7 +4267,7 @@
       "handles": [
         {
           "angle": 6.23429,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "9bfa1f48-46f3-4fd7-a416-8280e06b3461:link",
           "radius": 3
         }
@@ -4598,7 +4610,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "ad940e2b-12e4-49ba-8cfa-98854e5b2f7a:link",
           "radius": 3
         }
@@ -4707,7 +4719,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "aee66807-ac00-4b12-8251-abafefdae05b:link",
           "radius": 3
         }
@@ -4783,7 +4795,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "ba35dd11-3022-4408-913f-0f6d25b40a83:link",
           "radius": 3
         }
@@ -4897,7 +4909,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "c8749a39-f9d1-48b2-b331-6d00d2615302:link",
           "radius": 3
         }
@@ -5011,7 +5023,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "d04d9e84-6f8c-45d1-93c7-068498c7d962:link",
           "radius": 3
         }
@@ -5049,7 +5061,7 @@
       "handles": [
         {
           "angle": 4.506416,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "d45a533d-4975-4a93-a6c4-74ea4b2fdac9:link",
           "radius": 3
         }
@@ -5106,7 +5118,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "d88f2d4c-4e31-454f-aee5-446636931c37:link",
           "radius": 3
         }
@@ -5163,7 +5175,7 @@
       "handles": [
         {
           "angle": 6.23429,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "dc6e7ac6-1515-46ca-9e94-248988badc0f:link",
           "radius": 3
         }
@@ -5182,7 +5194,7 @@
       "handles": [
         {
           "angle": 1.364823,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "dcf9ff79-1f52-412d-9eb4-7329f77b237c:link",
           "radius": 3
         }
@@ -5296,7 +5308,7 @@
       "handles": [
         {
           "angle": 6.23429,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "ec9ecf17-4f23-4bfb-a37d-f890951b105e:link",
           "radius": 3
         }
@@ -5315,7 +5327,7 @@
       "handles": [
         {
           "angle": 6.23429,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "ee2a19ee-04c2-4023-b048-4695dd8971f7:link",
           "radius": 3
         }
@@ -5647,7 +5659,7 @@
       "handles": [
         {
           "angle": 1.521901,
-          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "handleKind": "semio.metabolism.light.handle.019ab243-21f4-73df-8cb4-4f2766b68b25",
           "id": "fc693ca3-6a41-49b5-b5f6-258a7a06ed2e:link",
           "radius": 3
         }

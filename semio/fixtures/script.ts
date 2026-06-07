@@ -4,6 +4,83 @@ import fs from "node:fs";
 import path from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/src/index.ts";
 
+//#region 🔖AssembleSplitInitialKit
+/** @emoji 📎 Reads `{ hash, items }` or a legacy array collection from kit snapshot JSON. */
+export function fixtureItemsOf(node: unknown): Record<string, unknown>[] {
+	if (Array.isArray(node)) return node as Record<string, unknown>[];
+	if (node && typeof node === "object" && Array.isArray((node as { items?: unknown[] }).items)) {
+		return (node as { items: Record<string, unknown>[] }).items;
+	}
+	return [];
+}
+
+/** @emoji 🧩 Merges `types/*.type.semio.json` and `designs/*.design.semio.json` into a split `kit.semio.json` shell. */
+export function assembleSplitInitialKitFromDirectory(initialKitDir: string): Record<string, unknown> {
+	const shellPath = path.join(initialKitDir, "kit.semio.json");
+	const kit = JSON.parse(fs.readFileSync(shellPath, "utf8")) as Record<string, unknown>;
+	const typeById = new Map<string, Record<string, unknown>>();
+	const designById = new Map<string, Record<string, unknown>>();
+	const typesDir = path.join(initialKitDir, "types");
+	const designsDir = path.join(initialKitDir, "designs");
+	if (fs.existsSync(typesDir)) {
+		for (const name of fs.readdirSync(typesDir)) {
+			if (!name.endsWith(".type.semio.json")) continue;
+			const row = JSON.parse(fs.readFileSync(path.join(typesDir, name), "utf8")) as Record<string, unknown>;
+			if (typeof row.id === "string") typeById.set(row.id, row);
+		}
+	}
+	if (fs.existsSync(designsDir)) {
+		for (const name of fs.readdirSync(designsDir)) {
+			if (!name.endsWith(".design.semio.json")) continue;
+			const row = JSON.parse(fs.readFileSync(path.join(designsDir, name), "utf8")) as Record<string, unknown>;
+			if (typeof row.id === "string") designById.set(row.id, row);
+		}
+	}
+	const typologies = fixtureItemsOf(kit.typologies);
+	for (const topo of typologies) {
+		const mergedTypes = fixtureItemsOf(topo.types).map((stub) => {
+			const id = String(stub.id ?? "");
+			return typeById.get(id) ?? stub;
+		});
+		if (mergedTypes.length > 0) {
+			const hash =
+				topo.types && typeof topo.types === "object" && !Array.isArray(topo.types) && typeof (topo.types as { hash?: string }).hash === "string"
+					? (topo.types as { hash: string }).hash
+					: "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
+			topo.types = { hash, items: mergedTypes };
+		}
+		const mergedDesigns = fixtureItemsOf(topo.designs).map((stub) => {
+			const id = String(stub.id ?? "");
+			return designById.get(id) ?? stub;
+		});
+		if (mergedDesigns.length > 0) {
+			const hash =
+				topo.designs && typeof topo.designs === "object" && !Array.isArray(topo.designs) && typeof (topo.designs as { hash?: string }).hash === "string"
+					? (topo.designs as { hash: string }).hash
+					: "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
+			topo.designs = { hash, items: mergedDesigns };
+		}
+	}
+	if (typologies.length > 0) {
+		const hash =
+			kit.typologies && typeof kit.typologies === "object" && !Array.isArray(kit.typologies) && typeof (kit.typologies as { hash?: string }).hash === "string"
+				? (kit.typologies as { hash: string }).hash
+				: "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
+		kit.typologies = { hash, items: typologies };
+	}
+	return kit;
+}
+
+/** @emoji 📦 Reads split or monolithic `kit.semio.json` (assembles sidecars when `types/` exists). */
+export function readInitialKitFixtureFromPath(kitJsonPath: string): Record<string, unknown> {
+	const initialKitDir = path.dirname(kitJsonPath);
+	if (fs.existsSync(path.join(initialKitDir, "types"))) {
+		return assembleSplitInitialKitFromDirectory(initialKitDir);
+	}
+	return JSON.parse(fs.readFileSync(kitJsonPath, "utf8")) as Record<string, unknown>;
+}
+//#endregion 🔖AssembleSplitInitialKit
+
 const HASH = "…";
 const SCHEMA = "🎆26🌙06⬆️1";
 const KIT_ID = "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc";
@@ -64,8 +141,7 @@ class RegenerateMetabolismLightScript extends BundleScript {
 	}
 }
 
-const router = new ScriptRouter(import.meta.dir).register("regenerate-metabolism-light", RegenerateMetabolismLightScript);
-
 if (import.meta.main) {
+	const router = new ScriptRouter(import.meta.dir).register("regenerate-metabolism-light", RegenerateMetabolismLightScript);
 	await runBundleScriptMain(router, import.meta.url);
 }

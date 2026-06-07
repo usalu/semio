@@ -21,6 +21,7 @@ import {
   type UiNode,
   Playground,
   playgroundTreePanelRootItems,
+  platformFromViewContext,
   type UiTreeItemNode,
   type UiTreeNode,
   enforcePlaygroundWindowEngagementInput,
@@ -30,7 +31,8 @@ import { buildPuzzle2dPlayHierarchySections } from "../../2d/play/index.ts";
 import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
 import { PUZZLE_2D_LOD_MODE_AUTOMATIC, puzzle2dLodAutomaticSelectLabel, puzzle2dLodCanvasProps, isPuzzle2dDrawLodKind, parsePuzzle2dFixtureV1, type Puzzle2dDrawLodKind, type Puzzle2dFixtureV1, type Puzzle2dLodModeKind, type CameraState } from "../../2d/react/index.tsx";
 import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
-import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_PLAY_EMPTY_SELECTION } from "../../3d/play/index.ts";
+import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
+import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
@@ -41,7 +43,6 @@ import {
   puzzle3dLodCanvasProps,
   sliderValueFromLod,
   type FixtureV1 as Puzzle3dFixtureV1,
-  type RelocateMode as Puzzle3dRelocateMode,
 } from "../../3d/react/index.tsx";
 import { createStore, parseV1, project2d, project3d, compose5d, sharedKindsFromMetas, type Store as Puzzle5dStore, type StoreSnapshot as Puzzle5dStoreSnapshot, type V1 as Puzzle5dV1 } from "../react/index.tsx";
 import nakagin5dJson from "../fixture/nakagin-capsule-tower.5d.json";
@@ -112,7 +113,7 @@ function puzzle5dPlayLodTierMenuLabel(tier: string): string {
 }
 
 function puzzle5dControllerFromContext(ctx: WindowBodyViewContext): Puzzle5dPlayShellController | undefined {
-  return ctx.runtime.getActiveApp()?.controller as Puzzle5dPlayShellController | undefined;
+  return platformFromViewContext(ctx)?.getActiveApp()?.controller as Puzzle5dPlayShellController | undefined;
 }
 
 function sameCamera(a: CameraState | null, b: CameraState): boolean {
@@ -129,7 +130,7 @@ export interface Puzzle5dPlaySnapshot {
   readonly camera2d: CameraState | null;
   readonly camera3d: CameraState | null;
   readonly selected3d: string | null;
-  readonly relocateMode: Puzzle3dRelocateMode;
+  readonly gumballConfig: GumballConfig;
   readonly lod3dTag: number;
   readonly lod2dTag: Puzzle2dDrawLodKind;
   readonly lod2dProps: ReturnType<typeof puzzle2dLodCanvasProps>;
@@ -176,7 +177,7 @@ export class Puzzle5dPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Puzzle 5d", undefined);
   readonly puzzle5dStore: Puzzle5dStore = createStore(loadNakagin5dModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
-  private relocateMode: Puzzle3dRelocateMode = "translate";
+  private gumballConfig: GumballConfig = { ...DEFAULT_GUMBALL_CONFIG };
   private selected2d: ReadonlySet<string> = new Set();
   private selected3d: string | null = null;
   private camera2d: CameraState | null = { ...this.puzzle5dStore.read().camera2d };
@@ -206,15 +207,15 @@ export class Puzzle5dPlayShellController extends Controller {
   }
 
   private rebuildShellMode(): void {
-    const relocateTools: ToolItem[] = (["translate", "rotate", "scale"] as const).map((mode, order) => ({
-      id: `puzzle5d.relocate.${mode}`,
+    const relocateTools: ToolItem[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label }, order) => ({
+      id: `puzzle5d.gumball.${key}`,
       kind: "toggle" as const,
-      text: mode.charAt(0).toUpperCase() + mode.slice(1),
+      text: label,
       order,
-      pressed: this.relocateMode === mode,
+      pressed: this.gumballConfig[key] !== false,
       controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID,
-      command: "setRelocateMode",
-      args: { mode },
+      command: "setGumballConfigToggle",
+      args: { key },
     }));
     this.mainMode.tools = { actions: relocateTools };
     this.mainMode.windowKinds = this.getWindowKinds();
@@ -224,7 +225,6 @@ export class Puzzle5dPlayShellController extends Controller {
     return {
       kind: "select",
       id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`,
-      label: "LOD",
       value: this.lod2dMode,
       items: [{ id: "automatic", label: puzzle2dLodAutomaticSelectLabel(this.lod2dTag), value: PUZZLE_2D_LOD_MODE_AUTOMATIC }, ...PUZZLE_5D_PLAY_LOD_TIERS_2D.map((tier) => ({ id: tier, label: puzzle5dPlayLodTierMenuLabel(tier), value: tier }))],
       onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "set2dLodMode" },
@@ -236,7 +236,6 @@ export class Puzzle5dPlayShellController extends Controller {
       {
         kind: "toggle",
         id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-auto`,
-        label: "LOD",
         text: "Auto zoom",
         pressed: this.automaticLod3d,
         onChange: { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command: "set3dAutoLod" },
@@ -276,8 +275,8 @@ export class Puzzle5dPlayShellController extends Controller {
 
   getWindowKinds(): readonly WindowKindRuntime[] {
     const windowKinds = [
-      new WindowKindRuntime(PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_2D_BODY_KEY, undefined, [this.lod2dMeasure()], this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID)),
-      new WindowKindRuntime(PUZZLE_5D_PLAY_3D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_BODY_KEY, undefined, [...this.lod3dMeasures()], this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID)),
+      new WindowKindRuntime(PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_2D_BODY_KEY, undefined, [{ kind: "group", id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`, label: "LOD", children: [this.lod2dMeasure()] }], this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID)),
+      new WindowKindRuntime(PUZZLE_5D_PLAY_3D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_BODY_KEY, undefined, [{ kind: "group", id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-lod`, label: "LOD", children: this.lod3dMeasures() }], this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID)),
     ];
     for (const windowKind of windowKinds) {
       enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 5D play window "${windowKind.id}"`);
@@ -352,10 +351,14 @@ export class Puzzle5dPlayShellController extends Controller {
         else changed = false;
         break;
       }
-      case "setRelocateMode": {
-        const mode = (args as { mode: Puzzle3dRelocateMode }).mode;
-        if (this.relocateMode !== mode) this.relocateMode = mode;
-        else changed = false;
+      case "setGumballConfigToggle": {
+        const key = (args as { key?: Puzzle3dGumballGroupKey }).key;
+        if (!key || !PUZZLE_3D_GUMBALL_GROUPS.some((row) => row.key === key)) {
+          changed = false;
+          break;
+        }
+        this.gumballConfig = { ...this.gumballConfig, [key]: this.gumballConfig[key] === false };
+        this.rebuildShellMode();
         break;
       }
       case "note2dConnect":
@@ -411,7 +414,7 @@ export class Puzzle5dPlayShellController extends Controller {
       camera2d: this.camera2d,
       camera3d: this.camera3d,
       selected3d: this.selected3d,
-      relocateMode: this.relocateMode,
+      gumballConfig: this.gumballConfig,
       lod3dTag: this.lod3dTag,
       lod2dTag: this.lod2dTag,
       lod2dProps: puzzle2dLodCanvasProps(this.lod2dMode),

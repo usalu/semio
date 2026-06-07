@@ -1,0 +1,22 @@
+{
+  "title": "Fix Interactive Disposition Resize",
+  "status": "closed",
+  "description": "The arc command doesn't preview correctly (no curve rendering for arc/circle-outline preview kinds) and produces wrong output (kernel reads radiusPoint instead of start)",
+  "summary": "Description full→short on goal slide now morphs via text morph-source pairing (prior lines on data-id, short label on presentation-morph-target). Affiliation abbreviation uses the same pattern with morphLineLabels. Flow intro keeps data-id on leaf nodes only.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8d10652d4d464f29ad354d87cca945e4",
+    "⚪74f93cd4f69f4ba28470bfde5e99035f",
+    "⚪5dcd4182b1694dc2ab67fc6a8aad01af",
+    "⚪4d8f1f2e358f42ccb663eb6add93803e",
+    "⚪b7a3448a555346c69322367a22093c3c",
+    "⚪72e7184bfcf94d88aa3a7e41fae2e7fe",
+    "⚪b55c9f31c82b4d58b7ee8fb46bf094f5",
+    "⚪e3920b7fb57f428aaf9564614be81c7e",
+    "⚪bfe680f9b6f54d7f9f939d16309937bf",
+    "⚪01b598528f814e35b9e77c9045fe0576",
+    "⚪cd7c4b1d508e4fe49afcd35a4c042bcd",
+    "⚪35345b81b2eb4f5881864f6103501887",
+    "⚪58dde3a6dacc40709dcafadf4badef48"
+  ]
+}

@@ -9,12 +9,14 @@
 // #endregion 🧲Header
 
 import { Footer } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { CheckCircle2 } from "lucide-react";
 
 // 🔷#region 🎮Footer
+const CheckCircle2 = createIconComponent("check-circle2");
+
 const meta = {
-  title: "elements/react/Footer",
+  title: "🖱️ui⚛️react/Footer",
   component: Footer,
   parameters: {
     layout: "fullscreen",

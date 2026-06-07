@@ -15,7 +15,7 @@
     },
     "dev": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio/rs:build"],
+      "dependsOn": ["@semio/rs:wasm"],
       "options": {
         "cwd": "semio/client/lib/sketchpad/js",
         "command": "vite",

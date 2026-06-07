@@ -22,7 +22,7 @@ const shallowKit = metabolismShallowKit as unknown as SemioKit;
 // #region ⏱️Kit
 
 const meta: Meta<typeof Kit> = {
-  title: "semio/react/Kit",
+  title: "🏘️semio⚛️react/Kit",
   component: Kit,
   tags: ["autodocs"],
   parameters: { layout: "padded" },

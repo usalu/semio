@@ -41,7 +41,7 @@ const minimalKit = { types: minimalTypes, files: minimalFiles } as any;
 // #region 📍Scene
 
 const meta: Meta<typeof Scene> = {
-  title: "semio/react/Scene",
+  title: "🏘️semio⚛️react/Scene",
   component: Scene,
   tags: ["autodocs"],
   parameters: { layout: "centered" },

@@ -1,0 +1,18 @@
+{
+  "title": "Tambour Platform Door Compatibility",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Fix fixture port compatibilities: door tambour east only with platform west; door tambour west only with platform east.",
+  "summary": "Capsule S door side corrected to door capsule right (with J); only Capsule L is door capsule left. Updated puzzle3dMetabolismDoorCapsuleSideFromKindName, reverted s/s.capsule/balcony_s kit ports to right, refreshed nakagin 3d fixture vortices.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1524"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3f7a971b13ad4f90a5e19f332cf1e4b3",
+    "⚪e9df3f21d57b4fa1ab57f7033cd96cef",
+    "⚪d447e1b40d66431ba672e98c5d5ea88d",
+    "⚪838ac5b4620e48dabeeca26bdcfec753",
+    "⚪5b59dc8f3f0d4b908eeb087a1c02d406"
+  ]
+}

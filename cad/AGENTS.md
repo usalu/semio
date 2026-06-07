@@ -1,5 +1,6 @@
 ---
-technology: spatial
+technology: cad
+emoji: 📐
 ---
 
 # Core

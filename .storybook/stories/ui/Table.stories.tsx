@@ -9,12 +9,16 @@
 // #endregion 🧲Header
 
 import { Table, TableAvatar, TableColumn, TableSkeleton } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { FileCode, FileImage, FolderIcon } from "lucide-react";
 
 // 📊#region 🛎️Table
+const FileCode = createIconComponent("file-code");
+const FileImage = createIconComponent("file-image");
+const FolderIcon = createIconComponent("folder");
+
 const meta = {
-  title: "elements/react/Table",
+  title: "🖱️ui⚛️react/Table",
   component: Table,
   parameters: {
     layout: "padded",

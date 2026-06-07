@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { reactHostPort, type ContextMenuItem } from "@ui/react";
+import { reactHostPort, DEFAULT_GUMBALL_CONFIG, type ContextMenuItem, type GumballConfig } from "@ui/react";
 import type { ReactElement } from "react";
 
 /** @emoji 🔗 Unified puzzle 5d model with 2d WASM + 3d R3F projections and a shared {@link Store}. */
@@ -11,7 +11,7 @@ import type { ReactElement } from "react";
 import {
   Puzzle2dCanvas,
   DEFAULT_PUZZLE_2D_GRID_FACTOR,
-  DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS,
+  getPuzzle2dLodScale,
   Edge, Handle, Node, Wire,
   BUILTIN_PORT_HANDLE_KIND,
   fixtureMetaKindCatalogBundle,
@@ -20,6 +20,8 @@ import {
   type Puzzle2dCanvasProps,
   type Puzzle2dFixtureV1,
   type Puzzle2dForceGraphLayoutOptions,
+  type Puzzle2dRedrawLayoutOptions,
+  layoutPuzzle2dFixtureRedrawNodes,
   type KindCatalogBundle as Puzzle2dKindCatalogBundle,
   type KindCompatEntry as Puzzle2dKindCompatEntry,
   type Puzzle2dLinkSessionSnapshot,
@@ -315,7 +317,12 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
   for (const edge of fixture2d.edges) {
     if (tieIds.has(edge.id)) continue;
     tieIds.add(edge.id);
-    ties.push({ id: edge.id, source: edge.source, target: edge.target });
+    ties.push({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      ...(edge.edgeKind !== undefined ? { tieKind: edge.edgeKind } : {}),
+    });
   }
   for (const att of fixture3d.attractions) {
     if (tieIds.has(att.id)) continue;
@@ -400,7 +407,12 @@ export function project2d(model: V1): Puzzle2dFixtureV1 {
     schema: "puzzle.2d.fixture/v1",
     camera: { ...model.camera2d },
     nodes,
-    edges: model.ties.map((b) => ({ id: b.id, source: b.source, target: b.target })),
+    edges: model.ties.map((b) => ({
+      id: b.id,
+      source: b.source,
+      target: b.target,
+      ...(b.tieKind !== undefined ? { edgeKind: b.tieKind } : {}),
+    })),
     ...(model.meta ? { meta: model.meta } : {}),
   };
 }
@@ -540,6 +552,17 @@ export class Store {
     this.setSnapshot({ ...this.snapshot, model: { ...this.snapshot.model, parts } });
   }
 
+  /** @emoji 🕸️ Batch-updates flat node centers after a WASM force-graph tick. */
+  applyFlatNodeCenters(centers: ReadonlyMap<string, { readonly x: number; readonly y: number }>): void {
+    if (centers.size === 0) return;
+    const parts = this.snapshot.model.parts.map((p) => {
+      const center = centers.get(p.id);
+      if (center == null || !p.puzzle2d) return p;
+      return { ...p, puzzle2d: { ...p.puzzle2d, x: center.x, y: center.y } };
+    });
+    this.setSnapshot({ ...this.snapshot, model: { ...this.snapshot.model, parts } });
+  }
+
   apply3dRelocate(partId: string, origin: readonly [number, number, number], orientation: readonly [number, number, number, number]): void {
     const parts = this.snapshot.model.parts.map((p) => {
       if (p.id !== partId || !p.puzzle3d) return p;
@@ -549,11 +572,16 @@ export class Store {
   }
 
   applyTie(source: string, target: string, tieKind?: string): void {
+    const ties = this.snapshot.model.ties;
+    if (ties.some((tie) => tie.source === source && tie.target === target)) {
+      this.setSnapshot({ ...this.snapshot, connectSession: null });
+      return;
+    }
     const id = crypto.randomUUID();
-    const ties: TieV1[] = [...this.snapshot.model.ties, { id, source, target, ...(tieKind ? { tieKind } : {}) }];
+    const nextTies: TieV1[] = [...ties, { id, source, target, ...(tieKind ? { tieKind } : {}) }];
     this.setSnapshot({
       ...this.snapshot,
-      model: { ...this.snapshot.model, ties },
+      model: { ...this.snapshot.model, ties: nextTies },
       connectSession: null,
     });
   }
@@ -594,7 +622,6 @@ export const FIVE_D_ROOT_CLASS = "flex h-full min-h-0 flex-1 flex-col";
 
 /** @emoji 📶 Flat-only LOD/grid defaults ({@link PUZZLE_5D_2D_LOD_TIER_COUNT} discrete tiers); do not pass to 3d {@link Puzzle3dCanvas}. */
 export const FIVE_D_FLAT_LOD_DEFAULTS = {
-  lodZoomThresholds: DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS,
   gridFactor: DEFAULT_PUZZLE_2D_GRID_FACTOR,
   gridSnapEnabled: true,
 } as const;
@@ -613,11 +640,41 @@ export interface FiveDProps {
   readonly instanceId: string;
   readonly className?: string;
   readonly lockedPartIds?: ReadonlySet<string>;
-  readonly relocateMode?: Puzzle3dRelocateMode;
+  readonly gumballConfig?: GumballConfig;
+  /** @emoji 🕸️ When true, runs a continuous WASM force-graph layout on the flat surface (e.g. kit WIRES). */
+  readonly liveForceGraph?: boolean;
   /** 2d surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
   readonly puzzle2d?: Omit<Puzzle2dCanvasProps, "children">;
   /** 3d surface overrides; LOD is continuous/camera-driven — not the flat six-tier scale. */
   readonly puzzle3d?: Omit<Puzzle3dCanvasProps, "children">;
+}
+
+const FIVE_D_LIVE_FORCE_ITERS_PER_FRAME = 24;
+
+/** @emoji 🕸️ Applies one WASM force-graph tick to a puzzle 5d store snapshot. */
+export function fiveDApplyLiveForceGraphStep(
+  store: Store,
+  instanceId: string,
+  lockedNodeIds: readonly string[] = [],
+): void {
+  const fixture = project2d(store.read());
+  if (fixture.nodes.length === 0) return;
+  const camera = store.get2dCamera(instanceId);
+  const laid = layoutPuzzle2dFixtureRedrawNodes(fixture, {
+    centerX: camera.x,
+    centerY: camera.y,
+    forceGraph: {
+      gravity: 0.012,
+      idealEdgeLength: 64,
+      iterations: FIVE_D_LIVE_FORCE_ITERS_PER_FRAME,
+      repulsionStrength: 80,
+    },
+    lockedNodeIds: lockedNodeIds.length ? [...lockedNodeIds] : undefined,
+    mode: "force-graph",
+    redrawHandlesAfter: false,
+  } satisfies Puzzle2dRedrawLayoutOptions);
+  const centers = new Map(laid.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
+  store.applyFlatNodeCenters(centers);
 }
 
 function fiveDLinkSessionFromStore(session: ConnectSession | null): Puzzle2dLinkSessionSnapshot | null {
@@ -695,7 +752,14 @@ function markers2dFromFixture(props: { readonly fixture: Puzzle2dFixtureV1; read
         ),
       )}
       {fixture.edges.map((edge) => (
-        <Edge edgeKind={undefined} id={edge.id} key={edge.id} selected={selectedIds.has(edge.id)} source={edge.source} target={edge.target} />
+        <Edge
+          {...(edge.edgeKind !== undefined ? { edgeKind: edge.edgeKind } : {})}
+          id={edge.id}
+          key={edge.id}
+          selected={selectedIds.has(edge.id)}
+          source={edge.source}
+          target={edge.target}
+        />
       ))}
     </>
   );
@@ -710,8 +774,25 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
   const markers = reactHostPort.useMemo(() => markers2dFromFixture({ fixture: fixture2d, lockedIds: locked, selectedIds }), [fixture2d, locked, selectedIds]);
   const camera = store.get2dCamera(props.instanceId);
   const extra2d = props.puzzle2d ?? {};
-  const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, ...rest2d } = extra2d;
+  const { onSelect: onSelectHost, onConnect: onConnectHost, onIndirectConnect: onIndirectConnectHost, onProximityConnect: onProximityConnectHost, onDrag: onDragHost, onDragEnd: onDragEndHost, ...rest2d } = extra2d;
   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
+  const liveForceGraph = props.liveForceGraph === true;
+  const draggingNodeIdRef = reactHostPort.useRef<string | null>(null);
+  const storeRef = reactHostPort.useRef(store);
+  storeRef.current = store;
+
+  reactHostPort.useEffect(() => {
+    if (!liveForceGraph || fixture2d.nodes.length === 0) return;
+    let raf = 0;
+    const step = () => {
+      const lockedNodeIds = draggingNodeIdRef.current ? [draggingNodeIdRef.current] : [];
+      fiveDApplyLiveForceGraphStep(storeRef.current, props.instanceId, lockedNodeIds);
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [fixture2d.nodes.length, liveForceGraph, props.instanceId]);
+
   return (
     <div className={FIVE_D_ROOT_CLASS} data-five-d-indirect-active={snap.connectSession ? "true" : "false"} data-five-d-mode="2d" data-five-d-instance={props.instanceId}>
       <Puzzle2dCanvas
@@ -727,8 +808,15 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
           onConnectHost?.(p);
         }}
         onDrag={(p) => {
+          draggingNodeIdRef.current = p.id;
           store.applyNodeMove(p.id, p.x, p.y);
           onDragHost?.(p);
+        }}
+        onDragEnd={(p) => {
+          if (draggingNodeIdRef.current === p.id) {
+            draggingNodeIdRef.current = null;
+          }
+          onDragEndHost?.(p);
         }}
         onIndirectConnect={(p) => {
           store.applyTie(p.source, p.target);
@@ -815,7 +903,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       gridSnapEnabled={FIVE_D_FLAT_LOD_DEFAULTS.gridSnapEnabled}
       kindCatalogs={project3dKindCatalogs(snap.model.kindCatalogs)}
       kindCompatibility={snap.model.kindCompatibility as Puzzle3dKindCompatEntry[] | undefined}
-      relocateMode={props.relocateMode ?? "translate"}
+      gumballConfig={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG}
       onCamera={(c) => store.set3dCamera(props.instanceId, c)}
       onConnect={(p) => {
         onConnect?.(p);
@@ -878,7 +966,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       }}
       {...rest3d}
     >
-      <Puzzle3dParts selectedObjectId={selectedObjectId} relocate={props.relocateMode ?? "translate"} />
+      <Puzzle3dParts selectedObjectId={selectedObjectId} relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
       <Puzzle3dTies />
     </Puzzle3dCanvas>
   );
@@ -1206,7 +1294,7 @@ export function kindCompatibilityFromMetas(inp: { readonly meta2d: Record<string
 
 export function sharedKindsFromMetas(inp: { readonly meta2d: Record<string, unknown> | undefined; readonly meta3d: Record<string, unknown> | undefined }): Pick<
   typeof FIVE_D_FLAT_LOD_DEFAULTS,
-  "lodZoomThresholds" | "gridFactor" | "gridSnapEnabled"
+  "gridFactor" | "gridSnapEnabled"
 > & {
   kindCatalogs?: KindCatalogBundle;
   kindCompatibility?: readonly KindCompatEntry[];
@@ -1433,7 +1521,7 @@ export function flatMarkersFromFixture(props: {
 }
 //#endregion 🔖Puzzle2dMarkers
 
-export { DEFAULT_PUZZLE_2D_GRID_FACTOR, DEFAULT_PUZZLE_2D_LOD_ZOOM_THRESHOLDS, blockedVortexFullIdsFromAttractions, parsePuzzle2dFixtureV1, parseFixtureV1 };
+export { DEFAULT_PUZZLE_2D_GRID_FACTOR, getPuzzle2dLodScale, blockedVortexFullIdsFromAttractions, parsePuzzle2dFixtureV1, parseFixtureV1 };
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -1478,7 +1566,45 @@ if (import.meta.vitest) {
       const t = compose5d(fixture2d, fixture3d);
       expect(t.parts.some((p) => p.id === "p1" && p.puzzle2d && p.puzzle3d)).toBe(true);
     });
+
+    it("preserves edge kinds as tie kinds for wires-style fixtures", () => {
+      const fixture2d: Puzzle2dFixtureV1 = {
+        schema: "puzzle.2d.fixture/v1",
+        camera: { x: 0, y: 0, zoom: 1 },
+        nodes: [
+          { id: "a", shape: "circle", x: 0, y: 0, radius: 10, handles: [] },
+          { id: "b", shape: "circle", x: 100, y: 0, radius: 10, handles: [] },
+        ],
+        edges: [{ id: "e1", source: "a", target: "b", edgeKind: "wires.owns" }],
+      };
+      const fixture3d: Puzzle3dFixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        domain: "architecture",
+        camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        objects: [],
+        attractions: [],
+      };
+      const model = compose5d(fixture2d, fixture3d);
+      expect(model.ties[0]?.tieKind).toBe("wires.owns");
+      expect(project2d(model).edges[0]?.edgeKind).toBe("wires.owns");
+    });
   });
+
+  describe("Store applyTie", () => {
+    it("ignores duplicate source-target pairs", () => {
+      const store = createStore({
+        schema: "puzzle.5d/v1",
+        domain: "architecture",
+        camera2d: { x: 0, y: 0, zoom: 1 },
+        camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+        parts: [],
+        ties: [{ id: "t1", source: "a", target: "b" }],
+      });
+      store.applyTie("a", "b");
+      expect(store.getSnapshot().model.ties).toHaveLength(1);
+    });
+  });
+
   describe("puzzle 3d projection", () => {
     it("projects parts with puzzle3d aspects to a 3d fixture", () => {
       const model = compose5d(
@@ -1579,6 +1705,37 @@ if (import.meta.vitest) {
       const o = puzzle2dForceGraphOptions({ centerStrength: 0.1, linkDistance: 120, chargeStrength: -400 });
       expect(o.repulsionStrength).toBe(400);
       expect(o.idealEdgeLength).toBe(120);
+    });
+  });
+
+  describe("fiveDApplyLiveForceGraphStep", () => {
+    it("updates flat node centers for linked normal-graph nodes", () => {
+      const store = createStore(
+        compose5d(
+          {
+            schema: "puzzle.2d.fixture/v1",
+            camera: { x: 0, y: 0, zoom: 1 },
+            nodes: [
+              { id: "a", shape: "circle", x: 0, y: 0, radius: 20, handles: [] },
+              { id: "b", shape: "circle", x: 4, y: 0, radius: 20, handles: [] },
+            ],
+            edges: [{ id: "e1", source: "a", target: "b" }],
+          },
+          {
+            schema: "puzzle.3d.fixture/v1",
+            domain: "architecture",
+            camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+            objects: [],
+            attractions: [],
+          },
+        ),
+      );
+      fiveDApplyLiveForceGraphStep(store, "kit:kit:wires");
+      const a = store.read().parts.find((part) => part.id === "a")?.puzzle2d;
+      const b = store.read().parts.find((part) => part.id === "b")?.puzzle2d;
+      expect(a?.x).toBeDefined();
+      expect(b?.x).toBeDefined();
+      expect(Math.abs((a?.x ?? 0) - (b?.x ?? 0))).toBeGreaterThan(8);
     });
   });
 }

@@ -26,6 +26,7 @@ import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 import { puzzle3dMeshesVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { readInitialKitFixtureFromPath } from "../../../../fixtures/script.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
@@ -51,7 +52,10 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
         file.startsWith(`${root}/semio/client/lib/sketchpad/`) ||
         file.startsWith(`${root}/semio/client/lib/react/`) ||
         file.startsWith(`${root}/semio/assets/`) ||
-        file.startsWith(`${root}/framework/product/playground/`);
+        file.startsWith(`${root}/framework/product/playground/`) ||
+        file.startsWith(`${root}/infinite/`) ||
+        file.startsWith(`${root}/gis/`) ||
+        file.startsWith(`${root}/reasoning/`);
       if (!allowed) return;
       if (!/\.(tsx?|mts|cts)$/.test(file)) return;
       const loader = file.endsWith(".tsx") || (file.endsWith(".ts") && /<[A-Za-z/]/.test(code)) ? "tsx" : "ts";
@@ -146,6 +150,11 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
           if (requestedFixturePath.endsWith(".json")) {
             res.setHeader("Content-Type", "application/json");
           }
+          if (requestedFixturePath.endsWith("/kit.semio.json") && fsMod.existsSync(path.join(path.dirname(filePath), "types"))) {
+            const assembled = readInitialKitFixtureFromPath(filePath);
+            res.end(JSON.stringify(assembled));
+            return;
+          }
           fsMod.createReadStream(filePath).pipe(res);
           return;
         }
@@ -193,7 +202,7 @@ export default defineConfig(async ({ mode }) => {
       "import.meta.env.SEMIO_SKETCHPAD_E2E": JSON.stringify(process.env.SEMIO_SKETCHPAD_E2E ?? ""),
     },
     resolve: {
-      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three"],
+      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three", "@radix-ui/react-compose-refs", "@radix-ui/react-slot"],
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
         { find: "@semio/react", replacement: path.resolve(__dirname, "../../react") },
@@ -234,6 +243,15 @@ export default defineConfig(async ({ mode }) => {
           find: "@framework/playground/renderer/react",
           replacement: path.resolve(__dirname, "../../../../../framework/product/playground/renderer/react/index.tsx"),
         },
+        {
+          find: "@reasoning/mindmap/wires/react",
+          replacement: path.resolve(__dirname, "../../../../../reasoning/mindmap/wires/react/index.ts"),
+        },
+        { find: "@reasoning/mindmap/react", replacement: path.resolve(__dirname, "../../../../../reasoning/mindmap/react/index.tsx") },
+        { find: "@infinite/cavas/react-renderer", replacement: path.resolve(__dirname, "../../../../../infinite/cavas/react-renderer/index.tsx") },
+        { find: "@infinite/world/r3f", replacement: path.resolve(__dirname, "../../../../../infinite/world/r3f/index.tsx") },
+        { find: "@gis/map/play", replacement: path.resolve(__dirname, "../../../../../gis/map/play/index.ts") },
+        { find: "@gis/map/react", replacement: path.resolve(__dirname, "../../../../../gis/map/react/index.tsx") },
         { find: "@puzzle/2d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
         { find: "@puzzle/3d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/3d/react/index.tsx") },
         { find: "@puzzle/5d/react", replacement: path.resolve(__dirname, "../../../../../puzzle/5d/react/index.tsx") },
@@ -293,7 +311,7 @@ export default defineConfig(async ({ mode }) => {
       /** Workers + wasm-bindgen glue may use syntax older `esbuild` targets cannot downlevel (see vite-plugin-top-level-await). */
       target: "es2022",
       rollupOptions: {
-        external: ["@playwright/test", "@semio/fixtures/kit/dev/metabolism/wip/initialKit/kit.semio.json"],
+        external: ["@playwright/test"],
       },
     },
     worker: {

@@ -23,7 +23,9 @@ class WasmScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(): void {
-    new WasmScript(this.root, this.repoRoot).run();
+    if (process.env.SEMIO_RS_SKIP_WASM !== "1") {
+      new WasmScript(this.root, this.repoRoot).run();
+    }
     execFileSync("cargo", ["build", "--release"], { stdio: "inherit", cwd: this.root });
   }
 }

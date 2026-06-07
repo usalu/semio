@@ -16,6 +16,10 @@ path = "lib.rs"
 serde_json = "1.0.140"
 
 [dependencies]
+infinite_cavas = { path = "../../../infinite/cavas/vello" }
+mathematical_graph_port_directed = { path = "../../../mathematical/graph/port/directed" }
+gis_map = { path = "../../../gis/map/rs" }
+reasoning_mindmap = { path = "../../../reasoning/mindmap" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }

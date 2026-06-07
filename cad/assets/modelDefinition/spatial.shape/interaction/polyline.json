@@ -20,7 +20,11 @@
       {
         "state": "next_point_of_polyline",
         "anchor": "points.@last",
-        "field": "cursor"
+        "field": "cursor",
+        "control": "stepper",
+        "min": 0,
+        "step": 0.1,
+        "unit": "m"
       }
     ]
   },

@@ -9,9 +9,9 @@
     "test": "bun nx run @puzzle/2d/react:test"
   },
 	"dependencies": {
+		"@infinite/cavas/react-renderer": "workspace:*",
 		"@ui/react": "workspace:*",
     "its-fine": "^2.0.0",
-    "lucide-react": "^0.536.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-reconciler": "^0.33.0"

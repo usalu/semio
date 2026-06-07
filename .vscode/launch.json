@@ -91,7 +91,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🎨ui",
+      "name": "🛠️dev📖storybook🖱️ui",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:ui",
@@ -110,7 +110,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🧩puzzle2d",
+      "name": "🛠️dev📖storybook🧩puzzle🩻2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:puzzle:2d",
@@ -148,7 +148,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook👤semio",
+      "name": "🛠️dev📖storybook🏘️semio",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:semio",
@@ -167,7 +167,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook👤semio🧪algorithms",
+      "name": "🛠️dev📖storybook🏘️semio🧪algorithms",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:semio:algorithms",
@@ -186,7 +186,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook👤semio🎨ui",
+      "name": "🛠️dev📖storybook🏘️semio🖱️ui",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:semio:ui",
@@ -205,7 +205,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🌐hub",
+      "name": "🛠️dev🏘️semio🌐hub",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo run -p semio-hub",
@@ -223,7 +223,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🖱️3dm",
+      "name": "🛠️dev🏘️semio📐3dm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio/3dm-ui",
@@ -258,7 +258,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🖱️desktop",
+      "name": "🛠️dev🏘️semio🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev",
@@ -269,7 +269,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio⚙️engine🤖mcp",
+      "name": "🛠️dev🏘️semio⚙️engine🤖mcp",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev mcp engine",
@@ -305,7 +305,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🖱️sketchpad🎛️play",
+      "name": "🛠️dev🏘️semio✍️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio/play:dev",
@@ -321,7 +321,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🧮query🧪test",
+      "name": "🛠️dev🏘️semio🧮query🧪test",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio/query:test",
@@ -332,7 +332,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱framework🧪core",
+      "name": "🛠️dev🥅framework🧪core",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @framework/core:test",
@@ -343,7 +343,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱framework🧪platform",
+      "name": "🛠️dev🥅framework🧪platform",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @framework/platform/core:test",
@@ -354,7 +354,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱framework🧪playground",
+      "name": "🛠️dev🥅framework🧪playground",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @framework/playground/core:test",
@@ -365,7 +365,7 @@
       }
     },
     {
-      "name": "🛠️dev🌈ui🪁typecheck",
+      "name": "🛠️dev🖱️ui🪁typecheck",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @ui/react:typecheck",
@@ -376,7 +376,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🧮query🦀build",
+      "name": "🛠️dev🏘️semio🧮query🦀build",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio/query:build",
@@ -387,7 +387,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🧮query🌐wasm",
+      "name": "🛠️dev🏘️semio🧮query🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts query wasm",
@@ -398,7 +398,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🏪store📊graphiql",
+      "name": "🛠️dev🏘️semio🏪store📊graphiql",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo run -p semio-store",
@@ -418,7 +418,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🧪fixtures🔄metabolism-light",
+      "name": "🛠️dev🏘️semio🧪fixtures🔄metabolism-light",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio/fixtures:regenerate-metabolism-light",
@@ -429,7 +429,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🖱️sketchpad",
+      "name": "🛠️dev🏘️semio✍️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio/sketchpad",
@@ -450,7 +450,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE",
-          "endsPattern": "http://localhost:5173/"
+          "endsPattern": "http://(localhost|127\\.0\\.0\\.1):5173/"
         }
       },
       "cwd": "${workspaceFolder}",
@@ -460,12 +460,12 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://localhost:5173)",
+        "pattern": "http://(localhost|127\\.0\\.0\\.1):5173",
         "uriFormat": "%s"
       }
     },
     {
-      "name": "🛠️dev👤semio🎗️vscode",
+      "name": "🛠️dev🏘️semio🎗️vscode",
       "type": "extensionHost",
       "request": "launch",
       "args": [
@@ -480,7 +480,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🎗️vscodeintegrated",
+      "name": "🛠️dev🏘️semio🎗️vscodeintegrated",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio/vscode",
@@ -656,7 +656,7 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️dev🧭cad",
+      "name": "🛠️dev📐cad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:cad",
@@ -675,7 +675,40 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle2d",
+      "name": "🛠️dev♾️infinite✈️cavas🧪react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @infinite/cavas/react-renderer:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 169.5
+      }
+    },
+    {
+      "name": "🛠️dev♾️infinite🏙️world🧪r3f",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @infinite/world/r3f:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 169.55
+      }
+    },
+    {
+      "name": "🛠️dev♾️infinite✈️cavas🦀vello",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p infinite_cavas -p mathematical_core -p mathematical_graph -p mathematical_graph_normal_undirected -p mathematical_graph_normal_directed -p mathematical_graph_port_undirected -p mathematical_graph_port_directed -p gis_map -p reasoning_mindmap -p reasoning_mindmap_rs -p reasoning_mindmap_wires -p puzzle_2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 169.6
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle🩻2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:2d",
@@ -694,7 +727,56 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle3d",
+      "name": "🛠️dev🧠reasoning🔗wires",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:reasoning:wires",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "WIRES_PLAY_PORT": "6015"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 172
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6015)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌐gis📍map",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:gis:map",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "GIS_MAP_PLAY_PORT": "6040"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 175
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6040)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌐gis📍map🧩tiles",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @gis/map/play:tiles",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 176
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle📷3d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d",
@@ -713,7 +795,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle5d",
+      "name": "🛠️dev🧩puzzle👯5d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d",
@@ -750,6 +832,25 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🛠️dev📽️presentationplay",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/presentation/play:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PRESENTATION_PLAY_PORT": "6051"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 191
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6051)",
+        "uriFormat": "%s"
+      }
+    },
     // #endregion
     // #region 📦 Build
     {
@@ -764,7 +865,7 @@
       }
     },
     {
-      "name": "📦build👤semio🖱️3dm",
+      "name": "📦build🏘️semio📐3dm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- 3dm",
@@ -775,7 +876,18 @@
       }
     },
     {
-      "name": "📦build👤semio🏪assets",
+      "name": "📦build🖱️ui🏪assets",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts generate all",
+      "cwd": "${workspaceFolder}/ui/assets",
+      "presentation": {
+        "group": "4_build",
+        "order": 29
+      }
+    },
+    {
+      "name": "📦build🏘️semio🏪assets",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- assets",
@@ -786,7 +898,7 @@
       }
     },
     {
-      "name": "📦build👤semio🖱️desktop",
+      "name": "📦build🏘️semio🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- desktop",
@@ -797,7 +909,7 @@
       }
     },
     {
-      "name": "📦build👤semio⚙️engine",
+      "name": "📦build🏘️semio⚙️engine",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- engine",
@@ -808,7 +920,7 @@
       }
     },
     {
-      "name": "📦build👤semio🔗graphql",
+      "name": "📦build🏘️semio🔗graphql",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run semio/graphql:build",
@@ -819,7 +931,7 @@
       }
     },
     {
-      "name": "📦build👤semio🖱️sketchpad",
+      "name": "📦build🏘️semio✍️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- sites",
@@ -884,10 +996,21 @@
         "order": 120
       }
     },
+    {
+      "name": "📦build📽️presentationplay",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @framework/presentation/play:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 121
+      }
+    },
     // #endregion
     // #region ⬆️ Publish
     {
-      "name": "⬆️publish👤semio🖱️desktop",
+      "name": "⬆️publish🏘️semio🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- desktop",
@@ -898,7 +1021,7 @@
       }
     },
     {
-      "name": "⬆️publish👤semio🖱️sketchpad🎛️play",
+      "name": "⬆️publish🏘️semio✍️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- play",
@@ -909,7 +1032,7 @@
       }
     },
     {
-      "name": "⬆️publish👤semio🖱️sketchpad",
+      "name": "⬆️publish🏘️semio✍️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- sketchpad",
@@ -920,7 +1043,7 @@
       }
     },
     {
-      "name": "⬆️publish👤semio🖱️sketchpad📖docs",
+      "name": "⬆️publish🏘️semio✍️sketchpad📖docs",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- docs",

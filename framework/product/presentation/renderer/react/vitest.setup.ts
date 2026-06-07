@@ -1,5 +1,5 @@
 /** @emoji 🧪 jsdom polyfills for presentation renderer tests. */
-import { createElement, type ReactNode } from "react";
+import { createElement, useLayoutEffect, type ReactNode } from "react";
 import { vi } from "vitest";
 
 Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { value: true, writable: true });
@@ -123,8 +123,42 @@ if (typeof Range !== "undefined" && typeof Range.prototype.getClientRects !== "f
 }
 
 vi.mock("react-pdf", () => ({
-	Document: ({ children }: { readonly children?: ReactNode }) =>
-		createElement("div", { className: "react-pdf__Document" }, children),
-	Page: () => createElement("div", { className: "react-pdf__Page" }),
+	Document: ({
+		children,
+		onLoadSuccess,
+	}: {
+		readonly children?: ReactNode;
+		readonly onLoadSuccess?: (payload: { readonly numPages: number }) => void;
+	}) => {
+		useLayoutEffect(() => {
+			onLoadSuccess?.({ numPages: 3 });
+		}, [onLoadSuccess]);
+		return createElement("div", { className: "react-pdf__Document" }, children);
+	},
+	Page: ({
+		onLoadSuccess,
+		scale,
+		pageNumber,
+	}: {
+		readonly onLoadSuccess?: (page: {
+			getViewport: (options: { readonly scale: number }) => { readonly width: number; readonly height: number };
+		}) => void;
+		readonly scale?: number;
+		readonly pageNumber?: number;
+	}) => {
+		useLayoutEffect(() => {
+			onLoadSuccess?.({
+				getViewport: ({ scale: viewportScale }) => ({
+					width: 595 * viewportScale,
+					height: 842 * viewportScale,
+				}),
+			});
+		}, [onLoadSuccess, pageNumber]);
+		return createElement("div", {
+			className: "react-pdf__Page",
+			"data-scale": scale === undefined ? undefined : String(scale),
+			"data-page": pageNumber === undefined ? undefined : String(pageNumber),
+		});
+	},
 	pdfjs: { GlobalWorkerOptions: { workerSrc: "" }, version: "0.0.0" },
 }));

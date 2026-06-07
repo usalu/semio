@@ -9,12 +9,19 @@
 // #endregion 🧲Header
 
 import { Action, ToggleGroup } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 
 // 🔷#region 🧩ToggleGroup
+const Box = createIconComponent("box");
+const List = createIconComponent("list");
+const Lock = createIconComponent("lock");
+const Network = createIconComponent("network");
+const Plus = createIconComponent("plus");
+const Settings = createIconComponent("settings");
+
 const meta = {
-  title: "elements/react/ToggleGroup",
+  title: "🖱️ui⚛️react/ToggleGroup",
   component: ToggleGroup,
   parameters: {
     layout: "centered",

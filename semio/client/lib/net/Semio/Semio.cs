@@ -389,6 +389,75 @@ public static class Utility
 
     #region 🧬KitDocumentJson
 
+    /// <summary>📁 Reads split <c>kit.semio.json</c> shells with sibling <c>types/</c> and <c>designs/</c> sidecars merged for hydration.</summary>
+    public static string ReadKitFixtureJson(string kitJsonPath)
+    {
+        var initialKitDir = Path.GetDirectoryName(Path.GetFullPath(kitJsonPath))
+            ?? throw new DirectoryNotFoundException($"Kit fixture path has no directory: {kitJsonPath}");
+        var typesDir = Path.Combine(initialKitDir, "types");
+        if (!Directory.Exists(typesDir))
+            return System.IO.File.ReadAllText(kitJsonPath);
+        var shell = JObject.Parse(System.IO.File.ReadAllText(kitJsonPath));
+        var typeById = new Dictionary<string, JObject>(StringComparer.Ordinal);
+        foreach (var typeFile in Directory.EnumerateFiles(typesDir, "*.type.semio.json"))
+        {
+            var row = JObject.Parse(System.IO.File.ReadAllText(typeFile));
+            var id = row["id"]?.Value<string>();
+            if (!string.IsNullOrEmpty(id))
+                typeById[id] = row;
+        }
+        var designById = new Dictionary<string, JObject>(StringComparer.Ordinal);
+        var designsDir = Path.Combine(initialKitDir, "designs");
+        if (Directory.Exists(designsDir))
+        {
+            foreach (var designFile in Directory.EnumerateFiles(designsDir, "*.design.semio.json"))
+            {
+                var row = JObject.Parse(System.IO.File.ReadAllText(designFile));
+                var id = row["id"]?.Value<string>();
+                if (!string.IsNullOrEmpty(id))
+                    designById[id] = row;
+            }
+        }
+        if (shell["typologies"] is not JArray and JObject typologiesBlock)
+        {
+            var topoItems = typologiesBlock["items"] as JArray;
+            if (topoItems != null)
+                MergeSplitTypologySidecars(topoItems, typeById, designById);
+        }
+        else if (shell["typologies"] is JArray topoArr)
+        {
+            MergeSplitTypologySidecars(topoArr, typeById, designById);
+        }
+        return shell.ToString(Formatting.None);
+    }
+
+    private static void MergeSplitTypologySidecars(JArray topologies, IReadOnlyDictionary<string, JObject> typeById, IReadOnlyDictionary<string, JObject> designById)
+    {
+        foreach (var topoTok in topologies.OfType<JObject>())
+        {
+            if (topoTok["types"] is JObject typesBlock && typesBlock["items"] is JArray typeItems)
+            {
+                for (var i = 0; i < typeItems.Count; i++)
+                {
+                    if (typeItems[i] is not JObject stub) continue;
+                    var id = stub["id"]?.Value<string>();
+                    if (!string.IsNullOrEmpty(id) && typeById.TryGetValue(id, out var full))
+                        typeItems[i] = full;
+                }
+            }
+            if (topoTok["designs"] is JObject designsBlock && designsBlock["items"] is JArray designItems)
+            {
+                for (var i = 0; i < designItems.Count; i++)
+                {
+                    if (designItems[i] is not JObject stub) continue;
+                    var id = stub["id"]?.Value<string>();
+                    if (!string.IsNullOrEmpty(id) && designById.TryGetValue(id, out var full))
+                        designItems[i] = full;
+                }
+            }
+        }
+    }
+
     /// <summary>📦 Flattens persisted kit workspace JSON (<c>wip.initialKit</c>, <c>{ hash, items }</c> buckets, <c>updatedAt</c>) into the JSON shape <see cref="Kit"/> bindings expect.</summary>
     public static string NormalizeKitDocumentJson(string json)
     {

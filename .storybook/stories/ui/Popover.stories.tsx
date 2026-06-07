@@ -9,12 +9,14 @@
 // #endregion 🧲Header
 
 import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Settings } from "lucide-react";
 
 // 🔷#region 🌐Popover
+const Settings = createIconComponent("settings");
+
 const meta = {
-  title: "elements/react/Popover",
+  title: "🖱️ui⚛️react/Popover",
   component: Popover,
   parameters: {
     layout: "centered",

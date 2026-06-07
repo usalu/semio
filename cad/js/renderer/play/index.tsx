@@ -21,6 +21,7 @@ import {
   type UiNode,
   type WindowLayout,
   enforcePlaygroundWindowEngagementInput,
+  windowEngagementsEqual,
 } from "@framework/playground/core";
 import {
   DocumentHistory,
@@ -58,12 +59,11 @@ import {
   type SpatialComputeMode,
   type TransformationSpec,
   applyModelDiff,
-  type CadTransformGumballMode,
-  CAD_PLAY_TRANSFORM_WINDOW_MODES,
-  cadPlayTransformWindowModeLabel,
-  cadTransformGumballModeFromWindowMode,
-  isCadPlayTransformWindowMode,
-  type CadPlayTransformWindowMode,
+  type CadGumballConfig,
+  type CadGumballGroupKey,
+  CAD_GUMBALL_GROUPS,
+  CAD_GUMBALL_HIDDEN,
+  cadGumballConfigVisible,
   type ModelDiff,
   deleteObjectsFromModel,
   deletableObjectIdsFromSelection,
@@ -72,8 +72,8 @@ import {
 /** @emoji ⚡ Per-window compute mode options for CAD play window measures. */
 export const CAD_PLAY_COMPUTE_MODES: readonly SpatialComputeMode[] = ["fast", "precise"];
 
-/** @emoji 🎛 Default per-pane transform combobox value for CAD play window measures. */
-export const CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE: CadPlayTransformWindowMode = "none";
+const ListTree = createIconComponent("list-tree");
+const Shapes = createIconComponent("shapes");
 
 //#region 🔖Ids
 export const CAD_PLAY_APP_ID = "cad-play";
@@ -207,6 +207,19 @@ export function cadPlaySceneSurfaceIdForPane(pane: CadPlayPaneId): string {
 /** @emoji 🧭 Maps a CAD play window kind id to its pane id. */
 export function cadPlayPaneFromWindowKindId(windowKindId: string): CadPlayPaneId | null {
   return CAD_PLAY_PANE_SPECS.find((row) => row.windowKindId === windowKindId)?.pane ?? null;
+}
+
+/** @emoji 🪟 Maps shell instance id (or window kind id on bootstrap) to CAD play pane. */
+export function cadPlayPaneFromShellWindowId(shellWindowId: string): CadPlayPaneId | null {
+  const direct = cadPlayPaneFromWindowKindId(shellWindowId);
+  if (direct) {
+    return direct;
+  }
+  const match = /^win-(cad-play-(?:shape|building|energy|structure-classic))-/.exec(shellWindowId);
+  if (!match?.[1]) {
+    return null;
+  }
+  return cadPlayPaneFromWindowKindId(match[1]);
 }
 
 /** @emoji 🧭 Maps a model definition id to its CAD play pane id. */
@@ -480,21 +493,6 @@ export function buildCadPlayToolbarTools(state: CadPlayToolbarState, controllerI
   };
 }
 
-/** @emoji 🔑 Stable digest for {@link WindowEngagement} equality (skips redundant shell updates). */
-export function windowEngagementDigest(engagement: WindowEngagement | undefined): string {
-  if (!engagement) return "";
-  const options = (engagement.options ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.pressed ? 1 : 0}\u0001${row.disabled ? 1 : 0}`).join("\u0002");
-  const input = engagement.input ? `${engagement.input.id}\u0001${engagement.input.value}\u0001${engagement.input.placeholder ?? ""}\u0001${engagement.input.disabled ? 1 : 0}` : "";
-  const status = (engagement.status ?? []).map((row) => `${row.id}\u0001${row.text}`).join("\u0002");
-  const possibles = (engagement.possibleEngagements ?? []).map((row) => `${row.id}\u0001${row.label}\u0001${row.detail ?? ""}`).join("\u0002");
-  return [options, input, status, possibles].join("\u0003");
-}
-
-/** @emoji ⚖️ Returns whether two neutral engagement snapshots are equivalent for shell sync. */
-export function windowEngagementsEqual(left: WindowEngagement | undefined, right: WindowEngagement | undefined): boolean {
-  return windowEngagementDigest(left) === windowEngagementDigest(right);
-}
-
 /** @emoji 💬 Mirrors a live ui {@link EngagementSpec} into a React-neutral {@link WindowEngagement} whose option/input commands route back through the host bridge to the InteractionRepl callbacks. */
 export function cadPlayEngagementMirror(engagement: EngagementSpec | null, pane: CadPlayPaneId): WindowEngagement | undefined {
   if (!engagement) return undefined;
@@ -526,7 +524,8 @@ export function cadPlayEngagementMirror(engagement: EngagementSpec | null, pane:
     detail: row.detail,
     command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane, possibleId: row.id } },
   }));
-  return { options, input, status, possibleEngagements };
+  const control = engagementSpecControlMirror(engagement.control, CAD_PLAY_CONTROLLER_ID, { pane });
+  return { sessionActive: engagement.sessionActive, options, input, control, status, possibleEngagements };
 }
 
 /** @emoji 💬 Placeholder engagement until a pane's {@link InteractionRepl} publishes a live snapshot (requires `input`). */
@@ -559,7 +558,7 @@ export class CadPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "CAD", undefined);
   private hostBridge: CadPlayHostBridge | null = null;
   private computeModeByPane: Record<CadPlayPaneId, SpatialComputeMode>;
-  private transformModeByPane: Record<CadPlayPaneId, CadPlayTransformWindowMode>;
+  private gumballConfigByPane: Record<CadPlayPaneId, CadGumballConfig>;
   private engagementByPane: Record<CadPlayPaneId, WindowEngagement | undefined>;
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
@@ -570,11 +569,11 @@ export class CadPlayShellController extends Controller {
       energy: "fast",
       "structure-classic": "fast",
     };
-    this.transformModeByPane = {
-      shape: CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE,
-      building: CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE,
-      energy: CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE,
-      "structure-classic": CAD_PLAY_DEFAULT_TRANSFORM_WINDOW_MODE,
+    this.gumballConfigByPane = {
+      shape: { ...CAD_GUMBALL_HIDDEN },
+      building: { ...CAD_GUMBALL_HIDDEN },
+      energy: { ...CAD_GUMBALL_HIDDEN },
+      "structure-classic": { ...CAD_GUMBALL_HIDDEN },
     };
     this.engagementByPane = { shape: undefined, building: undefined, energy: undefined, "structure-classic": undefined };
     this.rebuildShellMode();
@@ -584,7 +583,6 @@ export class CadPlayShellController extends Controller {
     return {
       kind: "select",
       id: `${pane}-compute`,
-      label: "Compute",
       value: this.computeModeByPane[pane],
       items: CAD_PLAY_COMPUTE_MODES.map((mode) => ({
         id: mode,
@@ -596,17 +594,20 @@ export class CadPlayShellController extends Controller {
   }
 
   private transformMeasureForPane(pane: CadPlayPaneId): WindowMeasure {
+    const config = this.gumballConfigByPane[pane];
     return {
-      kind: "select",
+      kind: "group",
       id: `${pane}-transform`,
       label: "Transform",
-      value: this.transformModeByPane[pane],
-      items: CAD_PLAY_TRANSFORM_WINDOW_MODES.map((mode) => ({
-        id: mode,
-        value: mode,
-        label: cadPlayTransformWindowModeLabel(mode),
+      defaultOpen: true,
+      children: CAD_GUMBALL_GROUPS.map((row) => ({
+        kind: "toggle" as const,
+        id: `${pane}-gumball-${row.key}`,
+        label: row.label,
+        text: row.label,
+        pressed: config[row.key] !== false,
+        onChange: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "setGumballConfigToggleForPane", args: { pane, key: row.key } },
       })),
-      onChange: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "setTransformModeForPane", args: { pane } },
     };
   }
 
@@ -619,7 +620,17 @@ export class CadPlayShellController extends Controller {
     this.mainMode.windowKinds = CAD_PLAY_PANE_SPECS.map((row) => {
       const engagement = this.paneEngagementForShell(row.pane);
       enforcePlaygroundWindowEngagementInput(engagement, `CAD play window "${row.windowKindId}"`);
-      return new WindowKindRuntime(row.windowKindId, row.label, row.bodyKey, undefined, [this.computeMeasureForPane(row.pane), this.transformMeasureForPane(row.pane)], engagement);
+      return new WindowKindRuntime(
+        row.windowKindId,
+        row.label,
+        row.bodyKey,
+        undefined,
+        [
+          { kind: "group", id: `${row.pane}-compute`, label: "Compute", children: [this.computeMeasureForPane(row.pane)] },
+          { kind: "group", id: `${row.pane}-transform`, label: "Transform", children: [this.transformMeasureForPane(row.pane)] },
+        ],
+        engagement,
+      );
     });
   }
 
@@ -648,19 +659,15 @@ export class CadPlayShellController extends Controller {
     return this.computeModeByPane;
   }
 
-  /** @emoji 🎛 Returns transform combobox value for one quad pane. */
-  getTransformWindowModeForPane(pane: CadPlayPaneId): CadPlayTransformWindowMode {
-    return this.transformModeByPane[pane];
+  /** @emoji 🎛 Returns gumball config for one quad pane. */
+  getTransformGumballConfigForPane(pane: CadPlayPaneId): CadGumballConfig | null {
+    const config = this.gumballConfigByPane[pane];
+    return cadGumballConfigVisible(config) ? config : null;
   }
 
-  /** @emoji 🎛 Active gumball mode for one quad pane (`null` when combobox is None). */
-  getTransformGumballModeForPane(pane: CadPlayPaneId): CadTransformGumballMode | null {
-    return cadTransformGumballModeFromWindowMode(this.transformModeByPane[pane]);
-  }
-
-  /** @emoji 🎛 Snapshot of transform combobox values for all quad panes. */
-  getTransformWindowModeByPane(): Readonly<Record<CadPlayPaneId, CadPlayTransformWindowMode>> {
-    return this.transformModeByPane;
+  /** @emoji 🎛 Snapshot of gumball configs for all quad panes. */
+  getGumballConfigByPane(): Readonly<Record<CadPlayPaneId, CadGumballConfig>> {
+    return this.gumballConfigByPane;
   }
 
   /** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
@@ -689,12 +696,12 @@ export class CadPlayShellController extends Controller {
         this.rebuildShellMode();
         break;
       }
-      case "setTransformModeForPane": {
-        const { pane, value } = args as { pane?: CadPlayPaneId; value?: string };
+      case "setGumballConfigToggleForPane": {
+        const { pane, key } = args as { pane?: CadPlayPaneId; key?: CadGumballGroupKey };
         if (!pane || !CAD_PLAY_PANE_SPECS.some((row) => row.pane === pane)) break;
-        if (!value || !isCadPlayTransformWindowMode(value)) break;
-        if (this.transformModeByPane[pane] === value) break;
-        this.transformModeByPane = { ...this.transformModeByPane, [pane]: value };
+        if (!key || !CAD_GUMBALL_GROUPS.some((row) => row.key === key)) break;
+        const current = this.gumballConfigByPane[pane];
+        this.gumballConfigByPane = { ...this.gumballConfigByPane, [pane]: { ...current, [key]: current[key] === false } };
         this.rebuildShellMode();
         break;
       }
@@ -711,6 +718,9 @@ export class CadPlayShellController extends Controller {
       case "engagementRepeatLast":
       case "engagementAbort":
       case "engagementPossibleSelect":
+      case "engagementControlChange":
+      case "engagementControlCommit":
+      case "engagementControlSelect":
         this.hostBridge?.runHostCommand(command, args);
         break;
       default:
@@ -746,8 +756,8 @@ export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppR
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
   app.panelTabs = [];
-  app.onActiveWindowChange = (windowKindId) => {
-    const pane = cadPlayPaneFromWindowKindId(windowKindId);
+  app.onActiveWindowChange = (shellWindowId) => {
+    const pane = cadPlayPaneFromShellWindowId(shellWindowId);
     if (!pane) return;
     controller.run("focusModelDefinition", { modelDefinitionId: cadPlayModelDefinitionIdForPane(pane) });
   };
@@ -787,6 +797,7 @@ import {
   type TreeDataSection,
   type UiTranslationKey,
 } from "@ui/react";
+import { createIconComponent } from "@ui/react";
 import { StrictMode, type ChangeEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -803,12 +814,12 @@ import {
   CallbackTreePanelDefinition,
   PureSidePanelTabDefinition,
   StaticTreePanelDefinition,
+  engagementSpecControlMirror,
   mountPlaygroundApp,
   playgroundPanelSection,
   type SidePanelTabConfig,
 } from "@framework/playground/renderer/react/shell";
-import { registerSurfaceBinding, type UiCadHostSurfaceNode } from "@framework/platform/renderer/react";
-import { ListTree, Shapes } from "lucide-react";
+import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@framework/platform/renderer/react";
 import { defaultConstructRunner } from "@cad/js/query";
 import geometryNakagin from "../../../assets/play/geometry.json";
 import geometryLoom from "../../../assets/play/geometry-loom.json";
@@ -1265,7 +1276,7 @@ interface PlaySessionProps {
   readonly onCanvasHoverTarget: (target: SpatialPickTarget | null) => void;
   readonly autoFitMeshes?: boolean;
   readonly autoFitBehavior?: "initial" | "always";
-  readonly transformGumballMode: CadTransformGumballMode | null;
+  readonly transformGumballConfig: CadGumballConfig | null;
   readonly onTransformGumballCommit: (diff: ModelDiff) => void;
   readonly onDeleteSelection: () => boolean;
 }
@@ -1300,7 +1311,7 @@ function PlaySession({
   onCanvasHoverTarget,
   autoFitMeshes = false,
   autoFitBehavior = "initial",
-  transformGumballMode,
+  transformGumballConfig,
   onTransformGumballCommit,
   onDeleteSelection,
 }: PlaySessionProps) {
@@ -1363,7 +1374,7 @@ function PlaySession({
       onHoverTarget={onCanvasHoverTarget}
       autoFitMeshes={autoFitMeshes}
       autoFitBehavior={autoFitBehavior}
-      transformGumballMode={transformGumballMode}
+      transformGumballConfig={transformGumballConfig}
       onTransformGumballCommit={onTransformGumballCommit}
       onDeleteSelection={onDeleteSelection}
     />
@@ -1383,7 +1394,7 @@ interface CadPlayModelSpaceValue {
   readonly history: DocumentHistory;
   readonly kernel: InteractionRuntimeOptions["kernel"];
   readonly computeModeForPane: (pane: CadPlayPaneId) => SpatialComputeMode;
-  readonly transformGumballModeForPane: (pane: CadPlayPaneId) => CadTransformGumballMode | null;
+  readonly transformGumballConfigForPane: (pane: CadPlayPaneId) => CadGumballConfig | null;
   readonly sessionRestartNonceForPane: (pane: CadPlayPaneId) => number;
   readonly rendererSelectionByModel: SpatialRendererSelectionByModel;
   readonly setRendererSelectionByModel: (value: SpatialRendererSelectionByModel) => void;
@@ -1438,7 +1449,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   );
   void shellGeneration;
   const computeModeForPane = reactHostPort.useCallback((pane: CadPlayPaneId) => shellController.getComputeModeForPane(pane), [shellController, shellGeneration]);
-  const transformGumballModeForPane = reactHostPort.useCallback((pane: CadPlayPaneId) => shellController.getTransformGumballModeForPane(pane), [shellController, shellGeneration]);
+  const transformGumballConfigForPane = reactHostPort.useCallback((pane: CadPlayPaneId) => shellController.getTransformGumballConfigForPane(pane), [shellController, shellGeneration]);
   const publishCadPlayChrome = useCadPlayChromePublish();
   const pointerFocusRef = reactHostPort.useRef<AppPointerFocusStore<string> | null>(null);
   if (!pointerFocusRef.current) {
@@ -1838,6 +1849,30 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
             engagementSpecRefByPane.current[pane]?.possibleEngagements?.find((row) => row.id === possibleId)?.onSelect?.();
             break;
           }
+          case "engagementControlChange": {
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
+            const value = (args as { value?: number })?.value;
+            const control = pane && CAD_PLAY_PANE_IDS.includes(pane) ? engagementSpecRefByPane.current[pane]?.control : undefined;
+            if (value === undefined || !control || control.kind === "ring") break;
+            control.onChange?.(value);
+            break;
+          }
+          case "engagementControlCommit": {
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
+            const value = (args as { value?: number })?.value;
+            const control = pane && CAD_PLAY_PANE_IDS.includes(pane) ? engagementSpecRefByPane.current[pane]?.control : undefined;
+            if (value === undefined || !control || control.kind === "ring") break;
+            control.onCommit?.(value);
+            break;
+          }
+          case "engagementControlSelect": {
+            const pane = (args as { pane?: CadPlayPaneId })?.pane;
+            const id = (args as { id?: string })?.id;
+            const control = pane && CAD_PLAY_PANE_IDS.includes(pane) ? engagementSpecRefByPane.current[pane]?.control : undefined;
+            if (!id || !control || control.kind !== "ring") break;
+            control.onSelect?.(id);
+            break;
+          }
           default:
             break;
         }
@@ -1899,7 +1934,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       history,
       kernel,
       computeModeForPane,
-      transformGumballModeForPane,
+      transformGumballConfigForPane,
       sessionRestartNonceForPane: (pane) => interactionBootIdByPane[pane],
       rendererSelectionByModel,
       setRendererSelectionByModel,
@@ -1961,7 +1996,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       kernel,
       liveModel,
       computeModeForPane,
-      transformGumballModeForPane,
+      transformGumballConfigForPane,
       modelDefinitionRevision,
       pickGeometry,
       playModelSpace,
@@ -2060,7 +2095,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
     hoveredPickKey,
     onCanvasHoverTarget,
     onHoveredPickKeyChange,
-    transformGumballModeForPane,
+    transformGumballConfigForPane,
     handleTransformGumballCommit,
     handleDeleteSelection,
   } = useCadPlayModelSpace();
@@ -2097,7 +2132,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
   }
 
   const mode = computeModeForPane(pane);
-  const transformGumballMode = transformGumballModeForPane(pane);
+  const transformGumballConfig = transformGumballConfigForPane(pane);
   const autoFitMeshes = pane !== "shape";
 
   return (
@@ -2130,7 +2165,7 @@ function CadPlayInteractionPane({ pane }: { readonly pane: CadPlayPaneId }): Rea
         onHoveredPickKeyChange={onHoveredPickKeyChange}
         onCanvasHoverTarget={onCanvasHoverTarget}
         autoFitMeshes={autoFitMeshes}
-        transformGumballMode={transformGumballMode}
+        transformGumballConfig={transformGumballConfig}
         onTransformGumballCommit={onTransformGumballCommit}
         onDeleteSelection={handleDeleteSelection}
       />
@@ -2155,7 +2190,10 @@ function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): 
   if (node.controllerId !== CAD_PLAY_CONTROLLER_ID) {
     return <div className="p-single text-destructive text-xs">Invalid CAD play surface binding</div>;
   }
-  const pane = cadPlayPaneFromSurfaceId(node.surfaceId);
+  const shellInstance = useShellWindowInstance();
+  const paneFromSurface = cadPlayPaneFromSurfaceId(node.surfaceId);
+  const paneFromKind = shellInstance?.windowKindId ? cadPlayPaneFromWindowKindId(shellInstance.windowKindId) : null;
+  const pane = paneFromKind ?? paneFromSurface;
   if (!pane) {
     return <div className="p-single text-destructive text-xs">Unknown CAD play surface</div>;
   }
@@ -2264,6 +2302,25 @@ if (typeof document !== "undefined" && !import.meta.vitest) {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
+  describe("cad play display shell", () => {
+    it("resolves pane from shell instance ids", () => {
+      expect(cadPlayPaneFromShellWindowId(CAD_PLAY_SHAPE_WINDOW_ID)).toBe("shape");
+      expect(cadPlayPaneFromShellWindowId("win-cad-play-energy-abc")).toBe("energy");
+      expect(cadPlayPaneFromShellWindowId("win-unknown")).toBeNull();
+    });
+
+    it("registers a window kind per quad pane for the display panel", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      expect(controller.mainMode.windowKinds.map((row) => row.id)).toEqual([
+        CAD_PLAY_SHAPE_WINDOW_ID,
+        CAD_PLAY_BUILDING_WINDOW_ID,
+        CAD_PLAY_ENERGY_WINDOW_ID,
+        CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_ID,
+      ]);
+    });
+  });
+
   describe("CadPlayShellController compute mode", () => {
     it("stores independent compute modes per quad pane", () => {
       const runtime = new Platform();
@@ -2277,18 +2334,16 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("CadPlayShellController transform window measure", () => {
-    it("stores independent transform combobox values per quad pane", () => {
+  describe("CadPlayShellController transform gumball toggles", () => {
+    it("stores independent gumball configs per quad pane", () => {
       const runtime = new Platform();
       const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
-      expect(controller.getTransformWindowModeForPane("shape")).toBe("none");
-      expect(controller.getTransformGumballModeForPane("shape")).toBeNull();
-      controller.run("setTransformModeForPane", { pane: "energy", value: "rotate" });
-      expect(controller.getTransformWindowModeForPane("energy")).toBe("rotate");
-      expect(controller.getTransformGumballModeForPane("energy")).toBe("rotate");
-      expect(controller.getTransformWindowModeForPane("shape")).toBe("none");
+      expect(controller.getTransformGumballConfigForPane("shape")).toBeNull();
+      controller.run("setGumballConfigToggleForPane", { pane: "energy", key: "rotate" });
+      expect(controller.getTransformGumballConfigForPane("energy")).toMatchObject({ rotate: true });
+      expect(controller.getTransformGumballConfigForPane("shape")).toBeNull();
       const energyWindow = controller.mainMode.windowKinds.find((row) => row.id === CAD_PLAY_ENERGY_WINDOW_ID);
-      expect(energyWindow?.measures[1]).toMatchObject({ kind: "select", id: "energy-transform", value: "rotate", label: "Transform" });
+      expect(energyWindow?.measures[1]).toMatchObject({ kind: "group", id: "energy-transform", label: "Transform" });
     });
   });
 
@@ -2340,19 +2395,38 @@ if (import.meta.vitest) {
   });
 
   describe("windowEngagementsEqual", () => {
-    it("treats engagement snapshots with the same visible fields as equal", () => {
+    it("treats engagement snapshots with the same visible fields and commands as equal", () => {
+      const command = { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } };
       const left: WindowEngagement = {
         input: { id: "engagement-input", value: "box", placeholder: "Command" },
         status: [{ id: "engagement-step", text: "Step: Idle" }],
-        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b" }],
+        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command }],
       };
       const right: WindowEngagement = {
         input: { id: "engagement-input", value: "box", placeholder: "Command" },
         status: [{ id: "engagement-step", text: "Step: Idle" }],
-        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } } }],
+        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b", command }],
       };
       expect(windowEngagementsEqual(left, right)).toBe(true);
-      expect(windowEngagementDigest(left)).toBe(windowEngagementDigest(right));
+    });
+
+    it("differs when suggestion routing commands are added", () => {
+      const left: WindowEngagement = {
+        input: { id: "engagement-input", value: "box", placeholder: "Command" },
+        possibleEngagements: [{ id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e" }],
+      };
+      const right: WindowEngagement = {
+        input: { id: "engagement-input", value: "box", placeholder: "Command" },
+        possibleEngagements: [
+          {
+            id: "surface.extrudeCrv",
+            label: "ExtrudeCrv",
+            detail: "e",
+            command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "surface.extrudeCrv" } },
+          },
+        ],
+      };
+      expect(windowEngagementsEqual(left, right)).toBe(false);
     });
   });
 
@@ -2401,13 +2475,41 @@ if (import.meta.vitest) {
       let generation = runtime.generation;
       const engagement: WindowEngagement = {
         input: { id: "engagement-input", value: "", placeholder: "Command" },
-        possibleEngagements: [{ id: "primitive.box", label: "Box", detail: "b" }],
+        possibleEngagements: [
+          {
+            id: "primitive.box",
+            label: "Box",
+            detail: "b",
+            command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } },
+          },
+        ],
       };
       controller.setPaneEngagement("shape", engagement);
       const afterFirst = runtime.generation;
-      controller.setPaneEngagement("shape", { ...engagement, possibleEngagements: [{ ...engagement.possibleEngagements![0]!, command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "primitive.box" } } }] });
+      controller.setPaneEngagement("shape", { ...engagement, input: { ...engagement.input!, value: "" } });
       expect(runtime.generation).toBe(afterFirst);
       expect(afterFirst).toBeGreaterThan(generation);
+    });
+
+    it("notifies shell when mirrored engagement gains suggestion routing commands", () => {
+      const runtime = new Platform();
+      const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+      const engagement: WindowEngagement = {
+        input: { id: "engagement-input", value: "Ex", placeholder: "Command" },
+        possibleEngagements: [{ id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e" }],
+      };
+      controller.setPaneEngagement("shape", engagement);
+      const afterFirst = runtime.generation;
+      controller.setPaneEngagement("shape", {
+        ...engagement,
+        possibleEngagements: [
+          {
+            ...engagement.possibleEngagements![0]!,
+            command: { controllerId: CAD_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { pane: "shape", possibleId: "surface.extrudeCrv" } },
+          },
+        ],
+      });
+      expect(runtime.generation).toBeGreaterThan(afterFirst);
     });
 
     it("attaches engagement per pane and routes pane-scoped engagement commands to the host bridge", () => {

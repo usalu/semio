@@ -1,10 +1,21 @@
 [workspace]
 members = [
+    "infinite/cavas/vello",
+    "mathematical/core",
+    "mathematical/graph",
+    "mathematical/graph/normal/directed",
+    "mathematical/graph/normal/undirected",
+    "mathematical/graph/port/directed",
+    "mathematical/graph/port/undirected",
+    "reasoning/mindmap/wires",
+    "reasoning/mindmap/rs",
+    "gis/map/rs",
+    "reasoning/mindmap",
     "puzzle/2d/rs",
     "semio/client/lib/rs",
     "semio/client/lib/query",
     "semio/client/bin/store",
-    "semio/server/hub", "coda/client/bin/assistant/sketchpad-rs",
+    "semio/server/hub",
 ]
 
 resolver = "2"

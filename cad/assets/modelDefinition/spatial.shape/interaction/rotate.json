@@ -16,7 +16,20 @@
     ],
     "heightDragStates": [],
     "verticalRodStates": [],
-    "heightConfirmState": null
+    "heightConfirmState": null,
+    "scalarEntry": [
+      {
+        "state": "angle_or_first_reference_point",
+        "event": "set.angle",
+        "field": "angle",
+        "commit": "confirm",
+        "control": "ring",
+        "min": 0,
+        "max": 360,
+        "step": 15,
+        "unit": "°"
+      }
+    ]
   },
   "machine": {
     "initial": "idle",

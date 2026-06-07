@@ -28,6 +28,9 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
     - You MUST get everything working.
     - There are many inconsistencies that you MUST refactor.
       - You MUST use clean mechanisms that might require large refactorings.
+    - You MUST not leave any migration scripts.
+      - You MUST handcraft all assets, names, code without any ugly migrations, adapters, etc.
+      - You MUST manually fix all assets, fixtures, etc all at once.
 - You MUST use repo mcp for repo-specific infrastructure.
   - You MUST work inside a ticket.
   - You MUST NOT use search tool because it is broken.
@@ -48,7 +51,9 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - A title MUST be titleized (e.g. "Some Title on Something") and MUST NOT be a slug or MUST NOT be all caps.
   - Available LLMs are: `opus-4-7`, `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-5`, `gpt-5-4`, `gpt-5-3-codex`, `gpt-5-2-codex`, `swe-1-5`, `gpt-5-mini`.
   - Available Clients are: `copilot-chat`, `windsurf-chat`, `cursor-chat`, `antigravity-chat`, `claude-code`, `codex`, `droid`, `kiro-cli`.
-- You MUST NOT mix technologies (`./elements`, `./semio`, `./coda`, `./reuse`) if NOT explicitly asked.
+- You MUST NOT mix technologies (`./elements`, `./semio`, `./coda`, `./mit-bestand`) if NOT explicitly asked.
+  - You MUST NOT leak fixtures or other technologies into the code outside of testing.
+  - You MUST fix a bug at the root and that might be inside another technology.
 - You MUST NOT assume and you MUST validate your assumptions.
   - You MUST NOT say that a test is passing when you didn't run it.
   - You MUST NOT say that a feature is working when you didn't confirm runtime behaviour with console logs.

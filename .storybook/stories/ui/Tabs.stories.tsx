@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🏷️Tabs
 const meta = {
-  title: "elements/react/Tabs",
+  title: "🖱️ui⚛️react/Tabs",
   component: Tabs,
   parameters: {
     layout: "centered",

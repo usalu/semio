@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🎄Orb
 const meta = {
-  title: "elements/react/Orb",
+  title: "🖱️ui⚛️react/Orb",
   component: Orb,
   parameters: {
     layout: "centered",

@@ -10,6 +10,7 @@ import {
 	type Disposition,
 	type DispositionPosition,
 	type Embodiment,
+	type MorphToSlot,
 	type IntroSpec,
 	type Participant,
 	type PresentationMeta,
@@ -81,7 +82,7 @@ export const introSpec: IntroSpec = {
 //#endregion 🔖Meta
 
 //#region 🔖Catalogue
-export const ASSET_CATALOGUE = "./bauteilbo\u0308rse.png";
+export const ASSET_CATALOGUE = "/bauteilbörse.png";
 export const ASSET_VIDEO = "./bauen-mit-bestand.mp4";
 export const ASSET_THESIS_PDF = "./bachelor-thesis-ueli-saluz.pdf";
 
@@ -98,7 +99,15 @@ export const CATALOGUE_EMBODIMENT_COL2_LABEL = "catalogue-col2--label";
 export const CATALOGUE_EMBODIMENT_COL3_CROP = "catalogue-col3--crop";
 export const CATALOGUE_EMBODIMENT_COL3_LABEL = "catalogue-col3--label";
 
-export const CATALOGUE_FRAME = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
+/** @emoji 📐 `bauteilbörse.png` pixel width÷height (1222×896). */
+export const CATALOGUE_SOURCE_ASPECT = 1222 / 896;
+
+export const CATALOGUE_FRAME = {
+	x: 0.127,
+	y: 0.1,
+	width: 0.746,
+	height: 0.75,
+};
 
 /** @emoji 🏷 Grid keys of all 3×5 catalogue tiles → semantic participant ids. */
 export const CATALOGUE_TILE_SEMANTIC_KEYS = {
@@ -149,6 +158,7 @@ const CATALOGUE_SPLIT_RAW = split({
 	columns: 5,
 	frame: CATALOGUE_FRAME,
 	gap: 0,
+	sourceAspect: CATALOGUE_SOURCE_ASPECT,
 });
 
 export const CATALOGUE_SPLIT = catalogueSplitWithSemanticKeys(CATALOGUE_SPLIT_RAW);
@@ -283,6 +293,24 @@ export function catalogueFocusDispositions(): readonly Disposition[] {
 	);
 }
 
+/** @emoji 🔀 One-to-many morphTo slots: catalogue figure into focus tiles at grid positions on the catalogue slide. */
+export function catalogueFocusMorphTo(): readonly MorphToSlot[] {
+	return CATALOGUE_FOCUS_TILES.map((tile) => {
+		const splitDisposition = CATALOGUE_SPLIT.dispositions.find(
+			(disposition) => disposition.participantId === tile.participantId,
+		);
+		const position = splitDisposition?.position;
+		if (!position) {
+			throw new Error(`catalogueFocusMorphTo: no grid position for "${tile.participantId}".`);
+		}
+		return {
+			participantId: tile.participantId,
+			embodimentId: `${tile.participantId}-figure`,
+			position,
+		};
+	});
+}
+
 /** @emoji 🔀 Many-to-one morphFrom slots: focus tiles (source figure) into one column label disposition. */
 export function columnLabelMorphFrom(
 	column: keyof typeof CATALOGUE_COLUMN_TILE_KEYS,
@@ -311,6 +339,8 @@ export const mediaEmbodiments: Embodiment[] = [
 		id: CATALOGUE_EMBODIMENT_FULL,
 		src: ASSET_CATALOGUE,
 		alt: "Komponentenkatalog",
+		crop: { x: 0, y: 0, width: 1, height: 1 },
+		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{
 		kind: "figure",
@@ -318,6 +348,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		src: ASSET_CATALOGUE,
 		alt: CATALOGUE_COLUMN_LABELS.col1,
 		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col1),
+		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{
 		kind: "text",
@@ -332,6 +363,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		src: ASSET_CATALOGUE,
 		alt: CATALOGUE_COLUMN_LABELS.col2,
 		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col2),
+		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{
 		kind: "text",
@@ -346,6 +378,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		src: ASSET_CATALOGUE,
 		alt: CATALOGUE_COLUMN_LABELS.col3,
 		crop: unionTileCropForParticipants(CATALOGUE_SPLIT, CATALOGUE_COLUMN_TILE_KEYS.col3),
+		sourceAspect: CATALOGUE_SOURCE_ASPECT,
 	},
 	{
 		kind: "text",
@@ -366,6 +399,7 @@ export const mediaEmbodiments: Embodiment[] = [
 		id: "thesis--doc",
 		src: ASSET_THESIS_PDF,
 		page: 1,
+		pages: [1, 12, 25, 35, 42, 43, 51],
 		alt: "Bachelorarbeit Ueli Saluz",
 	},
 	...CATALOGUE_SPLIT.embodiments,
