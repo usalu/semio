@@ -133,7 +133,7 @@ import {
   PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID,
   PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID,
   PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID,
-  DEFAULT_VOXEL_BRUSH_SIZE,
+  DEFAULT_VOXEL_BRUSH_DIMENSIONS,
   VOXEL_BRUSH_SIZE_MIN,
   VOXEL_BRUSH_SIZE_MAX,
   VOXEL_BRUSH_SIZE_STEP,
@@ -911,7 +911,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   targetRingCount: 0,
   activeTool: "select",
   fillEditTargetVolumes: false,
-  voxelBrushSize: DEFAULT_VOXEL_BRUSH_SIZE,
+  voxelBrushDimensions: DEFAULT_VOXEL_BRUSH_DIMENSIONS,
   brushPlacementOverlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
   cameraSeedEpoch: 0,
   hoverFocus: { hoverTarget: null, kindHover: null },
@@ -1405,7 +1405,7 @@ export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelectio
   return ids;
 }
 
-/** @emoji 🌳 Structural hierarchy sections (no per-row selected flags; selection via {@link puzzle3dPlayHierarchySelectedIds}). */
+/** @emoji 🌳 Structural hierarchy sections: Objects, References, Target Volumes, Attractions. */
 export function buildPuzzle3dPlayHierarchySections(
   fixture: FixtureV1,
   options?: Puzzle3dPlayHierarchyHoverBuildOptions,
@@ -1422,12 +1422,6 @@ export function buildPuzzle3dPlayHierarchySections(
         ...puzzle3dPlayHierarchyEntityChrome(vortex, { kind: "vortex", fullId }, options),
       };
     });
-    const vorticesGroup: UiTreeItemNode = {
-      id: `puzzle-3d-play-hierarchy.object.${object.id}.vortices`,
-      label: "Vortices",
-      defaultOpen: true,
-      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-hierarchy.object.${object.id}.vortices.empty`, label: "(none)" }],
-    };
     return {
       id: `puzzle-3d-play-hierarchy.object.${object.id}`,
       ...puzzle3dPlayFixtureTreeRowFields(object.label, object.id),
@@ -1435,15 +1429,9 @@ export function buildPuzzle3dPlayHierarchySections(
       command: puzzle3dPlaySelectObjectCommand(object.id),
       ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
       ...puzzle3dPlayHierarchyEntityChrome(object, { kind: "object", id: object.id }, options),
-      items: [vorticesGroup],
+      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-hierarchy.object.${object.id}.vortices.empty`, label: "(none)" }],
     };
   });
-  const objectsGroup: UiTreeItemNode = {
-    id: "puzzle-3d-play-hierarchy.objects",
-    label: "Objects",
-    defaultOpen: true,
-    items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-hierarchy.objects.empty", label: "(none)" }],
-  };
   const attractionItems: UiTreeItemNode[] = fixture.attractions.map((attraction) => ({
     id: `puzzle-3d-play-hierarchy.attraction.${attraction.id}`,
     label: attraction.id,
@@ -1452,12 +1440,6 @@ export function buildPuzzle3dPlayHierarchySections(
     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
     ...puzzle3dPlayHierarchyEntityChrome(attraction, { kind: "attraction", id: attraction.id }, options),
   }));
-  const attractionsGroup: UiTreeItemNode = {
-    id: "puzzle-3d-play-hierarchy.attractions",
-    label: "Attractions",
-    defaultOpen: true,
-    items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-hierarchy.attractions.empty", label: "(none)" }],
-  };
   const referenceItems: UiTreeItemNode[] = (fixture.references ?? []).map((reference) => ({
     id: `puzzle-3d-play-hierarchy.reference.${reference.id}`,
     label: reference.id,
@@ -1466,12 +1448,6 @@ export function buildPuzzle3dPlayHierarchySections(
     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "reference", id: reference.id }),
     ...puzzle3dPlayHierarchyEntityChrome(reference, { kind: "reference", id: reference.id }, options),
   }));
-  const referencesGroup: UiTreeItemNode = {
-    id: "puzzle-3d-play-hierarchy.references",
-    label: "References",
-    defaultOpen: true,
-    items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
-  };
   const targetVolumeItems: UiTreeItemNode[] = (fixture.targetVolumes ?? []).map((volume) => ({
     id: `puzzle-3d-play-hierarchy.target-volume.${volume.id}`,
     label: volume.id,
@@ -1479,22 +1455,35 @@ export function buildPuzzle3dPlayHierarchySections(
     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "targetVolume", id: volume.id }),
     ...puzzle3dPlayHierarchyEntityChrome(volume, { kind: "targetVolume", id: volume.id }, options),
   }));
-  const targetVolumesGroup: UiTreeItemNode = {
-    id: "puzzle-3d-play-hierarchy.target-volumes",
-    label: "Target Volumes",
-    defaultOpen: true,
-    items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-hierarchy.target-volumes.empty", label: "(none)" }],
-  };
-  const viewportRoot: UiTreeItemNode = {
-    id: "puzzle-3d-play-hierarchy.viewport",
-    label: "Puzzle 3D",
-    defaultOpen: true,
-    items: [objectsGroup, referencesGroup, targetVolumesGroup, attractionsGroup],
-  };
-  return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [viewportRoot]).sections;
+  return [
+    {
+      id: "puzzle-3d-play-hierarchy.objects",
+      label: "Objects",
+      defaultOpen: true,
+      items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-hierarchy.objects.empty", label: "(none)" }],
+    },
+    {
+      id: "puzzle-3d-play-hierarchy.references",
+      label: "References",
+      defaultOpen: true,
+      items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
+    },
+    {
+      id: "puzzle-3d-play-hierarchy.target-volumes",
+      label: "Target Volumes",
+      defaultOpen: true,
+      items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-hierarchy.target-volumes.empty", label: "(none)" }],
+    },
+    {
+      id: "puzzle-3d-play-hierarchy.attractions",
+      label: "Attractions",
+      defaultOpen: true,
+      items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-hierarchy.attractions.empty", label: "(none)" }],
+    },
+  ];
 }
 
-/** @emoji 🌳 Nested workbench tree: Puzzle 3D → Objects → Vortices; Attractions sibling group. */
+/** @emoji 🌳 Workbench hierarchy: Objects, References, Target Volumes, Attractions sections. */
 export function buildPuzzle3dPlayHierarchyTree(
   fixture: FixtureV1 | null,
   selection: Puzzle3dPlaySelection,
@@ -1670,7 +1659,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   private targetRingCount: number;
   private brushPlacementOverlapBudget: number;
   private fillEditTargetVolumes: boolean;
-  private voxelBrushSize: number;
+  private voxelBrushDimensions: Vec3;
   private objectKindIds: string[] = [];
   private vortexKindIds: string[] = [];
   private objectKindWeights: KindWeightMap = {};
@@ -1713,7 +1702,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.targetRingCount = 0;
     this.brushPlacementOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
     this.fillEditTargetVolumes = false;
-    this.voxelBrushSize = DEFAULT_VOXEL_BRUSH_SIZE;
+    this.voxelBrushDimensions = DEFAULT_VOXEL_BRUSH_DIMENSIONS;
     this.windowEngagement = this.placeholderWindowEngagement();
     this.syncBrushKindWeightsFromFixture();
     this.rebuildShellMode();
@@ -1884,7 +1873,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       targetRingCount: this.targetRingCount,
       brushPlacementOverlapBudget: this.brushPlacementOverlapBudget,
       fillEditTargetVolumes: this.fillEditTargetVolumes,
-      voxelBrushSize: this.voxelBrushSize,
+      voxelBrushDimensions: this.voxelBrushDimensions,
       cameraSeedEpoch: this.cameraSeedEpoch,
       hoverFocus: this.hoverFocus,
     };
@@ -2016,14 +2005,14 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   /** @emoji 🧊 Adds a drawn target volume and selects it for immediate edit. */
-  paintVoxel(cad: Vec3, size?: number): void {
+  paintVoxel(cad: Vec3, scale?: Vec3): void {
     if (!this.fixture) {
       return;
     }
-    const cellSize = size ?? this.voxelBrushSize;
-    this.patchFixture((fixture) => addVoxelToFixture(fixture, cad, cellSize));
+    const box = scale ?? this.voxelBrushDimensions;
+    this.patchFixture((fixture) => addVoxelToFixture(fixture, cad, box));
     invalidatePuzzle3dFillForTargetVolumesChange();
-    console.log("[DEBUG] puzzle3d paintVoxel", cad, cellSize);
+    console.log("[DEBUG] puzzle3d paintVoxel", cad, box);
   }
 
   addTargetVolume(volume: WorldVolumeProps): void {
@@ -2531,22 +2520,29 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
         this.notifySnapshot();
         return;
       }
-      case "setVoxelBrushSize": {
-        const size = Number((args as { size?: number }).size);
-        if (!Number.isFinite(size)) {
+      case "setVoxelBrushDimension": {
+        const axis = Number((args as { axis?: number }).axis);
+        const value = Number((args as { value?: number }).value);
+        if (!Number.isFinite(axis) || axis < 0 || axis > 2 || !Number.isFinite(value)) {
           return;
         }
-        this.voxelBrushSize = Math.min(VOXEL_BRUSH_SIZE_MAX, Math.max(VOXEL_BRUSH_SIZE_MIN, size));
+        const next = [...this.voxelBrushDimensions] as Vec3;
+        next[axis] = Math.min(VOXEL_BRUSH_SIZE_MAX, Math.max(VOXEL_BRUSH_SIZE_MIN, value));
+        this.voxelBrushDimensions = next;
         this.notifySnapshot();
         return;
       }
       case "paintVoxel": {
         const cad = (args as { cad?: Vec3 }).cad;
-        const size = Number((args as { size?: number }).size);
+        const scale = (args as { scale?: Vec3 }).scale;
         if (!cad || cad.length !== 3 || cad.some((n) => !Number.isFinite(n))) {
           return;
         }
-        this.paintVoxel(cad, Number.isFinite(size) ? size : undefined);
+        const resolved =
+          scale && scale.length === 3 && scale.every((n) => Number.isFinite(n))
+            ? ([scale[0], scale[1], scale[2]] as Vec3)
+            : undefined;
+        this.paintVoxel(cad, resolved);
         return;
       }
       case "deleteSelectedTargetVolume": {
@@ -3127,7 +3123,7 @@ export interface Puzzle3dPlaySnapshot {
   readonly gumballConfig: GumballConfig;
   readonly activeTool: Puzzle3dActiveTool;
   readonly fillEditTargetVolumes: boolean;
-  readonly voxelBrushSize: number;
+  readonly voxelBrushDimensions: Vec3;
   readonly selection: Puzzle3dPlaySelection;
   readonly selectedId: string | null;
   readonly selectedLabel: string | null;
@@ -4827,17 +4823,14 @@ if (import.meta.vitest) {
       });
       expect(fixture).not.toBeNull();
       const tree = buildPuzzle3dPlayHierarchyTree(fixture!, PUZZLE_3D_PLAY_EMPTY_SELECTION);
-      const viewportRoot = tree.sections[0]?.items?.[0];
-      expect(viewportRoot?.label).toBe("Puzzle 3D");
-      const objectsGroup = viewportRoot?.items?.find((row) => row.label === "Objects");
-      expect(objectsGroup?.items?.length).toBe(2);
-      const firstObject = objectsGroup?.items?.[0];
+      const objectsSection = tree.sections.find((section) => section.label === "Objects");
+      expect(objectsSection?.items?.length).toBe(2);
+      const firstObject = objectsSection?.items?.[0];
       expect(firstObject?.label).toBe("Alpha");
-      expect(firstObject?.items?.[0]?.label).toBe("Vortices");
-      expect(firstObject?.items?.[0]?.items?.[0]?.label).toBe("Handle A");
-      expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.vortex.a:v1");
-      const attractionsGroup = viewportRoot?.items?.find((row) => row.label === "Attractions");
-      expect(attractionsGroup?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.attraction.t1");
+      expect(firstObject?.items?.[0]?.label).toBe("Handle A");
+      expect(firstObject?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.vortex.a:v1");
+      const attractionsSection = tree.sections.find((section) => section.label === "Attractions");
+      expect(attractionsSection?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.attraction.t1");
     });
 
     it("buildPuzzle3dPlayHierarchySections omits per-row selected flags", () => {

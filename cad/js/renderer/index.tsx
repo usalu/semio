@@ -1046,6 +1046,19 @@ export function collectGeometryEdgeSegments(buckets: ReturnType<typeof geometryB
   return out;
 }
 
+/** @emoji 📐 B-rep edge segments limited to revealed factory-geometry members. */
+export function collectGeometryEdgeSegmentsForMembers(
+  buckets: ReturnType<typeof geometryBuckets>,
+  revealedMemberKeys: ReadonlySet<string>,
+): readonly (readonly [Vec3, Vec3])[] {
+  const out: (readonly [Vec3, Vec3])[] = [];
+  for (const edge of geometryRecords(buckets.edges)) {
+    if (!revealedMemberKeys.has(`edge:${edge.id}`)) continue;
+    out.push(...polylineWireSegments(geometryEdgePoints(buckets.vertices, edge)));
+  }
+  return out;
+}
+
 function modelObjectPickPoints(model: Model, row: SpatialObjectRecord): readonly Vec3[] {
   const buckets = geometryBuckets(model);
   const cellRef = Object.values(row.primitives)[0];
@@ -1102,6 +1115,40 @@ export function buildGeometryTypologyIndex(model: Model, modelDefinitionId: stri
         continue;
       }
       out.set(`${kind}:${primitiveRef}`, row.typology);
+    }
+  }
+  for (const anchor of geometryRecords(buckets.anchors)) {
+    const attachment = anchor.attachment;
+    const mapped = out.get(`${attachment.kind}:${attachment.id}`);
+    if (mapped) out.set(`anchor:${anchor.id}`, mapped);
+  }
+  return out;
+}
+
+/** @emoji 🧭 Maps factory geometry member keys (`vertex:v0`, `solid:s0`, …) to owning object ids for reveal gating. */
+export function buildGeometryObjectIndex(model: Model, modelDefinitionId: string): ReadonlyMap<string, string> {
+  const buckets = geometryBuckets(model);
+  const out = new Map<string, string>();
+  const mapObjectPrimitive = (objectId: string, primitiveRef: string): void => {
+    const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
+    out.set(`${kind}:${primitiveRef}`, objectId);
+    if (kind === "solid") {
+      out.set(`object:${primitiveRef}`, objectId);
+      for (const key of collectSolidPrimitiveMemberIds(buckets, String(primitiveRef))) out.set(key, objectId);
+    }
+  };
+  for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {
+    const objectId = String(row.id);
+    out.set(`object:${objectId}`, objectId);
+    for (const [, primitiveRef] of objectPrimitiveEntries(row)) mapObjectPrimitive(objectId, String(primitiveRef));
+  }
+  for (const solid of geometryRecords(buckets.solids)) {
+    const solidId = solid.id;
+    if (out.has(`solid:${solidId}`)) continue;
+    out.set(`solid:${solidId}`, solidId);
+    out.set(`object:${solidId}`, solidId);
+    for (const key of collectSolidPrimitiveMemberIds(buckets, solidId)) {
+      if (!out.has(key)) out.set(key, solidId);
     }
   }
   for (const anchor of geometryRecords(buckets.anchors)) {
@@ -2409,6 +2456,38 @@ export function spatialHoverKeysMatch(left: string | null | undefined, right: st
   return spatialHoverKeyAliases(left).has(right);
 }
 
+/** @emoji 🪪 Stable factory-geometry member key for object-reveal lookup. */
+export function spatialPickTargetMemberKey(target: SpatialPickTarget): string {
+  if (target.kind === "object" && !target.geometryKind) return `object:${target.id}`;
+  const geometryKind = target.geometryKind ?? kernelGeometryKindForObjectPick(target.kind as SpatialGeometryPickTargetKind, target.geometryKind);
+  return `${geometryKind}:${target.id}`;
+}
+
+/** @emoji 👁️ Object ids whose factory primitives should draw (hover/selection on object or its topology). */
+export function revealedObjectIdsFromPickKeys(
+  objectIndex: ReadonlyMap<string, string>,
+  hoveredTargetKey: string | null | undefined,
+  selectedTargetKeys: ReadonlySet<string> = new Set(),
+): ReadonlySet<string> {
+  const revealed = new Set<string>();
+  const consider = (key: string | null | undefined): void => {
+    if (!key) return;
+    for (const alias of spatialHoverKeyAliases(key)) {
+      const owner = objectIndex.get(alias);
+      if (owner) revealed.add(owner);
+    }
+  };
+  consider(hoveredTargetKey);
+  for (const key of selectedTargetKeys) consider(key);
+  return revealed;
+}
+
+function spatialPickTargetObjectRevealed(target: SpatialPickTarget, objectIndex: ReadonlyMap<string, string>, revealedObjectIds: ReadonlySet<string>): boolean {
+  if (target.kind === "object" && !target.geometryKind) return true;
+  const ownerId = objectIndex.get(spatialPickTargetMemberKey(target));
+  return ownerId !== undefined && revealedObjectIds.has(ownerId);
+}
+
 /** @emoji 🖱️ Maps a hierarchy {@link SelectionTarget} to the canvas hover key (typology object when possible). */
 export function canvasHoverKeyForSelectionTarget(model: Model, modelDefinitionId: string, target: SelectionTarget): string {
   if (target.kind === "object") return selectionTargetHoverKey(target);
@@ -2460,15 +2539,21 @@ export function resolveSpatialPickTargetsToRender(
   filterKindToggles: SpatialPickKindToggles = {},
   pinnedTargetKeys: ReadonlySet<string> = new Set(),
   flagsForId: (entityId: string) => SpatialEntityFlags = () => ({}),
+  objectIndex?: ReadonlyMap<string, string>,
+  revealedObjectIds?: ReadonlySet<string>,
 ): SpatialPickTarget[] {
   const pinnedKeys = pinnedPickTargetKeys(pinnedTargetKeys);
   const enabledTargets = filterSpatialPickTargetsForVisibility(viewTargets, filterKindToggles);
   const seen = new Set<string>();
   const out: SpatialPickTarget[] = [];
+  const objectRevealActive = objectIndex !== undefined && revealedObjectIds !== undefined;
   for (const target of enabledTargets) {
     const key = spatialPickTargetKey(target);
     const flags = flagsForId(target.id);
     if (flags.hidden === true && !pinnedKeys.has(key)) {
+      continue;
+    }
+    if (objectRevealActive && !pinnedKeys.has(key) && !spatialPickTargetObjectRevealed(target, objectIndex, revealedObjectIds)) {
       continue;
     }
     if (seen.has(key)) continue;
@@ -2579,11 +2664,21 @@ function SpatialPickTargetNode({
 }
 
 /** @emoji 🧵 Draws all geometry edges for imported factory geometry (one batched `lineSegments`). */
-function GeometryFactoryWireframeLayer({ geometry, visible = true }: { readonly geometry?: SpatialPickGeometry | null; readonly visible?: boolean }): ReactNode {
+function GeometryFactoryWireframeLayer({
+  geometry,
+  visible = true,
+  revealedMemberKeys,
+}: {
+  readonly geometry?: SpatialPickGeometry | null;
+  readonly visible?: boolean;
+  readonly revealedMemberKeys?: ReadonlySet<string> | null;
+}): ReactNode {
   const segments = reactHostPort.useMemo(() => {
     if (!geometry) return [] as readonly (readonly [Vec3, Vec3])[];
-    return collectGeometryEdgeSegments(geometryBuckets(geometry));
-  }, [geometry]);
+    const buckets = geometryBuckets(geometry);
+    if (revealedMemberKeys === null || revealedMemberKeys === undefined) return collectGeometryEdgeSegments(buckets);
+    return collectGeometryEdgeSegmentsForMembers(buckets, revealedMemberKeys);
+  }, [geometry, revealedMemberKeys]);
   const edgeGeometry = reactHostPort.useMemo(() => {
     if (!segments.length) return null;
     const pos = new Float32Array(segments.length * 6);
@@ -2644,8 +2739,12 @@ export function SpatialPickGeometryLayer({
 }): ReactNode {
   const modelRevision = geometry && typeof geometry === "object" && "revision" in geometry ? Number((geometry as { revision?: unknown }).revision) : 0;
   const resolvedEntityFlagsForId = reactHostPort.useCallback(
-    (entityId: string) => entityFlagsForId?.(entityId) ?? (geometry && typeof geometry === "object" && "metadata" in geometry ? spatialEntityFlagsForModelEntity(geometry as Model, entityId) : {}),
-    [entityFlagsForId, geometry, modelRevision],
+    (entityId: string) =>
+      entityFlagsForId?.(entityId) ??
+      (geometry && typeof geometry === "object" && "metadata" in geometry
+        ? resolveSpatialEntityFlags(geometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId(), entityId)
+        : {}),
+    [activeModelDefinitionId, entityFlagsForId, geometry, modelRevision],
   );
   const targets = reactHostPort.useMemo(() => createSpatialPickTargets(geometry, activeModelDefinitionId), [geometry, modelRevision, modelDefinitionRevision, activeModelDefinitionId]);
   const viewTargets = reactHostPort.useMemo(() => filterSpatialPickTargetsForActiveView(targets, activeModelDefinitionId ?? null), [targets, activeModelDefinitionId]);
@@ -2656,9 +2755,18 @@ export function SpatialPickGeometryLayer({
     selectedTargetKeys?.forEach((key) => keys.add(key));
     return keys;
   }, [hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
+  const objectIndex = reactHostPort.useMemo(() => {
+    if (!geometry) return new Map<string, string>();
+    const model = geometry instanceof Model ? geometry : parseModelJson(geometry as ModelJson);
+    return model ? buildGeometryObjectIndex(model, activeModelDefinitionId ?? defaultModelDefinitionId()) : new Map<string, string>();
+  }, [geometry, modelRevision, modelDefinitionRevision, activeModelDefinitionId]);
+  const revealedObjectIds = reactHostPort.useMemo(
+    () => revealedObjectIdsFromPickKeys(objectIndex, hoveredTargetKey, pinnedTargetKeys),
+    [objectIndex, hoveredTargetKey, pinnedTargetKeys],
+  );
   const renderedTargets = reactHostPort.useMemo(() => {
-    return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId);
-  }, [viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId]);
+    return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId, objectIndex, revealedObjectIds);
+  }, [viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId, objectIndex, revealedObjectIds]);
   const selectableTargets = reactHostPort.useMemo(
     () => filterSpatialPickTargetsForEntityFlags(filterSpatialPickTargets(viewTargets, selectionAccept, selectionKindToggles), resolvedEntityFlagsForId),
     [viewTargets, selectionAccept, selectionKindToggles, resolvedEntityFlagsForId],
@@ -2853,6 +2961,87 @@ const cadMeshGeometryPool = createTemplatePool<string>();
 /** @emoji 📍 Chunk anchor at mesh bounds center for view-radius streaming. */
 export function meshTransferOrigin(mesh: MeshTransfer): Vec3 {
   return boundsFromMeshTransfers([mesh])?.center ?? [0, 0, 0];
+}
+
+/** @emoji 👁️ Options for object-scoped committed mesh visibility. */
+export interface CommittedMeshVisibilityOptions {
+  readonly flagsForId?: (entityId: string) => SpatialEntityFlags;
+  readonly typologyToggles?: SpatialTypologyToggles;
+  readonly filterKindToggles?: SpatialPickKindToggles;
+}
+
+function collectVisibleSolidRefsForObject(
+  model: Model,
+  row: SpatialObjectRecord,
+  flagsForId: (entityId: string) => SpatialEntityFlags,
+  out: Set<string>,
+): void {
+  for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
+    if (resolvePrimitiveRefKind(model, primitiveRef) !== "solid") continue;
+    const solidId = String(primitiveRef);
+    if (flagsForId(solidId).hidden === true) continue;
+    out.add(solidId);
+  }
+}
+
+/** @emoji 👁️ Solid ids eligible for committed mesh draw under a model definition (object-scoped). */
+export function visibleSolidRefsForModelDefinition(
+  model: Model,
+  modelDefinitionId: string,
+  options: CommittedMeshVisibilityOptions = {},
+): ReadonlySet<string> {
+  const flagsForId = options.flagsForId ?? (() => ({}));
+  const typologyToggles = options.typologyToggles ?? {};
+  const objectVisible = options.filterKindToggles?.object !== false;
+  const scoped = listModelObjectsForModelDefinition(model, modelDefinitionId);
+  const out = new Set<string>();
+  if (scoped.length > 0) {
+    if (!objectVisible) return out;
+    for (const row of scoped) {
+      const objectId = String(row.id);
+      if (flagsForId(objectId).hidden === true) continue;
+      if (typologyToggles[row.typology] === false) continue;
+      collectVisibleSolidRefsForObject(model, row, flagsForId, out);
+    }
+    return out;
+  }
+  if (!isShapeModelDefinition(modelDefinitionId)) return out;
+  if (!objectVisible) return out;
+  for (const solidId of Object.keys(model.solids)) {
+    if (flagsForId(solidId).hidden === true) continue;
+    out.add(solidId);
+  }
+  return out;
+}
+
+/** @emoji 👁️ Filters tessellated committed meshes to visible object-owned solids. */
+export function filterCommittedMeshesForModelDefinition(
+  model: Model,
+  modelDefinitionId: string,
+  meshes: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[],
+  options: CommittedMeshVisibilityOptions = {},
+): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
+  const allowed = visibleSolidRefsForModelDefinition(model, modelDefinitionId, options);
+  if (allowed.size === 0) return [];
+  return meshes.filter((row) => allowed.has(String(row.solid)));
+}
+
+/** @emoji 👁️ Resolves hide/lock flags including object ownership for factory geometry members. */
+export function resolveSpatialEntityFlags(model: Model, modelDefinitionId: string, entityId: string): SpatialEntityFlags {
+  const direct = model.getEntityFlags(entityId);
+  if (direct.hidden === true || direct.locked === true) return direct;
+  const objectIndex = buildGeometryObjectIndex(model, modelDefinitionId);
+  const ownerId =
+    objectIndex.get(`object:${entityId}`) ??
+    objectIndex.get(`solid:${entityId}`) ??
+    objectIndex.get(`face:${entityId}`) ??
+    objectIndex.get(`edge:${entityId}`) ??
+    objectIndex.get(`vertex:${entityId}`) ??
+    objectIndex.get(`anchor:${entityId}`);
+  if (!ownerId) return direct;
+  const ownerFlags = model.getEntityFlags(ownerId);
+  if (ownerFlags.hidden !== true && ownerFlags.locked !== true) return direct;
+  return { ...direct, ...(ownerFlags.hidden === true ? { hidden: true } : {}), ...(ownerFlags.locked === true ? { locked: true } : {}) };
 }
 
 /** @emoji 🧊 Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
@@ -3433,6 +3622,26 @@ export function InteractionSpatialView({
   );
   const scenePickGeometry = geometry ?? pickGeometryProp;
   const pickGeometryRevision = scenePickGeometry && typeof scenePickGeometry === "object" && "revision" in scenePickGeometry ? Number((scenePickGeometry as { revision?: unknown }).revision) : 0;
+  const objectIndex = reactHostPort.useMemo(() => {
+    if (!scenePickGeometry) return new Map<string, string>();
+    const model = scenePickGeometry instanceof Model ? scenePickGeometry : parseModelJson(scenePickGeometry as ModelJson);
+    return model ? buildGeometryObjectIndex(model, activeModelDefinitionId ?? defaultModelDefinitionId()) : new Map<string, string>();
+  }, [scenePickGeometry, geometryRevision, modelDefinitionRevision, activeModelDefinitionId]);
+  const revealedObjectIds = reactHostPort.useMemo(() => {
+    const pinned = new Set<string>();
+    if (hoveredTargetKey) pinned.add(hoveredTargetKey);
+    if (selectedTargetKey) pinned.add(selectedTargetKey);
+    selectedTargetKeys?.forEach((key) => pinned.add(key));
+    return revealedObjectIdsFromPickKeys(objectIndex, hoveredTargetKey, pinned);
+  }, [objectIndex, hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
+  const revealedMemberKeys = reactHostPort.useMemo(() => {
+    if (revealedObjectIds.size === 0) return new Set<string>();
+    const keys = new Set<string>();
+    for (const [memberKey, ownerId] of objectIndex) {
+      if (revealedObjectIds.has(ownerId)) keys.add(memberKey);
+    }
+    return keys;
+  }, [objectIndex, revealedObjectIds]);
   const styleForSolid = reactHostPort.useMemo(() => {
     if (!geometry || typeof geometry !== "object" || !("objects" in geometry)) return undefined;
     return createSolidTypologyStyleResolver(geometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId());
@@ -3502,7 +3711,7 @@ export function InteractionSpatialView({
           />
         </WorldLayer>
         <WorldLayer order={20} name="cad.factory-wireframe">
-          <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />
+          <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} revealedMemberKeys={revealedMemberKeys} />
         </WorldLayer>
         <WorldLayer order={30} name="cad.pick">
           {showPickLayer ? (
@@ -4439,7 +4648,6 @@ export function InteractionRepl({
   const [selectionPrimitiveToggles, setSelectionPrimitiveToggles] = useHostState(selectionPrimitiveTogglesProp, onSelectionPrimitiveTogglesChange, () => chromeDefaults.selectionPrimitiveToggles);
   const [activeModelDefinitionId, setActiveModelDefinitionId] = useHostState(activeModelDefinitionIdProp, onActiveModelDefinitionIdChange, () => chromeDefaults.activeModelDefinitionId);
   const mdIdForView = activeModelDefinitionId ?? defaultModelDefinitionId();
-  const committedMeshesForView = reactHostPort.useMemo(() => (modelDefinitionUsesGeometryPicking(mdIdForView) ? committedMeshes : []), [committedMeshes, mdIdForView]);
   const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
   const [modelDefinitionRevision, setModelDefinitionRevision] = useHostState(modelDefinitionRevisionProp, onModelDefinitionRevisionChange, () => chromeDefaults.modelDefinitionRevision);
   const modelDefinitions = reactHostPort.useMemo(() => listModelDefinitionManifests(), []);
@@ -4508,9 +4716,20 @@ export function InteractionRepl({
     [activeModelDefinitionId, filterPrimitiveToggles],
   );
   const entityFlagsForId = reactHostPort.useCallback(
-    (entityId: string) => (pickSourceGeometry && typeof pickSourceGeometry === "object" && "metadata" in pickSourceGeometry ? spatialEntityFlagsForModelEntity(pickSourceGeometry as Model, entityId) : {}),
-    [pickSourceGeometry, pickSourceRevision],
+    (entityId: string) =>
+      pickSourceGeometry && typeof pickSourceGeometry === "object" && "metadata" in pickSourceGeometry
+        ? resolveSpatialEntityFlags(pickSourceGeometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId(), entityId)
+        : {},
+    [activeModelDefinitionId, pickSourceGeometry, pickSourceRevision],
   );
+  const committedMeshesForView = reactHostPort.useMemo(() => {
+    if (!modelDefinitionUsesGeometryPicking(mdIdForView)) return [];
+    return filterCommittedMeshesForModelDefinition(gumballPreviewModel, mdIdForView, committedMeshes, {
+      flagsForId: entityFlagsForId,
+      typologyToggles: filterTypologyToggles,
+      filterKindToggles: sceneKindToggles,
+    });
+  }, [committedMeshes, entityFlagsForId, filterTypologyToggles, gumballPreviewModel, mdIdForView, sceneKindToggles]);
   const selectablePickTargets = reactHostPort.useMemo(() => {
     const filterPrimitives = filterSpatialPickTargetsForPrimitiveToggles(visiblePickTargets, selectionPrimitiveToggles);
     const typologyFiltered = filterSpatialPickTargetsForTypologyToggles(filterPrimitives, selectionTypologyToggles, activeTypologyIds);
@@ -6856,6 +7075,38 @@ if (import.meta.vitest) {
       expect(resolveSpatialPickTargetsToRender(targets, {}).map(spatialPickTargetKey).sort()).toEqual(["edge:e0", "vertex:v0"]);
     });
 
+    it("resolveSpatialPickTargetsToRender gates factory primitives until their object is revealed", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+      const solidId = Object.keys(model.solids)[0]!;
+      model.objects["box-obj"] = {
+        id: "box-obj" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as const,
+        primitives: { solid: solidId },
+      };
+      const objectIndex = buildGeometryObjectIndex(model, defaultModelDefinitionId());
+      const targets = createSpatialPickTargets(model, defaultModelDefinitionId());
+      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), () => ({}), objectIndex, new Set()).map(spatialPickTargetKey)).toEqual([]);
+      const revealed = revealedObjectIdsFromPickKeys(objectIndex, `object:box-obj`, new Set());
+      expect(revealed.has("box-obj")).toBe(true);
+      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), () => ({}), objectIndex, revealed).some((row) => row.kind === "vertex")).toBe(true);
+    });
+
+    it("revealedObjectIdsFromPickKeys expands solid and member picks to the owning object", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
+      const solidId = Object.keys(model.solids)[0]!;
+      const vertexId = Object.keys(model.vertices)[0]!;
+      model.objects["box-obj"] = {
+        id: "box-obj" as ObjectRef,
+        typology: "spatial.shape.primitive.box" as const,
+        primitives: { solid: solidId },
+      };
+      const objectIndex = buildGeometryObjectIndex(model, defaultModelDefinitionId());
+      expect([...revealedObjectIdsFromPickKeys(objectIndex, `vertex:${vertexId}`, new Set())]).toEqual(["box-obj"]);
+      expect([...revealedObjectIdsFromPickKeys(objectIndex, `object:${solidId}`, new Set())]).toEqual(["box-obj"]);
+    });
+
     it("spatialSceneColors exposes a single product-aligned palette", () => {
       resetSpatialSceneColorCache();
       const palette = spatialSceneColors();
@@ -6864,6 +7115,44 @@ if (import.meta.vitest) {
       expect(palette.selected).toBeTruthy();
       expect(palette.groundPlane).not.toBe(palette.accent);
       resetSpatialSceneColorCache();
+    });
+
+    it("visibleSolidRefsForModelDefinition scopes building solids to visible objects only", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [2, 0, 0], cornerB: [3, 1, 0], height: 1 }, solidRef("solid-b")));
+      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: "solid-a" } };
+      model.objects["obj-b"] = { id: "obj-b" as ObjectRef, typology: "building.building.beam", primitives: { solid: "solid-b" } };
+      model.objects["orphan"] = { id: "orphan" as ObjectRef, typology: "spatial.shape.kernel.solid", primitives: { solid: "solid-a" } };
+      const flagsForId = (id: string) => model.getEntityFlags(id);
+      expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })].sort()).toEqual(["solid-a", "solid-b"]);
+      model.setEntityFlag("obj-a", "hidden", true);
+      expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })].sort()).toEqual(["solid-b"]);
+      model.setEntityFlag("obj-b", "hidden", true);
+      expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })]).toEqual([]);
+    });
+
+    it("filterCommittedMeshesForModelDefinition drops meshes when all objects are hidden", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
+      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: "solid-a" } };
+      model.setEntityFlag("obj-a", "hidden", true);
+      const mesh: MeshTransfer = { position: [0, 0, 0, 1, 0, 0, 0, 1, 0], normal: [0, 0, 0, 0, 0, 0, 0, 0, 0], index: [0, 1, 2], edges: [], faceGroups: [], faceInfos: [] };
+      const filtered = filterCommittedMeshesForModelDefinition(model, "aec.building", [{ solid: solidRef("solid-a"), mesh }], {
+        flagsForId: (id) => model.getEntityFlags(id),
+      });
+      expect(filtered).toEqual([]);
+    });
+
+    it("resolveSpatialEntityFlags inherits hidden state from owning object", () => {
+      const model = new Model();
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
+      const solidId = Object.keys(model.solids)[0]!;
+      const faceId = Object.keys(model.faces)[0]!;
+      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: solidId } };
+      model.setEntityFlag("obj-a", "hidden", true);
+      expect(resolveSpatialEntityFlags(model, "aec.building", faceId).hidden).toBe(true);
+      expect(resolveSpatialEntityFlags(model, "aec.building", solidId).hidden).toBe(true);
     });
 
     it("typologyStyleToMaterialProps and typologyStyleCacheKey reflect resolved style", () => {

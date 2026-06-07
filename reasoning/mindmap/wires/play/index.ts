@@ -30,7 +30,7 @@ export {
 
 import { Playground2d, type Puzzle2dPlayHierarchyBuildOptions } from "@puzzle/2d/play";
 import type { KindCatalogBundle, Puzzle2dFixtureV1 } from "@puzzle/2d/react";
-import { playgroundTreePanelRootItems, type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@framework/playground/core";
+import { type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@framework/playground/core";
 import { puzzle2dFixtureMergedKindCatalogs } from "@puzzle/2d/react";
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
 import {
@@ -203,12 +203,6 @@ export function buildWiresPlayHierarchySections(
       ...wiresHierarchyHoverHandlers(onHover, identity.nodeId),
     };
   });
-  const identitiesGroup: UiTreeItemNode = {
-    id: "wires-play-hierarchy.identities",
-    label: "Identities",
-    defaultOpen: true,
-    items: identityItems.length ? identityItems : [{ id: "wires-play-hierarchy.identities.empty", label: "(none)" }],
-  };
   const relationshipItems: UiTreeItemNode[] = puzzleFixture.edges.map((edge) => ({
     id: `${WIRES_PLAY_HIERARCHY_RELATIONSHIP_PREFIX}${edge.id}`,
     label: wiresRelationshipHierarchyLabel(wiresFixture, edge.id) ?? edge.id,
@@ -216,19 +210,23 @@ export function buildWiresPlayHierarchySections(
     onClick: () => onSelect(edge.id),
     ...wiresHierarchyHoverHandlers(onHover, edge.id),
   }));
-  const relationshipsGroup: UiTreeItemNode = {
-    id: "wires-play-hierarchy.relationships",
-    label: "Relationships",
-    defaultOpen: true,
-    items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-hierarchy.relationships.empty", label: "(none)" }],
-  };
-  const wiresRoot: UiTreeItemNode = {
-    id: "wires-play-hierarchy.wires",
-    label: wiresFixture.source.kitName,
-    defaultOpen: true,
-    items: [identitiesGroup, relationshipsGroup],
-  };
-  return playgroundTreePanelRootItems("wires-play-hierarchy.root", [wiresRoot]) as UiTreeNode;
+  return {
+    type: "tree",
+    sections: [
+      {
+        id: "wires-play-hierarchy.identities",
+        label: "Identities",
+        defaultOpen: true,
+        items: identityItems.length ? identityItems : [{ id: "wires-play-hierarchy.identities.empty", label: "(none)" }],
+      },
+      {
+        id: "wires-play-hierarchy.relationships",
+        label: "Relationships",
+        defaultOpen: true,
+        items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-hierarchy.relationships.empty", label: "(none)" }],
+      },
+    ],
+  } as UiTreeNode;
 }
 
 //#region 🔖Boot
@@ -261,11 +259,10 @@ if (import.meta.vitest) {
 
     it("buildWiresPlayHierarchySections uses Identities and Relationships groups", () => {
       const tree = buildWiresPlayHierarchySections(WIRES_PLAY_FIXTURE, WIRES_PLAY_DEFAULT_FIXTURE, [], () => {});
-      const root = tree.sections[0]?.items?.[0];
-      expect(root?.label).toBe("Metabolism");
-      const groups = root?.items ?? [];
-      expect(groups.map((g) => g.label)).toEqual(["Identities", "Relationships"]);
-      const rel = groups[1]?.items?.find((row) => row.id === "wires-play-hierarchy.relationship.wires-rel-is-capital");
+      const groups = tree.sections.map((section) => section.label);
+      expect(groups).toEqual(["Identities", "Relationships"]);
+      const relationshipsSection = tree.sections.find((section) => section.label === "Relationships");
+      const rel = relationshipsSection?.items?.find((row) => row.id === "wires-play-hierarchy.relationship.wires-rel-is-capital");
       expect(rel?.label).toBe("Is: Bridge → Capital");
     });
 

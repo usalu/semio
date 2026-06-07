@@ -12,6 +12,7 @@ import {
   gumballPointerConsumesCanvasEventRef,
   UnifiedGumball,
   type EngagementSpec,
+  type EngagementStepperControl,
   type GumballConfig,
   type GumballHandleKind,
   type ThreeEvent,
@@ -1125,10 +1126,10 @@ export interface CanvasProps {
   onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
   /** @emoji 🧊 Commits a target-volume gumball drag to the host fixture. */
   onTargetVolumeRelocate?: (payload: WorldVolumeRelocatePayload) => void;
-  /** @emoji 🧱 Paints one voxel at the snapped cursor cell while Alt is held. */
-  onVoxelBrushPaint?: (cad: Vec3, size: number) => void;
-  /** @emoji 🧱 Axis-aligned voxel brush cell size (world units). */
-  voxelBrushSize?: number;
+  /** @emoji 🧱 Paints one voxel box at the snapped cursor cell while Alt is held. */
+  onVoxelBrushPaint?: (cad: Vec3, scale: Vec3) => void;
+  /** @emoji 🧱 Axis-aligned voxel brush box size `[width, depth, height]` in world units. */
+  voxelBrushDimensions?: Vec3;
   /** @emoji 🧊 When true, target volumes are selectable and the voxel brush is active. */
   fillEditTargetVolumes?: boolean;
   onConnect?: (p: AttractionPayload) => void;
@@ -1651,8 +1652,8 @@ export function applyTargetVolumeRelocateToFixture(fixture: FixtureV1, payload: 
 }
 
 /** @emoji 🧊 Removes a target volume at the snapped voxel cell. */
-export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, size: number): FixtureV1 {
-  const volume = findVoxelAtCell(fixture.targetVolumes ?? [], cad, size);
+export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, scale: Vec3): FixtureV1 {
+  const volume = findVoxelAtCell(fixture.targetVolumes ?? [], cad, scale);
   if (!volume) {
     return fixture;
   }
@@ -1660,49 +1661,64 @@ export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, size: numb
 }
 
 /** @emoji 🧊 Adds one axis-aligned voxel at the snapped cursor cell when empty. */
-export function addVoxelToFixture(fixture: FixtureV1, cad: Vec3, size: number): FixtureV1 {
-  if (findVoxelAtCell(fixture.targetVolumes ?? [], cad, size)) {
+export function addVoxelToFixture(fixture: FixtureV1, cad: Vec3, scale: Vec3): FixtureV1 {
+  if (findVoxelAtCell(fixture.targetVolumes ?? [], cad, scale)) {
     return fixture;
   }
-  return addTargetVolumeToFixture(fixture, createVoxelVolume(cad, size));
+  return addTargetVolumeToFixture(fixture, createVoxelVolume(cad, scale));
 }
 
-/** @emoji 🧱 Snaps a CAD point to the center of a voxel cell. */
-export function snapCadToVoxelCenter(cad: Vec3, size: number): Vec3 {
+function snapCadAxisToVoxelCenter(coord: number, size: number): number {
   const h = size / 2;
-  return [
-    Math.round((cad[0] - h) / size) * size + h,
-    Math.round((cad[1] - h) / size) * size + h,
-    Math.round((cad[2] - h) / size) * size + h,
-  ] as Vec3;
+  return Math.round((coord - h) / size) * size + h;
 }
 
-/** @emoji 🧱 Stable grid key for a voxel cell at a given brush size. */
-export function voxelGridKey(origin: Vec3, size: number): string {
-  const center = snapCadToVoxelCenter(origin, size);
-  return `${center[0].toFixed(4)},${center[1].toFixed(4)},${center[2].toFixed(4)}`;
+/** @emoji 🧱 Snaps a CAD point to the center of an axis-aligned voxel box. */
+export function snapCadToVoxelCenter(cad: Vec3, scale: Vec3): Vec3 {
+  const sx = typeof scale === "number" ? scale : scale[0];
+  const sy = typeof scale === "number" ? scale : scale[1];
+  const sz = typeof scale === "number" ? scale : scale[2];
+  return [snapCadAxisToVoxelCenter(cad[0], sx), snapCadAxisToVoxelCenter(cad[1], sy), snapCadAxisToVoxelCenter(cad[2], sz)] as Vec3;
 }
 
-/** @emoji 🧱 Builds a target-volume record for one axis-aligned voxel. */
-export function createVoxelVolume(cad: Vec3, size: number, id?: string): WorldVolumeProps {
-  const origin = snapCadToVoxelCenter(cad, size);
+function voxelScaleVec(scale: number | Vec3): Vec3 {
+  if (typeof scale === "number") {
+    return [scale, scale, scale];
+  }
+  return [scale[0], scale[1], scale[2]];
+}
+
+/** @emoji 🧱 Stable grid key for a voxel cell at a given brush box size. */
+export function voxelGridKey(cad: Vec3, scale: number | Vec3): string {
+  const box = voxelScaleVec(scale);
+  const center = snapCadToVoxelCenter(cad, box);
+  return `${center[0].toFixed(4)},${center[1].toFixed(4)},${center[2].toFixed(4)}@${box[0].toFixed(4)},${box[1].toFixed(4)},${box[2].toFixed(4)}`;
+}
+
+/** @emoji 🧱 Builds a target-volume record for one axis-aligned voxel box. */
+export function createVoxelVolume(cad: Vec3, scale: number | Vec3, id?: string): WorldVolumeProps {
+  const box = voxelScaleVec(scale);
+  const origin = snapCadToVoxelCenter(cad, box);
   return {
     id: id ?? `voxel-${origin.map((n) => n.toFixed(2)).join("-")}`,
     origin,
-    scale: size,
+    scale: box,
   };
 }
 
 /** @emoji 🧱 Finds an existing voxel in the fixture at the snapped cell. */
-export function findVoxelAtCell(volumes: readonly WorldVolumeProps[], cad: Vec3, size: number): WorldVolumeProps | null {
-  const key = voxelGridKey(cad, size);
+export function findVoxelAtCell(volumes: readonly WorldVolumeProps[], cad: Vec3, scale: number | Vec3): WorldVolumeProps | null {
+  const key = voxelGridKey(cad, scale);
   for (const volume of volumes) {
-    if (voxelGridKey(volume.origin, size) === key) {
+    if (voxelGridKey(volume.origin, volume.scale ?? 1) === key) {
       return volume;
     }
   }
   return null;
 }
+
+export const VOXEL_BRUSH_PREVIEW_COLOR = "#38bdf8";
+export const VOXEL_BRUSH_PREVIEW_OPACITY = 0.48;
 
 export function parseFixtureV1(raw: unknown): FixtureV1 | null {
   if (!raw || typeof raw !== "object") return null;
@@ -7928,7 +7944,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly fillCount: number;
   readonly fillBuildProgress?: Puzzle3dFillBuildProgress;
   readonly fillEditTargetVolumes?: boolean;
-  readonly voxelBrushSize?: number;
+  readonly voxelBrushDimensions?: Vec3;
   readonly selectedTargetVolumeCount?: number;
   readonly selectionCount: number;
   readonly onCmdLineChange: (value: string) => void;
@@ -7941,7 +7957,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly onFillCount: (count: number) => void;
   readonly onToggleFillEditTargetVolumes?: () => void;
   readonly onDeleteSelectedTargetVolume?: () => void;
-  readonly onVoxelBrushSize?: (size: number) => void;
+  readonly onVoxelBrushDimension?: (axis: 0 | 1 | 2, value: number) => void;
   readonly onCycleBrushCandidate: () => void;
   readonly onPickBrushCandidate: (index: number) => void;
   readonly onZoomToSelection: () => void;
@@ -7968,7 +7984,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     if (inputs.fillEditTargetVolumes) {
       status.push({
         id: "puzzle3d.fill.volumeEdit",
-        content: "Hold Alt to paint voxels; release Alt to select voxels",
+        content: "Adjust W/D/H steppers; preview follows cursor; press Alt to place; release Alt to select voxels",
       });
     }
   }
@@ -8024,19 +8040,20 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     inputs.fillBuildProgress && !inputs.fillBuildProgress.done
       ? `Fill ${inputs.fillCount} (building ${inputs.fillBuildProgress.count}/${inputs.fillBuildProgress.maxCount})`
       : `Fill ${inputs.fillCount}`;
-  const voxelSize = inputs.voxelBrushSize ?? DEFAULT_VOXEL_BRUSH_SIZE;
+  const dims = inputs.voxelBrushDimensions ?? DEFAULT_VOXEL_BRUSH_DIMENSIONS;
+  const voxelDimensionStepper = (axis: 0 | 1 | 2, label: string, id: string): EngagementStepperControl => ({
+    kind: "stepper",
+    id,
+    label,
+    value: dims[axis],
+    min: VOXEL_BRUSH_SIZE_MIN,
+    max: VOXEL_BRUSH_SIZE_MAX,
+    step: VOXEL_BRUSH_SIZE_STEP,
+    onChange: (value) => inputs.onVoxelBrushDimension?.(axis, value),
+  });
   const control =
     inputs.activeTool === "fill" && inputs.fillEditTargetVolumes
-      ? {
-          kind: "stepper" as const,
-          id: "puzzle3d-voxel-size",
-          label: "Voxel size",
-          value: voxelSize,
-          min: VOXEL_BRUSH_SIZE_MIN,
-          max: VOXEL_BRUSH_SIZE_MAX,
-          step: VOXEL_BRUSH_SIZE_STEP,
-          onChange: inputs.onVoxelBrushSize,
-        }
+      ? undefined
       : inputs.activeTool === "fill"
       ? {
           kind: "slider" as const,
@@ -8090,6 +8107,15 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
       onAbort: inputs.onAbort,
     },
     control,
+    ...(inputs.activeTool === "fill" && inputs.fillEditTargetVolumes
+      ? {
+          controls: [
+            voxelDimensionStepper(0, "Width", "puzzle3d-voxel-width"),
+            voxelDimensionStepper(1, "Depth", "puzzle3d-voxel-depth"),
+            voxelDimensionStepper(2, "Height", "puzzle3d-voxel-height"),
+          ],
+        }
+      : {}),
     ...(options?.length ? { options } : {}),
     ...(status.length ? { status } : {}),
     possibleEngagements,
@@ -8143,8 +8169,8 @@ export const puzzle3dBrushAltPressedRef = { current: false };
 /** @emoji 🧊 True while fill target-volume edit mode is active. */
 export const puzzle3dTargetVolumeToolActiveRef = { current: false };
 
-/** @emoji 🧱 Default axis-aligned voxel brush cell size (world units). */
-export const DEFAULT_VOXEL_BRUSH_SIZE = 1;
+/** @emoji 🧱 Default axis-aligned voxel brush box size (world units). */
+export const DEFAULT_VOXEL_BRUSH_DIMENSIONS: Vec3 = [1, 1, 1];
 export const VOXEL_BRUSH_SIZE_MIN = 0.25;
 export const VOXEL_BRUSH_SIZE_MAX = 8;
 export const VOXEL_BRUSH_SIZE_STEP = 0.25;
@@ -8178,11 +8204,11 @@ export function createVoxelBrushUiStore(initial: VoxelBrushUiSnapshot = VOXEL_BR
 }
 
 export const puzzle3dVoxelBrushUiStore = createVoxelBrushUiStore();
-export const puzzle3dVoxelBrushSizeRef = { current: DEFAULT_VOXEL_BRUSH_SIZE };
+export const puzzle3dVoxelBrushDimensionsRef: { current: Vec3 } = { current: DEFAULT_VOXEL_BRUSH_DIMENSIONS };
 
 const puzzle3dVoxelBrushBridgeRef: {
   current: {
-    readonly onPaint?: (cad: Vec3, size: number) => void;
+    readonly onPaint?: (cad: Vec3, scale: Vec3) => void;
   };
 } = { current: {} };
 
@@ -8613,35 +8639,40 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   );
 });
 
-const VoxelBrushPreview = reactHostPort.memo(function VoxelBrushPreview(props: { readonly voxelSize: number }) {
+const VoxelBrushPreview = reactHostPort.memo(function VoxelBrushPreview(props: { readonly dimensions: Vec3 }) {
   const ui = reactHostPort.useSyncExternalStore(
     puzzle3dVoxelBrushUiStore.subscribe,
     puzzle3dVoxelBrushUiStore.getSnapshot,
     puzzle3dVoxelBrushUiStore.getSnapshot,
   );
-  if (!ui.altPainting || !ui.cursorCad) {
+  if (!ui.cursorCad) {
     return null;
   }
-  const preview = createVoxelVolume(ui.cursorCad, props.voxelSize);
+  const preview: WorldVolumeProps = {
+    ...createVoxelVolume(ui.cursorCad, props.dimensions),
+    id: "voxel-brush-preview",
+    color: VOXEL_BRUSH_PREVIEW_COLOR,
+    opacity: VOXEL_BRUSH_PREVIEW_OPACITY,
+  };
   return <WorldVolumeLayer volumes={[preview]} interactive={false} />;
 });
 
-function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize: number }): null {
+function VoxelBrushBridge(props: { readonly enabled: boolean; readonly dimensions: Vec3 }): null {
   const { camera, gl } = useThree();
   const controls = useThree((state) => state.controls as { target?: Vector3 } | null | undefined);
   const lodCtx = useLod();
-  const lastPaintKeyRef = reactHostPort.useRef<string | null>(null);
+  const lastCommitKeyRef = reactHostPort.useRef<string | null>(null);
   reactHostPort.useEffect(() => {
     puzzle3dTargetVolumeToolActiveRef.current = props.enabled;
-    puzzle3dVoxelBrushSizeRef.current = props.voxelSize;
+    puzzle3dVoxelBrushDimensionsRef.current = props.dimensions;
     if (!props.enabled) {
       puzzle3dVoxelBrushUiStore.setSnapshot(VOXEL_BRUSH_UI_IDLE);
-      lastPaintKeyRef.current = null;
+      lastCommitKeyRef.current = null;
     }
     return () => {
       puzzle3dTargetVolumeToolActiveRef.current = false;
     };
-  }, [props.enabled, props.voxelSize]);
+  }, [props.enabled, props.dimensions]);
   reactHostPort.useEffect(() => {
     if (!props.enabled) {
       return;
@@ -8657,15 +8688,15 @@ function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize
         gridStepWorld: lodCtx.gridStepWorld,
         gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(controls?.target ?? null),
       });
-    const paintAt = (cad: Vec3): void => {
-      const size = puzzle3dVoxelBrushSizeRef.current;
-      const key = voxelGridKey(cad, size);
-      if (lastPaintKeyRef.current === key) {
+    const commitAt = (cad: Vec3): void => {
+      const scale = puzzle3dVoxelBrushDimensionsRef.current;
+      const key = voxelGridKey(cad, scale);
+      if (lastCommitKeyRef.current === key) {
         return;
       }
-      lastPaintKeyRef.current = key;
-      puzzle3dVoxelBrushBridgeRef.current.onPaint?.(cad, size);
-      console.log("[DEBUG] puzzle3d voxel brush paint", cad, size);
+      lastCommitKeyRef.current = key;
+      puzzle3dVoxelBrushBridgeRef.current.onPaint?.(cad, scale);
+      console.log("[DEBUG] puzzle3d voxel brush commit", cad, scale);
     };
     const setAltPainting = (altPainting: boolean): void => {
       const prev = puzzle3dVoxelBrushUiStore.getSnapshot();
@@ -8673,13 +8704,18 @@ function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize
         return;
       }
       if (!altPainting) {
-        lastPaintKeyRef.current = null;
+        lastCommitKeyRef.current = null;
       }
       puzzle3dVoxelBrushUiStore.setSnapshot({ ...prev, altPainting });
     };
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "Alt") {
-        setAltPainting(true);
+      if (event.key !== "Alt") {
+        return;
+      }
+      setAltPainting(true);
+      const cursor = puzzle3dVoxelBrushUiStore.getSnapshot().cursorCad;
+      if (cursor) {
+        commitAt(cursor);
       }
     };
     const onKeyUp = (event: KeyboardEvent): void => {
@@ -8694,19 +8730,13 @@ function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize
       const cad = pickCad(event.clientX, event.clientY);
       const prev = puzzle3dVoxelBrushUiStore.getSnapshot();
       puzzle3dVoxelBrushUiStore.setSnapshot({ ...prev, cursorCad: cad });
-      if (prev.altPainting || event.altKey) {
-        if (!prev.altPainting && event.altKey) {
-          setAltPainting(true);
-        }
-        paintAt(cad);
-      }
     };
     const onDown = (event: PointerEvent): void => {
       if (event.button !== 0 || !event.altKey) {
         return;
       }
       setAltPainting(true);
-      paintAt(pickCad(event.clientX, event.clientY));
+      commitAt(pickCad(event.clientX, event.clientY));
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -10984,7 +11014,7 @@ function Inner(props: CanvasProps & {
     attractionSession,
     fillEditTargetVolumes = false,
     onVoxelBrushPaint,
-    voxelBrushSize = DEFAULT_VOXEL_BRUSH_SIZE,
+    voxelBrushDimensions = DEFAULT_VOXEL_BRUSH_DIMENSIONS,
   } = props;
   const kindCompatibility = reactHostPort.useMemo(
     () => resolvePuzzle3dKindCompatibility(kindCompatibilityProp, sceneFixture?.meta as Record<string, unknown> | undefined),
@@ -11143,8 +11173,8 @@ function Inner(props: CanvasProps & {
     >
       {registryLodSceneCore}
       {fixtureDropEnabled ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
-      <VoxelBrushBridge enabled={fillEditTargetVolumes} voxelSize={voxelBrushSize} />
-      <VoxelBrushPreview voxelSize={voxelBrushSize} />
+      <VoxelBrushBridge enabled={fillEditTargetVolumes} dimensions={voxelBrushDimensions} />
+      <VoxelBrushPreview dimensions={voxelBrushDimensions} />
     </LodBridge>
   );
   const onFillMeshesReadyRef = reactHostPort.useRef(onFillMeshesReady);
@@ -11223,8 +11253,8 @@ export interface PlayCanvasProps {
   readonly onSelect?: (snap: SelectionSnapshot) => void;
   readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
   readonly onTargetVolumeRelocate?: (payload: WorldVolumeRelocatePayload) => void;
-  readonly onVoxelBrushPaint?: (cad: Vec3, size: number) => void;
-  readonly voxelBrushSize?: number;
+  readonly onVoxelBrushPaint?: (cad: Vec3, scale: Vec3) => void;
+  readonly voxelBrushDimensions?: Vec3;
   readonly fillEditTargetVolumes?: boolean;
   readonly onIndirectConnect?: () => void;
   readonly onProximityConnect?: () => void;
@@ -11365,7 +11395,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       onReferenceRelocate={props.onReferenceRelocate}
       onTargetVolumeRelocate={props.onTargetVolumeRelocate}
       onVoxelBrushPaint={props.onVoxelBrushPaint}
-      voxelBrushSize={props.voxelBrushSize}
+      voxelBrushDimensions={props.voxelBrushDimensions}
       fillEditTargetVolumes={props.fillEditTargetVolumes}
       onConnect={handleConnect}
       onRelocate={handleRelocate}
@@ -13907,13 +13937,11 @@ if (import.meta.vitest) {
       spec.options?.find((row) => row.id === PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID)?.onPress?.();
       expect(toggled).toBe(true);
       expect(deleted).toBe(true);
-      expect(spec.control?.kind).toBe("stepper");
-      if (spec.control?.kind === "stepper") {
-        expect(spec.control.label).toBe("Voxel size");
-      }
+      expect(spec.control).toBeUndefined();
+      expect(spec.controls?.map((row) => row.label)).toEqual(["Width", "Depth", "Height"]);
     });
-    it("snapCadToVoxelCenter and addVoxelToFixture place axis-aligned cells", () => {
-      expect(snapCadToVoxelCenter([0.2, 0.2, 0.2], 1)).toEqual([0.5, 0.5, 0.5]);
+    it("snapCadToVoxelCenter and addVoxelToFixture place axis-aligned boxes", () => {
+      expect(snapCadToVoxelCenter([0.2, 0.2, 0.2], [1, 2, 3])).toEqual([0.5, 1, 1.5]);
       const base: FixtureV1 = {
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
@@ -13923,10 +13951,10 @@ if (import.meta.vitest) {
         references: [],
         targetVolumes: [],
       };
-      const next = addVoxelToFixture(base, [0.2, 0.2, 0.2], 1);
+      const next = addVoxelToFixture(base, [0.2, 0.2, 0.2], [1, 2, 3]);
       expect(next.targetVolumes).toHaveLength(1);
-      expect(next.targetVolumes[0]?.scale).toBe(1);
-      expect(addVoxelToFixture(next, [0.2, 0.2, 0.2], 1).targetVolumes).toHaveLength(1);
+      expect(next.targetVolumes[0]?.scale).toEqual([1, 2, 3]);
+      expect(addVoxelToFixture(next, [0.2, 0.2, 0.2], [1, 2, 3]).targetVolumes).toHaveLength(1);
     });
     it("buildPuzzle3dPlayEngagement shows fill build progress on the slider label and caps max", () => {
       const spec = buildPuzzle3dPlayEngagement({

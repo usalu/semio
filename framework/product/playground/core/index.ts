@@ -247,6 +247,7 @@ export interface WindowEngagement {
   readonly options?: readonly WindowEngagementOption[];
   readonly input?: WindowEngagementInput;
   readonly control?: WindowEngagementControl;
+  readonly controls?: readonly WindowEngagementControl[];
   readonly status?: readonly WindowEngagementStatus[];
   readonly possibleEngagements?: readonly WindowEngagementPossible[];
 }
@@ -284,7 +285,8 @@ export function windowEngagementDigest(engagement: WindowEngagement | undefined)
     .join("\u0002");
   const session = engagement.sessionActive ? "1" : "0";
   const control = windowEngagementControlDigest(engagement.control);
-  return [session, options, input, status, possibles, control].join("\u0003");
+  const controls = (engagement.controls ?? []).map((row) => windowEngagementControlDigest(row)).join("\u0004");
+  return [session, options, input, status, possibles, control, controls].join("\u0003");
 }
 
 /** @emoji ⚖️ Returns whether two neutral engagement snapshots are equivalent for shell sync. */

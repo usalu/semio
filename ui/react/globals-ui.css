@@ -84,18 +84,6 @@
   -webkit-app-region: window-drag;
 } */
 
-/* #region ❄️TreeSpacing
-/* Vertical rhythm is owned by TreeBranchContent (margin-top via layout effect).
- * Section wrappers only get a divider between adjacent top-level sections.
- */
-
-[data-slot="tree-section-wrapper"] + [data-slot="tree-section-wrapper"] {
-  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  margin-top: 10px;
-  padding-top: 10px;
-}
-/* #endregion ❄️*/
-
 /* #region 🎃TreeHoverPath
 /* Tree hover path highlight: when a row is hovered, ancestor branch containers
  * receive [data-tree-hover-path="branch"] and ancestor/active rows receive

@@ -483,14 +483,16 @@ export function buildCadPlayHierarchySections(
       items: objectItems.length ? objectItems : [{ id: `cad-play-hierarchy.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }],
     });
   }
-  const modelSpaceRoot: TreeDataItem = {
-    id: "cad-play-hierarchy.modelspace",
-    label: "ModelSpace",
-    defaultOpen: true,
-    items: modelBranches.length ? modelBranches : [{ id: "cad-play-hierarchy.modelspace.empty", label: "(empty)" }],
-  };
   return {
-    sections: [{ id: "cad-play-hierarchy.root", defaultOpen: true, items: [modelSpaceRoot] }],
+    sections: modelBranches.length
+      ? modelBranches.map((branch) => ({
+          id: branch.id,
+          label: branch.label,
+          description: branch.description,
+          defaultOpen: branch.defaultOpen,
+          items: branch.items ?? [],
+        }))
+      : [{ id: "cad-play-hierarchy.empty", label: "ModelSpace", defaultOpen: true, items: [{ id: "cad-play-hierarchy.empty.msg", label: "(empty)" }] }],
     highlightKeyToItemIds,
   };
 }
@@ -1287,8 +1289,8 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
 function modelsFromCadJson(json: unknown): Record<string, Model> {
   const bundle = json && typeof json === "object" ? (json as SpatialExchangeBundle) : null;
   const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
-  if (modelSpace) return ensureCadPlayQuadModels(recordFromModelSpace(modelSpace));
-  return ensureCadPlayQuadModels({
+  if (modelSpace) return ensurePlayQuadModelSlots(recordFromModelSpace(modelSpace));
+  return ensurePlayQuadModelSlots({
     [defaultModelDefinitionId()]: parseModelJson(bundle?.model ?? json) ?? new Model(),
   });
 }
@@ -1350,14 +1352,17 @@ function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, defi
   return withShape;
 }
 
-/** @emoji 🌌 Ensures play quad model slots exist without running heavy derive transforms. */
+/** @emoji 🌌 Ensures play quad model slots exist without running derive transforms. */
 export function ensurePlayQuadModelSlots(models: Readonly<Record<string, Model>>): Record<string, Model> {
   const withShape = ensurePlayShapeModel(models);
-  if (withShape[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]) return withShape;
-  return { ...withShape, [CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]: new Model() };
+  let next = { ...withShape };
+  for (const row of CAD_PLAY_PANE_SPECS) {
+    if (!next[row.modelDefinitionId]) next[row.modelDefinitionId] = new Model();
+  }
+  return next;
 }
 
-/** @emoji 🌌 Ensures all four CAD play quad models exist and stay derived from shape. */
+/** @emoji 🌌 Derives missing play quad models from linked sources (explicit transfer toolbar only). */
 export function ensureCadPlayQuadModels(models: Readonly<Record<string, Model>>): Record<string, Model> {
   let next = ensurePlayQuadModelSlots(models);
   next = ensureDerivedModelInSpace(next, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID);
@@ -1370,14 +1375,12 @@ function emptyPlayModels(): Record<string, Model> {
   return ensurePlayQuadModelSlots({});
 }
 
-function pickShapeForModelDefinition(models: Readonly<Record<string, Model>>, activeModelDefinitionId: string, liveModel: Model): Model {
-  if (isShapeModelDefinition(activeModelDefinitionId)) {
+/** @emoji 🧭 Resolves one pane's geometry without falling back to spatial.shape. */
+export function cadPlayPaneGeometry(models: Readonly<Record<string, Model>>, modelDefinitionId: string, liveModel: Model): Model {
+  if (isShapeModelDefinition(modelDefinitionId)) {
     return models[defaultModelDefinitionId()] ?? liveModel;
   }
-  const scoped = models[activeModelDefinitionId];
-  if (scoped && listModelObjectsForModelDefinition(scoped, activeModelDefinitionId).length > 0) return scoped;
-  if (scoped && modelHasCommittedSolidsForDisplay(scoped)) return scoped;
-  return models[defaultModelDefinitionId()] ?? liveModel;
+  return models[modelDefinitionId] ?? new Model();
 }
 
 //#region 🔖CadPlayChrome
@@ -1796,14 +1799,14 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
 
   const flushedModelsByDefinitionId = reactHostPort.useMemo(() => {
     const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
-    return ensureCadPlayQuadModels(flushed);
+    return ensurePlayQuadModelSlots(flushed);
   }, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId]);
 
   const playModelSpace = reactHostPort.useMemo(() => modelSpaceFromRecord(flushedModelsByDefinitionId), [flushedModelsByDefinitionId]);
 
   const visibleExportModel = reactHostPort.useMemo(() => flushedModelsByDefinitionId[activeModelDefinitionId] ?? liveModel, [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
 
-  const pickGeometry = reactHostPort.useMemo(() => pickShapeForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel), [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
+  const pickGeometry = reactHostPort.useMemo(() => cadPlayPaneGeometry(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel), [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
 
   const commitModelForDefinition = reactHostPort.useCallback((modelDefinitionId: string, model: Model) => {
     setModelsByDefinitionId((prev) => ensurePlayQuadModelSlots({ ...prev, [modelDefinitionId]: Model.fromJSON(model.toJSON()) }));
@@ -1825,11 +1828,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const focusModelDefinition = reactHostPort.useCallback(
     (modelDefinitionId: string) => {
       if (modelDefinitionId === activeModelDefinitionId) return;
-      setModelsByDefinitionId((prev) => {
-        const flushed = ensurePlayQuadModelSlots(flushModelsRecord(prev, activeModelDefinitionId, liveModel));
-        if (isShapeModelDefinition(modelDefinitionId)) return flushed;
-        return ensureDerivedModelInSpace(flushed, modelDefinitionId);
-      });
+      setModelsByDefinitionId((prev) => ensurePlayQuadModelSlots(flushModelsRecord(prev, activeModelDefinitionId, liveModel)));
       setActiveModelDefinitionId(modelDefinitionId);
       setModelDefinitionRevision((r) => r + 1);
     },
@@ -1997,7 +1996,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
         setFileStatus(`Transfer failed: ${String(error)}`);
         return;
       }
-      setModelsByDefinitionId(ensureCadPlayQuadModels(recordFromModelSpace(space)));
+      setModelsByDefinitionId(ensurePlayQuadModelSlots(recordFromModelSpace(space)));
       setActiveModelDefinitionId(spec.target.modelDefinition);
       setModelDefinitionRevision((r) => r + 1);
       setFileStatus(`Transferred ${spec.source.modelDefinition} → ${spec.target.modelDefinition}.`);
@@ -2189,7 +2188,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
         const nextActiveModelDefinitionId = typeof envelope.activeModelDefinitionId === "string" && modelSpace.get(envelope.activeModelDefinitionId) ? envelope.activeModelDefinitionId : activeModelDefinitionIdFromSpatialJson(snapshot);
         setShapeAssetId("");
         setLoadedRawName(file.name);
-        setModelsByDefinitionId(recordFromModelSpace(modelSpace));
+        setModelsByDefinitionId(ensurePlayQuadModelSlots(recordFromModelSpace(modelSpace)));
         setActiveModelDefinitionId(nextActiveModelDefinitionId);
         setModelDefinitionRevision((r) => r + 1);
         setFileStatus(`Loaded model space from ${file.name}.`);
@@ -2418,11 +2417,11 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
     [interactionId],
   );
   const paneModel = cadPlayPaneModel(flushedModelsByDefinitionId, pane);
+  const viewModel = paneModel;
   const pickGeometry = reactHostPort.useMemo(
-    () => pickShapeForModelDefinition(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
+    () => cadPlayPaneGeometry(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
     [flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision],
   );
-  const viewModel = reactHostPort.useMemo(() => (modelHasCommittedSolidsForDisplay(paneModel) ? paneModel : pickGeometry), [paneModel, pickGeometry]);
   const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(viewModel.toJSON()), nodes: [] }), [viewModel, modelDefinitionRevision]);
   const commitPaneModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(modelDefinitionId, model), [commitModelForDefinition, modelDefinitionId]);
   const onTransformGumballCommit = reactHostPort.useCallback((diff: ModelDiff) => handleTransformGumballCommit(modelDefinitionId, diff), [handleTransformGumballCommit, modelDefinitionId]);
@@ -3029,7 +3028,7 @@ if (import.meta.vitest) {
       await rt.send({ kind: "set.height", value: 4, modifiers: {} });
       await rt.send({ kind: "confirm", modifiers: {} });
       const build = buildCadPlayHierarchySections({ [defaultModelDefinitionId()]: model }, defaultModelDefinitionId(), [], () => {});
-      const modelBranch = build.sections[0]?.items?.[0]?.items?.[0];
+      const modelBranch = build.sections[0]?.items?.[0];
       expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
     });
 
@@ -3061,7 +3060,7 @@ if (import.meta.vitest) {
         primitives: { solid: String(solid) },
       };
       const build = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
-      const primitiveNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0]?.items?.[0];
+      const primitiveNode = build.sections[0]?.items?.[0]?.items?.[0];
       expect(primitiveNode?.label).toContain("solid:");
       const shellNode = primitiveNode?.items?.[0];
       expect(shellNode?.label).toContain("shell");
@@ -3087,7 +3086,7 @@ if (import.meta.vitest) {
       };
       const mdId = defaultModelDefinitionId();
       const build = buildCadPlayHierarchySections({ [mdId]: model }, mdId, [], () => {});
-      const objectNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
+      const objectNode = build.sections[0]?.items?.[0];
       expect(objectNode?.label).toContain("object-imported");
       expect(objectNode?.description).toBe("spatial.shape.kernel.solid");
     });
@@ -3113,6 +3112,21 @@ if (import.meta.vitest) {
       expect(cadPlayPaneModel(models, "shape").objects["box1"]).toBeDefined();
       expect(cadPlayPaneModel(models, "building").objects["site1"]).toBeDefined();
       expect(cadPlayPaneModel(models, "shape")).not.toBe(cadPlayPaneModel(models, "building"));
+    });
+
+    it("cadPlayPaneGeometry never borrows spatial.shape for building pane", () => {
+      const models = modelsFromCadJson({
+        modelSpace: geometryConcreteForestLeft,
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      const building = cadPlayPaneGeometry(models, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID, new Model());
+      const shape = cadPlayPaneGeometry(models, defaultModelDefinitionId(), new Model());
+      expect(listModelObjectsForModelDefinition(building, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID)).toHaveLength(12);
+      expect(listModelObjectsForModelDefinition(shape, defaultModelDefinitionId())).toHaveLength(1);
+      const shapeOnly = ensurePlayQuadModelSlots({ [defaultModelDefinitionId()]: shape });
+      const emptyBuilding = cadPlayPaneGeometry(shapeOnly, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID, new Model());
+      expect(listModelObjectsForModelDefinition(emptyBuilding, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID)).toHaveLength(0);
+      expect(Object.keys(emptyBuilding.solids).length).toBe(0);
     });
   });
 
@@ -3147,9 +3161,10 @@ if (import.meta.vitest) {
       expect(typologies.has("building.building.column")).toBe(true);
       expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
       expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(listModelObjectsForModelDefinition(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length).toBe(0);
       expect(
         listModelObjectsForModelDefinition(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!, CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID).length,
-      ).toBeGreaterThan(0);
+      ).toBe(0);
     });
 
     it("ensureDerivedModelInSpace keeps spatial.shape for shape definition", () => {
@@ -3157,11 +3172,13 @@ if (import.meta.vitest) {
       expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
     });
 
-    it("ensurePlayQuadModelSlots seeds shape and building without derive transforms", () => {
+    it("ensurePlayQuadModelSlots seeds all play panes without derive transforms", () => {
       const models = ensurePlayQuadModelSlots({});
       expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
       expect(models[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
-      expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeUndefined();
+      expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+      expect(Object.keys(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!.objects).length).toBe(0);
     });
 
     it("ensureCadPlayQuadModels seeds all four play panes", () => {
@@ -3172,24 +3189,33 @@ if (import.meta.vitest) {
       expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
     });
 
+    it("ensureCadPlayQuadModels derives missing models only when called explicitly", () => {
+      const loaded = modelsFromCadJson({
+        modelSpace: geometryConcreteForestLeft,
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
+      expect(listModelObjectsForModelDefinition(loaded[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length).toBe(0);
+      const derived = ensureCadPlayQuadModels(loaded);
+      expect(
+        listModelObjectsForModelDefinition(derived[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length,
+      ).toBeGreaterThan(0);
+    });
+
     it("buildCadPlayHierarchySections lists concrete forest BIM objects across play definitions", () => {
-      const models = ensureCadPlayQuadModels(
-        modelsFromCadJson({
-          modelSpace: geometryConcreteForestLeft,
-          activeModelDefinitionId: defaultModelDefinitionId(),
-        }),
-      );
+      const models = modelsFromCadJson({
+        modelSpace: geometryConcreteForestLeft,
+        activeModelDefinitionId: defaultModelDefinitionId(),
+      });
       const build = buildCadPlayHierarchySections(models, defaultModelDefinitionId(), [], () => {});
-      const modelSpaceRoot = build.sections[0]?.items[0];
-      const buildingBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
+      const buildingBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
       expect(buildingBranch?.items?.length).toBe(12);
-      const energyBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
-      expect((energyBranch?.items?.length ?? 0) > 0).toBe(true);
-      const structureBranch = modelSpaceRoot?.items?.find(
+      const energyBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
+      expect(energyBranch?.items?.[0]?.label).toBe("(no objects)");
+      const structureBranch = build.sections.find(
         (row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
       );
-      expect((structureBranch?.items?.length ?? 0) > 0).toBe(true);
-      expect(modelSpaceRoot?.items?.some((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`)).toBe(true);
+      expect(structureBranch?.items?.[0]?.label).toBe("(no objects)");
+      expect(build.sections.some((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`)).toBe(true);
     });
   });
 }

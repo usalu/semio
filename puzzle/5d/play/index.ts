@@ -146,35 +146,33 @@ export interface Puzzle5dPlayHierarchySelectHandlers {
   readonly onSelect3dAttraction: (attractionId: string) => void;
 }
 
-/** @emoji 🌳 Puzzle 5d hierarchy: manifest → 2d + 3d composition subtrees. */
+/** @emoji 🌳 Puzzle 5d hierarchy: flat 2d and 3d composition sections. */
+function puzzle5dPlayHierarchyTreeSections(domain: "2d" | "3d", labelPrefix: string, tree: UiTreeNode): UiTreeSectionNode[] {
+  if (tree.type !== "tree") {
+    return [];
+  }
+  return tree.sections.map((section) => ({
+    ...section,
+    id: section.id.replace(/^puzzle-(?:2d|3d)-play-hierarchy\./, `puzzle-5d-play-hierarchy.${domain}.`),
+    label: `${labelPrefix} · ${section.label}`,
+  }));
+}
+
 export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapshot, handlers: Puzzle5dPlayHierarchySelectHandlers): UiTreeNode {
-  const branches: UiTreeItemNode[] = [];
+  const sections: UiTreeSectionNode[] = [];
   if (snapshot.fixture2d) {
-    const root2d = buildPuzzle2dPlayHierarchySections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d).sections[0]?.items?.[0];
-    branches.push({
-      id: "puzzle-5d-play-hierarchy.2d",
-      label: "2d",
-      defaultOpen: true,
-      items: root2d?.items ?? [{ id: "puzzle-5d-play-hierarchy.2d.empty", label: "(empty)" }],
-    });
+    const tree2d = buildPuzzle2dPlayHierarchySections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d);
+    sections.push(...puzzle5dPlayHierarchyTreeSections("2d", "2d", tree2d));
   }
   if (snapshot.fixture3d) {
     const selection3d = snapshot.selected3d ? { ...PUZZLE_3D_PLAY_EMPTY_SELECTION, objectIds: [snapshot.selected3d] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
-    const root3d = buildPuzzle3dPlayHierarchyTree(snapshot.fixture3d, selection3d).sections[0]?.items?.[0];
-    branches.push({
-      id: "puzzle-5d-play-hierarchy.3d",
-      label: "3d",
-      defaultOpen: true,
-      items: root3d?.items ?? [{ id: "puzzle-5d-play-hierarchy.3d.empty", label: "(empty)" }],
-    });
+    const tree3d = buildPuzzle3dPlayHierarchyTree(snapshot.fixture3d, selection3d);
+    sections.push(...puzzle5dPlayHierarchyTreeSections("3d", "3d", tree3d));
   }
-  const root5d: UiTreeItemNode = {
-    id: "puzzle-5d-play-hierarchy.5d",
-    label: snapshot.manifestLabel ?? "5d",
-    defaultOpen: true,
-    items: branches.length ? branches : [{ id: "puzzle-5d-play-hierarchy.5d.empty", label: "(no fixtures)" }],
-  };
-  return playgroundTreePanelRootItems("puzzle-5d-play-hierarchy.root", [root5d]);
+  if (!sections.length) {
+    return playgroundTreePanelRootItems("puzzle-5d-play-hierarchy.root", [{ id: "puzzle-5d-play-hierarchy.empty", label: "(no fixtures)" }]);
+  }
+  return { type: "tree", sections };
 }
 //#endregion 🔖Puzzle5dPlayHierarchy
 
@@ -1131,11 +1129,9 @@ if (import.meta.vitest) {
         onSelect3dVortex: () => {},
         onSelect3dAttraction: () => {},
       });
-      const root5d = tree.sections[0]?.items?.[0];
-      expect(root5d?.label).toBeTruthy();
-      const labels = root5d?.items?.map((row) => row.label);
-      expect(labels).toContain("2d");
-      expect(labels).toContain("3d");
+      const sectionLabels = tree.sections.map((section) => section.label);
+      expect(sectionLabels.some((label) => label?.startsWith("2d ·"))).toBe(true);
+      expect(sectionLabels.some((label) => label?.startsWith("3d ·"))).toBe(true);
     });
   });
 

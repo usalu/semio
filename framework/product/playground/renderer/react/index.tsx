@@ -819,8 +819,8 @@ export function engagementSpecControlMirror(
     step: control.step,
     unit: control.unit,
     disabled: control.disabled,
-    onChange: control.onChange ? { controllerId, command: "engagementControlChange", args: { ...commandArgs } } : undefined,
-    onCommit: control.onCommit ? { controllerId, command: "engagementControlCommit", args: { ...commandArgs } } : undefined,
+    onChange: control.onChange ? { controllerId, command: "engagementControlChange", args: { ...commandArgs, controlId: control.id } } : undefined,
+    onCommit: control.onCommit ? { controllerId, command: "engagementControlCommit", args: { ...commandArgs, controlId: control.id } } : undefined,
   };
 }
 
@@ -857,10 +857,11 @@ export function windowEngagementToGolden(engagement: WindowEngagement | undefine
     onSelect: row.command ? () => bus.dispatch(row.command!.controllerId, row.command!.command, row.command!.args) : undefined,
   }));
   const control = windowEngagementControlToGolden(engagement.control, bus);
+  const controls = engagement.controls?.map((row) => windowEngagementControlToGolden(row, bus)).filter((row): row is EngagementControl => row !== undefined);
   const hasContent =
-    (options?.length ?? 0) > 0 || Boolean(input) || Boolean(control) || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
+    (options?.length ?? 0) > 0 || Boolean(input) || Boolean(control) || (controls?.length ?? 0) > 0 || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
   if (!hasContent) return undefined;
-  return { sessionActive: engagement.sessionActive, options, input, control, status, possibleEngagements };
+  return { sessionActive: engagement.sessionActive, options, input, control, controls, status, possibleEngagements };
 }
 
 export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], bus: CommandBus): UIWindowKindDefinition[] {
@@ -1650,7 +1651,8 @@ export function puzzle3dPlayEngagementMirror(engagement: EngagementSpec | null):
     command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { possibleId: row.id } },
   }));
   const control = engagementSpecControlMirror(engagement.control, PUZZLE_3D_PLAY_CONTROLLER_ID, {});
-  return { sessionActive: engagement.sessionActive, options, input, control, status, possibleEngagements };
+  const controls = engagement.controls?.map((row) => engagementSpecControlMirror(row, PUZZLE_3D_PLAY_CONTROLLER_ID, {})).filter((row): row is WindowEngagementControl => row !== undefined);
+  return { sessionActive: engagement.sessionActive, options, input, control, controls, status, possibleEngagements };
 }
 
 function Puzzle3dPlayEngagementPublisher(props: {
@@ -1775,9 +1777,9 @@ function Puzzle3dPlayEngagementPublisher(props: {
   const onToggleFillEditTargetVolumes = reactHostPort.useCallback(() => {
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillEditTargetVolumes", {});
   }, [bus]);
-  const onVoxelBrushSize = reactHostPort.useCallback(
-    (size: number) => {
-      bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setVoxelBrushSize", { size });
+  const onVoxelBrushDimension = reactHostPort.useCallback(
+    (axis: 0 | 1 | 2, value: number) => {
+      bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setVoxelBrushDimension", { axis, value });
     },
     [bus],
   );
@@ -1831,7 +1833,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         fillCount,
         fillBuildProgress,
         fillEditTargetVolumes: snap.fillEditTargetVolumes,
-        voxelBrushSize: snap.voxelBrushSize,
+        voxelBrushDimensions: snap.voxelBrushDimensions,
         selectedTargetVolumeCount: snap.selection.targetVolumeIds.length,
         selectionCount,
         onCmdLineChange: setCmdLine,
@@ -1844,7 +1846,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         onFillCount,
         onToggleFillEditTargetVolumes,
         onDeleteSelectedTargetVolume,
-        onVoxelBrushSize,
+        onVoxelBrushDimension,
         onCycleBrushCandidate: () => brushSource.cycleCandidate(),
         onPickBrushCandidate: (index) => {
           const candidate = brushSource.candidates[index];
@@ -1858,7 +1860,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushTargetActive: brushSource.targetActive,
         brushPlacementProbePending: brushSource.placementProbePending,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushSize, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length, snap.voxelBrushSize],
+    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushDimension, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length, snap.voxelBrushDimensions],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -1903,15 +1905,25 @@ function Puzzle3dPlayEngagementPublisher(props: {
             break;
           }
           case "engagementControlChange": {
-            const value = (args as { value?: number })?.value;
-            const control = engagementSpecRef.current?.control;
+            const value = (args as { value?: number; controlId?: string })?.value;
+            const controlId = (args as { controlId?: string })?.controlId;
+            const spec = engagementSpecRef.current;
+            const control =
+              controlId && spec?.controls?.length
+                ? spec.controls.find((row) => row.id === controlId) ?? spec.control
+                : spec?.control;
             if (value === undefined || !control || control.kind === "ring") break;
             control.onChange?.(value);
             break;
           }
           case "engagementControlCommit": {
-            const value = (args as { value?: number })?.value;
-            const control = engagementSpecRef.current?.control;
+            const value = (args as { value?: number; controlId?: string })?.value;
+            const controlId = (args as { controlId?: string })?.controlId;
+            const spec = engagementSpecRef.current;
+            const control =
+              controlId && spec?.controls?.length
+                ? spec.controls.find((row) => row.id === controlId) ?? spec.control
+                : spec?.control;
             if (value === undefined || !control || control.kind === "ring") break;
             control.onCommit?.(value);
             break;
@@ -2030,8 +2042,8 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
     [ctrl],
   );
   const onVoxelBrushPaintPersist = reactHostPort.useCallback(
-    (cad: import("../react/index.tsx").Vec3, size: number) => {
-      ctrl?.run("paintVoxel", { cad, size });
+    (cad: import("../react/index.tsx").Vec3, scale: import("../react/index.tsx").Vec3) => {
+      ctrl?.run("paintVoxel", { cad, scale });
     },
     [ctrl],
   );
@@ -2188,7 +2200,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
           onTargetVolumeRelocate={onTargetVolumeRelocatePersist}
           onVoxelBrushPaint={onVoxelBrushPaintPersist}
           fillEditTargetVolumes={snap.fillEditTargetVolumes}
-          voxelBrushSize={snap.voxelBrushSize}
+          voxelBrushDimensions={snap.voxelBrushDimensions}
           onToggleSelectionHidden={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "hidden", value })}
           onToggleSelectionLocked={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "locked", value })}
           onDeleteSelection={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "deleteSelection")}

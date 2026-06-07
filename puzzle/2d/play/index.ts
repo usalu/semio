@@ -16,7 +16,6 @@ import {
 	createNamedLayout,
 	createWindowLayout,
 	type WindowTemplate,
-	playgroundTreePanelRootItems,
 	platformFromViewContext,
 	type AppTools,
 	type ToolItem,
@@ -468,22 +467,13 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
     }
   }
   visiting.delete(nodeId);
-  const nodeItems: UiTreeItemNode[] = [];
-  if (node.handles.length > 0) {
-    const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
-      id: `puzzle-2d-play-hierarchy.handle.${handle.id}`,
-      label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
-      ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
-      onClick: () => onSelect(handle.id),
-      ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, handle.id),
-    }));
-    nodeItems.push({
-      id: `puzzle-2d-play-hierarchy.node.${nodeId}.handles`,
-      label: "Handles",
-      defaultOpen: true,
-      items: handleItems,
-    });
-  }
+  const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
+    id: `puzzle-2d-play-hierarchy.handle.${handle.id}`,
+    label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
+    ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
+    onClick: () => onSelect(handle.id),
+    ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, handle.id),
+  }));
   return {
     id: `puzzle-2d-play-hierarchy.node.${nodeId}`,
     label: puzzle2dFixtureNodeDisplayLabel(node, kindCatalogs),
@@ -492,7 +482,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
     defaultOpen: true,
     onClick: () => onSelect(nodeId),
     ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, nodeId),
-    items: [...nodeItems, ...childItems],
+    items: [...handleItems, ...childItems],
   };
 }
 
@@ -575,7 +565,7 @@ export function puzzle2dPlayHierarchyTreeHighlightedIds(
 	return [];
 }
 
-/** @emoji 🌳 Nested workbench tree: Puzzle 2D → nodes (graph) → handles; flat edges group. */
+/** @emoji 🌳 Workbench hierarchy: Nodes and Edges sections. */
 export function buildPuzzle2dPlayHierarchySections(
 	fixture: Puzzle2dFixtureV1,
 	selectionIds: readonly string[],
@@ -596,12 +586,6 @@ export function buildPuzzle2dPlayHierarchySections(
 			nodeItems.push(item);
 		}
 	}
-	const nodesGroup: UiTreeItemNode = {
-		id: "puzzle-2d-play-hierarchy.nodes",
-		label: "Nodes",
-		defaultOpen: true,
-		items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-hierarchy.nodes.empty", label: "(none)" }],
-	};
 	const edgeItems: UiTreeItemNode[] = fixture.edges.map((edge) => ({
 		id: `puzzle-2d-play-hierarchy.edge.${edge.id}`,
 		label: puzzle2dFixtureEdgeDisplayLabel(edge, fixture, kindCatalogs),
@@ -609,19 +593,23 @@ export function buildPuzzle2dPlayHierarchySections(
 		onClick: () => onSelect(edge.id),
 		...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, edge.id),
 	}));
-	const edgesGroup: UiTreeItemNode = {
-		id: "puzzle-2d-play-hierarchy.edges",
-		label: "Edges",
-		defaultOpen: true,
-		items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-hierarchy.edges.empty", label: "(none)" }],
-	};
-	const puzzle2dRoot: UiTreeItemNode = {
-		id: "puzzle-2d-play-hierarchy.puzzle2d",
-		label: "Puzzle 2D",
-		defaultOpen: true,
-		items: [nodesGroup, edgesGroup],
-	};
-	return playgroundTreePanelRootItems("puzzle-2d-play-hierarchy.root", [puzzle2dRoot]) as UiTreeNode;
+	return {
+		type: "tree",
+		sections: [
+			{
+				id: "puzzle-2d-play-hierarchy.nodes",
+				label: "Nodes",
+				defaultOpen: true,
+				items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-hierarchy.nodes.empty", label: "(none)" }],
+			},
+			{
+				id: "puzzle-2d-play-hierarchy.edges",
+				label: "Edges",
+				defaultOpen: true,
+				items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-hierarchy.edges.empty", label: "(none)" }],
+			},
+		],
+	} as UiTreeNode;
 }
 //#endregion 🔖Puzzle2dPlayHierarchy
 
@@ -1937,8 +1925,8 @@ if (import.meta.vitest) {
 			});
 			expect(fixture).not.toBeNull();
 			const tree = buildPuzzle2dPlayHierarchySections(fixture!, [], () => {});
-			const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
-			const rootItem = nodesGroup?.items?.find((row) => row.id === "puzzle-2d-play-hierarchy.node.root");
+			const nodesSection = tree.sections.find((section) => section.label === "Nodes");
+			const rootItem = nodesSection?.items?.find((row) => row.id === "puzzle-2d-play-hierarchy.node.root");
 			expect(rootItem?.items?.some((row) => row.label === "Child")).toBe(true);
 			expect(rootItem?.items?.some((row) => row.label === "Handles")).toBe(false);
 		});
@@ -1972,13 +1960,11 @@ if (import.meta.vitest) {
 			});
 			expect(fixture).not.toBeNull();
 			const tree = buildPuzzle2dPlayHierarchySections(fixture!, [], () => {});
-			const puzzle2dRoot = tree.sections[0]?.items?.[0];
-			expect(puzzle2dRoot?.label).toBe("Puzzle 2D");
-			const nodesGroup = puzzle2dRoot?.items?.find((row) => row.label === "Nodes");
-			expect(nodesGroup?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.node.root");
-			expect(nodesGroup?.items?.[0]?.label).toBe("Root");
-			expect(nodesGroup?.items?.[0]?.items?.[0]?.label).toBe("Handles");
-			expect(nodesGroup?.items?.[0]?.items?.[1]?.label).toBe("Child");
+			const nodesSection = tree.sections.find((section) => section.label === "Nodes");
+			expect(nodesSection?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.node.root");
+			expect(nodesSection?.items?.[0]?.label).toBe("Root");
+			expect(nodesSection?.items?.[0]?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.handle.h-root");
+			expect(nodesSection?.items?.[0]?.items?.[1]?.label).toBe("Child");
 		});
 
 		it("buildPuzzle2dPlayRuntime wires main mode and empty side tab slots", () => {
@@ -2343,9 +2329,9 @@ if (import.meta.vitest) {
 
 	it("nakagin default fixture yields a populated hierarchy nodes group", () => {
 		const tree = buildPuzzle2dPlayHierarchySections(PUZZLE_2D_PLAY_DEFAULT_FIXTURE, [], () => {});
-		const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
-		expect(nodesGroup?.items?.length).toBeGreaterThan(0);
-		expect(nodesGroup?.items?.[0]?.label).not.toBe("(none)");
+		const nodesSection = tree.sections.find((section) => section.label === "Nodes");
+		expect(nodesSection?.items?.length).toBeGreaterThan(0);
+		expect(nodesSection?.items?.[0]?.label).not.toBe("(none)");
 	});
 
 	describe("puzzle2dPlayKindCatalogSelectItems", () => {

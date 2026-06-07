@@ -12978,6 +12978,8 @@ export interface EngagementSpec {
   input?: EngagementInput;
   /** @emoji 🎛 Optional slider, stepper, or ring control for the active step. */
   control?: EngagementControl;
+  /** @emoji 🎛 Optional additional controls rendered below the primary control. */
+  controls?: readonly EngagementControl[];
   status?: EngagementStatus[];
   possibleEngagements?: EngagementPossible[];
 }
@@ -13098,7 +13100,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
 }
 
 /** @emoji 💬 Top-aligned engagement: command input with optional right chevron for possibles; status and option buttons below. */
-const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, input, control, status, possibleEngagements, className = "", active = false }) => {
+const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, input, control, controls, status, possibleEngagements, className = "", active = false }) => {
   const commandPlaceholderLabel = useLabel(UI_ENGAGEMENT.command);
   const commandActivePlaceholderLabel = useLabel(UI_ENGAGEMENT.commandActive);
   const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.commands);
@@ -13127,7 +13129,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
 
   const hasOptions = !!options?.length;
   const hasInput = !!input;
-  const hasControl = !!control;
+  const hasControl = !!control || !!(controls?.length);
   const hasStatus = !!status?.length;
   const hasPossibles = !!possibleEngagements?.length;
   const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
@@ -13337,7 +13339,10 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
           ) : null}
         </Popover>
       ) : null}
-      {hasControl ? <EngagementControlView control={control!} /> : null}
+      {control ? <EngagementControlView control={control} /> : null}
+      {controls?.map((row) => (
+        <EngagementControlView key={row.id ?? row.label ?? row.kind} control={row} />
+      ))}
       {secondaryStatus?.length ? (
         <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
           {secondaryStatus.map((item) => (
