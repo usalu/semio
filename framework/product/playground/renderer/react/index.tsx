@@ -6273,6 +6273,7 @@ import {
   buildProceduralPlayExtensionsTree,
   buildProceduralPlayKindsTree,
   registerProceduralPlayDeclarativeBodies,
+  type ProceduralPlayHostBridge,
 } from "@procedural/play";
 import { DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, flowWidgetPaletteTreeDragController } from "@flow/react";
 import { ProceduralFlowEditor, ProceduralPreview, proceduralExtensionHost } from "@procedural/react";
@@ -6311,11 +6312,92 @@ function useProceduralPlayInteractionRevision(): number {
   return useProceduralPlaySnapshotRevision((ctrl) => ctrl.getInteractionRevision());
 }
 
-function useProceduralPlayController(): ProceduralPlayController | undefined {
-  const { runtime } = useApp();
-  const ctrl = runtime.getActiveApp()?.controller as ProceduralPlayController | undefined;
+function useProceduralPlayController(runtimeOverride?: Platform): ProceduralPlayController | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => (runtime ? runtime.subscribeChrome(listener) : () => {}),
+    () => runtime?.chromeGeneration ?? 0,
+    () => 0,
+  );
+  const ctrl = runtime?.getActiveApp()?.controller as ProceduralPlayController | undefined;
   proceduralPlayControllerRef.current = ctrl ?? null;
   return ctrl;
+}
+
+async function downloadProceduralFixtureJson(name: string, text: string): Promise<void> {
+  const pickerWindow = window as Window & { showSaveFilePicker?: (options?: { suggestedName?: string; types?: { description: string; accept: Record<string, string[]> }[] }) => Promise<FileSystemFileHandle> };
+  if (pickerWindow.showSaveFilePicker) {
+    const handle = await pickerWindow.showSaveFilePicker({
+      suggestedName: name,
+      types: [{ description: "Flow fixture JSON", accept: { "application/json": [".json"] } }],
+    });
+    const writable = await handle.createWritable();
+    await writable.write(`${text}\n`);
+    await writable.close();
+    return;
+  }
+  const href = URL.createObjectURL(new Blob([`${text}\n`], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(href);
+}
+
+function ProceduralPlayToolbarHostBridge({ runtime }: { readonly runtime: Platform }): ReactElement {
+  const ctrl = useProceduralPlayController(runtime);
+  const interactionRevision = useProceduralPlayInteractionRevision();
+  const loadInputRef = reactHostPort.useRef<HTMLInputElement>(null);
+  const downloadFixture = reactHostPort.useCallback(async () => {
+    const json = ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON;
+    try {
+      await downloadProceduralFixtureJson("procedural.fixture.json", json);
+      console.log("[DEBUG] procedural play downloaded fixture");
+    } catch (error) {
+      console.log(`[DEBUG] procedural play download failed: ${String(error)}`);
+    }
+  }, [ctrl]);
+  const handleLoadFile = reactHostPort.useCallback(
+    (event: reactHostPort.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !ctrl) return;
+      void file.text().then((text) => {
+        if (!text.includes("flow.fixture/v1")) {
+          console.log("[DEBUG] procedural play load rejected: not a flow fixture");
+          return;
+        }
+        ctrl.run("setFixtureJson", { json: text });
+        console.log("[DEBUG] procedural play loaded fixture from file");
+      });
+    },
+    [ctrl],
+  );
+  reactHostPort.useEffect(() => {
+    if (!ctrl) return;
+    const bridge: ProceduralPlayHostBridge = {
+      getToolbarState: () => ({
+        selectionMethod: ctrl.getSelectionMethod(),
+        selectionMode: ctrl.getSelectionMode(),
+        showMode: ctrl.getShowMode(),
+        selectionCount: ctrl.getSelectedNodeIds().length,
+        hasStoredFixture: ctrl.hasStoredFixture(),
+      }),
+      runHostCommand: (command) => {
+        if (command === "saveDownload") {
+          void downloadFixture();
+          return;
+        }
+        if (command === "loadRequest") {
+          loadInputRef.current?.click();
+        }
+      },
+    };
+    ctrl.setHostBridge(bridge);
+    return () => ctrl.setHostBridge(null);
+  }, [ctrl, downloadFixture, interactionRevision]);
+  return <input ref={loadInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleLoadFile} />;
 }
 
 function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
@@ -6418,21 +6500,23 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPuzzle
     [ctrl],
   );
   return (
-    <ProceduralPreview
-      handles={ctrl?.getGeometryHandles() ?? []}
-      selectedNodeIds={ctrl?.getSelectedNodeIds()}
-      preselectNodeIds={ctrl?.getPreselectNodeIds()}
-      preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
-      hoveredNodeId={ctrl?.getHoveredNodeId()}
-      previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
-      showMode={ctrl?.getShowMode() ?? "everything"}
-      selectionMode={ctrl?.getSelectionMode()}
-      selectionMethod={ctrl?.getSelectionMethod()}
-      onHover={onHover}
-      onSelectionChange={onSelectionChange}
-      kernel={proceduralExtensionHost.getBrepKernel()}
-      className="h-full w-full"
-    />
+    <div className="absolute inset-0 min-h-0 min-w-0">
+      <ProceduralPreview
+        handles={ctrl?.getGeometryHandles() ?? []}
+        selectedNodeIds={ctrl?.getSelectedNodeIds()}
+        preselectNodeIds={ctrl?.getPreselectNodeIds()}
+        preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
+        hoveredNodeId={ctrl?.getHoveredNodeId()}
+        previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
+        showMode={ctrl?.getShowMode() ?? "everything"}
+        selectionMode={ctrl?.getSelectionMode()}
+        selectionMethod={ctrl?.getSelectionMethod()}
+        onHover={onHover}
+        onSelectionChange={onSelectionChange}
+        kernel={proceduralExtensionHost.getBrepKernel()}
+        className="h-full w-full"
+      />
+    </div>
   );
 }
 
@@ -6483,7 +6567,12 @@ function ProceduralPlayInner({ runtime }: { readonly runtime: Platform }): React
     }),
     [proceduralPlayKindsPanel, proceduralPlayExtensionsPanel, catalogueRevision, extensionRevision],
   );
-  return <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
+  return (
+    <>
+      <ProceduralPlayToolbarHostBridge runtime={runtime} />
+      <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
+    </>
+  );
 }
 
 export function registerProceduralPlaySurfaceHosts(): void {

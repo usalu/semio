@@ -1208,16 +1208,14 @@ export class Puzzle2dPlayShellController extends Controller {
 	}
 
 	private windowMeasuresForPane(paneId: Puzzle2dPlayPaneId): readonly WindowMeasure[] {
-		return [
-			{ kind: "group", id: `${paneId}-lod`, label: "LOD", children: [this.lodMeasureForPane(paneId)] },
-			this.brushMeasuresGroup(),
-		];
+		return [this.lodMeasureForPane(paneId), this.brushMeasuresGroup()];
 	}
 
 	private lodMeasureForPane(paneId: Puzzle2dPlayPaneId): WindowMeasure {
 		return {
 			kind: "select",
 			id: `${paneId}-lod`,
+			label: "LOD",
 			value: this.lodModeByPane[paneId],
 			items: [
 				{ id: "automatic", value: PUZZLE_2D_LOD_MODE_AUTOMATIC, label: puzzle2dLodAutomaticSelectLabel(this.effectiveLodByPane[paneId]) },

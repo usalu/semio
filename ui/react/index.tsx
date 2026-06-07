@@ -990,20 +990,33 @@ export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
 /** @emoji 🎨 Interactive hover: normal-border fill + emphasized content. */
 export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
 
-/** @emoji 🎨 Active/on state mirrors hover: normal-border fill + emphasized content. */
+/** @emoji 🎨 Active/on: primary fill + emphasized content (never the transient hover fill). */
 export const interactiveOnClass = cn(
-  "data-[state=on]:bg-hover-interactive-fill",
+  "data-[state=on]:bg-active-base",
   "data-[state=on]:text-emphasized",
-  "data-[state=on]:hover:bg-hover-interactive-fill",
+  "data-[state=on]:hover:bg-active-base/90",
   "data-[state=on]:hover:text-emphasized",
 );
 
-/** @emoji 🎨 Active tab state mirrors hover fill + emphasized content. */
-export const interactiveTabActiveClass = cn("data-[state=active]:bg-hover-interactive-fill", "data-[state=active]:text-emphasized");
+/** @emoji 🎨 Shared active fill for pressed tabs, toggles, and nav selection. */
+export const interactiveActiveFillClass =
+  "bg-active-base text-emphasized hover:bg-active-base/90 hover:text-emphasized";
+
+/** @emoji 🎨 Active tab: primary fill + emphasized content. */
+export const interactiveTabActiveClass = cn(
+  "data-[state=active]:bg-active-base",
+  "data-[state=active]:text-emphasized",
+  "data-[state=active]:hover:bg-active-base/90",
+  "data-[state=active]:hover:text-emphasized",
+);
 
 /** @emoji 📋 Hover row styling for menus, selects, comboboxes, and context menus. */
-export const menuListItemClassName =
-  cn(interactiveHoverFillClass, "hover:text-emphasized focus:bg-hover-interactive-fill focus:text-emphasized data-[selected=true]:bg-hover-interactive-fill data-[selected=true]:text-emphasized");
+export const menuListItemClassName = cn(
+  "text-element",
+  interactiveHoverClass,
+  "focus:bg-hover-interactive-fill focus:text-emphasized",
+  "data-[selected=true]:bg-active-base data-[selected=true]:text-emphasized",
+);
 
 const contextMenuContentClassName = cn(
   glassMenuClass,
@@ -3417,25 +3430,34 @@ export const modeDockInactiveTabClass =
 export const modeDockInactiveTabBeforeGapClass =
   `relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderNormalClass} bg-window`;
 
-/** @emoji 📏 Filled primary for the globally active dock tab (matches single-tab selection). */
-export const modeDockActiveTabFillClass =
-  "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground";
+/** @emoji 🪟 Default mode-dock tab label — element gray; emphasize on hover/active only. */
+export const modeDockTabClassName =
+  "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-element select-none transition-colors hover:bg-hover-interactive-fill hover:text-emphasized";
 
-/** @emoji 📑 Active side-panel tab — hover fill + emphasized label (matches navbar toggle on-state). */
-export const panelTabActiveClass = "bg-hover-interactive-fill text-emphasized hover:bg-hover-interactive-fill hover:text-emphasized";
+/** @emoji 📏 Globally active dock tab — primary fill + emphasized label. */
+export const modeDockActiveTabFillClass = interactiveActiveFillClass;
+
+/** @emoji 📑 Active side-panel tab — primary fill + emphasized icon. */
+export const panelTabActiveClass = interactiveActiveFillClass;
 
 /** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body. */
 export const modeDockActiveTabClass =
   `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 ${activeLineClass} ${modeDockActiveTabFillClass}`;
 
 /** @emoji 📏 Maximize cap on the right of the gap (normal chrome line). */
-export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${borderNormalClass} bg-window`;
+export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${borderNormalClass} bg-window text-element`;
 
 /** @emoji 📏 Maximize cap when the stack owns the globally active window. */
-export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
+export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window text-element`;
 
 /** @emoji 📏 Maximize cap in multi-tab grid when the stack is globally active. */
-export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window`;
+export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window text-element`;
+
+/** @emoji 🪟 Window chrome icon button — element gray by default, emphasize on hover. */
+export const windowChromeControlButtonClass = cn(
+  "flex size-medium items-center justify-center border-0 bg-transparent transition-colors",
+  interactiveHoverClass,
+);
 
 /** @emoji 📐 Default unfolded width of the right-edge window options rail in pixels. */
 export const windowMeasuresDefaultWidthPx = 14 * 16;
@@ -3482,7 +3504,9 @@ export const windowMeasuresChromeClass =
   `pointer-events-auto flex h-small shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
 
 /** @emoji 📐 Square icon action in the window options chrome bar. */
-export const windowMeasuresChromeActionClass = "size-small min-h-small min-w-small max-h-small max-w-small shrink-0 rounded-none border-0 p-0";
+export const windowMeasuresChromeActionClass = cn(
+  "size-small min-h-small min-w-small max-h-small max-w-small shrink-0 rounded-none border-0 bg-transparent p-0 text-element transition-colors hover:bg-hover-interactive-fill hover:text-emphasized",
+);
 
 /** @emoji 📐 Span toggle hugging the stack top-left corner. */
 export const windowMeasuresChromeCornerLeftClass = "border-r border-element/40";
@@ -3674,7 +3698,7 @@ function CommandGroup({ className, ...props }: React.ComponentProps<typeof Comma
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        "text-foreground [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-single [&_[cmdk-group-heading]]:px-single [&_[cmdk-group-heading]]:py-single [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
+        "text-element [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-single [&_[cmdk-group-heading]]:px-single [&_[cmdk-group-heading]]:py-single [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
         className,
       )}
       {...props}
@@ -5065,7 +5089,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
             <button
               key={option.value}
               onClick={() => handleSelect(option.value)}
-              className={cn("flex items-center gap-single p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-interactive-fill outline-none focus-visible:bg-hover-interactive-fill", value === option.value && "bg-active-temporary")}
+              className={cn("flex items-center gap-single p-single text-xs cursor-selectable outline-none", menuListItemClassName, value === option.value && "bg-active-base text-emphasized")}
             >
               <span className="flex items-center justify-center size-3">{renderControlIcon(option.icon, "tiny")}</span>
               {option.label && <span className="flex-1 text-left">{option.label}</span>}
@@ -6028,7 +6052,7 @@ function SelectTrigger({
       data-size={size}
       data-level={level}
       className={cn(
-        `data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
+        `text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
         hoverClass,
         className,
       )}
@@ -14787,6 +14811,12 @@ const SceneFrameControl: React.FC = () => {
 
 const getComputedColor = (variable: string): string => resolveSemanticColorHex(variable, "gray");
 
+/** @emoji 📐 Scene floor grid — element gray strokes, not emphasized foreground. */
+const readSceneGridColors = (): { sectionColor: string; cellColor: string } => ({
+  sectionColor: resolveColorHex(themeColorVar("element"), "gray"),
+  cellColor: resolveColorHex(themeColorVar("muted-foreground"), "gray"),
+});
+
 /**
  * selectableCursorUsageCount holds the data fields for a selectableCursorUsageCount record.
  **/
@@ -16378,17 +16408,10 @@ interface SceneInnerProps {
  * SceneInner holds the data fields for a SceneInner record.
  **/
 const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, projection, camera: initialCamera, onCameraChange, onProjectionChange, focusedItemId, onFocusComplete, selectionOnDrag = false, onOrbitEnd }) => {
-  const [gridColors, setGridColors] = reactHostPort.useState({
-    sectionColor: getComputedColor("--foreground"),
-    cellColor: getComputedColor("--accent-foreground"),
-  });
+  const [gridColors, setGridColors] = reactHostPort.useState(readSceneGridColors);
 
   reactHostPort.useEffect(() => {
-    const updateColors = () =>
-      setGridColors({
-        sectionColor: getComputedColor("--foreground"),
-        cellColor: getComputedColor("--accent-foreground"),
-      });
+    const updateColors = () => setGridColors(readSceneGridColors());
     updateColors();
     const observer = new MutationObserver(updateColors);
     observer.observe(document.documentElement, {
@@ -18609,7 +18632,7 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
     <div
       data-slot="mode-dock-drag-preview"
       className={cn(
-        "pointer-events-none flex max-w-[12rem] shrink-0 items-center gap-half px-single text-xs text-foreground shadow-md select-none",
+        "pointer-events-none flex max-w-[12rem] shrink-0 items-center gap-half px-single text-xs text-element shadow-md select-none",
         modeDockInactiveTabClass,
         className,
       )}
@@ -18703,14 +18726,12 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       data-stack-active={activeId === tab.id ? "true" : undefined}
       data-active={activeWindowId === tab.id ? "true" : undefined}
       className={cn(
-        "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-muted-foreground select-none hover:bg-hover-interactive-fill hover:text-emphasized",
+        modeDockTabClassName,
         !perTabActiveChrome && "bg-window",
         perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
         perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
         perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
         !perTabActiveChrome && activeWindowId === tab.id && modeDockActiveTabFillClass,
-        activeWindowId !== tab.id && activeId === tab.id && "text-foreground",
-        perTabActiveChrome && activeId === tab.id && "text-foreground",
       )}
       onClick={() => onSelectTab(tab.id)}
       onPointerUp={(event) => {
@@ -18741,7 +18762,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       <button
         type="button"
         data-slot="mode-dock-maximize"
-        className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-interactive-fill"
+        className={windowChromeControlButtonClass}
         onClick={() => dock?.toggleMaximize(stackPath)}
       >
         {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
@@ -18750,7 +18771,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         <button
           type="button"
           data-slot="mode-dock-close"
-          className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-interactive-fill"
+          className={windowChromeControlButtonClass}
           onClick={() => dock?.closeWindow(activeId)}
         >
           <CloseIcon className="size-small" />
@@ -19664,7 +19685,7 @@ const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, f
             <ButtonGroupItem
               key={app.id}
               id={`ui.appNav.${app.id}`}
-              className={cn(activeAppId === app.id && "bg-hover-interactive-fill text-emphasized hover:bg-hover-interactive-fill hover:text-emphasized")}
+              className={cn(activeAppId === app.id && interactiveActiveFillClass)}
               data-state={activeAppId === app.id ? "on" : undefined}
               onClick={() => onActiveAppChange?.(app.id)}
               icon={app.icon ?? "layout-grid"}
@@ -19911,7 +19932,7 @@ if (import.meta.vitest) {
       ];
       const { container } = render(<SidePanel position="left" visible tabs={tabs} activeTabId="tab-b" />);
       const activeButton = container.querySelector('[data-slot="side-panel-tab-button"][data-active="true"]');
-      expect(activeButton?.className).toContain("bg-hover-interactive-fill");
+      expect(activeButton?.className).toContain("bg-active-base");
       expect(activeButton?.className).toContain("text-emphasized");
       expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
@@ -20011,6 +20032,9 @@ if (import.meta.vitest) {
       ).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("bg-window");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("bg-window");
+      expect(container.querySelector('[data-slot="mode-dock-maximize"]')?.className).toContain("text-element");
+      expect(container.querySelector('[data-slot="mode-dock-close"]')?.className).toContain("text-element");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("text-element");
       const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
       const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-active-base");
@@ -20078,7 +20102,9 @@ if (import.meta.vitest) {
       expect(activeStackTab?.className).toContain("border-active-base");
       expect(activeStackTab?.className).toContain("border-b-0");
       expect(activeStackTab?.className).toContain("bg-active-base");
-      expect(activeStackTab?.className).toContain("text-active-foreground");
+      expect(activeStackTab?.className).toContain("text-emphasized");
+      expect(inactiveStackTab?.className).toContain("text-element");
+      expect(inactiveStackTab?.className).not.toContain("text-foreground");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-normal");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-emphasized");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-active-base");
@@ -20217,7 +20243,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-active-base");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("bg-active-base");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("text-active-foreground");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("text-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-r");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-b-0");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).not.toContain("border-r-0");
@@ -20289,7 +20315,9 @@ if (import.meta.vitest) {
       expect(activeTab?.className).toContain("border-active-base");
       expect(activeTab?.className).toContain("border-b-0");
       expect(activeTab?.className).toContain("bg-active-base");
-      expect(activeTab?.className).toContain("text-active-foreground");
+      expect(activeTab?.className).toContain("text-emphasized");
+      expect(inactiveTab?.className).toContain("text-element");
+      expect(inactiveTab?.className).not.toContain("text-foreground");
       expect(stackBody?.className).toContain("border-active-base");
       expect(stackBody?.className).not.toContain("border-emphasized");
     });
@@ -22657,25 +22685,24 @@ if (treeVitest) {
   });
 
   describe("WindowMeasuresTree", () => {
-    it("renders measure controls from section content without a stray folder header", () => {
+    it("renders inline label and control on one measure row", () => {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
-          <WindowMeasureTreeGroup id="lod" label="LOD" defaultOpen>
-            <WindowMeasureTreeLeaf label="Mode">
-              <Select defaultValue="automatic">
-                <SelectTrigger id="lod-mode">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="automatic">Auto</SelectItem>
-                </SelectContent>
-              </Select>
-            </WindowMeasureTreeLeaf>
-          </WindowMeasureTreeGroup>
+          <WindowMeasureTreeLeaf label="LOD">
+            <Select defaultValue="automatic">
+              <SelectTrigger id="lod-mode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="automatic">Auto</SelectItem>
+              </SelectContent>
+            </Select>
+          </WindowMeasureTreeLeaf>
         </WindowMeasuresTree>,
       );
       expect(markup).toContain("LOD");
       expect(markup).toContain('data-slot="select-trigger"');
+      expect(markup).toContain('data-slot="window-measure-tree-row-right"');
       expect(markup).not.toContain("ring-[3px]");
       expect(markup).not.toContain("border-emphasized");
       expect(markup).not.toContain('data-slot="tree-section-row"');
@@ -22737,8 +22764,9 @@ if (treeVitest) {
         <Toggle id="ui.panelToggle.display" pressed={true} onPressedChange={() => undefined} icon="layout-grid" text="Display" />,
       );
       expect(markup).toContain('data-state="on"');
-      expect(markup).toContain("data-[state=on]:bg-hover-interactive-fill");
+      expect(markup).toContain("data-[state=on]:bg-active-base");
       expect(markup).toContain("data-[state=on]:text-emphasized");
+      expect(markup).not.toContain("data-[state=on]:bg-hover-interactive-fill");
     });
 
     it("surfaces missing icons at runtime when control icon is absent", () => {

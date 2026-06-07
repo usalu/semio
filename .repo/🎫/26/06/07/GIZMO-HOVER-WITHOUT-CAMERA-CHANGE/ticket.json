@@ -1,0 +1,14 @@
+{
+  "title": "Gizmo Hover Without Camera Change",
+  "emoji": "🧭",
+  "status": "closed",
+  "description": "When hovering over the infinite-world viewport gizmo (WorldOrbitViewGizmo), the camera should not change — only the gizmo should show a hover effect. Click should still snap views via WorldOrbitViewSnapDriver. Fix for cad, puzzle3d, procedural consumers.",
+  "summary": "Replaced drei GizmoViewport in WorldOrbitViewGizmo with WorldOrbitViewGizmoViewport that keeps axis-head hover scale feedback but does not call GizmoHelper tweenCamera on pointer down. Hover and press no longer animate the main camera; click still routes through onViewSelect → WorldOrbitViewSnapDriver for named view snaps. Fixes cad, puzzle3d, and procedural consumers that share WorldOrbitViewControls.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1575"
+  },
+  "goal": "🎯infinite🎯world",
+  "sessions": [
+    "⚪cb6b8cda61374b36ac5dc19fdd4e3d38"
+  ]
+}

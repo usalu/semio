@@ -1352,13 +1352,26 @@ export function FlowCanvas({
   const onPointerMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const session = sessionRef.current;
-      if (!session || !pointerRef.current.active || pointerRef.current.id !== e.pointerId) return;
+      if (!session) return;
+      if (pointerRef.current.active && pointerRef.current.id !== e.pointerId) return;
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
       session.pointerMoveScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
       emitInteractionState(session);
-      renderFrame();
+      if (pointerRef.current.active) {
+        renderFrame();
+      }
     },
     [clientToCanvas, emitInteractionState, renderFrame],
+  );
+
+  const onPointerLeave = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const session = sessionRef.current;
+      if (!session || pointerRef.current.active) return;
+      session.setHover(null);
+      emitInteractionState(session);
+    },
+    [emitInteractionState],
   );
 
   const onPointerUp = useCallback(
@@ -1565,6 +1578,7 @@ export function FlowCanvas({
         className="absolute inset-0 block h-full w-full touch-none"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
+        onPointerLeave={onPointerLeave}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onDoubleClick={onCanvasDoubleClick}

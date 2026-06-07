@@ -240,6 +240,7 @@ export class FlowPlayController extends Controller {
     return {
       kind: "select",
       id: `${scopeId}-lod`,
+      label: "LOD",
       value: this.lodModeForScope(scopeId),
       items: [
         { id: "automatic", value: DAG_LOD_MODE_AUTOMATIC, label: dagLodAutomaticSelectLabel(this.effectiveLod) },
@@ -250,7 +251,7 @@ export class FlowPlayController extends Controller {
   }
 
   private windowMeasures(): readonly WindowMeasure[] {
-    return [{ kind: "group", id: `${FLOW_PLAY_WINDOW_KIND_ID}-lod`, label: "LOD", children: [this.lodMeasure(FLOW_PLAY_WINDOW_KIND_ID)] }];
+    return [this.lodMeasure(FLOW_PLAY_WINDOW_KIND_ID)];
   }
 
   private syncReorganizeOptionsJson(): void {
@@ -582,9 +583,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const ctrl = new FlowPlayController(bus, () => {});
       const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
-      const lodGroup = measures.find((measure) => measure.kind === "group" && measure.label === "LOD");
-      expect(lodGroup?.kind).toBe("group");
-      const lodSelect = lodGroup?.kind === "group" ? lodGroup.children.find((child) => child.kind === "select") : undefined;
+      const lodSelect = measures.find((measure) => measure.kind === "select" && measure.label === "LOD");
       expect(lodSelect?.kind).toBe("select");
       if (lodSelect?.kind === "select") {
         expect(lodSelect.items.some((item) => item.value === DAG_LOD_MODE_AUTOMATIC)).toBe(true);
@@ -597,8 +596,7 @@ if (import.meta.vitest) {
       const ctrl = new FlowPlayController(bus, () => {});
       ctrl.run("setEffectiveLod", { lod: "detail" });
       const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
-      const lodGroup = measures.find((measure) => measure.kind === "group" && measure.label === "LOD");
-      const lodSelect = lodGroup?.kind === "group" ? lodGroup.children.find((child) => child.kind === "select") : undefined;
+      const lodSelect = measures.find((measure) => measure.kind === "select" && measure.label === "LOD");
       const automatic = lodSelect?.kind === "select" ? lodSelect.items.find((item) => item.value === DAG_LOD_MODE_AUTOMATIC) : undefined;
       expect(automatic?.label).toContain("Detail");
     });

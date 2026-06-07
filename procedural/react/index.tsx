@@ -1230,18 +1230,15 @@ export function ProceduralPreview({
 		setCameraSeed((seed) => seed + 1);
 	}, []);
 
-	const onOrbitCameraChange = useCallback((next: WorldCameraState) => {
-		setCamera(next);
-	}, []);
-
 	const onViewportGizmoCameraChange = useCallback((next: WorldCameraState) => {
 		setCamera(next);
 		setCameraSeed((seed) => seed + 1);
 	}, []);
 
 	return (
-		<div ref={containerRef} className={className ?? "relative h-full w-full bg-zinc-900"}>
+		<div ref={containerRef} className={`absolute inset-0 min-h-0 min-w-0 bg-zinc-900 ${className ?? ""}`.trim()}>
 			<WorldCanvas
+				className="h-full w-full"
 				frameloop="demand"
 				background="#18181b"
 				overlay={<WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />}
@@ -1259,7 +1256,7 @@ export function ProceduralPreview({
 				>
 					<WorldOrbitViewSnapGateProvider>
 						<WorldOrbitCameraViewRig state={camera} seedKey={cameraSeedKey} perspectiveFov={45} />
-						<WorldOrbitGated controlsKey={cameraSeedKey} projection={projection} zoom={camera.zoom} onCamera={onOrbitCameraChange} />
+						<WorldOrbitGated controlsKey={cameraSeedKey} projection={projection} zoom={camera.zoom} />
 						<WorldOrbitViewControls onCameraChange={onViewportGizmoCameraChange} />
 						<ProceduralPreviewCameraBridge onCamera={handleCamera} />
 						<ProceduralPreviewMarqueeBridge

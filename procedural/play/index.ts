@@ -93,16 +93,32 @@ export interface ProceduralPlayFixtureStore {
 	clear(): void;
 }
 
-export function createProceduralPlayFixtureStore(storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> = globalThis.localStorage): ProceduralPlayFixtureStore {
+export function createProceduralPlayFixtureStore(storage?: Pick<Storage, "getItem" | "setItem" | "removeItem">): ProceduralPlayFixtureStore {
+	const resolved =
+		storage ??
+		(typeof globalThis.localStorage !== "undefined"
+			? globalThis.localStorage
+			: (() => {
+					const backing = new Map<string, string>();
+					return {
+						getItem: (key: string) => backing.get(key) ?? null,
+						setItem: (key: string, value: string) => {
+							backing.set(key, value);
+						},
+						removeItem: (key: string) => {
+							backing.delete(key);
+						},
+					};
+				})());
 	return {
 		load(): string | null {
-			return storage.getItem(PROCEDURAL_PLAY_STORE_KEY);
+			return resolved.getItem(PROCEDURAL_PLAY_STORE_KEY);
 		},
 		save(fixtureJson: string): void {
-			storage.setItem(PROCEDURAL_PLAY_STORE_KEY, fixtureJson);
+			resolved.setItem(PROCEDURAL_PLAY_STORE_KEY, fixtureJson);
 		},
 		clear(): void {
-			storage.removeItem(PROCEDURAL_PLAY_STORE_KEY);
+			resolved.removeItem(PROCEDURAL_PLAY_STORE_KEY);
 		},
 	};
 }
@@ -576,6 +592,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		return {
 			kind: "select",
 			id: `${scopeId}-lod`,
+			label: "LOD",
 			value: this.lodModeForScope(scopeId),
 			items: [
 				{ id: "automatic", value: DAG_LOD_MODE_AUTOMATIC, label: dagLodAutomaticSelectLabel(this.effectiveLod) },
@@ -586,7 +603,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	}
 
 	private flowWindowMeasures(): readonly WindowMeasure[] {
-		return [{ kind: "group", id: `${PROCEDURAL_PLAY_WINDOW_KIND_ID}-lod`, label: "LOD", children: [this.lodMeasure(PROCEDURAL_PLAY_WINDOW_KIND_ID)] }];
+		return [this.lodMeasure(PROCEDURAL_PLAY_WINDOW_KIND_ID)];
 	}
 
 	/** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
@@ -751,7 +768,8 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 		if (command === "resetFixture") {
 			this.fixtureStore.clear();
-			this.loadFixtureById(PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID);
+			this.activeFixtureId = PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID;
+			this.applyFixtureJson(PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON);
 			return;
 		}
 		if (command === "setLodMode") {
@@ -1049,11 +1067,11 @@ if (import.meta.vitest) {
 			expect(ctrl.mainMode.windowKinds[1]?.id).toBe(PROCEDURAL_PLAY_WINDOW_KIND_PREVIEW);
 		});
 
-		it("flow window exposes lod measure group", () => {
+		it("flow window exposes inline lod select", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
-			expect(measures.some((measure) => measure.kind === "group" && measure.label === "LOD")).toBe(true);
+			expect(measures.some((measure) => measure.kind === "select" && measure.label === "LOD")).toBe(true);
 		});
 
 		it("setShowMode updates preview filter", () => {
@@ -1093,6 +1111,76 @@ if (import.meta.vitest) {
 			const ctrl = new ProceduralPlayController(bus, () => {});
 			ctrl.run("setSelectionMethod", { method: "lasso" });
 			expect(ctrl.getSelectionMethod()).toBe("lasso");
+		});
+
+		it("buildProceduralPlayToolbarTools registers selection, save, view, and actions", () => {
+			const tools = buildProceduralPlayToolbarTools(
+				{
+					selectionMethod: "rectangle",
+					selectionMode: "default",
+					showMode: "everything",
+					selectionCount: 0,
+					hasStoredFixture: false,
+				},
+				PROCEDURAL_PLAY_CONTROLLER_ID,
+			);
+			expect(tools.selection?.some((row) => row.id === "procedural.select.rectangle")).toBe(true);
+			expect(tools.save?.map((row) => row.id)).toEqual([
+				"procedural.save.stored",
+				"procedural.save.download",
+				"procedural.save.load",
+				"procedural.save.loadStored",
+				"procedural.save.reset",
+			]);
+			expect(tools.save?.[3]?.disabled).toBe(true);
+			expect(tools.view?.length).toBe(2);
+			expect(tools.actions?.some((row) => row.id === "procedural.action.reorganize")).toBe(true);
+		});
+
+		it("controller exposes toolbar tools when host bridge is attached", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			expect(ctrl.mainMode.tools).toBeUndefined();
+			ctrl.setHostBridge({
+				getToolbarState: () => ({
+					selectionMethod: "rectangle",
+					selectionMode: "default",
+					showMode: "everything",
+					selectionCount: 0,
+					hasStoredFixture: false,
+				}),
+				runHostCommand: () => {},
+			});
+			expect(ctrl.mainMode.tools?.selection?.length).toBeGreaterThan(0);
+		});
+
+		it("fixture store round-trips json", () => {
+			const backing = new Map<string, string>();
+			const store = createProceduralPlayFixtureStore({
+				getItem: (k) => backing.get(k) ?? null,
+				setItem: (k, v) => {
+					backing.set(k, v);
+				},
+				removeItem: (k) => {
+					backing.delete(k);
+				},
+			});
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {}, store);
+			ctrl.run("saveStored");
+			expect(ctrl.hasStoredFixture()).toBe(true);
+			ctrl.run("setFixtureJson", { json: '{"schema":"flow.fixture/v1","widgets":[],"synapses":[]}' });
+			ctrl.run("loadStored");
+			expect(ctrl.getFixtureJson()).toContain("flow.fixture/v1");
+		});
+
+		it("setActiveFixture loads default and empty fixtures", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setActiveFixture", { fixtureId: PLAYGROUND_NO_FIXTURE_ID });
+			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
+			ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
+			expect(ctrl.getFixtureJson()).toContain("brep.sketch2d.rectangle");
 		});
 
 		it("extensions tree lists installed modules", () => {

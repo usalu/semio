@@ -1583,7 +1583,7 @@ const PUZZLE_2D_CSS_HIGHLIGHTED_FILL = "color-mix(in oklab, var(--color-secondar
 /** @emoji 🎨 Resolves UI semantic CSS (`@ui/styling/ui.css` / `@theme`) for 2d canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
 const PUZZLE_2D_VELLO_THEME_FALLBACK_RGBA = {
   rasterClear: resolveColorRgba(semanticVar("base"), "light"),
-  gridMinorStroke: [...resolveColorRgba(themeColorVar("border"), "gray").slice(0, 3), 56] as [number, number, number, number],
+  gridMinorStroke: [...resolveColorRgba(themeColorVar("element"), "gray").slice(0, 3), 56] as [number, number, number, number],
   edgeStroke: resolveColorRgba(themeColorVar("muted-foreground"), "gray"),
   edgeStrokeHovered: resolveColorRgba(themeColorVar("hover-base"), "gray"),
   edgeStrokeSelected: resolveColorRgba(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary"),
@@ -1633,7 +1633,7 @@ function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dSty
     "edge.selected": { stroke: stroke(PUZZLE_2D_CSS_COLOR_PRIMARY, "primary", f["edge.selected"].stroke ?? tokenHex("primary")), strokeWidth: 3 },
     handle: {
       fill: fill(themeColorVar("base"), "light", f.handle.fill ?? tokenHex("light")),
-      stroke: stroke(themeColorVar("emphasized"), "dark", f.handle.stroke ?? tokenHex("dark")),
+      stroke: stroke(themeColorVar("element"), "gray", f.handle.stroke ?? tokenHex("gray")),
       strokeWidth: 2,
     },
     "handle.highlighted": {
@@ -1648,7 +1648,7 @@ function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dSty
     },
     node: {
       fill: fill(themeColorVar("panel"), "l-l-l-g", f.node.fill ?? tokenHex("l-l-l-g")),
-      stroke: stroke(themeColorVar("emphasized"), "dark", f.node.stroke ?? tokenHex("dark")),
+      stroke: stroke(themeColorVar("element"), "gray", f.node.stroke ?? tokenHex("gray")),
       strokeWidth: 2,
     },
     "node.highlighted": {
@@ -1674,8 +1674,8 @@ function serializePuzzle2dVelloThemeJson(): string {
   const payload = {
     rasterClear: pbg(semanticVar("base"), "light"),
     gridMinorStroke: (() => {
-      const border = resolveColorRgba(themeColorVar("border"), "gray");
-      return [border[0], border[1], border[2], fb.gridMinorStroke[3]];
+      const element = resolveColorRgba(themeColorVar("element"), "gray");
+      return [element[0], element[1], element[2], fb.gridMinorStroke[3]];
     })(),
     edgeStroke: pc(themeColorVar("muted-foreground"), "gray"),
     edgeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),

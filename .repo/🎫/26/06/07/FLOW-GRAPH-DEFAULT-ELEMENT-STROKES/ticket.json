@@ -1,0 +1,13 @@
+{
+  "title": "Flow Graph Default Element Strokes",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Flow graph nodes, handles, and edges still default to emphasized color instead of element gray.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1583"
+  },
+  "goal": "🎯ui🎯theming",
+  "sessions": [
+    "⚪b05aafaf43d64389be2a45ed5cb5d5bc"
+  ]
+}

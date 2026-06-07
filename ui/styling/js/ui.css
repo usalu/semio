@@ -624,12 +624,12 @@
 
 /* Unify active-state visuals across all toolbar interactive elements. */
 [data-slot="toolbar-zone"] [data-slot="toggle-group-item"][data-state="on"] {
-  background-color: var(--hover-interactive-fill);
+  background-color: var(--active-base);
   color: var(--border-emphasized-color);
 }
 
 [data-slot="toolbar-zone"] [data-slot="toggle-group-item"][data-state="on"]:hover {
-  background-color: var(--hover-interactive-fill);
+  background-color: color-mix(in oklab, var(--active-base) 90%, black);
   color: var(--border-emphasized-color);
 }
 
@@ -805,7 +805,7 @@
   --color-plaster: var(--plaster);
   --color-plaster-edge: var(--plaster-edge);
   --color-popover: var(--temporary);
-  --color-popover-foreground: var(--foreground);
+  --color-popover-foreground: var(--border-element-color);
   --color-border: var(--border-normal-color);
   --color-element: var(--border-element-color);
   --color-emphasized: var(--border-emphasized-color);
@@ -868,7 +868,17 @@
 [data-slot="footer"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),
 [data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:not(:disabled),
 [data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:not(:disabled) {
-  background-color: var(--hover-interactive-fill);
+  background-color: var(--active-base);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-slot="toggle-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="navbar"] [data-slot="button-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="navbar"] [data-slot="action-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="footer"] [data-slot="toggle-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:hover:not(:disabled) {
+  background-color: color-mix(in oklab, var(--active-base) 90%, black);
   color: var(--border-emphasized-color);
 }
 

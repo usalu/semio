@@ -99,6 +99,7 @@ export class DagPlayController extends Controller {
     return {
       kind: "select",
       id: `${scopeId}-lod`,
+      label: "LOD",
       value: this.lodModeForScope(scopeId),
       items: [
         { id: "automatic", value: DAG_LOD_MODE_AUTOMATIC, label: dagLodAutomaticSelectLabel(this.effectiveLod) },
@@ -109,7 +110,7 @@ export class DagPlayController extends Controller {
   }
 
   private windowMeasures(): readonly WindowMeasure[] {
-    return [{ kind: "group", id: `${DAG_PLAY_WINDOW_KIND_ID}-lod`, label: "LOD", children: [this.lodMeasure(DAG_PLAY_WINDOW_KIND_ID)] }];
+    return [this.lodMeasure(DAG_PLAY_WINDOW_KIND_ID)];
   }
 
   private syncReorganizeOptionsJson(): void {
@@ -327,7 +328,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const ctrl = new DagPlayController(bus, () => {});
       const measures = ctrl.mainMode.windowKinds[0]?.measures ?? [];
-      expect(measures.some((measure) => measure.kind === "group" && measure.label === "LOD")).toBe(true);
+      expect(measures.some((measure) => measure.kind === "select" && measure.label === "LOD")).toBe(true);
     });
   });
 }

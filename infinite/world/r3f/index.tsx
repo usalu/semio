@@ -13,13 +13,13 @@ const useFrame = sceneHostPort.fiber.useFrame;
 const useThree = sceneHostPort.fiber.useThree;
 const OrbitControls = sceneHostPort.drei.OrbitControls;
 const GizmoHelper = sceneHostPort.drei.GizmoHelper;
-const GizmoViewport = sceneHostPort.drei.GizmoViewport;
 const OrthographicCamera = sceneHostPort.drei.OrthographicCamera;
 const PerspectiveCamera = sceneHostPort.drei.PerspectiveCamera;
 const {
   Box3,
   BoxGeometry,
   BufferGeometry,
+  CanvasTexture,
   Color,
   DoubleSide,
   EdgesGeometry,
@@ -852,7 +852,7 @@ export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactE
     const size = 12_000;
     return layers.map(({ stepWorld, opacity }) => {
       const divs = Math.min(512, Math.max(2, Math.round(size / stepWorld)));
-      const grid = new GridHelper(size, divs, resolveThreeColor(themeColorVar("border"), "gray"), resolveThreeColor(themeColorVar("muted-foreground"), "gray"));
+      const grid = new GridHelper(size, divs, resolveThreeColor(themeColorVar("element"), "gray"), resolveThreeColor(themeColorVar("element"), "gray"));
       grid.rotation.x = Math.PI / 2;
       applyLodGridLayerStyle(grid, opacity);
       return grid;
@@ -1293,6 +1293,114 @@ function resolveWorldCadAxisColors(): [string, string, string] {
   ];
 }
 
+//#region 🧭WorldOrbitViewGizmoViewport
+interface WorldOrbitViewGizmoViewportProps {
+  readonly labels: [string, string, string];
+  readonly axisColors: [string, string, string];
+  readonly axisScale: [number, number, number];
+  readonly axisHeadScale?: number;
+  readonly hideNegativeAxes?: boolean;
+  readonly labelColor: string;
+  readonly font: string;
+  readonly onClick?: (event: ThreeEvent<MouseEvent>) => unknown;
+}
+
+function WorldOrbitViewGizmoViewportAxis(props: { readonly scale: [number, number, number]; readonly color: string; readonly rotation: [number, number, number] }): ReactElement {
+  return (
+    <group rotation={props.rotation}>
+      <mesh position={[0.4, 0, 0]}>
+        <boxGeometry args={props.scale} />
+        <meshBasicMaterial color={props.color} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function WorldOrbitViewGizmoViewportAxisHead(props: {
+  readonly arcStyle: string;
+  readonly position: [number, number, number];
+  readonly label?: string;
+  readonly font: string;
+  readonly labelColor: string;
+  readonly axisHeadScale: number;
+  readonly onClick?: (event: ThreeEvent<MouseEvent>) => unknown;
+}): ReactElement {
+  const gl = useThree((state) => state.gl);
+  const texture = reactHostPort.useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return new CanvasTexture(canvas);
+    }
+    context.beginPath();
+    context.arc(32, 32, 16, 0, 2 * Math.PI);
+    context.closePath();
+    context.fillStyle = props.arcStyle;
+    context.fill();
+    if (props.label) {
+      context.font = props.font;
+      context.textAlign = "center";
+      context.fillStyle = props.labelColor;
+      context.fillText(props.label, 32, 41);
+    }
+    return new CanvasTexture(canvas);
+  }, [props.arcStyle, props.font, props.label, props.labelColor]);
+  const [active, setActive] = reactHostPort.useState(false);
+  const scale = (props.label ? 1 : 0.75) * (active ? 1.2 : 1) * props.axisHeadScale;
+  return (
+    <sprite
+      scale={scale}
+      position={props.position}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        setActive(true);
+      }}
+      onPointerOut={(event) => {
+        event.stopPropagation();
+        setActive(false);
+      }}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+      onClick={props.onClick}
+    >
+      <spriteMaterial map={texture} alphaTest={0.3} opacity={props.label ? 1 : 0.75} toneMapped={false} />
+    </sprite>
+  );
+}
+
+/** @emoji 🎯 Viewport gizmo heads with hover feedback only; camera snaps on click via {@link WorldOrbitViewSnapDriver}. */
+function WorldOrbitViewGizmoViewport(props: WorldOrbitViewGizmoViewportProps): ReactElement {
+  const [colorX, colorY, colorZ] = props.axisColors;
+  const axisHeadScale = props.axisHeadScale ?? 1;
+  const headProps = {
+    font: props.font,
+    labelColor: props.labelColor,
+    axisHeadScale,
+    onClick: props.onClick,
+  };
+  return (
+    <group scale={40}>
+      <WorldOrbitViewGizmoViewportAxis color={colorX} rotation={[0, 0, 0]} scale={props.axisScale} />
+      <WorldOrbitViewGizmoViewportAxis color={colorY} rotation={[0, 0, Math.PI / 2]} scale={props.axisScale} />
+      <WorldOrbitViewGizmoViewportAxis color={colorZ} rotation={[0, -Math.PI / 2, 0]} scale={props.axisScale} />
+      <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorX} position={[1, 0, 0]} label={props.labels[0]} {...headProps} />
+      <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorY} position={[0, 1, 0]} label={props.labels[1]} {...headProps} />
+      <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorZ} position={[0, 0, 1]} label={props.labels[2]} {...headProps} />
+      {!props.hideNegativeAxes ? (
+        <>
+          <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorX} position={[-1, 0, 0]} {...headProps} />
+          <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorY} position={[0, -1, 0]} {...headProps} />
+          <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorZ} position={[0, 0, -1]} {...headProps} />
+        </>
+      ) : null}
+    </group>
+  );
+}
+//#endregion 🧭WorldOrbitViewGizmoViewport
+
 /** @emoji 🧭 CAD Z-up viewport gizmo (X / Y / Z) anchored bottom-right. */
 export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactElement | null {
   const { size } = useThree();
@@ -1315,7 +1423,7 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
   }
   return (
     <GizmoHelper alignment={placement.alignment} margin={placement.margin}>
-      <GizmoViewport
+      <WorldOrbitViewGizmoViewport
         labels={labels}
         axisColors={colors}
         axisScale={axisScale}
@@ -1715,18 +1823,23 @@ function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; 
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
   const lastApplyToken = reactHostPort.useRef<string | null>(null);
+  const lastCameraUuid = reactHostPort.useRef<string | null>(null);
+  const stateRef = reactHostPort.useRef(props.state);
+  stateRef.current = props.state;
   const projection = props.state.projection ?? "perspective";
   reactHostPort.useLayoutEffect(() => {
     if (!camera) {
       return;
     }
     const token = orbitCameraViewRigApplyToken(props.seedKey, projection);
-    if (lastApplyToken.current === token) {
+    const cameraChanged = lastCameraUuid.current !== camera.uuid;
+    if (!cameraChanged && lastApplyToken.current === token) {
       return;
     }
     lastApplyToken.current = token;
-    applyWorldCameraState(camera, props.state, controls);
-  }, [camera, controls, projection, props.seedKey, props.state]);
+    lastCameraUuid.current = camera.uuid;
+    applyWorldCameraState(camera, stateRef.current, controls);
+  }, [camera, controls, projection, props.seedKey]);
   return null;
 }
 // #endregion 📷OrbitCameraView
@@ -1892,7 +2005,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
-  if (props.camera === null) return null;
+  if (!camera || props.camera === null) return null;
   const reportCamera = () => {
     if (!props.onCamera || !camera) return;
     const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
@@ -1900,14 +2013,14 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
       position: threeVec3ToCad(camera.position),
       target: threeVec3ToCad(tgt),
       zoom: props.zoom ?? 1,
+      up: threeVec3ToCad(camera.up),
       projection,
     });
   };
   return (
     <OrbitControls
       key={props.controlsKey}
-      {...(props.camera ? { camera: props.camera } : {})}
-      domElement={gl.domElement}
+      camera={camera}
       makeDefault
       enabled={!gate && !snapGate}
       enableDamping={false}
@@ -1984,12 +2097,12 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
   const frameloop = props.frameloop ?? "demand";
   const cameraUp = props.cameraUp ?? ([0, 0, 1] as Vec3);
   const ownedCamera = props.cameraPosition !== undefined;
-  const rootRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const onWheelRef = reactHostPort.useRef(props.onWheel);
+  const wheelCleanupRef = reactHostPort.useRef<(() => void) | null>(null);
   onWheelRef.current = props.onWheel;
+  reactHostPort.useEffect(() => () => wheelCleanupRef.current?.(), []);
   const setRootRef = reactHostPort.useCallback(
     (element: HTMLDivElement | null) => {
-      rootRef.current = element;
       const external = props.rootRef;
       if (!external) return;
       if (typeof external === "function") external(element);
@@ -1997,16 +2110,6 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
     },
     [props.rootRef],
   );
-  reactHostPort.useEffect(() => {
-    const element = rootRef.current;
-    if (!element) return;
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      onWheelRef.current?.(event);
-    };
-    element.addEventListener("wheel", onWheel, { passive: false });
-    return () => element.removeEventListener("wheel", onWheel);
-  }, []);
   return (
     <div
       ref={setRootRef}
@@ -2043,7 +2146,17 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
         onContextMenu={(event) => props.onContextMenu?.(event.nativeEvent)}
         onDoubleClick={(event) => props.onDoubleClick?.(event.nativeEvent)}
         onLostPointerCapture={(event) => props.onLostPointerCapture?.(event.nativeEvent)}
-        onCreated={({ camera, gl: renderer }) => props.onCanvasReady?.({ camera, domElement: renderer.domElement })}
+        onCreated={({ camera, gl: renderer }) => {
+          wheelCleanupRef.current?.();
+          const canvas = renderer.domElement;
+          const onWheel = (event: WheelEvent) => {
+            event.preventDefault();
+            onWheelRef.current?.(event);
+          };
+          canvas.addEventListener("wheel", onWheel, { passive: false });
+          wheelCleanupRef.current = () => canvas.removeEventListener("wheel", onWheel);
+          props.onCanvasReady?.({ camera, domElement: canvas });
+        }}
       >
         {frameloop === "demand" ? <DemandFrameloopKick /> : null}
         {props.background ? <color attach="background" args={[props.background]} /> : null}

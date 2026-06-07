@@ -256,10 +256,10 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		const hex = resolveBackgroundColorHex(expr, fallKey);
 		return [...resolveColorRgba(hex, fallKey, alpha ?? 255)];
 	};
-	const border = resolveColorRgba(themeColorVar("border"), "gray");
+	const element = resolveColorRgba(themeColorVar("element"), "gray");
 	return JSON.stringify({
 		rasterClear: pbg(semanticVar("canvas"), "light-8-9"),
-		gridMinorStroke: [border[0], border[1], border[2], 56],
+		gridMinorStroke: [element[0], element[1], element[2], 56],
 		edgeStroke: pc(themeColorVar("muted-foreground"), "gray"),
 		edgeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
 		edgeStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
@@ -294,9 +294,9 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		selectionPreviewFill: pbg("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", 31),
 		selectionPreviewStroke: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
-		labelFill: pc(themeColorVar("border"), "gray"),
-		labelFillHovered: pc(themeColorVar("foreground"), "dark"),
-		labelHalo: [0, 0, 0, 0],
+		labelFill: pc(themeColorVar("foreground"), "dark"),
+		labelFillHovered: pc(themeColorVar("emphasized"), "dark"),
+		labelHalo: pbg(semanticVar("canvas"), "light-8-9", 200),
 	});
 }
 //#endregion 🎨Resolve
@@ -346,17 +346,24 @@ if (import.meta.vitest) {
 			const parsed = JSON.parse(serializeGraphVelloThemePaletteJson()) as {
 				rasterClear: number[];
 				nodeFill: number[];
+				nodeStroke: number[];
+				nodeStrokeHovered: number[];
 				labelFill: number[];
 				labelFillHovered: number[];
 				labelHalo: number[];
+				gridMinorStroke: number[];
 			};
 			expect(parsed.rasterClear).toHaveLength(4);
 			expect(parsed.nodeFill).toHaveLength(4);
 			expect(parsed.labelFill).toHaveLength(4);
 			expect(parsed.labelFillHovered).toHaveLength(4);
-			expect(parsed.labelHalo).toEqual([0, 0, 0, 0]);
-			expect(parsed.labelFill).toEqual([123, 130, 125, 255]);
+			expect(parsed.labelHalo[3]).toBeGreaterThan(0);
+			expect(parsed.labelFill).toEqual([0, 17, 23, 255]);
+			expect(parsed.nodeStroke).toEqual([123, 130, 125, 255]);
+			expect(parsed.nodeStroke).not.toEqual(parsed.nodeStrokeHovered);
 			expect(parsed.labelFill).not.toEqual(parsed.rasterClear);
+			expect(parsed.gridMinorStroke).toEqual([123, 130, 125, 56]);
+			expect(parsed.gridMinorStroke[3]).toBeLessThan(255);
 		});
 	});
 }

@@ -71,17 +71,6 @@ pub fn computation_node_height(input_count: usize, output_count: usize, variadic
         * DAG_CHANNEL_ROW_HEIGHT
 }
 
-fn dag_glyph_extent(glyph: &str, px: f64) -> (f64, f64) {
-    let trimmed = glyph.trim();
-    if trimmed.is_empty() || px < 4.0 {
-        return (0.0, 0.0);
-    }
-    let pad = px * 0.35;
-    let w = trimmed.len() as f64 * px * 0.62 + pad * 2.0;
-    let h = px * 1.6 + pad * 2.0;
-    (w, h)
-}
-
 fn port_label_text_width(label: &str, px: f64) -> f64 {
     let trimmed = label.trim();
     if trimmed.is_empty() || px < 4.0 {
@@ -99,27 +88,20 @@ fn io_port_column_width(ports: &[IoPortSpec], px: f64) -> f64 {
     text_w.clamp(DAG_IO_COLUMN_MIN, DAG_IO_COLUMN_MAX)
 }
 
-fn stacked_vertical_name_column_width(name: &str, px: f64) -> f64 {
-    let name_px = px * 1.05;
-    let trimmed = name.trim();
-    if trimmed.is_empty() {
-        return name_px;
-    }
-    let max_glyph_w = trimmed
-        .chars()
-        .map(|ch| dag_glyph_extent(&ch.to_string(), name_px).0)
-        .fold(0.0, f64::max);
-    (max_glyph_w + 2.0).max(name_px * 0.55)
-}
-
-/// 📐 Computation node width from IO labels and the stacked vertical name column.
+/// 📐 Computation node width from IO label columns and the horizontal title above the body.
 pub fn computation_node_width(name: &str, inputs: &[IoPortSpec], outputs: &[IoPortSpec]) -> f64 {
+    use cavas::text::label_extent;
     let port_px = DAG_LABEL_COMPACT_SCREEN_PX;
-    let name_px = DAG_LABEL_SCREEN_PX;
-    let name_col_w = stacked_vertical_name_column_width(name, name_px);
     let left_w = io_port_column_width(inputs, port_px);
     let right_w = io_port_column_width(outputs, port_px);
-    let content = left_w + DAG_NODE_COLUMN_GAP + name_col_w + DAG_NODE_COLUMN_GAP + right_w;
+    let io_w = match (inputs.is_empty(), outputs.is_empty()) {
+        (true, true) => 0.0,
+        (true, false) => right_w,
+        (false, true) => left_w,
+        (false, false) => left_w + DAG_NODE_COLUMN_GAP + right_w,
+    };
+    let (name_w, _) = label_extent(name, DAG_LABEL_SCREEN_PX);
+    let content = io_w.max(name_w);
     (content + DAG_NODE_EDGE_INSET * 2.0).max(32.0)
 }
 
@@ -432,22 +414,12 @@ fn computation_output_label_x(node: &DagNodeSpec, label: &str, px: f64) -> f64 {
     node.x + node.width * 0.5 - DAG_NODE_EDGE_INSET - label_w
 }
 
-fn computation_name_column_bounds(node: &DagNodeSpec, px: f64) -> (f64, f64) {
-    let hw = node.width * 0.5;
-    let inputs = node.inputs();
-    let outputs = node.outputs();
-    let port_px = DAG_LABEL_COMPACT_SCREEN_PX;
-    let left_w = io_port_column_width(inputs, port_px);
-    let right_w = io_port_column_width(outputs, port_px);
-    let name_w = stacked_vertical_name_column_width(&node.name, px);
-    let name_left = if inputs.is_empty() && outputs.is_empty() {
-        node.x - name_w * 0.5
-    } else if inputs.is_empty() {
-        node.x + hw - DAG_NODE_EDGE_INSET - right_w - DAG_NODE_COLUMN_GAP - name_w
-    } else {
-        node.x - hw + DAG_NODE_EDGE_INSET + left_w + DAG_NODE_COLUMN_GAP
-    };
-    (name_left, name_left + name_w)
+fn computation_name_world_center(node: &DagNodeSpec, label: &str, px: f64, zoom: f64) -> (f64, f64) {
+    use cavas::text::label_extent;
+    let hh = node.height * 0.5;
+    let (_, label_h) = label_extent(label, px);
+    let world_gap = (DAG_LABEL_SCREEN_PX * 0.35) / zoom.max(0.05);
+    (node.x, node.y - hh - world_gap - label_h * 0.5)
 }
 
 fn io_widget_name_column_bounds(node: &DagNodeSpec, px: f64) -> (f64, f64, f64, f64) {
@@ -838,7 +810,11 @@ fn dag_label_layout_px() -> f64 {
 }
 
 fn dag_label_paint_px(zoom: f64) -> f64 {
-    DAG_LABEL_SCREEN_PX * zoom.max(0.05)
+    (DAG_LABEL_SCREEN_PX * zoom.max(0.05)).max(DAG_LABEL_SCREEN_PX)
+}
+
+fn dag_label_compact_paint_px(zoom: f64) -> f64 {
+    (DAG_LABEL_COMPACT_SCREEN_PX * zoom.max(0.05)).max(DAG_LABEL_COMPACT_SCREEN_PX)
 }
 
 fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
@@ -1802,7 +1778,7 @@ impl DagHost {
         let computation = matches!(node.kind, DagNodeKind::Computation { .. });
         let port_layout_px = if computation { DAG_LABEL_COMPACT_SCREEN_PX } else { layout_px };
         let port_paint_px = if computation {
-            DAG_LABEL_COMPACT_SCREEN_PX * cam.zoom.max(0.05)
+            dag_label_compact_paint_px(cam.zoom)
         } else {
             paint_px
         };
@@ -1838,39 +1814,6 @@ impl DagHost {
                 label_fill,
                 label_halo,
             );
-        }
-    }
-
-    fn paint_stacked_vertical_name(
-        scene: &mut cavas::vello::Scene,
-        center_screen: cavas::vello::kurbo::Point,
-        name: &str,
-        px: f64,
-        label_fill: cavas::vello::peniko::Color,
-        label_halo: cavas::vello::peniko::Color,
-    ) {
-        use cavas::text::append_label;
-        use cavas::vello::kurbo::Point;
-        let trimmed = name.trim();
-        if trimmed.is_empty() {
-            return;
-        }
-        let chars: Vec<char> = trimmed.chars().collect();
-        let line_step = px * 1.1;
-        let total_h = chars.len() as f64 * line_step;
-        let mut y = center_screen.y - total_h * 0.5;
-        for ch in chars {
-            let glyph = ch.to_string();
-            let (w, _) = dag_glyph_extent(&glyph, px);
-            append_label(
-                scene,
-                &glyph,
-                Point::new(center_screen.x - w * 0.5, y),
-                px,
-                label_fill,
-                label_halo,
-            );
-            y += line_step;
         }
     }
 
@@ -1910,42 +1853,6 @@ impl DagHost {
         } else {
             Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
         }
-    }
-
-    fn paint_computation_name_column_fill(
-        scene: &mut cavas::vello::Scene,
-        aff: cavas::vello::kurbo::Affine,
-        node: &DagNodeSpec,
-        px: f64,
-        fill: cavas::vello::peniko::Color,
-    ) {
-        use cavas::vello::kurbo::Rect;
-        use cavas::vello::peniko::Fill;
-        let hh = node.height * 0.5;
-        let (name_left, name_right) = computation_name_column_bounds(node, px);
-        let rect = Rect::new(name_left, node.y - hh, name_right, node.y + hh);
-        scene.fill(Fill::NonZero, aff, vello_color_with_alpha(fill, 255), None, &rect);
-    }
-
-    fn paint_computation_section_dividers(
-        scene: &mut cavas::vello::Scene,
-        aff: cavas::vello::kurbo::Affine,
-        node: &DagNodeSpec,
-        px: f64,
-        chrome_stroke: f64,
-        stroke: cavas::vello::peniko::Color,
-    ) {
-        use cavas::vello::kurbo::{Line, Point, Stroke};
-        if !matches!(node.kind, DagNodeKind::Computation { .. }) {
-            return;
-        }
-        let hh = node.height * 0.5;
-        let top = node.y - hh;
-        let bottom = node.y + hh;
-        let stroke_style = Stroke::new(chrome_stroke);
-        let (name_left, name_right) = computation_name_column_bounds(node, px);
-        scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(name_left, top), Point::new(name_left, bottom)));
-        scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(name_right, top), Point::new(name_right, bottom)));
     }
 
     fn paint_io_widget_channel_borders(
@@ -2006,9 +1913,9 @@ impl DagHost {
     ) {
         use cavas::camera::world_to_screen;
         use cavas::vello::kurbo::Point;
-        let anchor = world_to_screen(cam, viewport, Point::new(node.x, node.y));
-        let clear_halo = vello_color_with_alpha(label_halo, 0);
-        Self::paint_stacked_vertical_name(scene, anchor, label, px, label_fill, clear_halo);
+        let (label_x, label_y) = computation_name_world_center(node, label, px, cam.zoom);
+        let anchor = world_to_screen(cam, viewport, Point::new(label_x, label_y));
+        Self::paint_node_name_horizontal(scene, anchor, label, px, label_fill, label_halo);
     }
 
     fn paint_io_widget_name(
@@ -2083,10 +1990,7 @@ impl DagHost {
         self.paint_node_lod_icon(scene, lod, center_screen, node, cam.zoom, accent, ghost_fill);
         if let Some(label) = Self::node_label_text(node, lod) {
             if matches!(node.kind, DagNodeKind::Computation { .. }) {
-                let chrome_stroke = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
                 Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
-                Self::paint_computation_name_column_fill(scene, aff, node, layout_px, ghost_fill);
-                Self::paint_computation_section_dividers(scene, aff, node, layout_px, chrome_stroke, theme.node_stroke);
                 Self::paint_computation_node_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
             } else {
                 Self::paint_node_name_horizontal(scene, center_screen, label, paint_px, label_fill, label_halo);
@@ -2168,10 +2072,6 @@ impl DagHost {
                         if lod.shows_port_labels() {
                             Self::paint_port_labels(scene, &cam, &viewport, node, layout_px, paint_px, label_fill, label_halo);
                         }
-                        if let Some(column_fill) = fill {
-                            Self::paint_computation_name_column_fill(scene, aff, node, layout_px, column_fill);
-                        }
-                        Self::paint_computation_section_dividers(scene, aff, node, layout_px, chrome_stroke, theme.node_stroke);
                         if let Some(label) = label_text {
                             Self::paint_computation_node_name(scene, &cam, &viewport, node, label, paint_px, label_fill, label_halo);
                         }
@@ -2686,6 +2586,26 @@ mod tests {
     }
 
     #[test]
+    fn idle_pointer_move_updates_hover() {
+        use cavas::camera::{world_to_screen, Camera, Viewport};
+        use cavas::vello::kurbo::Point;
+
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        let camera = Camera {
+            x: host.fixture.camera.x,
+            y: host.fixture.camera.y,
+            zoom: host.fixture.camera.zoom,
+        };
+        let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
+        let slider = world_to_screen(&camera, &viewport, Point::new(-400.0, -40.0));
+        host.pointer_move_screen(slider.x, slider.y, false, false, false);
+        assert_eq!(host.hovered_node_id().as_deref(), Some("slider"));
+        host.pointer_move_screen(8.0, 8.0, false, false, false);
+        assert!(host.hovered_node_id().is_none());
+    }
+
+    #[test]
     fn dag_node_spec_port_accessors_per_kind() {
         let slider = DagNodeSpec {
             id: "s".into(),
@@ -2957,20 +2877,15 @@ mod tests {
     }
 
     #[test]
-    fn computation_name_column_width_fits_stacked_vertical_text() {
+    fn computation_node_width_uses_two_io_columns_without_name_strip() {
         let inputs = vec![
             IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
             IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
             IoPortSpec { id: "height".into(), label: "height".into() },
         ];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
-        let width = computation_node_width("brep.box", &inputs, &outputs);
-        let height = computation_node_height(3, 1, false, false);
-        let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
-        let (name_left, name_right) = computation_name_column_bounds(&node, DAG_LABEL_SCREEN_PX);
-        let col_w = name_right - name_left;
-        assert!(col_w < 22.0, "name column should be glyph-narrow, got {col_w}");
-        assert!(width > 95.0 && width < 120.0, "IO columns should fit port labels, got {width}");
+        let width = computation_node_width("Box", &inputs, &outputs);
+        assert!(width > 85.0 && width < 105.0, "two IO columns should fit port labels, got {width}");
     }
 
     #[test]
@@ -2984,27 +2899,21 @@ mod tests {
         let outputs_long = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
         let short = computation_node_width("n", &inputs_short, &outputs_short);
         let long = computation_node_width("n", &inputs_long, &outputs_long);
-        assert!(short >= 85.0, "IO columns should not collapse below minimum, got {short}");
-        assert!(long <= 120.0, "long port labels should cap column width, got {long}");
+        assert!(short >= 68.0, "IO columns should not collapse below minimum, got {short}");
+        assert!(long <= 105.0, "long port labels should cap column width, got {long}");
         assert!(long >= short, "longer labels should not shrink columns");
     }
 
     #[test]
-    fn computation_name_column_bounds_leave_visible_gutter() {
-        let inputs = vec![
-            IoPortSpec { id: "cornerA".into(), label: "cornerA".into() },
-            IoPortSpec { id: "cornerB".into(), label: "cornerB".into() },
-            IoPortSpec { id: "height".into(), label: "height".into() },
-        ];
-        let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into() }];
-        let width = computation_node_width("brep.box", &inputs, &outputs);
-        let height = computation_node_height(3, 1, false, false);
+    fn computation_name_sits_above_rectangle_centered() {
+        let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into() }];
+        let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into() }];
+        let width = computation_node_width("Box", &inputs, &outputs);
+        let height = computation_node_height(1, 1, false, false);
         let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
-        let (name_left, name_right) = computation_name_column_bounds(&node, DAG_LABEL_SCREEN_PX);
-        assert!(name_left < name_right);
-        let hw = width * 0.5;
-        assert!(name_left > node.x - hw + 1.0);
-        assert!(name_right < node.x + hw - 1.0);
+        let (label_x, label_y) = computation_name_world_center(&node, "Box", DAG_LABEL_SCREEN_PX, 1.0);
+        assert!((label_x - node.x).abs() < 1e-6);
+        assert!(label_y < node.y - height * 0.5);
     }
 
     #[test]
@@ -3050,7 +2959,7 @@ mod tests {
         let height = computation_node_height(3, 1, false, false);
         assert!(height <= 42.0, "expected compact height, got {height}");
         assert!(height < 96.0, "expected shorter than legacy 4-row layout");
-        assert!(width > 95.0 && width < 120.0, "expected balanced IO column width, got {width}");
+        assert!(width > 85.0 && width < 105.0, "expected balanced IO column width, got {width}");
     }
 
     #[test]
@@ -3117,7 +3026,24 @@ mod tests {
         assert_eq!(dag_label_layout_px(), DAG_LABEL_SCREEN_PX);
         assert!((dag_label_paint_px(1.0) - DAG_LABEL_SCREEN_PX).abs() < 1e-9);
         assert!((dag_label_paint_px(2.0) - DAG_LABEL_SCREEN_PX * 2.0).abs() < 1e-9);
-        assert!((dag_label_paint_px(0.5) - DAG_LABEL_SCREEN_PX * 0.5).abs() < 1e-9);
+        assert!((dag_label_paint_px(0.5) - DAG_LABEL_SCREEN_PX).abs() < 1e-9);
+        assert!((dag_label_paint_px(0.25) - DAG_LABEL_SCREEN_PX).abs() < 1e-9);
+        assert!((dag_label_compact_paint_px(0.25) - DAG_LABEL_COMPACT_SCREEN_PX).abs() < 1e-9);
+    }
+
+    #[test]
+    fn dag_paint_scene_keeps_labels_when_lod_forced_at_low_zoom() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("compact");
+        host.fixture.camera.zoom = 0.25;
+        let mut scene = cavas::vello::Scene::new();
+        host.paint_scene(&mut scene, 1280, 800, 1.0);
+        assert!(
+            scene.encoding().path_tags.len() > 12,
+            "compact LOD at low zoom should still paint abbreviation labels"
+        );
     }
 
     #[test]
