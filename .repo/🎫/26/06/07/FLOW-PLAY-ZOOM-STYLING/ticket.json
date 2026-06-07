@@ -3,12 +3,13 @@
   "emoji": "🌊",
   "status": "closed",
   "description": "Fix flow play canvas styling breaking on zoom",
-  "summary": "Fixed flow play zoom styling: added cavas scale_scene_for_device_pixel_ratio and applied it in flow/dag WASM render paths so logical scenes fill physical GPU surfaces on retina; DAG node labels now pick horizontal vs vertical orientation from node aspect ratio instead of forcing vertical at Normal+ LOD (stops labels flipping sideways when crossing zoom bands); flow/dag canvases listen to visualViewport resize for browser zoom DPR updates. WASM rebuilt, flow play validate passes.",
+  "summary": "Fixed remaining flow/procedural zoom styling bugs: (1) slider_track_bounds returned (left, right, top, bottom) but callers destructured as (left, top, right, bottom), painting the track outside the node box; corrected tuple order and added bounds test. (2) Computation nodes lacked a title header row, so node names overlapped port labels (e.g. brep.sphere over radius); added DAG_COMPUTATION_HEADER_ROWS and paint_computation_node_name in the header band. (3) Strokes and labels used world-fixed widths and zoom-scaled font px, making lines hair-thin and text inconsistent when zooming; switched to screen-constant stroke widths (dag_world_stroke) and fixed 10–11px label size. WASM rebuilt, all 23 dag tests and flow play validate pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1551"
   },
   "goal": "🎯geometry🎯brep",
   "sessions": [
-    "⚪7ebf0fc50c50434597ad2b9d27e8e72b"
+    "⚪7ebf0fc50c50434597ad2b9d27e8e72b",
+    "⚪9188b7863d27492eac30ae8f75ce3466"
   ]
 }

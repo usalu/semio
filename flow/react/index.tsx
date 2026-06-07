@@ -3,6 +3,7 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { SelectionMarquee, type SelectionMarqueeCoverage } from "@ui/react";
 import { serializeGraphVelloThemePaletteJson } from "@ui/styling";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 
@@ -782,6 +783,14 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
 // #endregion 🔖Spotlight
 
 // #region 🔖FlowCanvas
+export type FlowSelectionMode = "default" | "additive" | "subtractive" | "invertive";
+export type FlowSelectionMethod = "rectangle" | "lasso";
+
+export interface FlowPreselectSnapshot {
+  readonly ids: readonly string[];
+  readonly removedIds: readonly string[];
+}
+
 export interface FlowCanvasProps {
   readonly fixtureJson?: string;
   readonly className?: string;
@@ -796,10 +805,41 @@ export interface FlowCanvasProps {
   readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
   readonly onWidgetDrop?: (detail: FlowWidgetDropDetail) => void;
   readonly onSelectionChange?: (ids: readonly string[]) => void;
+  readonly onPreselectChange?: (snapshot: FlowPreselectSnapshot) => void;
   readonly onHoverChange?: (id: string | null) => void;
   readonly selectedNodeIds?: readonly string[];
   readonly hoveredNodeId?: string | null;
   readonly previewOffNodeIds?: readonly string[];
+  readonly selectionMode?: FlowSelectionMode;
+  readonly selectionMethod?: FlowSelectionMethod;
+}
+
+export function parseFlowPreselectJson(json: string): FlowPreselectSnapshot {
+  try {
+    const parsed = JSON.parse(json) as { ids?: unknown; removedIds?: unknown };
+    const ids = Array.isArray(parsed.ids) ? parsed.ids.filter((value): value is string => typeof value === "string") : [];
+    const removedIds = Array.isArray(parsed.removedIds) ? parsed.removedIds.filter((value): value is string => typeof value === "string") : [];
+    return { ids, removedIds };
+  } catch {
+    return { ids: [], removedIds: [] };
+  }
+}
+
+export function parseFlowSelectionPreviewPoints(json: string): readonly { readonly x: number; readonly y: number }[] {
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => {
+        if (!Array.isArray(entry) || entry.length < 2) return null;
+        const x = Number(entry[0]);
+        const y = Number(entry[1]);
+        return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+      })
+      .filter((entry): entry is { x: number; y: number } => entry != null);
+  } catch {
+    return [];
+  }
 }
 
 export function parseFlowWidgetIdArray(json: string): string[] {
@@ -830,29 +870,41 @@ export function FlowCanvas({
   onCatalogueReady,
   onWidgetDrop,
   onSelectionChange,
+  onPreselectChange,
   onHoverChange,
   selectedNodeIds,
   hoveredNodeId,
   previewOffNodeIds,
+  selectionMode = "default",
+  selectionMethod = "rectangle",
 }: FlowCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<FlowSession | null>(null);
   const rafRef = useRef<number | null>(null);
+  const wheelZoomEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onPreviewTextRef = useRef(onPreviewText);
   const onEvalOutputsRef = useRef(onEvalOutputs);
   const onFixtureChangeRef = useRef(onFixtureChange);
   const onCatalogueReadyRef = useRef(onCatalogueReady);
   const onWidgetDropRef = useRef(onWidgetDrop);
   const onSelectionChangeRef = useRef(onSelectionChange);
+  const onPreselectChangeRef = useRef(onPreselectChange);
   const onHoverChangeRef = useRef(onHoverChange);
   const storeRef = useRef(store ?? createLocalFlowStore());
-  const pointerRef = useRef({ active: false, pan: false, id: -1 });
+  const pointerRef = useRef({ active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false });
+  const spacePanRef = useRef(false);
   const fixtureDragDepthRef = useRef(0);
   const lastVelloThemeJsonRef = useRef("");
   const catalogueSectionsRef = useRef<CatalogueSection[]>([]);
   const [fixtureDragActive, setFixtureDragActive] = useState(false);
   const [spotlight, setSpotlight] = useState<FlowSpotlightAnchor | null>(null);
+  const [marqueeOverlay, setMarqueeOverlay] = useState<{
+    readonly coverage: SelectionMarqueeCoverage;
+    readonly shape: "rect" | "polygon";
+    readonly rect?: { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+    readonly points?: readonly { readonly x: number; readonly y: number }[];
+  } | null>(null);
 
   const syncVelloTheme = useCallback(() => {
     if (typeof document === "undefined") return;
@@ -892,6 +944,10 @@ export function FlowCanvas({
   }, [onSelectionChange]);
 
   useEffect(() => {
+    onPreselectChangeRef.current = onPreselectChange;
+  }, [onPreselectChange]);
+
+  useEffect(() => {
     onHoverChangeRef.current = onHoverChange;
   }, [onHoverChange]);
 
@@ -899,13 +955,36 @@ export function FlowCanvas({
     if (store) storeRef.current = store;
   }, [store]);
 
+  const syncMarqueeOverlay = useCallback((session: FlowSession) => {
+    const points = parseFlowSelectionPreviewPoints(session.selectionPreviewPointsJson());
+    if (points.length < 2) {
+      setMarqueeOverlay(null);
+      return;
+    }
+    const coverage: SelectionMarqueeCoverage = session.selectionPreviewCrossing() ? "partial" : "full";
+    if (selectionMethod === "lasso" && points.length >= 3) {
+      setMarqueeOverlay({ coverage, shape: "polygon", points });
+      return;
+    }
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    const maxX = Math.max(...xs);
+    const maxY = Math.max(...ys);
+    setMarqueeOverlay({ coverage, shape: "rect", rect: { x: minX, y: minY, width: maxX - minX, height: maxY - minY } });
+  }, [selectionMethod]);
+
   const emitInteractionState = useCallback((session: FlowSession) => {
     const selected = parseFlowWidgetIdArray(session.selectedWidgetIds());
     const hovered = session.hoveredWidgetId() ?? null;
+    const preselect = parseFlowPreselectJson(session.preselectWidgetIdsJson());
     onSelectionChangeRef.current?.(selected);
+    onPreselectChangeRef.current?.(preselect);
     onHoverChangeRef.current?.(hovered);
-    console.log(`[DEBUG] flow interaction selected=[${selected.join(", ")}] hover=${hovered ?? "—"}`);
-  }, []);
+    syncMarqueeOverlay(session);
+    console.log(`[DEBUG] flow interaction selected=[${selected.join(", ")}] preselect=[${preselect.ids.join(", ")}] hover=${hovered ?? "—"}`);
+  }, [syncMarqueeOverlay]);
 
   const persistFixture = useCallback(() => {
     const session = sessionRef.current;
@@ -1033,6 +1112,75 @@ export function FlowCanvas({
   }, [hoveredNodeId, previewOffNodeIds, renderFrame, selectedNodeIds]);
 
   useEffect(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    session.setSelectionOptions(selectionMethod, selectionMode);
+    renderFrame();
+  }, [renderFrame, selectionMethod, selectionMode]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Space" && !event.repeat) {
+        spacePanRef.current = true;
+      }
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.code === "Space") {
+        spacePanRef.current = false;
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      const session = sessionRef.current;
+      if (!session) return;
+      const mod = event.metaKey || event.ctrlKey;
+      if (mod && event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        session.selectAll();
+        emitInteractionState(session);
+        evaluate();
+        persistFixture();
+        renderFrame();
+        return;
+      }
+      if (event.key === "Escape") {
+        if (session.cancelAreaSelect()) {
+          event.preventDefault();
+          emitInteractionState(session);
+          renderFrame();
+        }
+        return;
+      }
+      if (event.key === "Delete" || event.key === "Backspace") {
+        const selected = parseFlowWidgetIdArray(session.selectedWidgetIds());
+        if (!selected.length) return;
+        event.preventDefault();
+        try {
+          session.deleteSelection();
+          emitInteractionState(session);
+          evaluate();
+          persistFixture();
+          renderFrame();
+        } catch (err) {
+          console.log(`[DEBUG] flow deleteSelection failed: ${String(err)}`);
+        }
+      }
+    };
+    container.addEventListener("keydown", onKeyDown);
+    return () => container.removeEventListener("keydown", onKeyDown);
+  }, [emitInteractionState, evaluate, persistFixture, renderFrame]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
@@ -1096,6 +1244,10 @@ export function FlowCanvas({
     return () => {
       cancelled = true;
       cleanupResize?.();
+      if (wheelZoomEndRef.current != null) {
+        clearTimeout(wheelZoomEndRef.current);
+        wheelZoomEndRef.current = null;
+      }
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       sessionRef.current = null;
     };
@@ -1113,9 +1265,10 @@ export function FlowCanvas({
       const session = sessionRef.current;
       if (!session || e.button > 2) return;
       e.currentTarget.setPointerCapture(e.pointerId);
-      pointerRef.current = { active: true, pan: e.button === 1 || e.shiftKey, id: e.pointerId };
+      const pan = e.button === 1 || spacePanRef.current;
+      pointerRef.current = { active: true, pan, id: e.pointerId, shift: e.shiftKey, ctrl: e.metaKey || e.ctrlKey, alt: e.altKey };
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
-      session.pointerDownScreen(x, y, e.metaKey || e.ctrlKey, pointerRef.current.pan);
+      session.pointerDownScreen(x, y, e.button, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey, pan);
       emitInteractionState(session);
       renderFrame();
     },
@@ -1127,7 +1280,7 @@ export function FlowCanvas({
       const session = sessionRef.current;
       if (!session || !pointerRef.current.active || pointerRef.current.id !== e.pointerId) return;
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
-      session.pointerMoveScreen(x, y);
+      session.pointerMoveScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
       emitInteractionState(session);
       renderFrame();
     },
@@ -1139,8 +1292,8 @@ export function FlowCanvas({
       const session = sessionRef.current;
       if (!session || pointerRef.current.id !== e.pointerId) return;
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
-      session.pointerUpScreen(x, y);
-      pointerRef.current = { active: false, pan: false, id: -1 };
+      session.pointerUpScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
+      pointerRef.current = { active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false };
       emitInteractionState(session);
       evaluate();
       persistFixture();
@@ -1165,17 +1318,33 @@ export function FlowCanvas({
     [clientToCanvas],
   );
 
+  const syncWheelZoomActive = useCallback((active: boolean) => {
+    try {
+      sessionRef.current?.setWheelZoomActive(active);
+    } catch {
+      /* gpu not ready */
+    }
+  }, []);
+
   const onWheel = useCallback(
     (e: React.WheelEvent<HTMLCanvasElement>) => {
       const session = sessionRef.current;
       if (!session) return;
       e.preventDefault();
+      syncWheelZoomActive(true);
+      if (wheelZoomEndRef.current != null) {
+        clearTimeout(wheelZoomEndRef.current);
+      }
+      wheelZoomEndRef.current = setTimeout(() => {
+        wheelZoomEndRef.current = null;
+        syncWheelZoomActive(false);
+      }, 120);
       const { x, y } = clientToCanvas(e.clientX, e.clientY);
       session.wheel(x, y, e.deltaY);
       persistFixture();
       renderFrame();
     },
-    [clientToCanvas, persistFixture, renderFrame],
+    [clientToCanvas, persistFixture, renderFrame, syncWheelZoomActive],
   );
 
   const resetFixtureDragDepth = useCallback(() => {
@@ -1289,7 +1458,8 @@ export function FlowCanvas({
   return (
     <div
       ref={containerRef}
-      className={className ?? `relative h-full min-h-0 w-full min-w-0 bg-canvas${fixtureDragActive ? " ring-2 ring-inset ring-accent" : ""}`}
+      tabIndex={0}
+      className={className ?? `relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none${fixtureDragActive ? " ring-2 ring-inset ring-accent" : ""}`}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
       onDragOver={onDragOver}
@@ -1305,6 +1475,12 @@ export function FlowCanvas({
         onDoubleClick={onCanvasDoubleClick}
         onWheel={onWheel}
       />
+      {marqueeOverlay?.shape === "rect" && marqueeOverlay.rect ? (
+        <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />
+      ) : null}
+      {marqueeOverlay?.shape === "polygon" && marqueeOverlay.points ? (
+        <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} />
+      ) : null}
       {spotlight && sessionRef.current ? (
         <FlowSpotlight
           anchor={spotlight}
@@ -1439,6 +1615,20 @@ if (import.meta.vitest) {
     it("compares widget id arrays in order", () => {
       expect(flowWidgetIdArraysEqual(["a"], ["a"])).toBe(true);
       expect(flowWidgetIdArraysEqual(["a"], ["b"])).toBe(false);
+    });
+
+    it("parses preselect json", () => {
+      const snap = parseFlowPreselectJson(JSON.stringify({ ids: ["a"], removedIds: ["b"] }));
+      expect(snap.ids).toEqual(["a"]);
+      expect(snap.removedIds).toEqual(["b"]);
+    });
+
+    it("parses selection preview points", () => {
+      const points = parseFlowSelectionPreviewPoints(JSON.stringify([[0, 1], [3, 4]]));
+      expect(points).toEqual([
+        { x: 0, y: 1 },
+        { x: 3, y: 4 },
+      ]);
     });
   });
 }

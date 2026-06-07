@@ -22,7 +22,7 @@ import {
 	type WindowBodyViewContext,
 	type WindowEngagement,
 } from "@framework/playground/core";
-import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMergeMode } from "@ui/react";
 import {
 	flowPlayCatalogueItemDragData,
 	type CatalogueItem,
@@ -61,6 +61,8 @@ export const PROCEDURAL_PLAY_KINDS_TAB_ID = "procedural-play-kinds";
 export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
 
 export type ProceduralLayoutOrientation = "leftRight" | "topBottom";
+export type ProceduralPlaySelectionMode = SelectionMergeMode;
+export type ProceduralPlaySelectionMethod = "rectangle" | "lasso";
 
 const DEFAULT_LAYER_SPACING = 120;
 const DEFAULT_SIBLING_GAP = 40;
@@ -168,9 +170,13 @@ export class ProceduralPlayController extends Controller {
 	private extensionRevision = 0;
 	private geometryHandles: ProceduralGeometryHandle[] = [];
 	private selectedNodeIds: string[] = [];
+	private preselectNodeIds: string[] = [];
+	private preselectRemovedNodeIds: string[] = [];
 	private hoveredNodeId: string | null = null;
 	private previewOffNodeIds: string[] = [];
 	private showMode: ProceduralPreviewShowMode = "everything";
+	private selectionMode: ProceduralPlaySelectionMode = "default";
+	private selectionMethod: ProceduralPlaySelectionMethod = "rectangle";
 	private interactionRevision = 0;
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
@@ -208,6 +214,22 @@ export class ProceduralPlayController extends Controller {
 
 	getSelectedNodeIds(): readonly string[] {
 		return this.selectedNodeIds;
+	}
+
+	getPreselectNodeIds(): readonly string[] {
+		return this.preselectNodeIds;
+	}
+
+	getPreselectRemovedNodeIds(): readonly string[] {
+		return this.preselectRemovedNodeIds;
+	}
+
+	getSelectionMode(): ProceduralPlaySelectionMode {
+		return this.selectionMode;
+	}
+
+	getSelectionMethod(): ProceduralPlaySelectionMethod {
+		return this.selectionMethod;
 	}
 
 	getHoveredNodeId(): string | null {
@@ -253,6 +275,27 @@ export class ProceduralPlayController extends Controller {
 		this.emit();
 	}
 
+	private selectionMeasures() {
+		return [
+			{
+				kind: "toggle" as const,
+				id: "procedural-flow-marquee-rectangle",
+				iconId: "square",
+				text: "Rectangle",
+				pressed: this.selectionMethod === "rectangle",
+				onChange: proceduralPlayCmd("setSelectionMethod", { method: "rectangle" }),
+			},
+			{
+				kind: "toggle" as const,
+				id: "procedural-flow-marquee-lasso",
+				iconId: "lasso",
+				text: "Lasso",
+				pressed: this.selectionMethod === "lasso",
+				onChange: proceduralPlayCmd("setSelectionMethod", { method: "lasso" }),
+			},
+		];
+	}
+
 	private flowWindowEngagement(): WindowEngagement {
 		return {
 			sessionActive: false,
@@ -263,6 +306,7 @@ export class ProceduralPlayController extends Controller {
 				onChange: proceduralPlayCmd("engagementInput"),
 				onSubmit: proceduralPlayCmd("engagementSubmit"),
 			},
+			measures: this.selectionMeasures(),
 			possibleEngagements: [
 				{ id: "procedural.tool.reorganize", label: "Reorganize", command: proceduralPlayCmd("reorganize") },
 				{ id: "procedural.layout.leftRight", label: "Left to Right", command: proceduralPlayCmd("setOrientation", { orientation: "leftRight" }) },
@@ -304,6 +348,7 @@ export class ProceduralPlayController extends Controller {
 				onChange: proceduralPlayCmd("previewEngagementInput"),
 				onSubmit: proceduralPlayCmd("previewEngagementSubmit"),
 			},
+			measures: this.selectionMeasures(),
 			control: {
 				kind: "ring",
 				id: "procedural-preview-show",
@@ -398,10 +443,62 @@ export class ProceduralPlayController extends Controller {
 		}
 		if (command === "setSelection") {
 			const ids = (args as { ids?: string[] }).ids;
+			const mode = (args as { mode?: ProceduralPlaySelectionMode }).mode ?? "default";
 			if (!Array.isArray(ids)) return;
-			const next = [...ids];
+			const next = selectionMergeIds(mode, this.selectedNodeIds, ids);
 			if (JSON.stringify(next) === JSON.stringify(this.selectedNodeIds)) return;
 			this.selectedNodeIds = next;
+			this.preselectNodeIds = [];
+			this.preselectRemovedNodeIds = [];
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "setPreselect") {
+			const ids = (args as { ids?: string[] }).ids;
+			const removedIds = (args as { removedIds?: string[] }).removedIds;
+			if (!Array.isArray(ids) || !Array.isArray(removedIds)) return;
+			this.preselectNodeIds = [...ids];
+			this.preselectRemovedNodeIds = [...removedIds];
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "setSelectionMode") {
+			const mode = (args as { mode?: ProceduralPlaySelectionMode }).mode;
+			if (mode !== "default" && mode !== "additive" && mode !== "subtractive" && mode !== "invertive") return;
+			if (this.selectionMode === mode) return;
+			this.selectionMode = mode;
+			this.rebuildShellMode();
+			this.emit();
+			return;
+		}
+		if (command === "setSelectionMethod") {
+			const method = (args as { method?: ProceduralPlaySelectionMethod }).method;
+			if (method !== "rectangle" && method !== "lasso") return;
+			if (this.selectionMethod === method) return;
+			this.selectionMethod = method;
+			this.rebuildShellMode();
+			this.emit();
+			return;
+		}
+		if (command === "selectAll") {
+			const ids = this.geometryHandles.map((entry) => entry.widgetId);
+			this.selectedNodeIds = [...new Set(ids)];
+			this.preselectNodeIds = [];
+			this.preselectRemovedNodeIds = [];
+			this.interactionRevision += 1;
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "deleteSelection") {
+			if (!this.selectedNodeIds.length) return;
+			this.selectedNodeIds = [];
+			this.preselectNodeIds = [];
+			this.preselectRemovedNodeIds = [];
 			this.interactionRevision += 1;
 			this.notifySnapshot();
 			this.emit();
@@ -514,6 +611,11 @@ export function buildProceduralPlayAppRuntime(controller: ProceduralPlayControll
 /** @emoji 🛝 Procedural playground app. */
 export class PlaygroundProcedural extends Playground {
 	readonly id = PROCEDURAL_PLAY_APP_ID;
+	readonly keybindings = [
+		{ key: "ctrl+a,meta+a", controllerId: PROCEDURAL_PLAY_CONTROLLER_ID, command: "selectAll" },
+		{ key: "Delete", controllerId: PROCEDURAL_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+		{ key: "Backspace", controllerId: PROCEDURAL_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+	];
 
 	createRuntime(): Platform {
 		const runtime = new Platform({ id: this.id });
@@ -611,6 +713,21 @@ if (import.meta.vitest) {
 			expect(ctrl.getSelectedNodeIds()).toEqual(["box"]);
 			expect(ctrl.getHoveredNodeId()).toBe("box");
 			expect(ctrl.getInteractionRevision()).toBeGreaterThan(0);
+		});
+
+		it("setSelection merges additively when mode is additive", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setSelection", { ids: ["a"], mode: "default" });
+			ctrl.run("setSelection", { ids: ["b"], mode: "additive" });
+			expect(ctrl.getSelectedNodeIds()).toEqual(["a", "b"]);
+		});
+
+		it("setSelectionMethod updates marquee method", () => {
+			const bus = new CommandBus();
+			const ctrl = new ProceduralPlayController(bus, () => {});
+			ctrl.run("setSelectionMethod", { method: "lasso" });
+			expect(ctrl.getSelectionMethod()).toBe("lasso");
 		});
 
 		it("extensions tree lists installed modules", () => {

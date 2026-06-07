@@ -8,8 +8,8 @@
       "kind": "slider",
       "x": -400,
       "y": -40,
-      "width": 180,
-      "height": 80,
+      "width": 72,
+      "height": 28,
       "min": 0,
       "max": 10,
       "step": 0.5,
@@ -22,8 +22,8 @@
       "kind": "select",
       "x": -400,
       "y": 80,
-      "width": 180,
-      "height": 80,
+      "width": 56,
+      "height": 28,
       "options": ["Add", "Multiply", "Max"],
       "selected": 0,
       "output": { "id": "out", "label": "mode" }
@@ -34,8 +34,8 @@
       "kind": "computation",
       "x": -120,
       "y": -40,
-      "width": 160,
-      "height": 72,
+      "width": 104,
+      "height": 14,
       "inputs": [{ "id": "in", "label": "value" }],
       "outputs": [{ "id": "out", "label": "scaled" }]
     },
@@ -45,8 +45,8 @@
       "kind": "computation",
       "x": 120,
       "y": 0,
-      "width": 160,
-      "height": 96,
+      "width": 104,
+      "height": 28,
       "inputs": [
         { "id": "a", "label": "a" },
         { "id": "b", "label": "b" }

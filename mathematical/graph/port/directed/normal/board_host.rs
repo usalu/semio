@@ -5185,7 +5185,7 @@ impl BoardHost {
         }
         self.interaction = Interaction::None;
         if let Some(id) = hit {
-            let next = Self::merge_pick_into_selection(&self.selection, &id, pick_mode.as_str());
+            let next = merge_pick_into_selection(&self.selection, &id, pick_mode.as_str());
             let ids: Vec<_> = next.iter().cloned().collect();
             let gesture = merge_from_modifiers.then_some(pick_mode.as_str());
             self.set_selection_ids_gestured(&ids, gesture);
@@ -5264,7 +5264,7 @@ impl BoardHost {
                 } else {
                     let points = vec![start, world];
                     let screen_points = vec![start_screen, screen];
-                    let merge_mode = Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+                    let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
                     let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points, merge_mode.as_str());
                     let ids: Vec<_> = next.iter().cloned().collect();
                     let merge_from_modifiers = ctrl_or_meta || shift;
@@ -5288,7 +5288,7 @@ impl BoardHost {
                 }
                 let initial = initial_ids.clone();
                 let pts = points.clone();
-                let merge_mode = Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+                let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
                 let next = self.resolve_area_selection_with_initial(&initial, start, &pts, merge_mode.as_str());
                 let ids: Vec<_> = next.iter().cloned().collect();
                 let merge_from_modifiers = ctrl_or_meta || shift;
@@ -5393,7 +5393,7 @@ impl BoardHost {
                 if !merge_from_modifiers {
                     self.clear_selection_on_background_click();
                 } else {
-                    let merge_mode = Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+                    let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
                     let gesture = Some(merge_mode.as_str());
                     let next = self.resolve_area_selection_with_initial(&initial_ids, start, &[start], merge_mode.as_str());
                     let ids: Vec<_> = next.iter().cloned().collect();
@@ -5408,7 +5408,7 @@ impl BoardHost {
                 let end_screen = screen_points.last().copied().unwrap_or(start_screen);
                 let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
                 let merge_from_modifiers = ctrl_or_meta || shift;
-                let merge_mode = Self::pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+                let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
                 let gesture = merge_from_modifiers.then(|| merge_mode.as_str());
                 if click_only {
                     self.commit_area_select_from_initial(&initial_ids, &[], gesture);
@@ -5538,16 +5538,7 @@ impl BoardHost {
     }
 
     fn selection_drag_shape_world(&self, start: Point, points: &[Point]) -> Option<(WorldBox, bool, Vec<Point>)> {
-        let last = points.last().copied().unwrap_or(start);
-        let enclosing = last.x >= start.x;
-        if self.selection_options.method == "lasso" && points.len() >= 3 {
-            let poly: Vec<Point> = points.to_vec();
-            let b = world_box_from_points(&poly)?;
-            return Some((b, enclosing, poly));
-        }
-        let b = world_box_from_points(&[start, last])?;
-        let poly = vec![Point::new(b.min_x, b.min_y), Point::new(b.max_x, b.min_y), Point::new(b.max_x, b.max_y), Point::new(b.min_x, b.max_y)];
-        Some((b, enclosing, poly))
+        selection_drag_shape(self.selection_options.method.as_str(), start, points)
     }
 
     fn selection_contains_node(&self, n: &NodeData, box_: WorldBox, enclosing: bool, polygon: &[Point]) -> bool {
@@ -5639,28 +5630,7 @@ impl BoardHost {
                 }
             }
         }
-        if merge_mode == "replace" {
-            return hits;
-        }
-        let mut next = initial.clone();
-        for id in &hits {
-            match merge_mode {
-                "additive" => {
-                    next.insert(id.clone());
-                }
-                "subtractive" => {
-                    next.remove(id);
-                }
-                _ => {
-                    if next.contains(id) {
-                        next.remove(id);
-                    } else {
-                        next.insert(id.clone());
-                    }
-                }
-            }
-        }
-        next
+        merge_ids_into_selection(initial, &hits, merge_mode)
     }
 }
 

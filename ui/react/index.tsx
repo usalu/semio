@@ -409,6 +409,69 @@ export function SelectionMarquee(props: SelectionMarqueeProps): React.ReactEleme
     </svg>
   );
 }
+
+export type SelectionMergeMode = "default" | "additive" | "subtractive" | "invertive";
+
+/** @emoji 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
+export function marqueeIsCrossing(startX: number, endX: number): boolean {
+  return endX < startX;
+}
+
+/** @emoji 🖱️ Maps drag direction to marquee coverage. */
+export function marqueeCoverageFromDrag(startX: number, endX: number): SelectionMarqueeCoverage {
+  return marqueeIsCrossing(startX, endX) ? "partial" : "full";
+}
+
+/** @emoji 🎯 Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive). */
+export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }): SelectionMergeMode {
+  const shift = modifiers.shiftKey === true;
+  const ctrl = modifiers.ctrlKey === true || modifiers.metaKey === true;
+  if (shift && ctrl) return "invertive";
+  if (shift) return "additive";
+  if (ctrl) return "subtractive";
+  return "default";
+}
+
+/** @emoji 🎯 Applies selection mode when committing ids. */
+export function selectionMergeIds(mode: SelectionMergeMode, current: readonly string[], incoming: readonly string[]): string[] {
+  const currentSet = new Set(current);
+  const incomingSet = new Set(incoming);
+  if (mode === "default") return [...incomingSet];
+  if (mode === "additive") {
+    for (const id of incomingSet) currentSet.add(id);
+    return [...currentSet];
+  }
+  if (mode === "subtractive") {
+    for (const id of incomingSet) currentSet.delete(id);
+    return [...currentSet];
+  }
+  for (const id of incomingSet) {
+    if (currentSet.has(id)) currentSet.delete(id);
+    else currentSet.add(id);
+  }
+  return [...currentSet];
+}
+
+export type ScreenRect = { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+
+export function screenRectContainsRect(outer: ScreenRect, inner: ScreenRect): boolean {
+  return inner.x >= outer.x && inner.y >= outer.y && inner.x + inner.width <= outer.x + outer.width && inner.y + inner.height <= outer.y + outer.height;
+}
+
+export function screenRectIntersectsRect(a: ScreenRect, b: ScreenRect): boolean {
+  return a.x <= b.x + b.width && a.x + a.width >= b.x && a.y <= b.y + b.height && a.y + a.height >= b.y;
+}
+
+export function screenRectFromPoints(points: readonly { readonly x: number; readonly y: number }[]): ScreenRect | null {
+  if (!points.length) return null;
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  const maxX = Math.max(...xs);
+  const maxY = Math.max(...ys);
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
 // #endregion 🔖SelectionMarquee
 
 // #region 🔖Icon
@@ -5815,6 +5878,8 @@ function Slider({
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isSliding, setIsSliding] = reactHostPort.useState(false);
+  const [isDragging, setIsDragging] = reactHostPort.useState(false);
+  const pointerActiveRef = reactHostPort.useRef(false);
   const [editValue, setEditValue] = reactHostPort.useState("");
   const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
   const commands = useInteractionCommands();
@@ -5879,6 +5944,7 @@ function Slider({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    pointerActiveRef.current = true;
     if (!hasBeenEdited) setHasBeenEdited(true);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (!isSliding) {
@@ -5888,7 +5954,13 @@ function Slider({
     onPointerDown?.();
   };
 
+  const handlePointerMove = () => {
+    if (pointerActiveRef.current) setIsDragging(true);
+  };
+
   const handlePointerUp = (e: React.PointerEvent) => {
+    pointerActiveRef.current = false;
+    setIsDragging(false);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
@@ -5898,6 +5970,8 @@ function Slider({
   };
 
   const handlePointerCancel = (e: React.PointerEvent) => {
+    pointerActiveRef.current = false;
+    setIsDragging(false);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
@@ -5941,6 +6015,7 @@ function Slider({
       max={max}
       onValueChange={handleValueChange}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       onKeyDown={handleKeyDown}
@@ -5959,8 +6034,9 @@ function Slider({
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
+          data-dragging={isDragging ? "true" : undefined}
           key={index}
-          className="border-foreground bg-foreground ring-ring/50 block size-small shrink-0 rounded-full border transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-accent"
+          className="border-foreground bg-foreground ring-ring/50 block size-small shrink-0 rounded-full border transition-colors hover:border-accent hover:bg-accent focus-visible:border-accent focus-visible:bg-accent focus-visible:outline-hidden data-[dragging=true]:border-accent data-[dragging=true]:bg-accent disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
     </SliderPrimitive.Root>

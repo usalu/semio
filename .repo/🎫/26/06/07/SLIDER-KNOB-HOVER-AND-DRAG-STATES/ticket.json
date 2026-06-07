@@ -1,0 +1,14 @@
+{
+  "title": "Slider Knob Hover and Drag States",
+  "emoji": "🎚",
+  "status": "closed",
+  "description": "The slider knob should show hover and only turn active color when dragged",
+  "summary": "Slider knob now shows accent border/background on hover, and only switches to the active accent color when the pointer moves while pressed (data-dragging). Removed CSS :active styling that fired on mousedown before any drag.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1553"
+  },
+  "goal": "🎯ui",
+  "sessions": [
+    "⚪50dd4558a69a429c946747f63b4d8bcf"
+  ]
+}

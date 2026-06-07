@@ -4,28 +4,28 @@ overview: Replace procedural's single-pick selection with puzzle-grade partial/f
 todos:
   - id: rust-shared
     content: Extract pure marquee primitives (modifier→mode, merge, drag-shape, partial/full hit, preselect) into mathematical/graph/lib.rs and refactor board_host to use them
-    status: in_progress
+    status: completed
   - id: engine-dag
     content: Add SelectionPending/AreaSelect/group-DragNodes + preselect + screen-preview + select-all/delete/cancel to GraphEngine and wire DAG host (pointer modifiers, id mapping, preselect paint)
-    status: pending
+    status: completed
   - id: flow-core
     content: "flow/core: new pointer signature (button+modifiers, drop shift-pan), selection options + preselect/preview/select-all/delete/cancel pass-throughs and WASM bindings; rebuild WASM"
-    status: pending
+    status: completed
   - id: flow-react
     content: "flow/react: pass modifiers/button, space/middle pan, SelectionMarquee DOM overlay from preview points, ctrl+a/delete/esc hotkeys, controlled selectionMethod/mode, emit preselect"
-    status: pending
+    status: completed
   - id: ts-shared
     content: Lift generic marquee helpers into @ui/react next to SelectionMarquee; refactor puzzle-3d to import them
-    status: pending
+    status: completed
   - id: preview-marquee
     content: "procedural/react ProceduralPreview: rect/lasso marquee with screen-projected partial/full hit testing, modifier merge modes, overlay, orbit gating, preselect visuals; onSelectionChange(ids, mode)"
-    status: pending
+    status: completed
   - id: play-renderer
     content: "procedural/play + renderer: selectionMode/method state+tools+keybindings, merge-aware shared setSelection, wire both panes (flow + preview) with controlled props"
-    status: pending
+    status: completed
   - id: tests
     content: Add Rust + vitest coverage; rebuild WASM; validate persistence/partial/full/group/modifiers via [DEBUG] logs; close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

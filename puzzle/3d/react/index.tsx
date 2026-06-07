@@ -19,6 +19,7 @@ import {
   type TreeDragAndDropController,
   referenceMediaKindFromUrl,
   SelectionMarquee,
+  marqueeModeFromModifiers,
   ContextMenuController,
   cn,
   glassMenuClass,
@@ -580,21 +581,7 @@ function mergeIdList(mode: SelectionMode, current: readonly string[], incoming: 
   return [...invert];
 }
 
-/** @emoji 🎯 Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive). */
-export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }): SelectionMode {
-  const shift = modifiers.shiftKey === true;
-  const ctrl = modifiers.ctrlKey === true || modifiers.metaKey === true;
-  if (shift && ctrl) {
-    return "invertive";
-  }
-  if (shift) {
-    return "additive";
-  }
-  if (ctrl) {
-    return "subtractive";
-  }
-  return "default";
-}
+export { marqueeModeFromModifiers };
 
 /** @emoji 🎯 Applies selection mode when committing a canvas pick. */
 export function mergeSelection(mode: SelectionMode, current: SelectionSnapshot, pick: SelectionPick): SelectionSnapshot {

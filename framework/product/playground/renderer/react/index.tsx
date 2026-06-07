@@ -6326,7 +6326,13 @@ function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowH
   );
   const onSelectionChange = reactHostPort.useCallback(
     (ids: readonly string[]) => {
-      ctrl?.run("setSelection", { ids: [...ids] });
+      ctrl?.run("setSelection", { ids: [...ids], mode: "default" });
+    },
+    [ctrl],
+  );
+  const onPreselectChange = reactHostPort.useCallback(
+    (snapshot: { readonly ids: readonly string[]; readonly removedIds: readonly string[] }) => {
+      ctrl?.run("setPreselect", { ids: [...snapshot.ids], removedIds: [...snapshot.removedIds] });
     },
     [ctrl],
   );
@@ -6346,10 +6352,15 @@ function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowH
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
       onSelectionChange={onSelectionChange}
+      onPreselectChange={onPreselectChange}
       onHoverChange={onHoverChange}
       selectedNodeIds={ctrl?.getSelectedNodeIds()}
+      preselectNodeIds={ctrl?.getPreselectNodeIds()}
+      preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
       hoveredNodeId={ctrl?.getHoveredNodeId()}
       previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
+      selectionMode={ctrl?.getSelectionMode()}
+      selectionMethod={ctrl?.getSelectionMethod()}
       className="h-full w-full"
     />
   );
@@ -6365,9 +6376,9 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPanelH
     },
     [ctrl],
   );
-  const onSelect = reactHostPort.useCallback(
-    (id: string) => {
-      ctrl?.run("setSelection", { ids: [id] });
+  const onSelectionChange = reactHostPort.useCallback(
+    (ids: readonly string[], mode: import("@procedural/react").ProceduralSelectionMode) => {
+      ctrl?.run("setSelection", { ids: [...ids], mode });
     },
     [ctrl],
   );
@@ -6375,11 +6386,15 @@ function ProceduralPreviewSurfaceHost({ node: _node }: { readonly node: UiPanelH
     <ProceduralPreview
       handles={ctrl?.getGeometryHandles() ?? []}
       selectedNodeIds={ctrl?.getSelectedNodeIds()}
+      preselectNodeIds={ctrl?.getPreselectNodeIds()}
+      preselectRemovedNodeIds={ctrl?.getPreselectRemovedNodeIds()}
       hoveredNodeId={ctrl?.getHoveredNodeId()}
       previewOffNodeIds={ctrl?.getPreviewOffNodeIds()}
       showMode={ctrl?.getShowMode() ?? "everything"}
+      selectionMode={ctrl?.getSelectionMode()}
+      selectionMethod={ctrl?.getSelectionMethod()}
       onHover={onHover}
-      onSelect={onSelect}
+      onSelectionChange={onSelectionChange}
       kernel={proceduralExtensionHost.getBrepKernel()}
       className="h-full w-full"
     />

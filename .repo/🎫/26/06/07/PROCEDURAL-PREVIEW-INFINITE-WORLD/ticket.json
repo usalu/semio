@@ -1,7 +1,7 @@
 {
-  "title": "Procedural Brep Playground",
+  "title": "Procedural Preview Infinite World",
   "emoji": "🔧",
-  "status": "closed",
+  "status": "open",
   "description": "Extract brep kernel into @geometry/brep/js, setup @procedural/react flow-based brep editor with R3F viewport, and @procedural/play playground.",
   "summary": "Fixed missing procedural play workbench panels: added buildProceduralPlayKindsTree/buildProceduralPlayExtensionsTree, extended ProceduralPlayController with subscribeSnapshot, extension entries, toggle/reorganize commands; wired ProceduralPlayInner with catalogue+extensions augmentPanelTabs mirroring flow play; passed onCatalogueReady through ProceduralEditor to FlowCanvas. Tests pass (10 play, 4 react).",
   "github": {
@@ -10,11 +10,12 @@
   "goal": "🎯geometry🎯brep",
   "plan": {
     "client": "cursor",
-    "id": "dca1c048",
-    "local": "procedural_brep_playground_dca1c048.plan.md"
+    "id": "76647a82",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/procedural_preview_infinite_world_76647a82.plan.md"
   },
   "sessions": [
     "⚪8734df91b0324944b2c9e59b28bfd336",
-    "⚪728f7b6d3484411686e47db9d4e37202"
+    "⚪728f7b6d3484411686e47db9d4e37202",
+    "⚪575ce1050f934da082e7cfdf07179778"
   ]
 }

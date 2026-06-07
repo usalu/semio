@@ -6,7 +6,10 @@ pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, HashMap};
 
-use dag::{computation_node_height, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec};
+use dag::{
+    computation_node_height, computation_node_width, io_widget_height, io_widget_width, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec,
+    IoPortSpec,
+};
 use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
@@ -207,15 +210,17 @@ fn widget_io_ports(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>
 }
 
 fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (f64, f64) {
+    let label = widget_label(widget);
     match widget {
-        Widget::InputSlider { .. } => (180.0, 48.0),
-        Widget::InputNote { .. } => (160.0, 48.0),
-        Widget::OutputPreview { .. } => (120.0, 48.0),
-        Widget::OutputAction { .. } => (120.0, 48.0),
+        Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } => {
+            (io_widget_width(&label), io_widget_height(&label))
+        }
         Widget::Neuron { neuronKind, input_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
-            let height = computation_node_height(inputs.len(), outputs.len(), variadic_inputs, variadic_outputs);
-            (160.0, height)
+            (
+                computation_node_width(&label, &inputs, &outputs),
+                computation_node_height(inputs.len(), outputs.len(), variadic_inputs, variadic_outputs),
+            )
         }
     }
 }
@@ -772,13 +777,13 @@ impl FlowHost {
         Ok(())
     }
 
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, extend: bool, pan: bool) {
+    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
         if pan {
             self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
             return;
         }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
-        self.dag.pointer_down(sx, sy, extend);
+        self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt);
         if let Some((widget_id, index)) = self.dag.take_pending_port_insert() {
             let _ = self.add_input_port(&widget_id, index);
             return;
@@ -786,7 +791,7 @@ impl FlowHost {
         self.sync_from_dag();
     }
 
-    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
+    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         if let Some((start_sx, start_sy, cam_x, cam_y)) = self.pan_anchor {
             let zoom = self.fixture.camera.zoom;
             let dx = (sx - start_sx) / zoom;
@@ -795,16 +800,59 @@ impl FlowHost {
             return;
         }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
-        self.dag.pointer_move(sx, sy);
+        self.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
         self.sync_from_dag();
     }
 
-    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
+    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.pan_anchor = None;
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
-        self.dag.pointer_up(sx, sy);
+        self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         self.sync_from_dag();
         self.evaluate_internal();
+    }
+
+    pub fn set_selection_options(&mut self, method: &str, mode: &str) {
+        self.dag.set_selection_options(method, mode, true, false, false);
+    }
+
+    pub fn selection_preview_points_json(&self) -> String {
+        self.dag.selection_preview_points_json()
+    }
+
+    pub fn selection_preview_crossing(&self) -> bool {
+        self.dag.selection_preview_crossing()
+    }
+
+    pub fn preselect_widget_ids_json(&self) -> String {
+        serde_json::json!({
+            "ids": self.dag.preselect_widget_ids(),
+            "removedIds": self.dag.preselect_removed_widget_ids(),
+        })
+        .to_string()
+    }
+
+    pub fn cancel_area_select(&mut self) -> bool {
+        let cancelled = self.dag.cancel_area_select();
+        if cancelled {
+            self.sync_from_dag();
+        }
+        cancelled
+    }
+
+    pub fn delete_selection(&mut self) -> Result<(), String> {
+        if self.dag.selected_node_ids().is_empty() {
+            return Ok(());
+        }
+        self.dag.delete_selected();
+        self.sync_from_dag();
+        self.evaluate_internal();
+        Ok(())
+    }
+
+    pub fn select_all(&mut self) {
+        self.dag.select_all();
+        self.sync_from_dag();
     }
 
     fn evaluate_internal(&mut self) {
@@ -1358,6 +1406,11 @@ impl FlowSession {
         self.state.borrow_mut().host.wheel(sx, sy, delta_y);
     }
 
+    #[wasm_bindgen(js_name = setWheelZoomActive)]
+    pub fn set_wheel_zoom_active(&self, active: bool) {
+        self.state.borrow_mut().host.dag.set_wheel_zoom_active(active);
+    }
+
     #[wasm_bindgen(js_name = attachCanvas)]
     pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
         let inner = self.state.clone();
@@ -1420,18 +1473,53 @@ impl FlowSession {
     }
 
     #[wasm_bindgen(js_name = pointerDownScreen)]
-    pub fn pointer_down_screen(&self, sx: f64, sy: f64, extend: bool, pan: bool) {
-        self.state.borrow_mut().host.pointer_down_screen(sx, sy, extend, pan);
+    pub fn pointer_down_screen(&self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
+        self.state.borrow_mut().host.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, pan);
     }
 
     #[wasm_bindgen(js_name = pointerMoveScreen)]
-    pub fn pointer_move_screen(&self, sx: f64, sy: f64) {
-        self.state.borrow_mut().host.pointer_move_screen(sx, sy);
+    pub fn pointer_move_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.state.borrow_mut().host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
     }
 
     #[wasm_bindgen(js_name = pointerUpScreen)]
-    pub fn pointer_up_screen(&self, sx: f64, sy: f64) {
-        self.state.borrow_mut().host.pointer_up_screen(sx, sy);
+    pub fn pointer_up_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
+    }
+
+    #[wasm_bindgen(js_name = setSelectionOptions)]
+    pub fn set_selection_options(&self, method: &str, mode: &str) {
+        self.state.borrow_mut().host.set_selection_options(method, mode);
+    }
+
+    #[wasm_bindgen(js_name = selectionPreviewPointsJson)]
+    pub fn selection_preview_points_json(&self) -> String {
+        self.state.borrow().host.selection_preview_points_json()
+    }
+
+    #[wasm_bindgen(js_name = selectionPreviewCrossing)]
+    pub fn selection_preview_crossing(&self) -> bool {
+        self.state.borrow().host.selection_preview_crossing()
+    }
+
+    #[wasm_bindgen(js_name = preselectWidgetIdsJson)]
+    pub fn preselect_widget_ids_json(&self) -> String {
+        self.state.borrow().host.preselect_widget_ids_json()
+    }
+
+    #[wasm_bindgen(js_name = cancelAreaSelect)]
+    pub fn cancel_area_select(&self) -> bool {
+        self.state.borrow_mut().host.cancel_area_select()
+    }
+
+    #[wasm_bindgen(js_name = deleteSelection)]
+    pub fn delete_selection(&self) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.delete_selection().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = selectAll)]
+    pub fn select_all(&self) {
+        self.state.borrow_mut().host.select_all();
     }
 }
 // #endregion 🔖WasmSession
@@ -1567,9 +1655,9 @@ mod tests {
             panic!("expected slider kind");
         };
         let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
-        host.pointer_down_screen(sx, sy, false, false);
-        host.pointer_move_screen(sx + 80.0, sy);
-        host.pointer_up_screen(sx + 80.0, sy);
+        host.pointer_down_screen(sx, sy, 0, false, false, false, false);
+        host.pointer_move_screen(sx + 80.0, sy, false, false, false);
+        host.pointer_up_screen(sx + 80.0, sy, false, false, false);
         let value = host
             .fixture
             .widgets
@@ -1598,9 +1686,9 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_viewport(1259, 706, 1.0);
         let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
-        host.pointer_down_screen(sx, sy, false, false);
-        host.pointer_move_screen(sx + 90.0, sy);
-        host.pointer_up_screen(sx + 90.0, sy);
+        host.pointer_down_screen(sx, sy, 0, false, false, false, false);
+        host.pointer_move_screen(sx + 90.0, sy, false, false, false);
+        host.pointer_up_screen(sx + 90.0, sy, false, false, false);
         let slider = host
             .fixture
             .widgets
@@ -1618,9 +1706,9 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_viewport(800, 600, 1.0);
         let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
-        host.pointer_down_screen(sx, sy, false, false);
-        host.pointer_move_screen(sx + 80.0, sy);
-        host.pointer_up_screen(sx + 80.0, sy);
+        host.pointer_down_screen(sx, sy, 0, false, false, false, false);
+        host.pointer_move_screen(sx + 80.0, sy, false, false, false);
+        host.pointer_up_screen(sx + 80.0, sy, false, false, false);
         let slider = host
             .fixture
             .widgets

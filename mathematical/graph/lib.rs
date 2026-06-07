@@ -88,6 +88,14 @@ pub enum BoardEvent {
     EdgeConnected { id: EdgeId, source: HandleId, target: HandleId },
     EdgeRemoved { id: EdgeId },
     SelectionChanged { edge_ids: Vec<EdgeId>, handle_ids: Vec<HandleId>, node_ids: Vec<NodeId> },
+    PreselectChanged {
+        edge_ids: Vec<EdgeId>,
+        handle_ids: Vec<HandleId>,
+        node_ids: Vec<NodeId>,
+        removed_edge_ids: Vec<EdgeId>,
+        removed_handle_ids: Vec<HandleId>,
+        removed_node_ids: Vec<NodeId>,
+    },
 }
 
 /// ✅ Selection snapshot maintained by the engine hot path.
@@ -117,12 +125,30 @@ enum HitObject<E> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum InteractionMode {
     DragNode { node_id: NodeId, offset: Vec2 },
+    DragNodes {
+        primary_id: NodeId,
+        offset: Vec2,
+    },
     DrawEdge {
         anchor_handle: HandleId,
         anchor_is_source: bool,
         fixed_target: Option<HandleId>,
         cursor: Point,
         reconnecting: Option<EdgeId>,
+    },
+    SelectionPending {
+        start: Point,
+        start_screen: Point,
+    },
+    AreaSelect {
+        start: Point,
+        start_screen: Point,
+    },
+    Pan {
+        start_screen: Point,
+        cam_x: f64,
+        cam_y: f64,
+        zoom: f64,
     },
     Idle,
 }
@@ -179,7 +205,7 @@ impl GraphPortModel for Ported {
 // #endregion 🔖Kinds
 
 // #region 🔖SelectionMarquee
-pub use cavas::vello::geom_sel::{
+pub use cavas::geom_sel::{
     point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
     world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
 };
@@ -394,6 +420,28 @@ pub fn selection_contains_edge_curve(curve: CubicBez, box_: WorldBox, enclosing:
 
 // #region 🔖Engine
 
+/// 🎯 Engine-local area-select options.
+#[derive(Clone, Debug, PartialEq)]
+pub struct EngineSelectionOptions {
+    pub method: String,
+    pub mode: String,
+    pub select_nodes: bool,
+    pub select_handles: bool,
+    pub select_edges: bool,
+}
+
+impl Default for EngineSelectionOptions {
+    fn default() -> Self {
+        Self {
+            method: "rectangle".into(),
+            mode: "replace".into(),
+            select_nodes: true,
+            select_handles: true,
+            select_edges: true,
+        }
+    }
+}
+
 /// ⚙️ Retained graph engine parameterized by port model and directedness.
 #[derive(Clone, Debug)]
 pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
@@ -406,6 +454,15 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub interaction: InteractionMode,
     pub nodes: BTreeMap<NodeId, Node>,
     pub selection: Selection,
+    pub preselect: Selection,
+    pub preselect_removed: Selection,
+    pub selection_options: EngineSelectionOptions,
+    pub selection_preview_points: Vec<Point>,
+    pub selection_preview_crossing: bool,
+    area_initial: Selection,
+    area_points: Vec<Point>,
+    area_screen_points: Vec<Point>,
+    drag_start_positions: BTreeMap<NodeId, Point>,
     next_edge_id: u64,
     _directedness: std::marker::PhantomData<D>,
     _port: std::marker::PhantomData<P>,
@@ -423,6 +480,15 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             interaction: InteractionMode::default(),
             nodes: BTreeMap::new(),
             selection: Selection::default(),
+            preselect: Selection::default(),
+            preselect_removed: Selection::default(),
+            selection_options: EngineSelectionOptions::default(),
+            selection_preview_points: Vec::new(),
+            selection_preview_crossing: false,
+            area_initial: Selection::default(),
+            area_points: Vec::new(),
+            area_screen_points: Vec::new(),
+            drag_start_positions: BTreeMap::new(),
             next_edge_id: 1000,
             _directedness: std::marker::PhantomData,
             _port: std::marker::PhantomData,
@@ -536,20 +602,117 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         }
     }
 
+    pub fn set_selection_options(&mut self, method: &str, mode: &str, select_nodes: bool, select_handles: bool, select_edges: bool) {
+        self.selection_options.method = method.to_string();
+        self.selection_options.mode = normalize_selection_mode(mode);
+        self.selection_options.select_nodes = select_nodes;
+        self.selection_options.select_handles = select_handles;
+        self.selection_options.select_edges = select_edges;
+    }
+
+    pub fn selection_preview_points(&self) -> &[Point] {
+        &self.selection_preview_points
+    }
+
+    pub fn selection_preview_crossing(&self) -> bool {
+        self.selection_preview_crossing
+    }
+
+    pub fn cancel_area_select(&mut self) -> bool {
+        let prev = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
+        let cancelled = matches!(prev, InteractionMode::SelectionPending { .. } | InteractionMode::AreaSelect { .. });
+        if cancelled {
+            self.selection = self.area_initial.clone();
+            self.clear_preselect();
+            self.selection_preview_points.clear();
+            self.selection_preview_crossing = false;
+            self.push_selection_event();
+        }
+        cancelled
+    }
+
+    pub fn select_all(&mut self) {
+        self.selection = Selection::default();
+        if self.selection_options.select_nodes {
+            self.selection.node_ids = self.nodes.keys().copied().collect();
+        }
+        if self.selection_options.select_handles && P::HAS_PORTS {
+            self.selection.handle_ids = self.handles.keys().copied().collect();
+        }
+        if self.selection_options.select_edges {
+            self.selection.edge_ids = self.edges.keys().copied().collect();
+        }
+        self.clear_preselect();
+        self.push_selection_event();
+    }
+
+    pub fn delete_selection(&mut self) {
+        let node_ids: Vec<_> = self.selection.node_ids.iter().copied().collect();
+        for id in node_ids {
+            self.remove_node(id);
+        }
+        let edge_ids: Vec<_> = self.selection.edge_ids.iter().copied().collect();
+        for id in edge_ids {
+            self.remove_edge(id);
+        }
+        if P::HAS_PORTS {
+            let handle_ids: Vec<_> = self.selection.handle_ids.iter().copied().collect();
+            for id in handle_ids {
+                self.remove_handle(id);
+            }
+        }
+        self.clear_preselect();
+    }
+
     pub fn pointer_down(&mut self, x: f64, y: f64, extend_selection: bool) {
-        let point = Point::new(x, y);
+        self.pointer_down_screen(x, y, x, y, 0, extend_selection, false, false);
+    }
+
+    pub fn pointer_down_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, _alt: bool) {
+        self.selection_preview_points.clear();
+        self.selection_preview_crossing = false;
+        let point = Point::new(world_x, world_y);
+        let screen = Point::new(screen_x, screen_y);
+        if button == 1 {
+            self.interaction = InteractionMode::Pan {
+                start_screen: screen,
+                cam_x: self.camera.x,
+                cam_y: self.camera.y,
+                zoom: self.camera.zoom,
+            };
+            return;
+        }
+        let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+        let merge_from_modifiers = ctrl_or_meta || shift;
         match self.hit_test(point) {
             Some(HitObject::Node(node_id)) => {
-                self.apply_pick_selection(HitObject::Node(node_id), extend_selection);
+                let members_before: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
+                let drag_group_before = members_before.contains(&node_id) && members_before.len() > 1;
+                let force_pick_merge = (merge_mode == "replace" && !drag_group_before) || merge_mode == "subtractive" || (merge_mode == "invertive" && merge_from_modifiers);
+                if !drag_group_before || force_pick_merge {
+                    self.apply_pick_with_mode(HitObject::Node(node_id), merge_mode.as_str());
+                }
                 if let Some(node) = self.nodes.get(&node_id) {
                     if node.draggable {
-                        self.interaction = InteractionMode::DragNode { node_id, offset: point - node.center };
+                        let members: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
+                        let drag_group = members.contains(&node_id) && members.len() > 1;
+                        self.drag_start_positions.clear();
+                        for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
+                            if let Some(n) = self.nodes.get(id) {
+                                self.drag_start_positions.insert(*id, n.center);
+                            }
+                        }
+                        if drag_group {
+                            self.interaction = InteractionMode::DragNodes { primary_id: node_id, offset: point - node.center };
+                        } else {
+                            self.interaction = InteractionMode::DragNode { node_id, offset: point - node.center };
+                        }
                     }
                 }
                 self.update_hover(Some(node_id));
             }
             Some(HitObject::Endpoint(ep)) => {
-                self.apply_pick_selection(HitObject::Endpoint(ep), extend_selection);
+                self.apply_pick_with_mode(HitObject::Endpoint(ep), merge_mode.as_str());
                 let hid = P::endpoint_as_u64(ep);
                 self.update_hover(Some(hid));
                 if P::HAS_PORTS {
@@ -559,13 +722,23 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 }
             }
             Some(HitObject::Edge(edge_id)) => {
-                self.apply_pick_selection(HitObject::Edge(edge_id), extend_selection);
+                self.apply_pick_with_mode(HitObject::Edge(edge_id), merge_mode.as_str());
                 self.update_hover(Some(edge_id));
                 self.interaction = InteractionMode::Idle;
             }
+            None if button == 0 => {
+                self.area_initial = self.selection.clone();
+                self.interaction = InteractionMode::SelectionPending { start: point, start_screen: screen };
+                self.update_hover(None);
+            }
             None => {
-                self.selection = Selection::default();
-                self.push_selection_event();
+                if merge_from_modifiers {
+                    self.selection = Selection::default();
+                    self.push_selection_event();
+                } else {
+                    self.selection = Selection::default();
+                    self.push_selection_event();
+                }
                 self.update_hover(None);
                 self.interaction = InteractionMode::Idle;
             }
@@ -573,13 +746,42 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     pub fn pointer_move(&mut self, x: f64, y: f64) {
-        let point = Point::new(x, y);
-        match self.interaction {
+        self.pointer_move_screen(x, y, x, y, false, false, false);
+    }
+
+    pub fn pointer_move_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, _alt: bool) {
+        let point = Point::new(world_x, world_y);
+        let screen = Point::new(screen_x, screen_y);
+        match std::mem::replace(&mut self.interaction, InteractionMode::Idle) {
+            InteractionMode::Pan { start_screen, cam_x, cam_y, zoom } => {
+                let dx = (screen.x - start_screen.x) / zoom;
+                let dy = (screen.y - start_screen.y) / zoom;
+                self.set_camera(cam_x - dx, cam_y - dy, zoom);
+                self.interaction = InteractionMode::Pan { start_screen, cam_x, cam_y, zoom };
+            }
             InteractionMode::DragNode { node_id, offset } => {
                 if let Some(node) = self.nodes.get_mut(&node_id) {
                     node.center = point - offset;
                     self.events.push(BoardEvent::NodeMoved { id: node_id, x: node.center.x, y: node.center.y });
                 }
+                self.interaction = InteractionMode::DragNode { node_id, offset };
+            }
+            InteractionMode::DragNodes { primary_id, offset } => {
+                let Some((px0, py0)) = self.drag_start_positions.get(&primary_id).map(|p| (p.x, p.y)) else {
+                    self.interaction = InteractionMode::Idle;
+                    return;
+                };
+                let nx = point.x - offset.x;
+                let ny = point.y - offset.y;
+                let dx = nx - px0;
+                let dy = ny - py0;
+                for (id, start) in &self.drag_start_positions {
+                    if let Some(node) = self.nodes.get_mut(id) {
+                        node.center = Point::new(start.x + dx, start.y + dy);
+                        self.events.push(BoardEvent::NodeMoved { id: *id, x: node.center.x, y: node.center.y });
+                    }
+                }
+                self.interaction = InteractionMode::DragNodes { primary_id, offset };
             }
             InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
                 self.interaction = InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor: point, reconnecting };
@@ -589,46 +791,130 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     HitObject::Node(id) => id,
                 }));
             }
+            InteractionMode::SelectionPending { start, start_screen } => {
+                if distance_between(screen, start_screen) < SELECTION_MARQUEE_DRAG_THRESHOLD_PX {
+                    self.interaction = InteractionMode::SelectionPending { start, start_screen };
+                } else {
+                    let area_points = vec![start, point];
+                    let area_screen_points = vec![start_screen, screen];
+                    self.area_points = area_points.clone();
+                    self.area_screen_points = area_screen_points.clone();
+                    self.apply_area_preselect(start, &area_points, shift, ctrl_or_meta);
+                    self.sync_selection_screen_overlay(start_screen, &area_screen_points);
+                    self.interaction = InteractionMode::AreaSelect { start, start_screen };
+                }
+            }
+            InteractionMode::AreaSelect { start, start_screen } => {
+                let mut points = self.area_points.clone();
+                let mut screen_points = self.area_screen_points.clone();
+                let last_screen = screen_points.last().copied().unwrap_or(start_screen);
+                let add_point = self.selection_options.method == "lasso" || distance_between(screen, last_screen) >= SELECTION_LASSO_MIN_POINT_DISTANCE_PX;
+                if add_point {
+                    points.push(point);
+                    screen_points.push(screen);
+                } else if !points.is_empty() {
+                    let last = points.len() - 1;
+                    points[last] = point;
+                    let ls = screen_points.len() - 1;
+                    screen_points[ls] = screen;
+                }
+                let points_for_preselect = points.clone();
+                let screen_for_overlay = screen_points.clone();
+                self.apply_area_preselect(start, &points_for_preselect, shift, ctrl_or_meta);
+                self.sync_selection_screen_overlay(start_screen, &screen_for_overlay);
+                self.area_points = points;
+                self.area_screen_points = screen_points;
+                self.interaction = InteractionMode::AreaSelect { start, start_screen };
+            }
             InteractionMode::Idle => {
+                self.interaction = InteractionMode::Idle;
                 self.update_hover(self.hit_test(point).map(|hit| match hit {
                     HitObject::Edge(id) => id,
                     HitObject::Endpoint(ep) => P::endpoint_as_u64(ep),
                     HitObject::Node(id) => id,
                 }));
             }
+            other => {
+                self.interaction = other;
+            }
         }
     }
 
     pub fn pointer_up(&mut self, x: f64, y: f64) {
-        if let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } = self.interaction {
-            let point = Point::new(x, y);
-            if let Some(HitObject::Endpoint(ep)) = self.hit_test(point) {
-                let hit_hid = P::endpoint_as_u64(ep);
-                let (source_hid, target_handle) = if let Some(tgt) = fixed_target {
-                    (hit_hid, tgt)
-                } else if anchor_is_source {
-                    (anchor_handle, hit_hid)
-                } else {
-                    (hit_hid, anchor_handle)
-                };
-                if self.is_valid_connection(source_hid, target_handle, reconnecting) {
-                    let new_id = reconnecting.unwrap_or_else(|| {
-                        let id = self.next_edge_id;
-                        self.next_edge_id += 1;
-                        id
-                    });
-                    if let Some(old_id) = reconnecting {
-                        self.edges.remove(&old_id);
-                        self.selection.edge_ids.remove(&old_id);
-                    }
-                    if let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid), P::try_handle_endpoint(target_handle)) {
-                        self.create_edge(new_id, src_ep, tgt_ep);
-                        self.events.push(BoardEvent::EdgeConnected { id: new_id, source: source_hid, target: target_handle });
+        self.pointer_up_screen(x, y, x, y, false, false, false);
+    }
+
+    pub fn pointer_up_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, _alt: bool) {
+        let point = Point::new(world_x, world_y);
+        let screen = Point::new(screen_x, screen_y);
+        let grabbed = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
+        match grabbed {
+            InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
+                if let Some(HitObject::Endpoint(ep)) = self.hit_test(point) {
+                    let hit_hid = P::endpoint_as_u64(ep);
+                    let (source_hid, target_handle) = if let Some(tgt) = fixed_target {
+                        (hit_hid, tgt)
+                    } else if anchor_is_source {
+                        (anchor_handle, hit_hid)
+                    } else {
+                        (hit_hid, anchor_handle)
+                    };
+                    if self.is_valid_connection(source_hid, target_handle, reconnecting) {
+                        let new_id = reconnecting.unwrap_or_else(|| {
+                            let id = self.next_edge_id;
+                            self.next_edge_id += 1;
+                            id
+                        });
+                        if let Some(old_id) = reconnecting {
+                            self.edges.remove(&old_id);
+                            self.selection.edge_ids.remove(&old_id);
+                        }
+                        if let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid), P::try_handle_endpoint(target_handle)) {
+                            self.create_edge(new_id, src_ep, tgt_ep);
+                            self.events.push(BoardEvent::EdgeConnected { id: new_id, source: source_hid, target: target_handle });
+                        }
                     }
                 }
             }
+            InteractionMode::DragNodes { .. } | InteractionMode::DragNode { .. } => {}
+            InteractionMode::SelectionPending { start, start_screen } => {
+                let merge_from_modifiers = ctrl_or_meta || shift;
+                if !merge_from_modifiers {
+                    self.selection = Selection::default();
+                    self.push_selection_event();
+                } else {
+                    let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+                    let next = self.resolve_area_hits(&self.area_initial_string_set(), start, &[start], merge_mode.as_str());
+                    self.commit_selection_from_hits(&next);
+                }
+                let _ = (start_screen, start);
+                self.clear_preselect();
+                self.selection_preview_points.clear();
+                self.selection_preview_crossing = false;
+            }
+            InteractionMode::AreaSelect { start, start_screen } => {
+                let mut points = self.area_points.clone();
+                let mut screen_points = self.area_screen_points.clone();
+                points.push(point);
+                screen_points.push(screen);
+                let end_screen = screen_points.last().copied().unwrap_or(start_screen);
+                let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
+                let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+                let next = if click_only {
+                    BTreeSet::new()
+                } else {
+                    self.resolve_area_hits(&self.area_initial_string_set(), start, &points, merge_mode.as_str())
+                };
+                self.commit_selection_from_hits(&next);
+                self.clear_preselect();
+                self.selection_preview_points.clear();
+                self.selection_preview_crossing = false;
+            }
+            InteractionMode::Pan { .. } => {}
+            other => {
+                self.interaction = other;
+            }
         }
-        self.interaction = InteractionMode::Idle;
     }
 
     pub fn render_snapshot(&self) -> RenderSnapshot {
@@ -707,21 +993,173 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     fn apply_pick_selection(&mut self, hit: HitObject<P::Endpoint>, extend_selection: bool) {
-        if !extend_selection {
-            self.selection = Selection::default();
-        }
+        let mode = if extend_selection { "additive" } else { "replace" };
+        self.apply_pick_with_mode(hit, mode);
+    }
+
+    fn apply_pick_with_mode(&mut self, hit: HitObject<P::Endpoint>, mode: &str) {
         match hit {
             HitObject::Node(id) => {
-                self.selection.node_ids.insert(id);
+                let current: BTreeSet<String> = self.selection.node_ids.iter().map(|nid| nid.to_string()).collect();
+                let next = merge_pick_into_selection(&current, &id.to_string(), mode);
+                self.selection.node_ids = next.iter().filter_map(|s| s.parse().ok()).collect();
             }
             HitObject::Endpoint(ep) => {
-                P::select_endpoint(&mut self.selection, ep);
+                let id = P::endpoint_as_u64(ep);
+                if P::HAS_PORTS {
+                    let current: BTreeSet<String> = self.selection.handle_ids.iter().map(|hid| hid.to_string()).collect();
+                    let next = merge_pick_into_selection(&current, &id.to_string(), mode);
+                    self.selection.handle_ids = next.iter().filter_map(|s| s.parse().ok()).collect();
+                } else {
+                    let current: BTreeSet<String> = self.selection.node_ids.iter().map(|nid| nid.to_string()).collect();
+                    let next = merge_pick_into_selection(&current, &id.to_string(), mode);
+                    self.selection.node_ids = next.iter().filter_map(|s| s.parse().ok()).collect();
+                }
             }
             HitObject::Edge(id) => {
-                self.selection.edge_ids.insert(id);
+                let current: BTreeSet<String> = self.selection.edge_ids.iter().map(|eid| eid.to_string()).collect();
+                let next = merge_pick_into_selection(&current, &id.to_string(), mode);
+                self.selection.edge_ids = next.iter().filter_map(|s| s.parse().ok()).collect();
             }
         }
+        self.clear_preselect();
         self.push_selection_event();
+    }
+
+    fn clear_preselect(&mut self) {
+        self.preselect = Selection::default();
+        self.preselect_removed = Selection::default();
+    }
+
+    fn sync_selection_screen_overlay(&mut self, start_screen: Point, screen_points: &[Point]) {
+        if screen_points.len() < 2 {
+            self.selection_preview_points.clear();
+            self.selection_preview_crossing = false;
+            return;
+        }
+        let last = *screen_points.last().unwrap_or(&start_screen);
+        self.selection_preview_crossing = !selection_drag_enclosing(start_screen, last);
+        self.selection_preview_points = selection_screen_overlay_points(self.selection_options.method.as_str(), start_screen, screen_points).unwrap_or_default();
+    }
+
+    fn area_initial_string_set(&self) -> BTreeSet<String> {
+        let mut set = BTreeSet::new();
+        for id in &self.area_initial.node_ids {
+            set.insert(id.to_string());
+        }
+        for id in &self.area_initial.handle_ids {
+            set.insert(id.to_string());
+        }
+        for id in &self.area_initial.edge_ids {
+            set.insert(id.to_string());
+        }
+        set
+    }
+
+    fn resolve_area_hits(&self, initial: &BTreeSet<String>, start: Point, points: &[Point], merge_mode: &str) -> BTreeSet<String> {
+        let Some((box_, enclosing, ref polygon)) = selection_drag_shape(self.selection_options.method.as_str(), start, points) else {
+            return initial.clone();
+        };
+        let lasso = self.selection_options.method == "lasso";
+        let mut hits = BTreeSet::new();
+        if self.selection_options.select_nodes {
+            for node in self.nodes.values() {
+                if selection_contains_node_bounds(node, box_, enclosing, polygon, lasso) {
+                    hits.insert(node.id.to_string());
+                }
+            }
+        }
+        if self.selection_options.select_handles && P::HAS_PORTS {
+            for handle in self.handles.values() {
+                if let Some(node) = self.nodes.get(&handle.node_id) {
+                    let pos = handle_position(node, handle);
+                    if selection_contains_handle_point(pos, handle.radius.max(6.0), box_, enclosing, polygon, lasso) {
+                        hits.insert(handle.id.to_string());
+                    }
+                }
+            }
+        }
+        if self.selection_options.select_edges {
+            for edge in self.edges.keys() {
+                if let Some(curve) = self.edge_curve(*edge) {
+                    if selection_contains_edge_curve(curve, box_, enclosing, polygon, lasso) {
+                        hits.insert(edge.to_string());
+                    }
+                }
+            }
+        }
+        merge_ids_into_selection(initial, &hits, merge_mode)
+    }
+
+    fn selection_to_string_set(&self) -> BTreeSet<String> {
+        let mut set = BTreeSet::new();
+        for id in &self.selection.node_ids {
+            set.insert(id.to_string());
+        }
+        for id in &self.selection.handle_ids {
+            set.insert(id.to_string());
+        }
+        for id in &self.selection.edge_ids {
+            set.insert(id.to_string());
+        }
+        set
+    }
+
+    fn selection_from_string_set(&self, ids: &BTreeSet<String>) -> Selection {
+        let mut selection = Selection::default();
+        for id in ids {
+            if let Ok(nid) = id.parse::<NodeId>() {
+                if self.nodes.contains_key(&nid) {
+                    selection.node_ids.insert(nid);
+                    continue;
+                }
+            }
+            if let Ok(hid) = id.parse::<HandleId>() {
+                if self.handles.contains_key(&hid) {
+                    selection.handle_ids.insert(hid);
+                    continue;
+                }
+            }
+            if let Ok(eid) = id.parse::<EdgeId>() {
+                if self.edges.contains_key(&eid) {
+                    selection.edge_ids.insert(eid);
+                }
+            }
+        }
+        selection
+    }
+
+    fn apply_area_preselect(&mut self, start: Point, points: &[Point], shift: bool, ctrl_or_meta: bool) {
+        let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
+        let anchor = self.area_initial_string_set();
+        let next_ids: Vec<String> = self.resolve_area_hits(&anchor, start, points, merge_mode.as_str()).into_iter().collect();
+        let (sorted, removed) = area_preselect_ids(&anchor, &next_ids);
+        let next = self.selection_from_string_set(&next_ids.iter().cloned().collect());
+        let removed_sel = self.selection_from_string_set(&removed.iter().cloned().collect());
+        if self.preselect == next && self.preselect_removed == removed_sel {
+            return;
+        }
+        self.preselect = next;
+        self.preselect_removed = removed_sel;
+        let _ = sorted;
+        self.push_preselect_event();
+    }
+
+    fn commit_selection_from_hits(&mut self, hits: &BTreeSet<String>) {
+        self.selection = self.selection_from_string_set(hits);
+        self.clear_preselect();
+        self.push_selection_event();
+    }
+
+    fn push_preselect_event(&mut self) {
+        self.events.push(BoardEvent::PreselectChanged {
+            node_ids: self.preselect.node_ids.iter().copied().collect(),
+            handle_ids: self.preselect.handle_ids.iter().copied().collect(),
+            edge_ids: self.preselect.edge_ids.iter().copied().collect(),
+            removed_node_ids: self.preselect_removed.node_ids.iter().copied().collect(),
+            removed_handle_ids: self.preselect_removed.handle_ids.iter().copied().collect(),
+            removed_edge_ids: self.preselect_removed.edge_ids.iter().copied().collect(),
+        });
     }
 
     fn update_hover(&mut self, hover: Option<u64>) {
@@ -966,6 +1404,14 @@ mod tests {
         let edge = engine.edges.values().next().unwrap();
         assert_eq!(edge.source, 10);
         assert_eq!(edge.target, 12);
+    }
+
+    #[test]
+    fn pick_merge_mode_for_modifiers_matches_puzzle() {
+        assert_eq!(pick_merge_mode_for_modifiers(false, false, "replace"), "replace");
+        assert_eq!(pick_merge_mode_for_modifiers(false, true, "replace"), "additive");
+        assert_eq!(pick_merge_mode_for_modifiers(true, false, "replace"), "subtractive");
+        assert_eq!(pick_merge_mode_for_modifiers(true, true, "replace"), "invertive");
     }
 
     #[test]

@@ -29,12 +29,34 @@ import {
 	type FlowReorganizeRequest,
 } from "@flow/react";
 import {
+	applyOrbitProjectionToCameraState,
+	DEFAULT_LOD_GRID_FACTOR,
+	DEFAULT_MANUAL_LOD,
 	worldEntityRenderMode,
 	WorldCameraInvalidator,
 	WorldCanvas,
+	WorldLayer,
+	WorldLodBridge,
+	WorldOrbitCameraViewRig,
 	WorldOrbitGated,
+	WorldOrbitProjectionSwitch,
+	WorldOrbitViewControls,
+	WorldOrbitViewSnapGateProvider,
+	type OrbitCameraProjection,
+	type WorldCameraState,
 } from "@infinite/world/r3f";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+	SelectionMarquee,
+	marqueeCoverageFromDrag,
+	marqueeModeFromModifiers,
+	screenRectContainsRect,
+	screenRectFromPoints,
+	screenRectIntersectsRect,
+	selectionMergeIds,
+	type SelectionMergeMode,
+	type SelectionMarqueeCoverage,
+} from "@ui/react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 const THREE = sceneHostPort.three;
 // #endregion 🔌Adapters
@@ -722,19 +744,28 @@ export interface ProceduralGeometryHandle {
 }
 
 export type ProceduralPreviewShowMode = "everything" | "selected";
+export type ProceduralSelectionMode = SelectionMergeMode;
+export type ProceduralSelectionMethod = "rectangle" | "lasso";
 
 export interface ProceduralPreviewProps {
 	readonly handles: readonly ProceduralGeometryHandle[];
 	readonly selectedNodeIds?: readonly string[];
+	readonly preselectNodeIds?: readonly string[];
+	readonly preselectRemovedNodeIds?: readonly string[];
 	readonly hoveredNodeId?: string | null;
 	readonly previewOffNodeIds?: readonly string[];
 	readonly showMode?: ProceduralPreviewShowMode;
+	readonly selectionMode?: ProceduralSelectionMode;
+	readonly selectionMethod?: ProceduralSelectionMethod;
 	readonly onHover?: (widgetId: string | null) => void;
 	readonly onSelect?: (widgetId: string) => void;
+	readonly onSelectionChange?: (ids: readonly string[], mode: ProceduralSelectionMode) => void;
 	readonly kernel?: BrepKernelType;
 	readonly tolerance?: number;
 	readonly className?: string;
 }
+
+const PROCEDURAL_PREVIEW_MARQUEE_THRESHOLD_PX = 4;
 
 /** @deprecated Use {@link ProceduralPreview} with {@link ProceduralGeometryHandle} entries. */
 export interface BrepViewportProps {
@@ -782,10 +813,11 @@ function BrepGeometryLayer({
 	tolerance,
 	color,
 	selected,
+	highlighted,
 	hovered,
 	previewOff,
 	onHover,
-	onSelect,
+	onPick,
 }: {
 	readonly widgetId: string;
 	readonly geometryId: string;
@@ -793,14 +825,15 @@ function BrepGeometryLayer({
 	readonly tolerance: number;
 	readonly color: string;
 	readonly selected: boolean;
+	readonly highlighted: boolean;
 	readonly hovered: boolean;
 	readonly previewOff: boolean;
 	readonly onHover?: (widgetId: string | null) => void;
-	readonly onSelect?: (widgetId: string) => void;
+	readonly onPick?: (widgetId: string, mode: ProceduralSelectionMode) => void;
 }): ReactNode {
 	const [buffers, setBuffers] = useState<BrepMeshBuffers>({ surface: null, lines: null, points: null });
 	const ref = geometryId as GeometryRef;
-	const renderMode = worldEntityRenderMode({ hidden: previewOff }, { hovered, selected, revealed: hovered });
+	const renderMode = worldEntityRenderMode({ hidden: previewOff }, { hovered, selected: selected || highlighted, revealed: hovered });
 
 	useEffect(() => {
 		let cancelled = false;
@@ -821,11 +854,14 @@ function BrepGeometryLayer({
 	if (!renderMode.visible) return null;
 
 	const opacity = renderMode.dim ? 0.35 : renderMode.asHover ? 0.95 : 0.85;
-	const emissive = renderMode.showSelectedOutline ? "#3b82f6" : renderMode.asHover ? "#60a5fa" : "#000000";
-	const emissiveIntensity = renderMode.showSelectedOutline ? 0.35 : renderMode.asHover ? 0.2 : 0;
+	const emissive = highlighted ? "#a78bfa" : renderMode.showSelectedOutline ? "#3b82f6" : renderMode.asHover ? "#60a5fa" : "#000000";
+	const emissiveIntensity = highlighted ? 0.28 : renderMode.showSelectedOutline ? 0.35 : renderMode.asHover ? 0.2 : 0;
 	const pointerHandlers =
-		onHover || onSelect
+		onHover || onPick
 			? {
+					onPointerDown: (event: { stopPropagation: () => void }) => {
+						event.stopPropagation();
+					},
 					onPointerOver: (event: { stopPropagation: () => void }) => {
 						event.stopPropagation();
 						onHover?.(widgetId);
@@ -834,9 +870,10 @@ function BrepGeometryLayer({
 						event.stopPropagation();
 						onHover?.(null);
 					},
-					onClick: (event: { stopPropagation: () => void }) => {
+					onClick: (event: { stopPropagation: () => void; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
 						event.stopPropagation();
-						onSelect?.(widgetId);
+						const mode = marqueeModeFromModifiers(event);
+						onPick?.(widgetId, mode);
 					},
 				}
 			: {};
@@ -864,44 +901,318 @@ function BrepGeometryLayer({
 
 const BREP_VIEWPORT_COLORS = ["#6b9bd1", "#7ec8a3", "#d18b6b", "#b16bd1", "#d1c46b"];
 
+export const PROCEDURAL_PREVIEW_DEFAULT_CAMERA: WorldCameraState = {
+	position: [8, 8, 6],
+	target: [0, 0, 0],
+	zoom: 1,
+	up: [0, 0, 1],
+	projection: "perspective",
+};
+
+export function proceduralPreviewCameraSeed(camera: WorldCameraState, seed: number): string {
+	return `${seed}|${camera.projection ?? "perspective"}|${camera.position.join(",")}|${camera.target.join(",")}`;
+}
+
+type ScreenBounds = { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number };
+
+function projectWorldBoundsToScreen(bounds: { min: Vec3; max: Vec3 }, camera: THREE.Camera, width: number, height: number): ScreenBounds | null {
+	const corners: Vec3[] = [
+		[bounds.min[0], bounds.min[1], bounds.min[2]],
+		[bounds.max[0], bounds.min[1], bounds.min[2]],
+		[bounds.min[0], bounds.max[1], bounds.min[2]],
+		[bounds.max[0], bounds.max[1], bounds.min[2]],
+		[bounds.min[0], bounds.min[1], bounds.max[2]],
+		[bounds.max[0], bounds.min[1], bounds.max[2]],
+		[bounds.min[0], bounds.max[1], bounds.max[2]],
+		[bounds.max[0], bounds.max[1], bounds.max[2]],
+	];
+	const vector = new THREE.Vector3();
+	let left = Number.POSITIVE_INFINITY;
+	let top = Number.POSITIVE_INFINITY;
+	let right = Number.NEGATIVE_INFINITY;
+	let bottom = Number.NEGATIVE_INFINITY;
+	for (const corner of corners) {
+		vector.set(corner[0], corner[1], corner[2]).project(camera);
+		const x = ((vector.x + 1) / 2) * width;
+		const y = ((-vector.y + 1) / 2) * height;
+		left = Math.min(left, x);
+		top = Math.min(top, y);
+		right = Math.max(right, x);
+		bottom = Math.max(bottom, y);
+	}
+	if (!Number.isFinite(left) || !Number.isFinite(top) || !Number.isFinite(right) || !Number.isFinite(bottom)) return null;
+	return { left, top, right, bottom };
+}
+
+function ProceduralPreviewCameraBridge({
+	onCamera,
+}: {
+	readonly onCamera: (camera: THREE.Camera, size: { width: number; height: number }) => void;
+}): null {
+	const invalidate = sceneHostPort.fiber.useThree((state) => state.invalidate);
+	const camera = sceneHostPort.fiber.useThree((state) => state.camera);
+	const size = sceneHostPort.fiber.useThree((state) => state.size);
+	useEffect(() => {
+		onCamera(camera, size);
+		invalidate();
+	}, [camera, invalidate, onCamera, size, size.height, size.width]);
+	return null;
+}
+
 export function ProceduralPreview({
 	handles,
 	selectedNodeIds = [],
+	preselectNodeIds = [],
+	preselectRemovedNodeIds = [],
 	hoveredNodeId = null,
 	previewOffNodeIds = [],
 	showMode = "everything",
+	selectionMode = "default",
+	selectionMethod = "rectangle",
 	onHover,
 	onSelect,
+	onSelectionChange,
 	kernel = brepjsGeometryKernel,
 	tolerance = 0.02,
 	className,
 }: ProceduralPreviewProps): ReactNode {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const cameraRef = useRef<THREE.Camera | null>(null);
+	const sizeRef = useRef({ width: 1, height: 1 });
+	const lodRef = useRef(DEFAULT_MANUAL_LOD);
+	const [camera, setCamera] = useState<WorldCameraState>(PROCEDURAL_PREVIEW_DEFAULT_CAMERA);
+	const [cameraSeed, setCameraSeed] = useState(0);
+	const cameraSeedKey = useMemo(() => proceduralPreviewCameraSeed(camera, cameraSeed), [camera, cameraSeed]);
+	const projection = camera.projection ?? "perspective";
+	const [orbitEnabled, setOrbitEnabled] = useState(true);
+	const [marqueeOverlay, setMarqueeOverlay] = useState<{
+		coverage: SelectionMarqueeCoverage;
+		shape: "rect" | "polygon";
+		rect?: { x: number; y: number; width: number; height: number };
+		points?: readonly { x: number; y: number }[];
+	} | null>(null);
+	const [livePreselect, setLivePreselect] = useState<{ ids: string[]; removedIds: string[] }>({ ids: [], removedIds: [] });
+	const marqueeRef = useRef<{ active: boolean; start: { x: number; y: number }; points: { x: number; y: number }[]; initial: string[] }>({
+		active: false,
+		start: { x: 0, y: 0 },
+		points: [],
+		initial: [],
+	});
+
 	const visibleHandles =
 		showMode === "selected" ? handles.filter((entry) => selectedNodeIds.includes(entry.widgetId)) : handles;
 
+	const effectiveSelected = useMemo(() => new Set(selectedNodeIds), [selectedNodeIds]);
+	const effectivePreselect = useMemo(() => new Set(livePreselect.ids.length ? livePreselect.ids : preselectNodeIds), [livePreselect.ids, preselectNodeIds]);
+	const effectivePreselectRemoved = useMemo(
+		() => new Set(livePreselect.removedIds.length ? livePreselect.removedIds : preselectRemovedNodeIds),
+		[livePreselect.removedIds, preselectRemovedNodeIds],
+	);
+
+	const handleCamera = useCallback((camera: THREE.Camera, size: { width: number; height: number }) => {
+		cameraRef.current = camera;
+		sizeRef.current = { width: size.width, height: size.height };
+	}, []);
+
+	const screenBoundsForHandle = useCallback(
+		(handle: ProceduralGeometryHandle): ScreenBounds | null => {
+			const camera = cameraRef.current;
+			if (!camera) return null;
+			try {
+				const bounds = kernel.getBoundsSync(handle.handle as GeometryRef);
+				return projectWorldBoundsToScreen(bounds, camera, sizeRef.current.width, sizeRef.current.height);
+			} catch {
+				return null;
+			}
+		},
+		[kernel],
+	);
+
+	const resolveMarqueeHits = useCallback(
+		(points: readonly { x: number; y: number }[], crossing: boolean): string[] => {
+			const marqueeRect = screenRectFromPoints(points);
+			if (!marqueeRect) return [];
+			const hits: string[] = [];
+			for (const entry of visibleHandles) {
+				const bounds = screenBoundsForHandle(entry);
+				if (!bounds) continue;
+				const target = { x: bounds.left, y: bounds.top, width: bounds.right - bounds.left, height: bounds.bottom - bounds.top };
+				const marquee = { x: marqueeRect.x, y: marqueeRect.y, width: marqueeRect.width, height: marqueeRect.height };
+				const contained = screenRectContainsRect(marquee, target);
+				const intersects = screenRectIntersectsRect(marquee, target);
+				if (crossing ? intersects : contained) hits.push(entry.widgetId);
+			}
+			return hits;
+		},
+		[screenBoundsForHandle, visibleHandles],
+	);
+
+	const commitSelection = useCallback(
+		(ids: readonly string[], mode: ProceduralSelectionMode) => {
+			if (onSelectionChange) {
+				onSelectionChange(ids, mode);
+				return;
+			}
+			if (ids.length === 1 && onSelect) {
+				onSelect(ids[0]!);
+			}
+		},
+		[onSelect, onSelectionChange],
+	);
+
+	const onPick = useCallback(
+		(widgetId: string, mode: ProceduralSelectionMode) => {
+			const next = selectionMergeIds(mode, selectedNodeIds, [widgetId]);
+			commitSelection(next, mode);
+		},
+		[commitSelection, selectedNodeIds],
+	);
+
+	const clientToLocal = useCallback((clientX: number, clientY: number) => {
+		const host = containerRef.current;
+		if (!host) return { x: clientX, y: clientY };
+		const rect = host.getBoundingClientRect();
+		return { x: clientX - rect.left, y: clientY - rect.top };
+	}, []);
+
+	const onOverlayPointerDown = useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (event.button !== 0) return;
+			event.currentTarget.setPointerCapture(event.pointerId);
+			const point = clientToLocal(event.clientX, event.clientY);
+			marqueeRef.current = { active: true, start: point, points: [point], initial: [...selectedNodeIds] };
+			setOrbitEnabled(false);
+			setMarqueeOverlay(null);
+			setLivePreselect({ ids: [], removedIds: [] });
+		},
+		[clientToLocal, selectedNodeIds],
+	);
+
+	const onOverlayPointerMove = useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (!marqueeRef.current.active) return;
+			const point = clientToLocal(event.clientX, event.clientY);
+			const start = marqueeRef.current.start;
+			const points = selectionMethod === "lasso" ? [...marqueeRef.current.points, point] : [start, point];
+			marqueeRef.current.points = points;
+			const coverage = marqueeCoverageFromDrag(start.x, point.x);
+			if (selectionMethod === "lasso" && points.length >= 3) {
+				setMarqueeOverlay({ coverage, shape: "polygon", points });
+			} else {
+				const rect = screenRectFromPoints(points);
+				if (rect) setMarqueeOverlay({ coverage, shape: "rect", rect });
+			}
+			const mode = marqueeModeFromModifiers(event);
+			const hits = resolveMarqueeHits(points, coverage === "partial");
+			const merged = selectionMergeIds(mode, marqueeRef.current.initial, hits);
+			const removed = marqueeRef.current.initial.filter((id) => !merged.includes(id));
+			setLivePreselect({ ids: merged.filter((id) => !marqueeRef.current.initial.includes(id)), removedIds: removed });
+		},
+		[clientToLocal, resolveMarqueeHits, selectionMethod],
+	);
+
+	const onOverlayPointerUp = useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (!marqueeRef.current.active) return;
+			const point = clientToLocal(event.clientX, event.clientY);
+			const start = marqueeRef.current.start;
+			const distance = Math.hypot(point.x - start.x, point.y - start.y);
+			const mode = marqueeModeFromModifiers(event);
+			if (distance >= PROCEDURAL_PREVIEW_MARQUEE_THRESHOLD_PX) {
+				const points = selectionMethod === "lasso" ? [...marqueeRef.current.points, point] : [start, point];
+				const coverage = marqueeCoverageFromDrag(start.x, point.x);
+				const hits = resolveMarqueeHits(points, coverage === "partial");
+				const next = selectionMergeIds(mode, marqueeRef.current.initial, hits);
+				commitSelection(next, mode);
+			}
+			marqueeRef.current = { active: false, start: { x: 0, y: 0 }, points: [], initial: [] };
+			setOrbitEnabled(true);
+			setMarqueeOverlay(null);
+			setLivePreselect({ ids: [], removedIds: [] });
+		},
+		[clientToLocal, commitSelection, resolveMarqueeHits, selectionMethod],
+	);
+
+	const onProjectionChange = useCallback((nextProjection: OrbitCameraProjection) => {
+		setCamera((prev) => applyOrbitProjectionToCameraState(prev, nextProjection));
+		setCameraSeed((seed) => seed + 1);
+	}, []);
+
+	const onOrbitCameraChange = useCallback((next: WorldCameraState) => {
+		setCamera(next);
+	}, []);
+
+	const onViewportGizmoCameraChange = useCallback((next: WorldCameraState) => {
+		setCamera(next);
+		setCameraSeed((seed) => seed + 1);
+	}, []);
+
 	return (
-		<div className={className ?? "relative h-full w-full bg-zinc-900"}>
-			<WorldCanvas frameloop="demand" cameraPosition={[8, 8, 6]} background="#18181b">
-				<WorldCameraInvalidator />
-				<ambientLight intensity={0.45} />
-				<directionalLight position={[12, 18, 10]} intensity={1.1} />
-				<WorldOrbitGated />
-				{visibleHandles.map((entry, index) => (
-					<BrepGeometryLayer
-						key={`${entry.widgetId}:${entry.handle}`}
-						widgetId={entry.widgetId}
-						geometryId={entry.handle}
-						kernel={kernel}
-						tolerance={tolerance}
-						color={BREP_VIEWPORT_COLORS[index % BREP_VIEWPORT_COLORS.length]!}
-						selected={selectedNodeIds.includes(entry.widgetId)}
-						hovered={hoveredNodeId === entry.widgetId}
-						previewOff={previewOffNodeIds.includes(entry.widgetId)}
-						onHover={onHover}
-						onSelect={onSelect}
-					/>
-				))}
+		<div
+			ref={containerRef}
+			className={className ?? "relative h-full w-full bg-zinc-900"}
+			onPointerDown={onOverlayPointerDown}
+			onPointerMove={onOverlayPointerMove}
+			onPointerUp={onOverlayPointerUp}
+			onPointerCancel={onOverlayPointerUp}
+		>
+			<WorldCanvas
+				frameloop="demand"
+				background="#18181b"
+				overlay={<WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />}
+			>
+				<WorldLodBridge
+					lodRef={lodRef}
+					distanceReference={100}
+					gridFactor={DEFAULT_LOD_GRID_FACTOR}
+					gridSnapEnabled={false}
+					showLodGrid
+					automaticLod
+					depthVariableLod={false}
+					manualLod={DEFAULT_MANUAL_LOD}
+					gridDatum={[0, 0, 0]}
+				>
+					<WorldOrbitViewSnapGateProvider>
+						<WorldOrbitCameraViewRig state={camera} seedKey={cameraSeedKey} perspectiveFov={45} />
+						<WorldOrbitGated
+							controlsKey={cameraSeedKey}
+							projection={projection}
+							zoom={camera.zoom}
+							controlsGate={!orbitEnabled}
+							onCamera={onOrbitCameraChange}
+						/>
+						<WorldOrbitViewControls onCameraChange={onViewportGizmoCameraChange} />
+						<ProceduralPreviewCameraBridge onCamera={handleCamera} />
+						<WorldCameraInvalidator />
+						<ambientLight intensity={0.45} />
+						<directionalLight position={[12, 18, 10]} intensity={1.1} />
+						<WorldLayer order={10} name="procedural.preview">
+							{visibleHandles.map((entry, index) => (
+								<BrepGeometryLayer
+									key={`${entry.widgetId}:${entry.handle}`}
+									widgetId={entry.widgetId}
+									geometryId={entry.handle}
+									kernel={kernel}
+									tolerance={tolerance}
+									color={BREP_VIEWPORT_COLORS[index % BREP_VIEWPORT_COLORS.length]!}
+									selected={effectiveSelected.has(entry.widgetId) || effectivePreselect.has(entry.widgetId)}
+									highlighted={effectivePreselectRemoved.has(entry.widgetId)}
+									hovered={hoveredNodeId === entry.widgetId}
+									previewOff={previewOffNodeIds.includes(entry.widgetId)}
+									onHover={onHover}
+									onPick={onPick}
+								/>
+							))}
+						</WorldLayer>
+					</WorldOrbitViewSnapGateProvider>
+				</WorldLodBridge>
 			</WorldCanvas>
+			{marqueeOverlay?.shape === "rect" && marqueeOverlay.rect ? (
+				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />
+			) : null}
+			{marqueeOverlay?.shape === "polygon" && marqueeOverlay.points ? (
+				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} />
+			) : null}
 		</div>
 	);
 }
@@ -949,10 +1260,15 @@ export interface ProceduralFlowEditorProps {
 	readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
 	readonly onFixtureChange?: (fixtureJson: string) => void;
 	readonly onSelectionChange?: (ids: readonly string[]) => void;
+	readonly onPreselectChange?: (snapshot: { readonly ids: readonly string[]; readonly removedIds: readonly string[] }) => void;
 	readonly onHoverChange?: (id: string | null) => void;
 	readonly selectedNodeIds?: readonly string[];
+	readonly preselectNodeIds?: readonly string[];
+	readonly preselectRemovedNodeIds?: readonly string[];
 	readonly hoveredNodeId?: string | null;
 	readonly previewOffNodeIds?: readonly string[];
+	readonly selectionMode?: ProceduralSelectionMode;
+	readonly selectionMethod?: ProceduralSelectionMethod;
 }
 
 export function ProceduralFlowEditor({
@@ -966,10 +1282,15 @@ export function ProceduralFlowEditor({
 	onCatalogueReady,
 	onFixtureChange,
 	onSelectionChange,
+	onPreselectChange,
 	onHoverChange,
 	selectedNodeIds,
+	preselectNodeIds,
+	preselectRemovedNodeIds,
 	hoveredNodeId,
 	previewOffNodeIds,
+	selectionMode,
+	selectionMethod,
 }: ProceduralFlowEditorProps): ReactNode {
 	const hostRef = useRef(extensionHost);
 
@@ -990,10 +1311,15 @@ export function ProceduralFlowEditor({
 			onCatalogueReady={onCatalogueReady}
 			onFixtureChange={onFixtureChange}
 			onSelectionChange={onSelectionChange}
+			onPreselectChange={onPreselectChange}
 			onHoverChange={onHoverChange}
 			selectedNodeIds={selectedNodeIds}
+			preselectNodeIds={preselectNodeIds}
+			preselectRemovedNodeIds={preselectRemovedNodeIds}
 			hoveredNodeId={hoveredNodeId}
 			previewOffNodeIds={previewOffNodeIds}
+			selectionMode={selectionMode}
+			selectionMethod={selectionMethod}
 			className={className ?? "h-full w-full"}
 		/>
 	);
@@ -1013,7 +1339,16 @@ export { createFlowEvalBridge, type FlowModuleCommandV1, type FlowReorganizeRequ
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it, beforeAll } = import.meta.vitest;
-	const { ProceduralExtensionHost, evaluateBrepFlowKind } = await import("./index.tsx");
+	const { createRoot } = await import("react-dom/client");
+	const { act } = await import("react");
+	const {
+		ProceduralExtensionHost,
+		ProceduralPreview,
+		PROCEDURAL_PREVIEW_DEFAULT_CAMERA,
+		evaluateBrepFlowKind,
+		proceduralPreviewCameraSeed,
+	} = await import("./index.tsx");
+	const { applyOrbitProjectionToCameraState } = await import("@infinite/world/r3f");
 	const { BrepjsGeometryKernel, ensureBrepWasmLoaded } = await import("@geometry/brep/js");
 
 	describe("@procedural/react", () => {
@@ -1021,6 +1356,14 @@ if (import.meta.vitest) {
 
 		beforeAll(async () => {
 			await ensureBrepWasmLoaded();
+			if (typeof globalThis.ResizeObserver === "undefined") {
+				globalThis.ResizeObserver = class {
+					observe() {}
+					unobserve() {}
+					disconnect() {}
+				} as typeof ResizeObserver;
+			}
+			(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 		});
 
 		it("brep.prim3d.box evaluates to geometry handle", () => {
@@ -1058,6 +1401,35 @@ if (import.meta.vitest) {
 			expect(sections.some((s) => s.id === "brep-prim3d")).toBe(true);
 			expect(sections.some((s) => s.id === "brep-curves")).toBe(true);
 			expect(sections.some((s) => s.id === "brep-solid")).toBe(true);
+		});
+
+		it("procedural preview default camera is z-up perspective", () => {
+			expect(PROCEDURAL_PREVIEW_DEFAULT_CAMERA).toMatchObject({
+				position: [8, 8, 6],
+				target: [0, 0, 0],
+				zoom: 1,
+				up: [0, 0, 1],
+				projection: "perspective",
+			});
+		});
+
+		it("procedural preview camera seed changes when projection changes", () => {
+			const ortho = applyOrbitProjectionToCameraState(PROCEDURAL_PREVIEW_DEFAULT_CAMERA, "orthographic");
+			const seedA = proceduralPreviewCameraSeed(PROCEDURAL_PREVIEW_DEFAULT_CAMERA, 0);
+			const seedB = proceduralPreviewCameraSeed(ortho, 1);
+			expect(seedA).not.toBe(seedB);
+		});
+
+		it("procedural preview mounts the infinite-world viewport stack", async () => {
+			const host = document.createElement("div");
+			document.body.appendChild(host);
+			const root = createRoot(host);
+			await act(async () => {
+				root.render(<ProceduralPreview handles={[]} />);
+			});
+			expect(host.querySelector("[data-world-projection-switch]")).not.toBeNull();
+			root.unmount();
+			host.remove();
 		});
 	});
 }
