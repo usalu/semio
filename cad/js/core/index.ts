@@ -230,10 +230,11 @@ export function expandSelectionTargetsForAccept(model: Model, spec: SelectionSpe
     if (target.kind !== "object") continue;
     const row = model.objects[target.id as ObjectRef];
     if (!row) continue;
-    const wireRef = row.primitives.wire;
-    const edgeRef = row.primitives.edge;
-    if (accept.has("wire") && wireRef) push("wire", String(wireRef));
-    else if (accept.has("edge") && edgeRef) push("edge", String(edgeRef));
+    const curveRef = row.primitives.curve;
+    if (!curveRef) continue;
+    const topo = resolveKernelTopologyKind(model, String(curveRef));
+    if (accept.has("wire") && (topo === "wire" || topo === null)) push("wire", String(curveRef));
+    else if (accept.has("edge") && (topo === "edge" || topo === null)) push("edge", String(curveRef));
   }
   return out;
 }
@@ -1252,7 +1253,12 @@ export function materializeInlineObjectPrimitives(model: Model, rawObjects: read
         }
         continue;
       }
-      if (kind === "edge" && Array.isArray(row.vertexIds) && row.vertexIds.length >= 2) {
+      if ((kind === "curve" || kind === "wire") && Array.isArray(row.edgeIds)) {
+        model.wires[id as WireRef] = { id: id as WireRef, edgeIds: row.edgeIds.map(String) as EdgeRef[] };
+        changed = true;
+        continue;
+      }
+      if ((kind === "curve" || kind === "edge") && Array.isArray(row.vertexIds) && row.vertexIds.length >= 2) {
         model.edges[id as EdgeRef] = {
           id: id as EdgeRef,
           vertexIds: [String(row.vertexIds[0]), String(row.vertexIds[1])] as [VertexRef, VertexRef],
@@ -1261,12 +1267,7 @@ export function materializeInlineObjectPrimitives(model: Model, rawObjects: read
         changed = true;
         continue;
       }
-      if (kind === "wire" && Array.isArray(row.edgeIds)) {
-        model.wires[id as WireRef] = { id: id as WireRef, edgeIds: row.edgeIds.map(String) as EdgeRef[] };
-        changed = true;
-        continue;
-      }
-      if (kind === "face" && Array.isArray(row.wireIds)) {
+      if ((kind === "surface" || kind === "face") && Array.isArray(row.wireIds)) {
         model.faces[id as FaceRef] = {
           id: id as FaceRef,
           wireIds: row.wireIds.map(String) as WireRef[],
@@ -1466,12 +1467,12 @@ export function hashAnchorRecord(anchor: AnchorRecord): GeometryPrimitiveHash {
 }
 
 /** @emoji #️⃣ Per-primitive hashes for one model (`ModelSpace` geometry fingerprint). */
-export type ModelPrimitiveHashes = Readonly<Partial<Record<TypologyPrimitiveKind, Readonly<Record<string, GeometryPrimitiveHash>>>>>;
+export type ModelPrimitiveHashes = Readonly<Partial<Record<KernelTopologyKind, Readonly<Record<string, GeometryPrimitiveHash>>>>>;
 
 /** @emoji #️⃣ Maps primitive tables on `model` to content hashes (every vertex and primitive). */
 export function hashModelPrimitives(model: Model): ModelPrimitiveHashes {
-  const out: Partial<Record<TypologyPrimitiveKind, Record<string, GeometryPrimitiveHash>>> = {};
-  const put = (kind: TypologyPrimitiveKind, id: string, hash: GeometryPrimitiveHash): void => {
+  const out: Partial<Record<KernelTopologyKind, Record<string, GeometryPrimitiveHash>>> = {};
+  const put = (kind: KernelTopologyKind, id: string, hash: GeometryPrimitiveHash): void => {
     out[kind] ??= {};
     out[kind]![id] = hash;
   };
@@ -1822,8 +1823,11 @@ export function parseModelJson(raw: unknown): Model | null {
   return Model.fromJSON(json);
 }
 
-/** @emoji 🧱 Primitive kind allowed on typology objects (`cad/AGENTS.md`). */
-export type TypologyPrimitiveKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
+/** @emoji 🧱 Standalone primitive kinds allowed on typology objects (`cad/AGENTS.md`). */
+export type TypologyPrimitiveKind = "anchor" | "solid" | "surface" | "curve";
+
+/** @emoji 🧬 Kernel-private topology entity kinds (faces, wires, … are not standalone primitives). */
+export type KernelTopologyKind = "anchor" | "vertex" | "edge" | "wire" | "face" | "shell" | "solid";
 
 /** @emoji 🏷️ Parsed model-definition manifest (`spatial.modelDefinition/v1` on disk). */
 export interface ModelDefinitionManifest {
@@ -1835,7 +1839,7 @@ export interface ModelDefinitionManifest {
   readonly kinds: readonly string[];
   readonly default?: boolean;
   readonly baseObjectTypology?: string;
-  readonly kernelTypologies?: Readonly<Partial<Record<TypologyPrimitiveKind, string>>>;
+  readonly kernelTypologies?: Readonly<Partial<Record<KernelTopologyKind, string>>>;
 }
 
 /** @emoji 🧭 Default geometry-edit model definition id (manifest `default: true`). */
@@ -1854,7 +1858,7 @@ export function isShapeModelDefinition(modelDefinitionId: string | null | undefi
 }
 
 /** @emoji 🪪 Kernel typology ids per primitive kind on a model-definition manifest. */
-export function kernelTypologyIds(modelDefinitionId: string): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | null {
+export function kernelTypologyIds(modelDefinitionId: string): Readonly<Partial<Record<KernelTopologyKind, string>>> | null {
   const manifest = listModelDefinitionManifests().find((row) => row.id === modelDefinitionId);
   const map = manifest?.kernelTypologies;
   if (!map || Object.keys(map).length === 0) return null;
@@ -1882,13 +1886,13 @@ export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManif
   };
 }
 
-function parseKernelTypologies(raw: unknown): Readonly<Partial<Record<TypologyPrimitiveKind, string>>> | undefined {
+function parseKernelTypologies(raw: unknown): Readonly<Partial<Record<KernelTopologyKind, string>>> | undefined {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
-  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
-  const out: Partial<Record<TypologyPrimitiveKind, string>> = {};
+  const allowed = new Set<KernelTopologyKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
+  const out: Partial<Record<KernelTopologyKind, string>> = {};
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
-    if (!allowed.has(key as TypologyPrimitiveKind) || typeof value !== "string" || value.length === 0) continue;
-    out[key as TypologyPrimitiveKind] = value;
+    if (!allowed.has(key as KernelTopologyKind) || typeof value !== "string" || value.length === 0) continue;
+    out[key as KernelTopologyKind] = value;
   }
   return Object.keys(out).length > 0 ? out : undefined;
 }
@@ -1950,18 +1954,32 @@ export function inferTypologyPrimitiveKinds(typology: string): readonly Typology
   if (id.includes(".measure.") && id.includes("volume")) return [];
   if (id.includes(".entity.") || id.includes("create-anchor")) return ["anchor"];
   if (id.includes(".measure.")) return ["anchor"];
-  if (id.includes(".curve.")) return ["edge", "wire"];
-  if (id.includes(".surface.")) return ["face"];
-  if (id.includes(".primitive.") || id.includes(".solid.")) return ["solid"];
+  if (id.includes(".curve.") || id.includes(".linefem") || id.includes("lineelement")) return ["curve"];
+  if (id.includes(".surface.") || id.includes("surfacefem") || id.includes("surfaceelement")) return ["surface"];
+  if (id.includes(".primitive.") || id.includes(".solid.") || id.includes("solidelement")) return ["solid"];
   if (id.includes(".feature.extrude")) return ["solid"];
-  if (id.includes(".feature.offset")) return ["face", "solid"];
-  if (id.includes(".transform.") || id.includes(".edit.")) return ["vertex", "edge", "wire", "face", "solid"];
+  if (id.includes(".feature.offset")) return ["surface", "solid"];
+  if (id.includes(".transform.") || id.includes(".edit.")) return ["solid", "surface", "curve"];
+  if (id.includes(".beam") || id.includes(".railing")) return ["curve"];
+  if (id.includes(".column") || id.includes(".stair") || id.includes(".hull")) return ["solid"];
+  if (
+    id.includes("wall") ||
+    id.includes("slab") ||
+    id.includes(".roof") ||
+    id.includes("baseplate") ||
+    id.includes("ceiling") ||
+    id.includes("foundation") ||
+    id.includes(".door") ||
+    id.includes("window")
+  ) {
+    return ["surface"];
+  }
   return ["solid"];
 }
 
 function parseTypologyPrimitiveKinds(raw: unknown, typology: string): readonly TypologyPrimitiveKind[] {
   if (!Array.isArray(raw) || raw.length === 0) return inferTypologyPrimitiveKinds(typology);
-  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
+  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "solid", "surface", "curve"]);
   const kinds: TypologyPrimitiveKind[] = [];
   for (const entry of raw) {
     if (typeof entry !== "string") continue;
@@ -1969,6 +1987,13 @@ function parseTypologyPrimitiveKinds(raw: unknown, typology: string): readonly T
     if (allowed.has(k)) kinds.push(k);
   }
   return kinds.length ? kinds : inferTypologyPrimitiveKinds(typology);
+}
+
+/** @emoji 🧭 Maps a standalone typology primitive kind to the kernel entity kind used for picking. */
+export function typologyPrimitiveToEntityKind(kind: TypologyPrimitiveKind): ModelEntityKind {
+  if (kind === "surface") return "face";
+  if (kind === "curve") return "wire";
+  return kind;
 }
 
 const TYPOLOGY_STYLE_PATTERN_KINDS = new Set<TypologyStylePatternKind>(["none", "hatch", "crosshatch", "dots"]);
@@ -2268,8 +2293,8 @@ export function loadPropertyDefinition(propertyId: string): PropertyDefinitionSp
   return shippedPropertyDefinitionCatalog().find((row) => row.id === propertyId) ?? null;
 }
 
-/** @emoji 🧭 Resolves the primitive kind referenced by one primitive ref. */
-export function resolvePrimitiveRefKind(model: Model, primitiveRef: string): TypologyPrimitiveKind | null {
+/** @emoji 🧭 Resolves the kernel topology kind referenced by one primitive ref. */
+export function resolveKernelTopologyKind(model: Model, primitiveRef: string): KernelTopologyKind | null {
   if (model.anchors[primitiveRef]) return "anchor";
   if (model.vertices[primitiveRef]) return "vertex";
   if (model.edges[primitiveRef]) return "edge";
@@ -2280,9 +2305,21 @@ export function resolvePrimitiveRefKind(model: Model, primitiveRef: string): Typ
   return null;
 }
 
+/** @emoji 🧭 Resolves the standalone primitive kind referenced by one primitive ref. */
+export function resolveStandalonePrimitiveKind(model: Model, primitiveRef: string): TypologyPrimitiveKind | null {
+  if (model.anchors[primitiveRef]) return "anchor";
+  if (model.solids[primitiveRef]) return "solid";
+  if (model.faces[primitiveRef]) return "surface";
+  if (model.wires[primitiveRef] || model.edges[primitiveRef]) return "curve";
+  return null;
+}
+
+/** @emoji 🧭 Resolves the kernel topology kind referenced by one primitive ref. */
+export const resolvePrimitiveRefKind = resolveKernelTopologyKind;
+
 /** @emoji 🌳 Nested primitive node under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
 export interface ModelPrimitiveHierarchyNode {
-  readonly kind: TypologyPrimitiveKind;
+  readonly kind: KernelTopologyKind;
   readonly id: string;
   readonly children: readonly ModelPrimitiveHierarchyNode[];
 }
@@ -2291,7 +2328,7 @@ function sortedPrimitiveChildIds(ids: readonly string[]): string[] {
   return [...ids].sort((a, b) => a.localeCompare(b));
 }
 
-function buildModelPrimitiveHierarchyNode(model: Model, kind: TypologyPrimitiveKind, id: string): ModelPrimitiveHierarchyNode | null {
+function buildModelPrimitiveHierarchyNode(model: Model, kind: KernelTopologyKind, id: string): ModelPrimitiveHierarchyNode | null {
   const children: ModelPrimitiveHierarchyNode[] = [];
   switch (kind) {
     case "solid": {
@@ -2366,7 +2403,7 @@ export function objectMatchesTypologyPrimitives(model: Model, object: SpatialObj
   const typology = loadTypology(object.typology);
   if (!typology || typology.primitiveKinds.length === 0) return false;
   const primitiveKinds = objectPrimitiveRefs(object)
-    .map((primitiveRef) => resolvePrimitiveRefKind(model, primitiveRef))
+    .map((primitiveRef) => resolveStandalonePrimitiveKind(model, primitiveRef))
     .filter((kind): kind is TypologyPrimitiveKind => kind !== null);
   return primitiveKinds.length > 0 && primitiveKinds.every((kind) => typologyAllowsPrimitiveKind(typology, kind));
 }
@@ -2381,7 +2418,7 @@ export function buildTypologyToEntityKindMapForModelDefinition(modelDefinitionId
     }
     for (const spec of listTypologiesForModelDefinition(modelDefinitionId)) {
       if (spec.primitiveKinds.length !== 1) continue;
-      const kind = spec.primitiveKinds[0]!;
+      const kind = typologyPrimitiveToEntityKind(spec.primitiveKinds[0]!);
       if (kind === "anchor" && !spec.id.includes("entity") && !spec.id.includes("measure")) continue;
       out[spec.id] = kind;
     }
@@ -2601,8 +2638,8 @@ export function collectFaceRefsForObjects(model: Model, objects: readonly Spatia
   const ids = new Set<string>();
   for (const object of objects) {
     for (const primitiveRef of objectPrimitiveRefs(object)) {
-      const kind = resolvePrimitiveRefKind(model, primitiveRef);
-      if (kind === "face") {
+      const kind = resolveStandalonePrimitiveKind(model, primitiveRef);
+      if (kind === "surface") {
         ids.add(primitiveRef);
         continue;
       }
@@ -2913,7 +2950,7 @@ function parseTransformationDeriveSpec(raw: unknown): TransformationDeriveSpec |
   const classify = r.classify as Record<string, unknown> | undefined;
   if (typeof collect?.sourceModelDefinition !== "string") return null;
   const primitiveKind = collect.primitiveKind;
-  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]);
+  const allowed = new Set<TypologyPrimitiveKind>(["anchor", "solid", "surface", "curve"]);
   if (typeof primitiveKind !== "string" || !allowed.has(primitiveKind as TypologyPrimitiveKind)) return null;
   if (typeof hull?.typology !== "string" || typeof hull?.primitiveKind !== "string") return null;
   if (!classify || !Array.isArray(classify.rules) || classify.rules.length === 0) return null;
@@ -3568,7 +3605,7 @@ function runDeriveTransformation(spec: TransformationSpec, source: Model, previe
     target.objects[objectId] = {
       id: objectId,
       typology: group.typology,
-      primitives: { face: String(group.faces[0]!) },
+      primitives: { surface: String(group.faces[0]!) },
       attributes: { sourceObjectIds, surfaceRole: group.role, faceIds: group.faces.map(String) },
     };
   }
@@ -3578,7 +3615,7 @@ function runDeriveTransformation(spec: TransformationSpec, source: Model, previe
       target.objects[objectId] = {
         id: objectId,
         typology: ensure.typology as TypologyRef,
-        primitives: ensure.empty ? {} : { face: String(externalFaces[0] ?? '') },
+        primitives: ensure.empty ? {} : { surface: String(externalFaces[0] ?? '') },
         attributes: { sourceObjectIds },
       };
     }
@@ -3725,24 +3762,24 @@ export function typologyIdForInteractionCommit(interactionId: string): string | 
 /** @emoji 📦 Binds a typology object row to the primary primitive added by a create/construct diff. */
 export function ensureTypologyObjectFromCreateDiff(model: Model, typology: string, diff: ModelDiff): ObjectRef | null {
   const typologySpec = loadTypology(typology);
-  if (!typologySpec) return null;
+  if (!typologySpec || typologySpec.primitiveKinds.length === 0) return null;
+  const candidates: { readonly kind: TypologyPrimitiveKind; readonly id: string }[] = [];
   const solidId = diff.solids?.added?.[0]?.id;
+  const faceId = diff.faces?.added?.[0]?.id;
   const wireId = diff.wires?.added?.[0]?.id;
   const edgeId = diff.edges?.added?.[0]?.id;
-  const primitiveRef = solidId ?? wireId ?? edgeId;
-  if (!primitiveRef) return null;
-  const primitiveKind =
-    (solidId && typologySpec.primitiveKinds.includes("solid") && "solid") ||
-    (wireId && typologySpec.primitiveKinds.includes("wire") && "wire") ||
-    (edgeId && typologySpec.primitiveKinds.includes("edge") && "edge") ||
-    typologySpec.primitiveKinds[0] ||
-    "solid";
+  if (solidId && typologySpec.primitiveKinds.includes("solid")) candidates.push({ kind: "solid", id: solidId });
+  if (faceId && typologySpec.primitiveKinds.includes("surface")) candidates.push({ kind: "surface", id: faceId });
+  if (wireId && typologySpec.primitiveKinds.includes("curve")) candidates.push({ kind: "curve", id: wireId });
+  if (edgeId && typologySpec.primitiveKinds.includes("curve")) candidates.push({ kind: "curve", id: edgeId });
+  const picked = candidates[0];
+  if (!picked) return null;
   const typologyObjectId = typology as ObjectRef;
-  const objectId = model.objects[typologyObjectId] ? (String(primitiveRef) as ObjectRef) : typologyObjectId;
+  const objectId = model.objects[typologyObjectId] ? (String(picked.id) as ObjectRef) : typologyObjectId;
   model.objects[objectId] = {
     id: objectId,
     typology: typology as TypologyRef,
-    primitives: { [primitiveKind]: String(primitiveRef) },
+    primitives: { [picked.kind]: String(picked.id) },
   };
   model.bump();
   return objectId;
@@ -6955,8 +6992,22 @@ if (import.meta.vitest) {
     it("assigns primitiveKinds to geometry typologies", () => {
       const box = loadTypology("spatial.shape.primitive.box");
       const line = loadTypology("spatial.shape.curve.line");
+      const plane = loadTypology("spatial.shape.surface.plane");
       expect(box?.primitiveKinds).toEqual(["solid"]);
-      expect(line?.primitiveKinds).toEqual(["edge", "wire"]);
+      expect(line?.primitiveKinds).toEqual(["curve"]);
+      expect(plane?.primitiveKinds).toEqual(["surface"]);
+    });
+    it("assigns primitiveKinds to AEC typologies", () => {
+      expect(loadTypology("building.building.slab")?.primitiveKinds).toEqual(["surface"]);
+      expect(loadTypology("building.building.wall")?.primitiveKinds).toEqual(["surface"]);
+      expect(loadTypology("building.building.beam")?.primitiveKinds).toEqual(["curve"]);
+      expect(loadTypology("building.building.column")?.primitiveKinds).toEqual(["solid"]);
+      expect(loadTypology("energy.energy.externalwall")?.primitiveKinds).toEqual(["surface"]);
+      expect(loadTypology("energy.energy.hull")?.primitiveKinds).toEqual(["solid"]);
+      expect(loadTypology("structure.structure.onewayreinforcedconcreteslab")?.primitiveKinds).toEqual(["surface"]);
+      expect(loadTypology("structure.linefem.lineelement")?.primitiveKinds).toEqual(["curve"]);
+      expect(loadTypology("structure.surfacefem.surfaceelement")?.primitiveKinds).toEqual(["surface"]);
+      expect(loadTypology("structure.solidfem.solidelement")?.primitiveKinds).toEqual(["solid"]);
     });
     it("resolveTypologyStyle is deterministic and distinct per typology id", () => {
       const a = resolveTypologyStyle("spatial.shape.primitive.box");
@@ -7013,6 +7064,19 @@ if (import.meta.vitest) {
         primitives: { solid: solidId },
       };
       expect(objectMatchesTypologyPrimitives(model, model.objects["obj-b"]!)).toBe(false);
+      model.objects["obj-c"] = {
+        id: "obj-c" as ObjectRef,
+        typology: "building.building.slab" as TypologyRef,
+        primitives: { solid: solidId },
+      };
+      expect(objectMatchesTypologyPrimitives(model, model.objects["obj-c"]!)).toBe(false);
+      const faceId = Object.keys(model.faces)[0]!;
+      model.objects["obj-d"] = {
+        id: "obj-d" as ObjectRef,
+        typology: "building.building.slab" as TypologyRef,
+        primitives: { surface: faceId },
+      };
+      expect(objectMatchesTypologyPrimitives(model, model.objects["obj-d"]!)).toBe(true);
     });
   });
 
@@ -7177,8 +7241,8 @@ if (import.meta.vitest) {
       expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.roof")).toHaveLength(1);
       expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.baseplate")).toHaveLength(1);
       expect(listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall")).toHaveLength(4);
-      expect(target.objects["energy.energy.roof"]?.primitives.face).toBe("box-box-face-top");
-      expect(target.objects["energy.energy.baseplate"]?.primitives.face).toBe("box-box-face-bottom");
+      expect(target.objects["energy.energy.roof"]?.primitives.surface).toBe("box-box-face-top");
+      expect(target.objects["energy.energy.baseplate"]?.primitives.surface).toBe("box-box-face-bottom");
       const space = new ModelSpace();
       space.link("geometry", source);
       space.transfer("geometry", "energy", spec!, M);
@@ -7220,8 +7284,8 @@ if (import.meta.vitest) {
       expect(target.solids["from_geometry-hull"]?.shellIds).toEqual([]);
       expect(target.metadata.get("from_geometry-hull")?.fuseSourceSolidIds).toEqual(["lower", "upper"]);
       expect(target.objects["energy.energy.hull"]?.primitives.solid).toBe("from_geometry-hull");
-      expect(target.objects["energy.energy.roof"]?.primitives.face).toBe("box-upper-face-top");
-      expect(target.objects["energy.energy.baseplate"]?.primitives.face).toBe("box-lower-face-bottom");
+      expect(target.objects["energy.energy.roof"]?.primitives.surface).toBe("box-upper-face-top");
+      expect(target.objects["energy.energy.baseplate"]?.primitives.surface).toBe("box-lower-face-bottom");
       expect(
         listModelObjectsForModelDefinition(target, "aec.building.energy").filter((row) => row.typology === "energy.energy.externalwall"),
       ).toHaveLength(4);
@@ -7838,7 +7902,7 @@ if (import.meta.vitest) {
       expect(Object.keys(model.edges).length).toBeGreaterThan(0);
       expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId())).toHaveLength(1);
       expect(model.objects[typology as ObjectRef]?.typology).toBe(typology);
-      expect(model.objects[typology as ObjectRef]?.primitives.wire).toBeTruthy();
+      expect(model.objects[typology as ObjectRef]?.primitives.curve).toBeTruthy();
     });
 
     it("curve.interpolateCurve commit uses live snapped vertex positions after vertex move", async () => {
@@ -8510,7 +8574,7 @@ if (import.meta.vitest) {
       model.objects[typology as ObjectRef] = {
         id: typology as ObjectRef,
         typology: typology as TypologyRef,
-        primitives: { wire: "w-interp" },
+        primitives: { curve: "w-interp" },
       };
       const spec: SelectionSpec = { accept: ["wire", "edge"], multiple: true };
       const expanded = expandSelectionTargetsForAccept(model, spec, [{ kind: "object", id: typology, editable: true }]);

@@ -85,7 +85,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1103522759",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -93,7 +93,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1541531391",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -101,7 +101,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1640958702",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -109,7 +109,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1667539922",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -117,7 +117,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1732570736",
                 "vertexIds": [
                   "tall-building-vertex-1633277293",
@@ -125,7 +125,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1771130932",
                 "vertexIds": [
                   "tall-building-vertex-1289496452",
@@ -133,7 +133,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1857787919",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -141,7 +141,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1928778442",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -149,7 +149,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1963649925",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -157,7 +157,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1984263321",
                 "vertexIds": [
                   "tall-building-vertex-672034363",
@@ -165,7 +165,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-310009987",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -173,7 +173,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-826216029",
                 "vertexIds": [
                   "tall-building-vertex-672034363",
@@ -181,7 +181,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1744750176",
                 "edgeIds": [
                   "tall-building-edge-1640958702",
@@ -191,7 +191,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-33613871",
                 "edgeIds": [
                   "tall-building-edge-1928778442",
@@ -201,7 +201,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-364097118",
                 "edgeIds": [
                   "tall-building-edge-1857787919",
@@ -211,7 +211,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-491057513",
                 "edgeIds": [
                   "tall-building-edge-1667539922",
@@ -221,7 +221,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-6100606",
                 "edgeIds": [
                   "tall-building-edge-1640958702",
@@ -231,7 +231,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-738452240",
                 "edgeIds": [
                   "tall-building-edge-1984263321",
@@ -241,42 +241,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1226104468",
                 "wireIds": [
                   "tall-building-wire-6100606"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1974621623",
                 "wireIds": [
                   "tall-building-wire-364097118"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1988214813",
                 "wireIds": [
                   "tall-building-wire-491057513"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-78314107",
                 "wireIds": [
                   "tall-building-wire-738452240"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-795461761",
                 "wireIds": [
                   "tall-building-wire-33613871"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-831837007",
                 "wireIds": [
                   "tall-building-wire-1744750176"
@@ -381,7 +381,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1182448194",
                 "vertexIds": [
                   "tall-building-vertex-411335615",
@@ -389,7 +389,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1686389557",
                 "vertexIds": [
                   "tall-building-vertex-1386743482",
@@ -397,7 +397,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1806975849",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -405,7 +405,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1872677810",
                 "vertexIds": [
                   "tall-building-vertex-573827955",
@@ -413,7 +413,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1941606793",
                 "vertexIds": [
                   "tall-building-vertex-573827955",
@@ -421,7 +421,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1954038446",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -429,7 +429,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2021963583",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -437,7 +437,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-297058955",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -445,7 +445,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-372743502",
                 "vertexIds": [
                   "tall-building-vertex-1338236112",
@@ -453,7 +453,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-747703130",
                 "vertexIds": [
                   "tall-building-vertex-276369610",
@@ -461,7 +461,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-770060325",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -469,7 +469,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-912047801",
                 "vertexIds": [
                   "tall-building-vertex-1338236112",
@@ -477,7 +477,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1180922095",
                 "edgeIds": [
                   "tall-building-edge-1686389557",
@@ -487,7 +487,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1516756433",
                 "edgeIds": [
                   "tall-building-edge-1182448194",
@@ -497,7 +497,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1546681238",
                 "edgeIds": [
                   "tall-building-edge-1182448194",
@@ -507,7 +507,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1868449618",
                 "edgeIds": [
                   "tall-building-edge-1954038446",
@@ -517,7 +517,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-610054554",
                 "edgeIds": [
                   "tall-building-edge-1941606793",
@@ -527,7 +527,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-654883347",
                 "edgeIds": [
                   "tall-building-edge-770060325",
@@ -537,42 +537,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1085014160",
                 "wireIds": [
                   "tall-building-wire-1180922095"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1645889631",
                 "wireIds": [
                   "tall-building-wire-1546681238"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2147140612",
                 "wireIds": [
                   "tall-building-wire-1868449618"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-358756280",
                 "wireIds": [
                   "tall-building-wire-610054554"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-402147777",
                 "wireIds": [
                   "tall-building-wire-1516756433"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-684851053",
                 "wireIds": [
                   "tall-building-wire-654883347"
@@ -677,7 +677,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1094093114",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -685,7 +685,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1233779671",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -693,7 +693,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1332412692",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -701,7 +701,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-138878392",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -709,7 +709,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1421633737",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -717,7 +717,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1748918886",
                 "vertexIds": [
                   "tall-building-vertex-1324127167",
@@ -725,7 +725,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-346661893",
                 "vertexIds": [
                   "tall-building-vertex-151356793",
@@ -733,7 +733,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-430398344",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -741,7 +741,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-540240163",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -749,7 +749,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-677075598",
                 "vertexIds": [
                   "tall-building-vertex-848024472",
@@ -757,7 +757,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-714693257",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -765,7 +765,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-759315498",
                 "vertexIds": [
                   "tall-building-vertex-848024472",
@@ -773,7 +773,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1157406340",
                 "edgeIds": [
                   "tall-building-edge-714693257",
@@ -783,7 +783,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1226899396",
                 "edgeIds": [
                   "tall-building-edge-540240163",
@@ -793,7 +793,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1270330659",
                 "edgeIds": [
                   "tall-building-edge-430398344",
@@ -803,7 +803,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1311521944",
                 "edgeIds": [
                   "tall-building-edge-1233779671",
@@ -813,7 +813,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2113288731",
                 "edgeIds": [
                   "tall-building-edge-677075598",
@@ -823,7 +823,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-905957892",
                 "edgeIds": [
                   "tall-building-edge-540240163",
@@ -833,42 +833,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1111157487",
                 "wireIds": [
                   "tall-building-wire-905957892"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1170649626",
                 "wireIds": [
                   "tall-building-wire-1226899396"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1218966062",
                 "wireIds": [
                   "tall-building-wire-2113288731"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1523671437",
                 "wireIds": [
                   "tall-building-wire-1157406340"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1524387605",
                 "wireIds": [
                   "tall-building-wire-1270330659"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2144997239",
                 "wireIds": [
                   "tall-building-wire-1311521944"
@@ -973,7 +973,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1094331605",
                 "vertexIds": [
                   "tall-building-vertex-2135265355",
@@ -981,7 +981,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1103522759",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -989,7 +989,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1541531391",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -997,7 +997,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1646947765",
                 "vertexIds": [
                   "tall-building-vertex-1633277293",
@@ -1005,7 +1005,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1732570736",
                 "vertexIds": [
                   "tall-building-vertex-1633277293",
@@ -1013,7 +1013,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1802844270",
                 "vertexIds": [
                   "tall-building-vertex-1165658674",
@@ -1021,7 +1021,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1928778442",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -1029,7 +1029,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-271866169",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -1037,7 +1037,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-642162720",
                 "vertexIds": [
                   "tall-building-vertex-2135265355",
@@ -1045,7 +1045,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-837398126",
                 "vertexIds": [
                   "tall-building-vertex-2135265355",
@@ -1053,7 +1053,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-899396367",
                 "vertexIds": [
                   "tall-building-vertex-1739174052",
@@ -1061,7 +1061,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-957569889",
                 "vertexIds": [
                   "tall-building-vertex-1169660411",
@@ -1069,7 +1069,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-101671441",
                 "edgeIds": [
                   "tall-building-edge-1802844270",
@@ -1079,7 +1079,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1775818238",
                 "edgeIds": [
                   "tall-building-edge-1732570736",
@@ -1089,7 +1089,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2021193356",
                 "edgeIds": [
                   "tall-building-edge-1928778442",
@@ -1099,7 +1099,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2083922507",
                 "edgeIds": [
                   "tall-building-edge-1103522759",
@@ -1109,7 +1109,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2146538646",
                 "edgeIds": [
                   "tall-building-edge-1541531391",
@@ -1119,7 +1119,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-33613871",
                 "edgeIds": [
                   "tall-building-edge-1928778442",
@@ -1129,42 +1129,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1162828173",
                 "wireIds": [
                   "tall-building-wire-2083922507"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1189739789",
                 "wireIds": [
                   "tall-building-wire-101671441"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1309189693",
                 "wireIds": [
                   "tall-building-wire-1775818238"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1901288073",
                 "wireIds": [
                   "tall-building-wire-2146538646"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-795461761",
                 "wireIds": [
                   "tall-building-wire-33613871"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-964481788",
                 "wireIds": [
                   "tall-building-wire-2021193356"
@@ -1269,7 +1269,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1012642479",
                 "vertexIds": [
                   "tall-building-vertex-2058022051",
@@ -1277,7 +1277,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1115438318",
                 "vertexIds": [
                   "tall-building-vertex-411335615",
@@ -1285,7 +1285,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1182448194",
                 "vertexIds": [
                   "tall-building-vertex-411335615",
@@ -1293,7 +1293,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1212310562",
                 "vertexIds": [
                   "tall-building-vertex-961654646",
@@ -1301,7 +1301,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1315468270",
                 "vertexIds": [
                   "tall-building-vertex-1860741962",
@@ -1309,7 +1309,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1421158877",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -1317,7 +1317,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-152904828",
                 "vertexIds": [
                   "tall-building-vertex-1401937651",
@@ -1325,7 +1325,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1686389557",
                 "vertexIds": [
                   "tall-building-vertex-1386743482",
@@ -1333,7 +1333,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1954038446",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -1341,7 +1341,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-594541651",
                 "vertexIds": [
                   "tall-building-vertex-1386743482",
@@ -1349,7 +1349,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-770060325",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -1357,7 +1357,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-883627108",
                 "vertexIds": [
                   "tall-building-vertex-1401937651",
@@ -1365,7 +1365,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1030594648",
                 "edgeIds": [
                   "tall-building-edge-1315468270",
@@ -1375,7 +1375,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1076794059",
                 "edgeIds": [
                   "tall-building-edge-152904828",
@@ -1385,7 +1385,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1354543953",
                 "edgeIds": [
                   "tall-building-edge-883627108",
@@ -1395,7 +1395,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1516756433",
                 "edgeIds": [
                   "tall-building-edge-1182448194",
@@ -1405,7 +1405,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1767149543",
                 "edgeIds": [
                   "tall-building-edge-1012642479",
@@ -1415,7 +1415,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-347836931",
                 "edgeIds": [
                   "tall-building-edge-883627108",
@@ -1425,42 +1425,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1447358525",
                 "wireIds": [
                   "tall-building-wire-1767149543"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1645988786",
                 "wireIds": [
                   "tall-building-wire-1030594648"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2103843209",
                 "wireIds": [
                   "tall-building-wire-347836931"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-279411588",
                 "wireIds": [
                   "tall-building-wire-1354543953"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-402147777",
                 "wireIds": [
                   "tall-building-wire-1516756433"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-669209282",
                 "wireIds": [
                   "tall-building-wire-1076794059"
@@ -1565,7 +1565,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1094331605",
                 "vertexIds": [
                   "tall-building-vertex-2135265355",
@@ -1573,7 +1573,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1131805220",
                 "vertexIds": [
                   "tall-building-vertex-1289496452",
@@ -1581,7 +1581,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-138715027",
                 "vertexIds": [
                   "tall-building-vertex-1790675002",
@@ -1589,7 +1589,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1463719485",
                 "vertexIds": [
                   "tall-building-vertex-1790675002",
@@ -1597,7 +1597,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-146409225",
                 "vertexIds": [
                   "tall-building-vertex-104287430",
@@ -1605,7 +1605,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1541531391",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -1613,7 +1613,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-285571882",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -1621,7 +1621,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-400319589",
                 "vertexIds": [
                   "tall-building-vertex-810079272",
@@ -1629,7 +1629,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-505225360",
                 "vertexIds": [
                   "tall-building-vertex-1739174052",
@@ -1637,7 +1637,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-642162720",
                 "vertexIds": [
                   "tall-building-vertex-2135265355",
@@ -1645,7 +1645,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-728911266",
                 "vertexIds": [
                   "tall-building-vertex-1790675002",
@@ -1653,7 +1653,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-899396367",
                 "vertexIds": [
                   "tall-building-vertex-1739174052",
@@ -1661,7 +1661,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1176044982",
                 "edgeIds": [
                   "tall-building-edge-138715027",
@@ -1671,7 +1671,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-121517694",
                 "edgeIds": [
                   "tall-building-edge-1131805220",
@@ -1681,7 +1681,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1992670492",
                 "edgeIds": [
                   "tall-building-edge-1541531391",
@@ -1691,7 +1691,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2146538646",
                 "edgeIds": [
                   "tall-building-edge-1541531391",
@@ -1701,7 +1701,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-273970647",
                 "edgeIds": [
                   "tall-building-edge-400319589",
@@ -1711,7 +1711,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-958930452",
                 "edgeIds": [
                   "tall-building-edge-285571882",
@@ -1721,42 +1721,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1245274648",
                 "wireIds": [
                   "tall-building-wire-121517694"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1704761419",
                 "wireIds": [
                   "tall-building-wire-1176044982"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1901238224",
                 "wireIds": [
                   "tall-building-wire-1992670492"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1901288073",
                 "wireIds": [
                   "tall-building-wire-2146538646"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-278512312",
                 "wireIds": [
                   "tall-building-wire-273970647"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-661706250",
                 "wireIds": [
                   "tall-building-wire-958930452"
@@ -1861,7 +1861,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1626279544",
                 "vertexIds": [
                   "tall-building-vertex-265471352",
@@ -1869,7 +1869,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1646947765",
                 "vertexIds": [
                   "tall-building-vertex-1633277293",
@@ -1877,7 +1877,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1696122652",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -1885,7 +1885,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1802844270",
                 "vertexIds": [
                   "tall-building-vertex-1165658674",
@@ -1893,7 +1893,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1928778442",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -1901,7 +1901,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-271866169",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -1909,7 +1909,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-321868171",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -1917,7 +1917,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-417121705",
                 "vertexIds": [
                   "tall-building-vertex-1169660411",
@@ -1925,7 +1925,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-451823051",
                 "vertexIds": [
                   "tall-building-vertex-1731626832",
@@ -1933,7 +1933,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-813247261",
                 "vertexIds": [
                   "tall-building-vertex-265471352",
@@ -1941,7 +1941,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-944400730",
                 "vertexIds": [
                   "tall-building-vertex-1633277293",
@@ -1949,7 +1949,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-993478867",
                 "vertexIds": [
                   "tall-building-vertex-1165658674",
@@ -1957,7 +1957,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1278337488",
                 "edgeIds": [
                   "tall-building-edge-1928778442",
@@ -1967,7 +1967,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1580447832",
                 "edgeIds": [
                   "tall-building-edge-813247261",
@@ -1977,7 +1977,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1857126700",
                 "edgeIds": [
                   "tall-building-edge-1696122652",
@@ -1987,7 +1987,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2021193356",
                 "edgeIds": [
                   "tall-building-edge-1928778442",
@@ -1997,7 +1997,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-446984493",
                 "edgeIds": [
                   "tall-building-edge-944400730",
@@ -2007,7 +2007,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-922137296",
                 "edgeIds": [
                   "tall-building-edge-321868171",
@@ -2017,42 +2017,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1286773876",
                 "wireIds": [
                   "tall-building-wire-1278337488"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1905510121",
                 "wireIds": [
                   "tall-building-wire-1580447832"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-193824939",
                 "wireIds": [
                   "tall-building-wire-446984493"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-667771314",
                 "wireIds": [
                   "tall-building-wire-922137296"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-75281746",
                 "wireIds": [
                   "tall-building-wire-1857126700"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-964481788",
                 "wireIds": [
                   "tall-building-wire-2021193356"
@@ -2157,7 +2157,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1113986882",
                 "vertexIds": [
                   "tall-building-vertex-1860741962",
@@ -2165,7 +2165,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1115438318",
                 "vertexIds": [
                   "tall-building-vertex-411335615",
@@ -2173,7 +2173,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1160725587",
                 "vertexIds": [
                   "tall-building-vertex-234833553",
@@ -2181,7 +2181,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1315468270",
                 "vertexIds": [
                   "tall-building-vertex-1860741962",
@@ -2189,7 +2189,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1421158877",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -2197,7 +2197,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-361203568",
                 "vertexIds": [
                   "tall-building-vertex-234833553",
@@ -2205,7 +2205,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-424511337",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -2213,7 +2213,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-458871235",
                 "vertexIds": [
                   "tall-building-vertex-306313840",
@@ -2221,7 +2221,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-546580609",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -2229,7 +2229,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-741564323",
                 "vertexIds": [
                   "tall-building-vertex-163978829",
@@ -2237,7 +2237,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-770060325",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -2245,7 +2245,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-874082010",
                 "vertexIds": [
                   "tall-building-vertex-1373364467",
@@ -2253,7 +2253,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1030594648",
                 "edgeIds": [
                   "tall-building-edge-1315468270",
@@ -2263,7 +2263,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1356329952",
                 "edgeIds": [
                   "tall-building-edge-874082010",
@@ -2273,7 +2273,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1613482793",
                 "edgeIds": [
                   "tall-building-edge-1160725587",
@@ -2283,7 +2283,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1994053001",
                 "edgeIds": [
                   "tall-building-edge-1315468270",
@@ -2293,7 +2293,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-989493536",
                 "edgeIds": [
                   "tall-building-edge-1113986882",
@@ -2303,7 +2303,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-989728301",
                 "edgeIds": [
                   "tall-building-edge-546580609",
@@ -2313,42 +2313,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1645988786",
                 "wireIds": [
                   "tall-building-wire-1030594648"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2080214652",
                 "wireIds": [
                   "tall-building-wire-1613482793"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-306724680",
                 "wireIds": [
                   "tall-building-wire-1356329952"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-41263267",
                 "wireIds": [
                   "tall-building-wire-1994053001"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-45073977",
                 "wireIds": [
                   "tall-building-wire-989728301"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-715647947",
                 "wireIds": [
                   "tall-building-wire-989493536"
@@ -2453,7 +2453,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1058347544",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -2461,7 +2461,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1332412692",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -2469,7 +2469,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-159211633",
                 "vertexIds": [
                   "tall-building-vertex-264724351",
@@ -2477,7 +2477,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1598779554",
                 "vertexIds": [
                   "tall-building-vertex-1795986317",
@@ -2485,7 +2485,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1768509676",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -2493,7 +2493,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1857787919",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -2501,7 +2501,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-453975870",
                 "vertexIds": [
                   "tall-building-vertex-1711374219",
@@ -2509,7 +2509,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-58701286",
                 "vertexIds": [
                   "tall-building-vertex-1711374219",
@@ -2517,7 +2517,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-667799328",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -2525,7 +2525,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-87791659",
                 "vertexIds": [
                   "tall-building-vertex-1795986317",
@@ -2533,7 +2533,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-878810578",
                 "vertexIds": [
                   "tall-building-vertex-1324127167",
@@ -2541,7 +2541,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-964883356",
                 "vertexIds": [
                   "tall-building-vertex-1094259255",
@@ -2549,7 +2549,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-115749086",
                 "edgeIds": [
                   "tall-building-edge-1857787919",
@@ -2559,7 +2559,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1345591881",
                 "edgeIds": [
                   "tall-building-edge-1332412692",
@@ -2569,7 +2569,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1622645187",
                 "edgeIds": [
                   "tall-building-edge-1768509676",
@@ -2579,7 +2579,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1887356260",
                 "edgeIds": [
                   "tall-building-edge-1332412692",
@@ -2589,7 +2589,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2049704887",
                 "edgeIds": [
                   "tall-building-edge-878810578",
@@ -2599,7 +2599,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-762120988",
                 "edgeIds": [
                   "tall-building-edge-964883356",
@@ -2609,42 +2609,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1729911847",
                 "wireIds": [
                   "tall-building-wire-1887356260"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-198699638",
                 "wireIds": [
                   "tall-building-wire-762120988"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-201140427",
                 "wireIds": [
                   "tall-building-wire-1345591881"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-328415434",
                 "wireIds": [
                   "tall-building-wire-2049704887"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-371129754",
                 "wireIds": [
                   "tall-building-wire-115749086"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-86350609",
                 "wireIds": [
                   "tall-building-wire-1622645187"
@@ -2749,7 +2749,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1131805220",
                 "vertexIds": [
                   "tall-building-vertex-1289496452",
@@ -2757,7 +2757,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1541531391",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -2765,7 +2765,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1598779554",
                 "vertexIds": [
                   "tall-building-vertex-1795986317",
@@ -2773,7 +2773,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1771130932",
                 "vertexIds": [
                   "tall-building-vertex-1289496452",
@@ -2781,7 +2781,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1806183285",
                 "vertexIds": [
                   "tall-building-vertex-810079272",
@@ -2789,7 +2789,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1857787919",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -2797,7 +2797,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1963649925",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -2805,7 +2805,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-285571882",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -2813,7 +2813,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-400319589",
                 "vertexIds": [
                   "tall-building-vertex-810079272",
@@ -2821,7 +2821,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-453975870",
                 "vertexIds": [
                   "tall-building-vertex-1711374219",
@@ -2829,7 +2829,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-667799328",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -2837,7 +2837,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-937553943",
                 "vertexIds": [
                   "tall-building-vertex-510705817",
@@ -2845,7 +2845,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-115749086",
                 "edgeIds": [
                   "tall-building-edge-1857787919",
@@ -2855,7 +2855,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1312526901",
                 "edgeIds": [
                   "tall-building-edge-453975870",
@@ -2865,7 +2865,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1992670492",
                 "edgeIds": [
                   "tall-building-edge-1541531391",
@@ -2875,7 +2875,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2038955179",
                 "edgeIds": [
                   "tall-building-edge-667799328",
@@ -2885,7 +2885,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-364097118",
                 "edgeIds": [
                   "tall-building-edge-1857787919",
@@ -2895,7 +2895,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-567873027",
                 "edgeIds": [
                   "tall-building-edge-1598779554",
@@ -2905,42 +2905,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1741474668",
                 "wireIds": [
                   "tall-building-wire-2038955179"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1901238224",
                 "wireIds": [
                   "tall-building-wire-1992670492"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1912925643",
                 "wireIds": [
                   "tall-building-wire-567873027"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1974621623",
                 "wireIds": [
                   "tall-building-wire-364097118"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-371129754",
                 "wireIds": [
                   "tall-building-wire-115749086"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-713414859",
                 "wireIds": [
                   "tall-building-wire-1312526901"
@@ -3045,7 +3045,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1046624822",
                 "vertexIds": [
                   "tall-building-vertex-1266010935",
@@ -3053,7 +3053,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1363046050",
                 "vertexIds": [
                   "tall-building-vertex-1094259255",
@@ -3061,7 +3061,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1676643464",
                 "vertexIds": [
                   "tall-building-vertex-1259072308",
@@ -3069,7 +3069,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1941606793",
                 "vertexIds": [
                   "tall-building-vertex-573827955",
@@ -3077,7 +3077,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2007846360",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -3085,7 +3085,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2021963583",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -3093,7 +3093,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2042982696",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -3101,7 +3101,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-297058955",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -3109,7 +3109,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-372743502",
                 "vertexIds": [
                   "tall-building-vertex-1338236112",
@@ -3117,7 +3117,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-524669541",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -3125,7 +3125,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-647562314",
                 "vertexIds": [
                   "tall-building-vertex-1259072308",
@@ -3133,7 +3133,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-964883356",
                 "vertexIds": [
                   "tall-building-vertex-1094259255",
@@ -3141,7 +3141,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1174320538",
                 "edgeIds": [
                   "tall-building-edge-297058955",
@@ -3151,7 +3151,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1962887505",
                 "edgeIds": [
                   "tall-building-edge-1941606793",
@@ -3161,7 +3161,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-476481792",
                 "edgeIds": [
                   "tall-building-edge-647562314",
@@ -3171,7 +3171,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-529944319",
                 "edgeIds": [
                   "tall-building-edge-2021963583",
@@ -3181,7 +3181,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-610054554",
                 "edgeIds": [
                   "tall-building-edge-1941606793",
@@ -3191,7 +3191,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-868197991",
                 "edgeIds": [
                   "tall-building-edge-372743502",
@@ -3201,42 +3201,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1180655481",
                 "wireIds": [
                   "tall-building-wire-529944319"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1205625720",
                 "wireIds": [
                   "tall-building-wire-1962887505"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1573764469",
                 "wireIds": [
                   "tall-building-wire-1174320538"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1702123263",
                 "wireIds": [
                   "tall-building-wire-868197991"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1807955776",
                 "wireIds": [
                   "tall-building-wire-476481792"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-358756280",
                 "wireIds": [
                   "tall-building-wire-610054554"
@@ -3341,7 +3341,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1027737897",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -3349,7 +3349,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1104343759",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -3357,7 +3357,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1298801438",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -3365,7 +3365,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1464284263",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -3373,7 +3373,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1598779554",
                 "vertexIds": [
                   "tall-building-vertex-1795986317",
@@ -3381,7 +3381,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1736075674",
                 "vertexIds": [
                   "tall-building-vertex-1944336978",
@@ -3389,7 +3389,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1806183285",
                 "vertexIds": [
                   "tall-building-vertex-810079272",
@@ -3397,7 +3397,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-321868171",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -3405,7 +3405,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-380996658",
                 "vertexIds": [
                   "tall-building-vertex-188655261",
@@ -3413,7 +3413,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-400319589",
                 "vertexIds": [
                   "tall-building-vertex-810079272",
@@ -3421,7 +3421,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-465374063",
                 "vertexIds": [
                   "tall-building-vertex-1944336978",
@@ -3429,7 +3429,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-937553943",
                 "vertexIds": [
                   "tall-building-vertex-510705817",
@@ -3437,7 +3437,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1409362409",
                 "edgeIds": [
                   "tall-building-edge-465374063",
@@ -3447,7 +3447,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1567433026",
                 "edgeIds": [
                   "tall-building-edge-380996658",
@@ -3457,7 +3457,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1967591753",
                 "edgeIds": [
                   "tall-building-edge-380996658",
@@ -3467,7 +3467,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-567873027",
                 "edgeIds": [
                   "tall-building-edge-1598779554",
@@ -3477,7 +3477,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-603505312",
                 "edgeIds": [
                   "tall-building-edge-1027737897",
@@ -3487,7 +3487,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-711028844",
                 "edgeIds": [
                   "tall-building-edge-1464284263",
@@ -3497,42 +3497,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1119640917",
                 "wireIds": [
                   "tall-building-wire-1409362409"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1744861431",
                 "wireIds": [
                   "tall-building-wire-1967591753"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1912925643",
                 "wireIds": [
                   "tall-building-wire-567873027"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-315602848",
                 "wireIds": [
                   "tall-building-wire-603505312"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-517352289",
                 "wireIds": [
                   "tall-building-wire-1567433026"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-650720714",
                 "wireIds": [
                   "tall-building-wire-711028844"
@@ -3637,7 +3637,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1087405765",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -3645,7 +3645,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1188659324",
                 "vertexIds": [
                   "tall-building-vertex-1401937651",
@@ -3653,7 +3653,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1212310562",
                 "vertexIds": [
                   "tall-building-vertex-961654646",
@@ -3661,7 +3661,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1400879477",
                 "vertexIds": [
                   "tall-building-vertex-721864216",
@@ -3669,7 +3669,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-152904828",
                 "vertexIds": [
                   "tall-building-vertex-1401937651",
@@ -3677,7 +3677,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1686389557",
                 "vertexIds": [
                   "tall-building-vertex-1386743482",
@@ -3685,7 +3685,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1833044140",
                 "vertexIds": [
                   "tall-building-vertex-1132761518",
@@ -3693,7 +3693,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-207829444",
                 "vertexIds": [
                   "tall-building-vertex-2058022051",
@@ -3701,7 +3701,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-275660235",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -3709,7 +3709,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-402212555",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -3717,7 +3717,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-594541651",
                 "vertexIds": [
                   "tall-building-vertex-1386743482",
@@ -3725,7 +3725,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-882736281",
                 "vertexIds": [
                   "tall-building-vertex-721864216",
@@ -3733,7 +3733,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1076794059",
                 "edgeIds": [
                   "tall-building-edge-152904828",
@@ -3743,7 +3743,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1351127869",
                 "edgeIds": [
                   "tall-building-edge-402212555",
@@ -3753,7 +3753,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1581868345",
                 "edgeIds": [
                   "tall-building-edge-1188659324",
@@ -3763,7 +3763,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-222381220",
                 "edgeIds": [
                   "tall-building-edge-207829444",
@@ -3773,7 +3773,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-788954729",
                 "edgeIds": [
                   "tall-building-edge-1833044140",
@@ -3783,7 +3783,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-86258895",
                 "edgeIds": [
                   "tall-building-edge-1188659324",
@@ -3793,42 +3793,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1500700760",
                 "wireIds": [
                   "tall-building-wire-1351127869"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1639613883",
                 "wireIds": [
                   "tall-building-wire-788954729"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1679966150",
                 "wireIds": [
                   "tall-building-wire-1581868345"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1997967064",
                 "wireIds": [
                   "tall-building-wire-86258895"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-636191280",
                 "wireIds": [
                   "tall-building-wire-222381220"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-669209282",
                 "wireIds": [
                   "tall-building-wire-1076794059"
@@ -3933,7 +3933,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1171895932",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -3941,7 +3941,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1223009176",
                 "vertexIds": [
                   "tall-building-vertex-306313840",
@@ -3949,7 +3949,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1233779671",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -3957,7 +3957,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1619939237",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -3965,7 +3965,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1765477009",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -3973,7 +3973,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2065633666",
                 "vertexIds": [
                   "tall-building-vertex-306313840",
@@ -3981,7 +3981,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-402212555",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -3989,7 +3989,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-430398344",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -3997,7 +3997,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-540240163",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -4005,7 +4005,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-546580609",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -4013,7 +4013,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-659315516",
                 "vertexIds": [
                   "tall-building-vertex-125121398",
@@ -4021,7 +4021,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-677075598",
                 "vertexIds": [
                   "tall-building-vertex-848024472",
@@ -4029,7 +4029,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1226899396",
                 "edgeIds": [
                   "tall-building-edge-540240163",
@@ -4039,7 +4039,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1471106097",
                 "edgeIds": [
                   "tall-building-edge-1223009176",
@@ -4049,7 +4049,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1543107201",
                 "edgeIds": [
                   "tall-building-edge-546580609",
@@ -4059,7 +4059,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1679874613",
                 "edgeIds": [
                   "tall-building-edge-546580609",
@@ -4069,7 +4069,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-466639013",
                 "edgeIds": [
                   "tall-building-edge-402212555",
@@ -4079,7 +4079,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-626090557",
                 "edgeIds": [
                   "tall-building-edge-1765477009",
@@ -4089,42 +4089,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1058395020",
                 "wireIds": [
                   "tall-building-wire-1679874613"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-10653033",
                 "wireIds": [
                   "tall-building-wire-1471106097"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1170649626",
                 "wireIds": [
                   "tall-building-wire-1226899396"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-325928460",
                 "wireIds": [
                   "tall-building-wire-626090557"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-466900340",
                 "wireIds": [
                   "tall-building-wire-1543107201"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-879620636",
                 "wireIds": [
                   "tall-building-wire-466639013"
@@ -4229,7 +4229,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1160725587",
                 "vertexIds": [
                   "tall-building-vertex-234833553",
@@ -4237,7 +4237,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1223009176",
                 "vertexIds": [
                   "tall-building-vertex-306313840",
@@ -4245,7 +4245,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1400879477",
                 "vertexIds": [
                   "tall-building-vertex-721864216",
@@ -4253,7 +4253,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1432946863",
                 "vertexIds": [
                   "tall-building-vertex-1132761518",
@@ -4261,7 +4261,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1705909449",
                 "vertexIds": [
                   "tall-building-vertex-1689169832",
@@ -4269,7 +4269,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1765477009",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -4277,7 +4277,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1833044140",
                 "vertexIds": [
                   "tall-building-vertex-1132761518",
@@ -4285,7 +4285,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-275660235",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -4293,7 +4293,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-361203568",
                 "vertexIds": [
                   "tall-building-vertex-234833553",
@@ -4301,7 +4301,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-402212555",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -4309,7 +4309,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-546580609",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -4317,7 +4317,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-741564323",
                 "vertexIds": [
                   "tall-building-vertex-163978829",
@@ -4325,7 +4325,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1094256972",
                 "edgeIds": [
                   "tall-building-edge-1160725587",
@@ -4335,7 +4335,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1111569001",
                 "edgeIds": [
                   "tall-building-edge-1432946863",
@@ -4345,7 +4345,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1613482793",
                 "edgeIds": [
                   "tall-building-edge-1160725587",
@@ -4355,7 +4355,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1679874613",
                 "edgeIds": [
                   "tall-building-edge-546580609",
@@ -4365,7 +4365,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1698291412",
                 "edgeIds": [
                   "tall-building-edge-1705909449",
@@ -4375,7 +4375,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-788954729",
                 "edgeIds": [
                   "tall-building-edge-1833044140",
@@ -4385,42 +4385,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1058395020",
                 "wireIds": [
                   "tall-building-wire-1679874613"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1531618841",
                 "wireIds": [
                   "tall-building-wire-1698291412"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1639613883",
                 "wireIds": [
                   "tall-building-wire-788954729"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1645250110",
                 "wireIds": [
                   "tall-building-wire-1111569001"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2080214652",
                 "wireIds": [
                   "tall-building-wire-1613482793"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-825498428",
                 "wireIds": [
                   "tall-building-wire-1094256972"
@@ -4525,7 +4525,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1027737897",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -4533,7 +4533,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1426352005",
                 "vertexIds": [
                   "tall-building-vertex-151356793",
@@ -4541,7 +4541,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1640958702",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -4549,7 +4549,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1757290381",
                 "vertexIds": [
                   "tall-building-vertex-151356793",
@@ -4557,7 +4557,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1995831367",
                 "vertexIds": [
                   "tall-building-vertex-188655261",
@@ -4565,7 +4565,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-305699690",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -4573,7 +4573,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-524669541",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -4581,7 +4581,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-658260200",
                 "vertexIds": [
                   "tall-building-vertex-672034363",
@@ -4589,7 +4589,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-673413393",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -4597,7 +4597,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-705798454",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -4605,7 +4605,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-714693257",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -4613,7 +4613,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-842916594",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -4621,7 +4621,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1350332269",
                 "edgeIds": [
                   "tall-building-edge-714693257",
@@ -4631,7 +4631,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1760409450",
                 "edgeIds": [
                   "tall-building-edge-1426352005",
@@ -4641,7 +4641,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-275499859",
                 "edgeIds": [
                   "tall-building-edge-1640958702",
@@ -4651,7 +4651,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-590211470",
                 "edgeIds": [
                   "tall-building-edge-842916594",
@@ -4661,7 +4661,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-729057013",
                 "edgeIds": [
                   "tall-building-edge-714693257",
@@ -4671,7 +4671,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-980227698",
                 "edgeIds": [
                   "tall-building-edge-524669541",
@@ -4681,42 +4681,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-102725139",
                 "wireIds": [
                   "tall-building-wire-275499859"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-118446947",
                 "wireIds": [
                   "tall-building-wire-980227698"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1540528635",
                 "wireIds": [
                   "tall-building-wire-590211470"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-319968775",
                 "wireIds": [
                   "tall-building-wire-1350332269"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-487839853",
                 "wireIds": [
                   "tall-building-wire-1760409450"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-600466518",
                 "wireIds": [
                   "tall-building-wire-729057013"
@@ -4821,7 +4821,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1087405765",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -4829,7 +4829,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1619939237",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -4837,7 +4837,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1685567599",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -4845,7 +4845,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1686389557",
                 "vertexIds": [
                   "tall-building-vertex-1386743482",
@@ -4853,7 +4853,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1923719215",
                 "vertexIds": [
                   "tall-building-vertex-125121398",
@@ -4861,7 +4861,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-372743502",
                 "vertexIds": [
                   "tall-building-vertex-1338236112",
@@ -4869,7 +4869,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-402212555",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -4877,7 +4877,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-430398344",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -4885,7 +4885,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-659315516",
                 "vertexIds": [
                   "tall-building-vertex-125121398",
@@ -4893,7 +4893,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-747703130",
                 "vertexIds": [
                   "tall-building-vertex-276369610",
@@ -4901,7 +4901,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-882736281",
                 "vertexIds": [
                   "tall-building-vertex-721864216",
@@ -4909,7 +4909,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-912047801",
                 "vertexIds": [
                   "tall-building-vertex-1338236112",
@@ -4917,7 +4917,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1180922095",
                 "edgeIds": [
                   "tall-building-edge-1686389557",
@@ -4927,7 +4927,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1351127869",
                 "edgeIds": [
                   "tall-building-edge-402212555",
@@ -4937,7 +4937,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1708720817",
                 "edgeIds": [
                   "tall-building-edge-882736281",
@@ -4947,7 +4947,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1760652619",
                 "edgeIds": [
                   "tall-building-edge-1087405765",
@@ -4957,7 +4957,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1927375771",
                 "edgeIds": [
                   "tall-building-edge-430398344",
@@ -4967,7 +4967,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-466639013",
                 "edgeIds": [
                   "tall-building-edge-402212555",
@@ -4977,42 +4977,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-102518137",
                 "wireIds": [
                   "tall-building-wire-1760652619"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1085014160",
                 "wireIds": [
                   "tall-building-wire-1180922095"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1500700760",
                 "wireIds": [
                   "tall-building-wire-1351127869"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1800515755",
                 "wireIds": [
                   "tall-building-wire-1927375771"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-506445686",
                 "wireIds": [
                   "tall-building-wire-1708720817"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-879620636",
                 "wireIds": [
                   "tall-building-wire-466639013"
@@ -5297,7 +5297,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1012642479",
                 "vertexIds": [
                   "tall-building-vertex-2058022051",
@@ -5305,7 +5305,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1058347544",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -5313,7 +5313,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1087405765",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -5321,7 +5321,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1094093114",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -5329,7 +5329,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1094331605",
                 "vertexIds": [
                   "tall-building-vertex-2135265355",
@@ -5337,7 +5337,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1103522759",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -5345,7 +5345,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1104343759",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -5353,7 +5353,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1171895932",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -5361,7 +5361,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1233779671",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -5369,7 +5369,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1298801438",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -5377,7 +5377,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1363046050",
                 "vertexIds": [
                   "tall-building-vertex-1094259255",
@@ -5385,7 +5385,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-138878392",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -5393,7 +5393,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1421158877",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -5401,7 +5401,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1421633737",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -5409,7 +5409,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1463719485",
                 "vertexIds": [
                   "tall-building-vertex-1790675002",
@@ -5417,7 +5417,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1464284263",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -5425,7 +5425,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1619939237",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -5433,7 +5433,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1626279544",
                 "vertexIds": [
                   "tall-building-vertex-265471352",
@@ -5441,7 +5441,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1667539922",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -5449,7 +5449,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1685567599",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -5457,7 +5457,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1696122652",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -5465,7 +5465,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1705909449",
                 "vertexIds": [
                   "tall-building-vertex-1689169832",
@@ -5473,7 +5473,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1765477009",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -5481,7 +5481,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1768509676",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -5489,7 +5489,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1806183285",
                 "vertexIds": [
                   "tall-building-vertex-810079272",
@@ -5497,7 +5497,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1806975849",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -5505,7 +5505,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1954038446",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -5513,7 +5513,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1963649925",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -5521,7 +5521,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2007846360",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -5529,7 +5529,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2021963583",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -5537,7 +5537,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2042982696",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -5545,7 +5545,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-207829444",
                 "vertexIds": [
                   "tall-building-vertex-2058022051",
@@ -5553,7 +5553,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2120309374",
                 "vertexIds": [
                   "tall-building-vertex-265471352",
@@ -5561,7 +5561,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-261013208",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -5569,7 +5569,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-271866169",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -5577,7 +5577,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-275660235",
                 "vertexIds": [
                   "tall-building-vertex-1410363036",
@@ -5585,7 +5585,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-285571882",
                 "vertexIds": [
                   "tall-building-vertex-756047205",
@@ -5593,7 +5593,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-305699690",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -5601,7 +5601,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-310009987",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -5609,7 +5609,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-424511337",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -5617,7 +5617,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-594541651",
                 "vertexIds": [
                   "tall-building-vertex-1386743482",
@@ -5625,7 +5625,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-667799328",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -5633,7 +5633,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-673413393",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -5641,7 +5641,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-705798454",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -5649,7 +5649,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-728911266",
                 "vertexIds": [
                   "tall-building-vertex-1790675002",
@@ -5657,7 +5657,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-741564323",
                 "vertexIds": [
                   "tall-building-vertex-163978829",
@@ -5665,7 +5665,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-837398126",
                 "vertexIds": [
                   "tall-building-vertex-2135265355",
@@ -5673,7 +5673,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-842916594",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -5681,7 +5681,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-874082010",
                 "vertexIds": [
                   "tall-building-vertex-1373364467",
@@ -5689,7 +5689,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-87791659",
                 "vertexIds": [
                   "tall-building-vertex-1795986317",
@@ -5697,7 +5697,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-912047801",
                 "vertexIds": [
                   "tall-building-vertex-1338236112",
@@ -5705,7 +5705,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-993478867",
                 "vertexIds": [
                   "tall-building-vertex-1165658674",
@@ -5713,7 +5713,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1006069519",
                 "edgeIds": [
                   "tall-building-edge-261013208",
@@ -5723,7 +5723,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1311521944",
                 "edgeIds": [
                   "tall-building-edge-1233779671",
@@ -5733,7 +5733,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1356329952",
                 "edgeIds": [
                   "tall-building-edge-874082010",
@@ -5743,7 +5743,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1359005346",
                 "edgeIds": [
                   "tall-building-edge-1685567599",
@@ -5753,7 +5753,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1458206481",
                 "edgeIds": [
                   "tall-building-edge-1012642479",
@@ -5763,7 +5763,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1622645187",
                 "edgeIds": [
                   "tall-building-edge-1768509676",
@@ -5773,7 +5773,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1694759656",
                 "edgeIds": [
                   "tall-building-edge-2120309374",
@@ -5783,7 +5783,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1698291412",
                 "edgeIds": [
                   "tall-building-edge-1705909449",
@@ -5793,7 +5793,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1760652619",
                 "edgeIds": [
                   "tall-building-edge-1087405765",
@@ -5803,7 +5803,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1767149543",
                 "edgeIds": [
                   "tall-building-edge-1012642479",
@@ -5813,7 +5813,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1857126700",
                 "edgeIds": [
                   "tall-building-edge-1696122652",
@@ -5823,7 +5823,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1868449618",
                 "edgeIds": [
                   "tall-building-edge-1954038446",
@@ -5833,7 +5833,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1902268288",
                 "edgeIds": [
                   "tall-building-edge-2042982696",
@@ -5843,7 +5843,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2038955179",
                 "edgeIds": [
                   "tall-building-edge-667799328",
@@ -5853,7 +5853,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2083922507",
                 "edgeIds": [
                   "tall-building-edge-1103522759",
@@ -5863,7 +5863,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-222381220",
                 "edgeIds": [
                   "tall-building-edge-207829444",
@@ -5873,7 +5873,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-491057513",
                 "edgeIds": [
                   "tall-building-edge-1667539922",
@@ -5883,7 +5883,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-529944319",
                 "edgeIds": [
                   "tall-building-edge-2021963583",
@@ -5893,7 +5893,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-590211470",
                 "edgeIds": [
                   "tall-building-edge-842916594",
@@ -5903,7 +5903,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-626090557",
                 "edgeIds": [
                   "tall-building-edge-1765477009",
@@ -5913,7 +5913,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-662376138",
                 "edgeIds": [
                   "tall-building-edge-305699690",
@@ -5923,7 +5923,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-711028844",
                 "edgeIds": [
                   "tall-building-edge-1464284263",
@@ -5933,7 +5933,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-839306283",
                 "edgeIds": [
                   "tall-building-edge-1298801438",
@@ -5943,7 +5943,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-867630395",
                 "edgeIds": [
                   "tall-building-edge-138878392",
@@ -5953,7 +5953,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-891764572",
                 "edgeIds": [
                   "tall-building-edge-424511337",
@@ -5963,7 +5963,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-958930452",
                 "edgeIds": [
                   "tall-building-edge-285571882",
@@ -5973,182 +5973,182 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-102518137",
                 "wireIds": [
                   "tall-building-wire-1760652619"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1033221500",
                 "wireIds": [
                   "tall-building-wire-662376138"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1162828173",
                 "wireIds": [
                   "tall-building-wire-2083922507"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1180655481",
                 "wireIds": [
                   "tall-building-wire-529944319"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1243392230",
                 "wireIds": [
                   "tall-building-wire-1458206481"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1280578556",
                 "wireIds": [
                   "tall-building-wire-1359005346"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1447358525",
                 "wireIds": [
                   "tall-building-wire-1767149543"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1480579346",
                 "wireIds": [
                   "tall-building-wire-1694759656"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1531618841",
                 "wireIds": [
                   "tall-building-wire-1698291412"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1540528635",
                 "wireIds": [
                   "tall-building-wire-590211470"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1741474668",
                 "wireIds": [
                   "tall-building-wire-2038955179"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1988214813",
                 "wireIds": [
                   "tall-building-wire-491057513"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2056359013",
                 "wireIds": [
                   "tall-building-wire-891764572"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2144997239",
                 "wireIds": [
                   "tall-building-wire-1311521944"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2147140612",
                 "wireIds": [
                   "tall-building-wire-1868449618"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-306724680",
                 "wireIds": [
                   "tall-building-wire-1356329952"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-325928460",
                 "wireIds": [
                   "tall-building-wire-626090557"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-381247057",
                 "wireIds": [
                   "tall-building-wire-1006069519"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-458889135",
                 "wireIds": [
                   "tall-building-wire-839306283"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-464570322",
                 "wireIds": [
                   "tall-building-wire-1902268288"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-636191280",
                 "wireIds": [
                   "tall-building-wire-222381220"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-650720714",
                 "wireIds": [
                   "tall-building-wire-711028844"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-661706250",
                 "wireIds": [
                   "tall-building-wire-958930452"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-75281746",
                 "wireIds": [
                   "tall-building-wire-1857126700"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-817045005",
                 "wireIds": [
                   "tall-building-wire-867630395"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-86350609",
                 "wireIds": [
                   "tall-building-wire-1622645187"
@@ -6273,7 +6273,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1171895932",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -6281,7 +6281,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1806975849",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -6289,7 +6289,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1872677810",
                 "vertexIds": [
                   "tall-building-vertex-573827955",
@@ -6297,7 +6297,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1973727180",
                 "vertexIds": [
                   "tall-building-vertex-848024472",
@@ -6305,7 +6305,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2065633666",
                 "vertexIds": [
                   "tall-building-vertex-306313840",
@@ -6313,7 +6313,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-261013208",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -6321,7 +6321,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-297058955",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -6329,7 +6329,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-424511337",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -6337,7 +6337,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-458871235",
                 "vertexIds": [
                   "tall-building-vertex-306313840",
@@ -6345,7 +6345,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-540240163",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -6353,7 +6353,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-546580609",
                 "vertexIds": [
                   "tall-building-vertex-372548136",
@@ -6361,7 +6361,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-770060325",
                 "vertexIds": [
                   "tall-building-vertex-501580074",
@@ -6369,7 +6369,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1020551771",
                 "edgeIds": [
                   "tall-building-edge-540240163",
@@ -6379,7 +6379,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1166014203",
                 "edgeIds": [
                   "tall-building-edge-458871235",
@@ -6389,7 +6389,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1543107201",
                 "edgeIds": [
                   "tall-building-edge-546580609",
@@ -6399,7 +6399,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-654883347",
                 "edgeIds": [
                   "tall-building-edge-770060325",
@@ -6409,7 +6409,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-891764572",
                 "edgeIds": [
                   "tall-building-edge-424511337",
@@ -6419,7 +6419,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-989728301",
                 "edgeIds": [
                   "tall-building-edge-546580609",
@@ -6429,42 +6429,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1741534057",
                 "wireIds": [
                   "tall-building-wire-1166014203"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2056359013",
                 "wireIds": [
                   "tall-building-wire-891764572"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-45073977",
                 "wireIds": [
                   "tall-building-wire-989728301"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-466900340",
                 "wireIds": [
                   "tall-building-wire-1543107201"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-684851053",
                 "wireIds": [
                   "tall-building-wire-654883347"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-723853012",
                 "wireIds": [
                   "tall-building-wire-1020551771"
@@ -6569,7 +6569,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1027737897",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -6577,7 +6577,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1104343759",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -6585,7 +6585,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1640958702",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -6593,7 +6593,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1696122652",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -6601,7 +6601,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1736075674",
                 "vertexIds": [
                   "tall-building-vertex-1944336978",
@@ -6609,7 +6609,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1928778442",
                 "vertexIds": [
                   "tall-building-vertex-73421344",
@@ -6617,7 +6617,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-305699690",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -6625,7 +6625,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-310009987",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -6633,7 +6633,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-321868171",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -6641,7 +6641,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-658260200",
                 "vertexIds": [
                   "tall-building-vertex-672034363",
@@ -6649,7 +6649,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-826216029",
                 "vertexIds": [
                   "tall-building-vertex-672034363",
@@ -6657,7 +6657,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-944400730",
                 "vertexIds": [
                   "tall-building-vertex-1633277293",
@@ -6665,7 +6665,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1248924008",
                 "edgeIds": [
                   "tall-building-edge-658260200",
@@ -6675,7 +6675,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1278337488",
                 "edgeIds": [
                   "tall-building-edge-1928778442",
@@ -6685,7 +6685,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1744750176",
                 "edgeIds": [
                   "tall-building-edge-1640958702",
@@ -6695,7 +6695,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-275499859",
                 "edgeIds": [
                   "tall-building-edge-1640958702",
@@ -6705,7 +6705,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-603505312",
                 "edgeIds": [
                   "tall-building-edge-1027737897",
@@ -6715,7 +6715,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-662376138",
                 "edgeIds": [
                   "tall-building-edge-305699690",
@@ -6725,42 +6725,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-102725139",
                 "wireIds": [
                   "tall-building-wire-275499859"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1033221500",
                 "wireIds": [
                   "tall-building-wire-662376138"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1286773876",
                 "wireIds": [
                   "tall-building-wire-1278337488"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1757488521",
                 "wireIds": [
                   "tall-building-wire-1248924008"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-315602848",
                 "wireIds": [
                   "tall-building-wire-603505312"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-831837007",
                 "wireIds": [
                   "tall-building-wire-1744750176"
@@ -6865,7 +6865,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1046624822",
                 "vertexIds": [
                   "tall-building-vertex-1266010935",
@@ -6873,7 +6873,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1094093114",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -6881,7 +6881,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1332412692",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -6889,7 +6889,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1363046050",
                 "vertexIds": [
                   "tall-building-vertex-1094259255",
@@ -6897,7 +6897,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1685567599",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -6905,7 +6905,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1748918886",
                 "vertexIds": [
                   "tall-building-vertex-1324127167",
@@ -6913,7 +6913,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1768509676",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -6921,7 +6921,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1923719215",
                 "vertexIds": [
                   "tall-building-vertex-125121398",
@@ -6929,7 +6929,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-372743502",
                 "vertexIds": [
                   "tall-building-vertex-1338236112",
@@ -6937,7 +6937,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-430398344",
                 "vertexIds": [
                   "tall-building-vertex-1419635179",
@@ -6945,7 +6945,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-878810578",
                 "vertexIds": [
                   "tall-building-vertex-1324127167",
@@ -6953,7 +6953,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-964883356",
                 "vertexIds": [
                   "tall-building-vertex-1094259255",
@@ -6961,7 +6961,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1270330659",
                 "edgeIds": [
                   "tall-building-edge-430398344",
@@ -6971,7 +6971,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1359005346",
                 "edgeIds": [
                   "tall-building-edge-1685567599",
@@ -6981,7 +6981,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1887356260",
                 "edgeIds": [
                   "tall-building-edge-1332412692",
@@ -6991,7 +6991,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1927375771",
                 "edgeIds": [
                   "tall-building-edge-430398344",
@@ -7001,7 +7001,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-405270103",
                 "edgeIds": [
                   "tall-building-edge-1923719215",
@@ -7011,7 +7011,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-868197991",
                 "edgeIds": [
                   "tall-building-edge-372743502",
@@ -7021,42 +7021,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1212602398",
                 "wireIds": [
                   "tall-building-wire-405270103"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1280578556",
                 "wireIds": [
                   "tall-building-wire-1359005346"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1524387605",
                 "wireIds": [
                   "tall-building-wire-1270330659"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1702123263",
                 "wireIds": [
                   "tall-building-wire-868197991"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1729911847",
                 "wireIds": [
                   "tall-building-wire-1887356260"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1800515755",
                 "wireIds": [
                   "tall-building-wire-1927375771"
@@ -7161,7 +7161,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1027737897",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -7169,7 +7169,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1464284263",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -7177,7 +7177,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-159211633",
                 "vertexIds": [
                   "tall-building-vertex-264724351",
@@ -7185,7 +7185,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1598779554",
                 "vertexIds": [
                   "tall-building-vertex-1795986317",
@@ -7193,7 +7193,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1995831367",
                 "vertexIds": [
                   "tall-building-vertex-188655261",
@@ -7201,7 +7201,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2042982696",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -7209,7 +7209,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-380996658",
                 "vertexIds": [
                   "tall-building-vertex-188655261",
@@ -7217,7 +7217,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-524669541",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -7225,7 +7225,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-647562314",
                 "vertexIds": [
                   "tall-building-vertex-1259072308",
@@ -7233,7 +7233,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-673413393",
                 "vertexIds": [
                   "tall-building-vertex-1883592953",
@@ -7241,7 +7241,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-87791659",
                 "vertexIds": [
                   "tall-building-vertex-1795986317",
@@ -7249,7 +7249,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-964883356",
                 "vertexIds": [
                   "tall-building-vertex-1094259255",
@@ -7257,7 +7257,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1902268288",
                 "edgeIds": [
                   "tall-building-edge-2042982696",
@@ -7267,7 +7267,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1967591753",
                 "edgeIds": [
                   "tall-building-edge-380996658",
@@ -7277,7 +7277,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-476481792",
                 "edgeIds": [
                   "tall-building-edge-647562314",
@@ -7287,7 +7287,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-762120988",
                 "edgeIds": [
                   "tall-building-edge-964883356",
@@ -7297,7 +7297,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-849779289",
                 "edgeIds": [
                   "tall-building-edge-647562314",
@@ -7307,7 +7307,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-980227698",
                 "edgeIds": [
                   "tall-building-edge-524669541",
@@ -7317,42 +7317,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1006266943",
                 "wireIds": [
                   "tall-building-wire-849779289"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-118446947",
                 "wireIds": [
                   "tall-building-wire-980227698"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1744861431",
                 "wireIds": [
                   "tall-building-wire-1967591753"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1807955776",
                 "wireIds": [
                   "tall-building-wire-476481792"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-198699638",
                 "wireIds": [
                   "tall-building-wire-762120988"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-464570322",
                 "wireIds": [
                   "tall-building-wire-1902268288"
@@ -7457,7 +7457,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1421633737",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -7465,7 +7465,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1426352005",
                 "vertexIds": [
                   "tall-building-vertex-151356793",
@@ -7473,7 +7473,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1676643464",
                 "vertexIds": [
                   "tall-building-vertex-1259072308",
@@ -7481,7 +7481,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1973727180",
                 "vertexIds": [
                   "tall-building-vertex-848024472",
@@ -7489,7 +7489,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2007846360",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -7497,7 +7497,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-261013208",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -7505,7 +7505,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-297058955",
                 "vertexIds": [
                   "tall-building-vertex-756945552",
@@ -7513,7 +7513,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-524669541",
                 "vertexIds": [
                   "tall-building-vertex-952016529",
@@ -7521,7 +7521,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-540240163",
                 "vertexIds": [
                   "tall-building-vertex-1545726667",
@@ -7529,7 +7529,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-714693257",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -7537,7 +7537,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-759315498",
                 "vertexIds": [
                   "tall-building-vertex-848024472",
@@ -7545,7 +7545,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-842916594",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -7553,7 +7553,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1006069519",
                 "edgeIds": [
                   "tall-building-edge-261013208",
@@ -7563,7 +7563,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1020551771",
                 "edgeIds": [
                   "tall-building-edge-540240163",
@@ -7573,7 +7573,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1174320538",
                 "edgeIds": [
                   "tall-building-edge-297058955",
@@ -7583,7 +7583,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-2079608000",
                 "edgeIds": [
                   "tall-building-edge-1973727180",
@@ -7593,7 +7593,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-729057013",
                 "edgeIds": [
                   "tall-building-edge-714693257",
@@ -7603,7 +7603,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-905957892",
                 "edgeIds": [
                   "tall-building-edge-540240163",
@@ -7613,42 +7613,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1111157487",
                 "wireIds": [
                   "tall-building-wire-905957892"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1573764469",
                 "wireIds": [
                   "tall-building-wire-1174320538"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1890863398",
                 "wireIds": [
                   "tall-building-wire-2079608000"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-381247057",
                 "wireIds": [
                   "tall-building-wire-1006069519"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-600466518",
                 "wireIds": [
                   "tall-building-wire-729057013"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-723853012",
                 "wireIds": [
                   "tall-building-wire-1020551771"
@@ -7753,7 +7753,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1058347544",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -7761,7 +7761,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1332412692",
                 "vertexIds": [
                   "tall-building-vertex-1261146635",
@@ -7769,7 +7769,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-138878392",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -7777,7 +7777,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1640958702",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -7785,7 +7785,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1667539922",
                 "vertexIds": [
                   "tall-building-vertex-348560996",
@@ -7793,7 +7793,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1757290381",
                 "vertexIds": [
                   "tall-building-vertex-151356793",
@@ -7801,7 +7801,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1857787919",
                 "vertexIds": [
                   "tall-building-vertex-535070744",
@@ -7809,7 +7809,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1984263321",
                 "vertexIds": [
                   "tall-building-vertex-672034363",
@@ -7817,7 +7817,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-346661893",
                 "vertexIds": [
                   "tall-building-vertex-151356793",
@@ -7825,7 +7825,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-58701286",
                 "vertexIds": [
                   "tall-building-vertex-1711374219",
@@ -7833,7 +7833,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-705798454",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -7841,7 +7841,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-714693257",
                 "vertexIds": [
                   "tall-building-vertex-248601827",
@@ -7849,7 +7849,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1157406340",
                 "edgeIds": [
                   "tall-building-edge-714693257",
@@ -7859,7 +7859,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1345591881",
                 "edgeIds": [
                   "tall-building-edge-1332412692",
@@ -7869,7 +7869,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1350332269",
                 "edgeIds": [
                   "tall-building-edge-714693257",
@@ -7879,7 +7879,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-6100606",
                 "edgeIds": [
                   "tall-building-edge-1640958702",
@@ -7889,7 +7889,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-867630395",
                 "edgeIds": [
                   "tall-building-edge-138878392",
@@ -7899,7 +7899,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-932440314",
                 "edgeIds": [
                   "tall-building-edge-346661893",
@@ -7909,42 +7909,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-120591853",
                 "wireIds": [
                   "tall-building-wire-932440314"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1226104468",
                 "wireIds": [
                   "tall-building-wire-6100606"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1523671437",
                 "wireIds": [
                   "tall-building-wire-1157406340"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-201140427",
                 "wireIds": [
                   "tall-building-wire-1345591881"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-319968775",
                 "wireIds": [
                   "tall-building-wire-1350332269"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-817045005",
                 "wireIds": [
                   "tall-building-wire-867630395"
@@ -8049,7 +8049,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1298801438",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -8057,7 +8057,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-138715027",
                 "vertexIds": [
                   "tall-building-vertex-1790675002",
@@ -8065,7 +8065,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-146409225",
                 "vertexIds": [
                   "tall-building-vertex-104287430",
@@ -8073,7 +8073,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-1626279544",
                 "vertexIds": [
                   "tall-building-vertex-265471352",
@@ -8081,7 +8081,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-2120309374",
                 "vertexIds": [
                   "tall-building-vertex-265471352",
@@ -8089,7 +8089,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-321868171",
                 "vertexIds": [
                   "tall-building-vertex-533474687",
@@ -8097,7 +8097,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-400319589",
                 "vertexIds": [
                   "tall-building-vertex-810079272",
@@ -8105,7 +8105,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-451823051",
                 "vertexIds": [
                   "tall-building-vertex-1731626832",
@@ -8113,7 +8113,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-465374063",
                 "vertexIds": [
                   "tall-building-vertex-1944336978",
@@ -8121,7 +8121,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-728911266",
                 "vertexIds": [
                   "tall-building-vertex-1790675002",
@@ -8129,7 +8129,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-813247261",
                 "vertexIds": [
                   "tall-building-vertex-265471352",
@@ -8137,7 +8137,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "tall-building-edge-847317162",
                 "vertexIds": [
                   "tall-building-vertex-1731626832",
@@ -8145,7 +8145,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-1409362409",
                 "edgeIds": [
                   "tall-building-edge-465374063",
@@ -8155,7 +8155,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-219545580",
                 "edgeIds": [
                   "tall-building-edge-465374063",
@@ -8165,7 +8165,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-273970647",
                 "edgeIds": [
                   "tall-building-edge-400319589",
@@ -8175,7 +8175,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-380758920",
                 "edgeIds": [
                   "tall-building-edge-813247261",
@@ -8185,7 +8185,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-839306283",
                 "edgeIds": [
                   "tall-building-edge-1298801438",
@@ -8195,7 +8195,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "tall-building-wire-922137296",
                 "edgeIds": [
                   "tall-building-edge-321868171",
@@ -8205,42 +8205,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1119640917",
                 "wireIds": [
                   "tall-building-wire-1409362409"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-1673695481",
                 "wireIds": [
                   "tall-building-wire-380758920"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-2000748018",
                 "wireIds": [
                   "tall-building-wire-219545580"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-278512312",
                 "wireIds": [
                   "tall-building-wire-273970647"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-458889135",
                 "wireIds": [
                   "tall-building-wire-839306283"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "tall-building-face-667771314",
                 "wireIds": [
                   "tall-building-wire-922137296"

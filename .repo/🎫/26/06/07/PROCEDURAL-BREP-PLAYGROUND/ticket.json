@@ -1,8 +1,9 @@
 {
   "title": "Procedural Brep Playground",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Extract brep kernel into @geometry/brep/js, setup @procedural/react flow-based brep editor with R3F viewport, and @procedural/play playground.",
+  "summary": "Extracted cad-free @geometry/brep/js bundle (contracts, BrepjsGeometryKernel with sync eval, mesh helpers). Wired cad/js/core and cad/js/kernel/brepjs to import geometry contracts. Built @procedural/react (ProceduralEditor = FlowCanvas + brep JS flow module + BrepViewport R3F preview) and @procedural/play playground on port 6018. Extended FlowCanvas with onEvalOutputs. Registered procedural in framework renderer, vite aliases, launch.json, and root dev:procedural script. Tests pass for geometry/brep/js, procedural/react, procedural/play; dev server serves on http://127.0.0.1:6018/.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1550"
   },
@@ -10,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "dca1c048",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/procedural_brep_playground_dca1c048.plan.md"
+    "local": "procedural_brep_playground_dca1c048.plan.md"
   },
   "sessions": [
     "⚪8734df91b0324944b2c9e59b28bfd336"

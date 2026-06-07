@@ -5,7 +5,7 @@
   "label": "Beam",
   "description": "Horizontal spanning member.",
   "primitiveKinds": [
-    "solid"
+    "curve"
   ],
   "style": {
     "color": "#5B7FA5",

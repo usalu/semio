@@ -11,6 +11,6 @@
     "surface.networkSrf"
   ],
   "primitiveKinds": [
-    "face"
+    "surface"
   ]
 }

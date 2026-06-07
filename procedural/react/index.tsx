@@ -38,6 +38,12 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 const THREE = sceneHostPort.three;
 // #endregion 🔌Adapters
 
+// #region 🔖BrepWasmBridge
+if (!import.meta.env.VITEST) {
+	await ensureBrepWasmLoaded();
+}
+// #endregion 🔖BrepWasmBridge
+
 // #region 🔖BrepFlowModule
 const BREP_FLOW_KINDS: readonly FlowModuleNeuronKindV1[] = [
 	{ id: "brep.box", module: "brep", name: "Box", summary: "Axis-aligned box solid", inputs: ["cornerA", "cornerB", "height"], outputs: ["brep"] },
@@ -125,6 +131,7 @@ export class ProceduralExtensionHost extends FlowExtensionHost {
 	constructor(kernel: BrepKernelType = new BrepjsGeometryKernel()) {
 		super();
 		this.brepKernel = kernel;
+		this.brepReady = import.meta.env.VITEST === true;
 	}
 
 	getBrepKernel(): BrepKernelType {
@@ -132,9 +139,9 @@ export class ProceduralExtensionHost extends FlowExtensionHost {
 	}
 
 	async activateDefaults(): Promise<void> {
-		await super.activateDefaults();
 		await ensureBrepWasmLoaded();
 		this.brepReady = true;
+		await super.activateDefaults();
 	}
 
 	override evaluate(kindId: string, inputJson: string): string {

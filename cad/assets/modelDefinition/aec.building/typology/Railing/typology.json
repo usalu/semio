@@ -5,7 +5,7 @@
   "label": "Railing",
   "description": "Guard or handrail element.",
   "primitiveKinds": [
-    "solid"
+    "curve"
   ],
   "style": {
     "color": "#616161",

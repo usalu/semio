@@ -3359,6 +3359,19 @@ export function applySpatialAutoFitCamera(camera: THREE.Camera, bounds: { readon
   }
 }
 
+/** @emoji 🧊 Invalidates the canvas when committed meshes first become available (demand frameloop / async tessellation). */
+function CommittedMeshesReadyInvalidate({ meshes }: { readonly meshes: readonly MeshTransfer[] }): null {
+  const invalidate = useThree((state) => state.invalidate);
+  const prevCount = reactHostPort.useRef(0);
+  reactHostPort.useEffect(() => {
+    if (meshes.length > 0 && prevCount.current === 0) {
+      invalidate();
+    }
+    prevCount.current = meshes.length;
+  }, [invalidate, meshes]);
+  return null;
+}
+
 /** @emoji 🔄 Invalidates demand frameloop when host-driven scene visuals change. */
 function InvalidateOnRevision({ revision }: { readonly revision: string | number }): null {
   const invalidate = useThree((state) => state.invalidate);
@@ -3651,7 +3664,12 @@ export function InteractionSpatialView({
         revision={`${snapshot.revision}:${modelDefinitionRevision}:${geometryRevision}:${pickGeometryRevision}:${layerMeshes.map((row, i) => `${row.solid}:${meshTransferContentKey(row.mesh, i)}`).join("|")}:${hoveredTargetKey ?? ""}:${selectedTargetKey ?? ""}:${selectedTargetKeys?.size ?? 0}`}
       />
       <WorldCameraInvalidator />
-      {autoFitMeshes ? <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} /> : null}
+      {autoFitMeshes ? (
+        <>
+          <CommittedMeshesReadyInvalidate meshes={autoFitSources} />
+          <SpatialAutoFit meshes={autoFitSources} geometry={geometry} behavior={autoFitBehavior} />
+        </>
+      ) : null}
       <WorldLodBridge
         lodRef={cadLodRef}
         distanceReference={100}
@@ -4339,6 +4357,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly renderDisplayItem?: SpatialDisplayItemRenderer;
   readonly autoFitMeshes?: boolean;
   readonly autoFitBehavior?: SpatialAutoFitBehavior;
+  readonly committedMeshesKeepPrevious?: boolean;
   readonly tessellationTolerance?: number;
   /** @emoji 🎛 Toolbar gumball mode; hidden while an interaction session is active. */
   readonly transformGumballConfig?: CadGumballConfig | null;
@@ -4522,6 +4541,7 @@ export function InteractionRepl({
   renderDisplayItem,
   autoFitMeshes = false,
   autoFitBehavior = "initial",
+  committedMeshesKeepPrevious = false,
   tessellationTolerance,
   cmdLine: cmdLineProp,
   activeSuggestionIndex: activeSuggestionIndexProp,
@@ -4609,7 +4629,7 @@ export function InteractionRepl({
     return copy;
   }, [documentModel.model, gumballPreviewActive, gumballPreviewDiff]);
   const viewGeometry = gumballPreviewActive ? gumballPreviewModel : geometry;
-  const committedMeshes = useDocumentMeshes(rt.kernel(), gumballPreviewModel, tessTolerance, gumballPreviewActive);
+  const committedMeshes = useDocumentMeshes(rt.kernel(), gumballPreviewModel, tessTolerance, gumballPreviewActive || committedMeshesKeepPrevious);
   const handleTransformGumballPreview = reactHostPort.useCallback((diff: ModelDiff) => {
     setGumballPreviewDiff(isEmptyModelDiff(diff) ? null : diff);
   }, []);
@@ -6725,7 +6745,7 @@ if (import.meta.vitest) {
         edges: { added: [{ id: "e0" as EdgeRef, vertexIds: ["v0" as VertexRef, "v1" as VertexRef] }] },
       };
       ensureTypologyObjectFromCreateDiff(model, "spatial.shape.curve.interpolate-curve", diff);
-      expect(model.objects["spatial.shape.curve.interpolate-curve"]?.primitives.wire).toBe("w0");
+      expect(model.objects["spatial.shape.curve.interpolate-curve"]?.primitives.curve).toBe("w0");
     });
 
     it("geometryEntityNurbsPoles returns interpolation poles for through curves", () => {

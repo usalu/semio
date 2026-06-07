@@ -13,7 +13,7 @@
     "energy.energy.constructExternalWall"
   ],
   "primitiveKinds": [
-    "solid"
+    "surface"
   ],
   "style": {
     "color": "#C4785A",

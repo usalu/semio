@@ -13,6 +13,6 @@
     "structure.surfacefem.constructSurfaceElement"
   ],
   "primitiveKinds": [
-    "solid"
+    "surface"
   ]
 }

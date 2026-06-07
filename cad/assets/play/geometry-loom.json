@@ -31,7 +31,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "slot": "edge",
                 "id": "e11",
                 "vertexIds": [
@@ -82,7 +82,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e0",
                 "vertexIds": [
                   "v0",
@@ -90,7 +90,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e1",
                 "vertexIds": [
                   "v1",
@@ -98,7 +98,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e2",
                 "vertexIds": [
                   "v2",
@@ -106,7 +106,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e3",
                 "vertexIds": [
                   "v3",
@@ -114,7 +114,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "w-deck",
                 "edgeIds": [
                   "e0",
@@ -124,7 +124,7 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "stub-surface",
                 "wireIds": [
                   "w-deck"
@@ -179,7 +179,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e10",
                 "vertexIds": [
                   "v10",
@@ -187,7 +187,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e9",
                 "vertexIds": [
                   "v9",
@@ -195,7 +195,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "slot": "wire",
                 "id": "rail-upper",
                 "edgeIds": [
@@ -255,7 +255,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e4",
                 "vertexIds": [
                   "v4",
@@ -263,7 +263,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e5",
                 "vertexIds": [
                   "v5",
@@ -271,7 +271,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e6",
                 "vertexIds": [
                   "v6",
@@ -279,7 +279,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e7",
                 "vertexIds": [
                   "v7",
@@ -287,7 +287,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "e8",
                 "vertexIds": [
                   "v8",
@@ -295,7 +295,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "slot": "wire",
                 "id": "stub-wire",
                 "edgeIds": [

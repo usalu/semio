@@ -85,7 +85,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-eb0",
                 "vertexIds": [
                   "box-brepjs-solid-2-v000",
@@ -93,7 +93,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-eb1",
                 "vertexIds": [
                   "box-brepjs-solid-2-v100",
@@ -101,7 +101,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-eb2",
                 "vertexIds": [
                   "box-brepjs-solid-2-v110",
@@ -109,7 +109,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-eb3",
                 "vertexIds": [
                   "box-brepjs-solid-2-v010",
@@ -117,7 +117,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-et0",
                 "vertexIds": [
                   "box-brepjs-solid-2-v001",
@@ -125,7 +125,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-et1",
                 "vertexIds": [
                   "box-brepjs-solid-2-v101",
@@ -133,7 +133,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-et2",
                 "vertexIds": [
                   "box-brepjs-solid-2-v111",
@@ -141,7 +141,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-et3",
                 "vertexIds": [
                   "box-brepjs-solid-2-v011",
@@ -149,7 +149,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-ev0",
                 "vertexIds": [
                   "box-brepjs-solid-2-v000",
@@ -157,7 +157,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-ev1",
                 "vertexIds": [
                   "box-brepjs-solid-2-v100",
@@ -165,7 +165,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-ev2",
                 "vertexIds": [
                   "box-brepjs-solid-2-v110",
@@ -173,7 +173,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-ev3",
                 "vertexIds": [
                   "box-brepjs-solid-2-v010",
@@ -181,7 +181,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-wire-bottom",
                 "edgeIds": [
                   "box-brepjs-solid-2-eb0",
@@ -191,7 +191,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-wire-top",
                 "edgeIds": [
                   "box-brepjs-solid-2-et0",
@@ -201,7 +201,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-wire-x0",
                 "edgeIds": [
                   "box-brepjs-solid-2-eb3",
@@ -211,7 +211,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-wire-x1",
                 "edgeIds": [
                   "box-brepjs-solid-2-eb1",
@@ -221,7 +221,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-wire-y0",
                 "edgeIds": [
                   "box-brepjs-solid-2-eb0",
@@ -231,7 +231,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-2-wire-y1",
                 "edgeIds": [
                   "box-brepjs-solid-2-eb2",
@@ -241,42 +241,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-2-face-bottom",
                 "wireIds": [
                   "box-brepjs-solid-2-wire-bottom"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-2-face-top",
                 "wireIds": [
                   "box-brepjs-solid-2-wire-top"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-2-face-x0",
                 "wireIds": [
                   "box-brepjs-solid-2-wire-x0"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-2-face-x1",
                 "wireIds": [
                   "box-brepjs-solid-2-wire-x1"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-2-face-y0",
                 "wireIds": [
                   "box-brepjs-solid-2-wire-y0"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-2-face-y1",
                 "wireIds": [
                   "box-brepjs-solid-2-wire-y1"
@@ -395,7 +395,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-eb0",
                 "vertexIds": [
                   "box-brepjs-solid-3-v000",
@@ -403,7 +403,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-eb1",
                 "vertexIds": [
                   "box-brepjs-solid-3-v100",
@@ -411,7 +411,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-eb2",
                 "vertexIds": [
                   "box-brepjs-solid-3-v110",
@@ -419,7 +419,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-eb3",
                 "vertexIds": [
                   "box-brepjs-solid-3-v010",
@@ -427,7 +427,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-et0",
                 "vertexIds": [
                   "box-brepjs-solid-3-v001",
@@ -435,7 +435,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-et1",
                 "vertexIds": [
                   "box-brepjs-solid-3-v101",
@@ -443,7 +443,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-et2",
                 "vertexIds": [
                   "box-brepjs-solid-3-v111",
@@ -451,7 +451,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-et3",
                 "vertexIds": [
                   "box-brepjs-solid-3-v011",
@@ -459,7 +459,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-ev0",
                 "vertexIds": [
                   "box-brepjs-solid-3-v000",
@@ -467,7 +467,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-ev1",
                 "vertexIds": [
                   "box-brepjs-solid-3-v100",
@@ -475,7 +475,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-ev2",
                 "vertexIds": [
                   "box-brepjs-solid-3-v110",
@@ -483,7 +483,7 @@
                 ]
               },
               {
-                "kind": "edge",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-ev3",
                 "vertexIds": [
                   "box-brepjs-solid-3-v010",
@@ -491,7 +491,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-wire-bottom",
                 "edgeIds": [
                   "box-brepjs-solid-3-eb0",
@@ -501,7 +501,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-wire-top",
                 "edgeIds": [
                   "box-brepjs-solid-3-et0",
@@ -511,7 +511,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-wire-x0",
                 "edgeIds": [
                   "box-brepjs-solid-3-eb3",
@@ -521,7 +521,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-wire-x1",
                 "edgeIds": [
                   "box-brepjs-solid-3-eb1",
@@ -531,7 +531,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-wire-y0",
                 "edgeIds": [
                   "box-brepjs-solid-3-eb0",
@@ -541,7 +541,7 @@
                 ]
               },
               {
-                "kind": "wire",
+                "kind": "curve",
                 "id": "box-brepjs-solid-3-wire-y1",
                 "edgeIds": [
                   "box-brepjs-solid-3-eb2",
@@ -551,42 +551,42 @@
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-3-face-bottom",
                 "wireIds": [
                   "box-brepjs-solid-3-wire-bottom"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-3-face-top",
                 "wireIds": [
                   "box-brepjs-solid-3-wire-top"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-3-face-x0",
                 "wireIds": [
                   "box-brepjs-solid-3-wire-x0"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-3-face-x1",
                 "wireIds": [
                   "box-brepjs-solid-3-wire-x1"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-3-face-y0",
                 "wireIds": [
                   "box-brepjs-solid-3-wire-y0"
                 ]
               },
               {
-                "kind": "face",
+                "kind": "surface",
                 "id": "box-brepjs-solid-3-face-y1",
                 "wireIds": [
                   "box-brepjs-solid-3-wire-y1"

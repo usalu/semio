@@ -5,7 +5,7 @@
   "label": "Door",
   "description": "Operable opening panel.",
   "primitiveKinds": [
-    "solid"
+    "surface"
   ],
   "style": {
     "color": "#8B5A2B",

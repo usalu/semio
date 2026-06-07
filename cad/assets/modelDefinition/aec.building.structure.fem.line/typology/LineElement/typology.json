@@ -13,6 +13,6 @@
     "structure.linefem.constructLineElement"
   ],
   "primitiveKinds": [
-    "solid"
+    "curve"
   ]
 }

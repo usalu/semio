@@ -11,6 +11,6 @@
     "surface.loft"
   ],
   "primitiveKinds": [
-    "face"
+    "surface"
   ]
 }

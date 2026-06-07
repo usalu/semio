@@ -19,6 +19,12 @@ export default defineConfig({
 			{ find: "@flow/module-dictionary", replacement: resolve(root, "../../flow/modules/dictionary/pkg/flow_module_dictionary.js") },
 			{ find: "@flow/module-list", replacement: resolve(root, "../../flow/modules/list/pkg/flow_module_list.js") },
 			{ find: "@infinite/world/r3f", replacement: resolve(root, "../../infinite/world/r3f/index.tsx") },
+			{ find: "@ui/react", replacement: resolve(root, "../../ui/react/index.tsx") },
+			{ find: "@flow/module-math", replacement: resolve(root, "../../flow/modules/math/pkg/flow_module_math.js") },
+			{ find: "@flow/module-text", replacement: resolve(root, "../../flow/modules/text/pkg/flow_module_text.js") },
+			{ find: "@flow/module-logic", replacement: resolve(root, "../../flow/modules/logic/pkg/flow_module_logic.js") },
+			{ find: "@flow/module-dictionary", replacement: resolve(root, "../../flow/modules/dictionary/pkg/flow_module_dictionary.js") },
+			{ find: "@flow/module-list", replacement: resolve(root, "../../flow/modules/list/pkg/flow_module_list.js") },
 		],
 	},
 	test: {

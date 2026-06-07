@@ -15,7 +15,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["anchor", "vertex", "edge", "wire", "face", "shell", "solid", "compSolid", "compound"]
+        "enum": ["anchor", "solid", "surface", "curve"]
       },
       "minItems": 0
     },

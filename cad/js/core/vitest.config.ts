@@ -21,6 +21,7 @@ export default defineConfig({
 			"@cad/js/kernel/brepjs": resolve(jsRoot, "kernel/brepjs/index.ts"),
 			"@cad/js/machine/stately": resolve(jsRoot, "machine/stately/index.ts"),
 			"@cad/js/query": resolve(jsRoot, "query/index.ts"),
+			"@geometry/brep/js": resolve(root, "../../../geometry/brep/js/index.ts"),
 		},
 	},
 	test: {

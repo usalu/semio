@@ -12,7 +12,7 @@
     "structure.structure.constructReinforcedConcreteExternalWall"
   ],
   "primitiveKinds": [
-    "solid"
+    "surface"
   ],
   "style": {
     "color": "#6B8E9F",

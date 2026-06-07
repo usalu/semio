@@ -366,7 +366,7 @@ export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): P
       if (id.includes("playgroundEntry=shell")) {
         return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
       }
-      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|presentation|wires)/);
+      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|procedural|presentation|wires)/);
       if (puzzleMatch) {
         return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
       }

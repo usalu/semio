@@ -22,34 +22,34 @@ todos:
     status: completed
   - id: cad-renderer-imports
     content: Update @cad/js/renderer + play imports to new geometry/cad locations
-    status: pending
+    status: completed
   - id: geo-wire-config
     content: "Wire @geometry/brep/js: root workspaces, vite aliases, tsconfig paths, vitest aliases, launch.json; validate cad tests + viewport"
-    status: in_progress
+    status: completed
   - id: proc-react-scaffold
     content: Scaffold @procedural/react bundle (index.tsx, script.ts, package.json, project.json, vitest.config)
-    status: pending
+    status: completed
   - id: proc-brep-module
     content: Implement JS brep flow module (manifest + sync evaluate calling @geometry/brep/js, solids by id) and register with flow extension host
-    status: pending
+    status: completed
   - id: flow-eval-outputs
     content: Extend flow/react FlowCanvas with onEvalOutputs callback exposing full session.evaluate() outputs
-    status: pending
+    status: completed
   - id: proc-viewport
     content: Build BrepViewport (infinite/world/r3f + buildBufferGeometryFromMeshTransfer) and ProceduralEditor composing FlowCanvas + viewport; add inlined tests
-    status: pending
+    status: completed
   - id: proc-play-scaffold
     content: Scaffold @procedural/play (index.html, index.ts, script.ts, package.json, project.json, vite.config, vitest.config, globals.css)
-    status: pending
+    status: completed
   - id: proc-framework-renderer
     content: Add procedural to PlaygroundRendererPuzzleKind + ProceduralPlaySurfaceHost + bootProceduralPlay in framework renderer
-    status: pending
+    status: completed
   - id: proc-registration
     content: "Register procedural: ports (6018/6031), root workspaces, dev:procedural script+route, vite-elements aliases, launch.json"
-    status: pending
+    status: completed
   - id: proc-validate
     content: Validate dev:procedural on 6018 (box->extrude->union renders in viewport), run react+play tests, close ticket
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

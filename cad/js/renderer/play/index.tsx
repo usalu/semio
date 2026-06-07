@@ -1480,6 +1480,7 @@ interface PlaySessionProps {
   readonly transformGumballConfig: CadGumballConfig | null;
   readonly onTransformGumballCommit: (diff: ModelDiff) => void;
   readonly onDeleteSelection: () => boolean;
+  readonly committedMeshesKeepPrevious?: boolean;
   readonly cameraView?: OrbitCameraViewId;
   readonly cameraViewSeedKey?: string | number;
   readonly orbitProjection?: OrbitCameraProjection;
@@ -1523,6 +1524,7 @@ function PlaySession({
   onCanvasHoverTarget,
   autoFitMeshes = false,
   autoFitBehavior = "initial",
+  committedMeshesKeepPrevious = true,
   transformGumballConfig,
   onTransformGumballCommit,
   onDeleteSelection,
@@ -1597,6 +1599,7 @@ function PlaySession({
       onHoverTarget={onCanvasHoverTarget}
       autoFitMeshes={autoFitMeshes}
       autoFitBehavior={autoFitBehavior}
+      committedMeshesKeepPrevious={committedMeshesKeepPrevious}
       transformGumballConfig={transformGumballConfig}
       onTransformGumballCommit={onTransformGumballCommit}
       onDeleteSelection={onDeleteSelection}
@@ -1668,6 +1671,7 @@ interface CadPlayModelSpaceValue {
   readonly orbitProjectionForInstance: (instanceId?: string | null) => OrbitCameraProjection;
   readonly applyOrbitViewForInstance: (view: OrbitCameraViewId, instanceId?: string | null) => void;
   readonly setOrbitProjectionForInstance: (projection: OrbitCameraProjection, instanceId?: string | null) => void;
+  readonly modelsLoadEpoch: number;
 }
 
 const CadPlayModelSpaceContext = reactHostPort.createContext<CadPlayModelSpaceValue | null>(null);
@@ -1728,6 +1732,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const [rendererSelectionByModel, setRendererSelectionByModel] = reactHostPort.useState<SpatialRendererSelectionByModel>({});
   const [interactionSelectionByState, setInteractionSelectionByState] = reactHostPort.useState<SpatialInteractionSelectionByState>({});
   const [modelDefinitionRevision, setModelDefinitionRevision] = reactHostPort.useState(0);
+  const [modelsLoadEpoch, setModelsLoadEpoch] = reactHostPort.useState(0);
   const [snapshotByPane, setSnapshotByPane] = reactHostPort.useState(emptySnapshotByPane);
   const engagementSpecRefByPane = reactHostPort.useRef<Partial<Record<CadPlayPaneId, EngagementSpec | null>>>({});
   const [fileStatus, setFileStatus] = reactHostPort.useState<string>("");
@@ -1778,11 +1783,13 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       pointerFocusRef.current?.clearHover();
       setModelsByDefinitionId(emptyPlayModels());
       setActiveModelDefinitionId(defaultModelDefinitionId());
+      setModelsLoadEpoch((epoch) => epoch + 1);
     } else {
       const asset = SHAPE_ASSETS.find((candidate) => candidate.id === id);
       if (!asset) return;
       setModelsByDefinitionId(modelsFromCadJson(asset.json));
       setActiveModelDefinitionId(activeModelDefinitionIdFromSpatialJson(asset.json));
+      setModelsLoadEpoch((epoch) => epoch + 1);
     }
     setModelDefinitionRevision((r) => r + 1);
   }, []);
@@ -1807,7 +1814,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   const flushedModelsByDefinitionId = reactHostPort.useMemo(() => {
     const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
     return ensurePlayQuadModelSlots(flushed);
-  }, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId]);
+  }, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId, modelsLoadEpoch]);
 
   const playModelSpace = reactHostPort.useMemo(() => modelSpaceFromRecord(flushedModelsByDefinitionId), [flushedModelsByDefinitionId]);
 
@@ -2197,6 +2204,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
         setLoadedRawName(file.name);
         setModelsByDefinitionId(ensurePlayQuadModelSlots(recordFromModelSpace(modelSpace)));
         setActiveModelDefinitionId(nextActiveModelDefinitionId);
+        setModelsLoadEpoch((epoch) => epoch + 1);
         setModelDefinitionRevision((r) => r + 1);
         setFileStatus(`Loaded model space from ${file.name}.`);
         return;
@@ -2207,6 +2215,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       setLoadedRawName(file.name);
       setModelsByDefinitionId(modelsFromCadJson(model.toJSON()));
       setActiveModelDefinitionId(defaultModelDefinitionId());
+      setModelsLoadEpoch((epoch) => epoch + 1);
       setModelDefinitionRevision((r) => r + 1);
       setFileStatus(`Loaded model from ${file.name}.`);
     } catch (error) {
@@ -2267,6 +2276,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       orbitProjectionForInstance,
       applyOrbitViewForInstance,
       setOrbitProjectionForInstance,
+      modelsLoadEpoch,
     }),
     [
       activeModelDefinitionId,
@@ -2313,6 +2323,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
       handleDeleteSelection,
       orbitProjectionForInstance,
       setOrbitProjectionForInstance,
+      modelsLoadEpoch,
     ],
   );
 
@@ -2406,6 +2417,7 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
     cameraViewSeedForInstance,
     orbitProjectionForInstance,
     setOrbitProjectionForInstance,
+    modelsLoadEpoch,
   } = useCadPlayModelSpace();
   const cameraSeed = cameraViewSeedForInstance(instanceId);
   const orbitProjection = orbitProjectionForInstance(instanceId);
@@ -2425,9 +2437,12 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
   const paneModelRevision = viewModel.revision;
   const pickGeometry = reactHostPort.useMemo(
     () => cadPlayPaneGeometry(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
-    [flushedModelsByDefinitionId, modelDefinitionId, paneModel, paneModelRevision],
+    [flushedModelsByDefinitionId, modelDefinitionId, paneModel, paneModelRevision, modelsLoadEpoch],
   );
-  const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(viewModel.toJSON()), nodes: [] }), [viewModel, paneModelRevision]);
+  const documentModel = reactHostPort.useMemo(
+    (): ModelDocument => ({ model: Model.fromJSON(viewModel.toJSON()), nodes: [] }),
+    [viewModel, paneModelRevision, modelsLoadEpoch],
+  );
   const commitPaneModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(modelDefinitionId, model), [commitModelForDefinition, modelDefinitionId]);
   const onTransformGumballCommit = reactHostPort.useCallback((diff: ModelDiff) => handleTransformGumballCommit(modelDefinitionId, diff), [handleTransformGumballCommit, modelDefinitionId]);
   const onSnapshot = reactHostPort.useCallback((snapshot: InteractionSnapshot) => handleSnapshotChangeForPane(pane, snapshot), [handleSnapshotChangeForPane, pane]);
@@ -2495,7 +2510,7 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         onHoveredPickKeyChange={onHoveredPickKeyChange}
         onCanvasHoverTarget={onCanvasHoverTarget}
         autoFitMeshes={autoFitMeshes}
-        autoFitBehavior="initial"
+        autoFitBehavior="changes"
         transformGumballConfig={transformGumballConfig}
         onTransformGumballCommit={onTransformGumballCommit}
         onDeleteSelection={handleDeleteSelection}

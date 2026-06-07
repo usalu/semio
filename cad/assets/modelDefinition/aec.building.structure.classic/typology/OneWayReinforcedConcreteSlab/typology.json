@@ -12,7 +12,7 @@
     "structure.structure.constructOneWayReinforcedConcreteSlab"
   ],
   "primitiveKinds": [
-    "solid"
+    "surface"
   ],
   "style": {
     "color": "#8B7355",

@@ -5,7 +5,7 @@
   "label": "Window",
   "description": "Glazed opening element.",
   "primitiveKinds": [
-    "solid"
+    "surface"
   ],
   "style": {
     "color": "#87CEEB",

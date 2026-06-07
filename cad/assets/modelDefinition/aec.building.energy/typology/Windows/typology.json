@@ -13,6 +13,6 @@
     "energy.energy.constructWindows"
   ],
   "primitiveKinds": [
-    "solid"
+    "surface"
   ]
 }

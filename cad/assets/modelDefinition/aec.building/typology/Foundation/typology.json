@@ -5,7 +5,7 @@
   "label": "Foundation",
   "description": "Substructure bearing element.",
   "primitiveKinds": [
-    "solid"
+    "surface"
   ],
   "style": {
     "color": "#8B6914",

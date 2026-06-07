@@ -13,7 +13,7 @@
     "energy.energy.constructRoof"
   ],
   "primitiveKinds": [
-    "solid"
+    "surface"
   ],
   "style": {
     "color": "#7A9E6E",

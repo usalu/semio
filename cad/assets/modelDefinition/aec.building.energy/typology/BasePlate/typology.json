@@ -11,6 +11,6 @@
     "energy.energy.constructBasePlate"
   ],
   "primitiveKinds": [
-    "solid"
+    "surface"
   ]
 }

@@ -11,6 +11,6 @@
     "surface.sweep1"
   ],
   "primitiveKinds": [
-    "face"
+    "surface"
   ]
 }

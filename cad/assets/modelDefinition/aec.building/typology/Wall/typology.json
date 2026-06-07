@@ -5,7 +5,7 @@
   "label": "Wall",
   "description": "Vertical planar enclosure element.",
   "primitiveKinds": [
-    "solid"
+    "surface"
   ],
   "style": {
     "color": "#C4785A",

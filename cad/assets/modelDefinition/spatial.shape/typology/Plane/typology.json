@@ -11,6 +11,6 @@
     "surface.plane"
   ],
   "primitiveKinds": [
-    "face"
+    "surface"
   ]
 }

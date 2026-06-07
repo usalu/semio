@@ -35,7 +35,7 @@
       "properties": {
         "id": { "type": "string" },
         "kind": {
-          "enum": ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]
+          "enum": ["anchor", "solid", "surface", "curve", "vertex", "edge", "wire", "face", "shell"]
         },
         "slot": { "type": "string" },
         "attributes": {

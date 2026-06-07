@@ -21,7 +21,6 @@ import {
 import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
 import {
 	PROCEDURAL_DEFAULT_FIXTURE,
-	proceduralExtensionHost,
 	proceduralFixtureToJson,
 	type CatalogueSection,
 	type FlowReorganizeRequest,
@@ -35,6 +34,10 @@ export const PROCEDURAL_PLAY_WINDOW_KIND_ID = "procedural-main";
 
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
 export const PROCEDURAL_PLAY_LAYOUT = createStackLayout([PROCEDURAL_PLAY_WINDOW_KIND_ID], ["Procedural"]);
+
+function proceduralPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+	return { controllerId: PROCEDURAL_PLAY_CONTROLLER_ID, command, args };
+}
 
 /** @emoji 🎛 Procedural play shell controller. */
 export class ProceduralPlayController extends Controller {
@@ -50,10 +53,6 @@ export class ProceduralPlayController extends Controller {
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(PROCEDURAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.rebuildShellMode();
-		void proceduralExtensionHost.activateDefaults().then(() => {
-			this.extensionRevision += 1;
-			this.emit();
-		});
 	}
 
 	getFixtureJson(): string {
@@ -81,7 +80,19 @@ export class ProceduralPlayController extends Controller {
 	}
 
 	private windowEngagement(): WindowEngagement {
-		return { sessionActive: false, possibleEngagements: [], controls: [], status: [] };
+		return {
+			sessionActive: false,
+			input: {
+				id: "engagement-input",
+				value: "",
+				placeholder: "Procedural",
+				onChange: proceduralPlayCmd("engagementInput"),
+				onSubmit: proceduralPlayCmd("engagementSubmit"),
+			},
+			possibleEngagements: [],
+			controls: [],
+			status: [],
+		};
 	}
 
 	private rebuildShellMode(): void {
