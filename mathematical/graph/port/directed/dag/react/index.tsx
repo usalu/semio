@@ -312,6 +312,8 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange 
       resize();
       const ro = new ResizeObserver(resize);
       ro.observe(container);
+      const visualViewport = globalThis.visualViewport;
+      visualViewport?.addEventListener("resize", resize);
       const tick = () => {
         renderFrame();
         rafRef.current = requestAnimationFrame(tick);
@@ -345,6 +347,7 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange 
       canvas.addEventListener("pointerleave", onPointerUp);
       return () => {
         ro.disconnect();
+        visualViewport?.removeEventListener("resize", resize);
         canvas.removeEventListener("pointerdown", onPointerDown);
         canvas.removeEventListener("pointermove", onPointerMove);
         canvas.removeEventListener("pointerup", onPointerUp);

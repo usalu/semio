@@ -14,6 +14,7 @@
     "test": "bun nx run @procedural/play:test"
   },
   "dependencies": {
+    "@flow/react": "workspace:*",
     "@framework/playground/core": "workspace:*",
     "@procedural/react": "workspace:*"
   },

@@ -6240,14 +6240,45 @@ export function bootDagPlay(playground: Playground, rootId = "root"): void {
 import {
   PROCEDURAL_PLAY_APP_ID,
   PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON,
+  PROCEDURAL_PLAY_EXTENSIONS_TAB_ID,
+  PROCEDURAL_PLAY_KINDS_TAB_ID,
   PROCEDURAL_PLAY_SURFACE_ID,
   ProceduralPlayController,
+  buildProceduralPlayExtensionsTree,
+  buildProceduralPlayKindsTree,
   registerProceduralPlayDeclarativeBodies,
 } from "@procedural/play";
+import { flowWidgetPaletteTreeDragController } from "@flow/react";
 import { ProceduralEditor } from "@procedural/react";
 
 let proceduralPlayChromeRegistered = false;
 const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
+
+/** @emoji 🔔 Re-renders procedural play workbench kinds when WASM catalogue sections arrive. */
+function useProceduralPlaySnapshotRevision(selector: (ctrl: ProceduralPlayController) => number): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = proceduralPlayControllerRef.current;
+      if (!ctrl?.subscribeSnapshot) {
+        return () => {};
+      }
+      return ctrl.subscribeSnapshot(listener);
+    },
+    () => {
+      const ctrl = proceduralPlayControllerRef.current;
+      return ctrl ? selector(ctrl) : 0;
+    },
+    () => 0,
+  );
+}
+
+function useProceduralPlayCatalogueRevision(): number {
+  return useProceduralPlaySnapshotRevision((ctrl) => ctrl.getCatalogueRevision());
+}
+
+function useProceduralPlayExtensionRevision(): number {
+  return useProceduralPlaySnapshotRevision((ctrl) => ctrl.getExtensionRevision());
+}
 
 function useProceduralPlayController(): ProceduralPlayController | undefined {
   const { runtime } = useApp();
@@ -6258,7 +6289,7 @@ function useProceduralPlayController(): ProceduralPlayController | undefined {
 
 function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
   const ctrl = useProceduralPlayController();
-  const extensionRevision = ctrl?.getExtensionRevision() ?? 0;
+  const extensionRevision = useProceduralPlayExtensionRevision();
   const onPreviewText = reactHostPort.useCallback(
     (text: string) => {
       console.log(`[DEBUG] procedural play preview: ${text}`);
@@ -6284,9 +6315,60 @@ function ProceduralPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowH
       reorganize={ctrl?.getReorganize()}
       extensionRevision={extensionRevision}
       onPreviewText={onPreviewText}
+      onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
     />
   );
+}
+
+class ProceduralPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: PROCEDURAL_PLAY_KINDS_TAB_ID,
+      icon: createIconComponent("tags"),
+      order: 0,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = proceduralPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildProceduralPlayKindsTree(ctrl?.getCatalogueSections() ?? []);
+        const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return {
+          ...config,
+          dragAndDropController: flowWidgetPaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
+        };
+      }),
+    };
+  }
+}
+
+class ProceduralPlayExtensionsPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: PROCEDURAL_PLAY_EXTENSIONS_TAB_ID,
+      icon: createIconComponent("puzzle"),
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = proceduralPlayControllerRef.current;
+        const bus = new CommandBus();
+        const treeNode = buildProceduralPlayExtensionsTree(ctrl?.getExtensionEntries() ?? []);
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+function ProceduralPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  const catalogueRevision = useProceduralPlayCatalogueRevision();
+  const extensionRevision = useProceduralPlayExtensionRevision();
+  const proceduralPlayKindsPanel = reactHostPort.useMemo(() => new ProceduralPlayKindsPanelDefinition(), []);
+  const proceduralPlayExtensionsPanel = reactHostPort.useMemo(() => new ProceduralPlayExtensionsPanelDefinition(), []);
+  const augmentPanelTabs = reactHostPort.useMemo(
+    () => ({
+      workbench: [proceduralPlayKindsPanel, proceduralPlayExtensionsPanel],
+    }),
+    [proceduralPlayKindsPanel, proceduralPlayExtensionsPanel, catalogueRevision, extensionRevision],
+  );
+  return <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
 }
 
 export function registerProceduralPlaySurfaceHosts(): void {
@@ -6297,7 +6379,7 @@ export function registerProceduralPlaySurfaceHosts(): void {
 }
 
 function ProceduralPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_PLAY_APP_ID} />;
+  return <ProceduralPlayInner runtime={runtime} />;
 }
 
 export function mountProceduralPlayChrome(playground: Playground, rootId = "root"): void {

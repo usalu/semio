@@ -6,7 +6,7 @@ pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, HashMap};
 
-use dag::{computation_node_height, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeSpec, IoPortSpec};
+use dag::{computation_node_height, would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec};
 use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
@@ -201,25 +201,82 @@ fn widget_io_ports(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>
 
 fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (f64, f64) {
     match widget {
-        Widget::InputSlider { .. } => (176.0, 72.0),
-        Widget::InputNote { .. } | Widget::OutputPreview { .. } => (176.0, 64.0),
+        Widget::InputSlider { .. } => (180.0, 48.0),
+        Widget::InputNote { .. } => (160.0, 48.0),
+        Widget::OutputPreview { .. } => (120.0, 48.0),
+        Widget::OutputAction { .. } => (120.0, 48.0),
         Widget::Neuron { neuronKind, input_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
             let height = computation_node_height(inputs.len(), outputs.len(), variadic_inputs, variadic_outputs);
             (160.0, height)
         }
-        _ => (160.0, 56.0),
     }
 }
 
 fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>, kind_infos: &HashMap<String, NeuronKindInfo>) -> DagNodeSpec {
-    let (inputs, outputs, variadic_inputs, variadic_outputs) = widget_io_ports(widget, kind_infos);
     let id = match widget {
         Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id.clone(),
     };
     let (width, height) = widget_node_size(widget, kind_infos);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
-    DagNodeSpec::computation(id, widget_label(widget), inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
+    let name = widget_label(widget);
+    match widget {
+        Widget::Neuron { neuronKind, input_ports, .. } => {
+            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuronKind, input_ports, kind_infos);
+            DagNodeSpec::computation(id, name, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
+        }
+        Widget::InputSlider { value, .. } => DagNodeSpec {
+            id,
+            name,
+            x,
+            y,
+            width,
+            height,
+            kind: DagNodeKind::Slider {
+                min: FLOW_SLIDER_MIN,
+                max: FLOW_SLIDER_MAX,
+                step: FLOW_SLIDER_STEP,
+                value: *value,
+                output: IoPortSpec { id: "out".into(), label: "out".into() },
+            },
+        },
+        Widget::InputNote { text, .. } => DagNodeSpec {
+            id,
+            name,
+            x,
+            y,
+            width,
+            height,
+            kind: DagNodeKind::Note {
+                text: text.clone(),
+                output: IoPortSpec { id: "out".into(), label: "out".into() },
+            },
+        },
+        Widget::OutputPreview { preview, .. } => DagNodeSpec {
+            id,
+            name,
+            x,
+            y,
+            width,
+            height,
+            kind: DagNodeKind::Preview {
+                text: format_dictionary_preview(preview),
+                input: IoPortSpec { id: "in".into(), label: "in".into() },
+            },
+        },
+        Widget::OutputAction { action, .. } => DagNodeSpec {
+            id,
+            name,
+            x,
+            y,
+            width,
+            height,
+            kind: DagNodeKind::Action {
+                label: action.clone(),
+                input: IoPortSpec { id: "in".into(), label: "in".into() },
+            },
+        },
+    }
 }
 
 fn parse_port_endpoint(endpoint: &str, default_port: &str) -> (String, String) {
@@ -232,6 +289,23 @@ fn parse_port_endpoint(endpoint: &str, default_port: &str) -> (String, String) {
 const FLOW_SLIDER_MIN: f64 = 0.0;
 const FLOW_SLIDER_MAX: f64 = 10.0;
 const FLOW_SLIDER_STEP: f64 = 0.1;
+
+fn format_preview_number(n: f64) -> String {
+    if (n - n.round()).abs() < 0.05 {
+        format!("{}", n.round() as i64)
+    } else {
+        format!("{n:.1}")
+    }
+}
+
+fn format_dictionary_preview(dict: &Dictionary) -> String {
+    dict.get("number")
+        .and_then(|v| v.as_atom())
+        .and_then(|a| a.as_f64())
+        .map(format_preview_number)
+        .or_else(|| dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string))
+        .unwrap_or_else(|| "—".into())
+}
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -368,7 +442,6 @@ pub struct FlowHost {
     viewport_h: u32,
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
-    slider_adjust_id: Option<String>,
 }
 
 impl Default for FlowHost {
@@ -393,7 +466,6 @@ impl FlowHost {
             viewport_h: 1,
             viewport_dpr: 1.0,
             pan_anchor: None,
-            slider_adjust_id: None,
         };
         host.rebuild_dag();
         host.evaluate_internal();
@@ -677,12 +749,6 @@ impl FlowHost {
             self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
             return;
         }
-        let world = self.screen_to_world_point(sx, sy);
-        if let Some(widget_id) = self.hit_slider_widget_at(world.x, world.y) {
-            self.slider_adjust_id = Some(widget_id.clone());
-            self.adjust_slider_at_world(&widget_id, world.x);
-            return;
-        }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_down(sx, sy, extend);
         if let Some((widget_id, index)) = self.dag.take_pending_port_insert() {
@@ -700,11 +766,6 @@ impl FlowHost {
             self.set_camera(cam_x - dx, cam_y - dy, zoom);
             return;
         }
-        if let Some(widget_id) = self.slider_adjust_id.clone() {
-            let world = self.screen_to_world_point(sx, sy);
-            self.adjust_slider_at_world(&widget_id, world.x);
-            return;
-        }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_move(sx, sy);
         self.sync_from_dag();
@@ -712,11 +773,6 @@ impl FlowHost {
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
         self.pan_anchor = None;
-        let was_slider = self.slider_adjust_id.take();
-        if was_slider.is_some() {
-            self.evaluate_internal();
-            return;
-        }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_up(sx, sy);
         self.sync_from_dag();
@@ -798,6 +854,31 @@ impl FlowHost {
                 }
             }
         }
+        self.sync_dag_display_from_widgets();
+    }
+
+    fn sync_dag_display_from_widgets(&mut self) {
+        for widget in &self.fixture.widgets {
+            let id = widget_id_for(widget);
+            let Some(node) = self.dag.fixture.nodes.iter_mut().find(|n| n.id == *id) else {
+                continue;
+            };
+            match (widget, &mut node.kind) {
+                (Widget::InputSlider { value, .. }, DagNodeKind::Slider { value: dag_value, .. }) => {
+                    *dag_value = *value;
+                }
+                (Widget::InputNote { text, .. }, DagNodeKind::Note { text: dag_text, .. }) => {
+                    *dag_text = text.clone();
+                }
+                (Widget::OutputPreview { preview, .. }, DagNodeKind::Preview { text, .. }) => {
+                    *text = format_dictionary_preview(preview);
+                }
+                (Widget::OutputAction { action, .. }, DagNodeKind::Action { label, .. }) => {
+                    *label = action.clone();
+                }
+                _ => {}
+            }
+        }
     }
 
     fn rebuild_dag(&mut self) {
@@ -810,6 +891,24 @@ impl FlowHost {
     fn sync_from_dag(&mut self) {
         for node in &self.dag.fixture.nodes {
             self.fixture.layout.insert(node.id.clone(), WidgetLayout { x: node.x, y: node.y });
+        }
+        for widget in &mut self.fixture.widgets {
+            let id = widget_id_for(widget);
+            let Some(node) = self.dag.fixture.nodes.iter().find(|n| n.id == *id) else {
+                continue;
+            };
+            match (widget, &node.kind) {
+                (Widget::InputSlider { value, .. }, DagNodeKind::Slider { value: dag_value, .. }) => {
+                    *value = *dag_value;
+                }
+                (Widget::InputNote { text, .. }, DagNodeKind::Note { text: dag_text, .. }) => {
+                    *text = dag_text.clone();
+                }
+                (Widget::OutputAction { action, .. }, DagNodeKind::Action { label, .. }) => {
+                    *action = label.clone();
+                }
+                _ => {}
+            }
         }
         self.fixture.synapses = self
             .dag
@@ -900,129 +999,12 @@ impl FlowHost {
         let _ = self.evaluate();
     }
 
-    fn hit_slider_widget_at(&self, wx: f64, wy: f64) -> Option<String> {
-        for widget in &self.fixture.widgets {
-            let Widget::InputSlider { id, .. } = widget else { continue };
-            let node = self.dag.fixture.nodes.iter().find(|n| n.id == *id)?;
-            let hw = node.width * 0.5;
-            let hh = node.height * 0.5;
-            let left = node.x - hw + 4.0;
-            let right = node.x + hw - 16.0;
-            let top = node.y - hh + 4.0;
-            let bottom = node.y + hh - 4.0;
-            if wx >= left && wx <= right && wy >= top && wy <= bottom {
-                return Some(id.clone());
-            }
-        }
-        None
-    }
-
-    fn adjust_slider_at_world(&mut self, widget_id: &str, world_x: f64) {
-        let Some(node) = self.dag.fixture.nodes.iter().find(|n| n.id == widget_id) else { return };
-        let hw = node.width * 0.5;
-        let track_left = node.x - hw + 12.0;
-        let track_right = node.x + hw - 28.0;
-        let span = (track_right - track_left).max(1.0);
-        let t = ((world_x - track_left) / span).clamp(0.0, 1.0);
-        let raw = FLOW_SLIDER_MIN + t * (FLOW_SLIDER_MAX - FLOW_SLIDER_MIN);
-        let stepped = (raw / FLOW_SLIDER_STEP).round() * FLOW_SLIDER_STEP;
-        self.set_slider_value(widget_id, stepped);
-    }
-
-    fn format_preview_number(n: f64) -> String {
-        if (n - n.round()).abs() < 0.05 {
-            format!("{}", n.round() as i64)
-        } else {
-            format!("{n:.1}")
-        }
-    }
-
-    fn format_dictionary_preview(dict: &Dictionary) -> String {
-        dict.get("number")
-            .and_then(|v| v.as_atom())
-            .and_then(|a| a.as_f64())
-            .map(Self::format_preview_number)
-            .or_else(|| dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string))
-            .unwrap_or_else(|| "—".into())
-    }
-
-    fn paint_flow_widget_chrome(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
-        use cavas::camera::{camera_content_affine, world_to_screen, Camera, Viewport};
-        use cavas::text::append_label;
-        use cavas::vello::kurbo::{Circle, Point, RoundedRect, RoundedRectRadii, Stroke};
-        use cavas::vello::peniko::{Color, Fill};
-
-        let cam = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
-        let lod = dag::dag_draw_lod(cam.zoom);
-        if !lod.shows_controls() {
-            return;
-        }
-        let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
-        let aff = camera_content_affine(&cam, &viewport);
-        let theme = &self.dag.vello_theme;
-        let track_fill = theme.node_fill;
-        let track_stroke = theme.node_stroke;
-        let thumb_fill = theme.handle_stroke_selected;
-        let text_fill = theme.node_stroke;
-        let text_halo = {
-            let rgba = theme.raster_clear.to_rgba8();
-            Color::from_rgba8(rgba.r, rgba.g, rgba.b, 210)
-        };
-
-        for widget in &self.fixture.widgets {
-            let id = widget_id_for(widget);
-            let Some(node) = self.dag.fixture.nodes.iter().find(|n| n.id == id) else { continue };
-            let hw = node.width * 0.5;
-            let hh = node.height * 0.5;
-            let px = (10.5 * cam.zoom).clamp(8.0, 16.0);
-            match widget {
-                Widget::InputSlider { value, .. } => {
-                    let track_left = node.x - hw + 12.0;
-                    let track_right = node.x + hw - 28.0;
-                    let track_y = node.y + 8.0;
-                    let track_h = 8.0;
-                    let track = RoundedRect::new(
-                        track_left,
-                        track_y - track_h * 0.5,
-                        track_right,
-                        track_y + track_h * 0.5,
-                        RoundedRectRadii::from_single_radius(4.0),
-                    );
-                    scene.fill(Fill::NonZero, aff, track_fill, None, &track);
-                    scene.stroke(&Stroke::new(1.0), aff, track_stroke, None, &track);
-                    let t = ((*value - FLOW_SLIDER_MIN) / (FLOW_SLIDER_MAX - FLOW_SLIDER_MIN)).clamp(0.0, 1.0);
-                    let thumb_x = track_left + t * (track_right - track_left);
-                    scene.fill(Fill::NonZero, aff, thumb_fill, None, &Circle::new(Point::new(thumb_x, track_y), 6.0));
-                    let label = format!("{value:.1}");
-                    let screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y - hh + 16.0));
-                    append_label(scene, &label, screen, px, text_fill, text_halo);
-                }
-                Widget::InputNote { text, .. } => {
-                    let display = if text.is_empty() { "Note…" } else { text.as_str() };
-                    let screen = world_to_screen(&cam, &viewport, Point::new(node.x - hw + 14.0, node.y + 6.0));
-                    append_label(scene, display, screen, px, text_fill, text_halo);
-                }
-                Widget::OutputPreview { preview, .. } => {
-                    let display = Self::format_dictionary_preview(preview);
-                    let screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + 10.0));
-                    append_label(scene, &display, screen, px * 1.05, text_fill, text_halo);
-                }
-                _ => {}
-            }
-        }
-    }
-
     pub fn preview_text(&self) -> String {
         self.fixture
             .widgets
             .iter()
             .find_map(|w| match w {
-                Widget::OutputPreview { preview, .. } => preview
-                    .get("number")
-                    .and_then(|v| v.as_atom())
-                    .and_then(|a| a.as_f64())
-                    .map(Self::format_preview_number)
-                    .or_else(|| preview.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string)),
+                Widget::OutputPreview { preview, .. } => Some(format_dictionary_preview(preview)),
                 _ => None,
             })
             .unwrap_or_else(|| "—".into())
@@ -1034,7 +1016,6 @@ impl FlowHost {
 
     pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, width: u32, height: u32, dpr: f64) {
         self.dag.paint_scene(scene, width, height, dpr);
-        self.paint_flow_widget_chrome(scene, width, height, dpr);
     }
 }
 
@@ -1088,6 +1069,7 @@ impl FlowSessionInner {
         let mut scene = cavas::vello::Scene::new();
         let clear = self.host.dag.vello_theme.raster_clear;
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
+        let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, self.dpr);
         self.gpu.render_frame(&scene, clear)
     }
 }
@@ -1396,6 +1378,26 @@ mod tests {
         (screen.x, screen.y)
     }
 
+    fn widget_slider_track_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f64) {
+        let node = host.dag.fixture.nodes.iter().find(|n| n.id == widget_id).expect("node");
+        let (wx, wy) = dag::slider_track_center(node).expect("slider track");
+        let cam = Camera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
+        let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
+        let screen = world_to_screen(&cam, &viewport, Point::new(wx, wy));
+        (screen.x, screen.y)
+    }
+
+    #[test]
+    fn default_fixture_maps_widgets_to_native_dag_kinds() {
+        let host = host_with_test_bridge();
+        let slider = host.dag.fixture.nodes.iter().find(|n| n.id == "slider").expect("slider");
+        assert!(matches!(slider.kind, DagNodeKind::Slider { .. }));
+        let add = host.dag.fixture.nodes.iter().find(|n| n.id == "add").expect("add");
+        assert!(matches!(add.kind, DagNodeKind::Computation { .. }));
+        let preview = host.dag.fixture.nodes.iter().find(|n| n.id == "preview").expect("preview");
+        assert!(matches!(preview.kind, DagNodeKind::Preview { .. }));
+    }
+
     #[test]
     fn default_fixture_evaluates_add_preview() {
         let host = host_with_test_bridge();
@@ -1407,6 +1409,30 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_slider_value("slider", 5.0);
         assert_eq!(host.preview_text(), "5");
+    }
+
+    #[test]
+    fn dag_slider_drag_syncs_fixture_value() {
+        let mut host = host_with_test_bridge();
+        host.set_viewport(800, 600, 1.0);
+        let slider_node = host.dag.fixture.nodes.iter().find(|n| n.id == "slider").expect("slider").clone();
+        let DagNodeKind::Slider { .. } = slider_node.kind else {
+            panic!("expected slider kind");
+        };
+        let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
+        host.pointer_down_screen(sx, sy, false, false);
+        host.pointer_move_screen(sx + 80.0, sy);
+        host.pointer_up_screen(sx + 80.0, sy);
+        let value = host
+            .fixture
+            .widgets
+            .iter()
+            .find_map(|w| match w {
+                Widget::InputSlider { id, value } if id == "slider" => Some(*value),
+                _ => None,
+            })
+            .unwrap();
+        assert!(value > 3.0);
     }
 
     #[test]
@@ -1424,7 +1450,7 @@ mod tests {
     fn canvas_slider_hit_adjusts_value_playground_viewport() {
         let mut host = host_with_test_bridge();
         host.set_viewport(1259, 706, 1.0);
-        let (sx, sy) = widget_screen_point(&host, "slider");
+        let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
         host.pointer_down_screen(sx, sy, false, false);
         host.pointer_move_screen(sx + 90.0, sy);
         host.pointer_up_screen(sx + 90.0, sy);
@@ -1444,7 +1470,7 @@ mod tests {
     fn canvas_slider_hit_adjusts_value() {
         let mut host = host_with_test_bridge();
         host.set_viewport(800, 600, 1.0);
-        let (sx, sy) = widget_screen_point(&host, "slider");
+        let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
         host.pointer_down_screen(sx, sy, false, false);
         host.pointer_move_screen(sx + 80.0, sy);
         host.pointer_up_screen(sx + 80.0, sy);

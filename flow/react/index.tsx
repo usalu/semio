@@ -812,6 +812,8 @@ export function FlowCanvas({
       resize();
       const ro = new ResizeObserver(resize);
       ro.observe(container);
+      const visualViewport = globalThis.visualViewport;
+      visualViewport?.addEventListener("resize", resize);
       const tick = () => {
         renderFrame();
         rafRef.current = requestAnimationFrame(tick);
@@ -819,6 +821,7 @@ export function FlowCanvas({
       rafRef.current = requestAnimationFrame(tick);
       cleanupResize = () => {
         ro.disconnect();
+        visualViewport?.removeEventListener("resize", resize);
         if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       };
     })();

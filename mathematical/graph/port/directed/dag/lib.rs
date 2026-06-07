@@ -135,6 +135,18 @@ pub enum DagNodeKind {
         media: Option<DagMedia>,
         input: IoPortSpec,
     },
+    Note {
+        text: String,
+        output: IoPortSpec,
+    },
+    Preview {
+        text: String,
+        input: IoPortSpec,
+    },
+    Action {
+        label: String,
+        input: IoPortSpec,
+    },
 }
 
 /// 📦 DAG node with shared layout fields and a tagged kind.
@@ -197,7 +209,9 @@ impl DagNodeSpec {
     pub fn inputs(&self) -> &[IoPortSpec] {
         match &self.kind {
             DagNodeKind::Computation { inputs, .. } => inputs,
-            DagNodeKind::Screen { input, .. } => std::slice::from_ref(input),
+            DagNodeKind::Screen { input, .. } | DagNodeKind::Preview { input, .. } | DagNodeKind::Action { input, .. } => {
+                std::slice::from_ref(input)
+            }
             _ => EMPTY_PORTS,
         }
     }
@@ -206,7 +220,9 @@ impl DagNodeSpec {
     pub fn outputs(&self) -> &[IoPortSpec] {
         match &self.kind {
             DagNodeKind::Computation { outputs, .. } => outputs,
-            DagNodeKind::Slider { output, .. } | DagNodeKind::Select { output, .. } => std::slice::from_ref(output),
+            DagNodeKind::Slider { output, .. }
+            | DagNodeKind::Select { output, .. }
+            | DagNodeKind::Note { output, .. } => std::slice::from_ref(output),
             _ => EMPTY_PORTS,
         }
     }
@@ -214,6 +230,17 @@ impl DagNodeSpec {
 
 fn point_in_rect(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f64) -> bool {
     px >= x0.min(x1) && px <= x0.max(x1) && py >= y0.min(y1) && py <= y0.max(y1)
+}
+
+/// 📍 World-space center of the draggable slider track.
+pub fn slider_track_center(node: &DagNodeSpec) -> Option<(f64, f64)> {
+    match &node.kind {
+        DagNodeKind::Slider { .. } => {
+            let (x0, y0, x1, y1) = slider_track_bounds(node);
+            Some(((x0 + x1) * 0.5, (y0 + y1) * 0.5))
+        }
+        _ => None,
+    }
 }
 
 fn slider_track_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
@@ -229,6 +256,27 @@ fn select_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
     let hw = node.width * 0.5;
     let hh = node.height * 0.5;
     (node.x - hw + 8.0, node.y + hh * 0.05, node.x + hw - 22.0, node.y + hh * 0.55)
+}
+
+fn note_content_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
+    let hw = node.width * 0.5;
+    let hh = node.height * 0.5;
+    let pad = 10.0;
+    (node.x - hw + pad, node.y - hh + pad, node.x + hw - pad, node.y + hh - pad)
+}
+
+fn preview_content_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
+    let hw = node.width * 0.5;
+    let hh = node.height * 0.5;
+    let pad = 10.0;
+    (node.x - hw + pad, node.y - hh + pad, node.x + hw - pad, node.y + hh - pad)
+}
+
+fn action_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
+    let hw = node.width * 0.5;
+    let hh = node.height * 0.5;
+    let pad = 8.0;
+    (node.x - hw + pad, node.y - hh * 0.35, node.x + hw - pad, node.y + hh * 0.35)
 }
 
 fn set_slider_value_from_x(node: &mut DagNodeSpec, world_x: f64) -> Option<f64> {
@@ -632,8 +680,12 @@ impl DagDrawLod {
         matches!(self, Self::Normal | Self::Detail | Self::Micro)
     }
 
-    pub fn shows_port_labels(self) -> bool {
+    pub fn shows_name(self) -> bool {
         matches!(self, Self::Detail | Self::Micro)
+    }
+
+    pub fn shows_port_labels(self) -> bool {
+        matches!(self, Self::Micro)
     }
 
     pub fn shows_handles(self) -> bool {
@@ -1128,19 +1180,21 @@ impl DagHost {
         label_halo: cavas::vello::peniko::Color,
     ) {
         use cavas::camera::world_to_screen;
-        use cavas::text::append_label;
+        use cavas::text::{append_label, label_extent};
         use cavas::vello::kurbo::Point;
         let hw = node.width * 0.5;
+        let handle_inset = 18.0 / cam.zoom.max(0.05);
         let inputs = node.inputs();
         let outputs = node.outputs();
         for (i, port) in inputs.iter().enumerate() {
             let world_y = port_center_y(node, i, inputs.len());
-            let world = Point::new(node.x - hw + 8.0 / cam.zoom.max(0.05), world_y);
+            let world = Point::new(node.x - hw + handle_inset, world_y);
             append_label(scene, &port.label, world_to_screen(cam, viewport, world), px, label_fill, label_halo);
         }
         for (i, port) in outputs.iter().enumerate() {
             let world_y = port_center_y(node, i, outputs.len());
-            let world = Point::new(node.x + hw - 8.0 / cam.zoom.max(0.05), world_y);
+            let (label_w, _) = label_extent(&port.label, px);
+            let world = Point::new(node.x + hw - handle_inset - label_w, world_y);
             append_label(scene, &port.label, world_to_screen(cam, viewport, world), px, label_fill, label_halo);
         }
     }
@@ -1153,15 +1207,35 @@ impl DagHost {
         label_fill: cavas::vello::peniko::Color,
         label_halo: cavas::vello::peniko::Color,
     ) {
-        use cavas::text::append_label;
+        use cavas::text::{append_label, label_extent};
         use cavas::vello::kurbo::{Affine, Point};
-        if name.trim().is_empty() {
+        let trimmed = name.trim();
+        if trimmed.is_empty() {
             return;
         }
+        let name_px = px * 1.05;
+        let (w, h) = label_extent(trimmed, name_px);
         let mut label_scene = cavas::vello::Scene::new();
-        append_label(&mut label_scene, name, Point::new(0.0, 0.0), px * 1.05, label_fill, label_halo);
-        let rot = Affine::translate((center_screen.x, center_screen.y)) * Affine::rotate(-std::f64::consts::FRAC_PI_2);
+        append_label(&mut label_scene, trimmed, Point::new(0.0, 0.0), name_px, label_fill, label_halo);
+        let rot = Affine::translate((center_screen.x, center_screen.y))
+            * Affine::rotate(-std::f64::consts::FRAC_PI_2)
+            * Affine::translate((-w * 0.5, -h * 0.5));
         scene.append(&label_scene, Some(rot));
+    }
+
+    fn paint_node_name(
+        scene: &mut cavas::vello::Scene,
+        center_screen: cavas::vello::kurbo::Point,
+        node: &DagNodeSpec,
+        px: f64,
+        label_fill: cavas::vello::peniko::Color,
+        label_halo: cavas::vello::peniko::Color,
+    ) {
+        if node.width >= node.height {
+            Self::paint_node_name_horizontal(scene, center_screen, &node.name, px, label_fill, label_halo);
+        } else {
+            Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
+        }
     }
 
     fn paint_node_name_horizontal(
@@ -1172,18 +1246,17 @@ impl DagHost {
         label_fill: cavas::vello::peniko::Color,
         label_halo: cavas::vello::peniko::Color,
     ) {
-        use cavas::text::append_label;
+        use cavas::text::{append_label, label_extent};
         use cavas::vello::kurbo::Point;
         let trimmed = name.trim();
         if trimmed.is_empty() {
             return;
         }
-        let offset_x = -(trimmed.len() as f64 * px * 0.62 * 0.5);
-        let offset_y = -px * 0.5;
+        let (w, h) = label_extent(trimmed, px);
         append_label(
             scene,
             trimmed,
-            Point::new(center_screen.x + offset_x, center_screen.y + offset_y),
+            Point::new(center_screen.x - w * 0.5, center_screen.y - h * 0.5),
             px,
             label_fill,
             label_halo,
@@ -1222,6 +1295,9 @@ impl DagHost {
         stroke: cavas::vello::peniko::Color,
     ) {
         use cavas::vello::kurbo::{Line, Point, Stroke};
+        if !matches!(node.kind, DagNodeKind::Computation { .. }) {
+            return;
+        }
         let inputs = node.inputs();
         let outputs = node.outputs();
         if inputs.is_empty() && outputs.is_empty() {
@@ -1294,6 +1370,11 @@ impl DagHost {
                 Self::paint_section_dividers(scene, aff, node, node_stroke);
                 Self::paint_channel_row_dividers(scene, aff, node, node_stroke);
             }
+            let paint_name = |scene: &mut cavas::vello::Scene| {
+                if lod.shows_name() {
+                    Self::paint_node_name(scene, center_screen, node, px, label_fill, label_halo);
+                }
+            };
             match &node.kind {
                 DagNodeKind::Computation { variadic_inputs, .. } => {
                     if lod.shows_port_labels() {
@@ -1302,10 +1383,10 @@ impl DagHost {
                             Self::paint_variadic_plus_controls(scene, &cam, &viewport, node, px, accent, label_halo);
                         }
                     }
-                    Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
+                    paint_name(scene);
                 }
                 DagNodeKind::Slider { min, max, value, .. } => {
-                    Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
+                    paint_name(scene);
                     if lod.shows_controls() {
                         let (x0, y0, x1, y1) = slider_track_bounds(node);
                         let track = Line::new(Point::new(x0, (y0 + y1) * 0.5), Point::new(x1, (y0 + y1) * 0.5));
@@ -1317,16 +1398,16 @@ impl DagHost {
                         scene.fill(Fill::NonZero, aff, accent, None, &Circle::new(Point::new(thumb_x, thumb_y), 5.0 / cam.zoom.max(0.05)));
                     }
                     if lod.shows_detail_text() {
-                        let value_text = format!("{value:.2}");
-                        let value_pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + hh * 0.45));
-                        append_label(scene, &value_text, value_pos, px * 0.9, label_fill, label_halo);
+                        let value_text = format!("{value:.1}");
+                        let value_pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
+                        append_label(scene, &value_text, value_pos, px * 0.95, label_fill, label_halo);
                     }
                     if lod.shows_port_labels() {
                         Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
                     }
                 }
                 DagNodeKind::Select { options, selected, .. } => {
-                    Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
+                    paint_name(scene);
                     if lod.shows_controls() {
                         let (cx0, cy0, cx1, cy1) = select_control_bounds(node);
                         let control = Rect::new(cx0, cy0, cx1, cy1);
@@ -1344,7 +1425,7 @@ impl DagHost {
                     }
                 }
                 DagNodeKind::Screen { media, .. } => {
-                    Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
+                    paint_name(scene);
                     if lod.shows_controls() {
                         let inset = 8.0 / cam.zoom.max(0.05);
                         let frame = Rect::new(node.x - hw + inset, node.y - hh + hh * 0.35, node.x + hw - inset, node.y + hh - inset);
@@ -1360,6 +1441,53 @@ impl DagHost {
                             };
                             let hint = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + hh * 0.1));
                             append_label(scene, kind_label, hint, px * 0.85, vello_color_with_alpha(label_fill, 140), label_halo);
+                        }
+                    }
+                    if lod.shows_port_labels() {
+                        Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                    }
+                }
+                DagNodeKind::Note { text, .. } => {
+                    paint_name(scene);
+                    if lod.shows_controls() {
+                        let (x0, y0, x1, y1) = note_content_bounds(node);
+                        let frame = Rect::new(x0, y0, x1, y1);
+                        scene.stroke(&Stroke::new(1.0), aff, theme.edge_stroke, None, &frame);
+                    }
+                    if lod.shows_detail_text() {
+                        let display = if text.is_empty() { "Note…" } else { text.as_str() };
+                        let pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
+                        append_label(scene, display, pos, px * 0.95, label_fill, label_halo);
+                    }
+                    if lod.shows_port_labels() {
+                        Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                    }
+                }
+                DagNodeKind::Preview { text, .. } => {
+                    paint_name(scene);
+                    if lod.shows_controls() {
+                        let (x0, y0, x1, y1) = preview_content_bounds(node);
+                        let frame = Rect::new(x0, y0, x1, y1);
+                        scene.stroke(&Stroke::new(1.0), aff, theme.edge_stroke_selection_exit, None, &frame);
+                    }
+                    if lod.shows_detail_text() || lod.shows_controls() {
+                        let display = if text.is_empty() { "—" } else { text.as_str() };
+                        let pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
+                        append_label(scene, display, pos, px * 1.05, label_fill, label_halo);
+                    }
+                    if lod.shows_port_labels() {
+                        Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                    }
+                }
+                DagNodeKind::Action { label, .. } => {
+                    paint_name(scene);
+                    if lod.shows_controls() {
+                        let (x0, y0, x1, y1) = action_control_bounds(node);
+                        let control = Rect::new(x0, y0, x1, y1);
+                        scene.stroke(&Stroke::new(1.2), aff, theme.edge_stroke, None, &control);
+                        if lod.shows_detail_text() {
+                            let pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
+                            append_label(scene, label, pos, px * 0.95, label_fill, label_halo);
                         }
                     }
                     if lod.shows_port_labels() {
@@ -1510,6 +1638,7 @@ mod wasm_session {
             let mut scene = cavas::vello::Scene::new();
             let clear = inner.host.vello_theme.raster_clear;
             inner.host.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
+            let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
             inner.gpu.render_frame(&scene, clear)
         }
     }
@@ -1898,6 +2027,40 @@ mod tests {
         assert_eq!(dag_draw_lod(1.0), DagDrawLod::Normal);
         assert_eq!(dag_draw_lod(2.0), DagDrawLod::Detail);
         assert_eq!(dag_draw_lod(5.0), DagDrawLod::Micro);
+    }
+
+    #[test]
+    fn dag_draw_lod_progressive_disclosure_gates() {
+        assert!(!DagDrawLod::Normal.shows_name());
+        assert!(DagDrawLod::Detail.shows_name());
+        assert!(!DagDrawLod::Detail.shows_port_labels());
+        assert!(DagDrawLod::Micro.shows_port_labels());
+    }
+
+    #[test]
+    fn note_preview_action_port_accessors() {
+        let note = DagNodeSpec {
+            id: "note".into(),
+            name: "Note".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 160.0,
+            height: 48.0,
+            kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into() } },
+        };
+        assert!(note.inputs().is_empty());
+        assert_eq!(note.outputs().len(), 1);
+        let preview = DagNodeSpec {
+            id: "preview".into(),
+            name: "Preview".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 120.0,
+            height: 48.0,
+            kind: DagNodeKind::Preview { text: "3".into(), input: IoPortSpec { id: "in".into(), label: "in".into() } },
+        };
+        assert_eq!(preview.inputs().len(), 1);
+        assert!(preview.outputs().is_empty());
     }
 
     #[test]

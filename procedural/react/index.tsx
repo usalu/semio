@@ -13,7 +13,7 @@ import {
 	isRenderableMeshTransfer,
 	meshTransferToGeometryData,
 	type BrepjsGeometryKernel as BrepKernelType,
-	type SolidRef,
+	type GeometryRef,
 	type Vec3,
 } from "@geometry/brep/js";
 import {
@@ -264,6 +264,7 @@ export interface ProceduralEditorProps {
 	readonly reorganize?: FlowReorganizeRequest;
 	readonly extensionRevision?: number;
 	readonly onPreviewText?: (text: string) => void;
+	readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
 	readonly onFixtureChange?: (fixtureJson: string) => void;
 }
 
@@ -286,6 +287,7 @@ export function ProceduralEditor({
 	reorganize,
 	extensionRevision = 0,
 	onPreviewText,
+	onCatalogueReady,
 	onFixtureChange,
 }: ProceduralEditorProps): ReactNode {
 	const [brepSolidId, setBrepSolidId] = useState<string | null>(null);
@@ -314,6 +316,7 @@ export function ProceduralEditor({
 					extensionRevision={extensionRevision}
 					extensionHost={extensionHost}
 					onPreviewText={onPreviewText}
+					onCatalogueReady={onCatalogueReady}
 					onEvalOutputs={onEvalOutputs}
 					onFixtureChange={onFixtureChange}
 					className="h-full w-full"

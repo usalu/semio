@@ -140,9 +140,40 @@ export type SolidRef = kernelGeometry.SolidRef;
 export type FaceRef = kernelGeometry.FaceRef;
 export type EdgeRef = kernelGeometry.EdgeRef;
 export type VertexRef = kernelGeometry.VertexRef;
+export type WireRef = kernelGeometry.WireRef;
+export type ShellRef = kernelGeometry.ShellRef;
 export type SolidPrimitive = kernelGeometry.SolidPrimitive;
 export type SolidRecord = kernelGeometry.SolidRecord;
 export const solidRef = kernelGeometry.solidRef;
+
+// #region 🧭GeometryRef
+/** @emoji 🧭 Self-describing geometry handle kind prefix. */
+export type GeometryKind = "vertex" | "edge" | "wire" | "face" | "shell" | "solid" | "compound" | "drawing";
+
+/** @emoji 🧭 Opaque geometry handle (`solid-3`, `edge-7`, …). */
+export type GeometryRef = string & { readonly __brand: "GeometryRef" };
+
+export function geometryRef(id: string): GeometryRef {
+	return id as GeometryRef;
+}
+
+export function parseGeometryKind(ref: GeometryRef | string): GeometryKind | null {
+	const prefix = String(ref).split("-")[0];
+	if (
+		prefix === "vertex" ||
+		prefix === "edge" ||
+		prefix === "wire" ||
+		prefix === "face" ||
+		prefix === "shell" ||
+		prefix === "solid" ||
+		prefix === "compound" ||
+		prefix === "drawing"
+	) {
+		return prefix;
+	}
+	return null;
+}
+// #endregion 🧭GeometryRef
 
 // #region 🖼️MeshTransfer
 /** @emoji 🧩 Triangle index range for one B-Rep face. */
@@ -178,6 +209,7 @@ export interface MeshTransfer {
 	readonly normal: Float32Array;
 	readonly index: Uint32Array;
 	readonly edges: Float32Array;
+	readonly points?: Float32Array;
 	readonly faceGroups: readonly FaceGroup[];
 	readonly edgeGroups: readonly EdgeGroup[];
 	readonly faceInfos: readonly FaceInfo[];
@@ -192,6 +224,7 @@ export function emptyMeshTransfer(): MeshTransfer {
 		normal: new Float32Array(0),
 		index: new Uint32Array(0),
 		edges: new Float32Array(0),
+		points: new Float32Array(0),
 		faceGroups: [],
 		edgeGroups: [],
 		faceInfos: [],
@@ -226,6 +259,9 @@ export interface BrepPreviewKernel {
 /** @emoji 🔌 Model-free BREP kernel: construction, tessellation, measurement. */
 export interface BrepKernel extends BrepPreviewKernel {
 	readonly id: string;
+	getGeometryKind(ref: GeometryRef): GeometryKind | null;
+	tessellateGeometry(ref: GeometryRef, tolerance: number): Promise<MeshTransfer>;
+	disposeGeometry(ref: GeometryRef): void;
 	createBoxFromCorners(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<SolidRef>;
 	createSphere(center: Vec3, radius: number): Promise<SolidRef>;
 	createCylinder(base: Vec3, axis: Vec3, radius: number, height: number): Promise<SolidRef>;
@@ -235,5 +271,112 @@ export interface BrepKernel extends BrepPreviewKernel {
 	volume(solid: SolidRef): Promise<number>;
 	tessellate(solid: SolidRef, tolerance: number): Promise<MeshTransfer>;
 	disposeSolid(solid: SolidRef): void;
+	createBoxFromCornersSync(input: { cornerA: Vec3; cornerB: Vec3; height: number }): SolidRef;
+	createSphereSync(center: Vec3, radius: number): SolidRef;
+	createCylinderSync(base: Vec3, axis: Vec3, radius: number, height: number): SolidRef;
+	extrudeSolidSync(solid: SolidRef, direction: Vec3, distance: number): SolidRef;
+	translateSolidSync(solid: SolidRef, offset: Vec3): SolidRef;
+	fuseSolidsSync(solids: readonly SolidRef[]): SolidRef;
+	boxSync(width: number, depth: number, height: number, at?: Vec3): GeometryRef;
+	spherePrimSync(radius: number, at?: Vec3): GeometryRef;
+	cylinderPrimSync(radius: number, height: number, base?: Vec3, axis?: Vec3): GeometryRef;
+	coneSync(radius: number, height: number, base?: Vec3, axis?: Vec3): GeometryRef;
+	torusSync(major: number, minor: number, at?: Vec3): GeometryRef;
+	ellipsoidSync(rx: number, ry: number, rz: number, at?: Vec3): GeometryRef;
+	polyhedronSync(vertices: readonly Vec3[], faces: readonly (readonly number[])[]): GeometryRef;
+	polygonSync(points: readonly Vec3[]): GeometryRef;
+	lineSync(start: Vec3, end: Vec3): GeometryRef;
+	circleCurveSync(radius: number, at?: Vec3, normal?: Vec3): GeometryRef;
+	ellipseCurveSync(major: number, minor: number, at?: Vec3, normal?: Vec3): GeometryRef;
+	helixSync(radius: number, pitch: number, height: number, at?: Vec3): GeometryRef;
+	threePointArcSync(a: Vec3, b: Vec3, c: Vec3): GeometryRef;
+	tangentArcSync(start: Vec3, tangent: Vec3, end: Vec3): GeometryRef;
+	ellipseArcSync(major: number, minor: number, startAngle: number, endAngle: number, at?: Vec3): GeometryRef;
+	bezierSync(poles: readonly Vec3[]): GeometryRef;
+	bsplineApproxSync(poles: readonly Vec3[], degree?: number): GeometryRef;
+	interpolateCurveSync(points: readonly Vec3[], closed?: boolean): GeometryRef;
+	approximateCurveSync(points: readonly Vec3[], tolerance?: number): GeometryRef;
+	wireSync(edges: readonly GeometryRef[]): GeometryRef;
+	wireLoopSync(edges: readonly GeometryRef[]): GeometryRef;
+	faceSync(wires: readonly GeometryRef[]): GeometryRef;
+	filledFaceSync(wire: GeometryRef): GeometryRef;
+	fillSync(edges: readonly GeometryRef[]): GeometryRef;
+	subFaceSync(face: GeometryRef, wire: GeometryRef): GeometryRef;
+	offsetFaceSync(face: GeometryRef, distance: number): GeometryRef;
+	surfaceFromGridSync(grid: readonly (readonly Vec3[])[], uClosed?: boolean, vClosed?: boolean): GeometryRef;
+	drawRectangleSync(width: number, height: number): GeometryRef;
+	drawCircleSync(radius: number): GeometryRef;
+	drawEllipseSync(major: number, minor: number): GeometryRef;
+	drawRoundedRectangleSync(width: number, height: number, radius: number): GeometryRef;
+	drawPolysidesSync(radius: number, sides: number): GeometryRef;
+	sketchCircleSync(radius: number): GeometryRef;
+	sketchRectangleSync(width: number, height: number): GeometryRef;
+	extrudeSync(shape: GeometryRef, direction: Vec3, distance: number): GeometryRef;
+	revolveSync(shape: GeometryRef, axis: Vec3, angle: number): GeometryRef;
+	loftSync(sections: readonly GeometryRef[]): GeometryRef;
+	sweepSync(profile: GeometryRef, path: GeometryRef): GeometryRef;
+	supportExtrudeSync(shape: GeometryRef, direction: Vec3, distance: number): GeometryRef;
+	twistExtrudeSync(shape: GeometryRef, direction: Vec3, distance: number, angle: number): GeometryRef;
+	filletSync(shape: GeometryRef, radius: number): GeometryRef;
+	chamferSync(shape: GeometryRef, distance: number): GeometryRef;
+	shellSync(shape: GeometryRef, thickness: number): GeometryRef;
+	offsetSync(shape: GeometryRef, distance: number): GeometryRef;
+	thickenSync(shape: GeometryRef, thickness: number): GeometryRef;
+	draftSync(shape: GeometryRef, angle: number, direction: Vec3): GeometryRef;
+	hullSync(shapes: readonly GeometryRef[]): GeometryRef;
+	minkowskiSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	convexHullSync(shapes: readonly GeometryRef[]): GeometryRef;
+	fuseSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	cutSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	intersectSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	fuseAllSync(shapes: readonly GeometryRef[]): GeometryRef;
+	cutAllSync(base: GeometryRef, cutters: readonly GeometryRef[]): GeometryRef;
+	fuse2DSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	cut2DSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	intersect2DSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	translateGeomSync(shape: GeometryRef, offset: Vec3): GeometryRef;
+	rotateGeomSync(shape: GeometryRef, axis: Vec3, angle: number, center?: Vec3): GeometryRef;
+	mirrorGeomSync(shape: GeometryRef, planeOrigin: Vec3, planeNormal: Vec3): GeometryRef;
+	scaleGeomSync(shape: GeometryRef, factor: number, center?: Vec3): GeometryRef;
+	cloneGeomSync(shape: GeometryRef): GeometryRef;
+	linearPatternSync(shape: GeometryRef, direction: Vec3, count: number, spacing: number): GeometryRef;
+	circularPatternSync(shape: GeometryRef, axis: Vec3, count: number, angle: number): GeometryRef;
+	rectangularPatternSync(shape: GeometryRef, dirA: Vec3, countA: number, dirB: Vec3, countB: number, spacing: number): GeometryRef;
+	sectionSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	sectionToFaceSync(a: GeometryRef, b: GeometryRef): GeometryRef;
+	splitSync(shape: GeometryRef, tool: GeometryRef): readonly GeometryRef[];
+	sliceSync(shape: GeometryRef, planeOrigin: Vec3, planeNormal: Vec3): GeometryRef;
+	checkInterferenceSync(a: GeometryRef, b: GeometryRef): boolean;
+	curvePointAtSync(curve: GeometryRef, t: number): Vec3;
+	curveTangentAtSync(curve: GeometryRef, t: number): Vec3;
+	curveStartPointSync(curve: GeometryRef): Vec3;
+	curveEndPointSync(curve: GeometryRef): Vec3;
+	curveLengthSync(curve: GeometryRef): number;
+	curveIsClosedSync(curve: GeometryRef): boolean;
+	pointOnSurfaceSync(face: GeometryRef, u: number, v: number): Vec3;
+	normalAtSync(face: GeometryRef, u: number, v: number): Vec3;
+	uvBoundsSync(face: GeometryRef): { uMin: number; uMax: number; vMin: number; vMax: number };
+	faceCenterSync(face: GeometryRef): Vec3;
+	vertexPositionSync(vertex: GeometryRef): Vec3;
+	getBoundsSync(shape: GeometryRef): Aabb;
+	measureVolumeSync(shape: GeometryRef): number;
+	measureAreaSync(shape: GeometryRef): number;
+	measureLengthSync(shape: GeometryRef): number;
+	measureDistanceSync(a: GeometryRef, b: GeometryRef): number;
+	getEdgesSync(shape: GeometryRef): readonly GeometryRef[];
+	getFacesSync(shape: GeometryRef): readonly GeometryRef[];
+	getWiresSync(shape: GeometryRef): readonly GeometryRef[];
+	getVerticesSync(shape: GeometryRef): readonly GeometryRef[];
+	healSolidSync(shape: GeometryRef): GeometryRef;
+	healFaceSync(face: GeometryRef): GeometryRef;
+	autoHealSync(shape: GeometryRef): GeometryRef;
+	sewShellsSync(faces: readonly GeometryRef[]): GeometryRef;
+	solidFromShellSync(shell: GeometryRef): GeometryRef;
+	exportStepSync(shape: GeometryRef): Uint8Array;
+	exportStlSync(shape: GeometryRef, tolerance?: number): Uint8Array;
+	importStepSync(data: Uint8Array): GeometryRef;
+	importStlSync(data: Uint8Array): GeometryRef;
+	makeExternalGearSync(teeth: number, module: number, pressureAngle?: number): GeometryRef;
+	makeInternalGearSync(teeth: number, module: number, pressureAngle?: number): GeometryRef;
 }
 // #endregion 🔌BrepKernelInterface

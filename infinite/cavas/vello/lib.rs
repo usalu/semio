@@ -464,6 +464,18 @@ pub mod text {
         }
     }
 
+    /// @emoji 📐 Estimated label box size in screen px for layout (matches `append_label` padding).
+    pub fn label_extent(label: &str, px: f64) -> (f64, f64) {
+        let trimmed = label.trim();
+        if trimmed.is_empty() || px < 4.0 {
+            return (0.0, 0.0);
+        }
+        let pad = px * 0.35;
+        let w = (trimmed.len() as f64 * px * 0.62 + pad * 2.0).clamp(32.0, 2048.0);
+        let h = (px * 1.6 + pad * 2.0).clamp(16.0, 256.0);
+        (w, h)
+    }
+
     /// @emoji 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline).
     pub fn append_label(scene: &mut Scene, label: &str, origin: Point, px: f64, fill: Color, halo: Color) {
         let trimmed = label.trim();
@@ -471,8 +483,7 @@ pub mod text {
             return;
         }
         let pad = px * 0.35;
-        let w = (trimmed.len() as f64 * px * 0.62 + pad * 2.0).clamp(32.0, 2048.0);
-        let h = (px * 1.6 + pad * 2.0).clamp(16.0, 256.0);
+        let (w, h) = label_extent(trimmed, px);
         let text_y = pad + px;
         let family = usvg_options_map_labels().font_family.clone();
         let svg = format!(
@@ -665,6 +676,24 @@ pub mod raster {
 }
 // #endregion 🔖Raster
 
+// #region 🔖Render
+pub mod render {
+    use crate::vello::kurbo::Affine;
+    use crate::vello::Scene;
+
+    /// @emoji 📐 Scales a logical-viewport scene to the physical GPU surface (device pixel ratio).
+    pub fn scale_scene_for_device_pixel_ratio(scene: Scene, dpr: f64) -> Scene {
+        let scale = dpr.max(1.0);
+        if (scale - 1.0).abs() < f64::EPSILON {
+            return scene;
+        }
+        let mut scaled = Scene::new();
+        scaled.append(&scene, Some(Affine::scale(scale)));
+        scaled
+    }
+}
+// #endregion 🔖Render
+
 // #region 🔖CanvasContent
 pub mod canvas_content {
     use crate::vello::peniko::Color;
@@ -820,6 +849,17 @@ mod tests {
     use crate::vello::Scene;
 
     #[test]
+    fn scale_scene_for_device_pixel_ratio_scales_logical_scene() {
+        let mut scene = Scene::new();
+        text::append_label(&mut scene, "A", Point::new(10.0, 10.0), 12.0, Color::BLACK, Color::WHITE);
+        let logical = scene.encoding().path_tags.len();
+        let scaled = super::render::scale_scene_for_device_pixel_ratio(scene, 2.0);
+        assert!(scaled.encoding().path_tags.len() >= logical);
+        let identity = super::render::scale_scene_for_device_pixel_ratio(Scene::new(), 1.0);
+        assert_eq!(identity.encoding().path_tags.len(), 0);
+    }
+
+    #[test]
     fn append_label_renders_glyphs() {
         let mut scene = Scene::new();
         text::append_label(&mut scene, "Zürich", Point::new(40.0, 40.0), 14.0, Color::BLACK, Color::WHITE);
@@ -827,6 +867,14 @@ mod tests {
         let mut empty = Scene::new();
         text::append_label(&mut empty, "  ", Point::new(0.0, 0.0), 14.0, Color::BLACK, Color::WHITE);
         assert!(empty.encoding().path_tags.is_empty());
+    }
+
+    #[test]
+    fn label_extent_matches_append_label_box() {
+        let (w, h) = text::label_extent("math.add", 12.0);
+        assert!(w > 32.0);
+        assert!(h >= 16.0);
+        assert_eq!(text::label_extent("  ", 12.0), (0.0, 0.0));
     }
 
     #[test]

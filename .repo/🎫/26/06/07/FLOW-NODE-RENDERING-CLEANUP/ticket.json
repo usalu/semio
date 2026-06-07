@@ -1,0 +1,19 @@
+{
+  "title": "Flow Node Rendering Cleanup",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Refactor flow node rendering: map widgets to native DAG node kinds, remove overlay, fix label centering and handle overlap, LOD-driven progressive disclosure.",
+  "summary": "Refactored flow node rendering for clean, consistent widgets. Flow widgets now map to native DAG node kinds (Slider, Note, Preview, Action, Computation) instead of generic computation boxes with a paint overlay. Removed paint_flow_widget_chrome and duplicate slider pointer handling from flow core; slider drag uses native DAG interaction with sync back to fixture widgets. Added Note/Preview/Action to DagNodeKind with dedicated paint paths. Fixed vertical label centering via label_extent helper in cavas. Fixed port label/handle overlap by insetting labels. LOD progressive disclosure: Normal shows controls only; Detail adds names/values; Micro adds port labels. Section dividers limited to computation nodes. All Rust tests pass (dag 20, flow 13, cavas 5); flow react vitest 12 pass. WASM rebuilt for dag and flow core.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1552"
+  },
+  "goal": "🎯geometry🎯brep",
+  "plan": {
+    "client": "cursor",
+    "id": "c2bb0675",
+    "local": "flow_node_rendering_cleanup_c2bb0675.plan.md"
+  },
+  "sessions": [
+    "⚪fc185d24c6b14673a058c251ee3e1c41"
+  ]
+}
