@@ -269,12 +269,18 @@ export function parseFlowCatalogueSections(json: string): CatalogueSection[] {
 }
 // #endregion 🔖Catalogue
 
+export interface FlowReorganizeRequest {
+  readonly epoch: number;
+  readonly optionsJson: string;
+}
+
 // #region 🔖FlowCanvas
 export interface FlowCanvasProps {
   readonly fixtureJson?: string;
   readonly className?: string;
   readonly store?: FlowStore;
   readonly fixtureDragDrop?: boolean;
+  readonly reorganize?: FlowReorganizeRequest;
   readonly onPreviewText?: (text: string) => void;
   readonly onFixtureChange?: (fixtureJson: string) => void;
   readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
@@ -286,6 +292,7 @@ export function FlowCanvas({
   className,
   store,
   fixtureDragDrop = false,
+  reorganize,
   onPreviewText,
   onFixtureChange,
   onCatalogueReady,
@@ -368,6 +375,20 @@ export function FlowCanvas({
     console.log(`[DEBUG] flow evaluate preview: ${text}`);
   }, []);
 
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session || !reorganize || reorganize.epoch <= 0) return;
+    try {
+      session.reorganize(reorganize.optionsJson);
+      console.log("[DEBUG] flow canvas reorganized:", session.fixtureJson());
+      evaluate();
+      persistFixture();
+      renderFrame();
+    } catch (err) {
+      console.log(`[DEBUG] flow canvas reorganize failed: ${String(err)}`);
+    }
+  }, [reorganize?.epoch, reorganize?.optionsJson, evaluate, persistFixture, renderFrame]);
+
   const loadCatalogue = useCallback((session: FlowSession) => {
     const sections = parseFlowCatalogueSections(session.catalogueJson());
     onCatalogueReadyRef.current?.(sections);
@@ -413,6 +434,7 @@ export function FlowCanvas({
     const dpr = globalThis.devicePixelRatio || 1;
     const initW = Math.max(1, Math.round(rect.width));
     const initH = Math.max(1, Math.round(rect.height));
+    session.setSize(initW, initH, dpr);
     canvas.width = Math.round(initW * dpr);
     canvas.height = Math.round(initH * dpr);
     canvas.style.width = `${initW}px`;

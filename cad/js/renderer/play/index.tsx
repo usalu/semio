@@ -1598,7 +1598,7 @@ function PlaySession({
       onHoveredPickKeyChange={onHoveredPickKeyChange}
       onHoverTarget={onCanvasHoverTarget}
       autoFitMeshes={autoFitMeshes}
-      autoFitBehavior="changes"
+      autoFitBehavior={autoFitBehavior}
       transformGumballConfig={transformGumballConfig}
       onTransformGumballCommit={onTransformGumballCommit}
       onDeleteSelection={onDeleteSelection}
@@ -2395,7 +2395,6 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
     setRendererSelectionByModel,
     interactionSelectionByState,
     setInteractionSelectionByState,
-    modelDefinitionRevision,
     setModelDefinitionRevision,
     handleApplyTransformation,
     commitModelForDefinition,
@@ -2428,11 +2427,12 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
   );
   const paneModel = cadPlayPaneModel(flushedModelsByDefinitionId, pane);
   const viewModel = paneModel;
+  const paneModelRevision = viewModel.revision;
   const pickGeometry = reactHostPort.useMemo(
     () => cadPlayPaneGeometry(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
-    [flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision],
+    [flushedModelsByDefinitionId, modelDefinitionId, paneModel, paneModelRevision],
   );
-  const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(viewModel.toJSON()), nodes: [] }), [viewModel, modelDefinitionRevision]);
+  const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(viewModel.toJSON()), nodes: [] }), [viewModel, paneModelRevision]);
   const commitPaneModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(modelDefinitionId, model), [commitModelForDefinition, modelDefinitionId]);
   const onTransformGumballCommit = reactHostPort.useCallback((diff: ModelDiff) => handleTransformGumballCommit(modelDefinitionId, diff), [handleTransformGumballCommit, modelDefinitionId]);
   const onSnapshot = reactHostPort.useCallback((snapshot: InteractionSnapshot) => handleSnapshotChangeForPane(pane, snapshot), [handleSnapshotChangeForPane, pane]);
@@ -2488,7 +2488,7 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         onRendererSelectionByModel={setRendererSelectionByModel}
         interactionSelectionByState={interactionSelectionByState}
         onInteractionSelectionByState={setInteractionSelectionByState}
-        modelDefinitionRevision={modelDefinitionRevision}
+        modelDefinitionRevision={paneModelRevision}
         onModelDefinitionRevision={setModelDefinitionRevision}
         onApplyTransformation={handleApplyTransformation}
         pickGeometry={pickGeometry}
@@ -2500,6 +2500,7 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         onHoveredPickKeyChange={onHoveredPickKeyChange}
         onCanvasHoverTarget={onCanvasHoverTarget}
         autoFitMeshes={autoFitMeshes}
+        autoFitBehavior="initial"
         transformGumballConfig={transformGumballConfig}
         onTransformGumballCommit={onTransformGumballCommit}
         onDeleteSelection={handleDeleteSelection}

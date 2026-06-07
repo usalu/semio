@@ -7,22 +7,22 @@ todos:
     status: completed
   - id: rust-flow-reorganize
     content: Add FlowHost::reorganize (force layout, overwrite fixture.layout) + FlowSession.reorganize WASM; extend flow core tests
-    status: in_progress
+    status: completed
   - id: react-canvases
     content: Add reorganize/onFixtureChange props + epoch effect to DagCanvas and FlowCanvas
-    status: pending
+    status: completed
   - id: dag-play-engagement
     content: "DagPlayController: spacing/orientation/input/epoch state, windowEngagement(), rebuildShellMode, run() handlers, getters"
-    status: pending
+    status: completed
   - id: flow-play-engagement
     content: "FlowPlayController: same engagement + reorganize state, extend run(), getters"
-    status: pending
+    status: completed
   - id: wire-hosts
     content: Pass reorganize + onFixtureChange props from controllers into DagCanvas/FlowCanvas in the playground renderer surface hosts
-    status: pending
+    status: completed
   - id: ticket-validate
     content: Open repo ticket, rebuild WASM, run @dag/@flow vitest, extend runtime validators to exercise the Reorganize engagement
-    status: pending
+    status: completed
 isProject: false
 ---
 

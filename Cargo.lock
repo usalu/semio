@@ -1370,6 +1370,7 @@ checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
 name = "flow_core"
 version = "0.1.0"
 dependencies = [
+ "flow_module_dictionary",
  "flow_module_logic",
  "flow_module_math",
  "flow_module_text",
@@ -1383,6 +1384,13 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "flow_module_dictionary"
+version = "0.1.0"
+dependencies = [
+ "neural_engine",
 ]
 
 [[package]]

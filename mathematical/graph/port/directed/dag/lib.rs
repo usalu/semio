@@ -13,23 +13,7 @@ use graph::BoardEvent;
 pub type DagBoardEngine = DirectedPortGraphEngine;
 
 // #region 🔖IoNode
-/// 📦 Rectangle node with named inputs on the left and outputs on the right.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct IoNodeSpec {
-    pub id: String,
-    pub name: String,
-    pub inputs: Vec<IoPortSpec>,
-    pub outputs: Vec<IoPortSpec>,
-    #[serde(default)]
-    pub x: f64,
-    #[serde(default)]
-    pub y: f64,
-    #[serde(default = "default_node_width")]
-    pub width: f64,
-    #[serde(default = "default_node_height")]
-    pub height: f64,
-}
+const EMPTY_PORTS: &[IoPortSpec] = &[];
 
 fn default_node_width() -> f64 {
     160.0
@@ -39,12 +23,152 @@ fn default_node_height() -> f64 {
     56.0
 }
 
-/// 🪝 Named horizontal port on an IO node edge.
+/// 🪝 Named horizontal port on a DAG node edge.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IoPortSpec {
     pub id: String,
     pub label: String,
+}
+
+/// 🖼 Screen media payload for output nodes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagMedia {
+    pub kind: DagMediaKind,
+    pub src: String,
+}
+
+/// 🎬 Screen media kind discriminator.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DagMediaKind {
+    Image,
+    Svg,
+    Pdf,
+    Video,
+}
+
+/// 🧩 Tagged node kind: computation, slider, select, or screen.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum DagNodeKind {
+    Computation {
+        inputs: Vec<IoPortSpec>,
+        outputs: Vec<IoPortSpec>,
+    },
+    Slider {
+        min: f64,
+        max: f64,
+        step: f64,
+        value: f64,
+        output: IoPortSpec,
+    },
+    Select {
+        options: Vec<String>,
+        #[serde(default)]
+        selected: usize,
+        output: IoPortSpec,
+    },
+    Screen {
+        #[serde(default)]
+        media: Option<DagMedia>,
+        input: IoPortSpec,
+    },
+}
+
+/// 📦 DAG node with shared layout fields and a tagged kind.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagNodeSpec {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub x: f64,
+    #[serde(default)]
+    pub y: f64,
+    #[serde(default = "default_node_width")]
+    pub width: f64,
+    #[serde(default = "default_node_height")]
+    pub height: f64,
+    #[serde(flatten)]
+    pub kind: DagNodeKind,
+}
+
+impl DagNodeSpec {
+    /// 🔧 Builds a computation node with explicit IO ports.
+    pub fn computation(id: String, name: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, x: f64, y: f64, width: f64, height: f64) -> Self {
+        Self {
+            id,
+            name,
+            x,
+            y,
+            width,
+            height,
+            kind: DagNodeKind::Computation { inputs, outputs },
+        }
+    }
+
+    /// ⬅ Effective input ports for the node kind.
+    pub fn inputs(&self) -> &[IoPortSpec] {
+        match &self.kind {
+            DagNodeKind::Computation { inputs, .. } => inputs,
+            DagNodeKind::Screen { input, .. } => std::slice::from_ref(input),
+            _ => EMPTY_PORTS,
+        }
+    }
+
+    /// ➡ Effective output ports for the node kind.
+    pub fn outputs(&self) -> &[IoPortSpec] {
+        match &self.kind {
+            DagNodeKind::Computation { outputs, .. } => outputs,
+            DagNodeKind::Slider { output, .. } | DagNodeKind::Select { output, .. } => std::slice::from_ref(output),
+            _ => EMPTY_PORTS,
+        }
+    }
+}
+
+fn point_in_rect(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f64) -> bool {
+    px >= x0.min(x1) && px <= x0.max(x1) && py >= y0.min(y1) && py <= y0.max(y1)
+}
+
+fn slider_track_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
+    let hw = node.width * 0.5;
+    let hh = node.height * 0.5;
+    let pad = 14.0;
+    let track_y = node.y + hh * 0.2;
+    let track_h = 14.0;
+    (node.x - hw + pad, node.x + hw - pad - 18.0, track_y - track_h * 0.5, track_y + track_h * 0.5)
+}
+
+fn select_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
+    let hw = node.width * 0.5;
+    let hh = node.height * 0.5;
+    (node.x - hw + 8.0, node.y + hh * 0.05, node.x + hw - 22.0, node.y + hh * 0.55)
+}
+
+fn set_slider_value_from_x(node: &mut DagNodeSpec, world_x: f64) -> Option<f64> {
+    let (left, right, _, _) = slider_track_bounds(node);
+    let DagNodeKind::Slider { min, max, step, value, .. } = &mut node.kind else {
+        return None;
+    };
+    let span = (right - left).max(1e-6);
+    let t = ((world_x - left) / span).clamp(0.0, 1.0);
+    let raw = *min + t * (*max - *min);
+    let stepped = if *step > 0.0 { (raw / *step).round() * *step } else { raw };
+    *value = stepped.clamp(*min, *max);
+    Some(*value)
+}
+
+fn advance_select_option(node: &mut DagNodeSpec) -> Option<String> {
+    let DagNodeKind::Select { options, selected, .. } = &mut node.kind else {
+        return None;
+    };
+    if options.is_empty() {
+        return None;
+    }
+    *selected = (*selected + 1) % options.len();
+    Some(options[*selected].clone())
 }
 
 /// 📐 Places input handles on the left and output handles on the right of a rectangle node.
@@ -127,7 +251,7 @@ pub enum DagLayoutOrientation {
 }
 
 /// 🌲 Layered DAG layout options for fixture JSON.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagLayoutOptions {
     #[serde(default = "default_layer_spacing")]
@@ -148,6 +272,33 @@ fn default_layer_spacing() -> f64 {
 
 fn default_sibling_gap() -> f64 {
     40.0
+}
+
+fn resolve_layout_node_id(handle_to_node: &HashMap<String, String>, key: &str, node_ids: &HashSet<String>) -> String {
+    if let Some(nid) = handle_to_node.get(key) {
+        return nid.clone();
+    }
+    if node_ids.contains(key) {
+        return key.to_string();
+    }
+    if let Some(base) = key.split(':').next() {
+        if node_ids.contains(base) {
+            return base.to_string();
+        }
+    }
+    key.to_string()
+}
+
+impl Default for DagLayoutOptions {
+    fn default() -> Self {
+        Self {
+            layer_spacing: default_layer_spacing(),
+            sibling_gap: default_sibling_gap(),
+            orientation: DagLayoutOrientation::default(),
+            center_x: None,
+            center_y: None,
+        }
+    }
 }
 
 /// 🌳 Writes node centers from a layered DAG layout into `dag.fixture/v1`.
@@ -193,8 +344,8 @@ pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayou
         let (Some(src_h), Some(tgt_h)) = (src, tgt) else {
             continue;
         };
-        let u = handle_to_node.get(src_h).cloned().unwrap_or_else(|| src_h.to_string());
-        let v = handle_to_node.get(tgt_h).cloned().unwrap_or_else(|| tgt_h.to_string());
+        let u = resolve_layout_node_id(&handle_to_node, src_h, &node_ids);
+        let v = resolve_layout_node_id(&handle_to_node, tgt_h, &node_ids);
         if u != v && node_ids.contains(&u) && node_ids.contains(&v) {
             directed.push((u, v));
         }
@@ -290,7 +441,7 @@ fn dag_debug_log(msg: &str) {
 
 // #region 🔖DagHost
 
-/// 🌳 Retained DAG host: IO nodes, edges, engine, camera.
+/// 🌳 Retained DAG host: typed nodes, edges, engine, camera.
 pub struct DagHost {
     pub fixture: DagFixtureV1,
     pub engine: DagBoardEngine,
@@ -303,6 +454,7 @@ pub struct DagHost {
     node_id_map: HashMap<NodeId, usize>,
     handle_key_map: HashMap<HandleId, String>,
     edge_id_map: HashMap<EdgeId, String>,
+    widget_drag: Option<usize>,
 }
 
 fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
@@ -317,7 +469,7 @@ fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cava
 pub struct DagFixtureV1 {
     pub schema: String,
     pub camera: DagCameraV1,
-    pub nodes: Vec<IoNodeSpec>,
+    pub nodes: Vec<DagNodeSpec>,
     pub edges: Vec<DagFixtureEdgeV1>,
 }
 
@@ -377,6 +529,7 @@ impl DagHost {
             node_id_map: HashMap::new(),
             handle_key_map: HashMap::new(),
             edge_id_map: HashMap::new(),
+            widget_drag: None,
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -436,8 +589,10 @@ impl DagHost {
             next_node += 1;
             self.node_id_map.insert(nid, idx);
             self.engine.create_rect_node(nid, node.x, node.y, node.width, node.height, true);
-            for (port_idx, port) in node.inputs.iter().enumerate() {
-                let in_a = io_node_rect_port_angle(node.x, node.y, node.width, node.height, port_idx, node.inputs.len().max(1), true);
+            let inputs = node.inputs();
+            let outputs = node.outputs();
+            for (port_idx, port) in inputs.iter().enumerate() {
+                let in_a = io_node_rect_port_angle(node.x, node.y, node.width, node.height, port_idx, inputs.len().max(1), true);
                 let hid = next_handle;
                 next_handle += 1;
                 let key = format!("{}:{}", node.id, port.id);
@@ -446,8 +601,8 @@ impl DagHost {
                 self.engine.create_handle(hid, nid, in_a);
                 self.engine.set_handle_role(hid, HandleRole::Target);
             }
-            for (port_idx, port) in node.outputs.iter().enumerate() {
-                let out_a = io_node_rect_port_angle(node.x, node.y, node.width, node.height, port_idx, node.outputs.len().max(1), false);
+            for (port_idx, port) in outputs.iter().enumerate() {
+                let out_a = io_node_rect_port_angle(node.x, node.y, node.width, node.height, port_idx, outputs.len().max(1), false);
                 let hid = next_handle;
                 next_handle += 1;
                 let key = format!("{}:{}", node.id, port.id);
@@ -555,10 +710,68 @@ impl DagHost {
         self.engine.set_camera(x, y, zoom);
     }
 
+    fn world_hits_handle(&self, world_x: f64, world_y: f64) -> bool {
+        use cavas::vello::kurbo::Point;
+        let p = Point::new(world_x, world_y);
+        let snap = self.engine.render_snapshot();
+        for (_, center, radius) in &snap.handles {
+            let dx = p.x - center.x;
+            let dy = p.y - center.y;
+            let tol = radius + 6.0;
+            if dx * dx + dy * dy <= tol * tol {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn widget_hit_at(&self, world_x: f64, world_y: f64) -> Option<(usize, bool)> {
+        for idx in (0..self.fixture.nodes.len()).rev() {
+            let node = &self.fixture.nodes[idx];
+            match &node.kind {
+                DagNodeKind::Slider { .. } => {
+                    let (x0, y0, x1, y1) = slider_track_bounds(node);
+                    if point_in_rect(world_x, world_y, x0, y0, x1, y1) {
+                        return Some((idx, true));
+                    }
+                }
+                DagNodeKind::Select { .. } => {
+                    let (x0, y0, x1, y1) = select_control_bounds(node);
+                    if point_in_rect(world_x, world_y, x0, y0, x1, y1) {
+                        return Some((idx, false));
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    fn try_widget_pointer_down(&mut self, world_x: f64, world_y: f64) -> bool {
+        let Some((idx, is_slider)) = self.widget_hit_at(world_x, world_y) else {
+            return false;
+        };
+        let node_id = self.fixture.nodes[idx].id.clone();
+        if is_slider {
+            self.widget_drag = Some(idx);
+            if let Some(value) = set_slider_value_from_x(&mut self.fixture.nodes[idx], world_x) {
+                dag_debug_log(&format!("[DEBUG] dag slider value id={node_id} value={value:.3}"));
+            }
+            return true;
+        }
+        if let Some(label) = advance_select_option(&mut self.fixture.nodes[idx]) {
+            dag_debug_log(&format!("[DEBUG] dag select option id={node_id} label={label}"));
+        }
+        true
+    }
+
     pub fn pointer_down(&mut self, x: f64, y: f64, extend: bool) {
         self.last_screen_x = x;
         self.last_screen_y = y;
         let world = self.screen_to_world_point(x, y);
+        if !self.world_hits_handle(world.x, world.y) && self.try_widget_pointer_down(world.x, world.y) {
+            return;
+        }
         self.engine.pointer_down(world.x, world.y, extend);
         self.process_engine_events();
     }
@@ -567,6 +780,12 @@ impl DagHost {
         self.last_screen_x = x;
         self.last_screen_y = y;
         let world = self.screen_to_world_point(x, y);
+        if let Some(idx) = self.widget_drag {
+            if let Some(value) = set_slider_value_from_x(&mut self.fixture.nodes[idx], world.x) {
+                dag_debug_log(&format!("[DEBUG] dag slider value id={} value={value:.3}", self.fixture.nodes[idx].id));
+            }
+            return;
+        }
         self.engine.pointer_move(world.x, world.y);
         self.process_engine_events();
     }
@@ -574,6 +793,9 @@ impl DagHost {
     pub fn pointer_up(&mut self, x: f64, y: f64) {
         self.last_screen_x = x;
         self.last_screen_y = y;
+        if self.widget_drag.take().is_some() {
+            return;
+        }
         let world = self.screen_to_world_point(x, y);
         self.engine.pointer_up(world.x, world.y);
         self.process_engine_events();
@@ -583,10 +805,93 @@ impl DagHost {
         self.vello_theme.merge_from_json(json)
     }
 
+    /// 🖼 Screen-node overlay rects in CSS pixel space for DOM media layers.
+    pub fn node_overlays_json(&self) -> Result<String, String> {
+        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
+        use cavas::vello::kurbo::Point;
+        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
+        let mut overlays = Vec::new();
+        for node in &self.fixture.nodes {
+            let DagNodeKind::Screen { media: Some(media), .. } = &node.kind else {
+                continue;
+            };
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            let inset = 8.0 / cam.zoom.max(0.05);
+            let top = node.y - hh + hh * 0.35;
+            let bottom = node.y + hh - inset;
+            let left = node.x - hw + inset;
+            let right = node.x + hw - inset;
+            let tl = world_to_screen(&cam, &viewport, Point::new(left, top));
+            let br = world_to_screen(&cam, &viewport, Point::new(right, bottom));
+            let media_kind = match media.kind {
+                DagMediaKind::Image => "image",
+                DagMediaKind::Svg => "svg",
+                DagMediaKind::Pdf => "pdf",
+                DagMediaKind::Video => "video",
+            };
+            overlays.push(serde_json::json!({
+                "id": node.id,
+                "mediaKind": media_kind,
+                "src": media.src,
+                "rect": { "x": tl.x, "y": tl.y, "w": (br.x - tl.x).max(1.0), "h": (br.y - tl.y).max(1.0) }
+            }));
+        }
+        serde_json::to_string(&overlays).map_err(|e| e.to_string())
+    }
+
+    fn paint_port_labels(
+        scene: &mut cavas::vello::Scene,
+        cam: &cavas::camera::Camera,
+        viewport: &cavas::camera::Viewport,
+        node: &DagNodeSpec,
+        px: f64,
+        label_fill: cavas::vello::peniko::Color,
+        label_halo: cavas::vello::peniko::Color,
+    ) {
+        use cavas::camera::world_to_screen;
+        use cavas::text::append_label;
+        use cavas::vello::kurbo::Point;
+        let hw = node.width * 0.5;
+        let hh = node.height * 0.5;
+        let inputs = node.inputs();
+        let outputs = node.outputs();
+        for (i, port) in inputs.iter().enumerate() {
+            let t = (i as f64 + 0.5) / inputs.len().max(1) as f64;
+            let world = Point::new(node.x - hw + 8.0 / cam.zoom.max(0.05), node.y - hh + t * hh * 2.0);
+            append_label(scene, &port.label, world_to_screen(cam, viewport, world), px, label_fill, label_halo);
+        }
+        for (i, port) in outputs.iter().enumerate() {
+            let t = (i as f64 + 0.5) / outputs.len().max(1) as f64;
+            let world = Point::new(node.x + hw - 8.0 / cam.zoom.max(0.05), node.y - hh + t * hh * 2.0);
+            append_label(scene, &port.label, world_to_screen(cam, viewport, world), px, label_fill, label_halo);
+        }
+    }
+
+    fn paint_node_name_vertical(
+        scene: &mut cavas::vello::Scene,
+        center_screen: cavas::vello::kurbo::Point,
+        name: &str,
+        px: f64,
+        label_fill: cavas::vello::peniko::Color,
+        label_halo: cavas::vello::peniko::Color,
+    ) {
+        use cavas::text::append_label;
+        use cavas::vello::kurbo::{Affine, Point};
+        if name.trim().is_empty() {
+            return;
+        }
+        let mut label_scene = cavas::vello::Scene::new();
+        append_label(&mut label_scene, name, Point::new(0.0, 0.0), px * 1.05, label_fill, label_halo);
+        let rot = Affine::translate((center_screen.x, center_screen.y)) * Affine::rotate(-std::f64::consts::FRAC_PI_2);
+        scene.append(&label_scene, Some(rot));
+    }
+
     pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
         use cavas::camera::{camera_content_affine, world_to_screen, Camera as CavasCamera, Viewport};
         use cavas::text::append_label;
-        use cavas::vello::kurbo::{Affine, Circle, Point, Rect, Stroke};
+        use cavas::vello::kurbo::{Circle, Line, Point, Rect, Stroke};
         use cavas::vello::peniko::Fill;
 
         let theme = &self.vello_theme;
@@ -605,6 +910,7 @@ impl DagHost {
         let node_fill = theme.node_fill;
         let label_fill = theme.node_stroke;
         let label_halo = vello_color_with_alpha(theme.raster_clear, 200);
+        let accent = theme.wire_stroke_highlighted;
         for node in &self.fixture.nodes {
             let hw = node.width * 0.5;
             let hh = node.height * 0.5;
@@ -613,22 +919,58 @@ impl DagHost {
             scene.stroke(&Stroke::new(1.5), aff, node_stroke, None, &rect);
             let px = (10.0 * cam.zoom).clamp(8.0, 18.0);
             let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
-            for (i, port) in node.inputs.iter().enumerate() {
-                let t = (i as f64 + 0.5) / node.inputs.len().max(1) as f64;
-                let world = Point::new(node.x - hw + 8.0 / cam.zoom.max(0.05), node.y - hh + t * hh * 2.0);
-                append_label(scene, &port.label, world_to_screen(&cam, &viewport, world), px, label_fill, label_halo);
-            }
-            for (i, port) in node.outputs.iter().enumerate() {
-                let t = (i as f64 + 0.5) / node.outputs.len().max(1) as f64;
-                let world = Point::new(node.x + hw - 8.0 / cam.zoom.max(0.05), node.y - hh + t * hh * 2.0);
-                append_label(scene, &port.label, world_to_screen(&cam, &viewport, world), px, label_fill, label_halo);
-            }
-            let name = node.name.trim();
-            if !name.is_empty() {
-                let mut label_scene = cavas::vello::Scene::new();
-                append_label(&mut label_scene, name, Point::new(0.0, 0.0), px * 1.05, label_fill, label_halo);
-                let rot = Affine::translate((center_screen.x, center_screen.y)) * Affine::rotate(-std::f64::consts::FRAC_PI_2);
-                scene.append(&label_scene, Some(rot));
+            match &node.kind {
+                DagNodeKind::Computation { .. } => {
+                    Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                    Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
+                }
+                DagNodeKind::Slider { min, max, value, .. } => {
+                    let name_y = world_to_screen(&cam, &viewport, Point::new(node.x, node.y - hh * 0.55));
+                    append_label(scene, &node.name, name_y, px, label_fill, label_halo);
+                    let (x0, y0, x1, y1) = slider_track_bounds(node);
+                    let track = Line::new(Point::new(x0, (y0 + y1) * 0.5), Point::new(x1, (y0 + y1) * 0.5));
+                    scene.stroke(&Stroke::new(2.0), aff, theme.edge_stroke, None, &track);
+                    let span = (max - min).max(1e-6);
+                    let t = ((*value - *min) / span).clamp(0.0, 1.0);
+                    let thumb_x = x0 + t * (x1 - x0);
+                    let thumb_y = (y0 + y1) * 0.5;
+                    scene.fill(Fill::NonZero, aff, accent, None, &Circle::new(Point::new(thumb_x, thumb_y), 5.0 / cam.zoom.max(0.05)));
+                    let value_text = format!("{value:.2}");
+                    let value_pos = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + hh * 0.45));
+                    append_label(scene, &value_text, value_pos, px * 0.9, label_fill, label_halo);
+                    Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                }
+                DagNodeKind::Select { options, selected, .. } => {
+                    let name_y = world_to_screen(&cam, &viewport, Point::new(node.x, node.y - hh * 0.55));
+                    append_label(scene, &node.name, name_y, px, label_fill, label_halo);
+                    let option = options.get(*selected).map(String::as_str).unwrap_or("—");
+                    let (cx0, cy0, cx1, cy1) = select_control_bounds(node);
+                    let control = Rect::new(cx0, cy0, cx1, cy1);
+                    scene.stroke(&Stroke::new(1.2), aff, theme.edge_stroke, None, &control);
+                    let option_pos = world_to_screen(&cam, &viewport, Point::new((cx0 + cx1) * 0.5, (cy0 + cy1) * 0.5));
+                    append_label(scene, option, option_pos, px * 0.95, label_fill, label_halo);
+                    let chevron = world_to_screen(&cam, &viewport, Point::new(cx1 - 6.0 / cam.zoom.max(0.05), (cy0 + cy1) * 0.5));
+                    append_label(scene, "▾", chevron, px, label_fill, label_halo);
+                    Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                }
+                DagNodeKind::Screen { media, .. } => {
+                    let name_y = world_to_screen(&cam, &viewport, Point::new(node.x, node.y - hh * 0.72));
+                    append_label(scene, &node.name, name_y, px, label_fill, label_halo);
+                    let inset = 8.0 / cam.zoom.max(0.05);
+                    let frame = Rect::new(node.x - hw + inset, node.y - hh + hh * 0.35, node.x + hw - inset, node.y + hh - inset);
+                    scene.stroke(&Stroke::new(1.0), aff, theme.edge_stroke_selection_exit, None, &frame);
+                    if let Some(media) = media {
+                        let kind_label = match media.kind {
+                            DagMediaKind::Image => "image",
+                            DagMediaKind::Svg => "svg",
+                            DagMediaKind::Pdf => "pdf",
+                            DagMediaKind::Video => "video",
+                        };
+                        let hint = world_to_screen(&cam, &viewport, Point::new(node.x, node.y + hh * 0.1));
+                        append_label(scene, kind_label, hint, px * 0.85, vello_color_with_alpha(label_fill, 140), label_halo);
+                    }
+                    Self::paint_port_labels(scene, &cam, &viewport, node, px, label_fill, label_halo);
+                }
             }
         }
         for (hid, center, radius) in &snap.handles {
@@ -683,6 +1025,11 @@ mod wasm_session {
         #[wasm_bindgen(js_name = fixtureJson)]
         pub fn fixture_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = nodeOverlaysJson)]
+        pub fn node_overlays_json(&self) -> Result<String, JsValue> {
+            self.state.borrow().host.node_overlays_json().map_err(|e| JsValue::from_str(&e))
         }
 
         #[wasm_bindgen(js_name = attachCanvas)]
@@ -854,13 +1201,81 @@ mod tests {
     }
 
     #[test]
+    fn dag_node_spec_serde_round_trip_kinds() {
+        let nodes = vec![
+            DagNodeSpec::computation("c".into(), "C".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() }], vec![IoPortSpec { id: "out".into(), label: "out".into() }], 0.0, 0.0, 160.0, 56.0),
+            DagNodeSpec {
+                id: "s".into(),
+                name: "S".into(),
+                x: 1.0,
+                y: 2.0,
+                width: 180.0,
+                height: 80.0,
+                kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 3.0, output: IoPortSpec { id: "out".into(), label: "value".into() } },
+            },
+            DagNodeSpec {
+                id: "m".into(),
+                name: "M".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 180.0,
+                height: 80.0,
+                kind: DagNodeKind::Select { options: vec!["A".into(), "B".into()], selected: 1, output: IoPortSpec { id: "out".into(), label: "mode".into() } },
+            },
+            DagNodeSpec {
+                id: "p".into(),
+                name: "P".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 200.0,
+                height: 140.0,
+                kind: DagNodeKind::Screen {
+                    media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,test".into() }),
+                    input: IoPortSpec { id: "in".into(), label: "result".into() },
+                },
+            },
+        ];
+        for node in nodes {
+            let json = serde_json::to_string(&node).unwrap();
+            let back: DagNodeSpec = serde_json::from_str(&json).unwrap();
+            assert_eq!(node, back);
+        }
+    }
+
+    #[test]
+    fn dag_node_spec_port_accessors_per_kind() {
+        let slider = DagNodeSpec {
+            id: "s".into(),
+            name: "S".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 180.0,
+            height: 80.0,
+            kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec { id: "out".into(), label: "value".into() } },
+        };
+        assert!(slider.inputs().is_empty());
+        assert_eq!(slider.outputs().len(), 1);
+        let screen = DagNodeSpec {
+            id: "p".into(),
+            name: "P".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 200.0,
+            height: 140.0,
+            kind: DagNodeKind::Screen { media: None, input: IoPortSpec { id: "in".into(), label: "in".into() } },
+        };
+        assert_eq!(screen.inputs().len(), 1);
+        assert!(screen.outputs().is_empty());
+    }
+
+    #[test]
     fn dag_host_reorganize_updates_engine_positions() {
         let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
             schema: "dag.fixture/v1".into(),
             camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                IoNodeSpec { id: "a".into(), name: "A".into(), inputs: vec![], outputs: vec![IoPortSpec { id: "out".into(), label: "out".into() }], x: 500.0, y: 500.0, width: 160.0, height: 56.0 },
-                IoNodeSpec { id: "b".into(), name: "B".into(), inputs: vec![IoPortSpec { id: "in".into(), label: "in".into() }], outputs: vec![], x: 500.0, y: 500.0, width: 160.0, height: 56.0 },
+                DagNodeSpec::computation("a".into(), "A".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into() }], 500.0, 500.0, 160.0, 56.0),
+                DagNodeSpec::computation("b".into(), "B".into(), vec![IoPortSpec { id: "in".into(), label: "in".into() }], vec![], 500.0, 500.0, 160.0, 56.0),
             ],
             edges: vec![DagFixtureEdgeV1 { id: "e1".into(), source: "a:out".into(), target: "b:in".into() }],
         });
@@ -874,9 +1289,92 @@ mod tests {
     fn dag_host_loads_demo_fixture() {
         let host = DagHost::default_demo();
         assert_eq!(host.fixture.schema, "dag.fixture/v1");
-        assert_eq!(host.fixture.nodes.len(), 6);
-        assert_eq!(host.fixture.edges.len(), 6);
+        assert_eq!(host.fixture.nodes.len(), 5);
+        assert_eq!(host.fixture.edges.len(), 4);
         assert!(!host.engine.render_snapshot().edges.is_empty());
+    }
+
+    #[test]
+    fn dag_host_slider_drag_mutates_value() {
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![DagNodeSpec {
+                id: "slider".into(),
+                name: "Amount".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 180.0,
+                height: 80.0,
+                kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 2.0, output: IoPortSpec { id: "out".into(), label: "value".into() } },
+            }],
+            edges: vec![],
+        });
+        host.set_viewport(800, 600, 1.0);
+        let (x0, y0, x1, y1) = slider_track_bounds(&host.fixture.nodes[0]);
+        let mid_y = (y0 + y1) * 0.5;
+        let (sx, sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, mid_y));
+        host.pointer_down(sx, sy, false);
+        host.pointer_up(sx, sy);
+        let DagNodeKind::Slider { value, .. } = host.fixture.nodes[0].kind else {
+            panic!("expected slider");
+        };
+        assert!((value - 2.0).abs() > 0.1);
+    }
+
+    #[test]
+    fn dag_host_select_click_advances_option() {
+        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![DagNodeSpec {
+                id: "mode".into(),
+                name: "Mode".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 180.0,
+                height: 80.0,
+                kind: DagNodeKind::Select { options: vec!["Add".into(), "Multiply".into()], selected: 0, output: IoPortSpec { id: "out".into(), label: "mode".into() } },
+            }],
+            edges: vec![],
+        });
+        host.set_viewport(800, 600, 1.0);
+        let (x0, y0, x1, y1) = select_control_bounds(&host.fixture.nodes[0]);
+        let (sx, sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
+        host.pointer_down(sx, sy, false);
+        let DagNodeKind::Select { selected, .. } = host.fixture.nodes[0].kind else {
+            panic!("expected select");
+        };
+        assert_eq!(selected, 1);
+    }
+
+    #[test]
+    fn dag_host_exports_screen_overlay_rect() {
+        let host = DagHost::from_fixture_without_layout(DagFixtureV1 {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![DagNodeSpec {
+                id: "screen".into(),
+                name: "Preview".into(),
+                x: 100.0,
+                y: 50.0,
+                width: 200.0,
+                height: 140.0,
+                kind: DagNodeKind::Screen {
+                    media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,test".into() }),
+                    input: IoPortSpec { id: "in".into(), label: "result".into() },
+                },
+            }],
+            edges: vec![],
+        });
+        let mut host = host;
+        host.set_viewport(1280, 800, 1.0);
+        let json = host.node_overlays_json().unwrap();
+        let overlays: Vec<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(overlays.len(), 1);
+        assert_eq!(overlays[0]["id"], "screen");
+        assert_eq!(overlays[0]["mediaKind"], "svg");
+        assert!(overlays[0]["rect"]["w"].as_f64().unwrap_or(0.0) > 10.0);
     }
 
     fn handle_world(host: &DagHost, port_key: &str) -> cavas::vello::kurbo::Point {
@@ -931,8 +1429,8 @@ mod tests {
         assert!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }));
         host.pointer_move(out_sx, out_sy);
         host.pointer_up(out_sx, out_sy);
-        let e4 = host.fixture.edges.iter().find(|e| e.id == "e4").expect("e4");
-        assert_eq!(e4.source, "scale:out");
+        let e3 = host.fixture.edges.iter().find(|e| e.id == "e3").expect("e3");
+        assert_eq!(e3.source, "scale:out");
     }
 
     #[test]

@@ -49,7 +49,7 @@ class BuildScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "-p", "flow_core"], this.repoRoot, playPollingEnv());
+    runCargo(["test", "-p", "flow_module_dictionary", "-p", "flow_core"], this.repoRoot, playPollingEnv());
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
     runVitest(this.root, segments);
   }

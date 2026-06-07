@@ -55,6 +55,47 @@ function latestFixtureFromLogs(logs) {
   return null;
 }
 
+function parseReorganizedFixtureFromLog(log) {
+  const marker = "[DEBUG] dag canvas reorganized:";
+  const idx = log.indexOf(marker);
+  if (idx < 0) return null;
+  const jsonStart = log.indexOf("{", idx);
+  if (jsonStart < 0) return null;
+  try {
+    return JSON.parse(log.slice(jsonStart));
+  } catch {
+    return null;
+  }
+}
+
+function latestReorganizedFixtureFromLogs(logs) {
+  for (let i = logs.length - 1; i >= 0; i -= 1) {
+    const fixture = parseReorganizedFixtureFromLog(logs[i]);
+    if (fixture) return fixture;
+  }
+  return null;
+}
+
+function nodeById(fixture, id) {
+  return fixture?.nodes?.find((node) => node.id === id) ?? null;
+}
+
+async function triggerReorganizeEngagement(page) {
+  const input = page.locator('[data-slot="engagement-command-input"] input').first();
+  if (await input.count()) {
+    await input.click({ force: true });
+    await input.fill("reorganize");
+    await input.press("Enter");
+    await page.waitForTimeout(700);
+    return;
+  }
+  const reorganizeRow = page.getByText("Reorganize", { exact: true }).first();
+  if (await reorganizeRow.count()) {
+    await reorganizeRow.click({ force: true });
+    await page.waitForTimeout(700);
+  }
+}
+
 async function pointerOnCanvas(canvas, type, x, y) {
   const box = await canvas.boundingBox();
   if (!box) throw new Error("canvas missing bounding box");
@@ -77,10 +118,17 @@ async function dragOnCanvas(canvas, from, to) {
   await canvas.page().waitForTimeout(400);
 }
 
+function nodePorts(node, input) {
+  if (node.kind === "computation") return input ? node.inputs ?? [] : node.outputs ?? [];
+  if (input && node.kind === "screen") return [node.input];
+  if (!input && (node.kind === "slider" || node.kind === "select")) return [node.output];
+  return [];
+}
+
 function portScreenPx(fixture, nodeId, portId, input, viewW, viewH) {
   const node = fixture.nodes.find((n) => n.id === nodeId);
   if (!node) return null;
-  const ports = input ? node.inputs : node.outputs;
+  const ports = nodePorts(node, input);
   const idx = ports.findIndex((p) => p.id === portId);
   if (idx < 0) return null;
   const t = (idx + 0.5) / Math.max(ports.length, 1);
@@ -123,19 +171,49 @@ if (!box) {
 const midX = box.width * 0.5;
 const midY = box.height * 0.5;
 
-await dragOnCanvas(canvas, { x: midX - 120, y: midY }, { x: midX - 60, y: midY - 50 });
-const fixtureAfterDrag = latestFixtureFromLogs(debugLogs);
-const combineB = fixtureAfterDrag ? portScreenPx(fixtureAfterDrag, "combine", "b", true, box.width, box.height) : null;
-const scaleOut = fixtureAfterDrag ? portScreenPx(fixtureAfterDrag, "scale", "out", false, box.width, box.height) : null;
+await pointerOnCanvas(canvas, "pointerdown", midX, midY);
+await pointerOnCanvas(canvas, "pointerup", midX, midY);
+await page.waitForTimeout(200);
+const initialFixture = latestFixtureFromLogs(debugLogs);
+const combineNode = initialFixture?.nodes?.find((n) => n.id === "combine");
+if (combineNode) {
+  const combineCenter = { x: (combineNode.x ?? 0) + box.width * 0.5, y: (combineNode.y ?? 0) + box.height * 0.5 };
+  await dragOnCanvas(canvas, combineCenter, { x: combineCenter.x + 50, y: combineCenter.y + 30 });
+}
+const fixtureAfterNodeDrag = latestFixtureFromLogs(debugLogs);
+const sliderNode = fixtureAfterNodeDrag?.nodes?.find((n) => n.id === "slider");
+if (sliderNode?.kind === "slider") {
+  const hw = (sliderNode.width ?? 180) * 0.5;
+  const hh = (sliderNode.height ?? 80) * 0.5;
+  const trackY = (sliderNode.y ?? 0) + hh * 0.2;
+  const trackLeft = (sliderNode.x ?? 0) - hw + 14;
+  const trackRight = (sliderNode.x ?? 0) + hw - 32;
+  const from = { x: trackLeft + box.width * 0.5, y: trackY + box.height * 0.5 };
+  const to = { x: trackRight + box.width * 0.5, y: trackY + box.height * 0.5 };
+  await dragOnCanvas(canvas, from, to);
+}
+const combineB = fixtureAfterNodeDrag ? portScreenPx(fixtureAfterNodeDrag, "combine", "b", true, box.width, box.height) : null;
+const scaleOut = fixtureAfterNodeDrag ? portScreenPx(fixtureAfterNodeDrag, "scale", "out", false, box.width, box.height) : null;
 if (combineB && scaleOut) {
   await dragOnCanvas(canvas, combineB, scaleOut);
 }
+
+await page.locator("[data-dag-media-overlays] img").first().waitFor({ timeout: 10_000 });
+const screenOverlayCount = await page.locator("[data-dag-media-overlays] img").count();
+
+await triggerReorganizeEngagement(page);
+await page.waitForTimeout(1500);
+const reorganizedLog = debugLogs.some((l) => l.includes("dag canvas reorganized"));
+const reorganizedFixture = latestReorganizedFixtureFromLogs(debugLogs);
+const sliderNodeAfterLayout = nodeById(reorganizedFixture, "slider");
+const screenNodeAfterLayout = nodeById(reorganizedFixture, "screen");
 
 const canvasCount = await page.locator("canvas").count();
 const unsupported = await page.getByText("Unsupported UiNode").count();
 const fixture = latestFixtureFromLogs(debugLogs);
 const nodeMoved = debugLogs.some((l) => l.includes("dag node moved"));
 const edgeWired = debugLogs.some((l) => l.includes("dag edge connected") || l.includes("dag edge removed"));
+const sliderChanged = debugLogs.some((l) => l.includes("dag slider value"));
 
 await browser.close();
 
@@ -145,6 +223,9 @@ console.log("[validate-dag] canvas count:", canvasCount);
 console.log("[validate-dag] unsupported nodes:", unsupported);
 console.log("[validate-dag] node moved log:", nodeMoved);
 console.log("[validate-dag] edge wired log:", edgeWired);
+console.log("[validate-dag] slider changed log:", sliderChanged);
+console.log("[validate-dag] screen overlay count:", screenOverlayCount);
+console.log("[validate-dag] reorganized log:", reorganizedLog);
 if (fixture) {
   console.log("[validate-dag] fixture nodes:", fixture.nodes?.length, "edges:", fixture.edges?.length);
 }
@@ -161,16 +242,35 @@ if (!debugLogs.some((l) => l.includes("dag canvas loaded fixture") || l.includes
   console.error("[validate-dag] missing dag debug log");
   process.exit(1);
 }
-if (!fixture || fixture.nodes?.length !== 6 || fixture.edges?.length !== 6) {
-  console.error("[validate-dag] expected fixture snapshot with 6 nodes and 6 edges after interaction");
+if (!fixture || fixture.nodes?.length !== 5 || fixture.edges?.length !== 4) {
+  console.error("[validate-dag] expected fixture snapshot with 5 nodes and 4 edges after interaction");
   process.exit(1);
 }
-if (!nodeMoved) {
-  console.error("[validate-dag] expected node drag to emit dag node moved debug log");
+if (!sliderChanged) {
+  console.error("[validate-dag] expected slider drag to emit dag slider value debug log");
+  process.exit(1);
+}
+if (screenOverlayCount < 1) {
+  console.error("[validate-dag] expected at least one screen media overlay element");
+  process.exit(1);
+}
+if (!nodeMoved && !reorganizedLog) {
+  console.error("[validate-dag] expected node drag log or reorganize layout update");
   process.exit(1);
 }
 if (!edgeWired) {
   console.error("[validate-dag] expected edge reconnect to emit dag edge connected/removed debug log");
+  process.exit(1);
+}
+if (!reorganizedLog) {
+  console.error("[validate-dag] expected reorganize engagement to emit dag canvas reorganized debug log");
+  process.exit(1);
+}
+if (!sliderNodeAfterLayout || !screenNodeAfterLayout || !(screenNodeAfterLayout.x > sliderNodeAfterLayout.x + 1)) {
+  console.error("[validate-dag] expected left-to-right reorganize to place screen right of slider", {
+    sliderNodeAfterLayout,
+    screenNodeAfterLayout,
+  });
   process.exit(1);
 }
 console.log("[validate-dag] ok");

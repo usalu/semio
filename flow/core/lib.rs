@@ -1,5 +1,6 @@
 //! 🌊 Flow core: widgets, neural evaluation, and DAG canvas host.
 
+pub use flow_module_dictionary;
 pub use flow_module_logic;
 pub use flow_module_math;
 pub use flow_module_text;
@@ -9,7 +10,7 @@ pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, HashMap};
 
-use dag::{would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, IoNodeSpec, IoPortSpec};
+use dag::{would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeSpec, IoPortSpec};
 use neural::{Atom, Dictionary, Evaluator, Neuron, Registry, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
@@ -111,14 +112,14 @@ fn widget_node_size(widget: &Widget) -> (f64, f64) {
     }
 }
 
-fn widget_to_io_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>) -> IoNodeSpec {
+fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>) -> DagNodeSpec {
     let (inputs, outputs) = widget_io_ports(widget);
     let id = match widget {
         Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id.clone(),
     };
     let (width, height) = widget_node_size(widget);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
-    IoNodeSpec { id, name: widget_label(widget), inputs, outputs, x, y, width, height }
+    DagNodeSpec::computation(id, widget_label(widget), inputs, outputs, x, y, width, height)
 }
 
 const FLOW_SLIDER_MIN: f64 = 0.0;
@@ -164,6 +165,7 @@ fn build_registry() -> Registry {
     flow_module_math::register(&mut registry);
     flow_module_text::register(&mut registry);
     flow_module_logic::register(&mut registry);
+    flow_module_dictionary::register(&mut registry);
     registry
 }
 
@@ -378,6 +380,19 @@ impl FlowHost {
         Ok(())
     }
 
+    /// 🌳 Recomputes widget positions from the current graph using layered tree layout.
+    pub fn reorganize(&mut self, opts_json: &str) -> Result<(), String> {
+        let opts: DagLayoutOptions = if opts_json.trim().is_empty() {
+            DagLayoutOptions::default()
+        } else {
+            serde_json::from_str(opts_json).map_err(|e| e.to_string())?
+        };
+        self.dag = DagHost::from_fixture_without_layout(self.build_dag_fixture_v1());
+        self.dag.reorganize(&opts)?;
+        self.sync_from_dag();
+        Ok(())
+    }
+
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, extend: bool, pan: bool) {
         if pan {
             self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
@@ -520,7 +535,7 @@ impl FlowHost {
     }
 
     fn build_dag_fixture_v1(&self) -> DagFixtureV1 {
-        let nodes: Vec<IoNodeSpec> = self.fixture.widgets.iter().enumerate().map(|(i, w)| widget_to_io_node(w, i, &self.fixture.layout)).collect();
+        let nodes: Vec<DagNodeSpec> = self.fixture.widgets.iter().enumerate().map(|(i, w)| widget_to_dag_node(w, i, &self.fixture.layout)).collect();
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
         let edges: Vec<DagFixtureEdgeV1> = self
             .fixture
@@ -603,11 +618,19 @@ impl FlowHost {
         self.set_slider_value(widget_id, stepped);
     }
 
+    fn format_preview_number(n: f64) -> String {
+        if (n - n.round()).abs() < 0.05 {
+            format!("{}", n.round() as i64)
+        } else {
+            format!("{n:.1}")
+        }
+    }
+
     fn format_dictionary_preview(dict: &Dictionary) -> String {
         dict.get("number")
             .and_then(|v| v.as_atom())
             .and_then(|a| a.as_f64())
-            .map(|n| format!("{n}"))
+            .map(Self::format_preview_number)
             .or_else(|| dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string))
             .unwrap_or_else(|| "—".into())
     }
@@ -683,7 +706,7 @@ impl FlowHost {
                     .get("number")
                     .and_then(|v| v.as_atom())
                     .and_then(|a| a.as_f64())
-                    .map(|n| format!("{n}"))
+                    .map(Self::format_preview_number)
                     .or_else(|| preview.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string)),
                 _ => None,
             })
@@ -771,7 +794,10 @@ impl FlowSession {
     #[wasm_bindgen(js_name = loadFixtureJson)]
     pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
         let fixture = FlowHost::parse_fixture_json(json).map_err(|e| JsValue::from_str(&e))?;
-        self.state.borrow_mut().host = FlowHost::from_fixture(fixture);
+        let mut inner = self.state.borrow_mut();
+        let (w, h, dpr) = (inner.width, inner.height, inner.dpr);
+        inner.host = FlowHost::from_fixture(fixture);
+        inner.host.set_viewport(w.max(1), h.max(1), dpr.max(1.0));
         Ok(())
     }
 
@@ -893,6 +919,15 @@ impl FlowSession {
         let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
     }
 
+    #[wasm_bindgen(js_name = reorganize)]
+    pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .reorganize(options_json)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
     #[wasm_bindgen(js_name = renderFrame)]
     pub fn render_frame(&mut self) -> Result<(), JsValue> {
         self.state.borrow_mut().render_frame_gpu()
@@ -919,6 +954,16 @@ impl FlowSession {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use cavas::camera::{world_to_screen, Camera, Viewport};
+    use cavas::vello::kurbo::Point;
+
+    fn widget_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f64) {
+        let node = host.dag.fixture.nodes.iter().find(|n| n.id == widget_id).expect("node");
+        let cam = Camera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
+        let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
+        let screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
+        (screen.x, screen.y)
+    }
 
     #[test]
     fn default_fixture_evaluates_add_preview() {
@@ -935,23 +980,20 @@ mod tests {
     }
 
     #[test]
-    fn default_layout_places_slider_near_viewport_center() {
-        let mut host = FlowHost::default();
-        host.set_viewport(1280, 800, 1.0);
-        let slider = host.dag.fixture.nodes.iter().find(|n| n.id == "slider").expect("slider node");
-        let (sx, sy) = (640.0, 400.0);
-        let world = host.screen_to_world_point(sx, sy);
-        let hw = slider.width * 0.5;
-        let hh = slider.height * 0.5;
-        assert!(world.x >= slider.x - hw && world.x <= slider.x + hw);
-        assert!(world.y >= slider.y - hh && world.y <= slider.y + hh);
+    fn default_auto_layout_orders_slider_add_preview_left_to_right() {
+        let host = FlowHost::default();
+        let slider = host.fixture.layout.get("slider").expect("slider");
+        let add = host.fixture.layout.get("add").expect("add");
+        let preview = host.fixture.layout.get("preview").expect("preview");
+        assert!(add.x > slider.x);
+        assert!(preview.x > add.x);
     }
 
     #[test]
     fn canvas_slider_hit_adjusts_value_playground_viewport() {
         let mut host = FlowHost::default();
         host.set_viewport(1259, 706, 1.0);
-        let (sx, sy) = (629.5, 353.0);
+        let (sx, sy) = widget_screen_point(&host, "slider");
         host.pointer_down_screen(sx, sy, false, false);
         host.pointer_move_screen(sx + 90.0, sy);
         host.pointer_up_screen(sx + 90.0, sy);
@@ -971,7 +1013,7 @@ mod tests {
     fn canvas_slider_hit_adjusts_value() {
         let mut host = FlowHost::default();
         host.set_viewport(800, 600, 1.0);
-        let (sx, sy) = (400.0, 300.0);
+        let (sx, sy) = widget_screen_point(&host, "slider");
         host.pointer_down_screen(sx, sy, false, false);
         host.pointer_move_screen(sx + 80.0, sy);
         host.pointer_up_screen(sx + 80.0, sy);
@@ -985,6 +1027,21 @@ mod tests {
             })
             .unwrap();
         assert!(slider > 3.0);
+    }
+
+    #[test]
+    fn reorganize_overwrites_saved_layout_left_to_right() {
+        let mut host = FlowHost::default();
+        host.fixture.layout.insert("slider".into(), WidgetLayout { x: -900.0, y: -900.0 });
+        host.fixture.layout.insert("add".into(), WidgetLayout { x: -900.0, y: -900.0 });
+        host.fixture.layout.insert("preview".into(), WidgetLayout { x: -900.0, y: -900.0 });
+        host.rebuild_dag();
+        host.reorganize("").unwrap();
+        let slider = host.fixture.layout.get("slider").expect("slider layout");
+        let add = host.fixture.layout.get("add").expect("add layout");
+        let preview = host.fixture.layout.get("preview").expect("preview layout");
+        assert!(add.x > slider.x);
+        assert!(preview.x > add.x);
     }
 
     #[test]
@@ -1002,6 +1059,7 @@ mod tests {
         assert!(json.contains("math"));
         assert!(json.contains("text"));
         assert!(json.contains("logic"));
+        assert!(json.contains("dictionary"));
         assert!(json.contains("Inputs"));
         assert!(json.contains("Outputs"));
     }

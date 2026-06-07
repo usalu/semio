@@ -25,34 +25,76 @@ export { DagSession };
 // #endregion 🔖GpuWasmBridge
 
 // #region 🔖Fixture
-export interface DagFixtureV1 {
-  readonly schema: "dag.fixture/v1";
-  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
-  readonly nodes: readonly DagIoNodeV1[];
-  readonly edges: readonly { readonly id: string; readonly source: string; readonly target: string }[];
+export interface DagPortV1 {
+  readonly id: string;
+  readonly label: string;
 }
 
-export interface DagIoNodeV1 {
+export interface DagMediaV1 {
+  readonly kind: "image" | "svg" | "pdf" | "video";
+  readonly src: string;
+}
+
+interface DagNodeBaseV1 {
   readonly id: string;
   readonly name: string;
   readonly x?: number;
   readonly y?: number;
   readonly width?: number;
   readonly height?: number;
-  readonly inputs: readonly { readonly id: string; readonly label: string }[];
-  readonly outputs: readonly { readonly id: string; readonly label: string }[];
 }
+
+export interface DagComputationNodeV1 extends DagNodeBaseV1 {
+  readonly kind: "computation";
+  readonly inputs: readonly DagPortV1[];
+  readonly outputs: readonly DagPortV1[];
+}
+
+export interface DagSliderNodeV1 extends DagNodeBaseV1 {
+  readonly kind: "slider";
+  readonly min: number;
+  readonly max: number;
+  readonly step: number;
+  readonly value: number;
+  readonly output: DagPortV1;
+}
+
+export interface DagSelectNodeV1 extends DagNodeBaseV1 {
+  readonly kind: "select";
+  readonly options: readonly string[];
+  readonly selected: number;
+  readonly output: DagPortV1;
+}
+
+export interface DagScreenNodeV1 extends DagNodeBaseV1 {
+  readonly kind: "screen";
+  readonly media?: DagMediaV1;
+  readonly input: DagPortV1;
+}
+
+export type DagNodeV1 = DagComputationNodeV1 | DagSliderNodeV1 | DagSelectNodeV1 | DagScreenNodeV1;
+
+export interface DagFixtureV1 {
+  readonly schema: "dag.fixture/v1";
+  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+  readonly nodes: readonly DagNodeV1[];
+  readonly edges: readonly { readonly id: string; readonly source: string; readonly target: string }[];
+}
+
+const DAG_DEMO_SCREEN_SVG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect fill='%233c78d8' width='100' height='60'/%3E%3Ctext x='50' y='35' text-anchor='middle' fill='white' font-size='12'%3EDAG%3C/text%3E%3C/svg%3E";
 
 export const DAG_DEFAULT_FIXTURE: DagFixtureV1 = {
   schema: "dag.fixture/v1",
   camera: { x: 0, y: 0, zoom: 1 },
   nodes: [
-    { id: "source", name: "Source", x: -360, y: 0, width: 160, height: 72, inputs: [], outputs: [{ id: "out", label: "value" }] },
-    { id: "scale", name: "Scale", x: -120, y: -80, width: 160, height: 72, inputs: [{ id: "in", label: "value" }], outputs: [{ id: "out", label: "scaled" }] },
-    { id: "offset", name: "Offset", x: -120, y: 80, width: 160, height: 72, inputs: [{ id: "in", label: "value" }], outputs: [{ id: "out", label: "shifted" }] },
+    { id: "slider", name: "Amount", kind: "slider", x: -400, y: -40, width: 180, height: 80, min: 0, max: 10, step: 0.5, value: 5, output: { id: "out", label: "value" } },
+    { id: "mode", name: "Mode", kind: "select", x: -400, y: 80, width: 180, height: 80, options: ["Add", "Multiply", "Max"], selected: 0, output: { id: "out", label: "mode" } },
+    { id: "scale", name: "Scale", kind: "computation", x: -120, y: -40, width: 160, height: 72, inputs: [{ id: "in", label: "value" }], outputs: [{ id: "out", label: "scaled" }] },
     {
       id: "combine",
       name: "Combine",
+      kind: "computation",
       x: 120,
       y: 0,
       width: 160,
@@ -64,47 +106,130 @@ export const DAG_DEFAULT_FIXTURE: DagFixtureV1 = {
       outputs: [{ id: "out", label: "merged" }],
     },
     {
-      id: "split",
-      name: "Split",
-      x: 360,
+      id: "screen",
+      name: "Preview",
+      kind: "screen",
+      x: 400,
       y: 0,
-      width: 160,
-      height: 96,
-      inputs: [{ id: "in", label: "merged" }],
-      outputs: [
-        { id: "lo", label: "lo" },
-        { id: "hi", label: "hi" },
-      ],
+      width: 200,
+      height: 140,
+      media: { kind: "svg", src: DAG_DEMO_SCREEN_SVG },
+      input: { id: "in", label: "result" },
     },
-    { id: "sink", name: "Sink", x: 600, y: -48, width: 160, height: 72, inputs: [{ id: "in", label: "result" }], outputs: [] },
   ],
   edges: [
-    { id: "e1", source: "source:out", target: "scale:in" },
-    { id: "e2", source: "source:out", target: "offset:in" },
-    { id: "e3", source: "scale:out", target: "combine:a" },
-    { id: "e4", source: "offset:out", target: "combine:b" },
-    { id: "e5", source: "combine:out", target: "split:in" },
-    { id: "e6", source: "split:lo", target: "sink:in" },
+    { id: "e1", source: "slider:out", target: "scale:in" },
+    { id: "e2", source: "scale:out", target: "combine:a" },
+    { id: "e3", source: "mode:out", target: "combine:b" },
+    { id: "e4", source: "combine:out", target: "screen:in" },
   ],
 };
 
 export function dagFixtureToJson(fixture: DagFixtureV1): string {
   return JSON.stringify(fixture);
 }
+
+export type DagLayoutOrientation = "leftRight" | "topBottom";
+
+export interface DagReorganizeRequest {
+  readonly epoch: number;
+  readonly optionsJson: string;
+}
+
+interface DagNodeOverlayRect {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+interface DagNodeOverlayEntry {
+  readonly id: string;
+  readonly mediaKind: string;
+  readonly src: string;
+  readonly rect: DagNodeOverlayRect;
+}
 // #endregion 🔖Fixture
+
+// #region 🔖NodeOverlays
+function createMediaOverlayElement(mediaKind: string, src: string): HTMLElement {
+  if (mediaKind === "video") {
+    const video = document.createElement("video");
+    video.src = src;
+    video.muted = true;
+    video.loop = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    return video;
+  }
+  if (mediaKind === "pdf") {
+    const embed = document.createElement("embed");
+    embed.src = src;
+    embed.type = "application/pdf";
+    return embed;
+  }
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = "";
+  return img;
+}
+
+function syncDagNodeOverlays(container: HTMLDivElement, session: DagSession, elements: Map<string, HTMLElement>): void {
+  let overlays: DagNodeOverlayEntry[] = [];
+  try {
+    const json = session.nodeOverlaysJson();
+    if (json) overlays = JSON.parse(json) as DagNodeOverlayEntry[];
+  } catch {
+    overlays = [];
+  }
+  const active = new Set<string>();
+  for (const entry of overlays) {
+    active.add(entry.id);
+    let el = elements.get(entry.id);
+    if (!el) {
+      el = createMediaOverlayElement(entry.mediaKind, entry.src);
+      el.setAttribute("data-dag-overlay-id", entry.id);
+      el.style.position = "absolute";
+      el.style.pointerEvents = "none";
+      el.style.objectFit = "contain";
+      container.appendChild(el);
+      elements.set(entry.id, el);
+    } else if (el instanceof HTMLImageElement || el instanceof HTMLVideoElement) {
+      if (el.src !== entry.src) el.src = entry.src;
+    } else if (el instanceof HTMLEmbedElement && el.src !== entry.src) {
+      el.src = entry.src;
+    }
+    el.style.left = `${entry.rect.x}px`;
+    el.style.top = `${entry.rect.y}px`;
+    el.style.width = `${entry.rect.w}px`;
+    el.style.height = `${entry.rect.h}px`;
+  }
+  for (const [id, el] of elements) {
+    if (!active.has(id)) {
+      el.remove();
+      elements.delete(id);
+    }
+  }
+}
+// #endregion 🔖NodeOverlays
 
 // #region 🔖DagCanvas
 export interface DagCanvasProps {
   readonly fixtureJson?: string;
   readonly className?: string;
+  readonly reorganize?: DagReorganizeRequest;
+  readonly onFixtureChange?: (fixtureJson: string) => void;
 }
 
-export function DagCanvas({ fixtureJson, className }: DagCanvasProps): React.JSX.Element {
+export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange }: DagCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<DagSession | null>(null);
+  const overlayElementsRef = useRef(new Map<string, HTMLElement>());
   const rafRef = useRef<number | null>(null);
   const lastVelloThemeJsonRef = useRef("");
+  const onFixtureChangeRef = useRef(onFixtureChange);
 
   const syncVelloTheme = useCallback(() => {
     if (typeof document === "undefined") return;
@@ -120,13 +245,39 @@ export function DagCanvas({ fixtureJson, className }: DagCanvasProps): React.JSX
   }, []);
 
   const renderFrame = useCallback(() => {
+    const session = sessionRef.current;
+    const overlayRoot = overlayRef.current;
+    if (session && overlayRoot) {
+      try {
+        syncDagNodeOverlays(overlayRoot, session, overlayElementsRef.current);
+      } catch {
+        /* overlays not ready */
+      }
+    }
     try {
       syncVelloTheme();
-      sessionRef.current?.renderFrame();
+      session?.renderFrame();
     } catch {
       /* gpu not ready */
     }
   }, [syncVelloTheme]);
+
+  useEffect(() => {
+    onFixtureChangeRef.current = onFixtureChange;
+  }, [onFixtureChange]);
+
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (!session || !reorganize || reorganize.epoch <= 0) return;
+    try {
+      session.reorganize(reorganize.optionsJson);
+      console.log("[DEBUG] dag canvas reorganized:", session.fixtureJson());
+      onFixtureChangeRef.current?.(session.fixtureJson());
+      renderFrame();
+    } catch (err) {
+      console.log(`[DEBUG] dag canvas reorganize failed: ${String(err)}`);
+    }
+  }, [reorganize?.epoch, reorganize?.optionsJson, renderFrame]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -203,6 +354,8 @@ export function DagCanvas({ fixtureJson, className }: DagCanvasProps): React.JSX
     });
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      for (const el of overlayElementsRef.current.values()) el.remove();
+      overlayElementsRef.current.clear();
       sessionRef.current = null;
     };
   }, [fixtureJson, renderFrame]);
@@ -210,6 +363,7 @@ export function DagCanvas({ fixtureJson, className }: DagCanvasProps): React.JSX
   return (
     <div ref={containerRef} className={className ?? "relative h-full w-full min-h-0 min-w-0 bg-canvas"}>
       <canvas ref={canvasRef} className="block h-full w-full touch-none" />
+      <div ref={overlayRef} className="pointer-events-none absolute inset-0 overflow-hidden" data-dag-media-overlays="" />
     </div>
   );
 }
@@ -220,9 +374,17 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   describe("dag fixture", () => {
-    it("default fixture has six nodes", () => {
-      expect(DAG_DEFAULT_FIXTURE.nodes.length).toBe(6);
-      expect(DAG_DEFAULT_FIXTURE.edges.length).toBe(6);
+    it("default fixture has five nodes and four edges", () => {
+      expect(DAG_DEFAULT_FIXTURE.nodes.length).toBe(5);
+      expect(DAG_DEFAULT_FIXTURE.edges.length).toBe(4);
+    });
+
+    it("default fixture includes all node kinds", () => {
+      const kinds = DAG_DEFAULT_FIXTURE.nodes.map((n) => n.kind);
+      expect(kinds).toContain("slider");
+      expect(kinds).toContain("select");
+      expect(kinds).toContain("computation");
+      expect(kinds).toContain("screen");
     });
   });
 }

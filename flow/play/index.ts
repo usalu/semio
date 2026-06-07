@@ -12,8 +12,11 @@ import {
   WindowKindRuntime,
   buildFlowWindowBody,
   createStackLayout,
+  enforcePlaygroundWindowEngagementInput,
   registerWindowBody,
+  type CommandDescriptor,
   type WindowBodyViewContext,
+  type WindowEngagement,
   type UiNode,
   type UiTreeItemNode,
   type UiTreeSectionNode,
@@ -27,6 +30,7 @@ import {
   type CatalogueItem,
   type CatalogueSection,
   type FlowFixtureV1,
+  type FlowReorganizeRequest,
 } from "@flow/react";
 
 export const FLOW_PLAY_APP_ID = "flow-play";
@@ -35,12 +39,38 @@ export const FLOW_PLAY_SURFACE_ID = "flow.play/v1";
 export const FLOW_PLAY_BODY_KEY_MAIN = "flow.play.main";
 export const FLOW_PLAY_WINDOW_KIND_ID = "flow-main";
 
+export const FLOW_ENGAGEMENT_REORGANIZE_ID = "flow.tool.reorganize";
+export const FLOW_ENGAGEMENT_ORIENTATION_LR_ID = "flow.layout.leftRight";
+export const FLOW_ENGAGEMENT_ORIENTATION_TB_ID = "flow.layout.topBottom";
+
+export type FlowLayoutOrientation = "leftRight" | "topBottom";
+
+const DEFAULT_LAYER_SPACING = 120;
+const DEFAULT_SIBLING_GAP = 40;
+
 export const FLOW_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = FLOW_DEFAULT_FIXTURE;
 export const FLOW_PLAY_DEFAULT_FIXTURE_JSON = flowFixtureToJson(FLOW_PLAY_DEFAULT_FIXTURE);
 
 export const FLOW_PLAY_LAYOUT = createStackLayout([FLOW_PLAY_WINDOW_KIND_ID], ["Flow"]);
 export const FLOW_PLAY_KINDS_BODY_KEY = "flow.play.kinds";
 export const FLOW_PLAY_KINDS_TAB_ID = "flow-play-kinds";
+
+/** @emoji 📚 Neuron module section ids expected in the flow play workbench catalogue. */
+export const FLOW_NEURON_MODULE_IDS = ["dictionary", "logic", "math", "text"] as const;
+
+/** @emoji ✅ True when every registered neuron module section is present. */
+export function flowPlayCatalogueIncludesAllNeuronModules(sections: readonly CatalogueSection[]): boolean {
+  const ids = new Set(sections.map((section) => section.id));
+  return FLOW_NEURON_MODULE_IDS.every((id) => ids.has(id));
+}
+
+function flowPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+  return { controllerId: FLOW_PLAY_CONTROLLER_ID, command, args };
+}
+
+function buildFlowLayoutOptionsJson(layerSpacing: number, siblingGap: number, orientation: FlowLayoutOrientation): string {
+  return JSON.stringify({ layerSpacing, siblingGap, orientation });
+}
 
 /** @emoji 🏷️ Workbench catalogue tab: module sections plus Inputs and Outputs. */
 export function buildFlowPlayKindsTree(sections: readonly CatalogueSection[]): UiNode {
@@ -82,10 +112,18 @@ export class FlowPlayController extends Controller {
   private fixtureJson = FLOW_PLAY_DEFAULT_FIXTURE_JSON;
   private previewText = "—";
   private catalogueSections: CatalogueSection[] = [];
+  private catalogueRevision = 0;
+  private readonly snapshotListeners = new Set<() => void>();
+  private engagementInput = "";
+  private layerSpacing = DEFAULT_LAYER_SPACING;
+  private siblingGap = DEFAULT_SIBLING_GAP;
+  private orientation: FlowLayoutOrientation = "leftRight";
+  private reorganizeEpoch = 0;
+  private reorganizeOptionsJson = buildFlowLayoutOptionsJson(DEFAULT_LAYER_SPACING, DEFAULT_SIBLING_GAP, "leftRight");
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-    this.mainMode.windowKinds = [new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Flow", FLOW_PLAY_BODY_KEY_MAIN)];
+    this.rebuildShellMode();
   }
 
   getFixtureJson(): string {
@@ -100,7 +138,127 @@ export class FlowPlayController extends Controller {
     return this.catalogueSections;
   }
 
+  getCatalogueRevision(): number {
+    return this.catalogueRevision;
+  }
+
+  /** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
+  subscribeSnapshot(listener: () => void): () => void {
+    this.snapshotListeners.add(listener);
+    return () => this.snapshotListeners.delete(listener);
+  }
+
+  private notifySnapshot(): void {
+    for (const listener of this.snapshotListeners) {
+      listener();
+    }
+  }
+
+  getReorganize(): FlowReorganizeRequest {
+    return { epoch: this.reorganizeEpoch, optionsJson: this.reorganizeOptionsJson };
+  }
+
+  private syncReorganizeOptionsJson(): void {
+    this.reorganizeOptionsJson = buildFlowLayoutOptionsJson(this.layerSpacing, this.siblingGap, this.orientation);
+  }
+
+  private triggerReorganize(): void {
+    this.syncReorganizeOptionsJson();
+    this.reorganizeEpoch += 1;
+    this.rebuildShellMode();
+    this.emit();
+  }
+
+  private windowEngagement(): WindowEngagement {
+    return {
+      sessionActive: true,
+      input: {
+        id: "engagement-input",
+        value: this.engagementInput,
+        placeholder: "Reorganize, lr, tb",
+        onChange: flowPlayCmd("engagementInput"),
+        onSubmit: flowPlayCmd("engagementSubmit"),
+      },
+      possibleEngagements: [
+        { id: FLOW_ENGAGEMENT_REORGANIZE_ID, label: "Reorganize", command: flowPlayCmd("reorganize") },
+        { id: FLOW_ENGAGEMENT_ORIENTATION_LR_ID, label: "Left to Right", command: flowPlayCmd("setOrientation", { orientation: "leftRight" }) },
+        { id: FLOW_ENGAGEMENT_ORIENTATION_TB_ID, label: "Top to Bottom", command: flowPlayCmd("setOrientation", { orientation: "topBottom" }) },
+      ],
+      controls: [
+        {
+          kind: "slider",
+          id: "flow-layer-spacing",
+          label: "Layer spacing",
+          value: this.layerSpacing,
+          min: 40,
+          max: 320,
+          step: 10,
+          onChange: flowPlayCmd("setSpacing", { field: "layerSpacing" }),
+        },
+        {
+          kind: "slider",
+          id: "flow-sibling-gap",
+          label: "Sibling gap",
+          value: this.siblingGap,
+          min: 10,
+          max: 160,
+          step: 5,
+          onChange: flowPlayCmd("setSpacing", { field: "siblingGap" }),
+        },
+      ],
+      status: [{ id: "flow-layout-orientation", text: this.orientation === "leftRight" ? "Left to right" : "Top to bottom" }],
+    };
+  }
+
+  private rebuildShellMode(): void {
+    this.mainMode.windowKinds = [
+      new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Flow", FLOW_PLAY_BODY_KEY_MAIN, undefined, [], this.windowEngagement()),
+    ];
+    for (const windowKind of this.mainMode.windowKinds) {
+      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Flow play window "${windowKind.id}"`);
+    }
+  }
+
   override run(command: string, args?: unknown): void {
+    if (command === "engagementInput") {
+      const value = (args as { value?: string }).value;
+      if (typeof value === "string" && value !== this.engagementInput) {
+        this.engagementInput = value;
+        this.rebuildShellMode();
+        this.emit();
+      }
+      return;
+    }
+    if (command === "engagementSubmit") {
+      const value = (args as { value?: string }).value ?? this.engagementInput;
+      this.applyEngagement(value);
+      return;
+    }
+    if (command === "setSpacing") {
+      const field = (args as { field?: string; value?: number }).field;
+      const value = (args as { value?: number }).value;
+      if (typeof value !== "number") return;
+      if (field === "layerSpacing") this.layerSpacing = value;
+      else if (field === "siblingGap") this.siblingGap = value;
+      else return;
+      this.syncReorganizeOptionsJson();
+      this.rebuildShellMode();
+      this.emit();
+      return;
+    }
+    if (command === "setOrientation") {
+      const orientation = (args as { orientation?: FlowLayoutOrientation }).orientation;
+      if (orientation !== "leftRight" && orientation !== "topBottom") return;
+      this.orientation = orientation;
+      this.syncReorganizeOptionsJson();
+      this.rebuildShellMode();
+      this.emit();
+      return;
+    }
+    if (command === "reorganize") {
+      this.triggerReorganize();
+      return;
+    }
     if (command === "setPreviewText") {
       const text = (args as { text?: string }).text;
       if (typeof text === "string" && text !== this.previewText) {
@@ -113,6 +271,8 @@ export class FlowPlayController extends Controller {
       const sections = (args as { sections?: CatalogueSection[] }).sections;
       if (Array.isArray(sections)) {
         this.catalogueSections = sections;
+        this.catalogueRevision += 1;
+        this.notifySnapshot();
         this.emit();
       }
       return;
@@ -124,6 +284,32 @@ export class FlowPlayController extends Controller {
         this.emit();
       }
     }
+  }
+
+  private applyEngagement(value: string): void {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) return;
+    if (trimmed === "reorganize" || trimmed === "layout") {
+      this.triggerReorganize();
+      return;
+    }
+    if (trimmed === "lr" || trimmed === "left" || trimmed === "left to right") {
+      this.orientation = "leftRight";
+      this.syncReorganizeOptionsJson();
+      this.rebuildShellMode();
+      this.emit();
+      return;
+    }
+    if (trimmed === "tb" || trimmed === "top" || trimmed === "top to bottom") {
+      this.orientation = "topBottom";
+      this.syncReorganizeOptionsJson();
+      this.rebuildShellMode();
+      this.emit();
+      return;
+    }
+    this.engagementInput = "";
+    this.rebuildShellMode();
+    this.emit();
   }
 }
 
@@ -179,6 +365,44 @@ if (import.meta.vitest) {
       const item = tree.sections?.[0]?.items?.[0];
       expect(item?.draggable).toBe(true);
       expect(item?.dragData).toBeDefined();
+    });
+
+    it("kinds tree lists every neuron module section", () => {
+      const sections: CatalogueSection[] = [
+        { id: "dictionary", title: "Dictionary", items: [{ kind: "neuron", neuronKind: "dictionary.get", name: "Get", summary: "Read key" }] },
+        { id: "logic", title: "Logic", items: [{ kind: "neuron", neuronKind: "logic.not", name: "Not", summary: "Invert" }] },
+        { id: "math", title: "Math", items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }] },
+        { id: "text", title: "Text", items: [{ kind: "neuron", neuronKind: "text.upper", name: "Upper", summary: "Uppercase" }] },
+        { id: "inputs", title: "Inputs", items: [{ kind: "inputSlider", name: "Slider", summary: "Number" }] },
+        { id: "outputs", title: "Outputs", items: [{ kind: "outputPreview", name: "Preview", summary: "Preview" }] },
+      ];
+      expect(flowPlayCatalogueIncludesAllNeuronModules(sections)).toBe(true);
+      const tree = buildFlowPlayKindsTree(sections);
+      const labels = tree.sections?.map((section) => section.label) ?? [];
+      for (const moduleId of FLOW_NEURON_MODULE_IDS) {
+        expect(labels.some((label) => label.toLowerCase().includes(moduleId))).toBe(true);
+      }
+      expect(labels.some((label) => /inputs/i.test(label))).toBe(true);
+      expect(labels.some((label) => /outputs/i.test(label))).toBe(true);
+    });
+
+    it("catalogue revision bumps when sections arrive", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      expect(ctrl.getCatalogueRevision()).toBe(0);
+      ctrl.run("setCatalogueSections", {
+        sections: [{ id: "math", title: "Math", items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }] }],
+      });
+      expect(ctrl.getCatalogueRevision()).toBe(1);
+    });
+
+    it("reorganize engagement bumps epoch", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      expect(ctrl.getReorganize().epoch).toBe(0);
+      ctrl.run("reorganize");
+      expect(ctrl.getReorganize().epoch).toBe(1);
+      expect(ctrl.getReorganize().optionsJson).toContain("leftRight");
     });
   });
 }

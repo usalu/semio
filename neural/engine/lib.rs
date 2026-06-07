@@ -217,6 +217,20 @@ impl<'a> Evaluator<'a> {
     }
 
     pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<HashMap<String, Dictionary>, EvalError> {
+        self.evaluate_with(tree, seeds, &mut |kind, input| {
+            self.registry
+                .get(kind)
+                .ok_or_else(|| EvalError::UnknownKind(kind.into()))?
+                .evaluate(input)
+        })
+    }
+
+    pub fn evaluate_with(
+        &self,
+        tree: &Tree,
+        seeds: &HashMap<String, Dictionary>,
+        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+    ) -> Result<HashMap<String, Dictionary>, EvalError> {
         let order = topo_order(tree)?;
         let mut outputs: HashMap<String, Dictionary> = seeds.clone();
         for neuron_id in order {
@@ -226,8 +240,7 @@ impl<'a> Evaluator<'a> {
                 outputs.insert(neuron_id.clone(), seed.clone());
                 continue;
             }
-            let kind = self.registry.get(&neuron.kind).ok_or_else(|| EvalError::UnknownKind(neuron.kind.clone()))?;
-            let out = kind.evaluate(&input.merge(&neuron.params))?;
+            let out = dispatch(&neuron.kind, &input.merge(&neuron.params))?;
             outputs.insert(neuron_id.clone(), out);
         }
         Ok(outputs)
@@ -353,6 +366,22 @@ mod tests {
         assert_eq!(catalogue.len(), 2);
         assert_eq!(catalogue[0].id, "double");
         assert_eq!(catalogue[1].id, "echo");
+    }
+
+    #[test]
+    fn evaluate_with_custom_dispatch() {
+        let tree = Tree {
+            neurons: vec![Neuron { id: "b".into(), kind: "double".into(), params: Dictionary::new() }],
+            synapses: vec![],
+        };
+        let mut seeds = HashMap::new();
+        seeds.insert("b".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.0))));
+        let out = Evaluator::new(&Registry::new()).evaluate_with(&tree, &seeds, &mut |kind, input| {
+            assert_eq!(kind, "double");
+            let n = input.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
+            Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n * 2.0))))
+        }).unwrap();
+        assert_eq!(out.get("b").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.0));
     }
 
     #[test]

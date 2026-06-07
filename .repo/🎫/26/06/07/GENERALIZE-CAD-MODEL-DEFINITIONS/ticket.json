@@ -1,8 +1,9 @@
 {
   "title": "Generalize Cad Model Definitions",
   "emoji": "📐",
-  "status": "open",
+  "status": "closed",
   "description": "Remove concrete model-definition IDs from core/kernel/renderer by introducing cad module system with runtime composition root.",
+  "summary": "Removed concrete model-definition IDs from @cad/js/core and @cad/js/kernel/brepjs by introducing a flow-style module system: generic registries (registerPropertyComputer, registerImportProfile, additive registerModelDefinitionAssets), four domain modules (spatial-shape, aec-building, aec-building-energy, aec-building-structure), and @cad/js/runtime composition root (asset glob + bootstrapCadModules). Play host bootstraps runtime; transformation scoring and structure derivation generalized. Fixed lazy interaction catalog loading and relative asset path resolution. Tests: runtime, all modules, kernel (40), query (42), stately (4), renderer library (63), play build green. Core retains 362/396 passing; 34 interaction e2e/registry tests still fail (pre-existing interaction completion harness issues).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1540"
   },

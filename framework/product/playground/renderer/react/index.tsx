@@ -6027,6 +6027,21 @@ import type { UiFlowHostSurfaceNode } from "@framework/platform/core";
 let flowPlayChromeRegistered = false;
 const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
 
+/** @emoji 🔔 Re-renders flow play workbench kinds when WASM catalogue sections arrive. */
+function useFlowPlayCatalogueRevision(): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const ctrl = flowPlayControllerRef.current;
+      if (!ctrl?.subscribeSnapshot) {
+        return () => {};
+      }
+      return ctrl.subscribeSnapshot(listener);
+    },
+    () => flowPlayControllerRef.current?.getCatalogueRevision() ?? 0,
+    () => 0,
+  );
+}
+
 function useFlowPlayController(): FlowPlayController | undefined {
   const { runtime } = useApp();
   const ctrl = runtime.getActiveApp()?.controller as FlowPlayController | undefined;
@@ -6059,6 +6074,7 @@ function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSur
     <FlowCanvas
       fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
       fixtureDragDrop
+      reorganize={ctrl?.getReorganize()}
       onPreviewText={onPreviewText}
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
@@ -6087,12 +6103,13 @@ class FlowPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
 }
 
 function FlowPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
+  const catalogueRevision = useFlowPlayCatalogueRevision();
   const flowPlayKindsPanel = reactHostPort.useMemo(() => new FlowPlayKindsPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
       workbench: [flowPlayKindsPanel],
     }),
-    [flowPlayKindsPanel],
+    [flowPlayKindsPanel, catalogueRevision],
   );
   return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
 }
@@ -6145,8 +6162,20 @@ function useDagPlayController(): DagPlayController | undefined {
 
 function DagPlayPaneSurfaceHost({ node: _node }: { readonly node: UiDagHostSurfaceNode }): ReactElement {
   const ctrl = useDagPlayController();
+  const onFixtureChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setFixtureJson", { json });
+    },
+    [ctrl],
+  );
   console.log("[DEBUG] dag play surface mount");
-  return <DagCanvas fixtureJson={ctrl?.getFixtureJson() ?? DAG_PLAY_DEFAULT_FIXTURE_JSON} />;
+  return (
+    <DagCanvas
+      fixtureJson={ctrl?.getFixtureJson() ?? DAG_PLAY_DEFAULT_FIXTURE_JSON}
+      reorganize={ctrl?.getReorganize()}
+      onFixtureChange={onFixtureChange}
+    />
+  );
 }
 
 export function registerDagPlaySurfaceHosts(): void {

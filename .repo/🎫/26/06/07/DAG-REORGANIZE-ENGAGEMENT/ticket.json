@@ -1,0 +1,8 @@
+{
+  "title": "Reorganize DAG Nodes with Left-to-Right Tree Layout",
+  "emoji": "🌳",
+  "status": "open",
+  "description": "Add reorganize tool with automatic left-to-right Buchheim tree layout, spacing/orientation options, and window engagement chrome for DAG and Flow play apps.",
+  "summary": "Added DagLayoutOrientation (default leftRight) and DagHost::reorganize with WASM DagSession.reorganize; FlowHost::reorganize overwrites saved widget layout. DagCanvas and FlowCanvas accept reorganize epoch props. DagPlayController and FlowPlayController expose engagement with Reorganize command, orientation toggles, and layer/sibling spacing sliders. Playground surface hosts wire reorganize into canvases.",
+  "goal": "🎯r2603"
+}

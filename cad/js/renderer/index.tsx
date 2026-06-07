@@ -7183,6 +7183,12 @@ if (import.meta.vitest) {
     it("defaultInteractionSpatialViewTheme hides the factory ground plane tint", () => {
       expect(defaultInteractionSpatialViewTheme.groundPlaneOpacity).toBe(0);
     });
+
+    it("spatialAutoFitShouldRun keeps initial fit pane-local across mesh reloads", () => {
+      expect(spatialAutoFitShouldRun("initial", "mesh-key", "mesh-key", true)).toBe(false);
+      expect(spatialAutoFitShouldRun("changes", "mesh-key", "mesh-key", true)).toBe(false);
+      expect(spatialAutoFitShouldRun("changes", "next-key", "mesh-key", true)).toBe(true);
+    });
   });
 
   describe("ModelStatsPanel", () => {
