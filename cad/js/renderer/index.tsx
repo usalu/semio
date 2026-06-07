@@ -5,7 +5,7 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, Label, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
+import { Button, cn, ENGAGEMENT_USER, focusActiveEngagementInput, humanizeEngagementStepId, Input, isUiTypingTarget, normalizeEngagementCommandText, queryWindowEngagementInput, reactHostPort, sceneHostPort, SelectionMarquee, UnifiedGumball, gumballPointerConsumesCanvasEventRef, type EngagementControl, type EngagementSpec, type GumballConfig, type GumballPose, type ThreeEvent } from "@ui/react";
 import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@ui/styling";
 import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
@@ -71,6 +71,8 @@ import {
   modelDefinitionUsesGeometryPicking,
   PRIMITIVE_MODEL_ENTITY_KINDS,
   countViewObjectsForModelDefinition,
+  listModelObjectsForModelDefinition,
+  objectPrimaryPrimitiveRef,
   primaryAttributeSelectionTarget,
   listAttributeDefinitionsForModelDefinitionEntity,
   attributeDefinitionEditorKind,
@@ -1090,11 +1092,9 @@ function collectSolidPrimitiveMemberIds(buckets: ReturnType<typeof geometryBucke
 }
 
 export function buildGeometryTypologyIndex(model: Model, modelDefinitionId: string): ReadonlyMap<string, string> {
-  const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
   const buckets = geometryBuckets(model);
   const out = new Map<string, string>();
-  for (const row of Object.values(model.objects)) {
-    if (!typologyIds.has(row.typology)) continue;
+  for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {
     for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
       const kind = resolvePrimitiveRefKind(model, primitiveRef);
       if (kind === "solid") {
@@ -1113,10 +1113,8 @@ export function buildGeometryTypologyIndex(model: Model, modelDefinitionId: stri
 }
 
 function createModelObjectSpatialPickTargets(model: Model, modelDefinitionId: string): readonly SpatialPickTarget[] {
-  const typologyIds = new Set(listTypologiesForModelDefinition(modelDefinitionId).map((row) => row.id));
   const targets: SpatialPickTarget[] = [];
-  for (const row of Object.values(model.objects)) {
-    if (!typologyIds.has(row.typology)) continue;
+  for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {
     const points = modelObjectPickPoints(model, row);
     const point = geometryPointCentroid(points);
     if (!point) continue;
@@ -1131,7 +1129,13 @@ function createModelObjectSpatialPickTargets(model: Model, modelDefinitionId: st
   return targets;
 }
 
-function appendPrimitiveSpatialPickTargets(targets: SpatialPickTarget[], buckets: ReturnType<typeof geometryBuckets>, entityKinds: ReadonlySet<ModelEntityKind>, geometryTypologyIndex: ReadonlyMap<string, string>): void {
+function appendPrimitiveSpatialPickTargets(
+  targets: SpatialPickTarget[],
+  buckets: ReturnType<typeof geometryBuckets>,
+  entityKinds: ReadonlySet<ModelEntityKind>,
+  geometryTypologyIndex: ReadonlyMap<string, string>,
+  skipSolidIds: ReadonlySet<string> = new Set(),
+): void {
   const withTypology = (target: Omit<SpatialPickTarget, "typologyId"> & { readonly geometryKind: ModelEntityKind }): SpatialPickTarget => ({
     ...target,
     typologyId: geometryTypologyIndex.get(`${target.geometryKind}:${target.id}`),
@@ -1179,6 +1183,7 @@ function appendPrimitiveSpatialPickTargets(targets: SpatialPickTarget[], buckets
     const all = geometryAllVertexPoints(buckets.vertices);
     const allCenter = geometryPointCentroid(all);
     for (const cell of geometryRecords(buckets.solids)) {
+      if (skipSolidIds.has(cell.id)) continue;
       const points = geometrySolidPoints(buckets.vertices, buckets.edges, buckets.wires, buckets.faces, buckets.shells, cell);
       const point = geometryPointCentroid(points) ?? allCenter;
       if (point) targets.push(withTypology({ kind: "object", geometryKind: "solid", id: cell.id, point, points: points.length ? points : all }));
@@ -1194,10 +1199,16 @@ export function createSpatialPickTargets(geometry: SpatialPickGeometry | null | 
   if (!model) return [];
   const mdId = activeModelDefinitionId ?? defaultModelDefinitionId();
   const entityKinds = new Set(modelDefinitionSelectionEntityKinds(mdId));
+  const scopedObjects = !isShapeModelDefinition(mdId) ? listModelObjectsForModelDefinition(model, mdId) : [];
   const geometryTypologyIndex = buildGeometryTypologyIndex(model, mdId);
   const targets: SpatialPickTarget[] = [];
-  if (modelDefinitionUsesGeometryPicking(mdId)) appendPrimitiveSpatialPickTargets(targets, buckets, entityKinds, geometryTypologyIndex);
-  if (entityKinds.has("object") && !isShapeModelDefinition(mdId)) targets.push(...createModelObjectSpatialPickTargets(model, mdId));
+  if (entityKinds.has("object") && scopedObjects.length > 0) targets.push(...createModelObjectSpatialPickTargets(model, mdId));
+  if (modelDefinitionUsesGeometryPicking(mdId)) {
+    const skipSolidIds = new Set(
+      scopedObjects.map((row) => objectPrimaryPrimitiveRef(row)).filter((primitiveRef): primitiveRef is string => typeof primitiveRef === "string" && primitiveRef.length > 0),
+    );
+    appendPrimitiveSpatialPickTargets(targets, buckets, entityKinds, geometryTypologyIndex, skipSolidIds);
+  }
   return targets;
 }
 
@@ -2380,8 +2391,42 @@ function pinnedPickTargetKeys(keys: ReadonlySet<string>): ReadonlySet<string> {
     const id = key.slice(colon + 1);
     const mapped = GEOMETRY_KIND_TO_OBJECT_PICK[kind as ModelEntityKind];
     if (mapped) out.add(`${mapped}:${id}`);
+    if (kind === "object") out.add(`solid:${id}`);
   }
   return out;
+}
+
+/** @emoji 🪪 Expands a hover/selection key across geometry pick aliases (`solid:foo` ↔ `object:foo`). */
+export function spatialHoverKeyAliases(key: string | null | undefined): ReadonlySet<string> {
+  if (!key) return new Set();
+  return pinnedPickTargetKeys(new Set([key]));
+}
+
+/** @emoji 🪪 True when a canvas pick key matches a shared hover/selection key (including aliases). */
+export function spatialHoverKeysMatch(left: string | null | undefined, right: string | null | undefined): boolean {
+  if (!left || !right) return false;
+  if (left === right) return true;
+  return spatialHoverKeyAliases(left).has(right);
+}
+
+/** @emoji 🖱️ Maps a hierarchy {@link SelectionTarget} to the canvas hover key (typology object when possible). */
+export function canvasHoverKeyForSelectionTarget(model: Model, modelDefinitionId: string, target: SelectionTarget): string {
+  if (target.kind === "object") return selectionTargetHoverKey(target);
+  for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {
+    for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
+      const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
+      if (target.kind === kind && target.id === String(primitiveRef)) {
+        return selectionTargetHoverKey({ kind: "object", id: String(row.id), editable: false });
+      }
+      if (kind === "solid") {
+        const members = collectSolidPrimitiveMemberIds(geometryBuckets(model), String(primitiveRef));
+        if (members.has(`${target.kind}:${target.id}`)) {
+          return selectionTargetHoverKey({ kind: "object", id: String(row.id), editable: false });
+        }
+      }
+    }
+  }
+  return selectionTargetHoverKey(target);
 }
 
 function spatialSelectionTarget(target: SpatialPickTarget): SelectionTarget {
@@ -2461,8 +2506,8 @@ function SpatialPickTargetNode({
   const displayPoint = mapPt(target.point);
   const displayPoints = target.points?.map(mapPt);
   const targetKey = spatialPickTargetKey(target);
-  const hovered = hoveredTargetKey === targetKey;
-  const selected = selectedTargetKeys?.has(targetKey) ?? selectedTargetKey === targetKey;
+  const hovered = spatialHoverKeysMatch(hoveredTargetKey, targetKey);
+  const selected = selectedTargetKeys ? [...selectedTargetKeys].some((key) => spatialHoverKeysMatch(key, targetKey)) : spatialHoverKeysMatch(selectedTargetKey, targetKey);
   const entityFlags = entityFlagsForId?.(target.id) ?? {};
   const typologyStyle = target.typologyId ? resolveTypologyStyle(target.typologyId) : undefined;
   const style = targetStyle(target, hovered, selected, typologyStyle, entityFlags.locked === true);
@@ -5877,7 +5922,7 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
   const fieldRow = (defn: AttributeDefinitionSpec, current: unknown, control: ReactNode) => (
     <div key={defn.id} className="flex flex-col gap-half">
       <div className="flex items-center justify-between gap-single">
-        <Label className="text-xs">{defn.label}</Label>
+        <span className="text-xs font-medium">{defn.label}</span>
         {current !== undefined ? (
           <Button type="button" variant="outline" size="sm" className="h-auto px-half py-0 text-2xs" onClick={() => clearField(defn)}>
             Clear
@@ -6722,6 +6767,25 @@ if (import.meta.vitest) {
       const keys = pinnedPickTargetKeys(new Set(["shell:sh0" as string]));
       expect(keys.has("shell:sh0")).toBe(true);
       expect(keys.has("face:sh0")).toBe(true);
+    });
+
+    it("spatialHoverKeyAliases links object and solid geometry pick keys", () => {
+      expect(spatialHoverKeyAliases("solid:foo").has("object:foo")).toBe(true);
+      expect(spatialHoverKeyAliases("object:foo").has("solid:foo")).toBe(true);
+      expect(spatialHoverKeysMatch("object:foo", "solid:foo")).toBe(true);
+    });
+
+    it("canvasHoverKeyForSelectionTarget maps primitive picks to typology object hover keys", () => {
+      const model = new Model();
+      const cell = solidRef("c0");
+      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, cell));
+      model.objects["object-c0"] = {
+        id: "object-c0" as ObjectRef,
+        typology: "energy.energy.hull",
+        primitives: { solid: String(cell) },
+      };
+      expect(canvasHoverKeyForSelectionTarget(model, "aec.building.energy", { kind: "solid", id: String(cell), editable: true })).toBe("object:object-c0");
+      expect(canvasHoverKeyForSelectionTarget(model, "aec.building.energy", { kind: "object", id: "object-c0", editable: true })).toBe("object:object-c0");
     });
 
     it("keeps interaction selection isolated per state", () => {

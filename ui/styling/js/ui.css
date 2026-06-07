@@ -494,6 +494,23 @@
       cursor: var(--cursor-ns-resize) !important;
     }
 
+    [data-slot="resizable-handle"][data-resize-orientation="horizontal"] {
+      cursor: var(--cursor-ew-resize) !important;
+    }
+
+    [data-slot="resizable-handle"][data-resize-orientation="vertical"] {
+      cursor: var(--cursor-ns-resize) !important;
+    }
+
+    [data-slot="resizable-corner"] {
+      touch-action: none;
+      cursor: var(--cursor-move) !important;
+    }
+
+    [data-slot="resizable-handle"]:has([data-slot="resizable-corner"]:hover) {
+      cursor: var(--cursor-move) !important;
+    }
+
     [role="button"]:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
     [role="link"]:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
     a:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
@@ -831,6 +848,34 @@
   [data-slot="breadcrumb-separator-control"]
 ) {
   border-color: var(--border-normal-color) !important;
+}
+
+/* Shell chrome: reinforce level-aware hover on navbar, footer, and toolbar controls. */
+[data-slot="navbar"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-base);
+}
+
+[data-slot="navbar"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-window);
+}
+
+[data-slot="navbar"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-panel);
+}
+
+[data-slot="navbar"] [data-slot="breadcrumb-link"]:hover,
+[data-slot="navbar"] [data-slot="breadcrumb-separator-control"]:hover {
+  background-color: var(--hover-base);
+}
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"], [data-slot="action"]):hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-base);
 }
 
 [data-slot="toolbar-zone"],

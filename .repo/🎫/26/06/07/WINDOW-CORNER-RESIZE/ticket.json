@@ -1,0 +1,12 @@
+{
+  "title": "Window Corner Dual Resize",
+  "emoji": "↔️",
+  "status": "open",
+  "description": "When dragging a corner where horizontal and vertical window splits meet, resize both axes at once like VS Code.",
+  "goal": "🎯ui🎯uireact",
+  "summary": "Added VS Code-style corner grabs at perpendicular split intersections in Mode: diagonal cursors, dual-axis resize on drag, larger splitter hit targets, and tests for corner specs plus layout updates.",
+  "files": [
+    "ui/react/index.tsx",
+    "ui/styling/js/ui.css"
+  ]
+}

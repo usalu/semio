@@ -39,6 +39,8 @@ import {
   puzzle2dFixtureHandlesFromNodeKind,
   buildPaletteNodeDragFixture,
   mergePaletteNodeFromDrop,
+  abortPuzzle2dFixturePaletteDrag,
+  puzzle2dFixturePaletteDropCommittedRef,
   type Puzzle2dFixtureDropDetail,
   type Puzzle2dFixtureNodeV1,
 } from "@puzzle/2d/react";
@@ -48,6 +50,7 @@ import {
   Attractions as Puzzle3dTies,
   Canvas3D as Puzzle3dCanvas,
   blockedVortexFullIdsFromAttractions,
+  cancelPuzzle3dFixturePalettePointerDrag,
   parseFixtureV1,
   useObjectConnect as usePuzzle3dPartConnect,
   useObjectRelocate as usePuzzle3dPartRelocate,
@@ -941,6 +944,15 @@ function paletteFlatCenterFromVolume(peer: PartV1, origin: Vec3): { readonly x: 
   return { x: flat.x + (origin[0] - volume.origin[0]), y: flat.y - (origin[1] - volume.origin[1]) };
 }
 
+function clearFlatPaletteDragSession(): void {
+  puzzle2dFixturePaletteDropCommittedRef.current = true;
+  abortPuzzle2dFixturePaletteDrag();
+}
+
+function clearVolumePaletteDragSession(): void {
+  cancelPuzzle3dFixturePalettePointerDrag();
+}
+
 /** @emoji 📥 Builds one unified part from a flat palette node drop. */
 export function partFromPaletteNodeDrop(model: V1, node: Puzzle2dFixtureNodeV1): PartV1 | null {
   const partKind = node.nodeKind?.trim();
@@ -1383,6 +1395,7 @@ export class Store {
       fillCount: 0,
       fillBuildDone: true,
     });
+    clearFlatPaletteDragSession();
     return part.id;
   }
 
@@ -1401,6 +1414,7 @@ export class Store {
       fillCount: 0,
       fillBuildDone: true,
     });
+    clearVolumePaletteDragSession();
     return part.id;
   }
 
@@ -1910,6 +1924,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
       {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
       {...(onFillMeshesReadyHost ? { onFillMeshesReady: onFillMeshesReadyHost } : {})}
       {...rest3d}
+      sceneFixture={fixture3d}
       selection={canvasSelection}
     >
       <Puzzle3dParts relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />

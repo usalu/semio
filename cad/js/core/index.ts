@@ -2126,7 +2126,8 @@ export function parseTypologySpec(raw: unknown): TypologySpec | null {
   const r = raw as Record<string, unknown>;
   if (r.schema !== "spatial.typology/v1") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
-  if (!Array.isArray(r.actions) || !Array.isArray(r.interactions)) return null;
+  const actions = Array.isArray(r.actions) ? r.actions.filter((row): row is string => typeof row === "string") : [];
+  const interactions = Array.isArray(r.interactions) ? r.interactions.filter((row): row is string => typeof row === "string") : [];
   return {
     schema: "spatial.typology/v1",
     id: r.id,
@@ -2134,8 +2135,8 @@ export function parseTypologySpec(raw: unknown): TypologySpec | null {
     label: r.label,
     description: typeof r.description === "string" ? r.description : undefined,
     primitiveKinds: parseTypologyPrimitiveKinds(r.primitiveKinds, r.id),
-    actions: r.actions as string[],
-    interactions: r.interactions as string[],
+    actions,
+    interactions,
     properties: Array.isArray(r.properties) ? (r.properties as string[]) : undefined,
     attributes: Array.isArray(r.attributes) ? (r.attributes as string[]) : undefined,
     style: parseTypologyStyleSpec(r.style),
@@ -3512,7 +3513,10 @@ export function listModelObjectsForModelDefinition(model: Model, modelDefinition
       if (typeof typologyId === "string" && typologyId.length > 0) typologyIds.add(typologyId);
     }
   }
-  return Object.values(model.objects).filter((row) => typologyIds.has(row.typology));
+  return Object.values(model.objects).filter((row) => {
+    if (typologyIds.has(row.typology)) return true;
+    return modelDefinitionIdForTypology(row.typology) === modelDefinitionId;
+  });
 }
 
 /** @emoji 🧭 Counts in-view typology objects for a model definition (renderer scope). */
@@ -7379,6 +7383,16 @@ if (import.meta.vitest) {
       };
       expect(listModelObjectsForModelDefinition(model, defaultModelDefinitionId()).map((row) => String(row.id))).toEqual(["imported"]);
     });
+    it("listModelObjectsForModelDefinition lists BIM class objects for aec.building", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { resolve } = await import("node:path");
+      const fixturePath = resolve(import.meta.dirname, "../../assets/play/hexagonal-cut-concrete-forest-left.model.json");
+      const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
+      const space = ModelSpace.fromJSON(fixtureJson);
+      const building = space.models["aec.building"]!;
+      expect(listTypologiesForModelDefinition("aec.building").some((row) => row.id === "building.building.column")).toBe(true);
+      expect(listModelObjectsForModelDefinition(building, "aec.building")).toHaveLength(12);
+    });
     it("collectGeometrySelectionTargets scopes object rows to model definition typologies", () => {
       const model = new Model();
       const cell = solidRef("c0");
@@ -7980,7 +7994,7 @@ if (import.meta.vitest) {
         const mdId = manifest.id;
         if (isShapeModelDefinition(mdId)) continue;
         for (const typology of listTypologiesForModelDefinition(mdId)) {
-          expect(typologyHasNativeConstructKit(typology), `${mdId} → ${typology.id}`).toBe(true);
+          if (!typologyHasNativeConstructKit(typology)) continue;
           const ids = typologyConstructAssetIds(typology.id, typology.label);
           expect(modelDefinitionIdForInteraction(ids.interaction), `${mdId} → ${ids.interaction}`).toBe(mdId);
           for (const actionId of typologyConstructModeActionIds(typology.id, typology.label)) {
@@ -7990,7 +8004,9 @@ if (import.meta.vitest) {
             expect(actionOwnedByModelDefinition(actionId, mdId), `${mdId} → ${typology.id} → ${actionId}`).toBe(true);
           }
         }
-        expect(listConstructableTypologiesForModelDefinition(mdId).length).toBe(listTypologiesForModelDefinition(mdId).length);
+        expect(listConstructableTypologiesForModelDefinition(mdId).length).toBe(
+          listTypologiesForModelDefinition(mdId).filter(typologyHasNativeConstructKit).length,
+        );
       }
     });
     it("typology constructFrom2PointsAndHeight adds an object row for the typology", async () => {

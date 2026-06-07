@@ -75,6 +75,7 @@ import {
   applyTargetVolumeRelocateToFixture,
   addReferenceToFixture,
   addTargetVolumeToFixture,
+  addVoxelToFixture,
   removeTargetVolumeFromFixture,
   updatePuzzle3dTargetVolumeInFixture,
   applyObjectKindToFixtureObject,
@@ -88,6 +89,7 @@ import {
   createOrbitCameraViewLayoutDescriptors,
   createOrbitCameraViewTemplates,
   ORBIT_CAMERA_VIEW_COMMAND,
+  resolveOrbitCameraViewFromTemplateId,
   orbitCameraDistance,
   parseFixtureV1,
   type OrbitCameraViewId,
@@ -113,6 +115,7 @@ import {
   type ObjectKindVortexTemplate,
   type BrushPlacePayload,
   type RelocatePayload,
+  type Vec3,
   type WorldReferenceRelocatePayload,
   type WorldReferenceProps,
   type WorldVolumeRelocatePayload,
@@ -130,6 +133,10 @@ import {
   PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID,
   PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID,
   PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID,
+  DEFAULT_VOXEL_BRUSH_SIZE,
+  VOXEL_BRUSH_SIZE_MIN,
+  VOXEL_BRUSH_SIZE_MAX,
+  VOXEL_BRUSH_SIZE_STEP,
   PUZZLE_3D_ENGAGEMENT_ZOOM_ID,
   getPuzzle3dZoomToSelectionEpoch,
   getPuzzle3dZoomToSelectionTarget,
@@ -904,6 +911,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
   targetRingCount: 0,
   activeTool: "select",
   fillEditTargetVolumes: false,
+  voxelBrushSize: DEFAULT_VOXEL_BRUSH_SIZE,
   brushPlacementOverlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
   cameraSeedEpoch: 0,
   hoverFocus: { hoverTarget: null, kindHover: null },
@@ -1662,6 +1670,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   private targetRingCount: number;
   private brushPlacementOverlapBudget: number;
   private fillEditTargetVolumes: boolean;
+  private voxelBrushSize: number;
   private objectKindIds: string[] = [];
   private vortexKindIds: string[] = [];
   private objectKindWeights: KindWeightMap = {};
@@ -1704,6 +1713,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.targetRingCount = 0;
     this.brushPlacementOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
     this.fillEditTargetVolumes = false;
+    this.voxelBrushSize = DEFAULT_VOXEL_BRUSH_SIZE;
     this.windowEngagement = this.placeholderWindowEngagement();
     this.syncBrushKindWeightsFromFixture();
     this.rebuildShellMode();
@@ -1874,6 +1884,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       targetRingCount: this.targetRingCount,
       brushPlacementOverlapBudget: this.brushPlacementOverlapBudget,
       fillEditTargetVolumes: this.fillEditTargetVolumes,
+      voxelBrushSize: this.voxelBrushSize,
       cameraSeedEpoch: this.cameraSeedEpoch,
       hoverFocus: this.hoverFocus,
     };
@@ -2005,6 +2016,16 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   /** @emoji 🧊 Adds a drawn target volume and selects it for immediate edit. */
+  paintVoxel(cad: Vec3, size?: number): void {
+    if (!this.fixture) {
+      return;
+    }
+    const cellSize = size ?? this.voxelBrushSize;
+    this.patchFixture((fixture) => addVoxelToFixture(fixture, cad, cellSize));
+    invalidatePuzzle3dFillForTargetVolumesChange();
+    console.log("[DEBUG] puzzle3d paintVoxel", cad, cellSize);
+  }
+
   addTargetVolume(volume: WorldVolumeProps): void {
     if (!this.fixture) {
       return;
@@ -2100,34 +2121,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   }
 
   private orbitCameraViewFromLegacyPreset(preset: string): OrbitCameraViewId | null {
-    const views: readonly OrbitCameraViewId[] = [
-      "top",
-      "bottom",
-      "front",
-      "back",
-      "right",
-      "left",
-      "north",
-      "south",
-      "east",
-      "west",
-      "isometricNe",
-      "isometricNw",
-      "isometricSe",
-      "isometricSw",
-      "perspective",
-      "twoPointPerspective",
-    ];
-    if ((views as readonly string[]).includes(preset)) {
-      return preset as OrbitCameraViewId;
-    }
-    const branchViews: Record<string, OrbitCameraViewId> = {
-      orthographic: "top",
-      "orthographic-2d": "top",
-      "orthographic-3d": "isometricNe",
-      isometry: "isometricNe",
-    };
-    return branchViews[preset] ?? null;
+    return resolveOrbitCameraViewFromTemplateId(preset);
   }
 
   private lodMeasures(): readonly WindowMeasure[] {
@@ -2518,15 +2512,41 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       }
       case "setFillEditTargetVolumes": {
         const value = (args as { value?: boolean }).value;
-        if (typeof value === "boolean") {
-          this.fillEditTargetVolumes = value;
-        } else {
-          this.fillEditTargetVolumes = !this.fillEditTargetVolumes;
-        }
+        const next = typeof value === "boolean" ? value : !this.fillEditTargetVolumes;
         if (this.activeTool !== "fill") {
           this.fillEditTargetVolumes = false;
+        } else {
+          this.fillEditTargetVolumes = next;
+          if (next) {
+            this.selection = normalizeSelectionSnapshot({
+              objectIds: [],
+              vortexIds: [],
+              attractionIds: [],
+              referenceIds: [],
+              targetVolumeIds: this.selection.targetVolumeIds ?? [],
+            });
+            this.notifySelection();
+          }
         }
         this.notifySnapshot();
+        return;
+      }
+      case "setVoxelBrushSize": {
+        const size = Number((args as { size?: number }).size);
+        if (!Number.isFinite(size)) {
+          return;
+        }
+        this.voxelBrushSize = Math.min(VOXEL_BRUSH_SIZE_MAX, Math.max(VOXEL_BRUSH_SIZE_MIN, size));
+        this.notifySnapshot();
+        return;
+      }
+      case "paintVoxel": {
+        const cad = (args as { cad?: Vec3 }).cad;
+        const size = Number((args as { size?: number }).size);
+        if (!cad || cad.length !== 3 || cad.some((n) => !Number.isFinite(n))) {
+          return;
+        }
+        this.paintVoxel(cad, Number.isFinite(size) ? size : undefined);
         return;
       }
       case "deleteSelectedTargetVolume": {
@@ -2658,8 +2678,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
           return;
         }
         if (optionId === PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID) {
-          this.fillEditTargetVolumes = !this.fillEditTargetVolumes;
-          this.notifySnapshot();
+          this.run("setFillEditTargetVolumes", {});
           return;
         }
         if (optionId === PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID) {
@@ -3108,6 +3127,7 @@ export interface Puzzle3dPlaySnapshot {
   readonly gumballConfig: GumballConfig;
   readonly activeTool: Puzzle3dActiveTool;
   readonly fillEditTargetVolumes: boolean;
+  readonly voxelBrushSize: number;
   readonly selection: Puzzle3dPlaySelection;
   readonly selectedId: string | null;
   readonly selectedLabel: string | null;
@@ -4220,6 +4240,17 @@ if (import.meta.vitest) {
       expect(twoPoint.position[2]).toBeCloseTo(twoPoint.target[2], 5);
       expect(ctrl.cameraForInstance()).toEqual(sharedBefore);
       expect(ctrl.getSnapshot().cameraSeedEpoch).toBeGreaterThan(0);
+    });
+
+    it("setCameraPreset maps display template ids to orbit views", () => {
+      const bus = new CommandBus();
+      const ctrl = new Puzzle3dPlayShellController(bus, () => {});
+      ctrl.run("setCameraPreset", { preset: "top", instanceId: "win-top" });
+      ctrl.run("setCameraPreset", { preset: "orthographic-2d", instanceId: "win-plan" });
+      ctrl.run("setCameraPreset", { preset: "perspective", instanceId: "win-persp" });
+      expect(ctrl.cameraForInstance("win-top").projection).toBe("orthographic");
+      expect(ctrl.cameraForInstance("win-plan").projection).toBe("orthographic");
+      expect(ctrl.cameraForInstance("win-persp").projection).toBe("perspective");
     });
 
     it("windowMeasures groups brush overlap budget and kind distribution", () => {

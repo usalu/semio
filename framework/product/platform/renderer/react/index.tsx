@@ -917,12 +917,14 @@ function createShellInstanceId(windowKindId: string, index: number): string {
   return `win-${windowKindId}-${suffix}`;
 }
 
-function bootstrapShellInstances(layout: WindowLayout, catalog: readonly WindowKindRuntime[]): ShellWindowInstance[] {
-  return collectFrameworkWindowNodes(layout.root).map((node, index) => {
+function bootstrapShellInstances(layout: WindowLayout, catalog: readonly WindowKindRuntime[], bus: CommandBus): ShellWindowInstance[] {
+  return collectFrameworkWindowNodes(layout.root).map((node) => {
     const kind = catalog.find((entry) => entry.id === node.windowKindId);
     const template = node.templateId ? findWindowTemplate(catalog, node.windowKindId, node.templateId) : undefined;
+    const instanceId = node.instanceId ?? node.windowKindId;
+    dispatchWindowTemplate(bus, catalog, node.windowKindId, node.templateId, instanceId);
     return {
-      instanceId: node.instanceId ?? node.windowKindId,
+      instanceId,
       windowKindId: node.windowKindId,
       templateId: node.templateId,
       title: node.title ?? template?.label ?? kind?.label ?? node.windowKindId,
@@ -1602,17 +1604,17 @@ export const ShellModeCanvas: React.FC<{
   const windowKindCatalogRef = reactHostPort.useRef(windowKindCatalog);
   defaultLayoutRef.current = defaultLayout;
   windowKindCatalogRef.current = windowKindCatalog;
-  const [instances, setInstances] = reactHostPort.useState<ShellWindowInstance[]>(() => bootstrapShellInstances(defaultLayout, windowKindCatalog));
+  const [instances, setInstances] = reactHostPort.useState<ShellWindowInstance[]>(() => bootstrapShellInstances(defaultLayout, windowKindCatalog, commandBus));
   const [shellLayout, setShellLayout] = reactHostPort.useState<ShellWindowLayoutNode>(() => convertFrameworkLayoutToShellLayout(defaultLayout));
   const liveFrameworkLayoutRef = reactHostPort.useRef<WindowLayout>(defaultLayout);
 
   reactHostPort.useEffect(() => {
     const layout = defaultLayoutRef.current;
     const catalog = windowKindCatalogRef.current;
-    setInstances(bootstrapShellInstances(layout, catalog));
+    setInstances(bootstrapShellInstances(layout, catalog, commandBus));
     setShellLayout(convertFrameworkLayoutToShellLayout(layout));
     liveFrameworkLayoutRef.current = layout;
-  }, [layoutKey, catalogKey]);
+  }, [commandBus, layoutKey, catalogKey]);
 
   const windowBodyCacheRef = reactHostPort.useRef(new Map<string, ShellModeWindowBodyCacheEntry>());
   const kindById = reactHostPort.useMemo(() => new Map(windowKinds.map((kind) => [kind.id, kind])), [windowKinds]);
@@ -2809,6 +2811,16 @@ const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, c
 						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
 							commandBus.dispatch(component.controllerId, "puzzle5dSelection", puzzle5dSelectionPayload(instanceId, "flat", snapshot));
 						},
+						...(instanceId.endsWith(":kit:wires")
+							? {
+									onActivate: (snapshot: Puzzle2dSelectionSnapshot) => {
+										commandBus.dispatch(component.controllerId, "puzzle5dActivate", {
+											instanceId,
+											puzzle2dIds: snapshot.ids,
+										});
+									},
+								}
+							: {}),
 						onHover: (payload: { readonly id: string | null }) => {
 							commandBus.dispatch(component.controllerId, "puzzle5dHover", { instanceId, nodeId: payload.id });
 						},

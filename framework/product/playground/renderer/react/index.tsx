@@ -1535,6 +1535,12 @@ import {
   isLoadableMeshUrl,
   resolveObjectKindMeshUrl,
   type FixtureV1,
+  type CameraState,
+  computeOrbitCameraViewState,
+  orbitCameraDistance,
+  orbitCameraProjectionForView,
+  ORBIT_CAMERA_VIEW_COMMAND,
+  resolveOrbitCameraViewFromTemplateId,
   type Puzzle3dFixtureDropDetail,
   type Puzzle3dHoverPayload,
   type RelocatePayload,
@@ -1769,6 +1775,12 @@ function Puzzle3dPlayEngagementPublisher(props: {
   const onToggleFillEditTargetVolumes = reactHostPort.useCallback(() => {
     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillEditTargetVolumes", {});
   }, [bus]);
+  const onVoxelBrushSize = reactHostPort.useCallback(
+    (size: number) => {
+      bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setVoxelBrushSize", { size });
+    },
+    [bus],
+  );
   const onZoomToSelection = reactHostPort.useCallback(() => {
     requestPuzzle3dZoomToSelection(snap.selection);
   }, [snap.selection]);
@@ -1819,6 +1831,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         fillCount,
         fillBuildProgress,
         fillEditTargetVolumes: snap.fillEditTargetVolumes,
+        voxelBrushSize: snap.voxelBrushSize,
         selectedTargetVolumeCount: snap.selection.targetVolumeIds.length,
         selectionCount,
         onCmdLineChange: setCmdLine,
@@ -1831,6 +1844,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         onFillCount,
         onToggleFillEditTargetVolumes,
         onDeleteSelectedTargetVolume,
+        onVoxelBrushSize,
         onCycleBrushCandidate: () => brushSource.cycleCandidate(),
         onPickBrushCandidate: (index) => {
           const candidate = brushSource.candidates[index];
@@ -1844,7 +1858,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
         brushTargetActive: brushSource.targetActive,
         brushPlacementProbePending: brushSource.placementProbePending,
       }),
-    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length],
+    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushSize, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length, snap.voxelBrushSize],
   );
   engagementSpecRef.current = spec;
   reactHostPort.useEffect(() => {
@@ -1920,16 +1934,50 @@ function Puzzle3dPlayEngagementPublisher(props: {
   return null;
 }
 
+/** @emoji 📷 Aligns shell viewport camera projection with a display-tree template on first paint. */
+function puzzle3dPlayViewportCamera(base: CameraState, templateId?: string): CameraState {
+  const view = templateId ? resolveOrbitCameraViewFromTemplateId(templateId) : null;
+  if (!view) {
+    return base;
+  }
+  const expectedProjection = orbitCameraProjectionForView(view);
+  if ((base.projection ?? "perspective") === expectedProjection) {
+    return base;
+  }
+  return computeOrbitCameraViewState(view, {
+    target: base.target,
+    distance: orbitCameraDistance({ ...base, projection: base.projection ?? "perspective" }),
+    zoom: base.zoom,
+  });
+}
+
 const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewportHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
   const { runtime } = useApp();
   const bus = runtime.commandBus;
   const ctrl = usePuzzle3dPlayController();
   const snap = usePuzzle3dPlaySnapshot();
   const shellInstance = useShellWindowInstance();
-  const viewportCamera = reactHostPort.useMemo(
-    () => ctrl?.cameraForInstance(shellInstance?.instanceId) ?? snap.fixture?.camera,
-    [ctrl, shellInstance?.instanceId, snap.cameraSeedEpoch, snap.fixture?.camera],
-  );
+  const viewportCamera = reactHostPort.useMemo(() => {
+    const base = ctrl?.cameraForInstance(shellInstance?.instanceId) ?? snap.fixture?.camera;
+    if (!base) {
+      return { position: [420, -420, 320] as const, target: [0, 0, 40] as const, zoom: 1 };
+    }
+    return puzzle3dPlayViewportCamera(base, shellInstance?.templateId);
+  }, [ctrl, shellInstance?.instanceId, shellInstance?.templateId, snap.cameraSeedEpoch, snap.fixture?.camera]);
+  reactHostPort.useLayoutEffect(() => {
+    if (!ctrl || !shellInstance?.instanceId || !shellInstance.templateId) {
+      return;
+    }
+    const view = resolveOrbitCameraViewFromTemplateId(shellInstance.templateId);
+    if (!view) {
+      return;
+    }
+    const current = ctrl.cameraForInstance(shellInstance.instanceId);
+    if ((current.projection ?? "perspective") === orbitCameraProjectionForView(view)) {
+      return;
+    }
+    ctrl.run(ORBIT_CAMERA_VIEW_COMMAND, { view, instanceId: shellInstance.instanceId });
+  }, [ctrl, shellInstance?.instanceId, shellInstance?.templateId]);
   const cameraSeedKey = shellInstance ? `${shellInstance.instanceId}:${snap.cameraSeedEpoch}` : snap.cameraSeedEpoch;
   const engagementPublisher =
     ctrl && node.controllerId === PUZZLE_3D_PLAY_CONTROLLER_ID ? (
@@ -1981,9 +2029,9 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
     },
     [ctrl],
   );
-  const onTargetVolumeDrawPersist = reactHostPort.useCallback(
-    (volume: import("@infinite/world/r3f").WorldVolumeProps) => {
-      ctrl?.addTargetVolume(volume);
+  const onVoxelBrushPaintPersist = reactHostPort.useCallback(
+    (cad: import("../react/index.tsx").Vec3, size: number) => {
+      ctrl?.run("paintVoxel", { cad, size });
     },
     [ctrl],
   );
@@ -2121,7 +2169,11 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
           selectedLabel={snap.selectedLabel}
           selectionMode={snap.selectionMode}
           selectionMethod={snap.selectionMethod}
-          marqueeSelectableKinds={snap.selectableKinds}
+          marqueeSelectableKinds={
+            snap.fillEditTargetVolumes
+              ? { object: false, vortex: false, attraction: false }
+              : snap.selectableKinds
+          }
           proximityRadius={snap.proximityRadius}
           chunkSize={snap.chunkSize}
           gridFactor={snap.gridFactor}
@@ -2134,8 +2186,9 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
           onSelect={(selection) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "noteSelection", selection)}
           onReferenceRelocate={onReferenceRelocatePersist}
           onTargetVolumeRelocate={onTargetVolumeRelocatePersist}
-          onTargetVolumeDraw={onTargetVolumeDrawPersist}
+          onVoxelBrushPaint={onVoxelBrushPaintPersist}
           fillEditTargetVolumes={snap.fillEditTargetVolumes}
+          voxelBrushSize={snap.voxelBrushSize}
           onToggleSelectionHidden={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "hidden", value })}
           onToggleSelectionLocked={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "locked", value })}
           onDeleteSelection={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "deleteSelection")}
@@ -2249,6 +2302,7 @@ import {
   buildPuzzle5dPlayKindsTree,
   buildPuzzle5dPlayRuntime,
   buildPuzzle5d3dDeclarativeBody,
+  puzzle5dFixturePaletteTreeDragController,
   PUZZLE_5D_PLAY_KINDS_TAB_ID,
   PUZZLE_5D_PLAY_ICON_KINDS,
   type Puzzle5dPlaySnapshot,
@@ -2299,7 +2353,7 @@ function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dP
     const bridge: Puzzle5dPlayHostBridge = {
       getToolbarState: () => ({
         puzzle2dActiveTool: controller.getActiveTool(),
-        puzzle2dBrushFlushDistance: controller.getSnapshot().brushFlushDistance,
+        puzzle2dBrushFlushDistance: controller.getBrushFlushDistance(),
         puzzle2dSelectionMethod: selectionMethodRef.current,
         puzzle2dSelectionMode: selectionModeRef.current,
         puzzle2dSelectionTargets: selectionTargetsRef.current,
@@ -2483,7 +2537,14 @@ class Puzzle5dPlayKindsPanelDefinition extends PureSidePanelTabDefinition {
       id: PUZZLE_5D_PLAY_KINDS_TAB_ID,
       icon: createIconComponent("tags"),
       order: 1,
-      tree: new StaticTreePanelDefinition(uiTreeNodeToTreePanelConfig(this.buildTree(), this.commandBus)),
+      tree: new CallbackTreePanelDefinition(() => {
+        const treeNode = this.buildTree();
+        const config = uiTreeNodeToTreePanelConfig(treeNode, this.commandBus);
+        return {
+          ...config,
+          dragAndDropController: puzzle5dFixturePaletteTreeDragController(collectUiTreeItemDragData(treeNode.sections)),
+        };
+      }),
     };
   }
 }

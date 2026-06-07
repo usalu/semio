@@ -4,7 +4,7 @@
 
 // #region 🔌Adapters
 import { reactHostPort, resolveSceneGizmoViewportPlacement, sceneHostPort, referenceMediaPort, UnifiedGumball, gumballConfigVisible, gumballHandleKindToTransformMode, type GumballConfig, type GumballPose, type ReactNode, type ThreeEvent } from "@ui/react";
-import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar } from "@ui/styling";
+import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@ui/styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 
@@ -1133,6 +1133,40 @@ export function orbitCameraProjectionForView(view: OrbitCameraViewId): OrbitCame
   return view === "perspective" || view === "twoPointPerspective" ? "perspective" : "orthographic";
 }
 
+const ORBIT_CAMERA_VIEW_IDS: readonly OrbitCameraViewId[] = [
+  "top",
+  "bottom",
+  "front",
+  "back",
+  "right",
+  "left",
+  "north",
+  "south",
+  "east",
+  "west",
+  "isometricNe",
+  "isometricNw",
+  "isometricSe",
+  "isometricSw",
+  "perspective",
+  "twoPointPerspective",
+];
+
+const ORBIT_CAMERA_TEMPLATE_BRANCH_VIEWS: Record<string, OrbitCameraViewId> = {
+  orthographic: "top",
+  "orthographic-2d": "top",
+  "orthographic-3d": "isometricNe",
+  isometry: "isometricNe",
+};
+
+/** @emoji 🪟 Maps a display-tree window template id to an {@link OrbitCameraViewId}. */
+export function resolveOrbitCameraViewFromTemplateId(templateId: string): OrbitCameraViewId | null {
+  if ((ORBIT_CAMERA_VIEW_IDS as readonly string[]).includes(templateId)) {
+    return templateId as OrbitCameraViewId;
+  }
+  return ORBIT_CAMERA_TEMPLATE_BRANCH_VIEWS[templateId] ?? null;
+}
+
 function orbitCameraZoomForProjection(projection: OrbitCameraProjection, zoom?: number): number {
   if (projection === "orthographic") {
     return zoom !== undefined && zoom !== 1 ? zoom : 50;
@@ -1251,26 +1285,25 @@ export interface WorldOrbitViewGizmoProps {
   readonly onViewSelect: (view: OrbitCameraViewId) => void;
 }
 
-/** @emoji 🧭 CAD Z-up viewport gizmo (X / Z / −Y) anchored bottom-right. */
+function resolveWorldCadAxisColors(): [string, string, string] {
+  return [
+    resolveColorHex(semanticVar("accent"), "gray"),
+    resolveColorHex(semanticVar("accent-secondary"), "gray"),
+    resolveColorHex(semanticVar("accent-tertiary"), "gray"),
+  ];
+}
+
+/** @emoji 🧭 CAD Z-up viewport gizmo (X / Y / Z) anchored bottom-right. */
 export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactElement | null {
   const { size } = useThree();
-  const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => [
-    resolveColorHex(semanticVar("accent"), "gray"),
-    resolveColorHex(semanticVar("accent-tertiary"), "gray"),
-    resolveColorHex(semanticVar("accent-secondary"), "gray"),
-  ]);
-  const labels = reactHostPort.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
+  const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => resolveWorldCadAxisColors());
+  const labels = reactHostPort.useMemo(() => ["X", "Y", "Z"] as [string, string, string], []);
   const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
   const axisScale = reactHostPort.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
   const labelColor = reactHostPort.useMemo(() => resolveColorHex(semanticVar("foreground"), "gray"), []);
 
   reactHostPort.useEffect(() => {
-    const updateColors = () =>
-      setColors([
-        resolveColorHex(semanticVar("accent"), "gray"),
-        resolveColorHex(semanticVar("accent-tertiary"), "gray"),
-        resolveColorHex(semanticVar("accent-secondary"), "gray"),
-      ]);
+    const updateColors = () => setColors(resolveWorldCadAxisColors());
     updateColors();
     const observer = new MutationObserver(updateColors);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
@@ -1860,6 +1893,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
       position: threeVec3ToCad(camera.position),
       target: threeVec3ToCad(tgt),
       zoom: props.zoom ?? 1,
+      projection,
     });
   };
   return (
@@ -2023,15 +2057,41 @@ export interface WorldReferenceRelocatePayload {
 
 export const WORLD_REFERENCE_DEFAULT_WIDTH = 10;
 
-/** @emoji 🖼️ Resolves accent border color for reference hover vs selection outlines. */
-export function worldReferenceOutlineColor(renderMode: Pick<WorldEntityRenderMode, "asHover" | "showSelectedOutline">): string | null {
+export const WORLD_REFERENCE_SELECTED_BACKGROUND_CSS = semanticVar("active-base");
+export const WORLD_REFERENCE_SELECTED_OUTLINE_CSS = tokenVar("primary");
+export const WORLD_REFERENCE_HOVER_BACKGROUND_CSS = semanticVar("hover-base");
+export const WORLD_REFERENCE_SELECTED_CONTENT_OPACITY = 0.5;
+
+export interface WorldReferenceAppearance {
+  readonly backgroundColor: string | null;
+  readonly contentOpacity: number;
+  readonly outlineColor: string | null;
+}
+
+/** @emoji 🖼️ Resolves hover/selection fill, content opacity, and border for reference planes. */
+export function worldReferenceAppearance(
+  renderMode: Pick<WorldEntityRenderMode, "asHover" | "showSelectedOutline">,
+  baseOpacity: number,
+): WorldReferenceAppearance {
   if (renderMode.showSelectedOutline) {
-    return resolveColorHex(semanticVar("accent"), "gray");
+    return {
+      backgroundColor: resolveColorHex(WORLD_REFERENCE_SELECTED_BACKGROUND_CSS, "primary"),
+      contentOpacity: baseOpacity * WORLD_REFERENCE_SELECTED_CONTENT_OPACITY,
+      outlineColor: resolveColorHex(WORLD_REFERENCE_SELECTED_OUTLINE_CSS, "primary"),
+    };
   }
   if (renderMode.asHover) {
-    return resolveColorHex(semanticVar("accent-secondary"), "gray");
+    return {
+      backgroundColor: resolveColorHex(WORLD_REFERENCE_HOVER_BACKGROUND_CSS, "gray"),
+      contentOpacity: baseOpacity,
+      outlineColor: resolveColorHex(semanticVar("accent-secondary"), "gray"),
+    };
   }
-  return null;
+  return {
+    backgroundColor: null,
+    contentOpacity: baseOpacity,
+    outlineColor: null,
+  };
 }
 
 function worldReferenceScaleVec(scale: number | Vec3 | undefined): Vec3 {
@@ -2109,8 +2169,14 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   readonly onRelocate?: (payload: WorldReferenceRelocatePayload) => void;
 }) {
   const groupRef = reactHostPort.useRef<Group>(null);
+  const [pointerHovered, setPointerHovered] = reactHostPort.useState(false);
   const [media, setMedia] = reactHostPort.useState<{ readonly width: number; readonly height: number; readonly texture: import("three").Texture } | null>(null);
-  const renderMode = worldEntityRenderMode(props.reference, { hovered: props.hovered, selected: props.selected, revealed: props.revealed });
+  const interactionHovered = props.hovered || pointerHovered;
+  const renderMode = worldEntityRenderMode(props.reference, {
+    hovered: interactionHovered,
+    selected: props.selected,
+    revealed: props.revealed || pointerHovered,
+  });
   const selectable = worldEntitySelectable(props.reference);
   reactHostPort.useEffect(() => {
     let cancelled = false;
@@ -2141,7 +2207,9 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   }, [props.reference.origin, props.reference.orientation, props.reference.scale]);
   const mediaAspect = media ? media.width / media.height : 1;
   const [planeWidth, planeHeight] = reactHostPort.useMemo(() => worldReferencePlaneSize(props.reference, mediaAspect), [props.reference, mediaAspect]);
-  const outlineColor = worldReferenceOutlineColor(renderMode);
+  const opacityBase = props.reference.opacity ?? 1;
+  const opacityDimmed = renderMode.dim ? opacityBase * WORLD_LOCKED_OPACITY_SCALE : opacityBase;
+  const appearance = worldReferenceAppearance(renderMode, opacityDimmed);
   const planeOutlineGeo = reactHostPort.useMemo(() => {
     const plane = new PlaneGeometry(planeWidth, planeHeight);
     const edges = new EdgesGeometry(plane);
@@ -2152,8 +2220,6 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   if (!renderMode.visible || !media) {
     return null;
   }
-  const opacityBase = props.reference.opacity ?? 1;
-  const opacity = renderMode.dim ? opacityBase * WORLD_LOCKED_OPACITY_SCALE : opacityBase;
   const config = props.reference.relocate === false ? null : { ...(props.reference.relocate ?? {}), translationSnap: props.translationSnap };
   const showGumball = props.selected && selectable && props.relocateActive !== false && groupRef.current && config && gumballConfigVisible(config);
   return (
@@ -2171,22 +2237,30 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
         }}
         onPointerOver={(event) => {
           event.stopPropagation();
+          setPointerHovered(true);
           if (selectable) {
             props.onHover?.(props.reference.id);
           }
         }}
         onPointerOut={(event) => {
           event.stopPropagation();
+          setPointerHovered(false);
           props.onHover?.(null);
         }}
       >
+        {appearance.backgroundColor ? (
+          <mesh raycast={worldRaycastNone} renderOrder={-11}>
+            <planeGeometry args={[planeWidth, planeHeight]} />
+            <meshBasicMaterial attach="material" color={appearance.backgroundColor} transparent opacity={1} depthWrite={false} side={DoubleSide} toneMapped={false} />
+          </mesh>
+        ) : null}
         <mesh renderOrder={-10}>
           <planeGeometry args={[planeWidth, planeHeight]} />
-          <meshBasicMaterial attach="material" map={media.texture} transparent opacity={opacity} depthWrite={false} side={DoubleSide} toneMapped={false} />
+          <meshBasicMaterial attach="material" map={media.texture} transparent opacity={appearance.contentOpacity} depthWrite={false} side={DoubleSide} toneMapped={false} />
         </mesh>
-        {outlineColor ? (
+        {appearance.outlineColor ? (
           <lineSegments raycast={worldRaycastNone} geometry={planeOutlineGeo} renderOrder={-9} scale={[1.002, 1.002, 1.002]}>
-            <lineBasicMaterial attach="material" color={outlineColor} transparent opacity={renderMode.showSelectedOutline ? 1 : 0.85} depthWrite={false} />
+            <lineBasicMaterial attach="material" color={appearance.outlineColor} transparent opacity={renderMode.showSelectedOutline ? 1 : 0.9} depthWrite={false} />
           </lineSegments>
         ) : null}
       </group>
@@ -2544,6 +2618,15 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("resolveOrbitCameraViewFromTemplateId", () => {
+    it("maps display-tree template ids to orbit views", () => {
+      expect(resolveOrbitCameraViewFromTemplateId("top")).toBe("top");
+      expect(resolveOrbitCameraViewFromTemplateId("orthographic-2d")).toBe("top");
+      expect(resolveOrbitCameraViewFromTemplateId("perspective")).toBe("perspective");
+      expect(resolveOrbitCameraViewFromTemplateId("missing")).toBeNull();
+    });
+  });
+
   describe("applyOrbitProjectionToCameraState", () => {
     it("applies orthographic zoom defaults while preserving pose", () => {
       const state = applyOrbitProjectionToCameraState(
@@ -2665,11 +2748,23 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("worldReferenceOutlineColor", () => {
-    it("returns accent colors for hover and selection", () => {
-      expect(worldReferenceOutlineColor({ asHover: false, showSelectedOutline: false })).toBeNull();
-      expect(worldReferenceOutlineColor({ asHover: true, showSelectedOutline: false })).toMatch(/^#/);
-      expect(worldReferenceOutlineColor({ asHover: true, showSelectedOutline: true })).toMatch(/^#/);
+  describe("worldReferenceAppearance", () => {
+    it("returns hover and selection fills with halved content opacity when selected", () => {
+      expect(worldReferenceAppearance({ asHover: false, showSelectedOutline: false }, 1)).toMatchObject({
+        backgroundColor: null,
+        contentOpacity: 1,
+        outlineColor: null,
+      });
+      expect(worldReferenceAppearance({ asHover: true, showSelectedOutline: false }, 0.8)).toMatchObject({
+        backgroundColor: expect.stringMatching(/^#/),
+        contentOpacity: 0.8,
+        outlineColor: expect.stringMatching(/^#/),
+      });
+      expect(worldReferenceAppearance({ asHover: true, showSelectedOutline: true }, 1)).toMatchObject({
+        backgroundColor: tokenHex("primary"),
+        contentOpacity: WORLD_REFERENCE_SELECTED_CONTENT_OPACITY,
+        outlineColor: tokenHex("primary"),
+      });
     });
   });
 

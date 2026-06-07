@@ -31,9 +31,16 @@ import {
   type UiTreeNode,
   type UiTreeSectionNode,
   enforcePlaygroundWindowEngagementInput,
+  collectUiTreeItemDragData,
 } from "@framework/playground/core";
 
 import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayKindsTree, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
+import {
+  PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
+  beginPuzzle2dFixturePalettePointerDrag,
+  cancelPuzzle2dFixturePalettePointerDrag,
+  puzzle2dFixturePaletteTreeDragController,
+} from "../../2d/react/index.tsx";
 import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
 import {
   PUZZLE_2D_LOD_MODE_AUTOMATIC,
@@ -53,6 +60,12 @@ import {
 import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
 import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
 import { buildPuzzle3dPlayHierarchyTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
+import {
+  FIXTURE_DRAG_V1_MIME,
+  beginPuzzle3dFixturePalettePointerDrag,
+  cancelPuzzle3dFixturePalettePointerDrag,
+  puzzle3dFixturePaletteTreeDragController,
+} from "../../3d/react/index.tsx";
 import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
@@ -208,6 +221,92 @@ export function buildPuzzle5dPlayKindsTree(snapshot: Puzzle5dPlaySnapshot): UiTr
     };
   }
   return { type: "tree", sections };
+}
+
+function puzzle5dPaletteDragDomainFromEncoded(encoded: string): "2d" | "3d" | null {
+  try {
+    const parsed = JSON.parse(encoded) as { readonly schema?: string };
+    if (parsed.schema === "puzzle.2d.fixture/v1") {
+      return "2d";
+    }
+    if (parsed.schema === "puzzle.3d.fixture/v1") {
+      return "3d";
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function puzzle5dPaletteDragDomainFromDragData(dragData: Record<string, string> | undefined): "2d" | "3d" | null {
+  if (!dragData) {
+    return null;
+  }
+  if (dragData[PUZZLE_2D_FIXTURE_DRAG_V1_MIME]?.trim()) {
+    return "2d";
+  }
+  if (dragData[FIXTURE_DRAG_V1_MIME]?.trim()) {
+    return "3d";
+  }
+  return null;
+}
+
+/** @emoji 🖱️ Tree drag controller for merged flat + volume palette rows in puzzle 5d play. */
+export function puzzle5dFixturePaletteTreeDragController(dragDataByItemId: ReadonlyMap<string, Record<string, string>>) {
+  const flatDragByItemId = new Map<string, Record<string, string>>();
+  const volumeDragByItemId = new Map<string, Record<string, string>>();
+  for (const [itemId, dragData] of dragDataByItemId) {
+    const domain = puzzle5dPaletteDragDomainFromDragData(dragData);
+    if (domain === "2d") {
+      flatDragByItemId.set(itemId, dragData);
+    } else if (domain === "3d") {
+      volumeDragByItemId.set(itemId, dragData);
+    }
+  }
+  const flatController = puzzle2dFixturePaletteTreeDragController(flatDragByItemId);
+  const volumeController = puzzle3dFixturePaletteTreeDragController(volumeDragByItemId);
+  const readEncoded = (dragData: Record<string, string>): string | undefined =>
+    dragData[PUZZLE_2D_FIXTURE_DRAG_V1_MIME]?.trim() || dragData[FIXTURE_DRAG_V1_MIME]?.trim() || undefined;
+  return {
+    getDragData: ({ sourceItem }: { readonly sourceItem: { readonly id: string } }) => dragDataByItemId.get(sourceItem.id),
+    pointerPaletteDrag: {
+      readEncodedDragPayload: readEncoded,
+      begin: (encoded: string) => {
+        const domain = puzzle5dPaletteDragDomainFromEncoded(encoded);
+        if (domain === "2d") {
+          beginPuzzle2dFixturePalettePointerDrag(encoded);
+          return;
+        }
+        if (domain === "3d") {
+          beginPuzzle3dFixturePalettePointerDrag(encoded);
+        }
+      },
+      cancel: () => {
+        cancelPuzzle2dFixturePalettePointerDrag();
+        cancelPuzzle3dFixturePalettePointerDrag();
+      },
+    },
+    onDragStart: (ctx: { readonly sourceItem: { readonly id: string } }) => {
+      const domain = puzzle5dPaletteDragDomainFromDragData(dragDataByItemId.get(ctx.sourceItem.id));
+      if (domain === "2d") {
+        flatController.onDragStart?.(ctx as never);
+        return;
+      }
+      if (domain === "3d") {
+        volumeController.onDragStart?.(ctx as never);
+      }
+    },
+    onDragEnd: (ctx: { readonly sourceItem: { readonly id: string } }) => {
+      const domain = puzzle5dPaletteDragDomainFromDragData(dragDataByItemId.get(ctx.sourceItem.id));
+      if (domain === "2d") {
+        flatController.onDragEnd?.(ctx as never);
+        return;
+      }
+      if (domain === "3d") {
+        volumeController.onDragEnd?.(ctx as never);
+      }
+    },
+  };
 }
 //#endregion 🔖Puzzle5dPlayKinds
 
@@ -371,6 +470,10 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
 
   getActiveTool(): Puzzle5dActiveTool {
     return this.activeTool;
+  }
+
+  getBrushFlushDistance(): number {
+    return this.brushFlushDistance;
   }
 
   setBrushEngagementPossibles(rows: readonly { readonly id: string; readonly label: string }[]): void {
@@ -1002,6 +1105,20 @@ if (import.meta.vitest) {
       const volumeObjects = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.3d.objects");
       expect(flatNodes?.items?.some((row) => row.draggable === true && row.dragData)).toBe(true);
       expect(volumeObjects?.items?.some((row) => row.draggable === true && row.dragData)).toBe(true);
+    });
+
+    it("puzzle5dFixturePaletteTreeDragController routes flat and volume palette rows", () => {
+      const runtime = buildPuzzle5dPlayRuntime();
+      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
+      const tree = buildPuzzle5dPlayKindsTree(controller!.getSnapshot());
+      const dragByItemId = collectUiTreeItemDragData(tree.sections);
+      const dragController = puzzle5dFixturePaletteTreeDragController(dragByItemId);
+      const flatRow = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.2d.nodes")?.items?.find((row) => row.dragData);
+      const volumeRow = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.3d.objects")?.items?.find((row) => row.dragData);
+      expect(flatRow?.dragData?.[PUZZLE_2D_FIXTURE_DRAG_V1_MIME]).toBeTruthy();
+      expect(volumeRow?.dragData?.[FIXTURE_DRAG_V1_MIME]).toBeTruthy();
+      expect(dragController.pointerPaletteDrag?.readEncodedDragPayload(flatRow!.dragData!)).toBeTruthy();
+      expect(dragController.pointerPaletteDrag?.readEncodedDragPayload(volumeRow!.dragData!)).toBeTruthy();
     });
 
     it("buildPuzzle5dPlayHierarchySections includes 2d and 3d branches", () => {

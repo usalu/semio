@@ -1268,6 +1268,8 @@ export interface Puzzle2dEventMap {
   brushPlace: Puzzle2dBrushPlacePayload;
   brushPreview: { readonly edge: { readonly sourceHandleId: string; readonly targetHandleIndex: number } | null; readonly node: Record<string, unknown> | null };
   select: Puzzle2dSelectionSnapshot;
+  /** @emoji 🧭 Double-click on a node (or the sole committed selection when hover is empty). */
+  activate: Puzzle2dSelectionSnapshot;
   preselect: Puzzle2dPreselectSnapshot;
   preselectCancel: Puzzle2dPreselectSnapshot;
   wireChange: Puzzle2dGraphWireIdPayload;
@@ -4385,6 +4387,7 @@ export class Puzzle2dRenderer {
   private lastPointerClientY = 0;
   private lastPointerScreenX = 0;
   private lastPointerScreenY = 0;
+  private lastPointerAltKey = false;
   private invalidated = true;
   private isDisposed = false;
   private lastRenderTimestamp: number | null = null;
@@ -6879,6 +6882,7 @@ export class Puzzle2dRenderer {
     bindings.listen(this.canvas, "pointerdown", this.handlePointerDown as EventListener);
     bindings.listen(this.canvas, "pointermove", this.handlePointerMove as EventListener);
     bindings.listen(this.canvas, "pointerup", this.handlePointerUp as EventListener);
+    bindings.listen(this.canvas, "dblclick", this.handleDoubleClick as EventListener);
     bindings.listen(this.canvas, "pointerleave", this.handlePointerLeave as EventListener);
     bindings.listen(this.canvas, "wheel", this.handleWheel as EventListener, { passive: false });
     bindings.listen(globalThis, "keydown", this.handleWindowKeyDown as EventListener, true);
@@ -7016,11 +7020,12 @@ export class Puzzle2dRenderer {
     });
   }
 
-  private recordPointerClient(clientX: number, clientY: number, screenX: number, screenY: number): void {
+  private recordPointerClient(clientX: number, clientY: number, screenX: number, screenY: number, altKey = false): void {
     this.lastPointerClientX = clientX;
     this.lastPointerClientY = clientY;
     this.lastPointerScreenX = screenX;
     this.lastPointerScreenY = screenY;
+    this.lastPointerAltKey = altKey;
   }
 
   /** @emoji 🖌️ Replays a deferred brush pointer leave/move after GPU/session reentry unblocks. */
@@ -7031,9 +7036,9 @@ export class Puzzle2dRenderer {
     }
     this.pendingBrushWasmFlush = null;
     if (pending === "leave") {
-      this.session.pointerLeaveScreen();
+      this.session.pointerLeaveScreen(this.lastPointerAltKey);
     } else {
-      this.session.pointerMoveScreen(this.lastPointerScreenX, this.lastPointerScreenY, false, false);
+      this.session.pointerMoveScreen(this.lastPointerScreenX, this.lastPointerScreenY, false, false, this.lastPointerAltKey);
     }
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     this.wasmPushSceneDrainAlreadyApplied = true;
@@ -7165,8 +7170,8 @@ export class Puzzle2dRenderer {
     const rect = this.canvas.getBoundingClientRect();
     const sx = event.clientX - rect.left;
     const sy = event.clientY - rect.top;
-    this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-    this.session.pointerMoveScreen(sx, sy, false, false);
+    this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
+    this.session.pointerMoveScreen(sx, sy, false, false, event.altKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     const world = this.screenToWorld({ x: sx, y: sy });
     this.emit("contextmenu", { clientX: event.clientX, clientY: event.clientY, id: this.hoveredId, x: world.x, y: world.y });
@@ -7196,7 +7201,7 @@ export class Puzzle2dRenderer {
     const rect = this.canvas.getBoundingClientRect();
     const sx = event.clientX - rect.left;
     const sy = event.clientY - rect.top;
-    this.recordPointerClient(event.clientX, event.clientY, sx, sy);
+    this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
     this.pointerGestureCameraAtStart = { ...this.camera };
     this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey, event.ctrlKey || event.metaKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
@@ -7215,12 +7220,22 @@ export class Puzzle2dRenderer {
     const rect = this.canvas.getBoundingClientRect();
     const sx = event.clientX - rect.left;
     const sy = event.clientY - rect.top;
-    this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-    this.session.pointerMoveScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
+    this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
+    this.session.pointerMoveScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
     const silentCamera = this.session.defersDescriptorSyncFromJs();
     this.applyWasmDrainToScene(this.session.drainEventsJson(), { silentCamera });
     this.wasmPushSceneDrainAlreadyApplied = true;
     this.scheduleInputInvalidate();
+  };
+
+  private readonly handleDoubleClick = (event: MouseEvent): void => {
+    event.preventDefault();
+    const selectedIds = this.selectionStore.getSnapshot().ids;
+    const targetId = this.hoveredId ?? (selectedIds.length === 1 ? selectedIds[0]! : null);
+    if (!targetId) {
+      return;
+    }
+    this.emitter.emit("activate", { ids: [targetId] });
   };
 
   private readonly handlePointerUp = (event: PointerEvent): void => {
@@ -7237,8 +7252,8 @@ export class Puzzle2dRenderer {
     const rect = this.canvas.getBoundingClientRect();
     const sx = event.clientX - rect.left;
     const sy = event.clientY - rect.top;
-    this.recordPointerClient(event.clientX, event.clientY, sx, sy);
-    this.session.pointerUpScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey);
+    this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
+    this.session.pointerUpScreen(sx, sy, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     const gestureStart = this.pointerGestureCameraAtStart;
     this.pointerGestureCameraAtStart = null;
@@ -7257,14 +7272,14 @@ export class Puzzle2dRenderer {
       const rect = this.canvas.getBoundingClientRect();
       const sx = event.clientX - rect.left;
       const sy = event.clientY - rect.top;
-      this.recordPointerClient(event.clientX, event.clientY, sx, sy);
+      this.recordPointerClient(event.clientX, event.clientY, sx, sy, event.altKey);
     }
     if (this.wasmSessionCallBlockedForReentry()) {
       this.queuePendingBrushWasmFlush("leave");
       return;
     }
     this.pendingBrushWasmFlush = null;
-    this.session.pointerLeaveScreen();
+    this.session.pointerLeaveScreen(event.altKey);
     this.applyWasmDrainToScene(this.session.drainEventsJson());
     this.scheduleInputInvalidate();
   };
@@ -9876,7 +9891,7 @@ if (puzzle2dVitest) {
       mirror.dispose();
     });
 
-    it("brushPlace fires when pointer leaves brush slot", async () => {
+    it("brushPlace fires when pointer leaves brush slot with Alt held", async () => {
       await ensurePuzzle2dWasmLoaded();
       const { canvas } = createMockCanvas();
       const renderer = new Puzzle2dRenderer({ canvas, renderMode: "headless-test" });
@@ -9899,8 +9914,8 @@ if (puzzle2dVitest) {
       const farScreen = renderer.worldToScreen({ x: 500, y: 500 });
       const placed: Puzzle2dBrushPlacePayload[] = [];
       renderer.on("brushPlace", (payload) => placed.push(payload));
-      canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
-      canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: farScreen.x, clientY: farScreen.y }));
+      canvas.dispatchEvent(new MouseEvent("pointermove", { altKey: true, bubbles: true, clientX: slotScreen.x, clientY: slotScreen.y }));
+      canvas.dispatchEvent(new MouseEvent("pointermove", { altKey: true, bubbles: true, clientX: farScreen.x, clientY: farScreen.y }));
       expect(placed).toHaveLength(1);
       expect(placed[0]?.sourceHandleId).toBe("a:h0");
       expect(placed[0]?.nodeKind).toBe("brush.kind");
@@ -11211,11 +11226,13 @@ export interface Puzzle2dCanvasProps {
   brushFlushDistance?: number;
   /** @emoji 📐 Brush preview node span in world units. */
   brushNodeSize?: number;
-  /** @emoji 🖌️ Paint-style brush commit when the cursor leaves a slot ({@link Puzzle2dEventMap.brushPlace}). */
+  /** @emoji 🖌️ Paint-style brush commit when the cursor leaves a slot with Alt held ({@link Puzzle2dEventMap.brushPlace}). */
   onBrushPlace?: (payload: Puzzle2dBrushPlacePayload) => void;
   /** @emoji 🖌️ Brush candidate node kinds while hovering a slot. */
   onBrushCandidates?: (payload: Puzzle2dBrushCandidatesPayload) => void;
   onSelect?: (snapshot: Puzzle2dSelectionSnapshot) => void;
+  /** @emoji 🧭 Fires on canvas double-click for the hovered node or sole selection entry. */
+  onActivate?: (snapshot: Puzzle2dSelectionSnapshot) => void;
   /** @emoji ✅ Controlled committed selection (`onSelect` should update this). */
   selection?: Puzzle2dSelectionSnapshot | readonly string[];
   /** @emoji ✅ Uncontrolled initial committed selection. */
@@ -12480,6 +12497,7 @@ export function Puzzle2dCanvas({
   onBrushCandidates,
   onReady,
   onSelect,
+  onActivate,
   selection,
   defaultSelection,
   preselection,
@@ -12895,6 +12913,9 @@ export function Puzzle2dCanvas({
         }),
       );
     }
+    if (onActivate) {
+      unsubs.push(contextRenderer.on("activate", (snapshot) => onActivate(snapshot)));
+    }
     if (onPreselect || !preselectionControlled) {
       const onPreselectEvent = (snapshot: Puzzle2dPreselectSnapshot): void => {
         if (!preselectionControlled) {
@@ -12919,7 +12940,7 @@ export function Puzzle2dCanvas({
         u();
       }
     };
-  }, [contextRenderer, onDrag, onDragEnd, onInvalidate, onPreselect, onSelect, preselectionControlled, selectionControlled]);
+  }, [contextRenderer, onActivate, onDrag, onDragEnd, onInvalidate, onPreselect, onSelect, preselectionControlled, selectionControlled]);
 
   reactHostPort.useEffect(() => {
     if (!contextRenderer || (!onCreate && !onDelete)) {

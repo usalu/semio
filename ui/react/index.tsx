@@ -28,7 +28,7 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { resolveColorHex, resolveSemanticColorHex, themeColorVar, tokenVar } from "@ui/styling";
+import { resolveColorHex, resolveSemanticColorHex, semanticVar, themeColorVar, tokenVar } from "@ui/styling";
 import * as dagre from "dagre";
 import { format, formatDistanceToNow } from "date-fns";
 import Fuse, { type FuseResult } from "fuse.js";
@@ -610,12 +610,21 @@ export function getGlassSurfaceClass(tier: GlassTier): string {
   }
 }
 
+/** @emoji 🎨 Shared transition for interactive chrome (hover, focus, active backgrounds). */
+export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
+
+/** @emoji 📋 Hover row styling for menus, selects, comboboxes, and context menus. */
+export const menuListItemClassName =
+  "hover:bg-hover-temporary focus:bg-hover-temporary data-[selected=true]:bg-hover-temporary data-[selected=true]:text-foreground";
+
 const contextMenuContentClassName = cn(
   glassMenuClass,
   "w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-foreground",
 );
-const contextMenuItemClassName =
-  "text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
+const contextMenuItemClassName = cn(
+  "text-foreground relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+  menuListItemClassName,
+);
 const contextMenuShortcutClassName = "ml-auto text-xs text-muted-foreground pl-tiny";
 
 /**
@@ -1262,7 +1271,8 @@ export function panelKindFromPanelToggleControlId(id: string): string | undefine
 }
 
 /** @emoji 🏷️ True for legacy engagement element ids that must not surface as humanized tooltips. */
-export function isInternalChromeControlId(id: string): boolean {
+export function isInternalChromeControlId(id: string | undefined | null): boolean {
+  if (!id) return false;
   return id.startsWith("engagement-") || id.startsWith("engagement.");
 }
 
@@ -2325,9 +2335,10 @@ export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: 
 /**
  * React hook that resolves a localized label by i18n key and expertise level.
  **/
-export function useLabel(id: UiTranslationKey | (string & {})): string | undefined {
+export function useLabel(id: UiTranslationKey | (string & {}) | undefined): string | undefined {
   const { t } = useUiTranslation();
   const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
+  if (!id) return undefined;
   const value = t(id as UiTranslationKey);
 
   if (typeof value === "string") {
@@ -2916,8 +2927,11 @@ export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
 export const borderElementClass = "border-element";
 
 /** @emoji 🎯 Focus/open on form controls: accent border color only, never extra ring width. */
-export const formControlFocusBorderClass =
-  "outline-none transition-[color,border-color] focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none";
+export const formControlFocusBorderClass = cn(
+  "outline-none",
+  interactiveControlTransitionClass,
+  "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none",
+);
 
 /** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
@@ -3308,7 +3322,8 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-[selected=true]:bg-hover-temporary data-[selected=true]:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex items-center gap-single p-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-selectable",
+        "[&_svg:not([class*='text-'])]:text-muted-foreground relative flex items-center gap-single p-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-selectable",
+        menuListItemClassName,
         className,
       )}
       {...props}
@@ -3748,7 +3763,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
  * LabelProps holds the data fields for a LabelProps record.
  **/
 interface LabelProps {
-  id: string;
+  id?: string;
   rowId?: string;
   label?: React.ReactNode;
   labelElementId?: string;
@@ -3765,6 +3780,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
   const localizedLabel = useLabel(id);
   const resolvedLabel = label ?? localizedLabel;
   const fallbackLabel = reactHostPort.useMemo(() => {
+    if (!id) return "";
     const trailingToken = id.split(".").pop() ?? id;
     const normalizedToken = trailingToken.replace(/[-_]+/g, " ").trim();
     if (!normalizedToken) return id;
@@ -4529,7 +4545,7 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
  * actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
 const actionGroupItemVariants = cva(
-  `text-foreground inline-flex items-center justify-center shrink-0 transition-[color,border-color] cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single ${formControlFocusBorderClass}`,
+  `text-foreground inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single ${formControlFocusBorderClass}`,
   {
     variants: {
       level: {
@@ -4731,8 +4747,9 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       id={id}
       aria-label={ariaLabel}
       title={accessibleLabel}
+      data-level={level}
       className={cn(
-        `text-foreground inline-flex items-center justify-center shrink-0 transition-[color,border-color] cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
+        `text-foreground inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
         hasText && "aspect-auto gap-single",
         level === "base" && "hover:bg-hover-base",
         level === "window" && "hover:bg-hover-window",
@@ -4761,7 +4778,7 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
  * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
  **/
 const buttonGroupItemVariants = cva(
-  `text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} transition-[color,border-color] whitespace-nowrap h-medium aspect-square p-single overflow-hidden`,
+  `text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap h-medium aspect-square p-single overflow-hidden`,
   {
     variants: {
       level: {
@@ -5655,6 +5672,7 @@ function SelectTrigger({
       data-detail-panel-control="fill"
       id={id}
       data-size={size}
+      data-level={level}
       className={cn(
         `data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
         hoverClass,
@@ -5712,8 +5730,9 @@ function SelectItem({ className, children, id, ...props }: React.ComponentProps<
       data-slot="select-item"
       id={id}
       className={cn(
-        "focus:bg-hover-temporary focus:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pr-medium pl-single text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
+        "focus:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pr-medium pl-single text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
         "cursor-selectable",
+        menuListItemClassName,
         className,
       )}
       {...props}
@@ -5740,7 +5759,7 @@ function SelectSeparator({ className, ...props }: React.ComponentProps<typeof Se
  **/
 function SelectScrollUpButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
   return (
-    <SelectPrimitive.ScrollUpButton data-slot="select-scroll-up-button" className={cn("flex cursor-default items-center justify-center py-single", className)} {...props}>
+    <SelectPrimitive.ScrollUpButton data-slot="select-scroll-up-button" className={cn("flex cursor-default items-center justify-center py-single hover:bg-hover-temporary", className)} {...props}>
       <ChevronUpIcon className="size-tiny" />
     </SelectPrimitive.ScrollUpButton>
   );
@@ -5751,7 +5770,7 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
  **/
 function SelectScrollDownButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
   return (
-    <SelectPrimitive.ScrollDownButton data-slot="select-scroll-down-button" className={cn("flex cursor-default items-center justify-center py-single", className)} {...props}>
+    <SelectPrimitive.ScrollDownButton data-slot="select-scroll-down-button" className={cn("flex cursor-default items-center justify-center py-single hover:bg-hover-temporary", className)} {...props}>
       <ChevronDownIconAlt className="size-tiny" />
     </SelectPrimitive.ScrollDownButton>
   );
@@ -5941,7 +5960,7 @@ function Slider({
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
-          className="border-foreground bg-foreground ring-ring/50 block size-small shrink-0 rounded-full border transition-colors focus-visible:bg-accent focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-accent"
+          className="border-foreground bg-foreground ring-ring/50 block size-small shrink-0 rounded-full border transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-accent"
         />
       ))}
     </SliderPrimitive.Root>
@@ -6404,7 +6423,7 @@ export { Textarea };
  * toggleVariants holds the data fields for a toggleVariants record.
  **/
 const toggleVariants = cva(
-  `text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} transition-[color,border-color] whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden`,
+  `text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden`,
   {
     variants: {
       level: {
@@ -6577,6 +6596,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       id={id}
       aria-label={ariaLabel}
       title={ariaLabel}
+      data-level={level}
       className={cn(
         toggleVariants({
           level,
@@ -7043,9 +7063,15 @@ function AccordionItem({ className, ...props }: React.ComponentProps<typeof Acco
  * AccordionTrigger holds the data fields for a AccordionTrigger record.
  **/
 function AccordionTrigger({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
+  const level = useLevel();
+  const hoverClass = getLevelHoverClass(level);
   return (
     <AccordionPrimitive.Header className="flex">
-      <AccordionPrimitive.Trigger data-slot="accordion-trigger" className={cn(className)} {...props}>
+      <AccordionPrimitive.Trigger
+        data-slot="accordion-trigger"
+        className={cn("flex flex-1 cursor-selectable items-center justify-between py-single text-sm font-medium", interactiveControlTransitionClass, hoverClass, className)}
+        {...props}
+      >
         {children as React.ReactNode}
         <ChevronDownIconAlt className="text-muted-foreground pointer-events-none size-small shrink-0 translate-y-0.5 transition-transform duration-200" />
       </AccordionPrimitive.Trigger>
@@ -7083,7 +7109,15 @@ function Collapsible({ ...props }: React.ComponentProps<typeof CollapsiblePrimit
  * CollapsibleTrigger holds the data fields for a CollapsibleTrigger record.
  **/
 function CollapsibleTrigger({ className, ...props }: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleTrigger>) {
-  return <CollapsiblePrimitive.CollapsibleTrigger data-slot="collapsible-trigger" className={cn(className)} {...props} />;
+  const level = useLevel();
+  const hoverClass = getLevelHoverClass(level);
+  return (
+    <CollapsiblePrimitive.CollapsibleTrigger
+      data-slot="collapsible-trigger"
+      className={cn("cursor-selectable", interactiveControlTransitionClass, hoverClass, className)}
+      {...props}
+    />
+  );
 }
 
 /**
@@ -7211,9 +7245,166 @@ export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 
 // #region 🪬Resizable
 
+/** @emoji ↔️ Fine-pointer hit target for splitters and corner joins (VS Code–style). */
+export const RESIZABLE_HIT_TARGET_MIN_FINE_PX = 20;
+
+/** @emoji ↔️ Coarse-pointer hit target for splitters and corner joins. */
+export const RESIZABLE_HIT_TARGET_MIN_COARSE_PX = 28;
+
+/** @emoji ↔️ Corner grab square at perpendicular split intersections. */
+export const RESIZABLE_CORNER_GRAB_PX = 24;
+
+const RESIZABLE_HIT_TARGET_MINIMUM_SIZE = {
+  fine: RESIZABLE_HIT_TARGET_MIN_FINE_PX,
+  coarse: RESIZABLE_HIT_TARGET_MIN_COARSE_PX,
+} as const;
+
+type ResizableJoinCornerResizeHandler = (spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number) => void;
+
+const resizableJoinCornerResizeRef: { current: ResizableJoinCornerResizeHandler | null } = { current: null };
+
+/** @emoji ↔️ Mode registers the live corner-resize handler (module interceptor calls this). */
+export function registerResizableJoinCornerResizeHandler(handler: ResizableJoinCornerResizeHandler | null): void {
+  resizableJoinCornerResizeRef.current = handler;
+}
+
+function readResizableJoinCornerSpec(element: HTMLElement): ResizableJoinCornerSpec | null {
+  const raw = element.dataset.joinSpec;
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as ResizableJoinCornerSpec;
+  } catch {
+    return null;
+  }
+}
+
+function writeResizableJoinCornerSpec(element: HTMLElement, spec: ResizableJoinCornerSpec): void {
+  element.dataset.joinSpec = JSON.stringify(spec);
+}
+
+//#region ↔️ResizableCornerInterceptor
+
+/** @emoji ↔️ Document capture hook so corner grabs win over react-resizable-panels (registered at module load). */
+function installResizableCornerInterceptor(): void {
+  if (typeof document === "undefined") return;
+  const marker = "__semioResizableCornerInterceptor";
+  if ((document as Document & Record<string, boolean>)[marker]) return;
+  (document as Document & Record<string, boolean>)[marker] = true;
+  let drag: { pointerId: number; x: number; y: number; spec: ResizableJoinCornerSpec } | null = null;
+  const onPointerMove = (event: PointerEvent) => {
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const deltaXPx = event.clientX - drag.x;
+    const deltaYPx = event.clientY - drag.y;
+    if (deltaXPx !== 0 || deltaYPx !== 0) {
+      resizableJoinCornerResizeRef.current?.(drag.spec, deltaXPx, deltaYPx);
+      drag = { ...drag, x: event.clientX, y: event.clientY };
+    }
+  };
+  const endDrag = (event: PointerEvent) => {
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    drag = null;
+    document.body.style.removeProperty("cursor");
+    document.removeEventListener("pointermove", onPointerMove, true);
+    document.removeEventListener("pointerup", endDrag, true);
+    document.removeEventListener("pointercancel", endDrag, true);
+  };
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.button !== 0) return;
+      const corner = (event.target as Element | null)?.closest<HTMLElement>('[data-slot="resizable-corner"]');
+      if (!corner) return;
+      const spec = readResizableJoinCornerSpec(corner);
+      if (!spec) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, spec };
+      document.body.style.cursor = "move";
+      document.addEventListener("pointermove", onPointerMove, true);
+      document.addEventListener("pointerup", endDrag, true);
+      document.addEventListener("pointercancel", endDrag, true);
+    },
+    true,
+  );
+}
+
+installResizableCornerInterceptor();
+
+//#endregion ↔️ResizableCornerInterceptor
+
+/** @emoji ↔️ Corner grab at a perpendicular split intersection (dual-axis resize). */
+export type ResizableJoinEdgeSide = "leading" | "trailing";
+
+/** @emoji ↔️ Corner join wiring for a main-axis separator and a cross-axis child split. */
+export interface ResizableJoinCornerSpec {
+  parentKind: "row" | "column";
+  mainAxisPath: string;
+  mainSeparatorIndex: number;
+  crossAxisPath: string;
+  crossSeparatorIndex: number;
+  edgeSide: ResizableJoinEdgeSide;
+  alongFraction: number;
+}
+
+/** @emoji ↔️ Pixel placement for a corner grab on a separator strip. */
+export function resizableJoinCornerPlacementStyle(
+  orientation: "horizontal" | "vertical",
+  edgeSide: ResizableJoinEdgeSide,
+  alongFraction: number,
+  sizePx = RESIZABLE_CORNER_GRAB_PX,
+): React.CSSProperties {
+  const along = `${Math.round(Math.min(1, Math.max(0, alongFraction)) * 100)}%`;
+  if (orientation === "horizontal") {
+    return {
+      top: along,
+      [edgeSide === "leading" ? "left" : "right"]: 0,
+      width: sizePx,
+      height: sizePx,
+      transform: `translate(${edgeSide === "leading" ? "-50%" : "50%"}, -50%)`,
+    };
+  }
+  return {
+    left: along,
+    [edgeSide === "leading" ? "top" : "bottom"]: 0,
+    width: sizePx,
+    height: sizePx,
+    transform: `translate(-50%, ${edgeSide === "leading" ? "-50%" : "50%"})`,
+  };
+}
+
+function ResizableJoinCornerGrab({
+  orientation,
+  edgeSide,
+  alongFraction,
+  spec,
+}: {
+  orientation: "horizontal" | "vertical";
+  edgeSide: ResizableJoinEdgeSide;
+  alongFraction: number;
+  spec: ResizableJoinCornerSpec;
+}) {
+  const elementRef = reactHostPort.useRef<HTMLDivElement>(null);
+  reactHostPort.useLayoutEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+    writeResizableJoinCornerSpec(element, spec);
+  }, [spec]);
+
+  return (
+    <div
+      ref={elementRef}
+      data-slot="resizable-corner"
+      data-edge={edgeSide}
+      className="absolute z-50 cursor-move touch-none"
+      style={resizableJoinCornerPlacementStyle(orientation, edgeSide, alongFraction)}
+    />
+  );
+}
+
 function ResizablePanelGroup({
   className,
   orientation = "horizontal",
+  resizeTargetMinimumSize = RESIZABLE_HIT_TARGET_MINIMUM_SIZE,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
   return (
@@ -7222,6 +7413,7 @@ function ResizablePanelGroup({
       data-panel-group-direction={orientation}
       className={cn("flex h-full w-full", orientation === "vertical" ? "flex-col" : "flex-row", className)}
       orientation={orientation}
+      resizeTargetMinimumSize={resizeTargetMinimumSize}
       {...props}
     />
   );
@@ -7237,45 +7429,14 @@ function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimi
 function ResizableHandle({
   className,
   orientation = "horizontal",
-  onMouseDown: externalOnMouseDown,
-  onMouseEnter: externalOnMouseEnter,
-  onMouseLeave: externalOnMouseLeave,
+  joinCorners,
   style,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.Separator> & {
   orientation?: "horizontal" | "vertical";
-  onMouseDown?: React.MouseEventHandler<HTMLDivElement>;
-  onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
-  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
+  joinCorners?: readonly ResizableJoinCornerSpec[];
 }) {
-  const [isHovered, setIsHovered] = reactHostPort.useState(false);
-  const [isDragging, setIsDragging] = reactHostPort.useState(false);
   const horizontal = orientation === "horizontal";
-
-  const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    setIsDragging(true);
-    externalOnMouseDown?.(e as any);
-
-    const bindings = createDOMEventBinding();
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      bindings.dispose();
-    };
-
-    bindings.listen(document, "mouseup", handleMouseUp, true);
-  };
-
-  const handleMouseEnter: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    setIsHovered(true);
-    externalOnMouseEnter?.(e as any);
-  };
-
-  const handleMouseLeave: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    if (!isDragging) {
-      setIsHovered(false);
-    }
-    externalOnMouseLeave?.(e as any);
-  };
 
   return (
     <ResizablePrimitive.Separator
@@ -7283,11 +7444,8 @@ function ResizableHandle({
       data-resize-orientation={orientation}
       className={cn(
         "relative flex shrink-0 items-center justify-center border-0 bg-transparent",
-        horizontal ? "h-full min-h-0 w-double" : "w-full min-w-0 h-double",
-        isDragging || isHovered ? "bg-accent/25" : "hover:bg-accent/25",
-        horizontal
-          ? "before:absolute before:inset-y-0 before:-left-2 before:w-tiny before:cursor-ew-resize"
-          : "before:absolute before:inset-x-0 before:-top-2 before:h-tiny before:cursor-ns-resize",
+        horizontal ? "h-full min-h-0 w-double cursor-ew-resize" : "w-full min-w-0 h-double cursor-ns-resize",
+        "data-[separator=hover]:bg-accent/25 data-[separator=active]:bg-accent/25",
         "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none",
         "after:hidden",
         className,
@@ -7296,11 +7454,18 @@ function ResizableHandle({
         ...(horizontal ? { width: "var(--spacing-double)" } : { height: "var(--spacing-double)" }),
         ...style,
       }}
-      onMouseDown={handleMouseDown as any}
-      onMouseEnter={handleMouseEnter as any}
-      onMouseLeave={handleMouseLeave as any}
       {...(props as any)}
-    />
+    >
+      {joinCorners?.map((spec) => (
+        <ResizableJoinCornerGrab
+          key={`${spec.mainAxisPath}-${spec.mainSeparatorIndex}-${spec.crossAxisPath}-${spec.crossSeparatorIndex}-${spec.edgeSide}-${spec.alongFraction}`}
+          alongFraction={spec.alongFraction}
+          edgeSide={spec.edgeSide}
+          orientation={orientation}
+          spec={spec}
+        />
+      ))}
+    </ResizablePrimitive.Separator>
   );
 }
 
@@ -9609,7 +9774,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 <div data-slot="tree-branch-nav" className="flex items-center gap-[2px] flex-shrink-0">
                   <button
                     data-slot="tree-branch-prev"
-                    className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
+                    className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-panel disabled:opacity-30 disabled:cursor-default"
                     disabled={activeBranchIndex <= 0}
                     onClick={(e) => {
                       e.preventDefault();
@@ -9624,7 +9789,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                   </span>
                   <button
                     data-slot="tree-branch-next"
-                    className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
+                    className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-panel disabled:opacity-30 disabled:cursor-default"
                     disabled={activeBranchIndex >= branchCount - 1}
                     onClick={(e) => {
                       e.preventDefault();
@@ -10697,7 +10862,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
   const hasChildren = node.children && node.children.length > 0;
   const Icon = node.isFolder ? FolderIcon : DocumentIcon;
 
-  const baseClasses = "flex items-center gap-single text-sm rounded-small cursor-selectable select-none";
+  const baseClasses = "flex items-center gap-single text-sm rounded-small cursor-selectable select-none transition-colors hover:bg-hover-panel";
   const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground";
   const itemClasses = `${baseClasses} ${stateClasses}`;
   const handleClick = (e: React.MouseEvent) => {
@@ -11411,29 +11576,31 @@ interface BreadcrumbItemProps extends Omit<React.ComponentProps<"li">, "content"
  * BreadcrumbItem holds the data fields for a BreadcrumbItem record.
  **/
 function BreadcrumbItem({ className, id, content, children, onNavigate, options, ...props }: BreadcrumbItemProps) {
+  const level = useLevel();
+  const hoverClass = getLevelHoverClass(level);
   const itemContent = content ?? children;
   const interactiveContent = reactHostPort.useMemo(() => {
     if (itemContent == null || typeof itemContent === "boolean") return null;
     if (React.isValidElement(itemContent)) {
       if (itemContent.type === React.Fragment) {
         return (
-          <span data-slot="breadcrumb-link" className="cursor-selectable flex h-full min-w-0 items-center">
+          <span data-slot="breadcrumb-link" className={cn("cursor-selectable flex h-full min-w-0 items-center px-single", interactiveControlTransitionClass, hoverClass)}>
             {itemContent}
           </span>
         );
       }
       const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
       return React.cloneElement(itemContent as React.ReactElement<any>, {
-        className: cn("cursor-selectable h-full min-w-0", elementProps?.className),
+        className: cn("cursor-selectable h-full min-w-0 px-single", interactiveControlTransitionClass, hoverClass, elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
       });
     }
     return (
-      <span data-slot="breadcrumb-link" className="cursor-selectable flex h-full min-w-0 items-center">
+      <span data-slot="breadcrumb-link" className={cn("cursor-selectable flex h-full min-w-0 items-center px-single", interactiveControlTransitionClass, hoverClass)}>
         {itemContent}
       </span>
     );
-  }, [itemContent]);
+  }, [hoverClass, itemContent]);
 
   const itemElement = (
     <li data-slot="breadcrumb-item" id={id} className={cn("flex h-full min-w-0 items-stretch cursor-selectable overflow-hidden", className)} {...props}>
@@ -11465,6 +11632,8 @@ interface BreadcrumbSeparatorItemProps {
 /**
  **/
 function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options, onNavigate }: BreadcrumbSeparatorItemProps) {
+  const level = useLevel();
+  const hoverClass = getLevelHoverClass(level);
   const icon = isOpen ? <ChevronDownIcon className="cursor-foldable" /> : <ChevronRightIcon className="cursor-foldable" />;
 
   const handleSelect = (href: string) => {
@@ -11472,8 +11641,11 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
     onNavigate?.(href);
   };
 
-  const separatorControlClassName =
-    "text-foreground inline-flex h-full aspect-square items-center justify-center shrink-0 p-single transition-colors cursor-selectable overflow-hidden outline-none hover:bg-hover-base focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-none [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0";
+  const separatorControlClassName = cn(
+    "text-foreground inline-flex h-full aspect-square items-center justify-center shrink-0 p-single cursor-selectable overflow-hidden outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-none [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0",
+    interactiveControlTransitionClass,
+    hoverClass,
+  );
 
   if (!hasOptions || !options?.length) {
     return (
@@ -14697,6 +14869,9 @@ export interface GumballConfig {
   readonly translationSnap?: number;
   readonly rotationSnap?: number;
   readonly scaleSnap?: number;
+  readonly shiftTranslationSnap?: number;
+  readonly shiftRotationSnap?: number;
+  readonly shiftScaleSnap?: number;
   readonly size?: number;
 }
 
@@ -14836,26 +15011,52 @@ export function gumballSnapScalar(value: number, snap: number | undefined): numb
   return Math.round(value / snap) * snap;
 }
 
-const GUMBALL_AXIS_COLOR_REFS = { x: tokenVar("danger"), y: tokenVar("success"), z: tokenVar("secondary") } as const;
+/** @emoji 🎛 Default rotation snap while Shift is held (15°). */
+export const GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP = Math.PI / 12;
+
+/** @emoji 🎛 Default uniform scale snap while Shift is held (10%). */
+export const GUMBALL_DEFAULT_SHIFT_SCALE_SNAP = 0.1;
+
+/** @emoji 🎛 Resolves an active snap step from config and Shift modifier. */
+export function gumballEffectiveSnapValue(configSnap: number | undefined, shiftKey: boolean, shiftFallback: number): number | undefined {
+  if (configSnap != null && configSnap > 0) return configSnap;
+  if (shiftKey && shiftFallback > 0) return shiftFallback;
+  return undefined;
+}
+
+/** @emoji 🎛 Active gumball drag snap steps for translate / rotate / scale. */
+export function gumballResolveDragSnaps(
+  config: GumballConfig,
+  shiftKey: boolean,
+): { readonly translationSnap: number | undefined; readonly rotationSnap: number | undefined; readonly scaleSnap: number | undefined } {
+  return {
+    translationSnap: gumballEffectiveSnapValue(config.translationSnap, shiftKey, config.shiftTranslationSnap ?? 0),
+    rotationSnap: gumballEffectiveSnapValue(config.rotationSnap, shiftKey, config.shiftRotationSnap ?? GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP),
+    scaleSnap: gumballEffectiveSnapValue(config.scaleSnap, shiftKey, config.shiftScaleSnap ?? GUMBALL_DEFAULT_SHIFT_SCALE_SNAP),
+  };
+}
+
+const GUMBALL_AXIS_COLOR_REFS = { x: semanticVar("accent"), y: semanticVar("accent-secondary"), z: semanticVar("accent-tertiary") } as const;
 const GUMBALL_PLANE_COLOR_REF = themeColorVar("muted-foreground");
 const GUMBALL_UNIFORM_COLOR_REF = tokenVar("light");
-const GUMBALL_HANDLE_LENGTH = 0.85;
-const GUMBALL_ARROW_RADIUS = 0.035;
-const GUMBALL_ARROW_HEAD = 0.14;
-const GUMBALL_PLANE_OFFSET = 0.28;
-const GUMBALL_PLANE_SIZE = 0.18;
-const GUMBALL_PLANE_SCALE_INSET = 0.05;
-const GUMBALL_PLANE_SCALE_ARM = 0.11;
-const GUMBALL_PLANE_SCALE_THICK = 0.022;
-const GUMBALL_PLANE_SCALE_DEPTH = 0.022;
-const GUMBALL_PLANE_SCALE_PICK = 0.14;
-const GUMBALL_RING_RADIUS = 1.02;
-const GUMBALL_RING_TUBE = 0.018;
-const GUMBALL_SCALE_OFFSET = 1.38;
-const GUMBALL_SCALE_SHAFT_RADIUS = 0.012;
-const GUMBALL_SCALE_BOX = 0.085;
-const GUMBALL_SCALE_PICK = 0.16;
-const GUMBALL_UNIFORM_BOX = 0.11;
+const GUMBALL_HANDLE_LENGTH = 0.98;
+const GUMBALL_ARROW_RADIUS = 0.022;
+const GUMBALL_ARROW_HEAD = 0.12;
+const GUMBALL_ARROW_HEAD_RADIUS_SCALE = 1.75;
+const GUMBALL_PLANE_OFFSET = 0.3;
+const GUMBALL_PLANE_SIZE = 0.145;
+const GUMBALL_PLANE_SCALE_INSET = 0.04;
+const GUMBALL_PLANE_SCALE_ARM = 0.085;
+const GUMBALL_PLANE_SCALE_THICK = 0.012;
+const GUMBALL_PLANE_SCALE_DEPTH = 0.012;
+const GUMBALL_PLANE_SCALE_PICK = 0.12;
+const GUMBALL_RING_RADIUS = 1.06;
+const GUMBALL_RING_TUBE = 0.01;
+const GUMBALL_SCALE_OFFSET = 1.45;
+const GUMBALL_SCALE_SHAFT_RADIUS = 0.007;
+const GUMBALL_SCALE_BOX = 0.055;
+const GUMBALL_SCALE_PICK = 0.14;
+const GUMBALL_UNIFORM_BOX = 0.068;
 const GUMBALL_SCALE_RENDER_ORDER = 1001;
 
 const GUMBALL_AXIS_BY_KIND: Readonly<Record<GumballHandleKind, GumballVec3 | null>> = {
@@ -14921,7 +15122,7 @@ function GumballPlaneScaleLHandle(props: { readonly plane: GumballScalePlane }):
         <mesh position={[cx, cy + arm * 0.5, cz]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
           <boxGeometry args={[thick, arm, depth]} />
         </mesh>
-        <mesh position={[cx + arm * 0.5, cy + arm * 0.5, cz]} visible={false}>
+        <mesh position={[cx + arm * 0.5, cy + arm * 0.5, cz]} visible={false} userData={{ gumballHandlePick: true }}>
           <boxGeometry args={[pick, pick, depth * 2]} />
         </mesh>
       </>
@@ -14936,7 +15137,7 @@ function GumballPlaneScaleLHandle(props: { readonly plane: GumballScalePlane }):
         <mesh position={[cx, cy, cz + arm * 0.5]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
           <boxGeometry args={[depth, thick, arm]} />
         </mesh>
-        <mesh position={[cx, cy + arm * 0.5, cz + arm * 0.5]} visible={false}>
+        <mesh position={[cx, cy + arm * 0.5, cz + arm * 0.5]} visible={false} userData={{ gumballHandlePick: true }}>
           <boxGeometry args={[depth * 2, pick, pick]} />
         </mesh>
       </>
@@ -14950,7 +15151,7 @@ function GumballPlaneScaleLHandle(props: { readonly plane: GumballScalePlane }):
       <mesh position={[cx, cy, cz + arm * 0.5]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
         <boxGeometry args={[thick, depth, arm]} />
       </mesh>
-      <mesh position={[cx + arm * 0.5, cy, cz + arm * 0.5]} visible={false}>
+      <mesh position={[cx + arm * 0.5, cy, cz + arm * 0.5]} visible={false} userData={{ gumballHandlePick: true }}>
         <boxGeometry args={[pick, depth * 2, pick]} />
       </mesh>
     </>
@@ -14972,25 +15173,19 @@ export function gumballScaleAxisOffset(): number {
   return GUMBALL_SCALE_OFFSET;
 }
 
-function GumballScaleAxisHandle(props: {
-  readonly axis: GumballPreviewAxis;
-  readonly color: string;
-  readonly opacity: number;
-}): React.ReactElement {
+function GumballScaleAxisHandle(props: { readonly axis: GumballPreviewAxis }): React.ReactElement {
   const shaftMid = gumballScaleShaftMidpoint();
   const shaftLen = gumballScaleShaftLength();
-  const shaftMaterial = reactHostPort.useMemo(() => new THREE.MeshBasicMaterial({ color: props.color, transparent: true, opacity: props.opacity * 0.72, depthTest: false, depthWrite: false }), [props.color, props.opacity]);
-  reactHostPort.useEffect(() => () => shaftMaterial.dispose(), [shaftMaterial]);
   if (props.axis === "x") {
     return (
       <>
-        <mesh rotation={[0, 0, -Math.PI / 2]} position={[shaftMid, 0, 0]} material={shaftMaterial} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+        <mesh rotation={[0, 0, -Math.PI / 2]} position={[shaftMid, 0, 0]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
           <cylinderGeometry args={[GUMBALL_SCALE_SHAFT_RADIUS, GUMBALL_SCALE_SHAFT_RADIUS, shaftLen, 6]} />
         </mesh>
         <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
           <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
         </mesh>
-        <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]} visible={false}>
+        <mesh position={[GUMBALL_SCALE_OFFSET, 0, 0]} visible={false} userData={{ gumballHandlePick: true }}>
           <boxGeometry args={[GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK]} />
         </mesh>
       </>
@@ -14999,13 +15194,13 @@ function GumballScaleAxisHandle(props: {
   if (props.axis === "y") {
     return (
       <>
-        <mesh position={[0, shaftMid, 0]} material={shaftMaterial} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+        <mesh position={[0, shaftMid, 0]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
           <cylinderGeometry args={[GUMBALL_SCALE_SHAFT_RADIUS, GUMBALL_SCALE_SHAFT_RADIUS, shaftLen, 6]} />
         </mesh>
         <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
           <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
         </mesh>
-        <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]} visible={false}>
+        <mesh position={[0, GUMBALL_SCALE_OFFSET, 0]} visible={false} userData={{ gumballHandlePick: true }}>
           <boxGeometry args={[GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK]} />
         </mesh>
       </>
@@ -15013,22 +15208,49 @@ function GumballScaleAxisHandle(props: {
   }
   return (
     <>
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, shaftMid]} material={shaftMaterial} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, shaftMid]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
         <cylinderGeometry args={[GUMBALL_SCALE_SHAFT_RADIUS, GUMBALL_SCALE_SHAFT_RADIUS, shaftLen, 6]} />
       </mesh>
       <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]} renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
         <boxGeometry args={[GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX, GUMBALL_SCALE_BOX]} />
       </mesh>
-      <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]} visible={false}>
+      <mesh position={[0, 0, GUMBALL_SCALE_OFFSET]} visible={false} userData={{ gumballHandlePick: true }}>
         <boxGeometry args={[GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK]} />
       </mesh>
     </>
   );
 }
-const GUMBALL_PREVIEW_AXIS_LENGTH = 3.6;
-const GUMBALL_PREVIEW_PLANE_SIZE = 1.85;
-const GUMBALL_PREVIEW_RING_RADIUS = 1.18;
-const GUMBALL_PREVIEW_RING_TUBE = 0.028;
+const GUMBALL_PREVIEW_MIN_EXTENT = 12;
+const GUMBALL_PREVIEW_EXTENT_MARGIN = 2.75;
+const GUMBALL_PREVIEW_RING_RADIUS = 1.22;
+const GUMBALL_PREVIEW_RING_TUBE = 0.014;
+
+const _gumballPreviewCamPos = new THREE.Vector3();
+const _gumballPreviewPivot = new THREE.Vector3();
+
+/** @emoji 👁 World half-extent for gumball axis/plane previews (fills the viewport at the pivot). */
+export function gumballPreviewWorldExtent(camera: THREE.Camera, pivotWorld: THREE.Vector3): number {
+  _gumballPreviewCamPos.copy(camera.position);
+  const dist = Math.max(_gumballPreviewCamPos.distanceTo(pivotWorld), 1e-3);
+  if (camera instanceof THREE.OrthographicCamera) {
+    const halfW = ((camera.right - camera.left) * 0.5) / Math.max(camera.zoom, 1e-3);
+    const halfH = ((camera.top - camera.bottom) * 0.5) / Math.max(camera.zoom, 1e-3);
+    return Math.max(Math.max(halfW, halfH) * GUMBALL_PREVIEW_EXTENT_MARGIN, GUMBALL_PREVIEW_MIN_EXTENT);
+  }
+  if (camera instanceof THREE.PerspectiveCamera) {
+    const vFovRad = (camera.fov * Math.PI) / 180;
+    const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * camera.aspect);
+    const span = dist * Math.max(Math.tan(vFovRad / 2), Math.tan(hFovRad / 2)) * GUMBALL_PREVIEW_EXTENT_MARGIN;
+    return Math.max(span, GUMBALL_PREVIEW_MIN_EXTENT);
+  }
+  return Math.max(dist * 4, GUMBALL_PREVIEW_MIN_EXTENT);
+}
+
+function gumballAxisPreviewPoints(axis: GumballPreviewAxis, half: number): [number, number, number][] {
+  if (axis === "x") return [[-half, 0, 0], [half, 0, 0]];
+  if (axis === "y") return [[0, -half, 0], [0, half, 0]];
+  return [[0, 0, -half], [0, 0, half]];
+}
 
 /** @emoji 🎨 Resolved gumball chrome aligned with spatial selection / hover tokens. */
 export interface GumballVisualPalette {
@@ -15050,9 +15272,9 @@ export interface GumballVisualPalette {
 /** @emoji 🎨 Reads gumball palette from design tokens (matches CAD spatial pick chrome). */
 export function resolveGumballVisualPalette(): GumballVisualPalette {
   return {
-    axisX: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.x, "danger"),
-    axisY: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.y, "success"),
-    axisZ: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.z, "secondary"),
+    axisX: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.x, "gray"),
+    axisY: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.y, "gray"),
+    axisZ: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.z, "gray"),
     plane: resolveColorHex(GUMBALL_PLANE_COLOR_REF, "gray"),
     uniform: resolveColorHex(GUMBALL_UNIFORM_COLOR_REF, "light"),
     hover: getComputedColor("--color-changed-hovered"),
@@ -15079,11 +15301,11 @@ export function gumballHandleVisualState(kind: GumballHandleKind, hovered: Gumba
 }
 
 /** @emoji 🎨 Handle tint + opacity for a resolved visual state. */
-export function gumballResolveHandleVisual(baseColor: string, state: GumballHandleVisualState, palette: GumballVisualPalette): { readonly color: string; readonly opacity: number; readonly scale: number } {
-  if (state === "active") return { color: palette.active, opacity: palette.activeOpacity, scale: 1.14 };
-  if (state === "hover") return { color: palette.hover, opacity: palette.hoverOpacity, scale: 1.08 };
-  if (state === "dimmed") return { color: baseColor, opacity: palette.dimmedOpacity, scale: 1 };
-  return { color: baseColor, opacity: palette.idleOpacity, scale: 1 };
+export function gumballResolveHandleVisual(baseColor: string, state: GumballHandleVisualState, palette: GumballVisualPalette): { readonly color: string; readonly opacity: number } {
+  if (state === "active") return { color: palette.active, opacity: palette.activeOpacity };
+  if (state === "hover") return { color: palette.hover, opacity: palette.hoverOpacity };
+  if (state === "dimmed") return { color: baseColor, opacity: palette.dimmedOpacity };
+  return { color: baseColor, opacity: palette.idleOpacity };
 }
 
 function gumballPreviewAxisForKind(kind: GumballHandleKind): GumballPreviewAxis | null {
@@ -15118,47 +15340,67 @@ function useGumballVisualPalette(): GumballVisualPalette {
 const GumballLine = sceneHostPort.drei.Line;
 
 function GumballAxisPreviewLine(props: { readonly axis: GumballPreviewAxis; readonly color: string; readonly opacity: number; readonly lineWidth: number }): React.ReactElement {
-  const half = GUMBALL_PREVIEW_AXIS_LENGTH / 2;
-  const points = reactHostPort.useMemo((): [number, number, number][] => {
-    if (props.axis === "x") return [[-half, 0, 0], [half, 0, 0]];
-    if (props.axis === "y") return [[0, -half, 0], [0, half, 0]];
-    return [[0, 0, -half], [0, 0, half]];
-  }, [half, props.axis]);
-  return <GumballLine points={points} color={props.color} lineWidth={props.lineWidth} transparent opacity={props.opacity} depthTest={false} renderOrder={997} />;
+  const rootRef = reactHostPort.useRef<THREE.Group>(null);
+  const camera = useThree((state) => state.camera);
+  const invalidate = useThree((state) => state.invalidate);
+  const [points, setPoints] = reactHostPort.useState<[number, number, number][]>(() => gumballAxisPreviewPoints(props.axis, GUMBALL_PREVIEW_MIN_EXTENT));
+  useFrame(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const half = gumballPreviewWorldExtent(camera, root.getWorldPosition(_gumballPreviewPivot));
+    setPoints((prev) => {
+      const next = gumballAxisPreviewPoints(props.axis, half);
+      const prevHalf = Math.abs(prev[1]![props.axis === "x" ? 0 : props.axis === "y" ? 1 : 2] ?? 0);
+      if (Math.abs(prevHalf - half) <= half * 0.02) return prev;
+      return next;
+    });
+    invalidate();
+  });
+  return (
+    <group ref={rootRef}>
+      <GumballLine points={points} color={props.color} lineWidth={props.lineWidth} transparent opacity={props.opacity} depthTest={false} renderOrder={997} />
+    </group>
+  );
+}
+
+function GumballPlanePreviewMesh(props: { readonly orientation: "xy" | "yz" | "xz"; readonly color: string; readonly opacity: number }): React.ReactElement {
+  const meshRef = reactHostPort.useRef<THREE.Mesh>(null);
+  const camera = useThree((state) => state.camera);
+  const invalidate = useThree((state) => state.invalidate);
+  useFrame(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    const half = gumballPreviewWorldExtent(camera, mesh.getWorldPosition(_gumballPreviewPivot));
+    const size = half * 2;
+    mesh.scale.set(size, size, 1);
+    invalidate();
+  });
+  const rotation = props.orientation === "yz" ? [0, Math.PI / 2, 0] as const : props.orientation === "xz" ? ([-Math.PI / 2, 0, 0] as const) : ([0, 0, 0] as const);
+  return (
+    <mesh ref={meshRef} rotation={rotation} renderOrder={997}>
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial color={props.color} transparent opacity={props.opacity} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+    </mesh>
+  );
 }
 
 function GumballInteractionPreview(props: { readonly kind: GumballHandleKind; readonly palette: GumballVisualPalette; readonly phase: "hover" | "active" }): React.ReactElement | null {
   const color = props.phase === "active" ? props.palette.active : props.palette.hover;
   const fillOpacity = props.phase === "active" ? props.palette.previewActiveOpacity : props.palette.previewHoverOpacity;
-  const lineWidth = props.phase === "active" ? 4.5 : 3.5;
+  const lineWidth = props.phase === "active" ? 3.25 : 2.5;
   const lineOpacity = props.phase === "active" ? 0.92 : 0.72;
   const axis = gumballPreviewAxisForKind(props.kind);
   if (axis) {
     return <GumballAxisPreviewLine axis={axis} color={color} opacity={lineOpacity} lineWidth={lineWidth} />;
   }
   if (props.kind === "moveXY" || props.kind === "scaleXY") {
-    return (
-      <mesh renderOrder={997}>
-        <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
-        <meshBasicMaterial color={color} transparent opacity={fillOpacity} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
-      </mesh>
-    );
+    return <GumballPlanePreviewMesh orientation="xy" color={color} opacity={fillOpacity} />;
   }
   if (props.kind === "moveYZ" || props.kind === "scaleYZ") {
-    return (
-      <mesh rotation={[0, Math.PI / 2, 0]} renderOrder={997}>
-        <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
-        <meshBasicMaterial color={color} transparent opacity={fillOpacity} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
-      </mesh>
-    );
+    return <GumballPlanePreviewMesh orientation="yz" color={color} opacity={fillOpacity} />;
   }
   if (props.kind === "moveXZ" || props.kind === "scaleXZ") {
-    return (
-      <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={997}>
-        <planeGeometry args={[GUMBALL_PREVIEW_PLANE_SIZE, GUMBALL_PREVIEW_PLANE_SIZE]} />
-        <meshBasicMaterial color={color} transparent opacity={fillOpacity} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
-      </mesh>
-    );
+    return <GumballPlanePreviewMesh orientation="xz" color={color} opacity={fillOpacity} />;
   }
   if (props.kind === "rotateX") {
     return (
@@ -15187,7 +15429,7 @@ function GumballInteractionPreview(props: { readonly kind: GumballHandleKind; re
   if (props.kind === "scaleUniform") {
     return (
       <mesh renderOrder={997}>
-        <sphereGeometry args={[0.22, 20, 20]} />
+        <sphereGeometry args={[0.16, 20, 20]} />
         <meshBasicMaterial color={color} transparent opacity={fillOpacity} depthTest={false} depthWrite={false} wireframe={false} />
       </mesh>
     );
@@ -15276,6 +15518,14 @@ export interface UnifiedGumballProps {
   readonly onDraggingChanged?: (active: boolean) => void;
 }
 
+function gumballApplyHandleVisualMaterial(root: THREE.Object3D, material: THREE.MeshBasicMaterial): void {
+  root.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    if (node.visible === false || node.userData.gumballHandlePick === true) return;
+    node.material = material;
+  });
+}
+
 function GumballHandleMesh(props: {
   readonly kind: GumballHandleKind;
   readonly baseColor: string;
@@ -15286,6 +15536,7 @@ function GumballHandleMesh(props: {
   readonly onPointerOut: () => void;
   readonly children: React.ReactNode;
 }): React.ReactElement {
+  const rootRef = reactHostPort.useRef<THREE.Group>(null);
   const doubleSided =
     props.kind === "moveXY" ||
     props.kind === "moveYZ" ||
@@ -15294,28 +15545,46 @@ function GumballHandleMesh(props: {
     props.kind === "scaleYZ" ||
     props.kind === "scaleXZ";
   const visual = gumballResolveHandleVisual(props.baseColor, props.visualState, props.palette);
+  const material = reactHostPort.useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        side: doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+      }),
+    [doubleSided],
+  );
+  reactHostPort.useEffect(() => () => material.dispose(), [material]);
+  reactHostPort.useLayoutEffect(() => {
+    material.color.set(visual.color);
+    material.opacity = visual.opacity;
+  }, [material, visual.color, visual.opacity]);
+  reactHostPort.useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    gumballApplyHandleVisualMaterial(root, material);
+  }, [material, props.children, visual.color, visual.opacity]);
   return (
-    <group scale={[visual.scale, visual.scale, visual.scale]}>
-      <mesh
-        frustumCulled={false}
-        userData={{ gumballHandleKind: props.kind }}
-        onPointerDown={(event) => {
-          gumballPointerConsumesCanvasEventRef.current = true;
-          event.stopPropagation();
-          props.onPointerDown(props.kind, event);
-        }}
-        onPointerOver={(event) => {
-          event.stopPropagation();
-          props.onPointerOver(props.kind);
-        }}
-        onPointerOut={(event) => {
-          event.stopPropagation();
-          props.onPointerOut();
-        }}
-      >
-        {props.children}
-        <meshBasicMaterial color={visual.color} transparent opacity={visual.opacity} depthTest={false} depthWrite={false} side={doubleSided ? THREE.DoubleSide : THREE.FrontSide} />
-      </mesh>
+    <group
+      ref={rootRef}
+      frustumCulled={false}
+      userData={{ gumballHandleKind: props.kind }}
+      onPointerDown={(event) => {
+        gumballPointerConsumesCanvasEventRef.current = true;
+        event.stopPropagation();
+        props.onPointerDown(props.kind, event);
+      }}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        props.onPointerOver(props.kind);
+      }}
+      onPointerOut={(event) => {
+        event.stopPropagation();
+        props.onPointerOut();
+      }}
+    >
+      {props.children}
     </group>
   );
 }
@@ -15343,12 +15612,7 @@ function GumballHandles(props: {
       {children}
     </GumballHandleMesh>
   );
-  const scaleHandleProps = (kind: "scaleX" | "scaleY" | "scaleZ", axis: GumballPreviewAxis) => {
-    const base = gumballBaseColorForKind(kind, props.palette);
-    const state = gumballHandleVisualState(kind, props.hovered, props.active);
-    const visual = gumballResolveHandleVisual(base, state, props.palette);
-    return handleProps(kind, <GumballScaleAxisHandle axis={axis} color={visual.color} opacity={visual.opacity} />);
-  };
+  const scaleHandleProps = (kind: "scaleX" | "scaleY" | "scaleZ", axis: GumballPreviewAxis) => handleProps(kind, <GumballScaleAxisHandle axis={axis} />);
   const scalePlaneHandleProps = (kind: "scaleXY" | "scaleYZ" | "scaleXZ", plane: GumballScalePlane) => handleProps(kind, <GumballPlaneScaleLHandle plane={plane} />);
   return (
     <group renderOrder={999}>
@@ -15362,7 +15626,7 @@ function GumballHandles(props: {
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
               </mesh>
               <mesh position={[GUMBALL_HANDLE_LENGTH / 2 + GUMBALL_ARROW_HEAD / 2, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-                <coneGeometry args={[GUMBALL_ARROW_RADIUS * 2.2, GUMBALL_ARROW_HEAD, 8]} />
+                <coneGeometry args={[GUMBALL_ARROW_RADIUS * GUMBALL_ARROW_HEAD_RADIUS_SCALE, GUMBALL_ARROW_HEAD, 8]} />
               </mesh>
             </>,
           )}
@@ -15373,7 +15637,7 @@ function GumballHandles(props: {
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
               </mesh>
               <mesh position={[0, GUMBALL_HANDLE_LENGTH / 2 + GUMBALL_ARROW_HEAD / 2, 0]}>
-                <coneGeometry args={[GUMBALL_ARROW_RADIUS * 2.2, GUMBALL_ARROW_HEAD, 8]} />
+                <coneGeometry args={[GUMBALL_ARROW_RADIUS * GUMBALL_ARROW_HEAD_RADIUS_SCALE, GUMBALL_ARROW_HEAD, 8]} />
               </mesh>
             </>,
           )}
@@ -15384,7 +15648,7 @@ function GumballHandles(props: {
                 <cylinderGeometry args={[GUMBALL_ARROW_RADIUS, GUMBALL_ARROW_RADIUS, GUMBALL_HANDLE_LENGTH, 8]} />
               </mesh>
               <mesh position={[0, 0, GUMBALL_HANDLE_LENGTH / 2 + GUMBALL_ARROW_HEAD / 2]} rotation={[Math.PI / 2, 0, 0]}>
-                <coneGeometry args={[GUMBALL_ARROW_RADIUS * 2.2, GUMBALL_ARROW_HEAD, 8]} />
+                <coneGeometry args={[GUMBALL_ARROW_RADIUS * GUMBALL_ARROW_HEAD_RADIUS_SCALE, GUMBALL_ARROW_HEAD, 8]} />
               </mesh>
             </>,
           )}
@@ -15455,7 +15719,7 @@ function GumballHandles(props: {
               <mesh renderOrder={GUMBALL_SCALE_RENDER_ORDER}>
                 <boxGeometry args={[GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX, GUMBALL_UNIFORM_BOX]} />
               </mesh>
-              <mesh visible={false}>
+              <mesh visible={false} userData={{ gumballHandlePick: true }}>
                 <boxGeometry args={[GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK, GUMBALL_SCALE_PICK]} />
               </mesh>
             </>,
@@ -15520,27 +15784,28 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
   });
 
   const applyDrag = reactHostPort.useCallback(
-    (state: GumballDragState, ndcX: number, ndcY: number) => {
+    (state: GumballDragState, ndcX: number, ndcY: number, shiftKey: boolean) => {
       const target = props.target;
       const ray = gumballRayFromNdc(ndcX, ndcY, camera);
       const pivot = gumballV3(state.before.position[0], state.before.position[1], state.before.position[2]);
       const quat = new THREE.Quaternion(state.before.quaternion[0], state.before.quaternion[1], state.before.quaternion[2], state.before.quaternion[3]);
       const kind = state.kind;
+      const { translationSnap, rotationSnap, scaleSnap } = gumballResolveDragSnaps(config, shiftKey);
       if (kind === "moveX" || kind === "moveY" || kind === "moveZ") {
         const localAxis = GUMBALL_AXIS_BY_KIND[kind]!;
         const axisDir = gumballWorldAxis(localAxis, quat);
         const eye = gumballEyeFromPivot(camera, pivot);
         const param = gumballProjectRayOntoAxis(ray.origin, ray.dir, pivot, axisDir, eye);
         if (param === null) return;
-        const delta = gumballSnapScalar(param - state.startAxisParam, config.translationSnap);
+        const delta = gumballSnapScalar(param - state.startAxisParam, translationSnap);
         target.position.set(state.before.position[0] + axisDir[0] * delta, state.before.position[1] + axisDir[1] * delta, state.before.position[2] + axisDir[2] * delta);
       } else if (kind === "moveXY" || kind === "moveYZ" || kind === "moveXZ") {
         const planeNormal = gumballWorldAxis(GUMBALL_AXIS_BY_KIND[kind]!, quat);
         const hit = gumballRayPlanePoint(ray.origin, ray.dir, pivot, planeNormal);
         if (!hit) return;
         let delta = gumballSub(hit, state.startPlanePoint);
-        if (config.translationSnap && config.translationSnap > 0) {
-          delta = [gumballSnapScalar(delta[0], config.translationSnap), gumballSnapScalar(delta[1], config.translationSnap), gumballSnapScalar(delta[2], config.translationSnap)];
+        if (translationSnap && translationSnap > 0) {
+          delta = [gumballSnapScalar(delta[0], translationSnap), gumballSnapScalar(delta[1], translationSnap), gumballSnapScalar(delta[2], translationSnap)];
         }
         target.position.set(state.before.position[0] + delta[0], state.before.position[1] + delta[1], state.before.position[2] + delta[2]);
       } else if (kind === "rotateX" || kind === "rotateY" || kind === "rotateZ") {
@@ -15549,7 +15814,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         if (!hit) return;
         const currentVec = gumballSub(hit, pivot);
         let angle = gumballAxisRotateAngle(state.startRotateVec, currentVec, axisDir);
-        angle = gumballSnapScalar(angle, config.rotationSnap);
+        angle = gumballSnapScalar(angle, rotationSnap);
         const deltaQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(axisDir[0], axisDir[1], axisDir[2]), angle);
         target.quaternion.copy(quat).multiply(deltaQuat);
       } else if (kind === "scaleX" || kind === "scaleY" || kind === "scaleZ") {
@@ -15559,7 +15824,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         const param = gumballProjectRayOntoAxis(ray.origin, ray.dir, pivot, axisDir, eye);
         if (param === null) return;
         let factor = gumballAxisScaleFactor(state.startScaleProj, param);
-        if (config.scaleSnap && config.scaleSnap > 0) factor = gumballSnapScalar(factor, config.scaleSnap);
+        if (scaleSnap && scaleSnap > 0) factor = gumballSnapScalar(factor, scaleSnap);
         const axisIndex = kind === "scaleX" ? 0 : kind === "scaleY" ? 1 : 2;
         const next = [...state.before.scale] as [number, number, number];
         next[axisIndex] = state.before.scale[axisIndex] * factor;
@@ -15573,9 +15838,9 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         const factors = gumballPlaneScaleFactors(state.startPlaneScaleLocal, [local[ia]!, local[ib]!]);
         let fa = factors[0];
         let fb = factors[1];
-        if (config.scaleSnap && config.scaleSnap > 0) {
-          fa = gumballSnapScalar(fa, config.scaleSnap);
-          fb = gumballSnapScalar(fb, config.scaleSnap);
+        if (scaleSnap && scaleSnap > 0) {
+          fa = gumballSnapScalar(fa, scaleSnap);
+          fb = gumballSnapScalar(fb, scaleSnap);
         }
         const next = [...state.before.scale] as [number, number, number];
         next[ia] = state.before.scale[ia] * fa;
@@ -15588,18 +15853,20 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         const startLen = gumballLen(state.startUniformScale);
         const currentLen = gumballLen(current);
         let factor = gumballAxisScaleFactor(startLen, currentLen);
-        if (config.scaleSnap && config.scaleSnap > 0) factor = gumballSnapScalar(factor, config.scaleSnap);
+        if (scaleSnap && scaleSnap > 0) factor = gumballSnapScalar(factor, scaleSnap);
         target.scale.set(state.before.scale[0] * factor, state.before.scale[1] * factor, state.before.scale[2] * factor);
       }
       target.updateMatrixWorld(true);
       props.onDrag?.(kind, gumballPoseFromObject3D(target));
       invalidate();
     },
-    [camera, config.rotationSnap, config.scaleSnap, config.translationSnap, invalidate, props],
+    [camera, config, invalidate, props],
   );
 
   const onWindowMoveRef = reactHostPort.useRef<(event: PointerEvent) => void>(() => {});
   const onWindowUpRef = reactHostPort.useRef<() => void>(() => {});
+  const onWindowKeyRef = reactHostPort.useRef<(event: KeyboardEvent) => void>(() => {});
+  const dragPointerRef = reactHostPort.useRef({ ndcX: 0, ndcY: 0, shiftKey: false });
 
   const endDrag = reactHostPort.useCallback(() => {
     const state = dragRef.current;
@@ -15607,6 +15874,8 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
     setActiveKind(null);
     window.removeEventListener("pointermove", onWindowMoveRef.current);
     window.removeEventListener("pointerup", onWindowUpRef.current);
+    window.removeEventListener("keydown", onWindowKeyRef.current, true);
+    window.removeEventListener("keyup", onWindowKeyRef.current, true);
     if (controls) controls.enabled = true;
     props.onDraggingChanged?.(false);
     if (!state) return;
@@ -15620,9 +15889,22 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
       if (!state) return;
       const rect = gl.domElement.getBoundingClientRect();
       const ndc = gumballNdcFromPointer(event.clientX, event.clientY, rect);
-      applyDrag(state, ndc.x, ndc.y);
+      dragPointerRef.current = { ndcX: ndc.x, ndcY: ndc.y, shiftKey: event.shiftKey };
+      applyDrag(state, ndc.x, ndc.y, event.shiftKey);
     },
     [applyDrag, gl.domElement],
+  );
+
+  const onWindowKey = reactHostPort.useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key !== "Shift") return;
+      const state = dragRef.current;
+      if (!state) return;
+      const pointer = dragPointerRef.current;
+      applyDrag(state, pointer.ndcX, pointer.ndcY, event.type === "keydown");
+      invalidate();
+    },
+    [applyDrag, invalidate],
   );
 
   const onWindowUp = reactHostPort.useCallback(() => {
@@ -15631,11 +15913,14 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
 
   onWindowMoveRef.current = onWindowMove;
   onWindowUpRef.current = onWindowUp;
+  onWindowKeyRef.current = onWindowKey;
 
   reactHostPort.useEffect(
     () => () => {
       window.removeEventListener("pointermove", onWindowMoveRef.current);
       window.removeEventListener("pointerup", onWindowUpRef.current);
+      window.removeEventListener("keydown", onWindowKeyRef.current, true);
+      window.removeEventListener("keyup", onWindowKeyRef.current, true);
     },
     [],
   );
@@ -15681,6 +15966,7 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
         startUniformScale = gumballSub(hit, pivot);
       }
       dragRef.current = { kind, before, startAxisParam, startPlanePoint, startRotateVec, startScaleProj, startUniformScale, startPlaneScaleLocal, scalePlaneAxes };
+      dragPointerRef.current = { ndcX: ndc.x, ndcY: ndc.y, shiftKey: event.nativeEvent.shiftKey };
       setActiveKind(kind);
       setHovered(kind);
       if (controls) controls.enabled = false;
@@ -15688,8 +15974,10 @@ export function UnifiedGumball(props: UnifiedGumballProps): React.ReactElement |
       props.onDragStart?.(kind, before);
       window.addEventListener("pointermove", onWindowMove);
       window.addEventListener("pointerup", onWindowUp);
+      window.addEventListener("keydown", onWindowKey, true);
+      window.addEventListener("keyup", onWindowKey, true);
     },
-    [camera, controls, gl.domElement, onWindowMove, onWindowUp, props],
+    [camera, controls, gl.domElement, onWindowKey, onWindowMove, onWindowUp, props],
   );
 
   const handlePointerOver = reactHostPort.useCallback(
@@ -17608,6 +17896,162 @@ function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, size
   });
 }
 
+/** @emoji ↔️ True when a child axis runs perpendicular to its parent axis. */
+export function modeAxisIsPerpendicularChild(parentKind: "row" | "column", child: WindowLayoutNode): boolean {
+  return (parentKind === "row" && child.kind === "column") || (parentKind === "column" && child.kind === "row");
+}
+
+/** @emoji ↔️ Separator indices and center fractions for joins inside a perpendicular child axis. */
+export function modePerpendicularJoinSeparators(node: WindowLayoutNode): readonly { index: number; fraction: number }[] {
+  if (node.kind !== "row" && node.kind !== "column") return [];
+  const count = node.children.length;
+  if (count < 2) return [];
+  return Array.from({ length: count - 1 }, (_, offset) => ({
+    index: offset + 1,
+    fraction: (offset + 1) / count,
+  }));
+}
+
+/** @emoji ↔️ Corner join specs for a main-axis separator that crosses perpendicular child splits. */
+export function modeJoinCornerSpecsForSeparator(
+  parentPath: ModeLayoutPath,
+  parentKind: "row" | "column",
+  separatorIndex: number,
+  prevChild: WindowLayoutNode,
+  nextChild: WindowLayoutNode,
+): ResizableJoinCornerSpec[] {
+  const specs: ResizableJoinCornerSpec[] = [];
+  const pushSpecs = (beforeSide: boolean, crossPath: ModeLayoutPath, crossChild: WindowLayoutNode) => {
+    const joins = modePerpendicularJoinSeparators(crossChild);
+    joins.forEach(({ index, fraction }) => {
+      specs.push({
+        parentKind,
+        mainAxisPath: parentPath,
+        mainSeparatorIndex: separatorIndex,
+        crossAxisPath: crossPath,
+        crossSeparatorIndex: index,
+        edgeSide: beforeSide ? "leading" : "trailing",
+        alongFraction: fraction,
+      });
+    });
+  };
+  if (modeAxisIsPerpendicularChild(parentKind, prevChild)) {
+    pushSpecs(true, modeJoinPath(parentPath, separatorIndex - 1), prevChild);
+  }
+  if (modeAxisIsPerpendicularChild(parentKind, nextChild)) {
+    pushSpecs(false, modeJoinPath(parentPath, separatorIndex), nextChild);
+  }
+  return specs;
+}
+
+/** @emoji ↔️ Corner join specs on a cross-axis separator where it meets a parent split. */
+export function modeJoinCornerSpecsForCrossSeparator(
+  crossPath: ModeLayoutPath,
+  crossKind: "row" | "column",
+  crossSeparatorIndex: number,
+  parent: { path: ModeLayoutPath; kind: "row" | "column"; panelIndex: number },
+): ResizableJoinCornerSpec[] {
+  if ((parent.kind === "row" && crossKind !== "column") || (parent.kind === "column" && crossKind !== "row")) return [];
+  const parentSeparatorIndex = parent.panelIndex === 0 ? parent.panelIndex + 1 : parent.panelIndex;
+  const edgeSide: ResizableJoinEdgeSide = parent.panelIndex === 0 ? "trailing" : "leading";
+  const alongFraction = parent.kind === "row" ? 0.5 : parent.panelIndex === 0 ? 1 : 0;
+  return [
+    {
+      parentKind: parent.kind,
+      mainAxisPath: parent.path,
+      mainSeparatorIndex: parentSeparatorIndex,
+      crossAxisPath: crossPath,
+      crossSeparatorIndex,
+      edgeSide,
+      alongFraction,
+    },
+  ];
+}
+
+/** @emoji ↔️ Percentage delta for one panel pair on an axis separator. */
+export function applyAxisResizeDelta(
+  layout: WindowLayoutNode,
+  axisPath: ModeLayoutPath,
+  separatorIndex: number,
+  deltaPct: number,
+  minPct = 8,
+): WindowLayoutNode {
+  if (Math.abs(deltaPct) < 0.001) return layout;
+  return updateLayoutAtPath(layout, axisPath, (node) => {
+    if (node.kind !== "row" && node.kind !== "column") return node;
+    const leftIndex = separatorIndex - 1;
+    const rightIndex = separatorIndex;
+    if (leftIndex < 0 || rightIndex >= node.children.length) return node;
+    const count = node.children.length;
+    const leftSize = node.children[leftIndex]?.size ?? 100 / count;
+    const rightSize = node.children[rightIndex]?.size ?? 100 / count;
+    const nextLeft = Math.max(minPct, Math.min(100 - minPct, leftSize + deltaPct));
+    const nextRight = Math.max(minPct, Math.min(100 - minPct, rightSize - deltaPct));
+    const children = node.children.map((child, index) => {
+      if (index === leftIndex) return { ...child, size: nextLeft };
+      if (index === rightIndex) return { ...child, size: nextRight };
+      return child;
+    });
+    return { ...node, children };
+  });
+}
+
+/** @emoji ↔️ Pointer delta for a corner join on perpendicular row/column axes. */
+export function resolveJoinCornerResizeDeltas(
+  parentKind: "row" | "column",
+  deltaXPx: number,
+  deltaYPx: number,
+  mainAxisPixelSize: number,
+  crossAxisPixelSize: number,
+): { mainDeltaPct: number; crossDeltaPct: number } {
+  if (mainAxisPixelSize <= 0 || crossAxisPixelSize <= 0) return { mainDeltaPct: 0, crossDeltaPct: 0 };
+  if (parentKind === "row") {
+    return {
+      mainDeltaPct: -(deltaXPx / mainAxisPixelSize) * 100,
+      crossDeltaPct: -(deltaYPx / crossAxisPixelSize) * 100,
+    };
+  }
+  return {
+    mainDeltaPct: -(deltaYPx / mainAxisPixelSize) * 100,
+    crossDeltaPct: -(deltaXPx / crossAxisPixelSize) * 100,
+  };
+}
+
+/** @emoji ↔️ Applies a corner grab delta to both the main and cross layout axes. */
+export function applyModeJoinCornerResize(
+  layout: WindowLayoutNode,
+  spec: ResizableJoinCornerSpec,
+  deltaXPx: number,
+  deltaYPx: number,
+  mainAxisPixelSize: number,
+  crossAxisPixelSize: number,
+): WindowLayoutNode {
+  const { mainDeltaPct, crossDeltaPct } = resolveJoinCornerResizeDeltas(
+    spec.parentKind,
+    deltaXPx,
+    deltaYPx,
+    mainAxisPixelSize,
+    crossAxisPixelSize,
+  );
+  let next = applyAxisResizeDelta(layout, spec.mainAxisPath, spec.mainSeparatorIndex, mainDeltaPct);
+  next = applyAxisResizeDelta(next, spec.crossAxisPath, spec.crossSeparatorIndex, crossDeltaPct);
+  return next;
+}
+
+function readModeAxisPixelSize(axisPath: ModeLayoutPath, kind: "row" | "column"): number {
+  if (typeof document === "undefined") return 0;
+  const element = document.getElementById(`mode-axis-${axisPath || "root"}`);
+  if (!element) return 0;
+  const rect = element.getBoundingClientRect();
+  return kind === "row" ? rect.width : rect.height;
+}
+
+function readModeAxisKind(layout: WindowLayoutNode, axisPath: ModeLayoutPath): "row" | "column" | null {
+  const node = axisPath ? readLayoutAtPath(layout, axisPath) : layout;
+  if (!node || (node.kind !== "row" && node.kind !== "column")) return null;
+  return node.kind;
+}
+
 function setActiveWindowInLayout(layout: WindowLayoutNode, windowId: string): WindowLayoutNode {
   return mapLayoutStacks(layout, (stack) => {
     if (!stack.children.some((child) => child.id === windowId)) return stack;
@@ -18222,7 +18666,18 @@ interface ModeRenderContext {
   onAxisLayoutChanged: (axisPath: ModeLayoutPath, sizes: Record<string, number>) => void;
 }
 
-function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: ModeRenderContext): React.ReactNode {
+interface ModeRenderParentAxis {
+  path: ModeLayoutPath;
+  kind: "row" | "column";
+  panelIndex: number;
+}
+
+function renderModeDockNode(
+  node: WindowLayoutNode,
+  path: ModeLayoutPath,
+  ctx: ModeRenderContext,
+  parentAxis?: ModeRenderParentAxis,
+): React.ReactNode {
   if (node.kind === "stack") {
     return <ModeDockStack key={path || "root-stack"} stackPath={path} node={node} windowsById={ctx.windowsById} activeWindowId={ctx.activeWindowId} />;
   }
@@ -18230,11 +18685,23 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
   const panels: React.ReactNode[] = [];
   node.children.forEach((child, index) => {
     const childPath = modeJoinPath(path, index);
-    if (index > 0)
-      panels.push(<ResizableHandle key={`sep-${childPath}`} orientation={orientation} />);
+    if (index > 0) {
+      const prevChild = node.children[index - 1]!;
+      const joinCorners = [
+        ...modeJoinCornerSpecsForSeparator(path, node.kind, index, prevChild, child),
+        ...(parentAxis ? modeJoinCornerSpecsForCrossSeparator(path, node.kind, index, parentAxis) : []),
+      ];
+      panels.push(
+        <ResizableHandle
+          key={`sep-${childPath}`}
+          joinCorners={joinCorners}
+          orientation={orientation}
+        />,
+      );
+    }
     panels.push(
       <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0">
-        {renderModeDockNode(child as WindowLayoutNode, childPath, ctx)}
+        {renderModeDockNode(child as WindowLayoutNode, childPath, ctx, { path, kind: node.kind, panelIndex: index })}
       </ResizablePanel>,
     );
   });
@@ -18495,6 +18962,22 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
   }, []);
 
+  const onJoinCornerResize = reactHostPort.useCallback((spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number) => {
+    setLayoutState((prev) => {
+      const mainKind = readModeAxisKind(prev, spec.mainAxisPath);
+      const crossKind = readModeAxisKind(prev, spec.crossAxisPath);
+      if (!mainKind || !crossKind) return prev;
+      const mainSize = readModeAxisPixelSize(spec.mainAxisPath, mainKind);
+      const crossSize = readModeAxisPixelSize(spec.crossAxisPath, crossKind);
+      return applyModeJoinCornerResize(prev, spec, deltaXPx, deltaYPx, mainSize, crossSize);
+    });
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    registerResizableJoinCornerResizeHandler(onJoinCornerResize);
+    return () => registerResizableJoinCornerResizeHandler(null);
+  }, [onJoinCornerResize]);
+
   const clearTemplateDragPreview = reactHostPort.useCallback(() => {
     setTemplateDrag(null);
     dropZoneRef.current = null;
@@ -18665,7 +19148,10 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     ],
   );
 
-  const renderContext = reactHostPort.useMemo<ModeRenderContext>(() => ({ windowsById, activeWindowId, onAxisLayoutChanged }), [windowsById, activeWindowId, onAxisLayoutChanged]);
+  const renderContext = reactHostPort.useMemo<ModeRenderContext>(
+    () => ({ windowsById, activeWindowId, onAxisLayoutChanged }),
+    [windowsById, activeWindowId, onAxisLayoutChanged],
+  );
 
   const dockOutLayout = reactHostPort.useMemo(
     () => (dragState ? modeDockOutLayout(layoutState, dragState) : layoutState),
@@ -18886,7 +19372,7 @@ const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, f
             <ButtonGroupItem
               key={app.id}
               id={`ui.appNav.${app.id}`}
-              className={cn(activeAppId === app.id && "bg-active-base")}
+              className={cn(activeAppId === app.id && "bg-active-base hover:bg-active-base/90 text-active-foreground")}
               onClick={() => onActiveAppChange?.(app.id)}
               icon={app.icon ?? "layout-grid"}
               text={app.label}
@@ -18966,6 +19452,15 @@ if (import.meta.vitest) {
       expect(gumballAxisRotateAngle([1, 0, 0], [0, 1, 0], [0, 0, 1])).toBeCloseTo(Math.PI / 2, 5);
       expect(gumballAxisScaleFactor(2, 4)).toBe(2);
       expect(gumballSnapScalar(1.05, 0.5)).toBe(1);
+      expect(gumballEffectiveSnapValue(undefined, false, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP)).toBeUndefined();
+      expect(gumballEffectiveSnapValue(undefined, true, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP)).toBe(GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP);
+      expect(gumballEffectiveSnapValue(0.25, true, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP)).toBe(0.25);
+      const shiftRotate = gumballResolveDragSnaps({}, true);
+      expect(shiftRotate.rotationSnap).toBe(GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP);
+      expect(shiftRotate.scaleSnap).toBe(GUMBALL_DEFAULT_SHIFT_SCALE_SNAP);
+      expect(gumballResolveDragSnaps({}, false).rotationSnap).toBeUndefined();
+      expect(gumballSnapScalar(Math.PI / 3, Math.PI / 4)).toBeCloseTo(Math.PI / 4, 6);
+      expect(gumballSnapScalar(Math.PI / 6, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP)).toBeCloseTo(Math.PI / 6, 6);
       expect(gumballHandleKindToTransformMode("moveYZ")).toBe("translate");
       expect(gumballHandleKindToTransformMode("rotateX")).toBe("rotate");
       expect(gumballHandleKindToTransformMode("scaleUniform")).toBe("scale");
@@ -18979,7 +19474,32 @@ if (import.meta.vitest) {
       const palette = resolveGumballVisualPalette();
       expect(gumballResolveHandleVisual("#ff0000", "hover", palette).color).toBe(palette.hover);
       expect(gumballResolveHandleVisual("#ff0000", "active", palette).color).toBe(palette.active);
+      expect(gumballResolveHandleVisual("#ff0000", "idle", palette).color).toBe("#ff0000");
+      const tintRoot = new THREE.Group();
+      const visibleMesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: "#000000" }));
+      const pickMesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: "#000000" }));
+      pickMesh.visible = false;
+      pickMesh.userData = { gumballHandlePick: true };
+      tintRoot.add(visibleMesh, pickMesh);
+      const tintMaterial = new THREE.MeshBasicMaterial({ color: palette.hover, transparent: true, opacity: palette.hoverOpacity });
+      gumballApplyHandleVisualMaterial(tintRoot, tintMaterial);
+      expect(visibleMesh.material).toBe(tintMaterial);
+      expect(pickMesh.material).not.toBe(tintMaterial);
+      tintMaterial.dispose();
+      visibleMesh.geometry.dispose();
+      pickMesh.geometry.dispose();
+      (visibleMesh.material as THREE.Material).dispose();
+      (pickMesh.material as THREE.Material).dispose();
       expect(gumballScaleAxisOffset()).toBeGreaterThan(GUMBALL_RING_RADIUS);
+      const perspective = new THREE.PerspectiveCamera(50, 1.6, 0.1, 1000);
+      perspective.position.set(0, 0, 20);
+      perspective.updateProjectionMatrix();
+      const previewPivot = new THREE.Vector3(0, 0, 0);
+      expect(gumballPreviewWorldExtent(perspective, previewPivot)).toBeGreaterThan(GUMBALL_PREVIEW_MIN_EXTENT);
+      const ortho = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 1000);
+      ortho.position.set(0, 0, 20);
+      ortho.updateProjectionMatrix();
+      expect(gumballPreviewWorldExtent(ortho, previewPivot)).toBeGreaterThan(9);
       expect(gumballScalePlaneAxisIndices("scaleXY")).toEqual([0, 1]);
       expect(gumballScalePlaneAxisIndices("scaleYZ")).toEqual([1, 2]);
       expect(gumballScalePlaneAxisIndices("scaleXZ")).toEqual([0, 2]);
@@ -19313,6 +19833,45 @@ if (import.meta.vitest) {
       expect(verticalHandle!.style.height).toBe("var(--spacing-double)");
     });
 
+    it("Mode renders corner grabs at perpendicular split intersections", () => {
+      const { container } = render(
+        <div className="h-[400px] w-[600px]">
+          <Mode
+            windows={[
+              { id: "lt", title: "Left Top", children: <div>Left Top</div> },
+              { id: "lb", title: "Left Bottom", children: <div>Left Bottom</div> },
+              { id: "rt", title: "Right Top", children: <div>Right Top</div> },
+              { id: "rb", title: "Right Bottom", children: <div>Right Bottom</div> },
+            ]}
+            layout={{
+              kind: "row",
+              children: [
+                {
+                  kind: "column",
+                  children: [
+                    { kind: "stack", children: [{ kind: "window", id: "lt" }], activeId: "lt" },
+                    { kind: "stack", children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+                  ],
+                },
+                {
+                  kind: "column",
+                  children: [
+                    { kind: "stack", children: [{ kind: "window", id: "rt" }], activeId: "rt" },
+                    { kind: "stack", children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+                  ],
+                },
+              ],
+            }}
+            activeWindowId="lt"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const corners = [...container.querySelectorAll('[data-slot="resizable-corner"]')];
+      expect(corners.length).toBeGreaterThanOrEqual(4);
+      expect(corners.every((node) => node.className.includes("cursor-move"))).toBe(true);
+    });
+
     it("Mode tab stack shows only the active window body", () => {
       const { container } = render(
         <div className="h-[400px] w-[600px]">
@@ -19534,6 +20093,70 @@ if (import.meta.vitest) {
       expect(resolveModeSplitSideInBody(100, 150, 200, 200)).toBe("bottom");
       expect(resolveModeSplitSideInBody(40, 40, 200, 200)).toBe("left");
       expect(resolveModeSplitSideInBody(160, 40, 200, 200)).toBe("right");
+    });
+
+    it("modeJoinCornerSpecsForSeparator wires perpendicular child splits to corner grabs", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          {
+            kind: "column",
+            children: [
+              { kind: "stack", children: [{ kind: "window", id: "lt" }], activeId: "lt" },
+              { kind: "stack", children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+            ],
+          },
+          { kind: "stack", children: [{ kind: "window", id: "r" }], activeId: "r" },
+        ],
+      };
+      const specs = modeJoinCornerSpecsForSeparator("", layout.kind, 1, layout.children[0]!, layout.children[1]!);
+      expect(specs.some((spec) => spec.edgeSide === "leading" && spec.crossAxisPath === "0")).toBe(true);
+      expect(specs).toHaveLength(1);
+    });
+
+    it("modeJoinCornerSpecsForCrossSeparator wires parent splits on inner separators", () => {
+      const specs = modeJoinCornerSpecsForCrossSeparator("0", "column", 1, { path: "", kind: "row", panelIndex: 0 });
+      expect(specs).toHaveLength(1);
+      expect(specs[0]?.edgeSide).toBe("trailing");
+      expect(specs[0]?.mainAxisPath).toBe("");
+      expect(specs[0]?.crossAxisPath).toBe("0");
+    });
+
+    it("applyModeJoinCornerResize updates both main and cross axis sizes", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          {
+            kind: "column",
+            size: 50,
+            children: [
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "lt" }], activeId: "lt" },
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+            ],
+          },
+          { kind: "stack", size: 50, children: [{ kind: "window", id: "r" }], activeId: "r" },
+        ],
+      };
+      const spec: ResizableJoinCornerSpec = {
+        parentKind: "row",
+        mainAxisPath: "",
+        mainSeparatorIndex: 1,
+        crossAxisPath: "0",
+        crossSeparatorIndex: 1,
+        edgeSide: "leading",
+        alongFraction: 0.5,
+      };
+      const next = applyModeJoinCornerResize(layout, spec, -20, -10, 400, 300);
+      expect(next.kind).toBe("row");
+      if (next.kind === "row") {
+        expect(next.children[0]?.size).toBeGreaterThan(50);
+        expect(next.children[1]?.size).toBeLessThan(50);
+        const leftColumn = next.children[0];
+        if (leftColumn?.kind === "column") {
+          expect(leftColumn.children[0]?.size).toBeGreaterThan(50);
+          expect(leftColumn.children[1]?.size).toBeLessThan(50);
+        }
+      }
     });
 
     it("computeModeDropZone treats tab bar hits as tab drops not body splits", () => {
@@ -21839,6 +22462,38 @@ if (treeVitest) {
       );
       expect(markup).toContain("hover:bg-hover-window");
       expect(markup).not.toContain("hover:bg-hover-base");
+    });
+
+    it("renders breadcrumb links and menu rows with hover feedback", () => {
+      const breadcrumbMarkup = renderToStaticMarkup(
+        <Breadcrumb items={[{ content: "Home", onNavigate: () => undefined }, { content: "Project", onNavigate: () => undefined }]} />,
+      );
+      expect(breadcrumbMarkup).toContain('data-slot="breadcrumb-link"');
+      expect(breadcrumbMarkup).toContain("hover:bg-hover-base");
+      const commandMarkup = renderToStaticMarkup(
+        <Command>
+          <CommandList>
+            <CommandItem value="alpha">Alpha</CommandItem>
+          </CommandList>
+        </Command>,
+      );
+      expect(commandMarkup).toContain("hover:bg-hover-temporary");
+    });
+
+    it("renders select items with hover feedback", async () => {
+      const { render } = await import("@testing-library/react");
+      render(
+        <Select open defaultValue="fast">
+          <SelectTrigger id="compute-mode">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fast">Fast</SelectItem>
+          </SelectContent>
+        </Select>,
+      );
+      const item = document.querySelector('[data-slot="select-item"]');
+      expect(item?.className).toContain("hover:bg-hover-temporary");
     });
 
     it("renders select menus with popover surface tokens", async () => {

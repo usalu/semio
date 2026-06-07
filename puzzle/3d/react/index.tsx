@@ -115,6 +115,7 @@ export {
   createOrbitCameraViewTemplates,
   orbitCameraDistance,
   orbitCameraProjectionForView,
+  resolveOrbitCameraViewFromTemplateId,
   WorldOrbitCameraViewRig,
   WorldOrbitProjectionSwitch,
   WorldOrbitViewControls,
@@ -1124,16 +1125,18 @@ export interface CanvasProps {
   onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
   /** @emoji 🧊 Commits a target-volume gumball drag to the host fixture. */
   onTargetVolumeRelocate?: (payload: WorldVolumeRelocatePayload) => void;
-  /** @emoji 🧊 Commits a newly drawn target volume to the host fixture. */
-  onTargetVolumeDraw?: (volume: WorldVolumeProps) => void;
-  /** @emoji 🧊 When true, target volumes are selectable and the 3-point draw tool is active. */
+  /** @emoji 🧱 Paints one voxel at the snapped cursor cell while Alt is held. */
+  onVoxelBrushPaint?: (cad: Vec3, size: number) => void;
+  /** @emoji 🧱 Axis-aligned voxel brush cell size (world units). */
+  voxelBrushSize?: number;
+  /** @emoji 🧊 When true, target volumes are selectable and the voxel brush is active. */
   fillEditTargetVolumes?: boolean;
   onConnect?: (p: AttractionPayload) => void;
   onIndirectConnect?: (p: AttractionPayload) => void;
   onProximityConnect?: (p: AttractionPayload) => void;
   onAttractionCompatibleObjects?: (p: AttractionCompatibleObjectsPayload) => void;
   onAttractionTargetRing?: (p: AttractionTargetRingPayload) => void;
-  /** @emoji 🖌️ When true, hover free vortices to preview and flush compatible objects on leave. */
+  /** @emoji 🖌️ When true, hover free vortices to preview; hold Alt and leave to flush compatible objects. */
   brushActive?: boolean;
   /** @emoji 🪣 When true, preloads catalog meshes then calls {@link CanvasProps.onFillMeshesReady}. */
   fillActive?: boolean;
@@ -1645,6 +1648,60 @@ export function applyTargetVolumeRelocateToFixture(fixture: FixtureV1, payload: 
   const next = [...targetVolumes];
   next[index] = applyWorldVolumeTransform(targetVolumes[index]!, payload.after);
   return { ...fixture, targetVolumes: next };
+}
+
+/** @emoji 🧊 Removes a target volume at the snapped voxel cell. */
+export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, size: number): FixtureV1 {
+  const volume = findVoxelAtCell(fixture.targetVolumes ?? [], cad, size);
+  if (!volume) {
+    return fixture;
+  }
+  return removeTargetVolumeFromFixture(fixture, volume.id);
+}
+
+/** @emoji 🧊 Adds one axis-aligned voxel at the snapped cursor cell when empty. */
+export function addVoxelToFixture(fixture: FixtureV1, cad: Vec3, size: number): FixtureV1 {
+  if (findVoxelAtCell(fixture.targetVolumes ?? [], cad, size)) {
+    return fixture;
+  }
+  return addTargetVolumeToFixture(fixture, createVoxelVolume(cad, size));
+}
+
+/** @emoji 🧱 Snaps a CAD point to the center of a voxel cell. */
+export function snapCadToVoxelCenter(cad: Vec3, size: number): Vec3 {
+  const h = size / 2;
+  return [
+    Math.round((cad[0] - h) / size) * size + h,
+    Math.round((cad[1] - h) / size) * size + h,
+    Math.round((cad[2] - h) / size) * size + h,
+  ] as Vec3;
+}
+
+/** @emoji 🧱 Stable grid key for a voxel cell at a given brush size. */
+export function voxelGridKey(origin: Vec3, size: number): string {
+  const center = snapCadToVoxelCenter(origin, size);
+  return `${center[0].toFixed(4)},${center[1].toFixed(4)},${center[2].toFixed(4)}`;
+}
+
+/** @emoji 🧱 Builds a target-volume record for one axis-aligned voxel. */
+export function createVoxelVolume(cad: Vec3, size: number, id?: string): WorldVolumeProps {
+  const origin = snapCadToVoxelCenter(cad, size);
+  return {
+    id: id ?? `voxel-${origin.map((n) => n.toFixed(2)).join("-")}`,
+    origin,
+    scale: size,
+  };
+}
+
+/** @emoji 🧱 Finds an existing voxel in the fixture at the snapped cell. */
+export function findVoxelAtCell(volumes: readonly WorldVolumeProps[], cad: Vec3, size: number): WorldVolumeProps | null {
+  const key = voxelGridKey(cad, size);
+  for (const volume of volumes) {
+    if (voxelGridKey(volume.origin, size) === key) {
+      return volume;
+    }
+  }
+  return null;
 }
 
 export function parseFixtureV1(raw: unknown): FixtureV1 | null {
@@ -3141,7 +3198,8 @@ export interface PuzzleReferencesProps {
 /** @emoji 🖼️ Puzzle 3D reference planes wired to registry selection and relocate callbacks. */
 export const PuzzleReferences = reactHostPort.memo(function PuzzleReferences(props: PuzzleReferencesProps) {
   const { commitSelection } = useRegistryInteraction();
-  const { setHover, clearHover, hoverTarget, gumballConfig } = useRegistryCore();
+  const { gumballConfig } = useRegistryCore();
+  const { setHover, clearHover, hoverTarget } = useRegistryHover();
   const selectionStore = useSelectionSnapshotStore();
   const selection = reactHostPort.useSyncExternalStore(selectionStore.subscribe, selectionStore.getSnapshot, selectionStore.getSnapshot);
   const lodCtx = useLod();
@@ -3162,6 +3220,9 @@ export const PuzzleReferences = reactHostPort.memo(function PuzzleReferences(pro
       relocateActive={config !== false}
       translationSnap={translationSnap}
       onSelect={(id) => {
+        if (puzzle3dTargetVolumeToolActiveRef.current) {
+          return;
+        }
         commitSelection({ kind: "reference", id });
       }}
       onHover={(id) => {
@@ -3190,7 +3251,6 @@ const puzzle3dReferenceRelocateBridgeRef: {
 const puzzle3dTargetVolumeRelocateBridgeRef: {
   current: {
     readonly onRelocate?: (payload: WorldVolumeRelocatePayload) => void;
-    readonly onDraw?: (volume: WorldVolumeProps) => void;
   };
 } = { current: {} };
 
@@ -3203,7 +3263,8 @@ export interface PuzzleTargetVolumesProps {
 /** @emoji 🧊 Puzzle 3D target volumes wired to registry selection and relocate callbacks. */
 export const PuzzleTargetVolumes = reactHostPort.memo(function PuzzleTargetVolumes(props: PuzzleTargetVolumesProps) {
   const { commitSelection } = useRegistryInteraction();
-  const { setHover, clearHover, hoverTarget, gumballConfig } = useRegistryCore();
+  const { gumballConfig } = useRegistryCore();
+  const { setHover, clearHover, hoverTarget } = useRegistryHover();
   const selectionStore = useSelectionSnapshotStore();
   const selection = reactHostPort.useSyncExternalStore(selectionStore.subscribe, selectionStore.getSnapshot, selectionStore.getSnapshot);
   const lodCtx = useLod();
@@ -3225,6 +3286,9 @@ export const PuzzleTargetVolumes = reactHostPort.memo(function PuzzleTargetVolum
       relocateActive={props.interactive !== false && config !== false}
       translationSnap={translationSnap}
       onSelect={(id) => {
+        if (puzzle3dVoxelBrushUiStore.getSnapshot().altPainting) {
+          return;
+        }
         commitSelection({ kind: "targetVolume", id });
       }}
       onHover={(id) => {
@@ -5884,6 +5948,24 @@ export function updateWorldMatrixChain(leaf: Object3D): void {
 
 export type AutoFitBehavior = "initial" | "changes";
 
+const puzzle3dAutoFitInitialAppliedSeeds = new Set<string>();
+
+/** @emoji 🛰️ True when initial AutoFit already ran for a viewport seed (survives scene-core remounts). */
+export function puzzle3dAutoFitInitialApplied(seedKey: string | number): boolean {
+  return puzzle3dAutoFitInitialAppliedSeeds.has(String(seedKey));
+}
+
+/** @emoji 🛰️ Records initial AutoFit completion for a viewport seed. */
+export function puzzle3dAutoFitMarkInitialApplied(seedKey: string | number): void {
+  puzzle3dAutoFitInitialAppliedSeeds.add(String(seedKey));
+}
+
+/** @emoji 🖌️ True while brush preview or suggestion menu is active (suppresses camera auto-fit). */
+export function puzzle3dBrushSessionActive(): boolean {
+  const ui = puzzle3dBrushUiStore.getSnapshot();
+  return ui.targetActive || ui.menuOpen || ui.preview !== null;
+}
+
 export function puzzle3dAutoFitShouldRun(behavior: AutoFitBehavior, key: string, lastKey: string, hasApplied: boolean): boolean {
   if (!key || key === lastKey) return false;
   return behavior === "changes" || !hasApplied;
@@ -6344,7 +6426,7 @@ export const ObjectItem = reactHostPort.memo(function ObjectItem(props: ObjectPr
   const meshDimmed = renderMode.dim;
 
   const selectObject = reactHostPort.useCallback(() => {
-    if (attractionDragActive || attractionIndirectPickAwait || props.disabled || !entitySelectable || puzzle3dRelocateDragActiveRef.current) {
+    if (puzzle3dTargetVolumeToolActiveRef.current || attractionDragActive || attractionIndirectPickAwait || props.disabled || !entitySelectable || puzzle3dRelocateDragActiveRef.current) {
       return;
     }
     commitSelection({ kind: "object", id: props.id });
@@ -6599,7 +6681,7 @@ export const Vortex = reactHostPort.memo(function Vortex(
   const entitySelectable = worldEntitySelectable(entityFlags);
 
   const selectVortex = reactHostPort.useCallback(() => {
-    if (reg.attractionDragActive || reg.attractionIndirectPickAwait || reg.blockedVortexFullIds.has(fullId) || !entitySelectable) {
+    if (puzzle3dTargetVolumeToolActiveRef.current || reg.attractionDragActive || reg.attractionIndirectPickAwait || reg.blockedVortexFullIds.has(fullId) || !entitySelectable) {
       return;
     }
     commitSelection({ kind: "vortex", fullId });
@@ -6833,7 +6915,7 @@ const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attr
   const onPointerOver = reactHostPort.useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
-      if (reg.attractionDragActive || reg.attractionIndirectPickAwait) {
+      if (reg.attractionDragActive || reg.attractionIndirectPickAwait || puzzle3dTargetVolumeToolActiveRef.current) {
         return;
       }
       const idx = puzzle3dAttractionIndexFromPointerEvent(e);
@@ -6861,7 +6943,7 @@ const CableBatch = reactHostPort.memo(function CableBatch(props: { readonly attr
         return;
       }
       e.stopPropagation();
-      if (reg.attractionDragActive || reg.attractionIndirectPickAwait) {
+      if (reg.attractionDragActive || reg.attractionIndirectPickAwait || puzzle3dTargetVolumeToolActiveRef.current) {
         return;
       }
       const idx = puzzle3dAttractionIndexFromPointerEvent(e);
@@ -7846,6 +7928,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly fillCount: number;
   readonly fillBuildProgress?: Puzzle3dFillBuildProgress;
   readonly fillEditTargetVolumes?: boolean;
+  readonly voxelBrushSize?: number;
   readonly selectedTargetVolumeCount?: number;
   readonly selectionCount: number;
   readonly onCmdLineChange: (value: string) => void;
@@ -7858,6 +7941,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly onFillCount: (count: number) => void;
   readonly onToggleFillEditTargetVolumes?: () => void;
   readonly onDeleteSelectedTargetVolume?: () => void;
+  readonly onVoxelBrushSize?: (size: number) => void;
   readonly onCycleBrushCandidate: () => void;
   readonly onPickBrushCandidate: (index: number) => void;
   readonly onZoomToSelection: () => void;
@@ -7870,7 +7954,7 @@ export interface Puzzle3dPlayEngagementInputs {
 export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs): EngagementSpec {
   const status: { id: string; content: string }[] = [];
   if (inputs.activeTool === "brush") {
-    status.push({ id: "puzzle3d.brush.hint", content: "Point at an empty connector; Tab cycles placements; left-click opens the candidate list" });
+    status.push({ id: "puzzle3d.brush.hint", content: "Point at an empty connector; hold Alt and leave to flush; Tab cycles placements; left-click opens the candidate list" });
     if (inputs.brushTargetActive && inputs.brushCandidates.length === 0) {
       if (inputs.brushPlacementProbePending) {
         status.push({ id: "puzzle3d.brush.probe", content: "Checking collision-free placements…" });
@@ -7884,7 +7968,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     if (inputs.fillEditTargetVolumes) {
       status.push({
         id: "puzzle3d.fill.volumeEdit",
-        content: "Pick 3 points then drag height; select a volume to move or scale",
+        content: "Hold Alt to paint voxels; release Alt to select voxels",
       });
     }
   }
@@ -7940,8 +8024,20 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     inputs.fillBuildProgress && !inputs.fillBuildProgress.done
       ? `Fill ${inputs.fillCount} (building ${inputs.fillBuildProgress.count}/${inputs.fillBuildProgress.maxCount})`
       : `Fill ${inputs.fillCount}`;
+  const voxelSize = inputs.voxelBrushSize ?? DEFAULT_VOXEL_BRUSH_SIZE;
   const control =
-    inputs.activeTool === "fill"
+    inputs.activeTool === "fill" && inputs.fillEditTargetVolumes
+      ? {
+          kind: "stepper" as const,
+          id: "puzzle3d-voxel-size",
+          label: "Voxel size",
+          value: voxelSize,
+          min: VOXEL_BRUSH_SIZE_MIN,
+          max: VOXEL_BRUSH_SIZE_MAX,
+          step: VOXEL_BRUSH_SIZE_STEP,
+          onChange: inputs.onVoxelBrushSize,
+        }
+      : inputs.activeTool === "fill"
       ? {
           kind: "slider" as const,
           id: "puzzle3d-fill-count",
@@ -8041,31 +8137,27 @@ function patchBrushUi(patch: Partial<BrushUiSnapshot>): void {
 /** @emoji 🖌️ True while the brush tool is the active play tool. */
 export const puzzle3dBrushToolActiveRef = { current: false };
 
-/** @emoji 🧊 True while fill target-volume edit/draw is active. */
+/** @emoji ⌥ True while Alt is held during brush hover (enables flush-on-leave). */
+export const puzzle3dBrushAltPressedRef = { current: false };
+
+/** @emoji 🧊 True while fill target-volume edit mode is active. */
 export const puzzle3dTargetVolumeToolActiveRef = { current: false };
 
-export type TargetVolumeDrawPhase = "idle" | "edge" | "width" | "height";
+/** @emoji 🧱 Default axis-aligned voxel brush cell size (world units). */
+export const DEFAULT_VOXEL_BRUSH_SIZE = 1;
+export const VOXEL_BRUSH_SIZE_MIN = 0.25;
+export const VOXEL_BRUSH_SIZE_MAX = 8;
+export const VOXEL_BRUSH_SIZE_STEP = 0.25;
 
-export interface TargetVolumeDrawUiSnapshot {
-  readonly phase: TargetVolumeDrawPhase;
-  readonly p0: Vec3 | null;
-  readonly p1: Vec3 | null;
-  readonly p2: Vec3 | null;
-  readonly height: number;
+export interface VoxelBrushUiSnapshot {
+  readonly altPainting: boolean;
   readonly cursorCad: Vec3 | null;
 }
 
-const TARGET_VOLUME_DRAW_IDLE: TargetVolumeDrawUiSnapshot = {
-  phase: "idle",
-  p0: null,
-  p1: null,
-  p2: null,
-  height: 0.25,
-  cursorCad: null,
-};
+const VOXEL_BRUSH_UI_IDLE: VoxelBrushUiSnapshot = { altPainting: false, cursorCad: null };
 
-/** @emoji 🧊 External store for target-volume draw UI while fill edit mode is active. */
-export function createTargetVolumeDrawUiStore(initial: TargetVolumeDrawUiSnapshot = TARGET_VOLUME_DRAW_IDLE) {
+/** @emoji 🧱 External store for voxel brush cursor and Alt-paint state. */
+export function createVoxelBrushUiStore(initial: VoxelBrushUiSnapshot = VOXEL_BRUSH_UI_IDLE) {
   let snapshot = initial;
   const listeners = new Set<() => void>();
   return {
@@ -8073,10 +8165,10 @@ export function createTargetVolumeDrawUiStore(initial: TargetVolumeDrawUiSnapsho
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    getSnapshot(): TargetVolumeDrawUiSnapshot {
+    getSnapshot(): VoxelBrushUiSnapshot {
       return snapshot;
     },
-    setSnapshot(next: TargetVolumeDrawUiSnapshot): void {
+    setSnapshot(next: VoxelBrushUiSnapshot): void {
       snapshot = next;
       for (const listener of listeners) {
         listener();
@@ -8085,95 +8177,14 @@ export function createTargetVolumeDrawUiStore(initial: TargetVolumeDrawUiSnapsho
   };
 }
 
-export const puzzle3dTargetVolumeDrawUiStore = createTargetVolumeDrawUiStore();
+export const puzzle3dVoxelBrushUiStore = createVoxelBrushUiStore();
+export const puzzle3dVoxelBrushSizeRef = { current: DEFAULT_VOXEL_BRUSH_SIZE };
 
-/** @emoji 📍 Projects a pointer ray onto the infinite world-Z line through `origin`. */
-export function projectRayToVerticalZLineCad(rayOrigin: Vector3, rayDirection: Vector3, origin: Vec3): Vec3 {
-  const [ox, oy, oz] = origin;
-  const ro = rayOrigin;
-  const rd = rayDirection;
-  const eps = 1e-9;
-  let z = oz;
-  if (Math.abs(rd.x) > Math.abs(rd.y) && Math.abs(rd.x) > eps) {
-    z = ro.z + ((ox - ro.x) / rd.x) * rd.z;
-  } else if (Math.abs(rd.y) > eps) {
-    z = ro.z + ((oy - ro.y) / rd.y) * rd.z;
-  } else {
-    z = ro.z;
-  }
-  return [ox, oy, z];
-}
-
-function vec3Scale(v: Vec3, s: number): Vec3 {
-  return [v[0] * s, v[1] * s, v[2] * s] as Vec3;
-}
-
-function vec3Len(v: Vec3): number {
-  return Math.hypot(v[0], v[1], v[2]);
-}
-
-function quatFromCadAxisBasis(xAxis: Vec3, yAxis: Vec3, zAxis: Vec3): Quat {
-  const x = normalizeVec3Cad(xAxis);
-  const y = normalizeVec3Cad(yAxis);
-  const z = normalizeVec3Cad(zAxis);
-  const m = new Matrix4().makeBasis(
-    new Vector3(...cadVec3ToThree(x)),
-    new Vector3(...cadVec3ToThree(y)),
-    new Vector3(...cadVec3ToThree(z)),
-  );
-  return threeQuatToCad(new Quaternion().setFromRotationMatrix(m));
-}
-
-/** @emoji 🧊 Computes an oriented target volume pose from a 3-point base and extrusion height. */
-export function targetVolumePoseFromThreePoints(args: {
-  readonly p0: Vec3;
-  readonly p1: Vec3;
-  readonly p2: Vec3;
-  readonly height: number;
-}): Pick<WorldVolumeProps, "origin" | "orientation" | "scale"> | null {
-  const edge = vec3Sub(args.p1, args.p0);
-  const edgeLen = vec3Len(edge);
-  if (edgeLen < 1e-3) {
-    return null;
-  }
-  const edgeDir = normalizeVec3Cad(edge);
-  const toP2 = vec3Sub(args.p2, args.p0);
-  const along = vec3Dot(toP2, edgeDir);
-  const perp = vec3Sub(toP2, vec3Scale(edgeDir, along));
-  const width = vec3Len(perp);
-  if (width < 1e-3) {
-    return null;
-  }
-  const widthDir = normalizeVec3Cad(perp);
-  const widthVec = vec3Scale(widthDir, width);
-  const c0 = args.p0;
-  const c1 = args.p1;
-  const c2 = vec3Add(c1, widthVec);
-  const c3 = vec3Add(c0, widthVec);
-  const center = vec3Scale(vec3Add(vec3Add(c0, c1), vec3Add(c2, c3)), 0.25);
-  const h = Math.max(args.height, 1e-3);
-  const baseZ = Math.min(c0[2], c1[2], c2[2], c3[2]);
-  const origin: Vec3 = [center[0], center[1], baseZ + h / 2];
-  const orientation = quatFromCadAxisBasis(edgeDir, widthDir, [0, 0, 1]);
-  return { origin, orientation, scale: [edgeLen, width, h] };
-}
-
-/** @emoji 🧊 Resolves a live draw snapshot into a target volume pose. */
-export function targetVolumePoseFromDrawState(state: TargetVolumeDrawUiSnapshot): Pick<WorldVolumeProps, "origin" | "orientation" | "scale"> | null {
-  if (!state.p0 || !state.p1) {
-    return null;
-  }
-  if (state.phase === "edge") {
-    return targetVolumePoseFromThreePoints({ p0: state.p0, p1: state.p1, p2: state.cursorCad ?? state.p1, height: 0.01 });
-  }
-  if (state.phase === "width" && state.p2) {
-    return targetVolumePoseFromThreePoints({ p0: state.p0, p1: state.p1, p2: state.p2, height: 0.01 });
-  }
-  if (state.phase === "height" && state.p2) {
-    return targetVolumePoseFromThreePoints({ p0: state.p0, p1: state.p1, p2: state.p2, height: state.height });
-  }
-  return null;
-}
+const puzzle3dVoxelBrushBridgeRef: {
+  current: {
+    readonly onPaint?: (cad: Vec3, size: number) => void;
+  };
+} = { current: {} };
 
 function brushPreviewWorldAabb(preview: BrushPreviewState, meshRoot: Object3D): { readonly min: Vec3; readonly max: Vec3 } | null {
   const probe = brushProbeGroupFromPreview(preview, meshRoot);
@@ -8203,6 +8214,7 @@ function OrbitGated(props: {
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
   const gate = reg.attractionDragActive || reg.attractionIndirectPickAwait !== null || snapGate || (puzzle3dBrushToolActiveRef.current && puzzle3dBrushVortexHoverRef.current);
   const invalidate = useThree((s) => s.invalidate);
+  const projection = props.projection ?? "perspective";
   const reportCamera = reactHostPort.useCallback(() => {
     if (!props.onCamera) {
       return;
@@ -8213,13 +8225,12 @@ function OrbitGated(props: {
       target: threeVec3ToCad(tgt),
       zoom: props.zoom,
       ...(props.up ? { up: props.up } : {}),
-      ...(props.projection ? { projection: props.projection } : {}),
+      projection,
     });
-  }, [camera, controls, props.onCamera, props.projection, props.up, props.zoom, targetScratch]);
+  }, [camera, controls, props.onCamera, props.projection, props.up, props.zoom, projection, targetScratch]);
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
-  const projection = props.projection ?? "perspective";
   const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection), [projection]);
   useWorldOrbitRightMouseBindings(controls, gl.domElement, {
     projection,
@@ -8322,6 +8333,7 @@ function SelectionZoom(props: {
           position: threeVec3ToCad(camera.position),
           target: threeVec3ToCad(targetScratch),
           zoom: props.zoom,
+          projection: "perspective",
         });
         return;
       }
@@ -8361,7 +8373,14 @@ function SelectionZoom(props: {
 }
 
 /** @emoji 🛰️ Frames orbit camera to loaded object bounds once meshes are measurable (initial load fit). */
-function AutoFit(props: { readonly behavior?: AutoFitBehavior; readonly padding?: number; readonly zoom?: number; readonly onCamera?: (state: CameraState) => void }): null {
+function AutoFit(props: {
+  readonly behavior?: AutoFitBehavior;
+  readonly padding?: number;
+  readonly zoom?: number;
+  readonly seedKey?: string | number;
+  readonly projection?: CameraState["projection"];
+  readonly onCamera?: (state: CameraState) => void;
+}): null {
   const reg = useRegistry();
   const { camera, controls, invalidate } = useThree();
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
@@ -8370,8 +8389,12 @@ function AutoFit(props: { readonly behavior?: AutoFitBehavior; readonly padding?
   const behavior = props.behavior ?? "initial";
   const padding = props.padding ?? 1.25;
   const zoom = props.zoom ?? 1;
+  const seedKey = String(props.seedKey ?? "default");
   useFrame(() => {
-    if (behavior === "initial" && hasApplied.current) {
+    if (puzzle3dBrushSessionActive()) {
+      return;
+    }
+    if (behavior === "initial" && (hasApplied.current || puzzle3dAutoFitInitialApplied(seedKey))) {
       return;
     }
     const groups = reg.collectObjectGroups();
@@ -8385,6 +8408,9 @@ function AutoFit(props: { readonly behavior?: AutoFitBehavior; readonly padding?
     if (!bounds) return;
     lastKey.current = key;
     hasApplied.current = true;
+    if (behavior === "initial") {
+      puzzle3dAutoFitMarkInitialApplied(seedKey);
+    }
     if (!(camera instanceof ThreePerspectiveCamera)) return;
     const orbit = controls as { target: Vector3; update?: () => void } | null;
     applyAutoFitCamera(camera, bounds, padding, orbit);
@@ -8394,6 +8420,7 @@ function AutoFit(props: { readonly behavior?: AutoFitBehavior; readonly padding?
       position: threeVec3ToCad(camera.position),
       target: threeVec3ToCad(tgt),
       zoom,
+      projection: props.projection ?? "perspective",
     });
   });
   return null;
@@ -8586,33 +8613,35 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
   );
 });
 
-const TargetVolumeDrawPreview = reactHostPort.memo(function TargetVolumeDrawPreview() {
-  const draw = reactHostPort.useSyncExternalStore(
-    puzzle3dTargetVolumeDrawUiStore.subscribe,
-    puzzle3dTargetVolumeDrawUiStore.getSnapshot,
-    puzzle3dTargetVolumeDrawUiStore.getSnapshot,
+const VoxelBrushPreview = reactHostPort.memo(function VoxelBrushPreview(props: { readonly voxelSize: number }) {
+  const ui = reactHostPort.useSyncExternalStore(
+    puzzle3dVoxelBrushUiStore.subscribe,
+    puzzle3dVoxelBrushUiStore.getSnapshot,
+    puzzle3dVoxelBrushUiStore.getSnapshot,
   );
-  const pose = targetVolumePoseFromDrawState(draw);
-  if (!pose || draw.phase === "idle") {
+  if (!ui.altPainting || !ui.cursorCad) {
     return null;
   }
-  const preview: WorldVolumeProps = { id: "target-volume-preview", ...pose };
+  const preview = createVoxelVolume(ui.cursorCad, props.voxelSize);
   return <WorldVolumeLayer volumes={[preview]} interactive={false} />;
 });
 
-function TargetVolumeDrawBridge(props: { readonly enabled: boolean }): null {
+function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize: number }): null {
   const { camera, gl } = useThree();
   const controls = useThree((state) => state.controls as { target?: Vector3 } | null | undefined);
   const lodCtx = useLod();
+  const lastPaintKeyRef = reactHostPort.useRef<string | null>(null);
   reactHostPort.useEffect(() => {
     puzzle3dTargetVolumeToolActiveRef.current = props.enabled;
+    puzzle3dVoxelBrushSizeRef.current = props.voxelSize;
     if (!props.enabled) {
-      puzzle3dTargetVolumeDrawUiStore.setSnapshot(TARGET_VOLUME_DRAW_IDLE);
+      puzzle3dVoxelBrushUiStore.setSnapshot(VOXEL_BRUSH_UI_IDLE);
+      lastPaintKeyRef.current = null;
     }
     return () => {
       puzzle3dTargetVolumeToolActiveRef.current = false;
     };
-  }, [props.enabled]);
+  }, [props.enabled, props.voxelSize]);
   reactHostPort.useEffect(() => {
     if (!props.enabled) {
       return;
@@ -8628,71 +8657,68 @@ function TargetVolumeDrawBridge(props: { readonly enabled: boolean }): null {
         gridStepWorld: lodCtx.gridStepWorld,
         gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(controls?.target ?? null),
       });
-    const onMove = (event: PointerEvent): void => {
-      const state = puzzle3dTargetVolumeDrawUiStore.getSnapshot();
-      if (state.phase === "height" && state.p0 && state.p1 && state.p2) {
-        const raycaster = new Raycaster();
-        const rect = canvas.getBoundingClientRect();
-        raycaster.setFromCamera(new Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1), camera);
-        const base = targetVolumePoseFromThreePoints({ p0: state.p0, p1: state.p1, p2: state.p2, height: 0.01 });
-        if (!base) {
-          return;
-        }
-        const cursor = projectRayToVerticalZLineCad(raycaster.ray.origin, raycaster.ray.direction, base.origin);
-        const baseZ = Math.min(state.p0[2], state.p1[2], state.p2[2]);
-        const height = Math.max(0.25, cursor[2] - baseZ);
-        puzzle3dTargetVolumeDrawUiStore.setSnapshot({ ...state, height, cursorCad: cursor });
+    const paintAt = (cad: Vec3): void => {
+      const size = puzzle3dVoxelBrushSizeRef.current;
+      const key = voxelGridKey(cad, size);
+      if (lastPaintKeyRef.current === key) {
         return;
       }
-      if (state.phase === "idle" || state.phase === "edge" || state.phase === "width") {
-        puzzle3dTargetVolumeDrawUiStore.setSnapshot({ ...state, cursorCad: pickCad(event.clientX, event.clientY) });
+      lastPaintKeyRef.current = key;
+      puzzle3dVoxelBrushBridgeRef.current.onPaint?.(cad, size);
+      console.log("[DEBUG] puzzle3d voxel brush paint", cad, size);
+    };
+    const setAltPainting = (altPainting: boolean): void => {
+      const prev = puzzle3dVoxelBrushUiStore.getSnapshot();
+      if (prev.altPainting === altPainting) {
+        return;
+      }
+      if (!altPainting) {
+        lastPaintKeyRef.current = null;
+      }
+      puzzle3dVoxelBrushUiStore.setSnapshot({ ...prev, altPainting });
+    };
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Alt") {
+        setAltPainting(true);
       }
     };
-    const commitDraw = (): void => {
-      const state = puzzle3dTargetVolumeDrawUiStore.getSnapshot();
-      const pose = targetVolumePoseFromDrawState(state);
-      if (!pose) {
-        return;
+    const onKeyUp = (event: KeyboardEvent): void => {
+      if (event.key === "Alt") {
+        setAltPainting(false);
       }
-      const id = `target-volume-${Date.now()}`;
-      puzzle3dTargetVolumeRelocateBridgeRef.current.onDraw?.({ id, ...pose });
-      puzzle3dTargetVolumeDrawUiStore.setSnapshot(TARGET_VOLUME_DRAW_IDLE);
-      console.log("[DEBUG] puzzle3d target volume committed", id, pose);
+    };
+    const onBlur = (): void => {
+      setAltPainting(false);
+    };
+    const onMove = (event: PointerEvent): void => {
+      const cad = pickCad(event.clientX, event.clientY);
+      const prev = puzzle3dVoxelBrushUiStore.getSnapshot();
+      puzzle3dVoxelBrushUiStore.setSnapshot({ ...prev, cursorCad: cad });
+      if (prev.altPainting || event.altKey) {
+        if (!prev.altPainting && event.altKey) {
+          setAltPainting(true);
+        }
+        paintAt(cad);
+      }
     };
     const onDown = (event: PointerEvent): void => {
-      if (event.button !== 0) {
+      if (event.button !== 0 || !event.altKey) {
         return;
       }
-      const cad = pickCad(event.clientX, event.clientY);
-      const state = puzzle3dTargetVolumeDrawUiStore.getSnapshot();
-      if (state.phase === "idle") {
-        puzzle3dTargetVolumeDrawUiStore.setSnapshot({ ...TARGET_VOLUME_DRAW_IDLE, phase: "edge", p0: cad, cursorCad: cad });
-        return;
-      }
-      if (state.phase === "edge" && state.p0) {
-        puzzle3dTargetVolumeDrawUiStore.setSnapshot({ ...state, phase: "width", p1: cad, cursorCad: cad });
-        return;
-      }
-      if (state.phase === "width" && state.p0 && state.p1) {
-        puzzle3dTargetVolumeDrawUiStore.setSnapshot({ ...state, phase: "height", p2: cad, cursorCad: cad, height: 0.25 });
-        return;
-      }
-      if (state.phase === "height") {
-        commitDraw();
-      }
+      setAltPainting(true);
+      paintAt(pickCad(event.clientX, event.clientY));
     };
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key === "Enter" && puzzle3dTargetVolumeDrawUiStore.getSnapshot().phase === "height") {
-        commitDraw();
-      }
-    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerdown", onDown);
-    window.addEventListener("keydown", onKey);
     return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("keydown", onKey);
     };
   }, [camera, controls?.target, gl.domElement, lodCtx.gridSnapEnabled, lodCtx.gridStepWorld, props.enabled]);
   return null;
@@ -9016,7 +9042,19 @@ function BrushSession(props: {
     if (!targetRef.current) {
       return;
     }
-    commitCurrentPreview();
+    if (puzzle3dBrushAltPressedRef.current) {
+      commitCurrentPreview();
+    }
+    clearBrush();
+  }, [clearBrush, commitCurrentPreview]);
+
+  const finishTargetForSwitch = reactHostPort.useCallback(() => {
+    if (!targetRef.current) {
+      return;
+    }
+    if (puzzle3dBrushAltPressedRef.current) {
+      commitCurrentPreview();
+    }
     clearBrush();
   }, [clearBrush, commitCurrentPreview]);
 
@@ -9111,6 +9149,7 @@ function BrushSession(props: {
         menuOpenRef={menuOpenRef}
         candidatesRef={placementCandidatesRef}
         enterTarget={enterTarget}
+        finishTargetForSwitch={finishTargetForSwitch}
         leaveTarget={leaveTarget}
         openMenu={openMenu}
         dismissMenu={dismissMenu}
@@ -9133,6 +9172,7 @@ function BrushPointerBridge(props: {
   readonly menuOpenRef: MutableRefObject<boolean>;
   readonly candidatesRef: MutableRefObject<readonly BrushCompatibleCandidate[]>;
   readonly enterTarget: (fullId: string, meta: VortexBindingMeta) => void;
+  readonly finishTargetForSwitch: () => void;
   readonly leaveTarget: () => void;
   readonly openMenu: (anchor: ScreenPoint) => void;
   readonly dismissMenu: () => void;
@@ -9150,9 +9190,14 @@ function BrushPointerBridge(props: {
 
   reactHostPort.useEffect(() => {
     if (!props.brushActive) {
+      puzzle3dBrushAltPressedRef.current = false;
       return;
     }
+    const syncAlt = (event: KeyboardEvent | PointerEvent) => {
+      puzzle3dBrushAltPressedRef.current = event.altKey;
+    };
     const onKeyDown = (event: KeyboardEvent) => {
+      syncAlt(event);
       if (
         !routePuzzle3dBrushTabKeydown(
           props.brushActive,
@@ -9172,9 +9217,16 @@ function BrushPointerBridge(props: {
       }
       props.invalidate();
     };
+    const onKeyUp = (event: KeyboardEvent) => {
+      syncAlt(event);
+    };
     const bindings = new EventBindingController();
     bindings.listen(window, "keydown", onKeyDown, true);
-    return () => bindings.dispose();
+    bindings.listen(window, "keyup", onKeyUp, true);
+    return () => {
+      puzzle3dBrushAltPressedRef.current = false;
+      bindings.dispose();
+    };
   }, [props]);
 
   reactHostPort.useEffect(() => {
@@ -9229,6 +9281,7 @@ function BrushPointerBridge(props: {
       });
     };
     const onMove = (event: PointerEvent) => {
+      puzzle3dBrushAltPressedRef.current = event.altKey;
       const picked = pickVortexAt(event.clientX, event.clientY);
       puzzle3dBrushVortexHoverRef.current = picked !== null;
       if (!picked) {
@@ -9253,8 +9306,7 @@ function BrushPointerBridge(props: {
       }
       if (picked.fullId !== props.targetRef.current) {
         if (props.targetRef.current) {
-          props.commitCurrentPreview();
-          props.clearBrush();
+          props.finishTargetForSwitch();
         }
         props.enterTarget(picked.fullId, meta);
       }
@@ -9264,9 +9316,11 @@ function BrushPointerBridge(props: {
       if (event.button !== 0) {
         return;
       }
+      puzzle3dBrushAltPressedRef.current = event.altKey;
       clickGestureRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
     };
     const onPointerUp = (event: PointerEvent) => {
+      puzzle3dBrushAltPressedRef.current = event.altKey;
       const gesture = clickGestureRef.current;
       if (!gesture || gesture.pointerId !== event.pointerId || event.button !== 0) {
         return;
@@ -9297,8 +9351,7 @@ function BrushPointerBridge(props: {
       }
       if (picked.fullId !== props.targetRef.current) {
         if (props.targetRef.current) {
-          props.commitCurrentPreview();
-          props.clearBrush();
+          props.finishTargetForSwitch();
         }
         props.enterTarget(picked.fullId, meta);
       }
@@ -10930,8 +10983,8 @@ function Inner(props: CanvasProps & {
     fixtureDragDepthRef,
     attractionSession,
     fillEditTargetVolumes = false,
-    onTargetVolumeRelocate,
-    onTargetVolumeDraw,
+    onVoxelBrushPaint,
+    voxelBrushSize = DEFAULT_VOXEL_BRUSH_SIZE,
   } = props;
   const kindCompatibility = reactHostPort.useMemo(
     () => resolvePuzzle3dKindCompatibility(kindCompatibilityProp, sceneFixture?.meta as Record<string, unknown> | undefined),
@@ -10942,9 +10995,11 @@ function Inner(props: CanvasProps & {
     if (!brushActive) {
       puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
       puzzle3dBrushVortexHoverRef.current = false;
+      puzzle3dBrushAltPressedRef.current = false;
     }
     return () => {
       puzzle3dBrushToolActiveRef.current = false;
+      puzzle3dBrushAltPressedRef.current = false;
     };
   }, [brushActive]);
   const lodRef = reactHostPort.useRef<number>(DEFAULT_MANUAL_LOD);
@@ -11016,7 +11071,15 @@ function Inner(props: CanvasProps & {
         <WorldOrbitViewControls
           onCameraChange={(state) => canvasHostRef.current.onCamera?.(state)}
         />
-        {autoFitCamera && projection !== "orthographic" ? <AutoFit behavior={autoFitBehavior} zoom={zoom} onCamera={props.onCamera} /> : null}
+        {autoFitCamera && projection !== "orthographic" ? (
+          <AutoFit
+            behavior={autoFitBehavior}
+            zoom={zoom}
+            projection={projection}
+            seedKey={props.cameraSeedKey ?? `${projection}:${pos.join(",")}|${tgt.join(",")}|${up.join(",")}`}
+            onCamera={(state) => canvasHostRef.current.onCamera?.(state)}
+          />
+        ) : null}
         <AttractionThreeBinder />
         <AttractionWindowBridge />
         <MarqueeBridge />
@@ -11058,7 +11121,6 @@ function Inner(props: CanvasProps & {
       pos,
       projection,
       props.cameraSeedKey,
-      props.onCamera,
       puzzle3dRootRef,
       setFixtureDragActive,
       showLodGrid,
@@ -11081,8 +11143,8 @@ function Inner(props: CanvasProps & {
     >
       {registryLodSceneCore}
       {fixtureDropEnabled ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
-      <TargetVolumeDrawBridge enabled={fillEditTargetVolumes} />
-      <TargetVolumeDrawPreview />
+      <VoxelBrushBridge enabled={fillEditTargetVolumes} voxelSize={voxelBrushSize} />
+      <VoxelBrushPreview voxelSize={voxelBrushSize} />
     </LodBridge>
   );
   const onFillMeshesReadyRef = reactHostPort.useRef(onFillMeshesReady);
@@ -11161,7 +11223,8 @@ export interface PlayCanvasProps {
   readonly onSelect?: (snap: SelectionSnapshot) => void;
   readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
   readonly onTargetVolumeRelocate?: (payload: WorldVolumeRelocatePayload) => void;
-  readonly onTargetVolumeDraw?: (volume: WorldVolumeProps) => void;
+  readonly onVoxelBrushPaint?: (cad: Vec3, size: number) => void;
+  readonly voxelBrushSize?: number;
   readonly fillEditTargetVolumes?: boolean;
   readonly onIndirectConnect?: () => void;
   readonly onProximityConnect?: () => void;
@@ -11221,7 +11284,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
         <PuzzleTargetVolumes
           targetVolumes={props.fixture.targetVolumes ?? []}
           interactive={props.fillEditTargetVolumes === true}
-          relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG}
+          relocate={false}
         />
         <Objects relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
         <AttractionTreeRoots />
@@ -11266,13 +11329,16 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
     };
     puzzle3dTargetVolumeRelocateBridgeRef.current = {
       onRelocate: props.onTargetVolumeRelocate,
-      onDraw: props.onTargetVolumeDraw,
+    };
+    puzzle3dVoxelBrushBridgeRef.current = {
+      onPaint: props.onVoxelBrushPaint,
     };
     return () => {
       puzzle3dReferenceRelocateBridgeRef.current = {};
       puzzle3dTargetVolumeRelocateBridgeRef.current = {};
+      puzzle3dVoxelBrushBridgeRef.current = {};
     };
-  }, [props.onReferenceRelocate, props.onSelect, props.onTargetVolumeDraw, props.onTargetVolumeRelocate]);
+  }, [props.onReferenceRelocate, props.onSelect, props.onTargetVolumeRelocate, props.onVoxelBrushPaint]);
   return (
     <Canvas3D
       className="absolute inset-0"
@@ -11298,7 +11364,8 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
       onSelect={props.onSelect}
       onReferenceRelocate={props.onReferenceRelocate}
       onTargetVolumeRelocate={props.onTargetVolumeRelocate}
-      onTargetVolumeDraw={props.onTargetVolumeDraw}
+      onVoxelBrushPaint={props.onVoxelBrushPaint}
+      voxelBrushSize={props.voxelBrushSize}
       fillEditTargetVolumes={props.fillEditTargetVolumes}
       onConnect={handleConnect}
       onRelocate={handleRelocate}
@@ -11570,6 +11637,23 @@ if (import.meta.vitest) {
     });
     it("refits when the object-group key changes in changes behavior", () => {
       expect(puzzle3dAutoFitShouldRun("changes", "b", "a", true)).toBe(true);
+    });
+  });
+  describe("puzzle3dAutoFitInitialApplied", () => {
+    it("tracks initial auto-fit per viewport seed", () => {
+      expect(puzzle3dAutoFitInitialApplied("seed-a")).toBe(false);
+      puzzle3dAutoFitMarkInitialApplied("seed-a");
+      expect(puzzle3dAutoFitInitialApplied("seed-a")).toBe(true);
+      expect(puzzle3dAutoFitInitialApplied("seed-b")).toBe(false);
+    });
+  });
+  describe("puzzle3dBrushSessionActive", () => {
+    it("is true while brush target, preview, or menu is active", () => {
+      puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
+      expect(puzzle3dBrushSessionActive()).toBe(false);
+      puzzle3dBrushUiStore.setSnapshot({ ...BRUSH_UI_IDLE, targetActive: true });
+      expect(puzzle3dBrushSessionActive()).toBe(true);
+      puzzle3dBrushUiStore.setSnapshot(BRUSH_UI_IDLE);
     });
   });
   describe("cameraStateNearEqual", () => {
@@ -13019,6 +13103,7 @@ if (import.meta.vitest) {
       });
       const hint = spec.status?.find((row) => row.id === "puzzle3d.brush.hint")?.content ?? "";
       expect(hint).toContain("Point at");
+      expect(hint).toContain("Alt");
       expect(hint).toContain("left-click");
     });
     it("buildPuzzle3dPlayEngagement lists brush candidates when brush tool is active", () => {
@@ -13822,16 +13907,26 @@ if (import.meta.vitest) {
       spec.options?.find((row) => row.id === PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID)?.onPress?.();
       expect(toggled).toBe(true);
       expect(deleted).toBe(true);
+      expect(spec.control?.kind).toBe("stepper");
+      if (spec.control?.kind === "stepper") {
+        expect(spec.control.label).toBe("Voxel size");
+      }
     });
-    it("targetVolumePoseFromThreePoints builds an oriented box pose", () => {
-      const pose = targetVolumePoseFromThreePoints({
-        p0: [0, 0, 0],
-        p1: [4, 0, 0],
-        p2: [4, 2, 0],
-        height: 3,
-      });
-      expect(pose?.scale).toEqual([4, 2, 3]);
-      expect(pose?.origin[2]).toBeCloseTo(1.5, 5);
+    it("snapCadToVoxelCenter and addVoxelToFixture place axis-aligned cells", () => {
+      expect(snapCadToVoxelCenter([0.2, 0.2, 0.2], 1)).toEqual([0.5, 0.5, 0.5]);
+      const base: FixtureV1 = {
+        schema: "puzzle.3d.fixture/v1",
+        camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+        domain: "architecture",
+        attractions: [],
+        objects: [],
+        references: [],
+        targetVolumes: [],
+      };
+      const next = addVoxelToFixture(base, [0.2, 0.2, 0.2], 1);
+      expect(next.targetVolumes).toHaveLength(1);
+      expect(next.targetVolumes[0]?.scale).toBe(1);
+      expect(addVoxelToFixture(next, [0.2, 0.2, 0.2], 1).targetVolumes).toHaveLength(1);
     });
     it("buildPuzzle3dPlayEngagement shows fill build progress on the slider label and caps max", () => {
       const spec = buildPuzzle3dPlayEngagement({
