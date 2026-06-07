@@ -862,10 +862,21 @@
       }
     },
     {
+      "name": "🛠️dev🌊flow🦀module-list",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @flow/module-list:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.55
+      }
+    },
+    {
       "name": "🛠️dev🌊flow🦀test",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p neural_engine -p flow_module_wasm -p flow_module_math -p flow_module_text -p flow_module_logic -p flow_module_dictionary -p flow_core",
+      "command": "cargo test -p neural_engine -p flow_module_wasm -p flow_module_math -p flow_module_text -p flow_module_logic -p flow_module_dictionary -p flow_module_list -p flow_core",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",

@@ -158,6 +158,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Creates an empty list".into(),
             inputs: vec![],
             outputs: vec!["list".into()],
+            ..Default::default()
         },
         Box::new(Empty),
     );
@@ -169,6 +170,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Wraps input as a list dictionary".into(),
             inputs: vec!["*".into()],
             outputs: vec!["list".into()],
+            ..Default::default()
         },
         Box::new(Pack),
     );
@@ -180,6 +182,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Reads a value by index".into(),
             inputs: vec!["list".into(), "index".into()],
             outputs: vec!["value".into()],
+            ..Default::default()
         },
         Box::new(Get),
     );
@@ -191,6 +194,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Replaces a value at an index".into(),
             inputs: vec!["list".into(), "index".into(), "value".into()],
             outputs: vec!["list".into()],
+            ..Default::default()
         },
         Box::new(Set),
     );
@@ -202,6 +206,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Appends a value at the next index".into(),
             inputs: vec!["list".into(), "value".into()],
             outputs: vec!["list".into()],
+            ..Default::default()
         },
         Box::new(Append),
     );
@@ -213,6 +218,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Reports the number of indexed elements".into(),
             inputs: vec!["list".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(Size),
     );
@@ -224,6 +230,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Removes an index and reindexes".into(),
             inputs: vec!["list".into(), "index".into()],
             outputs: vec!["list".into()],
+            ..Default::default()
         },
         Box::new(Remove),
     );

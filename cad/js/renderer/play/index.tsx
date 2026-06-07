@@ -1483,7 +1483,6 @@ interface PlaySessionProps {
   readonly cameraView?: OrbitCameraViewId;
   readonly cameraViewSeedKey?: string | number;
   readonly orbitProjection?: OrbitCameraProjection;
-  readonly onOrbitViewSelect?: (view: OrbitCameraViewId) => void;
   readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;
@@ -1530,7 +1529,6 @@ function PlaySession({
   cameraView,
   cameraViewSeedKey,
   orbitProjection,
-  onOrbitViewSelect,
   onOrbitProjectionChange,
   worldReferences = [],
   selectedReferenceIds,
@@ -1605,7 +1603,6 @@ function PlaySession({
       spatialView={{
         ...(cameraView !== undefined && cameraViewSeedKey !== undefined ? { cameraView, cameraViewSeedKey } : {}),
         orbitProjection,
-        onOrbitViewSelect,
         onOrbitProjectionChange,
       }}
       worldReferences={worldReferences}
@@ -2408,12 +2405,10 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
     handleDeleteSelection,
     cameraViewSeedForInstance,
     orbitProjectionForInstance,
-    applyOrbitViewForInstance,
     setOrbitProjectionForInstance,
   } = useCadPlayModelSpace();
   const cameraSeed = cameraViewSeedForInstance(instanceId);
   const orbitProjection = orbitProjectionForInstance(instanceId);
-  const onOrbitViewSelect = reactHostPort.useCallback((view: OrbitCameraViewId) => applyOrbitViewForInstance(view, instanceId), [applyOrbitViewForInstance, instanceId]);
   const onOrbitProjectionChange = reactHostPort.useCallback(
     (projection: OrbitCameraProjection) => setOrbitProjectionForInstance(projection, instanceId),
     [instanceId, setOrbitProjectionForInstance],
@@ -2507,7 +2502,6 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         cameraView={cameraSeed?.view}
         cameraViewSeedKey={cameraSeed?.seedKey}
         orbitProjection={orbitProjection}
-        onOrbitViewSelect={onOrbitViewSelect}
         onOrbitProjectionChange={onOrbitProjectionChange}
         worldReferences={shapeReferences}
         selectedReferenceIds={pane === "shape" ? selectedReferenceIds : undefined}

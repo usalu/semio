@@ -88,7 +88,7 @@ export class DagPlayController extends Controller {
 
   private windowEngagement(): WindowEngagement {
     return {
-      sessionActive: true,
+      sessionActive: false,
       input: {
         id: "engagement-input",
         value: this.engagementInput,

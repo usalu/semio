@@ -53,6 +53,7 @@ pub fn register(registry: &mut Registry) {
             summary: "True when a > b".into(),
             inputs: vec!["a".into(), "b".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(Greater),
     );
@@ -64,6 +65,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Inverts boolean number".into(),
             inputs: vec!["number".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(Not),
     );

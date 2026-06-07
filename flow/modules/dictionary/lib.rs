@@ -1,6 +1,6 @@
 //! 📚 Flow dictionary module: neuron kinds for dictionary manipulation.
 
-use neural_engine::{Atom, Dictionary, EvalError, Function, NeuronKindInfo, Registry, Value};
+use neural_engine::{Atom, Dictionary, EvalError, Function, NeuronKindInfo, Registry, Value, VariadicSpec};
 
 // #region 🔖Pack
 /// 📦 Wraps the entire input dictionary under a single dictionary value.
@@ -106,14 +106,23 @@ impl Function for Size {
 // #endregion 🔖Size
 
 // #region 🔖Merge
-/// 🔀 Merges two dictionaries; later keys override earlier ones.
+/// 🔀 Merges ordered dictionary inputs; later keys override earlier ones.
 pub struct Merge;
 
 impl Function for Merge {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_dict(input, "a")?;
-        let b = read_dict(input, "b")?;
-        Ok(Dictionary::new().insert("dictionary", Value::Dictionary(a.merge(b))))
+        let items = read_dict(input, "items")?;
+        let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
+        indices.sort_unstable();
+        if indices.len() < 2 {
+            return Err(EvalError::MissingInput("items".into()));
+        }
+        let mut merged = Dictionary::new();
+        for index in indices {
+            let slot = read_dict(items, &index.to_string())?;
+            merged = merged.merge(slot);
+        }
+        Ok(Dictionary::new().insert("dictionary", Value::Dictionary(merged)))
     }
 }
 // #endregion 🔖Merge
@@ -176,6 +185,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Wraps input as a nested dictionary".into(),
             inputs: vec!["*".into()],
             outputs: vec!["dictionary".into()],
+            ..Default::default()
         },
         Box::new(Pack),
     );
@@ -187,6 +197,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Flattens a nested dictionary to top-level keys".into(),
             inputs: vec!["dictionary".into()],
             outputs: vec!["*".into()],
+            ..Default::default()
         },
         Box::new(Unpack),
     );
@@ -198,6 +209,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Reads a value by key".into(),
             inputs: vec!["dictionary".into(), "key".into()],
             outputs: vec!["value".into()],
+            ..Default::default()
         },
         Box::new(Get),
     );
@@ -209,6 +221,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Inserts or replaces a key".into(),
             inputs: vec!["dictionary".into(), "key".into(), "value".into()],
             outputs: vec!["dictionary".into()],
+            ..Default::default()
         },
         Box::new(Set),
     );
@@ -220,6 +233,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Removes a key".into(),
             inputs: vec!["dictionary".into(), "key".into()],
             outputs: vec!["dictionary".into()],
+            ..Default::default()
         },
         Box::new(Remove),
     );
@@ -231,6 +245,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Checks whether a key exists".into(),
             inputs: vec!["dictionary".into(), "key".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(Has),
     );
@@ -242,6 +257,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Lists keys as comma-separated text".into(),
             inputs: vec!["dictionary".into()],
             outputs: vec!["text".into()],
+            ..Default::default()
         },
         Box::new(Keys),
     );
@@ -253,6 +269,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Reports the number of keys".into(),
             inputs: vec!["dictionary".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(Size),
     );
@@ -261,9 +278,11 @@ pub fn register(registry: &mut Registry) {
             id: "dictionary.merge".into(),
             module: "dictionary".into(),
             name: "Merge".into(),
-            summary: "Merges two dictionaries".into(),
-            inputs: vec!["a".into(), "b".into()],
+            summary: "Merges ordered dictionary inputs".into(),
+            inputs: vec![],
             outputs: vec!["dictionary".into()],
+            variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+            variadic_output: None,
         },
         Box::new(Merge),
     );
@@ -373,13 +392,32 @@ mod tests {
         register(&mut reg);
         let a = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(1.0)));
         let b = Dictionary::new().insert("text", Value::Atom(Atom::String("x".into())));
-        let input = Dictionary::new()
-            .insert("a", Value::Dictionary(a))
-            .insert("b", Value::Dictionary(b));
+        let items = Dictionary::new()
+            .insert("0", Value::Dictionary(a))
+            .insert("1", Value::Dictionary(b));
+        let input = Dictionary::new().insert("items", Value::Dictionary(items));
         let out = reg.get("dictionary.merge").unwrap().evaluate(&input).unwrap();
         let dict = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dict");
         assert_eq!(dict.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
         assert_eq!(dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("x"));
+    }
+
+    #[test]
+    fn merge_three_way_later_overrides() {
+        let mut reg = Registry::new();
+        register(&mut reg);
+        let first = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(1.0)));
+        let second = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0)));
+        let third = Dictionary::new().insert("text", Value::Atom(Atom::String("z".into())));
+        let items = Dictionary::new()
+            .insert("0", Value::Dictionary(first))
+            .insert("1", Value::Dictionary(second))
+            .insert("2", Value::Dictionary(third));
+        let input = Dictionary::new().insert("items", Value::Dictionary(items));
+        let out = reg.get("dictionary.merge").unwrap().evaluate(&input).unwrap();
+        let dict = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dict");
+        assert_eq!(dict.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
+        assert_eq!(dict.get("text").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("z"));
     }
 
     use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};

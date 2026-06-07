@@ -7,7 +7,7 @@ pub use neural_engine as neural;
 use std::collections::{BTreeMap, HashMap};
 
 use dag::{would_create_cycle, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeSpec, IoPortSpec};
-use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, Synapse, Tree, Value as NeuralValue};
+use neural::{Atom, Dictionary, EvalError, Evaluator, Neuron, NeuronKindInfo, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Widget
@@ -15,7 +15,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Widget {
-    Neuron { id: String, neuronKind: String, #[serde(default)] params: Dictionary },
+    Neuron {
+        id: String,
+        neuronKind: String,
+        #[serde(default)]
+        params: Dictionary,
+        #[serde(default)]
+        input_ports: Vec<String>,
+    },
     InputSlider { id: String, #[serde(default = "default_slider_value")] value: f64 },
     InputNote { id: String, #[serde(default)] text: String },
     OutputPreview { id: String, #[serde(default)] preview: Dictionary },
@@ -52,12 +59,24 @@ pub struct CameraJson {
     pub zoom: f64,
 }
 
+fn default_from_port() -> String {
+    "out".into()
+}
+
+fn default_to_port() -> String {
+    "in".into()
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SynapseSpec {
     pub id: String,
     pub from: String,
     pub to: String,
+    #[serde(default = "default_from_port")]
+    pub from_port: String,
+    #[serde(default = "default_to_port")]
+    pub to_port: String,
 }
 
 impl Default for FlowFixtureV1 {
@@ -67,12 +86,29 @@ impl Default for FlowFixtureV1 {
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputSlider { id: "slider".into(), value: 3.0 },
-                Widget::Neuron { id: "add".into(), neuronKind: "math.add".into(), params: Dictionary::new() },
+                Widget::Neuron {
+                    id: "add".into(),
+                    neuronKind: "math.add".into(),
+                    params: Dictionary::new(),
+                    input_ports: vec![],
+                },
                 Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new() },
             ],
             synapses: vec![
-                SynapseSpec { id: "s1".into(), from: "slider".into(), to: "add".into() },
-                SynapseSpec { id: "s2".into(), from: "add".into(), to: "preview".into() },
+                SynapseSpec {
+                    id: "s1".into(),
+                    from: "slider".into(),
+                    to: "add".into(),
+                    from_port: "out".into(),
+                    to_port: "a".into(),
+                },
+                SynapseSpec {
+                    id: "s2".into(),
+                    from: "add".into(),
+                    to: "preview".into(),
+                    from_port: "out".into(),
+                    to_port: "in".into(),
+                },
             ],
             layout: BTreeMap::new(),
         }
@@ -89,33 +125,108 @@ fn widget_label(widget: &Widget) -> String {
     }
 }
 
-fn widget_io_ports(widget: &Widget) -> (Vec<IoPortSpec>, Vec<IoPortSpec>) {
+fn default_neuron_input_ports(kind: &str, input_ports: &[String], kind_infos: &HashMap<String, NeuronKindInfo>) -> Vec<String> {
+    if !input_ports.is_empty() {
+        return input_ports.to_vec();
+    }
+    if let Some(spec) = kind_infos.get(kind).and_then(|info| info.variadic_input.as_ref()) {
+        return (0..spec.min).map(|index| index.to_string()).collect();
+    }
+    if let Some(info) = kind_infos.get(kind) {
+        if !info.inputs.is_empty() && info.inputs[0] != "*" {
+            return info.inputs.clone();
+        }
+    }
+    vec!["in".into()]
+}
+
+fn neuron_io_layout(
+    neuron_kind: &str,
+    input_ports: &[String],
+    kind_infos: &HashMap<String, NeuronKindInfo>,
+) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
+    let info = kind_infos.get(neuron_kind);
+    let output_label = info.and_then(|entry| entry.outputs.first()).cloned().unwrap_or_else(|| "out".into());
+    let outputs = vec![IoPortSpec { id: "out".into(), label: output_label }];
+    if let Some(_spec) = info.and_then(|entry| entry.variadic_input.as_ref()) {
+        let ports = default_neuron_input_ports(neuron_kind, input_ports, kind_infos);
+        let inputs = ports
+            .iter()
+            .map(|port_id| IoPortSpec {
+                id: port_id.clone(),
+                label: port_id.clone(),
+            })
+            .collect();
+        let variadic_outputs = info.and_then(|entry| entry.variadic_output.as_ref()).is_some();
+        return (inputs, outputs, true, variadic_outputs);
+    }
+    if let Some(entry) = info {
+        if !entry.inputs.is_empty() && entry.inputs[0] != "*" {
+            let inputs = entry
+                .inputs
+                .iter()
+                .map(|key| IoPortSpec {
+                    id: key.clone(),
+                    label: key.clone(),
+                })
+                .collect();
+            return (inputs, outputs, false, false);
+        }
+    }
+    (
+        vec![IoPortSpec { id: "in".into(), label: "in".into() }],
+        outputs,
+        false,
+        false,
+    )
+}
+
+fn widget_io_ports(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     match widget {
-        Widget::Neuron { .. } => (
-            vec![IoPortSpec { id: "in".into(), label: "in".into() }],
+        Widget::Neuron { neuronKind, input_ports, .. } => neuron_io_layout(neuronKind, input_ports, kind_infos),
+        Widget::InputSlider { .. } | Widget::InputNote { .. } => (
+            vec![],
             vec![IoPortSpec { id: "out".into(), label: "out".into() }],
+            false,
+            false,
         ),
-        Widget::InputSlider { .. } | Widget::InputNote { .. } => (vec![], vec![IoPortSpec { id: "out".into(), label: "out".into() }]),
-        Widget::OutputPreview { .. } | Widget::OutputAction { .. } => (vec![IoPortSpec { id: "in".into(), label: "in".into() }], vec![]),
+        Widget::OutputPreview { .. } | Widget::OutputAction { .. } => (
+            vec![IoPortSpec { id: "in".into(), label: "in".into() }],
+            vec![],
+            false,
+            false,
+        ),
     }
 }
 
-fn widget_node_size(widget: &Widget) -> (f64, f64) {
+fn widget_node_size(widget: &Widget, kind_infos: &HashMap<String, NeuronKindInfo>) -> (f64, f64) {
     match widget {
         Widget::InputSlider { .. } => (176.0, 72.0),
         Widget::InputNote { .. } | Widget::OutputPreview { .. } => (176.0, 64.0),
+        Widget::Neuron { neuronKind, input_ports, .. } => {
+            let (inputs, _, _, _) = neuron_io_layout(neuronKind, input_ports, kind_infos);
+            let height = 56.0 + (inputs.len().saturating_sub(1) as f64) * 20.0;
+            (160.0, height)
+        }
         _ => (160.0, 56.0),
     }
 }
 
-fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>) -> DagNodeSpec {
-    let (inputs, outputs) = widget_io_ports(widget);
+fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>, kind_infos: &HashMap<String, NeuronKindInfo>) -> DagNodeSpec {
+    let (inputs, outputs, variadic_inputs, variadic_outputs) = widget_io_ports(widget, kind_infos);
     let id = match widget {
         Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id.clone(),
     };
-    let (width, height) = widget_node_size(widget);
+    let (width, height) = widget_node_size(widget, kind_infos);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
-    DagNodeSpec::computation(id, widget_label(widget), inputs, outputs, x, y, width, height)
+    DagNodeSpec::computation(id, widget_label(widget), inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
+}
+
+fn parse_port_endpoint(endpoint: &str, default_port: &str) -> (String, String) {
+    if let Some((widget_id, port_id)) = endpoint.split_once(':') {
+        return (widget_id.to_string(), port_id.to_string());
+    }
+    (endpoint.to_string(), default_port.to_string())
 }
 
 const FLOW_SLIDER_MIN: f64 = 0.0;
@@ -250,6 +361,7 @@ pub struct FlowHost {
     pub last_eval_json: String,
     eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
+    kind_infos: HashMap<String, NeuronKindInfo>,
     next_widget_serial: u64,
     next_synapse_serial: u64,
     viewport_w: u32,
@@ -274,6 +386,7 @@ impl FlowHost {
             last_eval_json: String::new(),
             eval_bridge: None,
             host_catalogue_json: String::new(),
+            kind_infos: HashMap::new(),
             next_widget_serial: 1,
             next_synapse_serial: 100,
             viewport_w: 1,
@@ -302,6 +415,17 @@ impl FlowHost {
 
     pub fn set_host_catalogue_json(&mut self, json: &str) {
         self.host_catalogue_json = json.to_string();
+    }
+
+    pub fn set_neuron_kind_infos_json(&mut self, json: &str) {
+        self.kind_infos = if json.trim().is_empty() {
+            HashMap::new()
+        } else {
+            serde_json::from_str::<Vec<NeuronKindInfo>>(json)
+                .map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect())
+                .unwrap_or_default()
+        };
+        self.rebuild_dag();
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -352,7 +476,12 @@ impl FlowHost {
         let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
         let id = self.next_widget_id(&descriptor);
         let widget = match descriptor {
-            WidgetDescriptor::Neuron { neuronKind } => Widget::Neuron { id: id.clone(), neuronKind, params: Dictionary::new() },
+            WidgetDescriptor::Neuron { neuronKind } => Widget::Neuron {
+                id: id.clone(),
+                neuronKind: neuronKind.clone(),
+                params: Dictionary::new(),
+                input_ports: default_neuron_input_ports(&neuronKind, &[], &self.kind_infos),
+            },
             WidgetDescriptor::InputSlider => Widget::InputSlider { id: id.clone(), value: 3.0 },
             WidgetDescriptor::InputNote => Widget::InputNote { id: id.clone(), text: String::new() },
             WidgetDescriptor::OutputPreview => Widget::OutputPreview { id: id.clone(), preview: Dictionary::new() },
@@ -392,28 +521,131 @@ impl FlowHost {
     }
 
     pub fn connect(&mut self, from_id: &str, to_id: &str) -> Result<String, String> {
+        self.connect_ports(from_id, "out", to_id, "in")
+    }
+
+    pub fn connect_ports(&mut self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, String> {
         if from_id == to_id {
             return Err("cannot connect widget to itself".into());
         }
-        if !widget_has_output(from_id, &self.fixture.widgets) {
+        if !widget_has_output(from_id, &self.fixture.widgets, &self.kind_infos) {
             return Err(format!("{from_id} has no output port"));
         }
-        if !widget_has_input(to_id, &self.fixture.widgets) {
+        if !widget_has_input(to_id, &self.fixture.widgets, &self.kind_infos) {
             return Err(format!("{to_id} has no input port"));
         }
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
         if would_create_cycle(&existing, from_id, to_id) {
             return Err("connection would create cycle".into());
         }
-        if self.fixture.synapses.iter().any(|s| s.from == from_id && s.to == to_id) {
+        if self
+            .fixture
+            .synapses
+            .iter()
+            .any(|s| s.from == from_id && s.from_port == from_port && s.to == to_id && s.to_port == to_port)
+        {
             return Err("connection already exists".into());
         }
         self.next_synapse_serial += 1;
         let synapse_id = format!("s{}", self.next_synapse_serial);
-        self.fixture.synapses.push(SynapseSpec { id: synapse_id.clone(), from: from_id.to_string(), to: to_id.to_string() });
+        self.fixture.synapses.push(SynapseSpec {
+            id: synapse_id.clone(),
+            from: from_id.to_string(),
+            to: to_id.to_string(),
+            from_port: from_port.to_string(),
+            to_port: to_port.to_string(),
+        });
         self.rebuild_dag();
         self.evaluate_internal();
         Ok(synapse_id)
+    }
+
+    pub fn add_input_port(&mut self, widget_id: &str, index: usize) -> Result<(), String> {
+        let neuron_kind = self
+            .fixture
+            .widgets
+            .iter()
+            .find_map(|widget| match widget {
+                Widget::Neuron { id, neuronKind, .. } if id == widget_id => Some(neuronKind.clone()),
+                _ => None,
+            })
+            .ok_or_else(|| format!("unknown neuron widget: {widget_id}"))?;
+        let spec = self
+            .kind_infos
+            .get(&neuron_kind)
+            .and_then(|info| info.variadic_input.clone())
+            .ok_or_else(|| format!("{widget_id} is not variadic"))?;
+        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+        let Widget::Neuron { input_ports, .. } = widget else {
+            return Err(format!("{widget_id} is not a neuron"));
+        };
+        let mut ports = default_neuron_input_ports(&neuron_kind, input_ports, &self.kind_infos);
+        if let Some(max) = spec.max {
+            if ports.len() >= max {
+                return Err(format!("{widget_id} reached max input ports"));
+            }
+        }
+        let insert_at = index.min(ports.len());
+        ports.insert(insert_at, insert_at.to_string());
+        for synapse in &mut self.fixture.synapses {
+            if synapse.to != widget_id {
+                continue;
+            }
+            if let Ok(old_index) = synapse.to_port.parse::<usize>() {
+                if old_index >= insert_at {
+                    synapse.to_port = (old_index + 1).to_string();
+                }
+            }
+        }
+        *input_ports = (0..ports.len()).map(|slot| slot.to_string()).collect();
+        self.rebuild_dag();
+        self.evaluate_internal();
+        Ok(())
+    }
+
+    pub fn remove_input_port(&mut self, widget_id: &str, port_id: &str) -> Result<(), String> {
+        let neuron_kind = self
+            .fixture
+            .widgets
+            .iter()
+            .find_map(|widget| match widget {
+                Widget::Neuron { id, neuronKind, .. } if id == widget_id => Some(neuronKind.clone()),
+                _ => None,
+            })
+            .ok_or_else(|| format!("unknown neuron widget: {widget_id}"))?;
+        let spec = self
+            .kind_infos
+            .get(&neuron_kind)
+            .and_then(|info| info.variadic_input.clone())
+            .ok_or_else(|| format!("{widget_id} is not variadic"))?;
+        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+        let Widget::Neuron { input_ports, .. } = widget else {
+            return Err(format!("{widget_id} is not a neuron"));
+        };
+        let ports = default_neuron_input_ports(&neuron_kind, input_ports, &self.kind_infos);
+        if ports.len() <= spec.min {
+            return Err(format!("{widget_id} requires at least {} inputs", spec.min));
+        }
+        let Some(remove_index) = ports.iter().position(|port| port == port_id) else {
+            return Err(format!("unknown input port: {port_id}"));
+        };
+        self.fixture.synapses.retain(|synapse| !(synapse.to == widget_id && synapse.to_port == port_id));
+        for synapse in &mut self.fixture.synapses {
+            if synapse.to != widget_id {
+                continue;
+            }
+            if let Ok(old_index) = synapse.to_port.parse::<usize>() {
+                if old_index > remove_index {
+                    synapse.to_port = (old_index - 1).to_string();
+                }
+            }
+        }
+        let mut next_ports = ports;
+        next_ports.remove(remove_index);
+        *input_ports = (0..next_ports.len()).map(|slot| slot.to_string()).collect();
+        self.rebuild_dag();
+        self.evaluate_internal();
+        Ok(())
     }
 
     pub fn disconnect(&mut self, synapse_id: &str) -> Result<(), String> {
@@ -453,6 +685,10 @@ impl FlowHost {
         }
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_down(sx, sy, extend);
+        if let Some((widget_id, index)) = self.dag.take_pending_port_insert() {
+            let _ = self.add_input_port(&widget_id, index);
+            return;
+        }
         self.sync_from_dag();
     }
 
@@ -497,7 +733,7 @@ impl FlowHost {
         let registry = neural::Registry::new();
         let evaluator = Evaluator::new(&registry);
         let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-        match evaluator.evaluate_with(&tree, &seeds, &mut dispatch) {
+        match evaluator.evaluate_with(&tree, &seeds, &self.kind_infos, &mut dispatch) {
             Ok(outputs) => {
                 self.outputs = outputs.clone();
                 self.apply_preview_outputs(&outputs);
@@ -515,11 +751,22 @@ impl FlowHost {
             .widgets
             .iter()
             .filter_map(|w| match w {
-                Widget::Neuron { id, neuronKind, params } => Some(Neuron { id: id.clone(), kind: neuronKind.clone(), params: params.clone() }),
+                Widget::Neuron { id, neuronKind, params, .. } => Some(Neuron { id: id.clone(), kind: neuronKind.clone(), params: params.clone() }),
                 _ => None,
             })
             .collect();
-        let synapses = self.fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone() }).collect();
+        let synapses = self
+            .fixture
+            .synapses
+            .iter()
+            .map(|s| Synapse {
+                id: s.id.clone(),
+                from: s.from.clone(),
+                to: s.to.clone(),
+                from_port: s.from_port.clone(),
+                to_port: s.to_port.clone(),
+            })
+            .collect();
         Tree { neurons, synapses }
     }
 
@@ -555,12 +802,7 @@ impl FlowHost {
 
     fn rebuild_dag(&mut self) {
         let fixture = self.build_dag_fixture_v1();
-        let apply_layout = self.fixture.layout.len() < self.fixture.widgets.len();
-        self.dag = if apply_layout {
-            DagHost::from_fixture(fixture)
-        } else {
-            DagHost::from_fixture_without_layout(fixture)
-        };
+        self.dag = DagHost::from_fixture_without_layout(fixture);
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.sync_from_dag();
     }
@@ -574,10 +816,16 @@ impl FlowHost {
             .fixture
             .edges
             .iter()
-            .filter_map(|edge| {
-                let from = edge.source.split(':').next()?.to_string();
-                let to = edge.target.split(':').next()?.to_string();
-                Some(SynapseSpec { id: edge.id.clone(), from, to })
+            .map(|edge| {
+                let (from, from_port) = parse_port_endpoint(&edge.source, "out");
+                let (to, to_port) = parse_port_endpoint(&edge.target, "in");
+                SynapseSpec {
+                    id: edge.id.clone(),
+                    from,
+                    to,
+                    from_port,
+                    to_port,
+                }
             })
             .collect();
         self.fixture.camera = CameraJson {
@@ -588,14 +836,24 @@ impl FlowHost {
     }
 
     fn build_dag_fixture_v1(&self) -> DagFixtureV1 {
-        let nodes: Vec<DagNodeSpec> = self.fixture.widgets.iter().enumerate().map(|(i, w)| widget_to_dag_node(w, i, &self.fixture.layout)).collect();
+        let nodes: Vec<DagNodeSpec> = self
+            .fixture
+            .widgets
+            .iter()
+            .enumerate()
+            .map(|(i, w)| widget_to_dag_node(w, i, &self.fixture.layout, &self.kind_infos))
+            .collect();
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
         let edges: Vec<DagFixtureEdgeV1> = self
             .fixture
             .synapses
             .iter()
             .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
-            .map(|syn| DagFixtureEdgeV1 { id: syn.id.clone(), source: format!("{}:out", syn.from), target: format!("{}:in", syn.to) })
+            .map(|syn| DagFixtureEdgeV1 {
+                id: syn.id.clone(),
+                source: format!("{}:{}", syn.from, syn.from_port),
+                target: format!("{}:{}", syn.to, syn.to_port),
+            })
             .collect();
         DagFixtureV1 { schema: "dag.fixture/v1".into(), camera: dag::DagCameraV1 { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
@@ -695,6 +953,10 @@ impl FlowHost {
         use cavas::vello::peniko::{Color, Fill};
 
         let cam = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let lod = dag::dag_draw_lod(cam.zoom);
+        if !lod.shows_controls() {
+            return;
+        }
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
         let aff = camera_content_affine(&cam, &viewport);
         let theme = &self.dag.vello_theme;
@@ -782,12 +1044,12 @@ fn widget_id_for(widget: &Widget) -> &str {
     }
 }
 
-fn widget_has_output(widget_id: &str, widgets: &[Widget]) -> bool {
-    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w).1.is_empty())
+fn widget_has_output(widget_id: &str, widgets: &[Widget], kind_infos: &HashMap<String, NeuronKindInfo>) -> bool {
+    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, kind_infos).1.is_empty())
 }
 
-fn widget_has_input(widget_id: &str, widgets: &[Widget]) -> bool {
-    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w).0.is_empty())
+fn widget_has_input(widget_id: &str, widgets: &[Widget], kind_infos: &HashMap<String, NeuronKindInfo>) -> bool {
+    widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, kind_infos).0.is_empty())
 }
 // #endregion 🔖FlowHost
 
@@ -872,6 +1134,38 @@ impl FlowSession {
     #[wasm_bindgen(js_name = setCatalogueJson)]
     pub fn set_catalogue_json(&self, json: &str) {
         self.state.borrow_mut().host.set_host_catalogue_json(json);
+    }
+
+    #[wasm_bindgen(js_name = setNeuronKindInfosJson)]
+    pub fn set_neuron_kind_infos_json(&self, json: &str) {
+        self.state.borrow_mut().host.set_neuron_kind_infos_json(json);
+    }
+
+    #[wasm_bindgen(js_name = addInputPort)]
+    pub fn add_input_port(&self, widget_id: &str, index: u32) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .add_input_port(widget_id, index as usize)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = removeInputPort)]
+    pub fn remove_input_port(&self, widget_id: &str, port_id: &str) -> Result<(), JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .remove_input_port(widget_id, port_id)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = connectPorts)]
+    pub fn connect_ports(&self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, JsValue> {
+        self.state
+            .borrow_mut()
+            .host
+            .connect_ports(from_id, from_port, to_id, to_port)
+            .map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = evaluate)]
@@ -1042,9 +1336,34 @@ mod tests {
         Err(EvalError::UnknownKind(kind.into()))
     }
 
+    fn test_kind_infos_json() -> String {
+        serde_json::to_string(&[
+            NeuronKindInfo {
+                id: "math.add".into(),
+                module: "math".into(),
+                name: "Add".into(),
+                summary: "Sums two numbers".into(),
+                inputs: vec!["a".into(), "b".into()],
+                outputs: vec!["number".into()],
+                ..Default::default()
+            },
+            NeuronKindInfo {
+                id: "math.passThrough".into(),
+                module: "math".into(),
+                name: "Pass Through".into(),
+                summary: "Forwards a number".into(),
+                inputs: vec!["number".into()],
+                outputs: vec!["number".into()],
+                ..Default::default()
+            },
+        ])
+        .unwrap()
+    }
+
     fn host_with_test_bridge() -> FlowHost {
         let mut host = FlowHost::default();
         host.set_eval_bridge_fn(Box::new(test_math_bridge));
+        host.set_neuron_kind_infos_json(&test_kind_infos_json());
         host.set_host_catalogue_json(&serde_json::to_string(&[CatalogueSection {
             id: "math".into(),
             title: "Math".into(),
@@ -1091,13 +1410,14 @@ mod tests {
     }
 
     #[test]
-    fn default_auto_layout_orders_slider_add_preview_left_to_right() {
+    fn default_fixture_does_not_auto_layout() {
         let host = host_with_test_bridge();
         let slider = host.fixture.layout.get("slider").expect("slider");
         let add = host.fixture.layout.get("add").expect("add");
         let preview = host.fixture.layout.get("preview").expect("preview");
-        assert!(add.x > slider.x);
-        assert!(preview.x > add.x);
+        assert_eq!(slider.x, 0.0);
+        assert_eq!(add.x, 200.0);
+        assert_eq!(preview.x, 400.0);
     }
 
     #[test]
@@ -1177,10 +1497,129 @@ mod tests {
     fn add_widget_and_connect() {
         let mut host = host_with_test_bridge();
         let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.passThrough"}"#, 100.0, 50.0).unwrap();
-        host.connect("slider", &id).unwrap();
-        host.connect(&id, "preview").unwrap();
+        host.connect_ports("slider", "out", &id, "number").unwrap();
+        host.connect_ports(&id, "out", "preview", "in").unwrap();
         host.set_slider_value("slider", 4.0);
         assert_eq!(host.preview_text(), "4");
+    }
+
+    fn test_dictionary_merge_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        if kind != "dictionary.merge" {
+            return Err(EvalError::UnknownKind(kind.into()));
+        }
+        let items = input
+            .get("items")
+            .and_then(|value| value.as_dictionary())
+            .ok_or_else(|| EvalError::MissingInput("items".into()))?;
+        let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
+        indices.sort_unstable();
+        if indices.len() < 2 {
+            return Err(EvalError::MissingInput("items".into()));
+        }
+        let mut merged = Dictionary::new();
+        for index in indices {
+            let slot = items
+                .get(&index.to_string())
+                .and_then(|value| value.as_dictionary())
+                .ok_or_else(|| EvalError::MissingInput(index.to_string()))?;
+            merged = merged.merge(slot);
+        }
+        Ok(Dictionary::new().insert("dictionary", NeuralValue::Dictionary(merged)))
+    }
+
+    #[test]
+    fn variadic_merge_evaluates_port_routed_inputs() {
+        let mut host = FlowHost::from_fixture(FlowFixtureV1 {
+            schema: "flow.fixture/v1".into(),
+            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+            widgets: vec![
+                Widget::InputSlider { id: "a".into(), value: 1.0 },
+                Widget::InputSlider { id: "b".into(), value: 2.0 },
+                Widget::Neuron {
+                    id: "merge".into(),
+                    neuronKind: "dictionary.merge".into(),
+                    params: Dictionary::new(),
+                    input_ports: vec!["0".into(), "1".into()],
+                },
+                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new() },
+            ],
+            synapses: vec![
+                SynapseSpec {
+                    id: "s1".into(),
+                    from: "a".into(),
+                    to: "merge".into(),
+                    from_port: "out".into(),
+                    to_port: "0".into(),
+                },
+                SynapseSpec {
+                    id: "s2".into(),
+                    from: "b".into(),
+                    to: "merge".into(),
+                    from_port: "out".into(),
+                    to_port: "1".into(),
+                },
+                SynapseSpec {
+                    id: "s3".into(),
+                    from: "merge".into(),
+                    to: "preview".into(),
+                    from_port: "out".into(),
+                    to_port: "in".into(),
+                },
+            ],
+            layout: BTreeMap::new(),
+        });
+        host.set_eval_bridge_fn(Box::new(test_dictionary_merge_bridge));
+        host.set_neuron_kind_infos_json(
+            &serde_json::to_string(&[NeuronKindInfo {
+                id: "dictionary.merge".into(),
+                module: "dictionary".into(),
+                name: "Merge".into(),
+                summary: "Merge".into(),
+                inputs: vec![],
+                outputs: vec!["dictionary".into()],
+                variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+                ..Default::default()
+            }])
+            .unwrap(),
+        );
+        host.evaluate_internal();
+        let preview = host
+            .fixture
+            .widgets
+            .iter()
+            .find_map(|widget| match widget {
+                Widget::OutputPreview { preview, .. } => Some(preview),
+                _ => None,
+            })
+            .expect("preview");
+        let merged = preview
+            .get("dictionary")
+            .and_then(|value| value.as_dictionary())
+            .expect("merged dictionary");
+        assert_eq!(
+            merged.get("number").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()),
+            Some(2.0)
+        );
+    }
+
+    #[test]
+    fn add_input_port_inserts_variadic_slot() {
+        let mut host = host_with_test_bridge();
+        host.set_neuron_kind_infos_json(&serde_json::to_string(&[NeuronKindInfo {
+            id: "dictionary.merge".into(),
+            module: "dictionary".into(),
+            name: "Merge".into(),
+            summary: "Merge".into(),
+            inputs: vec![],
+            outputs: vec!["dictionary".into()],
+            variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+            ..Default::default()
+        }]).unwrap());
+        let merge_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 0.0, 0.0).unwrap();
+        host.add_input_port(&merge_id, 1).unwrap();
+        let widget = host.fixture.widgets.iter().find(|widget| widget_id_for(widget) == merge_id).expect("merge");
+        let Widget::Neuron { input_ports, .. } = widget else { panic!("neuron") };
+        assert_eq!(input_ports.len(), 3);
     }
 }
 // #endregion 🔖Tests

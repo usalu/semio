@@ -1706,21 +1706,27 @@ export function WorldOrbitCameraViewRig(props: {
   );
 }
 
+/** @emoji 🔑 Stable apply token for {@link WorldOrbitCameraViewRigSeed}; keyed by seed + projection, not camera uuid remounts. */
+export function orbitCameraViewRigApplyToken(seedKey: string | number, projection: OrbitCameraProjection = "perspective"): string {
+  return `${seedKey}:${projection}`;
+}
+
 function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; readonly seedKey: string | number }): null {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
   const lastApplyToken = reactHostPort.useRef<string | null>(null);
+  const projection = props.state.projection ?? "perspective";
   reactHostPort.useLayoutEffect(() => {
     if (!camera) {
       return;
     }
-    const token = `${props.seedKey}:${camera.uuid}`;
+    const token = orbitCameraViewRigApplyToken(props.seedKey, projection);
     if (lastApplyToken.current === token) {
       return;
     }
     lastApplyToken.current = token;
     applyWorldCameraState(camera, props.state, controls);
-  }, [camera, controls, props.seedKey, props.state]);
+  }, [camera, controls, projection, props.seedKey, props.state]);
   return null;
 }
 // #endregion 📷OrbitCameraView
@@ -2624,6 +2630,14 @@ if (import.meta.vitest) {
       expect(resolveOrbitCameraViewFromTemplateId("orthographic-2d")).toBe("top");
       expect(resolveOrbitCameraViewFromTemplateId("perspective")).toBe("perspective");
       expect(resolveOrbitCameraViewFromTemplateId("missing")).toBeNull();
+    });
+  });
+
+  describe("orbitCameraViewRigApplyToken", () => {
+    it("keys apply-once behavior by seed and projection, not camera remounts", () => {
+      expect(orbitCameraViewRigApplyToken("inst:1", "orthographic")).toBe("inst:1:orthographic");
+      expect(orbitCameraViewRigApplyToken("inst:1", "perspective")).toBe("inst:1:perspective");
+      expect(orbitCameraViewRigApplyToken(7, "perspective")).toBe("7:perspective");
     });
   });
 

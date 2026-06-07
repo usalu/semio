@@ -3489,7 +3489,6 @@ export interface InteractionSpatialViewProps {
   readonly cameraViewSeedKey?: string | number;
   readonly orbitProjection?: OrbitCameraProjection;
   readonly showOrbitViewGizmo?: boolean;
-  readonly onOrbitViewSelect?: (view: OrbitCameraViewId) => void;
   readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly onOrbitCameraChange?: (state: import("@infinite/world/r3f").WorldCameraState) => void;
   /** @emoji 🖼️ Grid reference planes persisted beside the CAD model. */
@@ -3561,7 +3560,6 @@ export function InteractionSpatialView({
   cameraViewSeedKey,
   orbitProjection,
   showOrbitViewGizmo = true,
-  onOrbitViewSelect,
   onOrbitProjectionChange,
   onOrbitCameraChange,
   worldReferences = [],
@@ -3678,11 +3676,7 @@ export function InteractionSpatialView({
           ) : null}
           <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} projection={orbitProjection} />
           {showOrbitViewGizmo ? (
-            <WorldOrbitViewControls
-              onCameraChange={onOrbitCameraChange}
-              onProjectionChange={onOrbitProjectionChange}
-              onViewSnap={(view) => onOrbitViewSelect?.(view)}
-            />
+            <WorldOrbitViewControls onCameraChange={onOrbitCameraChange} onProjectionChange={onOrbitProjectionChange} />
           ) : null}
         <WorldLayer order={0} name="cad.grid">
           <WorldLodGridHelper gridDatum={[0, 0, 0]} />

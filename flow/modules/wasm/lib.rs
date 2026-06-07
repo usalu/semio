@@ -134,6 +134,7 @@ mod tests {
                 summary: "Echo".into(),
                 inputs: vec!["x".into()],
                 outputs: vec!["x".into()],
+                ..Default::default()
             },
             Box::new(Echo),
         );
@@ -153,6 +154,7 @@ mod tests {
                 summary: "Echo".into(),
                 inputs: vec!["x".into()],
                 outputs: vec!["x".into()],
+                ..Default::default()
             },
             Box::new(Echo),
         );

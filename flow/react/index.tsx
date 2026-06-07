@@ -18,16 +18,19 @@ if (import.meta.env.VITEST) {
     { initSync: initTextSync },
     { initSync: initLogicSync },
     { initSync: initDictionarySync },
+    { initSync: initListSync },
   ] = await Promise.all([
     import("../modules/math/pkg/flow_module_math.js"),
     import("../modules/text/pkg/flow_module_text.js"),
     import("../modules/logic/pkg/flow_module_logic.js"),
     import("../modules/dictionary/pkg/flow_module_dictionary.js"),
+    import("../modules/list/pkg/flow_module_list.js"),
   ]);
   initMathSync({ module: readFileSync(join(reactDir, "../modules/math/pkg/flow_module_math_bg.wasm")) });
   initTextSync({ module: readFileSync(join(reactDir, "../modules/text/pkg/flow_module_text_bg.wasm")) });
   initLogicSync({ module: readFileSync(join(reactDir, "../modules/logic/pkg/flow_module_logic_bg.wasm")) });
   initDictionarySync({ module: readFileSync(join(reactDir, "../modules/dictionary/pkg/flow_module_dictionary_bg.wasm")) });
+  initListSync({ module: readFileSync(join(reactDir, "../modules/list/pkg/flow_module_list_bg.wasm")) });
 } else {
   await initFlowWasm();
 }
@@ -40,6 +43,12 @@ export { FlowSession };
 // #endregion 🔖GpuWasmBridge
 
 // #region 🔖ExtensionHost
+export interface FlowModuleVariadicSpecV1 {
+  readonly slotKey: string;
+  readonly min: number;
+  readonly max?: number;
+}
+
 export interface FlowModuleNeuronKindV1 {
   readonly id: string;
   readonly module: string;
@@ -47,6 +56,8 @@ export interface FlowModuleNeuronKindV1 {
   readonly summary: string;
   readonly inputs: readonly string[];
   readonly outputs: readonly string[];
+  readonly variadicInput?: FlowModuleVariadicSpecV1;
+  readonly variadicOutput?: FlowModuleVariadicSpecV1;
 }
 
 export interface FlowModuleCommandV1 {
@@ -111,9 +122,10 @@ const FLOW_MODULE_LOADERS: Record<string, FlowModuleLoader> = {
   text: () => import("@flow/module-text"),
   logic: () => import("@flow/module-logic"),
   dictionary: () => import("@flow/module-dictionary"),
+  list: () => import("@flow/module-list"),
 };
 
-export const FLOW_DEFAULT_MODULE_IDS = ["math", "text", "logic", "dictionary"] as const;
+export const FLOW_DEFAULT_MODULE_IDS = ["math", "text", "logic", "dictionary", "list"] as const;
 export type FlowModuleId = (typeof FLOW_DEFAULT_MODULE_IDS)[number];
 
 export const FLOW_INSTALLED_MODULE_IDS = Object.keys(FLOW_MODULE_LOADERS);
@@ -265,6 +277,14 @@ export class FlowExtensionHost {
     return JSON.stringify(this.catalogueSections());
   }
 
+  kindInfosJson(): string {
+    const kinds: FlowModuleNeuronKindV1[] = [];
+    for (const entry of this.active.values()) {
+      kinds.push(...entry.manifest.contributes.neuronKinds);
+    }
+    return JSON.stringify(kinds);
+  }
+
   private placeholderManifest(id: string): FlowModuleManifestV1 {
     return {
       schema: "flow.module/v1",
@@ -311,12 +331,18 @@ export interface FlowFixtureV1 {
   readonly schema: "flow.fixture/v1";
   readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
   readonly widgets: readonly FlowWidgetV1[];
-  readonly synapses: readonly { readonly id: string; readonly from: string; readonly to: string }[];
+  readonly synapses: readonly {
+    readonly id: string;
+    readonly from: string;
+    readonly to: string;
+    readonly fromPort?: string;
+    readonly toPort?: string;
+  }[];
   readonly layout?: Readonly<Record<string, { readonly x: number; readonly y: number }>>;
 }
 
 export type FlowWidgetV1 =
-  | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string }
+  | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string; readonly inputPorts?: readonly string[] }
   | { readonly kind: "inputSlider"; readonly id: string; readonly value: number }
   | { readonly kind: "inputNote"; readonly id: string; readonly text: string }
   | { readonly kind: "outputPreview"; readonly id: string }
@@ -331,8 +357,8 @@ export const FLOW_DEFAULT_FIXTURE: FlowFixtureV1 = {
     { kind: "outputPreview", id: "preview" },
   ],
   synapses: [
-    { id: "s1", from: "slider", to: "add" },
-    { id: "s2", from: "add", to: "preview" },
+    { id: "s1", from: "slider", to: "add", fromPort: "out", toPort: "a" },
+    { id: "s2", from: "add", to: "preview", fromPort: "out", toPort: "in" },
   ],
 };
 
@@ -679,6 +705,7 @@ export function FlowCanvas({
     (session: FlowSession) => {
       session.setEvalBridge(createFlowEvalBridge(extensionHost));
       session.setCatalogueJson(extensionHost.catalogueJson());
+      session.setNeuronKindInfosJson(extensionHost.kindInfosJson());
       const sections = parseFlowCatalogueSections(session.catalogueJson());
       onCatalogueReadyRef.current?.(sections);
     },

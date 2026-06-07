@@ -59,7 +59,7 @@ export const FLOW_PLAY_KINDS_TAB_ID = "flow-play-kinds";
 export const FLOW_PLAY_EXTENSIONS_TAB_ID = "flow-play-extensions";
 
 /** @emoji 📚 Neuron module section ids expected in the flow play workbench catalogue. */
-export const FLOW_NEURON_MODULE_IDS = ["dictionary", "logic", "math", "text"] as const;
+export const FLOW_NEURON_MODULE_IDS = ["dictionary", "list", "logic", "math", "text"] as const;
 
 /** @emoji ✅ True when every registered neuron module section is present. */
 export function flowPlayCatalogueIncludesAllNeuronModules(sections: readonly CatalogueSection[]): boolean {
@@ -233,7 +233,7 @@ export class FlowPlayController extends Controller {
 
   private windowEngagement(): WindowEngagement {
     return {
-      sessionActive: true,
+      sessionActive: false,
       input: {
         id: "engagement-input",
         value: this.engagementInput,
@@ -451,6 +451,7 @@ if (import.meta.vitest) {
     it("kinds tree lists every neuron module section", () => {
       const sections: CatalogueSection[] = [
         { id: "dictionary", title: "Dictionary", items: [{ kind: "neuron", neuronKind: "dictionary.get", name: "Get", summary: "Read key" }] },
+        { id: "list", title: "List", items: [{ kind: "neuron", neuronKind: "list.get", name: "Get", summary: "Read index" }] },
         { id: "logic", title: "Logic", items: [{ kind: "neuron", neuronKind: "logic.not", name: "Not", summary: "Invert" }] },
         { id: "math", title: "Math", items: [{ kind: "neuron", neuronKind: "math.add", name: "Add", summary: "Sum" }] },
         { id: "text", title: "Text", items: [{ kind: "neuron", neuronKind: "text.upper", name: "Upper", summary: "Uppercase" }] },

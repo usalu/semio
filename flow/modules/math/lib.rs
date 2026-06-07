@@ -98,6 +98,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Sums two numbers".into(),
             inputs: vec!["a".into(), "b".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(Add),
     );
@@ -109,6 +110,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Multiplies two numbers".into(),
             inputs: vec!["a".into(), "b".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(Multiply),
     );
@@ -120,6 +122,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Forwards a number".into(),
             inputs: vec!["number".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(PassThrough),
     );
@@ -131,6 +134,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Sums numbers in a list dictionary".into(),
             inputs: vec!["list".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         },
         Box::new(Sum),
     );

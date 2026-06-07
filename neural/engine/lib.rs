@@ -118,12 +118,25 @@ pub struct Neuron {
     pub params: Dictionary,
 }
 
+fn default_from_port() -> String {
+    "out".into()
+}
+
+fn default_to_port() -> String {
+    "in".into()
+}
+
 /// 🔗 Directed connection between two port endpoints.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Synapse {
     pub id: String,
     pub from: String,
     pub to: String,
+    #[serde(default = "default_from_port")]
+    pub from_port: String,
+    #[serde(default = "default_to_port")]
+    pub to_port: String,
 }
 // #endregion 🔖Tree
 
@@ -155,8 +168,18 @@ pub trait Function: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
 }
 
-/// 📇 Catalogue metadata for a neuron kind.
+/// ➕ Variadic input or output slot specification.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VariadicSpec {
+    pub slot_key: String,
+    pub min: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max: Option<usize>,
+}
+
+/// 📇 Catalogue metadata for a neuron kind.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NeuronKindInfo {
     pub id: String,
@@ -165,6 +188,10 @@ pub struct NeuronKindInfo {
     pub summary: String,
     pub inputs: Vec<String>,
     pub outputs: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variadic_input: Option<VariadicSpec>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variadic_output: Option<VariadicSpec>,
 }
 
 struct RegistryEntry {
@@ -197,6 +224,10 @@ impl Registry {
         self.kinds.get(kind_id).map(|entry| entry.function.as_ref())
     }
 
+    pub fn kind_info(&self, kind_id: &str) -> Option<&NeuronKindInfo> {
+        self.kinds.get(kind_id).map(|entry| &entry.info)
+    }
+
     pub fn catalogue(&self) -> Vec<NeuronKindInfo> {
         let mut items: Vec<NeuronKindInfo> = self.kinds.values().map(|entry| entry.info.clone()).collect();
         items.sort_by(|a, b| a.id.cmp(&b.id));
@@ -217,7 +248,7 @@ impl<'a> Evaluator<'a> {
     }
 
     pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<HashMap<String, Dictionary>, EvalError> {
-        self.evaluate_with(tree, seeds, &mut |kind, input| {
+        self.evaluate_with(tree, seeds, &HashMap::new(), &mut |kind, input| {
             self.registry
                 .get(kind)
                 .ok_or_else(|| EvalError::UnknownKind(kind.into()))?
@@ -229,13 +260,15 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
+        kind_infos: &HashMap<String, NeuronKindInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
     ) -> Result<HashMap<String, Dictionary>, EvalError> {
         let order = topo_order(tree)?;
         let mut outputs: HashMap<String, Dictionary> = seeds.clone();
         for neuron_id in order {
             let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
-            let input = collect_neuron_input(tree, &outputs, &neuron_id);
+            let kind_info = kind_infos.get(&neuron.kind).or_else(|| self.registry.kind_info(&neuron.kind));
+            let input = collect_neuron_input(tree, &outputs, &neuron_id, kind_info);
             if let Some(seed) = seeds.get(&neuron_id) {
                 outputs.insert(neuron_id.clone(), seed.clone());
                 continue;
@@ -247,15 +280,57 @@ impl<'a> Evaluator<'a> {
     }
 }
 
-fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str) -> Dictionary {
+fn synapse_source_value(src_out: &Dictionary, from_port: &str) -> Value {
+    if from_port.is_empty() || from_port == "out" {
+        return Value::Dictionary(src_out.clone());
+    }
+    src_out.get(from_port).cloned().unwrap_or(Value::Dictionary(src_out.clone()))
+}
+
+fn insert_variadic_slot(acc: Dictionary, slot_key: &str, port_id: &str, value: Value) -> Dictionary {
+    let mut slots = acc.get(slot_key).and_then(|v| v.as_dictionary()).cloned().unwrap_or_default();
+    slots = slots.insert(port_id.to_string(), value);
+    acc.insert(slot_key.to_string(), Value::Dictionary(slots))
+}
+
+fn insert_fixed_port(acc: Dictionary, port_key: &str, value: Value) -> Dictionary {
+    match value {
+        Value::Dictionary(dict) => {
+            if let Some(v) = dict.get("number").or_else(|| dict.get("text")).or_else(|| dict.get("dictionary")) {
+                return acc.insert(port_key.to_string(), v.clone());
+            }
+            if dict.len() == 1 {
+                if let Some(v) = dict.keys().next().and_then(|k| dict.get(k)) {
+                    return acc.insert(port_key.to_string(), v.clone());
+                }
+            }
+            acc.insert(port_key.to_string(), Value::Dictionary(dict))
+        }
+        other => acc.insert(port_key.to_string(), other),
+    }
+}
+
+fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str, kind_info: Option<&NeuronKindInfo>) -> Dictionary {
     let mut acc = Dictionary::new();
+    let variadic = kind_info.and_then(|info| info.variadic_input.as_ref());
     for syn in &tree.synapses {
         if syn.to != neuron_id {
             continue;
         }
-        if let Some(src_out) = outputs.get(&syn.from) {
-            acc = acc.merge(src_out);
+        let Some(src_out) = outputs.get(&syn.from) else { continue };
+        let value = synapse_source_value(src_out, &syn.from_port);
+        if let Some(spec) = variadic {
+            let port_id = if syn.to_port.is_empty() || syn.to_port == "in" { "0" } else { syn.to_port.as_str() };
+            acc = insert_variadic_slot(acc, &spec.slot_key, port_id, value);
+            continue;
         }
+        if syn.to_port.is_empty() || syn.to_port == "in" {
+            if let Value::Dictionary(dict) = value {
+                acc = acc.merge(&dict);
+            }
+            continue;
+        }
+        acc = insert_fixed_port(acc, &syn.to_port, value);
     }
     acc
 }
@@ -335,6 +410,7 @@ mod tests {
             summary: "Forwards input".into(),
             inputs: vec!["x".into()],
             outputs: vec!["x".into()],
+            ..Default::default()
         }
     }
 
@@ -346,6 +422,7 @@ mod tests {
             summary: "Doubles number".into(),
             inputs: vec!["number".into()],
             outputs: vec!["number".into()],
+            ..Default::default()
         }
     }
 
@@ -378,11 +455,17 @@ mod tests {
             }],
             synapses: vec![],
         };
-        let out = Evaluator::new(&Registry::new()).evaluate_with(&tree, &HashMap::new(), &mut |kind, input| {
-            assert_eq!(kind, "double");
-            let n = input.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
-            Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n * 2.0))))
-        }).unwrap();
+        let out = Evaluator::new(&Registry::new())
+            .evaluate_with(&tree, &HashMap::new(), &HashMap::new(), &mut |kind, input| {
+                assert_eq!(kind, "double");
+                let n = input
+                    .get("number")
+                    .and_then(|v| v.as_atom())
+                    .and_then(|a| a.as_f64())
+                    .ok_or_else(|| EvalError::MissingInput("number".into()))?;
+                Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n * 2.0))))
+            })
+            .unwrap();
         assert_eq!(out.get("b").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.0));
     }
 
@@ -396,12 +479,93 @@ mod tests {
                 Neuron { id: "a".into(), kind: "echo".into(), params: Dictionary::new() },
                 Neuron { id: "b".into(), kind: "double".into(), params: Dictionary::new() },
             ],
-            synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into() }],
+            synapses: vec![Synapse {
+                id: "s1".into(),
+                from: "a".into(),
+                to: "b".into(),
+                from_port: "out".into(),
+                to_port: "in".into(),
+            }],
         };
         let mut seeds = HashMap::new();
         seeds.insert("a".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0))));
         let out = Evaluator::new(&reg).evaluate(&tree, &seeds).unwrap();
         assert_eq!(out.get("b").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
+    }
+
+    #[test]
+    fn collect_routes_fixed_port_by_key() {
+        let tree = Tree {
+            neurons: vec![Neuron { id: "add".into(), kind: "math.add".into(), params: Dictionary::new() }],
+            synapses: vec![
+                Synapse {
+                    id: "s1".into(),
+                    from: "slider".into(),
+                    to: "add".into(),
+                    from_port: "out".into(),
+                    to_port: "a".into(),
+                },
+                Synapse {
+                    id: "s2".into(),
+                    from: "note".into(),
+                    to: "add".into(),
+                    from_port: "out".into(),
+                    to_port: "b".into(),
+                },
+            ],
+        };
+        let mut outputs = HashMap::new();
+        outputs.insert("slider".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0))));
+        outputs.insert("note".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.0))));
+        let input = collect_neuron_input(&tree, &outputs, "add", None);
+        assert_eq!(input.get("a").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
+        assert_eq!(input.get("b").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+    }
+
+    #[test]
+    fn collect_routes_variadic_slots_in_order() {
+        let kind = NeuronKindInfo {
+            id: "dictionary.merge".into(),
+            module: "dictionary".into(),
+            name: "Merge".into(),
+            summary: "Merge".into(),
+            inputs: vec![],
+            outputs: vec!["dictionary".into()],
+            variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+            ..Default::default()
+        };
+        let tree = Tree {
+            neurons: vec![Neuron { id: "merge".into(), kind: "dictionary.merge".into(), params: Dictionary::new() }],
+            synapses: vec![
+                Synapse {
+                    id: "s1".into(),
+                    from: "a".into(),
+                    to: "merge".into(),
+                    from_port: "out".into(),
+                    to_port: "0".into(),
+                },
+                Synapse {
+                    id: "s2".into(),
+                    from: "b".into(),
+                    to: "merge".into(),
+                    from_port: "out".into(),
+                    to_port: "1".into(),
+                },
+            ],
+        };
+        let mut outputs = HashMap::new();
+        outputs.insert(
+            "a".into(),
+            Dictionary::new().insert("dictionary", Value::Dictionary(Dictionary::new().insert("x", Value::Atom(Atom::Decimal(1.0))))),
+        );
+        outputs.insert(
+            "b".into(),
+            Dictionary::new().insert("dictionary", Value::Dictionary(Dictionary::new().insert("y", Value::Atom(Atom::Decimal(2.0))))),
+        );
+        let input = collect_neuron_input(&tree, &outputs, "merge", Some(&kind));
+        let items = input.get("items").and_then(|v| v.as_dictionary()).expect("items");
+        assert!(items.get("0").is_some());
+        assert!(items.get("1").is_some());
     }
 }
 // #endregion 🔖Tests

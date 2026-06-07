@@ -52,6 +52,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Joins two text values".into(),
             inputs: vec!["a".into(), "b".into()],
             outputs: vec!["text".into()],
+            ..Default::default()
         },
         Box::new(Concat),
     );
@@ -63,6 +64,7 @@ pub fn register(registry: &mut Registry) {
             summary: "Uppercases text".into(),
             inputs: vec!["text".into()],
             outputs: vec!["text".into()],
+            ..Default::default()
         },
         Box::new(Upper),
     );
