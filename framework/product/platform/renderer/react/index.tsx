@@ -228,7 +228,10 @@ import {
   windowMeasureTileClass,
   windowMeasureToggleClass,
   windowMeasureToggleCompactClass,
-  borderNormalClass,
+	borderNormalClass,
+	navbarFillClassName,
+	PanelToggleGroup,
+	type PanelToggleItem,
   WindowMeasureTreeGroup,
   WindowMeasureTreeLeaf,
   WindowMeasuresTree,
@@ -589,13 +592,13 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
     case "display":
       return (
         <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
-          <div className="text-foreground max-w-full text-xs leading-snug break-words">{measure.content}</div>
+          <div className="text-element max-w-full text-xs leading-snug break-words">{measure.content}</div>
         </WindowMeasureTreeLeaf>
       );
     case "reading":
       return (
         <WindowMeasureTreeLeaf key={measure.id} label={measure.label} fullWidth>
-          <div className={cn("text-foreground text-xs tabular-nums", measure.monospace && "font-mono")}>{measure.text}</div>
+          <div className={cn("text-element text-xs tabular-nums", measure.monospace && "font-mono")}>{measure.text}</div>
         </WindowMeasureTreeLeaf>
       );
     case "section":
@@ -670,7 +673,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
     case "checkbox":
       return (
         <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
-          <div className="text-foreground flex w-full min-w-0 items-center justify-end gap-single text-xs">
+          <div className="text-element flex w-full min-w-0 items-center justify-end gap-single text-xs">
             <input
               id={measure.id}
               type="checkbox"
@@ -691,7 +694,7 @@ function renderUIWindowMeasure(measure: UIWindowMeasure): React.ReactNode {
                 type="button"
                 data-slot="window-measure-radio-item"
                 className={cn(
-                  "border-normal/80 hover:bg-hover-window w-full rounded border px-tiny py-tiny text-left text-xs transition-colors",
+                  "border-normal/80 hover:bg-hover-interactive-fill w-full rounded border px-tiny py-tiny text-left text-xs transition-colors",
                   measure.value === item.value && "bg-active-base text-active-foreground",
                 )}
                 onClick={() => measure.onChange?.(item.value)}
@@ -2621,7 +2624,7 @@ const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }
 										className={cn(
 											"border-b px-2 py-1 text-left font-medium",
 											column.sortable ? "cursor-pointer select-none hover:bg-muted/40" : undefined,
-											active ? "text-foreground" : "text-muted-foreground",
+											active ? "text-emphasized" : "text-muted-foreground",
 										)}
 										onClick={
 											column.sortable && platform
@@ -3968,35 +3971,6 @@ function readBrowserUri(): string {
 	return `${window.location.pathname}${window.location.search}`;
 }
 
-/**
- * Left panel toggle for the navbar.
- * Uses the first tab icon as the toggle icon.
- * Panel toggle strip: normal border, h-medium.
- **/
-const UIPanelToggleGroup: React.FC<{
-  items: Array<{
-    icon: React.ReactNode;
-    id: string;
-    text?: string;
-    onPressedChange: (pressed: boolean) => void;
-    pressed: boolean;
-  }>;
-}> = ({ items }) => (
-  <div data-slot="app-panel-toggle-group" className={cn("flex min-w-0 items-stretch border h-medium", borderNormalClass)}>
-    {items.map((item, index) => (
-      <Toggle
-        key={item.id}
-        id={item.id}
-        text={item.text}
-        pressed={item.pressed}
-        onPressedChange={item.onPressedChange}
-        className={cn("border-0 rounded-none shrink-0", index > 0 && cn("border-l", borderNormalClass))}
-        icon={item.icon}
-      />
-    ))}
-  </div>
-);
-
 //#region 🪨ProductShell
 
 /** @emoji 🪨 Shared product base layout: navbar, floating side panels, window canvas, footer, optional toolbar/search/find. */
@@ -4642,14 +4616,14 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 
 	navbarItems.push({
 		key: "breadcrumb",
-		className: slotNavbarCenter ? "min-w-0 shrink-0 max-w-[40%]" : "flex-1 min-w-0",
+		className: slotNavbarCenter ? "min-w-0 shrink-0 max-w-[40%]" : navbarFillClassName,
 		content: <Breadcrumb className="min-w-0" items={breadcrumbItems} />,
 	});
 
 	if (slotNavbarCenter) {
 		navbarItems.push({
 			key: "fixture",
-			className: "flex-1 min-w-0 flex justify-center",
+			className: cn(navbarFillClassName, "flex justify-center"),
 			content: slotNavbarCenter,
 		});
 	}
@@ -4665,7 +4639,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	});
 
 	const { t } = useUiTranslation();
-	const panelToggleItems = reactHostPort.useMemo(
+	const panelToggleItems = reactHostPort.useMemo<PanelToggleItem[]>(
 		() =>
 			panelKindsWithTabs.map((kind) => {
 				const tabs = panelTabsByKind[kind];
@@ -4716,7 +4690,7 @@ export const PlatformView: React.FC<PlatformViewProps> = ({
 	if (panelToggleItems.length > 0) {
 		navbarItems.push({
 			key: "panelToggles",
-			content: <UIPanelToggleGroup items={panelToggleItems} />,
+			content: <PanelToggleGroup items={panelToggleItems} />,
 		});
 	}
 

@@ -735,6 +735,8 @@ export class ProceduralExtensionHost extends FlowExtensionHost {
 					kind: "neuron",
 					neuronKind: kind.id,
 					name: kind.name,
+					abbreviation: kind.abbreviation,
+					icon: kind.icon,
 					summary: kind.summary,
 				})),
 			});
@@ -1496,6 +1498,10 @@ if (import.meta.vitest) {
 			expect(sections.some((s) => s.id === "brep-prim3d")).toBe(true);
 			expect(sections.some((s) => s.id === "brep-curves")).toBe(true);
 			expect(sections.some((s) => s.id === "brep-solid")).toBe(true);
+			const brepItem = sections.find((s) => s.id === "brep-prim3d")?.items[0];
+			expect(brepItem?.abbreviation).toBeTruthy();
+			expect(brepItem?.icon).toBeTruthy();
+			expect(JSON.stringify(sections)).toContain('"abbreviation"');
 		});
 
 		it("procedural preview default camera is z-up perspective", () => {

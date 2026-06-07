@@ -1,0 +1,14 @@
+{
+  "title": "Tree Guide Lines Emphasize On Hover",
+  "emoji": "🌳",
+  "status": "closed",
+  "description": "Tree indentation guide lines should turn emphasized when hovering over a tree item row.",
+  "summary": "Tree indentation guide lines, branch elbows, and stems now emphasize on row hover. Added treeGuideLineStrokeClassName with group-hover:bg-emphasized on gutter strokes; updated TreeHoverPath CSS to use --border-emphasized-color (replacing muted mix), added stem emphasis, and :has() fallback for branch guide lines in all tree variants.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1571"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient",
+  "sessions": [
+    "⚪ebcd88d9cdac457ea2d9b2ce3ca8c96b"
+  ]
+}

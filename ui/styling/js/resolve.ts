@@ -266,9 +266,9 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		edgeStrokeSelectionExit: pc(tokenVar("secondary"), "secondary"),
 		edgeStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		nodeFill: pbg(themeColorVar("panel"), "l-l-l-g"),
-		nodeStroke: pc(themeColorVar("emphasized"), "dark"),
-		nodeFillHovered: pbg(themeColorVar("hover-panel"), "light-5-7"),
-		nodeStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+		nodeStroke: pc(themeColorVar("element"), "gray"),
+		nodeFillHovered: pbg(themeColorVar("border"), "gray"),
+		nodeStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
 		nodeFillSelected: pbg(GRAPH_VELLO_CSS_SELECTED_FILL, "primary"),
 		nodeStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
 		nodeFillSelectionExit: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
@@ -278,9 +278,9 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		indirectHandleFill: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
 		indirectHandleStroke: pc(tokenVar("secondary"), "secondary"),
 		handleFill: pbg(themeColorVar("base"), "light"),
-		handleStroke: pc(themeColorVar("emphasized"), "dark"),
-		handleFillHovered: pbg(themeColorVar("hover-panel"), "light-5-7"),
-		handleStrokeHovered: pc(themeColorVar("hover-base"), "gray"),
+		handleStroke: pc(themeColorVar("element"), "gray"),
+		handleFillHovered: pbg(themeColorVar("border"), "gray"),
+		handleStrokeHovered: pc(themeColorVar("emphasized"), "dark"),
 		handleFillSelected: pbg(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
 		handleStrokeSelected: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
 		handleFillSelectionExit: pbg(GRAPH_VELLO_CSS_HIGHLIGHTED_FILL, "secondary"),
@@ -294,8 +294,9 @@ export function serializeGraphVelloThemePaletteJson(): string {
 		wireStrokeDisabled: pbg("color-mix(in oklab, var(--color-muted-foreground) 38%, transparent)", "gray", 96),
 		selectionPreviewFill: pbg("color-mix(in oklab, var(--color-primary) 12%, transparent)", "primary", 31),
 		selectionPreviewStroke: pc(GRAPH_VELLO_CSS_COLOR_PRIMARY, "primary"),
-		labelFill: pc(themeColorVar("foreground"), "dark"),
-		labelHalo: pbg(semanticVar("canvas"), "light-8-9", 200),
+		labelFill: pc(themeColorVar("border"), "gray"),
+		labelFillHovered: pc(themeColorVar("foreground"), "dark"),
+		labelHalo: [0, 0, 0, 0],
 	});
 }
 //#endregion 🎨Resolve
@@ -346,10 +347,16 @@ if (import.meta.vitest) {
 				rasterClear: number[];
 				nodeFill: number[];
 				labelFill: number[];
+				labelFillHovered: number[];
+				labelHalo: number[];
 			};
 			expect(parsed.rasterClear).toHaveLength(4);
 			expect(parsed.nodeFill).toHaveLength(4);
 			expect(parsed.labelFill).toHaveLength(4);
+			expect(parsed.labelFillHovered).toHaveLength(4);
+			expect(parsed.labelHalo).toEqual([0, 0, 0, 0]);
+			expect(parsed.labelFill).toEqual([123, 130, 125, 255]);
+			expect(parsed.labelFill).not.toEqual(parsed.rasterClear);
 		});
 	});
 }

@@ -984,16 +984,33 @@ export function getGlassSurfaceClass(tier: GlassTier): string {
 /** @emoji 🎨 Shared transition for interactive chrome (hover, focus, active backgrounds). */
 export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
 
+/** @emoji 🎨 Normal-border gray fill for interactive hover states. */
+export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
+
+/** @emoji 🎨 Interactive hover: normal-border fill + emphasized content. */
+export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
+
+/** @emoji 🎨 Active/on state mirrors hover: normal-border fill + emphasized content. */
+export const interactiveOnClass = cn(
+  "data-[state=on]:bg-hover-interactive-fill",
+  "data-[state=on]:text-emphasized",
+  "data-[state=on]:hover:bg-hover-interactive-fill",
+  "data-[state=on]:hover:text-emphasized",
+);
+
+/** @emoji 🎨 Active tab state mirrors hover fill + emphasized content. */
+export const interactiveTabActiveClass = cn("data-[state=active]:bg-hover-interactive-fill", "data-[state=active]:text-emphasized");
+
 /** @emoji 📋 Hover row styling for menus, selects, comboboxes, and context menus. */
 export const menuListItemClassName =
-  "hover:bg-hover-temporary focus:bg-hover-temporary data-[selected=true]:bg-hover-temporary data-[selected=true]:text-foreground";
+  cn(interactiveHoverFillClass, "hover:text-emphasized focus:bg-hover-interactive-fill focus:text-emphasized data-[selected=true]:bg-hover-interactive-fill data-[selected=true]:text-emphasized");
 
 const contextMenuContentClassName = cn(
   glassMenuClass,
-  "w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-foreground",
+  "w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-element",
 );
 const contextMenuItemClassName = cn(
-  "text-foreground relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+  "text-element relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
   menuListItemClassName,
 );
 const contextMenuShortcutClassName = "ml-auto text-xs text-muted-foreground pl-tiny";
@@ -3222,40 +3239,24 @@ export function getLevelBgClass(level: Level): string {
 	}
 }
 
+/** @emoji 🎨 Per-level hover background + emphasized content for interactive controls. */
+export const levelHoverVariantClasses = {
+	base: interactiveHoverClass,
+	canvas: interactiveHoverClass,
+	window: interactiveHoverClass,
+	panel: interactiveHoverClass,
+	overlay: interactiveHoverClass,
+	temporary: interactiveHoverClass,
+} as const satisfies Record<Level, string>;
+
 /** @emoji 🎨 Tailwind hover background class for a {@link Level}. */
-export function getLevelHoverClass(level: Level): string {
-	switch (level) {
-		case "canvas":
-			return "hover:bg-hover-canvas";
-		case "window":
-			return "hover:bg-hover-window";
-		case "panel":
-			return "hover:bg-hover-panel";
-		case "overlay":
-			return "hover:bg-hover-overlay";
-		case "temporary":
-			return "hover:bg-hover-temporary";
-		default:
-			return "hover:bg-hover-base";
-	}
+export function getLevelHoverClass(_level: Level): string {
+	return interactiveHoverClass;
 }
 
 /** @emoji 🎨 Tailwind active-hover class for a {@link Level}. */
-export function getLevelActiveHoverClass(level: Level): string {
-	switch (level) {
-		case "canvas":
-			return "data-[state=active]:bg-hover-canvas";
-		case "window":
-			return "data-[state=active]:bg-hover-window";
-		case "panel":
-			return "data-[state=active]:bg-hover-panel";
-		case "overlay":
-			return "data-[state=active]:bg-hover-overlay";
-		case "temporary":
-			return "data-[state=active]:bg-hover-temporary";
-		default:
-			return "data-[state=active]:bg-hover-base";
-	}
+export function getLevelActiveHoverClass(_level: Level): string {
+	return interactiveTabActiveClass;
 }
 
 /** @emoji 🎨 Tailwind z-index class for a {@link Level}. */
@@ -3329,7 +3330,7 @@ export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillCla
 export const panelTabBarClass = cn("relative z-20 flex items-stretch shrink-0 overflow-x-auto", borderNormalBottomClass);
 
 /** @emoji 📑 Panel tab icon button (no per-tab borders — {@link panelTabBarClass} owns dividers). */
-export const panelTabButtonClass = "flex items-center justify-center h-full cursor-pointer transition-colors hover:bg-hover-panel";
+export const panelTabButtonClass = "flex items-center justify-center h-full cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized";
 
 /** @emoji 📑 Side panel tab strip height. */
 export const sidePanelTabBarClass = cn(panelTabBarClass, "h-medium");
@@ -3420,8 +3421,8 @@ export const modeDockInactiveTabBeforeGapClass =
 export const modeDockActiveTabFillClass =
   "bg-active-base text-active-foreground hover:bg-active-base hover:text-active-foreground";
 
-/** @emoji 📑 Active panel tab — primary fill matching dock/toolbar selection. */
-export const panelTabActiveClass = modeDockActiveTabFillClass;
+/** @emoji 📑 Active side-panel tab — hover fill + emphasized label (matches navbar toggle on-state). */
+export const panelTabActiveClass = "bg-hover-interactive-fill text-emphasized hover:bg-hover-interactive-fill hover:text-emphasized";
 
 /** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body. */
 export const modeDockActiveTabClass =
@@ -3512,7 +3513,7 @@ export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 
 /** @emoji 🌳 Compact disclosure header for a nested measure group. */
 export const windowMeasureGroupHeaderClass =
-  "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 hover:bg-hover-window";
+  "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 text-element hover:bg-hover-interactive-fill hover:text-emphasized";
 
 /** @emoji 🌳 Indented children under a measure group (minimal chrome). */
 export const windowMeasureGroupChildrenClass =
@@ -3531,10 +3532,10 @@ export const windowMeasureToggleCompactClass =
   "[&_[data-slot=toggle-group]]:h-small [&_[data-slot=toggle-group-item]]:min-h-0 [&_[data-slot=toggle-group-item]]:py-tiny [&_[data-slot=toggle-group-item]]:px-single [&_[data-slot=inline-label]]:!text-tiny";
 
 /** @emoji 🌳 Typography for measure tree group headers. */
-export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-muted-foreground";
+export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-element group-hover:text-emphasized";
 
 /** @emoji 🌳 Typography for measure tree leaf labels. */
-export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-foreground";
+export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
 
 /** @emoji 🎨 Normal border stroke for controls and in-chrome dividers at a {@link Level}. */
 export function getLevelBorderElementClass(_level: Level): string {
@@ -3999,7 +4000,7 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
       {(showManual && fullManualPath) || (showTutorial && fullTutorialPath) || hotkey ? (
         <div className="grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-single gap-single">
           {showManual && fullManualPath ? (
-            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
+            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-element transition-colors p-single hover:bg-hover-interactive-fill hover:text-emphasized">
               <BookIcon className="size-tiny" />
               <span>{useLabel("tooltip.manual")}</span>
             </Link>
@@ -4007,7 +4008,7 @@ function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
             <span className="block" />
           )}
           {showTutorial && fullTutorialPath ? (
-            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
+            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-element transition-colors p-single hover:bg-hover-interactive-fill hover:text-emphasized">
               <TutorialIcon className="size-tiny" />
               <span className="block text-center">{useLabel("tooltip.tutorial")}</span>
             </Link>
@@ -4102,13 +4103,13 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
       {hasLinks ? (
         <div className="flex w-full items-center border-t border-accent-foreground pt-single gap-single">
           {showManual && fullManualPath && (
-            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
+            <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-element transition-colors p-single hover:bg-hover-interactive-fill hover:text-emphasized">
               <BookIcon className="size-3" />
               <span>{manualLabel}</span>
             </Link>
           )}
           {showTutorial && fullTutorialPath && (
-            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
+            <Link to={fullTutorialPath} className="flex items-center gap-single cursor-pointer text-element transition-colors p-single hover:bg-hover-interactive-fill hover:text-emphasized">
               <TutorialIcon className="size-3" />
               <span className="block text-center">{tutorialLabel}</span>
             </Link>
@@ -4218,7 +4219,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
 
   if (labelLayoutKind === "treeGroupHeader") {
     const treeGroupHeaderLabel = (
-      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]" style={treeItemLabelStyle}>
+      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-element group-hover:text-emphasized h-[22px]" style={treeItemLabelStyle}>
         {displayLabel}
       </span>
     );
@@ -4254,14 +4255,14 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
   const propertyLabelElement = isTree ? (
     <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}>
       <div className="inline-flex min-w-0 h-[22px]">
-        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]">
+        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-[22px] pl-[4px]">
           {resolvedLabel}
         </span>
       </div>
     </div>
   ) : (
     <div ref={propertyLabelRef} data-slot="property-label-inline" className="min-w-0">
-      <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px]">
+      <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-[22px]">
         {resolvedLabel}
       </span>
     </div>
@@ -4500,7 +4501,7 @@ export const DraggableAvatar = reactHostPort.forwardRef<HTMLDivElement, Draggabl
           className={cn("cursor-grab active:cursor-grabbing select-none", avatarClassName, isSelected && "ring-1 ring-[color:var(--active-base)]", isHovered && !isSelected && "ring-1 ring-[color:var(--hover-base)]")}
           style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}
         >
-          <AvatarFallback className={cn("select-none", isSelected && "bg-[var(--active-base)] text-[var(--active-foreground)]", isHovered && !isSelected && "bg-[var(--hover-base)] text-foreground", !isSelected && !isHovered && "bg-muted")}>
+          <AvatarFallback className={cn("select-none", isSelected && "bg-[var(--active-base)] text-[var(--active-foreground)]", isHovered && !isSelected && "bg-[var(--hover-base)] text-emphasized", !isSelected && !isHovered && "bg-muted text-element")}>
             {content}
           </AvatarFallback>
         </Avatar>
@@ -4916,17 +4917,10 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
  * actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
 const actionGroupItemVariants = cva(
-  `text-foreground inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single ${formControlFocusBorderClass}`,
+  `text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single ${formControlFocusBorderClass}`,
   {
     variants: {
-      level: {
-        base: "hover:bg-hover-base",
-        canvas: "hover:bg-hover-canvas",
-        window: "hover:bg-hover-window",
-        panel: "hover:bg-hover-panel",
-        overlay: "hover:bg-hover-overlay",
-        temporary: "hover:bg-hover-temporary",
-      },
+      level: levelHoverVariantClasses,
     },
     defaultVariants: {
       level: "base",
@@ -5071,7 +5065,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
             <button
               key={option.value}
               onClick={() => handleSelect(option.value)}
-              className={cn("flex items-center gap-single p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary", value === option.value && "bg-active-temporary")}
+              className={cn("flex items-center gap-single p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-interactive-fill outline-none focus-visible:bg-hover-interactive-fill", value === option.value && "bg-active-temporary")}
             >
               <span className="flex items-center justify-center size-3">{renderControlIcon(option.icon, "tiny")}</span>
               {option.label && <span className="flex-1 text-left">{option.label}</span>}
@@ -5120,13 +5114,9 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       title={accessibleLabel}
       data-level={level}
       className={cn(
-        `text-foreground inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
+        `text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
         hasText && "aspect-auto gap-single",
-        level === "base" && "hover:bg-hover-base",
-        level === "window" && "hover:bg-hover-window",
-        level === "panel" && "hover:bg-hover-panel",
-        level === "overlay" && "hover:bg-hover-overlay",
-        level === "temporary" && "hover:bg-hover-temporary",
+        getLevelHoverClass(level),
         borderClass,
         className,
       )}
@@ -5149,17 +5139,10 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
  * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
  **/
 const buttonGroupItemVariants = cva(
-  `text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap h-medium aspect-square p-single overflow-hidden`,
+  `text-element inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap h-medium aspect-square p-single overflow-hidden`,
   {
     variants: {
-      level: {
-        base: "hover:bg-hover-base",
-        canvas: "hover:bg-hover-canvas",
-        window: "hover:bg-hover-window",
-        panel: "hover:bg-hover-panel",
-        overlay: "hover:bg-hover-overlay",
-        temporary: "hover:bg-hover-temporary",
-      },
+      level: levelHoverVariantClasses,
       variant: {
         default: "",
         ghost: "border-transparent bg-transparent",
@@ -5731,7 +5714,7 @@ function CollapsedFieldDisplay({ allowStackedOverflow = false, className, disabl
       data-overflow-layout={showStackedOverflow ? "stacked" : "single-line"}
       id={id}
       className={cn(
-        "text-foreground flex w-full min-w-0 overflow-hidden border bg-transparent text-base transition-[color,border-color] outline-none md:text-sm",
+        "text-element flex w-full min-w-0 overflow-hidden border bg-transparent text-base transition-[color,border-color] outline-none md:text-sm",
         showStackedOverflow ? "h-auto min-h-0 flex-col px-single" : "h-medium items-center px-single whitespace-nowrap",
         "aria-invalid:border-destructive flex-1 cursor-text",
         disabled && "cursor-not-allowed opacity-50",
@@ -5909,7 +5892,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
           data-mixed={mixed ? "true" : undefined}
           id={id}
           className={cn(
-            `file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent p-single text-base ${borderElementClass} file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
+            `file:text-element placeholder:text-muted-foreground text-element flex h-medium w-full min-w-0 border bg-transparent p-single text-base ${borderElementClass} file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
             formControlFocusBorderClass,
             "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
             mixed && "placeholder:italic placeholder:text-muted-foreground/70",
@@ -6101,7 +6084,7 @@ function SelectItem({ className, children, id, ...props }: React.ComponentProps<
       data-slot="select-item"
       id={id}
       className={cn(
-        "focus:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pr-medium pl-single text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
+        "focus:text-emphasized [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pr-medium pl-single text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
         "cursor-selectable",
         menuListItemClassName,
         className,
@@ -6130,7 +6113,7 @@ function SelectSeparator({ className, ...props }: React.ComponentProps<typeof Se
  **/
 function SelectScrollUpButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
   return (
-    <SelectPrimitive.ScrollUpButton data-slot="select-scroll-up-button" className={cn("flex cursor-default items-center justify-center py-single hover:bg-hover-temporary", className)} {...props}>
+    <SelectPrimitive.ScrollUpButton data-slot="select-scroll-up-button" className={cn("flex cursor-default items-center justify-center py-single hover:bg-hover-interactive-fill", className)} {...props}>
       <ChevronUpIcon className="size-tiny" />
     </SelectPrimitive.ScrollUpButton>
   );
@@ -6141,7 +6124,7 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
  **/
 function SelectScrollDownButton({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
   return (
-    <SelectPrimitive.ScrollDownButton data-slot="select-scroll-down-button" className={cn("flex cursor-default items-center justify-center py-single hover:bg-hover-temporary", className)} {...props}>
+    <SelectPrimitive.ScrollDownButton data-slot="select-scroll-down-button" className={cn("flex cursor-default items-center justify-center py-single hover:bg-hover-interactive-fill", className)} {...props}>
       <ChevronDownIconAlt className="size-tiny" />
     </SelectPrimitive.ScrollDownButton>
   );
@@ -6618,7 +6601,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
             }
           }
         }}
-        className="file:text-foreground placeholder:text-muted-foreground text-foreground flex h-[22px] min-w-0 flex-1 border-0 bg-transparent px-[6px] text-center text-base transition-[color,border-color] outline-none file:inline-flex file:h-[22px] file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-0 md:text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+        className="file:text-element placeholder:text-muted-foreground text-element flex h-[22px] min-w-0 flex-1 border-0 bg-transparent px-[6px] text-center text-base transition-[color,border-color] outline-none file:inline-flex file:h-[22px] file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-0 md:text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
         step={step}
         min={min}
         max={max}
@@ -6752,7 +6735,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
           data-mixed={mixed ? "true" : undefined}
           id={id}
           className={cn(
-            `placeholder:text-muted-foreground text-foreground flex w-full border bg-transparent text-base ${borderElementClass} disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
+            `placeholder:text-muted-foreground text-element flex w-full border bg-transparent text-base ${borderElementClass} disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
             formControlFocusBorderClass,
             "flex-1",
             useSingleRowPropertyEditor ? "h-medium min-h-[22px] max-h-[22px] resize-none overflow-y-auto px-single py-single leading-normal" : "field-sizing-content min-h-huge px-tiny py-single",
@@ -6807,17 +6790,10 @@ export { Textarea };
  * toggleVariants holds the data fields for a toggleVariants record.
  **/
 const toggleVariants = cva(
-  `text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden`,
+  `text-element inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap ${interactiveOnClass} h-medium aspect-square p-single leading-none overflow-hidden`,
   {
     variants: {
-      level: {
-        base: "hover:bg-hover-base",
-        canvas: "hover:bg-hover-canvas",
-        window: "hover:bg-hover-window",
-        panel: "hover:bg-hover-panel",
-        overlay: "hover:bg-hover-overlay",
-        temporary: "hover:bg-hover-temporary",
-      },
+      level: levelHoverVariantClasses,
     },
     defaultVariants: {
       level: "base",
@@ -6986,8 +6962,8 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
           level,
         }),
         inlineText
-          ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90"
-          : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel data-[state=on]:bg-active-base data-[state=on]:hover:bg-active-base/90",
+          ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel"
+          : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
         (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
         inlineText && "w-auto",
         className,
@@ -7137,7 +7113,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
             {availableItems.map((item) => {
               const dropdownText = item.dropdownText || item.text;
               const buttonElement = (
-                <button key={item.value} onClick={() => handleSelect(item.value)} className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}>
+                <button key={item.value} onClick={() => handleSelect(item.value)} className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-interactive-fill outline-none focus-visible:bg-hover-interactive-fill")}>
                   <span className="flex flex-1 items-center gap-single text-left">
                     <span className="flex items-center">{renderControlIcon(addIconSize(item.icon))}</span>
                     {dropdownText ? <span className="text-xs">{dropdownText}</span> : null}
@@ -8035,6 +8011,44 @@ function Navbar({ items, className }: NavbarProps) {
 
 export { Navbar };
 
+/** @emoji ↔️ Flex grow class that pushes trailing navbar chrome to the right edge. */
+export const navbarFillClassName = "flex-1 min-w-0";
+
+/** @emoji ↔️ Invisible navbar filler; use before trailing toggles when no center slot consumes the flex region. */
+export function navbarFillItem(key = "navbarFill"): NavbarItem {
+  return { key, className: navbarFillClassName, content: null };
+}
+
+/** @emoji 🎛 One side-panel toggle in the navbar trailing strip. */
+export interface PanelToggleItem {
+  readonly id: string;
+  readonly icon: React.ReactNode;
+  readonly text?: string;
+  readonly pressed: boolean;
+  readonly onPressedChange: (pressed: boolean) => void;
+}
+
+/** @emoji 🎛 Grouped side-panel toggles for product navbar trailing chrome. */
+function PanelToggleGroup({ items }: { readonly items: readonly PanelToggleItem[] }) {
+  return (
+    <div data-slot="app-panel-toggle-group" className={cn("flex min-w-0 items-stretch border h-medium", borderNormalClass)}>
+      {items.map((item, index) => (
+        <Toggle
+          key={item.id}
+          id={item.id}
+          text={item.text}
+          pressed={item.pressed}
+          onPressedChange={item.onPressedChange}
+          className={cn("border-0 rounded-none shrink-0", index > 0 && cn("border-l", borderNormalClass))}
+          icon={item.icon}
+        />
+      ))}
+    </div>
+  );
+}
+
+export { PanelToggleGroup };
+
 /** @emoji ∅ Sentinel id for the navbar “No fixture” row (matches {@link PLAYGROUND_NO_FIXTURE_ID}). */
 export const NAVBAR_NO_FIXTURE_ID = "__none__";
 
@@ -8119,7 +8133,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         activeHoverClass,
         hoverClass,
         className,
@@ -8496,7 +8510,7 @@ const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 1
 const treeRowHeightPx = 24;
 const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
 const treeRowShellClassName = "relative h-[24px] min-h-[24px] max-h-[24px] select-none overflow-hidden min-w-0";
-const treeRowInteractiveClassName = "hover:bg-hover-panel group";
+const treeRowInteractiveClassName = "hover:bg-hover-interactive-fill hover:text-emphasized group";
 const treeRowLayoutClassName = "grid min-w-0 h-full w-full";
 const treeRowContentClassName = "min-w-0 h-full flex items-center";
 const detailPanelPropertyLabelColumnWidthPx = 96;
@@ -8521,10 +8535,11 @@ const treeCompactSiblingGapPx = 0;
 const treeSubtreeGapPx = 0;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
-const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none text-foreground select-text";
+const treeGuideLineStrokeClassName = "bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150";
+const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none text-element group-hover:text-emphasized select-text";
 const treeItemSecondaryTextClassName = "text-[10px] leading-none text-muted-foreground";
-const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-muted-foreground select-text";
-const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-muted-foreground";
+const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-element group-hover:text-emphasized transition-colors select-text";
+const treeRowDefaultIconClassName = "size-[12px] flex-shrink-0 text-element group-hover:text-emphasized transition-colors";
 
 /** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
 const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconName) => (
@@ -8562,7 +8577,7 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
     <div data-slot="tree-guide" className="absolute left-0 top-0 bottom-0 pointer-events-none">
       {guideIndices.map((guideIndex) => (
         <div key={guideIndex} className="absolute top-0 bottom-0" style={{ left: `${indentationLinePx(guideIndex, indentMultiplier) - 0.5}px` }}>
-          <div data-tree-guide-line="" className="w-px h-full bg-muted-foreground/40 transition-[width,background-color] duration-150" />
+          <div data-tree-guide-line="" className={cn("w-px h-full", treeGuideLineStrokeClassName)} />
         </div>
       ))}
     </div>
@@ -8599,14 +8614,14 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
       {showLines && level > 0 && connectCurrentLevel && (
         <div
           data-slot="tree-branch-elbow"
-          className="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150"
+          className={cn("pointer-events-none absolute h-px -translate-y-1/2", treeGuideLineStrokeClassName)}
           style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }}
         />
       )}
       {showLines && level > 0 && extendCurrentLevelToBottom && (
         <div
           data-slot="tree-branch-stem"
-          className="pointer-events-none absolute w-px bg-muted-foreground/40 transition-[height,background-color] duration-150"
+          className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)}
           style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: `${currentGuidePx - 0.5}px`, bottom: "0px" }}
         />
       )}
@@ -9294,7 +9309,7 @@ function treeRowStateClasses(isSelected: boolean, isHighlighted: boolean, isHidd
     return cn("bg-active-base text-active-foreground", hiddenClass);
   }
   if (isHighlighted) {
-    return cn("bg-hover-base text-foreground", hiddenClass);
+    return cn("bg-hover-interactive-fill text-emphasized", hiddenClass);
   }
   return hiddenClass;
 }
@@ -9940,7 +9955,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               <span
                 data-slot="tree-label"
                 title={controlHint}
-                className={cn(treeItemLabelSlotClassName, "font-medium transition-colors hover:bg-hover-panel", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
+                className={cn(treeItemLabelSlotClassName, "font-medium transition-colors hover:bg-hover-interactive-fill hover:text-emphasized", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
                 style={treeItemLabelStyle}
                 onClick={(event) => {
                   if (event.detail > 1) return;
@@ -10046,7 +10061,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 <div data-slot="tree-branch-nav" className="flex items-center gap-[2px] flex-shrink-0">
                   <button
                     data-slot="tree-branch-prev"
-                    className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-panel disabled:opacity-30 disabled:cursor-default"
+                    className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
                     disabled={activeBranchIndex <= 0}
                     onClick={(e) => {
                       e.preventDefault();
@@ -10061,7 +10076,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                   </span>
                   <button
                     data-slot="tree-branch-next"
-                    className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-panel disabled:opacity-30 disabled:cursor-default"
+                    className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
                     disabled={activeBranchIndex >= branchCount - 1}
                     onClick={(e) => {
                       e.preventDefault();
@@ -10282,7 +10297,7 @@ const getTreeItemLabel = (item: TreeDataItem): React.ReactNode => {
 
   return (
     <span className="min-w-0 truncate leading-none">
-      <span className="text-foreground">{item.label}</span> <span className={treeItemSecondaryTextClassName}>{item.description}</span>
+      <span className="text-element group-hover:text-emphasized">{item.label}</span> <span className={treeItemSecondaryTextClassName}>{item.description}</span>
     </span>
   );
 };
@@ -11134,8 +11149,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
   const hasChildren = node.children && node.children.length > 0;
   const Icon = node.isFolder ? FolderIcon : DocumentIcon;
 
-  const baseClasses = "flex items-center gap-single text-sm rounded-small cursor-selectable select-none transition-colors hover:bg-hover-panel";
-  const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground";
+  const baseClasses = "flex items-center gap-single text-sm rounded-small cursor-selectable select-none transition-colors hover:bg-hover-interactive-fill";
+  const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-emphasized";
   const itemClasses = `${baseClasses} ${stateClasses}`;
   const handleClick = (e: React.MouseEvent) => {
     if (hasChildren) {
@@ -11408,7 +11423,7 @@ const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, class
   return (
     <>
       <ControlTreeRow
-        className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.folderRow)}
+        className={cn("hover:bg-hover-interactive-fill select-none overflow-hidden group", classNames?.folderRow)}
         left={
           <TreeAlignedRow
             level={level}
@@ -11435,7 +11450,7 @@ const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, class
             }
             contentClassName="flex min-w-0 items-center gap-[6px]"
           >
-            <span data-slot="control-tree-folder-label" className={cn("text-xs font-semibold uppercase tracking-wide truncate text-muted-foreground", classNames?.folderTitle)} style={treeItemLabelStyle}>
+            <span data-slot="control-tree-folder-label" className={cn("text-xs font-semibold uppercase tracking-wide truncate text-element group-hover:text-emphasized transition-colors", classNames?.folderTitle)} style={treeItemLabelStyle}>
               {node.key}
             </span>
           </TreeAlignedRow>
@@ -11460,10 +11475,10 @@ const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderCon
   const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   return (
     <ControlTreeRow
-      className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.controlRow)}
+      className={cn("hover:bg-hover-interactive-fill select-none overflow-hidden group", classNames?.controlRow)}
       left={
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-[6px]">
-          <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-foreground", classNames?.controlLabel)} style={treeItemLabelStyle}>
+          <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-element group-hover:text-emphasized", classNames?.controlLabel)} style={treeItemLabelStyle}>
             {node.key}
           </span>
         </TreeAlignedRow>
@@ -11540,7 +11555,7 @@ export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText =
 
 const windowMeasureTreeValueColumnWidthPx = 104;
 const windowMeasureTreeChromeClass = "text-tiny [&_[data-slot=select-trigger]]:h-small";
-const windowMeasureTreeRowClassName = "hover:bg-hover-panel/60 select-none min-h-[18px] w-full min-w-0";
+const windowMeasureTreeRowClassName = "group hover:bg-hover-interactive-fill select-none min-h-[18px] w-full min-w-0";
 
 interface WindowMeasureTreeRowProps {
   left: React.ReactNode;
@@ -11704,7 +11719,7 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
         className={cn(windowMeasuresChromeActionClass, windowMeasuresChromeCornerLeftClass)}
         onClick={expanded ? onCollapseExpand : onExpand}
       />
-      <span data-slot="window-measures-title" className="text-tiny text-foreground flex min-w-0 flex-1 items-center truncate px-tiny font-medium">
+      <span data-slot="window-measures-title" className="text-tiny text-element group-hover:text-emphasized flex min-w-0 flex-1 items-center truncate px-tiny font-medium">
         Window Options
       </span>
       <ActionGroupItem
@@ -11914,7 +11929,7 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
   };
 
   const separatorControlClassName = cn(
-    "text-foreground inline-flex h-full aspect-square items-center justify-center shrink-0 p-single cursor-selectable overflow-hidden outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-none [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0",
+    "text-element inline-flex h-full aspect-square items-center justify-center shrink-0 p-single cursor-selectable overflow-hidden outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive rounded-none [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0",
     interactiveControlTransitionClass,
     hoverClass,
   );
@@ -11942,7 +11957,7 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
               const menuItem = (
                 <DropdownMenuPrimitive.Item
                   key={index}
-                  className="text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center p-single text-sm outline-none whitespace-nowrap"
+                  className="text-element hover:bg-hover-interactive-fill hover:text-emphasized focus:bg-hover-interactive-fill focus:text-emphasized relative flex items-center p-single text-sm outline-none whitespace-nowrap"
                   onClick={() => handleSelect(item.href)}
                   role="button"
                 >
@@ -16910,7 +16925,7 @@ function TableDraggableRow<T>({
     setDraggableRef(node);
     setDroppableRef(node);
   };
-  const baseRowClassName = `${borderNormalBottomClass} ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-base ring-2 ring-active" : "hover:bg-hover-base"}`;
+  const baseRowClassName = `${borderNormalBottomClass} ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : isOver ? "bg-hover-interactive-fill ring-2 ring-active" : "hover:bg-hover-interactive-fill"}`;
   const isDragging = activeId === rowId || isDraggingHook;
   return (
     <tr
@@ -17123,7 +17138,7 @@ const Table = <T,>({
                   );
                 }
 
-                const baseRowClassName = `${borderNormalBottomClass} ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-base"}`;
+                const baseRowClassName = `${borderNormalBottomClass} ${rowHeightClass} ${isSelected ? "bg-active-base text-active-foreground" : "hover:bg-hover-interactive-fill"}`;
                 const isDragging = activeId === rowId;
 
                 return (
@@ -17723,7 +17738,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
               <button
                 type="button"
                 data-vfs-expand
-                className="inline-flex size-small shrink-0 items-center justify-center rounded hover:bg-hover-base"
+                className="inline-flex size-small shrink-0 items-center justify-center rounded hover:bg-hover-interactive-fill"
                 aria-label={row.isExpanded ? "Collapse" : "Expand"}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -18688,7 +18703,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       data-stack-active={activeId === tab.id ? "true" : undefined}
       data-active={activeWindowId === tab.id ? "true" : undefined}
       className={cn(
-        "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-muted-foreground select-none hover:bg-hover-window hover:text-foreground",
+        "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-muted-foreground select-none hover:bg-hover-interactive-fill hover:text-emphasized",
         !perTabActiveChrome && "bg-window",
         perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
         perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
@@ -18726,7 +18741,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       <button
         type="button"
         data-slot="mode-dock-maximize"
-        className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-window"
+        className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-interactive-fill"
         onClick={() => dock?.toggleMaximize(stackPath)}
       >
         {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
@@ -18735,7 +18750,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         <button
           type="button"
           data-slot="mode-dock-close"
-          className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-window"
+          className="flex size-medium items-center justify-center border-0 bg-transparent hover:bg-hover-interactive-fill"
           onClick={() => dock?.closeWindow(activeId)}
         >
           <CloseIcon className="size-small" />
@@ -19649,7 +19664,8 @@ const Ui: React.FC<UiProps> = ({ apps, activeAppId, onActiveAppChange, navbar, f
             <ButtonGroupItem
               key={app.id}
               id={`ui.appNav.${app.id}`}
-              className={cn(activeAppId === app.id && "bg-active-base hover:bg-active-base/90 text-active-foreground")}
+              className={cn(activeAppId === app.id && "bg-hover-interactive-fill text-emphasized hover:bg-hover-interactive-fill hover:text-emphasized")}
+              data-state={activeAppId === app.id ? "on" : undefined}
               onClick={() => onActiveAppChange?.(app.id)}
               icon={app.icon ?? "layout-grid"}
               text={app.label}
@@ -19887,7 +19903,7 @@ if (import.meta.vitest) {
       expect(screen.getByText("Review Mode")).toBeTruthy();
     });
 
-    it("SidePanel marks the active tab with primary fill below the emphasized frame", () => {
+    it("SidePanel marks the active tab with hover fill and emphasized icon below the emphasized frame", () => {
       const StubIcon = (): null => null;
       const tabs: SidePanelTabConfig[] = [
         { id: "tab-a", icon: StubIcon, tree: { sections: [] } },
@@ -19895,8 +19911,8 @@ if (import.meta.vitest) {
       ];
       const { container } = render(<SidePanel position="left" visible tabs={tabs} activeTabId="tab-b" />);
       const activeButton = container.querySelector('[data-slot="side-panel-tab-button"][data-active="true"]');
-      expect(activeButton?.className).toContain("bg-active-base");
-      expect(activeButton?.className).toContain("text-active-foreground");
+      expect(activeButton?.className).toContain("bg-hover-interactive-fill");
+      expect(activeButton?.className).toContain("text-emphasized");
       expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });
@@ -21654,7 +21670,7 @@ if (treeVitest) {
 
     it("treeRowStateClasses uses hover tokens for highlight and active tokens for selection", () => {
       expect(treeRowStateClasses(false, false)).toBe("");
-      expect(treeRowStateClasses(false, true)).toContain("bg-hover-base");
+      expect(treeRowStateClasses(false, true)).toContain("bg-hover-interactive-fill");
       expect(treeRowStateClasses(true, true)).toContain("bg-active-base");
       expect(treeRowStateClasses(true, false)).toContain("bg-active-base");
       expect(treeRowStateClasses(false, false, true)).toContain("opacity-50");
@@ -21750,7 +21766,7 @@ if (treeVitest) {
       expect(markup).not.toContain("margin-left:13px");
       expect(markup).not.toContain("gap-[6px]");
       expect(markup).toContain('data-slot="tree-branch-elbow"');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:12px;left:7px;width:10px"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px -translate-y-1/2 bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150" style="top:12px;left:7px;width:10px"');
       expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
     });
 
@@ -21785,7 +21801,7 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-row"');
       expect(markup).toContain('data-tree-row-kind="property"');
       expect(markup).toContain('data-slot="property-row"');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:12px;left:7px;width:10px"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px -translate-y-1/2 bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150" style="top:12px;left:7px;width:10px"');
       expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
     });
 
@@ -22069,9 +22085,9 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-gutter-slot"');
       expect(markup).toContain('data-slot="tree-gutter-slot" class="absolute flex -translate-y-1/2 items-center justify-center"');
       expect(markup).toContain('style="top:50%;left:0px"');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:50%;left:7px;width:3px"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px -translate-y-1/2 bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150" style="top:50%;left:7px;width:3px"');
       expect(markup).toContain('data-slot="tree-branch-stem"');
-      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
       expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
       expect(markup).not.toContain('data-slot="tree-property-label" class="relative min-w-0" style="padding-left:');
       expect(markup).toContain('data-slot="tree-section-content"');
@@ -22696,6 +22712,35 @@ if (treeVitest) {
       expect(markup).not.toContain("data-missing-icon");
     });
 
+    it("renders centralized panel toggle group chrome", () => {
+      const markup = renderToStaticMarkup(
+        <PanelToggleGroup
+          items={[
+            { id: "ui.panelToggle.workbench", icon: "folder", pressed: true, onPressedChange: () => undefined },
+            { id: "ui.panelToggle.details", icon: "info", pressed: false, onPressedChange: () => undefined },
+          ]}
+        />,
+      );
+      expect(markup).toContain('data-slot="app-panel-toggle-group"');
+      expect(markup).toContain('id="ui.panelToggle.workbench"');
+      expect(markup).toContain('id="ui.panelToggle.details"');
+    });
+
+    it("exposes navbar fill helper for trailing chrome alignment", () => {
+      const markup = renderToStaticMarkup(<Navbar items={[navbarFillItem(), { key: "trailing", content: <span>Trailing</span> }]} />);
+      expect(markup).toContain("flex-1 min-w-0");
+      expect(markup).toContain("Trailing");
+    });
+
+    it("keeps emphasized label styling on pressed navbar toggles", () => {
+      const markup = renderToStaticMarkup(
+        <Toggle id="ui.panelToggle.display" pressed={true} onPressedChange={() => undefined} icon="layout-grid" text="Display" />,
+      );
+      expect(markup).toContain('data-state="on"');
+      expect(markup).toContain("data-[state=on]:bg-hover-interactive-fill");
+      expect(markup).toContain("data-[state=on]:text-emphasized");
+    });
+
     it("surfaces missing icons at runtime when control icon is absent", () => {
       const markup = renderToStaticMarkup(
         <ToggleGroup
@@ -22766,8 +22811,9 @@ if (treeVitest) {
           </ButtonGroup>
         </LevelProvider>,
       );
-      expect(markup).toContain("hover:bg-hover-window");
+      expect(markup).toContain("hover:bg-hover-interactive-fill");
       expect(markup).not.toContain("hover:bg-hover-base");
+      expect(markup).not.toContain("hover:bg-hover-window");
     });
 
     it("renders breadcrumb links and menu rows with hover feedback", () => {
@@ -22775,7 +22821,7 @@ if (treeVitest) {
         <Breadcrumb items={[{ content: "Home", onNavigate: () => undefined }, { content: "Project", onNavigate: () => undefined }]} />,
       );
       expect(breadcrumbMarkup).toContain('data-slot="breadcrumb-link"');
-      expect(breadcrumbMarkup).toContain("hover:bg-hover-base");
+      expect(breadcrumbMarkup).toContain("hover:bg-hover-interactive-fill");
       const commandMarkup = renderToStaticMarkup(
         <Command>
           <CommandList>
@@ -22783,7 +22829,7 @@ if (treeVitest) {
           </CommandList>
         </Command>,
       );
-      expect(commandMarkup).toContain("hover:bg-hover-temporary");
+      expect(commandMarkup).toContain("hover:bg-hover-interactive-fill");
     });
 
     it("renders select items with hover feedback", async () => {
@@ -22799,7 +22845,7 @@ if (treeVitest) {
         </Select>,
       );
       const item = document.querySelector('[data-slot="select-item"]');
-      expect(item?.className).toContain("hover:bg-hover-temporary");
+      expect(item?.className).toContain("hover:bg-hover-interactive-fill");
     });
 
     it("renders select menus with popover surface tokens", async () => {

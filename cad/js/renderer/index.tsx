@@ -2001,8 +2001,8 @@ function spatialSceneColorToHex(color: string): number {
 
 const cadChromePopoverClass = "border-border bg-popover text-popover-foreground shadow-md rounded-md border p-single";
 const cadChromeMenuButtonClass =
-  "flex w-full cursor-pointer items-center gap-single rounded-sm px-single py-half text-left text-xs text-foreground hover:bg-accent hover:text-accent-foreground";
-const cadChromePanelAsideClass = "border-border bg-panel text-foreground flex shrink-0 flex-col gap-single overflow-auto border-l p-double relative z-[2]";
+  "flex w-full cursor-pointer items-center gap-single rounded-sm px-single py-half text-left text-xs text-element hover:bg-hover-interactive-fill hover:text-emphasized";
+const cadChromePanelAsideClass = "border-border bg-panel text-element flex shrink-0 flex-col gap-single overflow-auto border-l p-double relative z-[2]";
 const cadChromeTagClass = "border-border inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs";
 const cadChromeTagOnClass = "bg-accent text-accent-foreground";
 const cadChromeTagOffClass = "bg-muted text-muted-foreground";
@@ -5675,7 +5675,7 @@ export function InteractionRepl({
 
   return (
     <div
-      className={cn("bg-background text-foreground flex min-h-0 w-full font-sans", fillHost ? "h-full flex-col" : "h-screen flex-row")}
+      className={cn("bg-background text-element flex min-h-0 w-full font-sans", fillHost ? "h-full flex-col" : "h-screen flex-row")}
       style={rootStyle}
     >
       <div className="relative min-h-0 min-w-0 flex-1">
@@ -5835,7 +5835,7 @@ export function InteractionRepl({
               v
             </Button>
             {completionSuffix ? (
-              <div aria-hidden className="text-foreground pointer-events-none col-start-1 row-start-1 overflow-hidden pr-[34px] pl-[9px] py-[8px] text-sm leading-normal whitespace-pre">
+              <div aria-hidden className="text-element pointer-events-none col-start-1 row-start-1 overflow-hidden pr-[34px] pl-[9px] py-[8px] text-sm leading-normal whitespace-pre">
                 <span className="text-transparent">{cmdLine}</span>
                 <span className="text-muted-foreground">{completionSuffix}</span>
               </div>
@@ -5846,7 +5846,7 @@ export function InteractionRepl({
                   interactionMatches.map((suggestion) => (
                     <button key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} type="button" className={cadChromeMenuButtonClass} onClick={() => runSuggestion(suggestion)}>
                       <div className="flex items-center gap-single">
-                        <span className="border-border bg-muted text-foreground inline-flex min-w-6 items-center justify-center rounded-full border px-half py-0 text-2xs font-bold uppercase">{suggestion.key}</span>
+                        <span className="border-border bg-muted text-element inline-flex min-w-6 items-center justify-center rounded-full border px-half py-0 text-2xs font-bold uppercase">{suggestion.key}</span>
                         <span>{suggestion.label}</span>
                       </div>
                       {suggestion.detail ? <div className="text-muted-foreground text-2xs">{suggestion.detail}</div> : null}
@@ -5882,7 +5882,7 @@ export function InteractionRepl({
                       setSelectionMenu(null);
                       setHoveredPickKey(null);
                     }}
-                    className={cn(cadFieldClass, "border-border bg-background text-foreground rounded-md border px-single py-half")}
+                    className={cn(cadFieldClass, "border-border bg-background text-element rounded-md border px-single py-half")}
                   >
                     {modelDefinitions.map((row) => (
                       <option key={row.id} value={row.id}>
@@ -5914,7 +5914,7 @@ export function InteractionRepl({
                         if (spec) onApplyTransformation?.(spec);
                         e.target.value = "";
                       }}
-                      className={cn(cadFieldClass, "border-border bg-background text-foreground rounded-md border px-single py-half")}
+                      className={cn(cadFieldClass, "border-border bg-background text-element rounded-md border px-single py-half")}
                     >
                       <option value="">Select incoming transformation…</option>
                       {transfersFrom.map((row) => (
@@ -5937,7 +5937,7 @@ export function InteractionRepl({
                         if (spec) onApplyTransformation?.(spec);
                         e.target.value = "";
                       }}
-                      className={cn(cadFieldClass, "border-border bg-background text-foreground rounded-md border px-single py-half")}
+                      className={cn(cadFieldClass, "border-border bg-background text-element rounded-md border px-single py-half")}
                     >
                       <option value="">Select outgoing transformation…</option>
                       {transfersTo.map((row) => (
@@ -6186,7 +6186,7 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
                 if (!e.target.value) clearField(defn);
                 else setField(defn, e.target.value);
               }}
-              className={cn(cadFieldClass, "border-border bg-background text-foreground rounded-md border px-single py-half")}
+                      className={cn(cadFieldClass, "border-border bg-background text-element rounded-md border px-single py-half")}
             >
               <option value="">—</option>
               {options.map((option) => (
@@ -6304,7 +6304,7 @@ export function ModelStatsPanel({ model, kernel, activeModelDefinitionId, select
                 {defn.outputs.map((output) => (
                   <Fragment key={`${defn.id}:model:${output.key}`}>
                     <span>{output.label}</span>
-                    <span className="text-foreground text-right tabular-nums">
+                    <span className="text-element text-right tabular-nums">
                       {formatStatOutputValue(values[defn.id]?.model?.[output.key] ?? 0, output.format)}
                       {output.unit ? ` ${output.unit}` : ""}
                     </span>
@@ -6322,7 +6322,7 @@ export function ModelStatsPanel({ model, kernel, activeModelDefinitionId, select
                 {defn.outputs.map((output) => (
                   <Fragment key={`${defn.id}:selection:${output.key}`}>
                     <span>{output.label}</span>
-                    <span className="text-foreground text-right tabular-nums">
+                    <span className="text-element text-right tabular-nums">
                       {formatStatOutputValue(values[defn.id]?.selection?.[output.key] ?? 0, output.format)}
                       {output.unit ? ` ${output.unit}` : ""}
                     </span>

@@ -87,17 +87,40 @@
 /* #region 🎃TreeHoverPath
 /* Tree hover path highlight: when a row is hovered, ancestor branch containers
  * receive [data-tree-hover-path="branch"] and ancestor/active rows receive
- * [data-tree-hover-path="row"]. Guide lines and elbows on the path are rendered
- * 1.5× thicker in a brighter/darker theme-aware tone. */
+ * [data-tree-hover-path="row"]. Guide lines and elbows on the path emphasize
+ * to match hovered row labels. */
 
-[data-tree-hover-path="branch"] > [data-slot="tree-guide"] [data-tree-guide-line] {
+[data-tree-hover-path="branch"] > [data-slot="tree-guide"] [data-tree-guide-line],
+:is(
+    [data-slot="tree-section-content"],
+    [data-slot="tree-item-content"],
+    [data-slot="tree-property-content"],
+    [data-slot="control-tree-folder-content"],
+    [data-slot="window-measure-tree-content"]
+  ):has(
+    :is(
+        [data-slot="tree-item-row"],
+        [data-slot="tree-section-row"],
+        [data-slot="tree-property-item"],
+        [data-slot="control-tree-row"]
+      ):hover
+  )
+  > [data-slot="tree-guide"]
+  [data-tree-guide-line] {
   width: 1.5px !important;
-  background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
+  background-color: var(--border-emphasized-color) !important;
+}
+
+[data-tree-hover-path="row"] :is([data-slot="tree-branch-elbow"], [data-slot="tree-branch-stem"]) {
+  background-color: var(--border-emphasized-color) !important;
 }
 
 [data-tree-hover-path="row"] [data-slot="tree-branch-elbow"] {
   height: 1.5px !important;
-  background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
+}
+
+[data-tree-hover-path="row"] [data-slot="tree-branch-stem"] {
+  width: 1.5px !important;
 }
 /* #endregion 🎃TreeHoverPath */
 

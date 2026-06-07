@@ -14,8 +14,14 @@ import {
 	buildPuzzle3dWindowBody,
 	createDefaultLayout,
 	enforcePlaygroundWindowEngagementInput,
+	isPlaygroundNoFixtureId,
+	PLAYGROUND_NO_FIXTURE_ID,
 	registerWindowBody,
+	type AppTools,
 	type CommandDescriptor,
+	type PlaygroundFixtureCatalog,
+	type PlaygroundFixtureHost,
+	type ToolItem,
 	type UiNode,
 	type UiTreeItemNode,
 	type UiTreeSectionNode,
@@ -67,6 +73,39 @@ export const PROCEDURAL_PLAY_LAYOUT = createDefaultLayout(
 );
 export const PROCEDURAL_PLAY_KINDS_TAB_ID = "procedural-play-kinds";
 export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
+export const PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID = "procedural-default";
+
+export const PROCEDURAL_PLAY_EMPTY_FIXTURE: FlowFixtureV1 = {
+	schema: "flow.fixture/v1",
+	camera: { x: 0, y: 0, zoom: 1 },
+	widgets: [],
+	synapses: [],
+};
+
+export const PROCEDURAL_PLAY_FIXTURE_OPTIONS = [{ id: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID, label: "Sketch extrude" }] as const;
+
+const PROCEDURAL_PLAY_STORE_KEY = "procedural.fixture/v1";
+
+/** @emoji 💾 Local persistence for procedural flow fixtures. */
+export interface ProceduralPlayFixtureStore {
+	load(): string | null;
+	save(fixtureJson: string): void;
+	clear(): void;
+}
+
+export function createProceduralPlayFixtureStore(storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> = globalThis.localStorage): ProceduralPlayFixtureStore {
+	return {
+		load(): string | null {
+			return storage.getItem(PROCEDURAL_PLAY_STORE_KEY);
+		},
+		save(fixtureJson: string): void {
+			storage.setItem(PROCEDURAL_PLAY_STORE_KEY, fixtureJson);
+		},
+		clear(): void {
+			storage.removeItem(PROCEDURAL_PLAY_STORE_KEY);
+		},
+	};
+}
 
 export type ProceduralLayoutOrientation = "leftRight" | "topBottom";
 export type ProceduralPlaySelectionMode = SelectionMergeMode;
@@ -162,10 +201,217 @@ export function buildProceduralPlayKindsTree(sections: readonly CatalogueSection
 	return { type: "tree", sections: treeSections };
 }
 
+/** @emoji 🧰 Snapshot read by {@link buildProceduralPlayToolbarTools}. */
+export interface ProceduralPlayToolbarState {
+	readonly selectionMethod: ProceduralPlaySelectionMethod;
+	readonly selectionMode: ProceduralPlaySelectionMode;
+	readonly showMode: ProceduralPreviewShowMode;
+	readonly selectionCount: number;
+	readonly hasStoredFixture: boolean;
+}
+
+/** @emoji 🔗 Host bridge for toolbar commands that need React (file picker, download). */
+export interface ProceduralPlayHostBridge {
+	getToolbarState(): ProceduralPlayToolbarState;
+	runHostCommand(command: string, args?: unknown): void;
+}
+
+/** @emoji 🧰 Playground {@link AppTools} for procedural play (selection, save, view, actions). */
+export function buildProceduralPlayToolbarTools(state: ProceduralPlayToolbarState, controllerId: string): AppTools {
+	const selectionTools: ToolItem[] = [
+		{
+			id: "procedural.select.rectangle",
+			kind: "toggle",
+			iconId: "square",
+			text: "Rectangle",
+			order: 0,
+			pressed: state.selectionMethod === "rectangle",
+			controllerId,
+			command: "setSelectionMethod",
+			args: { method: "rectangle" },
+		},
+		{
+			id: "procedural.select.lasso",
+			kind: "toggle",
+			iconId: "lasso",
+			text: "Lasso",
+			order: 1,
+			pressed: state.selectionMethod === "lasso",
+			controllerId,
+			command: "setSelectionMethod",
+			args: { method: "lasso" },
+		},
+		{
+			id: "procedural.select.mode.default",
+			kind: "toggle",
+			iconId: "mouse-pointer-2",
+			text: "Default",
+			order: 2,
+			pressed: state.selectionMode === "default",
+			controllerId,
+			command: "setSelectionMode",
+			args: { mode: "default" },
+		},
+		{
+			id: "procedural.select.mode.additive",
+			kind: "toggle",
+			iconId: "plus",
+			text: "Add",
+			order: 3,
+			pressed: state.selectionMode === "additive",
+			controllerId,
+			command: "setSelectionMode",
+			args: { mode: "additive" },
+		},
+		{
+			id: "procedural.select.mode.subtractive",
+			kind: "toggle",
+			iconId: "minus",
+			text: "Subtract",
+			order: 4,
+			pressed: state.selectionMode === "subtractive",
+			controllerId,
+			command: "setSelectionMode",
+			args: { mode: "subtractive" },
+		},
+		{
+			id: "procedural.select.mode.invertive",
+			kind: "toggle",
+			iconId: "arrow-right-left",
+			text: "Invert",
+			order: 5,
+			pressed: state.selectionMode === "invertive",
+			controllerId,
+			command: "setSelectionMode",
+			args: { mode: "invertive" },
+		},
+		{
+			id: "procedural.selection.clear",
+			kind: "button",
+			iconId: "x",
+			label: "Clear",
+			order: 6,
+			disabled: state.selectionCount === 0,
+			controllerId,
+			command: "clearSelection",
+		},
+	];
+	const saveTools: ToolItem[] = [
+		{
+			id: "procedural.save.stored",
+			kind: "button",
+			iconId: "hard-drive",
+			label: "Store",
+			order: 0,
+			controllerId,
+			command: "saveStored",
+		},
+		{
+			id: "procedural.save.download",
+			kind: "button",
+			iconId: "save",
+			label: "Download",
+			order: 1,
+			controllerId,
+			command: "saveDownload",
+		},
+		{
+			id: "procedural.save.load",
+			kind: "button",
+			iconId: "folder-open",
+			label: "Load",
+			order: 2,
+			controllerId,
+			command: "loadRequest",
+		},
+		{
+			id: "procedural.save.loadStored",
+			kind: "button",
+			iconId: "rotate-ccw",
+			label: "Restore",
+			order: 3,
+			disabled: !state.hasStoredFixture,
+			controllerId,
+			command: "loadStored",
+		},
+		{
+			id: "procedural.save.reset",
+			kind: "button",
+			iconId: "refresh-cw",
+			label: "Reset",
+			order: 4,
+			controllerId,
+			command: "resetFixture",
+		},
+	];
+	return {
+		selection: selectionTools,
+		save: saveTools,
+		view: [
+			{
+				id: "procedural.view.everything",
+				kind: "toggle",
+				iconId: "layers",
+				text: "Everything",
+				order: 0,
+				pressed: state.showMode === "everything",
+				controllerId,
+				command: "setShowMode",
+				args: { id: "everything" },
+			},
+			{
+				id: "procedural.view.selected",
+				kind: "toggle",
+				iconId: "eye",
+				text: "Selected",
+				order: 1,
+				pressed: state.showMode === "selected",
+				controllerId,
+				command: "setShowMode",
+				args: { id: "selected" },
+			},
+		],
+		actions: [
+			{
+				id: "procedural.action.reorganize",
+				kind: "button",
+				iconId: "layout-grid",
+				label: "Reorganize",
+				order: 0,
+				controllerId,
+				command: "reorganize",
+			},
+			{
+				id: "procedural.action.delete",
+				kind: "button",
+				iconId: "trash-2",
+				label: "Delete",
+				order: 1,
+				disabled: state.selectionCount === 0,
+				controllerId,
+				command: "deleteSelection",
+			},
+		],
+	};
+}
+
+function proceduralFixtureJsonForId(fixtureId: string): string {
+	if (isPlaygroundNoFixtureId(fixtureId)) {
+		return proceduralFixtureToJson(PROCEDURAL_PLAY_EMPTY_FIXTURE);
+	}
+	if (fixtureId === PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID) {
+		return PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON;
+	}
+	return PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON;
+}
+
 /** @emoji 🎛 Procedural play shell controller. */
-export class ProceduralPlayController extends Controller {
+export class ProceduralPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Procedural", undefined);
+	private activeFixtureId = PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID;
 	private fixtureJson = PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON;
+	private readonly fixtureStore: ProceduralPlayFixtureStore;
+	private hostBridge: ProceduralPlayHostBridge | null = null;
 	private previewText = "—";
 	private catalogueSections: CatalogueSection[] = [];
 	private catalogueRevision = 0;
@@ -191,9 +437,71 @@ export class ProceduralPlayController extends Controller {
 	private lodModeByInstance: Record<string, DagLodModeKind> = {};
 	private effectiveLod: DagDrawLodKind = "normal";
 
-	constructor(commandBus: CommandBus, hostNotify: () => void) {
+	constructor(commandBus: CommandBus, hostNotify: () => void, fixtureStore: ProceduralPlayFixtureStore = createProceduralPlayFixtureStore()) {
 		super(PROCEDURAL_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		this.fixtureStore = fixtureStore;
+		const stored = this.fixtureStore.load();
+		if (stored?.includes("flow.fixture/v1")) {
+			this.fixtureJson = stored;
+		}
 		this.rebuildShellMode();
+	}
+
+	hasStoredFixture(): boolean {
+		return this.fixtureStore.load() != null;
+	}
+
+	getFixtureCatalog(): PlaygroundFixtureCatalog {
+		return { activeFixtureId: this.activeFixtureId, options: [...PROCEDURAL_PLAY_FIXTURE_OPTIONS] };
+	}
+
+	/** @emoji 🔗 Attaches the React host bridge for toolbar file IO. */
+	setHostBridge(bridge: ProceduralPlayHostBridge | null): void {
+		this.hostBridge = bridge;
+		this.rebuildToolbarTools();
+	}
+
+	private toolbarState(): ProceduralPlayToolbarState {
+		return (
+			this.hostBridge?.getToolbarState() ?? {
+				selectionMethod: this.selectionMethod,
+				selectionMode: this.selectionMode,
+				showMode: this.showMode,
+				selectionCount: this.selectedNodeIds.length,
+				hasStoredFixture: this.hasStoredFixture(),
+			}
+		);
+	}
+
+	/** @emoji 🔄 Rebuilds {@link ModeRuntime.tools} from the latest toolbar snapshot. */
+	rebuildToolbarTools(): void {
+		if (!this.hostBridge) {
+			this.mainMode.tools = undefined;
+			return;
+		}
+		this.mainMode.tools = buildProceduralPlayToolbarTools(this.toolbarState(), this.id);
+	}
+
+	private applyFixtureJson(json: string): void {
+		if (!json.includes("flow.fixture/v1") || json === this.fixtureJson) return;
+		this.fixtureJson = json;
+		this.selectedNodeIds = [];
+		this.preselectNodeIds = [];
+		this.preselectRemovedNodeIds = [];
+		this.hoveredNodeId = null;
+		this.previewOffNodeIds = [];
+		this.geometryHandles = [];
+		this.interactionRevision += 1;
+		this.notifySnapshot();
+		this.rebuildShellMode();
+		this.emit();
+	}
+
+	private loadFixtureById(fixtureId: string): void {
+		const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+		if (nextId === this.activeFixtureId && nextId !== PLAYGROUND_NO_FIXTURE_ID) return;
+		this.activeFixtureId = nextId;
+		this.applyFixtureJson(proceduralFixtureJsonForId(nextId));
 	}
 
 	getFixtureJson(): string {
@@ -308,27 +616,6 @@ export class ProceduralPlayController extends Controller {
 		this.emit();
 	}
 
-	private selectionMeasures() {
-		return [
-			{
-				kind: "toggle" as const,
-				id: "procedural-flow-marquee-rectangle",
-				iconId: "square",
-				text: "Rectangle",
-				pressed: this.selectionMethod === "rectangle",
-				onChange: proceduralPlayCmd("setSelectionMethod", { method: "rectangle" }),
-			},
-			{
-				kind: "toggle" as const,
-				id: "procedural-flow-marquee-lasso",
-				iconId: "lasso",
-				text: "Lasso",
-				pressed: this.selectionMethod === "lasso",
-				onChange: proceduralPlayCmd("setSelectionMethod", { method: "lasso" }),
-			},
-		];
-	}
-
 	private flowWindowEngagement(): WindowEngagement {
 		return {
 			sessionActive: false,
@@ -339,7 +626,6 @@ export class ProceduralPlayController extends Controller {
 				onChange: proceduralPlayCmd("engagementInput"),
 				onSubmit: proceduralPlayCmd("engagementSubmit"),
 			},
-			measures: this.selectionMeasures(),
 			possibleEngagements: [
 				{ id: "procedural.tool.reorganize", label: "Reorganize", command: proceduralPlayCmd("reorganize") },
 				{ id: "procedural.layout.leftRight", label: "Left to Right", command: proceduralPlayCmd("setOrientation", { orientation: "leftRight" }) },
@@ -381,18 +667,6 @@ export class ProceduralPlayController extends Controller {
 				onChange: proceduralPlayCmd("previewEngagementInput"),
 				onSubmit: proceduralPlayCmd("previewEngagementSubmit"),
 			},
-			measures: this.selectionMeasures(),
-			control: {
-				kind: "ring",
-				id: "procedural-preview-show",
-				label: "Show",
-				value: this.showMode,
-				options: [
-					{ id: "everything", label: "Everything" },
-					{ id: "selected", label: "Selected" },
-				],
-				onSelect: proceduralPlayCmd("setShowMode"),
-			},
 			status: [{ id: "procedural-preview-geometry-count", text: `${this.geometryHandles.length} geometries` }],
 		};
 	}
@@ -405,6 +679,7 @@ export class ProceduralPlayController extends Controller {
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Procedural play window "${windowKind.id}"`);
 		}
+		this.rebuildToolbarTools();
 	}
 
 	override run(command: string, args?: unknown): void {
@@ -449,10 +724,34 @@ export class ProceduralPlayController extends Controller {
 		}
 		if (command === "setFixtureJson") {
 			const json = (args as { json?: string }).json;
-			if (typeof json === "string" && json !== this.fixtureJson) {
-				this.fixtureJson = json;
-				this.emit();
+			if (typeof json === "string") {
+				this.applyFixtureJson(json);
 			}
+			return;
+		}
+		if (command === "setActiveFixture") {
+			const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
+			this.loadFixtureById(fixtureId);
+			return;
+		}
+		if (command === "saveStored") {
+			this.fixtureStore.save(this.fixtureJson);
+			this.rebuildShellMode();
+			this.emit();
+			return;
+		}
+		if (command === "saveDownload" || command === "loadRequest") {
+			this.hostBridge?.runHostCommand(command, args);
+			return;
+		}
+		if (command === "loadStored") {
+			const json = this.fixtureStore.load();
+			if (json) this.applyFixtureJson(json);
+			return;
+		}
+		if (command === "resetFixture") {
+			this.fixtureStore.clear();
+			this.loadFixtureById(PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID);
 			return;
 		}
 		if (command === "setLodMode") {
@@ -509,6 +808,7 @@ export class ProceduralPlayController extends Controller {
 			this.preselectRemovedNodeIds = [];
 			this.interactionRevision += 1;
 			this.notifySnapshot();
+			this.rebuildToolbarTools();
 			this.emit();
 			return;
 		}
@@ -551,13 +851,14 @@ export class ProceduralPlayController extends Controller {
 			this.emit();
 			return;
 		}
-		if (command === "deleteSelection") {
+		if (command === "clearSelection" || command === "deleteSelection") {
 			if (!this.selectedNodeIds.length) return;
 			this.selectedNodeIds = [];
 			this.preselectNodeIds = [];
 			this.preselectRemovedNodeIds = [];
 			this.interactionRevision += 1;
 			this.notifySnapshot();
+			this.rebuildToolbarTools();
 			this.emit();
 			return;
 		}

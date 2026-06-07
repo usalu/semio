@@ -166,6 +166,7 @@
     --border-emphasized-color: var(--foreground);
     --border-element-color: var(--border-normal-color);
     --border-color: var(--border-normal-color);
+    --hover-interactive-fill: var(--border-normal-color);
     --plaster: var(--color-gray);
     --plaster-edge: var(--color-foreground);
     --info-bg: var(--color-light-8-9);
@@ -623,13 +624,13 @@
 
 /* Unify active-state visuals across all toolbar interactive elements. */
 [data-slot="toolbar-zone"] [data-slot="toggle-group-item"][data-state="on"] {
-  background-color: var(--active-base);
-  color: var(--active-foreground);
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
 }
 
 [data-slot="toolbar-zone"] [data-slot="toggle-group-item"][data-state="on"]:hover {
-  background-color: color-mix(in oklab, var(--active-base) 90%, black);
-  color: var(--active-foreground);
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
 }
 
 .dark {
@@ -808,6 +809,7 @@
   --color-border: var(--border-normal-color);
   --color-element: var(--border-element-color);
   --color-emphasized: var(--border-emphasized-color);
+  --color-hover-interactive-fill: var(--hover-interactive-fill);
 }
 
 @utility border-normal {
@@ -851,31 +853,82 @@
 }
 
 /* Shell chrome: reinforce level-aware hover on navbar, footer, and toolbar controls. */
+[data-slot="navbar"] [data-level]:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level]:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level]:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="breadcrumb-link"],
+[data-slot="navbar"] [data-slot="breadcrumb-separator-control"],
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"], [data-slot="action"]) {
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+[data-slot="navbar"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),
+[data-slot="navbar"] [data-slot="button-group-item"][data-state="on"]:not(:disabled),
+[data-slot="navbar"] [data-slot="action-group-item"][data-state="on"]:not(:disabled),
+[data-slot="footer"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),
+[data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:not(:disabled),
+[data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
 [data-slot="navbar"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="footer"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="toolbar-zone"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-base);
+[data-slot="toolbar-zone"] [data-level="base"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="canvas"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="canvas"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="canvas"]:hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
 }
 
 [data-slot="navbar"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="footer"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="toolbar-zone"] [data-level="window"]:hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-window);
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
 }
 
 [data-slot="navbar"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="footer"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="toolbar-zone"] [data-level="panel"]:hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-panel);
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="overlay"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="overlay"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="overlay"]:hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="temporary"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="temporary"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="toolbar-zone"] [data-level="temporary"]:hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
 }
 
 [data-slot="navbar"] [data-slot="breadcrumb-link"]:hover,
 [data-slot="navbar"] [data-slot="breadcrumb-separator-control"]:hover {
-  background-color: var(--hover-base);
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"], [data-slot="action"]):hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-base);
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
 }
 
 [data-slot="toolbar-zone"],

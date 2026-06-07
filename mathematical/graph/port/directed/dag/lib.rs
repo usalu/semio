@@ -865,6 +865,18 @@ pub(crate) fn dag_node_body_stroke(theme: &VelloThemePalette, dimmed: bool, sele
     }
 }
 
+pub(crate) fn dag_node_label_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, hovered: bool) -> cavas::vello::peniko::Color {
+    if dimmed {
+        vello_color_with_alpha(theme.label_fill, 110)
+    } else if selected {
+        theme.label_fill
+    } else if hovered {
+        theme.label_fill_hovered
+    } else {
+        theme.label_fill
+    }
+}
+
 fn dag_node_stroke_screen_px(dimmed: bool, selected: bool, hovered: bool) -> f64 {
     if dimmed {
         1.0
@@ -2057,7 +2069,7 @@ impl DagHost {
         let aff = camera_content_affine(&cam, &viewport);
         let accent = theme.wire_stroke_highlighted;
         let ghost_fill = vello_color_with_alpha(accent, 48);
-        let label_fill = theme.label_fill;
+        let label_fill = dag_node_label_fill(theme, false, false, true);
         let label_halo = theme.label_halo;
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
@@ -2115,7 +2127,6 @@ impl DagHost {
             scene.stroke(&Stroke::new(edge_stroke), aff, theme.edge_stroke_selected, None, &preview);
         }
         let node_stroke = theme.node_stroke;
-        let label_fill = theme.label_fill;
         let label_halo = theme.label_halo;
         let accent = theme.wire_stroke_highlighted;
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
@@ -2130,6 +2141,7 @@ impl DagHost {
             let is_hovered = engine_nid.is_some_and(|nid| self.is_node_hovered(nid));
             let fill = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_hovered);
             let stroke = dag_node_body_stroke(theme, is_dimmed, is_selected, is_hovered);
+            let label_fill = dag_node_label_fill(theme, is_dimmed, is_selected, is_hovered);
             let stroke_screen_px = dag_node_stroke_screen_px(is_dimmed, is_selected, is_hovered);
             if let Some(fill) = fill {
                 scene.fill(Fill::NonZero, aff, fill, None, &rect);
@@ -2170,7 +2182,7 @@ impl DagHost {
                 }
                 DagNodeKind::Slider { min, max, value, .. } => {
                     if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, node_stroke);
+                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
                     if let Some(label) = label_text {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
@@ -2197,7 +2209,7 @@ impl DagHost {
                 }
                 DagNodeKind::Select { options, selected, .. } => {
                     if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, node_stroke);
+                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
                     if let Some(label) = label_text {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
@@ -2220,7 +2232,7 @@ impl DagHost {
                 }
                 DagNodeKind::Screen { media, .. } => {
                     if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, node_stroke);
+                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
                     if let Some(label) = label_text {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
@@ -2248,7 +2260,7 @@ impl DagHost {
                 }
                 DagNodeKind::Note { text, .. } => {
                     if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, node_stroke);
+                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
                     if let Some(label) = label_text {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
@@ -2269,7 +2281,7 @@ impl DagHost {
                 }
                 DagNodeKind::Preview { text, .. } => {
                     if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, node_stroke);
+                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
                     if let Some(label) = label_text {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
@@ -2290,7 +2302,7 @@ impl DagHost {
                 }
                 DagNodeKind::Action { label, .. } => {
                     if lod.shows_controls() {
-                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, node_stroke);
+                        Self::paint_io_widget_channel_borders(scene, aff, node, layout_px, chrome_stroke, stroke);
                     }
                     if let Some(label) = label_text {
                         Self::paint_io_widget_name(scene, &cam, &viewport, node, lod, label, paint_px, label_fill, label_halo);
@@ -3149,6 +3161,14 @@ mod tests {
         assert_eq!(
             dag_node_body_stroke(&theme, false, false, true).to_rgba8(),
             theme.node_stroke_hovered.to_rgba8()
+        );
+        assert_eq!(
+            dag_node_label_fill(&theme, false, false, true).to_rgba8(),
+            theme.label_fill_hovered.to_rgba8()
+        );
+        assert_eq!(
+            dag_node_label_fill(&theme, false, false, false).to_rgba8(),
+            theme.label_fill.to_rgba8()
         );
     }
 

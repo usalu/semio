@@ -28,6 +28,10 @@ import {
   type EngagementSpec,
   type FooterItem,
   type NavbarItem,
+  navbarFillClassName,
+  navbarFillItem,
+  PanelToggleGroup,
+  type PanelToggleItem,
   type SidePanelTabConfig,
   type SidePanelTabDefinition,
   type TreeDataItem,
@@ -1374,6 +1378,60 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     );
   }, [controllerId, fixtureCatalog, shell.bus, slotNavbarCenter]);
 
+  const playgroundPanelToggleItems = reactHostPort.useMemo<PanelToggleItem[]>(() => {
+    const items: PanelToggleItem[] = [];
+    if (displayTabs.length > 0) {
+      items.push({
+        id: "ui.panelToggle.display",
+        icon: displayIcon,
+        pressed: panelVisibility.leftSidePanel && activeLeftPanelKind === "display",
+        onPressedChange: (pressed) => {
+          if (pressed) setActiveLeftPanelKind("display");
+          setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed || (activeLeftPanelKind === "workbench" && p.leftSidePanel) }));
+        },
+      });
+    }
+    items.push({
+      id: "ui.panelToggle.workbench",
+      icon: shell.workbenchIcon,
+      pressed: panelVisibility.leftSidePanel && activeLeftPanelKind === "workbench",
+      onPressedChange: (pressed) => {
+        if (pressed) setActiveLeftPanelKind("workbench");
+        setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed || (activeLeftPanelKind === "display" && p.leftSidePanel) }));
+      },
+    });
+    items.push({
+      id: "ui.panelToggle.details",
+      icon: shell.detailsIcon,
+      pressed: panelVisibility.rightSidePanel && activeRightPanelKind === "details",
+      onPressedChange: (pressed) => {
+        if (pressed) setActiveRightPanelKind("details");
+        setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed || (activeRightPanelKind === "settings" && p.rightSidePanel) }));
+      },
+    });
+    items.push({
+      id: "ui.panelToggle.settings",
+      icon: settingsIcon,
+      pressed: panelVisibility.rightSidePanel && activeRightPanelKind === "settings",
+      onPressedChange: (pressed) => {
+        if (pressed) setActiveRightPanelKind("settings");
+        setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed || (activeRightPanelKind === "details" && p.rightSidePanel) }));
+      },
+    });
+    return items;
+  }, [
+    activeLeftPanelKind,
+    activeRightPanelKind,
+    displayIcon,
+    displayTabs.length,
+    panelVisibility.leftSidePanel,
+    panelVisibility.rightSidePanel,
+    setPanelVisibility,
+    settingsIcon,
+    shell.detailsIcon,
+    shell.workbenchIcon,
+  ]);
+
   const navbarItems = reactHostPort.useMemo<NavbarItem[]>(() => {
     if (!shell.activeApp) {
       return [];
@@ -1388,74 +1446,18 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     if (navbarFixtureSelect) {
       items.push({
         key: "fixture",
-        className: "flex-1 min-w-0 flex justify-center",
+        className: cn(navbarFillClassName, "flex justify-center"),
         content: navbarFixtureSelect,
       });
+    } else {
+      items.push(navbarFillItem());
     }
     items.push({
-        key: "panelToggles",
-        content: (
-          <div className="flex min-w-0 items-stretch border border-normal h-medium">
-            {displayTabs.length > 0 ? (
-              <Toggle
-                id="ui.panelToggle.display"
-                pressed={panelVisibility.leftSidePanel && activeLeftPanelKind === "display"}
-                onPressedChange={(pressed) => {
-                  if (pressed) setActiveLeftPanelKind("display");
-                  setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed || (activeLeftPanelKind === "workbench" && p.leftSidePanel) }));
-                }}
-                icon={displayIcon}
-                className="rounded-none border-0 shrink-0"
-              />
-            ) : null}
-            <Toggle
-              id="ui.panelToggle.workbench"
-              pressed={panelVisibility.leftSidePanel && activeLeftPanelKind === "workbench"}
-              onPressedChange={(pressed) => {
-                if (pressed) setActiveLeftPanelKind("workbench");
-                setPanelVisibility((p) => ({ ...p, leftSidePanel: pressed || (activeLeftPanelKind === "display" && p.leftSidePanel) }));
-              }}
-              icon={shell.workbenchIcon}
-              className={cn("rounded-none border-0 shrink-0", displayTabs.length > 0 && "border-l")}
-            />
-            <Toggle
-              id="ui.panelToggle.details"
-              pressed={panelVisibility.rightSidePanel && activeRightPanelKind === "details"}
-              onPressedChange={(pressed) => {
-                if (pressed) setActiveRightPanelKind("details");
-                setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed || (activeRightPanelKind === "settings" && p.rightSidePanel) }));
-              }}
-              icon={shell.detailsIcon}
-              className="rounded-none border-0 border-l shrink-0"
-            />
-            <Toggle
-              id="ui.panelToggle.settings"
-              pressed={panelVisibility.rightSidePanel && activeRightPanelKind === "settings"}
-              onPressedChange={(pressed) => {
-                if (pressed) setActiveRightPanelKind("settings");
-                setPanelVisibility((p) => ({ ...p, rightSidePanel: pressed || (activeRightPanelKind === "details" && p.rightSidePanel) }));
-              }}
-              icon={settingsIcon}
-              className="rounded-none border-0 border-l shrink-0"
-            />
-          </div>
-        ),
-      });
+      key: "panelToggles",
+      content: <PanelToggleGroup items={playgroundPanelToggleItems} />,
+    });
     return items;
-  }, [
-    activeLeftPanelKind,
-    activeRightPanelKind,
-    displayIcon,
-    displayTabs.length,
-    navbarFixtureSelect,
-    panelVisibility.leftSidePanel,
-    panelVisibility.rightSidePanel,
-    setPanelVisibility,
-    settingsIcon,
-    shell.activeApp,
-    shell.detailsIcon,
-    shell.workbenchIcon,
-  ]);
+  }, [navbarFixtureSelect, playgroundPanelToggleItems, shell.activeApp]);
 
   if (!shell.activeAppBase || !shell.activeApp || !shell.playgroundContextValue) return null;
 
@@ -1527,7 +1529,7 @@ export function PlaygroundShell({ children }: { readonly children: React.ReactNo
 
 /** @emoji 📦 Standard side-panel body; playgrounds must not use inline styles on panel chrome. */
 export function PlaygroundPanelBody({ children }: { readonly children: React.ReactNode }): React.ReactElement {
-  return <div className="text-foreground flex min-h-0 min-w-0 flex-1 flex-col gap-single overflow-hidden p-single text-xs">{children}</div>;
+  return <div className="text-element flex min-h-0 min-w-0 flex-1 flex-col gap-single overflow-hidden p-single text-xs">{children}</div>;
 }
 
 /** @emoji 🌲 Tree section whose sole row hosts arbitrary React as an inline control (inspector batches). */
@@ -7203,9 +7205,30 @@ if (import.meta.vitest) {
       expect(runtime.chromeGeneration).toBeGreaterThan(0);
     });
 
+    it("keeps panel toggles right-aligned when no navbar center slot is present", async () => {
+      const { renderToStaticMarkup } = await import("react-dom/server");
+      const { AppRuntime, Controller, createTabStackLayout, registerWindowBody, buildPanelWindowBody } = await import("@framework/playground/core");
+      const runtime = new Platform({ initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true } });
+      class TestController extends Controller {
+        constructor() {
+          super("playground-navbar-align-test", runtime.commandBus, () => runtime.notify());
+        }
+        run(): void {}
+      }
+      const app = new AppRuntime("playground-navbar-align-test", "Navbar Align Test", undefined, new TestController(), createTabStackLayout(["main"], ["Main"]), [
+        new WindowKindRuntime("main", "Main", "playground.navbar.align.main"),
+      ]);
+      registerWindowBody("playground.navbar.align.main", () => buildPanelWindowBody("playground.navbar.align", "playground-navbar-align-test"));
+      runtime.addApp(app);
+      const markup = renderToStaticMarkup(<PlaygroundView runtime={runtime} defaultAppId="playground-navbar-align-test" />);
+      expect(markup).toContain('data-slot="app-panel-toggle-group"');
+      expect(markup).toContain("flex-1 min-w-0");
+      expect(markup.indexOf("flex-1 min-w-0")).toBeLessThan(markup.indexOf('data-slot="app-panel-toggle-group"'));
+    });
+
     it("renders display panel toggle with layout-grid icon when app has window kinds", async () => {
       const { renderToStaticMarkup } = await import("react-dom/server");
-      const { AppRuntime, Controller, createTabStackLayout } = await import("@framework/playground/core");
+      const { AppRuntime, Controller, createTabStackLayout, registerWindowBody, registerSidePanelBody, buildPanelWindowBody } = await import("@framework/playground/core");
       const runtime = new Platform({ initialPanelVisibility: { leftSidePanel: true, rightSidePanel: true } });
       class TestController extends Controller {
         constructor() {
@@ -7220,9 +7243,9 @@ if (import.meta.vitest) {
         { id: "workbench", iconId: "folder", panel: "workbench", order: 0, bodyKey: "playground.view.test.workbench" },
         { id: "details", iconId: "info", panel: "details", order: 0, bodyKey: "playground.view.test.details" },
       ];
-      registerWindowBody("playground.view.test.main", () => <div>Main</div>);
-      registerSidePanelBody("playground.view.test.workbench", () => <div data-testid="playground-view-test.workbench" />);
-      registerSidePanelBody("playground.view.test.details", () => <div data-testid="playground-view-test.details" />);
+      registerWindowBody("playground.view.test.main", () => buildPanelWindowBody("playground.view.test", "playground-view-test"));
+      registerSidePanelBody("playground.view.test.workbench", () => ({ type: "tree", sections: [{ id: "workbench", items: [{ id: "item", label: "Workbench" }] }] }));
+      registerSidePanelBody("playground.view.test.details", () => ({ type: "tree", sections: [{ id: "details", items: [{ id: "item", label: "Details" }] }] }));
       runtime.addApp(app);
       const markup = renderToStaticMarkup(
         <PlaygroundView runtime={runtime} defaultAppId="playground-view-test" initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }} />,

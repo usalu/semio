@@ -1437,7 +1437,7 @@ export interface WorldOrbitProjectionSwitchProps {
 export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
   const shellClass = props.className ?? "pointer-events-auto absolute bottom-[4.75rem] right-3 z-10 flex overflow-hidden rounded-md border border-border text-[10px] font-medium shadow-sm";
   const buttonClass = (active: boolean) =>
-    `${active ? "bg-accent text-accent-foreground" : "bg-background/90 text-muted-foreground hover:text-foreground"} px-2 py-1 transition-colors`;
+    `${active ? "bg-accent text-accent-foreground" : "bg-background/90 text-muted-foreground hover:text-emphasized"} px-2 py-1 transition-colors`;
   return (
     <div className={shellClass} data-world-projection-switch>
       <button type="button" className={buttonClass(props.projection === "orthographic")} aria-pressed={props.projection === "orthographic"} onClick={() => props.onProjectionChange("orthographic")}>

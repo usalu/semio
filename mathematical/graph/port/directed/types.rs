@@ -305,6 +305,7 @@ pub struct VelloThemePalette {
     pub selection_preview_fill: Color,
     pub selection_preview_stroke: Color,
     pub label_fill: Color,
+    pub label_fill_hovered: Color,
     pub label_halo: Color,
 }
 
@@ -366,6 +367,7 @@ impl VelloThemePalette {
         Self::merge_color_field(&mut next.selection_preview_fill, &v, "selectionPreviewFill");
         Self::merge_color_field(&mut next.selection_preview_stroke, &v, "selectionPreviewStroke");
         Self::merge_color_field(&mut next.label_fill, &v, "labelFill");
+        Self::merge_color_field(&mut next.label_fill_hovered, &v, "labelFillHovered");
         Self::merge_color_field(&mut next.label_halo, &v, "labelHalo");
         *self = next;
         Ok(())
@@ -572,9 +574,9 @@ impl Default for VelloThemePalette {
             edge_stroke_selection_exit: Color::from_rgba8(80, 140, 110, 255),
             edge_stroke_disabled: Color::from_rgba8(160, 160, 170, 56),
             node_fill: Color::from_rgba8(235, 238, 245, 255),
-            node_stroke: Color::from_rgba8(40, 44, 52, 255),
-            node_fill_hovered: Color::from_rgba8(235, 238, 245, 255),
-            node_stroke_hovered: Color::from_rgba8(40, 44, 52, 255),
+            node_stroke: Color::from_rgba8(123, 130, 125, 255),
+            node_fill_hovered: Color::from_rgba8(123, 130, 125, 255),
+            node_stroke_hovered: Color::from_rgba8(0, 17, 23, 255),
             node_fill_selected: Color::from_rgba8(60, 120, 220, 89),
             node_stroke_selected: Color::from_rgba8(60, 120, 220, 255),
             node_fill_selection_exit: Color::from_rgba8(196, 228, 213, 255),
@@ -584,9 +586,9 @@ impl Default for VelloThemePalette {
             indirect_handle_fill: Color::from_rgba8(196, 228, 213, 255),
             indirect_handle_stroke: Color::from_rgba8(80, 140, 110, 255),
             handle_fill: Color::from_rgba8(248, 248, 250, 255),
-            handle_stroke: Color::from_rgba8(40, 44, 52, 255),
-            handle_fill_hovered: Color::from_rgba8(248, 248, 250, 255),
-            handle_stroke_hovered: Color::from_rgba8(40, 44, 52, 255),
+            handle_stroke: Color::from_rgba8(123, 130, 125, 255),
+            handle_fill_hovered: Color::from_rgba8(123, 130, 125, 255),
+            handle_stroke_hovered: Color::from_rgba8(0, 17, 23, 255),
             handle_fill_selected: Color::from_rgba8(60, 120, 220, 89),
             handle_stroke_selected: Color::from_rgba8(60, 120, 220, 255),
             handle_fill_selection_exit: Color::from_rgba8(196, 228, 213, 255),
@@ -600,8 +602,9 @@ impl Default for VelloThemePalette {
             wire_stroke_disabled: Color::from_rgba8(160, 160, 170, 56),
             selection_preview_fill: Color::from_rgba8(60, 120, 220, 40),
             selection_preview_stroke: Color::from_rgba8(60, 120, 220, 180),
-            label_fill: Color::from_rgba8(20, 20, 24, 255),
-            label_halo: Color::from_rgba8(248, 248, 250, 200),
+            label_fill: Color::from_rgba8(123, 130, 125, 255),
+            label_fill_hovered: Color::from_rgba8(0, 17, 23, 255),
+            label_halo: Color::from_rgba8(0, 0, 0, 0),
         }
     }
 }

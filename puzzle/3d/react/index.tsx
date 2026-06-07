@@ -9644,10 +9644,10 @@ export function MarqueeAttractionSource(): null {
 
 const brushMenuContentClassName = cn(
   glassMenuClass,
-  "w-auto min-w-[10rem] max-h-[min(24rem,70vh)] overflow-y-auto border p-single z-temporary text-foreground",
+  "w-auto min-w-[10rem] max-h-[min(24rem,70vh)] overflow-y-auto border p-single z-temporary text-element",
 );
 const brushMenuItemClassName =
-  "text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex w-full items-center gap-single p-single text-left text-sm outline-none whitespace-nowrap cursor-default select-none disabled:pointer-events-none disabled:opacity-50";
+  "text-element hover:bg-hover-interactive-fill hover:text-emphasized focus:bg-hover-interactive-fill focus:text-emphasized relative flex w-full items-center gap-single p-single text-left text-sm outline-none whitespace-nowrap cursor-default select-none disabled:pointer-events-none disabled:opacity-50";
 
 function Puzzle3dSelectionContextMenu() {
   const menu = reactHostPort.useSyncExternalStore(puzzle3dSelectionMenuStore.subscribe, puzzle3dSelectionMenuStore.getSnapshot, puzzle3dSelectionMenuStore.getSnapshot);

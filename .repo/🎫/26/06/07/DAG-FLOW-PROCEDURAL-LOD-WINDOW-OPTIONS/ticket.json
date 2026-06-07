@@ -3,7 +3,7 @@
   "emoji": "📶",
   "status": "closed",
   "description": "Add puzzle 2d style LOD window select options to dag, flow, and procedural play shells with wasm manual/automatic LOD support.",
-  "summary": "DAG flow labels now use dedicated theme labelFill/labelHalo tokens serialized from UI foreground and canvas instead of nodeStroke/rasterClear. VelloThemePalette gained label_fill and label_halo fields; paint_scene and ghost preview read them for all append_label text.",
+  "summary": "Fixed unreadable DAG node labels. Root cause: append_label used icon fg/bg remapping so light label fills mapped to canvas-colored halo and disappeared on the canvas. Labels now render with literal SVG paints. Theme tokens match navbar toggles: labelFill=border gray, labelFillHovered=foreground, transparent halo. Ghost preview uses hovered label color. DAG WASM rebuilt.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1560"
   },
@@ -13,6 +13,7 @@
     "⚪96278feb693c4648a8bc170c1ac1de7a",
     "⚪9460604098604deca4b0120b53215690",
     "⚪4738ef5bdb8e4c89b5a8b837337488f4",
-    "⚪2b675173373e4561a05029200a681c98"
+    "⚪2b675173373e4561a05029200a681c98",
+    "⚪7c718f78de1f4cc3a76dfaa4e7c4c759"
   ]
 }

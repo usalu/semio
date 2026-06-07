@@ -311,6 +311,70 @@ pub mod svg_icon_vello09 {
         }
     }
 
+    fn literal_paint(paint: &usvg::Paint, opacity: usvg::Opacity) -> Option<Color> {
+        let usvg::Paint::Color(c) = paint else {
+            return None;
+        };
+        Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8()))
+    }
+
+    fn stroke_path_literal(scene: &mut Scene, path: &usvg::Path, transform: Affine, local_path: &BezPath) {
+        if let Some(stroke) = path.stroke() {
+            if let Some(color) = literal_paint(stroke.paint(), stroke.opacity()) {
+                let conv = Stroke::new(f64::from(stroke.width().get()));
+                scene.stroke(&conv, transform, color, None, local_path);
+            }
+        }
+    }
+
+    fn fill_path_literal(scene: &mut Scene, path: &usvg::Path, transform: Affine, local_path: &BezPath) {
+        if let Some(fill) = path.fill() {
+            if let Some(color) = literal_paint(fill.paint(), fill.opacity()) {
+                scene.fill(
+                    match fill.rule() {
+                        usvg::FillRule::NonZero => Fill::NonZero,
+                        usvg::FillRule::EvenOdd => Fill::EvenOdd,
+                    },
+                    transform,
+                    color,
+                    None,
+                    local_path,
+                );
+            }
+        }
+    }
+
+    fn render_path_literal(scene: &mut Scene, path: &usvg::Path, stroke_first: bool) {
+        if !path.is_visible() {
+            return;
+        }
+        let transform = to_affine(&path.abs_transform());
+        let local_path = to_bez_path(path);
+        if stroke_first {
+            stroke_path_literal(scene, path, transform, &local_path);
+            fill_path_literal(scene, path, transform, &local_path);
+        } else {
+            fill_path_literal(scene, path, transform, &local_path);
+            stroke_path_literal(scene, path, transform, &local_path);
+        }
+    }
+
+    fn render_group_literal(scene: &mut Scene, group: &usvg::Group, stroke_first: bool) {
+        for node in group.children() {
+            match node {
+                usvg::Node::Group(g) => render_group_literal(scene, g, stroke_first),
+                usvg::Node::Path(path) => render_path_literal(scene, path, stroke_first),
+                usvg::Node::Text(t) => render_group_literal(scene, t.flattened(), true),
+                _ => {}
+            }
+        }
+    }
+
+    /// @emoji 🏷️ Renders SVG tree paints literally (no icon fg/bg remapping); used for map labels.
+    pub fn render_svg_tree_literal(scene: &mut Scene, tree: &usvg::Tree) {
+        render_group_literal(scene, tree.root(), false);
+    }
+
     fn icon_rect_xywh(r: usvg::Rect) -> Option<(f64, f64, f64, f64)> {
         let w = f64::from(r.width());
         let h = f64::from(r.height());
@@ -422,7 +486,7 @@ pub mod svg_icon_vello09 {
 pub mod text {
     use std::sync::{Arc, OnceLock};
 
-    use crate::svg_icon_vello09::render_svg_tree_themed;
+    use crate::svg_icon_vello09::render_svg_tree_literal;
     use crate::usvg;
     use crate::vello::kurbo::Point;
     use crate::vello::peniko::Color;
@@ -508,7 +572,7 @@ pub mod text {
         }
         let scale = (px * 0.9 / bh).min(2.5);
         let mut label_scene = Scene::new();
-        render_svg_tree_themed(&mut label_scene, &tree, fill, halo);
+        render_svg_tree_literal(&mut label_scene, &tree);
         let aff = vello::kurbo::Affine::translate((origin.x - bx * scale, origin.y - by * scale - px * 0.85))
             * vello::kurbo::Affine::scale(scale);
         scene.append(&label_scene, Some(aff));

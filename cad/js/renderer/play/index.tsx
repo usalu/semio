@@ -2455,7 +2455,7 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
         <p>
           Unknown interaction <code className="text-foreground">{interactionId}</code>.
         </p>
-        <button type="button" className="w-fit rounded-md border border-border bg-background px-double py-single text-sm text-foreground" onClick={() => onInteractionId("")}>
+        <button type="button" className="w-fit rounded-md border border-border bg-background px-double py-single text-sm text-element hover:text-emphasized" onClick={() => onInteractionId("")}>
           Reset
         </button>
       </div>

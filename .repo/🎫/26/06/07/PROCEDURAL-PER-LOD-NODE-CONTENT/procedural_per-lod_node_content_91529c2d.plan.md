@@ -22,7 +22,7 @@ todos:
     status: completed
   - id: verify
     content: Rebuild wasm, run nx tests, and confirm runtime per-tier rendering with DEBUG logs
-    status: in_progress
+    status: completed
 isProject: false
 ---
 
