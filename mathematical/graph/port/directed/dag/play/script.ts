@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@flow/play` task router. */
+/** 🧭 `@dag/play` task router. */
 import { join } from "node:path";
 import {
   BundleScript,
@@ -10,18 +10,18 @@ import {
   runCargo,
   runViteBunxDev,
   runVitest,
-} from "../../repo/lib/js/src/index.ts";
+} from "../../../../../repo/lib/js/src/index.ts";
 
-const wasmScript = join(import.meta.dir, "../core/script.ts");
+const wasmScript = join(import.meta.dir, "../script.ts");
 const validateRuntimeScript = join(
   import.meta.dir,
-  "../../.repo/🎫/26/06/07/FLOW-LANGUAGE-VERTICAL-SLICE/validate-flow-runtime.mjs",
+  "../../../../../.repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs",
 );
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
-    runViteBunxDev(this.root, segments, { portEnv: "FLOW_PLAY_PORT", defaultPort: "6016" });
+    runBun([wasmScript, "wasm"], join(import.meta.dir, ".."), playPollingEnv());
+    runViteBunxDev(this.root, segments, { portEnv: "DAG_PLAY_PORT", defaultPort: "6017" });
   }
 }
 
@@ -29,22 +29,22 @@ class ValidateScript extends BundleScript {
   run(segments: string[]): void {
     runBun([validateRuntimeScript, ...segments], this.root, {
       ...playPollingEnv(),
-      FLOW_PLAY_PORT: process.env.FLOW_PLAY_PORT ?? "6016",
+      DAG_PLAY_PORT: process.env.DAG_PLAY_PORT ?? "6017",
     });
   }
 }
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
+    runBun([wasmScript, "wasm"], join(import.meta.dir, ".."), playPollingEnv());
     runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, playPollingEnv());
   }
 }
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "-p", "flow_core"], this.repoRoot, playPollingEnv());
-    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
+    runCargo(["test", "-p", "mathematical_graph_port_directed_dag"], this.repoRoot, playPollingEnv());
+    runBun([wasmScript, "wasm"], join(import.meta.dir, ".."), playPollingEnv());
     runVitest(this.root, segments);
   }
 }

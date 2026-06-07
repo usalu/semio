@@ -3,6 +3,7 @@
 
 pub use vello_svg::usvg;
 pub use vello_svg::vello;
+pub use vello_svg;
 
 // #region 🏷️BoardIconAssets
 
@@ -1109,10 +1110,31 @@ pub mod gpu_session {
 }
 // #endregion 🔖GpuSession
 
+// #region 🔖IconCodec
+pub mod icon_codec;
+pub mod theme;
+// #endregion 🔖IconCodec
+
 // #region 🔖CanvasExtension
 /// 🧩 Extension hook for domain-specific canvas behavior (hit-test, paint, kinds).
 pub trait CanvasExtension: Send + Sync {
     fn extension_id(&self) -> &str;
+}
+
+/// 🎨 Optional domain paint hook for custom node/edge rendering on the shared board host.
+pub trait CanvasNodePaint: CanvasExtension {
+    fn paint_node_extras(
+        &self,
+        _scene: &mut vello::Scene,
+        _node_id: &str,
+        _center: vello::kurbo::Point,
+        _width: f64,
+        _height: f64,
+        _name: &str,
+        _input_labels: &[&str],
+        _output_labels: &[&str],
+    ) {
+    }
 }
 
 /// ⚙️ Generic infinite-canvas engine shell; domain logic lives in `E`.

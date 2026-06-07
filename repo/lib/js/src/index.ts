@@ -1009,6 +1009,16 @@ socket.once("error", () => process.exit(1));
   return result.status === 0;
 }
 
+/** @emoji 🔌 First free TCP port at or after `preferredPort` (up to `maxAttempts`). */
+export function resolveDevPort(host: string, preferredPort: number, maxAttempts = 20): number {
+  for (let offset = 0; offset < maxAttempts; offset++) {
+    const port = preferredPort + offset;
+    if (!isDevPortInUse(host, port)) return port;
+  }
+  console.error(`[dev] No free port found in range ${preferredPort}-${preferredPort + maxAttempts - 1}.`);
+  process.exit(1);
+}
+
 /** ▶️Vite dev via `bunx` with root-level `vite.config.ts`. */
 export function runViteBunxDev(
   bundleRoot: string,
@@ -1021,20 +1031,18 @@ export function runViteBunxDev(
   } = {},
 ): void {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-  const port = process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173";
-  const portInUse = isDevPortInUse(host, Number(port));
-  if (portInUse) {
-    console.error(
-      `[dev] Port ${port} is already in use. Stop the running dev server, then restart (clears Vite prebundle cache and avoids 504 Outdated Optimize Dep).`,
-    );
-    process.exit(1);
+  const preferredPort = Number(process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173");
+  const port = resolveDevPort(host, preferredPort);
+  if (port !== preferredPort) {
+    console.warn(`[dev] Port ${preferredPort} is already in use — starting on ${port} instead.`);
+    if (opts.portEnv) process.env[opts.portEnv] = String(port);
   }
   if (opts.clearViteCache) {
     const viteCache = join(bundleRoot, "node_modules", ".vite");
     if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
   }
   const wantStrictPort = opts.strictPort ?? true;
-  const viteArgs = ["vite", "--config", "vite.config.ts", "--host", host, "--port", port];
+  const viteArgs = ["vite", "--config", "vite.config.ts", "--host", host, "--port", String(port)];
   if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
     viteArgs.push("--strictPort");
   }

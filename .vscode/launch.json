@@ -733,8 +733,22 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6016)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):601[6-9]|http://(?:127\\.0\\.0\\.1|localhost):602[0-9])",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌊flow🧪validate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @flow/play:validate",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "FLOW_PLAY_PORT": "6016"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.25
       }
     },
     {
@@ -746,6 +760,50 @@
       "presentation": {
         "group": "3_dev",
         "order": 171.5
+      }
+    },
+    {
+      "name": "🛠️dev🌳dag",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:dag",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "DAG_PLAY_PORT": "6017"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.75
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):601[7-9]|http://(?:127\\.0\\.0\\.1|localhost):602[0-9])",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌳dag🧪validate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @dag/play:validate",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "DAG_PLAY_PORT": "6017"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 171.875
+      }
+    },
+    {
+      "name": "🛠️dev🌳dag🦀rs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @dag/core:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 172
       }
     },
     {

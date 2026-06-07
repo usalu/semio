@@ -1,0 +1,13 @@
+{
+  "name": "@dag/core",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "mathematical/graph/port/directed/dag",
+        "command": "bun ./script.ts wasm"
+      }
+    }
+  }
+}

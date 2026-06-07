@@ -1,0 +1,48 @@
+{
+  "schema": "dag.fixture/v1",
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "nodes": [
+    {
+      "id": "source",
+      "name": "Source",
+      "x": -220,
+      "y": 0,
+      "width": 160,
+      "height": 72,
+      "inputs": [],
+      "outputs": [
+        { "id": "out", "label": "value" }
+      ]
+    },
+    {
+      "id": "transform",
+      "name": "Transform",
+      "x": 0,
+      "y": 0,
+      "width": 160,
+      "height": 88,
+      "inputs": [
+        { "id": "in", "label": "value" }
+      ],
+      "outputs": [
+        { "id": "out", "label": "result" }
+      ]
+    },
+    {
+      "id": "sink",
+      "name": "Sink",
+      "x": 220,
+      "y": 0,
+      "width": 160,
+      "height": 72,
+      "inputs": [
+        { "id": "in", "label": "result" }
+      ],
+      "outputs": []
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "source:out", "target": "transform:in" },
+    { "id": "e2", "source": "transform:out", "target": "sink:in" }
+  ]
+}

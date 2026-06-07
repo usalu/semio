@@ -9,7 +9,7 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
-import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot, isDevPortInUse } from "./index.ts";
+import { BundleScript, ScriptRouter, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import {
   dependencyBoundaryBreachesForBundleDir,
@@ -56,6 +56,17 @@ describe("isDevPortInUse", () => {
   test("returns true when puzzle 3d play port is listening", () => {
     if (!isDevPortInUse("127.0.0.1", 6013) && !isDevPortInUse("127.0.0.1", 6014)) return;
     expect(isDevPortInUse("127.0.0.1", 6013) || isDevPortInUse("127.0.0.1", 6014)).toBe(true);
+  });
+});
+
+describe("resolveDevPort", () => {
+  test("returns preferred port when free", () => {
+    expect(resolveDevPort("127.0.0.1", 59_990)).toBe(59_990);
+  });
+
+  test("skips occupied ports", () => {
+    if (!isDevPortInUse("127.0.0.1", 6013)) return;
+    expect(resolveDevPort("127.0.0.1", 6013)).toBeGreaterThan(6013);
   });
 });
 

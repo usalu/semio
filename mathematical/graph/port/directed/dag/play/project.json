@@ -1,14 +1,14 @@
 {
-  "name": "@flow/play",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@dag/play",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "flow/play",
+        "cwd": "mathematical/graph/port/directed/dag/play",
         "command": "bun ./script.ts dev",
         "env": {
-          "FLOW_PLAY_PORT": "6016",
+          "DAG_PLAY_PORT": "6017",
           "NODE_OPTIONS": "",
           "NX_NATIVE_COMMAND_RUNNER": "false",
           "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
@@ -21,7 +21,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "flow/play",
+        "cwd": "mathematical/graph/port/directed/dag/play",
         "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
@@ -29,10 +29,10 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "flow/play",
+        "cwd": "mathematical/graph/port/directed/dag/play",
         "command": "bun ./script.ts test",
         "env": {
-          "FLOW_PLAY_PORT": "6029"
+          "DAG_PLAY_PORT": "6030"
         },
         "forwardAllArgs": true
       }
@@ -40,10 +40,10 @@
     "validate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "flow/play",
+        "cwd": "mathematical/graph/port/directed/dag/play",
         "command": "bun ./script.ts validate",
         "env": {
-          "FLOW_PLAY_PORT": "6016"
+          "DAG_PLAY_PORT": "6017"
         },
         "forwardAllArgs": true
       }

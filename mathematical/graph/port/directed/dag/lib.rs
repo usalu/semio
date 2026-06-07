@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed::{
-    self as graph, apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json, BoardEngine, BoardEvent, Camera, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
+    self as graph, apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json, BoardEngine, BoardEvent, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
 };
 
 /// 🌳 DAG board engine alias.
@@ -256,6 +256,313 @@ impl cavas::CanvasExtension for DagExtension {
 impl GraphExtension for DagExtension {}
 // #endregion 🔖GraphExtension
 
+// #region 🔖DagHost
+
+/// 🌳 Retained DAG host: IO nodes, edges, engine, camera.
+pub struct DagHost {
+    pub fixture: DagFixtureV1,
+    pub engine: DagBoardEngine,
+}
+
+/// 📦 `dag.fixture/v1` document.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagFixtureV1 {
+    pub schema: String,
+    pub camera: DagCameraV1,
+    pub nodes: Vec<IoNodeSpec>,
+    pub edges: Vec<DagFixtureEdgeV1>,
+}
+
+/// 📷 Fixture camera snapshot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagCameraV1 {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+/// 🔗 Edge between port handles.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagFixtureEdgeV1 {
+    pub id: String,
+    pub source: String,
+    pub target: String,
+}
+
+impl Default for DagFixtureV1 {
+    fn default() -> Self {
+        serde_json::from_str(include_str!("fixture/demo.dag.json")).unwrap_or_else(|_| Self {
+            schema: "dag.fixture/v1".into(),
+            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![],
+            edges: vec![],
+        })
+    }
+}
+
+impl DagHost {
+    pub fn default_demo() -> Self {
+        Self::from_fixture(DagFixtureV1::default())
+    }
+
+    pub fn from_fixture(fixture: DagFixtureV1) -> Self {
+        let mut host = Self { fixture, engine: DagBoardEngine::new() };
+        host.rebuild_engine();
+        host
+    }
+
+    pub fn load_fixture_json(json: &str) -> Result<Self, String> {
+        let fixture: DagFixtureV1 = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        if fixture.schema != "dag.fixture/v1" {
+            return Err("schema must be dag.fixture/v1".into());
+        }
+        Ok(Self::from_fixture(fixture))
+    }
+
+    pub fn fixture_json(&self) -> Result<String, String> {
+        serde_json::to_string(&self.fixture).map_err(|e| e.to_string())
+    }
+
+    fn rebuild_engine(&mut self) {
+        self.engine = DagBoardEngine::new();
+        let (cx, cy, zoom) = (self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom);
+        self.engine.set_camera(cx, cy, zoom);
+        let mut fixture_value = serde_json::to_value(&self.fixture).unwrap_or_else(|_| serde_json::json!({}));
+        let _ = apply_dag_layout_to_fixture_v1_value(&mut fixture_value, &DagLayoutOptions::default());
+        if let Ok(updated) = serde_json::from_value::<DagFixtureV1>(fixture_value.clone()) {
+            self.fixture = updated;
+        }
+        let mut next_node: u64 = 1;
+        let mut next_handle: u64 = 10;
+        let mut handle_map: HashMap<String, u64> = HashMap::new();
+        for node in &self.fixture.nodes {
+            let nid = next_node;
+            next_node += 1;
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            self.engine.create_node(nid, node.x, node.y, hw.max(hh).max(28.0), true);
+            for (idx, port) in node.inputs.iter().enumerate() {
+                let (in_a, _) = io_node_handle_angles(idx, node.inputs.len().max(1), 0, node.outputs.len().max(1));
+                let hid = next_handle;
+                next_handle += 1;
+                handle_map.insert(format!("{}:{}", node.id, port.id), hid);
+                self.engine.create_handle(hid, nid, in_a);
+            }
+            for (idx, port) in node.outputs.iter().enumerate() {
+                let (_, out_a) = io_node_handle_angles(0, node.inputs.len().max(1), idx, node.outputs.len().max(1));
+                let hid = next_handle;
+                next_handle += 1;
+                handle_map.insert(format!("{}:{}", node.id, port.id), hid);
+                self.engine.create_handle(hid, nid, out_a);
+            }
+        }
+        let existing: Vec<(String, String)> = self
+            .fixture
+            .edges
+            .iter()
+            .filter_map(|e| {
+                let src = e.source.split(':').next()?.to_string();
+                let tgt = e.target.split(':').next()?.to_string();
+                Some((src, tgt))
+            })
+            .collect();
+        let mut eid: u64 = 100;
+        for edge in &self.fixture.edges {
+            if would_create_cycle(&existing, edge.source.split(':').next().unwrap_or(""), edge.target.split(':').next().unwrap_or("")) {
+                continue;
+            }
+            let src = handle_map.get(&edge.source).copied();
+            let tgt = handle_map.get(&edge.target).copied();
+            if let (Some(s), Some(t)) = (src, tgt) {
+                self.engine.create_edge(eid, s, t);
+                eid += 1;
+            }
+        }
+    }
+
+    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+        self.fixture.camera = DagCameraV1 { x, y, zoom };
+        self.engine.set_camera(x, y, zoom);
+    }
+
+    pub fn pointer_down(&mut self, x: f64, y: f64, extend: bool) {
+        self.engine.pointer_down(x, y, extend);
+    }
+
+    pub fn pointer_move(&mut self, x: f64, y: f64) {
+        self.engine.pointer_move(x, y);
+    }
+
+    pub fn pointer_up(&mut self) {
+        self.engine.pointer_up();
+    }
+
+    pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
+        use cavas::camera::{camera_content_affine, world_to_screen, Camera as CavasCamera, Viewport};
+        use cavas::text::append_label;
+        use cavas::vello::kurbo::{Affine, Circle, Point, Rect, Stroke};
+        use cavas::vello::peniko::{Color, Fill};
+
+        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
+        let aff = camera_content_affine(&cam, &viewport);
+        let snap = self.engine.render_snapshot();
+        for curve in &snap.edges {
+            scene.stroke(&Stroke::new(2.0), aff, Color::from_rgb8(180, 200, 230), None, curve);
+        }
+        let node_stroke = Color::from_rgb8(90, 110, 140);
+        let node_fill = Color::from_rgba8(40, 48, 62, 230);
+        let label_fill = Color::from_rgb8(230, 235, 245);
+        let label_halo = Color::from_rgba8(20, 22, 28, 200);
+        for node in &self.fixture.nodes {
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
+            scene.fill(Fill::NonZero, aff, node_fill, None, &rect);
+            scene.stroke(&Stroke::new(1.5), aff, node_stroke, None, &rect);
+            let px = (10.0 * cam.zoom).clamp(8.0, 18.0);
+            let center_screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
+            for (i, port) in node.inputs.iter().enumerate() {
+                let t = (i as f64 + 0.5) / node.inputs.len().max(1) as f64;
+                let world = Point::new(node.x - hw + 8.0 / cam.zoom.max(0.05), node.y - hh + t * hh * 2.0);
+                append_label(scene, &port.label, world_to_screen(&cam, &viewport, world), px, label_fill, label_halo);
+            }
+            for (i, port) in node.outputs.iter().enumerate() {
+                let t = (i as f64 + 0.5) / node.outputs.len().max(1) as f64;
+                let world = Point::new(node.x + hw - 8.0 / cam.zoom.max(0.05), node.y - hh + t * hh * 2.0);
+                append_label(scene, &port.label, world_to_screen(&cam, &viewport, world), px, label_fill, label_halo);
+            }
+            let name = node.name.trim();
+            if !name.is_empty() {
+                let mut label_scene = cavas::vello::Scene::new();
+                append_label(&mut label_scene, name, Point::new(0.0, 0.0), px * 1.05, label_fill, label_halo);
+                let rot = Affine::translate((center_screen.x, center_screen.y)) * Affine::rotate(-std::f64::consts::FRAC_PI_2);
+                scene.append(&label_scene, Some(rot));
+            }
+        }
+        for (_hid, center, radius) in &snap.handles {
+            scene.fill(Fill::NonZero, aff, Color::from_rgb8(180, 200, 230), None, &Circle::new(*center, *radius));
+        }
+    }
+}
+// #endregion 🔖DagHost
+
+// #region 🔖WasmSession
+#[cfg(target_arch = "wasm32")]
+mod wasm_session {
+    use super::*;
+    use std::cell::RefCell;
+    use std::rc::Rc;
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen_futures::future_to_promise;
+    use web_sys::HtmlCanvasElement;
+
+    struct DagSessionInner {
+        host: DagHost,
+        gpu: cavas::gpu_session::CanvasGpuSession,
+        width: u32,
+        height: u32,
+        dpr: f64,
+    }
+
+    #[wasm_bindgen]
+    pub struct DagSession {
+        state: Rc<RefCell<DagSessionInner>>,
+    }
+
+    #[wasm_bindgen]
+    impl DagSession {
+        #[wasm_bindgen(constructor)]
+        pub fn new() -> Self {
+            Self { state: Rc::new(RefCell::new(DagSessionInner { host: DagHost::default_demo(), gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
+        }
+
+        #[wasm_bindgen(js_name = loadFixtureJson)]
+        pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
+            let host = DagHost::load_fixture_json(json).map_err(|e| JsValue::from_str(&e))?;
+            self.state.borrow_mut().host = host;
+            Ok(())
+        }
+
+        #[wasm_bindgen(js_name = fixtureJson)]
+        pub fn fixture_json(&self) -> Result<String, JsValue> {
+            self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = attachCanvas)]
+        pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
+            let inner = self.state.clone();
+            let lw = logical_w.max(1);
+            let lh = logical_h.max(1);
+            let dpr = dpr.max(1.0);
+            let pw = ((lw as f64 * dpr).round() as u32).max(1);
+            let ph = ((lh as f64 * dpr).round() as u32).max(1);
+            future_to_promise(async move {
+                let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph)
+                    .await
+                    .map_err(|err| JsValue::from_str(&err))?;
+                let mut g = inner.borrow_mut();
+                g.width = lw;
+                g.height = lh;
+                g.dpr = dpr;
+                g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
+                Ok(JsValue::UNDEFINED)
+            })
+        }
+
+        #[wasm_bindgen(js_name = gpuReady)]
+        pub fn gpu_ready(&self) -> bool {
+            self.state.borrow().gpu.gpu_ready()
+        }
+
+        #[wasm_bindgen(js_name = setSize)]
+        pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+            let mut inner = self.state.borrow_mut();
+            inner.width = width.max(1);
+            inner.height = height.max(1);
+            inner.dpr = dpr.max(1.0);
+            let pw = ((inner.width as f64 * inner.dpr).round() as u32).max(1);
+            let ph = ((inner.height as f64 * inner.dpr).round() as u32).max(1);
+            inner.gpu.resize_surface(pw, ph);
+        }
+
+        #[wasm_bindgen(js_name = setCamera)]
+        pub fn set_camera(&self, x: f64, y: f64, zoom: f64) {
+            self.state.borrow_mut().host.set_camera(x, y, zoom);
+        }
+
+        #[wasm_bindgen(js_name = pointerDown)]
+        pub fn pointer_down(&self, x: f64, y: f64, extend: bool) {
+            self.state.borrow_mut().host.pointer_down(x, y, extend);
+        }
+
+        #[wasm_bindgen(js_name = pointerMove)]
+        pub fn pointer_move(&self, x: f64, y: f64) {
+            self.state.borrow_mut().host.pointer_move(x, y);
+        }
+
+        #[wasm_bindgen(js_name = pointerUp)]
+        pub fn pointer_up(&self) {
+            self.state.borrow_mut().host.pointer_up();
+        }
+
+        #[wasm_bindgen(js_name = renderFrame)]
+        pub fn render_frame(&self) -> Result<(), JsValue> {
+            let mut inner = self.state.borrow_mut();
+            let mut scene = cavas::vello::Scene::new();
+            inner.host.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
+            inner.gpu.render_frame(&scene, cavas::vello::peniko::Color::from_rgba8(20, 22, 28, 255))
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub use wasm_session::DagSession;
+// #endregion 🔖WasmSession
+
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {
@@ -289,6 +596,15 @@ mod tests {
         let a_y = fixture["nodes"][0]["y"].as_f64().unwrap();
         let b_y = fixture["nodes"][1]["y"].as_f64().unwrap();
         assert!((b_y - a_y).abs() > 1.0);
+    }
+
+    #[test]
+    fn dag_host_loads_demo_fixture() {
+        let host = DagHost::default_demo();
+        assert_eq!(host.fixture.schema, "dag.fixture/v1");
+        assert_eq!(host.fixture.nodes.len(), 3);
+        assert_eq!(host.fixture.edges.len(), 2);
+        assert!(!host.engine.render_snapshot().edges.is_empty());
     }
 }
 // #endregion 🔖Tests

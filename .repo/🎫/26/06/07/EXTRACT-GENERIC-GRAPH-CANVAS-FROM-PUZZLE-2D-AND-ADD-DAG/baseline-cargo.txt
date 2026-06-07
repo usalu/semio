@@ -1,0 +1,7 @@
+Baseline cargo test (2026-06-07):
+- infinite_cavas: 3 passed
+- mathematical_graph: 3 passed  
+- mathematical_graph_port_directed: 1 passed
+- mathematical_graph_port_directed_dag: 3 passed
+- puzzle_2d: 108 passed
+Total: 118 passed, 0 failed

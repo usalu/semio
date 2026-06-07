@@ -235,9 +235,9 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "panel";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "panel";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -309,6 +309,16 @@ export interface UiFlowHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 🌳 Host-bound directed acyclic graph surface. */
+export interface UiDagHostSurfaceNode {
+	readonly type: "dag";
+	readonly componentKind: "dag";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+}
+
 /** @emoji 📐 Host-bound CAD spatial surface. */
 export interface UiCadHostSurfaceNode {
 	readonly type: "cad";
@@ -335,6 +345,7 @@ export type UiComponentHostSurfaceNode =
 	| UiPuzzle5dHostSurfaceNode
 	| UiGisMapHostSurfaceNode
 	| UiFlowHostSurfaceNode
+	| UiDagHostSurfaceNode
 	| UiCadHostSurfaceNode
 	| UiPanelHostSurfaceNode;
 
@@ -464,6 +475,18 @@ export function buildFlowWindowBody(surfaceId: string, controllerId: string, pan
 	return {
 		type: "flow",
 		componentKind: "flow",
+		surfaceId,
+		controllerId,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
+/** @emoji 🌳 Canonical DAG window body. */
+export function buildDagWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiDagHostSurfaceNode {
+	return {
+		type: "dag",
+		componentKind: "dag",
 		surfaceId,
 		controllerId,
 		...(paneId ? { paneId } : {}),

@@ -2682,10 +2682,15 @@ dependencies = [
 name = "infinite_cavas"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "fontdb",
+ "image",
  "js-sys",
  "serde",
  "serde_json",
+ "typst",
+ "typst-assets",
+ "typst-svg",
  "vello",
  "vello_svg",
  "wasm-bindgen",
@@ -2993,6 +2998,8 @@ version = "0.1.0"
 dependencies = [
  "infinite_cavas",
  "mathematical_core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -3032,11 +3039,15 @@ name = "mathematical_graph_port_directed_dag"
 version = "0.1.0"
 dependencies = [
  "infinite_cavas",
+ "js-sys",
  "mathematical_core",
  "mathematical_graph",
  "mathematical_graph_port_directed",
  "serde",
  "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -3949,6 +3960,7 @@ dependencies = [
  "image",
  "infinite_cavas",
  "js-sys",
+ "mathematical_graph",
  "mathematical_graph_normal_undirected",
  "mathematical_graph_port_directed",
  "reasoning_mindmap",

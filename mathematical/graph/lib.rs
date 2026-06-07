@@ -1,5 +1,9 @@
 //! 🕸️ Generic property graph engine on infinite canvas; specialize via quadrant crates.
 
+pub mod board_host;
+
+pub use board_host::*;
+
 pub use infinite_cavas as cavas;
 pub use mathematical_core::{self as core, Directed, Directedness, Edge as CoreEdge, EdgeId, HandleId, NodeId, Normal, PortModel, Ported, Undirected};
 

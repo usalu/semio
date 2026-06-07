@@ -330,9 +330,11 @@ type GisMapSurfaceHost = React.ComponentType<{ readonly node: import("@framework
 const gisMapSurfaceHosts = new Map<string, GisMapSurfaceHost>();
 type FlowSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiFlowHostSurfaceNode }>;
 const flowSurfaceHosts = new Map<string, FlowSurfaceHost>();
+type DagSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiDagHostSurfaceNode }>;
+const dagSurfaceHosts = new Map<string, DagSurfaceHost>();
 const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
 
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow"]);
+const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag"]);
 
 function isPlaygroundCanvasHostChild(child: UiNode): boolean {
   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
@@ -361,6 +363,12 @@ export function registerUiGisMapSurfaceHost(surfaceId: string, Component: GisMap
 /** @emoji 🌊 Binds `surfaceId` from {@link UiFlowHostSurfaceNode} to a flow canvas. */
 export function registerUiFlowSurfaceHost(surfaceId: string, Component: FlowSurfaceHost): void {
   flowSurfaceHosts.set(surfaceId, Component);
+  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+}
+
+/** @emoji 🌳 Binds `surfaceId` from {@link UiDagHostSurfaceNode} to a DAG canvas. */
+export function registerUiDagSurfaceHost(surfaceId: string, Component: DagSurfaceHost): void {
+  dagSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
@@ -401,6 +409,16 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
       );
     }
   }
+  if (node.type === "dag") {
+    const Host = dagSurfaceHosts.get(node.surfaceId);
+    if (Host) {
+      return (
+        <div className="absolute inset-0 min-h-0 min-w-0">
+          <Host node={node} />
+        </div>
+      );
+    }
+  }
   if (node.type === "table") {
     const Host = tableSurfaceHosts.get(node.surfaceId);
     if (Host) {
@@ -417,6 +435,7 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"): 
     node.type === "puzzle3d" ||
     node.type === "puzzle5d" ||
     node.type === "flow" ||
+    node.type === "dag" ||
     node.type === "panel" ||
     node.type === "table"
   ) {
@@ -665,6 +684,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "cad":
     case "gismap":
     case "flow":
+    case "dag":
     case "panel":
     case "table":
       return renderPlaygroundHostSurface(node, node.type === "table" || node.type === "panel" ? "panel" : "canvas");
@@ -6042,6 +6062,58 @@ export function bootFlowPlay(playground: Playground, rootId = "root"): void {
   bootPlayground(playground, flowPlayChromeBoot, rootId);
 }
 //#endregion 🔖FlowPlayHost
+
+//#region 🔖DagPlayHost
+import {
+  DAG_PLAY_APP_ID,
+  DAG_PLAY_BODY_KEY_MAIN,
+  DAG_PLAY_CONTROLLER_ID,
+  DAG_PLAY_DEFAULT_FIXTURE_JSON,
+  DAG_PLAY_SURFACE_ID,
+  DAG_PLAY_WINDOW_KIND_ID,
+  DagPlayController,
+  registerDagPlayDeclarativeBodies,
+} from "@dag/play";
+import { DagCanvas } from "@dag/react";
+import type { UiDagHostSurfaceNode } from "@framework/platform/core";
+
+let dagPlayChromeRegistered = false;
+
+function useDagPlayController(): DagPlayController | undefined {
+  const { runtime } = useApp();
+  return runtime.getActiveApp()?.controller as DagPlayController | undefined;
+}
+
+function DagPlayPaneSurfaceHost({ node: _node }: { readonly node: UiDagHostSurfaceNode }): ReactElement {
+  const ctrl = useDagPlayController();
+  console.log("[DEBUG] dag play surface mount");
+  return <DagCanvas fixtureJson={ctrl?.getFixtureJson() ?? DAG_PLAY_DEFAULT_FIXTURE_JSON} />;
+}
+
+export function registerDagPlaySurfaceHosts(): void {
+  if (dagPlayChromeRegistered) return;
+  dagPlayChromeRegistered = true;
+  registerUiDagSurfaceHost(DAG_PLAY_SURFACE_ID, DagPlayPaneSurfaceHost);
+  registerDagPlayDeclarativeBodies();
+}
+
+function DagPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
+  return <PlaygroundView runtime={runtime} defaultAppId={DAG_PLAY_APP_ID} />;
+}
+
+export function mountDagPlayChrome(playground: Playground, rootId = "root"): void {
+  mountPlaygroundApp(<DagPlayChrome runtime={playground.runtime} />, rootId);
+}
+
+const dagPlayChromeBoot: PlaygroundChromeBoot = {
+  registerHosts: registerDagPlaySurfaceHosts,
+  mount: mountDagPlayChrome,
+};
+
+export function bootDagPlay(playground: Playground, rootId = "root"): void {
+  bootPlayground(playground, dagPlayChromeBoot, rootId);
+}
+//#endregion 🔖DagPlayHost
 
 //#region 🔖PresentationPlayHost
 import {

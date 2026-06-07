@@ -233,7 +233,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "presentation" | "wires";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "presentation" | "wires";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@framework/playground/renderer/react/puzzle/2d": "2d",
@@ -241,6 +241,7 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@framework/playground/renderer/react/puzzle/5d": "5d",
   "@framework/playground/renderer/react/puzzle/map": "map",
   "@framework/playground/renderer/react/flow": "flow",
+  "@framework/playground/renderer/react/dag": "dag",
   "@framework/playground/renderer/react/presentation": "presentation",
   "@framework/playground/renderer/react/reasoning/wires": "wires",
 };
@@ -251,6 +252,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   "2d": { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
   map: { start: "//#region 🔖MapPlayHost", end: "//#endregion 🔖MapPlayHost" },
   flow: { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
+  dag: { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
   presentation: { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
   wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
 };
