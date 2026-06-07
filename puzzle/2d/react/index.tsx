@@ -9,12 +9,14 @@ import {
   ContinuousEventPriority,
   DefaultEventPriority,
   DiscreteEventPriority,
+  GraphWasmCanvas,
   LegacyRoot,
   NoEventPriority,
   reactHostPort,
   React,
   Reconciler,
   type ContextMenuItem,
+  type GraphWasmSession,
   type RenderMode,
 } from "@infinite/cavas/react-renderer";
 import { type TreeDragAndDropController } from "@ui/react";
@@ -54,6 +56,7 @@ export async function ensurePuzzle2dWasmLoaded(): Promise<void> {
 }
 
 export { BoardSession };
+export { GraphWasmCanvas, type GraphWasmSession, type CanvasWasmBridge } from "@infinite/cavas/react-renderer";
 
 /** @emoji 🧠 Normal graphs bind edges to node ids; ported graphs use handle endpoints. */
 export type Puzzle2dGraphPortMode = "normal" | "ported";

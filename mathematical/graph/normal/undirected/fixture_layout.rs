@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 
-use infinite_cavas::board_json_visible_or_true;
+use mathematical_graph::board_json_visible_or_true;
 
 // #region 🕸️ForceGraphLayout
 /// ⚙️ Force-directed layout parameters for normal undirected node-id graphs.

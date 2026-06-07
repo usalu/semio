@@ -10,10 +10,16 @@ import {
   runViteBunxDev,
   runVitest,
 } from "../../../repo/lib/js/src/index.ts";
+import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runViteBunxDev(this.root, segments, { portEnv: "PUZZLE_3D_PLAY_PORT", defaultPort: "6013", clearViteCache: true });
+    runViteBunxDev(this.root, segments, {
+      portEnv: playgroundPortEnv("puzzle-3d"),
+      defaultPort: playgroundDevPortString("puzzle-3d"),
+      fixedPort: true,
+      clearViteCache: true,
+    });
   }
 }
 

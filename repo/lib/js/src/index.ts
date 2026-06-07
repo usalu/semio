@@ -1009,10 +1009,16 @@ socket.once("error", () => process.exit(1));
   return result.status === 0;
 }
 
-/** @emoji 🔌 First free TCP port at or after `preferredPort` (up to `maxAttempts`). */
-export function resolveDevPort(host: string, preferredPort: number, maxAttempts = 20): number {
+/** @emoji 🔌 First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
+export function resolveDevPort(
+  host: string,
+  preferredPort: number,
+  maxAttempts = 20,
+  skipPorts: ReadonlySet<number> = new Set(),
+): number {
   for (let offset = 0; offset < maxAttempts; offset++) {
     const port = preferredPort + offset;
+    if (skipPorts.has(port)) continue;
     if (!isDevPortInUse(host, port)) return port;
   }
   console.error(`[dev] No free port found in range ${preferredPort}-${preferredPort + maxAttempts - 1}.`);
@@ -1028,15 +1034,31 @@ export function runViteBunxDev(
     defaultPort?: string;
     clearViteCache?: boolean;
     strictPort?: boolean;
+    /** When true, bind only `defaultPort` / env — never bump into another playground port. */
+    fixedPort?: boolean;
+    reservedPorts?: ReadonlySet<number>;
   } = {},
 ): void {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const preferredPort = Number(process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173");
-  const port = resolveDevPort(host, preferredPort);
-  if (port !== preferredPort) {
-    console.warn(`[dev] Port ${preferredPort} is already in use — starting on ${port} instead.`);
-    if (opts.portEnv) process.env[opts.portEnv] = String(port);
-  }
+  const port = (() => {
+    if (opts.fixedPort) {
+      if (isDevPortInUse(host, preferredPort)) {
+        console.error(
+          `[dev] Port ${preferredPort} is already in use. Stop the other process or set ${opts.portEnv ?? "VITE_PORT"}.`,
+        );
+        process.exit(1);
+      }
+      return preferredPort;
+    }
+    const skip = opts.reservedPorts ?? new Set<number>();
+    const resolved = resolveDevPort(host, preferredPort, 20, skip);
+    if (resolved !== preferredPort) {
+      console.warn(`[dev] Port ${preferredPort} is already in use — starting on ${resolved} instead.`);
+      if (opts.portEnv) process.env[opts.portEnv] = String(resolved);
+    }
+    return resolved;
+  })();
   if (opts.clearViteCache) {
     const viteCache = join(bundleRoot, "node_modules", ".vite");
     if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });

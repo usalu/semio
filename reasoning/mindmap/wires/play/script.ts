@@ -11,11 +11,16 @@ import {
   runViteBunxDev,
   runVitest,
 } from "../../../../repo/lib/js/src/index.ts";
+import { playgroundDevPortString, playgroundPortEnv } from "../../../../ui/styling/playground-dev-ports.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     runBun([join(this.repoRoot, "puzzle/2d/rs/script.ts"), "wasm"], this.root, playPollingEnv());
-    runViteBunxDev(this.root, segments, { portEnv: "WIRES_PLAY_PORT", defaultPort: "6015" });
+    runViteBunxDev(this.root, segments, {
+      portEnv: playgroundPortEnv("wires"),
+      defaultPort: playgroundDevPortString("wires"),
+      fixedPort: true,
+    });
   }
 }
 

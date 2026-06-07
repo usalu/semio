@@ -1,17 +1,14 @@
-//! 🧩 Puzzle 2d board: elements palette, icon codec, `BoardHost`, WASM session on `mathematical_graph` + `infinite_cavas`.
+//! 🧩 Puzzle 2d board: elements palette, icon codec, `BoardHost`, WASM session on directed port normal graph.
 #![allow(clippy::missing_errors_doc, reason = "Puzzle board bundle is internal to puzzle 2d.")]
 
-pub use infinite_cavas::{self as cavas, *};
+pub use mathematical_graph_port_directed_normal::{self as graph, *};
+pub use graph::cavas;
 pub use cavas::vello::kurbo::{CubicBez, Point, Vec2};
-pub use mathematical_graph_normal_undirected::{
-    apply_force_graph_layout_to_fixture_v1_json as apply_undirected_force_graph_layout_to_fixture_v1_json,
-    apply_force_graph_layout_to_fixture_v1_value as apply_undirected_force_graph_layout_to_fixture_v1_value,
-    apply_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json, ForceGraphLayoutOptions,
-};
-pub use mathematical_graph_port_directed::{self as graph, handle_position, BoardEngine, BoardEvent, Camera, Edge, EdgeId, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection};
 pub use graph::{
     apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value,
-    apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json, GraphExtension,
+    apply_normal_undirected_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json,
+    apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json,
+    apply_undirected_force_graph_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_value, GraphExtension,
 };
 pub use gis_map as map;
 pub use reasoning_mindmap as mindmap;
@@ -62,13 +59,11 @@ fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
 }
 
 mod board_icon_codec {
-    pub use infinite_cavas::icon_codec::{board_resolve_icon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
+    pub use crate::cavas::icon_codec::{board_resolve_icon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
     pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
         resolve_with_lookup(encoded, super::puzzle_themed_icon_lookup)
     }
 }
-
-pub use mathematical_graph::board_host::*;
 
 pub fn puzzle_themed_icon_lookup(key: &str) -> Option<&'static str> {
     board_metabolism_icons::board_metabolism_icon_svg(key)
@@ -133,21 +128,21 @@ pub fn board_distance_point_cubic(px: f64, py: f64, p0x: f64, p0y: f64, p1x: f64
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardRayRectEdge)]
 pub fn board_ray_rect_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Vec<f64> {
-    let p = vcompute::ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
+    let p = ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
     vec![p.x, p.y]
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardHandlePositionCircle)]
 pub fn board_handle_position_circle(cx: f64, cy: f64, radius: f64, angle: f64) -> Vec<f64> {
-    let p = vcompute::handle_position_on_circle(Point::new(cx, cy), radius, angle);
+    let p = handle_position_on_circle(Point::new(cx, cy), radius, angle);
     vec![p.x, p.y]
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardHandlePositionRectangle)]
 pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64, angle: f64) -> Vec<f64> {
-    let p = vcompute::handle_position_on_rectangle(Point::new(cx, cy), width, height, angle);
+    let p = handle_position_on_rectangle(Point::new(cx, cy), width, height, angle);
     vec![p.x, p.y]
 }
 
@@ -571,10 +566,10 @@ mod tests {
         assert!(curve.p3.y.abs() < 0.001);
         let source_radial = curve.p0 - Point::ORIGIN;
         let arm0 = curve.p1 - curve.p0;
-        let align0 = vcompute::normalize_or_zero(source_radial).dot(vcompute::normalize_or_zero(arm0));
+        let align0 = normalize_or_zero(source_radial).dot(normalize_or_zero(arm0));
         let target_approach = Point::new(300.0, 0.0) - curve.p3;
         let arm1 = curve.p3 - curve.p2;
-        let align1 = vcompute::normalize_or_zero(target_approach).dot(vcompute::normalize_or_zero(arm1));
+        let align1 = normalize_or_zero(target_approach).dot(normalize_or_zero(arm1));
         assert!(align0 > 0.99);
         assert!(align1 > 0.99);
     }
@@ -656,11 +651,7 @@ mod tests {
 
 #[cfg(test)]
 mod host_tests {
-    use super::vcompute::compute_edge_bezier_points;
-    use super::vcompute::distance_between;
-    use super::vcompute::handle_position_on_circle;
-    use super::vcompute::handle_position_on_rectangle;
-    use super::{BoardElementStyleKind, BoardHost, EdgeDescJson, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescJson, Interaction, NodeDescJson, NodeShape, SceneDescriptorJson, WireDescJson};
+    use super::{compute_edge_bezier_points, distance_between, handle_position_on_circle, handle_position_on_rectangle, BoardElementStyleKind, BoardHost, EdgeDescJson, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescJson, Interaction, NodeDescJson, NodeShape, SceneDescriptorJson, WireDescJson};
     use crate::cavas::geom_sel::cubic_bezier_point;
     use crate::cavas::vello::kurbo::Point;
     use serde_json::json;
@@ -4047,11 +4038,11 @@ mod force_graph_tests {
     fn svg_icon_vello09_append_smoke() {
         let mut scene = crate::cavas::vello::Scene::new();
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#ffffff"/><path d="M0 0 L10 10" stroke="#000000" stroke-width="1"/></svg>"##;
-        super::svg_icon_vello09::append_svg_str(&mut scene, svg).expect("parse svg");
+        crate::cavas::svg_icon_vello09::append_svg_str(&mut scene, svg).expect("parse svg");
         let fg = crate::cavas::vello::peniko::Color::from_rgba8(200, 10, 10, 255);
         let bg = crate::cavas::vello::peniko::Color::from_rgba8(10, 200, 10, 255);
         let mut scene2 = crate::cavas::vello::Scene::new();
-        super::svg_icon_vello09::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
+        crate::cavas::svg_icon_vello09::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
     }
 
     #[test]
@@ -4081,7 +4072,7 @@ mod force_graph_tests {
     fn svg_icon_content_bounds_follows_nested_group_translate() {
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><g transform="translate(72 88)"><rect width="12" height="12" fill="rgb(8,8,8)"/></g></svg>"#;
         let tree = crate::usvg::Tree::from_str(svg, &crate::usvg::Options::default()).expect("parse");
-        let (x, y, w, h) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        let (x, y, w, h) = crate::cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
         assert!(x >= 70.0 && x <= 74.0, "expected translated art near x≈72, got {x}");
         assert!(y >= 86.0 && y <= 90.0, "expected translated art near y≈88, got {y}");
         assert!(w > 10.0 && w < 14.0 && h > 10.0 && h < 14.0, "expected ~12×12 bbox, got {w}×{h}");
@@ -4090,8 +4081,8 @@ mod force_graph_tests {
     #[test]
     fn svg_icon_content_bounds_includes_visible_image_abs_box() {
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" x="30" y="40" width="50" height="50"/></svg>"##;
-        let tree = crate::usvg::Tree::from_str(svg, super::svg_icon_vello09::usvg_options_board_icons()).expect("parse");
-        let (x, y, w, h) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        let tree = crate::usvg::Tree::from_str(svg, crate::cavas::svg_icon_vello09::usvg_options_icons()).expect("parse");
+        let (x, y, w, h) = crate::cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
         assert!((x - 30.0).abs() < 2.0, "expected image bbox near x=30, got {x}");
         assert!((y - 40.0).abs() < 2.0, "expected image bbox near y=40, got {y}");
         assert!((w - 50.0).abs() < 2.0 && (h - 50.0).abs() < 2.0, "expected ~50×50 bbox, got {w}×{h}");

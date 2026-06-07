@@ -18,8 +18,11 @@ import {
   parseTsImportSpecs,
 } from "./dependency-boundary.ts";
 import {
+  PLAYGROUND_PORTS,
   PLAYGROUND_SITE_DEV_PORTS,
   PLAYGROUND_SITE_HOSTS,
+  allPlaygroundReservedPorts,
+  playgroundDevPort,
   playgroundEmbedUrl,
   playgroundStaticSiteBuildOptions,
 } from "../../../../ui/styling/vite-elements-assets.ts";
@@ -67,6 +70,10 @@ describe("resolveDevPort", () => {
   test("skips occupied ports", () => {
     if (!isDevPortInUse("127.0.0.1", 6013)) return;
     expect(resolveDevPort("127.0.0.1", 6013)).toBeGreaterThan(6013);
+  });
+
+  test("honors skipPorts", () => {
+    expect(resolveDevPort("127.0.0.1", 59_991, 5, new Set([59_991, 59_992]))).toBe(59_993);
   });
 });
 
@@ -489,6 +496,12 @@ describe("playground static sites", () => {
     expect(playgroundEmbedUrl("2d", true)).toBe(`http://localhost:${PLAYGROUND_SITE_DEV_PORTS["2d"]}`);
     expect(playgroundEmbedUrl("cad", false)).toBe(`https://${PLAYGROUND_SITE_HOSTS.cad}`);
     expect(playgroundEmbedUrl("5d", false)).toBe(`https://${PLAYGROUND_SITE_HOSTS["5d"]}`);
+  });
+
+  test("PLAYGROUND_PORTS keeps cad and dag on distinct reserved dev ports", () => {
+    expect(playgroundDevPort("cad")).toBe(6020);
+    expect(playgroundDevPort("dag")).toBe(6017);
+    expect(allPlaygroundReservedPorts().size).toBeGreaterThanOrEqual(Object.keys(PLAYGROUND_PORTS).length);
   });
 
   test("playgroundStaticSiteBuildOptions uses relative-base dist output", () => {

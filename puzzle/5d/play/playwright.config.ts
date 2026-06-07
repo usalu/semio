@@ -2,11 +2,12 @@
 import { defineConfig, devices } from "@playwright/test";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { playgroundTestPortString } from "../../../ui/styling/playground-dev-ports.ts";
 // #endregion 🔌Adapters
 
 const playDir = dirname(fileURLToPath(import.meta.url));
 const puzzle5dRoot = dirname(playDir);
-const port = process.env.PUZZLE_5D_PLAY_PORT ?? "6035";
+const port = process.env.PUZZLE_5D_PLAY_PORT ?? playgroundTestPortString("puzzle-5d") ?? "6035";
 
 export default defineConfig({
 	testDir: join(playDir, "e2e"),

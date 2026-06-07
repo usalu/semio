@@ -5,143 +5,17 @@ pub use vello_svg::usvg;
 pub use vello_svg::vello;
 pub use vello_svg;
 
-// #region 🏷️BoardIconAssets
+// #region 🏷️IconAssets
 
-pub mod board_icon_assets {
-    //! @emoji 📎 Static bytes for board icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
+pub mod icon_assets {
+    //! @emoji 📎 Static bytes for icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
 
     pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("assets/NotoColorEmoji-subset.ttf");
 
     pub static MAP_LABEL_SANS_TTF: &[u8] = include_bytes!("assets/MapLabelSans.ttf");
 }
 
-// #endregion 🏷️BoardIconAssets
-
-pub mod vcompute {
-    use crate::vello::kurbo::{Affine, CubicBez, ParamCurve, Point, Stroke, Vec2};
-    use crate::vello::peniko::Color;
-    use crate::vello::Scene;
-
-    #[inline]
-    pub fn clamp_f64(value: f64, min: f64, max: f64) -> f64 {
-        value.max(min).min(max)
-    }
-
-    #[inline]
-    pub fn distance_between(left: Point, right: Point) -> f64 {
-        (right - left).hypot()
-    }
-
-    #[inline]
-    pub fn normalize_or_zero(vector: Vec2) -> Vec2 {
-        let len = vector.hypot();
-        if len <= f64::EPSILON {
-            return Vec2::new(0.0, 0.0);
-        }
-        vector / len
-    }
-
-    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-    pub fn ray_from_origin_to_axis_aligned_rectangle_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Point {
-        let mut t_best = f64::INFINITY;
-        if ux.abs() > 1e-12 {
-            let tx = ux.signum() * hw / ux;
-            let y_at = uy * tx;
-            if tx > 0.0 && y_at.abs() <= hh + 1e-9 {
-                t_best = t_best.min(tx);
-            }
-        }
-        if uy.abs() > 1e-12 {
-            let ty = uy.signum() * hh / uy;
-            let x_at = ux * ty;
-            if ty > 0.0 && x_at.abs() <= hw + 1e-9 {
-                t_best = t_best.min(ty);
-            }
-        }
-        if !t_best.is_finite() || t_best <= 0.0 || t_best == f64::INFINITY {
-            return Point::new(hw, 0.0);
-        }
-        Point::new(ux * t_best, uy * t_best)
-    }
-
-    pub fn handle_position_on_circle(center: Point, radius: f64, angle: f64) -> Point {
-        let ux = angle.cos();
-        let uy = angle.sin();
-        center + Vec2::new(ux * radius, uy * radius)
-    }
-
-    /// 🧭 Rectangle handle `angle` is **0 at top edge center (north)**, increasing **counter‑clockwise** in board space (`y` down): `π/4` NW corner, `π/2` west midpoint, `π` south, `3π/2` east; circles keep **east‑zero** `atan2(dy,dx)` convention.
-    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-    pub fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
-        let hw = width / 2.0;
-        let hh = height / 2.0;
-        let ux = -angle.sin();
-        let uy = -angle.cos();
-        let local = ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
-        center + Vec2::new(local.x, local.y)
-    }
-
-    /// 🧭 East-zero polar angle for a circle handle that meets the ray from `center` toward `toward` on the rim.
-    pub fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
-        let d = toward - center;
-        f64::atan2(d.y, d.x)
-    }
-
-    /// 🧭 North-zero rectangle handle angle so the rim point lies on the ray from `center` toward `toward`.
-    pub fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, toward: Point) -> f64 {
-        let u = normalize_or_zero(toward - center);
-        f64::atan2(-u.x, -u.y)
-    }
-
-    pub fn compute_edge_bezier_points(source_point: Point, target_point: Point, source_center: Point, target_center: Point) -> CubicBez {
-        let mut source_radial = normalize_or_zero(source_point - source_center);
-        if source_radial == Vec2::new(0.0, 0.0) {
-            source_radial = normalize_or_zero(target_point - source_point);
-        }
-        let mut target_radial = normalize_or_zero(target_point - target_center);
-        if target_radial == Vec2::new(0.0, 0.0) {
-            target_radial = normalize_or_zero(target_point - source_point);
-        }
-        let handle_distance = distance_between(source_point, target_point);
-        let control_length = clamp_f64(handle_distance * 0.35, 24.0, 240.0);
-        let p1 = source_point + source_radial * control_length;
-        let p2 = target_point + target_radial * control_length;
-        CubicBez::new(source_point, p1, p2, target_point)
-    }
-
-    pub fn distance_point_to_cubic_bezier(point: Point, curve: CubicBez, segments: usize) -> f64 {
-        let mut smallest = f64::INFINITY;
-        let mut previous = curve.eval(0.0);
-        let n = segments.max(1);
-        for index in 1..=n {
-            let t = index as f64 / n as f64;
-            let next = curve.eval(t);
-            smallest = smallest.min(distance_to_segment(point, previous, next));
-            previous = next;
-        }
-        smallest
-    }
-
-    fn distance_to_segment(point: Point, start: Point, end: Point) -> f64 {
-        let segment = end - start;
-        let segment_len_squared = segment.dot(segment);
-        if segment_len_squared <= f64::EPSILON {
-            return distance_between(point, start);
-        }
-        let projection = clamp_f64((point - start).dot(segment) / segment_len_squared, 0.0, 1.0);
-        let closest = start + segment * projection;
-        distance_between(point, closest)
-    }
-
-    pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> Scene {
-        let mut scene = Scene::new();
-        let stroke = Stroke::new(stroke_width);
-        for curve in curves {
-            scene.stroke(&stroke, Affine::IDENTITY, Color::WHITE, None, curve);
-        }
-        scene
-    }
-}
+// #endregion 🏷️IconAssets
 
 pub mod geom_sel {
     use crate::vello::kurbo::{CubicBez, ParamCurve, Point};
@@ -300,204 +174,6 @@ pub mod geom_sel {
     }
 }
 
-pub mod scene_json {
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct CameraJson {
-        pub x: f64,
-        pub y: f64,
-        pub zoom: f64,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct NodeDescJson {
-        pub id: String,
-        pub x: f64,
-        pub y: f64,
-        #[serde(default)]
-        pub draggable: Option<bool>,
-        #[serde(default)]
-        pub selected: Option<bool>,
-        #[serde(default)]
-        pub style: Option<String>,
-        #[serde(default)]
-        pub text: Option<String>,
-        /// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
-        #[serde(default)]
-        pub icon_kind: Option<String>,
-        /// @emoji 🧩 Semantic node-kind id for compatibility rows at `node` specificity.
-        #[serde(default)]
-        pub node_kind: Option<String>,
-        #[serde(default)]
-        pub user_data: Option<serde_json::Value>,
-        #[serde(default)]
-        pub visible: Option<bool>,
-        #[serde(default)]
-        pub root: Option<bool>,
-        pub shape: Option<String>,
-        #[serde(default)]
-        pub radius: Option<f64>,
-        #[serde(default)]
-        pub width: Option<f64>,
-        #[serde(default)]
-        pub height: Option<f64>,
-        #[serde(default)]
-        pub scale: Option<f64>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct HandleDescJson {
-        pub id: String,
-        pub node_id: String,
-        pub angle: f64,
-        #[serde(default)]
-        pub radius: Option<f64>,
-        #[serde(default)]
-        pub selected: Option<bool>,
-        #[serde(default)]
-        pub style: Option<String>,
-        #[serde(default)]
-        pub handle_kind: Option<String>,
-        /// CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding catalog color for this handle.
-        #[serde(default)]
-        pub color: Option<String>,
-        /// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
-        #[serde(default)]
-        pub icon_kind: Option<String>,
-        #[serde(default)]
-        pub user_data: Option<serde_json::Value>,
-        #[serde(default)]
-        pub visible: Option<bool>,
-        #[serde(default)]
-        pub scale: Option<f64>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct EdgeDescJson {
-        pub id: String,
-        pub source: String,
-        pub target: String,
-        /// @emoji 🧩 Semantic edge-kind id for compatibility at `edge` specificity.
-        #[serde(default)]
-        pub edge_kind: Option<String>,
-        /// @emoji 🔺 Per-instance source tip id from the edge tip registry (`none` disables).
-        #[serde(default)]
-        pub source_tip: Option<String>,
-        /// @emoji 🔺 Per-instance target tip id from the edge tip registry (`none` disables).
-        #[serde(default)]
-        pub target_tip: Option<String>,
-        #[serde(default)]
-        pub selected: Option<bool>,
-        #[serde(default)]
-        pub style: Option<String>,
-        #[serde(default)]
-        pub user_data: Option<serde_json::Value>,
-        #[serde(default)]
-        pub visible: Option<bool>,
-    }
-
-    /// @emoji 🧵 Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct WireDescJson {
-        pub id: String,
-        pub source: String,
-        /// @emoji 🧩 Semantic wire-kind id (defaults from catalog when omitted in fixtures).
-        #[serde(default)]
-        pub wire_kind: Option<String>,
-        #[serde(default)]
-        pub target: Option<String>,
-        #[serde(default)]
-        pub end_x: Option<f64>,
-        #[serde(default)]
-        pub end_y: Option<f64>,
-        #[serde(default)]
-        pub selected: Option<bool>,
-        #[serde(default)]
-        pub style: Option<String>,
-        #[serde(default)]
-        pub user_data: Option<serde_json::Value>,
-        #[serde(default)]
-        pub visible: Option<bool>,
-    }
-
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct SceneDescriptorJson {
-        pub nodes: Vec<NodeDescJson>,
-        pub handles: Vec<HandleDescJson>,
-        pub edges: Vec<EdgeDescJson>,
-        #[serde(default)]
-        pub wires: Vec<WireDescJson>,
-        /// @emoji 💠 JS‑authored ids to paint with secondary “left selection” chrome (not in current `selected` flags).
-        #[serde(default)]
-        pub selection_exit_highlight_ids: Vec<String>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct FixtureV1Json {
-        pub schema: String,
-        pub camera: CameraJson,
-        pub nodes: Vec<serde_json::Value>,
-        pub edges: Vec<serde_json::Value>,
-        #[serde(default)]
-        pub meta: Option<serde_json::Value>,
-    }
-
-    /// 🧾 Reads fixture edge endpoint handle ids from `source` and `target` string fields only.
-    pub fn fixture_edge_handle_ids_from_object(eo: &serde_json::Map<String, serde_json::Value>) -> Option<(&str, &str)> {
-        let source = eo.get("source").and_then(|v| v.as_str())?;
-        let target = eo.get("target").and_then(|v| v.as_str())?;
-        Some((source, target))
-    }
-}
-
-pub use scene_json::{fixture_edge_handle_ids_from_object, CameraJson, EdgeDescJson, FixtureV1Json, HandleDescJson, NodeDescJson, SceneDescriptorJson, WireDescJson};
-
-fn board_json_hidden_flag(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    obj.get("hidden").and_then(|v| v.as_bool())
-}
-
-pub fn board_json_visible_option(obj: &serde_json::Map<String, serde_json::Value>) -> Option<bool> {
-    match board_json_hidden_flag(obj) {
-        Some(hidden) => Some(!hidden),
-        None => obj.get("visible").and_then(|v| v.as_bool()),
-    }
-}
-
-pub fn board_json_visible_or_true(obj: &serde_json::Map<String, serde_json::Value>) -> bool {
-    board_json_visible_option(obj).unwrap_or(true)
-}
-
-pub use vcompute::{
-    compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, encode_board_stroke_scene, handle_position_on_circle,
-    handle_position_on_rectangle, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge,
-};
-
-#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-pub fn normalize_board_descriptor_hidden_to_visible(value: &mut serde_json::Value) {
-    let Some(root) = value.as_object_mut() else {
-        return;
-    };
-    for key in ["nodes", "handles", "edges", "wires"] {
-        let Some(rows) = root.get_mut(key).and_then(|v| v.as_array_mut()) else {
-            continue;
-        };
-        for row in rows {
-            let Some(obj) = row.as_object_mut() else {
-                continue;
-            };
-            if let Some(visible) = board_json_visible_option(obj) {
-                obj.insert("visible".into(), serde_json::json!(visible));
-            }
-        }
-    }
-}
-
 pub mod svg_icon_vello09 {
     use std::sync::{Arc, OnceLock};
 
@@ -506,15 +182,15 @@ pub mod svg_icon_vello09 {
     use crate::vello::peniko::{Color, Fill};
     use crate::vello::Scene;
 
-    // #region 🔖BoardIconUsvgParseOptions
+    // #region 🔖IconUsvgParseOptions
 
-    static BOARD_ICON_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
+    static ICON_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
 
     /// @emoji 🔤 Shared `usvg` parse options with bundled Noto Color Emoji so `<text>` in Typst `emoji:` SVG matches the Typst font book; avoids system fallback glyphs.
-    pub fn usvg_options_board_icons() -> &'static usvg::Options<'static> {
-        BOARD_ICON_USVG_OPTIONS.get_or_init(|| {
+    pub fn usvg_options_icons() -> &'static usvg::Options<'static> {
+        ICON_USVG_OPTIONS.get_or_init(|| {
             let mut db = fontdb::Database::new();
-            db.load_font_data(super::board_icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF.to_vec());
+            db.load_font_data(super::icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF.to_vec());
             let mut o = usvg::Options::default();
             o.fontdb = Arc::new(db);
             o.font_family = "Noto Color Emoji".into();
@@ -522,7 +198,7 @@ pub mod svg_icon_vello09 {
         })
     }
 
-    // #endregion 🔖BoardIconUsvgParseOptions
+    // #endregion 🔖IconUsvgParseOptions
 
     fn to_affine(ts: &usvg::Transform) -> Affine {
         let usvg::Transform { sx, kx, ky, sy, tx, ty } = *ts;
@@ -731,7 +407,7 @@ pub mod svg_icon_vello09 {
 
     #[allow(dead_code)]
     pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), String> {
-        let tree = usvg::Tree::from_str(svg, usvg_options_board_icons()).map_err(|e| e.to_string())?;
+        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| e.to_string())?;
         render_svg_tree_themed(scene, &tree, fg, bg);
         Ok(())
     }
@@ -758,7 +434,7 @@ pub mod text {
     pub fn usvg_options_map_labels() -> &'static usvg::Options<'static> {
         MAP_LABEL_USVG_OPTIONS.get_or_init(|| {
             let mut db = fontdb::Database::new();
-            db.load_font_data(super::board_icon_assets::MAP_LABEL_SANS_TTF.to_vec());
+            db.load_font_data(super::icon_assets::MAP_LABEL_SANS_TTF.to_vec());
             let family = db
                 .faces()
                 .next()
@@ -1119,22 +795,6 @@ pub mod theme;
 /// 🧩 Extension hook for domain-specific canvas behavior (hit-test, paint, kinds).
 pub trait CanvasExtension: Send + Sync {
     fn extension_id(&self) -> &str;
-}
-
-/// 🎨 Optional domain paint hook for custom node/edge rendering on the shared board host.
-pub trait CanvasNodePaint: CanvasExtension {
-    fn paint_node_extras(
-        &self,
-        _scene: &mut vello::Scene,
-        _node_id: &str,
-        _center: vello::kurbo::Point,
-        _width: f64,
-        _height: f64,
-        _name: &str,
-        _input_labels: &[&str],
-        _output_labels: &[&str],
-    ) {
-    }
 }
 
 /// ⚙️ Generic infinite-canvas engine shell; domain logic lives in `E`.

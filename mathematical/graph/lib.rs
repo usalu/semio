@@ -1,8 +1,13 @@
 //! 🕸️ Generic property graph engine on infinite canvas; specialize via quadrant crates.
 
-pub mod board_host;
+pub mod geometry;
+pub mod scene_json;
 
-pub use board_host::*;
+pub use geometry::{
+    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, encode_board_stroke_scene, handle_position_on_circle,
+    handle_position_on_rectangle, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge, rectangle_handle_angle_toward,
+};
+pub use scene_json::{board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};
 
 pub use infinite_cavas as cavas;
 pub use mathematical_core::{self as core, Directed, Directedness, Edge as CoreEdge, EdgeId, HandleId, NodeId, Normal, PortModel, Ported, Undirected};
@@ -98,11 +103,11 @@ impl Default for InteractionMode {
 }
 
 pub fn handle_position(node: &Node, handle: &Handle) -> Point {
-    cavas::vcompute::handle_position_on_circle(node.center, node.radius, handle.angle)
+    geometry::handle_position_on_circle(node.center, node.radius, handle.angle)
 }
 
 fn distance(left: Point, right: Point) -> f64 {
-    cavas::vcompute::distance_between(left, right)
+    geometry::distance_between(left, right)
 }
 
 // #region 🔖GraphPortModel
@@ -126,7 +131,6 @@ impl GraphPortModel for Ported {
 // #endregion 🔖Kinds
 
 // #region 🔖Engine
-use cavas::{compute_edge_bezier_points, distance_point_to_cubic_bezier, encode_board_stroke_scene};
 
 /// ⚙️ Retained graph engine parameterized by port model and directedness.
 #[derive(Clone, Debug)]

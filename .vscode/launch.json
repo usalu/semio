@@ -711,7 +711,7 @@
       "name": "🛠️dev♾️infinite✈️cavas🦀vello",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p infinite_cavas -p mathematical_core -p mathematical_graph -p mathematical_graph_normal_undirected -p mathematical_graph_normal_directed -p mathematical_graph_port_undirected -p mathematical_graph_port_directed -p gis_map -p reasoning_mindmap -p reasoning_mindmap_rs -p reasoning_mindmap_wires -p puzzle_2d",
+      "command": "cargo test -p infinite_cavas -p mathematical_core -p mathematical_graph -p mathematical_graph_port -p mathematical_graph_normal_undirected -p mathematical_graph_normal_directed -p mathematical_graph_port_undirected -p mathematical_graph_port_directed -p mathematical_graph_port_directed_normal -p mathematical_graph_port_directed_dag -p gis_map -p reasoning_mindmap -p reasoning_mindmap_rs -p reasoning_mindmap_wires -p puzzle_2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -733,7 +733,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):601[6-9]|http://(?:127\\.0\\.0\\.1|localhost):602[0-9])",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6016)",
         "uriFormat": "%s"
       }
     },
@@ -777,7 +777,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):601[7-9]|http://(?:127\\.0\\.0\\.1|localhost):602[0-9])",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6017)",
         "uriFormat": "%s"
       }
     },

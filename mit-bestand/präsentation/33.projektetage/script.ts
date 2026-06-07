@@ -8,12 +8,14 @@ import {
 	runBundleScriptMain,
 	runViteBunxDev,
 } from "../../../repo/lib/js/src/index.ts";
+import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 
 class DevScript extends BundleScript {
 	run(segments: string[]): void {
 		runViteBunxDev(this.root, segments, {
-			portEnv: "PRAESENTATION_PROJEKTETAGE_PORT",
-			defaultPort: "6050",
+			portEnv: playgroundPortEnv("projektetage"),
+			defaultPort: playgroundDevPortString("projektetage"),
+			fixedPort: true,
 		});
 	}
 }

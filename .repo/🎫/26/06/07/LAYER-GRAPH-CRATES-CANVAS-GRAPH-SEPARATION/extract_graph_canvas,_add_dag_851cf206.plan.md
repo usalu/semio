@@ -13,22 +13,22 @@ todos:
     status: completed
   - id: phase3-session-react
     content: "Phase 3: Provide a generic board BoardSession (engine + extension hook) and move the generic Puzzle2dRenderer/reconciler/text-overlay/CanvasWasmBridge mount into infinite/cavas/react-renderer as a generic GraphCanvas + hooks + fixture/scene builders."
-    status: in_progress
+    status: completed
   - id: phase4-slim-puzzle
     content: "Phase 4: Slim puzzle/2d/rs + puzzle/2d/react to generic-engine + Puzzle2dExtension (brush/fill/palette/metabolism/original-style) only; repoint all consumers (puzzle/5d, platform + playground renderers, mindmap, wires, sketchpad, storybook); full cargo + vitest + dev boots green."
-    status: pending
+    status: completed
   - id: phase5-dag-render
     content: "Phase 5a: In the dag crate add cdylib + DagExtension painting the IO-node spec (rectangle, horizontal input labels left, vertical center name, horizontal output labels right, port-routed cycle-guarded edges) and a DagSession wasm API; extend in-file dag tests."
-    status: in_progress
+    status: completed
   - id: phase5-dag-harness
     content: "Phase 5b: Add dag/react canvas host (single canvas, no overlay), dag/play playground specialization (DagPlayHost region, boot subpath, PUZZLE_PLAY_ENTRY=dag), and dag/fixture/*.dag.json."
-    status: pending
+    status: completed
   - id: phase5-dag-wiring
     content: "Phase 5c: Wire dev - vite-elements-assets kind/subpath/markers, root package.json workspace + dev:dag script, root script.ts dag case, and a launch.json dag dev entry (new port)."
-    status: pending
+    status: completed
   - id: phase6-validate-close
     content: "Phase 6: Validate runtime via [DEBUG] logs / Playwright probe (rectangle IO nodes with port labels + vertical name + edges on one Rust canvas); run all cargo tests + vitest + affected dev boots; close the ticket with file list + summary."
-    status: pending
+    status: completed
 isProject: false
 ---
 

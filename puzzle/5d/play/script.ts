@@ -1,10 +1,15 @@
 #!/usr/bin/env bun
 /** 🧭 `@puzzle/5d/play` task router: `bun ./script.ts <dev|build|test|regenerate-fixture> [args…]`. */
 import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runPlaywright, runViteBunxDev, runVitest } from "../../../repo/lib/js/src/index.ts";
+import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runViteBunxDev(this.root, segments, { portEnv: "PUZZLE_5D_PLAY_PORT", defaultPort: "6014" });
+    runViteBunxDev(this.root, segments, {
+      portEnv: playgroundPortEnv("puzzle-5d"),
+      defaultPort: playgroundDevPortString("puzzle-5d"),
+      fixedPort: true,
+    });
   }
 }
 

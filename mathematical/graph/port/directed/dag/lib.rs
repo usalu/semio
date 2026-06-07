@@ -3,9 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 pub use infinite_cavas as cavas;
-pub use mathematical_graph_port_directed::{
-    self as graph, apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json, BoardEngine, BoardEvent, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
-};
+pub use mathematical_graph_port_directed::{self as graph, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection};
 
 /// 🌳 DAG board engine alias.
 pub type DagBoardEngine = DirectedPortGraphEngine;

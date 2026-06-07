@@ -12,9 +12,32 @@ import { fileURLToPath } from "node:url";
 import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
 import { PLAYGROUND_SITE_DEV_PORTS, PLAYGROUND_SITE_HOSTS, playgroundEmbedUrl, type PlaygroundSiteKind } from "./playground-embed-url.ts";
+import {
+  PLAYGROUND_PORTS,
+  allPlaygroundReservedPorts,
+  playgroundDevPort,
+  playgroundDevPortString,
+  playgroundPortEnv,
+  playgroundTestPort,
+  playgroundTestPortString,
+  type PlaygroundHostKind,
+} from "./playground-dev-ports.ts";
 // #endregion 🔌Adapters
 
-export { PLAYGROUND_SITE_DEV_PORTS, PLAYGROUND_SITE_HOSTS, playgroundEmbedUrl, type PlaygroundSiteKind };
+export {
+  PLAYGROUND_PORTS,
+  PLAYGROUND_SITE_DEV_PORTS,
+  PLAYGROUND_SITE_HOSTS,
+  allPlaygroundReservedPorts,
+  playgroundDevPort,
+  playgroundDevPortString,
+  playgroundEmbedUrl,
+  playgroundPortEnv,
+  playgroundTestPort,
+  playgroundTestPortString,
+  type PlaygroundHostKind,
+  type PlaygroundSiteKind,
+};
 
 //#region 🔖ViteElementsAssets
 /** @emoji 📦 Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
@@ -341,7 +364,7 @@ export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): P
       if (id.includes("playgroundEntry=shell")) {
         return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
       }
-      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|presentation|wires)/);
+      const puzzleMatch = id.match(/playgroundEntry=puzzle-(2d|3d|5d|map|flow|dag|presentation|wires)/);
       if (puzzleMatch) {
         return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
       }
@@ -724,6 +747,10 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@framework/presentation/play", replacement: resolve(repoRoot, "framework/product/presentation/play/index.ts") },
     { find: "@framework/presentation/core", replacement: resolve(repoRoot, "framework/product/presentation/core/index.ts") },
     { find: "@framework/presentation/renderer/react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
+    { find: "@flow/play", replacement: resolve(repoRoot, "flow/play/index.ts") },
+    { find: "@flow/react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
+    { find: "@dag/play", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/play/index.ts") },
+    { find: "@dag/react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
   ];
 }
 

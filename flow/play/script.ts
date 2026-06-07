@@ -11,6 +11,7 @@ import {
   runViteBunxDev,
   runVitest,
 } from "../../repo/lib/js/src/index.ts";
+import { playgroundDevPortString, playgroundPortEnv } from "../../ui/styling/playground-dev-ports.ts";
 
 const wasmScript = join(import.meta.dir, "../core/script.ts");
 const validateRuntimeScript = join(
@@ -21,7 +22,11 @@ const validateRuntimeScript = join(
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], this.root, playPollingEnv());
-    runViteBunxDev(this.root, segments, { portEnv: "FLOW_PLAY_PORT", defaultPort: "6016" });
+    runViteBunxDev(this.root, segments, {
+      portEnv: playgroundPortEnv("flow"),
+      defaultPort: playgroundDevPortString("flow"),
+      fixedPort: true,
+    });
   }
 }
 
@@ -29,7 +34,7 @@ class ValidateScript extends BundleScript {
   run(segments: string[]): void {
     runBun([validateRuntimeScript, ...segments], this.root, {
       ...playPollingEnv(),
-      FLOW_PLAY_PORT: process.env.FLOW_PLAY_PORT ?? "6016",
+      FLOW_PLAY_PORT: process.env.FLOW_PLAY_PORT ?? playgroundDevPortString("flow"),
     });
   }
 }

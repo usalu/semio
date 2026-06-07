@@ -3023,6 +3023,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_graph_port"
+version = "0.1.0"
+dependencies = [
+ "mathematical_core",
+ "mathematical_graph",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "mathematical_graph_port_directed"
 version = "0.1.0"
 dependencies = [
@@ -3030,6 +3040,7 @@ dependencies = [
  "mathematical_core",
  "mathematical_graph",
  "mathematical_graph_normal_undirected",
+ "mathematical_graph_port",
  "serde",
  "serde_json",
 ]
@@ -3041,7 +3052,6 @@ dependencies = [
  "infinite_cavas",
  "js-sys",
  "mathematical_core",
- "mathematical_graph",
  "mathematical_graph_port_directed",
  "serde",
  "serde_json",
@@ -3051,11 +3061,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_graph_port_directed_normal"
+version = "0.1.0"
+dependencies = [
+ "infinite_cavas",
+ "mathematical_core",
+ "mathematical_graph_normal_undirected",
+ "mathematical_graph_port_directed",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "mathematical_graph_port_undirected"
 version = "0.1.0"
 dependencies = [
  "mathematical_core",
- "mathematical_graph",
+ "mathematical_graph_port",
 ]
 
 [[package]]
@@ -3958,11 +3980,8 @@ dependencies = [
  "fontdb",
  "gis_map",
  "image",
- "infinite_cavas",
  "js-sys",
- "mathematical_graph",
- "mathematical_graph_normal_undirected",
- "mathematical_graph_port_directed",
+ "mathematical_graph_port_directed_normal",
  "reasoning_mindmap",
  "serde",
  "serde-wasm-bindgen",

@@ -4,7 +4,7 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPlaygroundPlayViteConfig } from "../../../../ui/styling/vite-elements-assets.ts";
+import { createPlaygroundPlayViteConfig } from "../../../../../../ui/styling/vite-elements-assets.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(playDir, "../../../../../../");
@@ -17,6 +17,7 @@ export default createPlaygroundPlayViteConfig({
   resolveDedupe: ["react", "react-dom", "@dag/react"],
   optimizeDeps: {
     include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@dag/react"],
+    exclude: ["@framework/playground/renderer/react/dag"],
     esbuildOptions: { target: "esnext" },
   },
   watchIgnored: ["../lib.rs", "../target/**", "../Cargo.toml", "../Cargo.lock", "../script.ts"],

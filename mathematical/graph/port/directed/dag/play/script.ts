@@ -10,18 +10,23 @@ import {
   runCargo,
   runViteBunxDev,
   runVitest,
-} from "../../../../../repo/lib/js/src/index.ts";
+} from "../../../../../../repo/lib/js/src/index.ts";
+import { playgroundDevPortString, playgroundPortEnv } from "../../../../../../ui/styling/playground-dev-ports.ts";
 
 const wasmScript = join(import.meta.dir, "../script.ts");
 const validateRuntimeScript = join(
   import.meta.dir,
-  "../../../../../.repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs",
+  "../../../../../../.repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs",
 );
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     runBun([wasmScript, "wasm"], join(import.meta.dir, ".."), playPollingEnv());
-    runViteBunxDev(this.root, segments, { portEnv: "DAG_PLAY_PORT", defaultPort: "6017" });
+    runViteBunxDev(this.root, segments, {
+      portEnv: playgroundPortEnv("dag"),
+      defaultPort: playgroundDevPortString("dag"),
+      fixedPort: true,
+    });
   }
 }
 
@@ -29,7 +34,7 @@ class ValidateScript extends BundleScript {
   run(segments: string[]): void {
     runBun([validateRuntimeScript, ...segments], this.root, {
       ...playPollingEnv(),
-      DAG_PLAY_PORT: process.env.DAG_PLAY_PORT ?? "6017",
+      DAG_PLAY_PORT: process.env.DAG_PLAY_PORT ?? playgroundDevPortString("dag"),
     });
   }
 }

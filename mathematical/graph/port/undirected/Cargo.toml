@@ -9,5 +9,5 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
-mathematical_graph = { path = "../.." }
+mathematical_graph_port = { path = ".." }
 mathematical_core = { path = "../../../core" }

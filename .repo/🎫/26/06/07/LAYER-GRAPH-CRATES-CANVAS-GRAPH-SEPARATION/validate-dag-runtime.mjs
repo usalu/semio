@@ -18,20 +18,18 @@ async function isPortListening(port) {
   });
 }
 
-async function findDagDevUrl(preferredPort) {
+async function findDagDevUrl(port) {
   const explicit = process.env.DAG_PLAY_URL;
   if (explicit) return explicit;
-  for (let port = preferredPort; port < preferredPort + 20; port++) {
-    if (!(await isPortListening(port))) continue;
-    try {
-      const res = await fetch(`http://127.0.0.1:${port}/index.ts`);
-      const body = await res.text();
-      if (body.includes('PUZZLE_PLAY_ENTRY": "dag"') && body.includes("DagPlayController")) {
-        return `http://127.0.0.1:${port}/`;
-      }
-    } catch {
-      /* try next */
+  if (!(await isPortListening(port))) return null;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/index.ts`);
+    const body = await res.text();
+    if (body.includes('PUZZLE_PLAY_ENTRY": "dag"') && body.includes("DagPlayController")) {
+      return `http://127.0.0.1:${port}/`;
     }
+  } catch {
+    return null;
   }
   return null;
 }

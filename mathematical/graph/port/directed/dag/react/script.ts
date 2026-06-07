@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 `@dag/react` task router. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runVitest } from "../../../../../repo/lib/js/src/index.ts";
+import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runVitest } from "../../../../../../repo/lib/js/src/index.ts";
 
 const wasmScript = join(import.meta.dir, "../script.ts");
 

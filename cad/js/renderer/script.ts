@@ -11,6 +11,7 @@ import {
   runViteDev,
   runVitest,
 } from "../../../repo/lib/js/src/index.ts";
+import { playgroundDevPortString, playgroundPortEnv } from "../../../ui/styling/playground-dev-ports.ts";
 import { defineLint } from "../../../repo/lib/js/src/index.ts";
 
 export const policyFile = "index.tsx";
@@ -25,8 +26,8 @@ class DevScript extends BundleScript {
   run(segments: string[]): void {
     runViteDev(this.root, segments, {
       config: "play/vite.config.ts",
-      portEnv: "CAD_JS_RENDERER_PLAY_PORT",
-      defaultPort: "6020",
+      portEnv: playgroundPortEnv("cad"),
+      defaultPort: playgroundDevPortString("cad"),
     });
   }
 }

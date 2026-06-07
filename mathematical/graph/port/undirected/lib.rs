@@ -1,6 +1,6 @@
 //! ↔️ Port undirected graph: handle-to-handle edges without direction.
 
-pub use mathematical_graph::*;
+pub use mathematical_graph_port::*;
 pub use mathematical_core::{Ported, Undirected};
 
 /// ↔️ Port graph engine; handle endpoints are unordered pairs.

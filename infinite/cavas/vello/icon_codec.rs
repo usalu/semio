@@ -69,7 +69,7 @@ fn typst_asset_font_list() -> Vec<Font> {
 
 fn typst_asset_font_list_plus_noto_color_emoji() -> Vec<Font> {
     let mut out = typst_asset_font_list();
-    let emoji_blob = Bytes::new(crate::board_icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF);
+    let emoji_blob = Bytes::new(crate::icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF);
     let mut idx = 0u32;
     loop {
         if let Some(f) = Font::new(emoji_blob.clone(), idx) {

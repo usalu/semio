@@ -3,6 +3,8 @@ members = [
     "infinite/cavas/vello",
     "mathematical/core",
     "mathematical/graph",
+    "mathematical/graph/port",
+    "mathematical/graph/port/directed",
     "mathematical/graph/normal/directed",
     "mathematical/graph/normal/undirected",
     "mathematical/graph/port/directed/normal",
